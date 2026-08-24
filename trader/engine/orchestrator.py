@@ -129,12 +129,21 @@ class Orchestrator:
         else:
             action = Action.HOLD
 
-        confidence = min(0.95, max(0.30, abs(net) / max(threshold, 1e-9) * 0.62
-                                   * (0.7 + 0.3 * frac)))
+        # NaN from indicator edge cases must never reach SQLite (it becomes
+        # NULL → NOT NULL violation → crash-loop → duplicate entries)
+        def _clean(x: float, default: float = 0.0) -> float:
+            x = float(x)
+            return default if (x != x or x in (float("inf"), float("-inf"))) \
+                else round(x, 6)
+
+        net = _clean(net)
+        threshold = max(_clean(threshold, 0.24), 0.05)
+        confidence = min(0.95, max(0.30, _clean(
+            abs(net) / max(threshold, 1e-9) * 0.62 * (0.7 + 0.3 * frac), 0.3)))
         d = Decision(
             id=new_id("dec"), cycle_id=cycle_id, symbol=snap.symbol,
-            action=action, score=round(net, 4),
-            threshold=round(threshold, 4), confidence=round(confidence, 3),
+            action=action, score=_clean(net), threshold=threshold,
+            confidence=confidence,
             votes=[v.as_dict() for v in votes],
             strategy_signals=[vars(s) | {"action": s.action.value}
                               for s in sigs])

@@ -104,6 +104,7 @@ class Kernel:
         log.info(f"LUFFY BOOT | market={self.market_type.value} "
                  f"state={self.state_machine.state.value} "
                  f"population={len(self.population)}")
+        self._filter_universe_to_venue()
         report = reconcile_futures(self.exchange, self.journal)
         if any(report.get(k) for k in ("adopted", "ghosts")):
             self.notifier.send(f"🔧 boot reconciliation: {report}")
@@ -114,6 +115,31 @@ class Kernel:
         signal.signal(signal.SIGINT, self._graceful)
         threading.Thread(target=self._telegram_listener, daemon=True,
                          name="tg-listener").start()
+
+    def _filter_universe_to_venue(self) -> None:
+        """Universe comes from production data; drop symbols the trading
+        venue (demo) cannot actually trade."""
+        try:
+            self.exchange.load_markets()
+            tradable = set()
+            for m in self.exchange.markets.values():
+                if not m.get("active", True) or m.get("spot"):
+                    continue
+                base = (m.get("base") or "")
+                quote = (m.get("quote") or "")
+                if quote == "USDT":
+                    tradable.add(f"{base}/USDT")
+            before = self.universe.symbols()
+            kept = [s for s in before if s in tradable]
+            dropped = set(before) - set(kept)
+            self.universe._alts = [s for s in self.universe._alts
+                                   if s in kept]
+            self.universe.majors = [s for s in self.universe.majors
+                                    if s in kept]
+            if dropped:
+                log.warning(f"universe trimmed to venue: dropped {sorted(dropped)}")
+        except Exception as e:
+            log.warning(f"universe venue-filter failed: {e}")
 
     def _graceful(self, signum, _frame) -> None:
         log.warning(f"signal {signum} — shutting down")
@@ -208,7 +234,10 @@ class Kernel:
                     log.info(f"SKIP {symbol} {d.action} score={d.score:+.3f} "
                              f"| {d.skip_reason}")
                 elif entry_allowed:
-                    if self._try_enter(d, snap, balance, closed_count):
+                    ok = self._try_enter(d, snap, balance, closed_count)
+                    self.journal.update_decision_outcome(
+                        d.id, d.executed, d.size_usdt, d.skip_reason)
+                    if ok:
                         stats["entries"] += 1
                         self.notifier.send(
                             f"🎯 <b>{d.action}</b> {symbol} @ {snap.price:.4g} "

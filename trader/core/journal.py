@@ -215,6 +215,14 @@ class Journal:
                  d.threshold, d.confidence, int(d.executed), d.skip_reason,
                  d.size_usdt, None, strat_ids))
 
+    def update_decision_outcome(self, decision_id: str, executed: bool,
+                                size_usdt: float = 0.0,
+                                skip_reason: str = "") -> None:
+        with self._tx() as c:
+            c.execute("UPDATE decisions SET executed=?, size_usdt=?, "
+                      "skip_reason=? WHERE id=?",
+                      (int(executed), size_usdt, skip_reason, decision_id))
+
     def set_decision_entry_price(self, decision_id: str, price: float) -> None:
         with self._tx() as c:
             c.execute("UPDATE decisions SET entry_price=? WHERE id=?",

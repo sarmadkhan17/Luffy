@@ -147,3 +147,29 @@ def test_short_outcome_correctness_inverted(tmp_path):
     resolve_pending(j, FakeFeed())
     row = j.query("SELECT * FROM outcomes")[0]
     assert row["correct_1h"] == 0 and row["fwd_ret_1h"] < 0
+
+
+def test_nan_data_never_crashes_journal(tmp_path):
+    """Regression: flat/garbage candles produced NaN score → sqlite NULL →
+    crash-loop → duplicate entries on live (caught in first supervised run)."""
+    from trader.engine.orchestrator import Orchestrator
+    n = 300
+    ts = pd.date_range("2026-01-01", periods=n, freq="15min")
+    flat = pd.DataFrame({"ts": ts, "open": 100.0, "high": 100.0, "low": 100.0,
+                         "close": 100.0, "volume": np.full(n, 1000.0)})
+    nan_df = flat.copy()
+    nan_df["close"] = np.nan
+
+    class JFake2(JFake):
+        def __init__(self): self.saved = []
+        def log_decision(self, d): self.saved.append(d)
+    jf = JFake2()
+    o = Orchestrator([__import__(
+        "trader.agents.momentum", fromlist=["MomentumAnalyst"]).MomentumAnalyst()],
+        jf)
+    snap = Snapshot(symbol="DRAM/USDT", ts="t", price=100.0,
+                    dfs={"15m": nan_df, "1h": flat}, market_type="futures")
+    d = o.decide(snap, [])
+    import math
+    assert math.isfinite(d.score) and math.isfinite(d.threshold)
+    o.journalize(snap, d, "futures", "live")   # must not raise

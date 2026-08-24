@@ -22,6 +22,7 @@ universe:
       - MU/USDT
       - SPCX/USDT
       - MSTR/USDT
+      - CRCL/USDT
 
 timeframes:
   execution: 15m
