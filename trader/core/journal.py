@@ -210,7 +210,7 @@ class Journal:
                              for s in d.strategy_signals or [])
         with self._tx() as c:
             c.execute(
-                "INSERT OR REPLACE INTO decisions VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT OR REPLACE INTO decisions VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (d.id, d.cycle_id, d.ts, d.symbol, d.action.value, d.score,
                  d.threshold, d.confidence, int(d.executed), d.skip_reason,
                  d.size_usdt, None, strat_ids))
@@ -277,12 +277,14 @@ class Journal:
                 (now_utc().isoformat(), event, from_state, to_state, actor,
                  detail if isinstance(detail, str) else json.dumps(detail)))
 
-    def schedule_outcome(self, decision_id: str, symbol: str, ts: str,
-                         action: str, entry_price: float) -> None:
+    def schedule_outcome(self, decision_id: str, cycle_id: str, symbol: str,
+                         ts: str, action: str, entry_price: float) -> None:
         with self._tx() as c:
             c.execute(
-                "INSERT OR REPLACE INTO outcomes(decision_id,symbol,ts,action,entry_price) "
-                "VALUES (?,?,?,?,?)", (decision_id, symbol, ts, action, entry_price))
+                "INSERT OR REPLACE INTO outcomes"
+                "(decision_id,cycle_id,symbol,ts,action,entry_price) "
+                "VALUES (?,?,?,?,?,?)",
+                (decision_id, cycle_id, symbol, ts, action, entry_price))
 
     # -- strategy population ------------------------------------------------
     def upsert_strategy(self, st) -> None:
