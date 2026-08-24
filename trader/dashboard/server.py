@@ -202,6 +202,20 @@ def create_app(cfg: dict | None = None) -> FastAPI:
 
     _autopsy_lock = {"busy": False}
 
+    @app.post("/api/chat")
+    async def chat(body: dict):
+        from ..chat.engine import ChatEngine
+        msg = (body.get("message") or "").strip()
+        if not msg:
+            return JSONResponse({"reply": "say something?"}, status_code=400)
+        history = body.get("history") or []
+
+        def _run():
+            return ChatEngine(journal, cfg).handle(msg, history)
+        import asyncio
+        reply = await asyncio.get_event_loop().run_in_executor(None, _run)
+        return {"reply": reply}
+
     @app.post("/api/brain/autopsy")
     async def run_autopsy():
         if _autopsy_lock["busy"]:
