@@ -333,6 +333,16 @@ class Kernel:
                 resolve_pending(self.journal, self.feed)
             except Exception as e:
                 log.warning(f"outcome resolution failed: {e}")
+        if Kernel._outcome_tick % 60 == 1:      # ~hourly vault refresh
+            try:
+                from .knowledge.vault import Vault
+                v = Vault(self.journal)
+                v.refresh_strategy_notes()
+                v.daily_review()
+                v.agent_ledger()
+                v.write_moc()
+            except Exception as e:
+                log.warning(f"vault refresh failed: {e}")
 
     # ── infra ────────────────────────────────────────────────────────────
     def account_snapshot(self) -> dict:
