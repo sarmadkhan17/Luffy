@@ -115,6 +115,12 @@ def flatten_all(exchange, journal: Journal, notifier=None) -> int:
                 sym, "market", side_close, float(t["amount"]),
                 params={"reduceOnly": True})
             fill = float(order.get("average") or order.get("price") or 0)
+            if fill <= 0:                      # async fills: confirm via ticker
+                try:
+                    tk = exchange.fetch_ticker(sym)
+                    fill = float(tk.get("last") or 0)
+                except Exception:
+                    pass
             direction = 1.0 if t["side"] == "long" else -1.0
             pnl = ((fill - float(t["entry_price"])) * direction
                    * float(t["amount"]) * int(t["leverage"] or 1))

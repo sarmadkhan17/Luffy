@@ -52,6 +52,9 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             hb_age = round(t.time() - json.loads(hb_path.read_text())["timestamp"])
         except Exception:
             pass
+        snap = _account_snapshot()
+        assets = snap.get("assets", {})
+        assets_total = snap.get("assets_total", 0)
         return {
             "control_state": journal.kv_get("control_state", "ACTIVE"),
             "market_type": journal.kv_get("market_type", "futures"),
@@ -59,6 +62,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             "equity": eq[0]["equity"] if eq else 0,
             "equity_prev": eq[1]["equity"] if len(eq) > 1 else None,
             "open_positions": opens,
+            "assets": assets, "assets_total": assets_total,
             "today": _today_stats(journal),
         }
 
@@ -82,6 +86,26 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         except Exception as e:
             log.debug(f"ws closed: {e}")
 
+    _feed_cache: list = []
+
+    @app.get("/api/klines")
+    async def klines(symbol: str = "BTC/USDT", tf: str = "15m", limit: int = 300):
+        from ..data.feed import DataFeed, make_exchange
+        try:
+            if not _feed_cache:
+                _feed_cache.append(DataFeed(make_exchange("futures")))
+            df = _feed_cache[0].fetch_ohlcv(symbol, tf, limit=limit,
+                                            min_bars=1)
+            if df is None:
+                return {"candles": []}
+            return {"candles": [
+                {"time": int(r.ts.timestamp()), "open": float(r.open),
+                 "high": float(r.high), "low": float(r.low),
+                 "close": float(r.close), "volume": float(r.volume)}
+                for r in df.itertuples()]}
+        except Exception as e:
+            return JSONResponse({"error": str(e)}, status_code=502)
+
     @app.get("/api/logs")
     async def logs(lines: int = 60):
         p = ROOT / "logs" / "luffy.log"
@@ -98,6 +122,56 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         return await call_next(request)
 
     return app
+
+
+_ASSET_CACHE = {"ts": 0.0, "data": {}}
+
+
+def _account_snapshot() -> dict:
+    """Cross-asset wallet view (display truth). Cached 60s."""
+    import hashlib
+    import hmac as _hmac
+    import time as _t
+
+    import requests
+    now = _t.time()
+    if now - _ASSET_CACHE["ts"] < 60:
+        return _ASSET_CACHE["data"]
+    out = {}
+    try:
+        from ..core.config import Env
+        key, secret = Env.binance_keys()
+        q = f"timestamp={int(now*1000)}&recvWindow=10000"
+        sig = _hmac.new(secret.encode(), q.encode(), hashlib.sha256).hexdigest()
+        r = requests.get("https://demo-fapi.binance.com/fapi/v3/account",
+                         params=q + f"&signature={sig}",
+                         headers={"X-MBX-APIKEY": key}, timeout=8).json()
+        assets = {x["asset"]: float(x["walletBalance"])
+                  for x in r.get("assets", [])
+                  if abs(float(x.get("walletBalance") or 0)) > 1e-9}
+        px_btc = 0.0
+        try:
+            px_btc = float(requests.get(
+                "https://fapi.binance.com/fapi/v1/ticker/price?symbol=BTCUSDT",
+                timeout=6).json()["price"])
+        except Exception:
+            pass
+        usd = {}
+        for k, v in assets.items():
+            if k in ("USDT", "USDC"):
+                usd[k] = round(v, 2)
+            elif k == "BTC" and px_btc:
+                usd[k] = round(v * px_btc, 2)
+            else:
+                usd[k] = f"{v:.6f}"
+        out = {"margin_equity": round(float(r.get("totalMarginBalance") or 0), 2),
+               "assets": usd,
+               "assets_total": round(sum(v for v in usd.values()
+                                         if isinstance(v, (int, float))), 2)}
+    except Exception as e:
+        log.debug(f"account snapshot failed: {e}")
+    _ASSET_CACHE.update(ts=now, data=out)
+    return out
 
 
 def _today_stats(journal: Journal) -> dict:

@@ -7,6 +7,7 @@ control_events) that the running kernel picks up next cycle. Single writer
 from __future__ import annotations
 
 import json
+from typing import Optional
 from datetime import datetime, timezone
 
 import strawberry
@@ -81,6 +82,19 @@ class StrategyType:
 
 
 @strawberry.type
+class AgentStatType:
+    agent: str
+    n: int
+    accuracy: str
+
+
+@strawberry.type
+class StrategyFullType(StrategyType):
+    params: str
+    state_detail: str
+
+
+@strawberry.type
 class StatusType:
     control_state: str
     market_type: str
@@ -130,11 +144,19 @@ def build_query(journal: Journal):
 
         @strawberry.field
         def decisions(self, executed_only: bool = False,
+                      symbol: Optional[str] = None,
                       limit: int = 100) -> list[DecisionType]:
-            where = "WHERE executed=1" if executed_only else ""
+            conds, params = [], []
+            if executed_only:
+                conds.append("executed=1")
+            if symbol:
+                conds.append("symbol=?")
+                params.append(symbol)
+            where = ("WHERE " + " AND ".join(conds)) if conds else ""
             rows = _rows(journal,
                          f"SELECT * FROM decisions {where} "
-                         f"ORDER BY ts DESC LIMIT ?", (limit,))
+                         f"ORDER BY ts DESC LIMIT ?",
+                         tuple(params) + (limit,))
             out = []
             for r in rows:
                 vrows = _rows(journal,
@@ -158,11 +180,32 @@ def build_query(journal: Journal):
                          f"SELECT * FROM trades {where} "
                          f"ORDER BY opened_at DESC LIMIT ?", (limit,))
             return [TradeType(
-                r["id"], r["symbol"], r["side"], r["amount"],
-                r["entry_price"], str(r["exit_price"]), r["notional_usdt"],
-                r["leverage"], r["strategy_name"] or "", r["status"],
-                str(r["realized_pnl"]), r["close_reason"] or "",
-                r["opened_at"], r["closed_at"] or "") for r in rows]
+                id=r["id"], symbol=r["symbol"], side=r["side"],
+                amount=r["amount"], entry_price=r["entry_price"],
+                exit_price=str(r["exit_price"]),
+                notional_usdt=r["notional_usdt"], leverage=r["leverage"],
+                strategy_name=r["strategy_name"] or "", status=r["status"],
+                realized_pnl=str(r["realized_pnl"]),
+                close_reason=r["close_reason"] or "",
+                opened_at=r["opened_at"], closed_at=r["closed_at"] or "")
+                for r in rows]
+
+        @strawberry.field
+        def agents_accuracy(self, since_hours: int = 336) -> list[AgentStatType]:
+            rows = journal.agent_accuracy(since_hours=float(since_hours))
+            return [AgentStatType(r["agent"], r["n"],
+                                  f"{(r['accuracy'] or 0):.2f}") for r in rows]
+
+        @strawberry.field
+        def strategy_full(self) -> list[StrategyFullType]:
+            out = []
+            for r in journal.list_strategies():
+                out.append(StrategyFullType(
+                    id=r["id"], name=r["name"], kind=r["kind"],
+                    state=r["state"], origin=r["origin"],
+                    hypothesis=r["hypothesis"] or "", params=r["params"] or "{}",
+                    state_detail=r["state"]))
+            return out
 
         @strawberry.field
         def strategies(self) -> list[StrategyType]:
