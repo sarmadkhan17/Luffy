@@ -225,3 +225,8 @@ class ClosedTrade(Position):
 
 class RiskError(Exception):
     pass
+
+
+def norm_symbol(sym: str) -> str:
+    """'BTC/USDT:USDT' -> 'BTC/USDT' (ccxt linear-perp suffix)."""
+    return sym.split(":")[0] if sym else sym

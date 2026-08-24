@@ -13,6 +13,15 @@ universe:
     min_price: 0.5
     min_age_days: 90       # skip fresh listings — insufficient history
     rescan_hours: 4
+    blacklist:             # tokenized commodities / equities on USDT-M
+      - XAU/USDT
+      - XAG/USDT
+      - CL/USDT
+      - SOXL/USDT
+      - SNDK/USDT
+      - MU/USDT
+      - SPCX/USDT
+      - MSTR/USDT
 
 timeframes:
   execution: 15m
