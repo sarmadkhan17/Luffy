@@ -43,6 +43,13 @@ class ExecMode(str, Enum):
     LIVE = "live"
 
 
+class ControlState(str, Enum):
+    """Operator-controlled autonomy states (REQUIREMENTS §3)."""
+    ACTIVE = "ACTIVE"      # full autonomy
+    FROZEN = "FROZEN"      # no NEW entries; open positions managed to natural close
+    HALTED = "HALTED"      # nothing new; exits manual-only; exchange stops stay armed
+
+
 class StrategyState(str, Enum):
     PROPOSED = "proposed"      # born from brain, awaiting backtest
     BACKTEST = "backtesting"

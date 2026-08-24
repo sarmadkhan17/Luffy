@@ -11,6 +11,7 @@ universe:
     top_n: 12              # alts filling remaining slots
     min_volume_usdt: 100000000
     min_price: 0.5
+    min_age_days: 90       # skip fresh listings — insufficient history
     rescan_hours: 4
 
 timeframes:
@@ -19,15 +20,24 @@ timeframes:
   scan_interval_seconds: 60
 
 risk:
-  risk_per_trade_pct: 5.0        # moderate envelope
-  max_drawdown_pct: 20.0         # circuit breaker kills trading
+  risk_per_trade_pct: 5.0        # moderate envelope (REQUIREMENTS §10)
+  proving_period_trades: 30      # first N live trades run at proving_size_mult
+  proving_size_mult: 0.5
+  portfolio_heat_cap_pct: 15.0   # max total open risk across positions
+  per_symbol_risk_cap_pct: 8.0
   max_open_positions: 10
-  max_daily_loss_pct: 6.0
+  max_daily_loss_pct: 6.0        # breaker blocks NEW entries until UTC midnight
+  drawdown_derisk_steps:         # staged de-risk on rolling DD
+    - {dd_pct: 8,  size_mult: 0.5}
+    - {dd_pct: 12, size_mult: 0.25}
+  halt_drawdown_pct: 20.0        # full stop → HALTED
   leverage: 5
   stop_loss_atr_mult: 2.5
   take_profit_atr_mult: 4.5
   trailing_atr_mult: 2.8
   min_notional_usdt: 10
+  taker_fee_pct: 0.05            # cost model from day one (REQUIREMENTS §10)
+  slippage_atr_frac: 0.06        # synthetic slippage = frac of ATR per fill
 
 strategies:
   max_active: 6                  # concurrently active strategies

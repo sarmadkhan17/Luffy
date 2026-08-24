@@ -119,6 +119,21 @@ CREATE TABLE IF NOT EXISTS brain_events (
     subject TEXT,                    -- strategy id or scope
     detail TEXT                      -- free text / JSON
 );
+
+CREATE TABLE IF NOT EXISTS control_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts TEXT NOT NULL,
+    event TEXT NOT NULL,             -- state_change / panic / mode_switch / budget_stop
+    from_state TEXT,
+    to_state TEXT,
+    actor TEXT NOT NULL,             -- operator / luffy / watchdog / risk_engine
+    detail TEXT
+);
+
+CREATE TABLE IF NOT EXISTS state_kv (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL              -- control_state, market_type, proving_trades, ...
+);
 """
 
 
@@ -221,6 +236,27 @@ class Journal:
             c.execute("INSERT INTO brain_events(ts,kind,subject,detail) VALUES (?,?,?,?)",
                       (now_utc().isoformat(), kind, subject,
                        detail if isinstance(detail, str) else json.dumps(detail)))
+
+    # -- control state ----------------------------------------------------
+    def kv_get(self, key: str, default: str | None = None) -> str | None:
+        row = self._conn().execute(
+            "SELECT value FROM state_kv WHERE key=?", (key,)).fetchone()
+        return row["value"] if row else default
+
+    def kv_set(self, key: str, value: str) -> None:
+        with self._tx() as c:
+            c.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES (?,?)",
+                      (key, value))
+
+    def log_control_event(self, event: str, actor: str,
+                          from_state: str = "", to_state: str = "",
+                          detail: Any = "") -> None:
+        with self._tx() as c:
+            c.execute(
+                "INSERT INTO control_events(ts,event,from_state,to_state,actor,detail) "
+                "VALUES (?,?,?,?,?,?)",
+                (now_utc().isoformat(), event, from_state, to_state, actor,
+                 detail if isinstance(detail, str) else json.dumps(detail)))
 
     def schedule_outcome(self, decision_id: str, symbol: str, ts: str,
                          action: str, entry_price: float) -> None:
