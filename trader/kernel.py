@@ -333,7 +333,19 @@ class Kernel:
                 resolve_pending(self.journal, self.feed)
             except Exception as e:
                 log.warning(f"outcome resolution failed: {e}")
-        if Kernel._outcome_tick % 60 == 1:      # ~hourly vault refresh
+        if Kernel._outcome_tick % 60 == 1:      # ~hourly brain/vault tick
+            try:
+                from .brain.strategist import Strategist
+                from .strategy.promotion import evaluate_population
+                evaluate_population(self.journal, self.notifier)
+                report = Strategist(self.journal, self.cfg,
+                                    self.notifier).review()
+                if report.get("reviewed"):
+                    log.info(f"strategist review: {report['why']} → "
+                             f"{len(report.get('actions', []))} actions "
+                             f"(llm={report.get('used_llm')})")
+            except Exception as e:
+                log.warning(f"brain tick failed: {e}")
             try:
                 from .knowledge.vault import Vault
                 v = Vault(self.journal)
