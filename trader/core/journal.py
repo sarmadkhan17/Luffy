@@ -163,6 +163,11 @@ class Journal:
         self._write_lock = threading.Lock()
         with self._conn() as c:
             c.executescript(SCHEMA)
+            try:   # migration: full strategy signal chain per decision
+                c.execute("ALTER TABLE decisions ADD COLUMN signals_json "
+                          "TEXT DEFAULT '[]'")
+            except Exception:
+                pass
 
     # -- connection -----------------------------------------------------
     def _conn(self) -> sqlite3.Connection:
@@ -208,12 +213,16 @@ class Journal:
     def log_decision(self, d: Decision) -> None:
         strat_ids = ",".join(s.get("strategy_id", "")
                              for s in d.strategy_signals or [])
+        signals = json.dumps(d.strategy_signals or [])
         with self._tx() as c:
             c.execute(
-                "INSERT OR REPLACE INTO decisions VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT OR REPLACE INTO decisions "
+                "(id,cycle_id,ts,symbol,action,score,threshold,confidence,"
+                "executed,skip_reason,size_usdt,entry_price,strategy_ids,"
+                "signals_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (d.id, d.cycle_id, d.ts, d.symbol, d.action.value, d.score,
                  d.threshold, d.confidence, int(d.executed), d.skip_reason,
-                 d.size_usdt, None, strat_ids))
+                 d.size_usdt, None, strat_ids, signals))
 
     def update_decision_outcome(self, decision_id: str, executed: bool,
                                 size_usdt: float = 0.0,
