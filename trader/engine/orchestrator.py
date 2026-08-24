@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+from datetime import datetime, timezone
 
 from ..agents.base import Analyst
 from ..agents.regime import classify, fit_multiplier
@@ -129,6 +130,31 @@ class Orchestrator:
         else:
             action = Action.HOLD
 
+        # ── signal cooldown: one decision per setup, not per minute ─────
+        # A persisting condition would re-fire identical signals every
+        # cycle, flooding the journal with pseudo-replicated outcomes.
+        # Re-arm only after 45 min, an opposite signal, or a HOLD break.
+        if action != Action.HOLD:
+            try:
+                last = self.journal.query(
+                    "SELECT action, ts FROM decisions WHERE symbol=? "
+                    "AND action!='HOLD' ORDER BY ts DESC LIMIT 1",
+                    (snap.symbol,))
+                if last and last[0]["action"] == action.value:
+                    age_min = (datetime.now(timezone.utc)
+                               - datetime.fromisoformat(last[0]["ts"])
+                               ).total_seconds() / 60
+                    if age_min < 45:
+                        action = Action.HOLD
+                        net = _clean(net)  # keep score for transparency
+                        self.journal.log_control_event(
+                            "signal_cooldown", "orchestrator",
+                            detail={"symbol": snap.symbol,
+                                    "since": last[0]["ts"][:19],
+                                    "action": action.value})
+            except Exception as e:
+                log.debug(f"cooldown check failed: {e}")
+
         # NaN from indicator edge cases must never reach SQLite (it becomes
         # NULL → NOT NULL violation → crash-loop → duplicate entries)
         def _clean(x: float, default: float = 0.0) -> float:
@@ -159,3 +185,10 @@ class Orchestrator:
                  for v in decision.votes]
         self.journal.log_votes(decision.cycle_id, decision.symbol, votes)
         self.journal.log_decision(decision)
+        # every directional decision — taken OR skipped — becomes a
+        # falsifiable prediction with resolved outcomes. Skipped setups are
+        # the majority of evidence; without them the learning loop starves.
+        if decision.action != Action.HOLD:
+            self.journal.schedule_outcome(
+                decision.id, decision.cycle_id, decision.symbol,
+                decision.ts, decision.action.value, snap.price)

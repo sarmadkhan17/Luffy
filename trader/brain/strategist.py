@@ -74,6 +74,19 @@ class Strategist:
                             if isinstance(v, dict) and "id" in v}
         applied = self._apply(verdicts) if verdicts else self._fallback()
 
+        try:
+            from ..strategy.proposer import Proposer
+            from ..data.feed import DataFeed, make_exchange
+            feed = DataFeed(make_exchange("futures"))
+            prop = Proposer(self.journal, self.cfg, feed,
+                            self.notifier).propose()
+            if prop.get("proposed"):
+                applied.append({"strategy": prop["strategy"]["name"],
+                                "action": "proposed",
+                                "rationale": "gauntlet-passed new genome"})
+        except Exception as e:
+            log.warning(f"proposal pass failed: {e}")
+
         self.journal.log_brain_event("review_complete", "strategist", {
             "why": why,
             "llm": bool(verdicts),
