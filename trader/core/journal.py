@@ -93,7 +93,7 @@ CREATE TABLE IF NOT EXISTS trades (
     exit_price REAL,
     notional_usdt REAL,
     leverage INTEGER DEFAULT 1,
-    stop_loss REAL, take_profit REAL,
+    stop_loss REAL, take_profit REAL, sl_order_id TEXT DEFAULT '',
     strategy_id TEXT, strategy_name TEXT,
     market_type TEXT, exec_mode TEXT,
     opened_at TEXT NOT NULL,
@@ -133,6 +133,24 @@ CREATE TABLE IF NOT EXISTS control_events (
 CREATE TABLE IF NOT EXISTS state_kv (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL              -- control_state, market_type, proving_trades, ...
+);
+
+CREATE TABLE IF NOT EXISTS strategies (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    params TEXT NOT NULL,            -- JSON genes
+    state TEXT NOT NULL,
+    description TEXT,
+    origin TEXT,
+    hypothesis TEXT,
+    invalidation TEXT,
+    regime_filter TEXT,              -- JSON list
+    markets TEXT,                    -- JSON list
+    generation INTEGER DEFAULT 0,
+    parent_id TEXT DEFAULT '',
+    created_at TEXT,
+    stats_json TEXT DEFAULT '{}'
 );
 """
 
@@ -205,10 +223,11 @@ class Journal:
     def add_trade(self, p) -> None:
         with self._tx() as c:
             c.execute(
-                "INSERT INTO trades VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'open')",
+                "INSERT INTO trades VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'open')",
                 (p.id, p.decision_id, p.symbol, p.side.value, p.amount,
                  p.entry_price, None, p.notional_usdt, p.leverage,
-                 p.stop_loss, p.take_profit, p.strategy_id, p.strategy_name,
+                 p.stop_loss, p.take_profit, getattr(p, "sl_order_id", ""),
+                 p.strategy_id, p.strategy_name,
                  p.market_type, p.exec_mode, p.opened_at, None, 0.0, None))
 
     def close_trade(self, trade_id: str, exit_price: float, pnl: float,
@@ -264,6 +283,28 @@ class Journal:
             c.execute(
                 "INSERT OR REPLACE INTO outcomes(decision_id,symbol,ts,action,entry_price) "
                 "VALUES (?,?,?,?,?)", (decision_id, symbol, ts, action, entry_price))
+
+    # -- strategy population ------------------------------------------------
+    def upsert_strategy(self, st) -> None:
+        from .types import Strategy as _S   # typing only; avoid cycle at import
+        with self._tx() as c:
+            c.execute(
+                "INSERT OR REPLACE INTO strategies VALUES "
+                "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (st.id, st.name, st.kind, json.dumps(st.params), st.state.value,
+                 st.description, st.origin,
+                 getattr(st, "hypothesis", ""), getattr(st, "invalidation", ""),
+                 json.dumps(sorted(getattr(st, "regime_filter", []) or [])),
+                 json.dumps(sorted(getattr(st, "markets", []) or [])),
+                 int(getattr(st, "generation", 0)), getattr(st, "parent_id", ""),
+                 st.created_at, json.dumps(st.stats)))
+
+    def list_strategies(self, states: list[str] | None = None) -> list[dict]:
+        if states:
+            q = f"SELECT * FROM strategies WHERE state IN " \
+                f"({','.join('?' * len(states))}) ORDER BY created_at"
+            return self.query(q, tuple(states))
+        return self.query("SELECT * FROM strategies ORDER BY created_at")
 
     # -- reads (used by brain, dashboard, learning) -----------------------
     def query(self, sql: str, params: tuple = ()) -> list[dict]:
