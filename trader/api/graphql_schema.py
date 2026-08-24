@@ -1,0 +1,213 @@
+"""GraphQL schema — the API contract serving dashboard AND Luffy's assistant.
+
+Queries read the journal; mutations write control intents (state_kv /
+control_events) that the running kernel picks up next cycle. Single writer
+(kernel) discipline preserved; dashboard/assistant only leave intent.
+"""
+from __future__ import annotations
+
+import json
+from datetime import datetime, timezone
+
+import strawberry
+from strawberry.fastapi import GraphQLRouter
+from strawberry.types import Info
+from strawberry.schema.config import StrawberryConfig
+
+from ..core.journal import Journal
+
+
+def _rows(j: Journal, sql: str, params: tuple = ()) -> list:
+    return j.query(sql, params)
+
+
+# ── types ────────────────────────────────────────────────────────────────
+@strawberry.type
+class EquityPoint:
+    ts: str
+    equity: float
+    open_positions: int
+
+
+@strawberry.type
+class VoteType:
+    agent: str
+    side: str
+    conviction: float
+    confidence: float
+    rationale: str
+
+
+@strawberry.type
+class DecisionType:
+    id: str
+    ts: str
+    symbol: str
+    action: str
+    score: float
+    threshold: float
+    confidence: float
+    executed: bool
+    skip_reason: str
+    votes: list[VoteType]
+
+
+@strawberry.type
+class TradeType:
+    id: str
+    symbol: str
+    side: str
+    amount: float
+    entry_price: float
+    exit_price: str
+    notional_usdt: float
+    leverage: int
+    strategy_name: str
+    status: str
+    realized_pnl: str
+    close_reason: str
+    opened_at: str
+    closed_at: str
+
+
+@strawberry.type
+class StrategyType:
+    id: str
+    name: str
+    kind: str
+    state: str
+    origin: str
+    hypothesis: str
+
+
+@strawberry.type
+class StatusType:
+    control_state: str
+    market_type: str
+    heartbeat_age_s: str
+    equity: str
+    drawdown_pct: str
+    daily_pnl_pct: str
+    open_trades: int
+    strategies_active: int
+
+
+# ── queries ──────────────────────────────────────────────────────────────
+def build_query(journal: Journal):
+
+    @strawberry.type
+    class Query:
+        @strawberry.field
+        def status(self) -> StatusType:
+            kv = journal.kv_get
+            hb = _rows(journal, "SELECT ts FROM equity ORDER BY ts DESC LIMIT 1")
+            eq = _rows(journal, "SELECT * FROM equity ORDER BY ts DESC LIMIT 1")
+            import time as _t
+            hb_age = "never"
+            try:
+                from pathlib import Path
+                p = Path(__file__).resolve().parents[2] / "data" / "heartbeat_luffy.json"
+                hb_age = f"{_t.time() - json.loads(p.read_text())['timestamp']:.0f}s"
+            except Exception:
+                pass
+            return StatusType(
+                control_state=kv("control_state", "ACTIVE"),
+                market_type=kv("market_type", "futures"),
+                heartbeat_age_s=hb_age,
+                equity=str(eq[0]["equity"]) if eq else "0",
+                drawdown_pct="0", daily_pnl_pct="0",
+                open_trades=len(journal.open_trades()),
+                strategies_active=len(
+                    journal.list_strategies(["paper", "active"])))
+
+        @strawberry.field
+        def equity_curve(self, limit: int = 500) -> list[EquityPoint]:
+            rows = _rows(journal,
+                         "SELECT * FROM equity ORDER BY ts DESC LIMIT ?",
+                         (limit,))
+            return [EquityPoint(r["ts"], r["equity"], r["open_positions"])
+                    for r in reversed(rows)]
+
+        @strawberry.field
+        def decisions(self, executed_only: bool = False,
+                      limit: int = 100) -> list[DecisionType]:
+            where = "WHERE executed=1" if executed_only else ""
+            rows = _rows(journal,
+                         f"SELECT * FROM decisions {where} "
+                         f"ORDER BY ts DESC LIMIT ?", (limit,))
+            out = []
+            for r in rows:
+                vrows = _rows(journal,
+                              "SELECT * FROM votes WHERE cycle_id=?",
+                              (r["cycle_id"],))
+                out.append(DecisionType(
+                    id=r["id"], ts=r["ts"], symbol=r["symbol"],
+                    action=r["action"], score=r["score"],
+                    threshold=r["threshold"], confidence=r["confidence"],
+                    executed=bool(r["executed"]), skip_reason=r["skip_reason"] or "",
+                    votes=[VoteType(v["agent"], v["side"], v["conviction"],
+                                    v["confidence"], v["rationale"] or "")
+                           for v in vrows]))
+            return out
+
+        @strawberry.field
+        def trades(self, open_only: bool = False,
+                  limit: int = 200) -> list[TradeType]:
+            where = "WHERE status='open'" if open_only else ""
+            rows = _rows(journal,
+                         f"SELECT * FROM trades {where} "
+                         f"ORDER BY opened_at DESC LIMIT ?", (limit,))
+            return [TradeType(
+                r["id"], r["symbol"], r["side"], r["amount"],
+                r["entry_price"], str(r["exit_price"]), r["notional_usdt"],
+                r["leverage"], r["strategy_name"] or "", r["status"],
+                str(r["realized_pnl"]), r["close_reason"] or "",
+                r["opened_at"], r["closed_at"] or "") for r in rows]
+
+        @strawberry.field
+        def strategies(self) -> list[StrategyType]:
+            return [StrategyType(r["id"], r["name"], r["kind"], r["state"],
+                                 r["origin"], r["hypothesis"] or "")
+                    for r in journal.list_strategies()]
+
+    return Query
+
+
+# ── mutations ────────────────────────────────────────────────────────────
+def build_mutation(journal: Journal):
+
+    @strawberry.type
+    class Mutation:
+        @strawberry.mutation
+        def set_control_state(self, state: str, actor: str = "dashboard") -> bool:
+            from ..core.types import ControlState
+            from ..engine.state import ControlStateMachine
+            sm = ControlStateMachine(journal)
+            sm.set(ControlState(state.upper()), actor)
+            return True
+
+        @strawberry.mutation
+        def panic(self, actor: str = "dashboard") -> bool:
+            journal.kv_set("panic_requested", "1")
+            journal.log_control_event("panic", actor, detail="via graphql")
+            return True
+
+        @strawberry.mutation
+        def set_market_type(self, market: str, actor: str = "dashboard") -> bool:
+            if market.lower() not in ("spot", "futures"):
+                return False
+            journal.kv_set("market_type", market.lower())
+            journal.log_control_event("mode_switch", actor,
+                                      detail=f"new entries → {market}")
+            return True
+
+    return Mutation
+
+
+def make_graphql_router(journal: Journal) -> GraphQLRouter:
+    Query = build_query(journal)
+    Mutation = build_mutation(journal)
+    schema = strawberry.Schema(
+        query=Query, mutation=Mutation,
+        config=StrawberryConfig(auto_camel_case=False))
+    return GraphQLRouter(schema, path="/graphql")

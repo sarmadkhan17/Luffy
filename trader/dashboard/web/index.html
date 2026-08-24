@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>LUFFY</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#0b0e11;--panel:#151a21;--line:#232a33;--txt:#d7dce2;--dim:#7a8593;
+--green:#2ecc71;--red:#e74c3c;--amber:#f1c40f;--blue:#3498db}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font:14px/1.45 -apple-system,Segoe UI,Roboto,sans-serif;padding:12px}
+header{display:flex;align-items:center;gap:14px;margin-bottom:10px;flex-wrap:wrap}
+h1{font-size:20px;letter-spacing:2px}
+.pill{padding:3px 12px;border-radius:20px;font-weight:700;font-size:12px}
+.pill.ACTIVE{background:#123524;color:var(--green)}
+.pill.FROZEN{background:#3a3212;color:var(--amber)}
+.pill.HALTED{background:#391416;color:var(--red)}
+.controls button{margin-right:6px;padding:6px 14px;border-radius:6px;border:1px solid var(--line);
+background:var(--panel);color:var(--txt);cursor:pointer;font-size:12px}
+.controls button.danger{border-color:#5c2226;color:#ff8087}
+.controls button:hover{filter:brightness(1.25)}
+.tabs{display:flex;gap:2px;margin-bottom:10px}
+.tab{padding:8px 18px;background:var(--panel);border:1px solid var(--line);cursor:pointer;color:var(--dim)}
+.tab.active{color:var(--txt);border-bottom:2px solid var(--blue)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px}
+.card .lbl{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:1px}
+.card .val{font-size:22px;font-weight:700;margin-top:4px}
+.up{color:var(--green)} .down{color:var(--red)}
+table{width:100%;border-collapse:collapse;background:var(--panel);border-radius:8px;overflow:hidden}
+th{background:#1b2129;color:var(--dim);text-transform:uppercase;font-size:11px;
+letter-spacing:.8px;padding:8px 10px;text-align:left}
+td{padding:8px 10px;border-top:1px solid var(--line)}
+.decision{display:flex;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line);
+font-size:13px;flex-wrap:wrap}
+.decision .sym{font-weight:700;width:110px}
+.tag{font-size:11px;padding:1px 8px;border-radius:10px;font-weight:600}
+.tag.BUY{background:#123524;color:var(--green)} .tag.SELL{background:#391416;color:#ff8087}
+.tag.exec{background:#12253a;color:var(--blue)} .tag.skip{background:#2a2f36;color:var(--dim)}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--dim)}
+#ticker{max-height:340px;overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+.hidden{display:none} h3{margin:14px 0 8px;font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+pre{background:var(--panel);border:1px solid var(--line);padding:10px;border-radius:8px;
+font-size:12px;max-height:420px;overflow-y:auto;color:var(--dim)}
+</style></head><body>
+<header>
+ <h1>LUFFY</h1>
+ <span class="pill ACTIVE" id="state">—</span>
+ <span class="mono" id="hb">heartbeat —</span>
+ <div class="controls" style="margin-left:auto">
+  <button onclick="setState('ACTIVE')">ACTIVE</button>
+  <button onclick="setState('FROZEN')">FROZEN</button>
+  <button onclick="setState('HALTED')">HALTED</button>
+  <button class="danger" onclick="panic()">⬤ PANIC FLATTEN</button>
+ </div>
+</header>
+
+<div class="tabs">
+ <div class="tab active" data-t="overview" onclick="show('overview')">Overview</div>
+ <div class="tab" data-t="trades" onclick="show('trades')">Trades</div>
+ <div class="tab" data-t="system" onclick="show('system')">System</div>
+</div>
+
+<div id="v-overview">
+ <div class="grid">
+  <div class="card"><div class="lbl">Equity (USDT)</div><div class="val" id="equity">—</div>
+   <div class="mono" id="eqdelta"></div></div>
+  <div class="card"><div class="lbl">Open Positions</div><div class="val" id="npos">0</div></div>
+  <div class="card"><div class="lbl">Today Taken / Skipped</div><div class="val" id="today">—</div></div>
+  <div class="card"><div class="lbl">Realized P&L Today</div><div class="val" id="pnl">—</div></div>
+  <div class="card"><div class="lbl">Mode</div><div class="val" style="font-size:15px" id="mode">—</div></div>
+ </div>
+ <div class="grid">
+  <div style="min-width:340px">
+   <h3>Positions</h3>
+   <table id="positions"><thead><tr><th>Symbol</th><th>Side</th><th>Entry</th>
+    <th>SL</th><th>TP</th><th>Strategy</th></tr></thead><tbody></tbody></table>
+   <h3>Decision Ticker (live)</h3>
+   <div id="ticker"></div>
+  </div>
+ </div>
+</div>
+
+<div id="v-trades" class="hidden">
+ <h3>Closed & Open Trades</h3>
+ <table id="trades"><thead><tr><th>Opened</th><th>Symbol</th><th>Side</th><th>Entry</th>
+  <th>Exit</th><th>PnL</th><th>Reason</th><th>Status</th></tr></thead><tbody></tbody></table>
+</div>
+
+<div id="v-system" class="hidden">
+ <h3>Kernel log tail</h3>
+ <pre id="logs">loading…</pre>
+</div>
+
+<script>
+const $=q=>document.querySelector(q);
+function show(t){document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('active',e.dataset.t===t));
+ ['overview','trades','system'].forEach(v=>$('#v-'+v).classList.toggle('hidden',v!==t));
+ if(t==='system')loadLogs(); if(t==='trades')loadTrades();}
+async function gql(q,v={}){const r=await fetch('/graphql',{method:'POST',
+ headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,variables:v})});
+ return (await r.json()).data;}
+async function setState(s){if(s!=='ACTIVE'&&!confirm('Set control state to '+s+'?'))return;
+ await gql(`mutation($s:String!){setControlState(state:$s)}`,{s});refresh();}
+async function panic(){if(!confirm('FLATTEN ALL POSITIONS AND FREEZE?'))return;
+ await gql(`mutation{panic}`);alert('Panic queued — kernel flattens next cycle.');refresh();}
+async function refresh(){
+ const d=await gql(`{status{control_state market_type heartbeat_age_s equity open_trades strategies_active}}`);
+ const s=d.status; $('#state').textContent=s.control_state; $('#state').className='pill '+s.control_state;
+ $('#hb').textContent='heartbeat '+s.heartbeat_age_s+' ago'; $('#mode').textContent=s.market_type.toUpperCase();
+ const sum=await (await fetch('/api/summary'+location.search)).json();
+ const eq=sum.equity||0; $('#equity').textContent=eq.toLocaleString(undefined,{maximumFractionDigits:2});
+ if(sum.equity_prev){const dx=eq-sum.equity_prev;$('#eqdelta').textContent=(dx>=0?'+':'')+dx.toFixed(2);
+  $('#eqdelta').className='mono '+(dx>=0?'up':'down');}
+ $('#npos').textContent=sum.open_positions.length;
+ $('#today').textContent=sum.today.taken+' / '+sum.today.skipped;
+ const pnl=sum.today.realized_pnl_today; $('#pnl').textContent=(pnl>=0?'+':'')+pnl.toFixed(2)+' USDT';
+ $('#pnl').className='val '+(pnl>=0?'up':'down');
+ $('#positions tbody').innerHTML=sum.open_positions.map(p=>
+  `<tr><td>${p.symbol}</td><td>${p.side}</td><td>${(+p.entry_price).toFixed(4)}</td>
+   <td>${(+p.stop_loss).toFixed(4)}</td><td>${(+p.take_profit).toFixed(4)}</td>
+   <td class="mono">${p.strategy_name||''}</td></tr>`).join('');
+}
+async function loadTrades(){const d=await gql(`{trades(limit:100){
+ opened_at symbol side entry_price exit_price realized_pnl close_reason status leverage}}`);
+ $('#trades tbody').innerHTML=d.trades.map(t=>`<tr>
+  <td class="mono">${(t.opened_at||'').slice(5,16)}</td><td>${t.symbol}</td>
+  <td class="${t.side==='long'?'up':'down'}">${t.side}</td>
+  <td>${(+t.entry_price).toFixed(4)}</td><td>${(+t.exit_price).toFixed(4)}</td>
+  <td class="${+t.realized_pnl>=0?'up':'down'}">${(+t.realized_pnl).toFixed(2)}</td>
+  <td>${t.close_reason||''}</td><td>${t.status}</td></tr>`).join('');}
+async function loadLogs(){const r=await fetch('/api/logs?lines=80');
+ const j=await r.json(); $('#logs').textContent=(j.tail||[]).join('\n')||'(empty)';}
+const ws=new WebSocket(`ws://${location.host}/ws/live`);
+ws.onmessage=e=>{const p=JSON.parse(e.data);
+ $('#ticker').innerHTML=(p.recent_decisions||[]).map(d=>`<div class="decision">
+  <span class="sym">${d.symbol}</span>
+  <span class="tag ${d.action}">${d.action}</span>
+  <span class="${d.score>=0?'up':'down'}">${(+d.score).toFixed(3)}</span>
+  <span class="tag ${d.executed?'exec':'skip'}">${d.executed?'EXECUTED':(d.skip_reason||'skipped')}</span>
+  <span class="mono">${(d.ts||'').slice(11,19)}</span></div>`).join('');};
+setInterval(refresh,8000); refresh();
+</script></body></html>
