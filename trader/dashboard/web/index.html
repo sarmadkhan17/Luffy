@@ -134,6 +134,7 @@ border-radius:8px;padding:8px 10px;margin-top:3px;display:inline-block;max-width
     <div class="tab active" onclick="brainTab('doctrine',this)">Doctrine</div>
     <div class="tab" onclick="brainTab('vault',this)">Obsidian Vault</div>
     <div class="tab" onclick="brainTab('review',this)">Review Status</div>
+    <div class="tab" onclick="brainTab('autopsy',this)">Autopsy</div>
    </div>
    <div id="b-doctrine"><div id="doctrine-view"></div></div>
    <div id="b-vault" class="hidden" style="display:flex;flex-direction:column;gap:10px">
@@ -199,7 +200,8 @@ function osTab(name,el){document.querySelectorAll('#v-os .subtabs .tab')
  ['dec','lab','agents','brain'].forEach(v=>
    $('#os-'+v).classList.toggle('hidden',v!==name));
  if(name==='dec')loadDecisions(); if(name==='lab')loadLab();
- if(name==='agents')loadAgents();}
+ if(name==='agents')loadAgents();
+ if(name==='autopsy')loadAutopsy();}
 
 async function gql(q,v={}){const r=await fetch('/graphql',{method:'POST',
  headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,variables:v})});
@@ -333,8 +335,22 @@ async function loadReview(){
    ${r.last_brain_event? r.last_brain_event.kind+' @ '+r.last_brain_event.ts.slice(0,16) : 'none yet'}</div></div>
  </div>`;}
 
-/* ── Luffy tab ── */
-let chart=null,series=null;
+function brainTab2(){}
+async function loadAutopsy(){
+ const r=await (await fetch('/api/brain/last_autopsy')).json();
+ if(r.ts)$('#autopsy-status').textContent='last: '+r.ts.slice(0,16);
+ else $('#autopsy-status').textContent='never run';}
+async function loadLastNote(){ /* preview handled via vault tab */ }
+async function runAutopsy(btn){
+ btn.disabled=true;$('#autopsy-status').textContent='thinking (R1, may take a minute)…';
+ const r=await (await fetch('/api/brain/autopsy',{method:'POST'})).json();
+ btn.disabled=false;
+ if(r.ran){$('#autopsy-status').textContent='done · doctrine v'+r.doctrine_version;
+  $('#autopsy-view').textContent='Autopsy written to vault:\n'+r.note+
+  '\n\nApplied belief updates: '+(r.applied_updates||[]).join(', ');
+  loadVault&&null;}
+ else $('#autopsy-status').textContent='failed: '+(r.reason||'?');}
+ let chart=null,series=null;
 function initChart(){
  if(chart)return;
  fetch('/api/summary').then(r=>r.json()).then(s=>{

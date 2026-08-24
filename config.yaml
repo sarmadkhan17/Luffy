@@ -62,7 +62,7 @@ brain:
   model_deep: deepseek-reasoner        # R1 — autopsies, strategy verdicts
   evolution_interval_minutes: 120      # continuous evolution heartbeat
   daily_token_budget: 200000
-  max_tokens_per_call: 1500
+  max_tokens_per_call: 4000
 
 dashboard:
   host: 0.0.0.0
