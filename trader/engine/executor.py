@@ -10,6 +10,7 @@ Contract (REQUIREMENTS §2/§10):
 from __future__ import annotations
 
 import logging
+import time
 import threading
 
 from ..core.config import ROOT
@@ -68,10 +69,17 @@ class Executor:
         except Exception as e:
             log.error(f"ENTRY FAILED {sym}: {e}")
             return None
-        fill = float(order.get("average") or order.get("price") or 0)
+        fill = self._confirm_fill(sym, str(order.get("id") or ""),
+                                  order, amount)
         oid = str(order.get("id") or "")
-        if not fill:
-            log.error(f"ENTRY {sym}: no fill price on order {oid}")
+        if fill is None:
+            # order may still have filled — reconciliation will adopt it at
+            # next boot; never place a stop against an unknown fill
+            log.critical(f"ENTRY {sym}: fill unconfirmed (order {oid}) — "
+                         f"position UNJOURNALED, reconcile will adopt")
+            self.journal.log_control_event(
+                "fill_unconfirmed", "executor",
+                detail={"symbol": sym, "order_id": oid})
             return None
 
         sl_oid = ""
@@ -101,6 +109,30 @@ class Executor:
                  f"| SL {stop_loss:.6g}{(' oid=' + sl_oid) if sl_oid else ''} "
                  f"| TP {take_profit:.6g} | est RT fees ≈ {fee_note:.2f}% notional")
         return pos
+
+    def _confirm_fill(self, symbol: str, order_id: str,
+                      order: dict, amount: float) -> float | None:
+        """Poll the order until a fill price is known (demo fills async)."""
+        for attempt in range(6):
+            fill = float(order.get("average") or order.get("price") or 0)
+            if fill > 0:
+                return fill
+            if order.get("status") in ("closed", "filled") and fill > 0:
+                return fill
+            if not order_id:
+                return None
+            time.sleep(0.8 * (attempt + 1))
+            try:
+                order = self.ex.fetch_order(order_id, symbol)
+            except Exception as e:
+                log.warning(f"fill confirm retry {symbol}: {e}")
+        # last resort: mark price
+        try:
+            t = self.ex.fetch_ticker(symbol)
+            px = float(t.get("last") or 0)
+            return px if px > 0 else None
+        except Exception:
+            return None
 
     def _place_native_stop(self, symbol: str, side: Side, amount: float,
                            stop_price: float) -> str:

@@ -47,10 +47,16 @@ def anchored_vwap(df: pd.DataFrame, anchor_bars: int = 96) -> float:
 
 def zscore(s: pd.Series, lookback: int = 96) -> float:
     w = s.tail(lookback)
-    sd = float(w.std())
-    if sd < 1e-12:
+    if w.isna().any() or len(w.dropna()) < 10:
         return 0.0
-    return float((s.iloc[-1] - w.mean()) / sd)
+    sd = float(w.std())
+    val = float(s.iloc[-1])
+    mean = float(w.mean())
+    if not np.isfinite(sd) or not np.isfinite(val) or not np.isfinite(mean) \
+            or sd < 1e-12:
+        return 0.0
+    z = (val - mean) / sd
+    return z if np.isfinite(z) else 0.0
 
 
 def realized_vol(df: pd.DataFrame, bars: int = 48) -> float:
