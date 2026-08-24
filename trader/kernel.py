@@ -335,9 +335,59 @@ class Kernel:
                 log.warning(f"outcome resolution failed: {e}")
 
     # ── infra ────────────────────────────────────────────────────────────
-    def _fetch_balance(self) -> float:
+    def account_snapshot(self) -> dict:
+        """{margin_equity, assets_total, assets:{}} — display truth vs risk truth."""
         try:
-            total = float(self.exchange.fetch_balance().get("USDT", {}).get("total") or 0)
+            import hashlib, hmac as _hmac
+            import requests
+            from .core.config import Env
+            key, secret = Env.binance_keys()
+            q = f"timestamp={int(time.time()*1000)}&recvWindow=10000"
+            sig = _hmac.new(secret.encode(), q.encode(), hashlib.sha256).hexdigest()
+            base = self.exchange.urls.get("api", {}).get(
+                "fapiPrivate", "").rsplit("/", 1)[0]
+            r = requests.get(f"{base}/v3/account",
+                             params=q + f"&signature={sig}",
+                             headers={"X-MBX-APIKEY": key}, timeout=10)
+            a = r.json()
+            assets = {x["asset"]: float(x["walletBalance"])
+                      for x in a.get("assets", [])
+                      if abs(float(x.get("walletBalance") or 0)) > 1e-9}
+            px_btc = self.feed.price("BTC/USDT") or 0
+            usd = {k: (v if k in ("USDT", "USDC", "BUSD") else
+                       v * px_btc if k == "BTC" else None) for k, v in assets.items()}
+            return {"margin_equity": float(a.get("totalMarginBalance") or 0),
+                    "assets_total": round(sum(v for v in usd.values() if v), 2),
+                    "assets": {k: round(v, 4) if v else f"{assets[k]:.6f}"
+                               for k, v in usd.items()}}
+        except Exception as e:
+            log.debug(f"account snapshot failed: {e}")
+            return {}
+
+    def _fetch_balance(self) -> float:
+        """Collateral margin equity — the number risk sizing is allowed to use."""
+        try:
+            import hashlib, hmac as _hmac
+            import requests
+            from .core.config import Env
+            key, secret = Env.binance_keys()
+            q = f"timestamp={int(time.time()*1000)}&recvWindow=10000"
+            sig = _hmac.new(secret.encode(), q.encode(), hashlib.sha256).hexdigest()
+            base = self.exchange.urls.get("api", {}).get("fapiPrivate",
+                   "https://demo-fapi.binance.com/fapi/v1").rsplit("/", 1)[0]
+            r = requests.get(
+                f"{base}/fapi/v3/account" if "/v1" in base
+                else f"{base}/v3/account",
+                params=q + f"&signature={sig}",
+                headers={"X-MBX-APIKEY": key}, timeout=10)
+            tmb = float(r.json().get("totalMarginBalance") or 0)
+            if tmb > 0:
+                return tmb
+        except Exception as e:
+            log.debug(f"v3 account fetch failed ({e}); falling back")
+        try:
+            total = float(self.exchange.fetch_balance().get("USDT", {})
+                          .get("total") or 0)
             return total if total > 0 else self._last_equity_fallback()
         except Exception as e:
             log.warning(f"balance fetch failed: {e}")
@@ -402,13 +452,29 @@ class Kernel:
     def run(self) -> None:
         self.boot()
         interval = float(self.cfg["timeframes"]["scan_interval_seconds"])
+        n = 0
         while not self._stop:
+            n += 1
             t0 = time.time()
             try:
                 info = self.cycle()
-                log.info(f"cycle ok | {info}")
+                dur = time.time() - t0
+                bits = [f"cycle #{n}",
+                        f"{info['scanned']} symbols",
+                        f"{info['decisions']} decisions"]
+                if info.get("entries"):
+                    bits.append(f"{info['entries']} ENTRIES")
+                if info.get("exits_detected"):
+                    bits.append(f"{info['exits_detected']} exits")
+                if info.get("panic_closed"):
+                    bits.append(f"panic x{info['panic_closed']}")
+                bits.append(f"eq ${info['equity']:,.0f}")
+                if info.get("dd_pct"):
+                    bits.append(f"dd {info['dd_pct']}%")
+                bits.append(f"{dur:.1f}s")
+                log.info(" · ".join(bits))
             except Exception as e:
-                log.exception(f"cycle failed: {e}")
+                log.exception(f"cycle #{n} failed: {e}")
             self._funding_cache = None                 # refresh funding hourly-ish
             time.sleep(max(1.0, interval - (time.time() - t0)))
         log.info("kernel stopped cleanly")

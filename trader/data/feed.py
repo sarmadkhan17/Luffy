@@ -62,7 +62,8 @@ class DataFeed:
         return self._ex
 
     def fetch_ohlcv(self, symbol: str, tf: str = "15m",
-                    limit: int = 400, force: bool = False) -> Optional[pd.DataFrame]:
+                    limit: int = 400, force: bool = False,
+                    min_bars: int = 30) -> Optional[pd.DataFrame]:
         ck = (symbol, tf)
         hit = self._cache.get(ck)
         if hit and not force and time.time() - hit[0] < self.ttl.get(tf, 300):
@@ -72,7 +73,7 @@ class DataFeed:
         except Exception as e:
             log.warning(f"ohlcv {symbol} {tf}: {e}")
             return hit[1] if hit else None
-        if not raw or len(raw) < 30:
+        if not raw or len(raw) < min_bars:
             return hit[1] if hit else None
         df = pd.DataFrame(raw, columns=COLUMNS)
         df["ts"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
