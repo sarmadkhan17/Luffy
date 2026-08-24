@@ -29,10 +29,16 @@ def create_app(cfg: dict | None = None) -> FastAPI:
     app = FastAPI(title="Luffy")
     token = os.environ.get("DASH_TOKEN", "luffy")
 
-    def authed(request) -> bool:
-        q = request.query_params.get("token")
-        h = request.headers.get("x-luffy-token")
+    def authed_from(q, h) -> bool:
         return token in (q, h) or token == "luffy"
+
+    def authed(request) -> bool:
+        return authed_from(request.query_params.get("token"),
+                           request.headers.get("x-luffy-token"))
+
+    def _nocache(response):
+        response.headers["Cache-Control"] = "no-store, max-age=0"
+        return response
 
     app.include_router(make_graphql_router(journal))
 
@@ -40,8 +46,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
     async def index():
         from fastapi import Response
         html = (WEB / "index.html").read_text()
-        return Response(html, media_type="text/html",
-                        headers={"Cache-Control": "no-store, max-age=0"})
+        return _nocache(Response(html, media_type="text/html"))
 
     @app.get("/api/summary", dependencies=[])
     async def summary():
@@ -71,6 +76,11 @@ def create_app(cfg: dict | None = None) -> FastAPI:
 
     @app.websocket("/ws/live")
     async def ws_live(ws: WebSocket):
+        q = dict(ws.query_params).get("token")
+        h = ws.headers.get("x-luffy-token")
+        if not (token in (q, h) or token == "luffy"):
+            await ws.close(code=4401)
+            return
         await ws.accept()
         try:
             while True:
@@ -270,12 +280,24 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         content = p.read_text(errors="replace").splitlines()[-lines:]
         return {"tail": content}
 
-    @app.middleware("http")
-    async def token_guard(request, call_next):
-        # GraphQL mutations & api: require token unless running open (default)
-        if request.url.path.startswith(("/api/", "/ws")) and not authed(request):
-            return JSONResponse({"error": "bad token"}, status_code=401)
-        return await call_next(request)
+    class TokenGuard:                    # raw ASGI: never touches websockets
+        def __init__(self, app):
+            self.app = app
+
+        async def __call__(self, scope, receive, send):
+            if scope["type"] == "http" and scope["path"].startswith("/api/"):
+                qs = dict(pair.split("=", 1) for pair in
+                          scope.get("query_string", b"").decode().split("&")
+                          if "=" in pair)
+                hdrs = {k.decode().lower(): v.decode()
+                        for k, v in scope.get("headers", [])}
+                if not authed_from(qs.get("token"), hdrs.get("x-luffy-token")):
+                    await JSONResponse({"error": "bad token"},
+                                       status_code=401)(scope, receive, send)
+                    return
+            await self.app(scope, receive, send)
+
+    app.add_middleware(TokenGuard)
 
     return app
 

@@ -139,7 +139,8 @@ def build_query(journal: Journal):
             rows = _rows(journal,
                          "SELECT * FROM equity ORDER BY ts DESC LIMIT ?",
                          (limit,))
-            return [EquityPoint(r["ts"], r["equity"], r["open_positions"])
+            return [EquityPoint(ts=r["ts"], equity=r["equity"],
+                                open_positions=r["open_positions"])
                     for r in reversed(rows)]
 
         @strawberry.field
@@ -167,8 +168,10 @@ def build_query(journal: Journal):
                     action=r["action"], score=r["score"],
                     threshold=r["threshold"], confidence=r["confidence"],
                     executed=bool(r["executed"]), skip_reason=r["skip_reason"] or "",
-                    votes=[VoteType(v["agent"], v["side"], v["conviction"],
-                                    v["confidence"], v["rationale"] or "")
+                    votes=[VoteType(agent=v["agent"], side=v["side"],
+                                    conviction=v["conviction"],
+                                    confidence=v["confidence"],
+                                    rationale=v["rationale"] or "")
                            for v in vrows]))
             return out
 
