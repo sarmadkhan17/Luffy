@@ -197,6 +197,7 @@ class Position:
     exec_mode: str = "paper"
     opened_at: str = field(default_factory=lambda: now_utc().isoformat())
     confidence: float = 0.0
+    sl_order_id: str = ""       # exchange-native stop order to cancel on close
 
     def unrealized_pnl(self, mark: float) -> float:
         direction = 1.0 if self.side == Side.LONG else -1.0
