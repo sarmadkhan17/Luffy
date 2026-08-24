@@ -369,7 +369,7 @@ def _position_marks(journal) -> dict:
             entry = float(t["entry_price"])
             amt = float(t["amount"])
             lev = int(t.get("leverage") or 1)
-            upnl = (px - entry) * direction * amt * lev
+            upnl = (px - entry) * direction * amt
             notional = amt * entry
             sl, tp = float(t.get("stop_loss") or 0), float(t.get("take_profit") or 0)
             out[sym] = {

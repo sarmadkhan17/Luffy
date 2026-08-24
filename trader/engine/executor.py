@@ -173,8 +173,7 @@ class Executor:
             fill = float(order.get("average") or order.get("price")
                          or exit_price_hint)
             direction = 1.0 if trade["side"] == "long" else -1.0
-            gross = ((fill - float(trade["entry_price"])) * direction * amount
-                     * int(trade.get("leverage") or 1))
+            gross = ((fill - float(trade["entry_price"])) * direction * amount)
             fees = self.taker_fee * (float(trade["notional_usdt"]) + amount * fill)
             pnl = gross - fees
             self.journal.close_trade(trade["id"], fill, round(pnl, 8), reason)

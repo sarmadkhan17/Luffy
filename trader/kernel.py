@@ -311,7 +311,7 @@ class Kernel:
                 sl, tp = float(t.get("stop_loss") or 0), float(t.get("take_profit") or 0)
                 direction = 1.0 if t["side"] == "long" else -1.0
                 gross = ((px - float(t["entry_price"])) * direction
-                         * float(t["amount"]) * int(t.get("leverage") or 1))
+                         * float(t["amount"]))
                 fees = self.executor.taker_fee * (
                     float(t["notional_usdt"]) + float(t["amount"]) * px)
                 reason = "tp_fill" if tp and abs(px - tp) <= abs(px - sl) else "sl_fill"
