@@ -38,7 +38,10 @@ def create_app(cfg: dict | None = None) -> FastAPI:
 
     @app.get("/", response_class=HTMLResponse)
     async def index():
-        return (WEB / "index.html").read_text()
+        from fastapi import Response
+        html = (WEB / "index.html").read_text()
+        return Response(html, media_type="text/html",
+                        headers={"Cache-Control": "no-store, max-age=0"})
 
     @app.get("/api/summary", dependencies=[])
     async def summary():
@@ -124,6 +127,70 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         if not str(target).startswith(str(VAULT.resolve())) or                 target.suffix != ".md" or not target.exists():
             return JSONResponse({"error": "not found"}, status_code=404)
         return {"path": path, "content": target.read_text(errors="replace")}
+
+    @app.get("/api/vault/graph")
+    async def vault_graph():
+        """Nodes = notes, edges = wikilinks (+ family→theory synapses).
+        This is the shape of Luffy's memory."""
+        import re
+        from ..knowledge.vault import VAULT, THEORY_NOTES
+
+        FAMILY_THEORY = {
+            "ema_trend": "Behavioral Momentum",
+            "breakout_retest": "Behavioral Momentum",
+            "vwap_fade": "Statistical Mean Reversion",
+            "sweep_reversal": "Auction Market Theory",
+            "rotation_momo": "Cross-Asset Rotation",
+        }
+        FOLDER_COLOR = {
+            "10 Theories": "#3498db", "20 Strategies": "#2ecc71",
+            "30 Postmortems": "#e74c3c", "40 Regimes": "#f1c40f",
+            "50 Daily": "#7a8593", "": "#9b59b6",
+        }
+        files = {}
+        for p in sorted(VAULT.rglob("*.md")):
+            rel = str(p.relative_to(VAULT))
+            folder = str(p.parent.relative_to(VAULT)) \
+                if p.parent != VAULT else ""
+            files[rel] = {"stem": p.stem, "folder": folder,
+                          "text": p.read_text(errors="replace")}
+
+        stems = {v["stem"]: rel for rel, v in files.items()}
+
+        def resolve(link: str) -> str | None:
+            link = link.split("|")[0].split("#")[0].strip()
+            if link in stems:
+                return stems[link]
+            for rel, v in files.items():
+                if v["stem"] == link:
+                    return rel
+            return None
+
+        nodes, edges, seen = [], [], set()
+        for rel, v in files.items():
+            nodes.append({"id": rel, "label": v["stem"],
+                          "group": v["folder"],
+                          "color": FOLDER_COLOR.get(v["folder"], "#888")})
+            for m in re.findall(r"\[\[([^\]]+)\]\]", v["text"]):
+                tgt = resolve(m)
+                if tgt and tgt != rel:
+                    key = tuple(sorted((rel, tgt)))
+                    if key not in seen:
+                        seen.add(key)
+                        edges.append({"from": rel, "to": tgt})
+            # family synapse: strategy genome → its parent theory
+            fm = re.search(r"family:\s*(\w+)", v["text"])
+            if fm and fm.group(1) in FAMILY_THEORY:
+                th_rel = stems.get(FAMILY_THEORY[fm.group(1)])
+                if th_rel and th_rel != rel:
+                    key = tuple(sorted((rel, th_rel)))
+                    if key not in seen:
+                        seen.add(key)
+                        edges.append({"from": rel, "to": th_rel,
+                                      "synapse": True})
+        # orphan theories still pulse: ensure theory notes exist as nodes even
+        # without links (they always will — seeded)
+        return {"nodes": nodes, "edges": edges}
 
     @app.get("/api/doctrine")
     async def doctrine():
