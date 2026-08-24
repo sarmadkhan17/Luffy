@@ -80,7 +80,7 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
         exit_px = mark_cache[sym]
         direction = 1.0 if jt["side"] == "long" else -1.0
         pnl = ((exit_px - float(jt["entry_price"])) * direction
-               * float(jt["amount"]) * int(jt["leverage"] or 1))
+               * float(jt["amount"]))
         journal.close_trade(jt["id"], exit_px, round(pnl, 8), "reconciled_ghost")
         log.warning(f"GHOST closed: {sym} was open in journal, absent on "
                     f"exchange → closed @{exit_px} pnl={pnl:+.2f}")
@@ -123,7 +123,7 @@ def flatten_all(exchange, journal: Journal, notifier=None) -> int:
                     pass
             direction = 1.0 if t["side"] == "long" else -1.0
             pnl = ((fill - float(t["entry_price"])) * direction
-                   * float(t["amount"]) * int(t["leverage"] or 1))
+                   * float(t["amount"]))
             journal.close_trade(t["id"], fill, round(pnl, 8), "panic")
             closed += 1
             log.warning(f"PANIC close {sym}: {t['amount']} @ ~{fill} "

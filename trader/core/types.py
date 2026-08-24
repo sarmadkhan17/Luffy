@@ -200,8 +200,10 @@ class Position:
     sl_order_id: str = ""       # exchange-native stop order to cancel on close
 
     def unrealized_pnl(self, mark: float) -> float:
+        # linear perps: P&L = price delta × base-asset size. Leverage scales
+        # MARGIN, never absolute P&L (verified against exchange uPnL).
         direction = 1.0 if self.side == Side.LONG else -1.0
-        return (mark - self.entry_price) * direction * self.amount * self.leverage
+        return (mark - self.entry_price) * direction * self.amount
 
     def as_dict(self) -> dict:
         d = self.__dict__.copy()
@@ -219,7 +221,7 @@ class ClosedTrade(Position):
     def finalize(self) -> "ClosedTrade":
         direction = 1.0 if self.side == Side.LONG else -1.0
         self.realized_pnl = ((self.exit_price - self.entry_price) * direction
-                             * self.amount * self.leverage)
+                             * self.amount)
         return self
 
 
