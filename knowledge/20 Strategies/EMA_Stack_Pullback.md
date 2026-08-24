@@ -16,7 +16,7 @@ origin: seed
 ```
 
 ## Live record
-- closed trades: 1 · wins: 0
+- closed trades: 2 · wins: 0
 - realized P&L: +0.00 USDT
 - state: **paper**
 
