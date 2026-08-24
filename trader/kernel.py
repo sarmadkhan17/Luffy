@@ -333,6 +333,15 @@ class Kernel:
                 resolve_pending(self.journal, self.feed)
             except Exception as e:
                 log.warning(f"outcome resolution failed: {e}")
+        if Kernel._outcome_tick % 360 == 5:     # ~every 6h: theorist autopsy
+            try:
+                from .brain.theorist import Theorist
+                rep = Theorist(self.journal, self.cfg).run_autopsy()
+                if rep.get("ran"):
+                    log.info(f"theorist autopsy → {rep['note']} "
+                             f"(doctrine v{rep.get('doctrine_version')})")
+            except Exception as e:
+                log.warning(f"theorist failed: {e}")
         if Kernel._outcome_tick % 60 == 1:      # ~hourly brain/vault tick
             try:
                 from .brain.strategist import Strategist

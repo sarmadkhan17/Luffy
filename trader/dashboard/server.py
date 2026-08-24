@@ -200,6 +200,41 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             return {"version": 0, "beliefs": []}
         return json.loads(p.read_text())
 
+    _autopsy_lock = {"busy": False}
+
+    @app.post("/api/brain/autopsy")
+    async def run_autopsy():
+        if _autopsy_lock["busy"]:
+            return JSONResponse({"ran": False,
+                                 "reason": "autopsy already running"},
+                                status_code=409)
+        _autopsy_lock["busy"] = True
+        try:
+            import asyncio
+            from ..brain.theorist import Theorist
+            loop = asyncio.get_event_loop()
+            rep = await loop.run_in_executor(
+                None, lambda: Theorist(journal, cfg).run_autopsy())
+            return rep
+        except Exception as e:
+            return JSONResponse({"ran": False, "reason": str(e)},
+                                status_code=500)
+        finally:
+            _autopsy_lock["busy"] = False
+
+    @app.get("/api/brain/last_autopsy")
+    async def last_autopsy():
+        rows = journal.query(
+            "SELECT ts,detail FROM brain_events WHERE kind='autopsy' "
+            "ORDER BY id DESC LIMIT 1")
+        if not rows:
+            return {"ts": None}
+        try:
+            detail = json.loads(rows[0]["detail"])
+        except Exception:
+            detail = {"summary": rows[0]["detail"]}
+        return {"ts": rows[0]["ts"], **detail}
+
     @app.get("/api/review_status")
     async def review_status():
         closed = journal.query(

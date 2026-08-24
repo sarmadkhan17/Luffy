@@ -55,12 +55,13 @@ class BrainLLM:
             if self._client is None:
                 self._client = OpenAI(api_key=self._key,
                                       base_url="https://api.deepseek.com")
+            use_json = json_mode and not deep
             resp = self._client.chat.completions.create(
                 model=self.model_deep if deep else self.model_fast,
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=self.max_tokens,
-                response_format={"type": "json_object"} if json_mode else None,
-                timeout=90)
+                response_format={"type": "json_object"} if use_json else None,
+                timeout=120)
             text = resp.choices[0].message.content or ""
             used = getattr(resp.usage, "total_tokens", 0) or 0
             self._spend(used)
@@ -75,16 +76,22 @@ class BrainLLM:
         text = self.chat(prompt, deep=deep, json_mode=True)
         if not text:
             return None
+        cleaned = text
+        if "```" in cleaned:                      # strip markdown fences
+            parts = cleaned.split("```")
+            cleaned = max(parts, key=len)
+            if cleaned.startswith("json"):
+                cleaned = cleaned[4:]
         try:
-            return json.loads(text)
+            return json.loads(cleaned)
         except Exception:
-            # salvage a JSON object from a chatty reply
-            start = text.find("{")
-            end = text.rfind("}")
-            if 0 <= start < end:
-                try:
-                    return json.loads(text[start:end + 1])
-                except Exception:
-                    pass
-            log.warning("brain returned unparseable JSON")
-            return None
+            pass
+        start, end = cleaned.find("{"), cleaned.rfind("}")
+        if 0 <= start < end:
+            try:
+                return json.loads(cleaned[start:end + 1])
+            except Exception as e:
+                log.warning(f"JSON salvage failed: {e}")
+        log.warning(f"brain returned unparseable output "
+                    f"({len(text)} chars): {text[:200]!r}")
+        return None
