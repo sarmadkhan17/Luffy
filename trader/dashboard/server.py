@@ -106,6 +106,46 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         except Exception as e:
             return JSONResponse({"error": str(e)}, status_code=502)
 
+    @app.get("/api/vault/tree")
+    async def vault_tree():
+        from ..knowledge.vault import VAULT
+        items = []
+        for p in sorted(VAULT.rglob("*.md")):
+            rel = str(p.relative_to(VAULT))
+            items.append({"folder": str(p.parent.relative_to(VAULT)),
+                          "name": p.stem, "path": rel,
+                          "size": p.stat().st_size})
+        return {"root": "knowledge", "files": items}
+
+    @app.get("/api/vault/file")
+    async def vault_file(path: str):
+        from ..knowledge.vault import VAULT
+        target = (VAULT / path).resolve()
+        if not str(target).startswith(str(VAULT.resolve())) or                 target.suffix != ".md" or not target.exists():
+            return JSONResponse({"error": "not found"}, status_code=404)
+        return {"path": path, "content": target.read_text(errors="replace")}
+
+    @app.get("/api/doctrine")
+    async def doctrine():
+        from ..core.config import ROOT
+        p = ROOT / "data" / "doctrine.json"
+        if not p.exists():
+            return {"version": 0, "beliefs": []}
+        return json.loads(p.read_text())
+
+    @app.get("/api/review_status")
+    async def review_status():
+        closed = journal.query(
+            "SELECT COUNT(*) n FROM trades WHERE status='closed'")[0]["n"]
+        last_brain = journal.query(
+            "SELECT ts,kind FROM brain_events ORDER BY id DESC LIMIT 1")
+        return {
+            "closed_trades": closed,
+            "review_trigger_trades": 8,
+            "trades_until_review": max(0, 8 - closed),
+            "last_brain_event": last_brain[0] if last_brain else None,
+        }
+
     @app.get("/api/logs")
     async def logs(lines: int = 60):
         p = ROOT / "logs" / "luffy.log"

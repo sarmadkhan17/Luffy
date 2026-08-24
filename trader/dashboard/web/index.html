@@ -266,6 +266,40 @@ async function loadAgents(){
   ||'<tr><td colspan=3 class="mono">not enough resolved outcomes yet — fills as trades close</td></tr>')
   +'</tbody></table>';}
 
+function brainTab(name,el){document.querySelectorAll('#os-brain .subtabs .tab')
+ .forEach(e=>e.classList.toggle('active',e===el));
+ ['doctrine','vault','review'].forEach(v=>
+   $('#b-'+v).classList.toggle('hidden',v!==name));
+ if(name==='doctrine')loadDoctrine(); if(name==='vault')loadVault();
+ if(name==='review')loadReview();}
+async function loadDoctrine(){
+ const d=await (await fetch('/api/doctrine')).json();
+ $('#doctrine-view').innerHTML=(d.beliefs||[]).map(b=>`<div class="strat-card">
+   <span class="name">${b.id}</span> <span class="mono" style="float:right">evidence: ${b.evidence||''}</span>
+   <div style="margin-top:4px">${b.belief}</div></div>`).join('')
+  +`<div class="mono">doctrine v${d.version} · updated ${(d.updated_at||'').slice(0,16)}</div>`;}
+async function loadVault(){
+ const t=await (await fetch('/api/vault/tree')).json();
+ const byFolder={};
+ t.files.forEach(f=>{(byFolder[f.folder]=byFolder[f.folder]||[]).push(f)});
+ $('#vault-list').innerHTML=Object.entries(byFolder).map(([folder,files])=>
+  `<div class="section-label" style="margin-top:8px">${folder}</div>`+
+  files.map(f=>`<div class="decision" style="cursor:pointer;padding:3px 10px"
+    onclick="openNote('${f.path.replace(/'/g,"\'")}')">${f.name}</div>`).join('')).join('');}
+async function openNote(path){
+ const f=await (await fetch('/api/vault/file?path='+encodeURIComponent(path))).json();
+ $('#vault-file').textContent=f.content||f.error;}
+async function loadReview(){
+ const r=await (await fetch('/api/review_status')).json();
+ $('#review-view').innerHTML=`<div class="grid">
+  <div class="card"><div class="lbl">Closed trades</div><div class="val">${r.closed_trades}</div>
+   <div class="sub">brain reviews fire every ${r.review_trigger_trades} closed trades</div></div>
+  <div class="card"><div class="lbl">Trades until next review</div>
+   <div class="val">${r.trades_until_review}</div></div>
+  <div class="card"><div class="lbl">Last brain event</div><div class="val" style="font-size:14px">
+   ${r.last_brain_event? r.last_brain_event.kind+' @ '+r.last_brain_event.ts.slice(0,16) : 'none yet'}</div></div>
+ </div>`;}
+
 /* ── Luffy tab ── */
 let chart=null,series=null;
 function initChart(){
