@@ -139,11 +139,33 @@ Narrative layer over `doctrine.json`; owner-readable anytime.
   agents, strategies, trades, brain events) + mutations (state, close-all,
   market switch, strategy lifecycle). Serves dashboard AND Luffy's own
   assistant tool-calls.
-- **Dashboard web**: equity/P&L analytics, live decision feed ("why we
-  traded/skipped"), strategy lab (lineage, probation stats, brain verdicts),
-  control buttons, mode switch.
 - **Telegram (equal citizen)**: full conversation, morning/evening briefings,
   trade alerts, `/panic`, all state commands.
+- **Dashboard** (FastAPI + HTMX/Alpine + TradingView lightweight-charts;
+  WebSocket push; exposed via Tailscale VPN only, login-protected).
+  Five tabs — first three inherit the familiar basic layout of the previous
+  project's dashboard, stripped of dead weight:
+
+  1. **Overview** — status pill, equity/balance cards, SPOT⇄FUTURES selector,
+     open positions w/ live PnL + protection distances, Close All. Added:
+     state control (ACTIVE/FROZEN/HALTED), PANIC, decision ticker,
+     taken-vs-skipped today, portfolio-heat gauge. Removed: profile presets,
+     demo badges, legacy breaker reset.
+  2. **Trades** — same table/filter/pagination pattern; adds strategy
+     attribution + link to the deciding reasoning chain.
+  3. **System** — heartbeat age, feed freshness, exchange reconciliation
+     report, DeepSeek budget gauge, MCP server health, log tail.
+  4. **OS** — sub-tabs: *Decisions* (chronological stream of executed AND
+     skipped setups, each expanding into its full vote/signal/risk chain,
+     clickable to a candle chart pinned at that moment) · *Strategy Lab*
+     (population cards: hypothesis, lineage tree, probation progress, stats,
+     brain verdicts) · *Agents* (analyst accuracy leaderboard vs 1h/4h/24h,
+     regime timeline of which mechanism got paid) · *Brain* (doctrine.json
+     viewer, evolution log, token spend, next review countdown).
+  5. **Luffy** — split pane: left, interactive chart with decision markers
+     and SL/TP overlays; right, conversation with Luffy grounded in journal +
+     vault via GraphQL tools; quick-action chips (Briefing / Why last trade? /
+     Freeze entries / Close all).
 
 ## 12. Success Criteria (v1, 4 weeks live)
 
