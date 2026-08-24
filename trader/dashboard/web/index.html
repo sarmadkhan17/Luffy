@@ -393,32 +393,16 @@ async function sendChat(){const t=$('#chat-in').value.trim();
  chatMsg('You',t);
  const reply=await luffyReply(t.toLowerCase());chatMsg('Luffy',reply);}
 function quick(q){chatMsg('You',q);luffyReply(q.toLowerCase()).then(r=>chatMsg('Luffy',r));}
+const chatHistory=[];
 async function luffyReply(t){
- const s=(await gql(`{status{control_state market_type equity open_trades heartbeat_age_s}}`)).status;
- if(t.includes('status'))
-  return `State ${s.control_state} · market ${s.market_type.toUpperCase()} · margin equity $${(+s.equity).toLocaleString(undefined,{maximumFractionDigits:0})} · ${s.open_trades} open positions · heartbeat ${s.heartbeat_age_s}s ago.`;
- if(t.includes('briefing')){
-  const sum=await (await fetch('/api/summary')).json();
-  const dec=await gql(`{decisions(limit:50){action executed skip_reason symbol ts}}`);
-  const recent=dec.decisions.filter(x=>x.action!=='HOLD').slice(0,5)
-   .map(x=>`• ${x.ts.slice(11,16)} ${x.symbol} ${x.action} → ${x.executed?'executed':(x.skip_reason||'skipped')}`).join('\n');
-  const pos=sum.open_positions.length;
-  return `Briefing:\nEquity $${(+sum.equity).toLocaleString()} · ${pos} open · today ${sum.today.taken} taken / ${sum.today.skipped} skipped · P&L ${sum.today.realized_pnl_today>=0?'+':''}${sum.today.realized_pnl_today}\n\nRecent signals:\n${recent||'none — market gave nothing worth buying.'}`}
- if(t.includes('why')&&t.includes('trade')){
-  const d=await gql(`{decisions(executed_only:false,limit:80){symbol action score threshold executed skip_reason ts votes{agent conviction rationale}}}`);
-  const x=d.decisions.filter(y=>y.action!=='HOLD').pop();
-  if(!x)return 'No directional signal has fired yet — every scan resolved to HOLD.';
-  const vs=x.votes.map(v=>`${v.agent}: ${v.conviction>=0?'+':''}${(+v.conviction).toFixed(2)} (${v.rationale})`).join('\n');
-  return `${x.ts.slice(11,16)} ${x.symbol} ${x.action} — score ${x.score} vs threshold ${x.threshold}, ${x.executed?'executed':'not executed ('+(x.skip_reason||'skipped')+')'}.\nVote chain:\n${vs}`;}
- if(t.includes('freeze')){await gql(`mutation{set_control_state(state:"FROZEN")}`);
-  return '🥶 FROZEN — no new entries; managing existing positions to natural close.';}
- if(t.includes('resume')||t.includes('activate')){await gql(`mutation{set_control_state(state:"ACTIVE")}`);
-  return '🙂 ACTIVE — full autonomy restored.';}
- if(t.includes('halt')){await gql(`mutation{set_control_state(state:"HALTED")}`);return '😴 HALTED.';}
- if(t.includes('close all')||t.includes('flatten')||t.includes('panic')){
-  await gql(`mutation{panic}`);return '🚨 Panic queued — I flatten every position next cycle and go FROZEN.';}
- if(t.includes('hello')||t.includes('hi'))return 'Ahoy! Ask me for a briefing, why a trade happened, or tell me to freeze/close-all.';
- return `I can brief you, explain any trade, or execute ops (freeze / halt / resume / close all). Right now: ${s.control_state}, ${s.open_trades} open positions.`;}
+ chatHistory.push({who:'You',text:t});
+ const r=await (await fetch('/api/chat',{method:'POST',
+  headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({message:t,history:chatHistory.slice(-6)})})).json();
+ const reply=r.reply||'…';
+ chatHistory.push({who:'Luffy',text:reply});
+ setTimeout(refresh,1500);
+ return reply;}
 
 /* live ticker */
 const ws=new WebSocket(`ws://${location.host}/ws/live`);
