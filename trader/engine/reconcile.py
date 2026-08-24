@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 
-from ..core.types import ClosedTrade, Position, Side, new_id
+from ..core.types import ClosedTrade, Position, Side, new_id, norm_symbol
 from ..core.journal import Journal
 
 log = logging.getLogger(__name__)
@@ -26,7 +26,8 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
     """Align journal open trades with live exchange positions."""
     try:
         ex_positions = {
-            p["symbol"]: p for p in (exchange.fetch_positions() or [])
+            norm_symbol(p["symbol"]): p
+            for p in (exchange.fetch_positions() or [])
             if float(p.get("contracts") or 0) > 0
         }
     except Exception as e:

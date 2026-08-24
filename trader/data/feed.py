@@ -8,6 +8,8 @@ import logging
 
 import numpy as np
 import time
+
+from ..core.types import norm_symbol
 from typing import Optional
 
 import pandas as pd
@@ -17,19 +19,30 @@ log = logging.getLogger(__name__)
 COLUMNS = ["ts", "open", "high", "low", "close", "volume"]
 
 
-def make_exchange(market_type: str = "futures"):
+def make_exchange(market_type: str = "futures", demo: bool | None = None,
+                  with_keys: bool = True):
+    """demo=None → follow .env · demo=True/False forces mode.
+    with_keys=False → clean public instance (universe scans use production
+    public data even when trading on demo: demo volumes are simulated)."""
     import ccxt
     from ..core.config import Env
 
-    key, secret = Env.binance_keys()
+    key, secret = Env.binance_keys() if with_keys else ("", "")
     klass = ccxt.binanceusdm if market_type == "futures" else ccxt.binance
     ex = klass({
         "apiKey": key, "secret": secret,
         "enableRateLimit": True,
         "options": {"defaultType": "future" if market_type == "futures" else "spot"},
     })
-    if Env.get("BINANCE_DEMO", "true").lower() in ("1", "true", "yes"):
-        ex.set_sandbox_mode(True)
+    use_demo = (Env.get("BINANCE_DEMO", "true").lower() in ("1", "true", "yes")
+                if demo is None else demo)
+    if use_demo:
+        # Binance Demo Trading platform (successor of the deprecated testnet).
+        # Futures: demo-fapi.binance.com · Spot: demo-api.binance.com
+        if hasattr(ex, "enable_demo_trading"):
+            ex.enable_demo_trading(True)
+        else:   # legacy ccxt
+            ex.set_sandbox_mode(True)
     return ex
 
 
@@ -104,14 +117,24 @@ class Universe:
         self.min_age_days = float(scan.get("min_age_days", 90))
         self.rescan_hours = float(scan.get("rescan_hours", 4))
         self.blacklist = set(scan.get("blacklist", [])) | {
-            "USDC/USDT", "FDUSD/USDT", "TUSD/USDT", "BUSD/USDT"}
+            "USDC/USDT", "FDUSD/USDT", "TUSD/USDT", "BUSD/USDT",
+            "USDE/USDT", "BFUSD/USDT"}
         self._ex = exchange
+        # market-data truth lives on production public API even when the
+        # trading venue is demo (demo volumes/listings are simulated)
+        from ..core.config import Env
+        on_demo = Env.get("BINANCE_DEMO", "true").lower() in ("1", "true", "yes")
+        self.data_ex = make_exchange(
+            "futures", demo=False, with_keys=False) if on_demo else (exchange or None)
         self._last_scan = 0.0
         self._alts: list[str] = []
         self._listing_cache: dict[str, float] = {}   # symbol -> first-candle ts (ms)
 
     @property
     def ex(self):
+        """Exchange used for market-data scans (production public on demo)."""
+        if self.data_ex is not None:
+            return self.data_ex
         if self._ex is None:
             self._ex = make_exchange()
         return self._ex
@@ -129,8 +152,9 @@ class Universe:
             self._last_scan = time.time()
             return
         scored = []
-        for sym, t in tickers.items():
-            if not sym.endswith("/USDT") or ":" in sym or sym in self.blacklist:
+        for sym_raw, t in tickers.items():
+            sym = norm_symbol(sym_raw)
+            if not sym.endswith("/USDT") or sym in self.blacklist:
                 continue
             if sym in self.majors:
                 continue
@@ -153,14 +177,13 @@ class Universe:
             first_ms = self._listing_cache[symbol]
         else:
             try:
-                first = self.ex.fetch_ohlcv(symbol, "1d", limit=1)  # most recent
-                # walk back with since=0 for the true first candle
                 raw = self.ex.fetch_ohlcv(symbol, "1d", since=0, limit=1)
                 first_ms = raw[0][0] if raw else 0
             except Exception:
                 first_ms = 0
             self._listing_cache[symbol] = first_ms
-        if not first_ms:
-            return False   # can't verify age → exclude
+        if not first_ms or first_ms > time.time() * 1000 - 86_400_000 * 5:
+            # no history, or "first" candle is recent (since=0 unsupported)
+            return False
         age_days = (time.time() * 1000 - first_ms) / 86_400_000
         return age_days >= self.min_age_days

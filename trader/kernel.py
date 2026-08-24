@@ -23,7 +23,8 @@ from .agents.momentum import MomentumAnalyst, RotationAnalyst, ValueAnalyst
 from .agents.structure import StructureAnalyst
 from .core.config import ROOT, load_config
 from .core.journal import Journal
-from .core.types import Action, ControlState, MarketType, Snapshot
+from .core.types import (Action, ControlState, MarketType, Snapshot,
+                         norm_symbol)
 from .data.feed import DataFeed, Universe, make_exchange
 from .engine.executor import Executor
 from .engine.outcomes import resolve_pending
@@ -267,7 +268,8 @@ class Kernel:
     def _detect_exchange_exits(self, symbol: str) -> int:
         """Position vanished on exchange while journal says open → SL/TP fired."""
         try:
-            ex_syms = {p["symbol"] for p in self.exchange.fetch_positions()
+            ex_syms = {norm_symbol(p["symbol"])
+                       for p in self.exchange.fetch_positions()
                        if float(p.get("contracts") or 0) > 0}
         except Exception:
             return 0
