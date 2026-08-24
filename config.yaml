@@ -1,0 +1,57 @@
+# Trading OS configuration — all knobs live here.
+
+mode:
+  market: futures          # spot | futures — switchable from dashboard
+  execution: paper         # paper | live (live requires explicit flag + keys)
+
+universe:
+  majors: [BTC/USDT, ETH/USDT, SOL/USDT]
+  auto_scan:
+    enabled: true
+    top_n: 12              # alts filling remaining slots
+    min_volume_usdt: 100000000
+    min_price: 0.5
+    rescan_hours: 4
+
+timeframes:
+  execution: 15m
+  context: ["1h", "4h"]
+  scan_interval_seconds: 60
+
+risk:
+  risk_per_trade_pct: 5.0        # moderate envelope
+  max_drawdown_pct: 20.0         # circuit breaker kills trading
+  max_open_positions: 10
+  max_daily_loss_pct: 6.0
+  leverage: 5
+  stop_loss_atr_mult: 2.5
+  take_profit_atr_mult: 4.5
+  trailing_atr_mult: 2.8
+  min_notional_usdt: 10
+
+strategies:
+  max_active: 6                  # concurrently active strategies
+  paper_probation_trades: 15     # trades a new strategy must pass in paper before live eligibility
+  paper_min_winrate: 0.40
+  paper_min_profit_factor: 1.15
+  auto_demote_drawdown_pct: 8.0  # statistical instant demotion, no LLM needed
+
+brain:
+  provider: deepseek
+  model_fast: deepseek-chat            # V3 — proposals, summaries
+  model_deep: deepseek-reasoner        # R1 — autopsies, strategy verdicts
+  evolution_interval_minutes: 120      # continuous evolution heartbeat
+  daily_token_budget: 200000
+  max_tokens_per_call: 1500
+
+dashboard:
+  host: 127.0.0.1
+  port: 8080
+
+notify:
+  telegram: true
+  alert_on_trade: true
+  daily_digest_hour_utc: 20
+
+logging:
+  level: INFO
