@@ -95,12 +95,14 @@ class Universe:
         self.top_n = int(scan.get("top_n", 12))
         self.min_vol = float(scan.get("min_volume_usdt", 1e8))
         self.min_price = float(scan.get("min_price", 0.5))
+        self.min_age_days = float(scan.get("min_age_days", 90))
         self.rescan_hours = float(scan.get("rescan_hours", 4))
         self.blacklist = set(scan.get("blacklist", [])) | {
             "USDC/USDT", "FDUSD/USDT", "TUSD/USDT", "BUSD/USDT"}
         self._ex = exchange
         self._last_scan = 0.0
         self._alts: list[str] = []
+        self._listing_cache: dict[str, float] = {}   # symbol -> first-candle ts (ms)
 
     @property
     def ex(self):
@@ -128,10 +130,31 @@ class Universe:
                 continue
             quote_vol = float(t.get("quoteVolume") or 0)
             last = float(t.get("last") or 0)
-            if quote_vol >= self.min_vol and last >= self.min_price:
-                scored.append((quote_vol, sym))
+            if quote_vol < self.min_vol or last < self.min_price:
+                continue
+            if not self._old_enough(sym):
+                continue
+            scored.append((quote_vol, sym))
         scored.sort(reverse=True)
         self._alts = [s for _, s in scored[:self.top_n]]
         self._last_scan = time.time()
         log.info(f"universe: {len(self.symbols())} symbols "
                  f"(majors {len(self.majors)} + alts {len(self._alts)})")
+
+    def _old_enough(self, symbol: str) -> bool:
+        """Listing age ≥ min_age_days via first 1d candle (cached)."""
+        if symbol in self._listing_cache:
+            first_ms = self._listing_cache[symbol]
+        else:
+            try:
+                first = self.ex.fetch_ohlcv(symbol, "1d", limit=1)  # most recent
+                # walk back with since=0 for the true first candle
+                raw = self.ex.fetch_ohlcv(symbol, "1d", since=0, limit=1)
+                first_ms = raw[0][0] if raw else 0
+            except Exception:
+                first_ms = 0
+            self._listing_cache[symbol] = first_ms
+        if not first_ms:
+            return False   # can't verify age → exclude
+        age_days = (time.time() * 1000 - first_ms) / 86_400_000
+        return age_days >= self.min_age_days
