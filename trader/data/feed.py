@@ -5,6 +5,8 @@ Binance demo keys from .env; sandbox mode when BINANCE_DEMO is truthy.
 from __future__ import annotations
 
 import logging
+
+import numpy as np
 import time
 from typing import Optional
 
@@ -64,6 +66,10 @@ class DataFeed:
         for col in COLUMNS[1:]:
             df[col] = pd.to_numeric(df[col], errors="coerce")
         df = df.dropna().reset_index(drop=True)
+        # estimated aggressor buy volume (candle-position proxy; ccxt omits col 9)
+        rng = (df["high"] - df["low"]).replace(0, np.nan)
+        df["taker_buy"] = (df["volume"] * (df["close"] - df["low"]) / rng).fillna(
+            df["volume"] * 0.5)
         self._cache[ck] = (time.time(), df)
         return df
 
