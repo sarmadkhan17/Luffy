@@ -63,6 +63,38 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         snap = _account_snapshot()
         assets = snap.get("assets", {})
         assets_total = snap.get("assets_total", 0)
+
+        # ── live position marks + unrealized P&L ──
+        marks = _position_marks(journal)
+        total_upnl = sum(m["upnl"] for m in marks.values()
+                         if isinstance(m.get("upnl"), (int, float)))
+        long_exp = sum(m["notional"] for m in marks.values() if m["side"] == "long")
+        short_exp = sum(m["notional"] for m in marks.values() if m["side"] == "short")
+        for p in opens:
+            m = marks.get(p["symbol"])
+            if m:
+                p["mark"] = m["mark"]
+                p["upnl"] = round(m["upnl"], 2)
+                p["upnl_pct"] = m["upnl_pct"]
+                p["sl_dist"] = m["sl_dist"]
+                p["tp_dist"] = m["tp_dist"]
+
+        # ── strategy P&L + winrate + agent activity ──
+        strat_pnl = journal.query(
+            "SELECT COALESCE(NULLIF(strategy_name,''),'orchestrator') sname,"
+            " ROUND(SUM(realized_pnl),2) pnl, COUNT(*) n "
+            "FROM trades WHERE status='closed' GROUP BY sname "
+            "HAVING COUNT(*)>0 ORDER BY pnl")
+        closed = journal.query(
+            "SELECT COUNT(*) n, SUM(realized_pnl>0) wins FROM trades "
+            "WHERE status='closed'")[0]
+        agents_now = journal.query("""
+            SELECT v.agent, v.side, v.conviction, v.confidence, v.ts,
+                   c.regime FROM votes v JOIN cycles c ON c.id=v.cycle_id
+            WHERE v.ts > datetime('now','-15 minutes')
+              AND v.rowid IN (SELECT MAX(rowid) FROM votes
+                              GROUP BY agent) ORDER BY v.ts DESC LIMIT 6""")
+        prices = _universe_prices()
         return {
             "control_state": journal.kv_get("control_state", "ACTIVE"),
             "market_type": journal.kv_get("market_type", "futures"),
@@ -71,6 +103,15 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             "equity_prev": eq[1]["equity"] if len(eq) > 1 else None,
             "open_positions": opens,
             "assets": assets, "assets_total": assets_total,
+            "total_upnl": round(total_upnl, 2),
+            "long_exposure": round(long_exp, 0),
+            "short_exposure": round(short_exp, 0),
+            "strategy_pnl": strat_pnl,
+            "winrate": (round(closed["wins"] / closed["n"] * 100, 1)
+                        if closed["n"] else None),
+            "closed_trades": closed["n"],
+            "agents_now": agents_now,
+            "prices": prices,
             "today": _today_stats(journal),
         }
 
@@ -302,6 +343,76 @@ def create_app(cfg: dict | None = None) -> FastAPI:
     return app
 
 
+_MARKS_CACHE = {"ts": 0.0, "data": {}}
+
+
+def _position_marks(journal) -> dict:
+    """symbol → {mark, upnl, upnl_pct, notional, side, sl_dist, tp_dist} (20s cache)."""
+    import time as _t
+    now = _t.time()
+    if now - _MARKS_CACHE["ts"] < 20:
+        return _MARKS_CACHE["data"]
+    out = {}
+    try:
+        from ..data.feed import DataFeed, make_exchange
+        global _marks_feed
+        try:
+            _marks_feed
+        except NameError:
+            _marks_feed = DataFeed(make_exchange("futures"))
+        for t in journal.open_trades():
+            sym = t["symbol"]
+            px = _marks_feed.price(sym)
+            if not px:
+                continue
+            direction = 1.0 if t["side"] == "long" else -1.0
+            entry = float(t["entry_price"])
+            amt = float(t["amount"])
+            lev = int(t.get("leverage") or 1)
+            upnl = (px - entry) * direction * amt * lev
+            notional = amt * entry
+            sl, tp = float(t.get("stop_loss") or 0), float(t.get("take_profit") or 0)
+            out[sym] = {
+                "mark": round(px, 6), "upnl": upnl,
+                "upnl_pct": round((px - entry) / entry * 100 * direction, 2),
+                "notional": notional, "side": t["side"],
+                "sl_dist": (abs(entry - sl) / entry * 100) if sl else None,
+                "tp_dist": (abs(tp - entry) / entry * 100) if tp else None,
+            }
+    except Exception as e:
+        log.debug(f"position marks failed: {e}")
+    _MARKS_CACHE.update(ts=now, data=out)
+    return out
+
+
+_PRICE_CACHE = {"ts": 0.0, "data": {}}
+
+
+def _universe_prices() -> dict:
+    import time as _t
+    now = _t.time()
+    if now - _PRICE_CACHE["ts"] < 15:
+        return _PRICE_CACHE["data"]
+    out = {}
+    try:
+        from ..data.feed import DataFeed, make_exchange
+        global _price_feed
+        try:
+            _price_feed
+        except NameError:
+            _price_feed = DataFeed(make_exchange("futures"))
+        for sym in ("BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT",
+                    "XRP/USDT", "ZEC/USDT", "AAVE/USDT", "SUI/USDT",
+                    "HYPE/USDT", "NEAR/USDT"):
+            px = _price_feed.price(sym)
+            if px:
+                out[sym] = px
+    except Exception as e:
+        log.debug(f"prices failed: {e}")
+    _PRICE_CACHE.update(ts=now, data=out)
+    return out
+
+
 _ASSET_CACHE = {"ts": 0.0, "data": {}}
 
 
@@ -364,7 +475,10 @@ def _today_stats(journal: Journal) -> dict:
     pnl_rows = journal.query(
         "SELECT COALESCE(SUM(realized_pnl),0) s FROM trades WHERE closed_at LIKE ?",
         (f"{day}%",))
-    return {"taken": taken, "skipped": skipped,
+    holds = journal.query(
+        "SELECT COUNT(*) n FROM decisions WHERE action='HOLD' AND ts LIKE ?",
+        (f"{day}%",))[0]["n"]
+    return {"taken": taken, "skipped": skipped, "holds": holds,
             "realized_pnl_today": round(pnl_rows[0]["s"], 2)}
 
 
