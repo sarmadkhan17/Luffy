@@ -199,6 +199,14 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
 .pbar{height:5px;border-radius:3px;background:#1a2029;overflow:hidden;flex:1}
 .pbar>div{height:100%;border-radius:3px}
 
+.pager{display:flex;gap:6px;align-items:center;margin:10px 0;font-family:var(--mono);font-size:11px;color:var(--dim)}
+.pager button{padding:4px 11px;border-radius:7px;border:1px solid var(--line);
+ background:var(--panel);color:var(--dim);cursor:pointer;font-family:var(--mono);font-size:11px}
+.pager button:hover:not(:disabled){color:var(--txt);border-color:#37455c}
+.pager button:disabled{opacity:.35;cursor:default}
+.pager button.cur{color:var(--green);border-color:rgba(0,209,160,.4);background:rgba(0,209,160,.06)}
+.pager .info{margin-left:auto;color:var(--dimmer)}
+
 /* toast */
 #toasts{position:fixed;top:16px;right:16px;z-index:200;display:flex;flex-direction:column;gap:8px}
 .toast{background:var(--raise);border:1px solid var(--line2);border-left:3px solid var(--green);
@@ -308,6 +316,7 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
  <h3 class="sec">Trade history</h3>
  <table id="trades"><thead><tr><th>Opened</th><th>Symbol</th><th>Side</th><th>Entry</th>
   <th>Exit</th><th>PnL</th><th>Reason</th><th>Status</th></tr></thead><tbody></tbody></table>
+ <div class="pager" id="trades-pager"></div>
 </div>
 
 <!-- ══════════ SYSTEM ══════════ -->
@@ -327,6 +336,7 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
  <div id="os-dec">
   <div class="plabel">Decision stream — executed AND skipped, with reasoning chains</div>
   <div id="dec-feed"></div>
+  <div class="pager" id="dec-pager"></div>
  </div>
  <div id="os-lab" class="hidden">
   <div class="plabel">Strategy population</div>
@@ -614,24 +624,48 @@ function bindChartControls(symSel,tfWrap,get,set,load){
   b.classList.add('on');set('tf',b.dataset.tf);load();}));}
 
 /* ── trades / logs ── */
-async function loadTrades(){const d=await gql(`{trades(limit:150){
- opened_at symbol side entry_price exit_price realized_pnl close_reason status}}`);
+const PAGE=25;
+let tradesPage=0,tradesTotal=0,decPage=0,decTotal=0;
+function pager(el,page,total,psize,goto){
+ const pages=Math.max(1,Math.ceil(total/psize));
+ const from=total?page*psize+1:0,to=Math.min(total,(page+1)*psize);
+ let btns='';
+ const win=2;
+ for(let i=0;i<pages;i++){
+  if(i===0||i===pages-1||Math.abs(i-page)<=win){
+   btns+=`<button class="${i===page?'cur':''}" onclick="${goto}(${i})">${i+1}</button>`;}
+  else if(Math.abs(i-page)===win+1){btns+='<span style="padding:0 2px">…</span>';}}
+ $(el).innerHTML=`<button ${page<=0?'disabled':''} onclick="${goto}(${page-1})">←</button>
+  ${btns}<button ${page>=pages-1?'disabled':''} onclick="${goto}(${page+1})">→</button>
+  <span class="info">${from}–${to} of ${total}</span>`;}
+function tradesGo(p){tradesPage=Math.max(0,p);loadTrades();}
+async function loadTrades(){
+ const d=await gql(`{trades(limit:${PAGE},offset:${tradesPage*PAGE}){
+  opened_at symbol side entry_price exit_price realized_pnl close_reason status}}`);
+ const t=await gql(`{trades_total}`);
+ tradesTotal=t.trades_total;
  $('#trades tbody').innerHTML=d.trades.map(t=>`<tr>
   <td>${(t.opened_at||'').slice(5,16)}</td>
   <td class="sans" style="font-weight:700">${t.symbol}</td>
   <td><span class="sidebadge ${t.side}">${t.side}</span></td>
-  <td>${(+t.entry_price).toFixed(4)}</td><td>${(+t.exit_price).toFixed(4)}</td>
+  <td>${(+t.entry_price).toFixed(4)}</td>
+  <td>${t.exit_price&&+t.exit_price>0?(+t.exit_price).toFixed(4):'—'}</td>
   <td class="${+t.realized_pnl>=0?'up':'down'}" style="font-weight:700">
-   ${(+t.realized_pnl).toFixed(2)}</td>
+   ${t.status==='open'?'—':(+t.realized_pnl).toFixed(2)}</td>
   <td style="color:var(--dim)">${t.close_reason||''}</td><td>${t.status}</td></tr>`
- ).join('')||'<tr><td colspan=8 class="empty" style="border:none">no trades yet</td></tr>';}
+ ).join('')||'<tr><td colspan=8 class="empty" style="border:none">no trades yet</td></tr>';
+ pager('#trades-pager',tradesPage,tradesTotal,PAGE,'tradesGo');}
+function decGo(p){decPage=Math.max(0,p);loadDecisions();}
 async function loadLogs(){const r=await fetch('/api/logs?lines=90');
  const j=await r.json();$('#logs').textContent=(j.tail||[]).join('\n')||'(empty)';}
 
 /* ── OS: decisions ── */
 async function loadDecisions(){
- const d=await gql(`{decisions(limit:60){id ts symbol action score threshold confidence
+ const d=await gql(`{decisions(limit:${PAGE},offset:${decPage*PAGE}){
+  id ts symbol action score threshold confidence
   executed skip_reason votes{agent side conviction confidence rationale}}}`);
+ const t=await gql(`{decisions_total}`);
+ decTotal=t.decisions_total;
  const rows=d.decisions.filter(x=>x.action!=='HOLD').slice(0,40);
  $('#dec-feed').innerHTML=rows.map(x=>{
   const vs=x.votes.map(v=>{const w=Math.min(Math.abs(v.conviction)*90,80);
@@ -646,7 +680,8 @@ async function loadDecisions(){
     <span class="tag ${x.executed?'exec':'skip'}">${x.executed?'EXECUTED':(x.skip_reason||'skipped')}</span>
     <span class="mono" style="margin-left:auto">${(x.ts||'').slice(11,19)}</span></div>
    <div class="r2">${vs||'<span class="mono">no votes</span>'}</div></div>`;}
- ).join('')||'<div class="empty" style="border:none">no directional signals yet</div>';}
+ ).join('')||'<div class="empty" style="border:none">no directional signals yet</div>';
+ pager('#dec-pager',decPage,decTotal,PAGE,'decGo');}
 async function loadLab(){
  const d=await gql(`{strategy_full{id name kind state origin hypothesis params}}`);
  $('#lab-grid').innerHTML=d.strategy_full.map(s=>`<div class="strat-card">
