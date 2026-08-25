@@ -52,6 +52,28 @@ def test_parse_metrics_extracts_core_fields():
     assert m["sharpe"] == 1.42
 
 
+def test_parse_metrics_free_plan_key_stats():
+    """2026-08 free plan: only Total PnL + Max drawdown (+ dash winrate)."""
+    text = """Key stats
+Total PnL
+−83.94
+USDT
+−0.84%
+Max drawdown
+328.65
+USDT
+3.29%
+Profitable trades
+—
+Performance"""
+    m = parse_metrics(text)
+    assert m["net_profit_usd"] == -83.94
+    assert m["net_profit_pct"] == -0.84
+    assert m["max_drawdown_usd"] == 328.65
+    assert m["max_drawdown_pct"] == 3.29
+    assert "total_trades" not in m and "sharpe" not in m
+
+
 def test_cache_roundtrip(tmp_path, monkeypatch):
     h = _harness(tmp_path, monkeypatch)
     key = sha_code("code", "BINANCE:BTCUSDT", "1h")
@@ -132,4 +154,16 @@ def test_evaluate_manifest_verdict_logic(tmp_path, monkeypatch):
     v3 = evaluate_manifest(h, manifest)
     assert not v3["valid"] and "selector" in v3["reason"]
 
-    assert json.dumps(verdict)     # serializable for the brain dossier
+    # free-plan metrics (no trades/sharpe) → those checks simply absent
+    free = {"net_profit_pct": 5.0, "max_drawdown_pct": 4.0}
+    calls["n"] = 0
+    fold_metrics = [{"net_profit_usd": 10}, {"net_profit_usd": -30},
+                    {"net_profit_usd": 8}]
+    monkeypatch.setattr(h, "backtest",
+                        lambda code, s="B", t="1h", force=False:
+                        {"ok": True, "metrics": free})
+    v4 = evaluate_manifest(h, manifest)
+    assert "enough_trades" not in v4["checks"]
+    assert "quality" not in v4["checks"]
+    assert v4["valid"] is False            # only 1/3 folds positive
+    assert json.dumps(v4)                  # serializable for the brain dossier

@@ -381,10 +381,20 @@ class Harvester:
         if test_pfs and min(test_pfs) < 0.5:
             return False, {"stage": "internal_sanity",
                            "test_pfs": test_pfs}
+        # trade-count gate lives here (TV free plan hides trade counts):
+        # a candidate must show real activity on the internal 15m test
+        total_trades = sum(r["test"].trades for r in results)
+        min_trades = int(self.cfg.get("strategies", {})
+                         .get("tv_min_oos_trades", 5))
+        if total_trades < min_trades:
+            return False, {"stage": "internal_sanity",
+                           "reason": f"only {total_trades} internal trades "
+                                     f"(<{min_trades}) — no activity edge"}
         tv_ok, tv_ev = j.final_verdict(g)
         return tv_ok, {"stage": tv_ev.get("stage", "yahoo"),
                        "tv": tv_ev,
-                       "internal": {"test_pfs": test_pfs}}
+                       "internal": {"test_pfs": test_pfs,
+                                    "total_trades": total_trades}}
 
     def _deploy(self, g: Genome, idea: dict, evidence: dict):
         from ..core.types import Strategy, StrategyState, new_id
