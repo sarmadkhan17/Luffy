@@ -144,20 +144,35 @@ def build_query(journal: Journal):
                     for r in reversed(rows)]
 
         @strawberry.field
+        def trades_total(self) -> int:
+            return journal.query(
+                "SELECT COUNT(*) n FROM trades")[0]["n"]
+
+        @strawberry.field
+        def decisions_total(self, symbol: Optional[str] = None) -> int:
+            if symbol:
+                return journal.query(
+                    "SELECT COUNT(*) n FROM decisions WHERE symbol=?",
+                    (symbol,))[0]["n"]
+            return journal.query("SELECT COUNT(*) n FROM decisions")[0]["n"]
+
+        @strawberry.field
         def decisions(self, executed_only: bool = False,
                       symbol: Optional[str] = None,
-                      limit: int = 100) -> list[DecisionType]:
+                      limit: int = 100, offset: int = 0) -> list[DecisionType]:
             conds, params = [], []
             if executed_only:
                 conds.append("executed=1")
             if symbol:
                 conds.append("symbol=?")
                 params.append(symbol)
+            if conds:
+                conds.append("1=1")
             where = ("WHERE " + " AND ".join(conds)) if conds else ""
             rows = _rows(journal,
                          f"SELECT * FROM decisions {where} "
-                         f"ORDER BY ts DESC LIMIT ?",
-                         tuple(params) + (limit,))
+                         f"ORDER BY ts DESC LIMIT ? OFFSET ?",
+                         tuple(params) + (limit, offset))
             out = []
             for r in rows:
                 vrows = _rows(journal,
@@ -177,11 +192,12 @@ def build_query(journal: Journal):
 
         @strawberry.field
         def trades(self, open_only: bool = False,
-                  limit: int = 200) -> list[TradeType]:
+                  limit: int = 200, offset: int = 0) -> list[TradeType]:
             where = "WHERE status='open'" if open_only else ""
             rows = _rows(journal,
                          f"SELECT * FROM trades {where} "
-                         f"ORDER BY opened_at DESC LIMIT ?", (limit,))
+                         f"ORDER BY opened_at DESC LIMIT ? OFFSET ?",
+                         (limit, offset))
             return [TradeType(
                 id=r["id"], symbol=r["symbol"], side=r["side"],
                 amount=r["amount"], entry_price=r["entry_price"],
