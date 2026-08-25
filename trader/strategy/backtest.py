@@ -164,7 +164,8 @@ def walk_forward(genome: Genome, df: pd.DataFrame, risk_cfg: dict,
     train = backtest(genome, df.iloc[:cut], risk_cfg)
     test = backtest(genome, df.iloc[cut:], risk_cfg)
     ok_train, f_train = train.passes()
-    ok_test, f_test = test.passes(min_trades=max(4, int(train.trades * 0.25)))
+    ok_test, f_test = test.passes(min_trades=max(3, int(train.trades * 0.2)),
+                                  min_pf=1.0)
     return {"train": train, "test": test,
             "robust": ok_train and ok_test,
             "train_fails": f_train, "test_fails": f_test}
