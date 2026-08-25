@@ -1,6 +1,6 @@
 ---
 type: strategy
-state: paper
+state: demoted
 family: vwap_fade
 origin: seed
 ---
@@ -18,6 +18,6 @@ origin: seed
 ## Live record
 - closed trades: 0 · wins: 0
 - realized P&L: +0.00 USDT
-- state: **paper**
+- state: **demoted**
 
 Related: [[Regime Playbook]], [[MOC]]
