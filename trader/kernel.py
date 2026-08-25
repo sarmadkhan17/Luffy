@@ -144,6 +144,9 @@ class Kernel:
         if self.cfg.get("harvester", {}).get("enabled", False):
             threading.Thread(target=self._harvest_loop, daemon=True,
                              name="harvester").start()
+        if self.cfg.get("crawler", {}).get("enabled", False):
+            threading.Thread(target=self._crawl_loop, daemon=True,
+                             name="crawler").start()
 
     def _filter_universe_to_venue(self) -> None:
         """Universe comes from production data; drop symbols the trading
@@ -187,6 +190,22 @@ class Kernel:
                 stats = h.harvest_once()
             except Exception as e:
                 log.warning(f"harvest cycle failed: {e}")
+            _t.sleep(interval)
+
+    def _crawl_loop(self) -> None:
+        """Deep-reading crawler: walks finance knowledge sites, mines
+        tradeable rules from full-text material."""
+        import time as _t
+        c = self.cfg.get("crawler", {})
+        interval = float(c.get("interval_minutes", 360)) * 60
+        _t.sleep(600)                    # let boot + first harvest settle
+        while not self._stop:
+            try:
+                from .brain.crawler import DeepCrawler
+                DeepCrawler(self.journal, self.cfg, self.feed,
+                            self.notifier).crawl_once()
+            except Exception as e:
+                log.warning(f"crawl cycle failed: {e}")
             _t.sleep(interval)
 
     def _maybe_validate_agents(self) -> None:

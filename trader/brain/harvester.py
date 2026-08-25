@@ -73,6 +73,12 @@ FAMILY_DOCS = {
     "breakout_retest": "trade confirmed range breakouts on first retest hold",
     "sweep_reversal": "trade stop-hunt reversals when swept levels reclaim fast",
     "rotation_momo": "ride BTC-led catch-up flows into lagging alts",
+    "rsi_extreme": "fade momentum exhaustion: enter when RSI crosses back "
+                   "out of an overbought/oversold extreme",
+    "ma_cross": "classic trend-following: fast MA crossing slow MA starts "
+                "a position in the cross direction",
+    "bb_fade": "fade overextension: price pierces a Bollinger band then "
+               "closes back inside",
 }
 
 
@@ -104,6 +110,8 @@ def scrape_feed(feed_url: str, timeout: int = 15) -> list[dict]:
                        r"|<published>([^<]+)</published>"
                        r"|<updated>([^<]+)</updated>"
                        r"|<dc:date>([^<]+)</dc:date>", block)
+        lm = re.search(r"<link(?:\s[^>]*)?(?:/>|>(?:<!\[CDATA\[)?([\s\S]+?)"
+                       r"(?:\]\]>)?</link>)", block)
         if not tm or not dm:
             continue
         import html as _html
@@ -130,11 +138,17 @@ def scrape_feed(feed_url: str, timeout: int = 15) -> list[dict]:
                 if ts:
                     age_h = max(0.0, (time.time() - ts) / 3600)
         title = re.sub(r"\s+", " ", _html.unescape(tm.group(1))).strip()
+        link = ""
+        if lm:
+            link = (lm.group(1) or lm.group(0)).split('"')[0].strip()
+            if link.startswith("<"):
+                link = re.sub(r"</?link[^>]*>", "", link).strip()
         items.append({"source": feed_url,
                       "idea_id": "rss_" + hashlib.md5(
                           title.encode()).hexdigest()[:10],
                       "title": title,
                       "text": desc[:600],
+                      "link": link,
                       "age_h": round(age_h, 2) if age_h is not None else None})
     seen, out = set(), []
     for it in items:
@@ -142,6 +156,37 @@ def scrape_feed(feed_url: str, timeout: int = 15) -> list[dict]:
             continue
         seen.add(it["idea_id"])
         out.append(it)
+    return out
+
+
+def repair_params(family: str, raw: dict) -> dict:
+    """Coerce sloppy LLM gene output into valid params.
+
+    Models copy range strings ('5..50'), emit ints for floats, or drift
+    outside bounds — every case maps onto the spec's clamped value or
+    its default instead of losing the whole genome."""
+    from ..strategy.genome import FAMILY_GENE_SPECS
+    spec = FAMILY_GENE_SPECS.get(family, {})
+    raw = raw if isinstance(raw, dict) else {}
+    out = {}
+    for k, (typ, lo, hi, default) in spec.items():
+        v = raw.get(k, default)
+        if isinstance(v, str):
+            m = re.fullmatch(r"\s*(-?[\d.]+)\s*(?:\.\.|-|to)\s*(-?[\d.]+)\s*",
+                             v)
+            try:
+                v = float(m.group(2)) if m else float(v)
+            except (TypeError, ValueError):
+                out[k] = default
+                continue
+        try:
+            v = typ(v)
+        except (TypeError, ValueError):
+            out[k] = default
+            continue
+        if lo is not None and hi is not None:
+            v = min(max(v, lo), hi)
+        out[k] = v
     return out
 
 
@@ -221,8 +266,7 @@ class Harvester:
     # ── EXTRACT ──────────────────────────────────────────────────────────
     def _genome_from(self, idea: dict, raw: dict) -> Genome | None:
         family = raw.get("family")
-        if family not in FAMILY_GENE_SPECS or \
-                not isinstance(raw.get("params"), dict):
+        if family not in FAMILY_GENE_SPECS:
             return None
         hyp = (raw.get("hypothesis") or "").strip()
         hyp = f"{hyp} — harvested from {idea['source']}: {idea['title'][:90]}"
@@ -233,7 +277,8 @@ class Harvester:
                    invalidation="Demote on PF<0.85/20 trades or 6 straight losses.",
                    regime_filter=frozenset(["TRENDING_UP", "TRENDING_DOWN",
                                             "RANGING", "VOLATILE"]),
-                   markets=frozenset({"futures"}), params=raw["params"])
+                   markets=frozenset({"futures"}),
+                   params=repair_params(family, raw.get("params")))
         if Genome.validate(g):
             return None
         return g

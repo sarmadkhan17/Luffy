@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import logging
 
-from ..agents.indicators import adx, anchored_vwap, ema, zscore
+from ..agents.indicators import adx, anchored_vwap, ema, rsi, zscore
 from ..core.types import Action, Snapshot, StrategySignal
 from .genome import Genome, spawn_seed
 
@@ -158,12 +158,104 @@ def eval_rotation_momo(g: Genome, snap: Snapshot) -> StrategySignal | None:
     return None
 
 
+# ── 6. RSI extreme reclaim (fade momentum exhaustion) ───────────────────
+def eval_rsi_extreme(g: Genome, snap: Snapshot) -> StrategySignal | None:
+    df = snap.df("15m")
+    if df is None or len(df) < int(g.params["rsi_len"]) + 30:
+        return None
+    r = rsi(df["close"], int(g.params["rsi_len"]))
+    prev, now = float(r.iloc[-2]), float(r.iloc[-1])
+    os_l, ob_l = g.params["os_level"], g.params["ob_level"]
+    if prev < os_l <= now:                 # crossed up out of oversold
+        return StrategySignal(
+            g.strategy_id, "rsi_extreme", snap.symbol, Action.BUY,
+            confidence=min(0.5 + (os_l - prev) / max(os_l, 1) * 0.3, 0.75),
+            rationale=f"RSI({g.params['rsi_len']:.0f}) reclaimed {os_l:.0f} "
+                      f"from {prev:.0f} — oversold exhaustion",
+            params=dict(g.params))
+    if prev > ob_l >= now:                 # crossed down out of overbought
+        return StrategySignal(
+            g.strategy_id, "rsi_extreme", snap.symbol, Action.SELL,
+            confidence=min(0.5 + (prev - ob_l) / max(100 - ob_l, 1) * 0.3,
+                           0.75),
+            rationale=f"RSI({g.params['rsi_len']:.0f}) fell through {ob_l:.0f} "
+                      f"from {prev:.0f} — overbought exhaustion",
+            params=dict(g.params))
+    return None
+
+
+# ── 7. Moving-average crossover ─────────────────────────────────────────
+def eval_ma_cross(g: Genome, snap: Snapshot) -> StrategySignal | None:
+    df = snap.df("15m")
+    fl, sl = int(g.params["fast_len"]), int(g.params["slow_len"])
+    if df is None or len(df) < sl + 60 or fl >= sl:
+        return None
+    c = df["close"]
+    spread = ema(c, fl) - ema(c, sl)
+    now, p1, p2 = float(spread.iloc[-1]), float(spread.iloc[-2]), \
+        float(spread.iloc[-3])
+    from ..agents.indicators import atr as _atr
+    a = _atr(df)
+    sep = abs(now) / max(a, 1e-9)
+    if p2 <= 0 < p1 and now > 0:           # fresh bullish cross ≤2 bars old
+        return StrategySignal(
+            g.strategy_id, "ma_cross", snap.symbol, Action.BUY,
+            confidence=min(0.45 + sep * 0.12, 0.72),
+            rationale=f"EMA{fl} crossed above EMA{sl} ({sep:.2f}·ATR apart)",
+            params=dict(g.params))
+    if p2 >= 0 > p1 and now < 0:
+        return StrategySignal(
+            g.strategy_id, "ma_cross", snap.symbol, Action.SELL,
+            confidence=min(0.45 + sep * 0.12, 0.72),
+            rationale=f"EMA{fl} crossed below EMA{sl} ({sep:.2f}·ATR apart)",
+            params=dict(g.params))
+    return None
+
+
+# ── 8. Bollinger band pierce fade ───────────────────────────────────────
+def eval_bb_fade(g: Genome, snap: Snapshot) -> StrategySignal | None:
+    df = snap.df("15m")
+    n, k = int(g.params["bb_len"]), float(g.params["bb_k"])
+    if df is None or len(df) < n + 30:
+        return None
+    c = df["close"]
+    mid = c.rolling(n).mean()
+    sd = c.rolling(n).std()
+    upper = mid + k * sd
+    lower = mid - k * sd
+    prev, now = df.iloc[-2], df.iloc[-1]
+    if float(prev["close"]) > float(upper.iloc[-2]) and \
+            float(now["close"]) < float(upper.iloc[-1]):
+        z = (float(prev["close"]) - float(mid.iloc[-2])) / \
+            max(float(sd.iloc[-2]) * k, 1e-9)
+        return StrategySignal(
+            g.strategy_id, "bb_fade", snap.symbol, Action.SELL,
+            confidence=min(0.45 + 0.12 * (z - 1), 0.72),
+            rationale=f"pierced upper BB({n},{k}) at {z:.1f}×band, "
+                      f"closed back inside — fading overextension",
+            params=dict(g.params))
+    if float(prev["close"]) < float(lower.iloc[-2]) and \
+            float(now["close"]) > float(lower.iloc[-1]):
+        z = (float(mid.iloc[-2]) - float(prev["close"])) / \
+            max(float(sd.iloc[-2]) * k, 1e-9)
+        return StrategySignal(
+            g.strategy_id, "bb_fade", snap.symbol, Action.BUY,
+            confidence=min(0.45 + 0.12 * (z - 1), 0.72),
+            rationale=f"pierced lower BB({n},{k}) at {z:.1f}×band, "
+                      f"closed back inside — fading capitulation",
+            params=dict(g.params))
+    return None
+
+
 EVALUATORS = {
     "ema_trend": eval_ema_trend,
     "vwap_fade": eval_vwap_fade,
     "breakout_retest": eval_breakout_retest,
     "sweep_reversal": eval_sweep_reversal,
     "rotation_momo": eval_rotation_momo,
+    "rsi_extreme": eval_rsi_extreme,
+    "ma_cross": eval_ma_cross,
+    "bb_fade": eval_bb_fade,
 }
 
 
