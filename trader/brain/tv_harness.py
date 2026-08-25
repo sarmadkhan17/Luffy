@@ -31,15 +31,28 @@ SHOT_DIR = ROOT / "logs"
 CHART_URL = "https://www.tradingview.com/chart/?symbol=BINANCE%3ABTCUSDT"
 
 SELECTORS = {
-    "pine_editor_tab": "[data-name='bottom-panel-tabs'] >> text=Pine Editor",
-    "pine_editor_alt": "div[class*='pine'] >> text=Pine Editor",
-    "editor_area": ".editor-container textarea, .view-lines",
+    # 2026-08 UI: Pine Editor is a floating overlay launched from the
+    # right toolbar; editor surface is Monaco; tester tab appears in the
+    # same overlay after a strategy is added.
+    "pine_toolbar_btn": "button[aria-label='Pine']",
+    "editor_surface": ".monaco-editor .view-lines, .monaco-editor",
     "add_to_chart": "button:has-text('Add to chart')",
-    "strategy_tester_tab": "[data-name='bottom-panel-tabs'] >> text=Strategy Tester",
-    "strategy_tester_alt": "div[title='Strategy Tester']",
-    "tester_panel": "[data-name='strategy-tester-panel'], div[id^='strategy-tester']",
     "chart_loaded": "div[class*='chart-container'], canvas",
 }
+
+
+def _find_tester_tab(page):
+    """Strategy Tester tab in the overlay panel (role/text agnostic)."""
+    for sel in ("[role='tab']:has-text('Strategy Tester')",
+                "button:has-text('Strategy Tester')",
+                "div:has-text('Strategy Tester')"):
+        try:
+            loc = page.locator(sel).first
+            if loc.count() and loc.is_visible():
+                return loc
+        except Exception:
+            continue
+    return None
 
 
 def sha_code(code: str, symbol: str = "BINANCE:BTCUSDT", tf: str = "1h") -> str:
@@ -47,8 +60,12 @@ def sha_code(code: str, symbol: str = "BINANCE:BTCUSDT", tf: str = "1h") -> str:
 
 
 def parse_metrics(text: str) -> dict:
-    """Tolerant label→value scrape from the tester panel's plain text."""
+    """Tolerant label→value scrape. 2026-08 free-plan tester ('Key
+    stats') exposes Total PnL + Max drawdown + Profitable trades only;
+    legacy Performance-Summary labels kept as fallbacks."""
     flat = re.sub(r"[ \t]+", " ", text)
+    # TV renders negative numbers with the typographic minus U+2212
+    flat = flat.replace("\u2212", "-").replace("–", "-")
     out = {}
 
     def grab(patterns, cast=str):
@@ -59,27 +76,39 @@ def parse_metrics(text: str) -> dict:
         return None
 
     num = r"([+-]?[\d,]+\.?\d*)\s*(?:USD|USDT|\$)?"
-    out["net_profit_usd"] = grab([
-        rf"Total Net Profit\s*\n?\s*{num}", rf"\bNet Profit\s*\n?\s*{num}"],
+    # ── new Key-stats labels ────────────────────────────────────────────
+    out["net_profit_usd"] = grab(
+        [rf"Total PnL\s*\n?\s*{num}",
+         rf"Total Net Profit\s*\n?\s*{num}",
+         rf"\bNet Profit\s*\n?\s*{num}"],
         lambda v: float(v.replace(",", "")))
     out["net_profit_pct"] = grab(
-        [rf"Total Net Profit[^%\n]*\n?.*?(-?[\d.]+)\s*%",
+        [rf"Total PnL\s*\n?\s*[+-]?[\d,.]+\s*(?:USD|USDT|\$)?\s*"
+         rf"([+-]?[\d.]+)\s*%",
+         rf"Total Net Profit[^%\n]*\n?.*?(-?[\d.]+)\s*%",
          rf"Net Profit.*?(-?[\d.]+)\s*%"],
         lambda v: float(v))
+    out["max_drawdown_usd"] = grab(
+        [rf"Max drawdown\s*\n?\s*{num}"],
+        lambda v: float(v.replace(",", "")))
+    out["max_drawdown_pct"] = grab(
+        [rf"Max drawdown\s*\n?\s*[+-]?[\d,.]+\s*(?:USD|USDT|\$)?\s*"
+         rf"([+-]?[\d.]+)\s*%",
+         rf"Max (?:Equity |Strategy )?Drawdown\s*\n?\s*"
+         rf"[+-]?[\d,.]+\s*(?:USD)?\s*([+-]?[\d.]+)\s*%",
+         rf"Max Drawdown[^%\n]*\n?.*?(-?[\d.]+)\s*%"],
+        lambda v: float(v))
+    out["win_rate_pct"] = grab(
+        [rf"Profitable trades\s*\n?\s*([+-]?[\d.]+)",
+         rf"Percent Profitable\s*\n?\s*(-?[\d.]+)"],
+        lambda v: float(v))
+    # ── legacy/deep-report labels (paid tiers) ──────────────────────────
     out["total_trades"] = grab(
         [rf"Total Closed Trades\s*\n?\s*{num}",
          rf"Total Trades\s*\n?\s*{num}"],
         lambda v: int(float(v.replace(",", ""))))
-    out["win_rate_pct"] = grab(
-        [rf"Percent Profitable\s*\n?\s*(-?[\d.]+)", ],
-        lambda v: float(v))
     out["profit_factor"] = grab(
         [rf"Profit Factor\s*\n?\s*(-?[\d.]+)"], lambda v: float(v))
-    out["max_drawdown_pct"] = grab(
-        [rf"Max (?:Equity |Strategy )?Drawdown\s*\n?\s*[+-]?[\d,.]+\s*"
-         rf"(?:USD)?\s*([+-]?[\d.]+)\s*%",
-         rf"Max (?:Equity |Strategy )?Drawdown\s*\n?\s*(-?[\d.]+)"],
-        lambda v: float(v))
     out["sharpe"] = grab([rf"Sharpe Ratio\s*\n?\s*(-?[\d.]+)"],
                          lambda v: float(v))
     out["buy_hold_pct"] = grab(
@@ -184,58 +213,60 @@ class TVHarness:
 
     # ── UI interactions (selectors may need repair as TV evolves) ───────
     def _set_timeframe(self, page, tf: str) -> None:
+        """TV quick-interval: type the tf while chart has focus."""
         try:
-            btn = page.locator("[data-name='menu-inner']").first
-            interval_btn = page.locator(
-                "button[id$='-interval'], [data-name='interval-button']"
-            ).first
-            if interval_btn.count():
-                interval_btn.click(timeout=4000)
-                page.locator(f"[data-name='items-continuous'] >> "
-                             f"text='{tf}'").first.click(timeout=4000)
+            page.locator(SELECTORS["chart_loaded"]).first.click(
+                timeout=5000, position={"x": 600, "y": 400})
+            page.keyboard.type(tf, delay=60)
+            page.keyboard.press("Enter")
+            page.wait_for_timeout(2500)
+            log.info(f"timeframe set to {tf} via quick-input")
         except Exception as e:
             log.debug(f"timeframe set skipped ({e}); keeping chart default")
 
     def _open_pine_editor(self, page) -> None:
-        for sel in (SELECTORS["pine_editor_tab"], SELECTORS["pine_editor_alt"]):
-            loc = page.locator(sel).first
-            try:
-                if loc.count():
-                    loc.click(timeout=6000)
-                    break
-            except Exception:
-                continue
-        page.wait_for_timeout(800)
+        page.locator(SELECTORS["pine_toolbar_btn"]).first.click(
+            timeout=10000)
+        page.wait_for_selector(".monaco-editor", timeout=20000)
+        page.wait_for_timeout(1000)
 
     def _paste_script(self, page, code: str) -> None:
-        area = page.locator(SELECTORS["editor_area"]).first
-        area.click(timeout=8000)
+        surface = page.locator(SELECTORS["editor_surface"]).first
+        surface.click(timeout=8000)
+        page.wait_for_timeout(300)
         page.keyboard.press("Control+A")
         page.keyboard.press("Delete")
+        page.wait_for_timeout(200)
         page.keyboard.insert_text(code)
-        page.wait_for_timeout(500)
+        page.wait_for_timeout(1200)          # let Monaco settle + lint
 
     def _add_to_chart(self, page) -> None:
         btn = page.locator(SELECTORS["add_to_chart"]).first
-        btn.click(timeout=8000)
-        page.wait_for_timeout(3500)      # strategy compiles + renders
+        btn.click(timeout=10000)
+        page.wait_for_timeout(4000)          # compile + render on chart
 
     def _read_tester(self, page) -> dict:
-        for sel in (SELECTORS["strategy_tester_tab"],
-                    SELECTORS["strategy_tester_alt"]):
-            loc = page.locator(sel).first
-            try:
-                if loc.count():
-                    loc.click(timeout=6000)
-                    break
-            except Exception:
-                continue
+        # one-time "tester menu has moved" notice
+        try:
+            g = page.locator("button:has-text('Got it')").first
+            if g.count() and g.is_visible(timeout=2000):
+                g.click(timeout=3000)
+                page.wait_for_timeout(800)
+        except Exception:
+            pass
+        # tester auto-opens as the left "strategy report" panel after a
+        # strategy is added; no tab click needed on 2026-08 UI
         page.wait_for_timeout(1500)
-        panel = page.locator(SELECTORS["tester_panel"]).first
-        text = panel.inner_text(timeout=8000) if panel.count() else \
-            page.inner_text("body")
+        text = page.inner_text("body")
         metrics = parse_metrics(text)
-        if not metrics:
+        # free plan gates the deep report ("Upgrade to get full access");
+        # stray digits near those labels are false matches — drop them
+        if "Upgrade to get full access" in text:
+            for k in ("profit_factor", "total_trades", "sharpe",
+                      "buy_hold_pct"):
+                metrics.pop(k, None)
+        if "net_profit_pct" not in metrics and \
+                "net_profit_usd" not in metrics:
             raise RuntimeError("tester panel produced no metrics")
         return metrics
 
@@ -285,18 +316,25 @@ def evaluate_manifest(harness: TVHarness, manifest: dict,
     m = res["metrics"]
     pos_folds = sum(1 for fm in folds
                     if (fm.get("net_profit_usd") or 0) > 0)
+    # Free-plan reality: the tester exposes PnL + drawdown (+ per-fold
+    # PnL) only. Trade-count and sharpe/winrate gates are enforced by
+    # the internal backtest stage in the gauntlet, which has full
+    # metrics — so here they apply only when the data exists (paid).
     checks = {
         "profitable_oos": (m.get("net_profit_pct") or -100) > 0,
-        "enough_trades": (m.get("total_trades") or 0) >= min_oos_trades,
-        "quality": ((m.get("sharpe") or 0) >= 1.0) or
-                   ((m.get("win_rate_pct") or 0) >= 50.0),
         "drawdown_ok": abs(m.get("max_drawdown_pct") or 100) <= 20.0,
         "folds_positive": pos_folds >= max(1, len(folds) // 2 + 1),
     }
+    if m.get("total_trades") is not None:
+        checks["enough_trades"] = m["total_trades"] >= min_oos_trades
+    if m.get("sharpe") is not None or m.get("win_rate_pct") is not None:
+        checks["quality"] = ((m.get("sharpe") or 0) >= 1.0) or \
+            ((m.get("win_rate_pct") or 0) >= 50.0)
     return {
         "valid": all(checks.values()), "checks": checks,
         "judge": "real_tv",
         "net_profit_pct": m.get("net_profit_pct"),
+        "net_profit_usd": m.get("net_profit_usd"),
         "trades": m.get("total_trades"),
         "win_rate": m.get("win_rate_pct"),
         "profit_factor": m.get("profit_factor"),

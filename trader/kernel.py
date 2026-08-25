@@ -624,8 +624,21 @@ class Kernel:
         except Exception as e:
             log.debug(f"v3 account fetch failed ({e}); falling back")
         try:
-            total = float(self.exchange.fetch_balance().get("USDT", {})
-                          .get("total") or 0)
+            total = 0.0
+            # demo-fapi.binance.com intermittently answers 5xx
+            # ("upstream request failed") for seconds at a time — retry
+            # once before falling back to the last known equity
+            for attempt in range(2):
+                try:
+                    total = float(self.exchange.fetch_balance()
+                                  .get("USDT", {}).get("total") or 0)
+                    if total > 0:
+                        break
+                except Exception as inner:
+                    if attempt == 1:
+                        raise
+                    log.debug(f"balance retry after: {inner}")
+                    time.sleep(3)
             return total if total > 0 else self._last_equity_fallback()
         except Exception as e:
             log.warning(f"balance fetch failed: {e}")
