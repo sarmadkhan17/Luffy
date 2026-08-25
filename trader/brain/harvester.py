@@ -360,12 +360,16 @@ class Harvester:
 
     # ── TEST + DEPLOY ────────────────────────────────────────────────────
     def _dual_gauntlet(self, g: Genome) -> tuple[bool, dict]:
-        tv = self.tv.walk_forward("BTC/USDT", g.family)
-        if not tv.get("valid"):
-            return False, {"stage": "tradingview", "tv": {
-                k: tv.get(k) for k in ("verdict", "oos_return_pct",
-                                       "oos_trades", "oos_sharpe",
-                                       "checks")}}
+        """Stage order: Yahoo prefilter (cheap) → internal sanity (cheap)
+        → real-TV Strategy Tester (expensive, budget-aware)."""
+        if not hasattr(self, "_strategy_judge"):
+            from .judge import StrategyJudge
+            self._strategy_judge = StrategyJudge(
+                self.journal, self.cfg, self.notifier)
+        j = self._strategy_judge
+        pre_ok, pre_ev = j.prefilter(g)
+        if not pre_ok:
+            return False, {"stage": "yahoo_prefilter", "tv": pre_ev}
         results = []
         for sym in ("BTC/USDT", "SOL/USDT"):
             df = self.feed.fetch_ohlcv(sym, "15m", limit=2900)
@@ -377,10 +381,10 @@ class Harvester:
         if test_pfs and min(test_pfs) < 0.5:
             return False, {"stage": "internal_sanity",
                            "test_pfs": test_pfs}
-        return True, {"tv": {k: tv.get(k) for k in
-                             ("oos_return_pct", "oos_trades", "oos_sharpe",
-                              "oos_win_rate", "beats_buy_hold")},
-                      "internal": {"test_pfs": test_pfs}}
+        tv_ok, tv_ev = j.final_verdict(g)
+        return tv_ok, {"stage": tv_ev.get("stage", "yahoo"),
+                       "tv": tv_ev,
+                       "internal": {"test_pfs": test_pfs}}
 
     def _deploy(self, g: Genome, idea: dict, evidence: dict):
         from ..core.types import Strategy, StrategyState, new_id

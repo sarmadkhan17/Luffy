@@ -64,6 +64,21 @@ class NewsGuardType:
 
 
 @strawberry.type
+class BrainEventType:
+    ts: str
+    kind: str
+    subject: str
+    detail: str
+
+
+@strawberry.type
+class TvHealthType:
+    state: str
+    runs_today: int
+    budget: int
+
+
+@strawberry.type
 class DecisionType:
     id: str
     ts: str
@@ -233,6 +248,30 @@ def build_query(journal: Journal):
                 threshold=r["threshold"], confidence=r["confidence"],
                 executed=bool(r["executed"]),
                 skip_reason=r["skip_reason"] or "", votes=[]) for r in rows]
+
+        @strawberry.field
+        def brain_events(self, kinds: str = "brain_judgement,pine_forged",
+                         limit: int = 20) -> list[BrainEventType]:
+            kind_list = [k.strip() for k in kinds.split(",") if k.strip()]
+            placeholders = ",".join("?" for _ in kind_list)
+            rows = _rows(journal,
+                         f"SELECT ts, kind, subject, detail FROM brain_events "
+                         f"WHERE kind IN ({placeholders}) "
+                         f"ORDER BY ts DESC LIMIT ?",
+                         tuple(kind_list) + (limit,))
+            return [BrainEventType(ts=r["ts"], kind=r["kind"],
+                                   subject=r["subject"],
+                                   detail=(r["detail"] or "")[:900])
+                    for r in rows]
+
+        @strawberry.field
+        def tv_health(self) -> TvHealthType:
+            from ..brain.tv_harness import TVHarness
+            h = TVHarness(journal, {"tv_harness": {"daily_runs": 20}})
+            st = h.health()
+            return TvHealthType(state=st["state"],
+                                runs_today=st["runs_today"],
+                                budget=st["budget"])
 
         @strawberry.field
         def trades(self, open_only: bool = False,

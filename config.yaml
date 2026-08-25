@@ -61,6 +61,11 @@ strategies:
   paper_min_profit_factor: 1.15
   auto_demote_drawdown_pct: 8.0  # statistical instant demotion, no LLM needed
 
+tv_harness:
+  enabled: true                  # REAL Strategy Tester via browser automation
+  daily_runs: 20                 # hard budget; folds consume runs too
+  run_timeout_s: 90
+
 harvester:
   enabled: true
   interval_minutes: 240        # scrape + extract + test every 4h
@@ -124,6 +129,8 @@ brain:
   model_fast: deepseek-chat            # V3 — proposals, summaries
   model_deep: deepseek-reasoner        # R1 — autopsies, strategy verdicts
   evolution_interval_minutes: 120      # continuous evolution heartbeat
+  judge_interval_minutes: 360          # Brain-Judge portfolio review cadence
+  judge_meta_every_hours: 168          # weekly "right direction?" deep review
   daily_token_budget: 200000
   max_tokens_per_call: 4000
 
