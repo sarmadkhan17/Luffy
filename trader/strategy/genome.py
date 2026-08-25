@@ -14,7 +14,8 @@ from ..core.types import Strategy, StrategyState, new_id
 
 REGIMES = {"TRENDING_UP", "TRENDING_DOWN", "RANGING", "VOLATILE"}
 FAMILIES = {"ema_trend", "vwap_fade", "breakout_retest",
-            "sweep_reversal", "rotation_momo"}
+            "sweep_reversal", "rotation_momo",
+            "rsi_extreme", "ma_cross", "bb_fade"}
 
 # gene name -> (python type, low, high, default)
 FAMILY_GENE_SPECS: dict[str, dict[str, tuple]] = {
@@ -40,6 +41,20 @@ FAMILY_GENE_SPECS: dict[str, dict[str, tuple]] = {
     "rotation_momo": {
         "btc_ret_1h_min": (float, 0.003, 0.03, 0.008),
         "lag_lookback":   (int, 2, 12, 4),
+    },
+    # ── families added to absorb classical harvested/crawled rules ──
+    "rsi_extreme": {                       # fade momentum extremes on reclaim
+        "rsi_len":        (int, 5, 30, 14),
+        "os_level":       (float, 15.0, 35.0, 30.0),
+        "ob_level":       (float, 65.0, 85.0, 70.0),
+    },
+    "ma_cross": {                          # classic fast/slow MA crossover
+        "fast_len":       (int, 5, 50, 20),
+        "slow_len":       (int, 30, 200, 50),
+    },
+    "bb_fade": {                           # pierce of Bollinger band reverts
+        "bb_len":         (int, 10, 40, 20),
+        "bb_k":           (float, 1.5, 3.0, 2.0),
     },
 }
 

@@ -92,6 +92,22 @@ scouts:
     min_samples: 60            # below this, votes pass through untouched
     refit_hours: 6
 
+crawler:
+  enabled: true
+  interval_minutes: 360        # deep-read walk every 6h
+  max_pages_per_cycle: 25
+  max_depth: 2                 # links followed from seeds / rss items
+  passages_per_mine: 10        # token budget: top-scored passages per cycle
+  per_host_delay_s: 1.5
+  seeds:
+    - https://chartschool.stockcharts.com/table-of-contents/market-indicators
+    - https://en.wikipedia.org/wiki/Mean_reversion_(finance)
+    - https://en.wikipedia.org/wiki/Momentum_(finance)
+    - https://en.wikipedia.org/wiki/Pair_trade
+    - https://en.wikipedia.org/wiki/Moving_average_crossover
+    - https://en.wikipedia.org/wiki/Relative_strength_index
+    - https://towardsdatascience.com/
+
 brain:
   provider: deepseek
   model_fast: deepseek-chat            # V3 — proposals, summaries

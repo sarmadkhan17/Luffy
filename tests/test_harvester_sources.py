@@ -91,10 +91,22 @@ def test_genome_rejects_out_of_schema_params():
         type("S", (), {})(),  # unused self path via instance below
         {}) if False else None
     h = _harvester_with(FakeLLM(None))
-    bad = h._genome_from(_idea(iid="x1"),
-                         {"family": "ema_trend",
-                          "params": {"nonsense_gene": 5}})
-    assert bad is None
+    g = h._genome_from(_idea(iid="x1"),
+                       {"family": "ema_trend",
+                        "params": {"nonsense_gene": 5}})
+    # unknown gene ignored, defaults fill in — genome survives
+    assert g is not None and g.family == "ema_trend"
+    assert "nonsense_gene" not in g.params
+    assert set(g.params) == {"adx_min", "pullback_atr", "trend_tf"}
+
+
+def test_genome_repairs_range_strings():
+    from trader.brain.harvester import repair_params
+    p = repair_params("ma_cross", {"fast_len": "5..50",
+                                   "slow_len": "30..200"})
+    assert p == {"fast_len": 50, "slow_len": 200}   # clamped to bounds
+    p2 = repair_params("rsi_extreme", {})
+    assert p2["rsi_len"] == 14                      # defaults fill gaps
 
 
 # ── Atom / entity parsing ────────────────────────────────────────────────
