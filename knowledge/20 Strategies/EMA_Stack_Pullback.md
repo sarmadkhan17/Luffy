@@ -16,8 +16,8 @@ origin: seed
 ```
 
 ## Live record
-- closed trades: 2 · wins: 0
-- realized P&L: +0.00 USDT
+- closed trades: 2 · wins: 1
+- realized P&L: +103.33 USDT
 - state: **paper**
 
 Related: [[Regime Playbook]], [[MOC]]

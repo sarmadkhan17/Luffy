@@ -78,11 +78,12 @@ class Kernel:
         self.executor = Executor(self.exchange, self.journal, cfg,
                                  self.market_type)
         from .engine.exits import ExitEngine
-        self.exits = ExitEngine(self.exchange, self.journal, self.executor,
-                                cfg, genomes={
-                                    st.id: st.params for st, _g in
-                                    self.population})
+
         self.population = self._load_population()
+        from .engine.exits import ExitEngine
+        self.exits = ExitEngine(self.exchange, self.journal, self.executor,
+                                cfg, genomes={st.id: st.params
+                                              for st, _g in self.population})
         self._stop = False
         self._book_cache: dict[str, tuple[float, dict]] = {}
         self._funding_cache: dict[str, float] | None = None
