@@ -51,6 +51,11 @@ risk:
 
 strategies:
   max_active: 6                  # concurrently active strategies
+  tv_validation: true            # TradingView walk-forward is mandatory judge
+  tv_interval: 1h
+  tv_period: 1y
+  tv_min_oos_trades: 5
+  tv_require_positive_oos: true
   paper_probation_trades: 15     # trades a new strategy must pass in paper before live eligibility
   paper_min_winrate: 0.40
   paper_min_profit_factor: 1.15

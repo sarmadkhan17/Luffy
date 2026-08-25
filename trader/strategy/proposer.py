@@ -13,6 +13,8 @@ import logging
 import random
 from datetime import datetime, timezone
 
+from ..brain.llm import BrainLLM
+from ..brain.tv import FAMILY_TV, TVClient
 from ..core.journal import Journal
 from ..strategy.backtest import walk_forward
 from ..strategy.genome import FAMILY_GENE_SPECS, Genome
@@ -32,12 +34,20 @@ FAMILY_REGIMES = {
 
 class Proposer:
     def __init__(self, journal: Journal, cfg: dict, feed=None,
-                 notifier=None):
+                 notifier=None, llm: BrainLLM | None = None,
+                 tv: TVClient | None = None):
         self.journal = journal
         self.cfg = cfg
         self.feed = feed
         self.notifier = notifier
         self.rng = random.Random()
+        self.llm = llm
+        self.tv = tv or TVClient(
+            interval="1h",
+            period="6mo",
+            min_oos_trades=int(cfg["strategies"].get("tv_min_oos_trades", 5)),
+            require_positive_oos=bool(
+                cfg["strategies"].get("tv_require_positive_oos", True)))
 
     def _proposals_today(self) -> int:
         day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -58,12 +68,39 @@ class Proposer:
         for fam in FAMILY_GENE_SPECS:
             if fam not in counts:
                 gaps.append(fam)
-        if rows and len(rows) < min(MIN_POPULATION, max_active):
-            # still room — add a second variant of the best-behaved family
-            for fam, n in sorted(counts.items(), key=lambda x: x[1]):
-                if n == min(counts.values()) and fam not in gaps:
-                    gaps.append(fam)
+        if rows and len(rows) < min(MIN_POPULATION, max_active) and not gaps:
+            # room left — the whole pipeline may try every family and the
+            # best dual-gauntlet survivor joins the population
+            return list(FAMILY_GENE_SPECS.keys())
         return gaps
+
+    def _llm_genome(self, family: str, tv_context: dict) -> Genome | None:
+        """DeepSeek composes a genome informed by TV's read of the market."""
+        if not (self.llm and self.llm.available):
+            return None
+        spec = FAMILY_GENE_SPECS[family]
+        genes_doc = {k: f"{v[1]}..{v[2]} (default {v[3]})"
+                     for k, v in spec.items()}
+        prompt = (
+            f"Compose ONE trading strategy of family '{family}'.\n"
+            f"Gene schema (name: range): {json.dumps(genes_doc)}\n"
+            f"TradingView walk-forward read of the current market:\n"
+            f"{json.dumps(tv_context)[:800]}\n\n"
+            "Choose genes suited to that read. Output JSON:\n"
+            '{"params":{...},"hypothesis":"one sentence citing the market '
+            'condition","name_hint":"3 words"}')
+        raw = self.llm.chat_json(prompt, deep=False)
+        if not raw or not isinstance(raw.get("params"), dict):
+            return None
+        g = Genome(strategy_id=f"prop_{family}_{self.rng.randint(1000,9999)}",
+                   family=family, hypothesis=raw.get("hypothesis") or
+                   f"{family} composed for current TV regime.",
+                   invalidation="Demote on PF<0.85/20 trades or 6 straight losses.",
+                   regime_filter=frozenset(FAMILY_REGIMES.get(family, ["RANGING"])),
+                   markets=frozenset({"futures"}), params=raw["params"])
+        if Genome.validate(g):
+            return None
+        return g
 
     def _random_genome(self, family: str) -> Genome:
         spec = FAMILY_GENE_SPECS[family]
@@ -87,9 +124,9 @@ class Proposer:
 
     def _hypothesis(self, family: str, params: dict) -> str:
         from ..strategy.library import build_seed_population
-        for st, _g in build_seed_population():
-            if st.kind == family:
-                return st.hypothesis
+        for _st, g in build_seed_population():
+            if g.family == family:
+                return g.hypothesis
         return (f"{family} variant exploiting its documented inefficiency "
                 f"with alternative parameters {params}.")
 
@@ -102,54 +139,90 @@ class Proposer:
         if self.feed is None:
             return {"proposed": 0, "reason": "no data feed for gauntlet"}
 
-        family = gaps[0]
+        # TV context first: how does every family read the current market?
+        tv_context = {}
+        try:
+            tv_context = self.tv.compare_families("BTC/USDT")
+        except Exception as e:
+            log.warning(f"tv context failed: {e}")
+
         best = None
-        attempts = 0
-        while attempts < 4:                      # try a few param draws
-            attempts += 1
-            g = self._random_genome(family)
-            errs = Genome.validate(g)
-            if errs:
-                continue
-            # gauntlet on the three majors (most liquid, longest history)
-            results = []
-            for sym in ("BTC/USDT", "ETH/USDT", "SOL/USDT"):
-                df = self.feed.fetch_ohlcv(sym, "15m", limit=900)
-                if df is None or len(df) < 400:
+        for family in gaps:                  # sweep families — first pass wins
+            candidates = []
+            llm_g = self._llm_genome(family, tv_context)
+            if llm_g:
+                candidates.append(("llm", llm_g))
+            for _ in range(2):
+                candidates.append(("random", self._random_genome(family)))
+
+            for origin, g in candidates:
+                if Genome.validate(g):
                     continue
-                results.append(walk_forward(g, df, self.cfg["risk"]))
-            if not results:
-                continue
-            robust_n = sum(1 for r in results if r["robust"])
-            total_test_trades = sum(r["test"].trades for r in results)
-            score = (robust_n, total_test_trades)
-            if best is None or score > best[0]:
-                best = (score, g, results)
+                # ── gauntlet 1: TRADINGVIEW (primary judge) ──────────
+                # 1y hourly walk-forward, OOS profitability + quality +
+                # fold consistency. 15m/30d internal windows are too short
+                # to validate anything — TV is the statistical authority.
+                tv = self.tv.walk_forward("BTC/USDT", family)
+                if not tv.get("valid"):
+                    self.journal.log_brain_event(
+                        "proposal_rejected", family,
+                        {"origin": origin, "stage": "tradingview",
+                         "params": g.params,
+                         "tv": {k: tv.get(k) for k in
+                                ("verdict", "checks", "oos_return_pct",
+                                 "oos_trades", "oos_sharpe",
+                                 "positive_folds")}})
+                    continue
+
+                # ── gauntlet 2: internal sanity (loose disaster check) ──
+                # only rejects catastrophes on our own data; strict
+                # statistical judgment already happened above.
+                results = []
+                for sym in ("BTC/USDT", "SOL/USDT"):
+                    df = self.feed.fetch_ohlcv(sym, "15m", limit=2900)
+                    if df is None or len(df) < 400:
+                        continue
+                    results.append(walk_forward(g, df, self.cfg["risk"]))
+                test_pfs = [r["test"].profit_factor for r in results
+                            if r["test"].trades >= 2]
+                if test_pfs and min(test_pfs) < 0.5:
+                    self.journal.log_brain_event(
+                        "proposal_rejected", family,
+                        {"origin": origin, "stage": "internal_sanity",
+                         "params": g.params, "test_pfs": test_pfs})
+                    continue
+
+                score = ((1 if tv.get("beats_buy_hold") else 0),
+                         tv.get("oos_return_pct") or 0)
+                cand = (score, g, results, tv, origin, family)
+                if best is None or score > best[0]:
+                    best = cand
 
         if best is None:
-            self.journal.log_brain_event("proposal_rejected", family,
-                                         "no valid genome drawn")
-            return {"proposed": 0, "reason": "gauntlet rejected all draws"}
+            return {"proposed": 0,
+                    "reason": "dual gauntlet (internal+TV) rejected all — "
+                              "see proposal_rejected events"}
 
-        score, g, results = best
-        accepted = score[0] >= 1 and score[1] >= 6
+        score, g, results, tv, origin, family = best
         detail = {
-            "family": family, "params": g.params,
-            "robust_variants": f"{score[0]}/3",
-            "test_trades": score[1],
-            "train_pfs": [round(r["train"].profit_factor, 2) for r in results],
-            "test_pfs": [round(r["test"].profit_factor, 2) for r in results],
+            "family": family, "origin": origin, "params": g.params,
+            "internal": {"robust_variants": f"{score[0]}/3",
+                         "train_pfs": [round(r["train"].profit_factor, 2)
+                                       for r in results],
+                         "test_pfs": [round(r["test"].profit_factor, 2)
+                                      for r in results]},
+            "tradingview": {k: tv.get(k) for k in
+                            ("tv_strategy", "verdict", "robustness",
+                             "oos_return_pct", "oos_trades", "oos_win_rate",
+                             "oos_sharpe", "beats_buy_hold")},
         }
-        if not accepted:
-            self.journal.log_brain_event("proposal_rejected", family, detail)
-            return {"proposed": 0, "reason": f"gauntlet: {detail}"}
 
         from ..core.types import Strategy, StrategyState, new_id
         st = Strategy(id=new_id("strat"), name=f"{family} variant "
                       f"({g.params.get('z_entry') or g.params.get('adx_min') or 'v2'})",
                       kind=family, params=g.params,
                       state=StrategyState.PAPER,
-                      description="brain proposal, gauntlet-passed",
+                      description="brain proposal, dual-gauntlet passed",
                       origin="brain")
         st.hypothesis, st.invalidation = g.hypothesis, g.invalidation
         st.regime_filter, st.markets = set(g.regime_filter), set(g.markets)

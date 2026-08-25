@@ -78,8 +78,8 @@ class Strategist:
             from ..strategy.proposer import Proposer
             from ..data.feed import DataFeed, make_exchange
             feed = DataFeed(make_exchange("futures"))
-            prop = Proposer(self.journal, self.cfg, feed,
-                            self.notifier).propose()
+            prop = Proposer(self.journal, self.cfg, feed, self.notifier,
+                            llm=self.llm).propose()
             if prop.get("proposed"):
                 applied.append({"strategy": prop["strategy"]["name"],
                                 "action": "proposed",
