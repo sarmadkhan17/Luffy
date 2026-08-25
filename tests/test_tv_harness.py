@@ -166,4 +166,20 @@ def test_evaluate_manifest_verdict_logic(tmp_path, monkeypatch):
     assert "enough_trades" not in v4["checks"]
     assert "quality" not in v4["checks"]
     assert v4["valid"] is False            # only 1/3 folds positive
+
+    # low-WR trend profile passes quality on profit factor
+    trend = {"net_profit_pct": 5.0, "max_drawdown_pct": 4.0,
+             "win_rate_pct": 34.0, "profit_factor": 1.3}
+    fold_metrics = [{"net_profit_usd": 10}, {"net_profit_usd": -30},
+                    {"net_profit_usd": 8}]
+    monkeypatch.setattr(h, "backtest",
+                        lambda code, s="B", t="1h", force=False:
+                        {"ok": True, "metrics": trend})
+    v5 = evaluate_manifest(h, manifest)
+    assert v5["checks"]["quality"] is True
+    # ...but a breakeven PF fails it
+    trend["profit_factor"] = 1.02
+    v6 = evaluate_manifest(h, manifest)
+    assert v6["checks"]["quality"] is False
+
     assert json.dumps(v4)                  # serializable for the brain dossier

@@ -178,6 +178,12 @@ class TVHarness:
                 str(PROFILE_DIR), headless=True,
                 viewport={"width": 1680, "height": 980})
             page = ctx.new_page()
+            try:
+                ctx.grant_permissions(
+                    ["clipboard-read", "clipboard-write"],
+                    origin="https://www.tradingview.com")
+            except Exception:
+                pass                     # best-effort; keyboard fallback below
             t0 = time.time()
             try:
                 page.goto(CHART_URL, timeout=45_000)
@@ -231,14 +237,81 @@ class TVHarness:
         page.wait_for_timeout(1000)
 
     def _paste_script(self, page, code: str) -> None:
+        """Replace editor content deterministically and VERIFY.
+        keyboard.insert_text is NOT safe here: TradingView's Monaco
+        auto-indents inserted newlines, stacking indentation until the
+        script is mangled. A real clipboard paste (Ctrl+V) inserts
+        verbatim, so we go through the clipboard and then verify."""
+        def editor_text() -> str:
+            try:
+                return page.locator(".monaco-editor .view-lines").first \
+                    .inner_text(timeout=4000)
+            except Exception:
+                return ""
+
+        def looks_clean() -> bool:
+            t = editor_text()
+            if not t.lstrip().startswith("//@version=5"):
+                return False
+            if t.count("strategy(") != 1:
+                return False
+            # auto-indent mangling leaves absurdly deep indents
+            if any(len(ln) - len(ln.lstrip()) > 12
+                   for ln in t.splitlines()):
+                return False
+            return True
+
         surface = page.locator(SELECTORS["editor_surface"]).first
-        surface.click(timeout=8000)
-        page.wait_for_timeout(300)
-        page.keyboard.press("Control+A")
-        page.keyboard.press("Delete")
-        page.wait_for_timeout(200)
-        page.keyboard.insert_text(code)
-        page.wait_for_timeout(1200)          # let Monaco settle + lint
+        for attempt in range(2):
+            page.keyboard.press("Escape")       # close suggest/hover widgets
+            surface.click(timeout=8000)
+            page.wait_for_timeout(300)
+            # Monaco keeps a JS model — setValue is atomic and cannot
+            # merge with stale content the way keypress-clearing can
+            try:
+                page.evaluate(
+                    "() => { const ms = window.monaco || "
+                    "(window.tradingView && window.tradingView.monaco);"
+                    " if (ms && ms.editor) { const m = "
+                    "ms.editor.getModels()[0]; if (m) { m.setValue(''); "
+                    "return true; } } return false; }")
+            except Exception:
+                pass
+            page.keyboard.press("Control+A")
+            page.keyboard.press("Delete")
+            page.wait_for_timeout(200)
+            pasted = False
+            try:
+                page.evaluate("c => navigator.clipboard.writeText(c)", code)
+                page.keyboard.press("Control+V")
+                pasted = True
+            except Exception:
+                page.keyboard.insert_text(code)   # fallback
+            page.wait_for_timeout(1800)           # settle + TV lint
+            if looks_clean():
+                self._assert_no_compile_errors(page)
+                return
+            if attempt == 0 and not pasted:
+                continue
+        raise RuntimeError("pine editor did not take the pasted script "
+                           "cleanly (stale content or focus loss)")
+
+    def _assert_no_compile_errors(self, page) -> None:
+        """Fail fast with the compiler's own message instead of wasting
+        an add-to-chart + tester wait on a broken script."""
+        try:
+            banner = page.locator(
+                "text=/of \\d+ problem/").first
+            if banner.count() and banner.is_visible(timeout=1500):
+                detail = page.locator(
+                    "[class*='error'], [class*='problem']").all_inner_texts()
+                raise RuntimeError(
+                    "pine compile error: "
+                    + "; ".join(t.strip() for t in detail[:3])[:200])
+        except RuntimeError:
+            raise
+        except Exception:
+            pass                                  # no banner = fine
 
     def _add_to_chart(self, page) -> None:
         btn = page.locator(SELECTORS["add_to_chart"]).first
@@ -327,9 +400,13 @@ def evaluate_manifest(harness: TVHarness, manifest: dict,
     }
     if m.get("total_trades") is not None:
         checks["enough_trades"] = m["total_trades"] >= min_oos_trades
-    if m.get("sharpe") is not None or m.get("win_rate_pct") is not None:
+    if m.get("sharpe") is not None or m.get("win_rate_pct") is not None \
+            or m.get("profit_factor") is not None:
+        # trend systems legitimately run low WR with big winners — PF
+        # is the honest quality signal when WR alone would mislead
         checks["quality"] = ((m.get("sharpe") or 0) >= 1.0) or \
-            ((m.get("win_rate_pct") or 0) >= 50.0)
+            ((m.get("win_rate_pct") or 0) >= 50.0) or \
+            ((m.get("profit_factor") or 0) >= 1.15)
     return {
         "valid": all(checks.values()), "checks": checks,
         "judge": "real_tv",

@@ -20,7 +20,7 @@ def _genome(family="rsi_extreme", **params):
                   hypothesis=HYP, invalidation="Demote on PF<0.85/20 trades.",
                   regime_filter=frozenset({"RANGING"}),
                   markets=frozenset({"futures"}), params=params or
-                  defaults[family])
+                  defaults.get(family, {}))
 
 
 ALL_FAMILIES = {
@@ -70,6 +70,17 @@ def test_params_injected_as_literals():
     assert "ta.rsi(close, 21)" in code
     assert "ta.crossover(r, 25)" in code
     assert "crossunder(r, 75)" in code
+
+
+def test_empty_params_fall_back_to_defaults():
+    """Regression: params={} once baked literal 'None' into the Pine
+    source (ta.rsi(close, None)) → TV compile error at add-to-chart."""
+    from trader.brain.pine import TEMPLATES
+    for fam in TEMPLATES:
+        g = _genome(fam)
+        code = forge(g)
+        assert "None" not in code, f"{fam} forged a 'None' literal"
+        assert lint(code) == [], f"{fam} failed lint with empty params"
 
 
 class FakeLLM:
