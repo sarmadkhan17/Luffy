@@ -64,8 +64,20 @@ strategies:
 harvester:
   enabled: true
   interval_minutes: 240        # scrape + extract + test every 4h
-  ideas_per_cycle: 6
-  tags: [btcusdt, ethusdt, solusdt]
+  ideas_per_cycle: 12          # token budget per cycle (batched into ONE LLM call)
+  tv_pages: 2                  # TradingView ideas pages per tag
+  tv_tags: [btcusdt, ethusdt, solusdt, altcoin, scalping, breakout, trend-trading]
+  rss_feeds:                   # news wires + quant essays + papers + forums
+    - https://cointelegraph.com/rss
+    - https://www.coindesk.com/arc/outboundfeeds/rss/
+    - https://decrypt.co/feed
+    - https://newsbtc.com/feed/
+    - https://www.cryptopotato.com/feed/
+    - https://medium.com/feed/tag/algorithmic-trading
+    - https://dev.to/feed/tag/trading
+    - http://arxiv.org/rss/q-fin.TR     # quant trading preprints
+    - http://arxiv.org/rss/q-fin.PM     # portfolio management preprints
+    - https://www.reddit.com/r/algotrading/.rss
 
 scouts:
   htf_soft_bump: 0.07          # extra threshold when entering against a strong 4h trend
