@@ -92,6 +92,7 @@ class Snapshot:
     btc_trend: str = "NEUTRAL"
     macro_note: str = ""
     market_type: str = "futures"
+    btc_ctx: dict = field(default_factory=dict)   # leader context (see regime.btc_context)
 
     def df(self, tf: str):
         return self.dfs.get(tf)

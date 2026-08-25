@@ -18,8 +18,13 @@ import sys
 import threading
 import time
 
+from .agents.calibration import maybe_refit as maybe_refit_calibration
 from .agents.flow import FlowAnalyst
 from .agents.momentum import MomentumAnalyst, RotationAnalyst, ValueAnalyst
+from .agents.news_guard import NewsGuard
+from .agents.orderbook_depth import DepthScout
+from .agents.positioning import PositioningAnalyst
+from .agents.regime import btc_context
 from .agents.structure import StructureAnalyst
 from .core.config import ROOT, load_config
 from .core.journal import Journal
@@ -39,7 +44,8 @@ log = logging.getLogger("luffy")
 
 AGENTS = {"structure": StructureAnalyst, "flow": FlowAnalyst,
           "momentum": MomentumAnalyst, "value": ValueAnalyst,
-          "rotation": RotationAnalyst}
+          "rotation": RotationAnalyst, "positioning": PositioningAnalyst,
+          "depth": DepthScout}
 
 
 def setup_logging(cfg: dict) -> None:
@@ -69,12 +75,15 @@ class Kernel:
         self.exchange = make_exchange(self.market_type.value)
         self.feed = DataFeed(self.exchange)
         self.universe = Universe(cfg, self.exchange)
-        self.flow_agent = AGENTS["flow"](self.exchange)
-        self.analysts = [AGENTS[k]() if k != "flow" else self.flow_agent
-                         for k in ("structure", "flow", "momentum",
-                                   "value", "rotation")]
+        self.positioning_agent = PositioningAnalyst(self.exchange)
+        self.depth_agent = DepthScout()
+        order = ("structure", "momentum", "flow", "value", "rotation",
+                 "positioning", "depth")
+        self.analysts = [self._make_agent(k) for k in order]
         from .engine.orchestrator import Orchestrator
-        self.orchestrator = Orchestrator(self.analysts, self.journal)
+        self.news_guard = NewsGuard(cfg, self.journal)
+        self.orchestrator = Orchestrator(self.analysts, self.journal,
+                                         news_guard=self.news_guard, cfg=cfg)
         self.executor = Executor(self.exchange, self.journal, cfg,
                                  self.market_type)
         from .engine.exits import ExitEngine
@@ -87,6 +96,15 @@ class Kernel:
         self._stop = False
         self._book_cache: dict[str, tuple[float, dict]] = {}
         self._funding_cache: dict[str, float] | None = None
+        self._oi_cache: tuple[float, dict[str, dict]] = (0.0, {})
+        self._btc_ctx: dict = {}
+
+    def _make_agent(self, key: str):
+        if key == "positioning":
+            return self.positioning_agent
+        if key == "depth":
+            return self.depth_agent
+        return AGENTS[key]()
 
     # ── boot ─────────────────────────────────────────────────────────────
     def _load_population(self) -> list[tuple]:
@@ -123,6 +141,9 @@ class Kernel:
                          name="tg-listener").start()
         threading.Thread(target=self._maybe_validate_agents, daemon=True,
                          name="agent-validator").start()
+        if self.cfg.get("harvester", {}).get("enabled", False):
+            threading.Thread(target=self._harvest_loop, daemon=True,
+                             name="harvester").start()
 
     def _filter_universe_to_venue(self) -> None:
         """Universe comes from production data; drop symbols the trading
@@ -152,6 +173,21 @@ class Kernel:
     def _graceful(self, signum, _frame) -> None:
         log.warning(f"signal {signum} — shutting down")
         self._stop = True
+
+    def _harvest_loop(self) -> None:
+        """Continuous strategy discovery from the internet."""
+        import time as _t
+        interval = float(self.cfg["harvester"].get("interval_minutes", 240)) * 60
+        _t.sleep(180)                       # let boot settle
+        while not self._stop:
+            try:
+                from .brain.harvester import Harvester
+                h = Harvester(self.journal, self.cfg, self.feed,
+                              self.notifier)
+                stats = h.harvest_once()
+            except Exception as e:
+                log.warning(f"harvest cycle failed: {e}")
+            _t.sleep(interval)
 
     def _maybe_validate_agents(self) -> None:
         """Re-run analyst validation weekly (or at boot if stale/missing)."""
@@ -208,7 +244,14 @@ class Kernel:
         return Snapshot(symbol=symbol,
                         ts=dt.datetime.now(dt.timezone.utc).isoformat(),
                         price=price, dfs=dfs,
-                        market_type=self.market_type.value)
+                        market_type=self.market_type.value,
+                        btc_ctx=self._btc_ctx)
+
+    def _refresh_btc_context(self) -> None:
+        """Leader context computed once per cycle, shared by all scouts."""
+        b15 = self.feed.fetch_ohlcv("BTC/USDT", "15m")
+        b1h = self.feed.fetch_ohlcv("BTC/USDT", "1h")
+        self._btc_ctx = btc_context(b15, b1h)
 
     def _order_book(self, symbol: str) -> dict | None:
         hit = self._book_cache.get(symbol)
@@ -216,7 +259,7 @@ class Kernel:
         if hit and now - hit[0] < 45:
             return hit[1]
         try:
-            ob = self.exchange.fetch_order_book(symbol, limit=25)
+            ob = self.exchange.fetch_order_book(symbol, limit=20)
             self._book_cache[symbol] = (now, ob)
             return ob
         except Exception:
@@ -234,6 +277,38 @@ class Kernel:
                 except Exception:
                     continue
         self._funding_cache = out
+        return out
+
+    def _oi_map(self, ttl: float = 900.0) -> dict[str, dict]:
+        """Open interest now + 24h change per symbol (TTL-cached).
+
+        OI history lives on production fapiData — the demo venue has no
+        route for it, so a public no-key instance serves the reads.
+        """
+        now = time.time()
+        if now - self._oi_cache[0] < ttl:
+            return self._oi_cache[1]
+        out: dict[str, dict] = {}
+        try:
+            if getattr(self, "_oi_ex", None) is None:
+                self._oi_ex = make_exchange("futures", demo=False,
+                                            with_keys=False)
+            for sym in self.universe.symbols():
+                try:
+                    hist = self._oi_ex.fetch_open_interest_history(
+                        sym, timeframe="1h", limit=25) or []
+                    points = [float(p.get("openInterestAmount") or
+                                    p.get("openInterestValue") or 0)
+                              for p in hist if isinstance(p, dict)]
+                    points = [p for p in points if p > 0]
+                    if len(points) >= 6:
+                        chg = (points[-1] - points[0]) / points[0]
+                        out[sym] = {"now": points[-1], "chg_24h": round(chg, 4)}
+                except Exception:
+                    continue
+        except Exception as e:
+            log.warning(f"OI map failed: {e}")
+        self._oi_cache = (now, out)
         return out
 
     # ── main loop ─────────────────────────────────────────────────────────
@@ -260,6 +335,11 @@ class Kernel:
             blocked = f"daily breaker {status['daily_pnl_pct']:.1f}%"
 
         funding = self._funding_map() if self.market_type == MarketType.FUTURES else {}
+        oi = self._oi_map() if self.market_type == MarketType.FUTURES else {}
+        self._refresh_btc_context()
+        news = self.news_guard.check()
+        if news.get("active"):
+            log.info(f"news guard: {news['why']} — thresholds raised")
         closed_count = int(self.journal.query(
             "SELECT COUNT(*) AS n FROM trades WHERE status='closed'")[0]["n"])
 
@@ -268,8 +348,9 @@ class Kernel:
             if snap is None:
                 continue
             stats["scanned"] += 1
-            self.flow_agent.set_context(symbol, self._order_book(symbol),
-                                        funding.get(symbol))
+            self.positioning_agent.set_context(symbol, funding.get(symbol),
+                                               oi.get(symbol))
+            self.depth_agent.set_context(symbol, self._order_book(symbol))
             d = self.orchestrator.decide(snap, self.population,
                                          entry_allowed=entry_allowed,
                                          blocked_reason=blocked)
@@ -409,6 +490,17 @@ class Kernel:
             except Exception as e:
                 log.warning(f"theorist failed: {e}")
         if Kernel._outcome_tick % 60 == 1:      # ~hourly brain/vault tick
+            try:
+                maybe_refit_calibration(
+                    self.journal,
+                    min_samples=int((self.cfg.get("scouts", {})
+                                     .get("calibration", {})
+                                     .get("min_samples", 60))),
+                    refit_hours=float((self.cfg.get("scouts", {})
+                                       .get("calibration", {})
+                                       .get("refit_hours", 6))))
+            except Exception as e:
+                log.warning(f"calibration tick failed: {e}")
             try:
                 from .brain.strategist import Strategist
                 from .strategy.promotion import evaluate_population

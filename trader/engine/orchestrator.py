@@ -1,13 +1,19 @@
 """Orchestrator — aggregates votes + strategy signals into one Decision.
 
-No vetoes. Regime-fit scales each analyst's conviction; measured agent
-accuracy (from journal) modulates weight. Strategy signals contribute
-their confidence as conviction in their direction.
+No vetoes — except two explicit, evidence-based ones:
+  1. higher-timeframe veto: strong 4h trend refuses counter-trend entries
+     (soft bump at |s|>0.35, hard refusal at |s|≥htf_hard_veto)
+  2. news blackout: while macro headlines churn, threshold rises
 
-    net = Σ(conviction × |conviction|·confidence · w_agent · fit) / Σw
+    net = Σ(conv' × |conv'|·confidence · w_agent · fit) / Σw
+    where conv' is the journal-calibrated conviction (calibration.py).
 
-Dynamic threshold: agreement tightens it (unanimous 0.18), conflict loosens
-it (0.32). Output is always a Decision — executed or skipped with reason.
+Regime-fit scales each analyst's conviction; measured agent accuracy
+(from validation replay + live outcomes) modulates weight.
+
+Dynamic threshold: agreement tightens it (unanimous 0.18), conflict
+loosens it (0.32). Output is always a Decision — executed or skipped
+with reason.
 """
 from __future__ import annotations
 
@@ -16,6 +22,7 @@ import threading
 import time
 from datetime import datetime, timezone
 
+from ..agents import calibration
 from ..agents.base import Analyst
 from ..agents.regime import classify, fit_multiplier
 from ..core.journal import Journal
@@ -25,8 +32,9 @@ from ..strategy import library as strat_lib
 
 log = logging.getLogger(__name__)
 
-_DEFAULT_WEIGHTS = {"structure": 0.28, "flow": 0.22, "momentum": 0.20,
-                    "value": 0.15, "rotation": 0.15}
+_DEFAULT_WEIGHTS = {"structure": 0.24, "flow": 0.15, "momentum": 0.17,
+                    "value": 0.11, "rotation": 0.13,
+                    "positioning": 0.11, "depth": 0.09}
 STRATEGY_VOTE_WEIGHT = 0.45      # strategies speak louder than any analyst
 
 
@@ -45,19 +53,41 @@ def _measured_weights() -> tuple[dict, dict]:
             return w["base_weights"], fit
     except Exception:
         pass
-    return _DEFAULT_WEIGHTS, {}
+    return {}, {}
+
+
+def htf_trend_score(df_4h) -> float:
+    """4h trend strength s ∈ [-1,+1]: EMA50 side × ADX-normalized slope."""
+    import numpy as np
+    if df_4h is None or len(df_4h) < 60:
+        return 0.0
+    c = df_4h["close"]
+    ema50 = c.ewm(span=50, adjust=False).mean()
+    dist = (float(c.iloc[-1]) - float(ema50.iloc[-1])) / (float(ema50.iloc[-1]) + 1e-12)
+    slope = float(ema50.iloc[-1] - ema50.iloc[-13]) / (float(ema50.iloc[-1]) + 1e-12)
+    atr = float((c.diff().abs().rolling(14).mean().iloc[-1]))
+    norm = max(atr * 3 / float(c.iloc[-1]), 1e-6)      # ~how far is "far" in 4h terms
+    s = np.tanh((0.7 * dist + 0.3 * slope) / norm)
+    return float(max(-1.0, min(1.0, s)))
 
 
 class Orchestrator:
     def __init__(self, analysts: list[Analyst], journal: Journal,
-                 base_threshold: float = 0.24):
+                 base_threshold: float = 0.24,
+                 news_guard=None, cfg: dict | None = None):
         self.analysts = {a.name: a for a in analysts}
         self.journal = journal
         self.base_threshold = base_threshold
-        self.base_weights, self.measured_fit = _measured_weights()
-        if self.measured_fit:
-            log.info(f"orchestrator: using MEASURED agent weights "
-                     f"{self.base_weights}")
+        self.news_guard = news_guard
+        sc = ((cfg or {}).get("scouts") or {})
+        self.htf_soft_bump = float(sc.get("htf_soft_bump", 0.07))
+        self.htf_hard_veto = float(sc.get("htf_hard_veto", 0.80))
+        self.calib_cfg = (sc.get("calibration") or {})
+        self.base_weights = {**_DEFAULT_WEIGHTS, **_measured_weights()[0]}
+        self.measured_fit = _measured_weights()[1]
+        if any(a != d for a, d in zip(sorted(self.base_weights),
+                                      sorted(_DEFAULT_WEIGHTS))):
+            log.info(f"orchestrator weights: {self.base_weights}")
         self._acc_cache: tuple[float, dict] = (0.0, {})   # ts, {agent: mult}
         self._lock = threading.Lock()
 
@@ -88,9 +118,16 @@ class Orchestrator:
         snap.regime = regime_info["regime"]
         snap.adx = regime_info["adx"]
 
+        # ── guards ───────────────────────────────────────────────────────
+        news = self.news_guard.check() if self.news_guard else \
+            {"active": False, "why": ""}
+        htf = htf_trend_score(snap.df("4h"))
+
         # ── collect votes ────────────────────────────────────────────────
         votes: list[Vote] = []
         acc_mults = self._accuracy_multipliers()
+        cal_state = calibration.load() if \
+            self.calib_cfg.get("enabled", True) else {}
         for name, analyst in self.analysts.items():
             try:
                 v = analyst.evaluate(snap)
@@ -103,6 +140,14 @@ class Orchestrator:
             v.meta["regime_fit"] = measured if measured is not None else \
                 fit_multiplier(analyst.regime_affinity, snap.regime)
             v.meta["acc_mult"] = round(acc_mults.get(name, 1.0), 2)
+            raw_c = v.conviction
+            new_c, did = calibration.apply(
+                cal_state, v.agent, v.conviction, v.confidence,
+                int(self.calib_cfg.get("min_samples", 60)))
+            if did:
+                v.conviction = new_c
+                v.meta["raw_conviction"] = round(raw_c, 3)
+                v.meta["calibrated"] = True
             votes.append(v)
 
         sigs: list[StrategySignal] = []
@@ -124,7 +169,7 @@ class Orchestrator:
         # ── aggregate ────────────────────────────────────────────────────
         num = den = 0.0
         for v in votes:
-            w = self.base_weights.get(v.agent, 0.15) * v.meta.get("acc_mult", 1.0)
+            w = self.base_weights.get(v.agent, 0.10) * v.meta.get("acc_mult", 1.0)
             eff = v.conviction * abs(v.conviction) * v.confidence \
                 * v.meta.get("regime_fit", 1.0)
             num += eff * w
@@ -146,6 +191,20 @@ class Orchestrator:
         else:
             frac = 0.5
         threshold = self.base_threshold * (1.45 - 0.55 * frac)   # 0.18..0.32
+
+        if news.get("active"):
+            threshold += 0.08
+            net *= 0.75
+        veto_reason = ""
+        if abs(htf) > 0.35 and snap.regime != "VOLATILE":
+            opposing = (net < 0 < htf) or (net > 0 > htf)
+            if opposing:
+                if abs(htf) >= self.htf_hard_veto:
+                    veto_reason = (f"4h trend {'UP' if htf > 0 else 'DOWN'} "
+                                   f"s={htf:+.2f} — hard veto")
+                    net = 0.0
+                else:
+                    threshold += self.htf_soft_bump
 
         if net > threshold:
             action = Action.BUY
@@ -198,8 +257,12 @@ class Orchestrator:
             strategy_signals=[vars(s) | {"action": s.action.value}
                               for s in sigs])
         d.executed = False
+        skip_bits = []
+        if veto_reason:
+            skip_bits.append(veto_reason)
         if action != Action.HOLD and not entry_allowed:
-            d.skip_reason = blocked_reason or "entries not allowed"
+            skip_bits.append(blocked_reason or "entries not allowed")
+        d.skip_reason = "; ".join(skip_bits)
         return d
 
     def journalize(self, snap: Snapshot, decision: Decision,
