@@ -156,6 +156,34 @@ class Executor:
                           f"unprotected! Consider manual flatten.")
                 return ""
 
+    def close_partial(self, trade: dict, amount: float,
+                      price_hint: float = 0.0, reason: str = "partial") -> bool:
+        """Reduce-only partial close; journal amount shrinks, trade stays open."""
+        sym = trade["symbol"]
+        side_close = "sell" if trade["side"] == "long" else "buy"
+        try:
+            order = self.ex.create_order(sym, "market", side_close, amount,
+                                         params={"reduceOnly": True})
+            fill = float(order.get("average") or order.get("price")
+                         or price_hint or 0)
+            direction = 1.0 if trade["side"] == "long" else -1.0
+            gross = ((fill - float(trade["entry_price"])) * direction * amount)
+            fees = self.taker_fee * (amount * fill + amount * float(trade["entry_price"]))
+            pnl = gross - fees
+            new_amt = float(trade["amount"]) - amount
+            with self.journal._tx() as c:
+                c.execute("UPDATE trades SET amount=?, realized_pnl="
+                          "realized_pnl+? WHERE id=?",
+                          (round(new_amt, 8), round(pnl, 8), trade["id"]))
+                c.execute("UPDATE trades SET tp1_done=1 WHERE id=? AND "
+                          "tp1_done=0", (trade["id"],))
+            log.info(f"PARTIAL {sym}: -{amount} @{fill:.4g} {reason} "
+                     f"pnl={pnl:+.2f} remaining={new_amt}")
+            return True
+        except Exception as e:
+            log.error(f"partial close failed {sym}: {e}")
+            return False
+
     # ── exit ─────────────────────────────────────────────────────────────
     def close(self, trade: dict, exit_price_hint: float = 0.0,
               reason: str = "signal_exit") -> bool:
