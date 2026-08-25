@@ -1,0 +1,224 @@
+"""Strategy judging + Brain-Judge — where Luffy's brain picks the book.
+
+Two layers live here:
+
+1. StrategyJudge — the dual-judge gauntlet gate. Cheap Yahoo pre-filter
+   and internal sanity run first; only survivors earn REAL TradingView
+   Strategy Tester runs through the browser harness (budget-aware).
+   Harness down → Yahoo policy verdict stands alone, system unblocked.
+
+2. BrainJudge — DeepSeek reviews candidate + population dossiers and
+   DECIDES the book: what stays paper, what promotes, what dies. Hard
+   statistical guardrails are non-negotiable (the brain cannot bypass
+   probation gates — it chooses among eligible actions only). Every
+   judgment journaled as 'brain_judgement' with full reasoning; weekly
+   meta-review answers the operator's standing questions (right
+   direction? better script available? keep or kill?) into the vault.
+"""
+from __future__ import annotations
+
+import json
+import logging
+import time
+from datetime import datetime, timezone
+
+from .llm import BrainLLM
+from .pine import forge_and_store
+from .tv import TVClient
+from .tv_harness import TVHarness, evaluate_manifest
+
+log = logging.getLogger(__name__)
+
+MAX_ACTIVE_DEFAULT = 6
+
+
+class StrategyJudge:
+    def __init__(self, journal, cfg: dict, notifier=None):
+        self.journal = journal
+        self.cfg = cfg
+        s = cfg.get("strategies", {})
+        self.tv = TVClient(
+            interval=s.get("tv_interval", "1h"),
+            period=s.get("tv_period", "1y"),
+            min_oos_trades=int(s.get("tv_min_oos_trades", 5)),
+            require_positive_oos=bool(
+                s.get("tv_require_positive_oos", True)))
+        self.harness = TVHarness(journal, cfg)
+        self.enabled = bool(cfg.get("tv_harness", {}).get("enabled", True))
+        self.notifier = notifier
+
+    def prefilter(self, genome) -> tuple[bool, dict]:
+        """Stage 1 (cheap): Yahoo walk-forward pre-filter."""
+        yv = self.tv.walk_forward("BTC/USDT", genome.family)
+        return bool(yv.get("valid")), {
+            "stage": "yahoo_prefilter",
+            "verdict": yv.get("verdict"),
+            "checks": yv.get("checks"),
+            "oos_return_pct": yv.get("oos_return_pct"),
+            "oos_trades": yv.get("oos_trades"),
+            "oos_sharpe": yv.get("oos_sharpe"),
+            "beats_buy_hold": yv.get("beats_buy_hold")}
+
+    def final_verdict(self, genome) -> tuple[bool, dict]:
+        """Stage 3 (expensive): REAL TradingView tester when the harness
+        is healthy and budget allows; otherwise the Yahoo policy stands
+        alone. Call only after cheap stages passed."""
+        if self.enabled:
+            health = self.harness.health()
+            reserve = 5                     # leave room for fold variants
+            if health["state"] != "down" and \
+                    health["runs_today"] + reserve <= health["budget"]:
+                try:
+                    manifest = forge_and_store(genome, self.journal)
+                    rv = evaluate_manifest(self.harness, manifest,
+                                           min_oos_trades=int(
+                                               self.cfg.get("strategies", {})
+                                               .get("tv_min_oos_trades", 5)))
+                    if "reason" not in rv or rv.get("valid"):
+                        return bool(rv.get("valid")), \
+                            {"stage": "real_tv", **rv}
+                    log.warning(f"real-TV failed ({rv['reason']}) — "
+                                f"falling back to Yahoo verdict")
+                except Exception as e:
+                    log.warning(f"real-TV pipeline error: {e}")
+        return self.prefilter(genome)
+
+    def judge(self, genome) -> tuple[bool, dict]:
+        """One-shot convenience: prefilter → final_verdict."""
+        ok, ev = self.prefilter(genome)
+        if not ok:
+            return False, ev
+        return self.final_verdict(genome)
+
+
+class BrainJudge:
+    def __init__(self, journal, cfg: dict, notifier=None):
+        self.journal = journal
+        self.cfg = cfg
+        self.llm = BrainLLM(cfg)
+        self.notifier = notifier
+        s = cfg.get("strategies", {})
+        self.max_active = int(s.get("max_active", MAX_ACTIVE_DEFAULT))
+        self.probation_trades = int(s.get("paper_probation_trades", 15))
+        self.min_winrate = float(s.get("paper_min_winrate", 0.40))
+        self.min_pf = float(s.get("paper_min_profit_factor", 1.15))
+
+    def _promotion_earned(self, row: dict) -> bool:
+        """HARD GUARDRAIL: the brain may only promote strategies whose
+        closed-trade record already meets probation thresholds. It picks
+        among the eligible; it never bends the gates."""
+        n = row.get("live_trades") or 0
+        wr = row.get("win_rate")
+        st = row.get("stats") or {}
+        pf = st.get("profit_factor")
+        if n < self.probation_trades or wr is None:
+            return False
+        return wr >= self.min_winrate or (
+            isinstance(pf, (int, float)) and pf >= self.min_pf)
+
+    # ── dossier assembly ────────────────────────────────────────────────
+    def _strategy_rows(self) -> list[dict]:
+        out = []
+        for r in self.journal.list_strategies(["paper", "active", "demoted"]):
+            t = self.journal.query(
+                "SELECT COUNT(*) n, "
+                "SUM(CASE WHEN realized_pnl > 0 THEN 1 ELSE 0 END) w, "
+                "SUM(realized_pnl) pnl FROM trades "
+                "WHERE strategy_id=? AND status='closed'", (r["id"],))[0]
+            n, wins = int(t["n"] or 0), int(t["w"] or 0)
+            out.append({
+                "id": r["id"], "name": r["name"], "state": r["state"],
+                "kind": r["kind"], "origin": r["origin"],
+                "hypothesis": (r["hypothesis"] or "")[:160],
+                "stats": json.loads(r["stats_json"] or "{}"),
+                "live_trades": n, "win_rate": round(wins / n, 2) if n else None,
+                "pnl_usdt": round(float(t["pnl"] or 0), 2)})
+        return out
+
+    def _last_judgement(self) -> dict | None:
+        r = self.journal.query(
+            "SELECT detail, ts FROM brain_events WHERE "
+            "kind='brain_judgement' ORDER BY ts DESC LIMIT 1")
+        if not r:
+            return None
+        try:
+            return json.loads(r[0]["detail"])
+        except Exception:
+            return None
+
+    # ── the review ───────────────────────────────────────────────────────
+    def review(self, meta_review: bool = False) -> dict:
+        rows = self._strategy_rows()
+        if not rows:
+            return {"reviewed": False, "why": "empty population"}
+        active_n = sum(1 for r in rows if r["state"] == "active")
+        payload = {
+            "population": rows,
+            "max_active": self.max_active,
+            "currently_active": active_n,
+            "previous_judgement": self._last_judgement(),
+            "meta_review": meta_review,
+        }
+        prompt = (
+            "You are the trading brain of an autonomous crypto futures "
+            "system. Review this strategy portfolio and DECIDE.\n"
+            f"{json.dumps(payload)[:3500]}\n\n"
+            "Rules: you may PROMOTE a paper strategy to active ONLY if its "
+            f"record justifies it and active count would stay <= {self.max_active}. "
+            "You may DEMOTE anything degrading. You may HOLD everything. "
+            "Never invent ids. Cite numbers in rationales.\n"
+            'Reply as one JSON object: {"decisions":[{"id","action":'
+            '"promote|demote|hold","rationale"}],'
+            '"direction_assessment":"one paragraph: are we going in the '
+            'right direction?",'
+            '"portfolio_note":"what you want next from discovery"}')
+        raw = self.llm.chat_json(prompt, deep=False) if self.llm.available \
+            else None
+        decisions = (raw or {}).get("decisions") or []
+        applied = []
+        by_id = {r["id"]: r for r in rows}
+        for d in decisions:
+            row = by_id.get(d.get("id"))
+            act = d.get("action")
+            if not row or act not in ("promote", "demote"):
+                continue
+            cur = row["state"]
+            if act == "promote" and cur == "paper" and \
+                    active_n < self.max_active and \
+                    self._promotion_earned(row):
+                self.journal.query(
+                    "UPDATE strategies SET state='active' WHERE id=?",
+                    (row["id"],))
+                active_n += 1
+                applied.append({**d, "from": cur, "to": "active"})
+            elif act == "demote" and cur in ("active", "paper"):
+                self.journal.query(
+                    "UPDATE strategies SET state='demoted', "
+                    "retire_reason=? WHERE id=?",
+                    (f"brain: {str(d.get('rationale'))[:150]}", row["id"]))
+                applied.append({**d, "from": cur, "to": "demoted"})
+        judgement = {
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "meta_review": meta_review,
+            "decisions_applied": applied,
+            "direction": (raw or {}).get("direction_assessment", ""),
+            "portfolio_note": (raw or {}).get("portfolio_note", ""),
+            "used_llm": raw is not None,
+        }
+        self.journal.log_brain_event("brain_judgement", "brain", judgement)
+        if applied and self.notifier:
+            summary = "; ".join(f"{a['id'][:12]}→{a['to']}" for a in applied)
+            self.notifier.send(f"🧠 Brain judged the book: {summary}")
+        if meta_review and judgement["direction"]:
+            try:
+                from ..knowledge.vault import Vault
+                Vault(self.journal).incident_note(
+                    f"Meta-review {judgement['ts'][:10]}",
+                    f"**Direction:** {judgement['direction']}\n\n"
+                    f"**Discovery ask:** {judgement['portfolio_note']}")
+            except Exception:
+                pass
+        log.info(f"brain judge: {len(applied)} applied "
+                 f"(llm={judgement['used_llm']})")
+        return {"reviewed": True, "applied": len(applied),
+                "meta": meta_review}

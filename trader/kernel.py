@@ -147,6 +147,9 @@ class Kernel:
         if self.cfg.get("crawler", {}).get("enabled", False):
             threading.Thread(target=self._crawl_loop, daemon=True,
                              name="crawler").start()
+        if self.cfg.get("brain", {}).get("judge_interval_minutes"):
+            threading.Thread(target=self._brain_judge_loop, daemon=True,
+                             name="brain-judge").start()
 
     def _filter_universe_to_venue(self) -> None:
         """Universe comes from production data; drop symbols the trading
@@ -206,6 +209,30 @@ class Kernel:
                             self.notifier).crawl_once()
             except Exception as e:
                 log.warning(f"crawl cycle failed: {e}")
+            _t.sleep(interval)
+
+    def _brain_judge_loop(self) -> None:
+        """Brain-Judge: LLM reviews the strategy book and decides —
+        promote/demote/hold, with journaled reasoning. Weekly deep
+        meta-review answers 'are we going in the right direction?'"""
+        import time as _t
+        b = self.cfg.get("brain", {})
+        interval = float(b.get("judge_interval_minutes", 360)) * 60
+        meta_every_s = float(b.get("judge_meta_every_hours", 168)) * 3600
+        last_meta = 0.0
+        _t.sleep(900)                    # let harvest/crawler settle first
+        while not self._stop:
+            try:
+                from .brain.judge import BrainJudge
+                do_meta = (time.time() - last_meta) > meta_every_s
+                rep = BrainJudge(self.journal, self.cfg,
+                                 self.notifier).review(meta_review=do_meta)
+                if do_meta:
+                    last_meta = time.time()
+                if rep.get("reviewed") and rep.get("applied"):
+                    log.info(f"brain-judge applied {rep['applied']} changes")
+            except Exception as e:
+                log.warning(f"brain-judge review failed: {e}")
             _t.sleep(interval)
 
     def _maybe_validate_agents(self) -> None:
@@ -682,6 +709,39 @@ class Kernel:
                 reply("🔭 scouts:\n" + "\n".join(lines))
             except Exception as e:
                 reply(f"/scouts failed: {e}")
+        elif msg.startswith("/judge"):
+            try:
+                r = self.journal.query(
+                    "SELECT ts, detail FROM brain_events WHERE "
+                    "kind='brain_judgement' ORDER BY ts DESC LIMIT 1")
+                if not r:
+                    reply("🧠 no brain judgement yet — first review fires "
+                          "~15min after boot, then every judge interval")
+                else:
+                    d = json.loads(r[0]["detail"])
+                    applied = d.get("decisions_applied") or []
+                    body = "\n".join(
+                        f"· {a['id'][:14]} {a['from']}→{a['to']}: "
+                        f"{str(a.get('rationale', ''))[:80]}"
+                        for a in applied) or "held the book"
+                    reply(f"🧠 judgement {r[0]['ts'][:16]}\n{body}\n"
+                          f"direction: {d.get('direction', '')[:200]}")
+            except Exception as e:
+                reply(f"/judge failed: {e}")
+        elif msg.startswith("/tv"):
+            try:
+                from .brain.tv_harness import TVHarness
+                h = TVHarness(self.journal, self.cfg)
+                st = h.health()
+                emoji = {"healthy": "✅", "degraded": "⚠️",
+                         "down": "❌"}.get(st["state"], "❔")
+                login_hint = "" if (ROOT / "data" / "tv_profile").exists() \
+                    else "\n(never logged in — run: ./venv/bin/python -m trader.brain.tv_harness --login)"
+                reply(f"{emoji} TV harness: {st['state']} · "
+                      f"{st['runs_today']}/{st['budget']} runs today"
+                      f"{login_hint}")
+            except Exception as e:
+                reply(f"/tv failed: {e}")
 
     # ── run ──────────────────────────────────────────────────────────────
     def run(self) -> None:

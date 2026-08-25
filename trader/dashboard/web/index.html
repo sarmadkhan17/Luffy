@@ -295,6 +295,8 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
    <div id="pos-cards"></div>
    <div class="empty hidden" id="pos-empty">Flat — no edge worth paying for.</div>
 
+   <h3 class="sec">Brain decisions <span class="mono" id="tv-health" style="float:right;font-size:11px"></span></h3>
+   <div id="brain-feed" style="margin-bottom:10px"></div>
    <h3 class="sec">Decision stream · live</h3>
    <div id="ticker"></div>
   </div>
@@ -436,7 +438,7 @@ function show(v){document.querySelectorAll('.navitem').forEach(e=>
  ['overview','trades','system','os','luffy'].forEach(x=>
    $('#v-'+x).classList.toggle('hidden',x!==v));
  if(v==='system')loadLogs(); if(v==='trades')loadTrades();
- if(v==='luffy')initChatChart(); if(v==='os')loadDecisions();}
+ if(v==='luffy')initChatChart(); if(v==='os'){loadDecisions();loadBrainFeed();}}
 function osTab(name,el){document.querySelectorAll('#v-os .subtabs .tab')
  .forEach(e=>e.classList.toggle('active',e===el));
  ['dec','lab','agents','brain'].forEach(x=>
@@ -665,6 +667,26 @@ async function loadLogs(){const r=await fetch('/api/logs?lines=90');
  const j=await r.json();$('#logs').textContent=(j.tail||[]).join('\n')||'(empty)';}
 
 /* ── OS: decisions ── */
+async function loadBrainFeed(){
+ try{
+  const t=await gql(`{tv_health{state runs_today budget}}`);
+  if(t&&t.tv_health){const e={'healthy':'var(--green)','degraded':'#ff9f43','down':'var(--red)'}[t.tv_health.state]||'#888';
+   $('#tv-health').innerHTML=`<span style="color:${e}">●</span> TV ${t.tv_health.state} ${t.tv_health.runs_today}/${t.tv_health.budget}`;}
+  const d=await gql(`{brain_events(kinds:"brain_judgement,pine_forged",limit:6)}`);
+  $('#brain-feed').innerHTML=(d.brain_events||[]).map(ev=>{
+   let line='';
+   if(ev.kind==='brain_judgement'){try{const j=JSON.parse(ev.detail);
+     const ap=(j.decisions_applied||[]).map(a=>`${a.id.slice(0,14)}→${a.to}`).join(', ')||'held the book';
+     line=`🧠 <b>${ap}</b> · ${((j.direction||'')+' '+(j.portfolio_note||'')).slice(0,140)}`;
+   }catch(e){line='🧠 judgement';}}
+   else{try{const p=JSON.parse(ev.detail);
+     line=`📜 pine forged for ${ev.subject} (${p.refined?'LLM-refined':'template'}${p.folds?`, ${p.folds} folds`:''})`;
+   }catch(e){line=`📜 pine forged ${ev.subject}`;}}
+   return `<div class="decision"><div class="r1" style="width:100%">
+    <span class="mono" style="color:var(--dimmer)">${(ev.ts||'').slice(5,16)}</span>
+    <span style="flex:1;font-size:12px">${line}</span></div></div>`;
+  }).join('')||'<div class="empty" style="border:none">no brain judgements yet — first review ~15min after boot</div>';
+ }catch(e){}}
 async function loadDecisions(){
  const d=await gql(`{decisions(limit:${PAGE},offset:${decPage*PAGE}){
   id ts symbol action score threshold confidence
