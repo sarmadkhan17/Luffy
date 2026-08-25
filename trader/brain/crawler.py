@@ -47,6 +47,13 @@ ALLOW_DOMAINS = {
     "wikipedia.org", "stockcharts.com", "towardsdatascience.com",
     "arxiv.org", "medium.com", "investopedia.com", "quantstart.com",
     "babypips.com",          # kept: if they unblock us someday, we resume
+    "oxfordstrat.com", "quantpedia.com", "federalreserve.gov",
+    "bis.org", "elitetrader.com", "tradingview.com", "xueqiu.com",
+}
+#: aggregators whose outbound links are worth one hop anywhere
+#: (robots.txt still governs; those targets' own links are never recursed)
+TRUSTED_AGGREGATORS = {
+    "quantocracy.com", "habr.com",
 }
 SKIP_EXT = re.compile(
     r"\.(pdf|jpg|jpeg|png|gif|svg|css|js|zip|gz|mp4|webp|ico|woff2?)($|\?)",
@@ -81,7 +88,8 @@ def allowed_domain(url: str) -> bool:
 
 
 def extract_links(html: str, base_url: str) -> list[str]:
-    """Same-allowlist, non-asset absolute links."""
+    """Absolute, non-asset links. Allowlisting happens at enqueue time
+    (push) so trusted aggregators can vouch for off-allowlist targets."""
     try:
         from bs4 import BeautifulSoup
         soup = BeautifulSoup(html, "html.parser")
@@ -95,8 +103,7 @@ def extract_links(html: str, base_url: str) -> list[str]:
         absu = normalize(urljoin(base_url, href))
         if not absu.startswith("http") or SKIP_EXT.search(absu):
             continue
-        if allowed_domain(absu):
-            out.append(absu)
+        out.append(absu)
     return sorted(set(out))
 
 
@@ -201,8 +208,10 @@ class DeepCrawler:
                               .hexdigest()[:16],))[0]["n"]
         return n > 0
 
-    def _fetch(self, url: str) -> tuple[str, list[str]] | None:
-        if not allowed_domain(url) or not self._can_fetch(url):
+    def _fetch(self, url: str, via_trusted: bool = False) -> \
+            tuple[str, list[str]] | None:
+        if not (allowed_domain(url) or via_trusted) or \
+                not self._can_fetch(url):
             return None
         self._throttle(url)
         try:
@@ -266,15 +275,17 @@ class DeepCrawler:
         stats = {"pages": 0, "docs": 0, "passages": 0, "mined": 0,
                  "extracted": 0, "accepted": 0, "rejected": 0}
 
-        frontier: deque[tuple[str, int]] = deque()
+        frontier: deque[tuple[str, int, bool]] = deque()   # (url, depth, via_trusted)
         enqueued: set[str] = set()
 
-        def push(url: str, depth: int):
+        def push(url: str, depth: int, via_trusted: bool = False):
             u = normalize(url)
             if u in enqueued or self._seen_doc(u):
                 return
+            if not (allowed_domain(u) or via_trusted):
+                return
             enqueued.add(u)
-            frontier.append((u, depth))
+            frontier.append((u, depth, via_trusted))
 
         for s in self.seeds:
             push(s, 0)
@@ -288,13 +299,14 @@ class DeepCrawler:
 
         mined: list[dict] = []
         while frontier and stats["pages"] < self.max_pages:
-            url, depth = frontier.popleft()
-            got = self._fetch(url)
+            url, depth, via_trusted = frontier.popleft()
+            got = self._fetch(url, via_trusted)
             if got is None:
                 continue
             text, links = got
             stats["pages"] += 1
-            if len(text) < 400:
+            trusted_page = host_of(url) in TRUSTED_AGGREGATORS
+            if len(text) < 400 and not trusted_page:
                 continue
             uid = hashlib.md5(url.encode()).hexdigest()[:16]
             chunks = [c for c in passages_from(text)
@@ -314,7 +326,10 @@ class DeepCrawler:
                               "score": chunk_score(c), "text": c})
             if depth < self.max_depth:
                 for l in links[:20]:
-                    push(l, depth + 1)
+                    # aggregator outbound links get one hop anywhere;
+                    # their targets' own links are never recursed into
+                    push(l, depth + 1,
+                         via_trusted=trusted_page and depth + 1 <= 1)
 
         # top passages only — tokens go to the densest material
         mined.sort(key=lambda p: p["score"], reverse=True)
