@@ -58,8 +58,10 @@ class Proposer:
         return n
 
     def _family_gaps(self) -> list[str]:
-        """Families either absent from the live population or under-covered."""
-        rows = self.journal.list_strategies(["paper", "active", "demoted"])
+        """Families absent from the TRADE-ELIGIBLE population.
+        Demoted/retired strategies cover nothing — their families are
+        exactly the ones needing new candidates."""
+        rows = self.journal.list_strategies(["paper", "active"])
         counts: dict[str, int] = {}
         for r in rows:
             counts[r["kind"]] = counts.get(r["kind"], 0) + 1

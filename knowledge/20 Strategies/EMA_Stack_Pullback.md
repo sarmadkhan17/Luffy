@@ -1,6 +1,6 @@
 ---
 type: strategy
-state: paper
+state: demoted
 family: ema_trend
 origin: seed
 ---
@@ -17,7 +17,7 @@ origin: seed
 
 ## Live record
 - closed trades: 2 · wins: 1
-- realized P&L: +103.33 USDT
-- state: **paper**
+- realized P&L: -31.17 USDT
+- state: **demoted**
 
 Related: [[Regime Playbook]], [[MOC]]

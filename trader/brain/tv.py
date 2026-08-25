@@ -15,6 +15,7 @@ Family → TV strategy mapping:
 """
 from __future__ import annotations
 
+import json
 import logging
 
 log = logging.getLogger(__name__)
@@ -116,3 +117,58 @@ class TVClient:
                         ("valid", "oos_return_pct", "oos_trades",
                          "robustness", "verdict")}
         return out
+
+
+def validate_population(journal, tv: TVClient, notifier=None,
+                        symbol: str = "BTC/USDT") -> dict:
+    """Run every live population strategy through the TV judge.
+
+    FAIL → demoted (ineligible for entries; reversible if market regime
+    changes and a future validation passes). PASS → stays eligible.
+    Duplicate genomes (same family+params) collapse to the oldest.
+    """
+    results = {"passed": [], "demoted": [], "duplicates": []}
+    seen_genomes: dict[str, str] = {}
+    for row in journal.list_strategies(["paper", "active", "demoted"]):
+        fam, params = row["kind"], json.dumps(row["params"], sort_keys=True)
+        key = f"{fam}:{params}"
+        if key in seen_genomes:
+            journal.query("UPDATE strategies SET state='retired', "
+                          "retire_reason=? WHERE id=?",
+                          (f"duplicate of {seen_genomes[key]}", row["id"]))
+            journal.log_brain_event("seed_tv_demoted", row["id"],
+                                    {"reason": "duplicate genome",
+                                     "of": seen_genomes[key]})
+            results["duplicates"].append(row["name"])
+            continue
+        seen_genomes[key] = row["id"]
+
+        r = tv.walk_forward(symbol, fam)
+        passed = bool(r.get("valid"))
+        evidence = {k: r.get(k) for k in
+                    ("tv_strategy", "verdict", "checks", "oos_return_pct",
+                     "oos_trades", "oos_win_rate", "oos_sharpe",
+                     "oos_max_dd", "positive_folds", "buy_hold_return",
+                     "beats_buy_hold")}
+        if passed:
+            journal.log_brain_event("seed_tv_passed", row["id"], evidence)
+            results["passed"].append(row["name"])
+        else:
+            journal.query(
+                "UPDATE strategies SET state='demoted', retire_reason=? "
+                "WHERE id=?",
+                (f"TV validation: {json.dumps(evidence)[:200]}", row["id"]))
+            journal.log_brain_event("seed_tv_demoted", row["id"], evidence)
+            results["demoted"].append(
+                {"name": row["name"],
+                 "oos_ret": evidence.get("oos_return_pct"),
+                 "checks": evidence.get("checks")})
+
+    journal.log_brain_event("population_validated", "tv",
+                            {k: len(v) if isinstance(v, list) else v
+                             for k, v in results.items()})
+    if notifier and results["demoted"]:
+        names = ", ".join(d["name"] for d in results["demoted"])
+        notifier.send(f"⚖️ TV validation: demoted {names}. "
+                      f"Passed: {len(results['passed'])}.")
+    return results

@@ -18,6 +18,7 @@ type: moc
 - [[EMA_Stack_Pullback]]
 - [[Liquidity_Sweep_Reversal]]
 - [[VWAP_Extreme_Fade]]
+- [[sweep_reversal_variant_(v2)]]
 
 ## Daily
 - [[2026-08-25]]

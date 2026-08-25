@@ -166,6 +166,7 @@ class Journal:
             for stmt in (
                 "ALTER TABLE decisions ADD COLUMN signals_json TEXT DEFAULT '[]'",
                 "ALTER TABLE trades ADD COLUMN tp1_done INTEGER DEFAULT 0",
+                "ALTER TABLE strategies ADD COLUMN retire_reason TEXT DEFAULT ''",
             ):
                 try:
                     c.execute(stmt)
