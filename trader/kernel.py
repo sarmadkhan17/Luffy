@@ -121,6 +121,8 @@ class Kernel:
         signal.signal(signal.SIGINT, self._graceful)
         threading.Thread(target=self._telegram_listener, daemon=True,
                          name="tg-listener").start()
+        threading.Thread(target=self._maybe_validate_agents, daemon=True,
+                         name="agent-validator").start()
 
     def _filter_universe_to_venue(self) -> None:
         """Universe comes from production data; drop symbols the trading
@@ -150,6 +152,47 @@ class Kernel:
     def _graceful(self, signum, _frame) -> None:
         log.warning(f"signal {signum} — shutting down")
         self._stop = True
+
+    def _maybe_validate_agents(self) -> None:
+        """Re-run analyst validation weekly (or at boot if stale/missing)."""
+        import json as _json
+        from .agents.validate import run as validate_run
+        from .agents.structure import StructureAnalyst
+        from .agents.flow import FlowAnalyst
+        from .agents.momentum import (MomentumAnalyst, ValueAnalyst,
+                                      RotationAnalyst)
+        from .core.config import ROOT
+        wpath = ROOT / "data" / "agent_weights.json"
+        age_days = 999.0
+        if wpath.exists():
+            age_days = (time.time() - wpath.stat().st_mtime) / 86400
+        if age_days < 7:
+            log.info(f"agent weights fresh ({age_days:.1f}d) — skip validation")
+            return
+        try:
+            time.sleep(90)                     # let boot settle
+            analysts = {"structure": StructureAnalyst(),
+                        "flow": FlowAnalyst(),
+                        "momentum": MomentumAnalyst(),
+                        "value": ValueAnalyst(),
+                        "rotation": RotationAnalyst()}
+            rep = validate_run(analysts, self.universe.symbols()[:8],
+                               self.feed, days=20)
+            self.journal.log_brain_event(
+                "agent_validation", "theorist",
+                {a: {"acc": i["overall_acc_1h"], "n": i["samples"]}
+                 for a, i in rep["agents"].items()})
+            try:
+                from .knowledge.vault import Vault
+                Vault(self.journal).agent_ledger()
+            except Exception:
+                pass
+            log.info(f"agent validation complete: "
+                     f"{ {a: round(i['overall_acc_1h'],3) for a,i in rep['agents'].items()} }")
+            self.notifier.send("🔬 Analyst validation refreshed — weights "
+                               "updated from measured accuracy.")
+        except Exception as e:
+            log.warning(f"agent validation failed: {e}")
 
     # ── per-symbol pipeline ───────────────────────────────────────────────
     def _snapshot_for(self, symbol: str) -> Snapshot | None:

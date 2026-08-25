@@ -25,9 +25,27 @@ from ..strategy import library as strat_lib
 
 log = logging.getLogger(__name__)
 
-BASE_WEIGHTS = {"structure": 0.28, "flow": 0.22, "momentum": 0.20,
-                "value": 0.15, "rotation": 0.15}
+_DEFAULT_WEIGHTS = {"structure": 0.28, "flow": 0.22, "momentum": 0.20,
+                    "value": 0.15, "rotation": 0.15}
 STRATEGY_VOTE_WEIGHT = 0.45      # strategies speak louder than any analyst
+
+
+def _measured_weights() -> tuple[dict, dict]:
+    """Evidence-based weights from the validation harness, if available."""
+    try:
+        from ..agents.validate import load_weights
+        w = load_weights()
+        if w and w.get("base_weights"):
+            fit = {}
+            for agent, by_regime in (w.get("agents") or {}).items():
+                fit[agent] = {r: (round(2 * (v["acc_1h"] - 0.5) + 0.6, 2)
+                                  if v.get("acc_1h") is not None else 0.55)
+                              for r, v in (by_regime.get("by_regime")
+                                           or {}).items()}
+            return w["base_weights"], fit
+    except Exception:
+        pass
+    return _DEFAULT_WEIGHTS, {}
 
 
 class Orchestrator:
@@ -36,6 +54,10 @@ class Orchestrator:
         self.analysts = {a.name: a for a in analysts}
         self.journal = journal
         self.base_threshold = base_threshold
+        self.base_weights, self.measured_fit = _measured_weights()
+        if self.measured_fit:
+            log.info(f"orchestrator: using MEASURED agent weights "
+                     f"{self.base_weights}")
         self._acc_cache: tuple[float, dict] = (0.0, {})   # ts, {agent: mult}
         self._lock = threading.Lock()
 
@@ -77,7 +99,9 @@ class Orchestrator:
                 continue
             if v is None:
                 continue
-            v.meta["regime_fit"] = fit_multiplier(analyst.regime_affinity, snap.regime)
+            measured = (self.measured_fit.get(v.agent) or {}).get(snap.regime)
+            v.meta["regime_fit"] = measured if measured is not None else \
+                fit_multiplier(analyst.regime_affinity, snap.regime)
             v.meta["acc_mult"] = round(acc_mults.get(name, 1.0), 2)
             votes.append(v)
 
@@ -100,7 +124,7 @@ class Orchestrator:
         # ── aggregate ────────────────────────────────────────────────────
         num = den = 0.0
         for v in votes:
-            w = BASE_WEIGHTS.get(v.agent, 0.15) * v.meta.get("acc_mult", 1.0)
+            w = self.base_weights.get(v.agent, 0.15) * v.meta.get("acc_mult", 1.0)
             eff = v.conviction * abs(v.conviction) * v.confidence \
                 * v.meta.get("regime_fit", 1.0)
             num += eff * w
