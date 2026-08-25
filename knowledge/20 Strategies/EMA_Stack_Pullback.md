@@ -17,7 +17,7 @@ origin: seed
 
 ## Live record
 - closed trades: 2 · wins: 1
-- realized P&L: -31.17 USDT
+- realized P&L: -73.49 USDT
 - state: **demoted**
 
 Related: [[Regime Playbook]], [[MOC]]
