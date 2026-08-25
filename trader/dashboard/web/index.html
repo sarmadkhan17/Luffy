@@ -135,6 +135,10 @@ tr:hover td{background:rgba(38,46,61,.28)}
 .tag.HOLD{background:#1a2029;color:var(--dim)}
 .tag.exec{background:#0e2136;color:var(--blue)}
 .tag.skip{background:#1a2029;color:var(--dimmer)}
+.tag.veto{background:#2a1a10;color:var(--warn,#ff9f43)}
+#news-banner{display:none;background:linear-gradient(90deg,#3a1410,#5a2418);color:#ffd9c4;padding:7px 18px;font-size:13px;font-weight:600;border-bottom:1px solid #6b3020}
+#news-banner.on{display:block}
+.cal-arrow{color:#7dd3a0;font-weight:700;margin-left:3px}
 #ticker,#dec-feed{max-height:380px;overflow-y:auto;background:var(--panel);
  border:1px solid var(--line);border-radius:var(--r)}
 .hidden{display:none}
@@ -217,6 +221,7 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
 </style></head>
 <body>
 
+<div id="news-banner"></div>
 <nav>
  <div class="logo"><div class="mark">L</div>
   <div><div class="name">LUFFY</div><div class="sub">trading os</div></div></div>
@@ -663,25 +668,40 @@ async function loadLogs(){const r=await fetch('/api/logs?lines=90');
 async function loadDecisions(){
  const d=await gql(`{decisions(limit:${PAGE},offset:${decPage*PAGE}){
   id ts symbol action score threshold confidence
-  executed skip_reason votes{agent side conviction confidence rationale}}}`);
+  executed skip_reason votes{agent side conviction confidence rationale raw_conviction calibrated htf news_blackout}}}`);
  const t=await gql(`{decisions_total}`);
  decTotal=t.decisions_total;
  const rows=d.decisions.filter(x=>x.action!=='HOLD').slice(0,40);
  $('#dec-feed').innerHTML=rows.map(x=>{
   const vs=x.votes.map(v=>{const w=Math.min(Math.abs(v.conviction)*90,80);
-   return `<span class="vbar">${v.agent}
+   const cal=v.calibrated&&v.raw_conviction!=null
+     ?`<span class="cal-arrow" title="raw ${v.raw_conviction} · calibrated ${v.conviction}">⇒</span>
+      <span class="${v.conviction>=0?'up':'down'}" style="opacity:.75">${v.conviction.toFixed(2)}</span>`:'';
+   const ctx=[];if(v.htf!=null)ctx.push('htf '+v.htf.toFixed(2));if(v.news_blackout)ctx.push('📰');
+   return `<span class="vbar" title="${ctx.join(' · ')}">${v.agent}
     <span class="bar ${v.conviction>=0?'pos':'neg'}" style="width:${w}px"></span>
-    <span class="${v.conviction>=0?'up':'down'}">${v.conviction.toFixed(2)}</span></span>`;}).join('');
+    <span class="${v.conviction>=0?'up':'down'}">${v.calibrated?v.raw_conviction.toFixed(2):v.conviction.toFixed(2)}</span>${cal}</span>`;}).join('');
+  const veto=(x.skip_reason||'').includes('veto');
   return `<div class="decision">
    <div class="r1"><span class="sym">${x.symbol}</span>
     <span class="tag ${x.action}">${x.action}</span>
     <span class="num ${x.score>=0?'up':'down'}">${x.score.toFixed(3)}</span>
     <span class="mono">thr ${x.threshold.toFixed(3)} · conf ${(x.confidence*100)|0}%</span>
-    <span class="tag ${x.executed?'exec':'skip'}">${x.executed?'EXECUTED':(x.skip_reason||'skipped')}</span>
+    <span class="tag ${x.executed?'exec':(veto?'veto':'skip')}">${x.executed?'EXECUTED':(x.skip_reason||'skipped')}</span>
     <span class="mono" style="margin-left:auto">${(x.ts||'').slice(11,19)}</span></div>
    <div class="r2">${vs||'<span class="mono">no votes</span>'}</div></div>`;}
  ).join('')||'<div class="empty" style="border:none">no directional signals yet</div>';
  pager('#dec-pager',decPage,decTotal,PAGE,'decGo');}
+
+async function loadNewsBanner(){
+ try{
+  const d=await gql(`{news_guard{active why checked_at}}`);
+  const b=document.getElementById('news-banner');
+  if(d&&d.news_guard&&d.news_guard.active){
+   b.classList.add('on');
+   b.textContent=`📰 NEWS BLACKOUT ARMED — entries suppressed · ${d.news_guard.why}`;
+  }else b.classList.remove('on');
+ }catch(e){}}
 async function loadLab(){
  const d=await gql(`{strategy_full{id name kind state origin hypothesis params}}`);
  $('#lab-grid').innerHTML=d.strategy_full.map(s=>`<div class="strat-card">
@@ -800,7 +820,9 @@ function fillSymSelect(sel){
    el.innerHTML=syms.map(x=>`<option${x===cSym?' selected':''}>${x}</option>`).join('');});});}
 window.addEventListener('DOMContentLoaded',()=>{
  loadEqCurve();
- setInterval(loadEqCurve,60000);});
+ loadNewsBanner();
+ setInterval(loadEqCurve,60000);
+ setInterval(loadNewsBanner,30000);});
 
 /* ws live ticker */
 let wsUp=false;

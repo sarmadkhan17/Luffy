@@ -37,6 +37,30 @@ class VoteType:
     conviction: float
     confidence: float
     rationale: str
+    raw_conviction: Optional[float] = None
+    calibrated: bool = False
+    htf: Optional[float] = None
+    news_blackout: bool = False
+
+
+def _vote_from_row(v) -> VoteType:
+    try:
+        meta = json.loads(v["meta"] or "{}")
+    except Exception:
+        meta = {}
+    return VoteType(
+        agent=v["agent"], side=v["side"], conviction=v["conviction"],
+        confidence=v["confidence"], rationale=v["rationale"] or "",
+        raw_conviction=meta.get("raw_conviction"),
+        calibrated=bool(meta.get("calibrated")),
+        htf=meta.get("htf"), news_blackout=bool(meta.get("news_blackout")))
+
+
+@strawberry.type
+class NewsGuardType:
+    active: bool
+    why: str
+    checked_at: str
 
 
 @strawberry.type
@@ -183,12 +207,32 @@ def build_query(journal: Journal):
                     action=r["action"], score=r["score"],
                     threshold=r["threshold"], confidence=r["confidence"],
                     executed=bool(r["executed"]), skip_reason=r["skip_reason"] or "",
-                    votes=[VoteType(agent=v["agent"], side=v["side"],
-                                    conviction=v["conviction"],
-                                    confidence=v["confidence"],
-                                    rationale=v["rationale"] or "")
-                           for v in vrows]))
+                    votes=[_vote_from_row(v) for v in vrows]))
             return out
+
+        @strawberry.field
+        def news_guard(self) -> NewsGuardType:
+            raw = journal.kv_get("news_guard_state", "")
+            try:
+                d = json.loads(raw)
+                return NewsGuardType(active=bool(d.get("active")),
+                                     why=d.get("why", ""),
+                                     checked_at=str(d.get("ts", "")))
+            except Exception:
+                return NewsGuardType(active=False, why="no data yet",
+                                     checked_at="")
+
+        @strawberry.field
+        def recent_vetoes(self, limit: int = 10) -> list[DecisionType]:
+            rows = _rows(journal,
+                         "SELECT * FROM decisions WHERE skip_reason "
+                         "LIKE '%veto%' ORDER BY ts DESC LIMIT ?", (limit,))
+            return [DecisionType(
+                id=r["id"], ts=r["ts"], symbol=r["symbol"],
+                action=r["action"], score=r["score"],
+                threshold=r["threshold"], confidence=r["confidence"],
+                executed=bool(r["executed"]),
+                skip_reason=r["skip_reason"] or "", votes=[]) for r in rows]
 
         @strawberry.field
         def trades(self, open_only: bool = False,

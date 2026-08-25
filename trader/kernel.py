@@ -357,6 +357,9 @@ class Kernel:
         oi = self._oi_map() if self.market_type == MarketType.FUTURES else {}
         self._refresh_btc_context()
         news = self.news_guard.check()
+        self.journal.kv_set("news_guard_state", json.dumps(
+            {"active": bool(news.get("active")), "why": news.get("why", ""),
+             "ts": dt.datetime.now(dt.timezone.utc).isoformat()}))
         if news.get("active"):
             log.info(f"news guard: {news['why']} — thresholds raised")
         closed_count = int(self.journal.query(
@@ -655,6 +658,30 @@ class Kernel:
             reply(f"state={self.state_machine.state.value} "
                   f"open={len(self.journal.open_trades())} "
                   f"heartbeat={hb_age and f'{hb_age:.0f}s'}")
+        elif msg.startswith("/news"):
+            st = self.news_guard.check()
+            emoji = "📰🚨" if st.get("active") else "📰✅"
+            reply(f"{emoji} news guard: "
+                  f"{'ARMED — entering suppressed' if st.get('active') else 'quiet — trading normal'}"
+                  f"\n{st.get('why', '')}")
+        elif msg.startswith("/scouts"):
+            try:
+                rows = self.journal.agent_accuracy(since_hours=336)
+                acc = {r["agent"]: r["accuracy"] for r in rows}
+                from .agents import calibration
+                fits = {k for k in calibration.load()
+                        if not k.startswith("_")}
+                w = self.orchestrator.base_weights
+                lines = []
+                for a in self.orchestrator.analysts:
+                    acc_s = f"{acc[a]:.0%}" if a in acc and \
+                        acc[a] is not None else "—"
+                    cal = " ·cal" if a in fits else ""
+                    lines.append(f"{a:12s} w={w.get(a, 0):.2f} "
+                                 f"acc={acc_s}{cal}")
+                reply("🔭 scouts:\n" + "\n".join(lines))
+            except Exception as e:
+                reply(f"/scouts failed: {e}")
 
     # ── run ──────────────────────────────────────────────────────────────
     def run(self) -> None:
