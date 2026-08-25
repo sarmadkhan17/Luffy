@@ -105,10 +105,14 @@ def validate_symbol(analysts: dict[str, Analyst], symbol: str,
 
 def _snap(symbol, df, i, px, dfs):
     from ..core.types import Snapshot
+    from .regime import btc_context
     import datetime as dt
+    btc_15 = dfs.get("BTC_1h")
     return Snapshot(symbol=symbol,
                     ts=dt.datetime.now(dt.timezone.utc).isoformat(),
-                    price=px, dfs=dfs, market_type="futures")
+                    price=px, dfs=dfs, market_type="futures",
+                    btc_ctx=btc_context(btc_15, btc_15)
+                    if btc_15 is not None else {})
 
 
 def run(analysts: dict[str, Analyst], symbols: list[str],

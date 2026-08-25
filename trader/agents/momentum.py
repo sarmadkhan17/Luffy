@@ -51,6 +51,12 @@ class MomentumAnalyst(Analyst):
         elif rsi_v < 22 and conv < 0:
             conv *= 0.6; notes.append(f"RSI {rsi_v:.0f} washed")
 
+        btc = snap.btc_ctx or {}
+        if conv != 0.0 and btc.get("trend") in ("UP", "DOWN"):
+            aligned = (conv > 0) == (btc["trend"] == "UP")
+            conv *= 1.08 if aligned else 0.85
+            notes.append(f"BTC {'aligned' if aligned else 'opposed'}")
+
         return self._vote(self.name, snap, conv, min(conf, 0.9),
                           "; ".join(notes) or "neutral", adx=round(adx_v, 1),
                           rsi=round(rsi_v, 1))
@@ -74,6 +80,14 @@ class ValueAnalyst(Analyst):
         side = -1.0 if z > 0 else 1.0                      # fade the extreme
         conv = side * min(0.2 + 0.15 * (abs(z) - 1.8), 0.65)
         conf = min(0.3 + 0.08 * (abs(z) - 1.8), 0.7)
+        btc = snap.btc_ctx or {}
+        if abs(btc.get("ret_1h") or 0) > 0.01:
+            conv *= 0.6                                    # never fade a live BTC impulse
+            conf *= 0.85
+            return self._vote(self.name, snap, conv, conf,
+                              f"{abs(z):.1f}σ vs VWAP but BTC impulse "
+                              f"{btc['ret_1h']:+.1%} — fade suppressed",
+                              zscore=round(z, 2))
         return self._vote(self.name, snap, conv, conf,
                           f"{abs(z):.1f}σ {'above' if z > 0 else 'below'} VWAP anchor — fading",
                           zscore=round(z, 2))

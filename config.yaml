@@ -61,6 +61,25 @@ strategies:
   paper_min_profit_factor: 1.15
   auto_demote_drawdown_pct: 8.0  # statistical instant demotion, no LLM needed
 
+harvester:
+  enabled: true
+  interval_minutes: 240        # scrape + extract + test every 4h
+  ideas_per_cycle: 6
+  tags: [btcusdt, ethusdt, solusdt]
+
+scouts:
+  htf_soft_bump: 0.07          # extra threshold when entering against a strong 4h trend
+  htf_hard_veto: 0.80          # |4h trend score| beyond this refuses counter-trend entries
+  news_guard:
+    enabled: true
+    window_hours: 3            # impact headline age that keeps the blackout armed
+    min_headlines: 2           # count needed to arm (1 if severe: hack/depeg/FOMC...)
+    refresh_minutes: 10
+  calibration:
+    enabled: true              # learned conviction from journal outcomes
+    min_samples: 60            # below this, votes pass through untouched
+    refit_hours: 6
+
 brain:
   provider: deepseek
   model_fast: deepseek-chat            # V3 — proposals, summaries

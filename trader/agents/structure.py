@@ -70,5 +70,11 @@ class StructureAnalyst(Analyst):
                 notes.append(f"absorption ({'selling' if push_up else 'buying'}), effort={e:.1f}x")
 
         rationale = "; ".join(notes) if notes else "auction balanced, no edge"
+        btc = snap.btc_ctx or {}
+        if conv != 0.0 and btc.get("trend") in ("UP", "DOWN"):
+            with_btc = (conv > 0) == (btc["trend"] == "UP")
+            conf += 0.04 if with_btc else -0.06
+            notes.append(f"BTC 4h {btc['trend']} "
+                         f"{'with' if with_btc else 'AGAINST'} vote")
         return self._vote(self.name, snap, conv, min(conf, 0.9),
                           rationale, swings_hi=len(ph), swings_lo=len(pl))
