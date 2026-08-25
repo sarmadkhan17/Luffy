@@ -78,6 +78,12 @@ harvester:
     - http://arxiv.org/rss/q-fin.TR     # quant trading preprints
     - http://arxiv.org/rss/q-fin.PM     # portfolio management preprints
     - https://www.reddit.com/r/algotrading/.rss
+    - https://quantocracy.com/feed/     # quant blog aggregator (best-of)
+    - https://alphaarchitect.com/feed/  # evidence-based factor research
+    - https://robotwealth.com/feed/
+    - https://financial-hacker.com/feed/
+    - https://rektcapital.substack.com/feed  # crypto cycle analysis
+    - https://habr.com/en/rss/best/daily/?fl=ru
 
 scouts:
   htf_soft_bump: 0.07          # extra threshold when entering against a strong 4h trend
@@ -107,6 +113,11 @@ crawler:
     - https://en.wikipedia.org/wiki/Moving_average_crossover
     - https://en.wikipedia.org/wiki/Relative_strength_index
     - https://towardsdatascience.com/
+    - https://oxfordstrat.com/category/ideas/     # strategy idea essays
+    - https://quantpedia.com/Strategies/          # strategy encyclopedia (free tier)
+    - https://www.tradingview.com/scripts/?script_type=strategies  # pine strategies w/ logic descriptions
+    - https://www.federalreserve.gov/econres/feds/index.htm  # Fed working papers
+    - https://www.bis.org/list/wpapers/index.htm  # BIS working papers
 
 brain:
   provider: deepseek

@@ -22,17 +22,36 @@ def test_extract_links_filters_and_resolves():
     html = """
     <a href="/articles/mean-reversion">mr</a>
     <a href="https://www.quantstart.com/articles/kalman">qs</a>
-    <a href="https://twitter.com/x">tw</a>
+    <a href="https://someblog.io/post/ema-strategies">ext</a>
     <a href="mailto:a@b.c">m</a>
     <a href="#top">frag</a>
     <a href="/docs/paper.pdf">pdf</a>
     """
     links = extract_links(html, "https://www.investopedia.com/start/")
     joined = " ".join(links)
+    # all absolute http(s) links kept — allowlisting happens at enqueue
     assert "investopedia.com/articles/mean-reversion" in joined
     assert "quantstart.com/articles/kalman" in joined
-    assert "twitter" not in joined and "paper.pdf" not in joined
+    assert "someblog.io" in joined
+    assert "mailto" not in joined and "paper.pdf" not in joined
     assert len(links) == len(set(links))
+
+
+def test_trusted_aggregator_gate():
+    """_fetch refuses off-allowlist URLs unless vouched by an aggregator."""
+    import yaml
+    from trader.brain.crawler import DeepCrawler, TRUSTED_AGGREGATORS, \
+        allowed_domain, host_of
+    from trader.core.journal import Journal as J
+    import tempfile, pathlib
+    cfg = yaml.safe_load(open("config.yaml"))
+    dc = DeepCrawler(J(pathlib.Path(tempfile.mkdtemp()) / "c2.db"), cfg,
+                     feed=None)
+    outside = "https://quantblog.example.com/great-essay"
+    assert not allowed_domain(outside)
+    assert host_of("https://quantocracy.com/x") in TRUSTED_AGGREGATORS
+    # un-vouched off-allowlist → refused before any network call
+    assert dc._fetch(outside, via_trusted=False) is None
 
 
 # ── text extraction ───────────────────────────────────────────────────────
