@@ -140,6 +140,8 @@ class Orchestrator:
             v.meta["regime_fit"] = measured if measured is not None else \
                 fit_multiplier(analyst.regime_affinity, snap.regime)
             v.meta["acc_mult"] = round(acc_mults.get(name, 1.0), 2)
+            v.meta["htf"] = round(htf, 3)
+            v.meta["news_blackout"] = bool(news.get("active"))
             raw_c = v.conviction
             new_c, did = calibration.apply(
                 cal_state, v.agent, v.conviction, v.confidence,
