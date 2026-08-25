@@ -77,6 +77,11 @@ class Kernel:
         self.orchestrator = Orchestrator(self.analysts, self.journal)
         self.executor = Executor(self.exchange, self.journal, cfg,
                                  self.market_type)
+        from .engine.exits import ExitEngine
+        self.exits = ExitEngine(self.exchange, self.journal, self.executor,
+                                cfg, genomes={
+                                    st.id: st.params for st, _g in
+                                    self.population})
         self.population = self._load_population()
         self._stop = False
         self._book_cache: dict[str, tuple[float, dict]] = {}
@@ -244,6 +249,23 @@ class Kernel:
                             f"score {d.score:+.2f} conf {d.confidence:.0%}")
 
             stats["exits_detected"] += self._detect_exchange_exits(symbol)
+            for t in self.journal.open_trades():
+                if t["symbol"] != symbol:
+                    continue
+                from .agents.indicators import atr as _atr
+                a = _atr(snap.df(self.cfg["timeframes"]["execution"])) \
+                    if snap.df(self.cfg["timeframes"]["execution"]) is not None else 0
+                if a <= 0:
+                    continue
+                score = d.score if d.symbol == symbol else None
+                try:
+                    reason = self.exits.manage(t, snap.price, a, score)
+                    if reason:
+                        stats["exit_action"] = reason
+                        self.notifier.send(
+                            f"↪ {symbol} exit: {reason} @ {snap.price:.4g}")
+                except Exception as e:
+                    log.warning(f"exit manage {symbol}: {e}")
 
         self._maybe_resolve_outcomes()
         self.heartbeat.beat({"equity": round(balance, 2),

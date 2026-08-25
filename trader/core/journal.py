@@ -163,11 +163,14 @@ class Journal:
         self._write_lock = threading.Lock()
         with self._conn() as c:
             c.executescript(SCHEMA)
-            try:   # migration: full strategy signal chain per decision
-                c.execute("ALTER TABLE decisions ADD COLUMN signals_json "
-                          "TEXT DEFAULT '[]'")
-            except Exception:
-                pass
+            for stmt in (
+                "ALTER TABLE decisions ADD COLUMN signals_json TEXT DEFAULT '[]'",
+                "ALTER TABLE trades ADD COLUMN tp1_done INTEGER DEFAULT 0",
+            ):
+                try:
+                    c.execute(stmt)
+                except Exception:
+                    pass
 
     # -- connection -----------------------------------------------------
     def _conn(self) -> sqlite3.Connection:
@@ -240,12 +243,24 @@ class Journal:
     def add_trade(self, p) -> None:
         with self._tx() as c:
             c.execute(
-                "INSERT INTO trades VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'open')",
-                (p.id, p.decision_id, p.symbol, p.side.value, p.amount,
-                 p.entry_price, None, p.notional_usdt, p.leverage,
-                 p.stop_loss, p.take_profit, getattr(p, "sl_order_id", ""),
-                 p.strategy_id, p.strategy_name,
-                 p.market_type, p.exec_mode, p.opened_at, None, 0.0, None))
+                "INSERT INTO trades (id,decision_id,symbol,side,amount,"
+                "entry_price,notional_usdt,leverage,stop_loss,take_profit,"
+                "sl_order_id,strategy_id,strategy_name,market_type,exec_mode,"
+                "opened_at,realized_pnl,status,tp1_done) "
+                "VALUES (:id,:decision_id,:symbol,:side,:amount,:entry_price,"
+                ":notional_usdt,:leverage,:stop_loss,:take_profit,:sl_order_id,"
+                ":strategy_id,:strategy_name,:market_type,:exec_mode,"
+                ":opened_at,0,'open',0)",
+                {"id": p.id, "decision_id": p.decision_id or "",
+                 "symbol": p.symbol, "side": p.side.value, "amount": p.amount,
+                 "entry_price": p.entry_price,
+                 "notional_usdt": p.notional_usdt, "leverage": p.leverage,
+                 "stop_loss": p.stop_loss, "take_profit": p.take_profit,
+                 "sl_order_id": getattr(p, "sl_order_id", ""),
+                 "strategy_id": p.strategy_id,
+                 "strategy_name": p.strategy_name,
+                 "market_type": p.market_type, "exec_mode": p.exec_mode,
+                 "opened_at": p.opened_at})
 
     def close_trade(self, trade_id: str, exit_price: float, pnl: float,
                     reason: str, closed_at: str | None = None) -> None:

@@ -20,4 +20,5 @@ type: moc
 - [[VWAP_Extreme_Fade]]
 
 ## Daily
+- [[2026-08-25]]
 - [[2026-08-24]]
