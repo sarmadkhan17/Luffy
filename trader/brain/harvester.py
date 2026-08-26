@@ -314,6 +314,7 @@ class Harvester:
         out: dict = {}
         results = raw.get("results") if isinstance(raw, dict) else None
         by_pos: dict[int, dict] = {}
+        n_entries = n_skips = 0
         if isinstance(results, list):
             for entry in results:
                 if not isinstance(entry, dict):
@@ -324,12 +325,28 @@ class Harvester:
                 if idx is None:
                     idx = len(by_pos)          # positional fallback
                 by_pos[idx] = entry
+            n_entries = len(by_pos)
+            n_skips = sum(1 for e in by_pos.values() if e.get("skip"))
+        log.info(f"extract_batch: {len(ideas)} ideas → {n_entries} entries "
+                 f"({n_skips} explicit skips); "
+                 f"reply={'ok' if isinstance(results, list) else str(raw)[:150]}")
+        fallback_budget = 6               # token guard for retry depth
         for i, idea in enumerate(ideas):
             entry = by_pos.get(i)
-            if not entry or entry.get("skip"):
-                out[idea["idea_id"]] = None
+            if entry is not None:
+                out[idea["idea_id"]] = None if entry.get("skip") \
+                    else self._genome_from(idea, entry)
                 continue
-            out[idea["idea_id"]] = self._genome_from(idea, entry)
+            # entry missing entirely (truncated/mangled batch reply):
+            # retry individually while token budget allows
+            if fallback_budget > 0:
+                fallback_budget -= 1
+                g = self.idea_to_genome(idea, tv_context)
+                out[idea["idea_id"]] = g
+                log.info(f"extract fallback [{idea['idea_id']}]: "
+                         f"{'genome' if g else 'skip'}")
+            else:
+                out[idea["idea_id"]] = None
         return out
 
     def idea_to_genome(self, idea: dict, tv_context: dict):

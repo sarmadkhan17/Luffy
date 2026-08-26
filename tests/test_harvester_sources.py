@@ -37,12 +37,15 @@ def test_screen_drops_hype_and_news():
 class FakeLLM:
     available = True
 
-    def __init__(self, reply):
+    def __init__(self, reply, replies=None):
         self.reply = reply
+        self.replies = list(replies or [])   # consumed per call, then repeat
         self.calls = 0
 
     def chat_json(self, prompt, deep=False):
         self.calls += 1
+        if len(self.replies) >= self.calls:
+            return self.replies[self.calls - 1]
         return self.reply
 
 
@@ -79,10 +82,41 @@ def test_batch_maps_by_id():
 
 def test_batch_single_call_for_many_ideas():
     ideas = [_idea(title=f"setup {i}", iid=f"tv_{i}") for i in range(8)]
-    llm = FakeLLM({"results": []})
+    llm = FakeLLM({"results": [
+        {"id": f"tv_{i}", "family": "ema_trend",
+         "params": {"fast_len": 21, "slow_len": 55}, "hypothesis": "h"}
+        for i in range(8)]})
     h = _harvester_with(llm)
     h.extract_batch(ideas, {})
-    assert llm.calls == 1                         # one call, not eight
+    assert llm.calls == 1                         # complete reply: one call
+
+
+def test_batch_mangled_reply_falls_back_per_idea():
+    """A truncated/mangled batch reply must not silently drop the whole
+    cycle — missing entries are retried individually (bounded)."""
+    ideas = [_idea(title=f"setup {i}", iid=f"tv_{i}") for i in range(8)]
+    genome = {"family": "ema_trend",
+              "params": {"fast_len": 21, "slow_len": 55},
+              "hypothesis": "Trends persist because traders anchor on stale "
+                            "prices and adjust positions slowly."}
+    per_idea = [{"id": f"tv_{i}", **genome} for i in range(6)]
+    llm = FakeLLM(genome, replies=[{"results": []}] + per_idea)
+    h = _harvester_with(llm)
+    out = h.extract_batch(ideas, {})
+    assert llm.calls == 1 + 6                     # batch + bounded fallbacks
+    got = [v for v in out.values() if v is not None]
+    assert len(got) == 6 and all(g.family == "ema_trend" for g in got)
+
+
+def test_batch_explicit_skips_cost_no_fallback():
+    """Explicit LLM skips are decisions, not failures — no per-idea retry."""
+    ideas = [_idea(title=f"setup {i}", iid=f"tv_{i}") for i in range(4)]
+    llm = FakeLLM({"results": [{"id": f"tv_{i}", "skip": True,
+                                "reason": "hype"} for i in range(4)]})
+    h = _harvester_with(llm)
+    out = h.extract_batch(ideas, {})
+    assert llm.calls == 1
+    assert all(v is None for v in out.values())
 
 
 def test_genome_rejects_out_of_schema_params():
