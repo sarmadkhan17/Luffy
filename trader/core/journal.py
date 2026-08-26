@@ -323,8 +323,13 @@ class Journal:
     def upsert_strategy(self, st) -> None:
         from .types import Strategy as _S   # typing only; avoid cycle at import
         with self._tx() as c:
+            # named columns: migrations (e.g. retire_reason) must not break
+            # positional inserts
             c.execute(
-                "INSERT OR REPLACE INTO strategies VALUES "
+                "INSERT OR REPLACE INTO strategies "
+                "(id,name,kind,params,state,description,origin,hypothesis,"
+                "invalidation,regime_filter,markets,generation,parent_id,"
+                "created_at,stats_json) VALUES "
                 "(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (st.id, st.name, st.kind, json.dumps(st.params), st.state.value,
                  st.description, st.origin,

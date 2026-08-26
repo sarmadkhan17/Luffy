@@ -382,7 +382,13 @@ def forge_and_store(genome, journal: Journal, llm=None,
                     n_folds: int = 3) -> dict:
     """Full pipeline for one genome → files + journal event. Returns
     manifest consumed later by the TV harness queue."""
-    full = forge(genome, version=1)
+    # full-run window pinned to end-yesterday (same span as the folds):
+    # an unbounded window re-evaluates as live candles form, flipping
+    # marginal verdicts between runs and burning budget
+    end = datetime.now(timezone.utc).date() - timedelta(days=1)
+    start_all = end - timedelta(days=360)
+    full = forge(genome, version=1,
+                 window=(start_all.isoformat(), end.isoformat()))
     full, refined = refine_with_llm(genome, full, llm)
     errs = lint(full)
     if errs:
