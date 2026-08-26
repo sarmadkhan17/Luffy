@@ -12,6 +12,9 @@ A genome is only TV-valid if:
 Family → TV strategy mapping:
   ema_trend → ema_cross · vwap_fade → bollinger · breakout_retest → donchian
   sweep_reversal → rsi · rotation_momo → macd
+  rsi_extreme → rsi · ma_cross → ema_cross · bb_fade → bollinger
+  (crawler-era families reuse the closest built-in as prefilter proxy;
+  the real-TV harness tests the family's actual Pine template)
 """
 from __future__ import annotations
 
@@ -26,6 +29,9 @@ FAMILY_TV = {
     "breakout_retest": "donchian",
     "sweep_reversal": "rsi",
     "rotation_momo": "macd",
+    "rsi_extreme": "rsi",
+    "ma_cross": "ema_cross",
+    "bb_fade": "bollinger",
 }
 
 

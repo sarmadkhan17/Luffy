@@ -61,6 +61,26 @@ class DataFeed:
             self._ex = make_exchange()
         return self._ex
 
+    _TF_MS = {"5m": 300_000, "15m": 900_000, "1h": 3_600_000,
+              "4h": 14_400_000, "1d": 86_400_000}
+
+    def _fetch_paged(self, symbol: str, tf: str, limit: int) -> list:
+        """Exchanges cap a single klines request (1000 on binanceusdm);
+        walk backwards in pages until `limit` bars are assembled."""
+        tf_ms = self._TF_MS[tf]
+        now_ms = int(time.time() * 1000)
+        cursor = now_ms - limit * tf_ms
+        rows: list = []
+        while cursor < now_ms:
+            batch = self.ex.fetch_ohlcv(symbol, tf, since=cursor, limit=1000)
+            if not batch:
+                break
+            rows.extend(batch)
+            cursor = batch[-1][0] + tf_ms
+            if len(batch) < 1000:
+                break
+        return rows[-limit:]
+
     def fetch_ohlcv(self, symbol: str, tf: str = "15m",
                     limit: int = 400, force: bool = False,
                     min_bars: int = 30) -> Optional[pd.DataFrame]:
@@ -69,7 +89,10 @@ class DataFeed:
         if hit and not force and time.time() - hit[0] < self.ttl.get(tf, 300):
             return hit[1]
         try:
-            raw = self.ex.fetch_ohlcv(symbol, tf, limit=limit)
+            if limit > 1000:
+                raw = self._fetch_paged(symbol, tf, limit)
+            else:
+                raw = self.ex.fetch_ohlcv(symbol, tf, limit=limit)
         except Exception as e:
             log.warning(f"ohlcv {symbol} {tf}: {e}")
             return hit[1] if hit else None
