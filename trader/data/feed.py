@@ -5,6 +5,7 @@ Binance demo keys from .env; sandbox mode when BINANCE_DEMO is truthy.
 from __future__ import annotations
 
 import logging
+import threading
 
 import numpy as np
 import time
@@ -47,13 +48,21 @@ def make_exchange(market_type: str = "futures", demo: bool | None = None,
 
 
 class DataFeed:
-    """Fetch + cache OHLCV per (symbol, timeframe). Thread-safe via GIL ops."""
+    """Fetch + cache OHLCV per (symbol, timeframe). Thread-safe via GIL ops.
 
-    def __init__(self, exchange=None, ttl_by_tf: dict | None = None):
+    Three layers: in-memory TTL cache → local sqlite candle store
+    (data/candles.db, survives restarts, incrementally appended) →
+    exchange REST calls (paged past the 1000-bar/request cap).
+    """
+
+    def __init__(self, exchange=None, ttl_by_tf: dict | None = None,
+                 db_path=None):
         self._ex = exchange
         # cache freshness: 15m data ~2min old max; 1h ~10min; 4h ~30min
         self.ttl = ttl_by_tf or {"5m": 120, "15m": 180, "1h": 600, "4h": 1800, "1d": 7200}
         self._cache: dict[tuple, tuple[float, pd.DataFrame]] = {}
+        self._db_path = str(db_path) if db_path else None   # resolved lazily
+        self._local = threading.local()                     # per-thread conns
 
     @property
     def ex(self):
@@ -61,8 +70,85 @@ class DataFeed:
             self._ex = make_exchange()
         return self._ex
 
+    # ── persistent candle store ─────────────────────────────────────────
+    @property
+    def db(self):
+        conn = getattr(self._local, "conn", None)
+        if conn is None:
+            import sqlite3
+            if self._db_path is None:
+                from ..core.config import ROOT
+                self._db_path = str(ROOT / "data" / "candles.db")
+            conn = sqlite3.connect(self._db_path)
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS candles ("
+                "symbol TEXT NOT NULL, tf TEXT NOT NULL, ts INTEGER NOT NULL,"
+                "open REAL, high REAL, low REAL, close REAL, volume REAL,"
+                "taker_buy REAL, PRIMARY KEY (symbol, tf, ts))")
+            conn.commit()
+            self._local.conn = conn
+        return conn
+
+    def _frame(self, raw: list) -> pd.DataFrame:
+        """ccxt rows → validated DataFrame with taker-buy estimate."""
+        df = pd.DataFrame(raw, columns=COLUMNS)
+        df["ts"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
+        for col in COLUMNS[1:]:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+        df = df.dropna().reset_index(drop=True)
+        # estimated aggressor buy volume (candle-position proxy; ccxt omits col 9)
+        rng = (df["high"] - df["low"]).replace(0, np.nan)
+        df["taker_buy"] = (df["volume"] * (df["close"] - df["low"]) / rng).fillna(
+            df["volume"] * 0.5)
+        return df
+
+    def _store_load(self, symbol: str, tf: str, limit: int,
+                    min_ts: int = 0) -> Optional[pd.DataFrame]:
+        try:
+            rows = self.db.execute(
+                "SELECT ts, open, high, low, close, volume, taker_buy "
+                "FROM candles WHERE symbol=? AND tf=? AND ts>=? "
+                "ORDER BY ts DESC LIMIT ?",
+                (symbol, tf, min_ts, limit)).fetchall()
+        except Exception as e:
+            log.warning(f"candle store read {symbol} {tf}: {e}")
+            return None
+        if not rows:
+            return None
+        df = pd.DataFrame(rows[::-1], columns=COLUMNS + ["taker_buy"])
+        df["ts"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
+        return df
+
     _TF_MS = {"5m": 300_000, "15m": 900_000, "1h": 3_600_000,
               "4h": 14_400_000, "1d": 86_400_000}
+
+    def _store_save(self, symbol: str, tf: str, df: pd.DataFrame) -> None:
+        try:
+            # .value/.astype(int64) are ns-based only for datetime64[ns];
+            # this repo's pandas keeps ms resolution → convert explicitly
+            unit = getattr(df["ts"].dt, "unit", None) or (
+                "ns" if str(df["ts"].dtype).startswith("datetime64[ns]") else "ms")
+            ms = df["ts"].astype("int64") // {"ns": 10 ** 6, "us": 10 ** 3}.get(unit, 1)
+            self.db.executemany(
+                "INSERT OR REPLACE INTO candles VALUES (?,?,?,?,?,?,?,?,?)",
+                [(symbol, tf, int(t), float(o), float(h), float(l),
+                  float(c), float(v), float(b))
+                 for t, o, h, l, c, v, b in zip(
+                     ms, df["open"], df["high"], df["low"],
+                     df["close"], df["volume"], df.get("taker_buy",
+                                                       df["volume"] * 0.5))])
+            self.db.commit()
+        except Exception as e:
+            log.warning(f"candle store write {symbol} {tf}: {e}")
+
+    def _merge_save(self, symbol: str, tf: str,
+                    stored: Optional[pd.DataFrame],
+                    fresh: pd.DataFrame) -> pd.DataFrame:
+        df = fresh if stored is None else pd.concat([stored, fresh]) \
+            .drop_duplicates(subset="ts", keep="last") \
+            .sort_values("ts").reset_index(drop=True)
+        self._store_save(symbol, tf, df)
+        return df
 
     def _fetch_paged(self, symbol: str, tf: str, limit: int) -> list:
         """Exchanges cap a single klines request (1000 on binanceusdm);
@@ -85,30 +171,65 @@ class DataFeed:
                     limit: int = 400, force: bool = False,
                     min_bars: int = 30) -> Optional[pd.DataFrame]:
         ck = (symbol, tf)
+        tf_ms = self._TF_MS.get(tf, 900_000)
+        now_ms = int(time.time() * 1000)
+
+        def finish(df: pd.DataFrame) -> pd.DataFrame:
+            self._cache[ck] = (time.time(), df)
+            return df
+
         hit = self._cache.get(ck)
         if hit and not force and time.time() - hit[0] < self.ttl.get(tf, 300):
             return hit[1]
+
+        stored = self._store_load(symbol, tf, limit)
+        have_full = stored is not None and len(stored) >= limit
+        fresh_tail = (stored is not None and
+                      now_ms - self._last_ms(stored) <=
+                      self.ttl.get(tf, 300) * 1000)
+        if have_full and fresh_tail and not force:
+            return finish(stored)
+
         try:
-            if limit > 1000:
-                raw = self._fetch_paged(symbol, tf, limit)
-            else:
-                raw = self.ex.fetch_ohlcv(symbol, tf, limit=limit)
+            if not force and stored is not None and len(stored) > 0:
+                # extend/refresh whatever is stored instead of redownloading
+                last = self._last_ms(stored)
+                if len(stored) < limit:
+                    raw = (self._fetch_paged(symbol, tf, limit)
+                           if limit > 1000 else
+                           self.ex.fetch_ohlcv(
+                               symbol, tf,
+                               since=int(last) + tf_ms -
+                               (limit - len(stored)) * tf_ms, limit=1000))
+                else:   # full window stored → only the tail can be stale
+                    missing = (now_ms - last) // tf_ms
+                    raw = (self.ex.fetch_ohlcv(symbol, tf,
+                                               since=int(last) + tf_ms,
+                                               limit=1000)
+                           if missing < 950 else
+                           self._fetch_paged(symbol, tf, limit))
+                new = self._frame(raw or [])
+                if new.empty:
+                    return finish(stored)
+                return finish(self._merge_save(symbol, tf, stored, new))
+            # cold symbol or force refresh
+            raw = (self._fetch_paged(symbol, tf, limit) if limit > 1000
+                   else self.ex.fetch_ohlcv(symbol, tf, limit=limit))
+            if not raw or len(raw) < min_bars:
+                return hit[1] if hit else (stored if stored is not None
+                                           and len(stored) >= min_bars else None)
+            new = self._frame(raw)
+            return finish(self._merge_save(symbol, tf, stored, new))
         except Exception as e:
             log.warning(f"ohlcv {symbol} {tf}: {e}")
+            if stored is not None and len(stored) >= min_bars:
+                return finish(stored)
             return hit[1] if hit else None
-        if not raw or len(raw) < min_bars:
-            return hit[1] if hit else None
-        df = pd.DataFrame(raw, columns=COLUMNS)
-        df["ts"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
-        for col in COLUMNS[1:]:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
-        df = df.dropna().reset_index(drop=True)
-        # estimated aggressor buy volume (candle-position proxy; ccxt omits col 9)
-        rng = (df["high"] - df["low"]).replace(0, np.nan)
-        df["taker_buy"] = (df["volume"] * (df["close"] - df["low"]) / rng).fillna(
-            df["volume"] * 0.5)
-        self._cache[ck] = (time.time(), df)
-        return df
+
+    @staticmethod
+    def _last_ms(df: pd.DataFrame) -> int:
+        v = df["ts"].iloc[-1]
+        return int(v.value // 1_000_000) if hasattr(v, "value") else int(v)
 
     def fetch_multi(self, symbol: str, tfs: list[str], limit: int = 400) -> dict[str, pd.DataFrame]:
         out = {}
