@@ -18,6 +18,7 @@ from pathlib import Path
 
 from ..core.config import ROOT
 from ..core.journal import Journal
+from ..strategy.genome import PARAM_DEFAULTS as _PARAM_DEFAULTS
 
 log = logging.getLogger(__name__)
 
@@ -236,20 +237,8 @@ if sellSig and strategy.position_size == 0
     },
 }
 
-# Sane fallbacks so a genome with missing params still forges a valid
-# script instead of baking literal 'None' into the Pine source.
-_PARAM_DEFAULTS = {
-    "ema_trend": {"fast_len": 21, "slow_len": 55, "adx_min": 18,
-                  "pullback_atr": 1.0},
-    "vwap_fade": {"anchor_bars": 48, "z_entry": 2.0, "max_hold_bars": 24},
-    "breakout_retest": {"range_lookback": 48, "vol_mult": 1.5,
-                        "retest_atr": 0.5},
-    "sweep_reversal": {"max_reclaim_bars": 6, "min_sweep_frac": 0.3},
-    "rotation_momo": {"btc_ret_1h_min": 0.15, "lag_lookback": 24},
-    "rsi_extreme": {"rsi_len": 14, "os_level": 25, "ob_level": 75},
-    "ma_cross": {"fast_len": 20, "slow_len": 50},
-    "bb_fade": {"bb_len": 20, "bb_k": 2.0},
-}
+# Sane fallbacks live in strategy.genome (single source of truth shared
+# with the evaluators); imported above as _PARAM_DEFAULTS.
 
 _PARAM_MAP = {
     # family -> template field -> genome param name

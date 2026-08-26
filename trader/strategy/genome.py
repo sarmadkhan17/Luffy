@@ -123,3 +123,20 @@ def spawn_seed(sid_hint: str, family: str, name: str, description: str,
         raise ValueError(f"seed '{name}' invalid: {errs}")
     st.params = dict(g.params)
     return st, g
+
+
+# Sane per-family fallbacks so genomes mined with missing params still
+# forge valid Pine and evaluate without KeyErrors (single source of
+# truth shared by pine.py templates and the strategy evaluators).
+PARAM_DEFAULTS: dict[str, dict] = {
+    "ema_trend": {"fast_len": 21, "slow_len": 55, "adx_min": 18,
+                  "pullback_atr": 1.0},
+    "vwap_fade": {"anchor_bars": 48, "z_entry": 2.0, "max_hold_bars": 24},
+    "breakout_retest": {"range_lookback": 48, "vol_mult": 1.5,
+                        "retest_atr": 0.5},
+    "sweep_reversal": {"max_reclaim_bars": 6, "min_sweep_frac": 0.3},
+    "rotation_momo": {"btc_ret_1h_min": 0.15, "lag_lookback": 24},
+    "rsi_extreme": {"rsi_len": 14, "os_level": 25, "ob_level": 75},
+    "ma_cross": {"fast_len": 20, "slow_len": 50},
+    "bb_fade": {"bb_len": 20, "bb_k": 2.0},
+}

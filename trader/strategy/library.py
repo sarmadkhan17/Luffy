@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import logging
 
+from dataclasses import replace
+
 from ..agents.indicators import adx, anchored_vwap, ema, rsi, zscore
 from ..core.types import Action, Snapshot, StrategySignal
 from .genome import Genome, spawn_seed
@@ -261,8 +263,17 @@ EVALUATORS = {
 
 def evaluate(genome: Genome, snap: Snapshot) -> StrategySignal | None:
     fn = EVALUATORS.get(genome.family)
+    if not fn:
+        return None
     try:
-        return fn(genome, snap) if fn else None
+        # mined genomes may arrive with missing params — fill from the
+        # family defaults so evaluators can index g.params safely
+        from .genome import PARAM_DEFAULTS
+        defaults = PARAM_DEFAULTS.get(genome.family, {})
+        if any(k not in genome.params for k in defaults):
+            merged = {**defaults, **genome.params}
+            genome = replace(genome, params=merged)
+        return fn(genome, snap)
     except Exception as e:
         log.warning(f"strategy {genome.strategy_id} ({genome.family}) error: {e}")
         return None
