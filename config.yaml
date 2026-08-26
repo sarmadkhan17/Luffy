@@ -64,6 +64,7 @@ strategies:
 tv_harness:
   enabled: true                  # REAL Strategy Tester via browser automation
   daily_runs: 20                 # hard budget; folds consume runs too
+  budget_enabled: false          # DEV PHASE: unlimited tester runs until finalization
   run_timeout_s: 90
 
 harvester:

@@ -38,12 +38,14 @@ def main() -> None:
     j = Journal("data/luffy.db")
     hv = Harvester(j, cfg, DataFeed())
     budget = int(cfg.get("tv_harness", {}).get("daily_runs", 20))
+    dev_mode = not bool(cfg.get("tv_harness", {})
+                        .get("budget_enabled", True))
 
     for c in CANDIDATES[:4]:
         fam = c["family"]
         if fam not in META:
             continue
-        if budget - tv_used_today(j) < 5:
+        if not dev_mode and budget - tv_used_today(j) < 5:
             print(f"STOP: TV budget exhausted ({tv_used_today(j)}/{budget})",
                   flush=True)
             return
@@ -79,7 +81,8 @@ def main() -> None:
                                "family": fam, "params": c["params"],
                                **ev})
             print(f"*** DEPLOYED {g.strategy_id} to paper ***", flush=True)
-            return                      # one acceptance ends the session
+            if "--all" not in sys.argv:
+                return                      # one acceptance ends the session
         time.sleep(10)
     print("session done: no acceptance", flush=True)
 
