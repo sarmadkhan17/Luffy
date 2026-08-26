@@ -333,18 +333,41 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
 </div>
 
 <!-- ══════════ OS ══════════ -->
-<div id="v-os" class="hidden">
- <div class="subtabs">
-  <div class="tab active" onclick="osTab('dec',this)">Decisions</div>
-  <div class="tab" onclick="osTab('lab',this)">Strategy Lab</div>
-  <div class="tab" onclick="osTab('agents',this)">Agents</div>
-  <div class="tab" onclick="osTab('brain',this)">Brain</div>
- </div>
- <div id="os-dec">
-  <div class="plabel">Decision stream — executed AND skipped, with reasoning chains</div>
-  <div id="dec-feed"></div>
-  <div class="pager" id="dec-pager"></div>
- </div>
+ <div id="v-os" class="hidden">
+  <div class="subtabs">
+   <div class="tab active" onclick="osTab('dec',this)">Decisions</div>
+   <div class="tab" onclick="osTab('disc',this)">Discovery</div>
+   <div class="tab" onclick="osTab('lab',this)">Strategy Lab</div>
+   <div class="tab" onclick="osTab('agents',this)">Agents</div>
+   <div class="tab" onclick="osTab('brain',this)">Brain</div>
+  </div>
+  <div id="os-dec">
+   <div class="plabel">Decision stream — executed AND skipped, with reasoning chains</div>
+   <div id="dec-feed"></div>
+   <div class="pager" id="dec-pager"></div>
+  </div>
+  <div id="os-disc" class="hidden">
+   <div class="kpis" id="disc-kpis"></div>
+   <div class="cols" style="grid-template-columns:1fr 340px">
+    <div>
+     <div class="plabel">Gauntlet verdicts — recent candidates</div>
+     <div id="verdict-feed"></div>
+    </div>
+    <div>
+     <div class="plabel">Validation gauntlet — stage order</div>
+     <div class="panel" style="font-size:12px;line-height:2">
+      <div><span class="tag HOLD">1</span> Yahoo prefilter · <i>advisory</i></div>
+      <div><span class="tag HOLD">2</span> Internal sanity · venue candles,<br>
+        walk-forward PF + trade floor</div>
+      <div><span class="tag exec">3</span> Real TradingView tester ·<br>
+        pinned window full + 3 folds</div>
+      <div><span class="tag BUY">4</span> Deploy → paper probation</div>
+     </div>
+     <div class="plabel" style="margin-top:12px">Harvested members</div>
+     <div class="panel" id="harvested-list"></div>
+    </div>
+   </div>
+  </div>
  <div id="os-lab" class="hidden">
   <div class="plabel">Strategy population</div>
   <div id="lab-grid"></div>
@@ -419,8 +442,7 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
 
 <div class="statusbar">
  <span id="sb-state"><span class="sdot"></span><b>ACTIVE</b></span>
- <span>regime <b id="sb-regime">—</b></span>
- <span>heat <b id="sb-heat">—</b></span>
+ <span>day <b id="sb-day">—</b></span>
  <span>dd <b id="sb-dd">—</b></span>
  <span style="margin-left:auto">LUFFY v1.0 · <b id="sb-mode">FUTURES</b></span>
 </div>
@@ -440,11 +462,12 @@ function show(v){document.querySelectorAll('.navitem').forEach(e=>
  if(v==='system')loadLogs(); if(v==='trades')loadTrades();
  if(v==='luffy')initChatChart(); if(v==='os'){loadDecisions();loadBrainFeed();}}
 function osTab(name,el){document.querySelectorAll('#v-os .subtabs .tab')
- .forEach(e=>e.classList.toggle('active',e===el));
- ['dec','lab','agents','brain'].forEach(x=>
-   $('#os-'+x).classList.toggle('hidden',x!==name));
- if(name==='dec')loadDecisions(); if(name==='lab')loadLab();
- if(name==='agents')loadAgents(); if(name==='brain')loadBrainDefault();}
+  .forEach(e=>e.classList.toggle('active',e===el));
+  ['dec','disc','lab','agents','brain'].forEach(x=>
+    $('#os-'+x).classList.toggle('hidden',x!==name));
+  if(name==='dec')loadDecisions(); if(name==='disc')loadDiscovery();
+  if(name==='lab')loadLab(); if(name==='agents')loadAgents();
+  if(name==='brain')loadBrainDefault();}
 function brainTab(name,el){document.querySelectorAll('#os-brain .subtabs .tab')
  .forEach(e=>e.classList.toggle('active',e===el));
  ['doctrine','vault','review','autopsy'].forEach(x=>
@@ -467,13 +490,17 @@ async function panic(){if(!confirm('FLATTEN ALL POSITIONS AND FREEZE?'))return;
 /* ── refresh ── */
 let prevEq=null;
 async function refresh(){
- const d=await gql(`{status{control_state market_type heartbeat_age_s equity open_trades strategies_active}}`);
+ const d=await gql(`{status{control_state market_type heartbeat_age_s equity drawdown_pct daily_pnl_pct open_trades strategies_active}}`);
  const s=d.status;
  $('#state').textContent=s.control_state;$('#state').className='pill '+s.control_state;
  $('#sb-state').innerHTML=`<span class="sdot${s.control_state==='ACTIVE'?'':' off'}"></span><b>${s.control_state}</b>`;
  $('#hb').textContent='heartbeat '+s.heartbeat_age_s+'s ago';
  $('#modechip').textContent=s.market_type.toUpperCase()+' · '+s.strategies_active+' strategies';
  $('#sb-mode').textContent=s.market_type.toUpperCase();
+ const dp=+s.daily_pnl_pct,ddp=+s.drawdown_pct;
+ $('#sb-day').textContent=(dp>=0?'+':'')+dp.toFixed(2)+'%';
+ $('#sb-day').style.color=dp>=0?'var(--green)':'var(--red)';
+ $('#sb-dd').textContent=ddp.toFixed(2)+'%';
  ['active','frozen','halted'].forEach(x=>
    $('#b-'+x).classList.toggle('on',x===s.control_state.toLowerCase()));
  const sum=await (await fetch('/api/summary'+location.search)).json();
@@ -599,36 +626,13 @@ async function loadEqCurve(){
  eqChart.timeScale().fitContent();
  $('#eq-range').textContent=d.equity_curve.length+' points';}
 
-/* ── candle charts ── */
+/* ── candle chart (chat view) ── */
 function mkChart(id){
  return LightweightCharts.createChart($(id),
   {layout:{background:{color:'transparent'},textColor:'#525d6e',fontSize:10},
    grid:{vertLines:{color:'#12161d'},horzLines:{color:'#12161d'}},
    timeScale:{timeVisible:true,secondsVisible:false},
    rightPriceScale:{borderColor:'#1c222e'}});}
-let candleChart=null,cSeries=null,cSym='BTC/USDT',cTf='15m';
-async function loadCandles(){
- if(!candleChart)return;
- const r=await (await fetch(`/api/klines?symbol=${encodeURIComponent(cSym)}&tf=${cTf}&limit=300`)).json();
- if(!r.candles)return;
- cSeries.setData(r.candles);
- candleChart.timeScale().fitContent();
- $('#candle-title').textContent=cSym+' · '+cTf;
- const d=await gql(`query($s:String!){decisions(symbol:$s,limit:200)
-  {ts action executed}}`,{s:cSym}).catch(()=>null);
- if(d&&d.decisions&&cSeries.setMarkers){
-  const marks=d.decisions.filter(x=>x.executed).map(x=>({
-   time:Math.floor(new Date(x.ts).getTime()/1000),
-   position:x.action==='BUY'?'belowBar':'aboveBar',
-   color:x.action==='BUY'?'#00d1a0':'#ff5c74',
-   shape:x.action==='BUY'?'arrowUp':'arrowDown',text:x.action}))
-   .sort((a,b)=>a.time-b.time);
-  try{cSeries.setMarkers(marks);}catch(e){}}}
-function bindChartControls(symSel,tfWrap,get,set,load){
- $(symSel).addEventListener('change',e=>{set('sym',e.target.value);load();});
- $(tfWrap).querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
-  $(tfWrap).querySelectorAll('button').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on');set('tf',b.dataset.tf);load();}));}
 
 /* ── trades / logs ── */
 const PAGE=25;
@@ -669,24 +673,67 @@ async function loadLogs(){const r=await fetch('/api/logs?lines=90');
 /* ── OS: decisions ── */
 async function loadBrainFeed(){
  try{
-  const t=await gql(`{tv_health{state runs_today budget}}`);
-  if(t&&t.tv_health){const e={'healthy':'var(--green)','degraded':'#ff9f43','down':'var(--red)'}[t.tv_health.state]||'#888';
-   $('#tv-health').innerHTML=`<span style="color:${e}">●</span> TV ${t.tv_health.state} ${t.tv_health.runs_today}/${t.tv_health.budget}`;}
-  const d=await gql(`{brain_events(kinds:"brain_judgement,pine_forged",limit:6)}`);
+  const t=await gql(`{tv_health{state runs_today budget budget_enabled}}`);
+  if(t&&t.tv_health){const h=t.tv_health;
+   const e={'healthy':'var(--green)','degraded':'#ff9f43','down':'var(--red)'}[h.state]||'#888';
+   const runs=h.budget_enabled?`${h.runs_today}/${h.budget}`:'dev · unlimited';
+   $('#tv-health').innerHTML=`<span style="color:${e}">●</span> TV ${h.state} · ${runs}`;}
+  const d=await gql(`{brain_events(kinds:"brain_judgement,pine_forged,harvest_accepted,harvest_rejected",limit:8)}`);
   $('#brain-feed').innerHTML=(d.brain_events||[]).map(ev=>{
    let line='';
-   if(ev.kind==='brain_judgement'){try{const j=JSON.parse(ev.detail);
+   if(ev.kind==='harvest_accepted'){
+    let src='';try{src=JSON.parse(ev.detail).source||'';}catch(e){}
+    line=`🌐 <b style="color:var(--green)">accepted</b> ${ev.subject} ${src?'· '+src:''}`;}
+   else if(ev.kind==='harvest_rejected'){
+    let stage='',pnl=null;try{const j=JSON.parse(ev.detail);
+     stage=j.stage||(j.tv||{}).stage||'';
+     pnl=(j.tv||{}).net_profit_pct??(j.tv||{}).oos_return_pct;}catch(e){}
+    line=`✗ <b style="color:var(--red)">rejected</b> @${stage}${pnl!=null?' · pnl '+pnl+'%':''} <span class="mono" style="color:var(--dimmer)">${(ev.detail.match(/"title": "([^"]{0,50})/)||[])[1]||''}</span>`;}
+   else if(ev.kind==='brain_judgement'){try{const j=JSON.parse(ev.detail);
      const ap=(j.decisions_applied||[]).map(a=>`${a.id.slice(0,14)}→${a.to}`).join(', ')||'held the book';
      line=`🧠 <b>${ap}</b> · ${((j.direction||'')+' '+(j.portfolio_note||'')).slice(0,140)}`;
-   }catch(e){line='🧠 judgement';}}
+    }catch(e){line='🧠 judgement';}}
    else{try{const p=JSON.parse(ev.detail);
      line=`📜 pine forged for ${ev.subject} (${p.refined?'LLM-refined':'template'}${p.folds?`, ${p.folds} folds`:''})`;
-   }catch(e){line=`📜 pine forged ${ev.subject}`;}}
+    }catch(e){line=`📜 pine forged ${ev.subject}`;}}
    return `<div class="decision"><div class="r1" style="width:100%">
     <span class="mono" style="color:var(--dimmer)">${(ev.ts||'').slice(5,16)}</span>
     <span style="flex:1;font-size:12px">${line}</span></div></div>`;
-  }).join('')||'<div class="empty" style="border:none">no brain judgements yet — first review ~15min after boot</div>';
+  }).join('')||'<div class="empty" style="border:none">no brain activity yet</div>';
  }catch(e){}}
+
+async function loadDiscovery(){
+ const r=await (await fetch('/api/pipeline')).json();
+ const f=r.funnel||{},lc=f.last_cycle||{};
+ const kpi=(lbl,val,sub)=>`<div class="card"><div class="lbl">${lbl}</div>
+  <div class="val num" style="font-size:21px">${val}</div>
+  <div class="sub">${sub||''}</div></div>`;
+ $('#disc-kpis').innerHTML=
+  kpi('Ideas scraped', lc.scraped??'—', `${f.cycles||0} cycles in window`)+
+  kpi('Screened out', lc.screened_out??'—','cheap text filter')+
+  kpi('Extracted', lc.extracted??'—', 'LLM → genomes')+
+  kpi('TV verdicts ok', f.tv_ok_all_time??0,'all-time tester passes')+
+  kpi('Deployed', (r.population?.by_state?.paper||0)+' paper',
+      Object.entries(r.population?.by_state||{}).map(([k,v])=>k+' '+v).join(' · '));
+ const chk=c=>c?Object.entries(c).filter(([k,v])=>['profitable_oos','drawdown_ok','folds_positive','quality'].includes(k))
+  .map(([k,v])=>`<span class="tag ${v?'BUY':'SELL'}" title="${k}">${k.slice(0,2)}${v?'✓':'✗'}</span>`).join(' '):'';
+ $('#verdict-feed').innerHTML=(r.verdicts||[]).map(v=>{
+  const acc=v.kind==='harvest_accepted';
+  return `<div class="decision"><div class="r1" style="width:100%">
+   <span class="tag ${acc?'BUY':'SELL'}">${acc?'PASS':'REJ'}</span>
+   <span class="mono" style="color:var(--dimmer)">${(v.ts||'').slice(5,16)}</span>
+   <span style="flex:1;font-size:12px">${v.title||v.subject}</span>
+   ${v.pnl_pct!=null?`<span class="num ${v.pnl_pct>=0?'up':'down'}">${(+v.pnl_pct).toFixed(2)}%</span>`:''}
+   ${v.folds&&v.folds!=='None/None'?`<span class="mono" style="color:var(--dimmer)">folds ${v.folds}</span>`:''}
+   <span class="mono" style="color:var(--blue);font-size:10px">@${v.stage||'?'}</span></div>
+   <div class="r2">${chk(v.checks)}</div></div>`;}).join('')
+  ||'<div class="empty">no gauntlet verdicts yet</div>';
+ const th=r.tv_health||{};
+ $('#harvested-list').innerHTML=(r.population?.harvested||[]).map(hm=>
+  `<div style="margin:6px 0;font-family:var(--mono);font-size:11px">
+   <span class="badge ${hm.state}" style="margin-right:7px">${hm.state}</span>${hm.kind}
+   <div style="color:var(--dimmer)">${hm.params}</div></div>`).join('')
+  ||'<span class="mono" style="color:var(--dimmer)">none yet</span>';}
 async function loadDecisions(){
  const d=await gql(`{decisions(limit:${PAGE},offset:${decPage*PAGE}){
   id ts symbol action score threshold confidence
@@ -725,13 +772,15 @@ async function loadNewsBanner(){
   }else b.classList.remove('on');
  }catch(e){}}
 async function loadLab(){
- const d=await gql(`{strategy_full{id name kind state origin hypothesis params}}`);
+ const d=await gql(`{strategy_full{id name kind state origin hypothesis params generation retire_reason}}`);
  $('#lab-grid').innerHTML=d.strategy_full.map(s=>`<div class="strat-card">
   <span class="name">${s.name}</span>
   <span class="badge ${s.state}" style="margin-left:9px">${s.state}</span>
-  <span class="mono" style="float:right;color:var(--dimmer)">${s.kind} · ${s.origin}</span>
+  <span class="mono" style="float:right;color:var(--dimmer)">${s.kind} · ${s.origin}${s.generation?` · gen${s.generation}`:''}</span>
   <div class="hyp">“${s.hypothesis}”</div>
-  <div class="mono" style="font-size:10.5px;color:var(--dimmer)">${s.params}</div></div>`).join('');}
+  <div class="mono" style="font-size:10.5px;color:var(--dimmer)">${s.params}</div>
+  ${s.retire_reason?`<div class="mono" style="font-size:10.5px;color:var(--red);opacity:.75;margin-top:4px">✗ ${s.retire_reason.slice(0,120)}</div>`:''}
+ </div>`).join('');}
 async function loadAgents(){
  const dd=await gql(`{agents_accuracy{agent n accuracy}}`);
  const rows=(dd&&dd.agents_accuracy)||[];
@@ -797,18 +846,19 @@ async function runAutopsy(btn){
  else $('#autopsy-status').textContent='failed: '+(r.reason||'?');}
 
 /* ── chat ── */
-let chatChart=null,chatSeries=null;
+let chatChart=null,chatSeries=null,cSym2='BTC/USDT',cTf2='15m';
 function initChatChart(){
  if(chatChart)return;
  chatChart=mkChart('#chart2');chatSeries=chatChart.addCandlestickSeries(
   {upColor:'#00d1a0',downColor:'#ff5c74',borderVisible:false,
    wickUpColor:'#00d1a0',wickDownColor:'#ff5c74'});
  fillSymSelect('#ch-sym2');
- bindChartControls('#ch-sym2','#tf-seg2',(k,v)=>{if(k==='sym')cSym2=v;else cTf2=v;},
-  ()=>{},loadChatCandles);
+ $('#ch-sym2').addEventListener('change',e=>{cSym2=e.target.value;loadChatCandles();});
+ $('#tf-seg2').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+  $('#tf-seg2').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');cTf2=b.dataset.tf;loadChatCandles();}));
  loadChatCandles();
  window.addEventListener('resize',()=>chatChart.applyOptions({width:$('#chart2').clientWidth}));}
-let cSym2='BTC/USDT',cTf2='15m';
 async function loadChatCandles(){
  if(!chatChart)return;
  const r=await (await fetch(`/api/klines?symbol=${encodeURIComponent(cSym2)}&tf=${cTf2}&limit=300`)).json();
@@ -837,9 +887,8 @@ function fillSymSelect(sel){
  fetch('/api/summary').then(r=>r.json()).then(s=>{
   const syms=[...new Set(['BTC/USDT','ETH/USDT','SOL/USDT',
    ...s.open_positions.map(p=>p.symbol)])];
-  ['ch-sym','ch-sym2'].forEach(id=>{
-   const el=$(id?'#'+id:sel);if(!el)return;
-   el.innerHTML=syms.map(x=>`<option${x===cSym?' selected':''}>${x}</option>`).join('');});});}
+  const el=document.querySelector(sel);if(!el)return;
+  el.innerHTML=syms.map(x=>`<option${x===cSym2?' selected':''}>${x}</option>`).join('');});}
 window.addEventListener('DOMContentLoaded',()=>{
  loadEqCurve();
  loadNewsBanner();

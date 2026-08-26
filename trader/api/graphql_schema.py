@@ -76,6 +76,7 @@ class TvHealthType:
     state: str
     runs_today: int
     budget: int
+    budget_enabled: bool = True
 
 
 @strawberry.type
@@ -131,6 +132,8 @@ class AgentStatType:
 class StrategyFullType(StrategyType):
     params: str
     state_detail: str
+    generation: int = 0
+    retire_reason: str = ""
 
 
 @strawberry.type
@@ -266,12 +269,14 @@ def build_query(journal: Journal):
 
         @strawberry.field
         def tv_health(self) -> TvHealthType:
+            from ..core.config import load_config as _lc
             from ..brain.tv_harness import TVHarness
-            h = TVHarness(journal, {"tv_harness": {"daily_runs": 20}})
+            h = TVHarness(journal, {"tv_harness": _lc().get("tv_harness", {})})
             st = h.health()
             return TvHealthType(state=st["state"],
                                 runs_today=st["runs_today"],
-                                budget=st["budget"])
+                                budget=st["budget"],
+                                budget_enabled=h.budget_enabled)
 
         @strawberry.field
         def trades(self, open_only: bool = False,
@@ -306,7 +311,9 @@ def build_query(journal: Journal):
                     id=r["id"], name=r["name"], kind=r["kind"],
                     state=r["state"], origin=r["origin"],
                     hypothesis=r["hypothesis"] or "", params=r["params"] or "{}",
-                    state_detail=r["state"]))
+                    state_detail=r["state"],
+                    generation=int(r.get("generation") or 0),
+                    retire_reason=r.get("retire_reason") or ""))
             return out
 
         @strawberry.field
