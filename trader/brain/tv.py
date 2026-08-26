@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 
 log = logging.getLogger(__name__)
 
@@ -115,13 +116,22 @@ class TVClient:
         }
 
     def compare_families(self, symbol: str) -> dict:
-        """Score every TV strategy on one symbol — context for the brain."""
+        """Score every TV strategy on one symbol — context for the brain.
+
+        Only VALID results are returned: transient upstream failures must
+        not leak as all-families-invalid context (it biases the extractor
+        into skipping every idea)."""
         out = {}
-        for fam, tv in FAMILY_TV.items():
+        for i, (fam, tv) in enumerate(FAMILY_TV.items()):
+            if i:
+                time.sleep(1.0)          # dodge upstream rate limits
             r = self.walk_forward(symbol, fam)
-            out[fam] = {k: r.get(k) for k in
-                        ("valid", "oos_return_pct", "oos_trades",
-                         "robustness", "verdict")}
+            if r.get("valid"):
+                out[fam] = {k: r.get(k) for k in
+                            ("valid", "oos_return_pct", "oos_trades",
+                             "robustness", "verdict")}
+            else:
+                log.warning(f"compare_families {fam}: {r.get('reason')}")
         return out
 
 

@@ -56,7 +56,13 @@ def _find_tester_tab(page):
 
 
 def sha_code(code: str, symbol: str = "BINANCE:BTCUSDT", tf: str = "1h") -> str:
-    return hashlib.sha256(f"{code}|{symbol}|{tf}".encode()).hexdigest()[:16]
+    # semantic hash: comments carry provenance only (strategy_id,
+    # hypothesis) and cannot affect tester output — exclude them so
+    # re-forged identical strategies reuse cached verdicts
+    core = "\n".join(
+        ln for ln in code.splitlines()
+        if ln.strip() and not ln.strip().startswith("//"))
+    return hashlib.sha256(f"{core}|{symbol}|{tf}".encode()).hexdigest()[:16]
 
 
 def parse_metrics(text: str) -> dict:

@@ -305,9 +305,13 @@ class Harvester:
             f"{json.dumps(tv_context)[:500]}\n\n"
             'For EACH idea output {"id", then either a genome '
             '{"family","params",{...within schema},"hypothesis":"one '
-            'sentence"} or {"skip":true,"reason":"..."}}. Skip opinions, '
-            "chart art, news and hype — only systematic, expressible "
-            "strategies. Never invent gene names.\n\n"
+            'sentence"} or {"skip":true,"reason":"..."}}. If an idea states '
+            "a TESTABLE mechanism — even loosely (double top, divergence, "
+            "breakout rejection, seasonality) — map it to the NEAREST "
+            "family and fill unspecified genes with schema midpoints; the "
+            "backtester will judge it. Skip only pure news, hype, price "
+            "predictions or chart art with no stated logic. Never invent "
+            "gene names.\n\n"
             'Reply as one JSON object: {"results":[...one entry per idea, '
             "same order...]}")
         raw = self.llm.chat_json(prompt, deep=False)
@@ -334,8 +338,10 @@ class Harvester:
         for i, idea in enumerate(ideas):
             entry = by_pos.get(i)
             if entry is not None:
-                out[idea["idea_id"]] = None if entry.get("skip") \
-                    else self._genome_from(idea, entry)
+                g = None if entry.get("skip") else self._genome_from(idea, entry)
+                log.info(f"extract [{idea['idea_id']}] {idea['title'][:60]} "
+                         f"→ {'skip: ' + str(entry.get('reason'))[:80] if entry.get('skip') else g.family if g else 'genome-invalid'}")
+                out[idea["idea_id"]] = g
                 continue
             # entry missing entirely (truncated/mangled batch reply):
             # retry individually while token budget allows
@@ -384,9 +390,15 @@ class Harvester:
             self._strategy_judge = StrategyJudge(
                 self.journal, self.cfg, self.notifier)
         j = self._strategy_judge
+        # Yahoo family-proxy is ADVISORY only: its BTC-USD 1y history can
+        # diverge wildly from the venue (e.g. −28% b&h vs live uptrend) and
+        # it tests a generic proxy, not the genome's exact genes. The
+        # binding cheap gate is internal sanity below (venue-exact candles,
+        # exact genes, walk-forward). Real-TV remains the final judge.
         pre_ok, pre_ev = j.prefilter(g)
         if not pre_ok:
-            return False, {"stage": "yahoo_prefilter", "tv": pre_ev}
+            log.info(f"prefilter advisory-reject ({g.family}): "
+                     f"{json.dumps(pre_ev)[:140]}")
         results = []
         for sym in ("BTC/USDT", "SOL/USDT"):
             df = self.feed.fetch_ohlcv(sym, "15m", limit=2900)
@@ -498,8 +510,15 @@ class Harvester:
                     min(len(i.get("text", "")), 500))
         candidates.sort(key=_rank, reverse=True)
 
+        # source mix: TradingView captions dominate the ranked pool but are
+        # mostly discretionary chart-art; reserve seats for systematic
+        # sources (arxiv, quant blogs) which formalize far better
         budget = self.ideas_per_cycle
-        batch = candidates[:budget]
+        tv = [c for c in candidates if "tradingview.com" in c.get("source", "")]
+        rest = [c for c in candidates
+                if "tradingview.com" not in c.get("source", "")]
+        batch = rest[:int(budget * 0.6)] + tv[:budget - int(budget * 0.6)]
+        batch = batch[:budget]
         for idea in batch:
             per_source.setdefault(idea["source"], {"scraped": 0,
                                                    "extracted": 0,

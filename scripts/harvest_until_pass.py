@@ -2,6 +2,7 @@
 dual gauntlet (or the TV budget runs dry). Kernel's own 4h thread shares
 the same journal-accounted budget, so overlap is safe."""
 
+import logging
 import sys
 import time
 
@@ -9,6 +10,9 @@ from trader.brain.harvester import Harvester
 from trader.core.config import load_config
 from trader.core.journal import Journal
 from trader.data.feed import DataFeed
+
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s %(name)s %(message)s")
 
 
 def tv_used_today(journal) -> int:
