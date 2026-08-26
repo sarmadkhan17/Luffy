@@ -127,6 +127,8 @@ class TVHarness:
         self.journal = journal
         c = cfg.get("tv_harness", {})
         self.daily_budget = int(c.get("daily_runs", 20))
+        # development switch: unlimited tester runs until Luffy finalizes
+        self.budget_enabled = bool(c.get("budget_enabled", True))
         self.run_timeout_s = int(c.get("run_timeout_s", 90))
 
     # ── cache ────────────────────────────────────────────────────────────
@@ -172,7 +174,8 @@ class TVHarness:
             hit = self.cached(key)
             if hit:
                 return {**hit, "cached": True}
-        if self.runs_today() >= self.daily_budget:
+        if self.budget_enabled and \
+                self.runs_today() >= self.daily_budget:
             log.warning("TV harness daily budget exhausted")
             return {"ok": False, "skipped": "daily_budget"}
 
@@ -249,15 +252,40 @@ class TVHarness:
         script is mangled. A real clipboard paste (Ctrl+V) inserts
         verbatim, so we go through the clipboard and then verify."""
         def editor_text() -> str:
+            # Monaco virtualizes the DOM (.view-lines holds only rendered
+            # lines), so long scripts read back truncated and fail
+            # verification. The JS model always has the exact content.
             try:
-                return page.locator(".monaco-editor .view-lines").first \
+                v = page.evaluate(
+                    "() => { const ms = window.monaco || "
+                    "(window.tradingView && window.tradingView.monaco);"
+                    " if (ms && ms.editor) { const m = "
+                    "ms.editor.getModels()[0]; if (m) return m.getValue(); }"
+                    " return null; }")
+                if v:
+                    return v
+            except Exception:
+                pass
+            try:
+                # ensure the head of the script is rendered before any
+                # DOM-based read (virtualization); wait out the re-render
+                page.keyboard.press("Control+Home")
+                page.wait_for_timeout(400)
+                t = page.locator(".monaco-editor .view-lines").first \
                     .inner_text(timeout=4000)
+                # Monaco renders spaces as U+00A0 in view-lines
+                return t.replace("\xa0", " ")
             except Exception:
                 return ""
 
         def looks_clean() -> bool:
             t = editor_text()
-            if not t.lstrip().startswith("//@version=5"):
+            if not t.strip():
+                return False
+            # head may be scrolled out of the virtualized DOM — accept
+            # version marker anywhere in the captured text, but require
+            # exactly one strategy declaration
+            if "//@version=5" not in t[:4000]:
                 return False
             if t.count("strategy(") != 1:
                 return False
@@ -297,6 +325,18 @@ class TVHarness:
             if looks_clean():
                 self._assert_no_compile_errors(page)
                 return
+            # capture what actually landed for diagnosis
+            t = editor_text()
+            lines = t.splitlines()
+            log.error(f"paste verify failed (attempt {attempt}): "
+                      f"editor has {len(lines)} lines; head="
+                      f"{lines[:2] if lines else 'EMPTY'!r} "
+                      f"strategy_count={t.count('strategy(')}")
+            shot = SHOT_DIR / f"paste_fail_{int(time.time())}.png"
+            try:
+                page.screenshot(path=str(shot), full_page=False)
+            except Exception:
+                pass
             if attempt == 0 and not pasted:
                 continue
         raise RuntimeError("pine editor did not take the pasted script "

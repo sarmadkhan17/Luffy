@@ -66,8 +66,10 @@ class StrategyJudge:
         if self.enabled:
             health = self.harness.health()
             reserve = 5                     # leave room for fold variants
-            if health["state"] != "down" and \
-                    health["runs_today"] + reserve <= health["budget"]:
+            budget_ok = (not getattr(self.harness, "budget_enabled", True)
+                         or health["runs_today"] + reserve <=
+                         health["budget"])
+            if health["state"] != "down" and budget_ok:
                 try:
                     manifest = forge_and_store(genome, self.journal)
                     rv = evaluate_manifest(self.harness, manifest,
