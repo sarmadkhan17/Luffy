@@ -189,7 +189,10 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         FAMILY_THEORY = {
             "ema_trend": "Behavioral Momentum",
             "breakout_retest": "Behavioral Momentum",
+            "ma_cross": "Behavioral Momentum",
             "vwap_fade": "Statistical Mean Reversion",
+            "bb_fade": "Statistical Mean Reversion",
+            "rsi_extreme": "Statistical Mean Reversion",
             "sweep_reversal": "Auction Market Theory",
             "rotation_momo": "Cross-Asset Rotation",
         }
@@ -242,6 +245,70 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         # orphan theories still pulse: ensure theory notes exist as nodes even
         # without links (they always will — seeded)
         return {"nodes": nodes, "edges": edges}
+
+    @app.get("/api/pipeline")
+    async def pipeline():
+        """Discovery→validation pipeline truth: funnel stats, recent
+        gauntlet verdicts, population snapshot, harness state."""
+        from ..brain.tv_harness import TVHarness
+
+        def _detail(rows):
+            out = []
+            for r in rows:
+                try:
+                    d = json.loads(r["detail"])
+                except Exception:
+                    d = {}
+                out.append({"ts": r["ts"], "kind": r["kind"],
+                            "subject": r["subject"],
+                            "title": (d.get("title") or "")[:90],
+                            "stage": d.get("stage")
+                            or (d.get("tv") or {}).get("stage"),
+                            "checks": (d.get("tv") or d).get("checks"),
+                            "pnl_pct": (d.get("tv") or {}).get(
+                                "net_profit_pct",
+                                (d.get("tv") or {}).get("oos_return_pct")),
+                            "folds": f"{(d.get('tv') or {}).get('positive_folds')}"
+                                     f"/{(d.get('tv') or {}).get('fold_count')}",
+                            "source": d.get("source")})
+            return out
+
+        cycles = journal.query(
+            "SELECT ts, detail FROM brain_events WHERE kind='harvest_cycle' "
+            "ORDER BY id DESC LIMIT 4")
+        verdicts = _detail(journal.query(
+            "SELECT ts, kind, subject, detail FROM brain_events "
+            "WHERE kind IN ('harvest_accepted','harvest_rejected') "
+            "ORDER BY id DESC LIMIT 14"))
+        tv = journal.query(
+            "SELECT COUNT(*) n FROM brain_events WHERE kind='tv_backtest' "
+            "AND detail LIKE '%\"ok\": true%'")[0]["n"]
+        pop = {r["state"]: r["n"] for r in journal.query(
+            "SELECT state, COUNT(*) n FROM strategies GROUP BY state")}
+        harvested = [{"id": r["id"], "kind": r["kind"], "state": r["state"],
+                      "params": r["params"]}
+                     for r in journal.query(
+                         "SELECT id, kind, state, params FROM strategies "
+                         "WHERE origin='harvested' ORDER BY created_at DESC "
+                         "LIMIT 6")]
+        try:
+            h = TVHarness(journal, {"tv_harness":
+                                    cfg.get("tv_harness", {})})
+            health = h.health()
+        except Exception:
+            health = {"state": "?", "runs_today": 0, "budget": 0}
+        return {
+            "funnel": {"cycles": len(cycles),
+                       "last_cycle": json.loads(cycles[0]["detail"])
+                       if cycles else {},
+                       "tv_ok_all_time": tv},
+            "verdicts": verdicts,
+            "population": {"by_state": pop, "harvested": harvested},
+            "tv_health": {**health,
+                          "budget_enabled": bool(
+                              cfg.get("tv_harness", {})
+                              .get("budget_enabled", True))},
+        }
 
     @app.get("/api/doctrine")
     async def doctrine():
