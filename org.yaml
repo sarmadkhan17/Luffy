@@ -1,0 +1,75 @@
+# org.yaml — Luffy's company directory.
+#
+# One Manager over a flat team of employees; each employee does one job and
+# wraps existing code. This file is the SOURCE OF TRUTH for the org chart and
+# the knowledge-graph role nodes. Adding an employee = add a block below
+# (no code change). Analysts are appended automatically at load time — one per
+# Analyst subclass in trader/agents/ — so the roster never drifts from the code.
+#
+# Fields:
+#   name        human-readable node name (becomes the [[wikilink]] in the vault)
+#   title       job title
+#   reports_to  manager's name (metadata only — never changes decision logic)
+#   wraps       dotted module paths this employee is responsible for
+#   authors     note types this employee signs (see trader/knowledge/vault.py)
+#   desc        one-line description
+
+manager:
+  name: Manager
+  title: Manager
+  wraps: [trader.kernel, trader.engine.orchestrator, trader.brain.judge]
+  authors: [daily-review]
+  status_source: manager
+  desc: Coordinates the team, makes the final call, keeps the books.
+
+employees:
+  - name: Researcher
+    title: Researcher
+    reports_to: Manager
+    wraps: [trader.brain.harvester, trader.brain.crawler]
+    authors: []
+    status_source: events
+    events: [harvest_cycle, harvest_accepted, crawl_cycle, crawl_doc]
+    desc: Sources new strategy ideas from ideas feeds and literature.
+
+  - name: Strategist
+    title: Strategist
+    reports_to: Manager
+    wraps: [trader.brain.strategist]
+    authors: [strategy]
+    status_source: events
+    events: [review_complete, proposal_accepted, retire, mutate, keep_verdict]
+    desc: Reviews the strategy book; promotes and demotes.
+
+  - name: Theorist
+    title: Theorist
+    reports_to: Manager
+    wraps: [trader.brain.theorist]
+    authors: [postmortem]
+    status_source: events
+    events: [autopsy, doctrine_updated, doctrine_created]
+    desc: Autopsies losing clusters and edge decay into doctrine.
+
+  - name: Risk Officer
+    title: Risk Officer
+    reports_to: Manager
+    wraps: [trader.engine.risk, trader.agents.macro_guard, trader.agents.news_guard]
+    authors: []
+    status_source: risk
+    desc: Sizing, heat cap, daily breaker, macro/news event freezes.
+
+  - name: Trader
+    title: Trader
+    reports_to: Manager
+    wraps: [trader.engine.executor, trader.engine.exits]
+    authors: []
+    status_source: trader
+    desc: Executes entries; manages trailing stops and time exits.
+
+  - name: Librarian
+    title: Librarian
+    reports_to: Manager
+    wraps: [trader.knowledge.vault]
+    authors: [theory, moc]
+    status_source: librarian
+    desc: Keeps the knowledge vault and the map of content current.
