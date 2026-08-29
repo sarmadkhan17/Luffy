@@ -21,6 +21,7 @@ import time
 from .agents.calibration import maybe_refit as maybe_refit_calibration
 from .agents.flow import FlowAnalyst
 from .agents.momentum import MomentumAnalyst, RotationAnalyst, ValueAnalyst
+from .agents.macro_guard import MacroGuard
 from .agents.news_guard import NewsGuard
 from .agents.orderbook_depth import DepthScout
 from .agents.positioning import PositioningAnalyst
@@ -82,6 +83,7 @@ class Kernel:
         self.analysts = [self._make_agent(k) for k in order]
         from .engine.orchestrator import Orchestrator
         self.news_guard = NewsGuard(cfg, self.journal)
+        self.macro_guard = MacroGuard(cfg, self.journal)
         self.orchestrator = Orchestrator(self.analysts, self.journal,
                                          news_guard=self.news_guard, cfg=cfg)
         self.executor = Executor(self.exchange, self.journal, cfg,
@@ -89,6 +91,8 @@ class Kernel:
         from .engine.exits import ExitEngine
 
         self.population = self._load_population()
+        self._pop_sig = [(st.id, st.state, st.params)
+                         for st, _g in self.population]
         from .engine.exits import ExitEngine
         self.exits = ExitEngine(self.exchange, self.journal, self.executor,
                                 cfg, genomes={st.id: st.params
@@ -372,6 +376,30 @@ class Kernel:
                                    f"panic flattened {n}")
             stats["panic_closed"] = n
 
+        # MacroGuard: hard-freeze during scheduled high-impact US events.
+        # Only auto-resumes if MacroGuard owns the current freeze, not operator.
+        macro = self.macro_guard.check()
+        macro_owns_freeze = self.journal.kv_get("macro_guard_froze", "0") == "1"
+        _cur = self.state_machine.state
+        if macro.get("active") and _cur == ControlState.ACTIVE:
+            self.state_machine.set(ControlState.FROZEN, "macro_guard",
+                                   macro.get("event", "macro event"))
+            self.journal.kv_set("macro_guard_froze", "1")
+            self.notifier.send(
+                f"🔒 MacroGuard FREEZE: {macro.get('event', 'macro event')} "
+                f"until {macro.get('until', '?')}")
+        elif (not macro.get("active") and macro_owns_freeze
+              and _cur == ControlState.FROZEN):
+            self.state_machine.set(ControlState.ACTIVE, "macro_guard",
+                                   "macro event cleared")
+            self.journal.kv_set("macro_guard_froze", "0")
+            self.notifier.send("✅ MacroGuard: event cleared — resuming ACTIVE")
+        self.journal.kv_set("macro_guard_state", json.dumps({
+            "active": bool(macro.get("active")),
+            "event": macro.get("event", ""),
+            "until": macro.get("until"),
+            "ts": dt.datetime.now(dt.timezone.utc).isoformat()}))
+
         state = self.state_machine.state
         entry_allowed = state == ControlState.ACTIVE
         blocked = "" if entry_allowed else f"state={state.value}"
@@ -562,6 +590,23 @@ class Kernel:
                              f"(llm={report.get('used_llm')})")
             except Exception as e:
                 log.warning(f"brain tick failed: {e}")
+            try:
+                # hot reload: promote/demote/mutate/harvest writes take
+                # effect within one brain tick — no restart required
+                fresh = self._load_population()
+                sig = [(st.id, st.state, st.params) for st, _g in fresh]
+                if sig != self._pop_sig:
+                    self.population = fresh
+                    self._pop_sig = sig
+                    self.exits.genomes = {st.id: st.params
+                                          for st, _g in fresh}
+                    self.orchestrator.reload_weights()
+                    elig = sum(1 for s in sig
+                               if s[1] in ("paper", "active"))
+                    log.info(f"population hot-reloaded: {len(fresh)} "
+                             f"strategies ({elig} trade-eligible)")
+            except Exception as e:
+                log.warning(f"population hot-reload failed: {e}")
             try:
                 from .knowledge.vault import Vault
                 v = Vault(self.journal)
