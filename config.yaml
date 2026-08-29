@@ -30,7 +30,7 @@ timeframes:
   scan_interval_seconds: 60
 
 risk:
-  risk_per_trade_pct: 5.0        # moderate envelope (REQUIREMENTS §10)
+  risk_per_trade_pct: 1.5        # sized so ~50%-WR strategies keep DD<=~12%
   proving_period_trades: 30      # first N live trades run at proving_size_mult
   proving_size_mult: 0.5
   portfolio_heat_cap_pct: 15.0   # max total open risk across positions
@@ -99,6 +99,12 @@ scouts:
     window_hours: 3            # impact headline age that keeps the blackout armed
     min_headlines: 2           # count needed to arm (1 if severe: hack/depeg/FOMC...)
     refresh_minutes: 10
+  macro_guard:
+    enabled: true
+    pre_event_min: 30        # freeze N minutes before scheduled event
+    post_event_min: 120      # stay frozen N minutes after event
+    min_impact: "high"       # only "high" impact US events from Finnhub
+    # finnhub_token: ""      # set FINNHUB_API_KEY in .env instead
   calibration:
     enabled: true              # learned conviction from journal outcomes
     min_samples: 60            # below this, votes pass through untouched
