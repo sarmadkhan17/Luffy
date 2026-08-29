@@ -261,10 +261,13 @@ def create_app(cfg: dict | None = None) -> FastAPI:
                     d = {}
                 out.append({"ts": r["ts"], "kind": r["kind"],
                             "subject": r["subject"],
-                            "title": (d.get("title") or "")[:90],
+                            "title": (d.get("title")
+                                      or d.get("family") or "")[:90],
                             "stage": d.get("stage")
                             or (d.get("tv") or {}).get("stage"),
-                            "checks": (d.get("tv") or d).get("checks"),
+                            "checks": (d.get("tv") or d).get(
+                                "checks", (d.get("validation") or {})
+                                .get("checks")),
                             "pnl_pct": (d.get("tv") or {}).get(
                                 "net_profit_pct",
                                 (d.get("tv") or {}).get("oos_return_pct")),
@@ -278,19 +281,34 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             "ORDER BY id DESC LIMIT 4")
         verdicts = _detail(journal.query(
             "SELECT ts, kind, subject, detail FROM brain_events "
-            "WHERE kind IN ('harvest_accepted','harvest_rejected') "
+            "WHERE kind IN ('harvest_accepted','harvest_rejected',"
+            "'proposal_accepted','proposal_rejected') "
             "ORDER BY id DESC LIMIT 14"))
         tv = journal.query(
             "SELECT COUNT(*) n FROM brain_events WHERE kind='tv_backtest' "
             "AND detail LIKE '%\"ok\": true%'")[0]["n"]
         pop = {r["state"]: r["n"] for r in journal.query(
             "SELECT state, COUNT(*) n FROM strategies GROUP BY state")}
-        harvested = [{"id": r["id"], "kind": r["kind"], "state": r["state"],
-                      "params": r["params"]}
+        # Harvested/analyst additions — duplicates retired as re-harvest are
+        # excluded so the panel never shows the same strategy twice.
+        harvested = [{"id": r["id"], "name": r["name"], "kind": r["kind"],
+                      "state": r["state"], "params": r["params"]}
                      for r in journal.query(
-                         "SELECT id, kind, state, params FROM strategies "
-                         "WHERE origin='harvested' ORDER BY created_at DESC "
-                         "LIMIT 6")]
+                         "SELECT id, name, kind, state, params FROM strategies "
+                         "WHERE origin IN ('harvested','analyst','brain') "
+                         "AND COALESCE(retire_reason,'') NOT LIKE 'duplicate%' "
+                         "ORDER BY CASE state WHEN 'active' THEN 0 "
+                         "WHEN 'paper' THEN 1 WHEN 'demoted' THEN 2 "
+                         "ELSE 3 END, created_at DESC LIMIT 12")]
+        # full population book for the discovery table (active on top)
+        book = [{"id": r["id"], "name": r["name"], "kind": r["kind"],
+                 "state": r["state"], "origin": r["origin"],
+                 "retire_reason": (r.get("retire_reason") or "")[:110]}
+                for r in journal.query(
+                    "SELECT id, name, kind, state, origin, retire_reason "
+                    "FROM strategies ORDER BY CASE state "
+                    "WHEN 'active' THEN 0 WHEN 'paper' THEN 1 "
+                    "WHEN 'demoted' THEN 2 ELSE 3 END, created_at DESC")]
         try:
             h = TVHarness(journal, {"tv_harness":
                                     cfg.get("tv_harness", {})})
@@ -303,12 +321,78 @@ def create_app(cfg: dict | None = None) -> FastAPI:
                        if cycles else {},
                        "tv_ok_all_time": tv},
             "verdicts": verdicts,
-            "population": {"by_state": pop, "harvested": harvested},
+            "population": {"by_state": pop, "harvested": harvested,
+                           "book": book},
             "tv_health": {**health,
                           "budget_enabled": bool(
                               cfg.get("tv_harness", {})
                               .get("budget_enabled", True))},
         }
+
+    @app.get("/api/agents_stats")
+    async def agents_stats():
+        """Agents tab: live activity (votes) + learned accuracy + weights.
+
+        Accuracy needs outcomes resolved with 4h-forward correctness; every
+        directional decision schedules one, so the columns fill over time."""
+        act = journal.query("""
+            SELECT v.agent,
+                   COUNT(*) AS votes,
+                   SUM(v.conviction>0.02) buys,
+                   SUM(v.conviction<-0.02) sells,
+                   ROUND(AVG(ABS(v.conviction)),3) avg_conv,
+                   MAX(v.ts) last_vote
+            FROM votes v
+            WHERE v.ts >= datetime('now','-24 hours')
+              AND v.agent NOT LIKE '%strategy%'
+            GROUP BY v.agent""")
+        acc_rows = journal.agent_accuracy(since_hours=24 * 30)
+        acc = {r["agent"]: r for r in acc_rows}
+        weights = {}
+        try:
+            p = ROOT / "data" / "agent_weights.json"
+            if p.exists():
+                weights = json.loads(p.read_text())
+        except Exception:
+            weights = {}
+        rows = []
+        seen = []
+        for a in act:
+            seen.append(a["agent"])
+            ac = acc.get(a["agent"], {})
+            w = weights.get(a["agent"])
+            if isinstance(w, dict):
+                w = w.get("weight")
+            rows.append({
+                "agent": a["agent"], "votes24h": a["votes"],
+                "buys": a["buys"] or 0, "sells": a["sells"] or 0,
+                "avg_conv": a["avg_conv"] or 0,
+                "last_vote": a["last_vote"] or "",
+                "acc_n": int(ac.get("n") or 0),
+                "accuracy": round(float(ac.get("accuracy") or 0), 2),
+                "weight": w})
+        # accuracy-only agents with no recent votes still deserve a row
+        for agent_name, ac in acc.items():
+            if agent_name not in seen:
+                w = weights.get(agent_name)
+                if isinstance(w, dict):
+                    w = w.get("weight")
+                rows.append({"agent": agent_name, "votes24h": 0, "buys": 0,
+                             "sells": 0, "avg_conv": 0, "last_vote": "",
+                             "acc_n": int(ac.get("n") or 0),
+                             "accuracy": round(float(ac.get("accuracy") or 0), 2),
+                             "weight": w})
+        pending = journal.query(
+            "SELECT COUNT(*) n FROM outcomes WHERE resolved_at IS NULL")[0]["n"]
+        scored = journal.query(
+            "SELECT COUNT(*) n FROM outcomes WHERE correct_4h IS NOT NULL")[0]["n"]
+        return {"rows": sorted(rows, key=lambda x: -x["votes24h"]),
+                "outcomes_pending": pending, "outcomes_scored": scored}
+
+    @app.get("/api/org")
+    async def org():
+        """Company cockpit: roster + live per-employee status."""
+        return build_company(journal, cfg)
 
     @app.get("/api/doctrine")
     async def doctrine():
@@ -547,6 +631,167 @@ def _today_stats(journal: Journal) -> dict:
         (f"{day}%",))[0]["n"]
     return {"taken": taken, "skipped": skipped, "holds": holds,
             "realized_pnl_today": round(pnl_rows[0]["s"], 2)}
+
+
+def _age_min(ts: str | None) -> float | None:
+    """Minutes since an ISO-ish UTC timestamp, or None if unparseable."""
+    if not ts:
+        return None
+    from datetime import datetime, timezone
+    try:
+        t = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
+        if t.tzinfo is None:
+            t = t.replace(tzinfo=timezone.utc)
+        return (datetime.now(timezone.utc) - t).total_seconds() / 60.0
+    except Exception:
+        return None
+
+
+def _state_from_age(mins: float | None, active=30, idle=1440) -> str:
+    if mins is None:
+        return "stale"
+    if mins <= active:
+        return "active"
+    if mins <= idle:
+        return "idle"
+    return "stale"
+
+
+def _short_detail(detail: str) -> str:
+    try:
+        d = json.loads(detail)
+    except Exception:
+        return str(detail)[:80]
+    for k in ("title", "verdict", "subject", "family", "name", "reason"):
+        if d.get(k):
+            return str(d[k])[:80]
+    if "accepted" in d:
+        return f"accepted {d['accepted']}"
+    return ", ".join(f"{k}={v}" for k, v in list(d.items())[:2])[:80]
+
+
+def build_company(journal, cfg: dict) -> dict:
+    """Roster + live per-employee status for the Company cockpit.
+
+    Read-only: sources everything from the journal (+ vault mtimes). Never makes
+    network calls, so it stays fast and testable. Each employee's status is
+    derived per its declarative `status_source` in org.yaml.
+    """
+    from .. import org as orgmod
+    org = orgmod.Org.load()
+
+    acc = {r["agent"]: r for r in journal.agent_accuracy(since_hours=24 * 30)}
+    last_votes = {r["agent"]: r for r in journal.query(
+        "SELECT agent, side, conviction, ts FROM votes "
+        "WHERE rowid IN (SELECT MAX(rowid) FROM votes GROUP BY agent)")}
+    opens = journal.open_trades()
+    control = journal.kv_get("control_state", "ACTIVE")
+
+    def analyst(e):
+        a = acc.get(e.agent_key, {})
+        lv = last_votes.get(e.agent_key, {})
+        n = int(a.get("n") or 0)
+        metric = (f"{float(a['accuracy'])*100:.0f}% acc ({n})"
+                  if a.get("accuracy") is not None and n else "no data yet")
+        out = (f"{lv.get('side','')} conv {float(lv.get('conviction',0)):+.2f}"
+               if lv else "no recent vote")
+        ts = lv.get("ts")
+        return metric, out, ts, _state_from_age(_age_min(ts)), []
+
+    def events(e):
+        kinds = e.events or []
+        ph = ",".join("?" * len(kinds)) or "''"
+        rows = journal.query(
+            f"SELECT ts, kind, subject, detail FROM brain_events "
+            f"WHERE kind IN ({ph}) ORDER BY id DESC LIMIT 8", tuple(kinds))
+        n24 = journal.query(
+            f"SELECT COUNT(*) n FROM brain_events WHERE kind IN ({ph}) "
+            f"AND ts >= datetime('now','-24 hours')", tuple(kinds))
+        n = n24[0]["n"] if n24 else 0
+        latest = rows[0] if rows else {}
+        out = (f"{latest['kind']}: {_short_detail(latest.get('detail','{}'))}"
+               if latest else "no activity")
+        feed = [{"ts": r["ts"],
+                 "text": f"{r['kind']} · {_short_detail(r.get('detail','{}'))}"}
+                for r in rows]
+        ts = latest.get("ts")
+        return f"{n}/24h", out, ts, _state_from_age(_age_min(ts)), feed
+
+    def trader(e):
+        last = journal.query(
+            "SELECT COALESCE(closed_at, opened_at) ts, symbol, realized_pnl "
+            "FROM trades ORDER BY id DESC LIMIT 6")
+        l0 = last[0] if last else {}
+        out = (f"{l0.get('symbol','')} {float(l0.get('realized_pnl') or 0):+.2f}"
+               if l0 else "no trades")
+        feed = [{"ts": r["ts"],
+                 "text": f"{r['symbol']} {float(r.get('realized_pnl') or 0):+.2f}"}
+                for r in last]
+        state = "active" if opens else _state_from_age(_age_min(l0.get("ts")))
+        return f"{len(opens)} open", out, l0.get("ts"), state, feed
+
+    def risk(e):
+        ng = str(journal.kv_get("news_guard_state", "") or "")
+        armed = control in ("HALTED", "FROZEN") or "arm" in ng.lower()
+        exp = None
+        try:
+            eqr = journal.query("SELECT equity FROM equity ORDER BY ts DESC LIMIT 1")
+            eq = float(eqr[0]["equity"]) if eqr else 0
+            notional = sum(float(t.get("notional_usdt") or t.get("notional") or 0)
+                           for t in opens)
+            if eq:
+                exp = notional / eq  # leveraged exposure as a multiple of equity
+        except Exception:
+            pass
+        metric = f"{len(opens)} pos"
+        out = ("guard armed / frozen" if armed else
+               (f"exposure {exp:.1f}x equity" if exp is not None
+                else f"{len(opens)} positions · limits nominal"))
+        state = "alert" if armed else ("active" if opens else "idle")
+        return metric, out, None, state, []
+
+    def manager(e):
+        cyc = journal.query("SELECT ts, id FROM cycles ORDER BY id DESC LIMIT 1")
+        eqr = journal.query("SELECT equity FROM equity ORDER BY ts DESC LIMIT 1")
+        eq = float(eqr[0]["equity"]) if eqr else 0
+        ts = cyc[0]["ts"] if cyc else None
+        metric = f"eq ${eq:,.0f}" if eq else control
+        out = f"{control} · last cycle" + (f" {_age_min(ts):.0f}m ago"
+                                           if _age_min(ts) is not None else "")
+        state = ("alert" if control in ("HALTED", "FROZEN")
+                 else _state_from_age(_age_min(ts)))
+        return metric, out, ts, state, []
+
+    def librarian(e):
+        from ..knowledge.vault import VAULT
+        from datetime import datetime, timezone
+        md = list(VAULT.rglob("*.md"))
+        newest = max(md, key=lambda p: p.stat().st_mtime, default=None)
+        ts = (datetime.fromtimestamp(newest.stat().st_mtime, timezone.utc)
+              .isoformat() if newest else None)
+        out = f"latest: {newest.stem}" if newest else "empty vault"
+        return f"{len(md)} notes", out, ts, _state_from_age(_age_min(ts)), []
+
+    handlers = {"analyst": analyst, "events": events, "trader": trader,
+                "risk": risk, "manager": manager, "librarian": librarian}
+
+    entries = []
+    for e in org.all():
+        fn = handlers.get(e.status_source)
+        if fn:
+            metric, out, ts, state, feed = fn(e)
+        else:
+            metric, out, ts, state, feed = "—", "", None, "idle", []
+        entries.append({
+            "name": e.name, "title": e.title, "reports_to": e.reports_to,
+            "desc": e.desc, "wraps": e.wraps,
+            "node": f"00 Company/{e.name}.md",
+            "status": state, "metric": metric, "last_output": out,
+            "last_activity": ts, "feed": feed,
+        })
+    from datetime import datetime, timezone
+    return {"employees": entries,
+            "generated_at": datetime.now(timezone.utc).isoformat()}
 
 
 def main() -> None:
