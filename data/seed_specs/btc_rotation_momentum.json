@@ -1,0 +1,51 @@
+{
+  "id": "seed_btc_rotation_momentum",
+  "name": "BTC Rotation Momentum",
+  "thesis": "Crypto capital rotates BTC to ETH to large caps to small caps; alts that are positive yet lagging a fresh BTC impulse get chased by late rotation buyers within hours.",
+  "invalidation": "Demote if profit factor is below 1.0 over 20 trades or BTC correlation collapses.",
+  "provenance": {
+    "source_kind": "seed",
+    "parent": "library.py",
+    "note": "APPROXIMATE port: eval_rotation_momo reads 1h frames; this reads 15m with a 4-bar (1h) lookback against the BTC leader aligned point-in-time."
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "long",
+  "entry_long": "btc_ret(4) > 0.008 and ret(4) > 0 and rel_strength_btc(4) < 0",
+  "entry_short": "",
+  "filters": [
+    "corr_btc(96) > 0.3"
+  ],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 2.0
+    },
+    "target": {
+      "kind": "rr",
+      "v": 2.0
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 24
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "TRENDING_UP"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

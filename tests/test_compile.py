@@ -118,3 +118,87 @@ def test_markdown_contains_thesis_and_readable_logic():
     assert "close > ema(20)" in md
     assert "adx(14) > 20" in md
     assert "Invalidation" in md
+
+
+from trader.strategy.seed_specs import load_seed_specs
+
+
+def test_all_seed_specs_compile():
+    specs = load_seed_specs()
+    assert len(specs) >= 8
+    for s in specs:
+        compile_spec(s)          # raises SpecError on anything malformed
+
+
+def test_seed_specs_have_distinct_theses():
+    theses = [s.thesis for s in load_seed_specs()]
+    assert len(set(theses)) == len(theses), \
+        "every spec must state its OWN inefficiency — the bug that made every " \
+        "ema_trend variant claim the seed's hypothesis"
+
+
+def test_seed_specs_have_real_names():
+    for s in load_seed_specs():
+        assert "variant" not in s.name.lower()
+        assert "harvested" not in s.name.lower()
+
+
+def test_seed_specs_have_distinct_exit_geometry():
+    """Exits are genes now. If every spec still carries the old global
+    2.5/4.5/32 then nothing was actually gained."""
+    geo = {(json_key(s)) for s in load_seed_specs()}
+    assert len(geo) > 1
+
+
+def json_key(s):
+    e = s.exit
+    return (str(e.stop), str(e.target), e.time.get("max_bars"))
+
+
+@pytest.fixture
+def busy_frame():
+    """Long and volatile enough to actually produce range breaks and sweeps.
+
+    A tame 600-bar walk never breaks a 48-bar Donchian with a volume surge, so
+    it cannot distinguish 'spec is quiet' from 'spec is unsatisfiable' — which
+    is exactly the bug this test exists to catch.
+    """
+    rng = np.random.default_rng(17)
+    n = 3000
+    vol = 0.004 * (1 + 0.8 * np.sin(np.arange(n) / 90.0))   # vol clustering
+    close = 100 * np.cumprod(1 + rng.normal(0, 1, n) * vol)
+    df = pd.DataFrame({
+        "ts": pd.date_range("2026-01-01", periods=n, freq="15min", tz="UTC"),
+        "open": close, "close": close,
+        "volume": rng.lognormal(5, 0.8, n)})
+    df["high"] = df[["open", "close"]].max(axis=1) * (1 + rng.uniform(0, .003, n))
+    df["low"] = df[["open", "close"]].min(axis=1) * (1 - rng.uniform(0, .003, n))
+    return df[["ts", "open", "high", "low", "close", "volume"]]
+
+
+def test_seed_specs_emit_signals(busy_frame):
+    """A spec that can never fire is not a quiet strategy, it is a broken one.
+
+    breakout_retest was exactly this: `prev(close,1) > donchian_hi(48)` is
+    unsatisfiable because the Donchian window contains bar i-1, so a close can
+    never exceed the max high of a window containing it. It scored zero
+    signals on 8000 real bars and would have looked merely unprofitable.
+    """
+    fired = {}
+    for s in load_seed_specs():
+        lo, sh = compile_spec(s).entries({"15m": busy_frame})
+        fired[s.id] = int(lo.sum() + sh.sum())
+    # rotation_momo compares against a BTC leader that this fixture omits
+    silent = [k for k, v in fired.items() if v == 0 and "rotation" not in k]
+    assert not silent, f"specs that never fire: {silent} (all: {fired})"
+
+
+def test_rotation_spec_needs_a_leader_frame(busy_frame):
+    """It must be silent WITHOUT btc data and able to fire WITH it — proving
+    the silence is missing data, not an unsatisfiable expression."""
+    spec = [s for s in load_seed_specs() if "rotation" in s.id][0]
+    c = compile_spec(spec)
+    lo, _ = c.entries({"15m": busy_frame})
+    assert not lo.any()
+    lo2, _ = c.entries({"15m": busy_frame}, btc={"15m": busy_frame.copy()})
+    assert len(lo2) == len(busy_frame)

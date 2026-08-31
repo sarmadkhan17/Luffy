@@ -1,0 +1,52 @@
+{
+  "id": "seed_ema_stack_pullback",
+  "name": "EMA Stack Pullback",
+  "thesis": "Trends persist short-term due to anchoring and delayed discretionary entry; buying shallow pullbacks within an aligned EMA stack captures continuation at reduced risk.",
+  "invalidation": "Demote after 6 consecutive losses or profit factor below 0.8 over 20 trades.",
+  "provenance": {
+    "source_kind": "seed",
+    "parent": "library.py",
+    "note": "Faithful port of eval_ema_trend, INCLUDING its quirk: because the long branch already requires close > ema(20), the pullback term (ema20 - close) is always negative and the pullback_atr gene never binds. A pullback strategy that never checks for a pullback."
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_long": "close > ema(20) and ema(20) > ema(50) and ema(20) - close <= 0.8 * max(abs(ema(20) - ema(50)), close * 0.002)",
+  "entry_short": "close < ema(20) and ema(20) < ema(50) and close - ema(20) <= 0.8 * max(abs(ema(20) - ema(50)), close * 0.002)",
+  "filters": [
+    "adx(14) > 22"
+  ],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 2.5
+    },
+    "target": {
+      "kind": "atr",
+      "mult": 4.5
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 32
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "TRENDING_UP",
+    "TRENDING_DOWN"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}
