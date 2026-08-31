@@ -153,3 +153,60 @@ def test_prev_enables_crossing_logic(ctx):
     cross = evaluate_bool(parse("prev(rsi(14), 1) < 30 and rsi(14) >= 30"), ctx)
     level = evaluate_bool(parse("rsi(14) >= 30"), ctx)
     assert cross.sum() < level.sum(), "a cross must be rarer than a level"
+
+
+from trader.strategy.dsl import apply_literals, extract_literals, render
+
+
+def test_extracts_arg_and_threshold_literals():
+    assert [l.value for l in extract_literals(parse("adx(14) > 25"))] == [14, 25]
+
+
+def test_arg_range_comes_from_feature_arg_spec():
+    lit = extract_literals(parse("ema(20) > close"))[0]
+    assert (lit.lo, lit.hi, lit.is_int, lit.source) == (3, 300, True, "arg_spec")
+
+
+def test_threshold_range_comes_from_the_other_side_domain():
+    lits = extract_literals(parse("rsi(14) < 30"))
+    thresh = [l for l in lits if l.value == 30][0]
+    assert (thresh.lo, thresh.hi, thresh.source) == (0.0, 100.0, "domain")
+
+
+def test_negative_threshold_gets_a_domain():
+    lits = extract_literals(parse("zscore(close, 96) < -2.0"))
+    t = [l for l in lits if l.value == 2.0][0]
+    assert t.source == "domain"
+
+
+def test_price_scale_threshold_falls_back_to_relative_range():
+    lit = [l for l in extract_literals(parse("close > 50000"))
+           if l.value == 50000][0]
+    assert lit.lo < 50000 < lit.hi and lit.source == "fallback"
+
+
+def test_apply_literals_rewrites_and_is_reparseable():
+    out = apply_literals(parse("adx(14) > 25"), [20, 30])
+    assert render(out) == "adx(20) > 30"
+    assert parse(render(out)) is not None
+
+
+def test_apply_literals_preserves_int_ness():
+    out = apply_literals(parse("ema(20) > close"), [33.7])
+    assert render(out) == "ema(34) > close", "a period must stay an integer"
+
+
+def test_apply_literals_length_mismatch_raises():
+    with pytest.raises(SpecError):
+        apply_literals(parse("adx(14) > 25"), [20])
+
+
+def test_apply_literals_does_not_mutate_the_original():
+    tree = parse("adx(14) > 25")
+    apply_literals(tree, [20, 30])
+    assert render(tree) == "adx(14) > 25"
+
+
+def test_tuned_expression_still_evaluates(ctx):
+    tuned = apply_literals(parse("adx(14) > 25"), [10, 5])
+    assert evaluate_bool(tuned, ctx).any()
