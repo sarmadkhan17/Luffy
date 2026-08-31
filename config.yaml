@@ -65,6 +65,14 @@ risk:
   bar_minutes: 15            # cost model from day one (REQUIREMENTS §10)
   slippage_atr_frac: 0.06        # synthetic slippage = frac of ATR per fill
 
+mechanism:
+  # The generate-judge-retire loop. No edge lasts, so this matters more than
+  # any single strategy in the book.
+  enabled: true
+  interval_minutes: 180
+  specs_per_cycle: 1
+  max_specs: 8
+
 strategies:
   max_active: 6                  # concurrently active strategies
   tv_validation: true            # TradingView walk-forward is mandatory judge

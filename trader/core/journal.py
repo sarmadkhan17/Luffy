@@ -357,6 +357,62 @@ class Journal:
                       "WHERE id=? AND (state_changed_at IS NULL "
                       "OR state_changed_at='')", (st.id,))
 
+    # ── specs (the StrategySpec population) ──────────────────────────
+    def _ensure_spec_column(self) -> None:
+        cols = [r[1] for r in self._conn().execute(
+            "PRAGMA table_info(strategies)")]
+        if "spec_json" not in cols:
+            c = self._conn()
+            c.execute("ALTER TABLE strategies ADD COLUMN spec_json TEXT")
+            c.commit()
+
+    def upsert_spec(self, spec, state: str = "paper",
+                    origin: str = "strategist") -> None:
+        """Store a StrategySpec alongside the legacy genome rows.
+
+        kind='spec' routes the row to the compiler at load; everything else
+        keeps loading as a Genome, so the two populations coexist and the
+        cutover needs no migration.
+        """
+        import json as _j
+        from datetime import datetime, timezone
+        self._ensure_spec_column()
+        c = self._conn()
+        c.execute(
+            "INSERT OR REPLACE INTO strategies "
+            "(id, name, kind, params, state, description, origin, hypothesis,"
+            " invalidation, regime_filter, markets, generation, parent_id,"
+            " created_at, stats_json, spec_json) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,"
+            "  COALESCE((SELECT created_at FROM strategies WHERE id=?), ?),"
+            "  COALESCE((SELECT stats_json FROM strategies WHERE id=?), '{}'),"
+            "  ?)",
+            (spec.id, spec.name, "spec", "{}", state,
+             (spec.thesis or "")[:400], origin, spec.thesis,
+             spec.invalidation, _j.dumps(list(spec.regime_filter)),
+             _j.dumps(list(spec.markets)), spec.generation, spec.parent_id,
+             spec.id, datetime.now(timezone.utc).isoformat(),
+             spec.id, spec.to_json()))
+        c.commit()
+
+    def list_specs(self, states=None) -> list:
+        """[(row, StrategySpec)] for every stored spec."""
+        import json as _j
+        from ..strategy.spec import StrategySpec
+        self._ensure_spec_column()
+        q = "SELECT * FROM strategies WHERE kind='spec' AND spec_json IS NOT NULL"
+        args = ()
+        if states:
+            q += f" AND state IN ({','.join('?' * len(states))})"
+            args = tuple(states)
+        out = []
+        for r in self.query(q, args):
+            try:
+                out.append((r, StrategySpec.from_json(r["spec_json"])))
+            except Exception:
+                continue
+        return out
+
     def list_strategies(self, states: list[str] | None = None) -> list[dict]:
         if states:
             q = f"SELECT * FROM strategies WHERE state IN " \
