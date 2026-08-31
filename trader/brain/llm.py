@@ -16,7 +16,10 @@ class BrainLLM:
         self.model_fast = b["model_fast"]
         self.model_deep = b["model_deep"]
         self.max_tokens = int(b["max_tokens_per_call"])
+        self.max_tokens_deep = int(b.get("max_tokens_deep",
+                                         max(16000, self.max_tokens)))
         self.daily_budget = int(b["daily_token_budget"])
+        self._base_url = b.get("base_url", "https://api.deepseek.com")
         self._key = Env.deepseek_key()
         self._client = None
 
@@ -43,6 +46,11 @@ class BrainLLM:
         except Exception:
             pass
 
+    def _cap(self, deep: bool) -> int:
+        """Token cap for one call. Reasoner models bill chain-of-thought
+        against max_tokens, so deep calls get a much larger ceiling."""
+        return self.max_tokens_deep if deep else self.max_tokens
+
     def budget_left(self) -> int:
         return max(0, self.daily_budget - self._tokens_today())
 
@@ -54,22 +62,56 @@ class BrainLLM:
             from openai import OpenAI
             if self._client is None:
                 self._client = OpenAI(api_key=self._key,
-                                      base_url="https://api.deepseek.com")
+                                      base_url=self._base_url)
             use_json = json_mode and not deep
             resp = self._client.chat.completions.create(
                 model=self.model_deep if deep else self.model_fast,
                 messages=[{"role": "user", "content": prompt}],
-                max_tokens=self.max_tokens,
+                max_tokens=self._cap(deep),
                 response_format={"type": "json_object"} if use_json else None,
                 timeout=120)
-            text = resp.choices[0].message.content or ""
+            choice = resp.choices[0]
+            text = choice.message.content or ""
             used = getattr(resp.usage, "total_tokens", 0) or 0
             self._spend(used)
             log.info(f"brain call: {used} tokens "
                      f"(budget left {self.budget_left()})")
+            if not text:
+                # reasoner models spend max_tokens on chain-of-thought before
+                # emitting content; a "length" stop leaves content empty
+                log.warning(
+                    f"brain call returned empty content "
+                    f"(finish_reason={choice.finish_reason}, cap="
+                    f"{self._cap(deep)}, {used} tokens billed) — raise "
+                    f"brain.max_tokens{'_deep' if deep else '_per_call'}")
+                return None
             return text
         except Exception as e:
             log.warning(f"brain call failed: {e}")
+            return None
+
+    def chat_tools(self, messages: list[dict], tools: list[dict],
+                   deep: bool = False):
+        """OpenAI-compatible tool-calling. Returns the assistant message
+        object (.content, .tool_calls) or None on no-budget/error."""
+        if not self.available or self.budget_left() <= 0:
+            return None
+        try:
+            from openai import OpenAI
+            if self._client is None:
+                self._client = OpenAI(api_key=self._key,
+                                      base_url=self._base_url)
+            resp = self._client.chat.completions.create(
+                model=self.model_deep if deep else self.model_fast,
+                messages=messages,
+                tools=tools,
+                max_tokens=self._cap(deep),
+                timeout=120)
+            used = getattr(resp.usage, "total_tokens", 0) or 0
+            self._spend(used)
+            return resp.choices[0].message
+        except Exception as e:
+            log.warning(f"brain tool call failed: {e}")
             return None
 
     def chat_json(self, prompt: str, deep: bool = False) -> dict | None:

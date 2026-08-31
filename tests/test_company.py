@@ -78,3 +78,46 @@ def test_trader_reflects_open_positions():
     trader = next(e for e in c["employees"] if e["name"] == "Trader")
     assert "1" in trader["metric"]  # one open position
     assert trader["status"] in {"active", "idle"}
+
+
+# ── command-deck enrichment ─────────────────────────────────────────────
+
+def test_every_entry_carries_deck_fields():
+    c = _company()
+    for e in c["employees"]:
+        assert e["category"] in {"BRAIN", "ANALYST", "RESEARCH", "RISK",
+                                 "EXECUTION", "KNOWLEDGE", ""}
+        assert isinstance(e["stats"], list)
+        assert isinstance(e["bar"], int) and 0 <= e["bar"] <= 100
+        assert isinstance(e["signal"], list) and len(e["signal"]) == 24
+
+
+def test_analyst_stats_triple_and_category():
+    c = _company()
+    a = next(e for e in c["employees"] if e["name"] == "Structure Analyst")
+    assert a["category"] == "ANALYST"
+    assert [s[0] for s in a["stats"]] == ["Accuracy", "Samples", "Votes 24h"]
+    assert a["bar"] == 62  # exact: accuracy% from the stub
+
+
+def test_manager_core_tiles():
+    c = _company()
+    m = c["employees"][0]
+    assert m["name"] == "Manager" and m["category"] == "BRAIN"
+    assert "core" in m and len(m["core"]) == 4
+    assert [t[0] for t in m["core"]] == ["Equity", "Control", "Cycle", "Heat"]
+
+
+def test_research_group_covers_strategist_and_theorist():
+    c = _company()
+    by = {e["name"]: e for e in c["employees"]}
+    assert by["Researcher"]["category"] == "RESEARCH"
+    assert by["Strategist"]["category"] == "RESEARCH"
+    assert by["Theorist"]["category"] == "RESEARCH"
+
+
+def test_non_manager_entries_omit_core():
+    c = _company()
+    for e in c["employees"]:
+        if e["name"] != "Manager":
+            assert "core" not in e

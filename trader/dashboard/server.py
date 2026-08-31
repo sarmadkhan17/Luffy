@@ -184,22 +184,12 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         """Nodes = notes, edges = wikilinks (+ family→theory synapses).
         This is the shape of Luffy's memory."""
         import re
-        from ..knowledge.vault import VAULT, THEORY_NOTES
-
-        FAMILY_THEORY = {
-            "ema_trend": "Behavioral Momentum",
-            "breakout_retest": "Behavioral Momentum",
-            "ma_cross": "Behavioral Momentum",
-            "vwap_fade": "Statistical Mean Reversion",
-            "bb_fade": "Statistical Mean Reversion",
-            "rsi_extreme": "Statistical Mean Reversion",
-            "sweep_reversal": "Auction Market Theory",
-            "rotation_momo": "Cross-Asset Rotation",
-        }
+        from ..knowledge.vault import (VAULT, THEORY_NOTES,
+                                       FAMILY_THEORY)
         FOLDER_COLOR = {
-            "10 Theories": "#3498db", "20 Strategies": "#2ecc71",
-            "30 Postmortems": "#e74c3c", "40 Regimes": "#f1c40f",
-            "50 Daily": "#7a8593", "": "#9b59b6",
+            "00 Company": "#e08cf0", "10 Theories": "#3498db",
+            "20 Strategies": "#2ecc71", "30 Postmortems": "#e74c3c",
+            "40 Regimes": "#f1c40f", "50 Daily": "#7a8593", "": "#9b59b6",
         }
         files = {}
         for p in sorted(VAULT.rglob("*.md")):
@@ -211,14 +201,20 @@ def create_app(cfg: dict | None = None) -> FastAPI:
 
         stems = {v["stem"]: rel for rel, v in files.items()}
 
+        def _norm(s: str) -> str:
+            return re.sub(r"[\s_-]+", " ", s).strip().casefold()
+
+        loose = {_norm(s): rel for s, rel in stems.items()}
+
         def resolve(link: str) -> str | None:
             link = link.split("|")[0].split("#")[0].strip()
             if link in stems:
                 return stems[link]
-            for rel, v in files.items():
-                if v["stem"] == link:
-                    return rel
-            return None
+            # Strategy notes are filed slugged ("VWAP_Extreme_Fade") but the
+            # theory notes and LLM-written autopsies link them by prose name
+            # ("VWAP Extreme Fade"). Match on a normalised stem so those
+            # theory→strategy edges don't silently vanish.
+            return loose.get(_norm(link))
 
         nodes, edges, seen = [], [], set()
         for rel, v in files.items():
@@ -329,70 +325,21 @@ def create_app(cfg: dict | None = None) -> FastAPI:
                               .get("budget_enabled", True))},
         }
 
-    @app.get("/api/agents_stats")
-    async def agents_stats():
-        """Agents tab: live activity (votes) + learned accuracy + weights.
-
-        Accuracy needs outcomes resolved with 4h-forward correctness; every
-        directional decision schedules one, so the columns fill over time."""
-        act = journal.query("""
-            SELECT v.agent,
-                   COUNT(*) AS votes,
-                   SUM(v.conviction>0.02) buys,
-                   SUM(v.conviction<-0.02) sells,
-                   ROUND(AVG(ABS(v.conviction)),3) avg_conv,
-                   MAX(v.ts) last_vote
-            FROM votes v
-            WHERE v.ts >= datetime('now','-24 hours')
-              AND v.agent NOT LIKE '%strategy%'
-            GROUP BY v.agent""")
-        acc_rows = journal.agent_accuracy(since_hours=24 * 30)
-        acc = {r["agent"]: r for r in acc_rows}
-        weights = {}
-        try:
-            p = ROOT / "data" / "agent_weights.json"
-            if p.exists():
-                weights = json.loads(p.read_text())
-        except Exception:
-            weights = {}
-        rows = []
-        seen = []
-        for a in act:
-            seen.append(a["agent"])
-            ac = acc.get(a["agent"], {})
-            w = weights.get(a["agent"])
-            if isinstance(w, dict):
-                w = w.get("weight")
-            rows.append({
-                "agent": a["agent"], "votes24h": a["votes"],
-                "buys": a["buys"] or 0, "sells": a["sells"] or 0,
-                "avg_conv": a["avg_conv"] or 0,
-                "last_vote": a["last_vote"] or "",
-                "acc_n": int(ac.get("n") or 0),
-                "accuracy": round(float(ac.get("accuracy") or 0), 2),
-                "weight": w})
-        # accuracy-only agents with no recent votes still deserve a row
-        for agent_name, ac in acc.items():
-            if agent_name not in seen:
-                w = weights.get(agent_name)
-                if isinstance(w, dict):
-                    w = w.get("weight")
-                rows.append({"agent": agent_name, "votes24h": 0, "buys": 0,
-                             "sells": 0, "avg_conv": 0, "last_vote": "",
-                             "acc_n": int(ac.get("n") or 0),
-                             "accuracy": round(float(ac.get("accuracy") or 0), 2),
-                             "weight": w})
-        pending = journal.query(
-            "SELECT COUNT(*) n FROM outcomes WHERE resolved_at IS NULL")[0]["n"]
-        scored = journal.query(
-            "SELECT COUNT(*) n FROM outcomes WHERE correct_4h IS NOT NULL")[0]["n"]
-        return {"rows": sorted(rows, key=lambda x: -x["votes24h"]),
-                "outcomes_pending": pending, "outcomes_scored": scored}
+    _org_cache = {"at": 0.0, "data": None}
 
     @app.get("/api/org")
     async def org():
-        """Company cockpit: roster + live per-employee status."""
-        return build_company(journal, cfg)
+        """Company cockpit + Agents command deck: roster + live status.
+
+        build_company runs a ~30-day accuracy scan over the votes table, so it
+        is briefly cached: both the Company tab and the Agents deck poll this
+        every 8s, and a short TTL keeps those polls from stacking the query."""
+        import time as _t
+        now = _t.time()
+        if _org_cache["data"] is None or now - _org_cache["at"] > 12:
+            _org_cache["data"] = build_company(journal, cfg)
+            _org_cache["at"] = now
+        return _org_cache["data"]
 
     @app.get("/api/doctrine")
     async def doctrine():
@@ -687,16 +634,105 @@ def build_company(journal, cfg: dict) -> dict:
     opens = journal.open_trades()
     control = journal.kv_get("control_state", "ACTIVE")
 
+    # ── shared portfolio math (equity / exposure / heat), computed once ──
+    eqr = journal.query("SELECT equity FROM equity ORDER BY ts DESC LIMIT 1")
+    equity_now = float(eqr[0]["equity"]) if eqr else 0.0
+    heat_cap_pct = float(cfg.get("risk", {}).get("portfolio_heat_cap_pct", 15.0))
+
+    def _pos_risk(t):
+        # mirrors RiskManager._position_risk: distance-to-stop × notional
+        notional = float(t.get("notional_usdt") or t.get("notional") or 0)
+        entry = float(t.get("entry_price") or 0)
+        stop = float(t.get("stop_loss") or 0)
+        if entry > 0 and stop > 0:
+            return notional * abs(entry - stop) / entry
+        return notional * 0.05  # unprotected fallback, same as risk.py
+
+    open_risk = sum(_pos_risk(t) for t in opens)
+    notional_sum = sum(float(t.get("notional_usdt") or t.get("notional") or 0)
+                       for t in opens)
+    exposure = (notional_sum / equity_now) if equity_now else None
+    heat_pct = (open_risk / equity_now * 100) if equity_now else None
+
+    vote24 = {r.get("agent"): int(r.get("n") or 0) for r in journal.query(
+        "SELECT agent, COUNT(*) n FROM votes "
+        "WHERE ts >= datetime('now','-24 hours') GROUP BY agent")}
+    _as = journal.query(
+        "SELECT COUNT(*) n FROM strategies WHERE state IN ('ACTIVE','active')")
+    active_strats = int(_as[0]["n"]) if _as else 0
+
+    def _belief_count():
+        try:
+            from ..core.config import ROOT
+            p = ROOT / "data" / "doctrine.json"
+            if p.exists():
+                return len(json.loads(p.read_text()).get("beliefs", []))
+        except Exception:
+            pass
+        return 0
+    belief_count = _belief_count()
+
+    def _age_str(ts):
+        m = _age_min(ts)
+        if m is None:
+            return "—"
+        if m < 60:
+            return f"{m:.0f}m"
+        if m < 1440:
+            return f"{m/60:.0f}h"
+        return f"{m/1440:.0f}d"
+
+    def _spark(table, tscol="ts", extra="", params=()):
+        """24-bucket hourly event histogram (oldest→newest) for a sparkline."""
+        rows = journal.query(
+            f"SELECT CAST((julianday('now')-julianday({tscol}))*24 AS INT) h, "
+            f"COUNT(*) n FROM {table} "
+            f"WHERE {tscol} >= datetime('now','-24 hours') {extra} GROUP BY h",
+            params)
+        buckets = [0] * 24
+        for r in rows:
+            h = r.get("h")
+            if h is not None and 0 <= int(h) < 24:
+                buckets[23 - int(h)] = int(r.get("n") or 0)
+        return buckets
+
+    def _ev_count(kinds):
+        ph = ",".join("?" * len(kinds)) or "''"
+        r = journal.query(
+            f"SELECT COUNT(*) n FROM brain_events WHERE kind IN ({ph}) "
+            f"AND ts >= datetime('now','-24 hours')", tuple(kinds))
+        return int(r[0]["n"]) if r else 0
+
     def analyst(e):
         a = acc.get(e.agent_key, {})
         lv = last_votes.get(e.agent_key, {})
         n = int(a.get("n") or 0)
-        metric = (f"{float(a['accuracy'])*100:.0f}% acc ({n})"
-                  if a.get("accuracy") is not None and n else "no data yet")
+        av = a.get("accuracy")
+        has = av is not None and n
+        acc_pct = f"{float(av)*100:.0f}%" if has else "—"
+        metric = f"{acc_pct} acc ({n})" if has else "no data yet"
         out = (f"{lv.get('side','')} conv {float(lv.get('conviction',0)):+.2f}"
                if lv else "no recent vote")
         ts = lv.get("ts")
-        return metric, out, ts, _state_from_age(_age_min(ts)), []
+        return {"metric": metric, "out": out, "ts": ts,
+                "state": _state_from_age(_age_min(ts)), "feed": [],
+                "stats": [["Accuracy", acc_pct], ["Samples", str(n)],
+                          ["Votes 24h", f"{vote24.get(e.agent_key, 0):,}"]],
+                "bar": int(round(float(av) * 100)) if has else 0,  # exact: accuracy%
+                "signal": _spark("votes", "ts", "AND agent=?", (e.agent_key,))}
+
+    # per-role stat triples for the event-driven brain staff
+    _EVENT_STATS = {
+        "Researcher": lambda: [["Ideas 24h", str(_ev_count(["harvest_cycle"]))],
+                               ["Accepted", str(_ev_count(["harvest_accepted"]))],
+                               ["Sources", str(_ev_count(["crawl_doc"]))]],
+        "Strategist": lambda: [["Reviews", str(_ev_count(["review_complete"]))],
+                               ["Active", str(active_strats)],
+                               ["Promoted", str(_ev_count(["proposal_accepted"]))]],
+        "Theorist": lambda: [["Autopsies", str(_ev_count(["autopsy"]))],
+                             ["Beliefs", str(belief_count)],
+                             ["Last run", "—"]],  # filled with real ts below
+    }
 
     def events(e):
         kinds = e.events or []
@@ -704,10 +740,7 @@ def build_company(journal, cfg: dict) -> dict:
         rows = journal.query(
             f"SELECT ts, kind, subject, detail FROM brain_events "
             f"WHERE kind IN ({ph}) ORDER BY id DESC LIMIT 8", tuple(kinds))
-        n24 = journal.query(
-            f"SELECT COUNT(*) n FROM brain_events WHERE kind IN ({ph}) "
-            f"AND ts >= datetime('now','-24 hours')", tuple(kinds))
-        n = n24[0]["n"] if n24 else 0
+        n = _ev_count(kinds)
         latest = rows[0] if rows else {}
         out = (f"{latest['kind']}: {_short_detail(latest.get('detail','{}'))}"
                if latest else "no activity")
@@ -715,7 +748,15 @@ def build_company(journal, cfg: dict) -> dict:
                  "text": f"{r['kind']} · {_short_detail(r.get('detail','{}'))}"}
                 for r in rows]
         ts = latest.get("ts")
-        return f"{n}/24h", out, ts, _state_from_age(_age_min(ts)), feed
+        stats = _EVENT_STATS.get(e.name, lambda: [["Events 24h", str(n)]])()
+        if e.name == "Theorist":  # complete the "Last run" cell with the real age
+            stats = [stats[0], stats[1], ["Last run", _age_str(ts)]]
+        return {"metric": f"{n}/24h", "out": out, "ts": ts,
+                "state": _state_from_age(_age_min(ts)), "feed": feed,
+                "stats": stats,
+                "bar": min(100, n * 6),  # rough 24h-activity gauge, not a KPI
+                "signal": _spark("brain_events", "ts",
+                                 f"AND kind IN ({ph})", tuple(kinds))}
 
     def trader(e):
         last = journal.query(
@@ -728,41 +769,64 @@ def build_company(journal, cfg: dict) -> dict:
                  "text": f"{r['symbol']} {float(r.get('realized_pnl') or 0):+.2f}"}
                 for r in last]
         state = "active" if opens else _state_from_age(_age_min(l0.get("ts")))
-        return f"{len(opens)} open", out, l0.get("ts"), state, feed
+        pnl = journal.query("SELECT COALESCE(SUM(realized_pnl),0) p FROM trades "
+                            "WHERE closed_at >= date('now')")
+        day = float(pnl[0].get("p") or 0) if pnl else 0.0
+        return {"metric": f"{len(opens)} open", "out": out,
+                "ts": l0.get("ts"), "state": state, "feed": feed,
+                "stats": [["Open", str(len(opens))],
+                          ["Exposure",
+                           f"{exposure:.1f}x" if exposure is not None else "—"],
+                          ["Day P&L", f"{day:+.2f}"]],
+                "bar": min(100, int((exposure or 0) / 2.5 * 100)),  # exposure gauge
+                "signal": _spark("trades", "opened_at")}
 
     def risk(e):
-        ng = str(journal.kv_get("news_guard_state", "") or "")
-        armed = control in ("HALTED", "FROZEN") or "arm" in ng.lower()
-        exp = None
-        try:
-            eqr = journal.query("SELECT equity FROM equity ORDER BY ts DESC LIMIT 1")
-            eq = float(eqr[0]["equity"]) if eqr else 0
-            notional = sum(float(t.get("notional_usdt") or t.get("notional") or 0)
-                           for t in opens)
-            if eq:
-                exp = notional / eq  # leveraged exposure as a multiple of equity
-        except Exception:
-            pass
+        ng_raw = str(journal.kv_get("news_guard_state", "") or "")
+        guard, ng_active = "clear", False
+        if ng_raw:
+            try:  # news_guard_state is a JSON blob {active, why, ts}
+                g = json.loads(ng_raw)
+                ng_active = bool(g.get("active"))
+                guard = (g.get("why") or "armed") if ng_active else "clear"
+            except Exception:
+                guard, ng_active = ng_raw, "arm" in ng_raw.lower()
+        armed = control in ("HALTED", "FROZEN") or ng_active
         metric = f"{len(opens)} pos"
         out = ("guard armed / frozen" if armed else
-               (f"exposure {exp:.1f}x equity" if exp is not None
+               (f"exposure {exposure:.1f}x equity" if exposure is not None
                 else f"{len(opens)} positions · limits nominal"))
         state = "alert" if armed else ("active" if opens else "idle")
-        return metric, out, None, state, []
+        heat_str = f"{heat_pct:.1f}%" if heat_pct is not None else "—"
+        bar = (min(100, int(heat_pct / heat_cap_pct * 100))
+               if heat_pct is not None and heat_cap_pct else 0)  # exact: heat vs cap
+        return {"metric": metric, "out": out, "ts": None, "state": state,
+                "feed": [],
+                "stats": [["Heat", heat_str],
+                          ["Breaker", "armed" if armed else "nominal"],
+                          ["Guard", guard]],
+                "bar": bar,
+                "signal": _spark("control_events", "ts")}
 
     def manager(e):
-        cyc = journal.query("SELECT ts, id FROM cycles ORDER BY id DESC LIMIT 1")
-        eqr = journal.query("SELECT equity FROM equity ORDER BY ts DESC LIMIT 1")
-        eq = float(eqr[0]["equity"]) if eqr else 0
+        cyc = journal.query("SELECT ts FROM cycles ORDER BY id DESC LIMIT 1")
         ts = cyc[0]["ts"] if cyc else None
-        metric = f"eq ${eq:,.0f}" if eq else control
+        metric = f"eq ${equity_now:,.0f}" if equity_now else control
         out = f"{control} · last cycle" + (f" {_age_min(ts):.0f}m ago"
                                            if _age_min(ts) is not None else "")
         state = ("alert" if control in ("HALTED", "FROZEN")
                  else _state_from_age(_age_min(ts)))
-        return metric, out, ts, state, []
+        heat_str = f"{heat_pct:.1f}%" if heat_pct is not None else "—"
+        return {"metric": metric, "out": out, "ts": ts, "state": state,
+                "feed": [], "stats": [], "bar": 0,
+                "signal": _spark("cycles", "ts"),
+                "core": [["Equity", f"${equity_now:,.0f}" if equity_now else "—"],
+                         ["Control", control],
+                         ["Cycle", _age_str(ts)],
+                         ["Heat", heat_str]]}
 
     def librarian(e):
+        import re
         from ..knowledge.vault import VAULT
         from datetime import datetime, timezone
         md = list(VAULT.rglob("*.md"))
@@ -770,25 +834,42 @@ def build_company(journal, cfg: dict) -> dict:
         ts = (datetime.fromtimestamp(newest.stat().st_mtime, timezone.utc)
               .isoformat() if newest else None)
         out = f"latest: {newest.stem}" if newest else "empty vault"
-        return f"{len(md)} notes", out, ts, _state_from_age(_age_min(ts)), []
+        links = 0
+        for p in md:  # small vault; a full scan per poll is cheap enough
+            try:
+                links += len(re.findall(r"\[\[", p.read_text(errors="replace")))
+            except Exception:
+                pass
+        return {"metric": f"{len(md)} notes", "out": out, "ts": ts,
+                "state": _state_from_age(_age_min(ts)), "feed": [],
+                "stats": [["Notes", str(len(md))], ["Links", str(links)],
+                          ["Updated", _age_str(ts)]],
+                "bar": min(100, len(md)),  # rough vault-size gauge
+                "signal": [0] * 24}  # no per-hour vault event stream
 
     handlers = {"analyst": analyst, "events": events, "trader": trader,
                 "risk": risk, "manager": manager, "librarian": librarian}
+    _blank = {"metric": "—", "out": "", "ts": None, "state": "idle",
+              "feed": [], "stats": [], "bar": 0, "signal": [0] * 24}
 
     entries = []
     for e in org.all():
         fn = handlers.get(e.status_source)
-        if fn:
-            metric, out, ts, state, feed = fn(e)
-        else:
-            metric, out, ts, state, feed = "—", "", None, "idle", []
-        entries.append({
+        r = fn(e) if fn else dict(_blank)
+        entry = {
             "name": e.name, "title": e.title, "reports_to": e.reports_to,
             "desc": e.desc, "wraps": e.wraps,
             "node": f"00 Company/{e.name}.md",
-            "status": state, "metric": metric, "last_output": out,
-            "last_activity": ts, "feed": feed,
-        })
+            "category": e.category
+            or ("ANALYST" if e.status_source == "analyst" else ""),
+            "status": r["state"], "metric": r["metric"],
+            "last_output": r["out"], "last_activity": r["ts"],
+            "feed": r["feed"], "stats": r.get("stats", []),
+            "bar": r.get("bar", 0), "signal": r.get("signal", [0] * 24),
+        }
+        if r.get("core"):
+            entry["core"] = r["core"]
+        entries.append(entry)
     from datetime import datetime, timezone
     return {"employees": entries,
             "generated_at": datetime.now(timezone.utc).isoformat()}

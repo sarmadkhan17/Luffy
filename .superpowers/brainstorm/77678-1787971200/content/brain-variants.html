@@ -1,0 +1,132 @@
+<h2>Four "alive" metaphors for the Brain graph</h2>
+<p class="subtitle">All running live. Each is a different way the graph can move. Click the one whose motion feels right (mixing welcome).</p>
+
+<style>
+  .vgrid{display:grid;grid-template-columns:1fr;gap:16px}
+  @media(min-width:980px){.vgrid{grid-template-columns:1fr 1fr}}
+  .vc{border-radius:14px;overflow:hidden;border:1px solid #171d29;background:#07090d;cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s}
+  .vc:hover{transform:translateY(-2px);box-shadow:0 10px 34px rgba(0,0,0,.45);border-color:#233247}
+  .vc.selected{border-color:#33e1c4;box-shadow:0 0 0 1px #33e1c4,0 10px 34px rgba(51,225,196,.15)}
+  .vc canvas{display:block;width:100%;height:230px}
+  .vc .h{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;border-bottom:1px solid #121824;font-family:'JetBrains Mono',monospace;font-size:11px}
+  .vc .h b{color:#e8f0f8;font-weight:700;letter-spacing:.3px}
+  .vc .h span{color:#5b6b82}
+  .vc .cap{padding:9px 13px;border-top:1px solid #121824;font-size:11.5px;color:#8b97ab;line-height:1.45}
+</style>
+
+<div class="vgrid">
+  <div class="vc" data-choice="constellation" onclick="toggleSelect(this)">
+    <div class="h"><b>A · Constellation</b><span>orbit + particle inflow</span></div>
+    <canvas data-kind="constellation"></canvas>
+    <div class="cap">Breathing nodes orbit the core; signal particles stream inward. Calm, cosmic, "always thinking."</div>
+  </div>
+  <div class="vc" data-choice="synapse" onclick="toggleSelect(this)">
+    <div class="h"><b>B · Synapse fire</b><span>neurons firing</span></div>
+    <canvas data-kind="synapse"></canvas>
+    <div class="cap">A neural web. Pulses race along connections and nodes flash as they "fire." Feels like live cognition.</div>
+  </div>
+  <div class="vc" data-choice="sonar" onclick="toggleSelect(this)">
+    <div class="h"><b>C · Sonar pulse</b><span>ripple on each tick</span></div>
+    <canvas data-kind="sonar"></canvas>
+    <div class="cap">Core emits expanding rings on every brain tick; nodes light up as the wave passes. Rhythmic heartbeat.</div>
+  </div>
+  <div class="vc" data-choice="river" onclick="toggleSelect(this)">
+    <div class="h"><b>D · Data river</b><span>pipeline flow</span></div>
+    <canvas data-kind="river"></canvas>
+    <div class="cap">Left→right lanes: Universe → Analysts → Orchestrator → Risk → Exec. Particles flow through a living pipeline.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const AC = {active:[51,225,196], prob:[255,178,36], dem:[255,92,116], core:[80,230,255]};
+  const canvases=[...document.querySelectorAll('.vc canvas')];
+  const setups=canvases.map(cv=>{
+    const ctx=cv.getContext('2d'); let DPR=devicePixelRatio||1;
+    function resize(){DPR=devicePixelRatio||1;cv.width=cv.clientWidth*DPR;cv.height=230*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+    resize(); addEventListener('resize',resize);
+    return {cv,ctx,kind:cv.dataset.kind,W:()=>cv.clientWidth,H:()=>230,st:{}};
+  });
+
+  function glow(ctx,x,y,r,c,a){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${c[0]},${c[1]},${c[2]},${a})`);g.addColorStop(1,`rgba(${c[0]},${c[1]},${c[2]},0)`);ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,6.28);ctx.fill();}
+
+  // --- init per kind ---
+  setups.forEach(s=>{
+    const W=s.W(),H=s.H();
+    if(s.kind==='constellation'){
+      s.st.nodes=[]; const cols=[AC.active,AC.active,AC.prob,AC.active,AC.dem,AC.active,AC.active,AC.prob];
+      for(let i=0;i<8;i++){const a=i/8*6.28;s.st.nodes.push({ang:a,rad:58+(i%3)*20,c:cols[i],ph:Math.random()*6.28,sp:.6+Math.random()*.6,os:.003+Math.random()*.004,parts:[{t:Math.random()},{t:Math.random()}]});}
+    }
+    if(s.kind==='synapse'){
+      s.st.nodes=[]; const cols=[AC.active,AC.prob,AC.active,AC.active,AC.dem,AC.active,AC.prob,AC.active,AC.active];
+      for(let i=0;i<9;i++)s.st.nodes.push({x:(.15+Math.random()*.7),y:(.18+Math.random()*.64),c:cols[i],fire:0});
+      s.st.edges=[]; const n=s.st.nodes;
+      for(let i=0;i<n.length;i++)for(let j=i+1;j<n.length;j++){if(Math.random()<.28)s.st.edges.push({a:i,b:j,pulses:[]});}
+      s.st.timer=0;
+    }
+    if(s.kind==='sonar'){
+      s.st.nodes=[]; const cols=[AC.active,AC.prob,AC.active,AC.dem,AC.active,AC.active,AC.prob,AC.active];
+      for(let i=0;i<8;i++){const a=i/8*6.28+.2;s.st.nodes.push({a,rad:50+(i%3)*22,c:cols[i],lit:0});}
+      s.st.rings=[]; s.st.timer=0;
+    }
+    if(s.kind==='river'){
+      s.st.lanes=['UNIV','ANALYSTS','ORCH','RISK','EXEC'];
+      s.st.parts=[]; for(let i=0;i<26;i++)s.st.parts.push({x:Math.random(),y:.28+Math.random()*.44,sp:.0015+Math.random()*.0025,c:Math.random()<.15?AC.prob:AC.active});
+    }
+  });
+
+  let t=0;
+  function loop(){
+    t+=0.016;
+    setups.forEach(s=>{
+      const {ctx}=s,W=s.W(),H=s.H(); ctx.clearRect(0,0,W,H);
+      if(s.kind==='constellation'){
+        const cx=W/2,cy=H/2; ctx.save();ctx.translate(cx,cy);
+        s.st.nodes.forEach(n=>{n.ang+=n.os; const x=Math.cos(n.ang)*n.rad,y=Math.sin(n.ang)*n.rad*.7;
+          ctx.strokeStyle=`rgba(${n.c[0]},${n.c[1]},${n.c[2]},.10)`;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(x,y);ctx.stroke();
+          n.parts.forEach(p=>{p.t+=.006;if(p.t>1)p.t-=1;const px=x*(1-p.t),py=y*(1-p.t);glow(ctx,px,py,4,n.c,.9);});
+          const R=4+Math.sin(t*n.sp+n.ph)*1.6; glow(ctx,x,y,R*2.6,n.c,.3);
+          ctx.fillStyle=`rgb(${n.c[0]},${n.c[1]},${n.c[2]})`;ctx.beginPath();ctx.arc(x,y,R,0,6.28);ctx.fill();});
+        const cr=13+Math.sin(t*1.4)*1.6; glow(ctx,0,0,cr*3,AC.core,.4);
+        ctx.strokeStyle='rgba(80,230,255,.5)';ctx.beginPath();ctx.arc(0,0,cr*1.8,0,6.28);ctx.stroke();
+        ctx.fillStyle=`rgb(80,230,255)`;ctx.beginPath();ctx.arc(0,0,cr,0,6.28);ctx.fill();
+        ctx.restore();
+      }
+      else if(s.kind==='synapse'){
+        const n=s.st.nodes;
+        s.st.timer-=0.016; if(s.st.timer<=0){s.st.timer=.35+Math.random()*.4; const e=s.st.edges[Math.floor(Math.random()*s.st.edges.length)]; if(e){e.pulses.push({t:0,dir:Math.random()<.5}); }}
+        s.st.edges.forEach(e=>{const A=n[e.a],B=n[e.b];const ax=A.x*W,ay=A.y*H,bx=B.x*W,by=B.y*H;
+          ctx.strokeStyle='rgba(90,120,150,.12)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+          e.pulses=e.pulses.filter(p=>p.t<1); e.pulses.forEach(p=>{p.t+=.03;const tt=p.dir?p.t:1-p.t;const px=ax+(bx-ax)*tt,py=ay+(by-ay)*tt;const c=A.c;glow(ctx,px,py,6,c,.95); if(p.t>.9){(p.dir?B:A).fire=1;}});});
+        n.forEach(nd=>{const x=nd.x*W,y=nd.y*H;nd.fire*=0.92;const R=5+nd.fire*4;glow(ctx,x,y,R*2.6+nd.fire*10,nd.c,.28+nd.fire*.5);
+          ctx.fillStyle=`rgb(${nd.c[0]},${nd.c[1]},${nd.c[2]})`;ctx.beginPath();ctx.arc(x,y,R,0,6.28);ctx.fill();
+          ctx.strokeStyle=`rgba(255,255,255,${.2+nd.fire*.7})`;ctx.lineWidth=1;ctx.stroke();});
+      }
+      else if(s.kind==='sonar'){
+        const cx=W/2,cy=H/2; ctx.save();ctx.translate(cx,cy);
+        s.st.timer-=0.016; if(s.st.timer<=0){s.st.timer=1.6; s.st.rings.push({r:8,a:1});}
+        s.st.rings=s.st.rings.filter(r=>r.a>0); s.st.rings.forEach(r=>{r.r+=1.1;r.a-=.008;
+          ctx.strokeStyle=`rgba(80,230,255,${Math.max(r.a,0)*.6})`;ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,r.r,0,6.28);ctx.stroke();
+          s.st.nodes.forEach(nd=>{const nr=nd.rad;if(Math.abs(r.r-nr)<8)nd.lit=1;});});
+        s.st.nodes.forEach(nd=>{const x=Math.cos(nd.a)*nd.rad,y=Math.sin(nd.a)*nd.rad*.72;nd.lit*=0.94;const R=4.5+nd.lit*3.5;
+          glow(ctx,x,y,R*2.4+nd.lit*8,nd.c,.25+nd.lit*.5);ctx.fillStyle=`rgb(${nd.c[0]},${nd.c[1]},${nd.c[2]})`;ctx.beginPath();ctx.arc(x,y,R,0,6.28);ctx.fill();});
+        const cr=12+Math.sin(t*2)*1.4;glow(ctx,0,0,cr*3,AC.core,.45);ctx.fillStyle='rgb(80,230,255)';ctx.beginPath();ctx.arc(0,0,cr,0,6.28);ctx.fill();
+        ctx.restore();
+      }
+      else if(s.kind==='river'){
+        const lanes=s.st.lanes,gap=W/(lanes.length);
+        // lane stations
+        lanes.forEach((L,i)=>{const x=gap*(i+.5);
+          ctx.strokeStyle='rgba(90,120,150,.1)';ctx.beginPath();ctx.moveTo(x,40);ctx.lineTo(x,H-30);ctx.stroke();
+          const R=7+Math.sin(t*1.2+i)*1.4;glow(ctx,x,H/2,R*3,i===lanes.length-1?AC.active:AC.core,.25);
+          ctx.fillStyle=i===lanes.length-1?'rgb(51,225,196)':'rgb(80,230,255)';ctx.beginPath();ctx.arc(x,H/2,R,0,6.28);ctx.fill();
+          ctx.fillStyle='rgba(160,180,205,.7)';ctx.font='9px JetBrains Mono,monospace';ctx.textAlign='center';ctx.fillText(L,x,H-14);});
+        s.st.parts.forEach(p=>{p.x+=p.sp; if(p.x>1){p.x=0;p.y=.28+Math.random()*.44;} const x=p.x*W,y=p.y*H;
+          const flowY=H/2+(y-H/2)*(1-Math.min(p.x*1.3,1)); glow(ctx,x,flowY,4,p.c,.85);});
+      }
+    });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+</script>

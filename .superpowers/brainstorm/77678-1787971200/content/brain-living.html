@@ -1,0 +1,144 @@
+<h2>OS · Brain — living graph</h2>
+<p class="subtitle">Nodes breathe (health = color), particles flow along edges toward the core, everything drifts gently. Hover a node to focus it. This is running live — watch it for a few seconds.</p>
+
+<div style="border-radius:16px;overflow:hidden;border:1px solid #161c27;background:radial-gradient(120% 120% at 50% 0%,#0c1017,#06080c)">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 15px;border-bottom:1px solid #121824;font-family:'JetBrains Mono',monospace;font-size:11px;color:#5b6b82">
+    <span style="color:#33e1c4">◉ BRAIN · 14 strategies · 7 analysts</span>
+    <span>flow: <span style="color:#ffb224">strategist tick</span> · budget 62%</span>
+  </div>
+  <canvas id="bg" style="display:block;width:100%;height:480px"></canvas>
+  <div style="display:flex;gap:16px;padding:10px 15px;border-top:1px solid #121824;font-size:11px;color:#7c88a8;font-family:'JetBrains Mono',monospace">
+    <span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#33e1c4;margin-right:5px"></i>active</span>
+    <span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ffb224;margin-right:5px"></i>probation</span>
+    <span><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff5c74;margin-right:5px"></i>demoted</span>
+    <span style="margin-left:auto;color:#4b5a70">particles = signals flowing to core</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  const cv = document.getElementById('bg');
+  const ctx = cv.getContext('2d');
+  let W,H,DPR;
+  function resize(){
+    DPR = window.devicePixelRatio||1;
+    W = cv.clientWidth; H = 480;
+    cv.width = W*DPR; cv.height = H*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  resize(); window.addEventListener('resize',resize);
+
+  const CORE = {label:'LUFFY', core:true};
+  const palette = {active:[51,225,196], prob:[255,178,36], dem:[255,92,116]};
+  function pick(s){return s==='active'?palette.active:s==='prob'?palette.prob:palette.dem;}
+
+  const specs = [
+    ['VWAP Fade','active'],['EMA Trend','active'],['BB Fade','active'],
+    ['RSI Reclaim','prob'],['Liq Sweep','active'],['Momentum','prob'],
+    ['Mean Rev','active'],['Breakout','dem'],['Macro Guard','active'],
+    ['Trend Analyst','active'],['Vol Analyst','active'],['Flow Analyst','prob'],
+    ['Regime Cls','active'],['Sentiment','active']
+  ];
+
+  const nodes = [];
+  const cx = ()=>W/2, cy = ()=>H/2;
+  nodes.push(Object.assign({}, CORE, {x:0,y:0,baseR:26,phase:0,c:[80,230,255],ring:true,vx:0,vy:0,ax:0,ay:0}));
+  specs.forEach((s,i)=>{
+    const a = (i/specs.length)*Math.PI*2 + 0.3;
+    const rad = 150 + (i%3)*46;
+    nodes.push({
+      label:s[0], x:Math.cos(a)*rad, y:Math.sin(a)*rad*0.62,
+      baseR: s[1]==='active'?9:7, phase:Math.random()*6.28,
+      speed:0.6+Math.random()*0.7, c:pick(s[1]), state:s[1],
+      ang:Math.random()*6.28, ospeed:0.0004+Math.random()*0.0006,
+      orad: rad, oy:0.62, jx:Math.random()*6.28, jy:Math.random()*6.28
+    });
+  });
+
+  // edges: each satellite -> core, plus a few cross links
+  const edges = [];
+  for(let i=1;i<nodes.length;i++) edges.push({a:0,b:i,parts:[]});
+  for(let k=0;k<6;k++){
+    const i=1+Math.floor(Math.random()*(nodes.length-1));
+    let j=1+Math.floor(Math.random()*(nodes.length-1));
+    if(i!==j) edges.push({a:i,b:j,parts:[],cross:true});
+  }
+  edges.forEach(e=>{ const n=e.cross?1:2; for(let i=0;i<n;i++) e.parts.push({t:Math.random(), sp:0.003+Math.random()*0.004}); });
+
+  let hover=-1;
+  cv.addEventListener('mousemove',ev=>{
+    const r=cv.getBoundingClientRect(); const mx=ev.clientX-r.left-cx(), my=ev.clientY-r.top-cy();
+    hover=-1; let best=1e9;
+    nodes.forEach((n,i)=>{const d=Math.hypot(mx-n.x,my-n.y); if(d<22&&d<best){best=d;hover=i;}});
+  });
+  cv.addEventListener('mouseleave',()=>hover=-1);
+
+  let t=0;
+  function frame(){
+    t+=0.016;
+    ctx.clearRect(0,0,W,H);
+    ctx.save(); ctx.translate(cx(),cy());
+
+    // gentle orbital drift
+    nodes.forEach(n=>{
+      if(n.core) return;
+      n.ang += n.ospeed*16;
+      const wob = Math.sin(t*0.5+n.jx)*10;
+      n.x = Math.cos(n.ang)*(n.orad+wob);
+      n.y = Math.sin(n.ang)*(n.orad+wob)*n.oy + Math.cos(t*0.4+n.jy)*8;
+    });
+
+    // edges
+    edges.forEach(e=>{
+      const A=nodes[e.a], B=nodes[e.b];
+      const [r,g,b]=B.core?A.c:B.c;
+      ctx.strokeStyle=`rgba(${r},${g},${b},${e.cross?0.06:0.11})`;
+      ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.stroke();
+      // particles flow satellite->core (b->a for spokes since a is core)
+      e.parts.forEach(p=>{
+        p.t+=p.sp; if(p.t>1)p.t-=1;
+        // flow from B to A (into core)
+        const px=B.x+(A.x-B.x)*p.t, py=B.y+(A.y-B.y)*p.t;
+        const glow=ctx.createRadialGradient(px,py,0,px,py,5);
+        glow.addColorStop(0,`rgba(${r},${g},${b},.9)`); glow.addColorStop(1,`rgba(${r},${g},${b},0)`);
+        ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(px,py,5,0,6.28); ctx.fill();
+      });
+    });
+
+    // nodes
+    nodes.forEach((n,i)=>{
+      const [r,g,b]=n.c;
+      const breathe = n.core ? 1+Math.sin(t*1.4)*0.10 : 1+Math.sin(t*n.speed+n.phase)*0.22;
+      const R = n.baseR*breathe;
+      const foc = i===hover;
+      // glow halo
+      const hg=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,R*(n.core?3.4:2.8));
+      hg.addColorStop(0,`rgba(${r},${g},${b},${n.core?.45:.32})`);
+      hg.addColorStop(1,`rgba(${r},${g},${b},0)`);
+      ctx.fillStyle=hg; ctx.beginPath(); ctx.arc(n.x,n.y,R*(n.core?3.4:2.8),0,6.28); ctx.fill();
+      // core ring
+      if(n.core){
+        ctx.strokeStyle=`rgba(${r},${g},${b},.5)`; ctx.lineWidth=1.5;
+        const rr=R*1.9+Math.sin(t*1.4)*3;
+        ctx.beginPath(); ctx.arc(n.x,n.y,rr,0,6.28); ctx.stroke();
+      }
+      // body
+      ctx.fillStyle=`rgb(${r},${g},${b})`;
+      ctx.beginPath(); ctx.arc(n.x,n.y,R,0,6.28); ctx.fill();
+      ctx.strokeStyle=`rgba(255,255,255,${foc?.9:.25})`; ctx.lineWidth=foc?2:1; ctx.stroke();
+      // label
+      if(n.core||foc||R>8.5){
+        ctx.fillStyle=foc?'#fff':`rgba(210,220,235,${n.core?.95:.6})`;
+        ctx.font=`${n.core?700:500} ${n.core?13:11}px Inter,sans-serif`;
+        ctx.textAlign='center';
+        ctx.fillText(n.label, n.x, n.y+(n.core?R+20:R+15));
+      }
+    });
+
+    ctx.restore();
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>

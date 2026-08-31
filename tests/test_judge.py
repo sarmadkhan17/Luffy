@@ -46,7 +46,15 @@ def test_prefilter_uses_yahoo_verdict(tmp_path, monkeypatch):
     assert calls == ["rsi_extreme"]          # family mapped, genome unused
 
 
-def test_final_verdict_skips_tv_when_down(tmp_path, monkeypatch):
+def test_final_verdict_fails_closed_when_harness_down(tmp_path, monkeypatch):
+    """A down harness must yield NO verdict — never a Yahoo-proxy approval.
+
+    final_verdict used to end in `return self.prefilter(genome)`, so a down
+    harness, an exhausted budget, a malformed tester read or any exception
+    handed the decision to the family proxy — a stock TradingView strategy
+    that never sees the genome's params. Here the proxy says valid=True and
+    must still not be able to approve anything.
+    """
     sj, j = _judge(tmp_path, monkeypatch,
                    harness_health={"state": "down", "runs_today": 0,
                                    "budget": 20})
@@ -55,7 +63,27 @@ def test_final_verdict_skips_tv_when_down(tmp_path, monkeypatch):
                         lambda g, j, **k: forged.append(g) or {})
     monkeypatch.setattr(sj.tv, "walk_forward", lambda *a, **k: {"valid": True})
     ok, ev = sj.final_verdict(_genome())
-    assert not forged and ev["stage"].startswith("yahoo")
+    assert not forged
+    assert ok is False
+    assert ev["stage"] == "no_verdict"
+    assert "harness unavailable" in ev["reason"]
+    # the proxy's opinion is still recorded, just not authoritative
+    assert "yahoo_advisory" in ev
+
+
+def test_final_verdict_fails_closed_on_pipeline_error(tmp_path, monkeypatch):
+    sj, j = _judge(tmp_path, monkeypatch,
+                   harness_health={"state": "healthy", "runs_today": 0,
+                                   "budget": 20})
+
+    def boom(*a, **k):
+        raise RuntimeError("tester panel produced no metrics")
+
+    monkeypatch.setattr("trader.brain.judge.forge_and_store", boom)
+    monkeypatch.setattr(sj.tv, "walk_forward", lambda *a, **k: {"valid": True})
+    ok, ev = sj.final_verdict(_genome())
+    assert ok is False and ev["stage"] == "no_verdict"
+    assert "pipeline error" in ev["reason"]
 
 
 def test_final_verdict_uses_real_tv_when_healthy(tmp_path, monkeypatch):
@@ -73,16 +101,28 @@ def test_final_verdict_uses_real_tv_when_healthy(tmp_path, monkeypatch):
     assert ok and ev["stage"] == "real_tv" and ev["net_profit_pct"] == 12.0
 
 
-def test_full_judge_rejects_at_prefilter_without_tv_run(tmp_path, monkeypatch):
+def test_full_judge_does_not_reject_on_proxy_alone(tmp_path, monkeypatch):
+    """A failing family proxy must not veto — it cannot see the genome.
+
+    judge() used to return early on prefilter failure, so a genome died on a
+    verdict about `ema_cross`/`donchian`/`macd` defaults rather than its own
+    genes. The proxy opinion is now attached as context and the real tester
+    decides.
+    """
     sj, j = _judge(tmp_path, monkeypatch,
                    harness_health={"state": "healthy", "runs_today": 0,
                                    "budget": 20})
     monkeypatch.setattr(sj.tv, "walk_forward", lambda *a, **k: {"valid": False})
-    forged = []
     monkeypatch.setattr("trader.brain.judge.forge_and_store",
-                        lambda g, journal, **k: forged.append(1))
+                        lambda g, journal, **k: {"strategy_id": g.strategy_id})
+    monkeypatch.setattr(
+        "trader.brain.judge.evaluate_manifest",
+        lambda h, m, min_oos_trades=5: {"valid": True, "checks": {},
+                                        "net_profit_pct": 9.0})
     ok, ev = sj.judge(_genome())
-    assert not ok and not forged and ev["stage"] == "yahoo_prefilter"
+    # the real tester approved despite the proxy saying no
+    assert ok is True and ev["stage"] == "real_tv"
+    assert ev["yahoo_advisory"]["stage"] == "yahoo_prefilter"
 
 
 # ── BrainJudge ────────────────────────────────────────────────────────────

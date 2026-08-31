@@ -3,6 +3,7 @@ type: strategy
 state: retired
 family: sweep_reversal
 origin: brain
+author: Strategist
 ---
 # sweep_reversal variant (v2)
 
@@ -20,4 +21,8 @@ origin: brain
 - realized P&L: +0.00 USDT
 - state: **retired**
 
-Related: [[Regime Playbook]], [[MOC]]
+Related: [[Auction Market Theory]], [[Regime Playbook]], [[MOC]]
+
+Same family (`sweep_reversal`): [[Liquidity_Sweep_Reversal]]
+
+Filed by [[Strategist]]

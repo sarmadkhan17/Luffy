@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#08090c;--panel:#101319;--panel2:#151923;--raise:#1a1f2b;--line:#1c222e;--line2:#262e3d;
+      --txt:#e6eaf0;--dim:#8b95a6;--dimmer:#525d6e;
+      --green:#00d1a0;--red:#ff5c74;--amber:#ffb224;--blue:#4da3ff;
+      --mono:'JetBrains Mono',ui-monospace,monospace;--sans:'Inter',sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--txt)}
+    a{color:var(--green)} a:hover{color:#00e6b0}
+    .scene{position:relative;width:480px;height:640px;overflow:hidden;background:
+      radial-gradient(80% 60% at 20% 40%, rgba(0,209,160,.05), transparent 60%), var(--bg)}
+    /* faint scene behind, blurred (depth) */
+    .behind{position:absolute;inset:0;filter:blur(3px);opacity:.4}
+    .behind .node{position:absolute;border-radius:50%;border:1.5px solid var(--dimmer)}
+    .panel{position:absolute;right:18px;top:18px;bottom:18px;width:404px;
+      background:linear-gradient(180deg, rgba(21,25,35,.92), rgba(13,15,20,.95));
+      border:1px solid var(--line2);border-radius:14px;backdrop-filter:blur(10px);
+      box-shadow:0 24px 60px rgba(0,0,0,.55);padding:20px;display:flex;flex-direction:column;gap:14px}
+    .top{display:flex;align-items:flex-start;gap:11px}
+    .glyph{width:38px;height:38px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;
+      background:rgba(0,209,160,.08);border:1px solid rgba(0,209,160,.35)}
+    .nm{font-size:17px;font-weight:700;letter-spacing:-.01em}
+    .role{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:2px;display:flex;align-items:center;gap:7px}
+    .status{margin-left:auto;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;
+      color:var(--green);border:1px solid rgba(0,209,160,.4);border-radius:999px;padding:3px 9px;align-self:flex-start}
+    .desc{font-size:12px;line-height:1.55;color:#c7cfda}
+    .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:10px}
+    .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dimmer)}
+    .val{font-family:var(--mono);font-size:20px;font-weight:700;margin-top:5px}
+    .spark{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:11px 12px}
+    .srow{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .feed{background:var(--panel);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+    .fi{display:flex;gap:9px;padding:8px 11px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10.5px}
+    .fi:last-child{border-bottom:0}
+    .fi .t{color:var(--dimmer);white-space:nowrap}
+    .btn{margin-top:auto;display:flex;align-items:center;justify-content:center;gap:8px;
+      padding:11px;border-radius:9px;border:1px solid rgba(0,209,160,.4);color:var(--green);
+      font-family:var(--mono);font-size:12px;font-weight:600;background:rgba(0,209,160,.06);cursor:pointer}
+  </style>
+</helmet>
+
+<div class="scene">
+  <div class="behind">
+    <div class="node" style="left:70px;top:120px;width:60px;height:60px"></div>
+    <div class="node" style="left:150px;top:360px;width:26px;height:26px"></div>
+    <div class="node" style="left:40px;top:470px;width:20px;height:20px"></div>
+    <div class="node" style="left:210px;top:230px;width:34px;height:34px"></div>
+  </div>
+
+  <div class="panel">
+    <div class="top">
+      <div class="glyph">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00d1a0" stroke-width="2">
+          <path d="M3 3v18h18"/><path d="M7 14l3-4 3 3 4-6"/></svg>
+      </div>
+      <div>
+        <div class="nm">Structure Analyst</div>
+        <div class="role"><span style="width:7px;height:7px;border-radius:50%;background:#00d1a0"></span>Analyst · reports to Manager</div>
+      </div>
+      <div class="status">ACTIVE</div>
+    </div>
+
+    <div class="desc">Measures the market-structure mechanism — breaks of structure, sweeps and reclaims — and casts a directional vote each scan.</div>
+
+    <div class="stats">
+      <div class="card"><div class="lbl">Accuracy 4h</div><div class="val" style="color:var(--txt)">15%</div></div>
+      <div class="card"><div class="lbl">Samples</div><div class="val" style="color:var(--dim)">20</div></div>
+      <div class="card"><div class="lbl">Votes 24h</div><div class="val" style="color:var(--dim)">64</div></div>
+    </div>
+
+    <div class="spark">
+      <div class="srow"><span class="lbl">Conviction · last 24h</span><span class="lbl" style="color:var(--green)">flat +0.00</span></div>
+      <svg width="356" height="46" viewBox="0 0 356 46" fill="none" preserveAspectRatio="none">
+        <polyline points="0,30 30,26 60,32 90,18 120,24 150,12 180,28 210,20 240,34 270,22 300,26 330,16 356,24"
+          stroke="#00d1a0" stroke-width="1.6" fill="none"/>
+        <polyline points="0,30 30,26 60,32 90,18 120,24 150,12 180,28 210,20 240,34 270,22 300,26 330,16 356,24 356,46 0,46"
+          fill="#00d1a0" fill-opacity=".08" stroke="none"/>
+      </svg>
+    </div>
+
+    <div>
+      <div class="lbl" style="margin-bottom:6px">Recent activity</div>
+      <div class="feed">
+        <div class="fi"><span class="t">08-29 12:04</span><span>vote · LONG conv +0.20</span></div>
+        <div class="fi"><span class="t">08-29 11:49</span><span>vote · FLAT conv +0.00</span></div>
+        <div class="fi"><span class="t">08-29 11:34</span><span>outcome 4h · correct</span></div>
+      </div>
+    </div>
+
+    <div class="btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+      open knowledge file · Structure Analyst.md
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

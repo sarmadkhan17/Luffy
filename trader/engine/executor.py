@@ -67,6 +67,14 @@ class Executor:
             order = self.ex.create_order(sym, "market", side_ccxt, amount,
                                          params=params)
         except Exception as e:
+            from ..data.feed import is_untradeable_error, mark_untradeable
+            if is_untradeable_error(e):
+                # venue lists it but this account can never trade it
+                # (tokenized equities need a signed TradFi-Perps agreement).
+                # Blacklist rather than rediscovering it every scan.
+                mark_untradeable(sym, str(e))
+                self.journal.log_brain_event(
+                    "symbol_untradeable", sym, {"error": str(e)[:200]})
             log.error(f"ENTRY FAILED {sym}: {e}")
             return None
         fill = self._confirm_fill(sym, str(order.get("id") or ""),

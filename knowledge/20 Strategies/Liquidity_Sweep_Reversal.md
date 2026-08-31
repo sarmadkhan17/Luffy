@@ -1,8 +1,9 @@
 ---
 type: strategy
-state: paper
+state: demoted
 family: sweep_reversal
 origin: seed
+author: Strategist
 ---
 # Liquidity Sweep Reversal
 
@@ -16,8 +17,12 @@ origin: seed
 ```
 
 ## Live record
-- closed trades: 0 · wins: 0
-- realized P&L: +0.00 USDT
-- state: **paper**
+- closed trades: 18 · wins: 9
+- realized P&L: -373.86 USDT
+- state: **demoted**
 
-Related: [[Regime Playbook]], [[MOC]]
+Related: [[Auction Market Theory]], [[Regime Playbook]], [[MOC]]
+
+Same family (`sweep_reversal`): [[sweep_reversal_variant_(v2)]]
+
+Filed by [[Strategist]]

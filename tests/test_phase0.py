@@ -81,9 +81,13 @@ def test_sizing_basic(rm):
                        side_risk_frac=0.02, open_positions=[], equity=2000.0,
                        closed_trades_count=100, market_type="futures")
     assert r.ok
-    # 5% of 2000 = $100 allowed risk; amount = 100 / (100*0.02) = 50 units → $5000 notional
-    assert abs(r.amount - 50.0) < 0.01
-    assert r.size_usdt == pytest.approx(5000 / rm.leverage, rel=0.02)
+    # risk comes from config (risk_per_trade_pct) — keep the test
+    # config-driven instead of hardcoding a pct that ops retunes
+    risk_usdt = 2000.0 * rm.risk_pct
+    expected_amount = risk_usdt / (100.0 * 0.02)
+    assert abs(r.amount - expected_amount) < 0.01
+    assert r.size_usdt == pytest.approx(expected_amount * 100.0 / rm.leverage,
+                                        rel=0.02)
     assert r.size_mult == 1.0
 
 

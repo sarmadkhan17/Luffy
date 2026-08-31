@@ -3,6 +3,7 @@ type: strategy
 state: demoted
 family: ema_trend
 origin: seed
+author: Strategist
 ---
 # EMA Stack Pullback
 
@@ -20,4 +21,8 @@ origin: seed
 - realized P&L: -73.49 USDT
 - state: **demoted**
 
-Related: [[Regime Playbook]], [[MOC]]
+Related: [[Behavioral Momentum]], [[Regime Playbook]], [[MOC]]
+
+Same family (`ema_trend`): [[ema_trend_harvested]], [[ema_trend_variant_(22.0)]]
+
+Filed by [[Strategist]]

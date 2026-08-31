@@ -97,8 +97,12 @@ class Theorist:
 
         result = self.llm.chat_json(prompt, deep=True)
         if not result:
-            log.warning("autopsy skipped: no LLM/budget")
-            return {"ran": False, "reason": "llm unavailable or out of budget"}
+            left = self.llm.budget_left()
+            reason = ("llm unavailable" if not self.llm.available
+                      else "daily token budget exhausted" if left <= 0
+                      else "no usable LLM response (see brain call log)")
+            log.warning(f"autopsy skipped: {reason} (budget left {left})")
+            return {"ran": False, "reason": reason}
 
         applied = self._apply_doctrine_updates(
             current_doctrine, result.get("doctrine_updates") or [])

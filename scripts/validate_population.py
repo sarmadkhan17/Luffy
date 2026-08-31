@@ -1,7 +1,10 @@
-"""One-off: run the entire strategy population through the TV judge.
+"""One-off: run the entire strategy population past the Yahoo family proxy.
 
-Demotes (makes trade-ineligible) every strategy that fails TradingView's
-1-year walk-forward; collapses duplicate genomes; keeps survivors honest.
+ADVISORY ONLY. This no longer demotes anything: the proxy maps a family to a
+stock TradingView strategy and never sees the genome's genes, so its verdict
+cannot distinguish two strategies of the same family. It reports concerns and
+collapses duplicate genomes. Real demotion lives in strategy/promotion.py
+(realized trades) and strategy/evidence.py (internal walk-forward).
 """
 import json
 import logging
@@ -31,7 +34,7 @@ tv = TVClient(interval=cfg["strategies"].get("tv_interval", "1h"),
 res = validate_population(j, tv, Telegram())
 print(json.dumps(res, indent=1))
 
-print("\n═══ POPULATION AFTER VERDICT ═══")
+print("\n═══ POPULATION (UNCHANGED — ADVISORY ONLY) ═══")
 for r in j.list_strategies():
     print(f"  {r['name']:32} {r['state']:9} "
           f"reason: {(r['retire_reason'] or '')[:60]}")

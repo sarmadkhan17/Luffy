@@ -128,15 +128,66 @@ def spawn_seed(sid_hint: str, family: str, name: str, description: str,
 # Sane per-family fallbacks so genomes mined with missing params still
 # forge valid Pine and evaluate without KeyErrors (single source of
 # truth shared by pine.py templates and the strategy evaluators).
+# NOTE: values must sit INSIDE FAMILY_GENE_SPECS ranges — earlier unit
+# errors (sweep 0.3 vs spec ≤0.01; rotation 15% vs ≤3%; lag 24 vs ≤12)
+# silently made mined variants of those families untradeable.
+def register_family(name: str, gene_spec: dict, param_defaults: dict) -> None:
+    """Register a runtime-invented family into all genome structures."""
+    FAMILIES.add(name)
+    FAMILY_GENE_SPECS[name] = gene_spec
+    PARAM_DEFAULTS[name] = param_defaults
+
+
 PARAM_DEFAULTS: dict[str, dict] = {
-    "ema_trend": {"fast_len": 21, "slow_len": 55, "adx_min": 18,
-                  "pullback_atr": 1.0},
+    # NOTE: every key here MUST exist in that family's FAMILY_GENE_SPECS —
+    # see assert_defaults_consistent() below. ema_trend used to carry
+    # fast_len/slow_len, which are not genes: library.evaluate() injected
+    # them, the Python evaluator ignored them (it hardcodes ema 20/50/200)
+    # and the Pine template interpolated them — so the two judges were
+    # scoring different strategies.
+    "ema_trend": {"adx_min": 18.0, "pullback_atr": 1.0, "trend_tf": "15m"},
     "vwap_fade": {"anchor_bars": 48, "z_entry": 2.0, "max_hold_bars": 24},
     "breakout_retest": {"range_lookback": 48, "vol_mult": 1.5,
                         "retest_atr": 0.5},
-    "sweep_reversal": {"max_reclaim_bars": 6, "min_sweep_frac": 0.3},
-    "rotation_momo": {"btc_ret_1h_min": 0.15, "lag_lookback": 24},
+    "sweep_reversal": {"max_reclaim_bars": 6, "min_sweep_frac": 0.002},
+    "rotation_momo": {"btc_ret_1h_min": 0.008, "lag_lookback": 4},
     "rsi_extreme": {"rsi_len": 14, "os_level": 25, "ob_level": 75},
     "ma_cross": {"fast_len": 20, "slow_len": 50},
     "bb_fade": {"bb_len": 20, "bb_k": 2.0},
 }
+
+
+def assert_defaults_consistent() -> list[str]:
+    """Every PARAM_DEFAULTS key must be a real gene of its family, and every
+    default must sit inside the gene's declared range.
+
+    Silent drift here is expensive: the Python evaluator and the Pine
+    template read params from different places, so a phantom default makes
+    the internal backtest and the TradingView test score different logic.
+    Returns the list of problems (empty = consistent).
+    """
+    problems: list[str] = []
+    for fam, defaults in PARAM_DEFAULTS.items():
+        spec = FAMILY_GENE_SPECS.get(fam)
+        if spec is None:
+            problems.append(f"PARAM_DEFAULTS has unknown family '{fam}'")
+            continue
+        for k, v in defaults.items():
+            if k not in spec:
+                problems.append(f"{fam}: default '{k}' is not a gene")
+                continue
+            typ, lo, hi, _ = spec[k]
+            if typ is str:
+                continue
+            if not isinstance(v, (int, float)):
+                problems.append(f"{fam}.{k}: default {v!r} is not numeric")
+            elif not (lo <= v <= hi):
+                problems.append(f"{fam}.{k}: default {v} outside [{lo},{hi}]")
+    return problems
+
+
+_DEFAULT_PROBLEMS = assert_defaults_consistent()
+if _DEFAULT_PROBLEMS:                      # fail loudly at import, not silently
+    import logging as _logging
+    _logging.getLogger(__name__).error(
+        "genome PARAM_DEFAULTS inconsistent: %s", _DEFAULT_PROBLEMS)

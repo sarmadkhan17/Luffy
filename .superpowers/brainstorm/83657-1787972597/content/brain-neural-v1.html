@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OS · Brain — neural net (Motion)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#08090c;--panel:#101319;--line:#1c222e;--line2:#262e3d;--txt:#e6eaf0;--dim:#8b95a6;--dimmer:#525d6e;
+    --green:#00d1a0;--amber:#ffb224;--red:#ff5c74;--cyan:#4fe6ff;--blue:#4da3ff;--violet:#9b7bff;
+    --mono:'JetBrains Mono',ui-monospace,monospace;--sans:'Inter',system-ui,sans-serif}
+  *{box-sizing:border-box}
+  body{margin:0;background:#0a0c11;color:var(--txt);font-family:var(--sans);padding:20px;max-width:1080px;margin:0 auto}
+  h2{margin:0 0 4px;font-size:20px}
+  .subtitle{color:var(--dim);font-size:13px;margin:0 0 16px}
+  #diag{display:none;font-family:var(--mono);font-size:12px;background:#3d1420;color:#ff9db0;border:1px solid var(--red);border-radius:10px;padding:10px 14px;margin-bottom:12px}
+  .wrap{display:grid;grid-template-columns:1fr 290px;gap:14px}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+  .card{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:radial-gradient(130% 100% at 50% 0%,#0d1220,#07090d 62%)}
+  .hd{display:flex;justify-content:space-between;align-items:center;padding:11px 15px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;color:#5b6b82}
+  .hd b{color:var(--cyan);font-weight:700}
+  svg{display:block;width:100%;height:auto}
+  .cols{display:flex;justify-content:space-between;padding:8px 46px 0;font:700 9px var(--sans);letter-spacing:1.5px;text-transform:uppercase;color:var(--dimmer)}
+  .ft{display:flex;gap:14px;padding:9px 15px;border-top:1px solid var(--line);font-size:11px;color:var(--dim);font-family:var(--mono);flex-wrap:wrap}
+  .synapse{fill:none;stroke-linecap:round}
+  .pulse{transform-box:fill-box;transform-origin:center}
+  .body{stroke:rgba(255,255,255,.22);stroke-width:1}
+  .nlabel{font:600 9px var(--sans);text-anchor:middle;pointer-events:none}
+  .node{cursor:default}
+  .log{padding:12px 14px}
+  .log h3{margin:0 0 10px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dimmer);font-weight:700}
+  .logrows{display:flex;flex-direction:column;gap:8px}
+  .lr{opacity:0;border-left:2px solid var(--green);background:var(--panel);border-radius:0 9px 9px 0;padding:8px 11px;font-size:12px}
+  .lr .t{font-family:var(--mono);font-size:9px;color:var(--dimmer)}
+  .lr .m{margin-top:2px;color:#d7deea}.lr .m b{color:var(--green)}
+  .lr.red{border-left-color:var(--red)}.lr.red .m b{color:var(--red)}
+  .lr.amber{border-left-color:var(--amber)}.lr.amber .m b{color:var(--amber)}
+</style>
+</head>
+<body>
+<h2>OS · Brain — neural net</h2>
+<p class="subtitle">Luffy's pipeline as a living network: Inputs → Analysts → Orchestrator → Decision. Every couple of seconds a forward pass propagates left-to-right — synapses light, neurons fire in sequence, and one decision wins. Idle synapses spark spontaneously.</p>
+<div id="diag"></div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="hd"><span><b>◉ NEURAL BRAIN</b> · forward pass</span><span id="passState">idle</span></div>
+    <div class="cols"><span>Inputs</span><span>Analysts</span><span>Orchestrator</span><span>Decision</span></div>
+    <svg id="svg" viewBox="0 0 760 470" role="img" aria-label="Neural brain">
+      <g id="syn"></g><g id="pulses"></g><g id="nodes"></g>
+    </svg>
+    <div class="ft">
+      <span style="color:var(--blue)">● inputs</span>
+      <span style="color:var(--green)">● analysts</span>
+      <span style="color:var(--violet)">● orchestrator</span>
+      <span style="margin-left:auto;color:var(--dimmer)">brightness = activation</span>
+    </div>
+  </div>
+  <div class="card log"><h3>Forward passes</h3><div class="logrows" id="logrows"></div></div>
+</div>
+
+<script>
+function lfDiag(m){var d=document.getElementById('diag');if(d){d.style.display='block';d.textContent='⚠ '+m;}}
+window.addEventListener('error',function(e){lfDiag('JS error: '+(e.message||e.type));});
+</script>
+<script type="module">
+(async function(){
+  let M=null;
+  try{const mod=await import("https://cdn.jsdelivr.net/npm/motion@latest/+esm");
+    if(!mod.animate)throw new Error("animate undefined");M={animate:mod.animate,stagger:mod.stagger};}
+  catch(err){lfDiag("Motion failed to load from CDN -> "+err.message);}
+
+  const NS="http://www.w3.org/2000/svg";
+  const el=(t,a)=>{const n=document.createElementNS(NS,t);for(const k in a)n.setAttribute(k,a[k]);return n;};
+  const gSyn=document.getElementById('syn'),gPulses=document.getElementById('pulses'),gNodes=document.getElementById('nodes');
+
+  // layers: [x, color, [labels], radius]
+  const CY=232, TOP=54, BOT=410;
+  const layerDefs=[
+    {x:70,  c:'#4da3ff', r:7,  names:['Price','Volume','Funding','OrderFlow','News']},
+    {x:275, c:'#00d1a0', r:8,  names:['Trend','Vol','Flow','Regime','Sentiment','Momentum','Macro']},
+    {x:490, c:'#9b7bff', r:8,  names:['RegimeFit','VoteΣ','Heat','Calib','Conviction']},
+    {x:690, c:'#00d1a0', r:13, names:['LONG','SHORT','FLAT'], deco:true}
+  ];
+  const layers=layerDefs.map(def=>{
+    const n=def.names.length;
+    return def.names.map((nm,i)=>{
+      const y = n===1 ? CY : TOP + (BOT-TOP)*(i/(n-1));
+      return {x:def.x,y,c:def.c,r:def.r,label:nm,def};
+    });
+  });
+
+  // synapses between adjacent layers (sparse, weighted)
+  const synapses=[];
+  for(let L=0;L<layers.length-1;L++){
+    const A=layers[L],B=layers[L+1];
+    A.forEach(a=>{
+      let linked=0;
+      B.forEach(b=>{
+        if(Math.random()<0.62){
+          const w=0.06+Math.random()*0.20;
+          const dx=(b.x-a.x)*0.5;
+          const d=`M ${a.x} ${a.y} C ${a.x+dx} ${a.y}, ${b.x-dx} ${b.y}, ${b.x} ${b.y}`;
+          const p=el('path',{d,class:'synapse',stroke:a.c,'stroke-opacity':w,'stroke-width':(0.6+w*3).toFixed(2)});
+          gSyn.appendChild(p);
+          synapses.push({a,b,L,path:p,w,len:p.getTotalLength()});
+          linked++;
+        }
+      });
+      if(!linked){const b=B[Math.floor(Math.random()*B.length)];const dx=(b.x-a.x)*0.5;
+        const p=el('path',{d:`M ${a.x} ${a.y} C ${a.x+dx} ${a.y}, ${b.x-dx} ${b.y}, ${b.x} ${b.y}`,class:'synapse',stroke:a.c,'stroke-opacity':0.12,'stroke-width':1});
+        gSyn.appendChild(p);synapses.push({a,b,L,path:p,w:0.12,len:p.getTotalLength()});}
+    });
+  }
+
+  // neurons
+  layers.forEach(layer=>layer.forEach(nd=>{
+    const g=el('g',{class:'node',transform:`translate(${nd.x} ${nd.y})`});
+    const pulse=el('g',{class:'pulse'});
+    const glow=el('circle',{r:nd.r*2.4,fill:nd.c,opacity:0.14});
+    const body=el('circle',{r:nd.r,fill:nd.c,opacity:0.42,class:'body'});
+    pulse.appendChild(glow);pulse.appendChild(body);g.appendChild(pulse);
+    const tx = nd.def.deco ? 0 : (nd.x<400? -nd.r-8 : nd.x>600? nd.r+8 : 0);
+    const anchor = nd.def.deco ? 'middle' : (nd.x<400?'end':nd.x>600?'start':'middle');
+    const ty = nd.def.deco ? 3 : nd.r+12;
+    const t=el('text',{x:nd.def.deco?0:tx,y:nd.def.deco?ty-1:ty,class:'nlabel',fill:nd.def.deco?'#04120d':'rgba(214,222,235,.6)','text-anchor':anchor,'font-weight':nd.def.deco?800:600});
+    t.textContent=nd.label;g.appendChild(t);
+    gNodes.appendChild(g);nd.gEl=g;nd.bodyEl=body;nd.glowEl=glow;nd.pulseEl=pulse;
+  }));
+
+  // breathing
+  if(M){
+    const all=[];layers.forEach(l=>l.forEach(n=>all.push(n.pulseEl)));
+    M.animate(all,{scale:[1,1.14,1]},{duration:3.8,repeat:Infinity,ease:'easeInOut',delay:M.stagger(0.05,{from:'first'})});
+  }
+
+  function activate(nd,strength){
+    if(!M){nd.bodyEl.setAttribute('opacity',0.9);return;}
+    M.animate(nd.bodyEl,{opacity:[0.42,1,0.55]},{duration:.8,ease:'easeOut'});
+    M.animate(nd.glowEl,{opacity:[0.14,0.5*strength,0.14]},{duration:.8,ease:'easeOut'});
+    M.animate(nd.pulseEl,{scale:[1,1+0.5*strength,1]},{duration:.7,ease:'easeOut'});
+  }
+  function fireSynapse(syn,dur){
+    if(M)M.animate(syn.path,{strokeOpacity:[syn.w,0.85,syn.w]},{duration:dur,ease:'easeOut'});
+    const dot=el('circle',{r:2.8,fill:syn.b.c});gPulses.appendChild(dot);
+    if(M)M.animate(0,1,{duration:dur,ease:'easeInOut',onUpdate:v=>{const pt=syn.path.getPointAtLength(syn.len*v);dot.setAttribute('cx',pt.x);dot.setAttribute('cy',pt.y);dot.setAttribute('opacity',(0.9*Math.sin(v*Math.PI)).toFixed(2));}}).then(()=>dot.remove());
+    else dot.remove();
+  }
+
+  // decision log
+  const logrows=document.getElementById('logrows');
+  const now=()=>new Date().toTimeString().slice(0,8);
+  function log(kind,html){const r=document.createElement('div');r.className='lr'+(kind==='SHORT'?' red':kind==='FLAT'?' amber':'');
+    r.innerHTML='<div class="t">'+now()+'</div><div class="m">'+html+'</div>';logrows.prepend(r);
+    while(logrows.children.length>6)logrows.lastChild.remove();
+    if(M)M.animate(r,{opacity:[0,1],x:[-14,0]},{type:'spring',bounce:0.1,visualDuration:0.4});else r.style.opacity=1;}
+
+  const SYMS=['SOL','ARB','WIF','INJ','SUI','TIA','SEI'];
+  // one forward pass
+  function forwardPass(){
+    document.getElementById('passState').textContent='forward pass…';
+    // activate inputs, then propagate layer by layer
+    layers[0].forEach((n,i)=>setTimeout(()=>activate(n,0.8),i*60));
+    const stepDur=0.5;
+    for(let L=0;L<layers.length-1;L++){
+      const t0=300 + L*520;
+      const layerSyn=synapses.filter(s=>s.L===L);
+      // fire a subset of synapses in this transition
+      const pick=layerSyn.sort(()=>Math.random()-0.5).slice(0,Math.min(12,layerSyn.length));
+      pick.forEach((s,i)=>setTimeout(()=>fireSynapse(s,stepDur),t0+i*22));
+      // activate next layer neurons
+      setTimeout(()=>layers[L+1].forEach((n,i)=>setTimeout(()=>activate(n,0.7),i*55)), t0+260);
+    }
+    // decide winner
+    setTimeout(()=>{
+      const wsum=Math.random(); const win = wsum<0.5?0:wsum<0.8?1:2; // LONG/SHORT/FLAT
+      const dec=layers[3][win]; const conv=(0.55+Math.random()*0.4).toFixed(2); const sym=SYMS[Math.floor(Math.random()*SYMS.length)];
+      activate(dec,1.3);
+      if(M){const ring=el('circle',{cx:dec.x,cy:dec.y,r:dec.r+3,fill:'none',stroke:dec.c,'stroke-width':2,opacity:0.9});gPulses.appendChild(ring);
+        M.animate(ring,{r:[dec.r+3,dec.r+26],opacity:[0.9,0]},{duration:1,ease:'easeOut'}).then(()=>ring.remove());}
+      const label=dec.label;
+      log(label, '<b>'+label+'</b> '+(label==='FLAT'?'· no trade':'· '+sym)+' · conv '+conv);
+      document.getElementById('passState').textContent='decided: '+label+(label==='FLAT'?'':' '+sym);
+    }, 300 + (layers.length-1)*520 + 200);
+  }
+
+  // spontaneous idle sparks
+  function spark(){const s=synapses[Math.floor(Math.random()*synapses.length)];fireSynapse(s,0.6);}
+
+  log('LONG','<b>Brain</b> · neural net online');
+  setTimeout(()=>{forwardPass();setInterval(forwardPass,3600);},700);
+  setInterval(spark,650);
+})();
+</script>
+</body>
+</html>

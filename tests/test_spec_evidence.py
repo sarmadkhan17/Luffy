@@ -133,3 +133,24 @@ def test_a_1h_spec_is_actually_scored_on_1h_bars(frames, feed):
     assert not ev.get("untested"), ev
     # a 1h spec sees ~1/4 the bars, so it cannot produce 15m-like trade counts
     assert ev["per_symbol"]["BTC/USDT"]["test_trades"] >= 0
+
+
+def test_detect_tf_reads_bar_spacing(frames):
+    assert se.detect_tf(frames["BTC/USDT"]) == "15m"
+    from trader.strategy.backtest import resample
+    assert se.detect_tf(resample(frames["BTC/USDT"], "4h")) == "4h"
+
+
+def test_native_frame_is_used_not_resampled(frames):
+    """A 4h frame passed in must be used as-is. Resampling from 15m would cap
+    4h history at one year when the store holds five."""
+    from trader.strategy.backtest import resample
+    native = resample(frames["BTC/USDT"], "4h")
+    out = se.frames_for(native, "4h")
+    assert out["4h"] is native
+
+
+def test_cannot_build_a_finer_frame_from_a_coarser_one(frames):
+    from trader.strategy.backtest import resample
+    with pytest.raises(KeyError):
+        se.frames_for(resample(frames["BTC/USDT"], "4h"), "15m")

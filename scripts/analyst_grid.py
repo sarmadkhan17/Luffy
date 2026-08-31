@@ -1,13 +1,21 @@
 """Analyst session: design genomes, optimize genes on stored candles,
-rank by out-of-sample robustness across BTC+SOL. Output = gauntlet-ready
-candidates ranked by min test PF (the same bar the internal gate uses)."""
+rank by out-of-sample robustness. Output = gauntlet-ready candidates ranked
+by min test PF (the same bar the internal gate uses).
+
+CAUTION — this maximizes an out-of-sample statistic over the whole GRID
+(currently 43 combos) with NO multiple-testing correction, so the winner's
+PF is biased upward by selection. The trial count is printed and written
+into the output so a later deflated-Sharpe / reality-check pass can price
+it. Treat these as candidates, not as validated edges.
+"""
 
 import json
 import sys
 
 from trader.strategy.genome import Genome
-from trader.strategy.backtest import walk_forward
-from trader.core.config import load_config
+from trader.strategy import evidence
+from trader.strategy.backtest import context_frames, walk_forward
+from trader.core.config import ROOT, load_config
 from trader.data.feed import DataFeed
 
 HYP = {
@@ -55,9 +63,16 @@ GRID = {
 def main() -> None:
     cfg = load_config()
     feed = DataFeed()
-    dfs = {}
-    for sym in ("BTC/USDT", "SOL/USDT"):
-        dfs[sym] = feed.fetch_ohlcv(sym, "15m", limit=2900)
+    # full cached history across the configured symbol set, with HTF/BTC
+    # context attached — was 2 symbols x 2900 bars (~30d) and no context,
+    # which left rotation_momo unable to emit a single signal.
+    frames = evidence.load_frames(feed, cfg)
+    btc_1h = frames.get("_btc_1h")
+    dfs = {k: v for k, v in frames.items() if not k.startswith("_")}
+    n_symbols = len(dfs)
+    total_trials = sum(len(c) for c in GRID.values())
+    bars = {k: len(v) for k, v in dfs.items()}
+    print(f"symbols={list(dfs)} bars={bars} trials={total_trials}", flush=True)
 
     results = []
     for fam, combos in GRID.items():
@@ -73,13 +88,14 @@ def main() -> None:
             pfs, trades = [], 0
             try:
                 for sym, df in dfs.items():
-                    r = walk_forward(g, df, cfg["risk"])
+                    r = walk_forward(g, df, cfg["risk"],
+                                     ctx=context_frames(df, btc_1h))
                     if r["test"].trades >= 3:
                         pfs.append(r["test"].profit_factor)
                     trades += r["test"].trades
             except Exception as e:
                 continue
-            if len(pfs) == 2 and trades >= 10:
+            if len(pfs) == n_symbols and trades >= 10:
                 score = min(pfs)
                 if best is None or score > best[0]:
                     best = (score, params, pfs, trades)
@@ -98,9 +114,18 @@ def main() -> None:
                           "min_test_pf": round(score, 3),
                           "pfs": [round(x, 3) for x in pfs],
                           "trades": trades}))
-    with open("/tmp/opencode/analyst_candidates.json", "w") as fh:
-        json.dump([{"family": f, "params": p} for _, f, p, _, _ in results[:6]],
-                  fh)
+    # analyst_gauntlet.py reads data/analyst_candidates.json — the old
+    # /tmp/opencode/ path meant this file was never actually consumed.
+    out_path = ROOT / "data" / "analyst_candidates.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(out_path, "w") as fh:
+        json.dump([{"family": f, "params": p,
+                    "min_test_pf": round(score, 3), "trades": trades,
+                    "selected_from_trials": total_trials,
+                    "symbols": list(dfs)}
+                   for score, f, p, _, trades in results[:6]], fh, indent=1)
+    print(f"\nwrote {out_path} "
+          f"(winners selected from {total_trials} uncorrected trials)")
 
 
 if __name__ == "__main__":

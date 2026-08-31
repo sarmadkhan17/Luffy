@@ -149,10 +149,54 @@ class DerivFeed:
     def _parse_ratio(self, raw: list, key: str) -> pd.DataFrame:
         return self._frame([(int(r["timestamp"]), float(r[key])) for r in raw])
 
-    def funding(self, symbol: str, limit: int = 1000) -> pd.DataFrame:
+    def funding(self, symbol: str, limit: int = 1000,
+                period: str | None = None) -> pd.DataFrame:
+        """Most recent funding settlements. `period` is accepted and ignored
+        so the recorder can call every fetcher uniformly."""
         return self._parse_funding(self._get(
             "/fapi/v1/fundingRate",
             {"symbol": to_binance(symbol), "limit": min(limit, 1000)}))
+
+    def funding_history(self, symbol: str, years: float = 4.0,
+                        delay: float = 0.25) -> pd.DataFrame:
+        """Page funding all the way back.
+
+        A single call caps at 1000 rows, which at an 8-hour settlement is
+        under a year. The candle store now holds 5 years at 4h, so without
+        paging every funding spec is refused for coverage — the data has to
+        reach as far as the frame it is tested against, not the other way
+        round.
+        """
+        import time as _t
+        now_ms = int(_t.time() * 1000)
+        floor_ms = now_ms - int(years * 365.25 * 86400 * 1000)
+        sym = to_binance(symbol)
+        # Page FORWARD. Given startTime/endTime Binance returns the EARLIEST
+        # rows in the window, so walking endTime backwards just re-reads the
+        # oldest page and stops one call in.
+        chunks, cursor = [], floor_ms
+        for _ in range(40):                  # hard bound; 40k rows is ~36 years
+            raw = self._get("/fapi/v1/fundingRate",
+                            {"symbol": sym, "limit": 1000,
+                             "startTime": cursor})
+            if not raw:
+                break
+            df = self._parse_funding(raw)
+            if df.empty:
+                break
+            chunks.append(df)
+            newest = int(pd.to_datetime(df["ts"], utc=True).max().timestamp() * 1000)
+            if newest <= cursor:             # no progress — stop, do not spin
+                break
+            cursor = newest + 1
+            if len(raw) < 1000 or cursor >= now_ms:
+                break
+            _t.sleep(delay)
+        if not chunks:
+            return self._frame([])
+        out = pd.concat(chunks).drop_duplicates(subset="ts") \
+                .sort_values("ts").reset_index(drop=True)
+        return out
 
     def open_interest(self, symbol: str, period: str = "15m",
                       limit: int = 500) -> pd.DataFrame:
@@ -197,9 +241,17 @@ class DerivFeed:
         """
         counts: dict = {}
         for sym in symbols:
+            try:
+                fh = self.funding_history(sym, delay=delay)
+                if fh is not None and len(fh):
+                    self.save(sym, "funding", fh)
+                    counts["funding@history"] = \
+                        counts.get("funding@history", 0) + len(fh)
+            except Exception as e:
+                log.warning(f"derivs backfill {sym}/funding history: {e}")
             for series, method in self._SERIES_FETCHERS:
                 if series == "funding":
-                    continue            # already has years at native cadence
+                    continue            # handled by funding_history above
                 for period in self.BACKFILL_PERIODS:
                     try:
                         df = getattr(self, method)(sym, period=period)

@@ -63,6 +63,8 @@ class DataFeed:
         self._cache: dict[tuple, tuple[float, pd.DataFrame]] = {}
         self._db_path = str(db_path) if db_path else None   # resolved lazily
         self._local = threading.local()                     # per-thread conns
+        #: symbol -> unix ts it was last seen as non-existent on the exchange
+        self._dead: dict[str, float] = {}
 
     @property
     def ex(self):
@@ -167,12 +169,34 @@ class DataFeed:
                 break
         return rows[-limit:]
 
+    def cached_ohlcv(self, symbol: str, tf: str = "15m",
+                     limit: int = 20000) -> Optional[pd.DataFrame]:
+        """Read the local candle store ONLY — never touches the exchange.
+
+        Backtests want every bar already on disk, which is a very different
+        request from 'give me fresh candles'. Routing them through
+        fetch_ohlcv(limit=20000) triggers _fetch_paged and walks the REST API
+        backwards for every symbol, turning an offline gauntlet into minutes
+        of network I/O.
+        """
+        return self._store_load(symbol, tf, limit)
+
     def fetch_ohlcv(self, symbol: str, tf: str = "15m",
                     limit: int = 400, force: bool = False,
                     min_bars: int = 30) -> Optional[pd.DataFrame]:
         ck = (symbol, tf)
         tf_ms = self._TF_MS.get(tf, 900_000)
         now_ms = int(time.time() * 1000)
+
+        if self.is_dead(symbol):
+            # delisted / never-listed symbol: serve whatever is stored and do
+            # not touch the exchange. Three such symbols (DRAM, BZ, MRVL) were
+            # producing 31,566 of 32,569 log warnings — 97% of all noise — by
+            # being refetched every single cycle forever.
+            stored = self._store_load(symbol, tf, limit)
+            if stored is not None and len(stored) >= min_bars:
+                return stored
+            return None
 
         def finish(df: pd.DataFrame) -> pd.DataFrame:
             self._cache[ck] = (time.time(), df)
@@ -221,10 +245,42 @@ class DataFeed:
             new = self._frame(raw)
             return finish(self._merge_save(symbol, tf, stored, new))
         except Exception as e:
-            log.warning(f"ohlcv {symbol} {tf}: {e}")
+            if self._note_dead(symbol, e):
+                log.warning(f"ohlcv {symbol} {tf}: {e} — symbol marked dead, "
+                            f"suppressing further fetches")
+            else:
+                log.warning(f"ohlcv {symbol} {tf}: {e}")
             if stored is not None and len(stored) >= min_bars:
                 return finish(stored)
             return hit[1] if hit else None
+
+    # ── dead-symbol negative cache ──────────────────────────────────────
+    #: exchange messages that mean "this market will never exist"
+    _DEAD_PATTERNS = ("does not have market symbol", "symbol not found",
+                      "invalid symbol", "unknown symbol")
+    #: retry a dead symbol only after this long (a relisting is possible)
+    DEAD_TTL_S = 6 * 3600
+
+    def is_dead(self, symbol: str) -> bool:
+        ts = self._dead.get(symbol)
+        if ts is None:
+            return False
+        if time.time() - ts > self.DEAD_TTL_S:
+            self._dead.pop(symbol, None)     # give it another chance
+            return False
+        return True
+
+    def _note_dead(self, symbol: str, exc: Exception) -> bool:
+        """Record a permanent-looking symbol failure. True if newly marked."""
+        msg = str(exc).lower()
+        if not any(p in msg for p in self._DEAD_PATTERNS):
+            return False
+        first = symbol not in self._dead
+        self._dead[symbol] = time.time()
+        return first
+
+    def dead_symbols(self) -> list[str]:
+        return sorted(s for s in self._dead if self.is_dead(s))
 
     @staticmethod
     def _last_ms(df: pd.DataFrame) -> int:
@@ -248,6 +304,28 @@ class DataFeed:
             return None
 
 
+#: symbols proven untradeable at runtime; shared process-wide so a rejection
+#: in the executor immediately removes the symbol from the next scan.
+_RUNTIME_BLACKLIST: set[str] = set()
+
+#: exchange errors that mean "this account may never trade this symbol"
+_UNTRADEABLE_MARKERS = ("-4411", "tradfi-perps", "tradfi perps")
+
+
+def mark_untradeable(symbol: str, reason: str = "") -> bool:
+    """Blacklist a symbol for the life of the process. True if newly added."""
+    first = symbol not in _RUNTIME_BLACKLIST
+    _RUNTIME_BLACKLIST.add(symbol)
+    if first:
+        log.warning(f"universe: {symbol} marked untradeable ({reason[:120]})")
+    return first
+
+
+def is_untradeable_error(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return any(m in msg for m in _UNTRADEABLE_MARKERS)
+
+
 class Universe:
     """Majors always included + top-N alts by quote volume, rescanned periodically."""
 
@@ -264,6 +342,11 @@ class Universe:
         self.blacklist = set(scan.get("blacklist", [])) | {
             "USDC/USDT", "FDUSD/USDT", "TUSD/USDT", "BUSD/USDT",
             "USDE/USDT", "BFUSD/USDT"}
+        # symbols the venue lists but refuses to trade for this account
+        # (e.g. tokenized equities: "-4411 Please sign TradFi-Perps
+        # agreement"). Learned at runtime instead of hand-edited into
+        # config.yaml after each rejection.
+        self.blacklist |= set(_RUNTIME_BLACKLIST)
         self._ex = exchange
         # market-data truth lives on production public API even when the
         # trading venue is demo (demo volumes/listings are simulated)

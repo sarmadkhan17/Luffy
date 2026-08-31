@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#08090c;--panel:#101319;--panel2:#151923;--line:#1c222e;--line2:#262e3d;
+      --txt:#e6eaf0;--dim:#8b95a6;--dimmer:#525d6e;
+      --green:#00d1a0;--red:#ff5c74;--amber:#ffb224;--blue:#4da3ff;
+      --mono:'JetBrains Mono',ui-monospace,monospace;--sans:'Inter',sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--txt)}
+    a{color:var(--green)} a:hover{color:#00e6b0}
+    .wrap{width:1000px;height:640px;display:flex;background:
+      radial-gradient(80% 90% at 30% 50%, rgba(0,209,160,.06), transparent 60%), var(--bg)}
+    .scope{position:relative;width:640px;height:640px;flex:none}
+    .mono{font-family:var(--mono)}
+    .chip{position:absolute;transform:translate(-50%,-50%);font-family:var(--mono);
+      background:rgba(11,13,18,.82);border:1px solid var(--line2);border-radius:4px;
+      padding:5px 8px;font-size:10.5px;white-space:nowrap;display:flex;align-items:center;gap:7px}
+    .chip .d{width:7px;height:7px;border-radius:1px}
+    .chip b{font-weight:600;font-family:var(--sans);font-size:11px}
+    .mgr{transform:translate(-50%,-50%);padding:10px 16px;border-color:#00d1a0;
+      background:rgba(0,209,160,.09);box-shadow:0 0 24px rgba(0,209,160,.18)}
+    .side{flex:1;border-left:1px solid var(--line);padding:22px 20px;display:flex;flex-direction:column}
+    .kick{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dimmer)}
+    .h1{font-size:19px;font-weight:800;margin:6px 0 2px}
+    .sub{font-size:11px;color:var(--dim);font-family:var(--mono)}
+    .read{margin-top:18px;display:flex;flex-direction:column;gap:1px;
+      border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+    .rr{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--panel);
+      border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px}
+    .rr:last-child{border-bottom:0}
+    .rr .nm{color:var(--txt);width:96px;font-family:var(--sans);font-weight:600;font-size:11px}
+    .rr .mt{margin-left:auto;color:var(--dim)}
+    .tick{font-family:var(--mono);font-size:8px;fill:#3a4557}
+    .foot{margin-top:auto;font-family:var(--mono);font-size:10px;color:var(--dimmer);
+      display:flex;align-items:center;gap:8px}
+    .sweep{width:8px;height:8px;border-radius:50%;background:var(--green);
+      box-shadow:0 0 8px var(--green)}
+  </style>
+</helmet>
+
+<div class="wrap">
+  <div class="scope">
+    <svg width="640" height="640" viewBox="0 0 640 640" fill="none" style="position:absolute;inset:0">
+      <defs>
+        <radialGradient id="sweepG" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#00d1a0" stop-opacity=".28"/>
+          <stop offset="100%" stop-color="#00d1a0" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="wedge" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#00d1a0" stop-opacity=".22"/>
+          <stop offset="100%" stop-color="#00d1a0" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <!-- scope glow -->
+      <circle cx="320" cy="320" r="300" fill="url(#sweepG)"/>
+      <!-- rings -->
+      <circle cx="320" cy="320" r="90"  stroke="#203a2c" stroke-width="1"/>
+      <circle cx="320" cy="320" r="175" stroke="#1b2a3b" stroke-width="1" stroke-dasharray="2 7"/>
+      <circle cx="320" cy="320" r="270" stroke="#182231" stroke-width="1"/>
+      <!-- crosshair spokes -->
+      <g stroke="#141b26" stroke-width="1">
+        <line x1="320" y1="30" x2="320" y2="610"/>
+        <line x1="30" y1="320" x2="610" y2="320"/>
+        <line x1="115" y1="115" x2="525" y2="525"/>
+        <line x1="525" y1="115" x2="115" y2="525"/>
+      </g>
+      <!-- radar sweep wedge (static, implies rotation) -->
+      <path d="M320 320 L610 320 A290 290 0 0 0 465 68 Z" fill="url(#wedge)"/>
+      <!-- tick ring -->
+      <g>
+        <text x="320" y="44" text-anchor="middle" class="tick">000</text>
+        <text x="588" y="324" text-anchor="middle" class="tick">090</text>
+        <text x="320" y="604" text-anchor="middle" class="tick">180</text>
+        <text x="52" y="324" text-anchor="middle" class="tick">270</text>
+      </g>
+      <!-- node markers (squares) on rings -->
+      <g fill="none" stroke-width="2">
+        <rect x="313" y="147" width="14" height="14" stroke="#4da3ff"/>   <!-- librarian inner top -->
+        <rect x="455" y="205" width="16" height="16" stroke="#00d1a0"/>   <!-- trader -->
+        <rect x="452" y="418" width="14" height="14" stroke="#4da3ff"/>   <!-- strategist -->
+        <rect x="313" y="475" width="14" height="14" stroke="#525d6e"/>   <!-- theorist -->
+        <rect x="171" y="418" width="16" height="16" stroke="#ff5c74"/>   <!-- risk -->
+        <rect x="171" y="205" width="14" height="14" stroke="#4da3ff"/>   <!-- researcher -->
+        <!-- outer analyst ticks -->
+        <rect x="315" y="55" width="9" height="9" stroke="#00d1a0"/>
+        <rect x="520" y="150" width="9" height="9" stroke="#00d1a0"/>
+        <rect x="565" y="360" width="9" height="9" stroke="#00d1a0"/>
+        <rect x="430" y="540" width="9" height="9" stroke="#4da3ff"/>
+        <rect x="205" y="540" width="9" height="9" stroke="#00d1a0"/>
+        <rect x="70"  y="360" width="9" height="9" stroke="#525d6e"/>
+        <rect x="110" y="150" width="9" height="9" stroke="#00d1a0"/>
+      </g>
+    </svg>
+
+    <!-- manager + team chips -->
+    <div class="chip mgr" style="left:320px;top:320px"><b>MANAGER</b><span class="mono" style="color:var(--dim)">eq $5,141</span></div>
+    <div class="chip" style="left:463px;top:213px"><span class="d" style="background:#00d1a0"></span><b>Trader</b><span style="color:var(--dim)">3 open</span></div>
+    <div class="chip" style="left:459px;top:425px"><span class="d" style="background:#4da3ff"></span><b>Strategist</b></div>
+    <div class="chip" style="left:320px;top:482px"><span class="d" style="background:#525d6e"></span><b>Theorist</b></div>
+    <div class="chip" style="left:179px;top:426px"><span class="d" style="background:#ff5c74"></span><b>Risk</b><span style="color:#ff9aa9">armed</span></div>
+    <div class="chip" style="left:178px;top:212px"><span class="d" style="background:#4da3ff"></span><b>Researcher</b></div>
+    <div class="chip" style="left:320px;top:154px"><span class="d" style="background:#4da3ff"></span><b>Librarian</b></div>
+  </div>
+
+  <div class="side">
+    <div class="kick">agents · command scope</div>
+    <div class="h1">The Desk</div>
+    <div class="sub">manager + 6 staff + 7 analysts</div>
+
+    <div class="read">
+      <div class="rr"><span class="nm">Structure</span><span class="mono" style="color:#00d1a0">●</span><span class="mt">15% · 20</span></div>
+      <div class="rr"><span class="nm">Momentum</span><span class="mono" style="color:#00d1a0">●</span><span class="mt">27% · 73</span></div>
+      <div class="rr"><span class="nm">Value</span><span class="mono" style="color:#4da3ff">●</span><span class="mt">75% · 57</span></div>
+      <div class="rr"><span class="nm">Depth</span><span class="mono" style="color:#00d1a0">●</span><span class="mt">38% · 21</span></div>
+      <div class="rr"><span class="nm">Rotation</span><span class="mono" style="color:#525d6e">●</span><span class="mt">20% · 5</span></div>
+    </div>
+
+    <div class="foot"><span class="sweep"></span>scope sweeps · click a marker to lock on</div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -111,7 +111,12 @@ def test_strategist_review_trigger(tmp_path):
     from trader.core.journal import Journal
     from trader.brain.strategist import Strategist
     j = Journal(tmp_path / "j.db")
-    s = Strategist(j, load_config())
+    cfg = load_config()
+    # This is a trigger/bookkeeping test, not a gauntlet test. Disable the
+    # walk-forward sweep so it does not spend its wall-clock budget
+    # backtesting 24 candidates across 5 symbols.
+    cfg["strategies"]["gauntlet_time_budget_s"] = 0
+    s = Strategist(j, cfg)
     should, why = s.should_review()
     assert should is True          # fresh journal — never reviewed
     r = s.review()                 # runs fallback (no LLM key in test env)

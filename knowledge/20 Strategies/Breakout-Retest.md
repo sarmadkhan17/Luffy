@@ -3,6 +3,7 @@ type: strategy
 state: demoted
 family: breakout_retest
 origin: seed
+author: Strategist
 ---
 # Breakout-Retest
 
@@ -20,4 +21,6 @@ origin: seed
 - realized P&L: +0.00 USDT
 - state: **demoted**
 
-Related: [[Regime Playbook]], [[MOC]]
+Related: [[Behavioral Momentum]], [[Regime Playbook]], [[MOC]]
+
+Filed by [[Strategist]]

@@ -57,8 +57,12 @@ def evaluate_population(journal: Journal, notifier=None) -> list[dict]:
         st = _stats_for(journal, sid)
 
         def transition(new_state: str, reason: str):
-            journal.query("UPDATE strategies SET state=? WHERE id=?",
-                          (new_state, sid))
+            if new_state == state:
+                return          # no-op: don't spam events/alerts each cycle
+            journal.query("UPDATE strategies SET state=?, state_changed_at=? "
+                          "WHERE id=?",
+                          (new_state, datetime.now(timezone.utc).isoformat(),
+                           sid))
             journal.log_brain_event(
                 "statistical_transition", sid,
                 {"from": state, "to": new_state, "reason": reason,
@@ -68,14 +72,20 @@ def evaluate_population(journal: Journal, notifier=None) -> list[dict]:
             actions.append({"strategy": row["name"], "id": sid,
                             "from": state, "to": new_state, "reason": reason})
 
-        if state == "paper" and st["trades"] >= PROMOTE_MIN_TRADES:
-            if st["winrate"] >= PROMOTE_MIN_WINRATE and st["pf"] >= PROMOTE_MIN_PF:
+        if state == "paper":
+            if st["trades"] >= PROMOTE_MIN_TRADES and \
+                    st["winrate"] >= PROMOTE_MIN_WINRATE and \
+                    st["pf"] >= PROMOTE_MIN_PF:
                 transition("active", f"probation passed: WR {st['winrate']:.0%}, "
                                      f"PF {st['pf']:.2f}")
+            # demotion must be reachable at ANY trade count — previously this
+            # was nested under `trades >= PROMOTE_MIN_TRADES`, so a paper
+            # strategy bleeding 14 straight losses could never be retired.
             elif st["consecutive_losses"] >= DEMOTE_CONSEC_LOSSES or (
                     st["trades"] >= DEMOTE_MIN_TRADES and st["pf"] < DEMOTE_MAX_PF):
                 transition("retired", f"failed probation: PF {st['pf']:.2f}, "
-                                      f"WR {st['winrate']:.0%}")
+                                      f"WR {st['winrate']:.0%}, "
+                                      f"{st['trades']} trades")
         elif state in ("active", "demoted"):
             if st["consecutive_losses"] >= DEMOTE_CONSEC_LOSSES:
                 transition("demoted", f"{st['consecutive_losses']} consecutive losses")
@@ -84,11 +94,17 @@ def evaluate_population(journal: Journal, notifier=None) -> list[dict]:
                 transition("demoted", f"PF decayed to {st['pf']:.2f} "
                                       f"over {st['trades']} trades")
             elif state == "demoted":
-                created = datetime.fromisoformat(row["created_at"])
-                age_days = (datetime.now(timezone.utc)
-                            - created).days
+                # measure from WHEN IT WAS DEMOTED, not from birth — using
+                # created_at made a strategy demoted late in its life
+                # instantly retire-eligible.
+                since = row.get("state_changed_at") or row["created_at"]
+                demoted_at = datetime.fromisoformat(since)
+                if demoted_at.tzinfo is None:
+                    demoted_at = demoted_at.replace(tzinfo=timezone.utc)
+                age_days = (datetime.now(timezone.utc) - demoted_at).days
                 if age_days > RETIRE_DEMOTED_DAYS and st["pf"] < PROMOTE_MIN_PF:
-                    transition("retired", f"no recovery in {age_days}d")
+                    transition("retired", f"no recovery in {age_days}d "
+                                          f"since demotion")
         # refresh persisted stats blob either way
         journal.query("UPDATE strategies SET stats_json=? WHERE id=?",
                       (json.dumps({"trades": st["trades"], "wins": st["wins"],
