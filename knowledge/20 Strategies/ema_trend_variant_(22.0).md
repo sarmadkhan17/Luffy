@@ -17,7 +17,7 @@ author: Strategist
 ```
 
 ## Live record
-- closed trades: 4 · wins: 2
+- closed trades: 5 · wins: 2
 - realized P&L: -118.52 USDT
 - state: **paper**
 
