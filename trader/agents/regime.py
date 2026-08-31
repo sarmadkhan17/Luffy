@@ -70,3 +70,37 @@ def btc_context(df_exec: pd.DataFrame | None,
     except Exception:
         pass
     return out
+
+
+def regime_series(df_exec: pd.DataFrame) -> pd.Series:
+    """classify() applied to EVERY bar, vectorized.
+
+    classify() reads only the last bar, which is all the live loop needs. To
+    learn which regimes a strategy actually pays in, history has to be
+    labelled bar by bar — the same thresholds, applied across the frame.
+
+    Kept deliberately in lockstep with classify(): the live gate and the
+    measured regime_filter must mean the same thing, or a strategy gets
+    admitted for one regime and traded in another.
+    """
+    import numpy as np
+
+    from .indicators import adx_series
+    if df_exec is None or len(df_exec) < 60:
+        return pd.Series([], dtype=object)
+
+    close = df_exec["close"]
+    adx_v = adx_series(df_exec)
+    logret = np.log(close).diff()
+    rv_now = logret.rolling(24).std()
+    rv_base = logret.rolling(96).std() + 1e-9
+    vol_ratio = rv_now / rv_base
+    ema50 = close.ewm(span=50, adjust=False).mean()
+
+    out = pd.Series("RANGING", index=df_exec.index, dtype=object)
+    trending = adx_v >= 25
+    out[trending & (close > ema50)] = "TRENDING_UP"
+    out[trending & (close <= ema50)] = "TRENDING_DOWN"
+    out[(vol_ratio > 1.6) & (adx_v < 30)] = "VOLATILE"
+    out[adx_v.isna() | vol_ratio.isna()] = "UNKNOWN"
+    return out

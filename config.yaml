@@ -85,6 +85,31 @@ strategies:
   backtest_bars: 8000
   # symbols the internal gauntlet walks forward over
   backtest_symbols: ["BTC/USDT", "ETH/USDT", "SOL/USDT", "XRP/USDT", "SUI/USDT"]
+  # ── selection: no edge lasts, so the gate asks "is this working NOW"
+  # rather than "did this survive five years". A lifetime train/test split
+  # averages the regimes an edge worked in with the ones it did not: under it
+  # all 27 specs scored 0 passes, while 4 pass a 90-day pooled gate.
+  select_recent_days: 90
+  select_min_trades: 20
+  select_min_pf: 1.15
+  # ── retirement: shorter and more lenient than selection, because holding a
+  # dead strategy costs continuously while retiring a live one costs a retest.
+  # Too few trades is IDLE, not decayed — a setup waiting for its regime.
+  decay_recent_days: 30
+  decay_min_trades: 10
+  decay_floor_pf: 0.85
+  # ── persistence: context only, never a gate. How often this mechanism has
+  # paid historically, which informs how closely to watch it.
+  persistence_window_days: 60
+  persistence_step_days: 15
+  # ── regime fitness: spec.regime_filter as written is the author's guess,
+  # and the orchestrator gates live signals on it. These measure it instead.
+  # Windows are ~a month because a regime label does not hold for longer.
+  regime_window_days: 30
+  regime_step_days: 7
+  regime_min_windows: 5
+  regime_min_hit_rate: 0.5
+  regime_min_median_pf: 1.0
   # binding cheap gate on the internal walk-forward
   gauntlet_min_test_pf: 1.15
   gauntlet_min_test_trades: 20

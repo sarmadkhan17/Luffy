@@ -127,3 +127,62 @@ def test_working_strategy_is_not_retired():
     dead, ev = rolling.has_decayed(c, {"A": _frame(3000, drift=0.004, seed=8)},
                                    RISK, "1h", recent_days=60, min_trades=3)
     assert not dead
+
+
+def _regime_frame(n=6000, seed=3):
+    """Alternating trend and chop, so several regimes are represented."""
+    rng = np.random.default_rng(seed)
+    seg, out, up = 600, [], True
+    for _ in range(n // seg):
+        drift = 0.004 if up else 0.0
+        vol = 0.003 if up else 0.008
+        out.append(rng.normal(drift, vol, seg))
+        up = not up
+    close = 100 * np.cumprod(1 + np.concatenate(out))
+    df = pd.DataFrame({
+        "ts": pd.date_range("2024-01-01", periods=len(close), freq="1h",
+                            tz="UTC"),
+        "open": close, "close": close,
+        "volume": rng.uniform(50, 500, len(close))})
+    df["high"] = df[["open", "close"]].max(axis=1) * 1.003
+    df["low"] = df[["open", "close"]].min(axis=1) * 0.997
+    return df[["ts", "open", "high", "low", "close", "volume"]]
+
+
+def test_regime_windows_splits_by_regime():
+    c = compile_spec(_spec())
+    by = rolling.regime_windows(c, {"A": _regime_frame()}, RISK, "1h",
+                                window_days=30, step_days=7)
+    assert by, "no regime produced any window"
+    assert set(by) <= {"TRENDING_UP", "TRENDING_DOWN", "RANGING", "VOLATILE"}
+    for st in by.values():
+        assert st.n_windows > 0 and len(st.pfs) == st.n_windows
+
+
+def test_regime_windows_excludes_unknown_label():
+    c = compile_spec(_spec())
+    by = rolling.regime_windows(c, {"A": _regime_frame()}, RISK, "1h")
+    assert "UNKNOWN" not in by
+
+
+def test_fit_regimes_needs_enough_windows():
+    st = rolling.WindowStats(n_windows=2, trades=[10, 10], pfs=[3.0, 3.0])
+    assert rolling.fit_regimes({"RANGING": st}, min_windows=5) == []
+
+
+def test_fit_regimes_needs_a_winning_majority():
+    losing = rolling.WindowStats(
+        n_windows=10, trades=[10] * 10, pfs=[0.4] * 7 + [2.0] * 3)
+    assert rolling.fit_regimes({"RANGING": losing}) == []
+
+
+def test_fit_regimes_accepts_a_genuinely_fit_regime():
+    good = rolling.WindowStats(
+        n_windows=10, trades=[10] * 10, pfs=[1.5] * 8 + [0.6] * 2)
+    assert rolling.fit_regimes({"TRENDING_UP": good}) == ["TRENDING_UP"]
+
+
+def test_fit_regimes_is_sorted_and_multi():
+    good = rolling.WindowStats(n_windows=8, trades=[10] * 8, pfs=[1.4] * 8)
+    out = rolling.fit_regimes({"VOLATILE": good, "RANGING": good})
+    assert out == ["RANGING", "VOLATILE"]
