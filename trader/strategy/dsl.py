@@ -233,3 +233,128 @@ def _eval_htf(node: ast.Call, ctx):
     arr = vals.to_numpy(dtype=float)
     out = np.where(pos >= 0, arr[np.clip(pos, 0, None)], np.nan)
     return pd.Series(out, index=ctx.index)
+
+
+# ── literal extraction: every number is a tunable gene ───────────────────
+@dataclass
+class Literal:
+    """A tunable number inside an expression.
+
+    Every numeric literal is automatically a parameter, with a range inferred
+    from the feature registry. This is why there is no FAMILY_GENE_SPECS: the
+    Strategist writes structure, an optimizer perturbs these, and the
+    rendered text stays the single source of truth for both — so the Python
+    evaluator and the Pine template can never score different strategies the
+    way ema_trend's phantom fast_len/slow_len defaults did.
+    """
+    index: int          # position in document order
+    value: float
+    lo: float
+    hi: float
+    is_int: bool
+    source: str         # "arg_spec" | "domain" | "fallback"
+
+
+def _numeric_constants(tree: ast.Expression) -> list[ast.Constant]:
+    """Numeric literals in DOCUMENT order.
+
+    ast.walk() is breadth-first, so `adx(14) > 25` yields 25 before 14 —
+    which would make apply_literals() silently assign tuned values to the
+    wrong parameters. Source position is the stable ordering, and it matches
+    between a tree and its deepcopy.
+    """
+    consts = [n for n in ast.walk(tree)
+              if isinstance(n, ast.Constant)
+              and isinstance(n.value, (int, float))
+              and not isinstance(n.value, bool)]
+    return sorted(consts, key=lambda n: (getattr(n, "lineno", 0),
+                                         getattr(n, "col_offset", 0)))
+
+
+def _unwrap_const(node):
+    """A threshold may be negated: `< -1.5` is UnaryOp(USub, Constant)."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+        return node
+    if isinstance(node, ast.UnaryOp) \
+            and isinstance(node.op, (ast.USub, ast.UAdd)) \
+            and isinstance(node.operand, ast.Constant):
+        return node.operand
+    return None
+
+
+def _domain_of(node):
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+        return FEATURES[node.func.id].domain
+    if isinstance(node, ast.Name) and node.id in FEATURES:
+        return FEATURES[node.id].domain
+    return None
+
+
+def _fallback_range(v: float) -> tuple:
+    """No declared domain (a price level, an ATR multiple). Tune relative to
+    the author's chosen value rather than refusing to tune it at all."""
+    if v == 0:
+        return (-1.0, 1.0, False, "fallback")
+    lo, hi = sorted((v * 0.5, v * 2.0))
+    return (lo, hi, float(v).is_integer() and abs(v) < 1000, "fallback")
+
+
+def extract_literals(tree: ast.Expression) -> list[Literal]:
+    ranges: dict[int, tuple] = {}
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            spec = FEATURES[node.func.id].arg_specs
+            for arg, aspec in zip(node.args, spec):
+                if aspec is SERIES_ARG or not isinstance(arg, ast.Constant):
+                    continue
+                if not isinstance(arg.value, (int, float)):
+                    continue
+                typ, lo, hi = aspec
+                if lo is not None:
+                    ranges[id(arg)] = (float(lo), float(hi), typ is int,
+                                       "arg_spec")
+        elif isinstance(node, ast.Compare):
+            operands = [node.left, *node.comparators]
+            for i, operand in enumerate(operands):
+                const = _unwrap_const(operand)
+                if const is None or id(const) in ranges:
+                    continue
+                other = operands[i - 1] if i else operands[1]
+                dom = _domain_of(other)
+                if dom:
+                    ranges[id(const)] = (float(dom[0]), float(dom[1]), False,
+                                         "domain")
+
+    out: list[Literal] = []
+    for i, node in enumerate(_numeric_constants(tree)):
+        lo, hi, is_int, src = ranges.get(
+            id(node), _fallback_range(float(node.value)))
+        out.append(Literal(i, node.value, lo, hi, is_int, src))
+    return out
+
+
+def apply_literals(tree: ast.Expression, values) -> ast.Expression:
+    """Return a NEW tree with each numeric literal replaced, in document
+    order. Integer-typed literals are rounded so a period stays a period."""
+    values = list(values)
+    originals = extract_literals(tree)
+    if len(values) != len(originals):
+        raise SpecError(f"expected {len(originals)} literal values, "
+                        f"got {len(values)}")
+    out = copy.deepcopy(tree)
+    for node, v, lit in zip(_numeric_constants(out), values, originals):
+        if lit.is_int:
+            node.value = int(round(float(v)))
+        else:
+            r = round(float(v), 6)
+            # render an integral float as an int so the Librarian's card reads
+            # `adx(14) > 30`, not `adx(14) > 30.0`
+            node.value = int(r) if r.is_integer() else r
+    return ast.fix_missing_locations(out)
+
+
+def render(tree: ast.Expression) -> str:
+    """Back to source. This text is what the Librarian prints, so it must
+    always re-parse."""
+    return ast.unparse(tree.body)
