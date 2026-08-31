@@ -1,0 +1,50 @@
+{
+  "id": "seed_liquidity_sweep_reversal",
+  "name": "Liquidity Sweep Reversal",
+  "thesis": "Resting stops beyond obvious swings are liquidity; their harvest by larger players marks exhaustion, and fast reclaim of the level signals the real direction (Wyckoff spring).",
+  "invalidation": "Demote after 6 consecutive losses or profit factor below 0.85 over 20 trades.",
+  "provenance": {
+    "source_kind": "seed",
+    "parent": "library.py",
+    "note": "APPROXIMATE port: eval_sweep_reversal scans the last max_reclaim_bars+1 bars for a pierce of a swing taken from df[-60:-k-1]. This tests only the current bar's low against a 56-bar Donchian, so a pierce that was reclaimed two bars ago is missed \u2014 it fires roughly 5x less often (28 vs 143 signals on 8000 bars). Widening this is a candidate for tuning."
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_long": "low < donchian_lo(56) * 0.998 and close > donchian_lo(56)",
+  "entry_short": "high > donchian_hi(56) * 1.002 and close < donchian_hi(56)",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 1.5
+    },
+    "target": {
+      "kind": "rr",
+      "v": 2.0
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 16
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "RANGING",
+    "VOLATILE"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

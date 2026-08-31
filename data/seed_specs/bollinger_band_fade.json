@@ -1,0 +1,51 @@
+{
+  "id": "seed_bollinger_band_fade",
+  "name": "Bollinger Band Fade",
+  "thesis": "A close beyond a Bollinger band is a statistical overextension of the recent distribution; the close back inside the band marks the moment the impulse that caused it has been absorbed, and price reverts toward the mean.",
+  "invalidation": "Demote if win rate is below 40% over 15 trades or profit factor below 1.0 over 20.",
+  "provenance": {
+    "source_kind": "seed",
+    "parent": "library.py",
+    "note": "Exact port of eval_bb_fade's pierce-and-reclaim (0.998 bar agreement with the filter removed, zero legacy-only bars). Fires ~60% less often than the legacy family because of the ADDED adx(14) < 25 filter: the legacy evaluator has no regime gate at all, so it fades bands inside strong trends. That is a deliberate change, not a porting delta."
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_long": "prev(close, 1) < prev(bb_lower(20, 2.0), 1) and close > bb_lower(20, 2.0)",
+  "entry_short": "prev(close, 1) > prev(bb_upper(20, 2.0), 1) and close < bb_upper(20, 2.0)",
+  "filters": [
+    "adx(14) < 25"
+  ],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 1.8
+    },
+    "target": {
+      "kind": "rr",
+      "v": 1.5
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 20
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "RANGING"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}
