@@ -1,0 +1,49 @@
+{
+  "id": "auth_oi_flush_reversal",
+  "name": "Open Interest Flush Reversal",
+  "thesis": "A sharp collapse in open interest alongside a violent price drop is a liquidation cascade, not a change in valuation. Forced sellers are price-insensitive and finite, so the level they exhaust themselves at tends to hold.",
+  "invalidation": "Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.",
+  "provenance": {
+    "source_kind": "authored",
+    "author": "quant",
+    "mechanism": "open_interest"
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "long",
+  "entry_long": "oi_ret(32) < -0.03 and ret(32) < -0.02 and close > low + 0.5 * (high - low)",
+  "entry_short": "",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 1.2
+    },
+    "target": {
+      "kind": "rr",
+      "v": 2.0
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 24
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "VOLATILE"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

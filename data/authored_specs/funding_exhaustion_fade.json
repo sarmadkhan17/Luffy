@@ -1,0 +1,52 @@
+{
+  "id": "auth_funding_exhaustion_fade",
+  "name": "Funding Exhaustion Fade",
+  "thesis": "Perpetual funding is the rent crowded leverage pays to stay on. When that rent reaches a multi-week extreme, the marginal long is no longer a buyer but a holder bleeding carry, so the flow that drove price up has already been spent and the unwind is what remains.",
+  "invalidation": "Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.",
+  "provenance": {
+    "source_kind": "authored",
+    "author": "quant",
+    "mechanism": "funding"
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_long": "funding_z(1920) < -2.0",
+  "entry_short": "funding_z(1920) > 2.0",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 1.5
+    },
+    "target": {
+      "kind": "rr",
+      "v": 2.0
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 32
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "TRENDING_UP",
+    "TRENDING_DOWN",
+    "RANGING",
+    "VOLATILE"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

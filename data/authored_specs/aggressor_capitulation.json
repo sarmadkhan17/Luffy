@@ -1,0 +1,51 @@
+{
+  "id": "auth_aggressor_capitulation",
+  "name": "Aggressor Capitulation",
+  "thesis": "The share of volume lifting the offer collapses at the end of a decline, not at its start: sellers who had to sell have finished, and what remains is passive supply. An extreme low in aggressor participation while price sits at a range low marks that exhaustion.",
+  "invalidation": "Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.",
+  "provenance": {
+    "source_kind": "authored",
+    "author": "quant",
+    "mechanism": "flow",
+    "note": "Entry thresholds loosened once for TESTABILITY: the original produced under 10 out-of-sample trades across 5 symbols, which is an absence of a verdict rather than a negative one. The mechanism is unchanged."
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "long",
+  "entry_long": "zscore(taker_buy_frac, 192) < -1.2 and low <= donchian_lo(96) * 1.005",
+  "entry_short": "",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 1.5
+    },
+    "target": {
+      "kind": "rr",
+      "v": 2.0
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 32
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "RANGING",
+    "VOLATILE"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

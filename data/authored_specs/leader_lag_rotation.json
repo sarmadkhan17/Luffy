@@ -1,0 +1,50 @@
+{
+  "id": "auth_leader_lag_rotation",
+  "name": "Leader Lag Rotation",
+  "thesis": "Capital enters crypto through BTC and disperses outward with a lag of hours. An alt that is still correlated but has not yet matched a decisive BTC impulse has a mechanical catch-up bid from allocators rebalancing toward beta.",
+  "invalidation": "Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.",
+  "provenance": {
+    "source_kind": "authored",
+    "author": "quant",
+    "mechanism": "cross_asset",
+    "note": "Entry thresholds loosened once for TESTABILITY: the original produced under 10 out-of-sample trades across 5 symbols, which is an absence of a verdict rather than a negative one. The mechanism is unchanged."
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "long",
+  "entry_long": "btc_ret(16) > 0.005 and corr_btc(192) > 0.4 and rel_strength_btc(16) < -0.002",
+  "entry_short": "",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 2.5
+    },
+    "target": {
+      "kind": "rr",
+      "v": 3.0
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 64
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "TRENDING_UP"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

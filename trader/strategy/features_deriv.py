@@ -53,13 +53,16 @@ register("funding", domain=(-0.01, 0.01), requires=("funding",))(
     lambda ctx: _deriv(ctx, "funding"))
 
 
-@register("funding_z", arg_specs=((int, 12, 500),), domain=(-4.0, 4.0),
+@register("funding_z", arg_specs=((int, 64, 4000),), domain=(-4.0, 4.0),
           requires=("funding",))
 def _funding_z(ctx, n):
+    """Window is in BARS, not funding periods. Funding settles every 8h =
+    32 bars on a 15m frame, so n=96 spans only 3 observations; a meaningful
+    z-score needs n in the low thousands."""
     return ind.zscore_series(_deriv(ctx, "funding"), int(n))
 
 
-@register("funding_cum", arg_specs=((int, 3, 500),), domain=(-0.5, 0.5),
+@register("funding_cum", arg_specs=((int, 32, 4000),), domain=(-0.5, 0.5),
           requires=("funding",))
 def _funding_cum(ctx, n):
     """Cumulative funding paid over n bars — the running cost of holding the
@@ -78,7 +81,7 @@ def _oi_ret(ctx, n):
     return s / s.shift(int(n)) - 1.0
 
 
-@register("oi_z", arg_specs=((int, 12, 500),), domain=(-4.0, 4.0),
+@register("oi_z", arg_specs=((int, 12, 2000),), domain=(-4.0, 4.0),
           requires=("open_interest",))
 def _oi_z(ctx, n):
     return ind.zscore_series(_deriv(ctx, "oi"), int(n))
@@ -89,7 +92,7 @@ register("taker_ratio", domain=(0.0, 5.0), requires=("taker_ratio",))(
     lambda ctx: _deriv(ctx, "taker_ratio"))
 
 
-@register("taker_ratio_z", arg_specs=((int, 12, 500),), domain=(-4.0, 4.0),
+@register("taker_ratio_z", arg_specs=((int, 12, 2000),), domain=(-4.0, 4.0),
           requires=("taker_ratio",))
 def _taker_z(ctx, n):
     return ind.zscore_series(_deriv(ctx, "taker_ratio"), int(n))
@@ -116,7 +119,7 @@ register("ls_ratio", domain=(0.0, 5.0), requires=("ls_ratio",))(
     lambda ctx: _deriv(ctx, "ls_ratio"))
 
 
-@register("ls_ratio_z", arg_specs=((int, 12, 500),), domain=(-4.0, 4.0),
+@register("ls_ratio_z", arg_specs=((int, 12, 2000),), domain=(-4.0, 4.0),
           requires=("ls_ratio",))
 def _ls_z(ctx, n):
     return ind.zscore_series(_deriv(ctx, "ls_ratio"), int(n))
@@ -127,7 +130,7 @@ register("basis", domain=(-0.1, 0.1), requires=("basis",))(
     lambda ctx: _deriv(ctx, "basis"))
 
 
-@register("basis_z", arg_specs=((int, 12, 500),), domain=(-4.0, 4.0),
+@register("basis_z", arg_specs=((int, 12, 2000),), domain=(-4.0, 4.0),
           requires=("basis",))
 def _basis_z(ctx, n):
     return ind.zscore_series(_deriv(ctx, "basis"), int(n))

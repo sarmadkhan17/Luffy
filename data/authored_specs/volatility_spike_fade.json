@@ -1,0 +1,49 @@
+{
+  "id": "auth_volatility_spike_fade",
+  "name": "Volatility Spike Fade",
+  "thesis": "A volatility spike is an information event or a liquidation, and both are transient. Once realised volatility is in its top decile the marginal participant is reacting rather than deciding, and reactive flow reverses.",
+  "invalidation": "Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.",
+  "provenance": {
+    "source_kind": "authored",
+    "author": "quant",
+    "mechanism": "volatility"
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_long": "pct_rank(realized_vol(48), 480) > 0.9 and close <= donchian_lo(48)",
+  "entry_short": "pct_rank(realized_vol(48), 480) > 0.9 and close >= donchian_hi(48)",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 1.2
+    },
+    "target": {
+      "kind": "rr",
+      "v": 2.0
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 24
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "VOLATILE"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}
