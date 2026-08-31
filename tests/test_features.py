@@ -50,3 +50,53 @@ def test_series_are_full_length_and_aligned(df):
               ind.vwap_series(df, 96), ind.realized_vol_series(df, 48)):
         assert len(s) == len(df)
         assert s.index.equals(df.index)
+
+
+from trader.strategy.features import FEATURES, FeatureCtx
+
+
+@pytest.fixture
+def ctx(df):
+    return FeatureCtx(frames={"15m": df}, tf="15m")
+
+
+def test_registry_has_core_features():
+    for name in ("close", "ema", "rsi", "atr", "adx", "vwap", "volume",
+                 "abs", "max", "min"):
+        assert name in FEATURES, f"{name} missing from FEATURES"
+
+
+def test_zero_arity_feature_returns_column(ctx, df):
+    assert FEATURES["close"].fn(ctx).equals(df["close"])
+
+
+def test_ema_matches_indicator(ctx, df):
+    assert FEATURES["ema"].fn(ctx, 20).iloc[-1] == pytest.approx(
+        ind.ema(df["close"], 20).iloc[-1])
+
+
+def test_atr_feature_matches_indicator(ctx, df):
+    assert FEATURES["atr"].fn(ctx, 14).iloc[-1] == pytest.approx(ind.atr(df, 14))
+
+
+def test_ctx_caches_repeated_calls(ctx):
+    a = ctx.get("ema", (20,))
+    b = ctx.get("ema", (20,))
+    assert a is b, "FeatureCtx must memoise; ema(20) appears in entry and filters"
+
+
+def test_every_feature_domain_is_well_formed():
+    for name, f in FEATURES.items():
+        assert f.domain is None or (len(f.domain) == 2 and f.domain[0] < f.domain[1]), name
+
+
+def test_bounded_features_stay_in_domain(ctx):
+    for name in ("rsi", "adx"):
+        s = ctx.get(name, (14,)).dropna()
+        lo, hi = FEATURES[name].domain
+        assert s.min() >= lo - 1e-6 and s.max() <= hi + 1e-6, name
+
+
+def test_donchian_excludes_the_current_bar(ctx, df):
+    hi = FEATURES["donchian_hi"].fn(ctx, 10)
+    assert hi.iloc[20] == pytest.approx(df["high"].iloc[10:20].max())
