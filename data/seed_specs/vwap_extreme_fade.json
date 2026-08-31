@@ -1,24 +1,12 @@
 {
-  "id": "seed_vwap_extreme_fade",
-  "name": "VWAP Extreme Fade",
-  "thesis": "Without a trend regime, extensions beyond roughly 2.5 sigma from the anchored VWAP revert as liquidity providers are paid the panic premium of overreaction traders (De Bondt-Thaler).",
-  "invalidation": "Demote if win rate is below 40% over 15 trades or profit factor below 1.0 over 20.",
-  "provenance": {
-    "source_kind": "seed",
-    "parent": "library.py",
-    "note": "Corrected port of eval_vwap_fade. The legacy version computes `vw = anchored_vwap(df, anchor)` as a SCALAR and divides the whole close series by it, so the constant cancels out of the z-score and its 'VWAP deviation z-score' is arithmetically just a z-score of price. This spec uses the rolling VWAP at each bar, so it measures the deviation it claims to. Bar agreement 0.972 against the legacy signal is that correction."
-  },
-  "universe": {
-    "include": [],
-    "exclude": [],
-    "min_volume_usdt": 0
-  },
-  "timeframe": "15m",
+  "data_requires": [
+    "ohlcv"
+  ],
   "direction": "both",
   "entry_long": "zscore((close - vwap(96)) / vwap(96), 96) < -2.5",
   "entry_short": "zscore((close - vwap(96)) / vwap(96), 96) > 2.5",
-  "filters": [],
   "exit": {
+    "signal_exit": "",
     "stop": {
       "kind": "atr",
       "mult": 2.0
@@ -27,23 +15,65 @@
       "kind": "rr",
       "v": 1.5
     },
-    "trail": {
-      "kind": "none"
-    },
     "time": {
       "max_bars": 24
     },
-    "signal_exit": ""
+    "trail": {
+      "kind": "none"
+    }
   },
-  "regime_filter": [
-    "RANGING"
-  ],
+  "filters": [],
+  "generation": 0,
+  "id": "seed_vwap_extreme_fade",
+  "invalidation": "Demote if win rate is below 40% over 15 trades or profit factor below 1.0 over 20.",
   "markets": [
     "futures"
   ],
-  "generation": 0,
+  "name": "VWAP Extreme Fade",
   "parent_id": "",
-  "data_requires": [
-    "ohlcv"
-  ]
+  "provenance": {
+    "note": "Corrected port of eval_vwap_fade. The legacy version computes `vw = anchored_vwap(df, anchor)` as a SCALAR and divides the whole close series by it, so the constant cancels out of the z-score and its 'VWAP deviation z-score' is arithmetically just a z-score of price. This spec uses the rolling VWAP at each bar, so it measures the deviation it claims to. Bar agreement 0.972 against the legacy signal is that correction.",
+    "parent": "library.py",
+    "regime_evidence": {
+      "by_regime": {
+        "RANGING": {
+          "hit_rate": 0.465,
+          "median_pf": 0.842,
+          "p25_pf": 0.502,
+          "total_trades": 671,
+          "windows": 86
+        },
+        "TRENDING_DOWN": {
+          "hit_rate": 0.776,
+          "median_pf": 3.543,
+          "p25_pf": 1.048,
+          "total_trades": 528,
+          "windows": 67
+        },
+        "TRENDING_UP": {
+          "hit_rate": 0.622,
+          "median_pf": 1.434,
+          "p25_pf": 0.535,
+          "total_trades": 298,
+          "windows": 45
+        }
+      },
+      "declared_was": [
+        "RANGING"
+      ],
+      "measured_on": "1h, 30d windows, 7d step, 3y history"
+    },
+    "source_kind": "seed"
+  },
+  "regime_filter": [
+    "TRENDING_DOWN",
+    "TRENDING_UP"
+  ],
+  "thesis": "Without a trend regime, extensions beyond roughly 2.5 sigma from the anchored VWAP revert as liquidity providers are paid the panic premium of overreaction traders (De Bondt-Thaler).",
+  "timeframe": "15m",
+  "universe": {
+    "exclude": [],
+    "include": [],
+    "min_volume_usdt": 0
+  }
 }

@@ -167,3 +167,71 @@ def has_decayed(compiled, frames: dict, risk_cfg: dict, timeframe: str,
         return True, {**ev, "verdict": f"decayed: pooled PF "
                                        f"{ev['pooled_pf']:.2f} < {floor_pf}"}
     return False, {**ev, "verdict": "still working"}
+
+
+def regime_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
+                   window_days: float = 30, step_days: float = 7,
+                   min_trades: int = 5, btc=None,
+                   derivs_for=None) -> dict:
+    """Score rolling windows GROUPED BY the regime that dominated them.
+
+    `StrategySpec.regime_filter` is a declaration by whoever wrote the spec —
+    a guess. The orchestrator gates live signals on it
+    (orchestrator.py:207), so a wrong guess either silences a working
+    strategy or runs it where it loses. This measures the answer instead.
+
+    Windows are shorter than the persistence sweep because a regime does not
+    hold for sixty days; a month is about as long as one label stays true.
+    """
+    from ..agents.regime import regime_series
+
+    win, step = bars(timeframe, window_days), bars(timeframe, step_days)
+    by_regime: dict[str, WindowStats] = {}
+    for sym, df in frames.items():
+        if sym.startswith("_") or df is None or len(df) < win:
+            continue
+        derivs = derivs_for(sym) if derivs_for else None
+        try:
+            lo, sh = compiled.entries({timeframe: df}, btc=btc, derivs=derivs)
+            regimes = regime_series(df)
+        except Exception as e:
+            log.warning(f"regime_windows {compiled.spec.id} {sym}: {e}")
+            continue
+        if not len(regimes):
+            continue
+        for a in range(0, len(df) - win, step):
+            b = a + win
+            labels = regimes.iloc[a:b]
+            labels = labels[labels != "UNKNOWN"]
+            if labels.empty:
+                continue
+            # the window belongs to whichever regime held for most of it
+            dominant = labels.value_counts().idxmax()
+            if labels.value_counts().iloc[0] / len(labels) < 0.5:
+                continue                    # too mixed to attribute
+            r = simulate(lo[a:b], sh[a:b], df.iloc[a:b].reset_index(drop=True),
+                         compiled.spec.exit, risk_cfg, symbol=sym)
+            if r.trades < min_trades:
+                continue
+            st = by_regime.setdefault(dominant, WindowStats())
+            st.n_windows += 1
+            st.trades.append(r.trades)
+            st.pfs.append(r.profit_factor)
+    return by_regime
+
+
+def fit_regimes(by_regime: dict, min_windows: int = 5,
+                min_hit_rate: float = 0.5,
+                min_median_pf: float = 1.0) -> list:
+    """Regimes where this mechanism has actually paid.
+
+    Requires enough windows to mean something AND that it won more often
+    than not AND that the median window was profitable. A regime with three
+    lucky windows is not evidence.
+    """
+    out = []
+    for regime, st in by_regime.items():
+        if (st.n_windows >= min_windows and st.hit_rate >= min_hit_rate
+                and st.median_pf >= min_median_pf):
+            out.append(regime)
+    return sorted(out)
