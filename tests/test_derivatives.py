@@ -25,9 +25,29 @@ def test_known_series_names():
 
 
 def test_store_roundtrip(feed):
-    feed.save("BTC/USDT", "funding", _df())
+    src = _df()
+    feed.save("BTC/USDT", "funding", src)
     out = feed.load("BTC/USDT", "funding")
     assert len(out) == 10 and out["value"].iloc[-1] == 9
+    # TIMESTAMPS MUST ROUND-TRIP. A resolution-blind ms conversion divides
+    # milliseconds by a million and lands everything in 1970; align() then
+    # forward-fills one constant across the frame and every derivative
+    # feature silently returns garbage instead of failing.
+    assert list(out["ts"]) == list(src["ts"])
+
+
+def test_stored_timestamps_are_epoch_millis(feed):
+    feed.save("BTC/USDT", "funding", _df(n=1))
+    ts = feed.db.execute("SELECT ts FROM derivs").fetchone()[0]
+    assert ts > 1_500_000_000_000, f"{ts} is not epoch ms — resolution bug"
+
+
+def test_roundtrip_survives_a_nanosecond_resolution_frame(feed):
+    """Guard both branches of the unit conversion."""
+    src = _df(n=5)
+    src["ts"] = src["ts"].astype("datetime64[ns, UTC]")
+    feed.save("ETH/USDT", "oi", src)
+    assert list(feed.load("ETH/USDT", "oi")["ts"]) == list(src["ts"])
 
 
 def test_store_is_idempotent(feed):

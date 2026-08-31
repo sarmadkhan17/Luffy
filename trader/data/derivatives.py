@@ -64,10 +64,25 @@ class DerivFeed:
             self._local.conn = conn
         return conn
 
+    @staticmethod
+    def _to_ms(ts: pd.Series) -> pd.Series:
+        """datetime64 -> epoch milliseconds, resolution-aware.
+
+        This repo's pandas yields datetime64[ms] here, so a blind
+        `.astype("int64") // 10**6` divides milliseconds by a million and
+        lands every observation in 1970 — after which align() forward-fills a
+        single constant across the whole frame and every derivative feature
+        silently returns garbage. feed.py:_store_save documents the same trap.
+        """
+        ts = pd.to_datetime(ts, utc=True)
+        unit = getattr(ts.dt, "unit", None) or (
+            "ns" if str(ts.dtype).startswith("datetime64[ns]") else "ms")
+        return ts.astype("int64") // {"ns": 10 ** 6, "us": 10 ** 3}.get(unit, 1)
+
     def save(self, symbol: str, series: str, df: pd.DataFrame) -> None:
         if df is None or df.empty:
             return
-        ms = pd.to_datetime(df["ts"], utc=True).astype("int64") // 10 ** 6
+        ms = self._to_ms(df["ts"])
         try:
             self.db.executemany(
                 "INSERT OR REPLACE INTO derivs VALUES (?,?,?,?)",
