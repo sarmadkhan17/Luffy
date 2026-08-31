@@ -126,6 +126,46 @@ class Kernel:
                        generation=row["generation"] or 0)
             st.is_trade_eligible = row["state"] in ("paper", "active")
             pop.append((st, g))
+        pop.extend(self._load_spec_population())
+        return pop
+
+    def _load_spec_population(self) -> list[tuple]:
+        """Compile stored StrategySpecs into the same (strategy, genome)
+        shape the orchestrator already consumes.
+
+        library.evaluate() dispatches on genome.family (library.py:293), so
+        registering a compiled spec under f"spec:{id}" makes the orchestrator
+        find it with no change at all — including its markets and
+        regime_filter guards at orchestrator.py:205-207.
+        """
+        from .strategy.compile import compile_spec
+        from .strategy.library import register_evaluator
+        pop = []
+        try:
+            rows = self.journal.list_specs(["paper", "active"])
+        except Exception as e:
+            log.warning(f"spec population unavailable: {e}")
+            return pop
+        for row, spec in rows:
+            try:
+                compiled = compile_spec(spec)
+            except Exception as e:
+                log.warning(f"spec {spec.id} will not compile: {e}")
+                continue
+            family = f"spec:{spec.id}"
+            register_evaluator(family, compiled.to_evaluator())
+            st = type("S", (), {})()
+            st.id, st.name, st.state = spec.id, spec.name, row["state"]
+            st.params = {}
+            st.is_trade_eligible = True
+            g = type("G", (), {})()
+            g.strategy_id, g.family = spec.id, family
+            g.params = {}
+            g.markets = frozenset(spec.markets)
+            g.regime_filter = frozenset(spec.regime_filter)
+            pop.append((st, g))
+        if pop:
+            log.info(f"loaded {len(pop)} compiled spec(s) into the population")
         return pop
 
     def boot(self) -> None:
@@ -145,6 +185,8 @@ class Kernel:
                          name="tg-listener").start()
         threading.Thread(target=self._derivatives_recorder, daemon=True,
                          name="derivs-recorder").start()
+        threading.Thread(target=self._strategy_mechanism_loop, daemon=True,
+                         name="strategy-mechanism").start()
         threading.Thread(target=self._maybe_validate_agents, daemon=True,
                          name="agent-validator").start()
         if self.cfg.get("harvester", {}).get("enabled", False):
@@ -225,6 +267,91 @@ class Kernel:
                 if self._stop:
                     return
                 _t.sleep(1)
+
+    def _strategy_mechanism_loop(self) -> None:
+        """The mechanism: retire what has stopped working, generate more.
+
+        No edge lasts, so this is the part that matters more than any single
+        strategy. Every cycle: sweep deployed specs for decay, then ask the
+        Strategist for a new one and let the Analyst decide whether it is
+        working NOW and whether it adds anything the book lacks.
+        """
+        import time as _t
+        mcfg = self.cfg.get("mechanism", {}) or {}
+        if not mcfg.get("enabled", True):
+            log.info("strategy mechanism disabled")
+            return
+        interval = float(mcfg.get("interval_minutes", 180)) * 60
+        per_cycle = int(mcfg.get("specs_per_cycle", 1))
+        max_book = int(mcfg.get("max_specs", 8))
+        _t.sleep(300)                      # let boot and the first cycles settle
+        while not self._stop:
+            try:
+                self._mechanism_once(per_cycle, max_book)
+            except Exception as e:
+                log.warning(f"strategy mechanism cycle failed: {e}")
+            for _ in range(int(interval)):
+                if self._stop:
+                    return
+                _t.sleep(1)
+
+    def _mechanism_once(self, per_cycle: int = 1, max_book: int = 8) -> dict:
+        from .brain.analyst import Analyst
+        from .brain.llm import BrainLLM
+        from .brain.spec_writer import SpecWriter
+
+        analyst = Analyst(self.journal, self.cfg, self.feed, self.notifier)
+        rows = self.journal.list_specs(["paper", "active"])
+        book = [spec for _r, spec in rows]
+
+        # 1. retire what has stopped working
+        retired = analyst.review_deployed(book)
+        for a in retired:
+            self.journal.query(
+                "UPDATE strategies SET state='retired', retire_reason=? "
+                "WHERE id=?", (a["evidence"]["verdict"][:200], a["spec"]))
+        if retired:
+            book = [s for s in book
+                    if s.id not in {a["spec"] for a in retired}]
+
+        # 2. generate replacements
+        added = []
+        if len(book) < max_book:
+            writer = SpecWriter(BrainLLM(self.cfg))
+            for _ in range(per_cycle):
+                spec, trace = writer.write(avoid=[s.name for s in book])
+                if spec is None:
+                    self.journal.log_brain_event("spec_write_failed", "", trace)
+                    break
+                ok, ev = analyst.admit(spec, book)
+                if not ok:
+                    self.journal.log_brain_event(
+                        "spec_rejected", spec.id,
+                        {"name": spec.name, "evidence": ev})
+                    continue
+                # regime_filter as written is a guess; measure it before the
+                # orchestrator starts gating live signals on it
+                spec.timeframe = ev.get("chosen_timeframe", spec.timeframe)
+                rf = analyst.set_measured_regimes(spec)
+                self.journal.upsert_spec(spec, state="paper")
+                self.journal.log_brain_event(
+                    "spec_admitted", spec.id,
+                    {"name": spec.name, "evidence": ev, "regimes": rf})
+                book.append(spec)
+                added.append(spec.name)
+                if self.notifier:
+                    self.notifier.send(
+                        f"\U0001f9ec New strategy: {spec.name} "
+                        f"({spec.timeframe}, {'/'.join(spec.regime_filter)})\n"
+                        f"recent PF {ev['recent']['pooled_pf']} over "
+                        f"{ev['recent']['trades']} trades \u2192 paper")
+
+        if retired or added:
+            self.population = self._load_population()   # hot reload
+        rep = {"retired": [a["name"] for a in retired], "added": added,
+               "book": len(book)}
+        log.info(f"mechanism: {rep}")
+        return rep
 
     def _harvest_loop(self) -> None:
         """Continuous strategy discovery from the internet."""
