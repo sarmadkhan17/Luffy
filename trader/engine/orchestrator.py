@@ -56,6 +56,26 @@ def _measured_weights() -> tuple[dict, dict]:
     return {}, {}
 
 
+def agreement_fraction(votes: list, sigs: list, net: float) -> float:
+    """Share of directional opinions pointing the same way as `net`.
+
+    Feeds the dynamic threshold (unanimous -> 0.18, conflicted -> 0.32) and
+    the reported confidence.
+
+    Strategy signals contribute their OWN direction. They previously entered
+    the tally as `None` and were scored with `(v.conviction if v else net) *
+    sign(net) > 0`, which for a None reduces to `abs(net) > 0` — always True.
+    Every strategy signal therefore counted as agreement even when it pointed
+    the opposite way, so ADDING an opposing signal LOWERED the bar to trade.
+    """
+    directional = [v.conviction for v in votes if abs(v.conviction) > 0.05]
+    directional += [1.0 if s.action == Action.BUY else -1.0 for s in sigs]
+    if len(directional) < 2:
+        return 0.5
+    sign = 1 if net >= 0 else -1
+    return sum(1 for d in directional if d * sign > 0) / len(directional)
+
+
 def htf_trend_score(df_4h) -> float:
     """4h trend strength s ∈ [-1,+1]: EMA50 side × ADX-normalized slope."""
     import numpy as np
@@ -83,15 +103,33 @@ class Orchestrator:
         self.htf_soft_bump = float(sc.get("htf_soft_bump", 0.07))
         self.htf_hard_veto = float(sc.get("htf_hard_veto", 0.80))
         self.calib_cfg = (sc.get("calibration") or {})
-        self.base_weights = {**_DEFAULT_WEIGHTS, **_measured_weights()[0]}
-        self.measured_fit = _measured_weights()[1]
-        if any(a != d for a, d in zip(sorted(self.base_weights),
-                                      sorted(_DEFAULT_WEIGHTS))):
-            log.info(f"orchestrator weights: {self.base_weights}")
         self._acc_cache: tuple[float, dict] = (0.0, {})   # ts, {agent: mult}
         self._lock = threading.Lock()
+        self._shadow_last: dict[str, float] = {}          # symbol → ts
+        self.shadow_sample_rate: float = 0.15             # of leaners
+        self.base_weights, self.measured_fit = {}, {}
+        self.reload_weights()
 
-    # ── accuracy → weight multiplier (bounded 0.6..1.4) ─────────────────
+    def reload_weights(self) -> None:
+        """(Re)load measured weights + regime fit and renormalize.
+
+        Merging a 5-agent measured set (Σ=1.0) over the 7-agent defaults
+        left Σ=1.2 — a ~17% systematic dilution of every net score.
+        Hot-reloadable so the weekly validation harness takes effect
+        within one brain tick instead of requiring a restart."""
+        mw, mfit = _measured_weights()
+        merged = {**_DEFAULT_WEIGHTS, **mw}
+        tot = sum(merged.values()) or 1.0
+        self.base_weights = {k: v / tot for k, v in merged.items()}
+        self.measured_fit = mfit
+        with self._lock:
+            self._acc_cache = (0.0, {})
+        if any(a != d for a, d in zip(sorted(self.base_weights),
+                                      sorted(_DEFAULT_WEIGHTS))):
+            log.info(f"orchestrator weights: "
+                     f"{ {k: round(v, 3) for k, v in self.base_weights.items()} }")
+
+    # ── accuracy → weight multiplier (bounded 0.7..1.3, evidence-scaled) ──
     def _accuracy_multipliers(self, ttl: float = 1800.0) -> dict[str, float]:
         now = time.time()
         with self._lock:
@@ -102,8 +140,16 @@ class Orchestrator:
             rows = self.journal.agent_accuracy(since_hours=336)
             fresh = {}
             for r in rows:
-                if r["n"] >= 8 and r["accuracy"] is not None:
-                    fresh[r["agent"]] = max(0.6, min(1.4, 2.0 * r["accuracy"]))
+                n, acc = int(r["n"] or 0), r["accuracy"]
+                if n >= 5 and acc is not None:
+                    # deviation from 1.0 scaled by how much we trust the
+                    # estimate: n=5 → ±29% weight, n=60 → ±75%, n→∞ → full.
+                    # Small clusters can no longer pin an agent to the floor
+                    # (the old 2·acc clamp crushed everyone to 0.6 on the
+                    # first 54-outcome cluster and never recovered).
+                    conf = n / (n + 20.0)
+                    mult = 1.0 + (2.0 * float(acc) - 1.0) * conf
+                    fresh[r["agent"]] = round(max(0.7, min(1.3, mult)), 2)
         except Exception:
             fresh = {}
         with self._lock:
@@ -182,16 +228,7 @@ class Orchestrator:
             den += STRATEGY_VOTE_WEIGHT
         net = num / den if den > 0 else 0.0
 
-        # dynamic threshold via directional agreement
-        directional = [v for v in votes if abs(v.conviction) > 0.05] + \
-                      [None] * len(sigs)
-        if len(directional) >= 2:
-            agree = sum(
-                1 for v in directional
-                if (v.conviction if v else net) * (1 if net >= 0 else -1) > 0)
-            frac = agree / len(directional)
-        else:
-            frac = 0.5
+        frac = agreement_fraction(votes, sigs, net)
         threshold = self.base_threshold * (1.45 - 0.55 * frac)   # 0.18..0.32
 
         if news.get("active"):
@@ -214,6 +251,13 @@ class Orchestrator:
             action = Action.SELL
         else:
             action = Action.HOLD
+
+        # NaN from indicator edge cases must never reach SQLite (it becomes
+        # NULL → NOT NULL violation → crash-loop → duplicate entries)
+        def _clean(x: float, default: float = 0.0) -> float:
+            x = float(x)
+            return default if (x != x or x in (float("inf"), float("-inf"))) \
+                else round(x, 6)
 
         # ── signal cooldown: one decision per setup, not per minute ─────
         # A persisting condition would re-fire identical signals every
@@ -239,13 +283,6 @@ class Orchestrator:
                                     "action": action.value})
             except Exception as e:
                 log.debug(f"cooldown check failed: {e}")
-
-        # NaN from indicator edge cases must never reach SQLite (it becomes
-        # NULL → NOT NULL violation → crash-loop → duplicate entries)
-        def _clean(x: float, default: float = 0.0) -> float:
-            x = float(x)
-            return default if (x != x or x in (float("inf"), float("-inf"))) \
-                else round(x, 6)
 
         net = _clean(net)
         threshold = max(_clean(threshold, 0.24), 0.05)
@@ -281,3 +318,28 @@ class Orchestrator:
             self.journal.schedule_outcome(
                 decision.id, decision.cycle_id, decision.symbol,
                 decision.ts, decision.action.value, snap.price)
+        else:
+            self._maybe_shadow_outcome(decision, snap)
+
+    def _maybe_shadow_outcome(self, decision: Decision, snap) -> None:
+        """Near-threshold HOLDs are the cheapest training data: the vote
+        stack leaned a direction and the 4h move grades every agent's vote
+        against its own direction. Sampled (probabilistic + per-symbol
+        cooldown) so persistent lean conditions can't flood the journal —
+        this is what finally feeds calibration's 60-sample gate."""
+        import random
+        lo = 0.6 * decision.threshold
+        if abs(decision.score) < lo:
+            return
+        now = time.time()
+        last = self._shadow_last.get(decision.symbol, 0.0)
+        if now - last < 5400:                     # ≥90 min per symbol
+            return
+        if random.random() > self.shadow_sample_rate:
+            return
+        self._shadow_last[decision.symbol] = now
+        self.journal.schedule_outcome(
+            decision.id, decision.cycle_id, decision.symbol,
+            decision.ts,
+            "BUY" if decision.score > 0 else "SELL",   # the lean's side
+            snap.price)

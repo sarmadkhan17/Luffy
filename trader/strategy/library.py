@@ -8,11 +8,12 @@ Every seed starts in PAPER probation; promotion is earned, not granted.
 """
 from __future__ import annotations
 
+import math
 import logging
 
 from dataclasses import replace
 
-from ..agents.indicators import adx, anchored_vwap, ema, rsi, zscore
+from ..agents.indicators import adx, anchored_vwap, ema, rsi, zscore, atr
 from ..core.types import Action, Snapshot, StrategySignal
 from .genome import Genome, spawn_seed
 
@@ -259,6 +260,33 @@ EVALUATORS = {
     "ma_cross": eval_ma_cross,
     "bb_fade": eval_bb_fade,
 }
+
+_ALLOWED_BUILTINS = [
+    "abs", "len", "min", "max", "range", "int", "float", "str", "bool",
+    "round", "zip", "enumerate", "isinstance", "list", "dict", "tuple",
+    "any", "all", "sum", "sorted", "reversed", "print",
+]
+
+# Restricted namespace for LLM-generated evaluator code.
+# Provides indicators + types; blocks os/sys/network/file access.
+SAFE_NS: dict = {
+    "__builtins__": {k: __builtins__[k] for k in _ALLOWED_BUILTINS
+                     if k in __builtins__},
+    "math": math,
+    "Action": Action,
+    "StrategySignal": StrategySignal,
+    "ema": ema,
+    "rsi": rsi,
+    "adx": adx,
+    "atr": atr,
+    "anchored_vwap": anchored_vwap,
+    "zscore": zscore,
+}
+
+
+def register_evaluator(family: str, fn) -> None:
+    """Register a runtime-invented evaluator into the dispatch table."""
+    EVALUATORS[family] = fn
 
 
 def evaluate(genome: Genome, snap: Snapshot) -> StrategySignal | None:

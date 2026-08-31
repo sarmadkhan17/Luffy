@@ -1,8 +1,9 @@
 ---
 type: strategy
-state: active
+state: demoted
 family: rsi_extreme
 origin: analyst
+author: Strategist
 ---
 # RSI Exhaustion Reclaim
 
@@ -16,11 +17,10 @@ origin: analyst
 ```
 
 ## Live record
-- closed trades: 1 · wins: 0
-- realized P&L: -72.52 USDT
-- state: **active**
-- note: Reinstated 2026-08-29. The single loss (2026-08-28T14:31) was during
-  the Kevin Warsh/Fed press conference macro shock — an exogenous event, not
-  strategy failure. MacroGuard now prevents entries during such windows.
+- closed trades: 2 · wins: 0
+- realized P&L: -124.17 USDT
+- state: **demoted**
 
-Related: [[Regime Playbook]], [[MOC]], [[20260828-1431 Macro Cluster Autopsy]]
+Related: [[Statistical Mean Reversion]], [[Regime Playbook]], [[MOC]]
+
+Filed by [[Strategist]]

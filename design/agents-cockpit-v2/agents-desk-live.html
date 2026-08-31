@@ -1,0 +1,534 @@
+<title>Luffy Agents Desk</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Chivo:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+  :root{
+    --bg:#06070a; --bg2:#080a0f; --glass:rgba(12,15,22,.72); --glass2:rgba(16,20,30,.66);
+    --line:#1b2230; --line2:#28313f; --hair:rgba(255,255,255,.05);
+    --txt:#e8ecf3; --dim:#8a94a6; --dimmer:#4f5869;
+    --brain:#9b7bff; --analyst:#22d3c5; --exec:#00d1a0; --strategy:#4da3ff;
+    --research:#c678dd; --insight:#ffb224; --risk:#ff5c74;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --sans:'Chivo','Inter',-apple-system,Segoe UI,sans-serif;
+    --spring:900ms linear(0,0.0378,0.1304,0.2523,0.3847,0.5147,0.6339,0.7376,0.8239,0.8927,0.9453,0.9835,1.0096,1.026,1.0349,1.0382,1.0377,1.0347,1.0303,1.0253,1.0202,1.0155,1.0113,1.0078,1.0049,1.0027,1.0011,0.9999,0.9992,1);
+    --spring2:550ms linear(0,0.1146,0.3313,0.5432,0.7115,0.8306,0.908,0.9548,0.981,0.9945,1.0005,1.0027,1,1.0025,1.0018,1.0012,1.0007,1);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0;background:
+      radial-gradient(120% 90% at 68% 26%, rgba(155,123,255,.10), transparent 55%),
+      radial-gradient(80% 70% at 20% 100%, rgba(0,209,160,.07), transparent 60%),
+      var(--bg);
+    color:var(--txt);font-family:var(--sans);overflow:hidden;
+    -webkit-font-smoothing:antialiased}
+  .app{position:fixed;inset:0;display:grid;
+    grid-template-columns:212px 1fr 396px;grid-template-rows:1fr 128px;
+    grid-template-areas:"rail stage panel" "rail ops panel"}
+  a{color:var(--exec)}
+
+  /* scene */
+  #stage{grid-area:stage;position:relative;overflow:hidden;min-width:0}
+  #ops{grid-area:ops;position:relative}
+  #gl{position:absolute;inset:0;display:block}
+  #labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .lab{position:absolute;transform:translate(-50%,-50%);will-change:transform,opacity;
+    transition:opacity .3s ease}
+  .lab .card{transform:translateY(30px);display:flex;flex-direction:column;align-items:center;gap:5px}
+  .lab .nm{font-weight:800;font-size:13px;letter-spacing:-.01em;white-space:nowrap;
+    text-shadow:0 2px 10px rgba(0,0,0,.9)}
+  .lab .tg{font-family:var(--mono);font-size:8px;letter-spacing:.16em;padding:2px 7px;border-radius:5px;
+    backdrop-filter:blur(4px)}
+  .lab.small .nm{font-size:10.5px;font-weight:600}
+  .lab .sat{font-family:var(--mono);font-size:9.5px;color:var(--dim);
+    background:rgba(8,10,15,.78);border:1px solid var(--line2);border-radius:6px;padding:3px 8px;
+    white-space:nowrap;margin-top:1px}
+
+  /* left rail */
+  .rail{grid-area:rail;background:linear-gradient(180deg,var(--bg2),rgba(8,10,15,.5));
+    border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;
+    z-index:6;backdrop-filter:blur(8px)}
+  .logo{display:flex;align-items:center;gap:11px;padding:2px 6px 18px}
+  .mark{width:32px;height:32px;border-radius:9px;flex:none;position:relative;
+    background:radial-gradient(circle at 34% 28%,#00e6b0,#00806a);display:grid;place-items:center;
+    font-weight:900;color:#04120e;font-size:16px;box-shadow:0 0 22px rgba(0,209,160,.35)}
+  .brand{font-weight:900;font-size:15px;letter-spacing:.04em;line-height:1}
+  .brand span{display:block;font-family:var(--mono);font-size:8.5px;color:var(--dimmer);
+    font-weight:500;letter-spacing:.2em;margin-top:4px}
+  .nsec{font-family:var(--mono);font-size:8.5px;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--dimmer);margin:16px 8px 6px}
+  .ni{display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:9px;color:var(--dim);
+    font-size:12.5px;font-weight:500;cursor:pointer;transition:background .18s,color .18s}
+  .ni:hover{background:var(--hair);color:var(--txt)}
+  .ni.on{background:linear-gradient(90deg,rgba(0,209,160,.15),transparent);color:var(--txt)}
+  .ni.on svg{color:var(--exec)}
+  .ni svg{width:15px;height:15px;flex:none}
+  .railfoot{margin-top:auto;border-top:1px solid var(--line);padding-top:12px;
+    font-family:var(--mono);font-size:9.5px;color:var(--dimmer)}
+  .railfoot b{color:var(--dim)}
+  .railfoot .pulse{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--exec);
+    margin-right:5px;box-shadow:0 0 8px var(--exec);animation:blink 2.4s infinite}
+  @keyframes blink{50%{opacity:.35}}
+
+  /* top strip over stage */
+  .topbar{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;gap:12px;
+    padding:16px 20px;background:linear-gradient(180deg,rgba(6,7,10,.85),transparent)}
+  .topbar h1{font-size:17px;font-weight:900;margin:0;letter-spacing:-.02em}
+  .topbar .sub{font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+  .grow{flex:1}
+  .stat{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;color:var(--dim);
+    background:var(--glass);border:1px solid var(--line);border-radius:9px;padding:7px 12px;
+    backdrop-filter:blur(10px)}
+  .stat b{color:var(--txt);font-weight:700}
+  .dot{width:7px;height:7px;border-radius:50%}
+  .chips{position:absolute;top:60px;left:20px;z-index:5;display:flex;gap:7px;flex-wrap:wrap;max-width:70%}
+  .chip{font-family:var(--mono);font-size:10.5px;color:var(--dim);background:var(--glass);
+    border:1px solid var(--line);border-radius:999px;padding:5px 13px;cursor:pointer;
+    backdrop-filter:blur(10px);transition:color .18s,border-color .18s,background .18s}
+  .chip:hover{color:var(--txt)}
+  .chip.on{color:#04120e;background:var(--exec);border-color:var(--exec);font-weight:700}
+
+  .legend{position:absolute;bottom:16px;left:20px;z-index:5;display:flex;gap:14px;flex-wrap:wrap;
+    align-items:center;font-family:var(--mono);font-size:10px;color:var(--dim);
+    background:var(--glass);border:1px solid var(--line);border-radius:10px;padding:9px 14px;
+    backdrop-filter:blur(10px)}
+  .legend .it{display:flex;align-items:center;gap:6px}
+  .hint{position:absolute;bottom:16px;right:20px;z-index:5;font-family:var(--mono);font-size:10px;
+    color:var(--dimmer)}
+
+  #tooltip{position:absolute;z-index:8;pointer-events:none;opacity:0;transform:translate(-50%,-140%);
+    font-family:var(--mono);font-size:10.5px;background:rgba(8,10,15,.94);border:1px solid var(--line2);
+    border-radius:8px;padding:6px 10px;white-space:nowrap;transition:opacity .16s;
+    box-shadow:0 12px 30px rgba(0,0,0,.6)}
+
+  /* right detail panel */
+  .panel{grid-area:panel;background:var(--glass2);border-left:1px solid var(--line);
+    backdrop-filter:blur(16px);display:flex;flex-direction:column;padding:20px;z-index:6;overflow:hidden}
+  .pbody{display:flex;flex-direction:column;gap:14px;min-height:0;
+    opacity:0;transform:translateX(24px);transition:opacity var(--spring2),transform var(--spring)}
+  .pbody.in{opacity:1;transform:none}
+  .ph{display:flex;align-items:flex-start;gap:12px}
+  .pglyph{width:46px;height:46px;flex:none;border-radius:12px;display:grid;place-items:center;
+    position:relative;overflow:hidden}
+  .pnm{font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1}
+  .prole{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-top:6px;
+    display:flex;align-items:center;gap:7px}
+  .pstat{margin-left:auto;font-family:var(--mono);font-size:9.5px;font-weight:700;letter-spacing:.12em;
+    border-radius:999px;padding:4px 10px;align-self:flex-start}
+  .pdesc{font-size:12.5px;line-height:1.55;color:#c3ccd8}
+  .st3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .c{background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:11px;padding:11px}
+  .c .l{font-family:var(--mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--dimmer)}
+  .c .v{font-family:var(--mono);font-size:19px;font-weight:700;margin-top:6px;
+    font-variant-numeric:tabular-nums}
+  .block{background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:11px;padding:12px 13px}
+  .blab{font-family:var(--mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--dimmer);margin-bottom:9px;display:flex;justify-content:space-between}
+  .feed .fi{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--hair);
+    font-family:var(--mono);font-size:10.5px}
+  .feed .fi:last-child{border:0;padding-bottom:0}
+  .feed .fi:first-child{padding-top:0}
+  .feed .t{color:var(--dimmer);white-space:nowrap}
+  .rel{display:flex;gap:7px;flex-wrap:wrap}
+  .rchip{font-family:var(--mono);font-size:10px;color:var(--dim);background:rgba(255,255,255,.03);
+    border:1px solid var(--line);border-radius:8px;padding:6px 10px;cursor:pointer;transition:.18s}
+  .rchip:hover{color:var(--txt);border-color:var(--line2)}
+  .kfile{margin-top:auto;display:flex;align-items:center;justify-content:center;gap:9px;padding:12px;
+    border-radius:11px;border:1px solid rgba(0,209,160,.4);color:var(--exec);font-family:var(--mono);
+    font-size:12px;font-weight:600;background:rgba(0,209,160,.07);cursor:pointer;transition:.18s}
+  .kfile:hover{background:rgba(0,209,160,.14)}
+
+  /* bottom ops strip */
+  .ops{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+    background:var(--line);border-top:1px solid var(--line)}
+  .opcard{background:var(--bg2);padding:13px 16px;min-width:0;overflow:hidden}
+  .opcard h4{margin:0 0 9px;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--dimmer);display:flex;justify-content:space-between}
+  .row{display:flex;align-items:center;gap:9px;padding:4px 0;font-family:var(--mono);font-size:11px}
+  .row .tag{font-size:8px;letter-spacing:.1em;padding:2px 6px;border-radius:4px;margin-left:auto}
+  .row .nm{color:var(--txt)}
+  .row .sym{color:var(--txt);width:78px}
+  .row .mm{margin-left:auto;color:var(--dim);font-variant-numeric:tabular-nums}
+  .pos{color:var(--exec)} .neg{color:var(--risk)}
+
+  @media (prefers-reduced-motion: reduce){ .mark .pulse,.railfoot .pulse{animation:none} }
+</style>
+
+<div class="app">
+  <!-- LEFT RAIL -->
+  <aside class="rail">
+    <div class="logo"><div class="mark">L</div>
+      <div class="brand">LUFFY<span>QUANT TRADING OS</span></div></div>
+    <div class="nsec">command</div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Command Center</div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 13l3-3 3 2 5-6"/></svg>Markets</div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v6H4z"/><path d="M4 14h11v5H4z"/></svg>Strategies</div>
+    <div class="nsec">organization</div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a4 4 0 014 4 4 4 0 010 8 4 4 0 01-8 0 4 4 0 010-8 4 4 0 014-4z"/></svg>Brain</div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg>Risk &amp; Capital</div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7l8-4 8 4-8 4z"/><path d="M4 12l8 4 8-4"/></svg>Execution</div>
+    <div class="nsec">knowledge · system</div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="12" cy="17" r="2"/><path d="M7.7 7.2l3 8M16.6 9.3l-3.5 6"/></svg>Knowledge Graph</div>
+    <div class="ni on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="3"/><path d="M6 21a6 6 0 0112 0"/><circle cx="5" cy="10" r="1.4"/><circle cx="19" cy="10" r="1.4"/></svg>Agents</div>
+    <div class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>Activity</div>
+    <div class="railfoot"><span class="pulse"></span><b>LUFFY OS</b> v2.4.1<br>kernel running · brain awake</div>
+  </aside>
+
+  <!-- STAGE -->
+  <section id="stage">
+    <canvas id="gl"></canvas>
+    <div id="labels"></div>
+    <div id="tooltip"></div>
+
+    <div class="topbar">
+      <h1>Agents</h1><span class="sub">the desk · 1 manager + 13</span>
+      <div class="grow"></div>
+      <div class="stat"><span class="dot" style="background:var(--exec)"></span>team healthy</div>
+      <div class="stat">votes today <b>1,284</b></div>
+      <div class="stat">regime <b style="color:var(--exec)">TRENDING ↑</b></div>
+    </div>
+    <div class="chips">
+      <span class="chip on" data-f="all">All</span>
+      <span class="chip" data-f="BRAIN">Manager</span>
+      <span class="chip" data-f="ANALYST">Analysts</span>
+      <span class="chip" data-f="RESEARCH">Research</span>
+      <span class="chip" data-f="RISK">Risk</span>
+      <span class="chip" data-f="EXECUTION">Execution</span>
+      <span class="chip" data-f="KNOWLEDGE">Knowledge</span>
+    </div>
+
+    <div class="legend">
+      <span class="it"><span class="dot" style="background:var(--brain)"></span>Manager</span>
+      <span class="it"><span class="dot" style="background:var(--analyst)"></span>Analyst</span>
+      <span class="it"><span class="dot" style="background:var(--research)"></span>Research</span>
+      <span class="it"><span class="dot" style="background:var(--strategy)"></span>Strategy</span>
+      <span class="it"><span class="dot" style="background:var(--risk)"></span>Risk</span>
+      <span class="it"><span class="dot" style="background:var(--exec)"></span>Execution</span>
+    </div>
+    <div class="hint">drag to orbit · scroll to zoom · click a node</div>
+  </section>
+
+  <!-- BOTTOM OPS -->
+  <div id="ops"><div class="ops">
+    <div class="opcard">
+      <h4>Recent brain decisions <span>live</span></h4>
+      <div class="row"><span class="t" style="color:var(--dimmer)">14:28</span><span class="nm">Reduced exposure → 42%</span><span class="tag" style="background:rgba(255,92,116,.16);color:var(--risk)">RISK</span></div>
+      <div class="row"><span class="t" style="color:var(--dimmer)">14:15</span><span class="nm">Approved Mean-Rev research</span><span class="tag" style="background:rgba(198,120,221,.16);color:var(--research)">RESEARCH</span></div>
+      <div class="row"><span class="t" style="color:var(--dimmer)">13:52</span><span class="nm">Demoted Volatility Scalper</span><span class="tag" style="background:rgba(77,163,255,.16);color:var(--strategy)">STRATEGY</span></div>
+    </div>
+    <div class="opcard">
+      <h4>Active alerts <span style="color:var(--risk)">3</span></h4>
+      <div class="row"><span style="color:var(--risk)">●</span><span class="nm">High correlation risk</span><span class="tag" style="background:rgba(255,178,36,.16);color:var(--insight)">MED</span></div>
+      <div class="row"><span style="color:var(--risk)">●</span><span class="nm">FOMC speech in 17m</span><span class="tag" style="background:rgba(255,92,116,.16);color:var(--risk)">HIGH</span></div>
+      <div class="row"><span style="color:var(--insight)">●</span><span class="nm">Momentum DD 6.2%</span><span class="tag" style="background:rgba(255,178,36,.16);color:var(--insight)">MED</span></div>
+    </div>
+    <div class="opcard">
+      <h4>Live positions <span>3</span></h4>
+      <div class="row"><span class="sym">BTC/USDT</span><span style="color:var(--exec)">LONG</span><span class="mm pos">+1.02%</span></div>
+      <div class="row"><span class="sym">ETH/USDT</span><span style="color:var(--exec)">LONG</span><span class="mm pos">+2.27%</span></div>
+      <div class="row"><span class="sym">SUI/USDT</span><span style="color:var(--exec)">LONG</span><span class="mm pos">+7.92%</span></div>
+    </div>
+  </div></div>
+
+  <!-- RIGHT PANEL -->
+  <aside class="panel"><div class="pbody" id="pbody"></div></aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const C = { BRAIN:0x9b7bff, ANALYST:0x22d3c5, EXECUTION:0x00d1a0, STRATEGY:0x4da3ff,
+            RESEARCH:0xc678dd, INSIGHT:0xffb224, RISK:0xff5c74, KNOWLEDGE:0x22d3c5 };
+const HEX = c => '#'+c.toString(16).padStart(6,'0');
+
+// ── data: the desk ──────────────────────────────────────────────
+const N = [
+  { id:'manager', name:'Manager', tag:'BRAIN', cat:'BRAIN', color:C.BRAIN, size:1.0,
+    role:'Manager · the core', status:'ACTIVE', statusColor:C.EXECUTION,
+    desc:'Coordinates the desk, makes the final call, and keeps the books. Every vote and verdict routes through here.',
+    stats:[['Equity','$5,141'],['Control','ACTIVE'],['Cycle','3s']],
+    feed:[['14:28','portfolio review · promote ×1'],['14:02','cycle closed · 7 votes'],['13:31','equity mark $5,141']],
+    rel:['Portfolio review','Doctrine','Daily log'], file:'Manager.md' },
+
+  { id:'trader', name:'Trader', tag:'EXECUTION', cat:'EXECUTION', color:C.EXECUTION, size:.66,
+    role:'Execution · reports to Manager', status:'ACTIVE', statusColor:C.EXECUTION,
+    desc:'Executes entries and manages exits — trailing stops and time closes — for every strategy the desk runs.',
+    stats:[['Open','3'],['Exposure','2.6×'],['Day P&L','+1.9%']],
+    feed:[['12:04','opened SUI/USDT · long'],['11:37','trail moved · ETH +0.6%'],['10:52','closed BTC · +0.89']],
+    rel:["Trader's trades",'Risk limits','Exit engine'], file:'Trader.md' },
+
+  { id:'strategist', name:'Strategist', tag:'STRATEGY', cat:'STRATEGY', color:C.STRATEGY, size:.6,
+    role:'Strategy · reports to Manager', status:'ACTIVE', statusColor:C.EXECUTION,
+    desc:'Reviews the strategy book each cycle — promoting, demoting and retiring — deciding which strategies deserve capital.',
+    stats:[['Reviews','27'],['Active','6'],['Promoted','2']],
+    feed:[['13:52','demoted Volatility Scalper'],['13:10','review complete · 6 kept'],['11:44','promoted Mean-Rev v3']],
+    rel:['Strategy book','Promotions','Backtests'], file:'Strategist.md' },
+
+  { id:'researcher', name:'Researcher', tag:'RESEARCH', cat:'RESEARCH', color:C.RESEARCH, size:.6,
+    role:'Research · reports to Manager', status:'IDLE', statusColor:C.STRATEGY,
+    desc:'Sources new strategy ideas from ideas feeds, papers and forums, then hands candidates to the gauntlet.',
+    stats:[['Ideas 24h','16'],['Accepted','2'],['Sources','21']],
+    feed:[['12:40','harvest cycle · 12 ideas'],['12:39','accepted breakout-retest'],['08:20','crawl · 25 pages']],
+    rel:['Idea feed','Gauntlet','Sources'], file:'Researcher.md' },
+
+  { id:'theorist', name:'Theorist', tag:'RESEARCH', cat:'RESEARCH', color:C.INSIGHT, size:.58,
+    role:'Research · reports to Manager', status:'STALE', statusColor:0x6d7a8c,
+    desc:'Autopsies losing clusters and edge decay, distilling findings into the doctrine that governs every decision.',
+    stats:[['Autopsies','0'],['Beliefs','5'],['Last run','6h']],
+    feed:[['08:15','doctrine v4 · no change'],['02:33','autopsy · macro cluster'],['—','edge decay watch']],
+    rel:['Doctrine','Postmortems','Edge decay'], file:'Theorist.md' },
+
+  { id:'risk', name:'Risk Officer', tag:'RISK · ALERT', cat:'RISK', color:C.RISK, size:.7,
+    role:'Risk · reports to Manager', status:'ALERT', statusColor:C.RISK,
+    desc:'Sizing, heat cap, the daily breaker and macro/news event freezes. A hard gate — the only role that can veto.',
+    stats:[['Heat','24.9%'],['Breaker','armed'],['Guard','FOMC 17m']],
+    feed:[['14:28','exposure cut → 42%'],['14:11','news guard armed'],['13:59','heat 24.9% / 70%']],
+    rel:['Risk limits','Event calendar','Breaker log'], file:'Risk Officer.md' },
+
+  { id:'librarian', name:'Librarian', tag:'KNOWLEDGE', cat:'KNOWLEDGE', color:C.ANALYST, size:.58,
+    role:'Knowledge · reports to Manager', status:'IDLE', statusColor:C.STRATEGY,
+    desc:'Keeps the knowledge vault and the map of content current — every decision the desk makes is filed and linked here.',
+    stats:[['Notes','56'],['Links','214'],['Updated','12m']],
+    feed:[['13:31','refreshed 56 notes'],['13:31','MOC rebuilt'],['09:02','2 postmortems filed']],
+    rel:['Knowledge graph','MOC','Doctrine'], file:'Librarian.md' },
+];
+// analysts
+const ANALYSTS = [
+  ['Structure',15,'ACTIVE'],['Momentum',27,'ACTIVE'],['Flow',29,'ACTIVE'],['Value',75,'IDLE'],
+  ['Rotation',20,'STALE'],['Positioning',33,'ACTIVE'],['Depth',38,'ACTIVE'] ];
+ANALYSTS.forEach((a,i)=>{
+  const st = a[2], sc = st==='ACTIVE'?C.EXECUTION:st==='IDLE'?C.STRATEGY:0x6d7a8c;
+  N.push({ id:'an'+i, name:a[0]+' Analyst', short:a[0], tag:'ANALYST', cat:'ANALYST',
+    color:C.ANALYST, size:.34, analyst:true,
+    role:'Analyst · reports to Manager', status:st, statusColor:sc,
+    desc:`Measures the ${a[0].toLowerCase()} mechanism and casts a directional vote every scan. Accuracy is scored against the 4h-forward return.`,
+    stats:[['Accuracy',a[1]+'%'],['Samples',(20+i*7)+''],['Votes 24h',(40+i*6)+'']],
+    feed:[['12:04','vote · '+(i%2?'LONG':'FLAT')],['11:49','vote · FLAT conv +0.00'],['11:34','outcome 4h · scored']],
+    rel:['Agent ledger','Calibration','Votes'], file:a[0]+' Analyst.md' });
+});
+
+// ── positions in 3D ─────────────────────────────────────────────
+N[0].pos = new THREE.Vector3(0,0,0);
+const EMP = N.slice(1,7);
+EMP.forEach((n,i)=>{ const a=i/EMP.length*Math.PI*2 - Math.PI/2;
+  n.pos = new THREE.Vector3(Math.cos(a)*6.2, Math.sin(a)*2.2, Math.sin(a)*5.4); });
+const AN = N.filter(n=>n.analyst);
+AN.forEach((n,i)=>{ const a=i/AN.length*Math.PI*2;
+  n.pos = new THREE.Vector3(Math.cos(a)*10.5, -3.2 + Math.sin(a*2)*1.1, Math.sin(a)*9.2); });
+
+// ── three.js scene ──────────────────────────────────────────────
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setClearColor(0x000000,0);
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x06070a, 0.028);
+const camera = new THREE.PerspectiveCamera(48,1,0.1,200);
+
+// glow sprite texture
+function glowTex(){
+  const s=128,cv=document.createElement('canvas');cv.width=cv.height=s;
+  const x=cv.getContext('2d'),g=x.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
+  g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.25,'rgba(255,255,255,.55)');
+  g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,s,s);
+  return new THREE.CanvasTexture(cv);
+}
+const GT = glowTex();
+
+const nodeObjs=[], pickMeshes=[];
+N.forEach(n=>{
+  const grp=new THREE.Group(); grp.position.copy(n.pos);
+  // soft aura
+  const aura=new THREE.Sprite(new THREE.SpriteMaterial({map:GT,color:n.color,
+    transparent:true,opacity:.55,blending:THREE.AdditiveBlending,depthWrite:false}));
+  aura.scale.setScalar(n.size*4.2); grp.add(aura);
+  // core
+  const core=new THREE.Mesh(new THREE.SphereGeometry(n.size*.62,24,24),
+    new THREE.MeshBasicMaterial({color:n.color}));
+  grp.add(core);
+  // rim
+  const rim=new THREE.Mesh(new THREE.IcosahedronGeometry(n.size*.95, n.id==='manager'?1:0),
+    new THREE.MeshBasicMaterial({color:n.color,wireframe:true,transparent:true,opacity:.35}));
+  grp.add(rim);
+  core.userData.node=n; pickMeshes.push(core);
+  scene.add(grp);
+  n._o={grp,aura,core,rim,base:n.size,glow:.55,tScale:1,cScale:1};
+  nodeObjs.push(n);
+});
+
+// edges + particles
+const EDGES=[]; const PARTS=[];
+function addEdge(a,b,color,lift){
+  const mid=a.clone().add(b).multiplyScalar(.5); mid.y+=lift;
+  const curve=new THREE.QuadraticBezierCurve3(a,mid,b);
+  const pts=curve.getPoints(24);
+  const geo=new THREE.BufferGeometry().setFromPoints(pts);
+  const line=new THREE.Line(geo,new THREE.LineBasicMaterial({color,transparent:true,opacity:.22}));
+  scene.add(line); EDGES.push(line);
+  const np = color===C.ANALYST?1:2;
+  for(let i=0;i<np;i++){
+    const p=new THREE.Sprite(new THREE.SpriteMaterial({map:GT,color,transparent:true,
+      opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));
+    p.scale.setScalar(.5); scene.add(p);
+    PARTS.push({p,curve,t:Math.random(),sp:.0016+Math.random()*.0016});
+  }
+}
+EMP.forEach(n=>addEdge(N[0].pos,n.pos,N[0].color,1.4));
+AN.forEach(n=>addEdge(N[0].pos,n.pos,C.ANALYST,-1.2));
+
+// starfield
+(function stars(){
+  const g=new THREE.BufferGeometry(),n=340,arr=[];
+  for(let i=0;i<n;i++){const r=26+Math.random()*40,th=Math.random()*6.28,ph=Math.acos(2*Math.random()-1);
+    arr.push(r*Math.sin(ph)*Math.cos(th),r*Math.cos(ph)*.6,r*Math.sin(ph)*Math.sin(th));}
+  g.setAttribute('position',new THREE.Float32BufferAttribute(arr,3));
+  scene.add(new THREE.Points(g,new THREE.PointsMaterial({color:0x5566aa,size:.13,
+    transparent:true,opacity:.5,sizeAttenuation:true})));
+})();
+
+// ── camera orbit control ────────────────────────────────────────
+let theta=0.7, phi=1.16, radius=22, dragging=false, px=0,py=0, autoT=0.7;
+const target=new THREE.Vector3(0,0,0), desired=new THREE.Vector3(0,0,0);
+let curRadius=22, desRadius=22;
+function applyCam(){
+  const st=Math.max(.15,Math.min(Math.PI-.15,phi));
+  camera.position.set(
+    target.x+curRadius*Math.sin(st)*Math.cos(theta),
+    target.y+curRadius*Math.cos(st),
+    target.z+curRadius*Math.sin(st)*Math.sin(theta));
+  camera.lookAt(target);
+}
+canvas.addEventListener('pointerdown',e=>{dragging=true;px=e.clientX;py=e.clientY;canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointerup',e=>{dragging=false;});
+canvas.addEventListener('pointermove',e=>{
+  const r=canvas.getBoundingClientRect();
+  mouse.x=((e.clientX-r.left)/r.width)*2-1; mouse.y=-((e.clientY-r.top)/r.height)*2+1;
+  mx=e.clientX-r.left; my=e.clientY-r.top;
+  if(dragging){theta-=(e.clientX-px)*.006; phi-=(e.clientY-py)*.006; px=e.clientX;py=e.clientY;}
+});
+canvas.addEventListener('wheel',e=>{e.preventDefault();desRadius=Math.max(11,Math.min(38,desRadius+e.deltaY*.014));},{passive:false});
+
+// ── picking / hover ─────────────────────────────────────────────
+const ray=new THREE.Raycaster(), mouse=new THREE.Vector2(-2,-2); let mx=0,my=0;
+let hovered=null, focused=null;
+const tooltip=document.getElementById('tooltip');
+function pick(){
+  ray.setFromCamera(mouse,camera);
+  const hit=ray.intersectObjects(pickMeshes,false)[0];
+  const n=hit?hit.object.userData.node:null;
+  if(n!==hovered){
+    hovered=n; canvas.style.cursor=n?'pointer':'grab';
+    if(n){ tooltip.style.opacity='1'; tooltip.innerHTML=
+      `<b style="color:${HEX(n.color)}">${n.name}</b> · ${n.status.toLowerCase()} · ${n.stats[0][1]} ${n.stats[0][0].toLowerCase()}`;
+    } else tooltip.style.opacity='0';
+  }
+  if(n){ tooltip.style.left=mx+'px'; tooltip.style.top=my+'px'; }
+}
+canvas.addEventListener('click',()=>{ if(hovered) selectNode(hovered); });
+
+// ── labels ──────────────────────────────────────────────────────
+const labelLayer=document.getElementById('labels'), labels={};
+N.forEach(n=>{
+  const d=document.createElement('div'); d.className='lab'+(n.analyst?' small':'');
+  const showSat = !n.analyst;
+  d.innerHTML=`<div class="card"><div class="nm">${n.analyst?n.short:n.name}</div>`+
+    (n.analyst?'':`<div class="tg" style="color:${HEX(n.color)};background:${HEX(n.color)}22">${n.tag}</div>`)+
+    (showSat?`<div class="sat">${n.stats[0][0].toLowerCase()} ${n.stats[0][1]}</div>`:'')+`</div>`;
+  labelLayer.appendChild(d); labels[n.id]=d;
+});
+
+// ── right panel ─────────────────────────────────────────────────
+const pbody=document.getElementById('pbody');
+function selectNode(n){
+  focused=n; desired.copy(n.pos); desRadius=n.id==='manager'?22:15;
+  pbody.classList.remove('in');
+  const glyphBg=`radial-gradient(circle at 35% 30%, ${HEX(n.color)}, ${HEX(n.color)}22)`;
+  pbody.innerHTML=`
+    <div class="ph">
+      <div class="pglyph" style="background:${HEX(n.color)}1a;border:1px solid ${HEX(n.color)}55">
+        <div style="width:16px;height:16px;border-radius:5px;background:${glyphBg};box-shadow:0 0 14px ${HEX(n.color)}"></div>
+      </div>
+      <div><div class="pnm">${n.name}</div>
+        <div class="prole"><span class="dot" style="background:${HEX(n.statusColor)}"></span>${n.role}</div></div>
+      <div class="pstat" style="color:${HEX(n.statusColor)};border:1px solid ${HEX(n.statusColor)}66">${n.status}</div>
+    </div>
+    <div class="pdesc">${n.desc}</div>
+    <div class="st3">${n.stats.map(s=>`<div class="c"><div class="l">${s[0]}</div><div class="v">${s[1]}</div></div>`).join('')}</div>
+    <div class="block"><div class="blab"><span>Signal · 24h</span><span style="color:${HEX(n.color)}">live</span></div>
+      <svg width="100%" height="42" viewBox="0 0 320 42" preserveAspectRatio="none">
+        <polyline points="${spark()}" fill="none" stroke="${HEX(n.color)}" stroke-width="1.6"/>
+        <polyline points="${spark.last} 320,42 0,42" fill="${HEX(n.color)}" fill-opacity=".08" stroke="none"/></svg></div>
+    <div class="block feed"><div class="blab"><span>Recent activity</span></div>
+      ${n.feed.map(f=>`<div class="fi"><span class="t">${f[0]}</span><span>${f[1]}</span></div>`).join('')}</div>
+    <div class="rel">${n.rel.map(r=>`<span class="rchip">${r}</span>`).join('')}</div>
+    <div class="kfile">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>
+      open knowledge file · ${n.file}</div>`;
+  requestAnimationFrame(()=>pbody.classList.add('in'));
+}
+function spark(){ let p=[],y=28; for(let i=0;i<=16;i++){y+=(Math.random()-.5)*12;y=Math.max(6,Math.min(38,y));p.push(`${i/16*320|0},${y|0}`);} spark.last=p[p.length-1]; return p.join(' '); }
+
+// ── loop ────────────────────────────────────────────────────────
+function resize(){
+  const r=document.getElementById('stage').getBoundingClientRect();
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(r.width,r.height,false);
+  camera.aspect=r.width/r.height; camera.updateProjectionMatrix();
+}
+addEventListener('resize',resize); resize();
+
+let filter='all';
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+  c.classList.add('on'); filter=c.dataset.f;
+}));
+
+const v=new THREE.Vector3();
+function project(p){ v.copy(p).project(camera);
+  const r=canvas.getBoundingClientRect();
+  return {x:(v.x*.5+.5)*r.width, y:(-v.y*.5+.5)*r.height, z:v.z}; }
+
+let tprev=0;
+function tick(t){
+  const dt=Math.min(0.05,(t-tprev)/1000||0); tprev=t;
+  if(!dragging && !REDUCE) theta+=0.0012;
+  curRadius+=(desRadius-curRadius)*.08;
+  target.lerp(desired,.06);
+  applyCam(); pick();
+
+  // node anim
+  N.forEach(n=>{
+    const o=n._o, active=n.status==='ACTIVE';
+    const hv=(n===hovered||n===focused);
+    const pulse=active&&!REDUCE?(1+Math.sin(t*.004+n.pos.x)*.08):1;
+    o.tScale += ((hv?1.45:1)-o.tScale)*.15;
+    o.core.scale.setScalar(o.tScale*pulse);
+    o.aura.material.opacity += ((hv?.9:.5)*(active?1:.62)-o.aura.material.opacity)*.15;
+    o.aura.scale.setScalar(n.size*4.2*o.tScale);
+    o.rim.rotation.y+=dt*(n.id==='manager'?.5:.2); o.rim.rotation.x+=dt*.12;
+    // filter dim
+    const on = filter==='all'||n.cat===filter||(filter==='BRAIN'&&n.id==='manager');
+    o.grp.visible=true;
+    o.core.material.opacity=1;
+    const dim = on?1:.12;
+    o.aura.material.opacity*=dim; o.rim.material.opacity=(on?.35:.05);
+  });
+  // particles
+  PARTS.forEach(pt=>{ if(!REDUCE)pt.t=(pt.t+pt.sp)%1; const q=pt.curve.getPointAt(pt.t); pt.p.position.copy(q); });
+
+  // labels
+  N.forEach(n=>{
+    const s=project(n.pos), L=labels[n.id];
+    const on = filter==='all'||n.cat===filter||(filter==='BRAIN'&&n.id==='manager');
+    const showAnalyst = !n.analyst || n===hovered || n===focused;
+    if(s.z<1 && on && showAnalyst){ L.style.opacity=n.analyst?(n===hovered||n===focused?'1':'0'):'.96';
+      L.style.transform=`translate(${s.x}px,${s.y}px) translate(-50%,-50%)`;
+      L.querySelector('.card').style.transform=`translateY(${n.size*22+18}px)`;
+    } else L.style.opacity='0';
+  });
+
+  renderer.render(scene,camera);
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+// open on Manager
+selectNode(N[0]); desired.set(0,0,0); desRadius=22;
+</script>

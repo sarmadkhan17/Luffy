@@ -126,6 +126,8 @@ class Decision:
     skip_reason: str = ""
     size_usdt: float = 0.0
     ts: str = field(default_factory=lambda: now_utc().isoformat())
+    meta_p: float = 0.0         # meta-label P(win) — 0 = not judged
+    meta_size: float = 1.0      # meta sizing multiplier (shrink-only ≤1)
 
 
 @dataclass

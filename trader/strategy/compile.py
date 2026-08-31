@@ -87,6 +87,18 @@ class CompiledStrategy:
                 params={"spec_id": self.spec.id})
         return _evaluate
 
+    # ── tradingview path ─────────────────────────────────────────────────
+    def to_pine(self, fee_pct: float = 0.05) -> tuple[str, bool, list]:
+        """(pine_source, tv_testable, reasons).
+
+        Honest degradation: a spec whose features have no Pine analogue
+        (funding, open interest, flow) returns tv_testable=False with the
+        reason, rather than a substituted proxy. Substituting a proxy is what
+        made FAMILY_TV score every candidate of a family identically.
+        """
+        from .pine_spec import to_pine as _to_pine
+        return _to_pine(self.spec, fee_pct=fee_pct)
+
     # ── librarian path ───────────────────────────────────────────────────
     def to_markdown(self) -> str:
         s = self.spec

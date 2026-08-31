@@ -38,6 +38,9 @@ class Employee:
     status_source: str = "none"
     #: brain_event kinds this employee emits (used when status_source == "events")
     events: list[str] = field(default_factory=list)
+    #: command-deck filter group (drives the filter chips), metadata-only. One of:
+    #: BRAIN | ANALYST | RESEARCH | RISK | EXECUTION | KNOWLEDGE
+    category: str = ""
 
 
 @dataclass
@@ -70,6 +73,7 @@ class Org:
             agent_key=d.get("agent_key"),
             status_source=d.get("status_source", "none"),
             events=list(d.get("events") or []),
+            category=d.get("category", ""),
         )
 
     @staticmethod
@@ -102,6 +106,7 @@ class Org:
                 desc=f"Measures the {key} mechanism and casts a vote.",
                 agent_key=key,
                 status_source="analyst",
+                category="ANALYST",
             ))
         out.sort(key=lambda e: e.name)
         return out

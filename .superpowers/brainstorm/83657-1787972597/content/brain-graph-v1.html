@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OS · Brain — living graph (Motion)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#08090c;--panel:#101319;--line:#1c222e;--line2:#262e3d;--txt:#e6eaf0;--dim:#8b95a6;--dimmer:#525d6e;
+    --green:#00d1a0;--amber:#ffb224;--red:#ff5c74;--cyan:#4fe6ff;--mono:'JetBrains Mono',ui-monospace,monospace;--sans:'Inter',system-ui,sans-serif}
+  *{box-sizing:border-box}
+  body{margin:0;background:#0a0c11;color:var(--txt);font-family:var(--sans);padding:20px;max-width:1080px;margin:0 auto}
+  h2{margin:0 0 4px;font-size:20px}
+  .subtitle{color:var(--dim);font-size:13px;margin:0 0 16px}
+  #diag{display:none;font-family:var(--mono);font-size:12px;background:#3d1420;color:#ff9db0;border:1px solid var(--red);border-radius:10px;padding:10px 14px;margin-bottom:12px}
+  .wrap{display:grid;grid-template-columns:1fr 300px;gap:14px}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+  .card{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:radial-gradient(130% 100% at 50% 0%,#0d1220,#07090d 62%)}
+  .hd{display:flex;justify-content:space-between;align-items:center;padding:11px 15px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;color:#5b6b82}
+  .hd b{color:var(--cyan);font-weight:700}
+  svg{display:block;width:100%;height:auto}
+  .ft{display:flex;gap:16px;padding:9px 15px;border-top:1px solid var(--line);font-size:11px;color:var(--dim);font-family:var(--mono);flex-wrap:wrap}
+  .ft i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+  /* svg node styling */
+  .pulse{transform-box:fill-box;transform-origin:center}
+  .body{stroke:rgba(255,255,255,.28);stroke-width:1}
+  .label{font:500 10px var(--sans);fill:rgba(214,222,235,.62);text-anchor:middle;pointer-events:none}
+  .clabel{font:800 13px var(--sans);fill:#eafcff;text-anchor:middle;pointer-events:none}
+  .edge{stroke-width:1;fill:none}
+  .node{cursor:pointer}
+  /* side log */
+  .log{padding:12px 14px;height:100%;display:flex;flex-direction:column}
+  .log h3{margin:0 0 10px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dimmer);font-weight:700}
+  .logrows{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:8px}
+  .lr{opacity:0;border-left:2px solid var(--green);background:var(--panel);border-radius:0 9px 9px 0;padding:8px 11px;font-size:12px}
+  .lr .t{font-family:var(--mono);font-size:9px;color:var(--dimmer);letter-spacing:.5px}
+  .lr .m{margin-top:2px;color:#d7deea}
+  .lr .m b{color:var(--green);font-weight:700}
+  .lr.amber{border-left-color:var(--amber)} .lr.amber .m b{color:var(--amber)}
+  .lr.red{border-left-color:var(--red)} .lr.red .m b{color:var(--red)}
+  /* tooltip */
+  #tip{position:fixed;pointer-events:none;opacity:0;transform:translateY(4px);background:#0c1017;border:1px solid var(--line2);border-radius:10px;padding:9px 12px;font-size:12px;z-index:20;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+  #tip .nm{font-weight:700;margin-bottom:4px} #tip .row{color:var(--dim);font-family:var(--mono);font-size:11px}
+</style>
+</head>
+<body>
+<h2>OS · Brain — living graph</h2>
+<p class="subtitle">Nodes breathe (colour = health), signals flow to the core, and every few seconds a strategy fires — it flashes, a pulse races to the core, the core ripples, and the decision lands in the log. Hover any node.</p>
+<div id="diag"></div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="hd"><span><b>◉ BRAIN</b> · 11 strategies · 7 analysts</span><span id="tickState">strategist idle</span></div>
+    <svg id="svg" viewBox="0 0 720 500" role="img" aria-label="Brain graph">
+      <g id="edges"></g>
+      <g id="dots"></g>
+      <g id="ripples"></g>
+      <g id="nodes"></g>
+      <g id="tags"></g>
+    </svg>
+    <div class="ft">
+      <span><i style="background:var(--green)"></i>active</span>
+      <span><i style="background:var(--amber)"></i>probation</span>
+      <span><i style="background:var(--red)"></i>demoted</span>
+      <span style="margin-left:auto;color:var(--dimmer)">particles = signals → core · flashes = live decisions</span>
+    </div>
+  </div>
+  <div class="card log">
+    <h3>Decision log</h3>
+    <div class="logrows" id="logrows"></div>
+  </div>
+</div>
+<div id="tip"></div>
+
+<script>
+function lfDiag(m){var d=document.getElementById('diag');if(d){d.style.display='block';d.textContent='⚠ '+m;}}
+window.addEventListener('error',function(e){lfDiag('JS error: '+(e.message||e.type));});
+</script>
+<script type="module">
+(async function(){
+  let M=null;
+  try{const mod=await import("https://cdn.jsdelivr.net/npm/motion@latest/+esm");
+    if(!mod.animate)throw new Error("animate undefined");M={animate:mod.animate,stagger:mod.stagger};}
+  catch(err){lfDiag("Motion failed to load from CDN -> "+err.message+" (browser can't reach jsdelivr?)");}
+
+  const SVGNS="http://www.w3.org/2000/svg";
+  const CX=360, CY=250;
+  const COL={active:'#00d1a0',prob:'#ffb224',dem:'#ff5c74',core:'#4fe6ff'};
+  const el=(t,a)=>{const n=document.createElementNS(SVGNS,t);for(const k in a)n.setAttribute(k,a[k]);return n;};
+
+  // --- data ---
+  const analysts=[['Trend','active'],['Vol','active'],['Flow','prob'],['Regime','active'],['Sentiment','active'],['Momentum','prob'],['Macro','active']];
+  const strategies=[['VWAP Fade','active',62,1.9],['EMA Trend','active',57,1.6],['BB Fade','active',54,1.4],['RSI Reclaim','prob',48,1.2],['Liq Sweep','active',60,1.8],['Mean Rev','active',55,1.5],['Breakout','dem',41,0.9],['Donchian','prob',46,1.1],['MACD X','active',53,1.4],['Range Scalp','active',58,1.7],['Carry','prob',49,1.2]];
+
+  const nodes=[]; // {x,y,c,label,state,type,stats,gEl,bodyEl,pulseEl}
+  function place(list,rx,ry,type,rBase){
+    list.forEach((s,i)=>{
+      const a=(i/list.length)*Math.PI*2 - Math.PI/2 + (type==='strat'?0.28:0);
+      nodes.push({x:CX+Math.cos(a)*rx,y:CY+Math.sin(a)*ry,c:COL[s[1]],state:s[1],label:s[0],type,
+        r:rBase,wr:s[2],pf:s[3],idx:nodes.length});
+    });
+  }
+  place(analysts,120,92,'analyst',7);
+  place(strategies,300,196,'strat',9);
+
+  // --- edges (satellite -> core) + a few cross links ---
+  const gEdges=document.getElementById('edges');
+  const edges=[];
+  nodes.forEach(n=>{const e=el('line',{x1:n.x,y1:n.y,x2:CX,y2:CY,class:'edge',stroke:n.c,'stroke-opacity':0.12});gEdges.appendChild(e);edges.push({from:n,line:e});});
+  // cross links strat<->analyst
+  const strat=nodes.filter(n=>n.type==='strat'), ana=nodes.filter(n=>n.type==='analyst');
+  for(let k=0;k<7;k++){const a=strat[(k*3)%strat.length],b=ana[k%ana.length];
+    gEdges.appendChild(el('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:'edge',stroke:'#3a4a5e','stroke-opacity':0.10}));}
+
+  // --- flowing particles (rAF, cheap) ---
+  const gDots=document.getElementById('dots');
+  const dots=[];
+  edges.forEach(e=>{const n=e.from;const count=n.type==='strat'?2:1;
+    for(let i=0;i<count;i++){const d=el('circle',{r:2.2,fill:n.c,opacity:0.85});gDots.appendChild(d);
+      dots.push({d,n,t:Math.random(),sp:0.0016+Math.random()*0.0022});}});
+  function flow(){for(let i=0;i<dots.length;i++){const p=dots[i];p.t+=p.sp;if(p.t>1)p.t-=1;
+    const x=p.n.x+(CX-p.n.x)*p.t, y=p.n.y+(CY-p.n.y)*p.t;
+    p.d.setAttribute('cx',x);p.d.setAttribute('cy',y);
+    p.d.setAttribute('opacity',(0.25+0.6*Math.sin(p.t*Math.PI)).toFixed(2));}
+    requestAnimationFrame(flow);}
+  flow();
+
+  // --- nodes (drawn last, on top) ---
+  const gNodes=document.getElementById('nodes');
+  const tip=document.getElementById('tip');
+  nodes.forEach(n=>{
+    const g=el('g',{class:'node',transform:`translate(${n.x} ${n.y})`});
+    const pulse=el('g',{class:'pulse'});
+    const glow=el('circle',{r:n.r*2.6,fill:n.c,opacity:0.16});
+    const body=el('circle',{r:n.r,fill:n.c,class:'body'});
+    pulse.appendChild(glow);pulse.appendChild(body);g.appendChild(pulse);
+    if(n.type==='strat'||n.r>8){g.appendChild(el('text',{y:n.r+13,class:'label'})).textContent=n.label;}
+    gNodes.appendChild(g);n.gEl=g;n.bodyEl=body;n.pulseEl=pulse;n.glowEl=glow;
+    // tooltip
+    g.addEventListener('mousemove',ev=>{tip.style.left=(ev.clientX+14)+'px';tip.style.top=(ev.clientY+14)+'px';
+      tip.innerHTML='<div class="nm" style="color:'+n.c+'">'+n.label+'</div>'+
+        '<div class="row">'+(n.type==='strat'?'strategy':'analyst')+' · '+n.state+'</div>'+
+        (n.type==='strat'?'<div class="row">WR '+n.wr+'% · PF '+n.pf+'</div>':'');
+      if(M)M.animate(tip,{opacity:1,y:0},{duration:.15});else tip.style.opacity=1;});
+    g.addEventListener('mouseleave',()=>{if(M)M.animate(tip,{opacity:0,y:4},{duration:.15});else tip.style.opacity=0;});
+  });
+
+  // --- core ---
+  const gCore=el('g',{transform:`translate(${CX} ${CY})`});
+  const corePulse=el('g',{class:'pulse'});
+  corePulse.appendChild(el('circle',{r:64,fill:COL.core,opacity:0.10}));
+  corePulse.appendChild(el('circle',{r:26,fill:COL.core,opacity:0.9,class:'body'}));
+  gCore.appendChild(corePulse);
+  gCore.appendChild(el('text',{y:5,class:'clabel'})).textContent='LUFFY';
+  document.getElementById('nodes').appendChild(gCore);
+
+  // --- breathing (Motion) ---
+  if(M){
+    const bodies=nodes.map(n=>n.pulseEl);
+    M.animate(bodies,{scale:[1,1.16,1]},{duration:4.2,repeat:Infinity,ease:'easeInOut',delay:M.stagger(0.12,{from:'center'})});
+    M.animate(corePulse,{scale:[1,1.07,1]},{duration:4.5,repeat:Infinity,ease:'easeInOut'});
+    M.animate(corePulse.querySelector('circle'),{opacity:[.9,1,.9]},{duration:2.4,repeat:Infinity,ease:'easeInOut'});
+  }
+
+  // --- ripple at core ---
+  const gRip=document.getElementById('ripples');
+  function coreRipple(color){
+    const c=el('circle',{cx:CX,cy:CY,r:28,fill:'none',stroke:color||COL.core,'stroke-width':1.5,opacity:0.7});
+    gRip.appendChild(c);
+    if(M)M.animate(c,{r:[28,90],opacity:[.7,0]},{duration:1.1,ease:'easeOut'}).then(()=>c.remove());
+    else setTimeout(()=>c.remove(),1100);
+  }
+
+  // --- decision log ---
+  const logrows=document.getElementById('logrows');
+  const now=()=>{const d=new Date();return d.toTimeString().slice(0,8);};
+  function log(kind,html){
+    const r=document.createElement('div');r.className='lr'+(kind==='prob'?' amber':kind==='dem'?' red':'');
+    r.innerHTML='<div class="t">'+now()+'</div><div class="m">'+html+'</div>';
+    logrows.prepend(r);
+    while(logrows.children.length>6)logrows.lastChild.remove();
+    if(M)M.animate(r,{opacity:[0,1],x:[-14,0]},{type:'spring',bounce:0.12,visualDuration:0.4});else r.style.opacity=1;
+  }
+
+  // --- FIRE event: a strategy emits a signal ---
+  const verbs={active:['long signal','entry armed','edge confirmed','add-on'],prob:['weak signal','probation check','vetoed by risk'],dem:['demotion review','flat — no edge']};
+  function fire(){
+    const n=strat[Math.floor(Math.random()*strat.length)];
+    // node flash
+    if(M){M.animate(n.pulseEl,{scale:[1,1.7,1]},{duration:.7,ease:'easeOut'});
+      M.animate(n.glowEl,{opacity:[0.16,0.5,0.16]},{duration:.7,ease:'easeOut'});}
+    // pulse travels node -> core
+    const pd=el('circle',{r:3.6,fill:n.c,cx:n.x,cy:n.y});document.getElementById('dots').appendChild(pd);
+    if(M){M.animate(0,1,{duration:.5,ease:'easeIn',onUpdate:v=>{pd.setAttribute('cx',n.x+(CX-n.x)*v);pd.setAttribute('cy',n.y+(CY-n.y)*v);pd.setAttribute('opacity',1-v*0.3);}})
+      .then(()=>{pd.remove();coreRipple(n.c);
+        if(M)M.animate(corePulse,{scale:[1,1.14,1]},{duration:.5,ease:'easeOut'});});}
+    else{pd.remove();coreRipple(n.c);}
+    // log
+    const v=verbs[n.state][Math.floor(Math.random()*verbs[n.state].length)];
+    log(n.state,'<b>'+n.label+'</b> · '+v);
+    document.getElementById('tickState').textContent='signal from '+n.label;
+  }
+
+  // --- big brain tick ---
+  function brainTick(){
+    document.getElementById('tickState').textContent='strategist tick — reviewing book';
+    coreRipple(COL.core);
+    if(M){M.animate(corePulse,{scale:[1,1.22,1]},{duration:.9,ease:'easeOut'});
+      M.animate(nodes.map(n=>n.pulseEl),{scale:[1,1.3,1]},{duration:.9,ease:'easeOut',delay:M.stagger(0.02,{from:'center'})});}
+    log('active','<b>Strategist</b> · full book reviewed, 0 changes');
+  }
+
+  // schedule
+  log('active','<b>Brain</b> · online — 11 strategies live');
+  setTimeout(()=>{ fire(); setInterval(fire, 2400); }, 900);
+  setInterval(brainTick, 11000);
+  setTimeout(brainTick, 5000);
+})();
+</script>
+</body>
+</html>

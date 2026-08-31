@@ -3,6 +3,7 @@ type: strategy
 state: demoted
 family: vwap_fade
 origin: seed
+author: Strategist
 ---
 # VWAP Extreme Fade
 
@@ -20,4 +21,8 @@ origin: seed
 - realized P&L: +0.00 USDT
 - state: **demoted**
 
-Related: [[Regime Playbook]], [[MOC]]
+Related: [[Statistical Mean Reversion]], [[Regime Playbook]], [[MOC]]
+
+Same family (`vwap_fade`): [[vwap_fade_variant_(1.9493)]]
+
+Filed by [[Strategist]]

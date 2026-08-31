@@ -39,6 +39,12 @@ inWin  = time >= tStart and time <= tEnd
 
 _EXITS_ATR = """
 // ── ATR protective exits ──
+// Multipliers come from config.yaml risk: (stop_loss_atr_mult /
+// take_profit_atr_mult) so the Pine tester sizes risk the same way the live
+// engine does. Templates used to hardcode their own (2.5/4.0, 1.5/3.0,
+// 2.5/3.5, 2.0/…), none of which matched the traded system.
+SL_ATR = {sl_atr}
+TP_ATR = {tp_atr}
 atrV = ta.atr(14)
 var float slP = na
 var float tpP = na
@@ -54,8 +60,10 @@ TEMPLATES: dict[str, dict] = {
     "ema_trend": {
         "overlay": "true",
         "body": """
-fastE = ta.ema(close, {fast_len})
-slowE = ta.ema(close, {slow_len})
+// lengths are FIXED at 20/50/200 to mirror library.eval_ema_trend exactly.
+// They are not genes: FAMILY_GENE_SPECS['ema_trend'] has no fast_len/slow_len.
+fastE = ta.ema(close, 20)
+slowE = ta.ema(close, 50)
 trendE = ta.ema(close, 200)
 [dPlus, dMinus, adxV] = ta.dmi(14, 14)
 pull = {pullback_atr} * atrV
@@ -65,12 +73,12 @@ longEntry = inWin and adxV >= {adx_min} and longStack and fastE - close <= pull
 shortEntry = inWin and adxV >= {adx_min} and shortStack and close - fastE <= pull
 if longEntry and strategy.position_size == 0
     strategy.entry("L", strategy.long)
-    slP := close - 2.5 * atrV
-    tpP := close + 4.0 * atrV
+    slP := close - SL_ATR * atrV
+    tpP := close + TP_ATR * atrV
 if shortEntry and strategy.position_size == 0
     strategy.entry("S", strategy.short)
-    slP := close + 2.5 * atrV
-    tpP := close - 4.0 * atrV
+    slP := close + SL_ATR * atrV
+    tpP := close - TP_ATR * atrV
 if strategy.position_size > 0 and close < slowE
     strategy.close("L")
 if strategy.position_size < 0 and close > slowE
@@ -130,12 +138,12 @@ retestL = waitL and ageL <= 12 and low <= lvlL + tol and close > lvlL
 retestS = waitS and ageS <= 12 and high >= lvlS - tol and close < lvlS
 if retestL and strategy.position_size == 0
     strategy.entry("L", strategy.long)
-    slP := close - 2.5 * atrV
-    tpP := close + 4.0 * atrV
+    slP := close - SL_ATR * atrV
+    tpP := close + TP_ATR * atrV
 if retestS and strategy.position_size == 0
     strategy.entry("S", strategy.short)
-    slP := close + 2.5 * atrV
-    tpP := close - 4.0 * atrV
+    slP := close + SL_ATR * atrV
+    tpP := close - TP_ATR * atrV
 if retestL or ageL > 12
     waitL := false
 if retestS or ageS > 12
@@ -157,12 +165,12 @@ spring = inWin and ageLo >= 1 and ageLo <= {max_reclaim_bars} and close > swingL
 upthrust = inWin and ageHi >= 1 and ageHi <= {max_reclaim_bars} and close < swingHi
 if spring and strategy.position_size == 0
     strategy.entry("L", strategy.long)
-    slP := low - 1.5 * atrV
-    tpP := close + 3.0 * atrV
+    slP := low - SL_ATR * atrV
+    tpP := close + TP_ATR * atrV
 if upthrust and strategy.position_size == 0
     strategy.entry("S", strategy.short)
-    slP := high + 1.5 * atrV
-    tpP := close - 3.0 * atrV
+    slP := high + SL_ATR * atrV
+    tpP := close - TP_ATR * atrV
 """,
     },
     "rotation_momo": {
@@ -175,8 +183,8 @@ laggards = myRet > 0 and myRet < btcRet * 0.7
 entry = inWin and btcRet >= {btc_ret_1h_min} and laggards
 if entry and strategy.position_size == 0
     strategy.entry("L", strategy.long)
-    slP := close - 2.5 * atrV
-    tpP := close + 4.0 * atrV
+    slP := close - SL_ATR * atrV
+    tpP := close + TP_ATR * atrV
 if strategy.position_size > 0 and btcRet < 0
     strategy.close("L")
 """,
@@ -189,12 +197,12 @@ buySig = inWin and ta.crossover(r, {os_level})
 sellSig = inWin and ta.crossunder(r, {ob_level})
 if buySig and strategy.position_size == 0
     strategy.entry("L", strategy.long)
-    slP := close - 2.5 * atrV
-    tpP := close + 3.5 * atrV
+    slP := close - SL_ATR * atrV
+    tpP := close + TP_ATR * atrV
 if sellSig and strategy.position_size == 0
     strategy.entry("S", strategy.short)
-    slP := close + 2.5 * atrV
-    tpP := close - 3.5 * atrV
+    slP := close + SL_ATR * atrV
+    tpP := close - TP_ATR * atrV
 """,
     },
     "ma_cross": {
@@ -206,12 +214,12 @@ bullCross = inWin and ta.crossover(fastM, slowM)
 bearCross = inWin and ta.crossunder(fastM, slowM)
 if bullCross
     strategy.entry("L", strategy.long)
-    slP := close - 2.5 * atrV
-    tpP := close + 4.5 * atrV
+    slP := close - SL_ATR * atrV
+    tpP := close + TP_ATR * atrV
 if bearCross
     strategy.entry("S", strategy.short)
-    slP := close + 2.5 * atrV
-    tpP := close - 4.5 * atrV
+    slP := close + SL_ATR * atrV
+    tpP := close - TP_ATR * atrV
 """,
     },
     "bb_fade": {
@@ -227,11 +235,11 @@ sellSig = inWin and piercedUp
 buySig = inWin and piercedDn
 if buySig and strategy.position_size == 0
     strategy.entry("L", strategy.long)
-    slP := close - 2.0 * atrV
+    slP := close - SL_ATR * atrV
     tpP := basis
 if sellSig and strategy.position_size == 0
     strategy.entry("S", strategy.short)
-    slP := close + 2.0 * atrV
+    slP := close + SL_ATR * atrV
     tpP := basis
 """,
     },
@@ -242,8 +250,7 @@ if sellSig and strategy.position_size == 0
 
 _PARAM_MAP = {
     # family -> template field -> genome param name
-    "ema_trend": {"fast_len": None, "slow_len": None,
-                  "adx_min": "adx_min", "pullback_atr": "pullback_atr"},
+    "ema_trend": {"adx_min": "adx_min", "pullback_atr": "pullback_atr"},
     "vwap_fade": {"anchor_bars": "anchor_bars", "z_entry": "z_entry",
                   "max_hold_bars": "max_hold_bars"},
     "breakout_retest": {"range_lookback": "range_lookback",
@@ -291,6 +298,22 @@ def _fmt_window(win: tuple[str, str] | None) -> str:
                           ey=e.year, em=e.month, ed=e.day)
 
 
+def _risk_atr() -> tuple[float, float]:
+    """(stop_loss_atr_mult, take_profit_atr_mult) from config.yaml risk:.
+
+    The Pine tester is only meaningful as evidence if it risks the way the
+    live engine risks. Falls back to the shipped defaults if config is
+    unreadable — forging must never raise.
+    """
+    try:
+        from ..core.config import load_config
+        r = load_config().get("risk", {}) or {}
+        return (float(r.get("stop_loss_atr_mult", 2.5)),
+                float(r.get("take_profit_atr_mult", 4.5)))
+    except Exception:
+        return (2.5, 4.5)
+
+
 def forge(genome, window: tuple[str, str] | None = None,
           version: int = 1) -> str:
     """Genome → Pine v5 source. Deterministic; never raises on params —
@@ -300,7 +323,9 @@ def forge(genome, window: tuple[str, str] | None = None,
     if tpl is None:
         raise ValueError(f"no pine template for family '{fam}'")
     body = tpl["body"]
-    mapping = _PARAM_MAP[fam]
+    mapping = _PARAM_MAP.get(fam)
+    if mapping is None:
+        raise ValueError(f"no param mapping for family '{fam}'")
     defaults = _PARAM_DEFAULTS.get(fam, {})
     fields = {}
     for tmpl_key, gene_key in mapping.items():
@@ -317,7 +342,11 @@ def forge(genome, window: tuple[str, str] | None = None,
                              hypothesis=(genome.hypothesis or "")[:120]
                              .replace("\n", " "),
                              overlay=tpl["overlay"]))
-    exits = "" if fam == "vwap_fade" else _EXITS_ATR
+    if fam == "vwap_fade":
+        exits = ""                       # time-based exit lives in its body
+    else:
+        exits = _EXITS_ATR.format(sl_atr=_risk_atr()[0],
+                                  tp_atr=_risk_atr()[1])
     return header + _fmt_window(window) + exits + body
 
 

@@ -30,6 +30,19 @@ SHOT_DIR = ROOT / "logs"
 
 CHART_URL = "https://www.tradingview.com/chart/?symbol=BINANCE%3ABTCUSDT"
 
+
+def chart_url(symbol: str = "BINANCE:BTCUSDT") -> str:
+    """Chart URL for a specific symbol.
+
+    backtest() has always ACCEPTED a `symbol`, cached under it and journaled
+    it — but then navigated to the hardcoded CHART_URL, so every run actually
+    executed on BTCUSDT no matter what was requested. Results were therefore
+    mislabelled, and any family whose logic references BTC (rotation_momo)
+    compared BTC against itself.
+    """
+    from urllib.parse import quote
+    return f"https://www.tradingview.com/chart/?symbol={quote(symbol, safe='')}"
+
 SELECTORS = {
     # 2026-08 UI: Pine Editor is a floating overlay launched from the
     # right toolbar; editor surface is Monaco; tester tab appears in the
@@ -195,7 +208,7 @@ class TVHarness:
                 pass                     # best-effort; keyboard fallback below
             t0 = time.time()
             try:
-                page.goto(CHART_URL, timeout=45_000)
+                page.goto(chart_url(symbol), timeout=45_000)
                 page.wait_for_selector(SELECTORS["chart_loaded"],
                                        timeout=30_000)
                 self._set_timeframe(page, tf)
@@ -408,6 +421,20 @@ class TVHarness:
 
 
 # ── manifest evaluation (walk-forward on real tester data) ───────────────
+# Families whose Pine logic references another instrument must NOT be tested
+# on that same instrument. rotation_momo pulls BINANCE:BTCUSDT via
+# request.security and requires `myRet < btcRet * 0.7` while `myRet > 0` — on a
+# BTC chart btcRet == myRet, so the condition is unsatisfiable and the family
+# could never produce a single TV trade.
+FAMILY_TEST_SYMBOL = {
+    "rotation_momo": "BINANCE:ETHUSDT",
+}
+
+
+def test_symbol_for(family: str, default: str = "BINANCE:BTCUSDT") -> str:
+    return FAMILY_TEST_SYMBOL.get(family, default)
+
+
 def evaluate_manifest(harness: TVHarness, manifest: dict,
                       symbol: str = "BINANCE:BTCUSDT",
                       tf: str = "1h",
@@ -417,6 +444,7 @@ def evaluate_manifest(harness: TVHarness, manifest: dict,
     consume either judge interchangeably."""
     from ..brain.pine import PINE_DIR
     sid = manifest["strategy_id"]
+    symbol = test_symbol_for(manifest.get("family", ""), symbol)
     full_path = PINE_DIR / sid / "full.pine"
     if not full_path.exists():
         return {"valid": False, "reason": "no forged script"}

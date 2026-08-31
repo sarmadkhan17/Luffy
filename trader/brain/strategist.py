@@ -78,12 +78,25 @@ class Strategist:
             from ..strategy.proposer import Proposer
             from ..data.feed import DataFeed, make_exchange
             feed = DataFeed(make_exchange("futures"))
-            prop = Proposer(self.journal, self.cfg, feed, self.notifier,
-                            llm=self.llm).propose()
+            proposer = Proposer(self.journal, self.cfg, feed, self.notifier,
+                                llm=self.llm)
+            prop = proposer.propose()
             if prop.get("proposed"):
                 applied.append({"strategy": prop["strategy"]["name"],
                                 "action": "proposed",
                                 "rationale": "gauntlet-passed new genome"})
+
+            # Invention is an INDEPENDENT pass. It used to sit at the tail of
+            # propose(), behind four early returns, so it only ran on a day
+            # when a proposal had already succeeded — and never once did.
+            inv = proposer.propose_invention()
+            if inv.get("invented"):
+                applied.append({"strategy": inv["strategy"]["name"],
+                                "action": "invented",
+                                "rationale": "new family passed internal "
+                                             "walk-forward"})
+            else:
+                log.info(f"invention pass: {inv.get('reason')}")
         except Exception as e:
             log.warning(f"proposal pass failed: {e}")
 

@@ -46,6 +46,18 @@ class StrategyJudge:
         self.harness = TVHarness(journal, cfg)
         self.enabled = bool(cfg.get("tv_harness", {}).get("enabled", True))
         self.notifier = notifier
+        self._llm = None               # lazily built; refine_with_llm
+                                       # self-guards on availability+budget
+
+    def _get_llm(self):
+        if self._llm is None:
+            try:
+                from .llm import BrainLLM
+                self._llm = BrainLLM(self.cfg)
+            except Exception as e:
+                log.warning(f"brain llm unavailable for pine refine: {e}")
+                self._llm = False
+        return self._llm or None
 
     def prefilter(self, genome) -> tuple[bool, dict]:
         """Stage 1 (cheap): Yahoo walk-forward pre-filter."""
@@ -60,9 +72,16 @@ class StrategyJudge:
             "beats_buy_hold": yv.get("beats_buy_hold")}
 
     def final_verdict(self, genome) -> tuple[bool, dict]:
-        """Stage 3 (expensive): REAL TradingView tester when the harness
-        is healthy and budget allows; otherwise the Yahoo policy stands
-        alone. Call only after cheap stages passed."""
+        """Stage 3 (expensive): the REAL TradingView tester, which is the only
+        judge that sees the genome's actual genes.
+
+        Fails CLOSED. This used to end in `return self.prefilter(genome)`,
+        so a disabled harness, an exhausted budget, a 'down' health state, a
+        malformed tester read, or any exception all silently handed the
+        verdict to the Yahoo family-proxy — a stock TradingView strategy that
+        never sees g.params. That proxy could single-handedly accept a
+        strategy. It is advisory only; it can no longer approve anything.
+        """
         if self.enabled:
             health = self.harness.health()
             reserve = 5                     # leave room for fold variants
@@ -71,7 +90,8 @@ class StrategyJudge:
                          health["budget"])
             if health["state"] != "down" and budget_ok:
                 try:
-                    manifest = forge_and_store(genome, self.journal)
+                    manifest = forge_and_store(genome, self.journal,
+                                               llm=self._get_llm())
                     rv = evaluate_manifest(self.harness, manifest,
                                            min_oos_trades=int(
                                                self.cfg.get("strategies", {})
@@ -79,18 +99,36 @@ class StrategyJudge:
                     if "reason" not in rv or rv.get("valid"):
                         return bool(rv.get("valid")), \
                             {"stage": "real_tv", **rv}
-                    log.warning(f"real-TV failed ({rv['reason']}) — "
-                                f"falling back to Yahoo verdict")
+                    reason = f"real-TV inconclusive: {rv['reason']}"
                 except Exception as e:
-                    log.warning(f"real-TV pipeline error: {e}")
-        return self.prefilter(genome)
+                    reason = f"real-TV pipeline error: {e}"
+            else:
+                reason = (f"harness unavailable "
+                          f"(state={health['state']}, budget_ok={budget_ok})")
+        else:
+            reason = "tv_harness disabled in config"
+
+        log.warning(f"{reason} — no verdict (advisory Yahoo prefilter "
+                    f"cannot approve a strategy)")
+        _, advisory = self.prefilter(genome)
+        return False, {"stage": "no_verdict", "reason": reason,
+                       "yahoo_advisory": advisory}
 
     def judge(self, genome) -> tuple[bool, dict]:
-        """One-shot convenience: prefilter → final_verdict."""
-        ok, ev = self.prefilter(genome)
-        if not ok:
-            return False, ev
-        return self.final_verdict(genome)
+        """One-shot convenience: advisory prefilter, then the real verdict.
+
+        The prefilter no longer REJECTS. It maps a family to a stock
+        TradingView strategy and never sees the genome's params, so it cannot
+        distinguish two strategies of the same family — using it as a gate
+        killed candidates on evidence about a different system entirely. Its
+        opinion is attached to the verdict for context instead.
+
+        (No production caller today; the harvester composes the stages
+        itself via prefilter() + run_gauntlet() + final_verdict().)
+        """
+        _, advisory = self.prefilter(genome)
+        ok, ev = self.final_verdict(genome)
+        return ok, {**ev, "yahoo_advisory": advisory}
 
 
 class BrainJudge:

@@ -16,6 +16,7 @@ import re
 
 from ..core.journal import Journal
 from ..brain.llm import BrainLLM
+from .agent import AnalystAgent
 
 log = logging.getLogger(__name__)
 
@@ -39,6 +40,9 @@ class ChatEngine:
     def __init__(self, journal: Journal, cfg: dict):
         self.journal = journal
         self.llm = BrainLLM(cfg)
+        self.agent = AnalystAgent(
+            journal, self.llm,
+            max_steps=int(cfg.get("chat", {}).get("max_steps", 5)))
 
     # ── grounding ───────────────────────────────────────────────────────
     def situation_brief(self) -> str:
@@ -120,7 +124,7 @@ class ChatEngine:
         if ops == "active":
             self._set_state("ACTIVE", "chat")
             return "🙂 ACTIVE — full autonomy restored."
-        return self.ask(message, history)
+        return self.agent.run(message, history)
 
     def _set_state(self, state: str, actor: str) -> None:
         from ..engine.state import ControlStateMachine

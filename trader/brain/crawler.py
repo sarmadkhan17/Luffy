@@ -19,6 +19,7 @@ import logging
 import re
 import time
 from collections import deque
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urljoin, urlparse
 from urllib.robotparser import RobotFileParser
 
@@ -201,11 +202,18 @@ class DeepCrawler:
         self._last_hit[h] = time.time()
 
     # ── dedupe ───────────────────────────────────────────────────────────
+    #: a page already read is skipped for this long, then re-read. Without a
+    #: TTL the frontier is permanently poisoned: the 12 static seeds were
+    #: consumed on day one and every crawl since reported pages=0, docs=0.
+    RECRAWL_AFTER_DAYS = 30
+
     def _seen_doc(self, url: str) -> bool:
         n = self.journal.query(
             "SELECT COUNT(*) n FROM brain_events WHERE kind='crawl_doc' "
-            "AND subject=?", (hashlib.md5(normalize(url).encode())
-                              .hexdigest()[:16],))[0]["n"]
+            "AND subject=? AND ts > ?",
+            (hashlib.md5(normalize(url).encode()).hexdigest()[:16],
+             (datetime.now(timezone.utc)
+              - timedelta(days=self.RECRAWL_AFTER_DAYS)).isoformat()))[0]["n"]
         return n > 0
 
     def _fetch(self, url: str, via_trusted: bool = False) -> \

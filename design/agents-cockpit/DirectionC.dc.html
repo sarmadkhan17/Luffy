@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#08090c;--panel:#101319;--line:#1c222e;--line2:#262e3d;
+      --txt:#e6eaf0;--dim:#8b95a6;--dimmer:#525d6e;
+      --green:#00d1a0;--red:#ff5c74;--amber:#ffb224;--blue:#4da3ff;
+      --mono:'JetBrains Mono',ui-monospace,monospace;--sans:'Inter',sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--txt)}
+    a{color:var(--green)} a:hover{color:#00e6b0}
+    .scene{position:relative;width:1000px;height:640px;overflow:hidden;background:
+      radial-gradient(90% 70% at 50% 78%, rgba(0,209,160,.08), transparent 62%),
+      radial-gradient(120% 90% at 50% -10%, rgba(77,163,255,.05), transparent 55%),
+      var(--bg)}
+    .lab{position:absolute;transform:translate(-50%,-100%);font-family:var(--mono);
+      background:rgba(11,13,18,.85);border:1px solid var(--line2);border-radius:5px;
+      padding:4px 9px;font-size:10.5px;white-space:nowrap;display:flex;align-items:center;gap:7px;
+      box-shadow:0 6px 18px rgba(0,0,0,.5)}
+    .lab .d{width:7px;height:7px;border-radius:50%}
+    .lab b{font-family:var(--sans);font-weight:600;font-size:11px}
+    .lab .m{color:var(--dim)}
+    .lab.mgr{border-color:#00d1a0;background:rgba(0,209,160,.1);padding:6px 12px}
+    .hud{position:absolute;font-family:var(--mono)}
+    .kick{left:24px;top:22px;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dimmer)}
+    .h1{left:24px;top:38px;font-size:19px;font-weight:800;font-family:var(--sans)}
+    .sub{left:24px;top:66px;font-size:11px;color:var(--dim)}
+    .foot{left:24px;bottom:18px;font-size:11px;color:var(--dim);display:flex;align-items:center;gap:9px}
+    .pillchip{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border-radius:999px;
+      background:rgba(16,19,25,.7);border:1px solid var(--line2)}
+    .live{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+  </style>
+</helmet>
+
+<div class="scene">
+  <svg width="1000" height="640" viewBox="0 0 1000 640" fill="none" style="position:absolute;inset:0">
+    <defs>
+      <filter id="soft" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="16"/></filter>
+    </defs>
+
+    <!-- iso floor grid -->
+    <g stroke="#141b26" stroke-width="1" opacity=".8">
+      <path d="M500 120 L860 300 M500 150 L800 300 M500 180 L740 300 M500 210 L680 300 M500 240 L620 300"/>
+      <path d="M500 120 L140 300 M500 150 L200 300 M500 180 L260 300 M500 210 L320 300 M500 240 L380 300"/>
+      <path d="M860 300 L500 480 M800 300 L500 450 M740 300 L500 420 M680 300 L500 390 M620 300 L500 360"/>
+      <path d="M140 300 L500 480 M200 300 L500 450 M260 300 L500 420 M320 300 L500 390 M380 300 L500 360"/>
+    </g>
+
+    <!-- manager glow -->
+    <ellipse cx="500" cy="345" rx="120" ry="60" fill="#00d1a0" opacity=".18" filter="url(#soft)"/>
+
+    <!-- ANALYST pods (back row, small, flat) -->
+    <g>
+      <!-- top faces -->
+      <polygon points="500,145 530,160 500,175 470,160" fill="#0c2b23" stroke="#00d1a0"/>
+      <polygon points="440,170 470,185 440,200 410,185" fill="#0c2b23" stroke="#00d1a0"/>
+      <polygon points="520,170 550,185 520,200 490,185" fill="#0c2b23" stroke="#00d1a0"/>
+      <polygon points="360,190 390,205 360,220 330,205" fill="#0c2b23" stroke="#00d1a0"/>
+      <polygon points="600,190 630,205 600,220 570,205" fill="#0c2b23" stroke="#00d1a0"/>
+      <polygon points="300,220 330,235 300,250 270,235" fill="#171b24" stroke="#525d6e"/>
+      <polygon points="660,220 690,235 660,250 630,235" fill="#10233b" stroke="#4da3ff"/>
+    </g>
+
+    <!-- TEAM platforms (extruded) -->
+    <!-- Theorist (stale) -->
+    <polygon points="406,250 452,273 452,299 406,276" fill="#0a0c11"/>
+    <polygon points="498,250 452,273 452,299 498,276" fill="#0d1017"/>
+    <polygon points="452,227 498,250 452,273 406,250" fill="#171b24" stroke="#525d6e" stroke-width="1.5"/>
+    <!-- Librarian -->
+    <polygon points="502,250 548,273 548,299 502,276" fill="#0a0c11"/>
+    <polygon points="594,250 548,273 548,299 594,276" fill="#0d1017"/>
+    <polygon points="548,227 594,250 548,273 502,250" fill="#10233b" stroke="#4da3ff" stroke-width="1.5"/>
+    <!-- Researcher -->
+    <polygon points="278,300 324,323 324,349 278,326" fill="#0a0c11"/>
+    <polygon points="370,300 324,323 324,349 370,326" fill="#0d1017"/>
+    <polygon points="324,277 370,300 324,323 278,300" fill="#10233b" stroke="#4da3ff" stroke-width="1.5"/>
+    <!-- Risk (alert) -->
+    <polygon points="630,300 676,323 676,349 630,326" fill="#0a0c11"/>
+    <polygon points="722,300 676,323 676,349 722,326" fill="#0d1017"/>
+    <polygon points="676,277 722,300 676,323 630,300" fill="#2a1016" stroke="#ff5c74" stroke-width="1.8"/>
+    <!-- Strategist -->
+    <polygon points="326,372 372,395 372,421 326,398" fill="#0a0c11"/>
+    <polygon points="418,372 372,395 372,421 418,398" fill="#0d1017"/>
+    <polygon points="372,349 418,372 372,395 326,372" fill="#10233b" stroke="#4da3ff" stroke-width="1.5"/>
+    <!-- Trader (active) -->
+    <polygon points="582,372 628,395 628,421 582,398" fill="#0a0c11"/>
+    <polygon points="674,372 628,395 628,421 674,398" fill="#0d1017"/>
+    <polygon points="628,349 674,372 628,395 582,372" fill="#0c2b23" stroke="#00d1a0" stroke-width="1.8"/>
+
+    <!-- MANAGER pillar (tall, central) -->
+    <polygon points="440,330 500,360 500,400 440,370" fill="#07100d"/>
+    <polygon points="560,330 500,360 500,400 560,370" fill="#0a1a15"/>
+    <polygon points="500,300 560,330 500,360 440,330" fill="#0a3d31" stroke="#00ffc6" stroke-width="2"/>
+  </svg>
+
+  <!-- floating labels -->
+  <div class="lab mgr" style="left:500px;top:288px"><b>MANAGER</b><span class="m">eq $5,141</span></div>
+  <div class="lab" style="left:628px;top:338px"><span class="d" style="background:#00d1a0"></span><b>Trader</b><span class="m">3 open</span></div>
+  <div class="lab" style="left:372px;top:338px"><span class="d" style="background:#4da3ff"></span><b>Strategist</b></div>
+  <div class="lab" style="left:676px;top:266px"><span class="d" style="background:#ff5c74"></span><b>Risk</b><span class="m" style="color:#ff9aa9">armed</span></div>
+  <div class="lab" style="left:324px;top:266px"><span class="d" style="background:#4da3ff"></span><b>Researcher</b></div>
+  <div class="lab" style="left:452px;top:216px"><span class="d" style="background:#525d6e"></span><b>Theorist</b></div>
+  <div class="lab" style="left:548px;top:216px"><span class="d" style="background:#4da3ff"></span><b>Librarian</b></div>
+
+  <div class="hud kick">agents · the floor</div>
+  <div class="hud h1">The Desk</div>
+  <div class="hud sub">walk the floor · 1 manager + 13</div>
+
+  <div class="hud foot">
+    <span class="pillchip"><span class="live"></span>stations glow on activity</span>
+    <span style="color:var(--dimmer)">orbit · zoom · click a station</span>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -167,11 +167,23 @@ class Journal:
                 "ALTER TABLE decisions ADD COLUMN signals_json TEXT DEFAULT '[]'",
                 "ALTER TABLE trades ADD COLUMN tp1_done INTEGER DEFAULT 0",
                 "ALTER TABLE strategies ADD COLUMN retire_reason TEXT DEFAULT ''",
+                # when the strategy last changed state — the retirement clock
+                # reads this, not created_at
+                "ALTER TABLE strategies ADD COLUMN state_changed_at TEXT DEFAULT ''",
+                # meta-labeling: the secondary model's live judgment
+                "ALTER TABLE decisions ADD COLUMN meta_p REAL DEFAULT NULL",
             ):
                 try:
                     c.execute(stmt)
                 except Exception:
                     pass
+            # backfill: existing rows get their birth time so the demotion
+            # clock starts now rather than firing retroactively
+            try:
+                c.execute("UPDATE strategies SET state_changed_at=created_at "
+                          "WHERE state_changed_at IS NULL OR state_changed_at=''")
+            except Exception:
+                pass
 
     # -- connection -----------------------------------------------------
     def _conn(self) -> sqlite3.Connection:
@@ -223,10 +235,11 @@ class Journal:
                 "INSERT OR REPLACE INTO decisions "
                 "(id,cycle_id,ts,symbol,action,score,threshold,confidence,"
                 "executed,skip_reason,size_usdt,entry_price,strategy_ids,"
-                "signals_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "signals_json,meta_p) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (d.id, d.cycle_id, d.ts, d.symbol, d.action.value, d.score,
                  d.threshold, d.confidence, int(d.executed), d.skip_reason,
-                 d.size_usdt, None, strat_ids, signals))
+                 d.size_usdt, None, strat_ids, signals,
+                 d.meta_p if d.meta_p else None))
 
     def update_decision_outcome(self, decision_id: str, executed: bool,
                                 size_usdt: float = 0.0,
@@ -338,6 +351,11 @@ class Journal:
                  json.dumps(sorted(getattr(st, "markets", []) or [])),
                  int(getattr(st, "generation", 0)), getattr(st, "parent_id", ""),
                  st.created_at, json.dumps(st.stats)))
+            # INSERT OR REPLACE rewrites the whole row, so state_changed_at
+            # would fall back to its DEFAULT. Seed it for fresh rows.
+            c.execute("UPDATE strategies SET state_changed_at=created_at "
+                      "WHERE id=? AND (state_changed_at IS NULL "
+                      "OR state_changed_at='')", (st.id,))
 
     def list_strategies(self, states: list[str] | None = None) -> list[dict]:
         if states:
@@ -366,11 +384,18 @@ class Journal:
             (f"-{older_than_hours} hours",))
 
     def agent_accuracy(self, since_hours: float = 168.0) -> list[dict]:
-        """Directional accuracy of each agent's vote vs 4h forward return."""
+        """Directional accuracy of each agent's OWN vote vs the 4h forward
+        return. A vote is correct when its direction matched the raw move:
+        a vote agreeing with the decision inherits the decision's outcome,
+        a dissenting vote gets the flipped label. (Previously every agent
+        inherited the decision's correctness — inverting truth for
+        dissenters and poisoning accuracy + calibration simultaneously.)"""
         return self.query("""
             SELECT v.agent,
                    COUNT(*) AS n,
-                   AVG(o.correct_4h) AS accuracy
+                   AVG(CASE WHEN (v.conviction > 0) = (o.action = 'BUY')
+                            THEN o.correct_4h ELSE 1 - o.correct_4h END
+                       ) AS accuracy
             FROM votes v
             JOIN outcomes o ON o.symbol=v.symbol AND o.cycle_id=v.cycle_id
              AND o.resolved_at IS NOT NULL

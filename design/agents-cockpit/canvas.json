@@ -1,0 +1,15 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",       "x": 0,    "y": 0,   "w": 1000, "h": 640, "title": "A · Neural Constellation" },
+    { "file": "DirectionB.dc.html", "x": 1120, "y": 0,   "w": 1000, "h": 640, "title": "B · Command Scope" },
+    { "file": "DirectionC.dc.html", "x": 0,    "y": 800, "w": 1000, "h": 640, "title": "C · The Floor" },
+    { "file": "Detail.dc.html",     "x": 1120, "y": 800, "w": 480,  "h": 640, "title": "Drill-down panel" }
+  ],
+  "annotations": [
+    { "id": "dir-a", "x": 0,    "y": -150, "w": 360, "text": "DIRECTION A · Neural Constellation\nManager as a glowing core; team + analysts as depth-layered nodes wired by synapses. Cinematic, and it matches the neural look you approved before.\nTradeoff: labels get tight when all 14 nodes are lit at once." },
+    { "id": "dir-b", "x": 1120, "y": -150, "w": 360, "text": "DIRECTION B · Command Scope\nA radar / mission-control instrument: radial rings, a live sweep, a side readout column. The most 'quant terminal' of the three.\nTradeoff: reads busier and less organic than a graph." },
+    { "id": "dir-c", "x": 0,    "y": 662,  "w": 360, "text": "DIRECTION C · The Floor\nAn isometric 3D desk you orbit; each employee is a glowing station on the plane. Spatial and the most memorable.\nTradeoff: keeping labels readable at an angle is fiddly; heaviest of the three to build." },
+    { "id": "drill", "x": 1120, "y": 662, "w": 360, "text": "DRILL-DOWN (works with any direction)\nClick a node/station and this HUD panel slides in. The analyst stats TABLE folds in here — accuracy, samples, a conviction sparkline, activity feed, and a link straight to that employee's knowledge file." }
+  ],
+  "launch": { "view": "canvas" }
+}

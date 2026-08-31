@@ -1,0 +1,132 @@
+<h2>Three visual directions for Luffy</h2>
+<p class="subtitle">Same data, three different "feels" and hierarchies. Click the one that speaks to you (or mix — tell me what you like from each).</p>
+
+<style>
+  .dir-grid{display:grid;grid-template-columns:1fr;gap:22px;margin-top:8px}
+  @media(min-width:1100px){.dir-grid{grid-template-columns:1fr 1fr 1fr}}
+  .dir{border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.08);cursor:pointer;transition:transform .12s,box-shadow .12s}
+  .dir:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
+  .dir .cap{padding:12px 14px;font-size:13px}
+  .dir .cap b{display:block;font-size:14px;margin-bottom:3px}
+  .dir .cap span{opacity:.6;font-size:12px}
+  .m{font-family:'JetBrains Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+
+  /* ---------- A: Evolved Cockpit ---------- */
+  .A{background:#0a0c11;color:#e6eaf0;font-family:Inter,system-ui,sans-serif}
+  .A .top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #161c27}
+  .A .eq{font-size:26px;font-weight:800}.A .eq .m{letter-spacing:-.02em}
+  .A .up{color:#00d1a0;font-size:12px;font-weight:700}
+  .A .pill{font-size:9px;letter-spacing:1.5px;padding:4px 9px;border-radius:20px;background:rgba(0,209,160,.12);color:#00d1a0;border:1px solid rgba(0,209,160,.3)}
+  .A .tiles{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:14px 16px}
+  .A .tile{background:#101319;border:1px solid #1a2130;border-radius:11px;padding:11px 12px}
+  .A .tile .l{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:#525d6e}
+  .A .tile .v{font-size:19px;font-weight:700;margin-top:5px}
+  .A .g{color:#00d1a0}.A .r{color:#ff5c74}
+  .A .pos{padding:0 16px 14px}
+  .A .prow{display:flex;justify-content:space-between;align-items:center;padding:9px 11px;background:#101319;border:1px solid #1a2130;border-radius:10px;margin-bottom:7px;font-size:12px}
+  .A .tag{font-size:9px;padding:2px 6px;border-radius:5px;background:rgba(0,209,160,.14);color:#00d1a0;font-weight:700}
+
+  /* ---------- B: Bloomberg Terminal ---------- */
+  .B{background:#05070a;color:#c9d3e0;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px}
+  .B .top{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid #14324a;background:#081019}
+  .B .eq{font-size:22px;font-weight:700;color:#e8f0f8}
+  .B .amber{color:#ffb224}.B .cy{color:#33e1c4}.B .r{color:#ff5c74}
+  .B .bar{display:flex;gap:0;border-bottom:1px solid #12212f}
+  .B .cell{flex:1;padding:9px 11px;border-right:1px solid #12212f}
+  .B .cell:last-child{border-right:0}
+  .B .cell .l{font-size:9px;color:#5b7288;letter-spacing:1px}
+  .B .cell .v{font-size:16px;font-weight:700;margin-top:3px}
+  .B table{width:100%;border-collapse:collapse}
+  .B td{padding:6px 12px;border-bottom:1px solid #0e1a26}
+  .B .rt{text-align:right}
+  .B thead td{color:#5b7288;font-size:9px;letter-spacing:1px;border-bottom:1px solid #14324a}
+
+  /* ---------- C: Calm Glass ---------- */
+  .C{background:linear-gradient(160deg,#0e1220,#131a2e);color:#dfe4f0;font-family:'Plus Jakarta Sans',Inter,sans-serif}
+  .C .top{padding:18px 18px 10px}
+  .C .lab{font-size:11px;color:#7c88a8;letter-spacing:.5px}
+  .C .eq{font-size:30px;font-weight:700;margin-top:2px;letter-spacing:-.5px}
+  .C .up{display:inline-flex;align-items:center;gap:5px;margin-top:6px;font-size:12px;color:#54e0b0;background:rgba(84,224,176,.1);padding:3px 9px;border-radius:20px}
+  .C .tiles{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:6px 18px 14px}
+  .C .tile{background:rgba(255,255,255,.045);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.07);border-radius:15px;padding:13px 14px}
+  .C .tile .l{font-size:10px;color:#7c88a8}
+  .C .tile .v{font-size:20px;font-weight:600;margin-top:6px}
+  .C .g{color:#54e0b0}.C .rr{color:#ff7a90}
+  .C .pos{padding:0 18px 16px}
+  .C .prow{display:flex;justify-content:space-between;align-items:center;padding:11px 13px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;margin-bottom:8px;font-size:13px}
+  .C .dot{width:7px;height:7px;border-radius:50%;background:#54e0b0;display:inline-block;margin-right:7px;box-shadow:0 0 8px #54e0b0}
+</style>
+
+<div class="dir-grid">
+
+  <!-- A -->
+  <div class="dir" data-choice="cockpit" onclick="toggleSelect(this)">
+    <div class="A">
+      <div class="top">
+        <div><div class="lab" style="font-size:9px;letter-spacing:2px;color:#525d6e;text-transform:uppercase">Equity</div>
+          <div class="eq m">$12,480<span class="up"> ▲ 3.2%</span></div></div>
+        <div class="pill">● ACTIVE</div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><div class="l">Today P&L</div><div class="v g m">+$392</div></div>
+        <div class="tile"><div class="l">Win Rate</div><div class="v m">58%</div></div>
+        <div class="tile"><div class="l">Open Heat</div><div class="v m">2.1%</div></div>
+        <div class="tile"><div class="l">Trades</div><div class="v m">7</div></div>
+      </div>
+      <div class="pos">
+        <div class="prow"><span><b>SOL</b> <span class="tag">LONG</span></span><span class="g m">+$118</span></div>
+        <div class="prow"><span><b>ARB</b> <span class="tag">LONG</span></span><span class="r m">−$41</span></div>
+      </div>
+    </div>
+    <div class="cap A"><b>A · Evolved Cockpit</b><span>Your current DNA, refined. Teal-on-dark, bold equity, tidy tiles. Familiar & fast.</span></div>
+  </div>
+
+  <!-- B -->
+  <div class="dir" data-choice="terminal" onclick="toggleSelect(this)">
+    <div class="B">
+      <div class="top">
+        <div><span style="color:#5b7288;font-size:9px;letter-spacing:1px">EQUITY USDT</span>
+          <div class="eq">12,480.55 <span class="cy" style="font-size:12px">+3.20%</span></div></div>
+        <div><span class="amber">● ACTIVE</span></div>
+      </div>
+      <div class="bar">
+        <div class="cell"><div class="l">PNL_D</div><div class="v cy">+392.1</div></div>
+        <div class="cell"><div class="l">WR</div><div class="v">58.0</div></div>
+        <div class="cell"><div class="l">HEAT</div><div class="v amber">2.10</div></div>
+        <div class="cell"><div class="l">N</div><div class="v">7</div></div>
+      </div>
+      <table>
+        <thead><tr><td>SYM</td><td>SIDE</td><td class="rt">SIZE</td><td class="rt">uPNL</td></tr></thead>
+        <tbody>
+          <tr><td>SOL</td><td class="cy">LONG</td><td class="rt">14.2</td><td class="rt cy">+118.4</td></tr>
+          <tr><td>ARB</td><td class="cy">LONG</td><td class="rt">820</td><td class="rt r">−41.0</td></tr>
+          <tr><td>WIF</td><td class="r">SHORT</td><td class="rt">300</td><td class="rt cy">+27.9</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cap B"><b style="color:#33e1c4">B · Bloomberg Terminal</b><span style="color:#5b7288">Max density, mono everything, tabular. Pro-desk feel — data first, chrome last.</span></div>
+  </div>
+
+  <!-- C -->
+  <div class="dir" data-choice="glass" onclick="toggleSelect(this)">
+    <div class="C">
+      <div class="top">
+        <div class="lab">Portfolio equity</div>
+        <div class="eq m">$12,480</div>
+        <div class="up">▲ 3.2% today · +$392</div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><div class="l">Win rate</div><div class="v">58%</div></div>
+        <div class="tile"><div class="l">Open heat</div><div class="v">2.1%</div></div>
+        <div class="tile"><div class="l">Sharpe 30d</div><div class="v g">1.42</div></div>
+        <div class="tile"><div class="l">Trades today</div><div class="v">7</div></div>
+      </div>
+      <div class="pos">
+        <div class="prow"><span><span class="dot"></span>SOL · Long</span><span class="g">+$118</span></div>
+        <div class="prow"><span><span class="dot" style="background:#ff7a90;box-shadow:0 0 8px #ff7a90"></span>ARB · Long</span><span class="rr">−$41</span></div>
+      </div>
+    </div>
+    <div class="cap C"><b style="color:#54e0b0">C · Calm Glass</b><span style="color:#7c88a8">Softer, roomy, glassy panels. Reads like a personal assistant, not a war room.</span></div>
+  </div>
+
+</div>

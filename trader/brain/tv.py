@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+from datetime import datetime, timezone
 
 log = logging.getLogger(__name__)
 
@@ -137,22 +138,35 @@ class TVClient:
 
 def validate_population(journal, tv: TVClient, notifier=None,
                         symbol: str = "BTC/USDT") -> dict:
-    """Run every live population strategy through the TV judge.
+    """Run every live population strategy past the Yahoo family proxy.
 
-    FAIL → demoted (ineligible for entries; reversible if market regime
-    changes and a future validation passes). PASS → stays eligible.
-    Duplicate genomes (same family+params) collapse to the oldest.
+    ADVISORY ONLY — this NO LONGER DEMOTES.
+
+    `TVClient.walk_forward(symbol, family)` maps a family to a stock
+    TradingView strategy (ema_trend→ema_cross, vwap_fade→bollinger, …) and
+    backtests THAT on Yahoo BTC-USD. It never receives the genome's params,
+    so its verdict is identical for every strategy of a family and says
+    nothing about any particular genome. It previously wrote
+    `state='demoted'` on failure and produced 5 of the 7 demotions in the
+    live population — including all five founding seeds, whose retire_reason
+    still records a verdict about `ema_cross`/`donchian`/`macd` defaults.
+
+    Statistical demotion belongs to `strategy/promotion.py` (realized
+    trades) and the internal walk-forward gauntlet (`strategy/evidence.py`).
+    Duplicate genome collapsing is genuine bookkeeping and is retained.
     """
-    results = {"passed": [], "demoted": [], "duplicates": []}
+    results = {"passed": [], "advisory_fail": [], "duplicates": []}
     seen_genomes: dict[str, str] = {}
     for row in journal.list_strategies(["paper", "active", "demoted"]):
         fam, params = row["kind"], json.dumps(row["params"], sort_keys=True)
         key = f"{fam}:{params}"
         if key in seen_genomes:
-            journal.query("UPDATE strategies SET state='retired', "
-                          "retire_reason=? WHERE id=?",
-                          (f"duplicate of {seen_genomes[key]}", row["id"]))
-            journal.log_brain_event("seed_tv_demoted", row["id"],
+            journal.query(
+                "UPDATE strategies SET state='retired', retire_reason=?, "
+                "state_changed_at=? WHERE id=?",
+                (f"duplicate of {seen_genomes[key]}",
+                 datetime.now(timezone.utc).isoformat(), row["id"]))
+            journal.log_brain_event("duplicate_retired", row["id"],
                                     {"reason": "duplicate genome",
                                      "of": seen_genomes[key]})
             results["duplicates"].append(row["name"])
@@ -170,12 +184,10 @@ def validate_population(journal, tv: TVClient, notifier=None,
             journal.log_brain_event("seed_tv_passed", row["id"], evidence)
             results["passed"].append(row["name"])
         else:
-            journal.query(
-                "UPDATE strategies SET state='demoted', retire_reason=? "
-                "WHERE id=?",
-                (f"TV validation: {json.dumps(evidence)[:200]}", row["id"]))
-            journal.log_brain_event("seed_tv_demoted", row["id"], evidence)
-            results["demoted"].append(
+            # advisory only — record the concern, do NOT change state
+            journal.log_brain_event("seed_tv_advisory_fail", row["id"],
+                                    evidence)
+            results["advisory_fail"].append(
                 {"name": row["name"],
                  "oos_ret": evidence.get("oos_return_pct"),
                  "checks": evidence.get("checks")})
@@ -183,8 +195,8 @@ def validate_population(journal, tv: TVClient, notifier=None,
     journal.log_brain_event("population_validated", "tv",
                             {k: len(v) if isinstance(v, list) else v
                              for k, v in results.items()})
-    if notifier and results["demoted"]:
-        names = ", ".join(d["name"] for d in results["demoted"])
-        notifier.send(f"⚖️ TV validation: demoted {names}. "
-                      f"Passed: {len(results['passed'])}.")
+    if notifier and results["advisory_fail"]:
+        names = ", ".join(d["name"] for d in results["advisory_fail"])
+        notifier.send(f"⚖️ TV family-proxy advisory (no action taken): "
+                      f"{names} look weak. Passed: {len(results['passed'])}.")
     return results

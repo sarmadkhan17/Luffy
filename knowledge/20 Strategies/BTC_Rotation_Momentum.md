@@ -3,6 +3,7 @@ type: strategy
 state: demoted
 family: rotation_momo
 origin: seed
+author: Strategist
 ---
 # BTC Rotation Momentum
 
@@ -20,4 +21,6 @@ origin: seed
 - realized P&L: +0.00 USDT
 - state: **demoted**
 
-Related: [[Regime Playbook]], [[MOC]]
+Related: [[Cross-Asset Rotation]], [[Regime Playbook]], [[MOC]]
+
+Filed by [[Strategist]]

@@ -153,3 +153,41 @@ def test_mixed_granularity_coexists_in_the_store(feed):
     feed.save("BTC/USDT", "oi", _df("2026-08-01", n=10, freq="15min", val=2.0))
     out = feed.load("BTC/USDT", "oi")
     assert len(out) == 20 and out["ts"].is_monotonic_increasing
+
+
+def test_funding_history_pages_forward(feed, monkeypatch):
+    """One call caps at 1000 rows (<1 year at 8h settlement) while the candle
+    store holds 5 years, so funding must page or every funding spec is
+    refused for coverage. Binance returns the EARLIEST rows in a window, so
+    paging must walk startTime forward — walking endTime backwards re-reads
+    the oldest page and stops after one call."""
+    step = 8 * 3600 * 1000
+    calls = []
+
+    def fake_get(path, params):
+        start = params["startTime"]
+        calls.append(start)
+        if len(calls) > 3:
+            return []
+        return [{"fundingTime": start + i * step, "fundingRate": "0.0001"}
+                for i in range(1000)]
+    monkeypatch.setattr(feed, "_get", fake_get)
+    out = feed.funding_history("BTC/USDT", years=4.0, delay=0.0)
+    assert len(out) > 1000, "must page past the single-call cap"
+    assert out["ts"].is_monotonic_increasing
+    assert calls == sorted(calls) and len(calls) > 1, "must advance forward"
+
+
+def test_funding_history_stops_when_no_progress(feed, monkeypatch):
+    """A server returning the same window forever must not spin."""
+    import time as _t
+    now = int(_t.time() * 1000)
+    monkeypatch.setattr(feed, "_get", lambda p, q: [
+        {"fundingTime": now, "fundingRate": "0.0001"}] * 1000)
+    out = feed.funding_history("BTC/USDT", years=4.0, delay=0.0)
+    assert len(out) >= 1
+
+
+def test_funding_history_empty_response_is_safe(feed, monkeypatch):
+    monkeypatch.setattr(feed, "_get", lambda p, q: [])
+    assert feed.funding_history("BTC/USDT", years=1.0, delay=0.0).empty

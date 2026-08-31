@@ -48,10 +48,15 @@ def _fit_logistic(zs: list[float], ys: list[float],
 
 
 def collect_training_data(journal) -> dict[str, tuple[list[float], list[float]]]:
-    """agent -> ([z...], [correct...]) from resolved 4h outcomes."""
+    """agent -> ([z...], [correct...]) from resolved 4h outcomes.
+
+    Labels are per-VOTE: a vote agreeing with the decision direction
+    inherits the decision's outcome; a dissenting vote gets the flipped
+    label (its own direction vs the raw forward move)."""
     rows = journal.query("""
         SELECT v.agent AS agent, v.conviction AS c, v.confidence AS cf,
-               o.correct_4h AS y
+               CASE WHEN (v.conviction > 0) = (o.action = 'BUY')
+                    THEN o.correct_4h ELSE 1 - o.correct_4h END AS y
         FROM votes v
         JOIN outcomes o ON o.symbol=v.symbol AND o.cycle_id=v.cycle_id
          AND o.resolved_at IS NOT NULL
@@ -90,6 +95,10 @@ def refit(journal, min_samples: int = 60) -> dict:
                         "acc": round(sum(ys) / n, 3),
                         "updated": time.time()}
         changed.append(agent)
+    # drop stale entries (renamed agents / legacy keys like 'scout') —
+    # they can never match a live voter and only rot the state file
+    for stale in [k for k in state if k != "_meta" and k not in data]:
+        state.pop(stale, None)
     state["_meta"] = {"updated": time.time(), "changed": changed}
     PATH.parent.mkdir(parents=True, exist_ok=True)
     PATH.write_text(json.dumps(state, indent=2))

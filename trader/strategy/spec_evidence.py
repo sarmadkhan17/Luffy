@@ -90,24 +90,77 @@ def missing_data(spec, symbols: list, feed: DerivFeed | None = None,
 _TF_MINUTES = {"5m": 5, "15m": 15, "1h": 60, "4h": 240}
 
 
-def frames_for(df, timeframe: str) -> dict:
-    """Frames a spec of `timeframe` needs, resampled from the stored 15m.
+def detect_tf(df) -> str | None:
+    """Infer a frame's timeframe from its own bar spacing."""
+    import pandas as pd
+    if df is None or len(df) < 3 or "ts" not in df.columns:
+        return None
+    ts = pd.to_datetime(df["ts"], utc=True)
+    mins = float(ts.diff().dt.total_seconds().median() or 0) / 60.0
+    for tf, m in _TF_MINUTES.items():
+        if abs(mins - m) < m * 0.25:
+            return tf
+    return None
 
-    A spec's timeframe is a gene, but the candle store only holds 15m, so
-    without this every spec was silently forced onto 15m. That matters: at
-    15m a round trip costs ~18.5% of the risk staked (13.7% in fees alone)
-    versus ~7.8% at 4h, because ATR/price scales with the square root of
-    horizon while the fee does not.
+
+def frames_for(df, timeframe: str) -> dict:
+    """Frames a spec of `timeframe` needs.
+
+    If `df` is already at that timeframe it is used as-is; otherwise it is
+    resampled down from a finer one. Resampling is the fallback, not the
+    plan: the candle store now holds ~5 years natively at 4h and ~3 at 1h,
+    while resampling from the 15m store would cap both at one year.
+
+    A spec's timeframe is a gene, and it matters — a round trip costs ~18.5%
+    of the risk staked at 15m (13.7% in fees alone) versus ~7.8% at 4h,
+    because ATR/price scales with the square root of horizon while the fee
+    does not.
     """
     from .backtest import resample
-    out = {"15m": df}
+    own = detect_tf(df) or "15m"
+    out = {own: df}
+    if timeframe != own:
+        if _TF_MINUTES.get(timeframe, 0) < _TF_MINUTES.get(own, 15):
+            raise KeyError(f"cannot build '{timeframe}' from coarser '{own}'")
+        r = resample(df, timeframe)
+        if r is None or not len(r):
+            raise KeyError(f"cannot build '{timeframe}' frame from '{own}'")
+        out[timeframe] = r
+    # context frames a spec may reach for with htf(), never finer than base
     for tf in ("1h", "4h"):
-        if tf == timeframe or tf in ("1h", "4h"):
+        if tf not in out and _TF_MINUTES[tf] > _TF_MINUTES.get(own, 15):
             r = resample(df, tf)
             if r is not None and len(r):
                 out[tf] = r
-    if timeframe not in out:
-        raise KeyError(f"cannot build '{timeframe}' frame from 15m candles")
+    return out
+
+
+def load_frames(cfg: dict, timeframe: str = "15m", feed=None,
+                symbols: list | None = None) -> dict:
+    """{symbol: df} read NATIVELY at `timeframe` from the candle store.
+
+    evidence.load_frames is 15m-only. Reading natively is what makes higher
+    timeframes testable: 4h has ~11000 stored bars (5 years) against the
+    ~2200 a resample of the 15m store could produce.
+    """
+    from ..data.feed import DataFeed
+    from .evidence import backtest_bars, backtest_symbols
+    feed = feed or DataFeed()
+    syms = symbols or backtest_symbols(cfg)
+    limit = max(backtest_bars(cfg), 40000)
+    out = {}
+    for sym in syms:
+        try:
+            df = feed.cached_ohlcv(sym, timeframe, limit=limit)
+        except Exception as e:
+            log.warning(f"load_frames {sym} {timeframe}: {e}")
+            continue
+        if df is not None and len(df) >= 400:
+            out[sym] = df
+    btc = out.get("BTC/USDT")
+    if btc is None:
+        btc = feed.cached_ohlcv("BTC/USDT", timeframe, limit=limit)
+    out["_btc_1h"] = btc
     return out
 
 

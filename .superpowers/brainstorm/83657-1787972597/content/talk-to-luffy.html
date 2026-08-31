@@ -1,0 +1,198 @@
+<h2>Talk to Luffy — Motion rebuild</h2>
+<p class="subtitle">Real Motion primitives: breathing presence (spring), replies that stream word-by-word, numbers that count up, chips that stagger in. It auto-plays once — or type anything and hit send to see a reply.</p>
+
+<div id="luffy-app">
+<style>
+  #luffy-app{--bg:#08090c;--panel:#101319;--panel2:#151923;--line:#1c222e;--line2:#262e3d;
+    --txt:#e6eaf0;--dim:#8b95a6;--dimmer:#525d6e;--green:#00d1a0;--red:#ff5c74;--amber:#ffb224;--blue:#4da3ff;
+    --mono:'JetBrains Mono',ui-monospace,monospace;--sans:'Inter',-apple-system,Segoe UI,Roboto,sans-serif;}
+  #luffy-app *{box-sizing:border-box}
+  .lf-shell{background:radial-gradient(120% 90% at 50% -10%,#0d1220,#07090d 60%);border:1px solid var(--line);
+    border-radius:18px;overflow:hidden;font-family:var(--sans);color:var(--txt);display:flex;flex-direction:column;height:600px}
+  /* header / presence */
+  .lf-head{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(0,209,160,.05),transparent)}
+  .orb-wrap{position:relative;width:48px;height:48px;flex:none}
+  .orb-aura{position:absolute;inset:-14px;border-radius:50%;
+    background:radial-gradient(circle,rgba(0,209,160,.35),transparent 68%);filter:blur(4px)}
+  .orb{position:absolute;inset:0;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#5ff0d0,#00d1a0 55%,#00a0b8);
+    box-shadow:0 0 26px rgba(0,209,160,.55),inset 0 0 14px rgba(255,255,255,.25)}
+  .orb-ring{position:absolute;inset:-6px;border-radius:50%;border:1.5px solid rgba(0,209,160,.4)}
+  .lf-id .nm{font-weight:800;letter-spacing:.5px;font-size:15px;display:flex;align-items:center;gap:8px}
+  .lf-id .st{font-size:11px;color:var(--dim);font-family:var(--mono)}
+  .lf-id .st b{color:var(--green)}
+  .lf-head .spacer{flex:1}
+  .lf-eq{text-align:right}
+  .lf-eq .l{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dimmer)}
+  .lf-eq .v{font-family:var(--mono);font-size:20px;font-weight:700;letter-spacing:-.02em}
+  .lf-eq .d{font-size:11px;color:var(--green);font-family:var(--mono)}
+  /* thread */
+  .lf-thread{flex:1;overflow-y:auto;padding:22px 20px;display:flex;flex-direction:column;gap:16px}
+  .msg{max-width:78%;display:flex;gap:10px;opacity:0}
+  .msg.me{align-self:flex-end;flex-direction:row-reverse}
+  .av{width:26px;height:26px;border-radius:8px;flex:none;display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:800}
+  .av.lf{background:linear-gradient(135deg,var(--green),#00a0b8);color:#04120d}
+  .av.me{background:var(--panel2);color:var(--dim);border:1px solid var(--line2)}
+  .bub{padding:11px 14px;border-radius:14px;font-size:13.5px;line-height:1.55}
+  .msg.lf .bub{background:var(--panel);border:1px solid var(--line);border-top-left-radius:5px}
+  .msg.me .bub{background:linear-gradient(135deg,rgba(0,209,160,.16),rgba(0,209,160,.07));
+    border:1px solid rgba(0,209,160,.28);border-top-right-radius:5px}
+  .bub .w{display:inline-block;opacity:0;white-space:pre}
+  .bub .stat{display:inline-flex;align-items:baseline;gap:5px;margin:2px 3px;padding:3px 9px;border-radius:8px;
+    background:rgba(0,209,160,.12);border:1px solid rgba(0,209,160,.25);font-family:var(--mono);font-weight:700;color:var(--green)}
+  .bub .stat.rd{background:rgba(255,92,116,.12);border-color:rgba(255,92,116,.25);color:var(--red)}
+  /* thinking dots */
+  .think{display:flex;gap:5px;padding:14px 16px;background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;border-top-left-radius:5px;width:fit-content}
+  .think i{width:7px;height:7px;border-radius:50%;background:var(--green);display:block}
+  /* composer */
+  .lf-foot{padding:14px 18px 18px;border-top:1px solid var(--line);background:var(--panel)}
+  .chips{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .chip{font-size:12px;color:var(--dim);background:var(--panel2);border:1px solid var(--line2);
+    padding:7px 12px;border-radius:20px;cursor:pointer;opacity:0;transition:color .15s,border-color .15s}
+  .chip:hover{color:var(--txt);border-color:var(--green)}
+  .composer{display:flex;gap:10px;align-items:center;background:var(--bg);border:1px solid var(--line2);
+    border-radius:13px;padding:6px 6px 6px 16px}
+  .composer input{flex:1;background:none;border:0;color:var(--txt);font-size:14px;font-family:var(--sans);outline:none}
+  .composer input::placeholder{color:var(--dimmer)}
+  .send{width:38px;height:38px;border:0;border-radius:10px;cursor:pointer;flex:none;
+    background:linear-gradient(135deg,var(--green),#00a0b8);color:#04120d;display:flex;align-items:center;justify-content:center}
+  .send svg{width:18px;height:18px}
+</style>
+
+<div class="lf-shell">
+  <div class="lf-head">
+    <div class="orb-wrap">
+      <div class="orb-aura" id="orbAura"></div>
+      <div class="orb-ring" id="orbRing"></div>
+      <div class="orb" id="orb"></div>
+    </div>
+    <div class="lf-id">
+      <div class="nm">Luffy</div>
+      <div class="st">state <b id="stText">ACTIVE</b> · heartbeat 2s · 7 open</div>
+    </div>
+    <div class="spacer"></div>
+    <div class="lf-eq">
+      <div class="l">Equity</div>
+      <div class="v" id="eqNum">$0</div>
+      <div class="d" id="eqDelta">▲ 0.0% today</div>
+    </div>
+  </div>
+
+  <div class="lf-thread" id="thread"></div>
+
+  <div class="lf-foot">
+    <div class="chips" id="chips">
+      <div class="chip" onclick="askChip(this)">How are we doing today?</div>
+      <div class="chip" onclick="askChip(this)">Why did you skip ETH?</div>
+      <div class="chip" onclick="askChip(this)">What's the riskiest position?</div>
+      <div class="chip" onclick="askChip(this)">Freeze new entries</div>
+    </div>
+    <div class="composer">
+      <input id="inp" placeholder="Ask Luffy anything…" onkeydown="if(event.key==='Enter')sendMsg()">
+      <button class="send" onclick="sendMsg()" aria-label="send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.js"></script>
+<script>
+(function(){
+  const M = window.Motion;
+  const { animate, stagger } = M;
+  const thread = document.getElementById('thread');
+  const spring = { type:'spring', bounce:0.12, visualDuration:0.45 }; // confident, no overshoot
+
+  // --- breathing presence ---
+  animate('#orb', { scale:[1,1.07,1] }, { duration:4.5, repeat:Infinity, ease:'easeInOut' });
+  animate('#orbAura', { opacity:[.55,.9,.55], scale:[1,1.12,1] }, { duration:4.5, repeat:Infinity, ease:'easeInOut' });
+  animate('#orbRing', { scale:[1,1.35], opacity:[.5,0] }, { duration:3, repeat:Infinity, ease:'easeOut' });
+
+  // --- equity counts up ---
+  animate(0, 12480, { duration:1.4, ease:'easeOut', onUpdate:v=>{
+    document.getElementById('eqNum').textContent = '$'+Math.round(v).toLocaleString();
+  }});
+  animate(0, 3.2, { duration:1.4, delay:.2, ease:'easeOut', onUpdate:v=>{
+    document.getElementById('eqDelta').textContent = '▲ '+v.toFixed(1)+'% today';
+  }});
+
+  function wordSpans(text){
+    // wrap words + inline stat tokens like {SOL +$118} or {ARB -$41 rd}
+    const parts = text.split(/(\{[^}]+\})/g);
+    let html='';
+    parts.forEach(p=>{
+      const m = p.match(/^\{(.+)\}$/);
+      if(m){ const rd=/ rd$/.test(m[1]); const label=m[1].replace(/ rd$/,'');
+        html+=`<span class="w stat${rd?' rd':''}">${label}</span> `;
+      } else {
+        p.split(/(\s+)/).forEach(tok=>{ if(tok.trim()==='' && tok!=='') html+=tok;
+          else if(tok.trim()!=='') html+=`<span class="w">${tok}</span> `; });
+      }
+    });
+    return html;
+  }
+
+  function addMsg(who, text, opts={}){
+    const msg=document.createElement('div'); msg.className='msg '+who;
+    const av=document.createElement('div'); av.className='av '+who; av.textContent = who==='lf'?'L':'S';
+    const bub=document.createElement('div'); bub.className='bub';
+    if(who==='lf' && opts.stream){ bub.innerHTML=wordSpans(text); }
+    else { bub.textContent=text; }
+    msg.appendChild(av); msg.appendChild(bub); thread.appendChild(msg);
+    thread.scrollTop=thread.scrollHeight;
+    animate(msg, { opacity:[0,1], y:[14,0] }, spring);
+    if(who==='lf' && opts.stream){
+      const words=bub.querySelectorAll('.w');
+      animate(words, { opacity:[0,1], y:[6,0] }, { delay:stagger(0.045), duration:.3, ease:'easeOut' });
+    }
+    return msg;
+  }
+
+  let thinkingEl=null;
+  function showThinking(){
+    thinkingEl=document.createElement('div'); thinkingEl.className='msg lf'; thinkingEl.style.opacity=1;
+    const av=document.createElement('div'); av.className='av lf'; av.textContent='L';
+    const t=document.createElement('div'); t.className='think';
+    t.innerHTML='<i></i><i></i><i></i>';
+    thinkingEl.appendChild(av); thinkingEl.appendChild(t); thread.appendChild(thinkingEl);
+    thread.scrollTop=thread.scrollHeight;
+    animate(t.querySelectorAll('i'), { y:[0,-7,0] },
+      { delay:stagger(0.14), duration:.6, repeat:Infinity, ease:'easeInOut' });
+    // presence pulses faster while thinking
+    animate('#orb', { scale:[1,1.12,1] }, { duration:1.1, repeat:Infinity, ease:'easeInOut' });
+  }
+  function hideThinking(){ if(thinkingEl){ thinkingEl.remove(); thinkingEl=null; }
+    animate('#orb', { scale:[1,1.07,1] }, { duration:4.5, repeat:Infinity, ease:'easeInOut' }); }
+
+  function luffyReply(text){
+    showThinking();
+    setTimeout(()=>{ hideThinking(); addMsg('lf', text, {stream:true}); }, 1100);
+  }
+
+  window.askChip=function(el){ const q=el.textContent; document.getElementById('inp').value=''; addMsg('me',q);
+    const canned={
+      'How are we doing today?':"Solid day. Equity {$12,480 +3.2%}, seven positions open, win-rate 58%. Best is {SOL +$118}, worst is {ARB -$41 rd}. Open heat 2.1% — well under the 5% cap.",
+      'Why did you skip ETH?':"Regime flipped to RANGING on ETH and my two active edges there both need trend. VWAP-fade fired but Risk vetoed: heat cap. I journaled the rejection if you want the trace.",
+      "What's the riskiest position?":"{ARB -$41 rd} — it's fighting a downtrend and closest to its stop. If the 4h close breaks 1.02 I flatten it automatically.",
+      'Freeze new entries':"Done — state set to {FROZEN}. Existing exits are still managed, no new entries until you resume. Exchange stops stay armed."
+    };
+    luffyReply(canned[q]||"On it — pulling that from the journal now.");
+  };
+  window.sendMsg=function(){ const inp=document.getElementById('inp'); const q=inp.value.trim(); if(!q)return;
+    inp.value=''; addMsg('me',q);
+    luffyReply("Good question. Here's where things stand: equity {$12,480 +3.2%}, heat 2.1%, and my highest-conviction open trade is {SOL +$118}. Want the full breakdown?");
+  };
+
+  // --- scripted auto-play on load ---
+  const chips=document.querySelectorAll('.chip');
+  setTimeout(()=>animate(chips,{opacity:[0,1],y:[8,0]},{delay:stagger(0.07),duration:.4,ease:'easeOut'}), 300);
+  setTimeout(()=>addMsg('lf',"Morning. I've been trading since 06:00 — everything's green and inside limits. Ask me anything.",{stream:true}), 700);
+  setTimeout(()=>addMsg('me',"How are we doing today?"), 2600);
+  setTimeout(()=>luffyReply("Solid day. Equity {$12,480 +3.2%}, seven positions open, win-rate 58%. Best is {SOL +$118}, worst is {ARB -$41 rd}. Open heat 2.1% — well under the 5% cap."), 3100);
+})();
+</script>
+</div>

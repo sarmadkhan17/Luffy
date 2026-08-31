@@ -20,6 +20,7 @@ manager:
   wraps: [trader.kernel, trader.engine.orchestrator, trader.brain.judge]
   authors: [daily-review]
   status_source: manager
+  category: BRAIN
   desc: Coordinates the team, makes the final call, keeps the books.
 
 employees:
@@ -30,6 +31,7 @@ employees:
     authors: []
     status_source: events
     events: [harvest_cycle, harvest_accepted, crawl_cycle, crawl_doc]
+    category: RESEARCH
     desc: Sources new strategy ideas from ideas feeds and literature.
 
   - name: Strategist
@@ -39,6 +41,7 @@ employees:
     authors: [strategy]
     status_source: events
     events: [review_complete, proposal_accepted, retire, mutate, keep_verdict]
+    category: RESEARCH
     desc: Reviews the strategy book; promotes and demotes.
 
   - name: Theorist
@@ -48,6 +51,7 @@ employees:
     authors: [postmortem]
     status_source: events
     events: [autopsy, doctrine_updated, doctrine_created]
+    category: RESEARCH
     desc: Autopsies losing clusters and edge decay into doctrine.
 
   - name: Risk Officer
@@ -56,6 +60,7 @@ employees:
     wraps: [trader.engine.risk, trader.agents.macro_guard, trader.agents.news_guard]
     authors: []
     status_source: risk
+    category: RISK
     desc: Sizing, heat cap, daily breaker, macro/news event freezes.
 
   - name: Trader
@@ -64,6 +69,7 @@ employees:
     wraps: [trader.engine.executor, trader.engine.exits]
     authors: []
     status_source: trader
+    category: EXECUTION
     desc: Executes entries; manages trailing stops and time exits.
 
   - name: Librarian
@@ -72,4 +78,5 @@ employees:
     wraps: [trader.knowledge.vault]
     authors: [theory, moc]
     status_source: librarian
+    category: KNOWLEDGE
     desc: Keeps the knowledge vault and the map of content current.

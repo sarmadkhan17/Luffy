@@ -21,7 +21,7 @@ import requests
 from ..brain.llm import BrainLLM
 from ..brain.tv import TVClient
 from ..core.journal import Journal
-from ..strategy.backtest import walk_forward
+from ..strategy import evidence
 from ..strategy.genome import FAMILY_GENE_SPECS, Genome
 
 log = logging.getLogger(__name__)
@@ -399,31 +399,17 @@ class Harvester:
         if not pre_ok:
             log.info(f"prefilter advisory-reject ({g.family}): "
                      f"{json.dumps(pre_ev)[:140]}")
-        results = []
-        for sym in ("BTC/USDT", "SOL/USDT"):
-            df = self.feed.fetch_ohlcv(sym, "15m", limit=2900)
-            if df is None or len(df) < 400:
-                continue
-            results.append(walk_forward(g, df, self.cfg["risk"]))
-        test_pfs = [r["test"].profit_factor for r in results
-                    if r["test"].trades >= 2]
-        if test_pfs and min(test_pfs) < 0.5:
-            return False, {"stage": "internal_sanity",
-                           "test_pfs": test_pfs}
-        # trade-count gate lives here (TV free plan hides trade counts):
-        # a candidate must show real activity on the internal 15m test
-        total_trades = sum(r["test"].trades for r in results)
-        min_trades = int(self.cfg.get("strategies", {})
-                         .get("tv_min_oos_trades", 5))
-        if total_trades < min_trades:
-            return False, {"stage": "internal_sanity",
-                           "reason": f"only {total_trades} internal trades "
-                                     f"(<{min_trades}) — no activity edge"}
+        # Binding cheap gate: the genome's real genes, on venue-exact candles,
+        # across the configured symbol set with higher-timeframe context, with
+        # the train/test 'robust' flag enforced. Previously this was a 2-symbol
+        # 30-day run whose only bar was PF ≥ 0.5 — i.e. "don't lose more than
+        # twice what you win" — plus a 5-trade activity check.
+        ok, ev = evidence.run_gauntlet(g, self.feed, self.cfg)
+        if not ok:
+            return False, {"stage": "internal_walk_forward", "internal": ev}
         tv_ok, tv_ev = j.final_verdict(g)
-        return tv_ok, {"stage": tv_ev.get("stage", "yahoo"),
-                       "tv": tv_ev,
-                       "internal": {"test_pfs": test_pfs,
-                                    "total_trades": total_trades}}
+        return tv_ok, {"stage": tv_ev.get("stage", "no_verdict"),
+                       "tv": tv_ev, "internal": ev}
 
     def _deploy(self, g: Genome, idea: dict, evidence: dict):
         from ..core.types import Strategy, StrategyState, new_id

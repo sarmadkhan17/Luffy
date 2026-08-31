@@ -134,6 +134,11 @@ class StrategyFullType(StrategyType):
     state_detail: str
     generation: int = 0
     retire_reason: str = ""
+    trades: int = 0
+    wins: int = 0
+    pnl_usdt: float = 0.0
+    profit_factor: float = 0.0
+    winrate: float = 0.0
 
 
 @strawberry.type
@@ -191,16 +196,22 @@ def build_query(journal: Journal):
                 "SELECT COUNT(*) n FROM trades")[0]["n"]
 
         @strawberry.field
-        def decisions_total(self, symbol: Optional[str] = None) -> int:
+        def decisions_total(self, symbol: Optional[str] = None,
+                            directional_only: bool = False) -> int:
             if symbol:
                 return journal.query(
                     "SELECT COUNT(*) n FROM decisions WHERE symbol=?",
                     (symbol,))[0]["n"]
+            if directional_only:
+                return journal.query(
+                    "SELECT COUNT(*) n FROM decisions WHERE action!='HOLD'"
+                    )[0]["n"]
             return journal.query("SELECT COUNT(*) n FROM decisions")[0]["n"]
 
         @strawberry.field
         def decisions(self, executed_only: bool = False,
                       symbol: Optional[str] = None,
+                      directional_only: bool = False,
                       limit: int = 100, offset: int = 0) -> list[DecisionType]:
             conds, params = [], []
             if executed_only:
@@ -208,6 +219,8 @@ def build_query(journal: Journal):
             if symbol:
                 conds.append("symbol=?")
                 params.append(symbol)
+            if directional_only:
+                conds.append("action!='HOLD'")
             if conds:
                 conds.append("1=1")
             where = ("WHERE " + " AND ".join(conds)) if conds else ""
@@ -307,13 +320,25 @@ def build_query(journal: Journal):
         def strategy_full(self) -> list[StrategyFullType]:
             out = []
             for r in journal.list_strategies():
+                try:
+                    s = json.loads(r.get("stats_json") or "{}")
+                except Exception:
+                    s = {}
+                trades = int(s.get("trades") or 0)
+                wins = int(s.get("wins") or 0)
+                pf = float(s.get("pf") or 0.0)
+                wr = float(s.get("winrate") or
+                           ((wins / trades) if trades else 0.0))
                 out.append(StrategyFullType(
                     id=r["id"], name=r["name"], kind=r["kind"],
                     state=r["state"], origin=r["origin"],
                     hypothesis=r["hypothesis"] or "", params=r["params"] or "{}",
                     state_detail=r["state"],
                     generation=int(r.get("generation") or 0),
-                    retire_reason=r.get("retire_reason") or ""))
+                    retire_reason=r.get("retire_reason") or "",
+                    trades=trades, wins=wins,
+                    pnl_usdt=float(s.get("pnl_usdt") or 0.0),
+                    profit_factor=min(pf, 99.0), winrate=wr))
             return out
 
         @strawberry.field
