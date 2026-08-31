@@ -143,6 +143,8 @@ class Kernel:
         signal.signal(signal.SIGINT, self._graceful)
         threading.Thread(target=self._telegram_listener, daemon=True,
                          name="tg-listener").start()
+        threading.Thread(target=self._derivatives_recorder, daemon=True,
+                         name="derivs-recorder").start()
         threading.Thread(target=self._maybe_validate_agents, daemon=True,
                          name="agent-validator").start()
         if self.cfg.get("harvester", {}).get("enabled", False):
@@ -183,6 +185,46 @@ class Kernel:
     def _graceful(self, signum, _frame) -> None:
         log.warning(f"signal {signum} — shutting down")
         self._stop = True
+
+    def _derivatives_recorder(self) -> None:
+        """Record funding / open interest / taker ratio / long-short every N
+        minutes.
+
+        Runs from day one even though nothing reads it yet. The OI, taker and
+        long-short endpoints are hard-limited to ~30 days of retention, so
+        history not recorded now is permanently unavailable to any future
+        backtest. A coarse backfill at start makes those ~30 days usable
+        immediately instead of after two months of forward recording.
+        """
+        import time as _t
+        dcfg = self.cfg.get("derivatives", {}) or {}
+        if not dcfg.get("enabled", True):
+            log.info("derivatives recorder disabled")
+            return
+        from .data.derivatives import DerivFeed
+        feed = DerivFeed()
+        symbols = dcfg.get("symbols") or self.cfg["universe"]["majors"]
+        interval = float(dcfg.get("record_interval_minutes", 15)) * 60
+        delay = float(dcfg.get("request_delay_s", 0.3))
+        _t.sleep(30)                        # let boot settle
+        if dcfg.get("backfill_on_start", True):
+            try:
+                counts = feed.backfill(symbols, delay=delay)
+                log.info(f"derivatives backfill: {counts}")
+            except Exception as e:
+                log.warning(f"derivatives backfill failed: {e}")
+        while not self._stop:
+            try:
+                counts = feed.record_all(symbols, delay=delay)
+                if counts:
+                    log.info(f"derivatives recorded: {counts}")
+            except Exception as e:
+                log.warning(f"derivatives recorder: {e}")
+            # sleep in slices so shutdown is not delayed a full interval
+            for _ in range(int(interval)):
+                if self._stop:
+                    return
+                _t.sleep(1)
 
     def _harvest_loop(self) -> None:
         """Continuous strategy discovery from the internet."""
