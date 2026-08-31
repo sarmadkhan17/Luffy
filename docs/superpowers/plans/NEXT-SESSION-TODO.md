@@ -15,7 +15,37 @@ scored zero.
 
 ---
 
-## 1. Verify the loop actually fired (do this first, 10 min)
+## 0. THE PIPELINE IS DISCONNECTED — fix this first
+
+**This is a deviation from the agreed design, not a nice-to-have.**
+
+Agreed: Researcher -> Harvester -> Strategist -> Analyst -> Trader -> Librarian.
+
+Wired: `kernel.py:322` calls `writer.write(avoid=[...])` with **no `idea=`**,
+so DeepSeek invents strategies from NOTHING every 3 hours. The Researcher
+(harvester + crawler) runs a separate loop, still maps scraped ideas onto the
+8 legacy families, and still feeds the OLD genome path. The two halves never
+meet, which makes the entire scraping/crawling investment worthless.
+
+The fix is small — `SpecWriter.write(idea=...)` already accepts the shape and
+is verified working end to end against DeepSeek:
+
+1. In `_mechanism_once`, pull an unconsumed idea:
+   `SELECT subject, detail FROM brain_events WHERE kind='harvest_idea'
+    AND subject NOT IN (SELECT subject FROM brain_events
+    WHERE kind IN ('spec_admitted','spec_rejected')) ORDER BY ts DESC LIMIT 1`
+2. Pass it as `writer.write(idea={"title":..., "text":..., "idea_id":...,
+   "url":...}, avoid=[...])`.
+3. Journal the outcome against that `idea_id` so it is not retried forever.
+4. Then do item 3 below (the harvester prompt), so ideas arrive as MECHANISMS
+   rather than pre-flattened family guesses.
+
+Until this is done the Strategist is guessing in a vacuum and the crawler's
+435-items-per-cycle is dead weight.
+
+---
+
+## 1. Verify the loop actually fired (10 min)
 
 `kernel._strategy_mechanism_loop` sleeps 300s after boot then runs every 3h.
 It had not yet logged a cycle when the session ended.
