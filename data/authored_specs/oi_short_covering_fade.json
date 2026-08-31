@@ -1,0 +1,50 @@
+{
+  "id": "auth_oi_short_covering_fade",
+  "name": "Open Interest Short Covering Fade",
+  "thesis": "Price rising while open interest falls is contracts being closed, not opened: the move is short covering rather than new demand. Covering ends when the shorts are out, so the advance has no successor bid behind it.",
+  "invalidation": "Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.",
+  "provenance": {
+    "source_kind": "authored",
+    "author": "quant",
+    "mechanism": "open_interest"
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "short",
+  "entry_long": "",
+  "entry_short": "ret(96) > 0.02 and oi_ret(96) < -0.02",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 1.5
+    },
+    "target": {
+      "kind": "rr",
+      "v": 2.0
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 32
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "RANGING",
+    "TRENDING_UP"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "auth_oi_leverage_buildup_fade",
+  "name": "Open Interest Leverage Buildup Fade",
+  "thesis": "Price and open interest rising together at an extreme means new leveraged longs are being added into strength. That is the population that gets liquidated first, and the liquidation is the move worth trading.",
+  "invalidation": "Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.",
+  "provenance": {
+    "source_kind": "authored",
+    "author": "quant",
+    "mechanism": "open_interest"
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "short",
+  "entry_long": "",
+  "entry_short": "oi_z(1500) > 1.8 and ret(96) > 0.015 and rsi(14) > 65",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 1.5
+    },
+    "target": {
+      "kind": "rr",
+      "v": 2.0
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 32
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "TRENDING_UP",
+    "VOLATILE"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

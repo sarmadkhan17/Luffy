@@ -1,0 +1,50 @@
+{
+  "id": "auth_negative_funding_squeeze",
+  "name": "Negative Funding Squeeze",
+  "thesis": "When funding turns deeply negative the shorts are paying the longs to hold, which means positioning is crowded short. That crowd is fuel: any upward move forces covering, and covering is price-insensitive buying.",
+  "invalidation": "Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.",
+  "provenance": {
+    "source_kind": "authored",
+    "author": "quant",
+    "mechanism": "funding"
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "long",
+  "entry_long": "funding_z(1920) < -1.5 and close > ema(50)",
+  "entry_short": "",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 2.5
+    },
+    "target": {
+      "kind": "rr",
+      "v": 3.0
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 64
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "TRENDING_UP",
+    "RANGING"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

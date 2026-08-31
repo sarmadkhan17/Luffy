@@ -1,0 +1,49 @@
+{
+  "id": "auth_correlation_break_reversion",
+  "name": "BTC Correlation Break Reversion",
+  "thesis": "Alts trade as high-beta BTC most of the time. When an alt's correlation to BTC collapses the move is idiosyncratic, and idiosyncratic moves in assets with no independent cash flow are usually flow, not information \u2014 so they revert to the beta relationship.",
+  "invalidation": "Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.",
+  "provenance": {
+    "source_kind": "authored",
+    "author": "quant",
+    "mechanism": "cross_asset"
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_long": "corr_btc(192) < 0.2 and rel_strength_btc(96) < -0.03",
+  "entry_short": "corr_btc(192) < 0.2 and rel_strength_btc(96) > 0.03",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 1.5
+    },
+    "target": {
+      "kind": "rr",
+      "v": 2.0
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 32
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "RANGING"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

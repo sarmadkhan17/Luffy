@@ -101,3 +101,11 @@ def test_max_bars_out_of_range_rejected():
     s = _valid()
     s.exit.time = {"max_bars": 0}
     assert any("max_bars" in e for e in StrategySpec.validate(s))
+
+
+def test_four_hour_timeframe_is_allowed():
+    """Cost per round trip is 18.5% of risk at 15m and 7.8% at 4h, so the
+    higher timeframes must be expressible."""
+    s = _valid()
+    s.timeframe = "4h"
+    assert not any("timeframe" in e for e in StrategySpec.validate(s))

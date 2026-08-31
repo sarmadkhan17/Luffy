@@ -1,0 +1,51 @@
+{
+  "id": "auth_aggressor_thrust_breakout",
+  "name": "Aggressor Thrust Breakout",
+  "thesis": "A range break that coincides with an extreme in aggressor buying is a break someone is paying the spread to cause. Paying up is costly and therefore informative, which separates a real break from drift across a level.",
+  "invalidation": "Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.",
+  "provenance": {
+    "source_kind": "authored",
+    "author": "quant",
+    "mechanism": "flow",
+    "note": "Entry thresholds loosened once for TESTABILITY: the original produced under 10 out-of-sample trades across 5 symbols, which is an absence of a verdict rather than a negative one. The mechanism is unchanged."
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_long": "close > donchian_hi(48) and zscore(taker_buy_frac, 192) > 1.0",
+  "entry_short": "close < donchian_lo(48) and zscore(taker_buy_frac, 192) < -1.0",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 2.5
+    },
+    "target": {
+      "kind": "rr",
+      "v": 3.0
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 64
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "TRENDING_UP",
+    "TRENDING_DOWN"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

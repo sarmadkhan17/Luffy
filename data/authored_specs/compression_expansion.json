@@ -1,0 +1,51 @@
+{
+  "id": "auth_compression_expansion",
+  "name": "Volatility Compression Expansion",
+  "thesis": "Realised volatility is mean-reverting on a horizon of days: an extreme low is not calm that persists but stored energy. Entering the break of a compressed range trades the transition rather than the state.",
+  "invalidation": "Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.",
+  "provenance": {
+    "source_kind": "authored",
+    "author": "quant",
+    "mechanism": "volatility"
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_long": "pct_rank(realized_vol(96), 480) < 0.15 and close > donchian_hi(48)",
+  "entry_short": "pct_rank(realized_vol(96), 480) < 0.15 and close < donchian_lo(48)",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 2.5
+    },
+    "target": {
+      "kind": "rr",
+      "v": 3.0
+    },
+    "trail": {
+      "kind": "atr",
+      "mult": 2.0,
+      "arm_at_r": 1.0
+    },
+    "time": {
+      "max_bars": 64
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "RANGING"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

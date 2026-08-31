@@ -1,0 +1,51 @@
+{
+  "id": "auth_funding_price_divergence",
+  "name": "Funding Price Divergence",
+  "thesis": "Price making new highs while funding cools means the advance is not being bought with leverage. That is the healthy version of a rally and it tends to persist, in contrast to the leverage-driven kind that funding flags.",
+  "invalidation": "Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.",
+  "provenance": {
+    "source_kind": "authored",
+    "author": "quant",
+    "mechanism": "funding"
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "long",
+  "entry_long": "close >= donchian_hi(192) and funding_z(1920) < 0.0",
+  "entry_short": "",
+  "filters": [
+    "adx(14) > 18"
+  ],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 2.5
+    },
+    "target": {
+      "kind": "rr",
+      "v": 3.0
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 64
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "TRENDING_UP"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

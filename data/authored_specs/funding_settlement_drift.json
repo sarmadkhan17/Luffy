@@ -1,0 +1,52 @@
+{
+  "id": "auth_funding_settlement_drift",
+  "name": "Funding Settlement Drift",
+  "thesis": "Funding settles at 00:00, 08:00 and 16:00 UTC. Traders holding the paying side reduce into settlement to avoid the charge and re-add after it, which produces a mechanical unwind-and-restore around those fixed hours that has nothing to do with valuation.",
+  "invalidation": "Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.",
+  "provenance": {
+    "source_kind": "authored",
+    "author": "quant",
+    "mechanism": "funding"
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_long": "hour_utc == 8 and funding_z(1920) > 1.0",
+  "entry_short": "hour_utc == 8 and funding_z(1920) < -1.0",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 1.2
+    },
+    "target": {
+      "kind": "rr",
+      "v": 2.0
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 24
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "TRENDING_UP",
+    "TRENDING_DOWN",
+    "RANGING",
+    "VOLATILE"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

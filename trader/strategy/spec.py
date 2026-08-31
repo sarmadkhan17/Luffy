@@ -13,7 +13,7 @@ import json
 import re
 from dataclasses import asdict, dataclass, field
 
-TIMEFRAMES = {"5m", "15m", "1h"}
+TIMEFRAMES = {"5m", "15m", "1h", "4h"}
 DIRECTIONS = {"long", "short", "both"}
 REGIMES = {"TRENDING_UP", "TRENDING_DOWN", "RANGING", "VOLATILE"}
 MARKETS = {"spot", "futures"}
