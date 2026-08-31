@@ -161,3 +161,37 @@ def test_trailing_stop_locks_in_profit():
     assert trailed.trades == 1 and no_trail.trades == 1
     assert trailed.pnl_usdt > no_trail.pnl_usdt, \
         "a trail must exit the reversal better than riding it to the stop"
+
+
+def _noisy(n=600):
+    """Ranging, noisy path — exercises both stop and target exits."""
+    rng = np.random.default_rng(9)
+    close = 100 * np.cumprod(1 + rng.normal(0, 0.004, n))
+    df = pd.DataFrame({
+        "ts": pd.date_range("2026-01-01", periods=n, freq="15min", tz="UTC"),
+        "open": close, "close": close, "volume": rng.uniform(50, 500, n)})
+    df["high"] = df[["open", "close"]].max(axis=1) * 1.0015
+    df["low"] = df[["open", "close"]].min(axis=1) * 0.9985
+    return df[["ts", "open", "high", "low", "close", "volume"]]
+
+
+def test_engine_equivalence_on_legacy_genomes():
+    """Old and new engines must produce identical trades from identical
+    signals under the exit geometry the old engine hardcoded."""
+    import pathlib
+    import sys
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+    from scripts.backtest_equivalence import engine_equivalence
+    from trader.strategy.backtest import context_frames
+    from trader.strategy.library import build_seed_population
+
+    df = _noisy()
+    ctx = context_frames(df, None)
+    checked = 0
+    for _st, g in build_seed_population():
+        rep = engine_equivalence(g, df, RISK, ctx=ctx)
+        if rep["signals"] == 0:
+            continue
+        checked += 1
+        assert rep["match"], f"{g.family}: {rep}"
+    assert checked > 0, "no legacy family produced a signal — test is vacuous"
