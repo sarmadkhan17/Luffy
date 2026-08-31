@@ -1,0 +1,50 @@
+{
+  "id": "seed_ma_crossover",
+  "name": "Moving Average Crossover",
+  "thesis": "Classic trend following: a fast average crossing a slow one marks the point at which recent order flow has decisively outweighed the prior consensus price, and momentum tends to continue past that pivot.",
+  "invalidation": "Demote after profit factor below 0.85 over 20 trades or 6 consecutive losses.",
+  "provenance": {
+    "source_kind": "seed",
+    "parent": "library.py",
+    "note": "Port of eval_ma_cross. The legacy version accepts a cross up to 2 bars old; this fires only on the cross bar itself."
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_long": "prev(ema(20), 1) <= prev(ema(50), 1) and ema(20) > ema(50)",
+  "entry_short": "prev(ema(20), 1) >= prev(ema(50), 1) and ema(20) < ema(50)",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 2.5
+    },
+    "target": {
+      "kind": "atr",
+      "mult": 4.5
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 48
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "TRENDING_UP",
+    "TRENDING_DOWN"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

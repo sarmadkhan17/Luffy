@@ -17,46 +17,75 @@ def rsi(close: pd.Series, period: int = 14) -> pd.Series:
     return 100 - 100 / (1 + rs)
 
 
+def _true_range(df: pd.DataFrame) -> pd.Series:
+    h, l, c = df["high"], df["low"], df["close"]
+    return pd.concat([h - l, (h - c.shift()).abs(),
+                      (l - c.shift()).abs()], axis=1).max(axis=1)
+
+
+def atr_series(df: pd.DataFrame, period: int = 14) -> pd.Series:
+    return _true_range(df).rolling(period).mean()
+
+
 def atr(df: pd.DataFrame, period: int = 14) -> float:
-    h, l, c = df["high"], df["low"], df["close"]
-    tr = pd.concat([h - l, (h - c.shift()).abs(), (l - c.shift()).abs()], axis=1).max(axis=1)
-    return float(tr.rolling(period).mean().iloc[-1])
+    return float(atr_series(df, period).iloc[-1])
 
 
-def adx(df: pd.DataFrame, period: int = 14) -> float:
-    h, l, c = df["high"], df["low"], df["close"]
+def adx_series(df: pd.DataFrame, period: int = 14) -> pd.Series:
+    h, l = df["high"], df["low"]
     up = h.diff()
     dn = -l.diff()
     plus_dm = np.where((up > dn) & (up > 0), up, 0.0)
     minus_dm = np.where((dn > up) & (dn > 0), dn, 0.0)
-    tr = pd.concat([h - l, (h - c.shift()).abs(), (l - c.shift()).abs()], axis=1).max(axis=1)
-    atr_ = tr.ewm(alpha=1 / period, adjust=False).mean() + 1e-12
-    plus_di = 100 * pd.Series(plus_dm, index=df.index).ewm(alpha=1 / period, adjust=False).mean() / atr_
-    minus_di = 100 * pd.Series(minus_dm, index=df.index).ewm(alpha=1 / period, adjust=False).mean() / atr_
+    atr_ = _true_range(df).ewm(alpha=1 / period, adjust=False).mean() + 1e-12
+    plus_di = 100 * pd.Series(plus_dm, index=df.index).ewm(
+        alpha=1 / period, adjust=False).mean() / atr_
+    minus_di = 100 * pd.Series(minus_dm, index=df.index).ewm(
+        alpha=1 / period, adjust=False).mean() / atr_
     dx = 100 * (plus_di - minus_di).abs() / (plus_di + minus_di + 1e-12)
-    return float(dx.ewm(alpha=1 / period, adjust=False).mean().iloc[-1])
+    return dx.ewm(alpha=1 / period, adjust=False).mean()
+
+
+def adx(df: pd.DataFrame, period: int = 14) -> float:
+    return float(adx_series(df, period).iloc[-1])
+
+
+def vwap_series(df: pd.DataFrame, n: int = 96) -> pd.Series:
+    """Rolling n-bar VWAP. At the last bar this equals anchored_vwap(df, n)."""
+    tp = (df["high"] + df["low"] + df["close"]) / 3
+    pv = (tp * df["volume"]).rolling(n).sum()
+    vol = df["volume"].rolling(n).sum()
+    return pv / (vol + 1e-12)
 
 
 def anchored_vwap(df: pd.DataFrame, anchor_bars: int = 96) -> float:
     """VWAP over the last `anchor_bars` bars ≈ session/market cost basis."""
-    w = df.tail(anchor_bars)
-    tp = (w["high"] + w["low"] + w["close"]) / 3
-    denom = w["volume"].sum() + 1e-12
-    return float((tp * w["volume"]).sum() / denom)
+    return float(vwap_series(df, anchor_bars).iloc[-1])
+
+
+def zscore_series(s: pd.Series, n: int = 96) -> pd.Series:
+    """Rolling z-score. Matches zscore()'s sample std (ddof=1) and its
+    0.0-on-degenerate-window behaviour."""
+    m = s.rolling(n).mean()
+    sd = s.rolling(n).std()
+    z = (s - m) / sd.where(sd > 1e-12)
+    return z.replace([np.inf, -np.inf], 0.0).fillna(0.0)
 
 
 def zscore(s: pd.Series, lookback: int = 96) -> float:
     w = s.tail(lookback)
     if w.isna().any() or len(w.dropna()) < 10:
         return 0.0
-    sd = float(w.std())
-    val = float(s.iloc[-1])
-    mean = float(w.mean())
-    if not np.isfinite(sd) or not np.isfinite(val) or not np.isfinite(mean) \
-            or sd < 1e-12:
-        return 0.0
-    z = (val - mean) / sd
-    return z if np.isfinite(z) else 0.0
+    return float(zscore_series(s, lookback).iloc[-1])
+
+
+def realized_vol_series(df: pd.DataFrame, n: int = 48) -> pd.Series:
+    """Rolling std of log returns. Matches realized_vol() on a full window:
+    that function computes r.std()*sqrt(len(r))/sqrt(bars), and len(r) == bars
+    once warmed up. The scalar keeps its own body because agents/regime.py
+    depends on its short-frame scaling."""
+    r = np.log(df["close"]).diff()
+    return r.rolling(n).std()
 
 
 def realized_vol(df: pd.DataFrame, bars: int = 48) -> float:

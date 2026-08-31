@@ -1,0 +1,50 @@
+{
+  "id": "seed_rsi_exhaustion_reclaim",
+  "name": "RSI Exhaustion Reclaim",
+  "thesis": "Momentum extremes overshoot because trend-followers and forced liquidations pile into the same direction; the reclaim of an oversold or overbought threshold marks the point at which that flow is exhausted and reverses.",
+  "invalidation": "Demote if win rate is below 40% over 15 trades or profit factor below 1.0 over 20.",
+  "provenance": {
+    "source_kind": "seed",
+    "parent": "library.py",
+    "note": "Exact port of eval_rsi_extreme's crossing logic via prev(). Fires more often than the legacy family because this spec uses 30/70 thresholds while PARAM_DEFAULTS['rsi_extreme'] carries 25/75."
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_long": "prev(rsi(14), 1) < 30 and rsi(14) >= 30",
+  "entry_short": "prev(rsi(14), 1) > 70 and rsi(14) <= 70",
+  "filters": [],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 1.8
+    },
+    "target": {
+      "kind": "rr",
+      "v": 1.8
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 24
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "RANGING",
+    "VOLATILE"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

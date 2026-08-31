@@ -1,0 +1,53 @@
+{
+  "id": "seed_breakout_retest",
+  "name": "Breakout Retest",
+  "thesis": "Range breakouts with volume confirmation trap the other side; the retest that holds converts trapped traders into fuel, paying continuation in the breakout direction.",
+  "invalidation": "Demote after profit factor below 0.9 over 20 trades or drawdown beyond 8%.",
+  "provenance": {
+    "source_kind": "seed",
+    "parent": "library.py",
+    "note": "Port of eval_breakout_retest. Two deliberate differences. (1) The range level must EXCLUDE the breakout bar: donchian_hi(48) already contains bar i-1, so `prev(close,1) > donchian_hi(48)` is unsatisfiable by construction and scored zero signals on 8000 real bars. prev(donchian_hi(48), 2) ends the window at i-3, matching the legacy df.iloc[-n-5:-2]. (2) The legacy volume test only scales confidence (0.66 vs 0.50) and never gates the signal; here it is a hard filter, so this fires ~28% less often."
+  },
+  "universe": {
+    "include": [],
+    "exclude": [],
+    "min_volume_usdt": 0
+  },
+  "timeframe": "15m",
+  "direction": "both",
+  "entry_long": "prev(close, 1) > prev(donchian_hi(48), 2) and (abs(low - prev(donchian_hi(48), 2)) <= 0.5 * atr(14) or close >= prev(donchian_hi(48), 2))",
+  "entry_short": "prev(close, 1) < prev(donchian_lo(48), 2) and (abs(high - prev(donchian_lo(48), 2)) <= 0.5 * atr(14) or close <= prev(donchian_lo(48), 2))",
+  "filters": [
+    "sma_of(volume, 3) > 1.4 * prev(sma_of(volume, 48), 48)"
+  ],
+  "exit": {
+    "stop": {
+      "kind": "atr",
+      "mult": 2.5
+    },
+    "target": {
+      "kind": "atr",
+      "mult": 4.5
+    },
+    "trail": {
+      "kind": "none"
+    },
+    "time": {
+      "max_bars": 32
+    },
+    "signal_exit": ""
+  },
+  "regime_filter": [
+    "TRENDING_UP",
+    "TRENDING_DOWN",
+    "RANGING"
+  ],
+  "markets": [
+    "futures"
+  ],
+  "generation": 0,
+  "parent_id": "",
+  "data_requires": [
+    "ohlcv"
+  ]
+}

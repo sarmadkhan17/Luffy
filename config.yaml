@@ -24,6 +24,18 @@ universe:
       - MSTR/USDT
       - CRCL/USDT
 
+derivatives:
+  enabled: true
+  # OI / taker / long-short endpoints are capped at 500 rows AND hard-limited
+  # to ~30 days of retention (measured 2026-08-31: 15m reaches 5d, 1h reaches
+  # 20d, 4h and 1d both stop at 30d). Funding goes back years. So the recorder
+  # runs from day one and history accumulates past the API window, and a
+  # coarse backfill at boot makes ~30 days usable immediately.
+  record_interval_minutes: 15
+  backfill_on_start: true
+  symbols: [BTC/USDT, ETH/USDT, SOL/USDT, XRP/USDT, SUI/USDT]
+  request_delay_s: 0.3
+
 timeframes:
   execution: 15m
   context: ["1h", "4h"]
@@ -46,7 +58,11 @@ risk:
   take_profit_atr_mult: 4.5
   trailing_atr_mult: 2.8
   min_notional_usdt: 10
-  taker_fee_pct: 0.05            # cost model from day one (REQUIREMENTS §10)
+  taker_fee_pct: 0.05
+  # perp carry charged in the backtest per 8h held (was unmodelled entirely)
+  funding_rate_8h: 0.0001
+  # minutes per bar for the backtest's funding/hold accounting
+  bar_minutes: 15            # cost model from day one (REQUIREMENTS §10)
   slippage_atr_frac: 0.06        # synthetic slippage = frac of ATR per fill
 
 strategies:
@@ -59,7 +75,26 @@ strategies:
   paper_probation_trades: 15     # trades a new strategy must pass in paper before live eligibility
   paper_min_winrate: 0.40
   paper_min_profit_factor: 1.15
-  auto_demote_drawdown_pct: 8.0  # statistical instant demotion, no LLM needed
+  auto_demote_drawdown_pct: 8.0
+  # bars of 15m history each gauntlet backtest pulls (0 = everything cached).
+  # Was hardcoded to 2900 (~30d). candles.db now holds ~20k bars (~209d), but
+  # the backtester costs ~1.9 ms/bar/symbol, so a full 20k x 5-symbol run is
+  # ~190s — longer than a brain tick can spend. 8000 (~83d) keeps a full
+  # gauntlet near 75s while giving ~25d out-of-sample instead of the ~7d the
+  # old 2900-bar window actually delivered. Raise for periodic deep runs.
+  backtest_bars: 8000
+  # symbols the internal gauntlet walks forward over
+  backtest_symbols: ["BTC/USDT", "ETH/USDT", "SOL/USDT", "XRP/USDT", "SUI/USDT"]
+  # binding cheap gate on the internal walk-forward
+  gauntlet_min_test_pf: 1.15
+  gauntlet_min_test_trades: 20
+  # bars used by the cheap single-symbol prescreen before the full run
+  prescreen_bars: 3000
+  # wall-clock ceiling for one propose() sweep (it runs inside the brain
+  # tick). <= 0 disables the sweep.
+  gauntlet_time_budget_s: 300
+  # how many prescreen survivors earn a full multi-symbol walk-forward
+  gauntlet_max_full_runs: 2  # statistical instant demotion, no LLM needed
 
 tv_harness:
   enabled: true                  # REAL Strategy Tester via browser automation
@@ -133,6 +168,7 @@ crawler:
 
 brain:
   provider: deepseek
+  base_url: https://api.deepseek.com   # OpenAI-compatible; swap for Ollama/OpenRouter later
   model_fast: deepseek-chat            # V3 — proposals, summaries
   model_deep: deepseek-reasoner        # R1 — autopsies, strategy verdicts
   evolution_interval_minutes: 120      # continuous evolution heartbeat
@@ -140,6 +176,10 @@ brain:
   judge_meta_every_hours: 168          # weekly "right direction?" deep review
   daily_token_budget: 200000
   max_tokens_per_call: 4000
+  # deepseek-reasoner spends max_tokens on chain-of-thought FIRST; if the cap
+  # is hit while still reasoning it returns empty content. Deep calls need
+  # room for reasoning + answer (autopsy measured at ~12.4k completion tokens).
+  max_tokens_deep: 16000
 
 dashboard:
   host: 0.0.0.0
