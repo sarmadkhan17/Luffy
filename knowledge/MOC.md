@@ -29,11 +29,14 @@ type: moc
 - [[Statistical Mean Reversion]]
 
 ## Strategies
+- [[Aggressor_Divergence_At_Highs]]
+- [[Aggressor_Thrust_Breakout]]
 - [[BB_2.5σ_Band_Fade]]
 - [[BB_3σ_Exhaustion_Fade]]
 - [[BTC_Rotation_Momentum]]
 - [[Breakout-Retest]]
 - [[EMA_Stack_Pullback]]
+- [[Funding_Price_Divergence]]
 - [[Liquidity_Sweep_Reversal]]
 - [[RSI_Exhaustion_Reclaim]]
 - [[VWAP_Extreme_Fade]]
