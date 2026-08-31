@@ -2502,7 +2502,7 @@ from `library.py`:
 | file | direction | entry_long | entry_short | filters | exit stop / target / max_bars |
 |---|---|---|---|---|---|
 | `vwap_extreme_fade.json` | both | `zscore((close - vwap(96)) / vwap(96), 96) < -2.5` | `zscore((close - vwap(96)) / vwap(96), 96) > 2.5` | — | atr 2.0 / rr 1.5 / 24 |
-| `breakout_retest.json` | both | `prev(close, 1) > donchian_hi(48) and low - donchian_hi(48) <= 0.5 * atr(14)` | `prev(close, 1) < donchian_lo(48) and donchian_lo(48) - high <= 0.5 * atr(14)` | `volume > 1.4 * sma_volume_proxy` → use `volume > 1.4 * (vwap(48) * 0 + volume)` is wrong; instead add the filter `volume > 1.4 * prev(volume, 1)` | atr 2.5 / atr 4.5 / 32 |
+| `breakout_retest.json` | both | `prev(close, 1) > donchian_hi(48) and low - donchian_hi(48) <= 0.5 * atr(14)` | `prev(close, 1) < donchian_lo(48) and donchian_lo(48) - high <= 0.5 * atr(14)` | see the volume filter below | atr 2.5 / atr 4.5 / 32 |
 | `liquidity_sweep_reversal.json` | both | `low < donchian_lo(60) * 0.998 and close > donchian_lo(60)` | `high > donchian_hi(60) * 1.002 and close < donchian_hi(60)` | — | atr 1.5 / rr 2.0 / 16 |
 | `btc_rotation_momentum.json` | long | `btc_ret(4) > 0.008 and ret(4) > 0 and rel_strength_btc(4) < 0` | — | `corr_btc(96) > 0.3` | atr 2.0 / rr 2.0 / 24 |
 | `ma_crossover.json` | both | `prev(ema(20), 1) <= prev(ema(50), 1) and ema(20) > ema(50)` | `prev(ema(20), 1) >= prev(ema(50), 1) and ema(20) < ema(50)` | — | atr 2.5 / atr 4.5 / 48 |
