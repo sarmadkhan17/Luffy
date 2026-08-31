@@ -302,3 +302,5 @@ def _rel_strength_btc(ctx, n):
 # parse() recognises the name and its arity.
 register("htf", arg_specs=((str, None, None), SERIES_ARG))(
     lambda ctx, tf, expr: expr)
+
+from . import features_deriv          # noqa: E402,F401  (registration side-effect)
