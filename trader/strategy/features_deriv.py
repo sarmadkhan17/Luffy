@@ -137,7 +137,7 @@ def _basis_z(ctx, n):
 
 
 @register("funding_pct", arg_specs=((int, 24, 2000),), domain=(0.0, 1.0),
-          requires=("ohlcv", "funding"))
+          requires=("funding",))
 def _funding_pct(ctx, n):
     """Where funding sits in its own recent distribution. A percentile
     survives regime shifts in the level that a z-score does not."""
@@ -145,14 +145,14 @@ def _funding_pct(ctx, n):
 
 
 @register("basis_slope", arg_specs=((int, 6, 500),), domain=(-1.0, 1.0),
-          requires=("ohlcv", "basis"))
+          requires=("basis",))
 def _basis_slope(ctx, n):
     b = _deriv(ctx, "basis")
     return b - b.shift(int(n))
 
 
 @register("oi_price_div", arg_specs=((int, 6, 500),), domain=(-10.0, 10.0),
-          requires=("ohlcv", "open_interest"))
+          requires=("open_interest",))
 def _oi_price_div(ctx, n):
     """Open interest building against the price move — positioning growing
     into a decline is a different animal from one growing into a rally.

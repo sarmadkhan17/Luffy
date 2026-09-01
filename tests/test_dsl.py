@@ -66,6 +66,20 @@ def test_data_requires_is_derived_not_declared():
     assert data_requires(parse("close > ema(20)")) == ("ohlcv",)
 
 
+@pytest.mark.parametrize("expr,series", [
+    ("funding_pct(96) > 0.9", "funding"),
+    ("basis_slope(24) > 0.01", "basis"),
+    ("oi_price_div(24) > 1.0", "open_interest"),
+])
+def test_deriv_only_features_do_not_declare_ohlcv(expr, series):
+    """funding_pct/basis_slope/oi_price_div all read ctx.df['close'] too,
+    but every other feature in features_deriv.py declares only its own
+    derivative series (e.g. `funding_z` -> requires=("funding",)) and lets
+    the "ohlcv" fallback in data_requires() supply the base frame. These
+    three broke that convention by declaring "ohlcv" explicitly."""
+    assert data_requires(parse(expr)) == (series,)
+
+
 def test_empty_expression_rejected():
     with pytest.raises(SpecError):
         parse("")
