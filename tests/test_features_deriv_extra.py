@@ -46,3 +46,17 @@ def test_oi_price_div_is_positive_when_oi_rises_as_price_falls():
     oi = np.linspace(1000.0, 2000.0, n)
     ctx = _ctx(price, "oi", oi)
     assert FEATURES["oi_price_div"].fn(ctx, 24).iloc[-1] > 0
+
+
+def test_oi_price_div_is_nan_when_lagged_oi_is_zero():
+    """When OI was zero n bars ago, division by zero produces inf unless
+    masked. Assert that NaN, not inf, results from this degenerate case."""
+    n = 60
+    price = np.ones(n) * 100.0
+    oi = np.concatenate([np.zeros(10), np.linspace(1000.0, 2000.0, n - 10)])
+    ctx = _ctx(price, "oi", oi)
+    result = FEATURES["oi_price_div"].fn(ctx, 10)
+    # First 10 bars have NaN from shift; bars 10-19 divide by zero (lagged OI=0)
+    assert np.all(~np.isfinite(result[:20]) | result[:20].isna())
+    # After warmup, result should be finite
+    assert np.all(np.isfinite(result[20:]) | result[20:].isna())

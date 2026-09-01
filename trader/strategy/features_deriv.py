@@ -151,13 +151,15 @@ def _basis_slope(ctx, n):
     return b - b.shift(int(n))
 
 
-@register("oi_price_div", arg_specs=((int, 6, 500),), domain=(-2.0, 2.0),
+@register("oi_price_div", arg_specs=((int, 6, 500),), domain=(-10.0, 10.0),
           requires=("ohlcv", "open_interest"))
 def _oi_price_div(ctx, n):
     """Open interest building against the price move — positioning growing
-    into a decline is a different animal from one growing into a rally."""
+    into a decline is a different animal from one growing into a rally.
+    Domain is a search range for the optimizer, not a claim about data bounds."""
     n = int(n)
     oi = _deriv(ctx, "oi")
-    oi_ret = oi / oi.shift(n) - 1.0
+    oi_shifted = oi.shift(n)
+    oi_ret = (oi / oi_shifted - 1.0).mask(oi_shifted == 0)
     px_ret = ctx.df["close"] / ctx.df["close"].shift(n) - 1.0
     return oi_ret - px_ret
