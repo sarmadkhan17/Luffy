@@ -15,9 +15,16 @@ from __future__ import annotations
 
 from .features import SERIES_ARG, register
 
-register("xs_rank", arg_specs=(SERIES_ARG,), domain=(0.0, 1.0))(
-    lambda ctx, expr: expr)
-register("breadth", arg_specs=(SERIES_ARG,), domain=(0.0, 1.0))(
-    lambda ctx, expr: expr)
-register("dispersion", arg_specs=(SERIES_ARG,), domain=(0.0, 10.0))(
-    lambda ctx, expr: expr)
+
+# No `domain`: each marker wraps an inner expression of arbitrary scale
+# (a price, a return, an oscillator already in [0, 1] — anything), so no
+# fixed range is honest here. `xs_rank` and `breadth` are bounded in [0, 1]
+# by construction but that is a property of the REDUCTION, not something a
+# literal is ever compared against directly in a useful way; `dispersion`
+# inherits the inner expression's own scale entirely (e.g. `dispersion(close)`
+# measures in the tens of thousands on real 15m data). Without a declared
+# domain, extract_literals() falls back to tuning relative to the author's
+# own literal — the correct behaviour for an unbounded wrapper.
+register("xs_rank", arg_specs=(SERIES_ARG,))(lambda ctx, expr: expr)
+register("breadth", arg_specs=(SERIES_ARG,))(lambda ctx, expr: expr)
+register("dispersion", arg_specs=(SERIES_ARG,))(lambda ctx, expr: expr)
