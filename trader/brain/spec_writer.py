@@ -72,7 +72,8 @@ _RULES = """DSL rules (violations are rejected, not repaired for you):
   spec using them is refused unless the data covers it."""
 
 
-def _prompt(idea: dict | None, doctrine: dict | None, avoid: list) -> str:
+def _prompt(idea: dict | None, doctrine: dict | None, avoid: list,
+            data: str = "") -> str:
     head = ("You are the Strategist for an autonomous crypto futures trading "
             "firm. Write ONE new trading strategy.\n\n")
     if idea:
@@ -85,6 +86,12 @@ def _prompt(idea: dict | None, doctrine: dict | None, avoid: list) -> str:
                  "different strategy instead.\n\n")
     if doctrine:
         head += f"Operating beliefs:\n{json.dumps(doctrine)[:600]}\n\n"
+    if data:
+        # Its own section, not folded into `doctrine`: the brief is the
+        # binding constraint on what can be SCORED, and truncating it away
+        # is how three consecutive specs got written against series the
+        # Analyst then refused for coverage.
+        head += f"{data}\n\n"
     if avoid:
         head += ("The book already trades these, so a near-duplicate is "
                  f"worthless however well it backtests:\n  "
@@ -153,18 +160,19 @@ class SpecWriter:
         self.llm = llm
 
     def write(self, idea: dict | None = None, doctrine: dict | None = None,
-              avoid: list | None = None) -> tuple[StrategySpec | None, dict]:
+              avoid: list | None = None,
+              data: str = "") -> tuple[StrategySpec | None, dict]:
         """Compose one spec. Returns (spec_or_None, trace)."""
         if not (self.llm and getattr(self.llm, "available", False)):
             return None, {"reason": "no LLM available"}
 
-        prompt = _prompt(idea, doctrine, avoid or [])
+        prompt = _prompt(idea, doctrine, avoid or [], data)
         trace: dict = {"attempts": []}
         for attempt in range(MAX_REPAIRS + 1):
             raw = self.llm.chat_json(prompt, deep=(attempt == 0))
             if not isinstance(raw, dict):
                 trace["attempts"].append({"error": "non-JSON reply"})
-                prompt = _prompt(idea, doctrine, avoid or []) + \
+                prompt = _prompt(idea, doctrine, avoid or [], data) + \
                     "\n\nYour previous reply was not valid JSON. Output JSON only."
                 continue
             provenance = {"source_kind": "strategist",
@@ -192,7 +200,7 @@ class SpecWriter:
                 break
             # feed the errors back — the model repairs its own output far
             # more reliably than any heuristic the caller could apply
-            prompt = (_prompt(idea, doctrine, avoid or [])
+            prompt = (_prompt(idea, doctrine, avoid or [], data)
                       + "\n\nYour previous attempt was REJECTED:\n"
                       + json.dumps(raw)[:900]
                       + "\n\nProblems:\n- " + "\n- ".join(str(e) for e in errs[:4])

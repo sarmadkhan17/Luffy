@@ -6,7 +6,7 @@ import logging
 import sys
 import time
 
-from trader.brain.harvester import Harvester
+from trader.brain.scraper import Scraper
 from trader.core.config import load_config
 from trader.core.journal import Journal
 from trader.data.feed import DataFeed
@@ -26,7 +26,7 @@ def tv_used_today(journal) -> int:
 def main() -> None:
     cfg = load_config()
     j = Journal("data/luffy.db")
-    hv = Harvester(j, cfg, DataFeed())
+    hv = Scraper(j, cfg, DataFeed())
     budget = int(cfg.get("tv_harness", {}).get("daily_runs", 20))
     max_cycles = int(sys.argv[1]) if len(sys.argv) > 1 else 12
 

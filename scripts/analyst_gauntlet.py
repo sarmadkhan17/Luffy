@@ -5,7 +5,7 @@ import json
 import sys
 import time
 
-from trader.brain.harvester import Harvester
+from trader.brain.scraper import Scraper
 from trader.core.config import load_config
 from trader.core.journal import Journal
 from trader.data.feed import DataFeed
@@ -36,7 +36,7 @@ META = {
 def main() -> None:
     cfg = load_config()
     j = Journal("data/luffy.db")
-    hv = Harvester(j, cfg, DataFeed())
+    hv = Scraper(j, cfg, DataFeed())
     budget = int(cfg.get("tv_harness", {}).get("daily_runs", 20))
     dev_mode = not bool(cfg.get("tv_harness", {})
                         .get("budget_enabled", True))

@@ -1,6 +1,6 @@
 """Deep Crawler — Luffy reads the internet's finance material properly.
 
-The Harvester skims headlines and idea captions. This module goes where
+The Scraper skims headlines and idea captions. This module goes where
 the substance lives: it walks a bounded frontier of finance knowledge
 sites (Investopedia articles, QuantStart, BabyPips, arXiv abstracts,
 Medium essays — plus whatever links this cycle's RSS items point to),
@@ -25,9 +25,10 @@ from urllib.robotparser import RobotFileParser
 
 import requests
 
+from . import ideas
 from ..brain.llm import BrainLLM
 from ..core.journal import Journal
-from .harvester import (DEFAULT_RSS_FEEDS, STRATEGY_TERMS, UA, Harvester,
+from .scraper import (DEFAULT_RSS_FEEDS, STRATEGY_TERMS, UA, Scraper,
                         scrape_feed)
 
 log = logging.getLogger(__name__)
@@ -169,9 +170,10 @@ class DeepCrawler:
         self.max_depth = int(c.get("max_depth", 2))
         self.seeds = list(c.get("seeds", SEEDS))
         self.mine_budget = int(c.get("passages_per_mine", 10))
+        self.queue_budget = int(c.get("passages_per_queue", 40))
         self.per_host_delay = float(c.get("per_host_delay_s", 1.5))
-        self.harvester = Harvester(journal, cfg, feed, notifier)
-        self.llm = self.harvester.llm
+        self.scraper = Scraper(journal, cfg, feed, notifier)
+        self.llm = self.scraper.llm
         self._robots: dict[str, tuple[float, RobotFileParser | None]] = {}
         self._last_hit: dict[str, float] = {}
 
@@ -275,7 +277,7 @@ class DeepCrawler:
             idea = {"source": f"crawled:{p['url'][:80]}",
                     "idea_id": p["pid"], "title": p["text"][:90],
                     "text": p["text"]}
-            out[p["pid"]] = self.harvester._genome_from(idea, e)
+            out[p["pid"]] = self.scraper._genome_from(idea, e)
         return out
 
     # ── the cycle ────────────────────────────────────────────────────────
@@ -298,7 +300,7 @@ class DeepCrawler:
         for s in self.seeds:
             push(s, 0)
         # synergy: deep-read what this window's RSS surfaced
-        for feed_url in (self.cfg.get("harvester", {})
+        for feed_url in (self.cfg.get("scraper", {})
                          .get("rss_feeds", DEFAULT_RSS_FEEDS))[:4]:
             for item in scrape_feed(feed_url):
                 link = item.get("link") or ""
@@ -345,10 +347,25 @@ class DeepCrawler:
         stats["passages"] = len(mined)
         stats["mined"] = len(batch)
 
+        # Queue the densest passages for the Strategist BEFORE the legacy
+        # family-mapper gets them. Everything the crawler read used to die
+        # here: passages the eight templates could not express were simply
+        # dropped, which is most of them. The queue keeps the text, and the
+        # Strategist writes a spec from the mechanism instead of guessing a
+        # family. Wider than the mine budget — expressing an idea costs one
+        # prompt, mining it costs a batch.
+        stats["queued"] = 0
+        for p in mined[:self.queue_budget]:
+            if ideas.record(self.journal, {
+                    "idea_id": p["pid"], "title": p["text"][:120],
+                    "text": p["text"], "url": p["url"],
+                    "source": f"crawled:{host_of(p['url'])}"}):
+                stats["queued"] += 1
+
         if batch:
             tv_context = {}
             try:
-                tv_context = self.harvester.tv.compare_families("BTC/USDT")
+                tv_context = self.scraper.tv.compare_families("BTC/USDT")
             except Exception:
                 pass
             genomes = self.mine_passages(batch)
@@ -360,9 +377,9 @@ class DeepCrawler:
                 idea = {"source": f"crawled:{p['url'][:80]}",
                         "idea_id": p["pid"], "title": p["text"][:90],
                         "text": p["text"]}
-                ok, evidence = self.harvester._dual_gauntlet(g)
+                ok, evidence = self.scraper._dual_gauntlet(g)
                 if ok:
-                    self.harvester._deploy(g, idea, evidence)
+                    self.scraper._deploy(g, idea, evidence)
                     stats["accepted"] += 1
                 else:
                     stats["rejected"] += 1

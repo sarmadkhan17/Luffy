@@ -24,25 +24,47 @@ manager:
   desc: Coordinates the team, makes the final call, keeps the books.
 
 employees:
-  - name: Researcher
-    title: Researcher
+  - name: Scraper
+    title: Scraper
     reports_to: Manager
-    wraps: [trader.brain.harvester, trader.brain.crawler]
+    wraps: [trader.brain.scraper, trader.brain.crawler, trader.brain.ideas]
     authors: []
     status_source: events
     events: [harvest_cycle, harvest_accepted, crawl_cycle, crawl_doc]
     category: RESEARCH
-    desc: Sources new strategy ideas from ideas feeds and literature.
+    desc: Reads prose — idea feeds, essays, papers — and queues mechanisms.
+
+  - name: Harvester
+    title: Harvester
+    reports_to: Manager
+    wraps: [trader.brain.harvester, trader.data.derivatives,
+            trader.data.mcp_client]
+    authors: []
+    status_source: events
+    events: [harvest_numeric]
+    category: RESEARCH
+    desc: Reads numbers — venue APIs and MCP servers — and reports coverage.
 
   - name: Strategist
     title: Strategist
     reports_to: Manager
-    wraps: [trader.brain.strategist]
+    wraps: [trader.brain.strategist, trader.brain.spec_writer]
     authors: [strategy]
     status_source: events
     events: [review_complete, proposal_accepted, retire, mutate, keep_verdict]
     category: RESEARCH
     desc: Reviews the strategy book; promotes and demotes.
+
+  - name: Strategy Analyst
+    title: Strategy Analyst
+    reports_to: Manager
+    wraps: [trader.brain.analyst, trader.strategy.spec_evidence,
+            trader.strategy.pine_spec]
+    authors: []
+    status_source: events
+    events: [spec_admitted, spec_rejected, tv_backtest]
+    category: RESEARCH
+    desc: Tests specs on stored data and TradingView; ranks them by regime fit.
 
   - name: Theorist
     title: Theorist

@@ -111,7 +111,7 @@ def test_manager_core_tiles():
 def test_research_group_covers_strategist_and_theorist():
     c = _company()
     by = {e["name"]: e for e in c["employees"]}
-    assert by["Researcher"]["category"] == "RESEARCH"
+    assert by["Scraper"]["category"] == "RESEARCH"
     assert by["Strategist"]["category"] == "RESEARCH"
     assert by["Theorist"]["category"] == "RESEARCH"
 
