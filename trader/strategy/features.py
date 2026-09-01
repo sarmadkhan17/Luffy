@@ -362,4 +362,39 @@ def _runup_from_low(ctx, n):
     return ctx.df["close"] / lo.where(lo > 1e-12) - 1.0
 
 
+# ── sequence ─────────────────────────────────────────────────────────────
+@register("bars_since", arg_specs=(SERIES_ARG,), domain=(0.0, 500.0))
+def _bars_since(ctx, s):
+    """Bars elapsed since the expression was last true. NaN until it has
+    been true at least once — never-happened is unknown, not zero."""
+    b = _series(ctx, s).astype(bool)
+    idx = pd.Series(np.arange(len(b), dtype=float), index=b.index)
+    return idx - idx.where(b).ffill()
+
+
+@register("streak", arg_specs=(SERIES_ARG,), domain=(0.0, 500.0))
+def _streak(ctx, s):
+    """Length of the current run of consecutive true bars; 0 when false."""
+    b = _series(ctx, s).astype(bool)
+    return b.groupby((~b).cumsum()).cumsum().astype(float)
+
+
+@register("swing_high", arg_specs=((int, 2, 50),))
+def _swing_high(ctx, n):
+    """Most recent CONFIRMED swing high. A pivot at bar i is only knowable
+    n bars later, so the level is shifted forward by n before it is used."""
+    n = int(n)
+    h = ctx.df["high"]
+    piv = h == h.rolling(2 * n + 1, center=True).max()
+    return h.where(piv).shift(n).ffill()
+
+
+@register("swing_low", arg_specs=((int, 2, 50),))
+def _swing_low(ctx, n):
+    n = int(n)
+    lo = ctx.df["low"]
+    piv = lo == lo.rolling(2 * n + 1, center=True).min()
+    return lo.where(piv).shift(n).ffill()
+
+
 from . import features_deriv          # noqa: E402,F401  (registration side-effect)
