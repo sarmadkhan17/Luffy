@@ -26,8 +26,8 @@ class CompiledStrategy:
     # ── vectorized path (Analyst) ────────────────────────────────────────
     def entries(self, frames: dict, btc: dict | None = None,
                 derivs: dict | None = None, universe: dict | None = None,
-                market: dict | None = None):
-        ctx = self._ctx(frames, btc, derivs, universe, market)
+                market: dict | None = None, symbol: str | None = None):
+        ctx = self._ctx(frames, btc, derivs, universe, market, symbol)
         n = len(ctx.index)
         keep = np.ones(n, dtype=bool)
         for f in self._filters:
@@ -41,20 +41,21 @@ class CompiledStrategy:
         return lo & ~both, sh & ~both
 
     def exit_signal(self, frames: dict, btc=None, derivs=None,
-                    universe=None, market=None):
+                    universe=None, market=None, symbol: str | None = None):
         if self._exit is None:
             return None
         return dsl.evaluate_bool(
-            self._exit, self._ctx(frames, btc, derivs, universe, market))
+            self._exit, self._ctx(frames, btc, derivs, universe, market,
+                                  symbol))
 
     def _ctx(self, frames, btc, derivs, universe=None,
-             market=None) -> FeatureCtx:
+             market=None, symbol=None) -> FeatureCtx:
         tf = self.spec.timeframe
         if tf not in frames:
             raise dsl.SpecError(f"spec timeframe '{tf}' not in frames "
                                 f"{sorted(frames)}")
         return FeatureCtx(frames=frames, tf=tf, btc=btc, derivs=derivs,
-                          universe=universe, market=market)
+                          universe=universe, market=market, symbol=symbol)
 
     # ── live path (Trader) ───────────────────────────────────────────────
     def to_evaluator(self):
@@ -74,7 +75,8 @@ class CompiledStrategy:
                    if snap.dfs.get("BTC_1h") is not None else None)
             try:
                 lo, sh = self.entries(frames, btc=btc,
-                                      universe=getattr(snap, "universe", None))
+                                      universe=getattr(snap, "universe", None),
+                                      symbol=snap.symbol)
             except Exception:
                 return None
             if not len(lo):

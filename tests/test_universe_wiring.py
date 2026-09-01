@@ -40,8 +40,9 @@ def test_rolling_passes_the_universe_into_entries(monkeypatch):
         spec = _Spec()
 
         def entries(self, frames, btc=None, derivs=None, universe=None,
-                    market=None):
+                    market=None, symbol=None):
             seen["universe"] = universe
+            seen["symbol"] = symbol
             n = len(next(iter(frames.values())))
             return np.zeros(n, dtype=bool), np.zeros(n, dtype=bool)
 
@@ -55,3 +56,6 @@ def test_rolling_passes_the_universe_into_entries(monkeypatch):
 
     assert seen["universe"] is not None
     assert set(seen["universe"]) == {"BTC/USDT", "ETH/USDT"}
+    # so a cross-sectional feature can exclude the base symbol's own key
+    # from its peer panel instead of assuming it is (or isn't) a member.
+    assert seen["symbol"] in ("BTC/USDT", "ETH/USDT")
