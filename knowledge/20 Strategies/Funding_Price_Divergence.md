@@ -11,10 +11,27 @@ author: Strategist
 >
 > **Invalidation.** Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.
 
-## Genes
-```json
-{}
+# Funding Price Divergence
+
+**Thesis** — Price making new highs while funding cools means the advance is not being bought with leverage. That is the healthy version of a rally and it tends to persist, in contrast to the leverage-driven kind that funding flags.
+
+**Invalidation** — Retire if worst-symbol out-of-sample profit factor stays below 1.0 over 30 trades, or if the mechanism's driving series stops being published.
+
+- Timeframe: `15m`  ·  Direction: `long`
+- Regimes: RANGING
+- Data: funding, ohlcv
+- Provenance: authored
+
+## Logic
 ```
+long:   close >= donchian_hi(192) and funding_z(1920) < 0.0
+filter: adx(14) > 18
+stop:   {'kind': 'atr', 'mult': 2.5}
+target: {'kind': 'rr', 'v': 3.0}
+trail:  {'kind': 'none'}
+time:   max 64 bars
+```
+
 
 ## Live record
 - closed trades: 0 · wins: 0
