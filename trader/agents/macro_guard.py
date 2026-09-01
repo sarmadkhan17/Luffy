@@ -141,13 +141,19 @@ class MacroGuard:
         age = time.time() - fetched
         if age > _CACHE_MAX_AGE:
             return
+        # A cache whose every event is already behind us guards nothing.
+        # Treating it as a live source would report "quiet week" while the
+        # guard is actually blind — the exact failure this class exists to
+        # avoid — so it is discarded instead.
+        horizon = datetime.now(timezone.utc) - timedelta(minutes=self.post_min)
         events = []
         for e in raw.get("events", []):
             try:
-                events.append({"event": e["event"],
-                               "when": datetime.fromisoformat(e["when"])})
+                when = datetime.fromisoformat(e["when"])
             except Exception:
                 continue
+            if when >= horizon:
+                events.append({"event": e["event"], "when": when})
         if not events:
             return
         self._calendar = events
