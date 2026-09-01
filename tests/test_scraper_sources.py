@@ -183,3 +183,27 @@ def test_source_scores_rank_productive_sources():
     med_key = "medium.com/feed/tag/algorithmic-trading"
     assert s[tv_key] > s[med_key]
     assert s[med_key] < 0.05                      # dead source near zero
+
+
+def test_scrape_tv_scripts_requests_the_scripts_section(monkeypatch):
+    """/ideas/ is people predicting; /scripts/ is the Pine library."""
+    from trader.brain import scraper as S
+
+    seen = []
+
+    class _R:
+        status_code = 200
+        text = ""
+
+    def _get(url, **kw):
+        seen.append(url)
+        return _R()
+
+    monkeypatch.setattr(S.requests, "get", _get)
+    s = _scraper_with(None)         # existing helper in this file, takes an llm
+    s.tv_pages = 1
+    s.scrape_tv_scripts("meanreversion")
+
+    assert seen, "no request was made"
+    assert "/scripts/" in seen[0], seen[0]
+    assert "/ideas/" not in seen[0], seen[0]
