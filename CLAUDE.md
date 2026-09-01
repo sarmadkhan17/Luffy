@@ -38,10 +38,8 @@ All commands use the local venv:
 ./venv/bin/python -m trader.brain.tv_harness --login
 
 # Scripts (run from repo root)
-./venv/bin/python scripts/analyst_gauntlet.py        # push analyst candidates through dual gauntlet
 ./venv/bin/python scripts/harvest_until_pass.py      # run harvester until a strategy passes
 ./venv/bin/python scripts/validate_population.py     # rerun analyst validation
-./venv/bin/python scripts/watch_budget_then_gauntlet.py
 ```
 
 Log tail: `tail -f logs/luffy.log`
@@ -133,7 +131,6 @@ Default weights in `orchestrator.py:_DEFAULT_WEIGHTS`. Overridden by measured ac
 | `data/agent_weights.json` | Measured analyst accuracy weights |
 | `data/agent_calibration.json` | Per-agent conviction calibration |
 | `data/tv_cache.json` | TradingView Strategy Tester result cache |
-| `data/analyst_candidates.json` | Input for `scripts/analyst_gauntlet.py` |
 | `data/heartbeat_luffy.json` | Process liveness (age checked by stall monitor) |
 | `knowledge/` | Obsidian vault (theories, strategies, postmortems, daily reviews) |
 | `logs/luffy.log` | Rotating log (5×10MB) |
