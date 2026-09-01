@@ -58,6 +58,20 @@ class DataFeed:
     def __init__(self, exchange=None, ttl_by_tf: dict | None = None,
                  db_path=None):
         self._ex = exchange
+        #: the venue orders are actually sent to (demo, when demo is on)
+        self.trade_ex = exchange
+        # Market-data truth lives on the production public API even when the
+        # trading venue is demo: demo klines carry simulated volume (1-4 vs a
+        # production 153-997 on the same 15m bar) and closes that drift by
+        # hundreds of dollars. Every volume feature, regime call and backtest
+        # reads these bars, so sourcing them from demo makes "is this working
+        # NOW" a question about a simulation. Universe already does this.
+        # An explicitly injected exchange always wins: that is how backtests
+        # and tests supply their own source.
+        from ..core.config import Env
+        on_demo = Env.get("BINANCE_DEMO", "true").lower() in ("1", "true", "yes")
+        self.data_ex = make_exchange("futures", demo=False, with_keys=False) \
+            if (on_demo and exchange is None) else None
         # cache freshness: 15m data ~2min old max; 1h ~10min; 4h ~30min
         self.ttl = ttl_by_tf or {"5m": 120, "15m": 180, "1h": 600, "4h": 1800, "1d": 7200}
         self._cache: dict[tuple, tuple[float, pd.DataFrame]] = {}
@@ -68,6 +82,9 @@ class DataFeed:
 
     @property
     def ex(self):
+        """Exchange used for market data (production public when on demo)."""
+        if self.data_ex is not None:
+            return self.data_ex
         if self._ex is None:
             self._ex = make_exchange()
         return self._ex
@@ -91,18 +108,78 @@ class DataFeed:
             self._local.conn = conn
         return conn
 
+    #: index of takerBuyBaseAssetVolume in a raw Binance kline row
+    _TAKER_BUY_IDX = 9
+
     def _frame(self, raw: list) -> pd.DataFrame:
-        """ccxt rows → validated DataFrame with taker-buy estimate."""
-        df = pd.DataFrame(raw, columns=COLUMNS)
+        """kline rows → validated DataFrame carrying real aggressor volume.
+
+        Rows may arrive 6-wide (ccxt's unified fetch_ohlcv, which drops the
+        column) or 12-wide (the venue's raw klines endpoint, which publishes
+        it at index 9). `taker_buy` is the measured aggressor-buy base volume
+        when the venue gives it and NaN when it does not.
+
+        It used to be synthesised as volume*(close-low)/(high-low) — a pure
+        function of OHLCV with no order-flow content. Against Binance's
+        published figure over 3000 bars that proxy correlated +0.42, had 3x
+        the dispersion, and got the DIRECTION of the imbalance wrong 33% of
+        the time, while the flow analyst and the aggressor specs read it as
+        if it reported who paid the spread.
+        """
+        if not len(raw):
+            df = pd.DataFrame(columns=COLUMNS + ["taker_buy"])
+            df["ts"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
+            return df
+        width = max(len(r) for r in raw)
+        rows = [list(r) + [None] * (width - len(r)) for r in raw]
+        df = pd.DataFrame([r[:6] for r in rows], columns=COLUMNS)
         df["ts"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
         for col in COLUMNS[1:]:
             df[col] = pd.to_numeric(df[col], errors="coerce")
-        df = df.dropna().reset_index(drop=True)
-        # estimated aggressor buy volume (candle-position proxy; ccxt omits col 9)
-        rng = (df["high"] - df["low"]).replace(0, np.nan)
-        df["taker_buy"] = (df["volume"] * (df["close"] - df["low"]) / rng).fillna(
-            df["volume"] * 0.5)
+        if width > self._TAKER_BUY_IDX:
+            df["taker_buy"] = pd.to_numeric(
+                [r[self._TAKER_BUY_IDX] for r in rows], errors="coerce")
+        else:
+            df["taker_buy"] = np.nan
+        # taker_buy is allowed to be absent; an incomplete OHLCV bar is not
+        df = df.dropna(subset=COLUMNS).reset_index(drop=True)
         return df
+
+    @staticmethod
+    def _venue_symbol(ex, symbol: str) -> str:
+        """Venue id for a unified symbol, without forcing a markets load.
+
+        ccxt's `market()` raises "markets not loaded" on a fresh instance,
+        which would send every raw-klines call down the fallback path and
+        silently restore the synthetic taker_buy.
+        """
+        try:
+            return ex.market(symbol)["id"]
+        except Exception:
+            return symbol.split(":")[0].replace("/", "")
+
+    def _klines(self, symbol: str, tf: str, since: int | None = None,
+                limit: int = 1000) -> list:
+        """Raw kline rows, preferring the endpoint that publishes aggressor
+        volume. Falls back to ccxt's unified 6-wide rows on any venue or
+        error where the raw call is unavailable — taker_buy then reads NaN,
+        which is the honest answer.
+        """
+        try:
+            ex = self.ex
+            params = {"symbol": self._venue_symbol(ex, symbol),
+                      "interval": tf, "limit": int(limit)}
+            if since is not None:
+                params["startTime"] = int(since)
+            getter = getattr(ex, "fapiPublicGetKlines", None) or \
+                getattr(ex, "publicGetKlines", None)
+            if getter is not None:
+                rows = getter(params)
+                if rows:
+                    return rows
+        except Exception as e:
+            log.debug(f"raw klines unavailable for {symbol} {tf}: {e}")
+        return self.ex.fetch_ohlcv(symbol, tf, since=since, limit=limit) or []
 
     def _store_load(self, symbol: str, tf: str, limit: int,
                     min_ts: int = 0) -> Optional[pd.DataFrame]:
@@ -134,11 +211,13 @@ class DataFeed:
             self.db.executemany(
                 "INSERT OR REPLACE INTO candles VALUES (?,?,?,?,?,?,?,?,?)",
                 [(symbol, tf, int(t), float(o), float(h), float(l),
-                  float(c), float(v), float(b))
+                  float(c), float(v),
+                  None if b is None or b != b else float(b))
                  for t, o, h, l, c, v, b in zip(
                      ms, df["open"], df["high"], df["low"],
-                     df["close"], df["volume"], df.get("taker_buy",
-                                                       df["volume"] * 0.5))])
+                     df["close"], df["volume"],
+                     df["taker_buy"] if "taker_buy" in df
+                     else [None] * len(df))])
             self.db.commit()
         except Exception as e:
             log.warning(f"candle store write {symbol} {tf}: {e}")
@@ -160,7 +239,7 @@ class DataFeed:
         cursor = now_ms - limit * tf_ms
         rows: list = []
         while cursor < now_ms:
-            batch = self.ex.fetch_ohlcv(symbol, tf, since=cursor, limit=1000)
+            batch = self._klines(symbol, tf, since=cursor, limit=1000)
             if not batch:
                 break
             rows.extend(batch)
@@ -221,15 +300,15 @@ class DataFeed:
                 if len(stored) < limit:
                     raw = (self._fetch_paged(symbol, tf, limit)
                            if limit > 1000 else
-                           self.ex.fetch_ohlcv(
+                           self._klines(
                                symbol, tf,
                                since=int(last) + tf_ms -
                                (limit - len(stored)) * tf_ms, limit=1000))
                 else:   # full window stored → only the tail can be stale
                     missing = (now_ms - last) // tf_ms
-                    raw = (self.ex.fetch_ohlcv(symbol, tf,
-                                               since=int(last) + tf_ms,
-                                               limit=1000)
+                    raw = (self._klines(symbol, tf,
+                                        since=int(last) + tf_ms,
+                                        limit=1000)
                            if missing < 950 else
                            self._fetch_paged(symbol, tf, limit))
                 new = self._frame(raw or [])
@@ -238,7 +317,7 @@ class DataFeed:
                 return finish(self._merge_save(symbol, tf, stored, new))
             # cold symbol or force refresh
             raw = (self._fetch_paged(symbol, tf, limit) if limit > 1000
-                   else self.ex.fetch_ohlcv(symbol, tf, limit=limit))
+                   else self._klines(symbol, tf, limit=limit))
             if not raw or len(raw) < min_bars:
                 return hit[1] if hit else (stored if stored is not None
                                            and len(stored) >= min_bars else None)

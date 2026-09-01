@@ -74,7 +74,11 @@ class Kernel:
         self.market_type = MarketType(
             self.journal.kv_get("market_type", cfg["mode"]["market"]))
         self.exchange = make_exchange(self.market_type.value)
-        self.feed = DataFeed(self.exchange)
+        # NOT DataFeed(self.exchange): that is the demo trading venue, and
+        # its klines carry simulated volume. Market data comes from the
+        # production public API; orders still go to self.exchange via the
+        # Executor.
+        self.feed = DataFeed()
         self.universe = Universe(cfg, self.exchange)
         self.positioning_agent = PositioningAnalyst(self.exchange)
         self.depth_agent = DepthScout()
@@ -141,6 +145,7 @@ class Kernel:
         from .strategy.compile import compile_spec
         from .strategy.library import register_evaluator
         pop = []
+        requires: set = set()
         try:
             rows = self.journal.list_specs(["paper", "active"])
         except Exception as e:
@@ -153,6 +158,7 @@ class Kernel:
                 log.warning(f"spec {spec.id} will not compile: {e}")
                 continue
             family = f"spec:{spec.id}"
+            requires.update(compiled.data_requires)
             register_evaluator(family, compiled.to_evaluator())
             st = type("S", (), {})()
             st.id, st.name, st.state = spec.id, spec.name, row["state"]
@@ -164,9 +170,35 @@ class Kernel:
             g.markets = frozenset(spec.markets)
             g.regime_filter = frozenset(spec.regime_filter)
             pop.append((st, g))
+        self._spec_requires = tuple(sorted(requires))
+        self._derivs_cache = {}
         if pop:
-            log.info(f"loaded {len(pop)} compiled spec(s) into the population")
+            log.info(f"loaded {len(pop)} compiled spec(s) into the population"
+                     + (f", needing {list(self._spec_requires)}"
+                        if self._spec_requires != ("ohlcv",) else ""))
         return pop
+
+    # Derivative series for the live path. Without these, a funding/OI/taker
+    # spec evaluates against an all-NaN column and can never fire — which is
+    # exactly how three authored specs sat in `paper` with zero trades.
+    _DERIVS_TTL = 300.0                # recorder writes every 15m
+
+    def _derivs_for(self, symbol: str) -> dict | None:
+        reqs = getattr(self, "_spec_requires", ())
+        if not any(r != "ohlcv" for r in reqs):
+            return None
+        hit = getattr(self, "_derivs_cache", {}).get(symbol)
+        now = time.time()
+        if hit and now - hit[0] < self._DERIVS_TTL:
+            return hit[1]
+        try:
+            from .strategy.spec_evidence import load_derivs
+            out = load_derivs(symbol, reqs)
+        except Exception as e:
+            log.warning(f"derivs unavailable for {symbol}: {e}")
+            out = None
+        self._derivs_cache[symbol] = (now, out)
+        return out
 
     def boot(self) -> None:
         log.info(f"LUFFY BOOT | market={self.market_type.value} "
@@ -520,7 +552,8 @@ class Kernel:
                         price=price, dfs=dfs,
                         market_type=self.market_type.value,
                         btc_ctx=self._btc_ctx,
-                        universe=universe)
+                        universe=universe,
+                        derivs=self._derivs_for(symbol))
 
     def _refresh_btc_context(self) -> None:
         """Leader context computed once per cycle, shared by all scouts."""

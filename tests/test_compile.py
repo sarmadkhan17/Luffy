@@ -202,3 +202,49 @@ def test_rotation_spec_needs_a_leader_frame(busy_frame):
     assert not lo.any()
     lo2, _ = c.entries({"15m": busy_frame}, btc={"15m": busy_frame.copy()})
     assert len(lo2) == len(busy_frame)
+
+
+# ── derivative-backed specs on the LIVE path ─────────────────────────────
+# The vectorized path takes derivs=; the live evaluator had no way to receive
+# them, so every funding/OI/taker spec evaluated against an all-NaN series and
+# could never fire. Three authored specs sat in `paper` with 0 trades because
+# of it.
+
+def _funding_obs(frame, value=0.01):
+    """Observation frame shaped like DerivFeed.load(): ts + value."""
+    return pd.DataFrame({"ts": frame["ts"].iloc[::32].reset_index(drop=True),
+                         "value": value})
+
+
+def _funding_spec(**kw):
+    return _spec(id="fz", direction="long", filters=[],
+                 entry_long="funding > 0.005", entry_short="", **kw)
+
+
+def test_deriv_spec_declares_its_requirement(frame):
+    assert "funding" in compile_spec(_funding_spec()).data_requires
+
+
+def test_deriv_spec_signals_live_when_snapshot_carries_derivs(frame):
+    """The contract: given the same derivs, the live evaluator agrees with
+    the vectorized path instead of silently returning None."""
+    derivs = {"funding": _funding_obs(frame)}
+    c = compile_spec(_funding_spec())
+    lo, _ = c.entries({"15m": frame}, derivs=derivs)
+    assert lo[-1], "fixture must produce a live long on the last bar"
+
+    snap = Snapshot(symbol="BTC/USDT", ts="", price=1.0,
+                    dfs={"15m": frame}, market_type="futures",
+                    derivs=derivs)
+    sig = c.to_evaluator()(c.spec, snap)
+    assert sig is not None, "derivs on the snapshot must reach entries()"
+    assert sig.action == Action.BUY
+
+
+def test_deriv_spec_stays_silent_when_derivs_absent(frame):
+    """No data is not a buy. Absent derivs must yield no signal, never a
+    signal computed from a fabricated neutral value."""
+    c = compile_spec(_funding_spec())
+    snap = Snapshot(symbol="BTC/USDT", ts="", price=1.0,
+                    dfs={"15m": frame}, market_type="futures")
+    assert c.to_evaluator()(c.spec, snap) is None
