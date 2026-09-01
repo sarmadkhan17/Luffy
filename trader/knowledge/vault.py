@@ -8,11 +8,14 @@ it into doctrine.json.
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
 from ..core.config import ROOT
 from ..org import Org
+
+log = logging.getLogger(__name__)
 
 VAULT = ROOT / "knowledge"
 
@@ -239,6 +242,37 @@ class Vault:
         return len(org.all())
 
     # ── regenerated from journal ────────────────────────────────────────
+    @staticmethod
+    def _spec_body(row) -> str:
+        """The mechanism, as the compiled spec describes itself.
+
+        Returns "" for genome rows so the caller keeps the gene block.
+        """
+        raw = None
+        try:
+            raw = row["spec_json"]
+        except (KeyError, IndexError, TypeError):
+            raw = None
+        if not raw:
+            return ""
+        try:
+            from ..strategy.compile import compile_spec
+            from ..strategy.spec import StrategySpec
+            spec = StrategySpec.from_json(raw)
+            md = compile_spec(spec).to_markdown()
+        except Exception as e:
+            log.warning(f"vault: spec card for {row['id']}: {e}")
+            return ""
+        ev = ""
+        try:
+            reg = (spec.provenance or {}).get("regime_evidence")
+            if reg:
+                ev = ("\n## Measured regime evidence\n```json\n"
+                      + json.dumps(reg, indent=2)[:1200] + "\n```\n")
+        except Exception:
+            pass
+        return md + ev
+
     def refresh_strategy_notes(self) -> int:
         rows = list(self.journal.list_strategies())
         # family -> sibling slugs, so a strategy links sideways to its own kin
@@ -260,6 +294,16 @@ class Vault:
             theory = FAMILY_THEORY.get(str(r["kind"]))
             related = ([f"[[{theory}]]"] if theory else []) + \
                 ["[[Regime Playbook]]", "[[MOC]]"]
+            # Spec rows carry an empty `params` and a populated `spec_json`,
+            # so the genome layout renders an EMPTY strategy for them. The
+            # compiled spec already knows how to describe itself.
+            body = f"""## Genes
+```json
+{r['params']}
+```"""
+            spec_md = self._spec_body(r)
+            if spec_md:
+                body = spec_md
             kin = sorted(by_family.get(str(r["kind"]), set()) - {slug})
             kin_line = ("\nSame family (`{}`): {}\n".format(
                 r["kind"], ", ".join(f"[[{s}]]" for s in kin)) if kin else "")
@@ -276,10 +320,7 @@ author: {author}
 >
 > **Invalidation.** {r['invalidation'] or '—'}
 
-## Genes
-```json
-{r['params']}
-```
+{body}
 
 ## Live record
 - closed trades: {len(closed)} · wins: {wins}
