@@ -14,7 +14,7 @@ def test_load_parses_manager_and_employees():
     assert org.manager.name == "Manager"
     assert org.manager.reports_to is None
     names = {e.name for e in org.employees}
-    for expected in ("Researcher", "Strategist", "Theorist",
+    for expected in ("Scraper", "Strategist", "Theorist",
                      "Risk Officer", "Trader", "Librarian"):
         assert expected in names
     # every non-manager employee reports to the Manager (flat, two layers)

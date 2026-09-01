@@ -29,7 +29,13 @@ import requests
 log = logging.getLogger(__name__)
 
 FAPI = "https://fapi.binance.com"
+SAPI = "https://api.binance.com"      # spot — the other half of the basis
 SERIES = ("funding", "oi", "taker_ratio", "ls_ratio", "basis")
+
+#: milliseconds per kline interval, for paging basis
+_PERIOD_MS = {"5m": 300_000, "15m": 900_000, "30m": 1_800_000,
+              "1h": 3_600_000, "2h": 7_200_000, "4h": 14_400_000,
+              "1d": 86_400_000}
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                     "(KHTML, like Gecko) Chrome/120 Safari/537.36"}
 
@@ -118,9 +124,9 @@ class DerivFeed:
         return out
 
     # ── fetch ────────────────────────────────────────────────────────────
-    def _get(self, path: str, params: dict) -> list:
+    def _get(self, path: str, params: dict, base: str = FAPI) -> list:
         try:
-            r = requests.get(f"{FAPI}{path}", params=params, headers=UA,
+            r = requests.get(f"{base}{path}", params=params, headers=UA,
                              timeout=self.timeout)
             r.raise_for_status()
             data = r.json()
@@ -220,10 +226,78 @@ class DerivFeed:
             path, {"symbol": to_binance(symbol), "period": period,
                    "limit": min(limit, 500)}), "longShortRatio")
 
+    # ── basis ────────────────────────────────────────────────────────────
+    #: Binance caps a klines page at 1500 rows on both venues.
+    _KLINE_PAGE = 1000
+
+    def _klines(self, base: str, path: str, symbol: str, interval: str,
+                start_ms: int, limit: int) -> list:
+        """[(close_ms, close_price)] for one page."""
+        raw = self._get(path, {"symbol": symbol, "interval": interval,
+                               "startTime": start_ms, "limit": limit},
+                        base=base)
+        out = []
+        for k in raw:
+            try:
+                out.append((int(k[6]), float(k[4])))   # closeTime, close
+            except (IndexError, TypeError, ValueError):
+                continue
+        return out
+
+    def basis(self, symbol: str, period: str = "1h",
+              limit: int = 500) -> pd.DataFrame:
+        """Recent spot-perp basis: (perp - spot) / spot, per closed bar.
+
+        Unlike OI and the ratio series, nothing here is capped at 30 days —
+        both klines endpoints serve years. `basis` was registered as a
+        feature from the start and no fetcher ever existed, so every basis
+        spec reported UNTESTED forever. This is that fetcher.
+        """
+        import time as _t
+        span_ms = _PERIOD_MS.get(period, 3600_000) * int(limit)
+        start = int(_t.time() * 1000) - span_ms
+        return self._basis_between(symbol, period, start)
+
+    def _basis_between(self, symbol: str, period: str,
+                       start_ms: int) -> pd.DataFrame:
+        sym = to_binance(symbol)
+        perp = dict(self._klines(FAPI, "/fapi/v1/klines", sym, period,
+                                 start_ms, self._KLINE_PAGE))
+        spot = dict(self._klines(SAPI, "/api/v3/klines", sym, period,
+                                 start_ms, self._KLINE_PAGE))
+        # inner join on close time: a bar missing on either venue has no basis
+        pairs = [(ts, (perp[ts] - spot[ts]) / spot[ts])
+                 for ts in sorted(perp.keys() & spot.keys())
+                 if spot[ts] > 0]
+        return self._frame(pairs)
+
+    def basis_history(self, symbol: str, years: float = 2.0,
+                      period: str = "1h", delay: float = 0.25) -> pd.DataFrame:
+        """Page basis back `years`. Both venues serve deep klines, so this
+        is the one 30-day-capped series that is not actually capped."""
+        import time as _t
+        now_ms = int(_t.time() * 1000)
+        step = _PERIOD_MS.get(period, 3600_000) * self._KLINE_PAGE
+        cursor = now_ms - int(years * 365.25 * 86400 * 1000)
+        chunks = []
+        for _ in range(80):                  # hard bound
+            df = self._basis_between(symbol, period, cursor)
+            if len(df):
+                chunks.append(df)
+            cursor += step
+            if cursor >= now_ms:
+                break
+            if delay:
+                _t.sleep(delay)
+        if not chunks:
+            return self._frame([])
+        return pd.concat(chunks).drop_duplicates(subset="ts") \
+                 .sort_values("ts").reset_index(drop=True)
+
     # ── recorder ─────────────────────────────────────────────────────────
     _SERIES_FETCHERS = (("funding", "funding"), ("oi", "open_interest"),
                         ("taker_ratio", "taker_ratio"),
-                        ("ls_ratio", "ls_ratio"))
+                        ("ls_ratio", "ls_ratio"), ("basis", "basis"))
 
     #: coarser periods pull deeper history. Measured against the live API on
     #: 2026-08-31: at 15m the 500-row cap reaches back only 5 days, at 1h it
@@ -249,9 +323,17 @@ class DerivFeed:
                         counts.get("funding@history", 0) + len(fh)
             except Exception as e:
                 log.warning(f"derivs backfill {sym}/funding history: {e}")
+            try:
+                bh = self.basis_history(sym, delay=delay)
+                if bh is not None and len(bh):
+                    self.save(sym, "basis", bh)
+                    counts["basis@history"] = \
+                        counts.get("basis@history", 0) + len(bh)
+            except Exception as e:
+                log.warning(f"derivs backfill {sym}/basis history: {e}")
             for series, method in self._SERIES_FETCHERS:
-                if series == "funding":
-                    continue            # handled by funding_history above
+                if series in ("funding", "basis"):
+                    continue            # both have real history above
                 for period in self.BACKFILL_PERIODS:
                     try:
                         df = getattr(self, method)(sym, period=period)

@@ -121,10 +121,12 @@ def test_record_all_survives_a_raising_endpoint(feed, monkeypatch):
 
 
 def test_record_all_writes_each_series(feed, monkeypatch):
-    for name in ("funding", "open_interest", "taker_ratio", "ls_ratio"):
+    for name in ("funding", "open_interest", "taker_ratio", "ls_ratio",
+                 "basis"):
         monkeypatch.setattr(feed, name, lambda *a, **k: _df(n=3))
     counts = feed.record_all(["BTC/USDT"], delay=0.0)
-    assert set(counts) == {"funding", "oi", "taker_ratio", "ls_ratio"}
+    assert set(counts) == {"funding", "oi", "taker_ratio", "ls_ratio",
+                           "basis"}
     assert feed.load("BTC/USDT", "funding") is not None
 
 

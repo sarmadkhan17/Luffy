@@ -1,4 +1,4 @@
-"""Harvester source-widening tests: prefilter screen, batch extraction,
+"""Scraper source-widening tests: prefilter screen, batch extraction,
 Atom parsing, source-yield learning."""
 import json
 
@@ -15,7 +15,7 @@ def _idea(title="EMA cross strategy", text="use ema 20/50 crossover entry",
 
 # ── cheap screen ──────────────────────────────────────────────────────────
 def test_screen_keeps_systematic():
-    from trader.brain.harvester import idea_score
+    from trader.brain.scraper import idea_score
     assert idea_score(_idea()) >= 2
     paper = _idea("Mean reversion at 15m horizons in crypto",
                   "Binance pairs show significant directional reversal; "
@@ -24,7 +24,7 @@ def test_screen_keeps_systematic():
 
 
 def test_screen_drops_hype_and_news():
-    from trader.brain.harvester import idea_score
+    from trader.brain.scraper import idea_score
     hype = _idea("PEPE to hit $1 — 1000x potential, buy now!",
                  "next moonshot gem, airdrop incoming")
     news = _idea("India plans first tokenized bonds using wholesale CBDC",
@@ -49,19 +49,19 @@ class FakeLLM:
         return self.reply
 
 
-def _harvester_with(llm):
+def _scraper_with(llm):
     import tempfile, pathlib, yaml
-    from trader.brain.harvester import Harvester
+    from trader.brain.scraper import Scraper
     from trader.core.journal import Journal
     cfg = yaml.safe_load(open("config.yaml"))
     j = Journal(pathlib.Path(tempfile.mkdtemp()) / "h.db")
-    h = Harvester(j, cfg, feed=None)
+    h = Scraper(j, cfg, feed=None)
     h.llm = llm
     return h
 
 
 def test_batch_maps_by_id():
-    from trader.brain.harvester import Harvester
+    from trader.brain.scraper import Scraper
     ideas = [_idea(title=f"strategy {i}", iid=f"tv_{i}") for i in range(3)]
     reply = {"results": [
         {"id": "tv_0", "family": "ema_trend", "params": {},
@@ -69,7 +69,7 @@ def test_batch_maps_by_id():
         {"id": "tv_1", "skip": True, "reason": "opinion"},
         {"id": "tv_2", "family": "not_a_family", "params": {}},
     ]}
-    h = _harvester_with(FakeLLM(reply))
+    h = _scraper_with(FakeLLM(reply))
     reply["results"][0]["params"] = {"adx_min": 20, "pullback_atr": 0.8,
                                      "trend_tf": "15m"}
     out = h.extract_batch(ideas, {})
@@ -86,7 +86,7 @@ def test_batch_single_call_for_many_ideas():
         {"id": f"tv_{i}", "family": "ema_trend",
          "params": {"fast_len": 21, "slow_len": 55}, "hypothesis": "h"}
         for i in range(8)]})
-    h = _harvester_with(llm)
+    h = _scraper_with(llm)
     h.extract_batch(ideas, {})
     assert llm.calls == 1                         # complete reply: one call
 
@@ -101,7 +101,7 @@ def test_batch_mangled_reply_falls_back_per_idea():
                             "prices and adjust positions slowly."}
     per_idea = [{"id": f"tv_{i}", **genome} for i in range(6)]
     llm = FakeLLM(genome, replies=[{"results": []}] + per_idea)
-    h = _harvester_with(llm)
+    h = _scraper_with(llm)
     out = h.extract_batch(ideas, {})
     assert llm.calls == 1 + 6                     # batch + bounded fallbacks
     got = [v for v in out.values() if v is not None]
@@ -113,18 +113,18 @@ def test_batch_explicit_skips_cost_no_fallback():
     ideas = [_idea(title=f"setup {i}", iid=f"tv_{i}") for i in range(4)]
     llm = FakeLLM({"results": [{"id": f"tv_{i}", "skip": True,
                                 "reason": "hype"} for i in range(4)]})
-    h = _harvester_with(llm)
+    h = _scraper_with(llm)
     out = h.extract_batch(ideas, {})
     assert llm.calls == 1
     assert all(v is None for v in out.values())
 
 
 def test_genome_rejects_out_of_schema_params():
-    from trader.brain.harvester import Harvester
-    g = Harvester._genome_from(
+    from trader.brain.scraper import Scraper
+    g = Scraper._genome_from(
         type("S", (), {})(),  # unused self path via instance below
         {}) if False else None
-    h = _harvester_with(FakeLLM(None))
+    h = _scraper_with(FakeLLM(None))
     g = h._genome_from(_idea(iid="x1"),
                        {"family": "ema_trend",
                         "params": {"nonsense_gene": 5}})
@@ -135,7 +135,7 @@ def test_genome_rejects_out_of_schema_params():
 
 
 def test_genome_repairs_range_strings():
-    from trader.brain.harvester import repair_params
+    from trader.brain.scraper import repair_params
     p = repair_params("ma_cross", {"fast_len": "5..50",
                                    "slow_len": "30..200"})
     assert p == {"fast_len": 50, "slow_len": 200}   # clamped to bounds
@@ -145,7 +145,7 @@ def test_genome_repairs_range_strings():
 
 # ── Atom / entity parsing ────────────────────────────────────────────────
 def test_scrape_feed_handles_atom(monkeypatch):
-    import trader.brain.harvester as hv
+    import trader.brain.scraper as hv
 
     class R:
         status_code = 200
@@ -176,7 +176,7 @@ def test_source_scores_rank_productive_sources():
                                                        "accepted": 0}}
     j.log_brain_event("harvest_cycle", "harvester", {"per_source": good})
     j.log_brain_event("harvest_cycle", "harvester", {"per_source": bad})
-    h = _harvester_with(FakeLLM(None))
+    h = _scraper_with(FakeLLM(None))
     h.journal = j
     s = h._source_scores()
     tv_key = "tradingview.com/ideas/btcusdt"
