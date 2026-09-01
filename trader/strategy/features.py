@@ -397,4 +397,39 @@ def _swing_low(ctx, n):
     return lo.where(piv).shift(n).ffill()
 
 
+# ── classic indicator vocabulary ─────────────────────────────────────────
+@register("macd", arg_specs=((int, 3, 50), (int, 10, 200), (int, 2, 50)))
+def _macd(ctx, fast, slow, signal):
+    """The histogram — line minus signal. One number, which is what a DSL
+    comparison needs."""
+    c = ctx.df["close"]
+    line = ind.ema(c, int(fast)) - ind.ema(c, int(slow))
+    return line - ind.ema(line, int(signal))
+
+
+@register("keltner_upper", arg_specs=((int, 5, 200), (float, 0.5, 4.0)))
+def _keltner_upper(ctx, n, k):
+    return ind.ema(ctx.df["close"], int(n)) \
+        + float(k) * ind.atr_series(ctx.df, int(n))
+
+
+@register("keltner_lower", arg_specs=((int, 5, 200), (float, 0.5, 4.0)))
+def _keltner_lower(ctx, n, k):
+    return ind.ema(ctx.df["close"], int(n)) \
+        - float(k) * ind.atr_series(ctx.df, int(n))
+
+
+@register("atr_pct_rank", arg_specs=((int, 20, 500),), domain=(0.0, 1.0))
+def _atr_pct_rank(ctx, n):
+    """Where current volatility sits in its own recent distribution —
+    a regime reading as a number rather than a label."""
+    return ind.atr_series(ctx.df, 14).rolling(int(n)).rank(pct=True)
+
+
+@register("vol_of_vol", arg_specs=((int, 20, 500),), domain=(0.0, 2.0))
+def _vol_of_vol(ctx, n):
+    n = int(n)
+    return ind.realized_vol_series(ctx.df, max(2, n // 4)).rolling(n).std()
+
+
 from . import features_deriv          # noqa: E402,F401  (registration side-effect)
