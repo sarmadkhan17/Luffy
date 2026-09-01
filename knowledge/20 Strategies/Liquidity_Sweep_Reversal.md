@@ -18,7 +18,7 @@ author: Strategist
 
 ## Live record
 - closed trades: 18 · wins: 9
-- realized P&L: -373.86 USDT
+- realized P&L: -395.76 USDT
 - state: **demoted**
 
 Related: [[Auction Market Theory]], [[Regime Playbook]], [[MOC]]

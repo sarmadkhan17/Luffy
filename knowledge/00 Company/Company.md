@@ -1,6 +1,6 @@
 ---
 type: org-chart
-updated: 2026-08-31
+updated: 2026-09-01
 ---
 # Company
 
@@ -9,8 +9,10 @@ updated: 2026-08-31
 ## Team
 | Employee | Title | Job |
 |---|---|---|
-| [[Researcher]] | Researcher | Sources new strategy ideas from ideas feeds and literature. |
+| [[Scraper]] | Scraper | Reads prose — idea feeds, essays, papers — and queues mechanisms. |
+| [[Harvester]] | Harvester | Reads numbers — venue APIs and MCP servers — and reports coverage. |
 | [[Strategist]] | Strategist | Reviews the strategy book; promotes and demotes. |
+| [[Strategy Analyst]] | Strategy Analyst | Tests specs on stored data and TradingView; ranks them by regime fit. |
 | [[Theorist]] | Theorist | Autopsies losing clusters and edge decay into doctrine. |
 | [[Risk Officer]] | Risk Officer | Sizing, heat cap, daily breaker, macro/news event freezes. |
 | [[Trader]] | Trader | Executes entries; manages trailing stops and time exits. |

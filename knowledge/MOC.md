@@ -7,8 +7,10 @@ type: moc
 
 ## Company
 - [[Manager]] — Manager
-- [[Researcher]] — Researcher
+- [[Scraper]] — Scraper
+- [[Harvester]] — Harvester
 - [[Strategist]] — Strategist
+- [[Strategy Analyst]] — Strategy Analyst
 - [[Theorist]] — Theorist
 - [[Risk Officer]] — Risk Officer
 - [[Trader]] — Trader
@@ -50,6 +52,7 @@ type: moc
 - [[vwap_fade_variant_(2.5)]]
 
 ## Daily
+- [[2026-09-01]]
 - [[2026-08-31]]
 - [[2026-08-30]]
 - [[2026-08-29]]
