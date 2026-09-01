@@ -1,12 +1,12 @@
 """Strategy Scraper — continuous discovery from the internet.
 
-Loop: SCRAPE (TradingView ideas pages + crypto RSS) → EXTRACT (DeepSeek
-turns human idea-speak into genome JSON, or skips) → TEST (dual gauntlet:
-TradingView walk-forward primary + internal sanity) → DEPLOY survivors to
-paper probation with source provenance.
+Loop: SCRAPE (TradingView scripts pages + crypto RSS) → SCREEN (cheap,
+token-free relevance filter) → QUEUE the surviving ideas whole for the
+Strategist, which is the only path that turns raw text into a strategy.
 
-Everything is journaled: scraped-idea ids (dedupe), rejections with
-reasons, acceptances with source. Budget-guarded by BrainLLM.
+Everything is journaled: scraped-idea ids (dedupe), per-cycle yield by
+source. Budget-guarded by BrainLLM (used only for downstream consumers,
+not for genome extraction here).
 """
 from __future__ import annotations
 
@@ -20,10 +20,7 @@ import requests
 
 from . import ideas
 from ..brain.llm import BrainLLM
-from ..brain.tv import TVClient
 from ..core.journal import Journal
-from ..strategy import evidence
-from ..strategy.genome import FAMILY_GENE_SPECS, Genome
 
 log = logging.getLogger(__name__)
 
@@ -107,21 +104,6 @@ def idea_score(item: dict) -> int:
     if HYPE.search(hay):
         score -= 4
     return score
-
-
-FAMILY_DOCS = {
-    "ema_trend": "trend continuation via EMA alignment + pullback entry",
-    "vwap_fade": "fade statistical extremes of an anchored VWAP",
-    "breakout_retest": "trade confirmed range breakouts on first retest hold",
-    "sweep_reversal": "trade stop-hunt reversals when swept levels reclaim fast",
-    "rotation_momo": "ride BTC-led catch-up flows into lagging alts",
-    "rsi_extreme": "fade momentum exhaustion: enter when RSI crosses back "
-                   "out of an overbought/oversold extreme",
-    "ma_cross": "classic trend-following: fast MA crossing slow MA starts "
-                "a position in the cross direction",
-    "bb_fade": "fade overextension: price pierces a Bollinger band then "
-               "closes back inside",
-}
 
 
 def scrape_feed(feed_url: str, timeout: int = 15) -> list[dict]:
@@ -245,13 +227,6 @@ class Scraper:
         self.tv_pages = int(h.get("tv_pages", 2))
         self.feeds = list(h.get("rss_feeds", DEFAULT_RSS_FEEDS))
         self.ideas_per_cycle = int(h.get("ideas_per_cycle", 12))
-        self.tv = TVClient(
-            interval=cfg["strategies"].get("tv_interval", "1h"),
-            period=cfg["strategies"].get("tv_period", "1y"),
-            min_oos_trades=int(
-                cfg["strategies"].get("tv_min_oos_trades", 5)),
-            require_positive_oos=bool(
-                cfg["strategies"].get("tv_require_positive_oos", True)))
 
     # ── SCRAPE ───────────────────────────────────────────────────────────
     def scrape_tv_scripts(self, tag: str) -> list[dict]:
@@ -310,176 +285,6 @@ class Scraper:
             "AND subject=?", (idea_id,))[0]["n"]
         return n > 0
 
-    # ── EXTRACT ──────────────────────────────────────────────────────────
-    def _genome_from(self, idea: dict, raw: dict) -> Genome | None:
-        family = raw.get("family")
-        if family not in FAMILY_GENE_SPECS:
-            return None
-        hyp = (raw.get("hypothesis") or "").strip()
-        hyp = f"{hyp} — harvested from {idea['source']}: {idea['title'][:90]}"
-        g = Genome(strategy_id=f"hav_{family}_{hashlib.md5(
-                       idea['idea_id'].encode()).hexdigest()[:6]}",
-                   family=family,
-                   hypothesis=hyp[:300],
-                   invalidation="Demote on PF<0.85/20 trades or 6 straight losses.",
-                   regime_filter=frozenset(["TRENDING_UP", "TRENDING_DOWN",
-                                            "RANGING", "VOLATILE"]),
-                   markets=frozenset({"futures"}),
-                   params=repair_params(family, raw.get("params")))
-        if Genome.validate(g):
-            return None
-        return g
-
-    def extract_batch(self, ideas: list[dict], tv_context: dict) -> dict:
-        """DeepSeek evaluates a shortlist in ONE call.
-
-        Returns {idea_id: genome-or-None}. Falls back to per-idea calls
-        when the batch reply is unusable."""
-        if not (self.llm and self.llm.available) or not ideas:
-            return {i["idea_id"]: None for i in ideas}
-        families = {k: FAMILY_DOCS[k] for k in FAMILY_GENE_SPECS}
-        genes_doc = {fam: {k: f"{v[1]}..{v[2]}" for k, v in spec.items()}
-                     for fam, spec in FAMILY_GENE_SPECS.items()}
-        listing = "\n".join(
-            f'{i+1}. id={idea["idea_id"]} | {idea["title"]} | '
-            f'{idea["text"][:450]}' for i, idea in enumerate(ideas))
-        prompt = (
-            "Below are trading ideas published by humans.\n"
-            + listing + "\n\n"
-            "Our system can only express these strategy families "
-            f"(with their gene schemas):\n{json.dumps(genes_doc, indent=1)}\n\n"
-            f"Current TradingView walk-forward context: "
-            f"{json.dumps(tv_context)[:500]}\n\n"
-            'For EACH idea output {"id", then either a genome '
-            '{"family","params",{...within schema},"hypothesis":"one '
-            'sentence"} or {"skip":true,"reason":"..."}}. If an idea states '
-            "a TESTABLE mechanism — even loosely (double top, divergence, "
-            "breakout rejection, seasonality) — map it to the NEAREST "
-            "family and fill unspecified genes with schema midpoints; the "
-            "backtester will judge it. Skip only pure news, hype, price "
-            "predictions or chart art with no stated logic. Never invent "
-            "gene names.\n\n"
-            'Reply as one JSON object: {"results":[...one entry per idea, '
-            "same order...]}")
-        raw = self.llm.chat_json(prompt, deep=False)
-        out: dict = {}
-        results = raw.get("results") if isinstance(raw, dict) else None
-        by_pos: dict[int, dict] = {}
-        n_entries = n_skips = 0
-        if isinstance(results, list):
-            for entry in results:
-                if not isinstance(entry, dict):
-                    continue
-                eid = entry.get("id")
-                idx = next((i for i, idea in enumerate(ideas)
-                            if idea["idea_id"] == eid), None)
-                if idx is None:
-                    idx = len(by_pos)          # positional fallback
-                by_pos[idx] = entry
-            n_entries = len(by_pos)
-            n_skips = sum(1 for e in by_pos.values() if e.get("skip"))
-        log.info(f"extract_batch: {len(ideas)} ideas → {n_entries} entries "
-                 f"({n_skips} explicit skips); "
-                 f"reply={'ok' if isinstance(results, list) else str(raw)[:150]}")
-        fallback_budget = 6               # token guard for retry depth
-        for i, idea in enumerate(ideas):
-            entry = by_pos.get(i)
-            if entry is not None:
-                g = None if entry.get("skip") else self._genome_from(idea, entry)
-                log.info(f"extract [{idea['idea_id']}] {idea['title'][:60]} "
-                         f"→ {'skip: ' + str(entry.get('reason'))[:80] if entry.get('skip') else g.family if g else 'genome-invalid'}")
-                out[idea["idea_id"]] = g
-                continue
-            # entry missing entirely (truncated/mangled batch reply):
-            # retry individually while token budget allows
-            if fallback_budget > 0:
-                fallback_budget -= 1
-                g = self.idea_to_genome(idea, tv_context)
-                out[idea["idea_id"]] = g
-                log.info(f"extract fallback [{idea['idea_id']}]: "
-                         f"{'genome' if g else 'skip'}")
-            else:
-                out[idea["idea_id"]] = None
-        return out
-
-    def idea_to_genome(self, idea: dict, tv_context: dict):
-        """Single-idea extraction (fallback path)."""
-        if not (self.llm and self.llm.available):
-            return None
-        families = {k: FAMILY_DOCS[k] for k in FAMILY_GENE_SPECS}
-        genes_doc = {fam: {k: f"{v[1]}..{v[2]}"
-                           for k, v in spec.items()}
-                     for fam, spec in FAMILY_GENE_SPECS.items()}
-        prompt = (
-            "A human trader published this trading idea:\n"
-            f'TITLE: {idea["title"]}\nTEXT: {idea["text"]}\n\n'
-            "Our system can only express these strategy families "
-            f"(with their gene schemas):\n{json.dumps(genes_doc, indent=1)}\n\n"
-            f"Current TradingView walk-forward context: "
-            f"{json.dumps(tv_context)[:500]}\n\n"
-            "If the idea maps cleanly onto ONE family, output its genome "
-            'JSON: {"family","params",{...within schema},"hypothesis":'
-            '"one sentence connecting the idea\'s logic to the family"}.\n'
-            "If it is not a systematic strategy (just an opinion/chart "
-            'art/hype), output {"skip":true,"reason":"..."}. Never invent '
-            "gene names.")
-        raw = self.llm.chat_json(prompt, deep=False)
-        if not raw or raw.get("skip"):
-            return None
-        return self._genome_from(idea, raw)
-
-    # ── TEST + DEPLOY ────────────────────────────────────────────────────
-    def _dual_gauntlet(self, g: Genome) -> tuple[bool, dict]:
-        """Stage order: Yahoo prefilter (cheap) → internal sanity (cheap)
-        → real-TV Strategy Tester (expensive, budget-aware)."""
-        if not hasattr(self, "_strategy_judge"):
-            from .judge import StrategyJudge
-            self._strategy_judge = StrategyJudge(
-                self.journal, self.cfg, self.notifier)
-        j = self._strategy_judge
-        # Yahoo family-proxy is ADVISORY only: its BTC-USD 1y history can
-        # diverge wildly from the venue (e.g. −28% b&h vs live uptrend) and
-        # it tests a generic proxy, not the genome's exact genes. The
-        # binding cheap gate is internal sanity below (venue-exact candles,
-        # exact genes, walk-forward). Real-TV remains the final judge.
-        pre_ok, pre_ev = j.prefilter(g)
-        if not pre_ok:
-            log.info(f"prefilter advisory-reject ({g.family}): "
-                     f"{json.dumps(pre_ev)[:140]}")
-        # Binding cheap gate: the genome's real genes, on venue-exact candles,
-        # across the configured symbol set with higher-timeframe context, with
-        # the train/test 'robust' flag enforced. Previously this was a 2-symbol
-        # 30-day run whose only bar was PF ≥ 0.5 — i.e. "don't lose more than
-        # twice what you win" — plus a 5-trade activity check.
-        ok, ev = evidence.run_gauntlet(g, self.feed, self.cfg)
-        if not ok:
-            return False, {"stage": "internal_walk_forward", "internal": ev}
-        tv_ok, tv_ev = j.final_verdict(g)
-        return tv_ok, {"stage": tv_ev.get("stage", "no_verdict"),
-                       "tv": tv_ev, "internal": ev}
-
-    def _deploy(self, g: Genome, idea: dict, evidence: dict):
-        from ..core.types import Strategy, StrategyState, new_id
-        st = Strategy(id=new_id("hav"), name=f"{g.family} harvested",
-                      kind=g.family, params=g.params,
-                      state=StrategyState.PAPER,
-                      description=f"from {idea['source']}: {idea['title'][:90]}",
-                      origin="harvested")
-        st.hypothesis, st.invalidation = g.hypothesis, g.invalidation
-        st.regime_filter, st.markets = set(g.regime_filter), set(g.markets)
-        st.generation, st.parent_id = 1, idea["idea_id"]
-        self.journal.upsert_strategy(st)
-        self.journal.log_brain_event("harvest_accepted", st.id,
-                                     {"source": idea["source"],
-                                      "title": idea["title"][:120],
-                                      **evidence})
-        if self.notifier:
-            self.notifier.send(
-                f"🌐 Harvested strategy: {st.name}\n"
-                f"from {idea['title'][:70]}\n"
-                f"TV OOS {evidence['tv'].get('oos_return_pct'):+.1f}% "
-                f"(sharpe {evidence['tv'].get('oos_sharpe')}) → paper probation")
-
     # ── source yield learning ────────────────────────────────────────────
     def _source_scores(self) -> dict[str, float]:
         """Yield per source from past cycles: (accepted×3 + extracted)
@@ -531,12 +336,6 @@ class Scraper:
             self._log_cycle(stats, per_source)
             return stats
 
-        tv_context = {}
-        try:
-            tv_context = self.tv.compare_families("BTC/USDT")
-        except Exception:
-            pass
-
         # rank: productive sources first, then strategy-speak density,
         # then textual substance (a 2000-char essay beats a chart caption)
         src_scores = self._source_scores()
@@ -566,26 +365,6 @@ class Scraper:
             # Record the idea WHOLE: the text is the part that holds the
             # mechanism, and the Strategist reads it out of this queue.
             ideas.record(self.journal, idea)
-
-        genomes = self.extract_batch(batch, tv_context)
-        for idea in batch:
-            g = genomes.get(idea["idea_id"])
-            if g is None:
-                stats["skipped"] += 1
-                continue
-            stats["extracted"] += 1
-            src = per_source[idea["source"]]
-            src["extracted"] += 1
-            ok, evidence = self._dual_gauntlet(g)
-            if ok:
-                self._deploy(g, idea, evidence)
-                stats["accepted"] += 1
-                src["accepted"] += 1
-            else:
-                stats["rejected"] += 1
-                self.journal.log_brain_event(
-                    "harvest_rejected", idea["idea_id"],
-                    {"title": idea["title"][:100], **evidence})
 
         self._log_cycle(stats, per_source)
         log.info(f"harvest: {stats}")

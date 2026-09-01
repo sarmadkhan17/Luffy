@@ -5,8 +5,8 @@ the substance lives: it walks a bounded frontier of finance knowledge
 sites (Investopedia articles, QuantStart, BabyPips, arXiv abstracts,
 Medium essays — plus whatever links this cycle's RSS items point to),
 extracts readable text, screens passages token-free for strategy
-density, then mines the best ones for expressible genomes in ONE batched
-LLM call. Survivors face the same dual gauntlet as everything else.
+density, then queues the densest ones whole for the Strategist — the
+only path that turns mined text into a strategy.
 
 Politeness: robots.txt honored (std. library parser), per-host delay,
 page + depth caps, assets skipped. Fail-open when robots is unreachable.
@@ -14,7 +14,6 @@ page + depth caps, assets skipped. Fail-open when robots is unreachable.
 from __future__ import annotations
 
 import hashlib
-import json
 import logging
 import re
 import time
@@ -235,51 +234,6 @@ class DeepCrawler:
             return None
         return html_to_text(html), extract_links(html, url)
 
-    # ── mining ───────────────────────────────────────────────────────────
-    def mine_passages(self, passages: list[dict]) -> dict:
-        """One batched call over {pid: passage} → {pid: genome|None}."""
-        empty: dict = {p["pid"]: None for p in passages}
-        if not (self.llm and self.llm.available) or not passages:
-            return empty
-        from ..strategy.genome import FAMILY_GENE_SPECS
-        genes_doc = {fam: {k: f"{v[1]}..{v[2]}" for k, v in spec.items()}
-                     for fam, spec in FAMILY_GENE_SPECS.items()}
-        listing = "\n".join(
-            f'{i}. id={p["pid"]} | {p["text"][:700]}'
-            for i, p in enumerate(passages))
-        prompt = (
-            "These are passages from finance educational material, papers "
-            "and practitioner essays:\n" + listing + "\n\n"
-            f"Expressible strategy families:\n{json.dumps(genes_doc, indent=1)}\n\n"
-            'For EACH passage output {"id", plus either {"family","params"'
-            '({...within schema},"hypothesis":"one sentence naming the '
-            'inefficiency"} or {"skip":true,"reason":"..."}}. Skip generic '
-            "education, definitions and opinions — mine only passages that "
-            "define an actual tradeable rule. Never invent gene names.\n"
-            'Reply as one JSON object: {"results":[...one entry per '
-            "passage, same order...]}")
-        raw = self.llm.chat_json(prompt, deep=False)
-        results = raw.get("results") if isinstance(raw, dict) else None
-        out = dict(empty)
-        if not isinstance(results, list):
-            return out
-        by_pos: dict[int, dict] = {}
-        for e in results:
-            if not isinstance(e, dict):
-                continue
-            idx = next((i for i, p in enumerate(passages)
-                        if p["pid"] == e.get("id")), len(by_pos))
-            by_pos[idx] = e
-        for i, p in enumerate(passages):
-            e = by_pos.get(i)
-            if not e or e.get("skip"):
-                continue
-            idea = {"source": f"crawled:{p['url'][:80]}",
-                    "idea_id": p["pid"], "title": p["text"][:90],
-                    "text": p["text"]}
-            out[p["pid"]] = self.scraper._genome_from(idea, e)
-        return out
-
     # ── the cycle ────────────────────────────────────────────────────────
     def crawl_once(self) -> dict:
         stats = {"pages": 0, "docs": 0, "passages": 0, "mined": 0,
@@ -347,13 +301,10 @@ class DeepCrawler:
         stats["passages"] = len(mined)
         stats["mined"] = len(batch)
 
-        # Queue the densest passages for the Strategist BEFORE the legacy
-        # family-mapper gets them. Everything the crawler read used to die
-        # here: passages the eight templates could not express were simply
-        # dropped, which is most of them. The queue keeps the text, and the
-        # Strategist writes a spec from the mechanism instead of guessing a
-        # family. Wider than the mine budget — expressing an idea costs one
-        # prompt, mining it costs a batch.
+        # Queue the densest passages for the Strategist — the only path
+        # that turns mined text into a strategy. The crawler's job ends
+        # at the queue; it keeps the text whole and lets the Strategist
+        # write a spec from the mechanism.
         stats["queued"] = 0
         for p in mined[:self.queue_budget]:
             if ideas.record(self.journal, {
@@ -361,31 +312,6 @@ class DeepCrawler:
                     "text": p["text"], "url": p["url"],
                     "source": f"crawled:{host_of(p['url'])}"}):
                 stats["queued"] += 1
-
-        if batch:
-            tv_context = {}
-            try:
-                tv_context = self.scraper.tv.compare_families("BTC/USDT")
-            except Exception:
-                pass
-            genomes = self.mine_passages(batch)
-            for p in batch:
-                g = genomes.get(p["pid"])
-                if g is None:
-                    continue
-                stats["extracted"] += 1
-                idea = {"source": f"crawled:{p['url'][:80]}",
-                        "idea_id": p["pid"], "title": p["text"][:90],
-                        "text": p["text"]}
-                ok, evidence = self.scraper._dual_gauntlet(g)
-                if ok:
-                    self.scraper._deploy(g, idea, evidence)
-                    stats["accepted"] += 1
-                else:
-                    stats["rejected"] += 1
-                    self.journal.log_brain_event(
-                        "crawl_rejected", p["pid"],
-                        {"url": p["url"][:120], **evidence})
 
         self.journal.log_brain_event("crawl_cycle", "crawler", stats)
         log.info(f"crawl: {stats}")
