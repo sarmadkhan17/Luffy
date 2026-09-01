@@ -49,3 +49,49 @@ def test_swing_high_only_reports_a_pivot_after_it_is_confirmed():
     out = FEATURES["swing_high"].fn(ctx, 2)
     assert np.isnan(out.iloc[2]), "pivot visible on its own bar = lookahead"
     assert out.iloc[4] == 10.0        # high = close + 1
+
+
+def test_bars_since_with_nan_input_remains_nan():
+    """NaN input means unknown condition, so output must be NaN."""
+    close = np.arange(1.0, 11.0)
+    n = len(close)
+    df = pd.DataFrame({
+        "ts": pd.date_range("2026-01-01", periods=n, freq="15min", tz="UTC"),
+        "open": close, "high": close + 1.0, "low": close - 1.0,
+        "close": close, "volume": np.ones(n)})
+    ctx = FeatureCtx(frames={"15m": df}, tf="15m")
+
+    # Create a Series with leading NaNs and trailing True/False values
+    nan_series = pd.Series([np.nan] * 5 + [False, False, True, False, False],
+                          index=df.index)
+    # Call _bars_since directly with NaN input
+    out = FEATURES["bars_since"].fn(ctx, nan_series)
+    # First 5 bars have NaN input, should stay NaN
+    assert out.iloc[:5].isna().all(), "bars_since should be NaN where input is NaN"
+    # After bar 7 (where condition becomes True), should count up
+    assert out.iloc[7] == 0.0  # True on bar 7
+    assert out.iloc[8] == 1.0  # 1 bar since bar 7 was true
+    assert out.iloc[9] == 2.0  # 2 bars since bar 7 was true
+
+
+def test_streak_with_nan_input_remains_nan():
+    """NaN input means unknown condition, so output must be NaN."""
+    close = np.arange(1.0, 11.0)
+    n = len(close)
+    df = pd.DataFrame({
+        "ts": pd.date_range("2026-01-01", periods=n, freq="15min", tz="UTC"),
+        "open": close, "high": close + 1.0, "low": close - 1.0,
+        "close": close, "volume": np.ones(n)})
+    ctx = FeatureCtx(frames={"15m": df}, tf="15m")
+
+    # Create a Series with leading NaNs then True values
+    nan_series = pd.Series([np.nan] * 5 + [True, True, False, True, True],
+                          index=df.index)
+    # Call _streak directly with NaN input
+    out = FEATURES["streak"].fn(ctx, nan_series)
+    # First 5 bars have NaN input, should stay NaN
+    assert out.iloc[:5].isna().all(), "streak should be NaN where input is NaN"
+    # After NaN warmup
+    assert out.iloc[5] == 1.0   # first True
+    assert out.iloc[6] == 2.0   # streak continues
+    assert out.iloc[7] == 0.0   # False breaks streak
