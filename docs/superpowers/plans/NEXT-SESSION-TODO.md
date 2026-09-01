@@ -15,103 +15,107 @@ scored zero.
 
 ---
 
-## 0. THE PIPELINE IS DISCONNECTED — fix this first
+## Pipeline — BUILT 2026-08-31
 
-**This is a deviation from the agreed design, not a nice-to-have.**
+The org pipeline is wired end to end and verified against live data:
 
-Agreed: Researcher -> Harvester -> Strategist -> Analyst -> Trader -> Librarian.
+**Scraper → Harvester → Strategist → Analyst → Trader → Risk Officer → Librarian**
 
-Wired: `kernel.py:322` calls `writer.write(avoid=[...])` with **no `idea=`**,
-so DeepSeek invents strategies from NOTHING every 3 hours. The Researcher
-(harvester + crawler) runs a separate loop, still maps scraped ideas onto the
-8 legacy families, and still feeds the OLD genome path. The two halves never
-meet, which makes the entire scraping/crawling investment worthless.
+| Role | Module | State |
+|---|---|---|
+| Scraper (prose) | `brain/scraper.py`, `crawler.py`, `ideas.py` | renamed from `harvester.py`; idea queue live |
+| Harvester (numbers) | `brain/harvester.py`, `data/derivatives.py`, `data/coinalyze.py`, `data/mcp_client.py` | NEW role |
+| Strategist | `brain/spec_writer.py` | now fed idea + doctrine + data brief |
+| Strategy Analyst | `brain/analyst.py` | + `confirm_on_tv()`, `rank_for_now()` |
+| Trader | `engine/executor.py`, `exits.py` | unchanged |
+| Risk Officer | `engine/risk.py` | **max 4 open trades** |
+| Librarian | `knowledge/vault.py` | spec cards via `to_markdown()` |
 
-The fix is small — `SpecWriter.write(idea=...)` already accepts the shape and
-is verified working end to end against DeepSeek:
+### The data, not the test
 
-1. In `_mechanism_once`, pull an unconsumed idea:
-   `SELECT subject, detail FROM brain_events WHERE kind='harvest_idea'
-    AND subject NOT IN (SELECT subject FROM brain_events
-    WHERE kind IN ('spec_admitted','spec_rejected')) ORDER BY ts DESC LIMIT 1`
-2. Pass it as `writer.write(idea={"title":..., "text":..., "idea_id":...,
-   "url":...}, avoid=[...])`.
-3. Journal the outcome against that `idea_id` so it is not retried forever.
-4. Then do item 3 below (the harvester prompt), so ideas arrive as MECHANISMS
-   rather than pre-flattened family guesses.
+- **`basis` implemented** (`derivatives.basis` / `basis_history`, spot vs perp
+  klines). It was registered as a feature with no fetcher, so every basis spec
+  reported UNTESTED forever. **2 years x 5 symbols backfilled** — now `usable`.
+- **`brief()` derives its bar from the Analyst's own gate** (90% of the
+  backtest frame = 75 days today), not a hardcoded day count. An earlier cut
+  used fixed thresholds and reported `oi` as usable when it is 31 days — the
+  brief must never promise what the Analyst will refuse.
+- The brief goes to the Strategist in **its own prompt section**. Folded into
+  `doctrine` it was truncated away at 600 chars and the model never saw it.
+  Verified: the Strategist now writes against `funding`/`basis` and avoids the
+  thin positioning series unprompted.
 
-Until this is done the Strategist is guessing in a vacuum and the crawler's
-435-items-per-cycle is dead weight.
+### MCP
+
+- `.mcp.json` gains the official **CoinGecko MCP** (`https://mcp.api.coingecko.com/mcp`,
+  keyless) for the agent layer.
+- `data/mcp_client.py` gives the **kernel** its own MCP client (Streamable
+  HTTP JSON-RPC, no new dependency) — `.mcp.json` only ever configured the
+  coding agent, so the daemon could not reach a server. Configured under
+  `mcp.servers` in config.yaml.
+- Note: the public CoinGecko MCP exposes only `execute`/`search_docs` — an
+  agent interface, not a numeric feed. The Harvester therefore prefers REST
+  where a REST source exists and uses MCP for what only MCP serves.
+
+### Open — needs you
+
+**Coinalyze API key.** `oi`, `taker_ratio` and `ls_ratio` are stuck at ~31
+days against a 75-day requirement, because Binance retains them ~30 days. They
+can NEVER clear the gate from Binance alone — waiting until 2026-11-01 does not
+fix it, it just delays it. Coinalyze serves them far deeper on a free key
+(40 req/min). `data/coinalyze.py` is written and wired; set
+`COINALYZE_API_KEY` in `.env` and it activates.
+
+It is **unverified against a live key** — we have none. `resolve()` discovers
+the venue-suffixed symbol format from `/future-markets` at runtime rather than
+hardcoding a guess, and every call degrades to an empty frame, so a wrong
+guess costs a log line. Verify once the key exists.
+
+### Weighted combination of the active set
+
+The orchestrator always combined strategies — it sums every eligible signal
+alongside the analyst votes. What it did NOT do is weigh them: every strategy
+entered the sum at a flat `STRATEGY_VOTE_WEIGHT = 0.45`, so a mechanism
+printing PF 1.8 in the live regime counted exactly as much as one limping at
+0.9. Analysts had `base_weights x acc_mult x regime_fit` from the start;
+strategies had nothing.
+
+`trader/strategy/blend.py` gives them the same treatment:
+
+    weight = performance_multiplier(closed trades)   # realized PF
+           x regime_multiplier(measured regime evidence, live regime)
+
+Both shrink toward 1.0 by how much evidence exists (half-weight at 10 trades
+/ 5 windows), because the failure mode is "two lucky trades doubled a
+strategy's voice". Each FACTOR is bounded to [0.5, 1.5] so neither alone pins
+the product at the [0.25, 2.0] ceiling — pinned weights lose the ordering
+inside the set, which is the whole point. Nothing is ever muted: silencing is
+retirement, the Analyst's job, not the blender's.
+
+**A second dead-code bug fixed on the way.** `set_measured_regimes()` computed
+regime evidence and only RETURNED it. `vault.py` and `blend.py` both read
+`spec.provenance["regime_evidence"]` and nothing ever wrote it, so the regime
+half of the weighting would have been permanently neutral. It is now
+persisted.
+
+Weights are all 1.0 today — the four live specs have no closed trades and no
+measured regime evidence yet. That is honest, not broken: they differentiate
+as evidence accumulates.
+
+### Decisions taken (I chose; say if you disagree)
+
+- **TradingView is ADVISORY**, never a gate — recorded beside the spec, never
+  blocking admission. A TV gate would silently kill every derivatives
+  mechanism, since only ~half the book compiles to Pine at all.
+- **The set is COMBINED, and now weighted.** `rank_for_now()` was the wrong
+  shape — a cosmetic ordering nothing consumed. Replaced by
+  `Analyst.active_set()`, which reports the set with the same weights the
+  orchestrator applies. See "Weighted combination" below.
+- **`risk_per_trade_pct` left at 1.5.** With a 4-trade cap that is 6% max heat
+  against a 15% cap, so the heat cap no longer binds and ~60% of the risk
+  budget sits idle. Raise it if you want the old budget used.
 
 ---
-
-## 1. Verify the loop actually fired (10 min)
-
-`kernel._strategy_mechanism_loop` sleeps 300s after boot then runs every 3h.
-It had not yet logged a cycle when the session ended.
-
-```bash
-grep -E "mechanism:|spec_admitted|spec_rejected|spec_write_failed" logs/luffy.log | tail
-# force one cycle without waiting:
-./venv/bin/python -c "
-from trader.kernel import Kernel
-k=Kernel(); print(k._mechanism_once(per_cycle=1, max_book=8))"
-```
-If `Kernel()` needs args, read `trader/kernel.py:60-100`. Expect either
-`spec_admitted` or `spec_rejected` in `brain_events`.
-
-## 2. Frontend — specs are invisible in the dashboard (NOT DONE)
-
-The dashboard was never updated for the spec population. `kind='spec'` rows
-carry `params='{}'` and a populated `spec_json`, so anything rendering
-`params` shows an empty strategy.
-
-- Find the strategies route in `trader/dashboard/server.py` (`/api/strategies`
-  returned 404 — the real path is elsewhere, check the GraphQL schema in
-  `trader/api/graphql_schema.py` too).
-- Render for spec rows: name, thesis, timeframe, direction, `entry_long`,
-  `filters`, exit geometry, measured `regime_filter`, and whether it fits the
-  CURRENT regime (`Analyst.current_regime()`).
-- `CompiledStrategy.to_markdown()` already renders exactly this — reuse it
-  rather than rebuilding the layout.
-- Verify `trader/dashboard/web/index.html` does not break on a null `params`.
-
-## 3. Researcher still flattens every idea (NOT DONE — highest leverage)
-
-`trader/brain/harvester.py:299-315` still instructs the LLM:
-
-> "Our system can only express these strategy families ... map it to the
-> NEAREST family and fill unspecified genes with schema midpoints"
-
-This is why 409 scraped ideas produced zero strategies. Replace it: ask for
-the MECHANISM (what inefficiency, what observable triggers it, what would
-invalidate it) and emit a structured `Idea`, then hand it to
-`SpecWriter.write(idea=...)` which already accepts exactly that shape and is
-verified working against DeepSeek. Do the same for
-`harvester.idea_to_genome()` and `crawler.py`.
-
-## 4. Librarian writes no spec cards (NOT DONE)
-
-`trader/knowledge/vault.py:refresh_strategy_notes()` only knows genome rows.
-Extend it to emit `CompiledStrategy.to_markdown()` for spec rows, including
-the regime evidence in `spec.provenance["regime_evidence"]`.
-
-## 5. TradingView path is built but unwired (NOT DONE)
-
-`CompiledStrategy.to_pine()` works — 13 of 27 specs compile to Pine v5 and
-pass the existing lint gate; the other 14 are honestly excluded because
-funding/OI/flow do not exist on a Pine chart.
-
-Nothing calls it. Wire it into `trader/brain/tv_harness.py` as a confirmation
-stage after `Analyst.admit()`, budget-capped via `tv_harness.daily_runs`.
-Keep it ADVISORY — `luffy-gauntlet-repair` records what happened when a TV
-proxy was allowed to gate.
-
-**Credentials:** the harness uses `assisted_login()` with a persistent browser
-profile, not stored secrets — run
-`./venv/bin/python -m trader.brain.tv_harness --login` once and the session
-persists for months. `.mcp.json` has only the Motion servers; there is no
-TradingView MCP. Do not put TV credentials in `.env`.
 
 ## 6. Three of four live specs are gated to unproven regimes
 
