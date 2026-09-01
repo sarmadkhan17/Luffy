@@ -57,6 +57,47 @@ HYPE = re.compile(
     r"(price prediction|price target|to hit \$|\d+x potential|moon\b"
     r"|buy now|giveaway|airdrop|1000x|next 100x|get rich)", re.I)
 
+#: research prose asserts that an observable predicts something, in a scope,
+#: ideally with a magnitude. It rarely contains a single word from
+#: STRATEGY_TERMS, which is why a second screen is needed rather than a
+#: looser one.
+CLAIM_TERMS = re.compile(
+    r"\b(predict\w*|forecast\w*|correlat\w+|regress\w+|significan\w+"
+    r"|hypothes\w+|evidence|out[- ]of[- ]sample|in[- ]sample|p[- ]value"
+    r"|t[- ]stat\w*|sharpe|information ratio|anomal\w+|risk premium|factor"
+    r"|cross[- ]section\w*|autocorrelat\w+|persist\w+|decay|half[- ]life"
+    r"|microstructure|adverse selection|inventory|order flow|toxicity"
+    r"|decile|quantile|percentile|basis points?|bps)\b", re.I)
+#: a claim with a number attached is worth more than one without
+MAGNITUDE = re.compile(r"\b\d+(\.\d+)?\s?(%|bps|basis points|x)\b", re.I)
+#: does it say WHERE the claim holds?
+SCOPE_TERMS = re.compile(
+    r"\b(regime|horizon|timeframe|intraday|daily|weekly|hours?|days?"
+    r"|bull|bear|trending|ranging|volatil\w+)\b", re.I)
+
+
+def research_score(item: dict) -> int:
+    """Screen for a market CLAIM rather than a trade setup."""
+    hay = f"{item.get('title', '')} {item.get('text', '')[:1200]}"
+    score = 2 * len(CLAIM_TERMS.findall(hay))
+    if MAGNITUDE.search(hay):
+        score += 4
+    if SCOPE_TERMS.search(hay):
+        score += 2
+    if HYPE.search(hay):
+        score -= 8
+    return score
+
+
+def streams_for(item: dict) -> set[str]:
+    """Which consumers should see this. An item may serve both."""
+    out = set()
+    if idea_score(item) >= 1:
+        out.add("strategy")
+    if research_score(item) >= 4:
+        out.add("research")
+    return out
+
 
 def idea_score(item: dict) -> int:
     """Cheap systematic-vs-hype screen. Higher = more likely a real,
