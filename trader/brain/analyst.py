@@ -211,6 +211,13 @@ class Analyst:
         stronger claim than the evidence makes.
         """
         rf = self.regime_fitness(spec, tf)
+        # Persist what was measured. The vault card and the orchestrator's
+        # strategy blender both read provenance["regime_evidence"]; until
+        # this line nothing wrote it, so a measurement made here died here.
+        if rf.get("by_regime"):
+            prov = dict(spec.provenance or {})
+            prov["regime_evidence"] = rf["by_regime"]
+            spec.provenance = prov
         if rf.get("fit"):
             measured = sorted(rf["fit"])          # deterministic ordering
             rf["changed"] = measured != sorted(spec.regime_filter)
@@ -272,6 +279,89 @@ class Analyst:
             return False, {**ev, "reason": f"signal overlap {overlap:.2f} with "
                                            f"{twin} (> {MAX_SIGNAL_OVERLAP})"}
         return True, ev
+
+    # ── tradingview confirmation ─────────────────────────────────────────
+    #: TradingView symbol for a pair, e.g. BTC/USDT -> BINANCE:BTCUSDT
+    @staticmethod
+    def tv_symbol(pair: str = "BTC/USDT") -> str:
+        return "BINANCE:" + pair.split(":")[0].replace("/", "")
+
+    def confirm_on_tv(self, spec: StrategySpec, tf: str | None = None,
+                      symbol: str = "BTC/USDT") -> dict:
+        """Second opinion from TradingView's Strategy Tester. ADVISORY.
+
+        This never gates admission, by deliberate choice. TV runs on TV's
+        data with TV's fee model, so it will disagree with our own backtest;
+        the disagreement is evidence about the mechanism, not a verdict on
+        it. Letting a TV proxy decide is what `luffy-gauntlet-repair` records
+        going wrong before. And only about half of the book can compile to
+        Pine at all — funding, open interest and order flow do not exist on
+        a Pine chart — so a TV gate would silently kill every derivatives
+        mechanism while looking like a quality bar.
+
+        Returns {tv_testable, ran, agree, ...}. `agree` is None when TV could
+        not be consulted, which is different from TV disagreeing.
+        """
+        out = {"spec": spec.id, "tv_testable": False, "ran": False,
+               "agree": None}
+        try:
+            compiled = compile_spec(spec)
+            code, testable, reasons = compiled.to_pine()
+        except Exception as e:
+            return {**out, "reason": f"compile failed: {e}"}
+        out["tv_testable"] = bool(testable)
+        if not testable:
+            out["reason"] = "; ".join(str(r) for r in reasons[:3])
+            return out
+        try:
+            from .tv_harness import TVHarness
+            h = TVHarness(self.journal, self.cfg)
+            if h.health().get("state") == "down" and h.runs_today() == 0:
+                pass                    # never consulted yet; still try once
+            res = h.backtest(code, symbol=self.tv_symbol(symbol),
+                             tf=tf or spec.timeframe)
+        except Exception as e:
+            return {**out, "reason": f"harness unavailable: {e}"}
+        out["ran"] = bool(res.get("ok"))
+        out["tv"] = res
+        if not out["ran"]:
+            out["reason"] = res.get("skipped") or "tester run failed"
+            return out
+        tv_pf = res.get("profit_factor")
+        if tv_pf is not None:
+            out["tv_pf"] = tv_pf
+            out["agree"] = bool(float(tv_pf) >= 1.0)
+        self.journal.log_brain_event("tv_confirmation", spec.id, out)
+        return out
+
+    # ── the active set, for the regime we are actually in ────────────────
+    def active_set(self, specs: list, tf: str = "1h") -> dict:
+        """Which strategies trade now, and how loudly each one speaks.
+
+        Deliberately not a single pick. The orchestrator combines every
+        eligible signal, and the governing premise is that no edge lasts —
+        collapsing the book to one mechanism means dying with it. So this
+        reports the SET, with the same weights the orchestrator will apply,
+        rather than inventing a second ordering that nothing consumes.
+        """
+        from ..strategy.blend import strategy_weights
+        reg = self.current_regime(tf) or {}
+        now = reg.get("regime") or reg.get("label") or ""
+        weights = strategy_weights(self.journal, specs, now)
+        members = []
+        for spec in specs:
+            filt = list(getattr(spec, "regime_filter", []) or [])
+            members.append({
+                "spec": spec.id, "name": spec.name,
+                "regime_filter": filt,
+                # the orchestrator gates on exactly this test
+                "trades_now": (not filt) or (now in filt),
+                "weight": weights.get(spec.id, 1.0)})
+        members.sort(key=lambda m: (not m["trades_now"], -m["weight"]))
+        active = [m for m in members if m["trades_now"]]
+        return {"regime": now, "active": len(active),
+                "members": members,
+                "combined_weight": round(sum(m["weight"] for m in active), 3)}
 
     # ── retirement ───────────────────────────────────────────────────────
     def review_deployed(self, specs: list) -> list:
