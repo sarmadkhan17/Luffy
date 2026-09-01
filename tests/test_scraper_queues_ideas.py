@@ -28,7 +28,7 @@ def _scraper(tmp_path, harvested):
            "strategies": {}, "risk": {}}
     s = Scraper(j, cfg, feed=None, notifier=None)
     s.tags = []
-    s.scrape_tv_ideas = lambda tag: []
+    s.scrape_tv_scripts = lambda tag: []
     s.scrape_feeds = lambda: harvested
     s.llm = None                      # no tokens spent; extraction is a no-op
     return j, s

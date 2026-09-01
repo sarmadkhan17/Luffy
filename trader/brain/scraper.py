@@ -254,17 +254,22 @@ class Scraper:
                 cfg["strategies"].get("tv_require_positive_oos", True)))
 
     # ── SCRAPE ───────────────────────────────────────────────────────────
-    def scrape_tv_ideas(self, tag: str) -> list[dict]:
+    def scrape_tv_scripts(self, tag: str) -> list[dict]:
+        """TradingView's public Pine library — published strategies.
+
+        NOT /ideas/, which is chart commentary: 452 of 452 items queued from
+        there were bare headlines with no mechanism in them.
+        """
         out: list[dict] = []
         seen: set[str] = set()
         for page in range(1, max(1, self.tv_pages) + 1):
             suffix = f"?page={page}" if page > 1 else ""
             try:
                 r = requests.get(
-                    f"https://www.tradingview.com/ideas/{tag}/{suffix}",
+                    f"https://www.tradingview.com/scripts/{tag}/{suffix}",
                     headers=UA, timeout=12)
             except Exception as e:
-                log.warning(f"tv ideas fetch {tag} p{page}: {e}")
+                log.warning(f"tv scripts fetch {tag} p{page}: {e}")
                 break
             page_items = []
             for m in re.finditer(
@@ -282,10 +287,10 @@ class Scraper:
                     continue
                 seen.add(idea_id)
                 page_items.append({
-                    "source": f"tradingview.com/ideas/{tag}",
+                    "source": f"tradingview.com/scripts/{tag}",
                     "idea_id": idea_id,
                     "title": name.strip(),
-                    "text": desc.strip()[:600]})
+                    "text": desc.strip()[:4000]})
             if not page_items:          # empty page → no deeper pages
                 break
             out.extend(page_items)
@@ -509,7 +514,7 @@ class Scraper:
         # list. The queue then never received a single item.
         scraped: list[dict] = []
         for tag in self.tags:
-            got = self.scrape_tv_ideas(tag)
+            got = self.scrape_tv_scripts(tag)
             scraped += got
         scraped += self.scrape_feeds()
         stats["scraped"] = len(scraped)

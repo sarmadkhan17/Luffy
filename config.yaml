@@ -162,8 +162,9 @@ scraper:                       # ideas: TradingView + RSS + deep crawl
   enabled: true
   interval_minutes: 240        # scrape + extract + test every 4h
   ideas_per_cycle: 12          # token budget per cycle (batched into ONE LLM call)
-  tv_pages: 2                  # TradingView ideas pages per tag
-  tv_tags: [btcusdt, ethusdt, solusdt, altcoin, scalping, breakout, trend-trading]
+  tv_pages: 2                  # TradingView scripts pages per tag
+  tv_tags: ["meanreversion", "momentum", "volatility", "trendanalysis",
+            "bitcoin", "ethereum"]
   rss_feeds:                   # news wires + quant essays + papers + forums
     - https://cointelegraph.com/rss
     - https://www.coindesk.com/arc/outboundfeeds/rss/
