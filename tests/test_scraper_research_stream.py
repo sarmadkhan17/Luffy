@@ -6,6 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from trader.brain import ideas
 from trader.brain.scraper import idea_score, research_score, streams_for
 
 SETUP = {"title": "Funding divergence setup",
@@ -20,6 +21,21 @@ FINDING = {"title": "Short-horizon reversal in cross-sectional crypto returns",
                    "days, and it persists after controlling for volatility."}
 
 
+def test_named_constants_exist_and_are_distinct():
+    """Verify that STRATEGY and RESEARCH constants exist, are distinct,
+    and both are members of STREAMS."""
+    assert hasattr(ideas, 'STRATEGY')
+    assert hasattr(ideas, 'RESEARCH')
+    assert ideas.STRATEGY != ideas.RESEARCH
+    assert ideas.STRATEGY in ideas.STREAMS
+    assert ideas.RESEARCH in ideas.STREAMS
+
+
+def test_default_stream_is_strategy():
+    """Verify that DEFAULT_STREAM points to the STRATEGY constant."""
+    assert ideas.DEFAULT_STREAM == ideas.STRATEGY
+
+
 def test_research_prose_scores_on_the_research_screen():
     assert research_score(FINDING) > 0
 
@@ -30,8 +46,10 @@ def test_the_strategy_screen_would_have_discarded_that_finding():
 
 
 def test_a_setup_routes_to_the_strategy_stream():
-    assert "strategy" in streams_for(SETUP)
+    """A trade setup routes to the strategy stream via the named constant."""
+    assert ideas.STRATEGY in streams_for(SETUP)
 
 
 def test_a_finding_routes_to_the_research_stream():
-    assert "research" in streams_for(FINDING)
+    """A research finding routes to the research stream via the named constant."""
+    assert ideas.RESEARCH in streams_for(FINDING)
