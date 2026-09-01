@@ -103,8 +103,9 @@ def test_source_scores_rank_productive_sources():
     h = _scraper_with(FakeLLM(None))
     h.journal = j
     s = h._source_scores()
-    tv_key = "tradingview.com/ideas/btcusdt"
-    med_key = "medium.com/feed/tag/algorithmic-trading"
+    # Sources are normalized to hostname only
+    tv_key = "tradingview.com"
+    med_key = "medium.com"
     assert s[tv_key] > s[med_key]
     assert s[med_key] < 0.05                      # dead source near zero
 
@@ -142,3 +143,78 @@ def test_the_scraper_no_longer_creates_strategies():
         assert not hasattr(S.Scraper, gone), (
             f"Scraper.{gone} still exists — that is the second, "
             f"population-writing creation path")
+
+
+def test_stats_keys_for_all_streams_exist():
+    """Every stream that streams_for() can return must have a stats key."""
+    from trader.brain import scraper as S
+    from trader.brain import ideas as I
+    from trader.core.journal import Journal
+    import tempfile, pathlib, yaml
+
+    # Create a scraper
+    cfg = yaml.safe_load(open("config.yaml"))
+    j = Journal(pathlib.Path(tempfile.mkdtemp()) / "h.db")
+    scraper = S.Scraper(j, cfg, feed=None)
+
+    # Get all streams that could be returned by streams_for
+    test_items = [
+        {"title": "RSI mean-reversion strategy", "text": "Entry on divergence, backtest at 15m", "source": "tv"},
+        {"title": "Cross-sectional anomaly", "text": "predictor with significant p-value", "source": "arxiv"},
+    ]
+
+    all_possible_streams = set()
+    for item in test_items:
+        streams = S.streams_for(item)
+        all_possible_streams.update(streams)
+
+    # Now run harvest_once and verify that every stream has a stats key
+    stats = scraper.harvest_once()
+
+    for stream in all_possible_streams:
+        key = f"queued_{stream}"
+        assert key in stats, f"Stream '{stream}' has no stats key '{key}' in {stats.keys()}"
+
+
+def test_source_yield_ranking_actually_affects_order():
+    """A productive source should actually rank higher than an unproductive one via _rank."""
+    import tempfile, pathlib, json
+    from trader.core.journal import Journal
+    from trader.brain import scraper as S
+    import yaml
+
+    cfg = yaml.safe_load(open("config.yaml"))
+    j = Journal(pathlib.Path(tempfile.mkdtemp()) / "sy.db")
+
+    # Create history: one good source, one bad one
+    good_url = "http://arxiv.org/rss/q-fin.TR"
+    bad_url = "https://medium.com/feed/tag/algorithmic-trading"
+
+    j.log_brain_event("harvest_cycle", "harvester",
+                      {"per_source": {good_url: {"scraped": 10, "queued": 6}}})
+    j.log_brain_event("harvest_cycle", "harvester",
+                      {"per_source": {bad_url: {"scraped": 40, "queued": 0}}})
+
+    scraper = S.Scraper(j, cfg, feed=None)
+
+    # Two items, one from each source, with equal strategy scores
+    good_item = {"title": "EMA crossover strategy", "text": "entry signal at ema 20/50 crossover",
+                 "source": good_url, "idea_id": "good_src_1"}
+    bad_item = {"title": "EMA crossover strategy", "text": "entry signal at ema 20/50 crossover",
+                "source": bad_url, "idea_id": "bad_src_1"}
+
+    # Manually build the ranking key like harvest_once does
+    src_scores = scraper._source_scores()
+
+    # The ranking should use the source scores
+    def _rank(i):
+        base = i.get("source", "")
+        key = ".".join(base.split("//")[-1].split("/")[:1]) or base
+        return (src_scores.get(key, 0.05), S.idea_score(i), min(len(i.get("text", "")), 500))
+
+    good_rank = _rank(good_item)
+    bad_rank = _rank(bad_item)
+
+    # Good source should rank higher
+    assert good_rank > bad_rank, \
+        f"Good source {good_url} (rank={good_rank}) should beat bad source (rank={bad_rank})"

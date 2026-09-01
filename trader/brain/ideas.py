@@ -115,6 +115,9 @@ def record(journal, idea: dict, streams=(DEFAULT_STREAM,)) -> bool:
     `idea` is the harvester/crawler shape: idea_id, title, text, source, and
     either `url` or `link`.
 
+    `streams` can be a tuple/list of stream names, or a bare string naming a
+    single stream. A bare string is accepted and treated as a one-element tuple.
+
     An idea is one idea; it just serves 1+ consumers, so the streams it
     qualifies for live on the single row as an attribute rather than one row
     per stream — keying rows by `f"{idea_id}#{stream}"` would store the text
@@ -143,6 +146,10 @@ def record(journal, idea: dict, streams=(DEFAULT_STREAM,)) -> bool:
         if len(had.get("text", "")) >= MIN_TEXT or len(text) < MIN_TEXT:
             return False               # already usable, or nothing to add
 
+    # Accept bare string as single stream
+    if isinstance(streams, str):
+        streams = (streams,)
+
     clean_streams = sorted(set(s for s in streams if s in STREAMS)) \
         or [DEFAULT_STREAM]
     journal.log_brain_event(KIND, iid, {
@@ -156,16 +163,21 @@ def record(journal, idea: dict, streams=(DEFAULT_STREAM,)) -> bool:
 
 
 def mark_consumed(journal, idea_id: str, outcome: str,
+                  stream: str | None = None,
                   spec_id: str = "", detail: dict | None = None) -> None:
-    """Record that the Strategist has spent this idea.
+    """Record that a consumer has spent this idea on a specific stream.
 
     Called for EVERY outcome, admitted or not. An idea that produced a spec
     the Analyst refused is still spent — retrying it every three hours would
     burn the same tokens on the same dud forever.
+
+    `stream` identifies which consumer (strategy or research) consumed it.
+    If None (legacy), treat it as consuming ALL streams for backwards compat.
     """
-    journal.log_brain_event(CONSUMED, idea_id,
-                            {"outcome": outcome, "spec": spec_id,
-                             **(detail or {})})
+    d = {"outcome": outcome, "spec": spec_id, **(detail or {})}
+    if stream is not None:
+        d["stream"] = stream
+    journal.log_brain_event(CONSUMED, idea_id, d)
 
 
 def pending(journal, max_age_days: float = MAX_AGE_DAYS,
@@ -179,14 +191,15 @@ def pending(journal, max_age_days: float = MAX_AGE_DAYS,
     live journal's newest rows are whatever an RSS feed published minutes
     ago — often unrelated tech news — while the usable material sits behind
     them.
+
+    An idea is excluded if it was consumed FOR this stream. Legacy consumption
+    rows (no stream key) suppress the idea for ALL streams.
     """
     rows = journal.query(
         "SELECT subject, detail FROM brain_events e WHERE e.kind=? "
         "AND e.ts >= datetime('now', ?) "
-        "AND NOT EXISTS (SELECT 1 FROM brain_events c "
-        "                WHERE c.kind=? AND c.subject=e.subject) "
         "ORDER BY e.ts DESC LIMIT ?",
-        (KIND, f"-{float(max_age_days)} days", CONSUMED, POOL * 6))
+        (KIND, f"-{float(max_age_days)} days", POOL * 6))
     seen: set[str] = set()             # an upgraded idea has two rows;
     out: list[dict] = []               # ts DESC means the newest one wins
     for r in rows:
@@ -195,11 +208,54 @@ def pending(journal, max_age_days: float = MAX_AGE_DAYS,
         seen.add(r["subject"])
         idea = _row_to_idea(r["subject"], r["detail"])
         if idea and len(idea["text"]) >= MIN_TEXT and idea["score"] > 0:
+            # Check if this idea was consumed for this stream
+            if _is_consumed_for_stream(journal, r["subject"], stream):
+                continue
             if stream is not None and stream not in idea["streams"]:
                 continue
             out.append(idea)
     out.sort(key=lambda i: i["score"], reverse=True)
     return out[:limit]
+
+
+def _is_consumed_for_stream(journal, idea_id: str, stream: str | None) -> bool:
+    """Check if an idea was consumed for a specific stream.
+
+    Returns True if:
+    - There's a consumption row with no stream key (legacy: consumed for ALL), or
+    - There's a consumption row with stream=stream (consumed for this stream), or
+    - stream is None and there are ANY consumption rows (filter by nothing = consumed).
+
+    Returns False if there are no consumption rows, or if the consumption rows
+    all specify a different stream.
+    """
+    rows = journal.query(
+        "SELECT detail FROM brain_events WHERE kind=? AND subject=?",
+        (CONSUMED, idea_id))
+
+    if not rows:
+        return False                   # not consumed at all
+
+    for r in rows:
+        try:
+            d = json.loads(r["detail"])
+        except Exception:
+            continue
+        consumed_stream = d.get("stream")
+
+        if consumed_stream is None:
+            # Legacy row with no stream: suppress for ALL streams
+            return True
+
+        if stream is None:
+            # Caller didn't specify a stream, any consumption suppresses
+            return True
+
+        if consumed_stream == stream:
+            # Consumed for this specific stream
+            return True
+
+    return False
 
 
 def next_idea(journal, max_age_days: float = MAX_AGE_DAYS,

@@ -288,7 +288,12 @@ class Scraper:
     # ── source yield learning ────────────────────────────────────────────
     def _source_scores(self) -> dict[str, float]:
         """Yield per source from past cycles: queued / (scraped + 5).
-        Laplace-smoothed; >0.3 is a productive source."""
+        Laplace-smoothed; >0.3 is a productive source.
+
+        Sources are normalized to hostname only (e.g. "arxiv.org") so that
+        multiple feeds from the same domain are learned together, and this
+        matches the normalization done in _rank().
+        """
         scores: dict[str, float] = {}
         try:
             rows = self.journal.query(
@@ -298,7 +303,9 @@ class Scraper:
             for r in rows:
                 for src, s in (json.loads(r["detail"]).get(
                         "per_source") or {}).items():
-                    a = agg.setdefault(src, {"scraped": 0, "queued": 0})
+                    # Normalize source to hostname, matching _rank() logic
+                    norm_src = ".".join(src.split("//")[-1].split("/")[:1]) or src
+                    a = agg.setdefault(norm_src, {"scraped": 0, "queued": 0})
                     for k in a:
                         a[k] += s.get(k, 0)
             for src, a in agg.items():
@@ -309,8 +316,10 @@ class Scraper:
 
     # ── the cycle ────────────────────────────────────────────────────────
     def harvest_once(self) -> dict:
-        stats = {"scraped": 0, "new": 0, "screened": 0, "queued_strategy": 0,
-                 "queued_research": 0, "skipped": 0}
+        # Build stats keys from ideas.STREAMS so adding a new stream doesn't break
+        stats = {"scraped": 0, "new": 0, "screened": 0, "skipped": 0}
+        for stream in ideas.STREAMS:
+            stats[f"queued_{stream}"] = 0
         per_source: dict[str, dict] = {}
         # NOT `ideas` — that is the queue module imported at the top of this
         # file, and shadowing it made `ideas.record()` below call .record on a
