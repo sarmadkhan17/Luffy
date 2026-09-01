@@ -1,6 +1,8 @@
 """Tests for MacroGuard — economic calendar hard-freeze agent."""
 from __future__ import annotations
 
+import time
+
 import pytest
 from datetime import datetime, timezone, timedelta
 from unittest.mock import MagicMock, patch
@@ -318,3 +320,26 @@ def test_a_genuinely_quiet_week_is_not_reported_as_blind(monkeypatch):
     g = mg.MacroGuard({"scouts": {"macro_guard": {"enabled": True}}})
 
     assert g.check()["why"] == "no active event window"
+
+
+def test_an_all_past_cache_is_not_mistaken_for_a_quiet_week(monkeypatch,
+                                                            tmp_path):
+    """A cache from last week guards nothing. If it is the only thing we
+    have, the guard is blind and must say so."""
+    import json, requests
+    from trader.agents import macro_guard as mg
+
+    stale = tmp_path / "macro_calendar.json"
+    stale.write_text(json.dumps({
+        "fetched": time.time() - 3 * 86400,
+        "events": [{"event": "Non-Farm Employment Change",
+                    "when": "2026-08-21T12:30:00+00:00"}]}))
+    monkeypatch.setattr(mg, "_CACHE_PATH", stale)
+    monkeypatch.delenv("FINNHUB_API_KEY", raising=False)
+    monkeypatch.setattr(requests, "get",
+                        lambda *a, **k: (_ for _ in ()).throw(
+                            RuntimeError("network down")))
+
+    why = mg.MacroGuard({"scouts": {"macro_guard": {"enabled": True}}}).check()["why"]
+
+    assert "no calendar source reachable" in why, why
