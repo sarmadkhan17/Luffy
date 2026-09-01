@@ -277,8 +277,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             "ORDER BY id DESC LIMIT 4")
         verdicts = _detail(journal.query(
             "SELECT ts, kind, subject, detail FROM brain_events "
-            "WHERE kind IN ('harvest_accepted','harvest_rejected',"
-            "'proposal_accepted','proposal_rejected') "
+            "WHERE kind IN ('proposal_accepted','proposal_rejected') "
             "ORDER BY id DESC LIMIT 14"))
         tv = journal.query(
             "SELECT COUNT(*) n FROM brain_events WHERE kind='tv_backtest' "
@@ -703,6 +702,21 @@ def build_company(journal, cfg: dict) -> dict:
             f"AND ts >= datetime('now','-24 hours')", tuple(kinds))
         return int(r[0]["n"]) if r else 0
 
+    def _queued_total():
+        """Sum queued_strategy + queued_research from harvest_cycle events 24h."""
+        total = 0
+        rows = journal.query(
+            "SELECT detail FROM brain_events WHERE kind='harvest_cycle' "
+            "AND ts >= datetime('now','-24 hours')")
+        for r in rows:
+            try:
+                d = json.loads(r["detail"])
+                total += d.get("queued_strategy", 0)
+                total += d.get("queued_research", 0)
+            except Exception:
+                pass
+        return total
+
     def analyst(e):
         a = acc.get(e.agent_key, {})
         lv = last_votes.get(e.agent_key, {})
@@ -724,7 +738,7 @@ def build_company(journal, cfg: dict) -> dict:
     # per-role stat triples for the event-driven brain staff
     _EVENT_STATS = {
         "Researcher": lambda: [["Ideas 24h", str(_ev_count(["harvest_cycle"]))],
-                               ["Accepted", str(_ev_count(["harvest_accepted"]))],
+                               ["Queued", str(_queued_total())],
                                ["Sources", str(_ev_count(["crawl_doc"]))]],
         "Strategist": lambda: [["Reviews", str(_ev_count(["review_complete"]))],
                                ["Active", str(active_strats)],
