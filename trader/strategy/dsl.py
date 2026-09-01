@@ -237,20 +237,48 @@ def _eval_htf(node: ast.Call, ctx):
     return pd.Series(out, index=ctx.index)
 
 
+def _bar_interval(ts: np.ndarray) -> np.timedelta64:
+    """Median spacing between consecutive base bars, for the staleness cap
+    below. Median rather than mean/first-diff so one gap (a missing candle)
+    cannot distort the interval the cap is measured against."""
+    if len(ts) < 2:
+        return np.timedelta64(0, "ns")
+    diffs = np.diff(ts).astype("timedelta64[ns]").astype("int64")
+    return np.timedelta64(int(np.median(diffs)), "ns")
+
+
 def _eval_xs(name: str, node: ast.Call, ctx):
     """Evaluate the inner expression for every universe member, align each
     onto this symbol's bars point-in-time, then reduce across members.
 
     Same discipline as _eval_htf: searchsorted side='right' minus one, so a
     bar can only see peer bars that had already closed.
+
+    NOTE: unlike every other feature call, this bypasses `ctx._cache` — the
+    inner expression is evaluated once per universe member on every call to
+    `_eval_xs`, not memoised on `(name, tf, args)`. The same cross-sectional
+    term appearing in both an entry expression and a filter is therefore
+    recomputed rather than reused.
     """
     universe = ctx.universe or {}
     if not universe:
         return pd.Series(np.nan, index=ctx.index)
 
     base_ts = pd.to_datetime(ctx.df["ts"], utc=True).values
+    # F: a peer whose frame stops updating must not contribute a value
+    # frozen forward onto every later base bar forever — cap how old a
+    # peer's source bar may be before it stops counting.
+    stale_after = 3 * _bar_interval(base_ts)
     cols = {}
     for sym in universe:
+        if name == "xs_rank" and sym == ctx.symbol:
+            # E: never let the base symbol rank against itself. Skipping it
+            # here — rather than including it and correcting the count
+            # afterward — is correct whether or not `universe` happens to
+            # carry the base's own key. breadth/dispersion are answering a
+            # different question ("what is the whole book doing"), where
+            # the base's own value legitimately belongs in the reduction.
+            continue
         sub = ctx.for_symbol(sym)
         if sub is None:
             continue
@@ -260,7 +288,9 @@ def _eval_xs(name: str, node: ast.Call, ctx):
         peer_ts = pd.to_datetime(sub.df["ts"], utc=True).values
         pos = np.searchsorted(peer_ts, base_ts, side="right") - 1
         arr = vals.to_numpy(dtype=float)
-        cols[sym] = np.where(pos >= 0, arr[np.clip(pos, 0, None)], np.nan)
+        clipped = np.clip(pos, 0, None)
+        fresh = (pos >= 0) & (base_ts - peer_ts[clipped] <= stale_after)
+        cols[sym] = np.where(fresh, arr[clipped], np.nan)
 
     if not cols:
         return pd.Series(np.nan, index=ctx.index)
@@ -274,11 +304,18 @@ def _eval_xs(name: str, node: ast.Call, ctx):
         return panel.astype(float).mean(axis=1)
     if name == "dispersion":
         return panel.std(axis=1)
-    # xs_rank: this symbol's position within the cross-section, in [0, 1]
+    # xs_rank: this symbol's position within the cross-section, in [0, 1].
+    # The base's own key was already excluded from `panel` above, so
+    # `valid` is the true peer count — no "-1" correction, and no
+    # assumption that the base is even a member of its own universe.
     below = panel.lt(mine, axis=0).sum(axis=1)
     valid = panel.notna().sum(axis=1)
-    denom = (valid - 1).where(valid > 1)
-    return (below / denom).clip(0.0, 1.0)
+    denom = valid.where(valid > 0)
+    # mine.notna(): when the base symbol's own value is undefined, every
+    # `panel.lt(mine)` comparison is False, so `below` comes out 0 and an
+    # unmasked rank would read as 0.0 — "weakest coin in the book" — which
+    # is fabricated, not measured. NaN is the honest answer.
+    return (below / denom).clip(0.0, 1.0).where(mine.notna())
 
 
 # ── literal extraction: every number is a tunable gene ───────────────────
