@@ -341,7 +341,7 @@ class Kernel:
                                                  {**trace, "idea": iid})
                     if iid:
                         idea_queue.mark_consumed(self.journal, iid,
-                                                 "write_failed",
+                                                 "write_failed", stream="strategy",
                                                  detail={"trace": trace})
                         consumed.append(iid)
                     break
@@ -349,7 +349,7 @@ class Kernel:
                 if iid:
                     idea_queue.mark_consumed(
                         self.journal, iid,
-                        "admitted" if ok else "rejected", spec_id=spec.id,
+                        "admitted" if ok else "rejected", stream="strategy", spec_id=spec.id,
                         detail={"name": spec.name})
                     consumed.append(iid)
                 if not ok:

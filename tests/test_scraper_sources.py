@@ -177,8 +177,11 @@ def test_stats_keys_for_all_streams_exist():
 
 
 def test_source_yield_ranking_actually_affects_order():
-    """A productive source should actually rank higher than an unproductive one via _rank."""
-    import tempfile, pathlib, json
+    """A productive source should actually rank higher than an unproductive one.
+
+    Tests the production _rank_key method, not a reimplementation.
+    """
+    import tempfile, pathlib
     from trader.core.journal import Journal
     from trader.brain import scraper as S
     import yaml
@@ -186,7 +189,7 @@ def test_source_yield_ranking_actually_affects_order():
     cfg = yaml.safe_load(open("config.yaml"))
     j = Journal(pathlib.Path(tempfile.mkdtemp()) / "sy.db")
 
-    # Create history: one good source, one bad one
+    # Create history: one good source (6/10 yield) vs one bad source (0/40 yield)
     good_url = "http://arxiv.org/rss/q-fin.TR"
     bad_url = "https://medium.com/feed/tag/algorithmic-trading"
 
@@ -198,23 +201,17 @@ def test_source_yield_ranking_actually_affects_order():
     scraper = S.Scraper(j, cfg, feed=None)
 
     # Two items, one from each source, with equal strategy scores
+    # (same title and text = same idea_score)
     good_item = {"title": "EMA crossover strategy", "text": "entry signal at ema 20/50 crossover",
                  "source": good_url, "idea_id": "good_src_1"}
     bad_item = {"title": "EMA crossover strategy", "text": "entry signal at ema 20/50 crossover",
                 "source": bad_url, "idea_id": "bad_src_1"}
 
-    # Manually build the ranking key like harvest_once does
+    # Use the production _rank_key method (not a reimplementation)
     src_scores = scraper._source_scores()
+    good_rank = scraper._rank_key(good_item, src_scores)
+    bad_rank = scraper._rank_key(bad_item, src_scores)
 
-    # The ranking should use the source scores
-    def _rank(i):
-        base = i.get("source", "")
-        key = ".".join(base.split("//")[-1].split("/")[:1]) or base
-        return (src_scores.get(key, 0.05), S.idea_score(i), min(len(i.get("text", "")), 500))
-
-    good_rank = _rank(good_item)
-    bad_rank = _rank(bad_item)
-
-    # Good source should rank higher
+    # Good source should rank higher: src_scores.arxiv.org > src_scores.medium.com
     assert good_rank > bad_rank, \
         f"Good source {good_url} (rank={good_rank}) should beat bad source (rank={bad_rank})"
