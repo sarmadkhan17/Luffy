@@ -303,4 +303,63 @@ def _rel_strength_btc(ctx, n):
 register("htf", arg_specs=((str, None, None), SERIES_ARG))(
     lambda ctx, tf, expr: expr)
 
+# ── bar shape and participation ──────────────────────────────────────────
+@register("efficiency_ratio", arg_specs=((int, 5, 200),), domain=(0.0, 1.0))
+def _efficiency_ratio(ctx, n):
+    """Kaufman: distance travelled over path walked. 1.0 = a straight line,
+    near 0 = chop. The cleanest trend-versus-noise discriminator available
+    from price alone."""
+    n = int(n)
+    c = ctx.df["close"]
+    direction = (c - c.shift(n)).abs()
+    path = c.diff().abs().rolling(n).sum()
+    return direction / path.where(path > 1e-12)
+
+
+@register("volume_z", arg_specs=((int, 12, 500),), domain=(-5.0, 5.0))
+def _volume_z(ctx, n):
+    return ind.zscore_series(ctx.df["volume"], int(n))
+
+
+@register("rel_volume", arg_specs=((int, 5, 200),), domain=(0.0, 10.0))
+def _rel_volume(ctx, n):
+    v = ctx.df["volume"]
+    m = v.rolling(int(n)).mean()
+    return v / m.where(m > 1e-12)
+
+
+def _range(ctx):
+    r = ctx.df["high"] - ctx.df["low"]
+    return r.where(r > 1e-12)          # a flat bar carries no shape: NaN
+
+
+@register("body_frac", domain=(0.0, 1.0))
+def _body_frac(ctx):
+    return (ctx.df["close"] - ctx.df["open"]).abs() / _range(ctx)
+
+
+@register("upper_wick", domain=(0.0, 1.0))
+def _upper_wick(ctx):
+    top = ctx.df[["open", "close"]].max(axis=1)
+    return (ctx.df["high"] - top) / _range(ctx)
+
+
+@register("lower_wick", domain=(0.0, 1.0))
+def _lower_wick(ctx):
+    bot = ctx.df[["open", "close"]].min(axis=1)
+    return (bot - ctx.df["low"]) / _range(ctx)
+
+
+@register("dd_from_high", arg_specs=((int, 5, 500),), domain=(-1.0, 0.0))
+def _dd_from_high(ctx, n):
+    hi = ctx.df["high"].rolling(int(n)).max()
+    return ctx.df["close"] / hi.where(hi > 1e-12) - 1.0
+
+
+@register("runup_from_low", arg_specs=((int, 5, 500),), domain=(0.0, 5.0))
+def _runup_from_low(ctx, n):
+    lo = ctx.df["low"].rolling(int(n)).min()
+    return ctx.df["close"] / lo.where(lo > 1e-12) - 1.0
+
+
 from . import features_deriv          # noqa: E402,F401  (registration side-effect)
