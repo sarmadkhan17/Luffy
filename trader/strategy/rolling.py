@@ -84,7 +84,7 @@ def rolling_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
         derivs = derivs_for(sym) if derivs_for else None
         try:
             lo, sh = compiled.entries({timeframe: df}, btc=btc, derivs=derivs,
-                                      universe=universe)
+                                      universe=universe, symbol=sym)
         except Exception as e:
             log.warning(f"rolling {compiled.spec.id} {sym}: {e}")
             continue
@@ -127,7 +127,8 @@ def recent_verdict(compiled, frames: dict, risk_cfg: dict, timeframe: str,
             # frame sliced to match `recent` would produce NaN for the
             # whole window.
             lo, sh = compiled.entries({timeframe: recent}, btc=btc,
-                                      derivs=derivs, universe=universe)
+                                      derivs=derivs, universe=universe,
+                                      symbol=sym)
             r = simulate(lo, sh, recent, compiled.spec.exit, risk_cfg,
                          symbol=sym)
         except Exception as e:
@@ -205,7 +206,7 @@ def regime_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
         derivs = derivs_for(sym) if derivs_for else None
         try:
             lo, sh = compiled.entries({timeframe: df}, btc=btc, derivs=derivs,
-                                      universe=universe)
+                                      universe=universe, symbol=sym)
             regimes = regime_series(df)
         except Exception as e:
             log.warning(f"regime_windows {compiled.spec.id} {sym}: {e}")

@@ -160,8 +160,8 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
 def vector_backtest(compiled, frames: dict, risk_cfg: dict, btc=None,
                     derivs=None, equity: float = 2000.0,
                     symbol: str = "BT") -> BacktestResult:
-    lo, sh = compiled.entries(frames, btc=btc, derivs=derivs)
-    ex = compiled.exit_signal(frames, btc=btc, derivs=derivs)
+    lo, sh = compiled.entries(frames, btc=btc, derivs=derivs, symbol=symbol)
+    ex = compiled.exit_signal(frames, btc=btc, derivs=derivs, symbol=symbol)
     return simulate(lo, sh, frames[compiled.spec.timeframe], compiled.spec.exit,
                     risk_cfg, equity=equity, genome_id=compiled.spec.id,
                     symbol=symbol, exit_sig=ex)
@@ -180,9 +180,9 @@ def vector_walk_forward(compiled, frames: dict, risk_cfg: dict,
     tf = compiled.spec.timeframe
     df = frames[tf]
     lo, sh = compiled.entries(frames, btc=btc, derivs=derivs,
-                              universe=universe, market=market)
+                              universe=universe, market=market, symbol=symbol)
     ex = compiled.exit_signal(frames, btc=btc, derivs=derivs,
-                              universe=universe, market=market)
+                              universe=universe, market=market, symbol=symbol)
     cut = int(len(df) * split)
 
     def run(a, b):
