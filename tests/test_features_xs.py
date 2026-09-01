@@ -189,3 +189,35 @@ def test_dispersion_rises_when_members_diverge():
     t = dsl.evaluate(dsl.parse("dispersion(close)"), tight).iloc[-1]
     w = dsl.evaluate(dsl.parse("dispersion(close)"), wide).iloc[-1]
     assert w > t
+
+
+def test_xs_rank_denominator_is_peer_count_not_member_count_when_symbol_passed():
+    """When FeatureCtx is given symbol=, xs_rank must exclude the base symbol
+    from the denominator. Build a universe with base + 2 peers. If self is
+    wrongly included, denominator is 3; if correctly excluded, it's 2.
+
+    Base=10 (max), Peer1=5, Peer2=3 → 2/2 = 1.0 (correct: all 2 peers below)
+                                     vs 2/3 ≈ 0.667 (buggy: includes self)
+    """
+    ctx = _ctx(np.array([10.0]), {"A": np.array([5.0]), "B": np.array([3.0])})
+    out = dsl.evaluate(dsl.parse("xs_rank(close)"), ctx)
+    # With symbol="ME" correctly passed, self is excluded: 2/2 = 1.0
+    assert out.iloc[-1] == pytest.approx(1.0)
+
+
+def test_xs_rank_denominator_is_wrong_when_symbol_not_passed():
+    """When FeatureCtx is created without symbol=, xs_rank cannot exclude
+    the base symbol from peers and wrongly includes it in the denominator.
+    This is the bug: redundancy() in analyst.py does not pass symbol=sym.
+    """
+    # Build universe with the base symbol's own key (ME) plus two peers
+    uni = {"ME": {"15m": _df(np.array([10.0]))},
+           "A": {"15m": _df(np.array([5.0]))},
+           "B": {"15m": _df(np.array([3.0]))}}
+    # Create context WITHOUT symbol= (the bug)
+    ctx = FeatureCtx(frames={"15m": _df(np.array([10.0]))}, tf="15m",
+                     universe=uni)
+    out = dsl.evaluate(dsl.parse("xs_rank(close)"), ctx)
+    # Without symbol, self is wrongly included: 2/3 ≈ 0.667 (buggy)
+    # NOT 1.0 (correct)
+    assert out.iloc[-1] == pytest.approx(2.0 / 3.0)
