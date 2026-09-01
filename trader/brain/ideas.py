@@ -30,6 +30,9 @@ log = logging.getLogger(__name__)
 KIND = "harvest_idea"
 CONSUMED = "idea_consumed"
 
+STREAMS = ("strategy", "research")
+DEFAULT_STREAM = "strategy"      # rows written before streams existed
+
 MAX_TEXT = 4000          # a spec prompt reads ~900; keep room for the vault
 MIN_TEXT = 80            # below this there is no mechanism to express
 MAX_AGE_DAYS = 45        # a stale idea describes a market that has moved on
@@ -99,10 +102,11 @@ def _row_to_idea(subject: str, detail: str) -> dict | None:
             "text": d.get("text", ""),
             "source": d.get("source", ""),
             "url": d.get("url", ""),
-            "score": float(d.get("score", 0.0) or 0.0)}
+            "score": float(d.get("score", 0.0) or 0.0),
+            "stream": d.get("stream") or DEFAULT_STREAM}
 
 
-def record(journal, idea: dict) -> bool:
+def record(journal, idea: dict, stream: str = DEFAULT_STREAM) -> bool:
     """Persist one researched idea, whole. Returns True if the queue gained
     something — a new idea, or text for one that was recorded without any.
 
@@ -136,6 +140,7 @@ def record(journal, idea: dict) -> bool:
         "text": text,
         "source": (idea.get("source") or "")[:200],
         "url": (idea.get("url") or idea.get("link") or "")[:400],
+        "stream": stream if stream in STREAMS else DEFAULT_STREAM,
         "score": score(text, title)})
     return True
 
@@ -154,7 +159,7 @@ def mark_consumed(journal, idea_id: str, outcome: str,
 
 
 def pending(journal, max_age_days: float = MAX_AGE_DAYS,
-            limit: int = POOL) -> list[dict]:
+            limit: int = POOL, stream: str | None = None) -> list[dict]:
     """Unconsumed ideas that carry enough text to be worth a prompt,
     best material first.
 
@@ -180,16 +185,19 @@ def pending(journal, max_age_days: float = MAX_AGE_DAYS,
         seen.add(r["subject"])
         idea = _row_to_idea(r["subject"], r["detail"])
         if idea and len(idea["text"]) >= MIN_TEXT and idea["score"] > 0:
+            if stream is not None and idea["stream"] != stream:
+                continue
             out.append(idea)
     out.sort(key=lambda i: i["score"], reverse=True)
     return out[:limit]
 
 
-def next_idea(journal, max_age_days: float = MAX_AGE_DAYS) -> dict | None:
+def next_idea(journal, max_age_days: float = MAX_AGE_DAYS,
+              stream: str | None = None) -> dict | None:
     """The single best unconsumed idea, or None when the queue is dry.
 
     None is not an error: the Strategist then invents unprompted, which is
     the old behaviour.
     """
-    q = pending(journal, max_age_days=max_age_days, limit=1)
+    q = pending(journal, max_age_days=max_age_days, limit=1, stream=stream)
     return q[0] if q else None
