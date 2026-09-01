@@ -97,6 +97,74 @@ def test_bounded_features_stay_in_domain(ctx):
         assert s.min() >= lo - 1e-6 and s.max() <= hi + 1e-6, name
 
 
+# ── domain widths that must cover what real data actually measures ───────
+# `domain` seeds the optimizer's search range for a numeric literal compared
+# against the feature — too narrow and every threshold is silently pinned
+# near the edge; too wide (vol_of_vol) and the search wastes its whole range
+# on magnitudes the feature never produces.
+def test_volume_z_domain_covers_a_realistic_spike():
+    n = 300
+    rng = np.random.default_rng(7)
+    v = rng.normal(100, 5, n)
+    v[-1] = 200.0                          # a real, large-but-plausible spike
+    ts = pd.date_range("2026-01-01", periods=n, freq="15min", tz="UTC")
+    df = pd.DataFrame({"ts": ts, "open": np.ones(n), "high": np.ones(n),
+                       "low": np.ones(n), "close": np.ones(n), "volume": v})
+    ctx = FeatureCtx(frames={"15m": df}, tf="15m")
+    z = FEATURES["volume_z"].fn(ctx, 96).iloc[-1]
+    lo, hi = FEATURES["volume_z"].domain
+    assert (-5.0, 5.0) != (lo, hi)          # the old, too-narrow domain
+    assert lo <= z <= hi, z
+
+
+def test_rel_volume_domain_covers_a_realistic_spike():
+    n = 100
+    rng = np.random.default_rng(3)
+    v = rng.uniform(80, 120, n)
+    v[-1] = 1800.0                          # ~18x the rolling mean
+    ts = pd.date_range("2026-01-01", periods=n, freq="15min", tz="UTC")
+    df = pd.DataFrame({"ts": ts, "open": np.ones(n), "high": np.ones(n),
+                       "low": np.ones(n), "close": np.ones(n), "volume": v})
+    ctx = FeatureCtx(frames={"15m": df}, tf="15m")
+    rv = FEATURES["rel_volume"].fn(ctx, 50).iloc[-1]
+    lo, hi = FEATURES["rel_volume"].domain
+    assert (0.0, 10.0) != (lo, hi)          # the old, too-narrow domain
+    assert lo <= rv <= hi, rv
+
+
+def test_bars_since_domain_covers_a_long_dry_spell():
+    n = 567
+    cond = np.zeros(n, dtype=bool)
+    cond[0] = True                          # true once, then silent
+    s = pd.Series(cond)
+    ts = pd.date_range("2026-01-01", periods=n, freq="15min", tz="UTC")
+    df = pd.DataFrame({"ts": ts, "open": np.ones(n), "high": np.ones(n),
+                       "low": np.ones(n), "close": np.ones(n),
+                       "volume": np.ones(n)})
+    ctx = FeatureCtx(frames={"15m": df}, tf="15m")
+    out = FEATURES["bars_since"].fn(ctx, s).iloc[-1]
+    lo, hi = FEATURES["bars_since"].domain
+    assert (0.0, 500.0) != (lo, hi)         # the old, too-narrow domain
+    assert lo <= out <= hi, out
+
+
+def test_vol_of_vol_domain_is_scaled_to_its_actual_output():
+    n = 400
+    rng = np.random.default_rng(5)
+    close = 100 * np.exp(np.cumsum(rng.normal(0, 0.003, n)))
+    ts = pd.date_range("2026-01-01", periods=n, freq="15min", tz="UTC")
+    df = pd.DataFrame({"ts": ts, "open": close, "high": close * 1.001,
+                       "low": close * 0.999, "close": close,
+                       "volume": np.ones(n)})
+    ctx = FeatureCtx(frames={"15m": df}, tf="15m")
+    v = FEATURES["vol_of_vol"].fn(ctx, 96).dropna()
+    lo, hi = FEATURES["vol_of_vol"].domain
+    assert hi <= 0.05                       # the old (0.0, 2.0) was ~200x too wide
+    # a typical measured value must be a meaningful fraction of the domain,
+    # not lost near zero the way it was against the old, oversized range
+    assert v.iloc[-1] > hi * 0.001
+
+
 def test_donchian_excludes_the_current_bar(ctx, df):
     hi = FEATURES["donchian_hi"].fn(ctx, 10)
     assert hi.iloc[20] == pytest.approx(df["high"].iloc[10:20].max())
