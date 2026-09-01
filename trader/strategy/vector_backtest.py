@@ -169,7 +169,7 @@ def vector_backtest(compiled, frames: dict, risk_cfg: dict, btc=None,
 
 def vector_walk_forward(compiled, frames: dict, risk_cfg: dict,
                         split: float = 0.7, btc=None, derivs=None,
-                        symbol: str = "BT") -> dict:
+                        symbol: str = "BT", universe=None, market=None) -> dict:
     """Same contract as backtest.walk_forward so evidence.py can call either.
 
     Signals are computed ONCE over the full frame and then sliced, so an
@@ -179,8 +179,10 @@ def vector_walk_forward(compiled, frames: dict, risk_cfg: dict,
     """
     tf = compiled.spec.timeframe
     df = frames[tf]
-    lo, sh = compiled.entries(frames, btc=btc, derivs=derivs)
-    ex = compiled.exit_signal(frames, btc=btc, derivs=derivs)
+    lo, sh = compiled.entries(frames, btc=btc, derivs=derivs,
+                              universe=universe, market=market)
+    ex = compiled.exit_signal(frames, btc=btc, derivs=derivs,
+                              universe=universe, market=market)
     cut = int(len(df) * split)
 
     def run(a, b):
