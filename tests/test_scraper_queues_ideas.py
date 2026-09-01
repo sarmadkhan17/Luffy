@@ -94,3 +94,25 @@ def test_source_scores_rank_by_queued_not_dead_accepted_extracted(tmp_path):
 
     assert scores["productive.com"] > scores["unproductive.com"]
     assert scores["unproductive.com"] == 0.0
+
+
+def test_an_item_scoring_on_both_screens_reaches_both_streams(tmp_path):
+    dual = {"idea_id": "dual_1",
+            "title": "Funding divergence setup, backtested",
+            "text": "A mean-reversion entry on the reclaim, stop-loss below "
+                    "the swept low, take-profit at the range midpoint. "
+                    "Backtest shows the setup is significant out-of-sample: "
+                    "it captures a decile momentum effect worth 41 bps over "
+                    "the following 8 hours, and decays with a half-life "
+                    "near two days, holding in the trending regime.",
+            "source": "arxiv.org/q-fin", "url": "https://arxiv.org/abs/2"}
+    j, s = _scraper(tmp_path, [dual])
+
+    stats = s.harvest_once()
+
+    assert stats["queued_strategy"] == 1
+    assert stats["queued_research"] == 1
+    assert {i["idea_id"] for i in idea_queue.pending(j, stream="strategy")} \
+        == {"dual_1"}
+    assert {i["idea_id"] for i in idea_queue.pending(j, stream="research")} \
+        == {"dual_1"}
