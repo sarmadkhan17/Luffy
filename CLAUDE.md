@@ -38,7 +38,6 @@ All commands use the local venv:
 ./venv/bin/python -m trader.brain.tv_harness --login
 
 # Scripts (run from repo root)
-./venv/bin/python scripts/harvest_until_pass.py      # run harvester until a strategy passes
 ./venv/bin/python scripts/validate_population.py     # rerun analyst validation
 ```
 

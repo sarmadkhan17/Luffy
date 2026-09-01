@@ -865,18 +865,10 @@ async function loadBrainFeed(){
    const e={'healthy':'var(--green)','degraded':'#ff9f43','down':'var(--red)'}[h.state]||'#888';
    const runs=h.budget_enabled?`${h.runs_today}/${h.budget}`:'dev · unlimited';
    $('#tv-health').innerHTML=`<span style="color:${e}">●</span> TV ${h.state} · ${runs}`;}
-  const d=await gql(`{brain_events(kinds:"brain_judgement,pine_forged,harvest_accepted,harvest_rejected",limit:8)}`);
+  const d=await gql(`{brain_events(kinds:"brain_judgement,pine_forged",limit:8)}`);
   $('#brain-feed').innerHTML=(d.brain_events||[]).map(ev=>{
    let line='';
-   if(ev.kind==='harvest_accepted'){
-    let src='';try{src=JSON.parse(ev.detail).source||'';}catch(e){}
-    line=`🌐 <b style="color:var(--green)">accepted</b> ${ev.subject} ${src?'· '+src:''}`;}
-   else if(ev.kind==='harvest_rejected'){
-    let stage='',pnl=null;try{const j=JSON.parse(ev.detail);
-     stage=j.stage||(j.tv||{}).stage||'';
-     pnl=(j.tv||{}).net_profit_pct??(j.tv||{}).oos_return_pct;}catch(e){}
-    line=`✗ <b style="color:var(--red)">rejected</b> @${stage}${pnl!=null?' · pnl '+pnl+'%':''} <span class="mono" style="color:var(--dimmer)">${(ev.detail.match(/"title": "([^"]{0,50})/)||[])[1]||''}</span>`;}
-   else if(ev.kind==='brain_judgement'){try{const j=JSON.parse(ev.detail);
+   if(ev.kind==='brain_judgement'){try{const j=JSON.parse(ev.detail);
      const ap=(j.decisions_applied||[]).map(a=>`${a.id.slice(0,14)}→${a.to}`).join(', ')||'held the book';
      line=`🧠 <b>${ap}</b> · ${((j.direction||'')+' '+(j.portfolio_note||'')).slice(0,140)}`;
     }catch(e){line='🧠 judgement';}}
@@ -913,14 +905,14 @@ async function loadDiscovery(){
  $('#disc-kpis').innerHTML=
   kpi('Ideas scraped', lc.scraped??'—', `${f.cycles||0} cycles in window`)+
   kpi('Screened out', lc.screened_out??'—','cheap text filter')+
-  kpi('Extracted', lc.extracted??'—', 'LLM → genomes')+
+  kpi('Queued', (lc.queued_strategy??0)+(lc.queued_research??0), 'strategy + research')+
   kpi('TV verdicts ok', f.tv_ok_all_time??0,'all-time tester passes')+
   kpi('Deployed', (r.population?.by_state?.paper||0)+' paper',
       Object.entries(r.population?.by_state||{}).map(([k,v])=>k+' '+v).join(' · '));
  const chk=c=>c?Object.entries(c).filter(([k])=>['profitable_oos','drawdown_ok','folds_positive','quality'].includes(k))
   .map(([k,v])=>`<span class="tag ${v?'BUY':'SELL'}" title="${k}">${k.slice(0,2)}${v?'✓':'✗'}</span>`).join(' '):'';
  $('#verdict-feed').innerHTML=(r.verdicts||[]).map(v=>{
-  const acc=v.kind==='harvest_accepted'||v.kind==='proposal_accepted';
+  const acc=v.kind==='proposal_accepted';
   return `<div class="decision"><div class="r1" style="width:100%">
    <span class="tag ${acc?'BUY':'SELL'}">${acc?'PASS':'REJ'}</span>
    <span class="mono" style="color:var(--dimmer)">${(v.ts||'').slice(5,16)}</span>
