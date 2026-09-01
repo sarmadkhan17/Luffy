@@ -159,6 +159,8 @@ def _eval(node, ctx):
         name = node.func.id
         if name == "htf":
             return _eval_htf(node, ctx)
+        if name in ("xs_rank", "breadth", "dispersion"):
+            return _eval_xs(name, node, ctx)
         # only literal args participate in the memo key; a Series argument is
         # keyed by its sub-expression source so two different expressions
         # never collide in the cache
@@ -233,6 +235,50 @@ def _eval_htf(node: ast.Call, ctx):
     arr = vals.to_numpy(dtype=float)
     out = np.where(pos >= 0, arr[np.clip(pos, 0, None)], np.nan)
     return pd.Series(out, index=ctx.index)
+
+
+def _eval_xs(name: str, node: ast.Call, ctx):
+    """Evaluate the inner expression for every universe member, align each
+    onto this symbol's bars point-in-time, then reduce across members.
+
+    Same discipline as _eval_htf: searchsorted side='right' minus one, so a
+    bar can only see peer bars that had already closed.
+    """
+    universe = ctx.universe or {}
+    if not universe:
+        return pd.Series(np.nan, index=ctx.index)
+
+    base_ts = pd.to_datetime(ctx.df["ts"], utc=True).values
+    cols = {}
+    for sym in universe:
+        sub = ctx.for_symbol(sym)
+        if sub is None:
+            continue
+        vals = _eval(node.args[0], sub)
+        if not isinstance(vals, pd.Series):
+            continue
+        peer_ts = pd.to_datetime(sub.df["ts"], utc=True).values
+        pos = np.searchsorted(peer_ts, base_ts, side="right") - 1
+        arr = vals.to_numpy(dtype=float)
+        cols[sym] = np.where(pos >= 0, arr[np.clip(pos, 0, None)], np.nan)
+
+    if not cols:
+        return pd.Series(np.nan, index=ctx.index)
+
+    panel = pd.DataFrame(cols, index=ctx.index)
+    mine = _eval(node.args[0], ctx)
+    if not isinstance(mine, pd.Series):
+        mine = pd.Series(mine, index=ctx.index)
+
+    if name == "breadth":
+        return panel.astype(float).mean(axis=1)
+    if name == "dispersion":
+        return panel.std(axis=1)
+    # xs_rank: this symbol's position within the cross-section, in [0, 1]
+    below = panel.lt(mine, axis=0).sum(axis=1)
+    valid = panel.notna().sum(axis=1)
+    denom = (valid - 1).where(valid > 1)
+    return (below / denom).clip(0.0, 1.0)
 
 
 # ── literal extraction: every number is a tunable gene ───────────────────
