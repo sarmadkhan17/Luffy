@@ -61,6 +61,7 @@ class FeatureCtx:
     derivs: dict | None = None
     universe: dict | None = None      # {symbol: {tf: df}} — the rest of the book
     market: dict | None = None        # market-wide series; populated later
+    symbol: str | None = None         # this ctx's own key in `universe`, if known
     _cache: dict = field(default_factory=dict, repr=False)
 
     @property
@@ -82,8 +83,10 @@ class FeatureCtx:
 
     def scoped(self, tf: str) -> "FeatureCtx":
         """A view on a different timeframe, sharing the cache."""
-        return FeatureCtx(self.frames, tf, self.btc, self.derivs,
-                          self.universe, self.market, self._cache)
+        return FeatureCtx(frames=self.frames, tf=tf, btc=self.btc,
+                          derivs=self.derivs, universe=self.universe,
+                          market=self.market, symbol=self.symbol,
+                          _cache=self._cache)
 
     def for_symbol(self, symbol: str) -> "FeatureCtx | None":
         """A view on another member of the universe at the same timeframe.
@@ -97,8 +100,18 @@ class FeatureCtx:
         # Fresh cache: the memo key is (name, tf, args) with no symbol
         # component, so sharing the parent's cache would return this
         # symbol's values for every other symbol.
-        return FeatureCtx(frames, self.tf, self.btc, self.derivs,
-                          self.universe, self.market, {})
+        #
+        # derivs=None, deliberately: `self.derivs` is the BASE symbol's raw
+        # funding/OI/basis observation frames. Passing them through would
+        # evaluate every peer using the base symbol's own derivative data —
+        # so xs_rank(funding_pct(24)) would silently compare a symbol
+        # against itself for every member of the book. There is no
+        # per-symbol derivs store on `universe` to draw the real peer data
+        # from, so a derivative feature inside a cross-sectional wrapper
+        # must come out honestly NaN rather than quietly wrong.
+        return FeatureCtx(frames=frames, tf=self.tf, btc=self.btc,
+                          derivs=None, universe=self.universe,
+                          market=self.market, symbol=symbol, _cache={})
 
 
 def _s(ctx: FeatureCtx, col: str) -> pd.Series:
@@ -334,7 +347,7 @@ def _efficiency_ratio(ctx, n):
     return direction / path.where(path > 1e-12)
 
 
-@register("volume_z", arg_specs=((int, 12, 500),), domain=(-5.0, 5.0))
+@register("volume_z", arg_specs=((int, 12, 500),), domain=(-10.0, 10.0))
 def _volume_z(ctx, n):
     n = int(n)
     v = ctx.df["volume"]
@@ -343,7 +356,7 @@ def _volume_z(ctx, n):
     return (v - m) / sd.where(sd > 1e-12)
 
 
-@register("rel_volume", arg_specs=((int, 5, 200),), domain=(0.0, 10.0))
+@register("rel_volume", arg_specs=((int, 5, 200),), domain=(0.0, 25.0))
 def _rel_volume(ctx, n):
     v = ctx.df["volume"]
     m = v.rolling(int(n)).mean()
@@ -385,7 +398,7 @@ def _runup_from_low(ctx, n):
 
 
 # ── sequence ─────────────────────────────────────────────────────────────
-@register("bars_since", arg_specs=(SERIES_ARG,), domain=(0.0, 500.0))
+@register("bars_since", arg_specs=(SERIES_ARG,), domain=(0.0, 600.0))
 def _bars_since(ctx, s):
     """Bars elapsed since the expression was last true. NaN until it has
     been true at least once — never-happened is unknown, not zero."""
@@ -450,11 +463,13 @@ def _keltner_lower(ctx, n, k):
 @register("atr_pct_rank", arg_specs=((int, 20, 500),), domain=(0.0, 1.0))
 def _atr_pct_rank(ctx, n):
     """Where current volatility sits in its own recent distribution —
-    a regime reading as a number rather than a label."""
+    a regime reading as a number rather than a label.
+
+    ATR period is hardcoded at 14; `n` only sets the ranking window."""
     return ind.atr_series(ctx.df, 14).rolling(int(n)).rank(pct=True)
 
 
-@register("vol_of_vol", arg_specs=((int, 20, 500),), domain=(0.0, 2.0))
+@register("vol_of_vol", arg_specs=((int, 20, 500),), domain=(0.0, 0.05))
 def _vol_of_vol(ctx, n):
     n = int(n)
     return ind.realized_vol_series(ctx.df, max(2, n // 4)).rolling(n).std()
