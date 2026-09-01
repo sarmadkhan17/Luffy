@@ -287,8 +287,8 @@ class Scraper:
 
     # ── source yield learning ────────────────────────────────────────────
     def _source_scores(self) -> dict[str, float]:
-        """Yield per source from past cycles: (accepted×3 + extracted)
-        / (scraped + 5). Laplace-smoothed; >0.3 is a productive source."""
+        """Yield per source from past cycles: queued / (scraped + 5).
+        Laplace-smoothed; >0.3 is a productive source."""
         scores: dict[str, float] = {}
         try:
             rows = self.journal.query(
@@ -298,21 +298,19 @@ class Scraper:
             for r in rows:
                 for src, s in (json.loads(r["detail"]).get(
                         "per_source") or {}).items():
-                    a = agg.setdefault(src, {"scraped": 0, "extracted": 0,
-                                             "accepted": 0})
+                    a = agg.setdefault(src, {"scraped": 0, "queued": 0})
                     for k in a:
                         a[k] += s.get(k, 0)
             for src, a in agg.items():
-                scores[src] = (a["accepted"] * 3 + a["extracted"]) / \
-                              (a["scraped"] + 5)
+                scores[src] = a["queued"] / (a["scraped"] + 5)
         except Exception:
             pass
         return scores
 
     # ── the cycle ────────────────────────────────────────────────────────
     def harvest_once(self) -> dict:
-        stats = {"scraped": 0, "new": 0, "screened": 0, "extracted": 0,
-                 "accepted": 0, "rejected": 0, "skipped": 0}
+        stats = {"scraped": 0, "new": 0, "screened": 0, "queued_strategy": 0,
+                 "queued_research": 0, "skipped": 0}
         per_source: dict[str, dict] = {}
         # NOT `ideas` — that is the queue module imported at the top of this
         # file, and shadowing it made `ideas.record()` below call .record on a
@@ -328,7 +326,7 @@ class Scraper:
                  if not self._already_processed(i["idea_id"])]
         stats["new"] = len(fresh)
         # cheap screen BEFORE any tokens are spent
-        candidates = [i for i in fresh if idea_score(i) >= 1]
+        candidates = [i for i in fresh if streams_for(i)]
         dropped = len(fresh) - len(candidates)
         stats["screened_out"] = dropped
 
@@ -356,15 +354,17 @@ class Scraper:
         batch = rest[:int(budget * 0.6)] + tv[:budget - int(budget * 0.6)]
         batch = batch[:budget]
         for idea in batch:
-            per_source.setdefault(idea["source"], {"scraped": 0,
-                                                   "extracted": 0,
-                                                   "accepted": 0})
+            per_source.setdefault(idea["source"], {"scraped": 0, "queued": 0})
             per_source[idea["source"]]["scraped"] += 1
             # mark processed only what we actually spend tokens on —
             # the rest of the pool stays fresh for later cycles.
             # Record the idea WHOLE: the text is the part that holds the
-            # mechanism, and the Strategist reads it out of this queue.
-            ideas.record(self.journal, idea)
+            # mechanism, and the Strategist/Researcher read it out of this
+            # queue. An item may land in both streams.
+            for stream in sorted(streams_for(idea)):
+                if ideas.record(self.journal, idea, stream=stream):
+                    stats[f"queued_{stream}"] += 1
+                    per_source[idea["source"]]["queued"] += 1
 
         self._log_cycle(stats, per_source)
         log.info(f"harvest: {stats}")
