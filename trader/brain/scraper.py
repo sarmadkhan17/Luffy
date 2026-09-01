@@ -90,9 +90,9 @@ def streams_for(item: dict) -> set[str]:
     """Which consumers should see this. An item may serve both."""
     out = set()
     if idea_score(item) >= 1:
-        out.add("strategy")
+        out.add(ideas.STREAMS[0])  # "strategy"
     if research_score(item) >= 4:
-        out.add("research")
+        out.add(ideas.STREAMS[1])  # "research"
     return out
 
 
@@ -285,6 +285,20 @@ class Scraper:
             "AND subject=?", (idea_id,))[0]["n"]
         return n > 0
 
+    # ── ranking ──────────────────────────────────────────────────────────
+    def _rank_key(self, item: dict, src_scores: dict[str, float]) -> tuple:
+        """Ranking key for candidates: productive sources first, then
+        strategy-speak density, then textual substance.
+
+        Returns a tuple (source_score, idea_score, text_length) suitable for
+        sorting in descending order: highest source yield, highest idea score,
+        longest text.
+        """
+        base = item.get("source", "")
+        key = ".".join(base.split("//")[-1].split("/")[:1]) or base
+        return (src_scores.get(key, 0.05), idea_score(item),
+                min(len(item.get("text", "")), 500))
+
     # ── source yield learning ────────────────────────────────────────────
     def _source_scores(self) -> dict[str, float]:
         """Yield per source from past cycles: queued / (scraped + 5).
@@ -346,12 +360,7 @@ class Scraper:
         # rank: productive sources first, then strategy-speak density,
         # then textual substance (a 2000-char essay beats a chart caption)
         src_scores = self._source_scores()
-        def _rank(i):
-            base = i.get("source", "")
-            key = ".".join(base.split("//")[-1].split("/")[:1]) or base
-            return (src_scores.get(key, 0.05), idea_score(i),
-                    min(len(i.get("text", "")), 500))
-        candidates.sort(key=_rank, reverse=True)
+        candidates.sort(key=lambda i: self._rank_key(i, src_scores), reverse=True)
 
         # source mix: TradingView captions dominate the ranked pool but are
         # mostly discretionary chart-art; reserve seats for systematic
