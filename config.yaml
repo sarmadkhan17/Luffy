@@ -69,7 +69,7 @@ mechanism:
   # The generate-judge-retire loop. No edge lasts, so this matters more than
   # any single strategy in the book.
   enabled: true
-  interval_minutes: 180
+  interval_minutes: 720
   specs_per_cycle: 1
   max_specs: 8
 
@@ -135,8 +135,8 @@ strategies:
 
 tv_harness:
   enabled: true                  # REAL Strategy Tester via browser automation
-  daily_runs: 20                 # hard budget; folds consume runs too
-  budget_enabled: false          # DEV PHASE: unlimited tester runs until finalization
+  daily_runs: 2                  # hard budget; folds consume runs too
+  budget_enabled: true           # DEV PHASE: unlimited tester runs until finalization
   run_timeout_s: 90
 
 harvester:                     # numbers: series acquisition + coverage brief
@@ -161,7 +161,7 @@ mcp:                           # MCP servers the KERNEL may call at runtime
 scraper:                       # ideas: TradingView + RSS + deep crawl
   enabled: true
   interval_minutes: 240        # scrape + extract + test every 4h
-  ideas_per_cycle: 12          # token budget per cycle (batched into ONE LLM call)
+  ideas_per_cycle: 4           # token budget per cycle (batched into ONE LLM call)
   tv_pages: 2                  # TradingView scripts pages per tag
   tv_tags: ["meanreversion", "momentum", "volatility", "trendanalysis",
             "bitcoin", "ethereum"]
