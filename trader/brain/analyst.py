@@ -248,7 +248,7 @@ class Analyst:
                 StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf}))
             a_lo, a_sh = cand.entries({tf: frames[sym]}, btc=btc,
                                       derivs=derivs_for(sym),
-                                      universe=universe)
+                                      universe=universe, symbol=sym)
         except Exception:
             return 0.0, ""
         worst, who = 0.0, ""
@@ -262,7 +262,7 @@ class Analyst:
                 b_lo, b_sh = oc.entries(
                     {tf: frames[sym]}, btc=btc,
                     derivs=spec_evidence.load_derivs(sym, other.data_requires),
-                    universe=universe)
+                    universe=universe, symbol=sym)
             except Exception:
                 continue
             r = signal_overlap(a_lo, a_sh, b_lo, b_sh)
