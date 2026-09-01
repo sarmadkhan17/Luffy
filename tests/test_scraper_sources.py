@@ -95,11 +95,9 @@ def test_source_scores_rank_productive_sources():
     import tempfile, pathlib
     from trader.core.journal import Journal
     j = Journal(pathlib.Path(tempfile.mkdtemp()) / "sy.db")
-    good = {"tradingview.com/ideas/btcusdt": {"scraped": 10, "extracted": 4,
-                                              "accepted": 2}}
+    good = {"tradingview.com/ideas/btcusdt": {"scraped": 10, "queued": 6}}
     bad = {"medium.com/feed/tag/algorithmic-trading": {"scraped": 40,
-                                                       "extracted": 0,
-                                                       "accepted": 0}}
+                                                       "queued": 0}}
     j.log_brain_event("harvest_cycle", "harvester", {"per_source": good})
     j.log_brain_event("harvest_cycle", "harvester", {"per_source": bad})
     h = _scraper_with(FakeLLM(None))
