@@ -6,12 +6,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+import logging
+
 import numpy as np
 
 from ..core.types import Action, StrategySignal
 from . import dsl
 from .features import FeatureCtx
 from .spec import StrategySpec
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -75,9 +79,14 @@ class CompiledStrategy:
                    if snap.dfs.get("BTC_1h") is not None else None)
             try:
                 lo, sh = self.entries(frames, btc=btc,
+                                      derivs=getattr(snap, "derivs", None),
                                       universe=getattr(snap, "universe", None),
                                       symbol=snap.symbol)
-            except Exception:
+            except Exception as e:
+                # Silence here cost three authored specs their entire live
+                # career: they raised on every bar and read as "no signal".
+                log.warning("spec %s failed to evaluate on %s: %s",
+                            self.spec.id, snap.symbol, e)
                 return None
             if not len(lo):
                 return None
