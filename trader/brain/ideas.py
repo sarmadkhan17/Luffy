@@ -97,21 +97,29 @@ def _row_to_idea(subject: str, detail: str) -> dict | None:
         return None
     if not isinstance(d, dict):
         return None
+    streams = d.get("streams") or \
+        ([d["stream"]] if d.get("stream") else [DEFAULT_STREAM])
     return {"idea_id": subject,
             "title": d.get("title", ""),
             "text": d.get("text", ""),
             "source": d.get("source", ""),
             "url": d.get("url", ""),
             "score": float(d.get("score", 0.0) or 0.0),
-            "stream": d.get("stream") or DEFAULT_STREAM}
+            "streams": streams}
 
 
-def record(journal, idea: dict, stream: str = DEFAULT_STREAM) -> bool:
+def record(journal, idea: dict, streams=(DEFAULT_STREAM,)) -> bool:
     """Persist one researched idea, whole. Returns True if the queue gained
     something — a new idea, or text for one that was recorded without any.
 
     `idea` is the harvester/crawler shape: idea_id, title, text, source, and
     either `url` or `link`.
+
+    An idea is one idea; it just serves 1+ consumers, so the streams it
+    qualifies for live on the single row as an attribute rather than one row
+    per stream — keying rows by `f"{idea_id}#{stream}"` would store the text
+    (up to MAX_TEXT chars) once per stream and break `_already_processed`,
+    which matches on `idea_id` alone.
 
     The upgrade path is not cosmetic. The old harvester wrote 416 rows
     carrying a title and a source and nothing else, and it treats any such
@@ -135,12 +143,14 @@ def record(journal, idea: dict, stream: str = DEFAULT_STREAM) -> bool:
         if len(had.get("text", "")) >= MIN_TEXT or len(text) < MIN_TEXT:
             return False               # already usable, or nothing to add
 
+    clean_streams = sorted(set(s for s in streams if s in STREAMS)) \
+        or [DEFAULT_STREAM]
     journal.log_brain_event(KIND, iid, {
         "title": title,
         "text": text,
         "source": (idea.get("source") or "")[:200],
         "url": (idea.get("url") or idea.get("link") or "")[:400],
-        "stream": stream if stream in STREAMS else DEFAULT_STREAM,
+        "streams": clean_streams,
         "score": score(text, title)})
     return True
 
@@ -185,7 +195,7 @@ def pending(journal, max_age_days: float = MAX_AGE_DAYS,
         seen.add(r["subject"])
         idea = _row_to_idea(r["subject"], r["detail"])
         if idea and len(idea["text"]) >= MIN_TEXT and idea["score"] > 0:
-            if stream is not None and idea["stream"] != stream:
+            if stream is not None and stream not in idea["streams"]:
                 continue
             out.append(idea)
     out.sort(key=lambda i: i["score"], reverse=True)

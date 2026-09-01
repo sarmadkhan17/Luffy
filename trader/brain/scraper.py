@@ -358,13 +358,14 @@ class Scraper:
             per_source[idea["source"]]["scraped"] += 1
             # mark processed only what we actually spend tokens on —
             # the rest of the pool stays fresh for later cycles.
-            # Record the idea WHOLE: the text is the part that holds the
-            # mechanism, and the Strategist/Researcher read it out of this
-            # queue. An item may land in both streams.
-            for stream in sorted(streams_for(idea)):
-                if ideas.record(self.journal, idea, stream=stream):
+            # Record the idea WHOLE, once, with every stream it qualifies
+            # for: the text is the part that holds the mechanism, and the
+            # Strategist/Researcher both read it out of this one row.
+            item_streams = sorted(streams_for(idea))
+            if ideas.record(self.journal, idea, streams=item_streams):
+                for stream in item_streams:
                     stats[f"queued_{stream}"] += 1
-                    per_source[idea["source"]]["queued"] += 1
+                per_source[idea["source"]]["queued"] += 1
 
         self._log_cycle(stats, per_source)
         log.info(f"harvest: {stats}")
