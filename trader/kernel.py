@@ -504,7 +504,8 @@ class Kernel:
             log.warning(f"agent validation failed: {e}")
 
     # ── per-symbol pipeline ───────────────────────────────────────────────
-    def _snapshot_for(self, symbol: str) -> Snapshot | None:
+    def _snapshot_for(self, symbol: str,
+                      universe: dict | None = None) -> Snapshot | None:
         dfs = self.feed.fetch_multi(
             symbol, self.cfg["timeframes"]["context"] + [self.cfg["timeframes"]["execution"]])
         exec_tf = self.cfg["timeframes"]["execution"]
@@ -518,7 +519,8 @@ class Kernel:
                         ts=dt.datetime.now(dt.timezone.utc).isoformat(),
                         price=price, dfs=dfs,
                         market_type=self.market_type.value,
-                        btc_ctx=self._btc_ctx)
+                        btc_ctx=self._btc_ctx,
+                        universe=universe)
 
     def _refresh_btc_context(self) -> None:
         """Leader context computed once per cycle, shared by all scouts."""
@@ -643,8 +645,15 @@ class Kernel:
         closed_count = int(self.journal.query(
             "SELECT COUNT(*) AS n FROM trades WHERE status='closed'")[0]["n"])
 
+        exec_tf = self.cfg["timeframes"]["execution"]
+        universe_frames = {}
+        for sym in self.universe.symbols():
+            df = self.feed.fetch_ohlcv(sym, exec_tf)
+            if df is not None and len(df):
+                universe_frames[sym] = {exec_tf: df}
+
         for symbol in self.universe.symbols():
-            snap = self._snapshot_for(symbol)
+            snap = self._snapshot_for(symbol, universe=universe_frames)
             if snap is None:
                 continue
             stats["scanned"] += 1

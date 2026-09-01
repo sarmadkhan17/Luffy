@@ -73,7 +73,8 @@ class CompiledStrategy:
             btc = ({"15m": snap.dfs["BTC_1h"]}
                    if snap.dfs.get("BTC_1h") is not None else None)
             try:
-                lo, sh = self.entries(frames, btc=btc)
+                lo, sh = self.entries(frames, btc=btc,
+                                      universe=getattr(snap, "universe", None))
             except Exception:
                 return None
             if not len(lo):

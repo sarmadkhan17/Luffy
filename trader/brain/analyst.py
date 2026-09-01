@@ -241,11 +241,14 @@ class Analyst:
         if not syms:
             return 0.0, ""
         sym = syms[0]
+        universe = {s: {tf: frames[s]} for s in syms
+                    if frames[s] is not None}
         try:
             cand = compile_spec(
                 StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf}))
             a_lo, a_sh = cand.entries({tf: frames[sym]}, btc=btc,
-                                      derivs=derivs_for(sym))
+                                      derivs=derivs_for(sym),
+                                      universe=universe)
         except Exception:
             return 0.0, ""
         worst, who = 0.0, ""
@@ -258,7 +261,8 @@ class Analyst:
                                             "timeframe": tf}))
                 b_lo, b_sh = oc.entries(
                     {tf: frames[sym]}, btc=btc,
-                    derivs=spec_evidence.load_derivs(sym, other.data_requires))
+                    derivs=spec_evidence.load_derivs(sym, other.data_requires),
+                    universe=universe)
             except Exception:
                 continue
             r = signal_overlap(a_lo, a_sh, b_lo, b_sh)

@@ -75,13 +75,16 @@ def rolling_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     mechanism has paid, which calibrates how aggressively to rotate.
     """
     win, step = bars(timeframe, window_days), bars(timeframe, step_days)
+    universe = {s: {timeframe: f} for s, f in frames.items()
+                if not s.startswith("_") and f is not None}
     st = WindowStats()
     for sym, df in frames.items():
         if sym.startswith("_") or df is None or len(df) < win:
             continue
         derivs = derivs_for(sym) if derivs_for else None
         try:
-            lo, sh = compiled.entries({timeframe: df}, btc=btc, derivs=derivs)
+            lo, sh = compiled.entries({timeframe: df}, btc=btc, derivs=derivs,
+                                      universe=universe)
         except Exception as e:
             log.warning(f"rolling {compiled.spec.id} {sym}: {e}")
             continue
@@ -109,6 +112,8 @@ def recent_verdict(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     make money recently, across the book, after costs.
     """
     n = bars(timeframe, recent_days)
+    universe = {s: {timeframe: f} for s, f in frames.items()
+                if not s.startswith("_") and f is not None}
     per_symbol, gross_win, gross_loss, trades, wins = {}, 0.0, 0.0, 0, 0
     for sym, df in frames.items():
         if sym.startswith("_") or df is None or len(df) < n:
@@ -116,8 +121,13 @@ def recent_verdict(compiled, frames: dict, risk_cfg: dict, timeframe: str,
         recent = df.iloc[-n:].reset_index(drop=True)
         derivs = derivs_for(sym) if derivs_for else None
         try:
+            # NOTE: universe carries the FULL frames, not `recent` — a
+            # cross-sectional feature aligns peers onto the base symbol's
+            # bars by timestamp, so a longer peer frame is harmless while a
+            # frame sliced to match `recent` would produce NaN for the
+            # whole window.
             lo, sh = compiled.entries({timeframe: recent}, btc=btc,
-                                      derivs=derivs)
+                                      derivs=derivs, universe=universe)
             r = simulate(lo, sh, recent, compiled.spec.exit, risk_cfg,
                          symbol=sym)
         except Exception as e:
@@ -186,13 +196,16 @@ def regime_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     from ..agents.regime import regime_series
 
     win, step = bars(timeframe, window_days), bars(timeframe, step_days)
+    universe = {s: {timeframe: f} for s, f in frames.items()
+                if not s.startswith("_") and f is not None}
     by_regime: dict[str, WindowStats] = {}
     for sym, df in frames.items():
         if sym.startswith("_") or df is None or len(df) < win:
             continue
         derivs = derivs_for(sym) if derivs_for else None
         try:
-            lo, sh = compiled.entries({timeframe: df}, btc=btc, derivs=derivs)
+            lo, sh = compiled.entries({timeframe: df}, btc=btc, derivs=derivs,
+                                      universe=universe)
             regimes = regime_series(df)
         except Exception as e:
             log.warning(f"regime_windows {compiled.spec.id} {sym}: {e}")
