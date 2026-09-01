@@ -189,9 +189,9 @@ class Kernel:
                          name="strategy-mechanism").start()
         threading.Thread(target=self._maybe_validate_agents, daemon=True,
                          name="agent-validator").start()
-        if self.cfg.get("harvester", {}).get("enabled", False):
+        if self.cfg.get("scraper", {}).get("enabled", False):
             threading.Thread(target=self._harvest_loop, daemon=True,
-                             name="harvester").start()
+                             name="scraper").start()
         if self.cfg.get("crawler", {}).get("enabled", False):
             threading.Thread(target=self._crawl_loop, daemon=True,
                              name="crawler").start()
@@ -243,16 +243,16 @@ class Kernel:
         if not dcfg.get("enabled", True):
             log.info("derivatives recorder disabled")
             return
-        from .data.derivatives import DerivFeed
-        feed = DerivFeed()
-        symbols = dcfg.get("symbols") or self.cfg["universe"]["majors"]
+        from .brain.harvester import Harvester
+        harvester = Harvester(self.journal, self.cfg, self.feed, self.notifier)
+        feed = harvester.deriv
+        symbols = harvester.symbols or self.cfg["universe"]["majors"]
         interval = float(dcfg.get("record_interval_minutes", 15)) * 60
         delay = float(dcfg.get("request_delay_s", 0.3))
         _t.sleep(30)                        # let boot settle
         if dcfg.get("backfill_on_start", True):
             try:
-                counts = feed.backfill(symbols, delay=delay)
-                log.info(f"derivatives backfill: {counts}")
+                log.info(f"harvest backfill: {harvester.harvest_once(backfill=True)['rows']} rows")
             except Exception as e:
                 log.warning(f"derivatives backfill failed: {e}")
         while not self._stop:
@@ -296,6 +296,7 @@ class Kernel:
                 _t.sleep(1)
 
     def _mechanism_once(self, per_cycle: int = 1, max_book: int = 8) -> dict:
+        from .brain import ideas as idea_queue
         from .brain.analyst import Analyst
         from .brain.llm import BrainLLM
         from .brain.spec_writer import SpecWriter
@@ -314,29 +315,65 @@ class Kernel:
             book = [s for s in book
                     if s.id not in {a["spec"] for a in retired}]
 
-        # 2. generate replacements
+        # 2. generate replacements — from what the Researcher actually read
         added = []
+        consumed = []
         if len(book) < max_book:
             writer = SpecWriter(BrainLLM(self.cfg))
+            # what the Strategist is allowed to build on: the firm's operating
+            # beliefs, plus the Harvester's brief on which numeric series are
+            # deep enough to score. Without the brief the Strategist writes
+            # mechanisms the Analyst must refuse for coverage — three of the
+            # last four rejections were exactly that.
+            knowledge = self._strategist_knowledge()
             for _ in range(per_cycle):
-                spec, trace = writer.write(avoid=[s.name for s in book])
+                # the handoff: harvester/crawler queue mechanisms, the
+                # Strategist expresses one. A dry queue is not an error —
+                # the model then invents unprompted, as it always did.
+                idea = idea_queue.next_idea(self.journal)
+                iid = (idea or {}).get("idea_id", "")
+                spec, trace = writer.write(
+                    idea=idea, doctrine=knowledge.get("doctrine"),
+                    data=knowledge.get("data", ""),
+                    avoid=[s.name for s in book])
                 if spec is None:
-                    self.journal.log_brain_event("spec_write_failed", "", trace)
+                    self.journal.log_brain_event("spec_write_failed", iid,
+                                                 {**trace, "idea": iid})
+                    if iid:
+                        idea_queue.mark_consumed(self.journal, iid,
+                                                 "write_failed",
+                                                 detail={"trace": trace})
+                        consumed.append(iid)
                     break
                 ok, ev = analyst.admit(spec, book)
+                if iid:
+                    idea_queue.mark_consumed(
+                        self.journal, iid,
+                        "admitted" if ok else "rejected", spec_id=spec.id,
+                        detail={"name": spec.name})
+                    consumed.append(iid)
                 if not ok:
                     self.journal.log_brain_event(
                         "spec_rejected", spec.id,
-                        {"name": spec.name, "evidence": ev})
+                        {"name": spec.name, "evidence": ev, "idea": iid})
                     continue
                 # regime_filter as written is a guess; measure it before the
                 # orchestrator starts gating live signals on it
                 spec.timeframe = ev.get("chosen_timeframe", spec.timeframe)
                 rf = analyst.set_measured_regimes(spec)
+                # TradingView second opinion — ADVISORY. It is recorded next
+                # to the spec and never blocks admission; see
+                # Analyst.confirm_on_tv for why a TV gate would be wrong.
+                if (self.cfg.get("tv_harness", {}) or {}).get("enabled", False):
+                    try:
+                        ev["tv"] = analyst.confirm_on_tv(spec)
+                    except Exception as e:
+                        log.debug(f"tv confirmation skipped: {e}")
                 self.journal.upsert_spec(spec, state="paper")
                 self.journal.log_brain_event(
                     "spec_admitted", spec.id,
-                    {"name": spec.name, "evidence": ev, "regimes": rf})
+                    {"name": spec.name, "evidence": ev, "regimes": rf,
+                     "idea": iid})
                 book.append(spec)
                 added.append(spec.name)
                 if self.notifier:
@@ -349,19 +386,36 @@ class Kernel:
         if retired or added:
             self.population = self._load_population()   # hot reload
         rep = {"retired": [a["name"] for a in retired], "added": added,
-               "book": len(book)}
+               "book": len(book), "ideas_used": consumed,
+               "ideas_pending": len(idea_queue.pending(self.journal))}
         log.info(f"mechanism: {rep}")
         return rep
+
+    def _strategist_knowledge(self) -> dict:
+        """Doctrine + the numeric coverage brief, as one prompt payload."""
+        out: dict = {}
+        try:
+            from .brain.theorist import Theorist
+            out["doctrine"] = Theorist._load_doctrine()
+        except Exception as e:
+            log.debug(f"doctrine unavailable: {e}")
+        try:
+            from .brain.harvester import Harvester
+            out["data"] = Harvester(self.journal, self.cfg,
+                                    self.feed).brief_text()
+        except Exception as e:
+            log.debug(f"data brief unavailable: {e}")
+        return out
 
     def _harvest_loop(self) -> None:
         """Continuous strategy discovery from the internet."""
         import time as _t
-        interval = float(self.cfg["harvester"].get("interval_minutes", 240)) * 60
+        interval = float(self.cfg["scraper"].get("interval_minutes", 240)) * 60
         _t.sleep(180)                       # let boot settle
         while not self._stop:
             try:
-                from .brain.harvester import Harvester
-                h = Harvester(self.journal, self.cfg, self.feed,
+                from .brain.scraper import Scraper
+                h = Scraper(self.journal, self.cfg, self.feed,
                               self.notifier)
                 stats = h.harvest_once()
             except Exception as e:
@@ -664,6 +718,20 @@ class Kernel:
             d.skip_reason = f"risk: {sizing.reason}"
             log.info(f"RISK DENY {d.symbol}: {sizing.reason}")
             return False
+        # meta-label sizing: shrink-only multiplier from P(win) — bounded
+        # [0.25, 1.0]; skipped outright if it would drop below min notional
+        if getattr(d, "meta_size", 1.0) < 1.0:
+            m = float(d.meta_size)
+            sizing.amount *= m
+            sizing.size_usdt *= m
+            sizing.risk_usdt = (sizing.risk_usdt or 0.0) * m
+            if sizing.amount * snap.price < float(
+                    self.cfg["risk"].get("min_notional_usdt", 10)):
+                d.skip_reason = "risk: meta-sized below min notional"
+                log.info(f"META SIZE DENY {d.symbol}: {m:.2f}× too small")
+                return False
+            log.info(f"meta size {d.symbol}: {m:.2f}× "
+                     f"(p={getattr(d, 'meta_p', 0):.2f})")
         top_strategy = ""
         if d.strategy_signals:
             best = max(d.strategy_signals, key=lambda s: s.get("confidence", 0))
@@ -747,6 +815,16 @@ class Kernel:
                                        .get("refit_hours", 6))))
             except Exception as e:
                 log.warning(f"calibration tick failed: {e}")
+            try:
+                from .agents import weights_online
+                from .brain import meta_label
+                ewa_cfg = self.cfg.get("scouts", {}).get("ewa", {})
+                weights_online.maybe_update(
+                    self.journal,
+                    eta=float(ewa_cfg.get("eta", 0.30)))
+                meta_label.maybe_refit(self.journal)
+            except Exception as e:
+                log.warning(f"ewa/meta tick failed: {e}")
             try:
                 from .brain.strategist import Strategist
                 from .strategy.promotion import evaluate_population
