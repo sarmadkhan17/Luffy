@@ -202,14 +202,29 @@ def run_gauntlet(spec, frames: dict, cfg: dict, min_pf: float | None = None,
         return False, {**ev, "reason": f"missing data: {gaps}",
                        "untested": True}
 
+    # Resolve every symbol to spec.timeframe ONCE, up front, so the universe
+    # map handed to cross-sectional features carries the same granularity
+    # the base symbol trades at rather than each symbol's native store tf.
+    sym_frames_map: dict = {}
+    for sym in syms:
+        try:
+            sym_frames_map[sym] = frames_for(frames[sym], spec.timeframe)
+        except Exception as e:
+            log.warning(f"spec gauntlet {spec.id} {sym}: frames_for: {e}")
+    universe = {sy: {spec.timeframe: sf[spec.timeframe]}
+                for sy, sf in sym_frames_map.items() if spec.timeframe in sf}
+
     results, per_symbol = [], {}
     for sym in syms:
+        sym_frames = sym_frames_map.get(sym)
+        if sym_frames is None:
+            continue
         derivs = load_derivs(sym, spec.data_requires, feed)
-        sym_frames = frames_for(frames[sym], spec.timeframe)
         risk = risk_for(cfg["risk"], spec.timeframe)
         try:
             r = vector_walk_forward(compiled, sym_frames, risk,
-                                    btc=btcd, derivs=derivs, symbol=sym)
+                                    btc=btcd, derivs=derivs, symbol=sym,
+                                    universe=universe)
         except Exception as e:
             log.warning(f"spec gauntlet {spec.id} {sym}: {e}")
             continue
