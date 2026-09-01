@@ -195,7 +195,9 @@ scouts:
     enabled: true
     pre_event_min: 30        # freeze N minutes before scheduled event
     post_event_min: 120      # stay frozen N minutes after event
-    min_impact: "high"       # only "high" impact US events from Finnhub
+    min_impact: "high"       # only "high" impact US events
+    # Calendar source: the free ForexFactory JSON feed (no key). A Finnhub
+    # key is tried first if set, but that endpoint needs a paid plan.
     # finnhub_token: ""      # set FINNHUB_API_KEY in .env instead
   calibration:
     enabled: true              # learned conviction from journal outcomes
