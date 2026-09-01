@@ -30,8 +30,10 @@ log = logging.getLogger(__name__)
 KIND = "harvest_idea"
 CONSUMED = "idea_consumed"
 
-STREAMS = ("strategy", "research")
-DEFAULT_STREAM = "strategy"      # rows written before streams existed
+STRATEGY = "strategy"
+RESEARCH = "research"
+STREAMS = (STRATEGY, RESEARCH)
+DEFAULT_STREAM = STRATEGY      # rows written before streams existed
 
 MAX_TEXT = 4000          # a spec prompt reads ~900; keep room for the vault
 MIN_TEXT = 80            # below this there is no mechanism to express

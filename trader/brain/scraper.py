@@ -90,9 +90,9 @@ def streams_for(item: dict) -> set[str]:
     """Which consumers should see this. An item may serve both."""
     out = set()
     if idea_score(item) >= 1:
-        out.add(ideas.STREAMS[0])  # "strategy"
+        out.add(ideas.STRATEGY)
     if research_score(item) >= 4:
-        out.add(ideas.STREAMS[1])  # "research"
+        out.add(ideas.RESEARCH)
     return out
 
 
