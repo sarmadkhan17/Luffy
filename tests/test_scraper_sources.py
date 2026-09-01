@@ -1,4 +1,4 @@
-"""Scraper source-widening tests: prefilter screen, batch extraction,
+"""Scraper source-widening tests: prefilter screen, param repair,
 Atom parsing, source-yield learning."""
 import json
 
@@ -33,7 +33,7 @@ def test_screen_drops_hype_and_news():
     assert idea_score(news) < 1
 
 
-# ── batched extraction ────────────────────────────────────────────────────
+# ── helpers ────────────────────────────────────────────────────────────
 class FakeLLM:
     available = True
 
@@ -58,80 +58,6 @@ def _scraper_with(llm):
     h = Scraper(j, cfg, feed=None)
     h.llm = llm
     return h
-
-
-def test_batch_maps_by_id():
-    from trader.brain.scraper import Scraper
-    ideas = [_idea(title=f"strategy {i}", iid=f"tv_{i}") for i in range(3)]
-    reply = {"results": [
-        {"id": "tv_0", "family": "ema_trend", "params": {},
-         "hypothesis": "h"},
-        {"id": "tv_1", "skip": True, "reason": "opinion"},
-        {"id": "tv_2", "family": "not_a_family", "params": {}},
-    ]}
-    h = _scraper_with(FakeLLM(reply))
-    reply["results"][0]["params"] = {"adx_min": 20, "pullback_atr": 0.8,
-                                     "trend_tf": "15m"}
-    out = h.extract_batch(ideas, {})
-    assert set(out) == {"tv_0", "tv_1", "tv_2"}
-    assert out["tv_1"] is None                    # skipped
-    assert out["tv_2"] is None                    # unknown family rejected
-    g = out["tv_0"]
-    assert g is not None and g.family == "ema_trend"
-
-
-def test_batch_single_call_for_many_ideas():
-    ideas = [_idea(title=f"setup {i}", iid=f"tv_{i}") for i in range(8)]
-    llm = FakeLLM({"results": [
-        {"id": f"tv_{i}", "family": "ema_trend",
-         "params": {"fast_len": 21, "slow_len": 55}, "hypothesis": "h"}
-        for i in range(8)]})
-    h = _scraper_with(llm)
-    h.extract_batch(ideas, {})
-    assert llm.calls == 1                         # complete reply: one call
-
-
-def test_batch_mangled_reply_falls_back_per_idea():
-    """A truncated/mangled batch reply must not silently drop the whole
-    cycle — missing entries are retried individually (bounded)."""
-    ideas = [_idea(title=f"setup {i}", iid=f"tv_{i}") for i in range(8)]
-    genome = {"family": "ema_trend",
-              "params": {"fast_len": 21, "slow_len": 55},
-              "hypothesis": "Trends persist because traders anchor on stale "
-                            "prices and adjust positions slowly."}
-    per_idea = [{"id": f"tv_{i}", **genome} for i in range(6)]
-    llm = FakeLLM(genome, replies=[{"results": []}] + per_idea)
-    h = _scraper_with(llm)
-    out = h.extract_batch(ideas, {})
-    assert llm.calls == 1 + 6                     # batch + bounded fallbacks
-    got = [v for v in out.values() if v is not None]
-    assert len(got) == 6 and all(g.family == "ema_trend" for g in got)
-
-
-def test_batch_explicit_skips_cost_no_fallback():
-    """Explicit LLM skips are decisions, not failures — no per-idea retry."""
-    ideas = [_idea(title=f"setup {i}", iid=f"tv_{i}") for i in range(4)]
-    llm = FakeLLM({"results": [{"id": f"tv_{i}", "skip": True,
-                                "reason": "hype"} for i in range(4)]})
-    h = _scraper_with(llm)
-    out = h.extract_batch(ideas, {})
-    assert llm.calls == 1
-    assert all(v is None for v in out.values())
-
-
-def test_genome_rejects_out_of_schema_params():
-    from trader.brain.scraper import Scraper
-    g = Scraper._genome_from(
-        type("S", (), {})(),  # unused self path via instance below
-        {}) if False else None
-    h = _scraper_with(FakeLLM(None))
-    g = h._genome_from(_idea(iid="x1"),
-                       {"family": "ema_trend",
-                        "params": {"nonsense_gene": 5}})
-    # unknown gene ignored, defaults fill in — genome survives
-    assert g is not None and g.family == "ema_trend"
-    assert "nonsense_gene" not in g.params
-    assert set(g.params) == {"adx_min", "pullback_atr", "trend_tf"}
 
 
 def test_genome_repairs_range_strings():
@@ -207,3 +133,14 @@ def test_scrape_tv_scripts_requests_the_scripts_section(monkeypatch):
     assert seen, "no request was made"
     assert "/scripts/" in seen[0], seen[0]
     assert "/ideas/" not in seen[0], seen[0]
+
+
+# ── single creation path ─────────────────────────────────────────────────
+def test_the_scraper_no_longer_creates_strategies():
+    """One creation path. The Scraper queues; the Strategist writes."""
+    from trader.brain import scraper as S
+
+    for gone in ("extract_batch", "_genome_from", "_dual_gauntlet", "_deploy"):
+        assert not hasattr(S.Scraper, gone), (
+            f"Scraper.{gone} still exists — that is the second, "
+            f"population-writing creation path")
