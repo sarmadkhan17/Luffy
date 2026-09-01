@@ -330,7 +330,7 @@ class Kernel:
                 # the handoff: harvester/crawler queue mechanisms, the
                 # Strategist expresses one. A dry queue is not an error —
                 # the model then invents unprompted, as it always did.
-                idea = idea_queue.next_idea(self.journal)
+                idea = idea_queue.next_idea(self.journal, stream="strategy")
                 iid = (idea or {}).get("idea_id", "")
                 spec, trace = writer.write(
                     idea=idea, doctrine=knowledge.get("doctrine"),

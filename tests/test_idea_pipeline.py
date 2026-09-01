@@ -328,3 +328,74 @@ def test_writer_passes_the_brief_through_to_the_prompt():
     llm = _LLM()
     sw.SpecWriter(llm).write(data="usable: funding, basis")
     assert "usable: funding, basis" in llm.prompts[0]
+
+
+# ── stream filtering: research vs strategy ideas ─────────────────────────────
+def test_next_idea_without_stream_gets_all_streams(journal):
+    """When no stream is specified, next_idea returns from any stream.
+    This is how it currently works; kernel._mechanism_once must pass stream='strategy'."""
+    ideas.record(journal, _idea("research1", text=(
+        "A deep review of funding rate dynamics and mean-reversion signals "
+        "in perpetual futures markets. Examines historical divergence patterns "
+        "and momentum implications for position entry and stop-loss placement."
+    )), streams=["research"])
+    ideas.record(journal, _idea("strategy1", text=(
+        "Entry signal: momentum divergence at resistance with stop-loss at "
+        "2 ATR and take-profit at mean-reversion target. Backtest confirms "
+        "edge in trending regimes; exit on divergence closure."
+    )), streams=["strategy"])
+
+    # Without stream parameter, both should be in the pool
+    got = ideas.next_idea(journal)
+    assert got is not None, "Should find an idea"
+    # The strategy idea ranks higher (more terms), so should be returned first
+    assert got["idea_id"] == "strategy1"
+
+    # Consume strategy1, now only research1 remains
+    ideas.mark_consumed(journal, "strategy1", outcome="admitted")
+    got_second = ideas.next_idea(journal)
+    assert got_second is not None
+    assert got_second["idea_id"] == "research1"
+
+
+def test_next_idea_stream_parameter_filters_to_strategy(journal):
+    """When stream='strategy' is passed, only strategy ideas are returned."""
+    ideas.record(journal, _idea("research1", text=(
+        "A deep review of funding rate dynamics and mean-reversion signals "
+        "in perpetual futures markets. Examines historical divergence patterns "
+        "and momentum implications for position entry and stop-loss placement."
+    )), streams=["research"])
+    ideas.record(journal, _idea("strategy1", text=(
+        "Entry signal: momentum divergence at resistance with stop-loss at "
+        "2 ATR and take-profit at mean-reversion target. Backtest confirms "
+        "edge in trending regimes; exit on divergence closure."
+    )), streams=["strategy"])
+
+    # Strategist asks for strategy stream only — should get strategy1, not research1
+    got = ideas.next_idea(journal, stream="strategy")
+    assert got is not None, "Should find a strategy idea"
+    assert got["idea_id"] == "strategy1"
+
+    # Research idea should never be handed to strategy stream, even though it exists
+    # Mark strategy1 consumed and call again with strategy stream
+    ideas.mark_consumed(journal, "strategy1", outcome="admitted")
+    got_second = ideas.next_idea(journal, stream="strategy")
+    assert got_second is None, \
+        "Should not return research1 when asking for strategy stream"
+
+
+def test_next_idea_research_stream_never_returns_strategy_ideas(journal):
+    """A hypothetical Researcher should not consume strategy-only ideas."""
+    ideas.record(journal, _idea("strategy1", text=(
+        "Entry signal: momentum divergence at resistance with stop-loss at "
+        "2 ATR and take-profit at mean-reversion target."
+    )), streams=["strategy"])
+    ideas.record(journal, _idea("research1", text=(
+        "A deep review of funding rate dynamics and mean-reversion signals "
+        "in perpetual futures markets."
+    )), streams=["research"])
+
+    # Research stream query should only get research ideas
+    got = ideas.next_idea(journal, stream="research")
+    assert got is not None, "Should find a research idea"
+    assert got["idea_id"] == "research1"
