@@ -318,7 +318,11 @@ def _efficiency_ratio(ctx, n):
 
 @register("volume_z", arg_specs=((int, 12, 500),), domain=(-5.0, 5.0))
 def _volume_z(ctx, n):
-    return ind.zscore_series(ctx.df["volume"], int(n))
+    n = int(n)
+    v = ctx.df["volume"]
+    m = v.rolling(n).mean()
+    sd = v.rolling(n).std()
+    return (v - m) / sd.where(sd > 1e-12)
 
 
 @register("rel_volume", arg_specs=((int, 5, 200),), domain=(0.0, 10.0))
@@ -367,16 +371,22 @@ def _runup_from_low(ctx, n):
 def _bars_since(ctx, s):
     """Bars elapsed since the expression was last true. NaN until it has
     been true at least once — never-happened is unknown, not zero."""
-    b = _series(ctx, s).astype(bool)
+    raw = _series(ctx, s)
+    known = raw.notna()
+    b = raw.fillna(0.0).astype(bool)
     idx = pd.Series(np.arange(len(b), dtype=float), index=b.index)
-    return idx - idx.where(b).ffill()
+    result = idx - idx.where(b).ffill()
+    return result.where(known)
 
 
 @register("streak", arg_specs=(SERIES_ARG,), domain=(0.0, 500.0))
 def _streak(ctx, s):
     """Length of the current run of consecutive true bars; 0 when false."""
-    b = _series(ctx, s).astype(bool)
-    return b.groupby((~b).cumsum()).cumsum().astype(float)
+    raw = _series(ctx, s)
+    known = raw.notna()
+    b = raw.fillna(0.0).astype(bool)
+    result = b.groupby((~b).cumsum()).cumsum().astype(float)
+    return result.where(known)
 
 
 @register("swing_high", arg_specs=((int, 2, 50),))

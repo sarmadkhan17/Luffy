@@ -43,3 +43,29 @@ def test_atr_pct_rank_is_high_when_volatility_expands():
     wild = 100 + np.arange(1, 21) * 3.0
     ctx = _ctx(np.concatenate([calm, wild]))
     assert FEATURES["atr_pct_rank"].fn(ctx, 60).iloc[-1] > 0.8
+
+
+def test_volume_z_is_nan_during_warmup():
+    """volume_z should be NaN during warmup, not 0.0 (fabricated 'average')."""
+    close = np.ones(10) * 100
+    ctx = _ctx(close)
+    out = FEATURES["volume_z"].fn(ctx, 20)
+    # All 10 bars have insufficient history for a 20-bar window
+    assert out.isna().all(), "volume_z should be NaN when window > available bars"
+
+
+def test_vol_of_vol_is_higher_when_volatility_changes():
+    """vol_of_vol should be higher for changing volatility than steady."""
+    # Steady volatility: constant returns
+    steady = np.ones(60) * 100
+    ctx_steady = _ctx(steady)
+    steady_vov = FEATURES["vol_of_vol"].fn(ctx_steady, 40).iloc[-1]
+
+    # Changing volatility: calm then volatile
+    calm = np.ones(30) * 100
+    volatile = 100 + np.arange(1, 31) * 0.5
+    ctx_changing = _ctx(np.concatenate([calm, volatile]))
+    changing_vov = FEATURES["vol_of_vol"].fn(ctx_changing, 40).iloc[-1]
+
+    # Changing volatility should have higher vol_of_vol
+    assert changing_vov > steady_vov, "vol_of_vol should increase with volatility changes"
