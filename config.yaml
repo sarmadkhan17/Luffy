@@ -47,7 +47,7 @@ risk:
   proving_size_mult: 0.5
   portfolio_heat_cap_pct: 15.0   # max total open risk across positions
   per_symbol_risk_cap_pct: 8.0
-  max_open_positions: 10
+  max_open_positions: 4          # hard cap: never more than 4 trades open at once
   max_daily_loss_pct: 6.0        # breaker blocks NEW entries until UTC midnight
   drawdown_derisk_steps:         # staged de-risk on rolling DD
     - {dd_pct: 8,  size_mult: 0.5}
@@ -75,7 +75,10 @@ mechanism:
 
 strategies:
   max_active: 6                  # concurrently active strategies
-  tv_validation: true            # TradingView walk-forward is mandatory judge
+  # NOT IMPLEMENTED — nothing reads this key. TradingView confirmation is
+  # ADVISORY and runs via Analyst.confirm_on_tv(); it never gates admission.
+  # Left here so the intent is visible, but do not read it as a guarantee.
+  tv_validation: true
   tv_interval: 1h
   tv_period: 1y
   tv_min_oos_trades: 5
@@ -83,7 +86,8 @@ strategies:
   paper_probation_trades: 15     # trades a new strategy must pass in paper before live eligibility
   paper_min_winrate: 0.40
   paper_min_profit_factor: 1.15
-  auto_demote_drawdown_pct: 8.0
+  auto_demote_drawdown_pct: 8.0  # NOT IMPLEMENTED — retirement is decided by
+                                 # decay_floor_pf below, not by drawdown
   # bars of 15m history each gauntlet backtest pulls (0 = everything cached).
   # Was hardcoded to 2900 (~30d). candles.db now holds ~20k bars (~209d), but
   # the backtester costs ~1.9 ms/bar/symbol, so a full 20k x 5-symbol run is
@@ -135,7 +139,26 @@ tv_harness:
   budget_enabled: false          # DEV PHASE: unlimited tester runs until finalization
   run_timeout_s: 90
 
-harvester:
+harvester:                     # numbers: series acquisition + coverage brief
+  enabled: true
+  request_delay_s: 0.3
+  # symbols default to derivatives.symbols
+  # Binance retains oi/taker_ratio/ls_ratio ~30 days while the backtest frame
+  # spans ~83, so those three can never clear the 90% coverage gate from
+  # Binance alone. Coinalyze serves them far deeper; set COINALYZE_API_KEY in
+  # .env (free signup) to switch them on. funding and basis need no key.
+  coinalyze:
+    enabled: true              # no-op without COINALYZE_API_KEY
+    history_years: 2.0
+    interval: 4h
+
+mcp:                           # MCP servers the KERNEL may call at runtime
+  servers:                     # (.mcp.json configures the coding agent's own)
+    coingecko:
+      enabled: true
+      url: https://mcp.api.coingecko.com/mcp
+
+scraper:                       # ideas: TradingView + RSS + deep crawl
   enabled: true
   interval_minutes: 240        # scrape + extract + test every 4h
   ideas_per_cycle: 12          # token budget per cycle (batched into ONE LLM call)
@@ -177,6 +200,15 @@ scouts:
     enabled: true              # learned conviction from journal outcomes
     min_samples: 60            # below this, votes pass through untouched
     refit_hours: 6
+  ewa:                         # online expert weights (Phase 1)
+    enabled: true
+    eta: 0.30                  # per-wrong-call weight decay
+    prior: 30                  # pseudo-count shrinkage toward static weights
+  meta:                        # secondary trust/sizing model (Phase 1)
+    enabled: true              # live w/ bounds: veto p<0.45, size 0.25-1.0x
+  adaptive_threshold:          # per-regime hit-rate thresholds (Phase 1)
+    enabled: true
+    min_outcomes: 30           # per regime before adapting
 
 crawler:
   enabled: true
@@ -184,6 +216,10 @@ crawler:
   max_pages_per_cycle: 25
   max_depth: 2                 # links followed from seeds / rss items
   passages_per_mine: 10        # token budget: top-scored passages per cycle
+  passages_per_queue: 40       # passages handed to the Strategist's idea
+                               # queue — wider than the mine budget:
+                               # expressing an idea costs one prompt,
+                               # mining it costs a batch
   per_host_delay_s: 1.5
   seeds:
     - https://chartschool.stockcharts.com/table-of-contents/market-indicators
@@ -204,7 +240,8 @@ brain:
   base_url: https://api.deepseek.com   # OpenAI-compatible; swap for Ollama/OpenRouter later
   model_fast: deepseek-chat            # V3 — proposals, summaries
   model_deep: deepseek-reasoner        # R1 — autopsies, strategy verdicts
-  evolution_interval_minutes: 120      # continuous evolution heartbeat
+  evolution_interval_minutes: 120      # NOT IMPLEMENTED — vestigial; the
+                                       # generate/retire loop is mechanism.*
   judge_interval_minutes: 360          # Brain-Judge portfolio review cadence
   judge_meta_every_hours: 168          # weekly "right direction?" deep review
   daily_token_budget: 200000
@@ -220,8 +257,9 @@ dashboard:
 
 notify:
   telegram: true
-  alert_on_trade: true
-  daily_digest_hour_utc: 20
+  alert_on_trade: true           # NOT IMPLEMENTED — trade alerts are
+                                 # unconditional (kernel sends on every entry)
+  daily_digest_hour_utc: 20      # NOT IMPLEMENTED — no digest job exists
 
 logging:
   level: INFO

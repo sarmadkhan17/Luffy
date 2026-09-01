@@ -103,6 +103,11 @@ class Orchestrator:
         self.htf_soft_bump = float(sc.get("htf_soft_bump", 0.07))
         self.htf_hard_veto = float(sc.get("htf_hard_veto", 0.80))
         self.calib_cfg = (sc.get("calibration") or {})
+        self.ewa_cfg = (sc.get("ewa") or {})
+        self.meta_cfg = (sc.get("meta") or {})
+        self._adapt_cfg = (sc.get("adaptive_threshold") or {})
+        self._hit_cache: tuple[float, dict] = (0.0, {})   # ts, regime→(hr, n)
+        self._blend_cache: tuple[float, str, dict] = (0.0, "", {})
         self._acc_cache: tuple[float, dict] = (0.0, {})   # ts, {agent: mult}
         self._lock = threading.Lock()
         self._shadow_last: dict[str, float] = {}          # symbol → ts
@@ -120,7 +125,18 @@ class Orchestrator:
         mw, mfit = _measured_weights()
         merged = {**_DEFAULT_WEIGHTS, **mw}
         tot = sum(merged.values()) or 1.0
-        self.base_weights = {k: v / tot for k, v in merged.items()}
+        merged = {k: v / tot for k, v in merged.items()}
+        # EWA online aggregation: evidence-weighted blend toward the
+        # per-agent exponential weights (theory: cumulative loss tracks
+        # the best expert under non-stationarity)
+        if self.ewa_cfg.get("enabled", True):
+            try:
+                from ..agents import weights_online
+                merged = weights_online.blended_weights(
+                    merged, prior_k=float(self.ewa_cfg.get("prior", 30.0)))
+            except Exception as e:
+                log.debug(f"ewa blend skipped: {e}")
+        self.base_weights = merged
         self.measured_fit = mfit
         with self._lock:
             self._acc_cache = (0.0, {})
@@ -154,6 +170,65 @@ class Orchestrator:
             fresh = {}
         with self._lock:
             self._acc_cache = (now, fresh)
+        return fresh
+
+    # ── adaptive base threshold (per-regime hit rates × vol scale) ──────
+    def _adaptive_base(self, regime: str, vol_ratio: float = 1.0) -> float:
+        """Regime-conditional threshold from realized 30d hit rates: when
+        recent signals in this regime paid (hr>0.5) the base relaxes; when
+        they lost it tightens. Falls back to the static base until
+        min_outcomes labels exist for the regime. Scaled modestly by
+        relative volatility expansion."""
+        if not self._adapt_cfg.get("enabled", True):
+            return self.base_threshold
+        now = time.time()
+        if now - self._hit_cache[0] > 1800:
+            try:
+                rows = self.journal.query(
+                    "SELECT c.regime r, AVG(o.correct_4h) hr, COUNT(*) n "
+                    "FROM outcomes o JOIN cycles c ON c.id=o.cycle_id "
+                    "WHERE o.resolved_at IS NOT NULL "
+                    "AND o.correct_4h IS NOT NULL "
+                    "AND o.ts >= datetime('now','-30 days') "
+                    "GROUP BY c.regime")
+                self._hit_cache = (now, {x["r"]: (x["hr"], x["n"])
+                                         for x in rows})
+            except Exception:
+                self._hit_cache = (now, {})
+        hr, n = self._hit_cache[1].get(regime, (None, 0))
+        if hr is None or n < int(self._adapt_cfg.get("min_outcomes", 30)):
+            base = self.base_threshold
+        else:
+            base = self.base_threshold * (0.5 / max(float(hr), 0.35))
+        base = max(0.16, min(0.34, base))
+        vscale = max(0.9, min(1.15,
+                              1.0 + (float(vol_ratio or 1.0) - 1.0) * 0.15))
+        return round(base * vscale, 4)
+
+    # ── weighing the active strategy set ───────────────────────────────
+    def _strategy_weights(self, population: list[tuple],
+                          regime: str) -> dict:
+        """{strategy_id: weight} for this regime, recomputed every 30 min.
+
+        Analysts have always entered the sum weighted by measured accuracy
+        and regime fit. Strategies entered it flat, so the book averaged its
+        mechanisms instead of combining them — a strategy paying in the live
+        regime spoke no louder than one that had stopped working. This is
+        the same treatment, from the same kind of evidence.
+        """
+        now = time.time()
+        ts, cached_regime, cached = self._blend_cache
+        if cached and cached_regime == regime and now - ts < 1800:
+            return cached
+        try:
+            from ..strategy.blend import strategy_weights
+            specs = [st for st, _g in population]
+            fresh = strategy_weights(self.journal, specs, regime)
+        except Exception as e:
+            log.debug(f"strategy blend skipped: {e}")
+            fresh = {}
+        with self._lock:
+            self._blend_cache = (now, regime, fresh)
         return fresh
 
     def decide(self, snap: Snapshot, population: list[tuple],
@@ -222,14 +297,20 @@ class Orchestrator:
                 * v.meta.get("regime_fit", 1.0)
             num += eff * w
             den += w
+        # the SET speaks, weighted — never reduced to a single winner
+        sw = self._strategy_weights(population, snap.regime)
         for s in sigs:
             dirn = 1.0 if s.action == Action.BUY else -1.0
-            num += dirn * s.confidence * STRATEGY_VOTE_WEIGHT
-            den += STRATEGY_VOTE_WEIGHT
+            w = STRATEGY_VOTE_WEIGHT * sw.get(
+                getattr(s, "strategy_id", ""), 1.0)
+            num += dirn * s.confidence * w
+            den += w
         net = num / den if den > 0 else 0.0
 
         frac = agreement_fraction(votes, sigs, net)
-        threshold = self.base_threshold * (1.45 - 0.55 * frac)   # 0.18..0.32
+        threshold = self._adaptive_base(snap.regime,
+                                        regime_info.get("vol_ratio", 1.0)) \
+            * (1.45 - 0.55 * frac)   # 0.18..0.32 band around the base
 
         if news.get("active"):
             threshold += 0.08
@@ -288,10 +369,40 @@ class Orchestrator:
         threshold = max(_clean(threshold, 0.24), 0.05)
         confidence = min(0.95, max(0.30, _clean(
             abs(net) / max(threshold, 1e-9) * 0.62 * (0.7 + 0.3 * frac), 0.3)))
+        d_ts = datetime.now(timezone.utc).isoformat()
+
+        # ── meta-labeling: the secondary model judges the primary signal ─
+        # LIVE with hard bounds (operator choice): veto below META_FLOOR,
+        # shrink-only sizing above it; passthrough (no meta_p) until the
+        # model has ≥40 training labels or if auto-disabled. Vetoed calls
+        # stay directional so their outcome grades the veto itself.
+        meta_p, meta_size = 0.0, 1.0
+        if action != Action.HOLD and self.meta_cfg.get("enabled", True):
+            try:
+                from ..brain import meta_label
+                lean_buy = action == Action.BUY
+                n_agree = sum(1 for s in sigs
+                              if (s.action == Action.BUY) == lean_buy)
+                sig_agree = (n_agree / len(sigs)) if sigs else 0.5
+                feat = meta_label.features(
+                    net, threshold, frac, snap.regime, htf, snap.adx,
+                    d_ts, len(sigs), sig_agree, bool(news.get("active")))
+                p = meta_label.judge(feat)
+                if p is not None:
+                    meta_p = p
+                    if p < meta_label.META_FLOOR:
+                        veto_reason = (f"meta: p={p:.2f} "
+                                       f"< {meta_label.META_FLOOR}")
+                    else:
+                        meta_size = meta_label.size_mult(p)
+            except Exception as e:
+                log.debug(f"meta judge failed: {e}")
+
         d = Decision(
             id=new_id("dec"), cycle_id=cycle_id, symbol=snap.symbol,
             action=action, score=_clean(net), threshold=threshold,
-            confidence=confidence,
+            confidence=confidence, ts=d_ts, meta_p=meta_p,
+            meta_size=meta_size,
             votes=[v.as_dict() for v in votes],
             strategy_signals=[vars(s) | {"action": s.action.value}
                               for s in sigs])

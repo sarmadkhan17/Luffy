@@ -33,9 +33,23 @@ class _FakeClient:
             usage=types.SimpleNamespace(total_tokens=42))
 
 
+def _isolate_budget(llm):
+    """Count spend in memory instead of `data/brain_usage.json`.
+
+    These tests assert real spend accounting, so the counter must work — but
+    against the production file they both read the live day's usage (failing
+    outright once the real budget is exhausted) and add to it.
+    """
+    spent = {"n": 0}
+    llm._tokens_today = lambda: spent["n"]
+    llm._spend = lambda tokens: spent.__setitem__("n", spent["n"] + tokens)
+    return llm
+
+
 def test_chat_tools_returns_message_and_spends():
     llm = BrainLLM(_cfg())
     llm._key = "x"
+    _isolate_budget(llm)
     fake = _FakeClient()
     llm._client = fake
     before = llm.budget_left()
@@ -49,6 +63,7 @@ def test_chat_tools_returns_message_and_spends():
 def test_chat_tools_none_when_no_budget(monkeypatch):
     llm = BrainLLM(_cfg())
     llm._key = "x"
+    _isolate_budget(llm)
     monkeypatch.setattr(llm, "budget_left", lambda: 0)
     assert llm.chat_tools([{"role": "user", "content": "hey"}], []) is None
 

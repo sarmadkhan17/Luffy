@@ -1,6 +1,6 @@
 """News blackout guard — risk-off when macro headlines are hot.
 
-Reuses the Harvester's RSS parser. When enough fresh, high-impact
+Reuses the Scraper's RSS parser. When enough fresh, high-impact
 headlines are circulating (Fed/CPI/hack/ETF-decision class events), the
 orchestrator raises its threshold and dents conviction: entering minutes
 around regime-moving news is paying spread for a coin-flip.
@@ -14,7 +14,7 @@ import logging
 import re
 import time
 
-from ..brain.harvester import scrape_feed
+from ..brain.scraper import scrape_feed
 from ..core.journal import Journal
 
 log = logging.getLogger(__name__)

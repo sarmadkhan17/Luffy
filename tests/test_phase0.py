@@ -98,13 +98,33 @@ def test_proving_period_halves_size(rm):
 
 
 def test_heat_cap_blocks(rm):
-    # two open positions already consuming heat near cap
-    big = [_pos(notional=5000) for _ in range(9)]      # 9 × (2% stop dist × 5000) = 900 risk
+    # Heat must be reached WITHIN the position cap (4), or the count check
+    # fires first and this stops testing heat at all.
+    big = [_pos(notional=8000) for _ in range(3)]      # 3 × (2% × 8000) = 480 risk
     r = rm.check_entry(ControlState.ACTIVE, "ETH/USDT", 100.0, 1.0, 0.02,
                        big, equity=2000.0, closed_trades_count=100,
                        market_type="futures")
-    # open risk 900 = 45% > cap → blocked
-    assert not r.ok and "heat" in r.reason or "budget" in r.reason
+    # open risk 480 = 24% > 15% cap → blocked
+    assert not r.ok and ("heat" in r.reason or "budget" in r.reason)
+
+
+def test_no_more_than_four_trades_open_at_once(rm):
+    """A hard operator cap, independent of heat: the fifth entry is refused
+    however small the risk on it."""
+    four = [_pos(notional=10) for _ in range(4)]
+    r = rm.check_entry(ControlState.ACTIVE, "ETH/USDT", 100.0, 1.0, 0.02,
+                       four, equity=100_000.0, closed_trades_count=100,
+                       market_type="futures")
+    assert not r.ok and "max positions" in r.reason
+
+
+def test_a_fourth_trade_is_still_allowed(rm):
+    """The cap is four open, not three."""
+    three = [_pos(notional=10) for _ in range(3)]
+    r = rm.check_entry(ControlState.ACTIVE, "ETH/USDT", 100.0, 1.0, 0.02,
+                       three, equity=100_000.0, closed_trades_count=100,
+                       market_type="futures")
+    assert r.ok, r.reason
 
 
 def test_frozen_blocks_entries(rm):

@@ -31,6 +31,9 @@ PATH = ROOT / "data" / "meta_model.json"
 META_FLOOR = 0.45           # veto below this
 META_MIN_TRAIN = 40         # outcomes before the model may act
 META_LIVE_MIN_WR = 0.40     # auto-disable below this over >=20 live calls
+META_MAX_BRIER = 0.25       # OOS validation gate — above this the model
+                            # stays passthrough (never gates live money)
+META_MIN_TEST = 30          # OOS samples required to trust the brier
 REGIMES = ("RANGING", "TRENDING_UP", "TRENDING_DOWN", "VOLATILE")
 
 FEATS = ["score_ratio", "frac", *("reg_" + r for r in REGIMES),
@@ -196,7 +199,9 @@ def refit(journal) -> dict:
     cut = int(len(X) * 0.7)
     w = _fit(X[:cut], y[:cut])
     btr = _brier(w, X[:cut], y[:cut])
-    bte = _brier(w, X[cut:], y[cut:]) if len(X) - cut >= 8 else btr
+    n_test = len(X) - cut
+    bte = _brier(w, X[cut:], y[cut:]) if n_test >= 8 else 1.0
+    ready = bool(n_test >= META_MIN_TEST and bte <= META_MAX_BRIER)
 
     # live kill-switch: win-rate of meta-JUDGED (non-vetoed) live calls
     judged = journal.query(
@@ -213,11 +218,14 @@ def refit(journal) -> dict:
         log.warning(f"meta-model AUTO-DISABLED: live WR "
                     f"{judged[0]['wr']:.2f} over {live['judged']} calls")
 
-    state = {"w": w, "n": len(X), "brier_train": btr, "brier_test": bte,
-             "disabled": disabled, "live": live, "updated": time.time()}
+    state = {"w": w if ready else None, "n": len(X),
+             "brier_train": btr, "brier_test": bte, "n_test": n_test,
+             "ready": ready, "disabled": disabled, "live": live,
+             "updated": time.time()}
     _save(state)
     log.info(f"meta-model refit: n={len(X)} brier {btr}/{bte} "
-             f"live {live} disabled={disabled}")
+             f"(test n={n_test}) ready={ready} live={live} "
+             f"disabled={disabled}")
     return state
 
 
@@ -245,9 +253,10 @@ def _model() -> list[float] | None:
 
 def judge(feat: list[float]) -> float | None:
     """P(win) for a directional decision, or None when the model is not
-    ready / auto-disabled (passthrough — primary ensemble stands alone)."""
+    validated / auto-disabled (passthrough — primary ensemble stands
+    alone). Goes live only after passing the OOS brier gate."""
     state = load()
-    if state.get("disabled"):
+    if state.get("disabled") or not state.get("ready"):
         return None
     w = _model()
     if not w or len(w) != len(feat):

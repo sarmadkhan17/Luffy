@@ -42,6 +42,11 @@ def _llm(client, cfg=None):
     llm = BrainLLM(cfg or _cfg())
     llm._key, llm._client = "x", client
     llm._spend = lambda tokens: None          # keep the test off disk
+    # ...and off the live journal: budget_left() reads the REAL day's spend,
+    # so without this every one of these cap assertions fails whenever the
+    # production DeepSeek budget happens to be exhausted. The cap logic is
+    # what is under test here, not the budget.
+    llm._tokens_today = lambda: 0
     return llm
 
 
