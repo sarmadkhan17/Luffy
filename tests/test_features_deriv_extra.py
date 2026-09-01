@@ -25,10 +25,12 @@ def _ctx(close, series_name=None, values=None):
 
 
 def test_funding_pct_is_high_when_funding_is_at_its_extreme():
-    """The spike sits in the last few observations, NOT only on the final
-    timestamp: align() deliberately shows a bar only the observations that
-    closed strictly before it, so a value stamped on the last bar's own ts
-    is never visible to any bar."""
+    """The spike sits in the last few observations, not only on the final
+    timestamp, so the percentile has something recent to rank against.
+    (This fixture does not exercise point-in-time compliance — neighbouring
+    observations share the spike value, so a leaked implementation would
+    give the same answer here. Real PIT coverage lives in
+    tests/test_pit_alignment.py.)"""
     n = 80
     vals = np.concatenate([np.zeros(n - 5), np.full(5, 0.01)])
     ctx = _ctx(np.ones(n) * 100, "funding", vals)
@@ -50,13 +52,22 @@ def test_oi_price_div_is_positive_when_oi_rises_as_price_falls():
 
 def test_oi_price_div_is_nan_when_lagged_oi_is_zero():
     """When OI was zero n bars ago, division by zero produces inf unless
-    masked. Assert that NaN, not inf, results from this degenerate case."""
+    masked. Assert that NaN, not inf, results from this degenerate case.
+
+    `~np.isfinite(x) | x.isna()` is always True for both NaN AND inf (inf
+    is, correctly, "not finite") — so it cannot distinguish the masked
+    result this test exists to require from the bug it exists to catch.
+    Check the zero-denominator bars are NaN explicitly, and separately that
+    no inf sneaks through anywhere in the result."""
     n = 60
     price = np.ones(n) * 100.0
     oi = np.concatenate([np.zeros(10), np.linspace(1000.0, 2000.0, n - 10)])
     ctx = _ctx(price, "oi", oi)
     result = FEATURES["oi_price_div"].fn(ctx, 10)
-    # First 10 bars have NaN from shift; bars 10-19 divide by zero (lagged OI=0)
-    assert np.all(~np.isfinite(result[:20]) | result[:20].isna())
+    # align() itself is point-in-time (a bar sees only observations strictly
+    # before its own close), adding one more bar of lag on top of shift(n) —
+    # so the zero-denominator window is bars 0-20, not 0-19.
+    assert result[:21].isna().all()
     # After warmup, result should be finite
-    assert np.all(np.isfinite(result[20:]) | result[20:].isna())
+    assert np.all(np.isfinite(result[21:]))
+    assert not np.isinf(result).any()
