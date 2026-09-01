@@ -86,3 +86,16 @@ def test_truncated_reasoning_returns_none_not_empty_string(caplog):
         assert llm.chat_json("p", deep=True) is None
     assert "empty content" in caplog.text
     assert "finish_reason=length" in caplog.text
+
+
+def test_tradingview_budget_is_actually_enforced():
+    """daily_runs is decorative while budget_enabled is false."""
+    import yaml
+    from pathlib import Path
+
+    cfg = yaml.safe_load(
+        (Path(__file__).resolve().parents[1] / "config.yaml").read_text())
+    tv = cfg["tv_harness"]
+
+    assert tv["budget_enabled"] is True, "the cap is ignored while this is off"
+    assert tv["daily_runs"] <= 5, tv["daily_runs"]
