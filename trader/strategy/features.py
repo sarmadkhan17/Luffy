@@ -461,3 +461,4 @@ def _vol_of_vol(ctx, n):
 
 
 from . import features_deriv          # noqa: E402,F401  (registration side-effect)
+from . import features_xs             # noqa: E402,F401  (registration side-effect)
