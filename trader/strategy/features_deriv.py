@@ -134,3 +134,30 @@ register("basis", domain=(-0.1, 0.1), requires=("basis",))(
           requires=("basis",))
 def _basis_z(ctx, n):
     return ind.zscore_series(_deriv(ctx, "basis"), int(n))
+
+
+@register("funding_pct", arg_specs=((int, 24, 2000),), domain=(0.0, 1.0),
+          requires=("ohlcv", "funding"))
+def _funding_pct(ctx, n):
+    """Where funding sits in its own recent distribution. A percentile
+    survives regime shifts in the level that a z-score does not."""
+    return _deriv(ctx, "funding").rolling(int(n)).rank(pct=True)
+
+
+@register("basis_slope", arg_specs=((int, 6, 500),), domain=(-1.0, 1.0),
+          requires=("ohlcv", "basis"))
+def _basis_slope(ctx, n):
+    b = _deriv(ctx, "basis")
+    return b - b.shift(int(n))
+
+
+@register("oi_price_div", arg_specs=((int, 6, 500),), domain=(-2.0, 2.0),
+          requires=("ohlcv", "open_interest"))
+def _oi_price_div(ctx, n):
+    """Open interest building against the price move — positioning growing
+    into a decline is a different animal from one growing into a rally."""
+    n = int(n)
+    oi = _deriv(ctx, "oi")
+    oi_ret = oi / oi.shift(n) - 1.0
+    px_ret = ctx.df["close"] / ctx.df["close"].shift(n) - 1.0
+    return oi_ret - px_ret
