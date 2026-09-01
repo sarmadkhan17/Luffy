@@ -59,6 +59,8 @@ class FeatureCtx:
     tf: str
     btc: dict | None = None
     derivs: dict | None = None
+    universe: dict | None = None      # {symbol: {tf: df}} — the rest of the book
+    market: dict | None = None        # market-wide series; populated later
     _cache: dict = field(default_factory=dict, repr=False)
 
     @property
@@ -80,7 +82,23 @@ class FeatureCtx:
 
     def scoped(self, tf: str) -> "FeatureCtx":
         """A view on a different timeframe, sharing the cache."""
-        return FeatureCtx(self.frames, tf, self.btc, self.derivs, self._cache)
+        return FeatureCtx(self.frames, tf, self.btc, self.derivs,
+                          self.universe, self.market, self._cache)
+
+    def for_symbol(self, symbol: str) -> "FeatureCtx | None":
+        """A view on another member of the universe at the same timeframe.
+
+        None when the member is absent — the caller then produces NaN rather
+        than a fabricated value.
+        """
+        frames = (self.universe or {}).get(symbol)
+        if not frames or self.tf not in frames:
+            return None
+        # Fresh cache: the memo key is (name, tf, args) with no symbol
+        # component, so sharing the parent's cache would return this
+        # symbol's values for every other symbol.
+        return FeatureCtx(frames, self.tf, self.btc, self.derivs,
+                          self.universe, self.market, {})
 
 
 def _s(ctx: FeatureCtx, col: str) -> pd.Series:

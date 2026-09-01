@@ -25,8 +25,9 @@ class CompiledStrategy:
 
     # ── vectorized path (Analyst) ────────────────────────────────────────
     def entries(self, frames: dict, btc: dict | None = None,
-                derivs: dict | None = None):
-        ctx = self._ctx(frames, btc, derivs)
+                derivs: dict | None = None, universe: dict | None = None,
+                market: dict | None = None):
+        ctx = self._ctx(frames, btc, derivs, universe, market)
         n = len(ctx.index)
         keep = np.ones(n, dtype=bool)
         for f in self._filters:
@@ -39,17 +40,21 @@ class CompiledStrategy:
         both = lo & sh
         return lo & ~both, sh & ~both
 
-    def exit_signal(self, frames: dict, btc=None, derivs=None):
+    def exit_signal(self, frames: dict, btc=None, derivs=None,
+                    universe=None, market=None):
         if self._exit is None:
             return None
-        return dsl.evaluate_bool(self._exit, self._ctx(frames, btc, derivs))
+        return dsl.evaluate_bool(
+            self._exit, self._ctx(frames, btc, derivs, universe, market))
 
-    def _ctx(self, frames, btc, derivs) -> FeatureCtx:
+    def _ctx(self, frames, btc, derivs, universe=None,
+             market=None) -> FeatureCtx:
         tf = self.spec.timeframe
         if tf not in frames:
             raise dsl.SpecError(f"spec timeframe '{tf}' not in frames "
                                 f"{sorted(frames)}")
-        return FeatureCtx(frames=frames, tf=tf, btc=btc, derivs=derivs)
+        return FeatureCtx(frames=frames, tf=tf, btc=btc, derivs=derivs,
+                          universe=universe, market=market)
 
     # ── live path (Trader) ───────────────────────────────────────────────
     def to_evaluator(self):
