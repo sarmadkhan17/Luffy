@@ -22,6 +22,7 @@ from ..core.journal import Journal
 from ..strategy import rolling, spec_evidence
 from ..strategy.compile import compile_spec
 from ..strategy.spec import StrategySpec
+from ..strategy.vector_backtest import vector_walk_forward
 
 log = logging.getLogger(__name__)
 
@@ -270,6 +271,28 @@ class Analyst:
                 worst, who = r, other.id
         return worst, who
 
+    @staticmethod
+    def _with_null_evidence(ev: dict, per_symbol_pct: dict) -> dict:
+        """Attach the rotation-null result to an admission record.
+
+        Admission gates on a 90-day pooled profit factor and signal overlap —
+        the same arithmetic that scores ALWAYS-LONG at PF 1.28 on drift, so
+        it cannot separate a mechanism from a market direction.
+
+        Recorded, not gated. With 60 draws a single symbol's percentile is
+        noisy, and the admitted strategy's per-symbol figures (0.70-0.88) do
+        not separate cleanly from a rejected one's (0.60-1.00); a threshold
+        chosen to split those two would be fitted to them. Putting the number
+        in the record lets the 6h review and the operator see it.
+        """
+        import statistics as _st
+        vals = [v for v in per_symbol_pct.values() if v is not None]
+        return {**ev,
+                "null_median_percentile": (round(_st.median(vals), 3)
+                                           if vals else None),
+                "null_beats_90pct_on":
+                    f"{sum(1 for v in vals if v >= 0.90)}/{len(vals)}"}
+
     def admit(self, spec: StrategySpec, book: list) -> tuple[bool, dict]:
         """Full admission decision: works now, and adds something new."""
         ok, ev = self.evaluate(spec)
@@ -282,7 +305,31 @@ class Analyst:
         if overlap > MAX_SIGNAL_OVERLAP:
             return False, {**ev, "reason": f"signal overlap {overlap:.2f} with "
                                            f"{twin} (> {MAX_SIGNAL_OVERLAP})"}
-        return True, ev
+        return True, self._with_null_evidence(ev, self._null_percentiles(spec, tf))
+
+    def _null_percentiles(self, spec: StrategySpec, tf: str) -> dict:
+        """{symbol: share of its own rotations this spec beats}, best effort."""
+        from ..strategy import null_baseline
+        out: dict = {}
+        try:
+            probe = StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf})
+            compiled = compile_spec(probe)
+            frames, btc, derivs_for, risk = self._ctx(tf, probe)
+            for sym in [k for k in frames if not k.startswith("_")]:
+                sf = spec_evidence.frames_for(frames[sym], tf)
+                r = vector_walk_forward(compiled, sf, risk, btc=btc,
+                                        derivs=derivs_for(sym), symbol=sym)
+                if r["test"].trades < 2:
+                    continue
+                a = null_baseline.assess(
+                    compiled, sf, risk, r["test"].profit_factor, btc=btc,
+                    derivs=derivs_for(sym), symbol=sym, draws=40,
+                    split=0.7, part="test")
+                if a.get("percentile") is not None:
+                    out[sym] = a["percentile"]
+        except Exception as e:
+            log.warning(f"null baseline unavailable for {spec.id}: {e}")
+        return out
 
     # ── tradingview confirmation ─────────────────────────────────────────
     #: TradingView symbol for a pair, e.g. BTC/USDT -> BINANCE:BTCUSDT
