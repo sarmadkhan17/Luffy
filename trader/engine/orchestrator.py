@@ -114,6 +114,35 @@ def net_score(votes: list, sigs: list, base_weights: dict,
     return num / den if den > 0 else 0.0
 
 
+def strategy_score(sigs: list, strategy_weights: dict) -> float:
+    """The book's own opinion, with no analyst in it.
+
+    Pooling the two put the one mechanism with measured edge in a weighted
+    average against seven that have none. Live, on 2026-09-02, that read:
+
+        UNI/USDT  HOLD  score=+0.2454  thr=0.2629
+           signal: Donchian Breakout Trail -> BUY conf=0.60
+
+    Donchian was firing, correctly, and the blend held it under threshold.
+    With a combined analyst weight of 1.0 against STRATEGY_VOTE_WEIGHT 0.45,
+    a lone signal at 0.6 confidence can reach at most 0.186 on its own, and
+    even with analysts leaning the same way it lands short. The strategy had
+    signalled for a week and taken zero trades.
+
+    The analysts are not neutral ballast either: measured over 204 live
+    decisions they returned -0.695% a call at the 4h horizon and won 34.6%
+    (t=-3.84), losing on BOTH sides. Averaging a measured edge against a
+    measured anti-edge is not diversification.
+    """
+    num = den = 0.0
+    for s in sigs:
+        dirn = 1.0 if s.action == Action.BUY else -1.0
+        w = strategy_weights.get(getattr(s, "strategy_id", ""), 1.0)
+        num += dirn * s.confidence * w
+        den += w
+    return num / den if den > 0 else 0.0
+
+
 def strategy_gate(action, sigs: list) -> tuple:
     """A trade needs a strategy that says so. -> (action, veto, gated_lean)
 
@@ -195,6 +224,7 @@ class Orchestrator:
         self._adapt_cfg = (sc.get("adaptive_threshold") or {})
         self.require_strategy_signal = bool(
             sc.get("require_strategy_signal", True))
+        self.strategy_leads = bool(sc.get("strategy_leads", True))
         self._hit_cache: tuple[float, dict] = (0.0, {})   # ts, regime→(hr, n)
         self._blend_cache: tuple[float, str, dict] = (0.0, "", {})
         self._acc_cache: tuple[float, dict] = (0.0, {})   # ts, {agent: mult}
@@ -381,6 +411,13 @@ class Orchestrator:
         # ── aggregate ────────────────────────────────────────────────────
         sw = self._strategy_weights(population, snap.regime)
         net = net_score(votes, sigs, self.base_weights, sw)
+        # Strategies own entry; analysts supply coins and direction. Once a
+        # strategy has spoken, the analysts no longer set the score — they
+        # are still evaluated and journalled, so their skill stays
+        # measurable and this stays reversible.
+        blended = net
+        if self.strategy_leads and sigs:
+            net = strategy_score(sigs, sw)
 
         frac = agreement_fraction(votes, sigs, net)
         threshold = self._adaptive_base(snap.regime,
@@ -454,6 +491,9 @@ class Orchestrator:
             except Exception as e:
                 log.debug(f"cooldown check failed: {e}")
 
+        if self.strategy_leads and sigs and abs(blended - net) > 1e-9:
+            log.debug(f"{snap.symbol}: strategy leads {net:+.3f} "
+                      f"(blend would have said {blended:+.3f})")
         net = _clean(net)
         threshold = max(_clean(threshold, 0.24), 0.05)
         confidence = min(0.95, max(0.30, _clean(
@@ -479,7 +519,13 @@ class Orchestrator:
                 p = meta_label.judge(feat)
                 if p is not None:
                     meta_p = p
-                    if p < meta_label.META_FLOOR:
+                    # The meta model is fit on correct_4h from decisions the
+                    # ANALYST BLEND produced — the same process measured at
+                    # -0.695% and 34.6% wins. It may shrink a strategy-led
+                    # call's size, but it does not get to veto a mechanism
+                    # on labels drawn from a losing one.
+                    lead = self.strategy_leads and bool(sigs)
+                    if p < meta_label.META_FLOOR and not lead:
                         veto_reason = (f"meta: p={p:.2f} "
                                        f"< {meta_label.META_FLOOR}")
                     else:

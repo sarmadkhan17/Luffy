@@ -86,3 +86,54 @@ def test_one_agreeing_strategy_is_enough_among_dissenters():
 def test_hold_is_never_vetoed():
     act, veto, lean = _apply(_orc(), Action.HOLD, [])
     assert act is Action.HOLD and veto == "" and lean is None
+
+
+# ── the score a strategy leads with ─────────────────────────────────────
+def test_a_lone_signal_clears_every_threshold_the_system_produces():
+    """The live failure: Donchian at 0.60 confidence scored 0.2454 against a
+    0.2629 threshold, because a single signal reaches at most
+    0.6 * 0.45 / 1.45 = 0.186 once seven analysts are averaged in. It had
+    signalled for a week and taken zero trades."""
+    from trader.engine.orchestrator import strategy_score
+    s = strategy_score([_sig(Action.BUY, conf=0.6)], {})
+    assert s == pytest.approx(0.6)
+    assert s > 0.34            # the top of the adaptive threshold band
+
+
+@pytest.mark.parametrize("action,sign", [(Action.BUY, 1), (Action.SELL, -1)])
+def test_direction_is_signed_symmetrically(action, sign):
+    from trader.engine.orchestrator import strategy_score
+    assert strategy_score([_sig(action, conf=0.6)], {}) == \
+        pytest.approx(0.6 * sign)
+
+
+def test_disagreeing_strategies_cancel_rather_than_pick_a_winner():
+    from trader.engine.orchestrator import strategy_score
+    assert strategy_score([_sig(Action.BUY, "a", 0.6),
+                           _sig(Action.SELL, "b", 0.6)], {}) == \
+        pytest.approx(0.0)
+
+
+def test_a_strategy_weighted_down_speaks_more_quietly():
+    from trader.engine.orchestrator import strategy_score
+    sigs = [_sig(Action.BUY, "a", 0.6), _sig(Action.SELL, "b", 0.6)]
+    s = strategy_score(sigs, {"a": 3.0, "b": 1.0})
+    assert s == pytest.approx((0.6 * 3 - 0.6) / 4)
+    assert s > 0
+
+
+def test_no_signal_is_no_opinion_not_a_zero_vote():
+    from trader.engine.orchestrator import strategy_score
+    assert strategy_score([], {}) == 0.0
+
+
+def test_the_lead_can_be_turned_off():
+    orc = _orc()
+    assert orc.strategy_leads is True
+    from trader.core.journal import Journal
+    from trader.engine.orchestrator import Orchestrator
+    import tempfile, os
+    fd, path = tempfile.mkstemp(suffix=".db"); os.close(fd)
+    off = Orchestrator([], Journal(Path(path)),
+                       cfg={"scouts": {"strategy_leads": False}})
+    assert off.strategy_leads is False
