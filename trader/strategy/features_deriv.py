@@ -59,7 +59,7 @@ def _funding_z(ctx, n):
     """Window is in BARS, not funding periods. Funding settles every 8h =
     32 bars on a 15m frame, so n=96 spans only 3 observations; a meaningful
     z-score needs n in the low thousands."""
-    return ind.zscore_series(_deriv(ctx, "funding"), int(n))
+    return ind.zscore_series(_deriv(ctx, "funding"), int(n), fill=None)
 
 
 @register("funding_cum", arg_specs=((int, 32, 4000),), domain=(-0.5, 0.5),
@@ -84,7 +84,7 @@ def _oi_ret(ctx, n):
 @register("oi_z", arg_specs=((int, 12, 2000),), domain=(-4.0, 4.0),
           requires=("open_interest",))
 def _oi_z(ctx, n):
-    return ind.zscore_series(_deriv(ctx, "oi"), int(n))
+    return ind.zscore_series(_deriv(ctx, "oi"), int(n), fill=None)
 
 
 # ── aggressor flow ───────────────────────────────────────────────────────
@@ -95,7 +95,7 @@ register("taker_ratio", domain=(0.0, 5.0), requires=("taker_ratio",))(
 @register("taker_ratio_z", arg_specs=((int, 12, 2000),), domain=(-4.0, 4.0),
           requires=("taker_ratio",))
 def _taker_z(ctx, n):
-    return ind.zscore_series(_deriv(ctx, "taker_ratio"), int(n))
+    return ind.zscore_series(_deriv(ctx, "taker_ratio"), int(n), fill=None)
 
 
 @register("taker_buy_frac", domain=(0.0, 1.0))
@@ -122,7 +122,7 @@ register("ls_ratio", domain=(0.0, 5.0), requires=("ls_ratio",))(
 @register("ls_ratio_z", arg_specs=((int, 12, 2000),), domain=(-4.0, 4.0),
           requires=("ls_ratio",))
 def _ls_z(ctx, n):
-    return ind.zscore_series(_deriv(ctx, "ls_ratio"), int(n))
+    return ind.zscore_series(_deriv(ctx, "ls_ratio"), int(n), fill=None)
 
 
 # ── basis (years of history — backtestable today) ────────────────────────
@@ -133,7 +133,7 @@ register("basis", domain=(-0.1, 0.1), requires=("basis",))(
 @register("basis_z", arg_specs=((int, 12, 2000),), domain=(-4.0, 4.0),
           requires=("basis",))
 def _basis_z(ctx, n):
-    return ind.zscore_series(_deriv(ctx, "basis"), int(n))
+    return ind.zscore_series(_deriv(ctx, "basis"), int(n), fill=None)
 
 
 @register("funding_pct", arg_specs=((int, 24, 2000),), domain=(0.0, 1.0),

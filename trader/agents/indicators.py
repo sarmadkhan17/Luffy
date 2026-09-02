@@ -63,13 +63,28 @@ def anchored_vwap(df: pd.DataFrame, anchor_bars: int = 96) -> float:
     return float(vwap_series(df, anchor_bars).iloc[-1])
 
 
-def zscore_series(s: pd.Series, n: int = 96) -> pd.Series:
-    """Rolling z-score. Matches zscore()'s sample std (ddof=1) and its
-    0.0-on-degenerate-window behaviour."""
+def zscore_series(s: pd.Series, n: int = 96,
+                  fill: float | None = 0.0) -> pd.Series:
+    """Rolling z-score, sample std (ddof=1).
+
+    `fill=0.0` keeps the analyst path's 0.0-on-degenerate-window behaviour:
+    an analyst scores a float and cannot carry NaN.
+
+    `fill=None` leaves an undefined z-score UNDEFINED, which is what the
+    feature registry needs. With the zero fill, funding_z / oi_z /
+    taker_ratio_z / ls_ratio_z / basis_z all returned 0.0 — "exactly
+    average" — for a symbol with no series at all, so a spec testing
+    `funding_z(96) > -1.0` fired true on data that does not exist, and every
+    frame's warmup window read as average rather than unknown.
+
+    Missing information is NaN, never a fabricated default: a fabricated
+    value reads as a real measurement.
+    """
     m = s.rolling(n).mean()
     sd = s.rolling(n).std()
     z = (s - m) / sd.where(sd > 1e-12)
-    return z.replace([np.inf, -np.inf], 0.0).fillna(0.0)
+    z = z.replace([np.inf, -np.inf], np.nan)
+    return z if fill is None else z.fillna(fill)
 
 
 def zscore(s: pd.Series, lookback: int = 96) -> float:
