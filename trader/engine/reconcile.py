@@ -132,8 +132,37 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
     except Exception as e:
         log.warning(f"orphan stop sweep failed: {e}")
 
+    # 4. the reverse of the orphan sweep — a POSITION with no stop.
+    # sweep_orphans covers a protective order whose position is gone. Nothing
+    # covered the dangerous direction: a STOP_MARKET that partially fills
+    # leaves a residue holding no protection, and aligning the journal's
+    # amount down to that residue reports success while the position stands
+    # naked. Observed live 2026-09-02 on UNI/USDT, where the residue was also
+    # under the venue's minimum notional and so could not be re-armed at all.
+    #
+    # This reports; it does not place orders. Arming a stop the venue will
+    # refuse for size is not protection, and the executor owns order flow.
+    naked = None
+    try:
+        stops = protective.open_stops(exchange)
+        # algo rows come back as UNIUSDT while positions read UNI/USDT:USDT;
+        # `venue_key` is the one spelling both collapse to
+        covered = {protective.venue_key(str(o.get("symbol") or ""))
+                   for o in stops}
+        bare = [sym for sym in ex_positions
+                if protective.venue_key(sym) not in covered]
+        naked = len(bare)
+        for sym in bare:
+            log.error(f"NAKED POSITION {sym}: no protective order on the "
+                      f"venue — the exchange is not holding a stop for it")
+    except Exception as e:
+        # if the venue will not say, the answer is unknown, never "protected"
+        log.warning(f"protective coverage unreadable: {e}")
+
     summary = {"adopted": adopted, "ghosts": ghosts, "aligned": aligned,
                "stops_swept": swept, "stops_stuck": failed_sweep}
+    if naked is not None:
+        summary["naked"] = naked
     if any(summary.values()):
         journal.log_control_event("reconcile", "luffy", detail=summary)
     log.info(f"reconcile: {summary}")
