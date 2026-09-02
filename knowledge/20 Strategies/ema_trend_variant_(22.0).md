@@ -18,7 +18,7 @@ author: Strategist
 
 ## Live record
 - closed trades: 9 · wins: 4
-- realized P&L: -241.35 USDT
+- realized P&L: -243.87 USDT
 - state: **retired**
 
 Related: [[Behavioral Momentum]], [[Regime Playbook]], [[MOC]]

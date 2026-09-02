@@ -216,7 +216,7 @@ invisible to other connections and holding a write lock — until some later
   old store is kept as `candles.demo-backup-*.db`. One market = one key:
   the store normalises `XAU/USDT:USDT` to `XAU/USDT`, having previously
   split the same market's history across both. |
-| `data/derivs.db` | funding (4y, 18 symbols), basis (2y, 17), OI/taker/long-short (~32d, 5) |
+| `data/derivs.db` | funding (4-5y, 32 symbols), basis (2y, 29), OI/taker/long-short (~32d, 5) |
 | `data/doctrine.json` | versioned operating beliefs |
 | `data/agent_weights.json` | measured analyst accuracy (weekly) |
 | `data/ewa_state.json` | online expert weights |
@@ -267,19 +267,56 @@ there is.
 register's highest-severity items were all closed on 2026-09-02; see
 `git log 413da6e..` for the evidence behind each. What replaced them:
 
-- **Nothing in the book has a live track record.** Donchian Breakout Trail is
-  the only strategy that beat both a rotation null and an always-long/
-  always-short control, and it has taken **zero live trades**. Everything
-  known about it is backtest.
-- Funding now covers **all 16 book symbols** (18 stored, 77k settlements) but
-  only ~80% of each 4h frame — the store starts 2022-08-31 and the candle
-  frame reaches further back. Those earlier bars still pay the flat
-  conservative `abs(funding_8h)`. `basis` covers 17 symbols; HYPE has no
-  Binance spot pair, so it has funding but no basis.
+- **The book's only strategy does not generalise off its declared universe,
+  and only forward trading can now settle it.** Donchian Breakout Trail scores
+  median PF 1.42 and cross-symbol null consistency p=3.5e-04 over its 16
+  declared symbols. Over 19 comparable perps — same liquidity bar, same 3+
+  years, same period — that it has never been scored against, the identical
+  rule reads median PF 0.93, median null percentile 53% (the no-edge line),
+  10/19 above the median, p=8.8e-01, and compounds at **-4.6%**. The gap is
+  not a liquidity artifact: the illiquid unseen names did BETTER, and the
+  liquid ones are ADA, LTC, TRX, DOT, BCH, XLM, XMR — majors by any reading.
+  Two further measurements narrow it:
+  - The gap is **stable in time**: on the earlier train half the declared set
+    reads p=7.8e-04 against the unseen set's 2.5e-01; on the test half,
+    3.5e-04 against 8.8e-01. So it is not an artifact of the window.
+  - The declared set sits in the **top 0.8%** of 4000 random 15-symbol draws
+    from the same 34-symbol pool by consistency p (`universe_selection_test`).
+    A set that extreme was chosen knowing the outcome.
+
+  Those two together do NOT separate "works on these markets" from "was
+  fitted to these markets" — both hypotheses predict exactly this. All the
+  history was on disk when the universe was written, so no in-sample test
+  can. The only remaining discriminator is forward performance, and the
+  strategy has taken **zero live trades**. Everything known about it is
+  backtest.
+- **A strategy was being scanned on markets it was never validated on.**
+  `plan_scan` computed `(liquid | include) - exclude`, so a spec naming 16
+  symbols was ALSO handed every venue candidate over its volume floor, and
+  `ScanPlan.wants()` — written with the docstring "A strategy must never be
+  evaluated on a market it refused" — had **zero callers**. Live at 14:00 on
+  2026-09-02 the kernel was scanning Donchian over 23 symbols including XAU,
+  XAG, SAMSUNG and SKHYNIX. Fixed: a non-empty `include` now DEFINES the
+  universe, and `orchestrator.symbol_allows` enforces per-strategy
+  membership. The scan is now exactly the declared 16.
+- Funding covers **32 symbols** (~91k settlements) and basis 29, but only
+  ~80% of each 4h frame — the store starts 2022-08-31 and the candle frame
+  reaches back to 2021-08-26. Earlier bars still pay the flat conservative
+  `abs(funding_8h)`. HYPE has no Binance spot pair, so it has funding but no
+  basis.
 - `promotion.py` still applies lifetime PF to the legacy genomes. All of them
   are retired, so it currently governs nothing.
 - The Researcher agent still does not exist; `research`-stream ideas queue up
   unconsumed.
+- The wide search has now run **once** at adequate power (24 mechanisms x 2
+  geometries x 19 discovery + 17 held-out symbols, with cross-sectional,
+  carry, basis, BTC-relative and volatility-regime families included) and
+  found no second mechanism. Two Donchian variants are the closest:
+  `carry_break` (breakout, skip when funding is crowded) reads discovery
+  p=5.9e-02 / held-out PF 1.47, p=1.3e-02 under the trail, and `break_hivol`
+  reads 2.9e-02 / PF 1.55, p=3.2e-02. Both fail the discovery gate, both are
+  the same mechanism the book already trades, and the paired filter test
+  below says neither is worth adding.
 - **Nothing has yet traded under correct geometry.** The 15m-ATR fault above
   was fixed on 2026-09-02 and Donchian has taken no trade since, so the
   validated geometry has still never met the venue.
@@ -369,6 +406,62 @@ These are facts about the search space, not beliefs the Theorist may rewrite.
   charging full heat — were all invisible from inside the system and obvious
   the moment the exchange was queried directly. `scripts/monitor.py` is that
   query.
+- **A search that returns "nothing works" is a claim about the tool first.**
+  `screen_mechanisms.py` printed that verdict for its whole life, and four
+  independent faults produced it, each failing silently and each in the same
+  direction. (1) It passed no `universe`, `derivs` or `btc` to the evaluator,
+  so every cross-sectional, carry and BTC-relative feature evaluated to NaN
+  and the mechanism took **zero trades** — which reads in a results table as
+  "no result", not as "could not be evaluated". Control: 285 trades either
+  way; `xs_rank` 0 vs 874, funding 0 vs 561, BTC-relative 0 vs 417. (2) The
+  rotation null was charged the flat `abs(funding)` while the actual profit
+  factor paid the venue's real signed series — a control made more expensive
+  than the thing it controls. (3) Two thresholds were absolute constants over
+  distributions that never reach them: over 88k 4h bars `taker_buy/volume`
+  runs p1=0.431, p50=0.492, p99=0.553, so `> 0.62` fires on 0.005% of bars
+  and the whole flow family was untested while appearing in the table. (4) It
+  ran on eight usable symbols — see the next bullet.
+- **The size of the discovery universe sets what the test can DETECT, not
+  just how noisy it is.** `consistency_p` reads a binomial tail, so at n=8
+  eight symbols all above the no-edge median still score p=1.2e-02 and the
+  0.01 gate is mathematically unreachable; only a narrow, very strong edge
+  registers. Donchian Breakout Trail is the opposite shape — 14 of 15 above
+  the median, 4 above the 90th — and scored **REFUSED (p=1.2e-02)** on the
+  screen's own universe against 3.5e-04 on its declared 16. ADA and LTC were
+  named in that universe and absent from the candle store, so they dropped
+  silently, and XAU/XAG made up the count while firing ~20 trades each. The
+  store now carries 32+ crypto perps at 4h and the screen runs 19 discovery /
+  17 held-out.
+- **No filter improves the one mechanism that works, and profit factor cannot
+  see why.** Paired test over the 16 declared symbols, same base rule, same
+  geometry, with and without the condition:
+
+  | variant | PF | null p | OOS trades | CAGR | maxDD |
+  |---|---|---|---|---|---|
+  | baseline | 1.42 | 3.5e-04 | 487 | 17.3% | 27.3% |
+  | carry | 1.43 | 3.5e-04 | 415 | 7.6% | 25.8% |
+  | hivol | 1.44 | 1.1e-02 | 307 | 6.3% | 25.0% |
+  | breadth | 1.42 | 3.8e-02 | 466 | 17.1% | 25.3% |
+  | rel_btc | 1.33 | 1.8e-04 | 426 | 9.6% | 23.3% |
+
+  Removing 15% of trades removed more than half the compounded return, so the
+  cut trades carried a disproportionate share of the fat right tail. PF
+  barely moves because those trades are near break-even *individually*.
+  Judge a refinement on compounded return over one account, never on a ratio
+  that improves while the trade count falls.
+- **The deployment is already at its own optimum; the return is not a knob.**
+  Walking the mechanism's 1724 real fills against one compounding balance
+  under the live concurrency cap (`scripts/deployment_frontier.py`), 8 slots
+  refuses 17% of signals and 4 slots refuses 46% — the book is signal-rich
+  and capital-poor. Relaxing the cap makes it WORSE (12 slots: 11.6%/yr at
+  34.2% drawdown against 17.3%/27.3% at 8), because concurrent positions in
+  correlated markets are one position. Raising risk scales return and
+  drawdown together at a flat ratio of ~0.63-0.70 (1.0%/8: 33.6%/yr at 47.6%
+  drawdown). There is no free return in the configuration. NOTE: these
+  figures omit the derisk ladder and the halt breaker, which the spec's own
+  `portfolio_expectation` models — that is why it reads 9.6%/yr where this
+  reads 17.3%. The comparison between rows is what this measures.
+
 - **Validate the config, not just the strategy.** At the old 1.5% risk with 4
   positions, Donchian tripped `halt_drawdown_pct` and stopped for good. 0.5%
   with 8 beats 0.75% with 4 on BOTH return and drawdown: a trend book earns

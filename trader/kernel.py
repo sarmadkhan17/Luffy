@@ -179,6 +179,9 @@ class Kernel:
             g.params = {}
             g.markets = frozenset(spec.markets)
             g.regime_filter = frozenset(spec.regime_filter)
+            # the universe the spec was ADMITTED over is the universe it may
+            # trade; empty means it named none and accepts the venue scan
+            g.symbols = frozenset((spec.universe or {}).get("include") or ())
             pop.append((st, g))
         self._spec_requires = tuple(sorted(requires))
         self._spec_exits = spec_exits
