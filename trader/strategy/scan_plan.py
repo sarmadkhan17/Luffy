@@ -12,12 +12,23 @@ adding a strategy widens the scan and retiring one narrows it, with nothing
 else to edit.
 
 Precedence, per strategy:
-  explicit `include`  >  `exclude`  >  the liquidity-filtered candidates
+  a non-empty `include` IS the universe  >  `exclude`  >  liquidity floor
 
 `include` beats the liquidity floor because naming a symbol is a decision,
 not a suggestion; `exclude` beats `include` because a refusal should be
 impossible to lose by accident. One strategy's exclusion never vetoes another
 strategy's symbol — that is what per-strategy membership is for.
+
+A non-empty `include` DEFINES the universe rather than adding to it. This
+read `(liquid | include) - exclude`, so a spec that named sixteen symbols was
+also handed every venue candidate clearing its volume floor, and there was no
+way to say "only these". That is not a preference lost, it is the validated
+universe lost: Donchian Breakout Trail is admitted on cross-symbol evidence
+measured over its declared sixteen, and on nineteen comparable liquid perps
+it has never been scored against the same rule reads median PF 0.93 and a
+median null percentile of 53% — the no-edge line. Live on 2026-09-02 the
+kernel was scanning it over 23 symbols including XAU, XAG, SAMSUNG and
+SKHYNIX.
 """
 from __future__ import annotations
 
@@ -64,7 +75,10 @@ def plan_scan(specs, candidates, volumes: dict) -> ScanPlan:
         liquid = {s for s in candidates
                   if float(volumes.get(s, 0.0) or 0.0) >= floor
                   and s in volumes}
-        mine = (liquid | include) - exclude
+        # a spec that named symbols gets those symbols and no others; one
+        # that named none keeps the liquidity-filtered venue candidates, so
+        # the legacy genomes behave exactly as before
+        mine = (include if include else liquid) - exclude
         by_strategy[spec.id] = frozenset(mine)
         symbols |= mine
         tf = getattr(spec, "timeframe", None)

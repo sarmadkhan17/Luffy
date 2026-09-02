@@ -191,6 +191,32 @@ def regime_allows(genome, regime: str) -> bool:
         return True
     return regime in rf
 
+def symbol_allows(genome, symbol: str) -> bool:
+    """Is this strategy allowed to speak about this market?
+
+    The scan is a UNION over what every live strategy asked for, so it
+    contains symbols some other strategy wanted. `ScanPlan.wants()` was
+    written to enforce per-strategy membership and had zero callers, so a
+    spec was evaluated on every symbol in the union — which is how the one
+    strategy with cross-symbol evidence over sixteen declared markets came to
+    be scanned over twenty-three, tokenized equities included.
+
+    An EMPTY set means EVERY symbol, not none — the same trap the regime
+    filter fell into, where `regime_filter: []` silently stopped the book
+    from trading at all.
+    """
+    want = getattr(genome, "symbols", None)
+    if not want:
+        return True
+    return _base_pair(symbol) in {_base_pair(s) for s in want}
+
+
+def _base_pair(symbol: str) -> str:
+    """`XAU/USDT:USDT` and `XAU/USDT` are one market. The venue quotes the
+    settled form and a spec names the plain one."""
+    return (symbol or "").split(":")[0]
+
+
 
 def htf_trend_score(df_4h) -> float:
     """4h trend strength s ∈ [-1,+1]: EMA50 side × ADX-normalized slope."""
@@ -399,6 +425,9 @@ class Orchestrator:
             if snap.market_type not in genome.markets:
                 continue
             if not regime_allows(genome, snap.regime):
+                continue
+            # a strategy may only speak about the markets it was validated on
+            if not symbol_allows(genome, snap.symbol):
                 continue
             try:
                 sig = strat_lib.evaluate(genome, snap)
