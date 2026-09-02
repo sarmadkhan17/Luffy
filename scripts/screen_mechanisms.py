@@ -23,9 +23,22 @@ CRYPTO=["BTC/USDT","ETH/USDT","SOL/USDT","XRP/USDT","BNB/USDT","DOGE/USDT",
         "ADA/USDT","LINK/USDT","AVAX/USDT","LTC/USDT"]
 TRADFI=["XAU/USDT:USDT","XAG/USDT:USDT"]
 
-# geometry: what the honest sweep chose — wide stop, RR 3, long hold
-GEO=ExitSpec(stop={"kind":"atr","mult":3.0}, target={"kind":"rr","v":3.0},
-             trail={"kind":"none"}, time={"max_bars":96})
+# Geometry is a screen DIMENSION, not a constant. The first pass here fixed
+# it at RR 3 with no trail — and a fixed target amputates the tail a
+# continuation mechanism lives on, which is exactly how Donchian Breakout
+# Trail stayed invisible until the geometry sweep found it. Screening every
+# mechanism under one exit shape asks "which entries pay under THIS exit",
+# never "which mechanism is real".
+GEOS = {
+    "fixed": ExitSpec(stop={"kind": "atr", "mult": 3.0},
+                      target={"kind": "rr", "v": 3.0},
+                      trail={"kind": "none"}, time={"max_bars": 96}),
+    # the shape the only validated strategy was admitted under
+    "trail": ExitSpec(stop={"kind": "atr", "mult": 2.0},
+                      target={"kind": "none"},
+                      trail={"kind": "atr", "mult": 4.0, "arm_at_r": 1.0},
+                      time={"max_bars": 500}),
+}
 
 MECHS=[
  ("trend_pullback",  "close > ema(50) and close < ema(10)", "close < ema(50) and close > ema(10)"),
@@ -46,7 +59,7 @@ MECHS=[
  ("gap_revert",      "ret(6) < -0.02 and close > ema(200)",  "ret(6) > 0.02 and close < ema(200)"),
 ]
 
-def spec_for(name, lo, sh, tf):
+def spec_for(name, lo, sh, tf, geo):
     return StrategySpec(
         id=f"{name}_{tf}", name=f"{name} {tf}",
         thesis=("Screen candidate evaluated against a rotation null so that "
@@ -55,51 +68,58 @@ def spec_for(name, lo, sh, tf):
         invalidation="Retire below profit factor 1.0 over 30 out-of-sample trades.",
         provenance={"source_kind":"screen"}, universe={"include":[]},
         timeframe=tf, direction="both", entry_long=lo, entry_short=sh,
-        filters=[], exit=GEO, regime_filter=[], markets=["futures"])
+        filters=[], exit=geo, regime_filter=[], markets=["futures"])
 
 def load(sym, tf):
     df = feed.cached_ohlcv(sym, tf, limit=40000)
     return df if df is not None and len(df) >= 500 else None
 
+TFS = tuple(a for a in sys.argv[1:] if a in ("4h", "1h", "15m")) or ("4h",)
+GKEYS = tuple(a for a in sys.argv[1:] if a in GEOS) or tuple(GEOS)
+
 results=[]
-for tf in ("4h","1h"):
-    universe = {}
-    for s in CRYPTO+TRADFI:
-        d=load(s,tf)
-        if d is not None: universe[s]=d
-    print(f"\n### timeframe {tf} — {len(universe)} symbols with >=500 bars", flush=True)
-    for name, lo, sh in MECHS:
-        spec=spec_for(name, lo, sh, tf)
-        try: c=compile_spec(spec)
-        except Exception as e:
-            print(f"  {name}: will not compile: {e}"); continue
-        beats=0; seen=0; pfs=[]; pcts=[]; trades=0
-        for sym, df in universe.items():
-            try: sf=spec_evidence.frames_for(df, tf)
-            except Exception: continue
-            risk=spec_evidence.risk_for(cfg["risk"], tf)
-            try: r=vector_walk_forward(c, sf, risk, symbol=sym)
-            except Exception: continue
-            trades += r["test"].trades
-            if r["test"].trades < 8: continue
-            pf=r["test"].profit_factor
-            a=null_baseline.assess(c, sf, risk, pf, symbol=sym, draws=60,
-                                   seed=17, split=0.7, part="test")
-            p=a.get("percentile")
-            if p is None: continue
-            seen+=1; pfs.append(pf); pcts.append(p)
-            if p>=0.90: beats+=1
-        if seen>=4:
-            results.append((tf,name,st.median(pfs),st.median(pcts),beats,seen,trades))
-            print(f"  {name:<18} PF {st.median(pfs):>5.2f}  null-pctile "
-                  f"{st.median(pcts):>4.0%}  beats-null {beats}/{seen}  "
-                  f"trades {trades}", flush=True)
+for gname in GKEYS:
+  geo = GEOS[gname]
+  print(f"\n{'='*74}\nGEOMETRY {gname}: stop {geo.stop} target {geo.target} "
+        f"trail {geo.trail} time {geo.time}\n{'='*74}", flush=True)
+  for tf in TFS:
+      universe = {}
+      for s in CRYPTO+TRADFI:
+          d=load(s,tf)
+          if d is not None: universe[s]=d
+      print(f"\n### timeframe {tf} — {len(universe)} symbols with >=500 bars", flush=True)
+      for name, lo, sh in MECHS:
+          spec=spec_for(name, lo, sh, tf, geo)
+          try: c=compile_spec(spec)
+          except Exception as e:
+              print(f"  {name}: will not compile: {e}"); continue
+          beats=0; seen=0; pfs=[]; pcts=[]; trades=0
+          for sym, df in universe.items():
+              try: sf=spec_evidence.frames_for(df, tf)
+              except Exception: continue
+              risk=spec_evidence.risk_for(cfg["risk"], tf)
+              try: r=vector_walk_forward(c, sf, risk, symbol=sym)
+              except Exception: continue
+              trades += r["test"].trades
+              if r["test"].trades < 8: continue
+              pf=r["test"].profit_factor
+              a=null_baseline.assess(c, sf, risk, pf, symbol=sym, draws=60,
+                                     seed=17, split=0.7, part="test")
+              p=a.get("percentile")
+              if p is None: continue
+              seen+=1; pfs.append(pf); pcts.append(p)
+              if p>=0.90: beats+=1
+          if seen>=4:
+              results.append((gname,tf,name,st.median(pfs),st.median(pcts),beats,seen,trades))
+              print(f"  {name:<18} PF {st.median(pfs):>5.2f}  null-pctile "
+                    f"{st.median(pcts):>4.0%}  beats-null {beats}/{seen}  "
+                    f"trades {trades}", flush=True)
 
 print("\n" + "="*74)
 print("MECHANISMS BEATING THEIR NULL ON A MAJORITY OF SYMBOLS")
 print("="*74)
-good=[r for r in results if r[4] >= max(3, r[5]*0.6)]
+good=[r for r in results if r[5] >= max(3, r[6]*0.6)]
 if not good: print("  none.")
-for tf,name,pf,pc,b,s,t in sorted(good,key=lambda r:-r[4]/r[5]):
-    print(f"  {name:<18} {tf:<4} PF {pf:.2f}  beats null on {b}/{s} symbols "
-          f"({t} trades)")
+for g,tf,name,pf,pc,b,n,t in sorted(good,key=lambda r:-r[5]/r[6]):
+    print(f"  {name:<18} {tf:<4} {g:<6} PF {pf:.2f}  beats null on {b}/{n} "
+          f"symbols ({t} trades)")
