@@ -16,6 +16,7 @@ import threading
 from ..core.config import ROOT
 from ..core.journal import Journal
 from ..core.types import Action, Decision, MarketType, Position, Side, new_id
+from . import protective
 
 log = logging.getLogger(__name__)
 
@@ -177,11 +178,8 @@ class Executor:
                            stop_price: float) -> str:
         close_side = "sell" if side == Side.LONG else "buy"
         try:
-            o = self.ex.create_order(
-                symbol, "market", close_side, amount,
-                params={"stopLossPrice": round(stop_price, 6),
-                        "reduceOnly": True})
-            return str(o.get("id") or "")
+            return protective.place_stop(self.ex, symbol, close_side,
+                                         amount, stop_price)
         except Exception as e:
             # ccxt unified stopLossPrice → fallback to binance STOP_MARKET
             try:
@@ -210,14 +208,25 @@ class Executor:
             fees = self.taker_fee * (amount * fill + amount * float(trade["entry_price"]))
             pnl = gross - fees
             new_amt = float(trade["amount"]) - amount
+            # notional must shrink with the position. It did not, so a
+            # half-closed trade still charged its FULL size against the 15%
+            # heat cap — starving a book whose return comes from breadth —
+            # and close() then billed entry fees on twice the size that was
+            # actually left, understating the PnL of every trade that took
+            # a partial.
+            new_notional = round(new_amt * float(trade["entry_price"]), 2)
             with self.journal._tx() as c:
-                c.execute("UPDATE trades SET amount=?, realized_pnl="
-                          "realized_pnl+? WHERE id=?",
-                          (round(new_amt, 8), round(pnl, 8), trade["id"]))
+                c.execute("UPDATE trades SET amount=?, notional_usdt=?, "
+                          "realized_pnl=realized_pnl+? WHERE id=?",
+                          (round(new_amt, 8), new_notional,
+                           round(pnl, 8), trade["id"]))
                 c.execute("UPDATE trades SET tp1_done=1 WHERE id=? AND "
                           "tp1_done=0", (trade["id"],))
+            trade["amount"] = round(new_amt, 8)
+            trade["notional_usdt"] = new_notional
             log.info(f"PARTIAL {sym}: -{amount} @{fill:.4g} {reason} "
-                     f"pnl={pnl:+.2f} remaining={new_amt}")
+                     f"pnl={pnl:+.2f} remaining={new_amt} "
+                     f"notional={new_notional}")
             return True
         except Exception as e:
             log.error(f"partial close failed {sym}: {e}")
@@ -231,10 +240,7 @@ class Executor:
         amount = float(trade["amount"])
         try:
             if trade.get("sl_order_id"):
-                try:
-                    self.ex.cancel_order(trade["sl_order_id"], sym)
-                except Exception:
-                    pass
+                protective.cancel_stop(self.ex, trade["sl_order_id"], sym)
             order = self.ex.create_order(sym, "market", side_close, amount,
                                          params={"reduceOnly": True})
             fill = float(order.get("average") or order.get("price")
