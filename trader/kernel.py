@@ -695,11 +695,7 @@ class Kernel:
         # add a symbol a spec explicitly named, so the scan tracks the book
         # instead of a list hardcoded beside it.
         scan_symbols = self._scan_symbols()
-        universe_frames = {}
-        for sym in scan_symbols:
-            df = self.feed.fetch_ohlcv(sym, exec_tf)
-            if df is not None and len(df):
-                universe_frames[sym] = {exec_tf: df}
+        universe_frames = self._universe_frames(scan_symbols)
 
         scanned: set = set()
         for symbol in scan_symbols:
@@ -810,6 +806,35 @@ class Kernel:
                         leverage=int(t.get("leverage") or 1),
                         stop_loss=float(t.get("stop_loss") or 0))
 
+    def _universe_frames(self, symbols: list[str]) -> dict:
+        """{symbol: {tf: df}} for cross-sectional features.
+
+        Built at the execution timeframe ONLY, whatever the strategies
+        traded. FeatureCtx.for_symbol requires the spec's own timeframe in a
+        peer's frames and returns None otherwise, so for a 4h spec every peer
+        resolved to None, xs_rank produced an all-NaN column, and the spec
+        silently never fired — reading as "no edge" when it was never
+        evaluated. The same shape as funding specs scoring zero because no
+        derivatives reached them.
+        """
+        exec_tf = self.cfg["timeframes"]["execution"]
+        tfs = list(dict.fromkeys(
+            [exec_tf, *getattr(self, "_scan_timeframes", ())]))
+        out: dict = {}
+        for sym in symbols:
+            frames = {}
+            for tf in tfs:
+                try:
+                    df = self.feed.fetch_ohlcv(sym, tf)
+                except Exception as e:
+                    log.warning(f"universe frame {sym} {tf}: {e}")
+                    continue
+                if df is not None and len(df):
+                    frames[tf] = df
+            if exec_tf in frames:
+                out[sym] = frames
+        return out
+
     def _scan_symbols(self) -> list[str]:
         """Venue candidates, filtered and extended by what the book asks for.
 
@@ -827,6 +852,7 @@ class Kernel:
             log.warning(f"scan plan failed, using plain universe: {e}")
             return base
         self._scan_plan = plan
+        self._scan_timeframes = plan.timeframes
         merged = list(dict.fromkeys(list(plan.symbols) + self.universe.majors))
         return merged or base
 
