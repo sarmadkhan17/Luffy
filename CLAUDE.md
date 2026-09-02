@@ -268,6 +268,9 @@ register's highest-severity items were all closed on 2026-09-02; see
   are retired, so it currently governs nothing.
 - The Researcher agent still does not exist; `research`-stream ideas queue up
   unconsumed.
+- **Nothing has yet traded under correct geometry.** The 15m-ATR fault above
+  was fixed on 2026-09-02 and Donchian has taken no trade since, so the
+  validated geometry has still never met the venue.
 - The seven analysts have **no measured directional edge**. Over 204 live
   decisions (2026-08-24..09-02) the blend returned -0.695% a call at the 4h
   horizon and won 34.6%, t=-3.84, losing on BOTH sides — which market drift
@@ -298,6 +301,13 @@ These are facts about the search space, not beliefs the Theorist may rewrite.
   Every sweep before 2026-09-02 used `trail={"kind":"none"}` with a fixed RR
   target and a short hold cap, and the engine had supported ATR trailing all
   along. That single omission hid the one mechanism that works.
+- **An ATR multiple is meaningless without the bar it was measured on.**
+  The live path read every ATR off the 15m execution frame — entry stop, the
+  sizing that follows from it, and the trail — while a spec declares its
+  geometry against its own timeframe. 4h ATR runs 5-8x the 15m figure, so a
+  spec validated with a 2.0x4h stop (BTC: 2.12%) traded behind 0.40% and was
+  trailed at 0.38% where it was validated at 4.23%. Spec-aware exits
+  (`SpecExit`) are cosmetic unless the frame travels with the multiple.
 - **4h beat 1h on every mechanism tested**, because cost is charged per round
   trip.
 - **Judge a small account by compound growth, not yield on starting capital.**
