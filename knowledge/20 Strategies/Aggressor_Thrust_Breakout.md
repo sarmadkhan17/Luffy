@@ -1,6 +1,6 @@
 ---
 type: strategy
-state: paper
+state: retired
 family: spec
 origin: authored
 author: Strategist
@@ -36,10 +36,10 @@ time:   max 64 bars
 ## Live record
 - closed trades: 0 · wins: 0
 - realized P&L: +0.00 USDT
-- state: **paper**
+- state: **retired**
 
 Related: [[Regime Playbook]], [[MOC]]
 
-Same family (`spec`): [[Aggressor_Divergence_At_Highs]], [[BTC_Rotation_Momentum]], [[Funding_Price_Divergence]]
+Same family (`spec`): [[Aggressor_Divergence_At_Highs]], [[BTC_Rotation_Momentum]], [[Donchian_Breakout_Trail]], [[Funding_Price_Divergence]]
 
 Filed by [[Strategist]]
