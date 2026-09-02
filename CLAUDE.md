@@ -549,6 +549,50 @@ These are facts about the search space, not beliefs the Theorist may rewrite.
   them" — both predict this — and forward performance remains the only
   discriminator.
 
+- **The backtest was over-charging slippage by 3-5x, and it was eating ~75%
+  of the mechanism's per-trade edge.** Because `amount = risk / (2*ATR)`,
+  ATR cancels out of the slippage term: `slippage_atr_frac` is not a
+  volatility-scaled cost at all, it is a flat tax of `2 x frac` on the risk
+  staked — 0.06 charged **12% of risk every round trip, on every symbol**.
+  Measured against the venue:
+  - **Fees.** 199 real fills over 21 symbols, all taker, all settled in USDT
+    (no BNB discount active). Volume-weighted commission **4.078 bps**, and
+    `fapiPrivateGetCommissionRate` confirms taker **0.0400%** on 14 of the 16
+    declared symbols, 0.0500% on TAO and HYPE. Config charged 0.05 on
+    everything. Now 0.04. **Production fees are UNMEASURED** — a production
+    `commissionRate` call answers -2015 on the demo key, and Binance's
+    published VIP0 taker is 0.05%. Re-read it before `BINANCE_DEMO=false`.
+  - **Slippage.** Of 56 real orders >= $1,000, **41 filled at a single
+    price**, median intra-order range 0.00 bps — there is no measurable
+    impact term at this size. Walking the live production book (16 symbols x
+    4 snapshots) costs 0.42 bps at the half-spread and **0.65 bps median to
+    fill $1,200**, worst symbol NEAR at 2.69. The model charged 8.6-20.5
+    bps/fill. Set to 0.015 (~4 bps/fill at the median declared ATR) — still
+    six times the measured cost, deliberately, because spreads widen during
+    the volatility expansion a breakout entry lands in and that is NOT
+    measured. Do not cut it further without measuring that.
+
+  **The verdict does not move; the money does.** `consistency_p` stays
+  between 4.6e-05 and 1.1e-04 across the *entire* cost range from zero to 20
+  bps/fill, because the rotation null pays the same costs as the strategy —
+  so no cost change could have created this edge or destroyed it, and cost
+  accuracy is not what establishes it. What moves is mean R per trade,
+  +0.076 -> +0.134, and compounded return **17.2% -> ~25%/yr at a LOWER
+  drawdown (27.3% -> ~24%)**. Every one of the 16 symbols' PF moved up and
+  none moved down, which is the shape a correct cost fix has. Read "~25%",
+  not a precise figure: the 8-slot cap puts +-3 points of path noise between
+  the 1/3/0 bps variants, and the conclusion survives a 5x error in the
+  slippage estimate (20.2%/yr at 10 bps/fill).
+
+  **Still open:** `executor.close()` and `close_partial()` compute journalled
+  P&L as `taker_fee * notional` (`executor.py:250, 301`) instead of reading
+  the venue's own `commission` field, which it returns on every fill. The
+  fee constant is now right so the error is small, but the venue's number is
+  free and exact — `reconcile.venue_realized_pnl` already does this properly.
+  Also unmeasured: the signal-to-fill delay cost. The backtest fills at the
+  4h close; live the order goes out at best 60s later and, when risk blocks
+  it, hours later. `signal_bar_age_min` was added to make that measurable.
+
 - **1d is a closed door, not an unexplored one.** "4h beat 1h because cost is
   charged per round trip" does NOT extend to 1d. Built daily bars from 4h
   (six bars per UTC day, partial days dropped; verified field-exact against

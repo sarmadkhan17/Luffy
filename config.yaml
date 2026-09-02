@@ -74,13 +74,36 @@ risk:
   # exist. Positions are scaled down to fit these, not refused.
   max_position_margin_pct: 20.0   # margin one position may command
   max_total_margin_pct: 70.0      # margin all open positions may command
-  min_notional_usdt: 10
-  taker_fee_pct: 0.05
+  min_notional_usdt: 10          # OUR entry-sizing floor, NOT the venue's
+                                 # (UNI's MIN_NOTIONAL is 5) — do not conflate
+  # Measured 2026-09-02 against 199 real fills and the venue's own
+  # commissionRate endpoint: taker is 0.0400% on 14 of the 16 declared
+  # symbols and 0.0500% on TAO and HYPE (maker 0.0200% throughout). All 199
+  # fills settled commission in USDT, so no BNB discount is in effect.
+  # NOTE this is the DEMO account; a production commissionRate call answers
+  # -2015, so production fees are UNMEASURED and Binance's published VIP0
+  # taker is 0.05%. Re-read commissionRate before setting BINANCE_DEMO=false.
+  taker_fee_pct: 0.04
   # perp carry charged in the backtest per 8h held (was unmodelled entirely)
   funding_rate_8h: 0.0001
   # minutes per bar for the backtest's funding/hold accounting
   bar_minutes: 15            # cost model from day one (REQUIREMENTS §10)
-  slippage_atr_frac: 0.06        # synthetic slippage = frac of ATR per fill
+  # Synthetic slippage as a fraction of ATR per fill. Because
+  # `amount = risk / (2*ATR)`, ATR cancels and this is really a flat tax of
+  # `2 * frac` on the risk staked, every symbol, every trade: 0.06 charged
+  # 12% of risk per round trip. Measured 2026-09-02 the true cost is a
+  # SPREAD, not an ATR multiple, and does not scale with volatility:
+  #   * production book walk, 16 symbols x 4 snapshots: 0.42 bps half-spread,
+  #     0.65 bps median cost to fill $1,200, worst symbol (NEAR) 2.69 bps
+  #   * 56 real orders >= $1,000: 41 filled at a SINGLE price, median
+  #     intra-order range 0.00 bps — no measurable impact term at this size
+  # 0.06 charges 8.6-20.5 bps/fill where the book charges 0.4-2.7, an
+  # overcharge of ~3-5x that was consuming ~75% of the mechanism's measured
+  # per-trade edge. 0.015 is ~4 bps/fill at the median declared ATR — still
+  # six times the measured cost, deliberately, because spreads widen during
+  # the volatility expansion a breakout entry lands in and THAT is not
+  # measured. Do not cut it further without measuring that.
+  slippage_atr_frac: 0.015
 
 mechanism:
   # The generate-judge-retire loop. No edge lasts, so this matters more than
