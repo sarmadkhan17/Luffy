@@ -23,6 +23,40 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def venue_realized_pnl(exchange, symbol: str,
+                       since_iso: str) -> float | None:
+    """What the venue says this position has realized, net of commission.
+
+    The only honest answer when the journal and the venue disagree about a
+    position's size: the fills happened, at prices nobody has to guess at.
+    Marking a hours-old exit to the boot-time price booked -2.51 against a
+    true +117.84 on 2026-09-02 — the wrong sign on the only trade of the
+    session, feeding straight into the PF the Analyst selects on.
+
+    None when the venue will not answer; the caller falls back to the mark.
+    """
+    try:
+        since = int(datetime.fromisoformat(since_iso).timestamp() * 1000)
+    except Exception:
+        return None
+    try:
+        fills = exchange.fetch_my_trades(symbol, since=since, limit=1000)
+    except Exception as e:
+        log.warning(f"venue fill history unavailable for {symbol}: {e}")
+        return None
+    if not fills:
+        return None
+    total = 0.0
+    for f in fills:
+        i = f.get("info") or {}
+        try:
+            total += float(i.get("realizedPnl") or 0) - float(
+                i.get("commission") or 0)
+        except (TypeError, ValueError):
+            continue
+    return total
+
+
 def _mark(exchange, symbol: str, fallback: float) -> float:
     """Last trade price, or the entry when the venue will not answer."""
     try:
@@ -77,11 +111,15 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
                 # gone, so it is priced at the mark, as the ghost path does.
                 # Growing is an accounting error, never a realized gain.
                 pnl = 0.0
+                total = None
                 if contracts < jamt:
-                    entry = float(jt["entry_price"])
-                    px = _mark(exchange, sym, entry)
-                    direction = 1.0 if jt["side"] == "long" else -1.0
-                    pnl = (px - entry) * direction * (jamt - contracts)
+                    total = venue_realized_pnl(
+                        exchange, sym, str(jt["opened_at"] or ""))
+                    if total is None:
+                        entry = float(jt["entry_price"])
+                        px = _mark(exchange, sym, entry)
+                        direction = 1.0 if jt["side"] == "long" else -1.0
+                        pnl = (px - entry) * direction * (jamt - contracts)
                 # through _tx, not query(): query() runs unwrapped and its
                 # UPDATE only lands if some later _tx on this thread happens
                 # to commit it — until then the row is invisible and the
@@ -89,9 +127,13 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
                 # sweep below, both of which are REST round-trips.
                 journal.align_trade_amount(
                     jt["id"], contracts, float(p.get("notional") or 0),
-                    pnl_delta=round(pnl, 8))
+                    pnl_delta=round(pnl, 8),
+                    pnl_total=None if total is None else round(total, 8))
+                booked = total if total is not None else pnl
                 log.info(f"ALIGNED {sym}: amount {jt['amount']} → {contracts}"
-                         + (f" | booked {pnl:+.2f}" if pnl else ""))
+                         + (f" | realized {booked:+.2f}"
+                            f" ({'venue' if total is not None else 'marked'})"
+                            if booked else ""))
                 aligned += 1
 
     # 2. ghost cleanup — journal says open, exchange disagrees

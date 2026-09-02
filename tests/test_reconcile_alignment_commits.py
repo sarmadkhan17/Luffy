@@ -126,3 +126,83 @@ def test_a_matching_position_is_left_alone(tmp_path):
     r = reconcile_futures(ex, j)
     assert r["aligned"] == 0
     assert _fresh_read(tmp_path / "j.db")["amount"] == pytest.approx(303.0)
+
+
+# ── pricing an align-down ────────────────────────────────────────────────
+class _ExWithFills(_Ex):
+    """A venue that remembers its fills, as Binance does."""
+
+    def __init__(self, positions, fills):
+        super().__init__(positions)
+        self._fills = fills
+        self.since_asked = None
+
+    def fetch_my_trades(self, symbol, since=None, limit=None):
+        self.since_asked = since
+        return self._fills
+
+
+def _uni_fills():
+    """The real 2026-09-02 UNI legs: entry, TP1, then the trailing stop."""
+    return [
+        {"info": {"realizedPnl": "0",           "commission": "1.4309"}},
+        {"info": {"realizedPnl": "31.73912520", "commission": "0.7270"}},
+        {"info": {"realizedPnl": "89.00612520", "commission": "0.7499"}},
+    ]
+
+
+def test_an_align_down_is_priced_from_the_venues_fills(tmp_path):
+    """The mark is whatever the price happens to be at boot, not what the
+    exit filled at. On 2026-09-02 that gap was -2.51 booked against a true
+    +117.84 — the sign was wrong, on the one trade of the session."""
+    j = _journal(tmp_path)
+    ex = _ExWithFills(
+        [{"symbol": "UNI/USDT:USDT", "contracts": 1.0, "side": "long",
+          "entryPrice": 5.8933, "notional": 5.88}],
+        _uni_fills())
+    ex.fetch_ticker = lambda s: {"last": 5.885}      # drifted back to entry
+    reconcile_futures(ex, j)
+    assert _fresh_read(tmp_path / "j.db")["realized_pnl"] == pytest.approx(
+        120.74525040 - 2.9078, abs=0.01)
+
+
+def test_the_venue_total_replaces_the_journals_guess(tmp_path):
+    """Realized P&L is set to the venue's number, not added to whatever the
+    journal had accumulated — otherwise the partial is counted twice."""
+    j = _journal(tmp_path)
+    j.align_trade_amount("pos_uni", 303.86680303,
+                         round(303.86680303 * 5.8933, 2), pnl_delta=29.70)
+    ex = _ExWithFills(
+        [{"symbol": "UNI/USDT:USDT", "contracts": 1.0, "side": "long",
+          "entryPrice": 5.8933, "notional": 5.88}],
+        _uni_fills())
+    reconcile_futures(ex, j)
+    assert _fresh_read(tmp_path / "j.db")["realized_pnl"] == pytest.approx(
+        117.8375, abs=0.01), "the TP1 partial was double-counted"
+
+
+def test_only_this_trades_fills_are_asked_for(tmp_path):
+    j = _journal(tmp_path)
+    ex = _ExWithFills(
+        [{"symbol": "UNI/USDT:USDT", "contracts": 1.0, "side": "long",
+          "entryPrice": 5.8933, "notional": 5.88}],
+        _uni_fills())
+    reconcile_futures(ex, j)
+    assert ex.since_asked is not None, \
+        "without a since the sum spans every trade ever taken in the symbol"
+
+
+def test_a_venue_that_cannot_answer_falls_back_to_the_mark(tmp_path):
+    """Degrade, never crash — an unpriced align still beats a journal that
+    claims 303 coins the venue does not hold."""
+    j = _journal(tmp_path)
+
+    class _Mute(_Ex):
+        def fetch_my_trades(self, *a, **k): raise RuntimeError("no history")
+    ex = _Mute([{"symbol": "UNI/USDT:USDT", "contracts": 1.0, "side": "long",
+                 "entryPrice": 5.8933, "notional": 5.88}])
+    reconcile_futures(ex, j)
+    row = _fresh_read(tmp_path / "j.db")
+    assert row["amount"] == pytest.approx(1.0)
+    sold = 303.86680303 - 1.0
+    assert row["realized_pnl"] == pytest.approx((6.187 - 5.8933) * sold, abs=0.01)
