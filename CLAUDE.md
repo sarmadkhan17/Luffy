@@ -225,6 +225,19 @@ clear it; `oi`, `taker_ratio` and `ls_ratio` sit at ~32 days and cannot reach
 
 Telegram: `/panic /halt /freeze /resume /status /news /scouts /judge /tv`
 
+## Protective stops are ALGO orders
+
+Binance USDM books a reduceOnly `STOP_MARKET` as a **conditional/algo**
+order: it returns an `algoId`, and it lives behind `/fapi/v1/algo/*`, not
+`/fapi/v1/order`. So `cancel_order()` answers -2011 on every stop, and
+`fetch_open_orders()` returns none of them — a position can look naked while
+it is in fact stopped. Every place, cancel and enumeration goes through
+`trader/engine/protective.py`; do not call ccxt directly for a stop.
+
+Reconcile sweeps orphans at boot. It refuses to strip a live position whose
+stop id the journal has lost — the venue's stop is then the only protection
+there is.
+
 ## Known-good invariants — do not break
 
 - `scripts/backtest_equivalence.py` must stay PASS.
@@ -255,6 +268,11 @@ register's highest-severity items were all closed on 2026-09-02; see
   are retired, so it currently governs nothing.
 - The Researcher agent still does not exist; `research`-stream ideas queue up
   unconsumed.
+- The seven analysts have **no measured directional edge**. Over 204 live
+  decisions (2026-08-24..09-02) the blend returned -0.695% a call at the 4h
+  horizon and won 34.6%, t=-3.84, losing on BOTH sides — which market drift
+  cannot produce. They are still evaluated, journalled and graded so this
+  stays measurable; they no longer set the score.
 
 ## What measurement established (do not re-litigate)
 
@@ -290,6 +308,19 @@ These are facts about the search space, not beliefs the Theorist may rewrite.
   arithmetic understates return on capital by roughly N; an uncapped shared
   account overstates it, because 8 simultaneous 1%-risk positions in
   correlated markets is one 18%-risk position.
+- **A blend can bury the one thing that works.** Pooling analyst votes with
+  strategy signals put a measured edge into a weighted average with seven
+  measured anti-edges. A lone signal at 0.6 confidence reached
+  0.6*0.45/1.45 = 0.186 — under every threshold the system produces — so
+  Donchian signalled for a week and took zero trades while reading as "the
+  setup has not appeared". `scouts.strategy_leads` completes the cutover:
+  once a strategy speaks it sets the score. `require_strategy_signal`
+  refuses any direction no strategy proposed.
+- **Ask the venue, not the journal.** Three separate live faults — 24
+  uncancellable stops, R multiples of 83, a half-closed position still
+  charging full heat — were all invisible from inside the system and obvious
+  the moment the exchange was queried directly. `scripts/monitor.py` is that
+  query.
 - **Validate the config, not just the strategy.** At the old 1.5% risk with 4
   positions, Donchian tripped `halt_drawdown_pct` and stopped for good. 0.5%
   with 8 beats 0.75% with 4 on BOTH return and drawdown: a trend book earns
