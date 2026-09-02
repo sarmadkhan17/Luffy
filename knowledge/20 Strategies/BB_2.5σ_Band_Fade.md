@@ -1,6 +1,6 @@
 ---
 type: strategy
-state: paper
+state: retired
 family: bb_fade
 origin: analyst
 author: Strategist
@@ -19,7 +19,7 @@ author: Strategist
 ## Live record
 - closed trades: 1 · wins: 1
 - realized P&L: +1.39 USDT
-- state: **paper**
+- state: **retired**
 
 Related: [[Statistical Mean Reversion]], [[Regime Playbook]], [[MOC]]
 

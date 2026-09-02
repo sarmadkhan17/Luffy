@@ -20,6 +20,7 @@ Reports to [[Manager]].
 - [[BB_3σ_Exhaustion_Fade]]
 - [[BTC_Rotation_Momentum]]
 - [[Breakout-Retest]]
+- [[Donchian_Breakout_Trail]]
 - [[EMA_Stack_Pullback]]
 - [[Funding_Price_Divergence]]
 - [[Liquidity_Sweep_Reversal]]

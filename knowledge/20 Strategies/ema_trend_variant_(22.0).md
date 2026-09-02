@@ -1,6 +1,6 @@
 ---
 type: strategy
-state: paper
+state: retired
 family: ema_trend
 origin: brain
 author: Strategist
@@ -17,9 +17,9 @@ author: Strategist
 ```
 
 ## Live record
-- closed trades: 6 · wins: 2
-- realized P&L: -278.52 USDT
-- state: **paper**
+- closed trades: 9 · wins: 2
+- realized P&L: -299.17 USDT
+- state: **retired**
 
 Related: [[Behavioral Momentum]], [[Regime Playbook]], [[MOC]]
 
