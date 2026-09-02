@@ -16,7 +16,7 @@ import logging
 from ..data.derivatives import DerivFeed
 from .compile import compile_spec
 from . import null_baseline
-from .vector_backtest import vector_walk_forward
+from .vector_backtest import funding_for, vector_walk_forward
 
 log = logging.getLogger(__name__)
 
@@ -286,7 +286,8 @@ def run_gauntlet(spec, frames: dict, cfg: dict, min_pf: float | None = None,
                 nb = null_baseline.assess(
                     compiled, sym_frames, risk, r["test"].profit_factor,
                     btc=btcd, derivs=derivs, universe=universe, symbol=sym,
-                    draws=null_draws, split=0.7, part="test")
+                    draws=null_draws, split=0.7, part="test",
+                    funding=funding_for(sym, sym_frames[spec.timeframe], risk))
                 null_pcts[sym] = nb.get("percentile")
                 null_meds[sym] = nb.get("null_median")
             except Exception as e:

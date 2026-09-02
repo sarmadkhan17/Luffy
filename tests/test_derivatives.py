@@ -193,3 +193,80 @@ def test_funding_history_stops_when_no_progress(feed, monkeypatch):
 def test_funding_history_empty_response_is_safe(feed, monkeypatch):
     monkeypatch.setattr(feed, "_get", lambda p, q: [])
     assert feed.funding_history("BTC/USDT", years=1.0, delay=0.0).empty
+
+
+def test_funding_history_honours_an_explicit_floor(feed, monkeypatch):
+    """The backfill floor is the frame the spec is scored over, not a fixed
+    number of years. A store holding 5 years of 4h bars and 4 years of
+    funding leaves the oldest fifth of every frame paying the flat
+    conservative rate — a cost model, not a measurement."""
+    step = 8 * 3600 * 1000
+    floor = 1_600_000_000_000          # 2020-09-13
+    calls = []
+
+    def fake_get(path, params):
+        calls.append(params["startTime"])
+        if len(calls) > 2:
+            return []
+        return [{"fundingTime": params["startTime"] + i * step,
+                 "fundingRate": "0.0001"} for i in range(1000)]
+
+    monkeypatch.setattr(feed, "_get", fake_get)
+    out = feed.funding_history("BTC/USDT", years=1.0, since_ms=floor, delay=0.0)
+    assert calls[0] == floor, "since_ms must override the years default"
+    assert not out.empty
+
+
+def test_basis_history_honours_an_explicit_floor(feed, monkeypatch):
+    floor = 1_600_000_000_000
+    starts = []
+
+    def fake_between(symbol, period, start_ms):
+        starts.append(start_ms)
+        return feed._frame([(start_ms + 3_600_000, 0.001)])
+
+    monkeypatch.setattr(feed, "_basis_between", fake_between)
+    feed.basis_history("BTC/USDT", years=1.0, since_ms=floor, delay=0.0)
+    assert starts[0] == floor
+
+
+def test_backfill_passes_the_per_symbol_floor_down(feed, monkeypatch):
+    """One floor per symbol: a coin listed in 2024 has no 2021 frame to
+    reach, and asking for one just burns pages against an empty window."""
+    seen = {}
+
+    def fake_funding(sym, years=4.0, delay=0.25, since_ms=None):
+        seen[("funding", sym)] = since_ms
+        return feed._frame([])
+
+    def fake_basis(sym, years=2.0, period="1h", delay=0.25, since_ms=None):
+        seen[("basis", sym)] = since_ms
+        return feed._frame([])
+
+    monkeypatch.setattr(feed, "funding_history", fake_funding)
+    monkeypatch.setattr(feed, "basis_history", fake_basis)
+    monkeypatch.setattr(feed, "open_interest", lambda *a, **k: feed._frame([]))
+    monkeypatch.setattr(feed, "taker_ratio", lambda *a, **k: feed._frame([]))
+    monkeypatch.setattr(feed, "ls_ratio", lambda *a, **k: feed._frame([]))
+
+    feed.backfill(["BTC/USDT", "TAO/USDT"], delay=0.0,
+                  since={"BTC/USDT": 111, "TAO/USDT": 222})
+    assert seen[("funding", "BTC/USDT")] == 111
+    assert seen[("basis", "TAO/USDT")] == 222
+
+
+def test_backfill_without_a_floor_keeps_the_years_default(feed, monkeypatch):
+    seen = {}
+
+    def fake_funding(sym, years=4.0, delay=0.25, since_ms=None):
+        seen[sym] = since_ms
+        return feed._frame([])
+
+    monkeypatch.setattr(feed, "funding_history", fake_funding)
+    monkeypatch.setattr(feed, "basis_history",
+                        lambda *a, **k: feed._frame([]))
+    monkeypatch.setattr(feed, "open_interest", lambda *a, **k: feed._frame([]))
+    monkeypatch.setattr(feed, "taker_ratio", lambda *a, **k: feed._frame([]))
+    monkeypatch.setattr(feed, "ls_ratio", lambda *a, **k: feed._frame([]))
+    feed.backfill(["BTC/USDT"], delay=0.0)
+    assert seen["BTC/USDT"] is None

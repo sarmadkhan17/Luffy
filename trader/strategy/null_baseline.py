@@ -40,8 +40,18 @@ def rotate_entries(a: np.ndarray, offset: int) -> np.ndarray:
 
 def null_pfs(long: np.ndarray, short: np.ndarray, df, exit_spec,
              risk_cfg: dict, draws: int = 100, seed: int = 0,
-             symbol: str = "BT") -> list[float]:
-    """Profit factors from `draws` rotations of the same signals."""
+             symbol: str = "BT", funding: np.ndarray | None = None
+             ) -> list[float]:
+    """Profit factors from `draws` rotations of the same signals.
+
+    `funding` is the same signed per-bar series the actual result was charged.
+    It must be passed, because a rotation moves the ENTRIES and leaves the
+    market where it is: the carry on a given bar is a property of that bar,
+    so it stays aligned. Omitting it charged every null draw the flat
+    `abs(funding_8h)` to both sides while the actual paid the venue's real
+    signed rate — a control made more expensive than the thing it controls,
+    which inflates the percentile of every strategy measured against it.
+    """
     n = len(df)
     if n <= WARMUP + 2:
         return []
@@ -53,7 +63,7 @@ def null_pfs(long: np.ndarray, short: np.ndarray, df, exit_spec,
     out: list[float] = []
     for off in rng.integers(lo_off, hi_off, size=int(draws)):
         r = simulate(rotate_entries(long, off), rotate_entries(short, off),
-                     df, exit_spec, risk_cfg, symbol=symbol)
+                     df, exit_spec, risk_cfg, symbol=symbol, funding=funding)
         if r.trades > 0:
             out.append(float(r.profit_factor))
     return out
@@ -74,7 +84,8 @@ def edge_percentile(actual_pf: float, null: list[float]) -> float | None:
 def assess(compiled, frames: dict, risk_cfg: dict, actual_pf: float,
            btc=None, derivs=None, universe=None, market=None,
            symbol: str = "BT", draws: int = 100, seed: int = 0,
-           split: float | None = None, part: str = "test") -> dict:
+           split: float | None = None, part: str = "test",
+           funding: np.ndarray | None = None) -> dict:
     """{null_median, null_p90, percentile, draws, bars} for one spec/symbol.
 
     `split`/`part` select the same slice the actual profit factor came from.
@@ -91,8 +102,10 @@ def assess(compiled, frames: dict, risk_cfg: dict, actual_pf: float,
         sl = slice(cut, len(df)) if part == "test" else slice(0, cut)
         df = df.iloc[sl].reset_index(drop=True)
         lo, sh = lo[sl], sh[sl]
+        if funding is not None:
+            funding = np.asarray(funding, dtype=float)[sl]
     pfs = null_pfs(lo, sh, df, compiled.spec.exit, risk_cfg,
-                   draws=draws, seed=seed, symbol=symbol)
+                   draws=draws, seed=seed, symbol=symbol, funding=funding)
     if len(pfs) < MIN_DRAWS:
         return {"draws": len(pfs), "bars": len(df), "percentile": None,
                 "reason": f"only {len(pfs)} usable null draws"}

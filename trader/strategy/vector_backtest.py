@@ -23,6 +23,7 @@ import pandas as pd
 
 from ..agents.indicators import atr_series
 from .backtest import BacktestResult
+from .portfolio_evidence import Fill
 from .spec import ExitSpec
 
 WARMUP = 210
@@ -61,7 +62,8 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
              exit_spec: ExitSpec, risk_cfg: dict, equity: float = 2000.0,
              genome_id: str = "", symbol: str = "BT",
              exit_sig: np.ndarray | None = None,
-             funding: np.ndarray | None = None) -> BacktestResult:
+             funding: np.ndarray | None = None,
+             fills_out: list | None = None) -> BacktestResult:
     """`funding`, when given, is the SIGNED 8-hourly rate per bar.
 
     Without it the engine charges abs(flat rate) to both sides, which bills a
@@ -164,6 +166,13 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
         funding_cost = carry * exit_px * amount
         pnl = gross - fees - funding_cost
 
+        if fills_out is not None:
+            # R is measured against the equity actually staked at THIS entry,
+            # so a portfolio walk can re-risk a different fraction of a
+            # different balance and still reproduce the arithmetic
+            staked = equity_curve[-1] * risk_frac
+            fills_out.append(Fill(entry_i=i, exit_i=exit_i, symbol=symbol,
+                                  r_multiple=pnl / staked if staked else 0.0))
         res.trades += 1
         res.pnl_usdt += pnl
         if pnl > 0:
