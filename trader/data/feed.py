@@ -10,7 +10,7 @@ import threading
 import numpy as np
 import time
 
-from ..core.types import norm_symbol
+from ..core.types import TF_MS as _TF_MS_SHARED, closed_bars, norm_symbol
 from typing import Optional
 
 import pandas as pd
@@ -203,11 +203,32 @@ class DataFeed:
         df["ts"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
         return df
 
-    _TF_MS = {"5m": 300_000, "15m": 900_000, "1h": 3_600_000,
-              "4h": 14_400_000, "1d": 86_400_000}
+    #: bar length by timeframe — shared with the live evaluator, which must
+    #: agree with the store about where a bar ends
+    _TF_MS = _TF_MS_SHARED
 
-    def _store_save(self, symbol: str, tf: str, df: pd.DataFrame) -> None:
+    #: how much of the stored tail an incremental refresh re-reads. A bar
+    #: frozen while forming used to be the one bar `since` skipped forever,
+    #: so damage accumulated one bar per fetch rather than staying at the
+    #: tail — live it ran four 4h bars deep. Re-reading a few costs nothing
+    #: (same single request) and repairs an accumulated freeze in one pass.
+    STORE_OVERLAP_BARS = 4
+
+    def _store_save(self, symbol: str, tf: str, df: pd.DataFrame,
+                    now_ms: int | None = None) -> None:
+        """Persist CLOSED bars only. A forming bar is not a bar.
+
+        A partially-formed candle has the right open and a high/low/close
+        truncated to whatever has traded so far. Writing it is writing a
+        measurement that was never taken — the same fabrication the DSL
+        forbids with "missing information is NaN, never a default", one
+        layer down. Once written it read as final to every backtest,
+        feature and live signal above it.
+        """
         symbol = norm_symbol(symbol)
+        df = closed_bars(df, tf, now_ms)
+        if not len(df):
+            return
         try:
             # .value/.astype(int64) are ns-based only for datetime64[ns];
             # this repo's pandas keeps ms resolution → convert explicitly
@@ -311,10 +332,13 @@ class DataFeed:
                                since=int(last) + tf_ms -
                                (limit - len(stored)) * tf_ms, limit=1000))
                 else:   # full window stored → only the tail can be stale
-                    missing = (now_ms - last) // tf_ms
-                    raw = (self._klines(symbol, tf,
-                                        since=int(last) + tf_ms,
-                                        limit=1000)
+                    # Start ON the stored tail, not past it. `last + tf_ms`
+                    # meant the newest stored bar was the one bar never
+                    # requested again, so a bar written while forming stayed
+                    # frozen at its partial values for good.
+                    resume = int(last) - self.STORE_OVERLAP_BARS * tf_ms
+                    missing = (now_ms - resume) // tf_ms
+                    raw = (self._klines(symbol, tf, since=resume, limit=1000)
                            if missing < 950 else
                            self._fetch_paged(symbol, tf, limit))
                 new = self._frame(raw or [])

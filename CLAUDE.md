@@ -180,7 +180,10 @@ Two rules govern every feature:
    degenerate case.
 2. **Point-in-time.** A bar may only use information that had closed by its
    own close. `dsl._eval_htf` is the reference:
-   `searchsorted(..., side="right") - 1`.
+   `searchsorted(..., side="right") - 1`. The same rule governs the newest
+   bar: a forming candle has a real open and a truncated high/low/close, so
+   reading it as final fabricates a measurement. `core.types.closed_bars` is
+   the one definition, used by both the candle store and the live evaluator.
 
 `domain=` and `arg_specs=` are load-bearing — they drive automatic parameter
 range inference for the optimizer. A domain real data exceeds silently
@@ -215,7 +218,9 @@ invisible to other connections and holding a write lock — until some later
   simulated (15x inflated) though its prices track to ~0.04%. Rebuilt; the
   old store is kept as `candles.demo-backup-*.db`. One market = one key:
   the store normalises `XAU/USDT:USDT` to `XAU/USDT`, having previously
-  split the same market's history across both. |
+  split the same market's history across both. **Closed bars only** — a
+  forming bar is not a bar; see `core.types.closed_bars` and
+  `scripts/repair_partial_bars.py`. |
 | `data/derivs.db` | funding (4-5y, 32 symbols), basis (2y, 29), OI/taker/long-short (~32d, 5) |
 | `data/doctrine.json` | versioned operating beliefs |
 | `data/agent_weights.json` | measured analyst accuracy (weekly) |
@@ -308,18 +313,26 @@ register's highest-severity items were all closed on 2026-09-02; see
   are retired, so it currently governs nothing.
 - The Researcher agent still does not exist; `research`-stream ideas queue up
   unconsumed.
-- **A $5.75 dust position from a RETIRED genome is blocking the book's only
-  strategy from its first live trade.** A trailing stop on UNI/USDT filled
-  302.87 of 303.87 coins; the 1.0 residue is under the venue's $10 minimum
-  notional, so it holds no stop and cannot be given one. It belongs to
-  `strat_606048ec95` ("ema_trend variant (22.0)", retired). UNI is currently
-  **past** its 100-bar Donchian high (close 6.3040 against 6.2220) and the
-  risk manager has refused the entry every cycle for thirteen hours with
-  "already exposed here". Closing it needs a human: run
-  `./venv/bin/python -m trader.kernel --status` to confirm, then close the
-  UNI position from the dashboard or Telegram. Reconcile now reports
-  `naked: N` at ERROR so this state is visible from inside the system rather
-  than only from `scripts/monitor.py`.
+- **A $5.74 dust position from a RETIRED genome sits naked on UNI/USDT.** A
+  trailing stop filled 302.87 of 303.87 coins; the 1.0 residue belongs to
+  `strat_606048ec95` ("ema_trend variant (22.0)", retired). Reconcile reports
+  `naked: N` at ERROR but **places nothing** — and the reason recorded for
+  that, that the residue was under the venue's minimum, is **wrong**. UNI's
+  filters are `MIN_NOTIONAL 5`, `LOT_SIZE minQty 1 step 1`, and the residue
+  is $5.74 on 1.0 coin: both clear. `min_notional_usdt: 10` in `config.yaml`
+  is OUR entry-sizing floor (`risk.check_entry`), not the venue's, and the
+  two were conflated. Nothing ever attempted a stop — there is no failure in
+  the log, only the report.
+  Re-arming this particular residue would still be refused, for a different
+  reason: it is a long whose journalled stop (6.1884) is above the market,
+  so Binance answers -2021 "order would immediately trigger". A stop already
+  through its level means the position should be CLOSED, not stopped. That
+  needs a human: confirm with `./venv/bin/python -m trader.kernel --status`,
+  then close it from the dashboard or Telegram.
+  It also blocks any new UNI entry through the risk manager's "already
+  exposed here". That block was **lucky**: while it held, UNI read as past
+  its Donchian break on a fabricated candle (see the forming-bar entry
+  below). On repaired data UNI is 11.23% away from a break, not through it.
 - The wide search has now run **once** at adequate power (24 mechanisms x 2
   geometries x 19 discovery + 17 held-out symbols, with cross-sectional,
   carry, basis, BTC-relative and volatility-regime families included) and
@@ -413,6 +426,40 @@ These are facts about the search space, not beliefs the Theorist may rewrite.
   setup has not appeared". `scouts.strategy_leads` completes the cutover:
   once a strategy speaks it sets the score. `require_strategy_signal`
   refuses any direction no strategy proposed.
+- **The candle store was serving partially-formed bars as closed bars, and
+  the live evaluator was signalling on them.** Two faults, one root: nothing
+  distinguished a bar that had closed from a bar still open.
+  (1) `fetch_ohlcv` extended the store with `since = last + tf_ms`, one bar
+  past the newest row it held — but `_merge_save` had already written that
+  row while the bar was forming. The one bar that could be wrong was the one
+  bar never requested again, so each fetch froze another partial candle. On
+  2026-09-02, 104 of 123 (symbol, timeframe) tails disagreed with the venue,
+  up to four 4h bars deep; each frozen bar carried 4-16% of the venue's
+  volume with the open exact and high/low/close truncated to whatever had
+  traded by the snapshot. UNI/USDT 4h stored `6.298/6.307/6.260/6.304`
+  against a real `6.298/6.373/5.692/5.742`. That fabricated close read as a
+  Donchian breakout over a 100-bar high of 6.222 — and the high was wrong
+  too, being a max over truncated highs. **The book's one strategy appeared
+  to be one dust position away from its first live trade, into a bar that
+  fell 9%.** All corruption began at 2026-09-01 23:30, when the store was
+  rebuilt from production, so the bulk-fetched history the backtests read is
+  clean and only what the kernel wrote live was affected.
+  (2) `to_evaluator` read `lo[-1]`, and the live frame's last row is the
+  forming bar, so the live rule was "price is beyond the level right now"
+  while the rule that earned the statistics is "the bar CLOSED beyond it"
+  (`vector_backtest.py:115` fills at `closes[i]`). For a breakout mechanism
+  those differ by exactly the population its edge excludes: the intrabar
+  poke that retraces.
+  Fixed: `core.types.closed_bars` is the single definition of "this bar has
+  ended", the store persists only closed bars and re-reads its tail on every
+  incremental fetch (`STORE_OVERLAP_BARS`), and the live evaluator judges
+  closed bars. `scripts/repair_partial_bars.py --check` audits the store
+  against the venue; it repaired 997 bars and now reports zero.
+  **Still open:** a closed-bar signal persists for the life of its bar, so an
+  entry blocked by risk can fill hours after the close the backtest paid.
+  Signals now carry `signal_bar_age_min` so the right cutoff can be measured
+  rather than guessed.
+
 - **Ask the venue, not the journal.** Three separate live faults — 24
   uncancellable stops, R multiples of 83, a half-closed position still
   charging full heat — were all invisible from inside the system and obvious
