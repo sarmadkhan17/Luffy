@@ -210,6 +210,12 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
 .pos-card .upnl{margin-left:auto;text-align:right}
 .pos-card .upnl .n{font-family:var(--mono);font-size:20px;font-weight:800}
 .pos-card .upnl .p{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.pos-card .closebtn{padding:4px 10px;border-radius:6px;font-size:11px;
+  font-family:var(--mono);border:1px solid #4a1d26;color:var(--red);
+  background:#160c0f;cursor:pointer;margin-left:10px}
+.pos-card .closebtn:hover:not(:disabled){background:#241014;border-color:#7a2a3a}
+.pos-card .closebtn:disabled{opacity:.45;cursor:default;color:var(--dim);
+  border-color:var(--line2);background:transparent}
 .pos-card .meta{display:flex;gap:14px;margin-top:8px;font-family:var(--mono);
  font-size:10.5px;color:var(--dim)}
 .pos-card .rail{margin-top:10px;height:6px;border-radius:3px;background:#1a2029;position:relative}
@@ -673,6 +679,16 @@ async function setState(s){if(s!=='ACTIVE'&&!confirm('Set control state to '+s+'
  toast('Control state → '+s);refresh();}
 async function panic(){if(!confirm('FLATTEN ALL POSITIONS AND FREEZE?'))return;
  await gql(`mutation{panic}`);toast('Panic queued — flattening next cycle');refresh();}
+/* one position, by hand. The browser places nothing: this leaves an intent
+   the kernel acts on next cycle, same channel as panic. */
+const closePending=new Set();
+async function closeTrade(id,sym){
+ if(!confirm('Market-close '+sym+' now?'))return;
+ const d=await gql(`mutation($t:String!){close_trade(trade_id:$t)}`,{t:id});
+ if(d&&d.close_trade){closePending.add(id);
+  toast(sym+' close queued — next cycle');}
+ else toast(sym+' is no longer open',true);
+ refresh();}
 
 /* ── refresh ── */
 let prevEq=null;
@@ -706,6 +722,8 @@ async function refresh(){
  $('#today2').textContent=sum.today.taken+' taken / '+sum.today.skipped+' skipped / '
   +sum.today.holds+' holds';
  $('#pos-empty').classList.toggle('hidden',sum.open_positions.length>0);
+ {const live=new Set(sum.open_positions.map(p=>p.id));
+  for(const id of [...closePending]) if(!live.has(id)) closePending.delete(id);}
 
  // ── live position cards ──
  $('#pos-cards').innerHTML=sum.open_positions.map(p=>{
@@ -721,7 +739,11 @@ async function refresh(){
       entry ${entry.toFixed(4)} → mark ${(+p.mark||entry).toFixed(4)}</span>
     <div class="upnl"><div class="n num ${up?(p.upnl>=0?'up':'down'):''}">
       ${up?(p.upnl>=0?'+':'')+p.upnl.toFixed(2):'—'}</div>
-     <div class="p">${up?(p.upnl_pct>=0?'+':'')+p.upnl_pct+'% on position':''}</div></div></div>
+     <div class="p">${up?(p.upnl_pct>=0?'+':'')+p.upnl_pct+'% on position':''}</div></div>
+    <button class="closebtn" data-tid="${p.id}" data-sym="${p.symbol}"
+      ${closePending.has(p.id)?'disabled':''}
+      onclick="closeTrade('${p.id}','${p.symbol}')">${
+      closePending.has(p.id)?'closing…':'Close'}</button></div>
    <div class="meta"><span>SL ${sl.toFixed(4)}</span>
     <span>TP ${tp.toFixed(4)}</span><span>lev ×${p.leverage||1}</span>
     <span style="margin-left:auto;color:var(--dimmer)">${p.strategy_name||''}</span></div>
