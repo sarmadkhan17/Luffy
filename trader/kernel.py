@@ -149,11 +149,13 @@ class Kernel:
         requires: set = set()
         spec_exits: dict = {}
         self._spec_exits = spec_exits
+        self._spec_rows = []
         try:
             rows = self.journal.list_specs(["paper", "active"])
         except Exception as e:
             log.warning(f"spec population unavailable: {e}")
             return pop
+        self._spec_rows = rows
         for row, spec in rows:
             try:
                 compiled = compile_spec(spec)
@@ -688,14 +690,19 @@ class Kernel:
             "SELECT COUNT(*) AS n FROM trades WHERE status='closed'")[0]["n"])
 
         exec_tf = self.cfg["timeframes"]["execution"]
+        # What to scan is a question the strategies answer. The plan can only
+        # narrow the venue candidates (a spec's exclude or liquidity floor) or
+        # add a symbol a spec explicitly named, so the scan tracks the book
+        # instead of a list hardcoded beside it.
+        scan_symbols = self._scan_symbols()
         universe_frames = {}
-        for sym in self.universe.symbols():
+        for sym in scan_symbols:
             df = self.feed.fetch_ohlcv(sym, exec_tf)
             if df is not None and len(df):
                 universe_frames[sym] = {exec_tf: df}
 
         scanned: set = set()
-        for symbol in self.universe.symbols():
+        for symbol in scan_symbols:
             snap = self._snapshot_for(symbol, universe=universe_frames)
             if snap is None:
                 continue
@@ -802,6 +809,26 @@ class Kernel:
                         notional_usdt=float(t["notional_usdt"] or 0),
                         leverage=int(t.get("leverage") or 1),
                         stop_loss=float(t.get("stop_loss") or 0))
+
+    def _scan_symbols(self) -> list[str]:
+        """Venue candidates, filtered and extended by what the book asks for.
+
+        Falls back to the plain universe whenever no spec expresses a
+        preference, so a book of legacy genomes behaves exactly as before.
+        """
+        base = self.universe.symbols()
+        specs = [sp for _row, sp in getattr(self, "_spec_rows", [])]
+        if not specs:
+            return base
+        try:
+            from .strategy.scan_plan import plan_scan
+            plan = plan_scan(specs, base, self.universe.volumes())
+        except Exception as e:
+            log.warning(f"scan plan failed, using plain universe: {e}")
+            return base
+        self._scan_plan = plan
+        merged = list(dict.fromkeys(list(plan.symbols) + self.universe.majors))
+        return merged or base
 
     def _manage_one(self, t: dict, snap, score) -> str | None:
         """Run the exit engine over one open trade. Returns an exit reason."""

@@ -436,6 +436,8 @@ class Universe:
         self._last_scan = 0.0
         self._alts: list[str] = []
         self._listing_cache: dict[str, float] = {}   # symbol -> first-candle ts (ms)
+        #: symbol -> last seen 24h quote volume, for strategy liquidity floors
+        self._volumes: dict[str, float] = {}
 
     @property
     def ex(self):
@@ -450,6 +452,19 @@ class Universe:
         if self.enabled and time.time() - self._last_scan > self.rescan_hours * 3600:
             self._rescan()
         return self.majors + [s for s in self._alts if s not in self.majors]
+
+    def volumes(self) -> dict:
+        """{symbol: 24h quote volume} as of the last scan.
+
+        A spec's `min_volume_usdt` needs a reading to test against; a symbol
+        absent here has no reading and must not pass a liquidity floor.
+        """
+        if not self._volumes and self.enabled:
+            self._rescan()
+        out = dict(self._volumes)
+        for m in self.majors:                # majors are scanned regardless
+            out.setdefault(m, float("inf"))
+        return out
 
     def _rescan(self) -> None:
         try:
@@ -472,6 +487,7 @@ class Universe:
             if not self._old_enough(sym):
                 continue
             scored.append((quote_vol, sym))
+            self._volumes[sym] = quote_vol
         scored.sort(reverse=True)
         self._alts = [s for _, s in scored[:self.top_n]]
         self._last_scan = time.time()
