@@ -132,8 +132,18 @@ for _col in ("open", "high", "low", "close", "volume"):
 
 @register("taker_buy")
 def _taker_buy(ctx):
+    """Aggressor-buy base volume, or NaN where the venue does not publish it.
+
+    This returned `volume * 0.5` for an absent column — inventing "half the
+    turnover was aggressive buying" on every bar. It is the same fabrication
+    the feed layer carried, where the synthetic figure disagreed with
+    Binance's published takerBuyBaseAssetVolume on the DIRECTION of the
+    imbalance 33% of the time.
+    """
     tb = ctx.df.get("taker_buy")
-    return ctx.df["volume"] * 0.5 if tb is None else tb
+    if tb is None:
+        return pd.Series(np.nan, index=ctx.index)
+    return tb
 
 
 # ── arithmetic helpers (needed to port the legacy families faithfully) ───
@@ -214,7 +224,8 @@ def _ret(ctx, n):
 # ── transforms ───────────────────────────────────────────────────────────
 @register("zscore", arg_specs=(SERIES_ARG, (int, 12, 500)), domain=(-5.0, 5.0))
 def _zscore(ctx, s, n):
-    return ind.zscore_series(_series(ctx, s), int(n))
+    # a z-score of an unfilled window is unknown, not average
+    return ind.zscore_series(_series(ctx, s), int(n), fill=None)
 
 
 @register("pct_rank", arg_specs=(SERIES_ARG, (int, 12, 500)), domain=(0.0, 1.0))
