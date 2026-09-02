@@ -345,11 +345,36 @@ register's highest-severity items were all closed on 2026-09-02; see
 - **Nothing has yet traded under correct geometry.** The 15m-ATR fault above
   was fixed on 2026-09-02 and Donchian has taken no trade since, so the
   validated geometry has still never met the venue.
-- The seven analysts have **no measured directional edge**. Over 204 live
-  decisions (2026-08-24..09-02) the blend returned -0.695% a call at the 4h
-  horizon and won 34.6%, t=-3.84, losing on BOTH sides — which market drift
-  cannot produce. They are still evaluated, journalled and graded so this
-  stays measurable; they no longer set the score.
+- The seven analysts show a **negative point estimate and no established
+  significance**. The earlier reading — "-0.695% a call, t=-3.84, losing on
+  BOTH sides" — was **pseudo-replication** and does not survive de-duplication.
+  The kernel writes a decision every 60s, so one persistent analyst view
+  becomes dozens of near-identical `outcomes` rows that the resolver grades
+  independently: all 30 AAVE rows are a single SELL view from 22:32-23:01 on
+  2026-08-24, one per cycle, with the same forward return. Of 224 rows there
+  are **143 distinct episodes** (same symbol+action, gaps under 30 min):
+
+  | | rows, as reported | independent episodes |
+  |---|---|---|
+  | all | n=224, -0.737%, t=-3.98 | n=143, -0.545%, **t=-2.36** |
+  | BUY | t=-1.59 | 93 eps, -0.757%, **t=-2.30** |
+  | SELL | t=-6.55 | 50 eps, -0.151%, **t=-0.63** |
+
+  The SELL side carried the whole result and collapses to noise; it was one
+  AAVE episode counted 30 times plus a ZEC episode counted 8. Only the BUY
+  side survives, weakly, and even 143 episodes over 9 days on correlated
+  symbols are not independent, so t=-2.36 is an **upper bound** on
+  significance. The analysts still look bad; the confidence with which they
+  were dismissed was manufactured by counting one decision thirty times.
+  A stale-candle bias was ruled out as the cause: journalled decision prices
+  sit a median 2 bps from the venue's, worth about -0.09% on BUY and -0.02%
+  on SELL — an order of magnitude too small.
+  `agents/validate.py`, which sets `data/agent_weights.json`, is a historical
+  replay over candles and does NOT read `outcomes`, so the live weighting
+  path is unaffected. Any NEW measurement taken off `decisions`/`outcomes`
+  must cluster by episode first.
+  They are still evaluated, journalled and graded; they no longer set the
+  score.
 
 ## What measurement established (do not re-litigate)
 
