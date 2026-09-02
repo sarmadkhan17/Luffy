@@ -313,7 +313,9 @@ register's highest-severity items were all closed on 2026-09-02; see
   are retired, so it currently governs nothing.
 - The Researcher agent still does not exist; `research`-stream ideas queue up
   unconsumed.
-- **A $5.74 dust position from a RETIRED genome sits naked on UNI/USDT.** A
+- **(CLOSED 2026-09-02 18:48)** A $5.74 dust position from a RETIRED genome
+  sat naked on UNI/USDT and blocked its symbol. Closed by hand at 5.821; the
+  venue is flat and the journal holds zero open trades. What it taught: A
   trailing stop filled 302.87 of 303.87 coins; the 1.0 residue belongs to
   `strat_606048ec95` ("ema_trend variant (22.0)", retired). Reconcile reports
   `naked: N` at ERROR but **places nothing** — and the reason recorded for
@@ -323,16 +325,17 @@ register's highest-severity items were all closed on 2026-09-02; see
   is OUR entry-sizing floor (`risk.check_entry`), not the venue's, and the
   two were conflated. Nothing ever attempted a stop — there is no failure in
   the log, only the report.
-  Re-arming this particular residue would still be refused, for a different
-  reason: it is a long whose journalled stop (6.1884) is above the market,
-  so Binance answers -2021 "order would immediately trigger". A stop already
-  through its level means the position should be CLOSED, not stopped. That
-  needs a human: confirm with `./venv/bin/python -m trader.kernel --status`,
-  then close it from the dashboard or Telegram.
-  It also blocks any new UNI entry through the risk manager's "already
-  exposed here". That block was **lucky**: while it held, UNI read as past
-  its Donchian break on a fabricated candle (see the forming-bar entry
-  below). On repaired data UNI is 11.23% away from a break, not through it.
+  Reconcile now RE-ARMS a naked position rather than only reporting it,
+  sized from the venue's contracts and not the journal's amount — a stop for
+  the journalled 303.87 against a real 1.0 is refused, which is how a residue
+  comes to hold no protection in the first place. A stop already through its
+  level is still not armed (Binance answers -2021 "order would immediately
+  trigger"); those are counted separately as `unarmable` and logged as
+  needing a CLOSE, which stays the executor's call. Summary keys are now
+  `naked`, `rearmed`, `unarmable`.
+  The block on UNI was also **lucky**: while it held, UNI read as past its
+  Donchian break on a fabricated candle (see the forming-bar entry below).
+  On repaired data it was 11.23% away, not through it.
 - The wide search has now run **once** at adequate power (24 mechanisms x 2
   geometries x 19 discovery + 17 held-out symbols, with cross-sectional,
   carry, basis, BTC-relative and volatility-regime families included) and

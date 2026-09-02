@@ -182,9 +182,25 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
     # naked. Observed live 2026-09-02 on UNI/USDT, where the residue was also
     # under the venue's minimum notional and so could not be re-armed at all.
     #
-    # This reports; it does not place orders. Arming a stop the venue will
-    # refuse for size is not protection, and the executor owns order flow.
+    # Detecting this is not protecting it. The original note here said the
+    # UNI residue "was under the venue's minimum notional and so could not be
+    # re-armed at all" — that was wrong. UNI's filters are MIN_NOTIONAL 5 and
+    # LOT_SIZE minQty 1 step 1, and the residue was $5.74 on 1.0 coin; both
+    # clear. `min_notional_usdt: 10` is OUR entry-sizing floor in
+    # `risk.check_entry`, not the venue's, and the two were conflated.
+    # Nothing ever attempted a stop.
+    #
+    # Two rules the venue forces:
+    #   - size from the VENUE's position, never the journal's amount. The
+    #     journal said 303.87 while 1.0 remained, and a stop for 303.87 is
+    #     refused — which is how a residue comes to hold no protection.
+    #   - a stop already through its level cannot be armed: Binance answers
+    #     -2021 "order would immediately trigger". A long whose stop sits
+    #     above the market needs CLOSING, and closing is the executor's
+    #     call, not reconcile's. Those are counted as `unarmable` so the
+    #     state stays visible rather than reading as a silent success.
     naked = None
+    rearmed = unarmable = 0
     try:
         stops = protective.open_stops(exchange)
         # algo rows come back as UNIUSDT while positions read UNI/USDT:USDT;
@@ -194,9 +210,48 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
         bare = [sym for sym in ex_positions
                 if protective.venue_key(sym) not in covered]
         naked = len(bare)
+        j_now = {t["symbol"]: t for t in journal.open_trades()}
         for sym in bare:
             log.error(f"NAKED POSITION {sym}: no protective order on the "
                       f"venue — the exchange is not holding a stop for it")
+            t = j_now.get(sym)
+            sl = float((t or {}).get("stop_loss") or 0)
+            amount = float(ex_positions[sym].get("contracts") or 0)
+            if t is None or sl <= 0 or amount <= 0:
+                unarmable += 1
+                log.error(f"  {sym}: no journalled stop level to restore "
+                          f"— it cannot be armed without inventing one")
+                continue
+            side = (t.get("side") or "long").lower()
+            mark = _mark(exchange, sym, float(t.get("entry_price") or 0))
+            through = sl >= mark if side == "long" else sl <= mark
+            if through:
+                unarmable += 1
+                log.error(f"  {sym}: stop {sl:.6g} is already through the "
+                          f"market {mark:.6g} — the venue refuses this with "
+                          f"-2021. This position needs CLOSING, not a stop")
+                continue
+            close_side = "sell" if side == "long" else "buy"
+            try:
+                oid = protective.place_stop(exchange, sym, close_side,
+                                            amount, sl)
+            except Exception as e:
+                unarmable += 1
+                log.error(f"  {sym}: re-arm FAILED at {sl:.6g} on {amount}: "
+                          f"{str(e)[:160]}")
+                continue
+            if not oid:
+                unarmable += 1
+                log.error(f"  {sym}: re-arm returned no order id")
+                continue
+            rearmed += 1
+            log.warning(f"  {sym}: RE-ARMED stop {oid} at {sl:.6g} on "
+                        f"{amount} (venue size, not the journal's)")
+            try:
+                journal.record_stop_order(t["id"], oid, sl)
+            except Exception as e:
+                log.error(f"  {sym}: stop {oid} is LIVE but not journalled "
+                          f"({e}) — the orphan sweep may cancel it")
     except Exception as e:
         # if the venue will not say, the answer is unknown, never "protected"
         log.warning(f"protective coverage unreadable: {e}")
@@ -205,6 +260,8 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
                "stops_swept": swept, "stops_stuck": failed_sweep}
     if naked is not None:
         summary["naked"] = naked
+        summary["rearmed"] = rearmed
+        summary["unarmable"] = unarmable
     if any(summary.values()):
         journal.log_control_event("reconcile", "luffy", detail=summary)
     log.info(f"reconcile: {summary}")
