@@ -370,6 +370,32 @@ def build_mutation(journal: Journal):
             return True
 
         @strawberry.mutation
+        def close_trade(self, trade_id: str, actor: str = "dashboard") -> bool:
+            """Queue one open position for the kernel to market-close.
+
+            /panic flattens the whole book and freezes it, which is far too
+            blunt for a single trade. Intent only — the browser places no
+            orders. A list, not a scalar key: two positions closed in the
+            same cycle must not overwrite each other.
+            """
+            rows = journal.query(
+                "SELECT id FROM trades WHERE id=? AND status='open'",
+                (trade_id,))
+            if not rows:
+                return False
+            try:
+                pending = json.loads(journal.kv_get("close_requests", "[]"))
+                if not isinstance(pending, list):
+                    pending = []
+            except Exception:
+                pending = []
+            if trade_id not in pending:
+                pending.append(trade_id)
+                journal.kv_set("close_requests", json.dumps(pending))
+            journal.log_control_event("manual_close", actor, detail=trade_id)
+            return True
+
+        @strawberry.mutation
         def set_market_type(self, market: str, actor: str = "dashboard") -> bool:
             if market.lower() not in ("spot", "futures"):
                 return False

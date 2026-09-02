@@ -640,6 +640,8 @@ class Kernel:
         balance = self._fetch_balance()
         status = self.risk.update_equity(balance)
 
+        stats["manual_closed"] = self._drain_close_requests()
+
         panic_requested = self.journal.kv_get("panic_requested") == "1"
         if panic_requested:
             n = flatten_all(self.exchange, self.journal, self.notifier)
@@ -967,6 +969,48 @@ class Kernel:
                 n += 1
             except Exception as e:
                 log.warning(f"orphan position {sym}: {e}")
+        return n
+
+    def _drain_close_requests(self) -> int:
+        """Market-close whatever the operator asked for from the dashboard.
+
+        Runs at the top of the cycle, before the scan loop, so the button
+        reaches a position whose symbol has rotated out of the universe —
+        exit management used to sit inside `for symbol in scan_symbols` and
+        stranded exactly those. A close the venue refuses is reported, never
+        requeued: an id retrying forever against a standing rejection is
+        worse than one loud error the operator can act on.
+        """
+        raw = self.journal.kv_get("close_requests", "[]")
+        if raw in (None, "", "[]"):
+            return 0
+        self.journal.kv_set("close_requests", "[]")     # drained on read
+        try:
+            ids = json.loads(raw)
+            if not isinstance(ids, list):
+                raise ValueError(raw)
+        except Exception:
+            log.warning(f"close_requests unreadable ({raw!r}) — discarded")
+            return 0
+
+        open_by_id = {t["id"]: t for t in self.journal.open_trades()}
+        n = 0
+        for tid in ids:
+            t = open_by_id.get(tid)
+            if t is None:
+                log.info(f"manual close {tid}: already closed — skipped")
+                continue
+            sym = t["symbol"]
+            px = self.feed.price(sym) or float(t["entry_price"])
+            if self.executor.close(t, px, reason="manual"):
+                n += 1
+                log.info(f"MANUAL CLOSE {sym} ({tid}) @~{px}")
+                self.notifier.send(f"✋ {sym} closed manually @~{px:.6g}")
+            else:
+                log.error(f"MANUAL CLOSE FAILED {sym} ({tid}) — not retried")
+                self.notifier.send(
+                    f"⚠️ {sym} manual close REJECTED by the venue — "
+                    f"still open, press again or use /panic")
         return n
 
     def _detect_exchange_exits(self, symbol: str) -> int:
