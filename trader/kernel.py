@@ -967,33 +967,57 @@ class Kernel:
         return n
 
     def _detect_exchange_exits(self, symbol: str) -> int:
-        """Position vanished on exchange while journal says open → SL/TP fired."""
+        """Reconcile one symbol's journalled size against the venue's.
+
+        The venue closes positions without telling us — a native stop or TP
+        fires between cycles. This used to ask only whether the symbol had
+        vanished from fetch_positions(), which reads presence, not size. On
+        2026-09-02 UNI's trailing stop sold 303 of 304 coins; the one left
+        behind kept the symbol present, so the journal carried a 303.87-coin,
+        $1,791 position that no longer existed for the rest of the session —
+        $89 unattributed, a trade slot and the heat budget spent on $6.
+
+        So: gone → closed. Materially smaller → book the part that filled and
+        align the rest. The tolerance matches reconcile's, wide enough that
+        lot-step rounding is never mistaken for an exit.
+        """
         try:
-            ex_syms = {norm_symbol(p["symbol"])
-                       for p in self.exchange.fetch_positions()
-                       if float(p.get("contracts") or 0) > 0}
+            ex_amt = {norm_symbol(p["symbol"]): float(p.get("contracts") or 0)
+                      for p in self.exchange.fetch_positions()
+                      if float(p.get("contracts") or 0) > 0}
         except Exception:
             return 0
         n = 0
         for t in self.journal.open_trades():
             if t["symbol"] != symbol or t["market_type"] != "futures":
                 continue
-            if t["symbol"] not in ex_syms:
-                px = self.feed.price(symbol) or float(t["entry_price"])
-                sl, tp = float(t.get("stop_loss") or 0), float(t.get("take_profit") or 0)
-                direction = 1.0 if t["side"] == "long" else -1.0
-                gross = ((px - float(t["entry_price"])) * direction
-                         * float(t["amount"]))
-                fees = self.executor.taker_fee * (
-                    float(t["notional_usdt"]) + float(t["amount"]) * px)
-                reason = "tp_fill" if tp and abs(px - tp) <= abs(px - sl) else "sl_fill"
-                self.journal.close_trade(t["id"], px,
-                                         round(gross - fees, 8), reason)
-                self.notifier.send(
-                    f"{'✅' if gross > 0 else '🛑'} {symbol} closed "
-                    f"({reason}) pnl {(gross - fees):+.2f} USDT")
-                log.info(f"EXCHANGE EXIT {symbol}: {reason} @{px} pnl={gross-fees:+.2f}")
-                n += 1
+            held = ex_amt.get(t["symbol"], 0.0)
+            amount = float(t["amount"])
+            if held >= amount - max(held * 0.01, 1e-9):
+                continue                      # the venue still has it all
+            px = self.feed.price(symbol) or float(t["entry_price"])
+            entry = float(t["entry_price"])
+            sl, tp = float(t.get("stop_loss") or 0), float(t.get("take_profit") or 0)
+            direction = 1.0 if t["side"] == "long" else -1.0
+            sold = amount - held
+            gross = (px - entry) * direction * sold
+            fees = self.executor.taker_fee * (sold * entry + sold * px)
+            pnl = gross - fees
+            reason = "tp_fill" if tp and abs(px - tp) <= abs(px - sl) else "sl_fill"
+            if held <= 0:
+                self.journal.close_trade(t["id"], px, round(pnl, 8), reason)
+                log.info(f"EXCHANGE EXIT {symbol}: {reason} @{px} pnl={pnl:+.2f}")
+            else:
+                # part of the line filled; what remains is a real position
+                self.journal.align_trade_amount(
+                    t["id"], held, held * entry, pnl_delta=pnl)
+                log.info(f"EXCHANGE PARTIAL {symbol}: {reason} @{px} "
+                         f"-{sold:g} pnl={pnl:+.2f} remaining={held:g}")
+            self.notifier.send(
+                f"{'✅' if pnl > 0 else '🛑'} {symbol} "
+                f"{'closed' if held <= 0 else f'reduced to {held:g}'} "
+                f"({reason}) pnl {pnl:+.2f} USDT")
+            n += 1
         return n
 
     _outcome_tick = 0

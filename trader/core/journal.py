@@ -289,10 +289,31 @@ class Journal:
                     reason: str, closed_at: str | None = None) -> None:
         closed_at = closed_at or now_utc().isoformat()
         with self._tx() as c:
+            # `pnl` is this leg, not the trade. It used to be written over
+            # realized_pnl, discarding whatever close_partial had already
+            # banked — so every trade that took its 1.5R partial recorded
+            # only the final leg, and the pooled PF, the decay gate and the
+            # judge all graded the book on a fraction of what it earned.
             c.execute(
-                "UPDATE trades SET exit_price=?, realized_pnl=?, close_reason=?, "
+                "UPDATE trades SET exit_price=?, "
+                "realized_pnl=COALESCE(realized_pnl,0)+?, close_reason=?, "
                 "closed_at=?, status='closed' WHERE id=?",
                 (exit_price, pnl, reason, closed_at, trade_id))
+
+    def align_trade_amount(self, trade_id: str, amount: float,
+                           notional: float, pnl_delta: float = 0.0) -> None:
+        """Pull an open trade's size back to what the venue actually holds.
+
+        Used when the venue closed part of a position without us — a stop or
+        TP that filled short of the whole line. `notional` shrinks with the
+        amount so the heat cap charges the position that exists, and
+        `pnl_delta` books the part that is already realized.
+        """
+        with self._tx() as c:
+            c.execute("UPDATE trades SET amount=?, notional_usdt=?, "
+                      "realized_pnl=COALESCE(realized_pnl,0)+? WHERE id=?",
+                      (round(amount, 8), round(notional, 2),
+                       round(pnl_delta, 8), trade_id))
 
     def update_position_protection(self, trade_id: str, sl: float, tp: float) -> None:
         with self._tx() as c:

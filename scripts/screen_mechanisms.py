@@ -54,11 +54,43 @@ cfg=load_config(); feed=DataFeed()
 # null percentile 87%, p=1.1e-03 over 501 trades — the single best result in
 # the screen. On HELDOUT it fell to 65% and p=0.27. Nothing about the first
 # number was wrong; it just was not evidence.
+# Sized for POWER, not for convenience. `consistency_p` reads a binomial
+# tail over per-symbol null percentiles, so the number of symbols sets what
+# the test can detect at all. At n=8, clearing the 0.50 cut on ALL EIGHT
+# still only reaches p=1.2e-02 — the gate at 0.01 is unreachable — and 5 of
+# 8 must clear the 90th. At n=16 a broad-but-modest edge is detectable:
+# 14/16 above the median, or 6/16 above the 90th.
+#
+# That is not academic. Donchian Breakout Trail, the one strategy in the
+# book with evidence, was measured through this screen's own universe:
+#
+#   the spec's own 16 symbols        15 scored  p = 3.5e-04   PASS
+#   screen DISCOVERY as configured   10 scored  p = 2.9e-03   PASS
+#   screen DISCOVERY as it LOADED     8 scored  p = 1.2e-02   REFUSED
+#
+# The third row was the real one. ADA and LTC were named in the list but
+# absent from the candle store, so they dropped silently, and XAU/XAG made
+# up the count while firing ~20 trades each across the whole period. The
+# screen was running on 8 usable symbols and would have rejected the one
+# mechanism that works. Every "nothing survives" verdict it ever printed was
+# produced at that power.
+#
+# The split rule is fixed so it cannot be chosen to flatter a result:
+# original members keep their original half, and every symbol added since is
+# assigned by alternating down the alphabetical list.
 DISCOVERY=["BTC/USDT","ETH/USDT","SOL/USDT","XRP/USDT","BNB/USDT","DOGE/USDT",
-           "ADA/USDT","LINK/USDT","AVAX/USDT","LTC/USDT"]
+           "ADA/USDT","LINK/USDT","AVAX/USDT","LTC/USDT",
+           "1000PEPE/USDT","APT/USDT","BCH/USDT","DASH/USDT","FET/USDT",
+           "INJ/USDT","T/USDT","WLD/USDT","XMR/USDT"]
 HELDOUT=["UNI/USDT","SUI/USDT","TAO/USDT","ZEC/USDT","NEAR/USDT","FIL/USDT",
-         "AAVE/USDT","HYPE/USDT","TRUMP/USDT"]
-TRADFI=["XAU/USDT:USDT","XAG/USDT:USDT"]
+         "AAVE/USDT","HYPE/USDT","TRUMP/USDT",
+         "1000SHIB/USDT","ARB/USDT","CRV/USDT","DOT/USDT","ICP/USDT",
+         "OP/USDT","TRX/USDT","XLM/USDT"]
+# Tokenized commodities are NOT in either universe. They are recent listings
+# on which the mechanisms fire ~20 trades across the whole period, so they
+# never carry a percentile — but they were counted into the discovery total,
+# which is how a universe of 8 read as 10.
+TRADFI=[]
 
 # Geometry is a screen DIMENSION, not a constant. The first pass here fixed
 # it at RR 3 with no trail — and a fixed target amputates the tail a

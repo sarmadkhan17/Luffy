@@ -74,3 +74,34 @@ def test_the_false_positive_rate_is_under_the_nominal_level():
 
 def test_every_symbol_at_the_ceiling_is_as_improbable_as_it_gets():
     assert consistency_p([1.0] * 10) == pytest.approx(3 * 0.10 ** 10, rel=1e-6)
+
+
+# ── how many symbols the test needs to detect anything ───────────────────
+# `consistency_p` reads a binomial tail, so the SIZE of the universe sets
+# what the test can detect at all — a small universe does not merely make a
+# result noisier, it puts whole classes of edge out of reach. This came up
+# the hard way: `screen_mechanisms.py` named ten discovery symbols, two of
+# which (ADA, LTC) were absent from the candle store and dropped silently,
+# and two more (XAU, XAG) fired ~20 trades across the whole period. It was
+# running on eight, and at eight the median cut cannot reach the gate.
+
+def test_the_median_cut_is_unreachable_on_eight_symbols():
+    """Eight symbols ALL above the no-edge median still scores 1.2e-02.
+
+    That is the signature of a broad, modest edge — Donchian Breakout Trail
+    sits 14/15 above the median — so on an eight-symbol universe the one
+    mechanism in this book with evidence reads as REFUSED."""
+    p = consistency_p([0.6] * 8)
+    assert p is not None and p > 0.01
+
+
+def test_the_same_shape_passes_once_the_universe_is_large_enough():
+    p = consistency_p([0.6] * 16)
+    assert p is not None and p < 0.01
+
+
+def test_a_narrow_strong_edge_is_still_visible_on_a_small_universe():
+    """The small universe is not blind to everything: five of eight above
+    the 90th percentile clears. It is blind to breadth, not to strength."""
+    p = consistency_p([0.95] * 5 + [0.4] * 3)
+    assert p is not None and p < 0.01
