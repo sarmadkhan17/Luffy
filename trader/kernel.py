@@ -100,7 +100,8 @@ class Kernel:
         from .engine.exits import ExitEngine
         self.exits = ExitEngine(self.exchange, self.journal, self.executor,
                                 cfg, genomes={st.id: st.params
-                                              for st, _g in self.population})
+                                              for st, _g in self.population},
+                                spec_exits=self._spec_exits)
         self._stop = False
         self._book_cache: dict[str, tuple[float, dict]] = {}
         self._funding_cache: dict[str, float] | None = None
@@ -146,6 +147,8 @@ class Kernel:
         from .strategy.library import register_evaluator
         pop = []
         requires: set = set()
+        spec_exits: dict = {}
+        self._spec_exits = spec_exits
         try:
             rows = self.journal.list_specs(["paper", "active"])
         except Exception as e:
@@ -159,6 +162,11 @@ class Kernel:
                 continue
             family = f"spec:{spec.id}"
             requires.update(compiled.data_requires)
+            # the geometry this spec was validated with must be the geometry
+            # the ExitEngine runs, or the backtest evidenced a different
+            # strategy than the one trading
+            from .engine.exits import SpecExit
+            spec_exits[spec.id] = SpecExit.from_spec(spec)
             register_evaluator(family, compiled.to_evaluator())
             st = type("S", (), {})()
             st.id, st.name, st.state = spec.id, spec.name, row["state"]
@@ -171,6 +179,7 @@ class Kernel:
             g.regime_filter = frozenset(spec.regime_filter)
             pop.append((st, g))
         self._spec_requires = tuple(sorted(requires))
+        self._spec_exits = spec_exits
         self._derivs_cache = {}
         if pop:
             log.info(f"loaded {len(pop)} compiled spec(s) into the population"
@@ -685,6 +694,7 @@ class Kernel:
             if df is not None and len(df):
                 universe_frames[sym] = {exec_tf: df}
 
+        scanned: set = set()
         for symbol in self.universe.symbols():
             snap = self._snapshot_for(symbol, universe=universe_frames)
             if snap is None:
@@ -716,23 +726,19 @@ class Kernel:
                             f"score {d.score:+.2f} conf {d.confidence:.0%}")
 
             stats["exits_detected"] += self._detect_exchange_exits(symbol)
+            scanned.add(symbol)
             for t in self.journal.open_trades():
                 if t["symbol"] != symbol:
                     continue
-                from .agents.indicators import atr as _atr
-                a = _atr(snap.df(self.cfg["timeframes"]["execution"])) \
-                    if snap.df(self.cfg["timeframes"]["execution"]) is not None else 0
-                if a <= 0:
-                    continue
                 score = d.score if d.symbol == symbol else None
-                try:
-                    reason = self.exits.manage(t, snap.price, a, score)
-                    if reason:
-                        stats["exit_action"] = reason
-                        self.notifier.send(
-                            f"↪ {symbol} exit: {reason} @ {snap.price:.4g}")
-                except Exception as e:
-                    log.warning(f"exit manage {symbol}: {e}")
+                r = self._manage_one(t, snap, score)
+                if r:
+                    stats["exit_action"] = r
+
+        # Positions whose symbol has left the universe are still positions.
+        # Both calls above live inside the scan loop, so before this pass a
+        # rotated-out symbol got no trail, no time exit and no fill detection.
+        stats["orphans_managed"] = self._manage_orphan_positions(scanned)
 
         self._maybe_resolve_outcomes()
         self.heartbeat.beat({"equity": round(balance, 2),
@@ -796,6 +802,54 @@ class Kernel:
                         notional_usdt=float(t["notional_usdt"] or 0),
                         leverage=int(t.get("leverage") or 1),
                         stop_loss=float(t.get("stop_loss") or 0))
+
+    def _manage_one(self, t: dict, snap, score) -> str | None:
+        """Run the exit engine over one open trade. Returns an exit reason."""
+        from .agents.indicators import atr as _atr
+        exec_tf = self.cfg["timeframes"]["execution"]
+        df = snap.df(exec_tf)
+        a = _atr(df) if df is not None else 0
+        if a <= 0:
+            return None
+        try:
+            reason = self.exits.manage(t, snap.price, a, score)
+        except Exception as e:
+            log.warning(f"exit manage {t['symbol']}: {e}")
+            return None
+        if reason:
+            self.notifier.send(
+                f"↪ {t['symbol']} exit: {reason} @ {snap.price:.4g}")
+        return reason
+
+    def _manage_orphan_positions(self, scanned: set) -> int:
+        """Manage open positions whose symbol was not scanned this cycle.
+
+        The universe rotates its alts every few hours; a position outlives
+        that rotation. Donchian Breakout Trail holds for up to 83 days, so a
+        stranded position is the expected case rather than an edge case, and
+        a stranded position is one with no trailing stop and no way to notice
+        its exchange stop already fired.
+
+        One unavailable symbol must not strand the rest, so each is isolated.
+        """
+        n = 0
+        for t in self.journal.open_trades():
+            sym = t["symbol"]
+            if sym in scanned:
+                continue
+            scanned.add(sym)          # one snapshot per symbol per cycle
+            try:
+                snap = self._snapshot_for(sym)
+                if snap is None:
+                    log.warning(f"orphan position {sym}: no snapshot — "
+                                f"cannot manage this cycle")
+                    continue
+                self._detect_exchange_exits(sym)
+                self._manage_one(t, snap, None)
+                n += 1
+            except Exception as e:
+                log.warning(f"orphan position {sym}: {e}")
+        return n
 
     def _detect_exchange_exits(self, symbol: str) -> int:
         """Position vanished on exchange while journal says open → SL/TP fired."""
