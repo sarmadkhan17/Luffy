@@ -549,6 +549,44 @@ These are facts about the search space, not beliefs the Theorist may rewrite.
   them" — both predict this — and forward performance remains the only
   discriminator.
 
+- **The mechanism does not appear outside the markets it was selected on —
+  in crypto OR outside it.** Ran the identical rule and geometry (read off
+  `auth_donchian_breakout_trail`, nothing tuned) over **40 liquid
+  dividend-adjusted non-crypto instruments across 7 sectors** — metals,
+  energy, ags, broad commodity, equity, rates, FX — 2,513 daily bars each
+  (2016-09-01..2026-09-01), using the repo's own `simulate` and
+  `null_baseline`. Four cost regimes x two channel lengths, all reported
+  side by side rather than picked:
+
+  | cost | N | n | medPF | med pctile | > median | consistency p |
+  |---|---|---|---|---|---|---|
+  | 2 bps | 20 | 40 | 1.08 | 40% | 15/40 | **1.0e+00** |
+  | 2 bps | 100 | 40 | 1.16 | 53% | 21/40 | **1.0e+00** |
+  | 6 bps | 20 | 40 | 1.06 | 40% | 15/40 | **1.0e+00** |
+  | 6 bps | 100 | 40 | 1.12 | 50% | 20/40 | **1.0e+00** |
+  | 20 bps | 100 | 40 | 0.96 | 52% | 21/40 | **1.0e+00** |
+  | crypto-like | 100 | 40 | 0.94 | 54% | 21/40 | **1.0e+00** |
+
+  Every cell reads p=1.0. Even at the cheapest cost assumption the rule does
+  not beat its own rotation null across these markets. Post-hoc, commodities
+  look better than financials (N=100: 13/18 above median, p=1.4e-01, medPF
+  1.49, against financials 7/22, p=1.0) — directionally what the published
+  record says, but not significant, n=18, and a sector split chosen after
+  seeing the result.
+  **This is consistent with external reality, not evidence of a broken
+  harness.** Trend-following on liquid futures is a documented anomaly whose
+  Sharpe has been weak since roughly 2010, so finding nothing over
+  2016-2026 is what the literature predicts. That calibration cuts against
+  us: it means the crypto result is more likely selection than a live regime.
+  Caveats: these are ETFs, not futures, so the commodity names carry roll
+  decay that structurally flatters the short side; 70-95 trades per
+  instrument at N=20 and ~38 at N=100; one 10-year window.
+  Taken with the crypto out-of-sample result (20 undeclared perps, 10/20
+  above median, p=9.7e-01), the mechanism has now failed to appear in **two
+  independent universes it was not chosen on**. Forward performance on the
+  declared 16 remains the only discriminator, and the prior going into it
+  should be lower than it was.
+
 - **The backtest was over-charging slippage by 3-5x, and it was eating ~75%
   of the mechanism's per-trade edge.** Because `amount = risk / (2*ATR)`,
   ATR cancels out of the slippage term: `slippage_atr_frac` is not a
