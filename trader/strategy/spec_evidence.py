@@ -40,6 +40,46 @@ def load_derivs(symbol: str, requires, feed: DerivFeed | None = None) -> dict:
     return out
 
 
+def funding_series(symbol: str, df, feed: DerivFeed | None = None):
+    """The venue's SIGNED 8-hourly funding rate, aligned onto `df`'s bars.
+
+    Point-in-time, on the same discipline as `dsl._eval_htf`: a bar may only
+    carry a settlement that had already happened by its own close, so this is
+    searchsorted(side="right") - 1. A bar before the first settlement gets
+    NaN, and the backtester charges its conservative flat rate there rather
+    than a fabricated zero.
+
+    Returns None when the store has nothing for this symbol, which keeps the
+    caller on the flat-rate path it has always used.
+    """
+    import numpy as np
+
+    feed = feed or DerivFeed()
+    try:
+        f = feed.load(symbol, "funding")
+    except Exception as e:
+        log.warning(f"funding_series {symbol}: {e}")
+        return None
+    if f is None or not len(f) or df is None or not len(df):
+        return None
+    fts = f["ts"].to_numpy("datetime64[ns]")
+    bts = df["ts"].to_numpy("datetime64[ns]")
+    idx = np.searchsorted(fts, bts, side="right") - 1
+    vals = f["value"].to_numpy(float)
+    out = np.full(len(bts), np.nan)
+    seen = idx >= 0
+    out[seen] = vals[idx[seen]]
+    return out
+
+
+def funding_coverage(arr) -> float:
+    """Fraction of bars carrying a real settlement. 0.0 when arr is None."""
+    import numpy as np
+    if arr is None or not len(arr):
+        return 0.0
+    return float(np.isfinite(arr).mean())
+
+
 #: a derivative series must cover at least this fraction of the candle frame
 #: for a walk-forward to mean anything. Below it the training half is partly
 #: or wholly blank, so the split is not a split.
