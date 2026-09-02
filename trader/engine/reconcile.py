@@ -23,6 +23,15 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _mark(exchange, symbol: str, fallback: float) -> float:
+    """Last trade price, or the entry when the venue will not answer."""
+    try:
+        px = float((exchange.fetch_ticker(symbol) or {}).get("last") or 0)
+        return px if px > 0 else fallback
+    except Exception:
+        return fallback
+
+
 def reconcile_futures(exchange, journal: Journal) -> dict:
     """Align journal open trades with live exchange positions."""
     try:
@@ -59,10 +68,30 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
             adopted += 1
         else:
             jt = j_open[sym]
-            if abs(float(jt["amount"]) - contracts) > max(contracts * 0.01, 1e-9):
-                journal.query("UPDATE trades SET amount=?, notional_usdt=? WHERE id=?",
-                              (contracts, float(p.get("notional") or 0), jt["id"]))
-                log.info(f"ALIGNED {sym}: amount {jt['amount']} → {contracts}")
+            jamt = float(jt["amount"])
+            if abs(jamt - contracts) > max(contracts * 0.01, 1e-9):
+                # Shrinking to meet the venue means the venue closed part of
+                # the line while we were down — a stop or TP that filled
+                # short. That P&L is the strategy's; dropping it makes the
+                # decay gate mismeasure a book it never saw win. The fill is
+                # gone, so it is priced at the mark, as the ghost path does.
+                # Growing is an accounting error, never a realized gain.
+                pnl = 0.0
+                if contracts < jamt:
+                    entry = float(jt["entry_price"])
+                    px = _mark(exchange, sym, entry)
+                    direction = 1.0 if jt["side"] == "long" else -1.0
+                    pnl = (px - entry) * direction * (jamt - contracts)
+                # through _tx, not query(): query() runs unwrapped and its
+                # UPDATE only lands if some later _tx on this thread happens
+                # to commit it — until then the row is invisible and the
+                # write lock is held across the ticker fetch and the stop
+                # sweep below, both of which are REST round-trips.
+                journal.align_trade_amount(
+                    jt["id"], contracts, float(p.get("notional") or 0),
+                    pnl_delta=round(pnl, 8))
+                log.info(f"ALIGNED {sym}: amount {jt['amount']} → {contracts}"
+                         + (f" | booked {pnl:+.2f}" if pnl else ""))
                 aligned += 1
 
     # 2. ghost cleanup — journal says open, exchange disagrees

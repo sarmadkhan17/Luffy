@@ -21,6 +21,28 @@ from . import protective
 log = logging.getLogger(__name__)
 
 
+def quantize(ex, symbol: str, amount: float) -> float:
+    """Round an order size down to the venue's lot step.
+
+    Binance truncates silently: UNI/USDT steps in whole coins, so a request
+    for 607.73 fills 607. Journalling the request rather than the fill let
+    the error compound across legs — the entry lost 0.73 lots, and each exit
+    was then sized from a remainder the venue never held and lost 0.87 more,
+    stranding 1 UNI of dust that no exit could ever clear.
+
+    A venue without the helper (spot fakes, backtest doubles) keeps the
+    amount it was given.
+    """
+    fn = getattr(ex, "amount_to_precision", None)
+    if fn is None:
+        return float(amount)
+    try:
+        return float(fn(symbol, amount))
+    except Exception as e:
+        log.warning(f"amount precision unavailable for {symbol}: {e}")
+        return float(amount)
+
+
 class Executor:
     def __init__(self, exchange, journal: Journal, cfg: dict,
                  market_type: MarketType):
@@ -95,6 +117,10 @@ class Executor:
         if self.market_type == MarketType.FUTURES:
             params["reduceOnly"] = False
         self._ensure_leverage(sym)
+        amount = quantize(self.ex, sym, amount)
+        if amount <= 0:
+            log.warning(f"ENTRY SKIPPED {sym}: size rounds to zero lots")
+            return None
         try:
             order = self.ex.create_order(sym, "market", side_ccxt, amount,
                                          params=params)
@@ -109,9 +135,11 @@ class Executor:
                     "symbol_untradeable", sym, {"error": str(e)[:200]})
             log.error(f"ENTRY FAILED {sym}: {e}")
             return None
-        fill = self._confirm_fill(sym, str(order.get("id") or ""),
-                                  order, amount)
+        fill, filled = self._confirm_fill(sym, str(order.get("id") or ""),
+                                          order, amount)
         oid = str(order.get("id") or "")
+        if filled and filled > 0:
+            amount = filled          # the venue's number is the only truth
         if fill is None:
             # order may still have filled — reconciliation will adopt it at
             # next boot; never place a stop against an unknown fill
@@ -152,17 +180,22 @@ class Executor:
                  f"| TP {tp_note} | est RT fees ≈ {fee_note:.2f}% notional")
         return pos
 
-    def _confirm_fill(self, symbol: str, order_id: str,
-                      order: dict, amount: float) -> float | None:
-        """Poll the order until a fill price is known (demo fills async)."""
+    def _confirm_fill(self, symbol: str, order_id: str, order: dict,
+                      amount: float) -> tuple[float | None, float]:
+        """Poll the order until a fill is known (demo fills async).
+
+        Returns (average price, filled quantity). The quantity matters as
+        much as the price: the venue rounds the request down to its lot step
+        and a journal that keeps the request instead accumulates a residue
+        that later legs can never close.
+        """
         for attempt in range(6):
             fill = float(order.get("average") or order.get("price") or 0)
+            got = float(order.get("filled") or 0)
             if fill > 0:
-                return fill
-            if order.get("status") in ("closed", "filled") and fill > 0:
-                return fill
+                return fill, got
             if not order_id:
-                return None
+                return None, got
             time.sleep(0.8 * (attempt + 1))
             try:
                 order = self.ex.fetch_order(order_id, symbol)
@@ -172,13 +205,14 @@ class Executor:
         try:
             t = self.ex.fetch_ticker(symbol)
             px = float(t.get("last") or 0)
-            return px if px > 0 else None
+            return (px if px > 0 else None), float(order.get("filled") or 0)
         except Exception:
-            return None
+            return None, float(order.get("filled") or 0)
 
     def _place_native_stop(self, symbol: str, side: Side, amount: float,
                            stop_price: float) -> str:
         close_side = "sell" if side == Side.LONG else "buy"
+        amount = quantize(self.ex, symbol, amount)
         try:
             return protective.place_stop(self.ex, symbol, close_side,
                                          amount, stop_price)
@@ -200,6 +234,12 @@ class Executor:
         """Reduce-only partial close; journal amount shrinks, trade stays open."""
         sym = trade["symbol"]
         side_close = "sell" if trade["side"] == "long" else "buy"
+        amount = quantize(self.ex, sym, amount)
+        if amount <= 0:
+            # a "partial" the venue would reject, or worse accept as nothing
+            # while the journal booked a fill against it
+            log.info(f"partial skipped {sym}: below one lot")
+            return False
         try:
             order = self.ex.create_order(sym, "market", side_close, amount,
                                          params={"reduceOnly": True})
@@ -239,7 +279,11 @@ class Executor:
               reason: str = "signal_exit") -> bool:
         sym = trade["symbol"]
         side_close = "sell" if trade["side"] == "long" else "buy"
-        amount = float(trade["amount"])
+        amount = quantize(self.ex, sym, float(trade["amount"]))
+        if amount <= 0:
+            log.warning(f"CLOSE {sym}: {trade['amount']} is below one lot — "
+                        f"nothing the venue will accept")
+            return False
         try:
             if trade.get("sl_order_id"):
                 protective.cancel_stop(self.ex, trade["sl_order_id"], sym)
@@ -247,9 +291,14 @@ class Executor:
                                          params={"reduceOnly": True})
             fill = float(order.get("average") or order.get("price")
                          or exit_price_hint)
+            # reduce-only fills only what the venue still holds. Sending 169
+            # against a 1-coin residue closes 1, and pricing the exit over
+            # the journalled 169 invents 168 coins of P&L out of rounding.
+            amount = float(order.get("filled") or 0) or amount
+            entry = float(trade["entry_price"])
             direction = 1.0 if trade["side"] == "long" else -1.0
-            gross = ((fill - float(trade["entry_price"])) * direction * amount)
-            fees = self.taker_fee * (float(trade["notional_usdt"]) + amount * fill)
+            gross = ((fill - entry) * direction * amount)
+            fees = self.taker_fee * (amount * entry + amount * fill)
             pnl = gross - fees
             self.journal.close_trade(trade["id"], fill, round(pnl, 8), reason)
             log.info(f"TRADE CLOSE {sym} @{fill} reason={reason} "
