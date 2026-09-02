@@ -15,6 +15,7 @@ import logging
 
 from ..data.derivatives import DerivFeed
 from .compile import compile_spec
+from . import null_baseline
 from .vector_backtest import vector_walk_forward
 
 log = logging.getLogger(__name__)
@@ -180,12 +181,21 @@ def run_gauntlet(spec, frames: dict, cfg: dict, min_pf: float | None = None,
     Same gate shape as evidence.run_gauntlet: worst-symbol out-of-sample
     profit factor, a minimum total OOS trade count, and train+test
     robustness on every symbol.
+
+    Plus a null hypothesis. Profit factor alone is a statement about
+    arithmetic: TP 4.5 ATR over SL 2.5 ATR pays a coin flip 35.7% of the
+    time whatever the entry says, and an ALWAYS-LONG rule measured on real
+    candles scored PF 1.28 purely on market drift. `null_percentile` is the
+    share of the spec's OWN entry signals, circularly rotated, that it
+    beats — the one number that separates timing from beta.
     """
     s = cfg.get("strategies", {}) or {}
     min_pf = float(s.get("gauntlet_min_test_pf", 1.15)) if min_pf is None \
         else min_pf
     min_trades = int(s.get("gauntlet_min_test_trades", 20)) \
         if min_trades is None else min_trades
+    null_draws = int(s.get("gauntlet_null_draws", 60))
+    min_null = float(s.get("gauntlet_min_null_percentile", 0.0))
 
     compiled = compile_spec(spec)
     syms = [k for k in frames if not k.startswith("_")]
@@ -215,6 +225,8 @@ def run_gauntlet(spec, frames: dict, cfg: dict, min_pf: float | None = None,
                 for sy, sf in sym_frames_map.items() if spec.timeframe in sf}
 
     results, per_symbol = [], {}
+    null_pcts: dict = {}
+    null_meds: dict = {}
     for sym in syms:
         sym_frames = sym_frames_map.get(sym)
         if sym_frames is None:
@@ -229,6 +241,16 @@ def run_gauntlet(spec, frames: dict, cfg: dict, min_pf: float | None = None,
             log.warning(f"spec gauntlet {spec.id} {sym}: {e}")
             continue
         results.append(r)
+        if null_draws > 0 and r["test"].trades >= 2:
+            try:
+                nb = null_baseline.assess(
+                    compiled, sym_frames, risk, r["test"].profit_factor,
+                    btc=btcd, derivs=derivs, universe=universe, symbol=sym,
+                    draws=null_draws, split=0.7, part="test")
+                null_pcts[sym] = nb.get("percentile")
+                null_meds[sym] = nb.get("null_median")
+            except Exception as e:
+                log.warning(f"null baseline {spec.id} {sym}: {e}")
         per_symbol[sym] = {
             "train_pf": round(r["train"].profit_factor, 3),
             "test_pf": round(r["test"].profit_factor, 3),
@@ -237,7 +259,12 @@ def run_gauntlet(spec, frames: dict, cfg: dict, min_pf: float | None = None,
             "max_dd_pct": round(r["test"].max_dd_pct, 2),
             "robust": r["robust"],
         }
+    for sym, v in per_symbol.items():
+        v["null_percentile"] = null_pcts.get(sym)
+        v["null_median_pf"] = null_meds.get(sym)
     ev["per_symbol"] = per_symbol
+    seen = [p for p in null_pcts.values() if p is not None]
+    ev["null_percentile"] = (round(min(seen), 3) if seen else None)
 
     if not results:
         return False, {**ev, "reason": "no candle data", "untested": True}
@@ -254,6 +281,12 @@ def run_gauntlet(spec, frames: dict, cfg: dict, min_pf: float | None = None,
     if min(pfs) < min_pf:
         return False, {**ev, "reason": f"worst out-of-sample PF "
                                        f"{min(pfs):.2f} < {min_pf}"}
+    if min_null > 0 and seen and min(seen) < min_null:
+        return False, {**ev, "reason":
+                       f"worst-symbol null percentile {min(seen):.0%} "
+                       f"< {min_null:.0%} — entry timing is not "
+                       f"distinguishable from firing the same signals at a "
+                       f"random offset"}
     if require_robust and not all(r["robust"] for r in results):
         weak = [s for s, v in per_symbol.items() if not v["robust"]]
         return False, {**ev, "reason": f"not robust across train+test on {weak}"}

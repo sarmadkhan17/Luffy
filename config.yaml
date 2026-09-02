@@ -83,6 +83,15 @@ strategies:
   tv_period: 1y
   tv_min_oos_trades: 5
   tv_require_positive_oos: true
+  # A profit factor is a statement about arithmetic until it is compared
+  # with something. TP 4.5 ATR over SL 2.5 ATR pays a coin flip 35.7% of the
+  # time whatever the entry says, and ALWAYS-LONG scored PF 1.28 on real
+  # candles purely on drift. gauntlet_null_draws rotations of the spec's own
+  # signals give the null; the percentile it beats is the edge.
+  gauntlet_null_draws: 60
+  # 0.0 = measure and report only. Raise to gate (0.90 = beat 90% of its own
+  # rotations). Nothing in the book currently clears 0.80.
+  gauntlet_min_null_percentile: 0.0
   paper_probation_trades: 15     # trades a new strategy must pass in paper before live eligibility
   paper_min_winrate: 0.40
   paper_min_profit_factor: 1.15
