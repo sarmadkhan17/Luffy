@@ -76,6 +76,44 @@ def agreement_fraction(votes: list, sigs: list, net: float) -> float:
     return sum(1 for d in directional if d * sign > 0) / len(directional)
 
 
+#: below this a conviction is not an opinion — the same line
+#: agreement_fraction uses to decide what counts as directional
+ABSTAIN_BELOW = 0.05
+
+
+def net_score(votes: list, sigs: list, base_weights: dict,
+              strategy_weights: dict) -> float:
+    """Weighted opinion in [-1, 1]. Silence abstains.
+
+    An analyst with no conviction used to add nothing above the line and its
+    full weight below it, so seven quiet analysts dragged any score toward
+    zero exactly as seven opposing ones would. With a combined analyst weight
+    of 1.0 against STRATEGY_VOTE_WEIGHT 0.45, one strategy signal at its
+    typical 0.6 confidence reached 0.6*0.45 / 1.45 = 0.186 — under every
+    threshold the live system produces (0.22-0.47). No amount of evidence
+    could let a validated strategy trade on its own, which is the opposite of
+    what STRATEGY_VOTE_WEIGHT's own comment promises.
+
+    Disagreement still counts fully. Only abstention is excused.
+    """
+    num = den = 0.0
+    for v in votes:
+        if abs(v.conviction) <= ABSTAIN_BELOW:
+            continue
+        w = base_weights.get(v.agent, 0.10) * v.meta.get("acc_mult", 1.0)
+        num += (v.conviction * abs(v.conviction) * v.confidence
+                * v.meta.get("regime_fit", 1.0)) * w
+        den += w
+    # the SET speaks, weighted — never reduced to a single winner
+    for s in sigs:
+        dirn = 1.0 if s.action == Action.BUY else -1.0
+        w = STRATEGY_VOTE_WEIGHT * strategy_weights.get(
+            getattr(s, "strategy_id", ""), 1.0)
+        num += dirn * s.confidence * w
+        den += w
+    return num / den if den > 0 else 0.0
+
+
 def htf_trend_score(df_4h) -> float:
     """4h trend strength s ∈ [-1,+1]: EMA50 side × ADX-normalized slope."""
     import numpy as np
@@ -290,22 +328,8 @@ class Orchestrator:
                 sigs.append(sig)
 
         # ── aggregate ────────────────────────────────────────────────────
-        num = den = 0.0
-        for v in votes:
-            w = self.base_weights.get(v.agent, 0.10) * v.meta.get("acc_mult", 1.0)
-            eff = v.conviction * abs(v.conviction) * v.confidence \
-                * v.meta.get("regime_fit", 1.0)
-            num += eff * w
-            den += w
-        # the SET speaks, weighted — never reduced to a single winner
         sw = self._strategy_weights(population, snap.regime)
-        for s in sigs:
-            dirn = 1.0 if s.action == Action.BUY else -1.0
-            w = STRATEGY_VOTE_WEIGHT * sw.get(
-                getattr(s, "strategy_id", ""), 1.0)
-            num += dirn * s.confidence * w
-            den += w
-        net = num / den if den > 0 else 0.0
+        net = net_score(votes, sigs, self.base_weights, sw)
 
         frac = agreement_fraction(votes, sigs, net)
         threshold = self._adaptive_base(snap.regime,
