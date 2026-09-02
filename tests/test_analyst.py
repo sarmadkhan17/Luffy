@@ -56,7 +56,7 @@ class _Journal:
 def analyst(monkeypatch):
     a = Analyst(_Journal(), CFG)
     up = _frame(4000, drift=0.004, seed=2)
-    monkeypatch.setattr(a, "frames", lambda tf: {"BTC/USDT": up,
+    monkeypatch.setattr(a, "frames", lambda tf, extra=(): {"BTC/USDT": up,
                                                  "_btc_1h": up})
     return a
 
@@ -128,7 +128,7 @@ def test_persistence_is_context_not_a_gate(analyst):
 def test_review_retires_a_decayed_strategy(monkeypatch):
     a = Analyst(_Journal(), CFG)
     down = _frame(4000, drift=-0.004, seed=9)
-    monkeypatch.setattr(a, "frames", lambda tf: {"BTC/USDT": down,
+    monkeypatch.setattr(a, "frames", lambda tf, extra=(): {"BTC/USDT": down,
                                                  "_btc_1h": down})
     actions = a.review_deployed([_spec()])
     assert len(actions) == 1 and actions[0]["action"] == "retire"

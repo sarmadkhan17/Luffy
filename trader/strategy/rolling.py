@@ -99,18 +99,9 @@ def rolling_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     return st
 
 
-def recent_verdict(compiled, frames: dict, risk_cfg: dict, timeframe: str,
-                   recent_days: float = 90, min_trades: int = 20,
-                   min_pf: float = 1.15, btc=None,
-                   derivs_for=None) -> tuple[bool, dict]:
-    """Is this spec working NOW? The selection gate.
-
-    Scored on the most recent `recent_days` only, pooled across symbols. A
-    per-symbol worst-case rule is wrong here: a regime-specific edge often
-    lives on two or three instruments and is simply absent on the rest, and
-    absence is not failure. Pooling asks the question that matters — did this
-    make money recently, across the book, after costs.
-    """
+def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
+                  recent_days: float, btc=None, derivs_for=None) -> dict:
+    """Pooled result over the last `recent_days`, across every symbol."""
     n = bars(timeframe, recent_days)
     universe = {s: {timeframe: f} for s, f in frames.items()
                 if not s.startswith("_") and f is not None}
@@ -149,12 +140,49 @@ def recent_verdict(compiled, frames: dict, risk_cfg: dict, timeframe: str,
           "pooled_pf": round(pooled_pf, 3), "trades": trades,
           "winrate": round(wins / trades, 3) if trades else 0.0,
           "pnl": round(gross_win - gross_loss, 2)}
-    if trades < min_trades:
-        return False, {**ev, "reason": f"only {trades} trades in the last "
-                                       f"{recent_days:.0f}d (<{min_trades})"}
-    if pooled_pf < min_pf:
-        return False, {**ev, "reason": f"recent pooled PF {pooled_pf:.2f} "
-                                       f"< {min_pf}"}
+    return ev
+
+
+def recent_verdict(compiled, frames: dict, risk_cfg: dict, timeframe: str,
+                   recent_days: float = 90, min_trades: int = 20,
+                   min_pf: float = 1.15, btc=None, derivs_for=None,
+                   max_days: float = 365) -> tuple[bool, dict]:
+    """Is this spec working NOW? The selection gate.
+
+    Scored on recent bars only, pooled across symbols. A per-symbol
+    worst-case rule is wrong here: a regime-specific edge often lives on two
+    or three instruments and is simply absent on the rest, and absence is not
+    failure. Pooling asks the question that matters — did this make money
+    recently, across the book, after costs.
+
+    The window WIDENS, by doubling to at most `max_days`, until it holds
+    `min_trades`. A fixed 90 days does not ask the same question of every
+    spec: it is 8,640 bars of 15m and 540 of 4h, so a bar-for-bar identical
+    edge clears the trade minimum at one timeframe and is refused for
+    "only 15 trades" at the other. Donchian Breakout Trail — the one
+    mechanism measured as real, at p=3.5e-04 across 15 symbols — could not
+    be re-admitted under the fixed window. That is a gate calibrated to
+    frequency, not to evidence.
+
+    Widening is bounded on purpose: `max_days` keeps this a recency gate.
+    A lifetime pass/fail averages the regimes an edge worked in with the
+    ones it did not, and under one all 27 candidates scored zero.
+    """
+    ev = _score_window(compiled, frames, risk_cfg, timeframe, recent_days,
+                       btc=btc, derivs_for=derivs_for)
+    window = recent_days
+    while ev["trades"] < min_trades and window < max_days:
+        window = min(window * 2, max_days)
+        ev = _score_window(compiled, frames, risk_cfg, timeframe, window,
+                           btc=btc, derivs_for=derivs_for)
+    ev["window_days"] = window
+    ev["window_widened"] = window > recent_days
+    if ev["trades"] < min_trades:
+        return False, {**ev, "reason": f"only {ev['trades']} trades in the "
+                                       f"last {window:.0f}d (<{min_trades})"}
+    if ev["pooled_pf"] < min_pf:
+        return False, {**ev, "reason": f"pooled PF {ev['pooled_pf']:.2f} over "
+                                       f"{window:.0f}d < {min_pf}"}
     return True, ev
 
 
@@ -169,9 +197,14 @@ def has_decayed(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     re-test. Too few recent trades is NOT decay — a setup that has gone quiet
     is idle, and idleness is handled by the population cap, not by retirement.
     """
+    # NEVER widen here. Selection widens its window to find enough evidence;
+    # retirement must not, or a spec that has STOPPED trading would have last
+    # year's trades pulled in to answer "is it still working". Too few recent
+    # trades is idle, and the caller below says so.
     ok, ev = recent_verdict(compiled, frames, risk_cfg, timeframe,
                             recent_days=recent_days, min_trades=min_trades,
-                            min_pf=floor_pf, btc=btc, derivs_for=derivs_for)
+                            min_pf=floor_pf, btc=btc, derivs_for=derivs_for,
+                            max_days=recent_days)
     if ev["trades"] < min_trades:
         return False, {**ev, "verdict": "idle — too few trades to judge"}
     if not ok:
