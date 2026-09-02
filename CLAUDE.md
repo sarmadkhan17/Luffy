@@ -516,6 +516,53 @@ These are facts about the search space, not beliefs the Theorist may rewrite.
   silently, and XAU/XAG made up the count while firing ~20 trades each. The
   store now carries 32+ crypto perps at 4h and the screen runs 19 discovery /
   17 held-out.
+- **The screen refuses the book's own strategy, and that is the screen being
+  right.** 38 mechanisms x 2 geometries at 19 discovery / 17 held-out on 4h
+  (2026-09-02) admitted nothing. Before reading that as a fact about the
+  market, the known-good input was run through the same gate:
+  `donchian_hi(100)` both ways under the trail geometry scores **discovery
+  p=2.3e-01, held-out p=8.1e-02** against a gate of 0.01/0.05 — REFUSED.
+  The gate is not merely too strict. Splitting that single run by whether
+  the spec NAMED the symbol, with identical geometry, period, split, cost
+  model and null:
+
+  | | n | median PF | median null-pctile | above median | consistency p |
+  |---|---|---|---|---|---|
+  | declared by the spec | 15 | 1.42 | 87% | 13/15 | 3.5e-04 |
+  | never declared | 20 | 0.93 | 52% | 10/20 | 9.7e-01 |
+
+  10 of 20 above the median is the coin flip. The gate clearly has power —
+  it hands the declared set 3.5e-04, reproducing the recorded headline
+  exactly — so the honest reading is that **"nothing survives" includes the
+  incumbent**, and the book has zero mechanisms that generalise off a
+  hand-picked symbol list, not one. This is the earlier universe-extension
+  result under a much tighter control: previously the comparison spanned
+  separate scripts and runs, so a difference in geometry or period could not
+  be excluded. Here nothing differs but the symbol list.
+  `CONTROL_donchian100` is now the first row of `screen_mechanisms.py` and
+  must stay there: a screen that prints "nothing survives" is making a claim
+  about its own power before it makes one about the market.
+  It still does not separate "works on these markets" from "was fitted to
+  them" — both predict this — and forward performance remains the only
+  discriminator.
+
+- **The registry was never the ceiling; the mechanism list was.** 71 features
+  are registered and the screen reached about twenty of them.
+  `efficiency_ratio`, `corr_btc`, `vol_of_vol`, `streak`, `bars_since`,
+  `swing_high/low`, the wick/body shape family and `rel_volume` had never
+  appeared in a single screened mechanism, so 14 new ones were added without
+  inventing a feature. None survived. What the DSL genuinely CANNOT express,
+  verified rather than assumed: order-book/microstructure (no book history is
+  stored anywhere, so the `depth` analyst's domain is unbacktestable);
+  open interest and long/short ratio (33.5 days over 5 symbols against a
+  75-day floor, and Binance's public OI endpoint caps at 30 — `COINALYZE_API_KEY`
+  is unset and is the one concrete unlock); multi-leg construction
+  (`StrategySpec` is one symbol, one direction, one exit, so `xs_rank` can
+  select but never hedge); cross-asset context beyond BTC; event time (
+  MacroGuard holds the calendar, the DSL cannot see it); and position state
+  (entries are stateless boolean arrays). Flow is NOT a gap — `taker_buy`
+  rides in the klines with full history.
+
 - **No filter improves the one mechanism that works, and profit factor cannot
   see why.** Paired test over the 16 declared symbols, same base rule, same
   geometry, with and without the condition:
