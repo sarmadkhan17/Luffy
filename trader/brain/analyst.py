@@ -22,7 +22,7 @@ from ..core.journal import Journal
 from ..strategy import rolling, spec_evidence
 from ..strategy.compile import compile_spec
 from ..strategy.spec import StrategySpec
-from ..strategy.vector_backtest import vector_walk_forward
+from ..strategy.vector_backtest import funding_for, vector_walk_forward
 
 log = logging.getLogger(__name__)
 
@@ -360,16 +360,24 @@ class Analyst:
             probe = StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf})
             compiled = compile_spec(probe)
             frames, btc, derivs_for, risk = self._ctx(tf, probe)
+            # a cross-sectional feature needs the rest of the book; without
+            # `universe` xs_rank/breadth/dispersion evaluate to NaN and the
+            # spec silently takes zero trades rather than failing loudly
+            universe = {s: {tf: f} for s, f in frames.items()
+                        if not s.startswith("_") and f is not None}
             for sym in [k for k in frames if not k.startswith("_")]:
                 sf = spec_evidence.frames_for(frames[sym], tf)
                 r = vector_walk_forward(compiled, sf, risk, btc=btc,
-                                        derivs=derivs_for(sym), symbol=sym)
+                                        derivs=derivs_for(sym), symbol=sym,
+                                        universe=universe)
                 if r["test"].trades < 8:
                     continue           # a 2-trade profit factor is noise
+                # the null must be charged what the actual was charged
+                fund = funding_for(sym, sf[tf], risk)
                 a = null_baseline.assess(
                     compiled, sf, risk, r["test"].profit_factor, btc=btc,
-                    derivs=derivs_for(sym), symbol=sym, draws=40,
-                    split=0.7, part="test")
+                    derivs=derivs_for(sym), universe=universe, symbol=sym,
+                    draws=40, split=0.7, part="test", funding=fund)
                 if a.get("percentile") is not None:
                     out[sym] = a["percentile"]
         except Exception as e:

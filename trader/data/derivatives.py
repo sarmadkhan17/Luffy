@@ -32,6 +32,11 @@ FAPI = "https://fapi.binance.com"
 SAPI = "https://api.binance.com"      # spot — the other half of the basis
 SERIES = ("funding", "oi", "taker_ratio", "ls_ratio", "basis")
 
+#: how many 1000-row klines pages `basis_history` may walk. At 1h that is
+#: 41.6 days a page, so 96 pages reach back just under 11 years — deeper
+#: than any perpetual listed on the venue.
+_MAX_BASIS_PAGES = 96
+
 #: milliseconds per kline interval, for paging basis
 _PERIOD_MS = {"5m": 300_000, "15m": 900_000, "30m": 1_800_000,
               "1h": 3_600_000, "2h": 7_200_000, "4h": 14_400_000,
@@ -164,7 +169,8 @@ class DerivFeed:
             {"symbol": to_binance(symbol), "limit": min(limit, 1000)}))
 
     def funding_history(self, symbol: str, years: float = 4.0,
-                        delay: float = 0.25) -> pd.DataFrame:
+                        delay: float = 0.25,
+                        since_ms: int | None = None) -> pd.DataFrame:
         """Page funding all the way back.
 
         A single call caps at 1000 rows, which at an 8-hour settlement is
@@ -172,10 +178,18 @@ class DerivFeed:
         paging every funding spec is refused for coverage — the data has to
         reach as far as the frame it is tested against, not the other way
         round.
+
+        `since_ms` is that frame's own floor, supplied per symbol by the
+        caller that knows how far the candles go. `years` is only the
+        fallback for a caller that does not: it was 4.0 against a 5-year 4h
+        frame, so the oldest fifth of every backtest paid the flat
+        conservative rate — a cost assumption wearing a measurement's
+        clothes.
         """
         import time as _t
         now_ms = int(_t.time() * 1000)
-        floor_ms = now_ms - int(years * 365.25 * 86400 * 1000)
+        floor_ms = (int(since_ms) if since_ms
+                    else now_ms - int(years * 365.25 * 86400 * 1000))
         sym = to_binance(symbol)
         # Page FORWARD. Given startTime/endTime Binance returns the EARLIEST
         # rows in the window, so walking endTime backwards just re-reads the
@@ -272,15 +286,21 @@ class DerivFeed:
         return self._frame(pairs)
 
     def basis_history(self, symbol: str, years: float = 2.0,
-                      period: str = "1h", delay: float = 0.25) -> pd.DataFrame:
-        """Page basis back `years`. Both venues serve deep klines, so this
-        is the one 30-day-capped series that is not actually capped."""
+                      period: str = "1h", delay: float = 0.25,
+                      since_ms: int | None = None) -> pd.DataFrame:
+        """Page basis back to `since_ms`, or `years` when nobody says.
+
+        Both venues serve deep klines, so this is the one 30-day-capped
+        series that is not actually capped — the only thing that ever
+        limited it was the default.
+        """
         import time as _t
         now_ms = int(_t.time() * 1000)
         step = _PERIOD_MS.get(period, 3600_000) * self._KLINE_PAGE
-        cursor = now_ms - int(years * 365.25 * 86400 * 1000)
+        cursor = (int(since_ms) if since_ms
+                  else now_ms - int(years * 365.25 * 86400 * 1000))
         chunks = []
-        for _ in range(80):                  # hard bound
+        for _ in range(_MAX_BASIS_PAGES):
             df = self._basis_between(symbol, period, cursor)
             if len(df):
                 chunks.append(df)
@@ -306,17 +326,25 @@ class DerivFeed:
     #: IMMEDIATELY instead of after two months of forward recording.
     BACKFILL_PERIODS = ("4h", "1h")
 
-    def backfill(self, symbols: list, delay: float = 0.3) -> dict:
+    def backfill(self, symbols: list, delay: float = 0.3,
+                 since: dict | None = None) -> dict:
         """Seed deeper history for the 30-day-window series.
 
         Mixed granularity in one series is fine and intended: features align
         by forward-filling the last observation before each bar, so the store
         ends up coarse in the past and fine near the present.
+
+        `since` is {symbol: epoch_ms} — the earliest bar the candle store
+        holds for that market. One floor per symbol, because a coin listed in
+        2024 has no 2021 frame to reach and asking for one only burns pages
+        against an empty window.
         """
         counts: dict = {}
+        since = since or {}
         for sym in symbols:
+            floor = since.get(sym)
             try:
-                fh = self.funding_history(sym, delay=delay)
+                fh = self.funding_history(sym, delay=delay, since_ms=floor)
                 if fh is not None and len(fh):
                     self.save(sym, "funding", fh)
                     counts["funding@history"] = \
@@ -324,7 +352,7 @@ class DerivFeed:
             except Exception as e:
                 log.warning(f"derivs backfill {sym}/funding history: {e}")
             try:
-                bh = self.basis_history(sym, delay=delay)
+                bh = self.basis_history(sym, delay=delay, since_ms=floor)
                 if bh is not None and len(bh):
                     self.save(sym, "basis", bh)
                     counts["basis@history"] = \
