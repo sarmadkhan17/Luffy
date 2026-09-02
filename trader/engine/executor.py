@@ -28,6 +28,8 @@ class Executor:
         self.market_type = market_type
         r = cfg["risk"]
         self.leverage = int(r["leverage"])
+        #: symbols whose venue leverage already matches self.leverage
+        self._leverage_set: set = set()
         self.tp_atr_mult = float(r["take_profit_atr_mult"])
         self.taker_fee = float(r.get("taker_fee_pct", 0.05)) / 100.0
         self._locks: dict[str, threading.Lock] = {}
@@ -53,6 +55,34 @@ class Executor:
         finally:
             lock.release()
 
+    def _ensure_leverage(self, symbol: str) -> None:
+        """Apply the configured leverage to the venue, once per symbol.
+
+        risk.leverage drove the margin figure (notional / leverage) and was
+        journalled on every trade, while set_leverage was never called — so
+        the venue traded at whatever the account was set to and the sizer
+        budgeted for something else. At 1x on the venue, every position needs
+        five times the margin the risk manager believes it does.
+
+        Cached because Binance rejects a leverage change while a position is
+        open on that symbol; a rejection is expected, never a reason to skip
+        the trade, and is not cached so it is retried once the symbol is flat.
+        """
+        if self.market_type != MarketType.FUTURES:
+            return
+        if symbol in self._leverage_set:
+            return
+        fn = getattr(self.ex, "set_leverage", None)
+        if fn is None:
+            return
+        try:
+            fn(self.leverage, symbol)
+            self._leverage_set.add(symbol)
+            log.info(f"leverage {self.leverage}x applied to {symbol}")
+        except Exception as e:
+            log.warning(f"leverage {self.leverage}x not applied to {symbol}: "
+                        f"{e} — venue keeps its current setting")
+
     def _open_locked(self, decision: Decision, amount: float, atr: float,
                      stop_loss: float, take_profit: float,
                      strategy_id: str, strategy_name: str,
@@ -63,6 +93,7 @@ class Executor:
         params: dict = {}
         if self.market_type == MarketType.FUTURES:
             params["reduceOnly"] = False
+        self._ensure_leverage(sym)
         try:
             order = self.ex.create_order(sym, "market", side_ccxt, amount,
                                          params=params)

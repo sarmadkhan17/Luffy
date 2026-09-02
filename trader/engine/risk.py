@@ -53,6 +53,14 @@ class RiskManager:
         self.leverage = int(r["leverage"])
         self.sl_atr_mult = float(r["stop_loss_atr_mult"])
         self.min_notional = float(r["min_notional_usdt"])
+        # A stop bounds the loss only when it FILLS; a gap through it loses
+        # notional, not the risk budget. And `amount = allowed / stop_dist`
+        # bounds distance-to-stop and nothing else, so the 0.4% stop floor
+        # turned a $23 budget into $5,750 of notional — a quarter of the
+        # account in one position, eight of which need margin that does not
+        # exist. Survivable at a 4-position cap; reachable at 8.
+        self.max_pos_margin = float(r.get("max_position_margin_pct", 20.0)) / 100.0
+        self.max_total_margin = float(r.get("max_total_margin_pct", 70.0)) / 100.0
         self.taker_fee = float(r.get("taker_fee_pct", 0.05)) / 100.0
 
         self.journal = journal
@@ -171,6 +179,24 @@ class RiskManager:
         stop_dist = max(price * side_risk_frac, price * 0.004)   # ≥0.4% floor
         amount = allowed / stop_dist
         notional = amount * price
+
+        # ── margin caps: reduce to fit rather than refuse ────────────────
+        open_margin = sum(p.notional_usdt for p in open_positions) / self.leverage
+        margin_room = min(equity * self.max_pos_margin,
+                          equity * self.max_total_margin - open_margin)
+        if margin_room <= 0:
+            return SizingResult(
+                False,
+                f"margin cap reached ({open_margin/equity:.0%}/"
+                f"{self.max_total_margin:.0%} of equity committed)",
+                0, 0, 0, 0)
+        margin = notional / self.leverage
+        if margin > margin_room:
+            scale = margin_room / margin
+            amount *= scale
+            notional *= scale
+            allowed *= scale          # the realised risk shrinks with the size
+
         if notional / self.leverage < self.min_notional:
             return SizingResult(False, "below min notional", 0, 0, 0, 0)
         return SizingResult(True, "ok",

@@ -67,6 +67,13 @@ risk:
   stop_loss_atr_mult: 2.5
   take_profit_atr_mult: 4.5
   trailing_atr_mult: 2.8
+  # A stop bounds the loss only when it fills; a gap through it loses
+  # notional. Sizing solved for distance-to-stop alone, so with the 0.4% stop
+  # floor a $23 risk budget bought $5,750 of notional — a quarter of the
+  # account in one position, and eight of those need margin that does not
+  # exist. Positions are scaled down to fit these, not refused.
+  max_position_margin_pct: 20.0   # margin one position may command
+  max_total_margin_pct: 70.0      # margin all open positions may command
   min_notional_usdt: 10
   taker_fee_pct: 0.05
   # perp carry charged in the backtest per 8h held (was unmodelled entirely)
