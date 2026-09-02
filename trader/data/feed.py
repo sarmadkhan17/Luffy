@@ -183,6 +183,11 @@ class DataFeed:
 
     def _store_load(self, symbol: str, tf: str, limit: int,
                     min_ts: int = 0) -> Optional[pd.DataFrame]:
+        # One market, one key. ccxt names a linear perp both 'XAU/USDT' and
+        # 'XAU/USDT:USDT', and keying by whatever the caller passed split the
+        # same market's history in two — a backtest reading the plain form saw
+        # 400 bars where 1427 existed.
+        symbol = norm_symbol(symbol)
         try:
             rows = self.db.execute(
                 "SELECT ts, open, high, low, close, volume, taker_buy "
@@ -202,6 +207,7 @@ class DataFeed:
               "4h": 14_400_000, "1d": 86_400_000}
 
     def _store_save(self, symbol: str, tf: str, df: pd.DataFrame) -> None:
+        symbol = norm_symbol(symbol)
         try:
             # .value/.astype(int64) are ns-based only for datetime64[ns];
             # this repo's pandas keeps ms resolution → convert explicitly
