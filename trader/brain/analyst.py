@@ -57,16 +57,43 @@ class Analyst:
         self.feed = feed
         self.notifier = notifier
         self._frames: dict = {}
+        #: how improbable a spec's cross-symbol null result must be before
+        #: it is admitted. 0.01 is conventional, not fitted: the measured
+        #: false-positive rate on uniform percentiles is 0.1-0.4%.
+        self.null_max_p = float(
+            (cfg.get("strategy") or {}).get("select_null_max_p", 0.01))
 
     # ── data ─────────────────────────────────────────────────────────────
-    def frames(self, tf: str) -> dict:
-        if tf not in self._frames:
-            self._frames[tf] = spec_evidence.load_frames(self.cfg, tf,
-                                                         feed=self.feed)
-        return self._frames[tf]
+    def frames(self, tf: str, extra: tuple = ()) -> dict:
+        key = (tf, extra)
+        if key not in self._frames:
+            base = list(spec_evidence.load_frames(
+                self.cfg, tf, feed=self.feed))
+            syms = [k for k in base if not k.startswith("_")]
+            syms += [x for x in extra if x not in syms]
+            self._frames[key] = spec_evidence.load_frames(
+                self.cfg, tf, feed=self.feed, symbols=syms)
+        return self._frames[key]
+
+    @staticmethod
+    def _declared(spec: StrategySpec) -> tuple:
+        """The markets the spec itself says it trades."""
+        try:
+            return tuple((spec.universe or {}).get("include") or ())
+        except Exception:
+            return ()
 
     def _ctx(self, tf: str, spec: StrategySpec):
-        frames = self.frames(tf)
+        """Evidence context for one spec, over ITS universe.
+
+        The backtest symbol list in config is five markets. A spec that
+        declares sixteen was judged — pooled profit factor, rotation null,
+        redundancy — on five of them, and the cross-symbol null test then had
+        five percentiles to work with, which is barely more than the minimum
+        that makes it computable. Donchian Breakout Trail reads p=0.094 on
+        those five and p=3.5e-04 on the sixteen it actually trades.
+        """
+        frames = self.frames(tf, self._declared(spec))
         btc = frames.get("_btc_1h")
         return (frames,
                 {"15m": btc} if btc is not None else None,
@@ -89,6 +116,7 @@ class Analyst:
         recent_days = float(s.get("select_recent_days", 90))
         min_trades = int(s.get("select_min_trades", 20))
         min_pf = float(s.get("select_min_pf", 1.15))
+        max_days = float(s.get("select_max_days", 365))
 
         best, results = None, {}
         for tf in timeframes:
@@ -107,7 +135,7 @@ class Analyst:
             ok, ev = rolling.recent_verdict(
                 compiled, frames, risk, tf, recent_days=recent_days,
                 min_trades=min_trades, min_pf=min_pf, btc=btc,
-                derivs_for=derivs_for)
+                derivs_for=derivs_for, max_days=max_days)
             results[tf] = ev
             if best is None or ev["pooled_pf"] > best[1]["pooled_pf"]:
                 best = (tf, ev, ok)
@@ -275,23 +303,29 @@ class Analyst:
     def _with_null_evidence(ev: dict, per_symbol_pct: dict) -> dict:
         """Attach the rotation-null result to an admission record.
 
-        Admission gates on a 90-day pooled profit factor and signal overlap —
-        the same arithmetic that scores ALWAYS-LONG at PF 1.28 on drift, so
-        it cannot separate a mechanism from a market direction.
+        The PF gate cannot separate a mechanism from a market direction —
+        it is the same arithmetic that scores ALWAYS-LONG at PF 1.28 on
+        drift. This one can: under no edge a spec's per-symbol null
+        percentiles are UNIFORM, so their spread across independent markets
+        is a test with a distribution, not a threshold someone chose.
 
-        Recorded, not gated. With 60 draws a single symbol's percentile is
-        noisy, and the admitted strategy's per-symbol figures (0.70-0.88) do
-        not separate cleanly from a rejected one's (0.60-1.00); a threshold
-        chosen to split those two would be fitted to them. Putting the number
-        in the record lets the 6h review and the operator see it.
+        An earlier version recorded a median and a count and deliberately
+        did not gate, because any cut that split the specs seen so far would
+        have been fitted to them. `consistency_p` is not fitted: it is the
+        binomial tail probability of the observed spread. On real specs it
+        separates cleanly — Donchian at 3.5e-04, a screen candidate that
+        died out of sample at 0.27.
         """
         import statistics as _st
+        from ..strategy import null_baseline
         vals = [v for v in per_symbol_pct.values() if v is not None]
         return {**ev,
                 "null_median_percentile": (round(_st.median(vals), 3)
                                            if vals else None),
                 "null_beats_90pct_on":
-                    f"{sum(1 for v in vals if v >= 0.90)}/{len(vals)}"}
+                    f"{sum(1 for v in vals if v >= 0.90)}/{len(vals)}",
+                "null_consistency_p": null_baseline.consistency_p(vals),
+                "null_symbols": len(vals)}
 
     def admit(self, spec: StrategySpec, book: list) -> tuple[bool, dict]:
         """Full admission decision: works now, and adds something new."""
@@ -305,7 +339,18 @@ class Analyst:
         if overlap > MAX_SIGNAL_OVERLAP:
             return False, {**ev, "reason": f"signal overlap {overlap:.2f} with "
                                            f"{twin} (> {MAX_SIGNAL_OVERLAP})"}
-        return True, self._with_null_evidence(ev, self._null_percentiles(spec, tf))
+        ev = self._with_null_evidence(ev, self._null_percentiles(spec, tf))
+        # A spec that cannot beat a rotation of its OWN entries across
+        # independent symbols has no edge, whatever its profit factor says.
+        # Too few symbols to test is not a pass and not a failure — it is
+        # silence, and silence does not block admission on its own.
+        p = ev.get("null_consistency_p")
+        if p is not None and p > self.null_max_p:
+            return False, {**ev, "reason":
+                           f"beats its own rotation no more often than chance "
+                           f"across {ev['null_symbols']} symbols "
+                           f"(p={p:.2g} > {self.null_max_p})"}
+        return True, ev
 
     def _null_percentiles(self, spec: StrategySpec, tf: str) -> dict:
         """{symbol: share of its own rotations this spec beats}, best effort."""
@@ -319,8 +364,8 @@ class Analyst:
                 sf = spec_evidence.frames_for(frames[sym], tf)
                 r = vector_walk_forward(compiled, sf, risk, btc=btc,
                                         derivs=derivs_for(sym), symbol=sym)
-                if r["test"].trades < 2:
-                    continue
+                if r["test"].trades < 8:
+                    continue           # a 2-trade profit factor is noise
                 a = null_baseline.assess(
                     compiled, sf, risk, r["test"].profit_factor, btc=btc,
                     derivs=derivs_for(sym), symbol=sym, draws=40,

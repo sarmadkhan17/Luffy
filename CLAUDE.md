@@ -144,8 +144,18 @@ brain/vault tick (~60 cycles), the Theorist autopsy (~360 cycles).
 
 `proposed → backtest → paper → active → demoted/retired`
 
-- **Admission** (Analyst): 90-day pooled PF ≥ 1.15 over ≥ 20 trades, AND
-  signal overlap < 0.6 against the book.
+- **Admission** (Analyst): pooled PF ≥ 1.15 over ≥ 20 trades, signal overlap
+  < 0.6 against the book, AND a cross-symbol rotation-null consistency
+  p < 0.01 (`select_null_max_p`). Fewer than 4 symbols carrying a percentile
+  is silence, not a pass, and does not block on its own.
+  The evidence window **starts at 90 days and doubles** until it holds 20
+  trades, capped at `select_max_days` (365). A fixed calendar window is
+  8,640 bars of 15m and 540 of 4h, so it asks a different question of each
+  timeframe — Donchian takes 15 trades in 90d and was refused for it.
+  Retirement never widens: too few recent trades is idle, not decayed.
+- Every spec is judged over **its own declared universe**, not the five
+  backtest symbols in config. Donchian reads null p=0.094 on those five and
+  9.2e-05 on the sixteen it trades.
 - **Probation** (`promotion.py`): 15 trades, WR ≥ 40%, PF ≥ 1.15.
 - **Decay** (Analyst): 30-day PF < 0.85 over ≥ 10 trades. Too few trades is
   *idle*, not decayed.
@@ -289,6 +299,24 @@ These are facts about the search space, not beliefs the Theorist may rewrite.
   often a spec beats a circular rotation of its OWN entries. A spec that
   cannot beat its own signals fired at a random offset has no edge, and no
   amount of parameter tuning or cheaper fees will give it one.
+- **A percentile per symbol is noise; the SHAPE across symbols is the test.**
+  Under no edge, per-symbol null percentiles are uniform, so counting how
+  many clear each of three cuts and reading the binomial tail gives a p-value
+  rather than a threshold someone picked
+  (`null_baseline.consistency_p`, false-positive rate 0.1-0.4%). Donchian
+  sits at p=3.5e-04, and each half of its universe clears independently
+  (1.2e-02 / 3.9e-02). The rule this replaced — "beats the 90th percentile on
+  ≥60% of symbols" — REJECTS Donchian at 7/15.
+- **Discovery evidence is a description of the symbols it was found on.**
+  `momo_persist` (`ret(24) > 0.03 and close > ema(100)`, both ways) was the
+  best result in the mechanism screen: PF 1.22, median null percentile 87%,
+  p=1.1e-03 over 501 trades. On 9 symbols it had never seen it fell to 65%
+  and p=0.27. Nothing about the first number was wrong; it just was not
+  evidence. `screen_mechanisms.py` now splits DISCOVERY from HELDOUT and
+  admits nothing that fails either.
+- **11 mechanisms x 2 exit geometries on 4h: none survive both universes.**
+  The trail is not universally better either — momo_persist drops from PF
+  1.22 to 0.91 under it. It is better for the mechanism it was chosen for.
 - **23 specs were screened this way and most sat AT or BELOW the no-edge line
   of ~0.76.** A Bollinger fade landed at the 10th percentile over 272 trades —
   materially worse than entering at random. Single-indicator reversion on 15m

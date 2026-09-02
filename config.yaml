@@ -129,7 +129,23 @@ strategies:
   # all 27 specs scored 0 passes, while 4 pass a 90-day pooled gate.
   select_recent_days: 90
   select_min_trades: 20
+  # 90 days is 8,640 bars of 15m and 540 of 4h, so a fixed window asks a
+  # different question of each timeframe: Donchian Breakout Trail produces 15
+  # trades in 90d across 16 symbols and was refused for "only 15 trades",
+  # while a 15m spec with the same edge per bar clears easily. The window
+  # doubles until it holds select_min_trades, and stops here. Retirement
+  # never widens — see rolling.has_decayed.
+  select_max_days: 365
   select_min_pf: 1.15
+  # A profit factor is a statement about arithmetic: exit geometry sets a win
+  # rate by itself, and ALWAYS-LONG scores PF 1.28 on drift alone. So a spec
+  # must also beat a circular rotation of its OWN entries, consistently,
+  # across independent symbols. Under no edge those per-symbol percentiles
+  # are uniform, so this is a binomial tail probability, not a fitted cut —
+  # measured false-positive rate 0.1-0.4%. Donchian sits at 3.5e-04; a screen
+  # candidate that died out of sample sat at 0.27. Fewer than 4 symbols
+  # carrying a percentile is silence, and silence does not block admission.
+  select_null_max_p: 0.01
   # ── retirement: shorter and more lenient than selection, because holding a
   # dead strategy costs continuously while retiring a live one costs a retest.
   # Too few trades is IDLE, not decayed — a setup waiting for its regime.

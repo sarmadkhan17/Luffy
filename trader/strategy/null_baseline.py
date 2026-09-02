@@ -18,6 +18,8 @@ and no amount of parameter tuning or cost reduction will make it one.
 """
 from __future__ import annotations
 
+from math import comb
+
 import numpy as np
 
 from .vector_backtest import WARMUP, simulate
@@ -99,3 +101,60 @@ def assess(compiled, frames: dict, risk_cfg: dict, actual_pf: float,
             "null_median": round(float(np.median(arr)), 3),
             "null_p90": round(float(np.percentile(arr, 90)), 3),
             "percentile": edge_percentile(actual_pf, pfs)}
+
+
+#: cuts the consistency test looks at, and how often a no-edge mechanism
+#: clears each. Percentiles are uniform under the null, so the cut IS the
+#: rate. Three looks, Bonferroni-corrected, because a single cut is a guess
+#: about where the evidence sits.
+_CUTS = (0.50, 0.75, 0.90)
+#: fewer symbols than this and the test has no power worth reporting
+MIN_SYMBOLS = 4
+
+
+def _tail_p(k: int, n: int, q: float) -> float:
+    """P(at least k of n symbols clear a cut a no-edge spec clears q of."""
+    return sum(comb(n, i) * q ** i * (1 - q) ** (n - i) for i in range(k, n + 1))
+
+
+def _clears(v: float, cut: float) -> bool:
+    """STRICTLY above the cut.
+
+    Percentiles come off a finite number of null draws, so they land on a
+    grid and ties at a cut are common. `>=` counts a spec sitting exactly ON
+    the no-edge median as beating it: ten symbols all at 0.50 — the
+    definition of no edge — scored p=0.003. Strict is conservative in the
+    direction an admission gate should be conservative in.
+    """
+    return v > cut
+
+
+def consistency_p(percentiles) -> float | None:
+    """How improbable this spread of per-symbol null percentiles is if the
+    mechanism has no edge at all.
+
+    A single symbol's percentile is noisy and a median throws away most of
+    what the sample says. What separates a mechanism from a lucky symbol is
+    the SHAPE of the distribution across independent markets: under no edge
+    the percentiles are uniform, so counting how many clear each cut and
+    reading the binomial tail is a test, not a fitted threshold.
+
+    Measured false-positive rate on uniform inputs: 0.4% at 15 symbols,
+    0.1% at 8 — the Bonferroni is conservative, and so is the strict
+    comparison at each cut.
+
+    Calibration, on real specs:
+      Donchian Breakout Trail, 15 symbols          p = 3.5e-04
+        its discovery half (8) / held-out half (7)     1.2e-02 / 3.9e-02
+      momo_persist, discovery universe (8)         p = 1.1e-03
+        the same rule on 9 symbols it never saw        p = 2.7e-01
+
+    Returns None when too few symbols carry a percentile to say anything.
+    """
+    vals = [float(v) for v in percentiles if v is not None]
+    n = len(vals)
+    if n < MIN_SYMBOLS:
+        return None
+    best = min(_tail_p(sum(1 for v in vals if _clears(v, q)), n, 1.0 - q)
+               for q in _CUTS)
+    return min(1.0, best * len(_CUTS))
