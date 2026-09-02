@@ -308,6 +308,18 @@ register's highest-severity items were all closed on 2026-09-02; see
   are retired, so it currently governs nothing.
 - The Researcher agent still does not exist; `research`-stream ideas queue up
   unconsumed.
+- **A $5.75 dust position from a RETIRED genome is blocking the book's only
+  strategy from its first live trade.** A trailing stop on UNI/USDT filled
+  302.87 of 303.87 coins; the 1.0 residue is under the venue's $10 minimum
+  notional, so it holds no stop and cannot be given one. It belongs to
+  `strat_606048ec95` ("ema_trend variant (22.0)", retired). UNI is currently
+  **past** its 100-bar Donchian high (close 6.3040 against 6.2220) and the
+  risk manager has refused the entry every cycle for thirteen hours with
+  "already exposed here". Closing it needs a human: run
+  `./venv/bin/python -m trader.kernel --status` to confirm, then close the
+  UNI position from the dashboard or Telegram. Reconcile now reports
+  `naked: N` at ERROR so this state is visible from inside the system rather
+  than only from `scripts/monitor.py`.
 - The wide search has now run **once** at adequate power (24 mechanisms x 2
   geometries x 19 discovery + 17 held-out symbols, with cross-sectional,
   carry, basis, BTC-relative and volatility-regime families included) and
