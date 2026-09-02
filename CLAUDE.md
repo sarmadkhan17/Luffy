@@ -216,7 +216,7 @@ invisible to other connections and holding a write lock — until some later
   old store is kept as `candles.demo-backup-*.db`. One market = one key:
   the store normalises `XAU/USDT:USDT` to `XAU/USDT`, having previously
   split the same market's history across both. |
-| `data/derivs.db` | funding (4y), basis (2y), OI/taker/long-short (~32d) |
+| `data/derivs.db` | funding (4y, 18 symbols), basis (2y, 17), OI/taker/long-short (~32d, 5) |
 | `data/doctrine.json` | versioned operating beliefs |
 | `data/agent_weights.json` | measured analyst accuracy (weekly) |
 | `data/ewa_state.json` | online expert weights |
@@ -271,10 +271,11 @@ register's highest-severity items were all closed on 2026-09-02; see
   the only strategy that beat both a rotation null and an always-long/
   always-short control, and it has taken **zero live trades**. Everything
   known about it is backtest.
-- Funding coverage is **12 of 16** book symbols and ~80% of each 4h frame.
-  The rest of each frame, and any symbol without history, still pays the flat
-  conservative `abs(funding_8h)`. Deepen it before trusting a carry-sensitive
-  spec.
+- Funding now covers **all 16 book symbols** (18 stored, 77k settlements) but
+  only ~80% of each 4h frame — the store starts 2022-08-31 and the candle
+  frame reaches further back. Those earlier bars still pay the flat
+  conservative `abs(funding_8h)`. `basis` covers 17 symbols; HYPE has no
+  Binance spot pair, so it has funding but no basis.
 - `promotion.py` still applies lifetime PF to the legacy genomes. All of them
   are retired, so it currently governs nothing.
 - The Researcher agent still does not exist; `research`-stream ideas queue up
