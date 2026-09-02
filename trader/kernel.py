@@ -917,6 +917,25 @@ class Kernel:
                 resolve_pending(self.journal, self.feed)
             except Exception as e:
                 log.warning(f"outcome resolution failed: {e}")
+        if Kernel._outcome_tick % 120 == 7:     # ~every 2h: the 24h horizon
+            # An outcome is written as soon as 4h can be graded, and is never
+            # revisited, so correct_24h was written NULL and stayed NULL —
+            # 191 resolved rows carried 54 24h grades. This pass fills them in
+            # once the candles exist.
+            try:
+                from .engine.outcome_backfill import upgrade_24h
+                syms = {r["symbol"] for r in self.journal.query(
+                    "SELECT DISTINCT symbol FROM outcomes "
+                    "WHERE correct_24h IS NULL")}
+                frames = {}
+                for sy in syms:
+                    df = self.feed.fetch_ohlcv(sy, "1h", limit=400)
+                    if df is not None and len(df):
+                        frames[sy] = df
+                if frames:
+                    upgrade_24h(self.journal, frames)
+            except Exception as e:
+                log.warning(f"24h outcome upgrade failed: {e}")
         if Kernel._outcome_tick % 360 == 5:     # ~every 6h: theorist autopsy
             try:
                 from .brain.theorist import Theorist

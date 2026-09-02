@@ -76,6 +76,45 @@ def _elapsed_minutes(ts: str, now=None) -> float:
     return (now - dt).total_seconds() / 60.0
 
 
+def upgrade_24h(journal, frames: dict, now=None) -> int:
+    """Fill the 24h grade on outcomes that were too young when first written.
+
+    A row was written the moment the 4h horizon could be graded, and
+    `candidates()` excludes any decision that already has an outcome row — so
+    it was never revisited. At 4h old no candle exists yet for the 24h
+    horizon, so `correct_24h` was written NULL and stayed NULL for good: 191
+    resolved outcomes in the live journal carried only 54 24h grades, while
+    the theorist and the agent weighting both read that column.
+
+    A horizon with no candle stays None. An ungraded horizon is honest; a
+    permanently ungradeable one is a bug.
+    """
+    rows = journal.query(
+        "SELECT decision_id, symbol, ts, action, entry_price, correct_24h "
+        "FROM outcomes WHERE correct_24h IS NULL")
+    n = 0
+    for r in rows:
+        if _elapsed_minutes(r["ts"], now) < HORIZONS["24h"]:
+            continue
+        df = frames.get(r["symbol"])
+        if df is None or not len(df):
+            continue
+        entry = float(r["entry_price"] or 0)
+        if entry <= 0:
+            continue
+        g = grade(df, r["ts"], entry, r["action"])
+        if g.get("correct_24h") is None:
+            continue                     # the frame does not reach it yet
+        with journal._tx() as c:
+            c.execute("UPDATE outcomes SET fwd_ret_24h=?, correct_24h=? "
+                      "WHERE decision_id=?",
+                      (g["fwd_ret_24h"], g["correct_24h"], r["decision_id"]))
+        n += 1
+    if n:
+        log.info(f"outcome upgrade: {n} decisions graded at 24h")
+    return n
+
+
 def candidates(journal, lean_frac: float = LEAN_FRAC,
                limit: int | None = None) -> list[dict]:
     """Ungraded HOLD decisions that leaned far enough to be a prediction."""
