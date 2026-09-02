@@ -121,6 +121,22 @@ GEOS = {
 # 5 symbols, far under the 75-day span a spec needs to be scored rather than
 # refused, so screening them would measure noise.
 MECHS=[
+ # CONTROL, and it must stay first. A screen that prints "nothing survives"
+ # is making a claim about its own power before it makes one about the
+ # market, so the known-good input runs through the same gate every time.
+ # Measured 2026-09-02, this row is REFUSED: discovery p=2.3e-01, held-out
+ # p=8.1e-02 against a gate of 0.01/0.05. That is not the gate being too
+ # strict — split by whether the spec NAMED the symbol, in one run with
+ # identical geometry, period, split, cost model and null:
+ #
+ #   declared by the spec   15 scored  median PF 1.42  pctile 87%  p=3.5e-04
+ #   never declared         20 scored  median PF 0.93  pctile 52%  p=9.7e-01
+ #
+ # 10 of 20 above the median is the coin flip. The gate has power — it hands
+ # the declared set 3.5e-04 — so "nothing survives" includes the incumbent,
+ # and the book has zero mechanisms that generalise, not one.
+ ("CONTROL_donchian100", "close > donchian_hi(100)", "close < donchian_lo(100)", ()),
+
  ("trend_pullback",  "close > ema(50) and close < ema(10)", "close < ema(50) and close > ema(10)", ()),
  ("breakout",        "close > donchian_hi(48)",             "close < donchian_lo(48)", ()),
  ("meanrev_z",       "zscore(close, 96) < -2.0",            "zscore(close, 96) > 2.0", ()),
@@ -181,6 +197,71 @@ MECHS=[
                      "close < donchian_lo(100) and atr_pct_rank(200) < 0.4", ()),
  ("break_hivol",     "close > donchian_hi(100) and atr_pct_rank(200) > 0.6",
                      "close < donchian_lo(100) and atr_pct_rank(200) > 0.6", ()),
+
+ # ── 2026-09-02: the registry was never the ceiling. 71 features are
+ # registered and the block above reaches about twenty of them, so
+ # "nothing but breakout survives" was a statement about which combinations
+ # had been written down, not about the space. efficiency_ratio, corr_btc,
+ # vol_of_vol, streak, bars_since, swing_high/low, the wick/body shape
+ # family and rel_volume had never appeared in a single screened mechanism.
+ #
+ # Every threshold below is placed at a MEASURED percentile of its own
+ # quantity over 183k discovery bars at 4h, not at a round number — the
+ # fault that silently zeroed the flow and vol-squeeze families:
+ #
+ #   efficiency_ratio(30)  p10 0.029  p50 0.162  p90 0.384
+ #   corr_btc(90)          p10 0.448  p50 0.725  p90 0.891
+ #   vol_of_vol(90)        p10 0.0018 p50 0.0038 p90 0.0094
+ #   upper/lower_wick()    p10 0.05   p50 0.25   p90 0.58
+ #   body_frac()           p10 0.087  p50 0.412  p90 0.759
+ #   rel_volume(50)        p10 0.424  p50 0.814  p90 1.788
+ #   dd_from_high(100)     p10 -0.261 p50 -0.111 p90 -0.027
+ #   streak(up)            p90 3      p99 6
+ #   bars_since(break)     p10 9      p50 107
+ #
+ # Donchian-plus-a-filter is deliberately NOT re-tested here: the paired
+ # filter test already showed every such variant holds PF while halving
+ # compounded return. These are different ENTRIES, not refinements.
+
+ # path quality: is the move direct, or is it chop covering the same ground?
+ ("er_trend",        "efficiency_ratio(30) > 0.38 and close > ema(100)",
+                     "efficiency_ratio(30) > 0.38 and close < ema(100)", ()),
+ ("er_revert",       "efficiency_ratio(30) < 0.03 and bb_pctb(20, 2.0) < 0.05",
+                     "efficiency_ratio(30) < 0.03 and bb_pctb(20, 2.0) > 0.95", ()),
+ # consecutive-bar runs, both signs — which way does the market pay?
+ ("streak_exhaust",  "streak(close < prev(close, 1)) >= 5",
+                     "streak(close > prev(close, 1)) >= 5", ()),
+ ("streak_follow",   "streak(close > prev(close, 1)) >= 4 and close > ema(50)",
+                     "streak(close < prev(close, 1)) >= 4 and close < ema(50)", ()),
+ # idiosyncratic move: the alt is not simply wearing BTC's beta
+ ("decoupled_trend", "corr_btc(90) < 0.45 and ret(30) > 0.05",
+                     "corr_btc(90) < 0.45 and ret(30) < -0.05", ()),
+ # absorption: a long tail rejected from one side inside a trend
+ ("wick_reject",     "lower_wick() > 0.6 and close > ema(100)",
+                     "upper_wick() > 0.6 and close < ema(100)", ()),
+ # volatility-of-volatility as a regime switch, never screened
+ ("lowvov_trend",    "vol_of_vol(90) < 0.0018 and close > ema(100)",
+                     "vol_of_vol(90) < 0.0018 and close < ema(100)", ()),
+ ("highvov_revert",  "vol_of_vol(90) > 0.0094 and bb_pctb(20, 2.0) < 0.05",
+                     "vol_of_vol(90) > 0.0094 and bb_pctb(20, 2.0) > 0.95", ()),
+ # deep pullback inside a long trend, measured from the range extreme
+ ("deep_pullback",   "dd_from_high(100) < -0.20 and close > ema(200)",
+                     "runup_from_low(100) > 0.30 and close < ema(200)", ()),
+ # range expansion: a wide directional bar on real volume
+ ("range_expand",    "body_frac() > 0.76 and rel_volume(50) > 1.8 and close > ema(50)",
+                     "body_frac() > 0.76 and rel_volume(50) > 1.8 and close < ema(50)", ()),
+ # pivot structure rather than a rolling extreme
+ ("swing_break",     "close > swing_high(10) and close > ema(100)",
+                     "close < swing_low(10) and close < ema(100)", ()),
+ # accelerating trend: slope rising, not merely positive
+ ("slope_accel",     "slope(close, 20) > 0.004 and slope(close, 20) > prev(slope(close, 20), 5)",
+                     "slope(close, 20) < -0.004 and slope(close, 20) < prev(slope(close, 20), 5)", ()),
+ # riding the band instead of fading it
+ ("bb_ride",         "bb_pctb(20, 2.0) > 0.92 and close > ema(100)",
+                     "bb_pctb(20, 2.0) < 0.08 and close < ema(100)", ()),
+ # the continuation WINDOW after a break, not the break itself
+ ("post_break",      "bars_since(close > donchian_hi(100)) < 10 and close > ema(50)",
+                     "bars_since(close < donchian_lo(100)) < 10 and close < ema(50)", ()),
 ]
 
 def spec_for(name, lo, sh, tf, geo, requires=()):
