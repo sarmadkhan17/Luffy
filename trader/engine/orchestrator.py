@@ -114,6 +114,24 @@ def net_score(votes: list, sigs: list, base_weights: dict,
     return num / den if den > 0 else 0.0
 
 
+def regime_allows(genome, regime: str) -> bool:
+    """Is this strategy eligible in `regime`?
+
+    An EMPTY regime_filter means every regime, not none. The gate read
+    `regime not in genome.regime_filter`, which an empty frozenset always
+    satisfies, so a spec written with `regime_filter: []` — how both the
+    Strategist and a hand-authored spec say "no restriction" — was skipped
+    before its evaluator was ever called, in every regime.
+
+    Every legacy genome carries a non-empty filter, which is why this went
+    unnoticed until a spec was the only thing in the book.
+    """
+    rf = getattr(genome, "regime_filter", None)
+    if not rf:
+        return True
+    return regime in rf
+
+
 def htf_trend_score(df_4h) -> float:
     """4h trend strength s ∈ [-1,+1]: EMA50 side × ADX-normalized slope."""
     import numpy as np
@@ -317,7 +335,7 @@ class Orchestrator:
                 continue
             if snap.market_type not in genome.markets:
                 continue
-            if snap.regime not in genome.regime_filter:
+            if not regime_allows(genome, snap.regime):
                 continue
             try:
                 sig = strat_lib.evaluate(genome, snap)
