@@ -18,7 +18,7 @@ author: Strategist
 
 ## Live record
 - closed trades: 2 · wins: 0
-- realized P&L: -124.17 USDT
+- realized P&L: -120.62 USDT
 - state: **demoted**
 
 Related: [[Statistical Mean Reversion]], [[Regime Playbook]], [[MOC]]

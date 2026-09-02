@@ -7,15 +7,19 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import logging
+import time
 
 import numpy as np
 
-from ..core.types import Action, StrategySignal
+from ..core.types import TF_MS, Action, StrategySignal, closed_bars
 from . import dsl
 from .features import FeatureCtx
 from .spec import StrategySpec
 
 log = logging.getLogger(__name__)
+
+#: context frames the snapshot keys by name rather than by timeframe
+_CTX_TF = {"BTC_1h": "1h"}
 
 
 @dataclass
@@ -71,12 +75,29 @@ class CompiledStrategy:
         (library.py:293) find it like any other evaluator.
         """
         def _evaluate(_genome, snap):
-            frames = {k: v for k, v in snap.dfs.items()
-                      if v is not None and len(v)}
+            # Judge CLOSED bars only. The live frame's last row is the bar
+            # currently forming, whose `close` is just the last trade — but
+            # the statistics that admitted this spec came from
+            # vector_backtest, which signals on bar i and fills at
+            # closes[i]. Reading the forming bar made the live rule "price
+            # is beyond the level right now" where the validated rule is
+            # "the bar CLOSED beyond it", so every intrabar poke that
+            # retraced was an entry the backtest never took. On 2026-09-02
+            # UNI/USDT 4h traded to 6.373 above its channel and closed at
+            # 5.742 below it.
+            frames = {}
+            for k, v in snap.dfs.items():
+                if v is None or not len(v):
+                    continue
+                # "BTC_1h" is a context frame keyed by name, not timeframe
+                tf = k if k in TF_MS else _CTX_TF.get(k)
+                v = closed_bars(v, tf) if tf else v
+                if len(v):
+                    frames[k] = v
             if self.spec.timeframe not in frames:
                 return None
-            btc = ({"15m": snap.dfs["BTC_1h"]}
-                   if snap.dfs.get("BTC_1h") is not None else None)
+            btc = ({"15m": frames["BTC_1h"]}
+                   if frames.get("BTC_1h") is not None else None)
             try:
                 lo, sh = self.entries(frames, btc=btc,
                                       derivs=getattr(snap, "derivs", None),
@@ -96,12 +117,27 @@ class CompiledStrategy:
                 action, why = Action.SELL, self.spec.entry_short
             else:
                 return None
+            # How stale is the bar this fired on? The backtest fills at the
+            # signal bar's own close (vector_backtest.py:115), so a live fill
+            # far into the bar is a different trade at a different price.
+            # Recorded, not gated: the right cutoff is a measurement nobody
+            # has taken yet, and guessing one risks suppressing real entries.
+            bar_age_min = None
+            try:
+                sig_tf = frames[self.spec.timeframe]
+                closed_at = (sig_tf["ts"].iloc[-1].timestamp() * 1000
+                             + TF_MS.get(self.spec.timeframe, 0))
+                bar_age_min = round(
+                    (time.time() * 1000 - closed_at) / 60_000, 1)
+            except Exception:
+                pass
             return StrategySignal(
                 strategy_id=self.spec.id, strategy_name=self.spec.name,
                 symbol=snap.symbol, action=action,
                 confidence=0.6,
                 rationale=f"{self.spec.name}: {why}",
-                params={"spec_id": self.spec.id})
+                params={"spec_id": self.spec.id,
+                        "signal_bar_age_min": bar_age_min})
         return _evaluate
 
     # ── tradingview path ─────────────────────────────────────────────────

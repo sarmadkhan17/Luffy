@@ -237,3 +237,36 @@ class RiskError(Exception):
 def norm_symbol(sym: str) -> str:
     """'BTC/USDT:USDT' -> 'BTC/USDT' (ccxt linear-perp suffix)."""
     return sym.split(":")[0] if sym else sym
+
+
+#: bar length in milliseconds, by timeframe name
+TF_MS = {"5m": 300_000, "15m": 900_000, "1h": 3_600_000,
+         "4h": 14_400_000, "1d": 86_400_000}
+
+
+def closed_bars(df, tf: str, now_ms: int | None = None):
+    """Rows of `df` whose bar had CLOSED by `now_ms` (default: now).
+
+    A forming bar is not a bar. Its open is real and its high/low/close are
+    truncated to whatever has traded so far, so reading it as final is
+    reading a measurement that was never taken — the same fabrication the
+    DSL forbids with "missing information is NaN, never a default".
+
+    Two places need this and must agree: the candle store, which must not
+    persist a partial candle, and the live spec evaluator, which must judge
+    the bar the backtest judged.
+    """
+    if df is None or not len(df):
+        return df
+    tf_ms = TF_MS.get(tf)
+    if not tf_ms:
+        return df
+    import time as _time
+    now = int(_time.time() * 1000) if now_ms is None else int(now_ms)
+    ts = df["ts"]
+    if hasattr(ts, "dt"):
+        unit = getattr(ts.dt, "unit", None) or "ms"
+        ms = ts.astype("int64") // {"ns": 10 ** 6, "us": 10 ** 3}.get(unit, 1)
+    else:
+        ms = ts.astype("int64")
+    return df[ms + tf_ms <= now]
