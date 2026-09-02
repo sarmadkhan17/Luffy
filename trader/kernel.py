@@ -751,13 +751,43 @@ class Kernel:
         return {**stats, "equity": status["equity"],
                 "dd_pct": status["drawdown_pct"]}
 
+    def _top_strategy(self, d) -> str:
+        """The strategy this trade belongs to: highest confidence AMONG the
+        signals that actually proposed the direction being taken.
+
+        `max(confidence)` over every signal could hand the trade — and its
+        P&L, and therefore its decay and promotion arithmetic — to a strategy
+        that signalled the other way.
+        """
+        agree = [s for s in (d.strategy_signals or [])
+                 if s.get("action") == d.action.value]
+        if not agree:
+            return ""
+        return max(agree, key=lambda s: s.get("confidence", 0)).get(
+            "strategy_id", "")
+
     def _try_enter(self, d, snap, equity, closed_count) -> bool:
-        df = snap.df(self.cfg["timeframes"]["execution"])
         from .agents.indicators import atr as _atr
-        a = _atr(df)
+        exec_tf = self.cfg["timeframes"]["execution"]
         side = "long" if d.action == Action.BUY else "short"
-        sl, tp = self.risk.protection_levels(snap.price, a, side,
-                                             self.executor.tp_atr_mult)
+        top_strategy = self._top_strategy(d)
+
+        # The stop must be measured on the frame the spec was validated on.
+        # A 2.0x ATR stop means nothing until you say which bar's ATR: 4h ATR
+        # runs 5-8x the 15m figure, so reading every ATR off the execution
+        # frame put a 4h trend spec behind a 0.40% stop where it was validated
+        # at 2.12% (BTC, 2026-09-02), sized to match, and stopped out by noise
+        # before its mechanism could resolve.
+        se = self._spec_exits.get(top_strategy)
+        atr_tf = se.timeframe if se is not None else exec_tf
+        a = _atr(snap.df(atr_tf)) if snap.df(atr_tf) is not None else 0.0
+        if a <= 0:                       # spec frame absent — do not guess
+            if se is not None:
+                d.skip_reason = f"no {atr_tf} bars to size the stop on"
+                log.info(f"ENTRY DENY {d.symbol}: {d.skip_reason}")
+                return False
+            a = _atr(snap.df(exec_tf))
+        sl, tp = self._protection_for(se, snap.price, a, side)
         stop_frac = abs(snap.price - sl) / snap.price
         sizing = self.risk.check_entry(
             self.state_machine.state, d.symbol, snap.price, a, stop_frac,
@@ -783,10 +813,6 @@ class Kernel:
                 return False
             log.info(f"meta size {d.symbol}: {m:.2f}× "
                      f"(p={getattr(d, 'meta_p', 0):.2f})")
-        top_strategy = ""
-        if d.strategy_signals:
-            best = max(d.strategy_signals, key=lambda s: s.get("confidence", 0))
-            top_strategy = best.get("strategy_id", "")
         pos = self.executor.open(
             d, sizing.amount, a, sl, tp,
             strategy_id=top_strategy or "orchestrator",
@@ -795,6 +821,35 @@ class Kernel:
                  if s.get("strategy_id") == top_strategy), "consensus"),
             exec_mode="live")
         return pos is not None
+
+    def _protection_for(self, se, price: float, atr: float,
+                        side: str) -> tuple[float, float]:
+        """Stop and target for one entry, from the spec that proposed it.
+
+        Falls back to the config geometry whenever no spec owns the trade —
+        which is every legacy genome, tuned on the execution frame.
+        """
+        if se is None:
+            return self.risk.protection_levels(
+                price, atr, side, self.executor.tp_atr_mult)
+        if se.stop_atr_mult > 0:
+            dist = se.stop_atr_mult * atr
+        elif se.stop_pct > 0:
+            dist = se.stop_pct * price
+        else:
+            return self.risk.protection_levels(
+                price, atr, side, self.executor.tp_atr_mult)
+        dist = max(dist, price * 0.004)        # venue noise floor
+        # A spec with no target rides the trail to the end. 0.0 is this
+        # schema's "no target" — inventing a far-away price would read as a
+        # real level the strategy never chose.
+        if not se.has_target:
+            return (price - dist, 0.0) if side == "long" \
+                else (price + dist, 0.0)
+        tp_dist = self.executor.tp_atr_mult * atr
+        if side == "long":
+            return price - dist, price + tp_dist
+        return price + dist, price - tp_dist
 
     @staticmethod
     def _as_position(t: dict):
@@ -860,7 +915,14 @@ class Kernel:
         """Run the exit engine over one open trade. Returns an exit reason."""
         from .agents.indicators import atr as _atr
         exec_tf = self.cfg["timeframes"]["execution"]
-        df = snap.df(exec_tf)
+        # trail on the spec's own frame, for the same reason the stop is set
+        # there: a 4.0 ATR trail on 15m bars is ~11x tighter than on 4h.
+        tf = self.exits.atr_timeframe(t) or exec_tf
+        df = snap.df(tf)
+        if df is None and tf != exec_tf:
+            log.warning(f"exit manage {t['symbol']}: no {tf} bars, "
+                        f"holding the stop where it is")
+            return None
         a = _atr(df) if df is not None else 0
         if a <= 0:
             return None

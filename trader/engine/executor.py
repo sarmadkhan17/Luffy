@@ -144,10 +144,12 @@ class Executor:
         self.journal.schedule_outcome(decision.id, decision.cycle_id,
                                          sym, decision.ts,
                                          decision.action.value, fill)
+        # 0.0 is the schema's "no target": the spec rides its trail out.
+        tp_note = f"{take_profit:.6g}" if take_profit else "none (trail)"
         fee_note = self.taker_fee * 200        # round-trip cost, % of notional
         log.info(f"TRADE OPEN {sym} {pos_side.value} {amount} @ {fill} "
                  f"| SL {stop_loss:.6g}{(' oid=' + sl_oid) if sl_oid else ''} "
-                 f"| TP {take_profit:.6g} | est RT fees ≈ {fee_note:.2f}% notional")
+                 f"| TP {tp_note} | est RT fees ≈ {fee_note:.2f}% notional")
         return pos
 
     def _confirm_fill(self, symbol: str, order_id: str,

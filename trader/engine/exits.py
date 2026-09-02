@@ -39,22 +39,37 @@ class SpecExit:
     trail where the spec chose 4.0, and a 50% partial at 1.5R on a spec with
     no target at all. A backtest that validates one geometry while the engine
     runs another is not evidence about anything.
+
+    `timeframe` is load-bearing beyond max_bars: an ATR multiple is
+    meaningless without the bar it was measured on. The engine read every
+    ATR off the 15m execution frame, and 4h ATR runs 5-8x larger — so a spec
+    validated with a 2.0x4h stop (BTC: 2.12% of price) traded live behind
+    2.5x15m (0.40% after the venue floor), and trailed at 2.8x15m (0.38%)
+    where it was validated at 4.0x4h (4.23%). Four to eleven times too tight
+    is not the same strategy.
     """
     max_bars: int
     timeframe: str
     trail_atr_mult: float
     has_target: bool
+    stop_atr_mult: float = 0.0
+    stop_pct: float = 0.0
 
     @classmethod
     def from_spec(cls, spec) -> "SpecExit":
         ex = spec.exit
         trail = ex.trail or {}
+        stop = ex.stop or {}
         return cls(
             max_bars=int((ex.time or {}).get("max_bars", 32)),
             timeframe=spec.timeframe,
             trail_atr_mult=float(trail.get("mult", 0.0))
             if trail.get("kind") == "atr" else 0.0,
-            has_target=(ex.target or {}).get("kind", "rr") != "none")
+            has_target=(ex.target or {}).get("kind", "rr") != "none",
+            stop_atr_mult=float(stop.get("mult", 0.0))
+            if stop.get("kind") == "atr" else 0.0,
+            stop_pct=float(stop.get("v", 0.0))
+            if stop.get("kind") == "pct" else 0.0)
 
     @property
     def max_hold_hours(self) -> float:
@@ -175,6 +190,15 @@ class ExitEngine:
             # legacy genomes are 15m bars by construction
             return float(g["max_hold_bars"]) * 15 / 60
         return None
+
+    def atr_timeframe(self, trade: dict) -> str | None:
+        """The frame this trade's ATR must be measured on, or None.
+
+        None means "no spec owns this trade" and the caller keeps the
+        execution timeframe, which is what every legacy genome was tuned on.
+        """
+        se = self.spec_exits.get(trade.get("strategy_id") or "")
+        return se.timeframe if se is not None else None
 
     def _trail_mult(self, trade: dict) -> float:
         se = self.spec_exits.get(trade.get("strategy_id") or "")
