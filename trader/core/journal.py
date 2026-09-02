@@ -326,6 +326,20 @@ class Journal:
                           (round(amount, 8), round(notional, 2),
                            round(pnl_delta, 8), trade_id))
 
+    def record_stop_order(self, trade_id: str, order_id: str,
+                          stop_price: float) -> None:
+        """Bind a live protective order to its trade, committed.
+
+        Both columns in ONE committed transaction, for the reason
+        `exits._move_stop` documents: writing a stop id through
+        `Journal.query()` leaves it uncommitted and invisible to every other
+        connection while holding a write lock.
+        """
+        with self._tx() as c:
+            c.execute("UPDATE trades SET stop_loss=?, sl_order_id=? "
+                      "WHERE id=?",
+                      (round(float(stop_price), 6), str(order_id), trade_id))
+
     def update_position_protection(self, trade_id: str, sl: float, tp: float) -> None:
         with self._tx() as c:
             c.execute("UPDATE trades SET stop_loss=?, take_profit=? WHERE id=?",
