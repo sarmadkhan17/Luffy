@@ -98,8 +98,8 @@ def test_proving_period_halves_size(rm):
 
 
 def test_heat_cap_blocks(rm):
-    # Heat must be reached WITHIN the position cap (4), or the count check
-    # fires first and this stops testing heat at all.
+    # Heat must be reached WITHIN the position cap, or the count check fires
+    # first and this stops testing heat at all.
     big = [_pos(notional=8000) for _ in range(3)]      # 3 × (2% × 8000) = 480 risk
     r = rm.check_entry(ControlState.ACTIVE, "ETH/USDT", 100.0, 1.0, 0.02,
                        big, equity=2000.0, closed_trades_count=100,
@@ -108,21 +108,26 @@ def test_heat_cap_blocks(rm):
     assert not r.ok and ("heat" in r.reason or "budget" in r.reason)
 
 
-def test_no_more_than_four_trades_open_at_once(rm):
-    """A hard operator cap, independent of heat: the fifth entry is refused
-    however small the risk on it."""
-    four = [_pos(notional=10) for _ in range(4)]
+def test_the_position_cap_is_hard_and_independent_of_heat(rm):
+    """One past the cap is refused however small the risk on it.
+
+    The cap's VALUE is a risk decision that config owns — it moved from 4 to
+    8 when Donchian Breakout Trail measured better at 0.5%/8 than 1.5%/4 on
+    both return and drawdown. What must not move is that the cap binds at all,
+    so this reads the configured number rather than restating it.
+    """
+    at_cap = [_pos(notional=10) for _ in range(rm.max_positions)]
     r = rm.check_entry(ControlState.ACTIVE, "ETH/USDT", 100.0, 1.0, 0.02,
-                       four, equity=100_000.0, closed_trades_count=100,
+                       at_cap, equity=100_000.0, closed_trades_count=100,
                        market_type="futures")
     assert not r.ok and "max positions" in r.reason
 
 
-def test_a_fourth_trade_is_still_allowed(rm):
-    """The cap is four open, not three."""
-    three = [_pos(notional=10) for _ in range(3)]
+def test_the_last_slot_under_the_cap_is_still_allowed(rm):
+    """The cap is N open, not N-1 — an off-by-one here silently costs a slot."""
+    under = [_pos(notional=10) for _ in range(rm.max_positions - 1)]
     r = rm.check_entry(ControlState.ACTIVE, "ETH/USDT", 100.0, 1.0, 0.02,
-                       three, equity=100_000.0, closed_trades_count=100,
+                       under, equity=100_000.0, closed_trades_count=100,
                        market_type="futures")
     assert r.ok, r.reason
 
