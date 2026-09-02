@@ -30,7 +30,7 @@ Everything runs through the local venv.
 ./venv/bin/python -m trader.dashboard.server  # dashboard on :8080
 ./restart.sh kernel | dashboard               # kill the old PID, start detached
 
-./venv/bin/python -m pytest tests/            # 603 tests
+./venv/bin/python -m pytest tests/            # 748 tests
 ./venv/bin/python -m pytest tests/test_phase0.py -k test_state_transitions
 
 ./venv/bin/python -m trader.brain.tv_harness --login   # one-time TV login
@@ -80,7 +80,7 @@ They never call each other. They share `data/luffy.db` (SQLite, WAL).
 | Strategist | `brain/spec_writer.py`, `strategist.py` | Turns a queued item plus doctrine plus the coverage brief into a `StrategySpec`. |
 | Strategy Analyst | `brain/analyst.py`, `strategy/spec_evidence.py` | Backtests it, measures which regimes it pays in, checks it isn't a near-copy, admits or refuses. |
 | Trader | `engine/executor.py`, `exits.py` | Places the order and arms the protective stop. |
-| Risk Officer | `engine/risk.py`, `agents/macro_guard.py`, `news_guard.py` | Sizes, caps, and blocks. Max **4** open trades. |
+| Risk Officer | `engine/risk.py`, `agents/macro_guard.py`, `news_guard.py` | Sizes, caps, and blocks. Max **8** open trades, 0.5% risk each. |
 | Librarian | `knowledge/vault.py` | Writes the human-readable record into `knowledge/`. |
 | Theorist | `brain/theorist.py` | Autopsies losing clusters into `data/doctrine.json` (versioned beliefs). |
 | Manager | `brain/judge.py` | Reviews the book every 6h, weekly meta-review. |
@@ -118,7 +118,9 @@ Journal.log_*()           → every decision AND every rejection
 
 The seven analysts read: **structure** (levels/breaks), **momentum**,
 **value** (VWAP mean reversion), **rotation** (BTC-led catch-up), **flow**
-(aggressor imbalance), **positioning** (funding + OI), **depth** (order book).
+(aggressor imbalance, from the venue's REAL takerBuyBaseAssetVolume
+since 2026-09-02 — it was a candle-shape proxy before that),
+**positioning** (funding + OI), **depth** (order book).
 
 Only the **stop** is armed on the exchange. The target and trail are worked
 in-process by `ExitEngine`; if the kernel dies, only the stop protects.
@@ -198,7 +200,12 @@ invisible to other connections and holding a write lock — until some later
 | file | holds |
 |---|---|
 | `data/luffy.db` | the journal — single source of truth |
-| `data/candles.db` | OHLCV: 5y at 4h, 3y at 1h, 1y at 15m |
+| `data/candles.db` | OHLCV: 5y at 4h, 3y at 1h, 1y at 15m. **Production**
+  public data — until 2026-09-02 it was Binance Demo, whose volume is
+  simulated (15x inflated) though its prices track to ~0.04%. Rebuilt; the
+  old store is kept as `candles.demo-backup-*.db`. One market = one key:
+  the store normalises `XAU/USDT:USDT` to `XAU/USDT`, having previously
+  split the same market's history across both. |
 | `data/derivs.db` | funding (4y), basis (2y), OI/taker/long-short (~32d) |
 | `data/doctrine.json` | versioned operating beliefs |
 | `data/agent_weights.json` | measured analyst accuracy (weekly) |
@@ -233,20 +240,57 @@ Telegram: `/panic /halt /freeze /resume /status /news /scouts /judge /tv`
 
 ## Open faults
 
-`docs/superpowers/plans/` carries the current plans. The audit register from
-2026-09-01 lists 31 verified faults; the highest-severity ones still open:
+`docs/superpowers/plans/` carries the current plans. The 2026-09-01 audit
+register's highest-severity items were all closed on 2026-09-02; see
+`git log 413da6e..` for the evidence behind each. What replaced them:
 
-- Positions are abandoned when their symbol rotates out of the universe —
-  exit management and exchange-exit detection both sit inside the per-symbol
-  scan loop.
-- `_move_stop` cancels the old stop **before** placing the replacement.
-- `RiskManager` peak equity and daily baseline are in-memory only, so a
-  restart disarms the drawdown ladder and the daily loss breaker.
-- Sizing caps stop-distance risk but not notional or margin.
-- `set_leverage` is never called; `risk.leverage` is journalled but never
-  applied to the venue.
-- The 24-hour outcome horizon is unreachable: `resolved_at` is stamped as soon
-  as `correct_4h` lands, and the resolver only selects unresolved rows.
-- `funding_z`/`oi_z`/`basis_z`/`taker_ratio_z`/`ls_ratio_z` pipe NaN through
-  `.fillna(0.0)`, and `compile.to_evaluator` passes no derivatives live — so
-  they read a constant "exactly average" on data that does not exist.
+- **Nothing in the book has a live track record.** Donchian Breakout Trail is
+  the only strategy that beat both a rotation null and an always-long/
+  always-short control, and it has taken **zero live trades**. Everything
+  known about it is backtest.
+- Both engines charge funding through `abs(funding_8h)`, billing a short for
+  funding it would actually receive. Conservative, so it stays until it can be
+  replaced with the real per-symbol series rather than a flat rate.
+- `promotion.py` still applies lifetime PF to the legacy genomes. All of them
+  are retired, so it currently governs nothing.
+- The Researcher agent still does not exist; `research`-stream ideas queue up
+  unconsumed.
+
+## What measurement established (do not re-litigate)
+
+Written 2026-09-02, after the candle store turned out to be simulator data.
+These are facts about the search space, not beliefs the Theorist may rewrite.
+
+- **A profit factor alone is a statement about arithmetic.** Exit geometry
+  sets a win rate by itself: TP 4.5 ATR over SL 2.5 ATR pays a coin flip 35.7%
+  of the time whatever the entry says. ALWAYS-LONG scored PF 1.28 on real
+  candles purely on drift. The gauntlet now reports `null_percentile` — how
+  often a spec beats a circular rotation of its OWN entries. A spec that
+  cannot beat its own signals fired at a random offset has no edge, and no
+  amount of parameter tuning or cheaper fees will give it one.
+- **23 specs were screened this way and most sat AT or BELOW the no-edge line
+  of ~0.76.** A Bollinger fade landed at the 10th percentile over 272 trades —
+  materially worse than entering at random. Single-indicator reversion on 15m
+  crypto is the most heavily mined space there is.
+- **Only both directions worked.** Long alone won 2 of 5 yearly windows, short
+  alone 3 of 5, the pair 4 of 5 — the legs are anti-correlated across regimes.
+  A one-directional trend rule is usually a market-direction bet wearing a
+  strategy's clothes.
+- **A fixed target amputates the tail a continuation mechanism lives on.**
+  Every sweep before 2026-09-02 used `trail={"kind":"none"}` with a fixed RR
+  target and a short hold cap, and the engine had supported ATR trailing all
+  along. That single omission hid the one mechanism that works.
+- **4h beat 1h on every mechanism tested**, because cost is charged per round
+  trip.
+- **Judge a small account by compound growth, not yield on starting capital.**
+  Income withdrawn from a fixed base is the wrong model and makes any edge
+  look pointless.
+- **A diversified mechanism must be judged as a portfolio**
+  (`strategy/portfolio_evidence.py`), not by worst symbol. Per-sleeve
+  arithmetic understates return on capital by roughly N; an uncapped shared
+  account overstates it, because 8 simultaneous 1%-risk positions in
+  correlated markets is one 18%-risk position.
+- **Validate the config, not just the strategy.** At the old 1.5% risk with 4
+  positions, Donchian tripped `halt_drawdown_pct` and stopped for good. 0.5%
+  with 8 beats 0.75% with 4 on BOTH return and drawdown: a trend book earns
+  its Sharpe from breadth, not size per trade.
