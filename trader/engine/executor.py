@@ -144,7 +144,7 @@ class Executor:
         self.journal.schedule_outcome(decision.id, decision.cycle_id,
                                          sym, decision.ts,
                                          decision.action.value, fill)
-        fee_note = self.taker_fee * pos.notional_usdt * 200   # % round-trip cost
+        fee_note = self.taker_fee * 200        # round-trip cost, % of notional
         log.info(f"TRADE OPEN {sym} {pos_side.value} {amount} @ {fill} "
                  f"| SL {stop_loss:.6g}{(' oid=' + sl_oid) if sl_oid else ''} "
                  f"| TP {take_profit:.6g} | est RT fees ≈ {fee_note:.2f}% notional")
