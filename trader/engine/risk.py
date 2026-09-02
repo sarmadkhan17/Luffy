@@ -14,6 +14,7 @@ equals allowed risk, then clamped by caps and min notional.
 """
 from __future__ import annotations
 
+import json
 import logging
 import math
 import threading
@@ -59,6 +60,41 @@ class RiskManager:
         self._day_start_equity: float | None = None
         self._peak_equity: float | None = None
         self._lock = threading.Lock()
+        self._load_state()
+
+    # ── persistence ─────────────────────────────────────────────────────
+    #: the high-water mark and the day's baseline live here, not only in RAM.
+    #: Held in memory alone, a restart made the first equity reading the new
+    #: peak, so an account 20% underwater reported 0% drawdown: the derisk
+    #: ladder and halt_drawdown_pct were both disarmed, and a losing day was
+    #: forgiven — precisely when a restart is most likely to be happening.
+    _STATE_KEY = "risk_state"
+
+    def _load_state(self) -> None:
+        try:
+            raw = self.journal.kv_get(self._STATE_KEY) if self.journal else None
+            if not raw:
+                return
+            d = json.loads(raw)
+            peak = d.get("peak_equity")
+            day = d.get("day_start_equity")
+            self._peak_equity = float(peak) if peak is not None else None
+            self._day_start_equity = float(day) if day is not None else None
+            self._day_key = d.get("day_key")
+        except Exception as e:
+            log.warning(f"risk state unreadable, starting clean: {e}")
+            self._peak_equity = self._day_start_equity = self._day_key = None
+
+    def _save_state(self) -> None:
+        if not self.journal:
+            return
+        try:
+            self.journal.kv_set(self._STATE_KEY, json.dumps({
+                "peak_equity": self._peak_equity,
+                "day_start_equity": self._day_start_equity,
+                "day_key": self._day_key}))
+        except Exception as e:
+            log.warning(f"risk state not persisted: {e}")
 
     # ── equity tracking ────────────────────────────────────────────────
     def update_equity(self, equity: float) -> dict:
@@ -74,6 +110,7 @@ class RiskManager:
             day_pnl_pct = (
                 (equity - self._day_start_equity) / self._day_start_equity
                 if self._day_start_equity else 0.0)
+            self._save_state()
             return {
                 "equity": equity,
                 "drawdown_pct": round(dd_pct * 100, 2),

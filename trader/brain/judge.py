@@ -157,6 +157,34 @@ class BrainJudge:
             isinstance(pf, (int, float)) and pf >= self.min_pf)
 
     # ── dossier assembly ────────────────────────────────────────────────
+    @staticmethod
+    def _expected_winrate(row: dict) -> float | None:
+        """The out-of-sample win rate this strategy was admitted on.
+
+        Without it the reviewer sees "0 wins from 3" with nothing to weigh it
+        against, and a fixed threshold reads an ordinary run of losses as a
+        broken mechanism.
+        """
+        try:
+            prov = (json.loads(row["spec_json"] or "{}")
+                    .get("provenance") or {})
+        except Exception:
+            return None
+        wr = prov.get("expected_winrate")
+        return float(wr) if isinstance(wr, (int, float)) else None
+
+    def _health_of(self, row: dict, wins: int, n: int) -> dict | None:
+        """Is the live record still consistent with the admitted envelope?"""
+        exp = self._expected_winrate(row)
+        if exp is None:            # legacy genomes carry no envelope
+            return None
+        from ..strategy.health import assess_health
+        h = assess_health(exp, wins, max(0, n - wins))
+        return {"verdict": h.verdict, "expected_winrate": exp,
+                "observed_winrate": round(h.observed_winrate, 4),
+                "p_underperform": round(h.p_underperform, 4),
+                "trades": h.trades, "summary": h.summary}
+
     def _strategy_rows(self) -> list[dict]:
         out = []
         for r in self.journal.list_strategies(["paper", "active", "demoted"]):
@@ -172,7 +200,8 @@ class BrainJudge:
                 "hypothesis": (r["hypothesis"] or "")[:160],
                 "stats": json.loads(r["stats_json"] or "{}"),
                 "live_trades": n, "win_rate": round(wins / n, 2) if n else None,
-                "pnl_usdt": round(float(t["pnl"] or 0), 2)})
+                "pnl_usdt": round(float(t["pnl"] or 0), 2),
+                "health": self._health_of(r, wins, n)})
         return out
 
     def _last_judgement(self) -> dict | None:

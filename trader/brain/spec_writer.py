@@ -72,6 +72,34 @@ _RULES = """DSL rules (violations are rejected, not repaired for you):
   spec using them is refused unless the data covers it."""
 
 
+#: Facts this firm established by measurement, as opposed to beliefs it
+#: currently holds. Doctrine is the Theorist's to rewrite; this is not.
+_MEASURED = """What measurement has already established here — do not re-litigate it:
+- A profit factor on its own is a statement about arithmetic. Exit geometry
+  sets a win rate by itself: TP 4.5 ATR over SL 2.5 ATR pays a coin flip 35.7%
+  of the time whatever the entry says. An ALWAYS-LONG rule scored PF 1.28 on
+  real candles purely on market drift. Your strategy is measured against a
+  rotation of its OWN entry signals, so a mechanism that cannot beat its own
+  signals fired at a random offset has no edge, whatever its profit factor.
+- 23 specs were screened this way. Most scored AT or BELOW the no-edge line
+  of ~0.76, and a Bollinger band fade landed at the 10th percentile over 272
+  trades — materially worse than entering at random. Classic single-indicator
+  reversion on 15m bars is the most heavily mined space there is; assume it is
+  arbitraged unless you have a reason it is not.
+- The one mechanism that beat both its rotation null AND an always-long/
+  always-short control did so with NO fixed target, an ATR trailing stop, a
+  long hold, and BOTH directions enabled. Long alone won 2 of 5 yearly windows
+  and short alone 3 of 5; only the pair won 4 of 5, because the two legs are
+  anti-correlated across regimes. A one-directional trend rule is usually a
+  market-direction bet wearing a strategy's clothes.
+- A fixed target amputates the fat right tail a continuation mechanism lives
+  on. If your thesis is that a move persists, do not cap it.
+- 4h beat 1h on every mechanism tested, because cost is charged per round trip.
+- Declare `universe`: a liquidity floor is part of the strategy. The largest
+  single loss on record (-$199.24) was taken on a market too thin for any
+  evidence to cover."""
+
+
 def _prompt(idea: dict | None, doctrine: dict | None, avoid: list,
             data: str = "") -> str:
     head = ("You are the Strategist for an autonomous crypto futures trading "
@@ -99,6 +127,7 @@ def _prompt(idea: dict | None, doctrine: dict | None, avoid: list,
     return (
         head
         + "Available features:\n" + vocabulary() + "\n\n" + _RULES + "\n\n"
+        + _MEASURED + "\n\n"
         "Judgement you should apply:\n"
         "- No edge lasts. Aim at a mechanism that pays in SOME regime, and "
         "say in `invalidation` how you would know it has stopped.\n"
@@ -118,11 +147,32 @@ def _prompt(idea: dict | None, doctrine: dict | None, avoid: list,
         '  "entry_short": "<DSL expression, or empty string>",\n'
         '  "filters": ["<DSL expression>", ...],\n'
         '  "regime_filter": ["TRENDING_UP"|"TRENDING_DOWN"|"RANGING"|"VOLATILE"],\n'
-        '  "exit": {"stop": {"kind":"atr","mult":2.0},\n'
-        '           "target": {"kind":"rr","v":2.0},\n'
-        '           "trail": {"kind":"none"},\n'
-        '           "time": {"max_bars": 32}}\n'
+        '  "universe": {"include": [], "exclude": [],\n'
+        '               "min_volume_usdt": 100000000},\n'
+        '  "exit": {"stop": {"kind":"atr","mult":2.5},\n'
+        '           "target": {"kind":"rr","v":3.0} | {"kind":"none"},\n'
+        '           "trail": {"kind":"atr","mult":3.0,"arm_at_r":1.0},\n'
+        '           "time": {"max_bars": 200}}\n'
         "}")
+
+
+#: a liquidity floor is part of a strategy, not a global setting. The largest
+#: single loss on record was taken on a market too thin for evidence to cover.
+_DEFAULT_MIN_VOLUME = 100_000_000
+
+
+def _universe(raw) -> dict:
+    """Whatever the writer declared, normalised. Was hardcoded to empty, so a
+    declared universe was silently discarded and the scan planner saw nothing.
+    """
+    u = raw if isinstance(raw, dict) else {}
+    inc = [str(x) for x in (u.get("include") or []) if x]
+    exc = [str(x) for x in (u.get("exclude") or []) if x]
+    try:
+        floor = float(u.get("min_volume_usdt", _DEFAULT_MIN_VOLUME))
+    except (TypeError, ValueError):
+        floor = _DEFAULT_MIN_VOLUME
+    return {"include": inc, "exclude": exc, "min_volume_usdt": floor}
 
 
 def _slug(name: str) -> str:
@@ -137,7 +187,7 @@ def _to_spec(raw: dict, provenance: dict) -> StrategySpec:
         thesis=(raw.get("thesis") or "").strip(),
         invalidation=(raw.get("invalidation") or "").strip(),
         provenance=provenance,
-        universe={"include": [], "exclude": [], "min_volume_usdt": 0},
+        universe=_universe(raw.get("universe")),
         timeframe=raw.get("timeframe") or "1h",
         direction=raw.get("direction") or "long",
         entry_long=(raw.get("entry_long") or "").strip(),
