@@ -42,12 +42,22 @@ timeframes:
   scan_interval_seconds: 60
 
 risk:
-  risk_per_trade_pct: 1.5        # sized so ~50%-WR strategies keep DD<=~12%
+  # 0.5 with 8 concurrent positions, not 1.5 with 4. Measured on Donchian
+  # Breakout Trail over 1724 trades and 4.9 years, WITH the derisk ladder and
+  # the halt breaker modelled: 1.5%/4 drives a 20% drawdown and trips
+  # halt_drawdown_pct, stopping the system for good; 1.0%/4 and 1.0%/8 halt
+  # too. 0.5%/8 survives at 12.8%/yr and a 15.3% peak drawdown, beating
+  # 0.75%/4 (8.5%/yr, 17.7%) on BOTH return and risk, because a trend book
+  # earns its Sharpe from breadth rather than from size per trade.
+  # Total heat falls with the change: 8 x 0.5% = 4% against 4 x 1.5% = 6%.
+  # A 37%-win-rate mechanism cannot be sized like a 50%-win-rate one.
+  risk_per_trade_pct: 0.5
   proving_period_trades: 30      # first N live trades run at proving_size_mult
   proving_size_mult: 0.5
   portfolio_heat_cap_pct: 15.0   # max total open risk across positions
   per_symbol_risk_cap_pct: 8.0
-  max_open_positions: 4          # hard cap: never more than 4 trades open at once
+  max_open_positions: 8          # breadth IS the risk control for a trend
+                                 # book; see risk_per_trade_pct above
   max_daily_loss_pct: 6.0        # breaker blocks NEW entries until UTC midnight
   drawdown_derisk_steps:         # staged de-risk on rolling DD
     - {dd_pct: 8,  size_mult: 0.5}
