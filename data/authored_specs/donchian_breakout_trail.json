@@ -33,6 +33,9 @@
   "name": "Donchian Breakout Trail",
   "parent_id": "",
   "provenance": {
+    "evidence_note": "Walk-forward across the 16 declared symbols at 4h: median out-of-sample win rate 38.85%, median PF 1.447, 487 out-of-sample trades. The win rate is the envelope the live record is judged against \u2014 at 38.85% a run of three losses is ordinary and must not read as breakage.",
+    "expected_pf": 1.447,
+    "expected_winrate": 0.3885,
     "note": "Found by testing what every earlier sweep could not express. Prior geometry sweeps used trail kind none with a fixed RR target and a short hold cap, which amputates the fat right tail this style lives on. With no target, a 4 ATR trailing stop and a long hold, median PF is 1.22 across five sequential yearly windows (4/5 profitable), while always-long and always-short controls on identical geometry fail in 0/5. Long alone wins 2/5 and short alone 3/5: the directions are anti-correlated across regimes and only the pair works.",
     "source_kind": "measured",
     "universe_note": "16 crypto perps. XAU and XAG were in the first symbol list and contributed NOTHING: they are recent listings with 1589 and 1427 4h bars, and the mechanism fires only 20 trades on each across the whole period \u2014 under 5 per fold, so every window scored nan and was silently dropped from the medians. The 18-symbol and 16-symbol results are identical to two decimals. They are also untradeable on Binance Demo, which lists crypto perps only. Re-test them once they carry a few years of history."
