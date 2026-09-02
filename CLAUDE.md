@@ -549,6 +549,39 @@ These are facts about the search space, not beliefs the Theorist may rewrite.
   them" — both predict this — and forward performance remains the only
   discriminator.
 
+- **1d is a closed door, not an unexplored one.** "4h beat 1h because cost is
+  charged per round trip" does NOT extend to 1d. Built daily bars from 4h
+  (six bars per UTC day, partial days dropped; verified field-exact against
+  the venue on 499 overlapping days for BTC/SOL/LINK) and ran the same gate.
+  The literal `donchian(100)` at 1d takes 2-7 test trades a symbol — **zero
+  of 35 symbols carry a null percentile, not scored**, which is silence, not
+  a failure. The duration-matched channel (100 4h-bars = ~17 days) IS
+  scoreable and reads nothing: `donchian(20)` declared p=1.0e+00,
+  `donchian(50)` declared p=1.0e+00. Compounded, declared falls from
+  **+16.8%/yr at 4h to +1.6%/yr at 1d**. Even the in-sample full-frame
+  reading, run deliberately to buy back the power the 1d split costs and
+  therefore generous to 1d, tops out at p=2.7e-01 against 4h's 1.1e-04.
+  The interesting part is HOW it fails: at 1d the declared/undeclared split
+  essentially disappears (1.6%/yr vs 1.0%/yr) — but by the declared set
+  collapsing to the undeclared level, not by the undeclared set rising. The
+  undeclared group never clears the coin flip at any channel length. So 1d
+  offers nothing to generalise with.
+  The run also re-derived the 4h control to the digit (declared PF 1.42,
+  pctile 87%, 13/15, p=3.5e-04; undeclared 0.93, 53%, 10/19, p=8.8e-01;
+  +16.8%/yr vs **-4.4%/yr at 49.9% maxDD**), so the instrument is the same
+  instrument.
+
+- **`vector_backtest.WARMUP = 210` is a BAR COUNT, not a duration.** `simulate`
+  skips the first 210 bars of every slice it is handed, including the test
+  half. At 4h that is 35 days and harmless. At 1d it discards 210 of a
+  550-bar test half — 38% — and collapses the rotation null, whose offsets
+  are drawn from `[WARMUP+1, n-WARMUP-1]`: only 129 distinct offsets remain
+  for 60 draws. Any future higher-timeframe work through this engine loses
+  210 bars per slice silently. Unfixed; it is not a fault at 4h or below.
+  Related: `backtest.resample()` uses `closed="right", label="right"`, which
+  is wrong against the store's open-time labels — do not use it to build
+  higher timeframes.
+
 - **The registry was never the ceiling; the mechanism list was.** 71 features
   are registered and the screen reached about twenty of them.
   `efficiency_ratio`, `corr_btc`, `vol_of_vol`, `streak`, `bars_since`,
