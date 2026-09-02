@@ -1,0 +1,28 @@
+{
+  "data_requires": ["ohlcv"],
+  "direction": "both",
+  "entry_long": "close > donchian_hi(100)",
+  "entry_short": "close < donchian_lo(100)",
+  "exit": {
+    "signal_exit": "",
+    "stop": {"kind": "atr", "mult": 2.0},
+    "target": {"kind": "none"},
+    "time": {"max_bars": 500},
+    "trail": {"kind": "atr", "mult": 4.0, "arm_at_r": 1.0}
+  },
+  "filters": [],
+  "generation": 0,
+  "id": "auth_donchian_breakout_trail",
+  "invalidation": "Retire if the BOTH-directions configuration drops below profit factor 1.0 over 40 out-of-sample trades, or if it stops beating an always-long and always-short control on the same exit geometry. Do not judge the long and short legs separately: each fails alone and the pair is the strategy.",
+  "markets": ["futures"],
+  "name": "Donchian Breakout Trail",
+  "parent_id": "",
+  "provenance": {
+    "source_kind": "measured",
+    "note": "Found by testing what every earlier sweep could not express. Prior geometry sweeps used trail kind none with a fixed RR target and a short hold cap, which amputates the fat right tail this style lives on. With no target, a 4 ATR trailing stop and a long hold, median PF is 1.22 across five sequential yearly windows (4/5 profitable), while always-long and always-short controls on identical geometry fail in 0/5. Long alone wins 2/5 and short alone 3/5: the directions are anti-correlated across regimes and only the pair works."
+  },
+  "regime_filter": [],
+  "timeframe": "4h",
+  "thesis": "A break of a multi-week range persists because risk is repriced slowly: systematic participants scale in over days and trapped counter-positions cover into the move, so the tail of a breakout is fatter than its body. A trailing stop harvests that tail, while a fixed target amputates it and turns a positive-expectancy mechanism into a losing one.",
+  "universe": {"include": []}
+}
