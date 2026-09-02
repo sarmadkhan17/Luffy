@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 
 from ..core.types import ClosedTrade, Position, Side, new_id, norm_symbol
 from ..core.journal import Journal
+from . import protective
 
 log = logging.getLogger(__name__)
 
@@ -86,7 +87,24 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
                     f"exchange → closed @{exit_px} pnl={pnl:+.2f}")
         ghosts += 1
 
-    summary = {"adopted": adopted, "ghosts": ghosts, "aligned": aligned}
+    # 3. orphaned protective stops — see protective.py. Binance books a
+    # reduceOnly stop as an ALGO order, so every cancel through
+    # /fapi/v1/order failed and every trail ratchet leaked its predecessor.
+    # 24 were live on this account, including nine BUY stops on SUI from a
+    # short closed days earlier — inert while flat, but exactly the closing
+    # side of the next short opened in that symbol.
+    swept = failed_sweep = 0
+    try:
+        open_now = journal.open_trades()
+        keep = {str(t["sl_order_id"]) for t in open_now if t.get("sl_order_id")}
+        protected = {t["symbol"] for t in open_now if t.get("sl_order_id")}
+        swept, failed_sweep = protective.sweep_orphans(
+            exchange, keep, set(ex_positions.keys()), protected)
+    except Exception as e:
+        log.warning(f"orphan stop sweep failed: {e}")
+
+    summary = {"adopted": adopted, "ghosts": ghosts, "aligned": aligned,
+               "stops_swept": swept, "stops_stuck": failed_sweep}
     if any(summary.values()):
         journal.log_control_event("reconcile", "luffy", detail=summary)
     log.info(f"reconcile: {summary}")
@@ -107,10 +125,7 @@ def flatten_all(exchange, journal: Journal, notifier=None) -> int:
         side_close = "sell" if t["side"] == "long" else "buy"
         try:
             if t.get("sl_order_id"):
-                try:
-                    exchange.cancel_order(t["sl_order_id"], sym)
-                except Exception:
-                    pass
+                protective.cancel_stop(exchange, t["sl_order_id"], sym)
             order = exchange.create_order(
                 sym, "market", side_close, float(t["amount"]),
                 params={"reduceOnly": True})

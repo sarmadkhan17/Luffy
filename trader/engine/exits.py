@@ -21,6 +21,7 @@ from dataclasses import dataclass
 
 from ..core.journal import Journal
 from ..core.types import Action, Position
+from . import protective
 
 log = logging.getLogger(__name__)
 
@@ -199,22 +200,17 @@ class ExitEngine:
         # This way the worst case is two reduceOnly stops of the same size,
         # and the loser is cancelled immediately below.
         try:
-            o = self.ex.create_order(
-                sym, "market", close_side, amount,
-                params={"stopLossPrice": round(new_sl, 6), "reduceOnly": True})
-            new_oid = str(o.get("id") or "")
+            new_oid = protective.place_stop(self.ex, sym, close_side,
+                                            amount, new_sl)
         except Exception as e:
             log.error(f"stop move failed {sym}: {e} — keeping the existing "
                       f"stop at {trade.get('stop_loss')}")
             return
-        if old_oid:
-            try:
-                self.ex.cancel_order(old_oid, sym)
-            except Exception as e:
-                # A duplicate stop is survivable; no stop is not. Reconcile
-                # picks up the stale order.
-                log.warning(f"stale stop {old_oid} on {sym} not cancelled: "
-                            f"{e} — new stop {new_oid} is in force")
+        if old_oid and not protective.cancel_stop(self.ex, old_oid, sym):
+            # A duplicate stop is survivable; no stop is not. The orphan
+            # sweep clears what could not be cancelled here.
+            log.warning(f"stale stop {old_oid} on {sym} survives — "
+                        f"new stop {new_oid} is in force")
         try:
             self.journal.update_position_protection(
                 trade["id"], round(new_sl, 6), trade.get("take_profit"))

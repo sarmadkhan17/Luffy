@@ -114,6 +114,37 @@ def net_score(votes: list, sigs: list, base_weights: dict,
     return num / den if den > 0 else 0.0
 
 
+def strategy_gate(action, sigs: list) -> tuple:
+    """A trade needs a strategy that says so. -> (action, veto, gated_lean)
+
+    Measured on 204 live decisions (2026-08-24..09-02): at the 4h horizon the
+    blended score returned -0.695% a call and won 34.6%, t=-3.84 — and BOTH
+    sides lost there (BUY -0.335%, SELL -1.117%). Market drift can make one
+    side lose; it cannot make both lose at the same horizon. That is negative
+    skill, and until this gate the analyst blend could open a position with no
+    strategy behind it at all.
+
+    Analysts still weigh in: they set the score that decides WHICH of the
+    proposed setups is worth taking, and they can still talk one down below
+    threshold. What they may no longer do is invent a direction of their own.
+    That is the shape CLAUDE.md describes — strategies own entry, analysts
+    supply coins and direction — and the cutover it says is manual.
+
+    `gated_lean` is the direction that was refused, kept so the veto is
+    graded like any other prediction. Reopening this must be an evidence
+    decision, not an opinion.
+    """
+    if action == Action.HOLD:
+        return action, "", None
+    if not sigs:
+        return Action.HOLD, "no strategy signal", action
+    if not any(s.action == action for s in sigs):
+        return (Action.HOLD,
+                f"no strategy agrees with {action.value} "
+                f"({len(sigs)} signalled the other way)", action)
+    return action, "", None
+
+
 def regime_allows(genome, regime: str) -> bool:
     """Is this strategy eligible in `regime`?
 
@@ -162,6 +193,8 @@ class Orchestrator:
         self.ewa_cfg = (sc.get("ewa") or {})
         self.meta_cfg = (sc.get("meta") or {})
         self._adapt_cfg = (sc.get("adaptive_threshold") or {})
+        self.require_strategy_signal = bool(
+            sc.get("require_strategy_signal", True))
         self._hit_cache: tuple[float, dict] = (0.0, {})   # ts, regime→(hr, n)
         self._blend_cache: tuple[float, str, dict] = (0.0, "", {})
         self._acc_cache: tuple[float, dict] = (0.0, {})   # ts, {agent: mult}
@@ -375,6 +408,20 @@ class Orchestrator:
         else:
             action = Action.HOLD
 
+        # ── a trade needs a strategy that says so ───────────────────────
+        # Measured on the live journal (204 decisions, 2026-08-24..09-02):
+        # at the 4h horizon the blended score returned -0.695% a call and
+        # won 34.6%, t=-3.84 — and BOTH sides lost there (BUY -0.335%,
+        # SELL -1.117%). Market drift can make one side lose; it cannot
+        # make both lose at the same horizon. That is negative skill, and
+        # the analyst blend was free to open a position with no strategy
+        # behind it at all. It no longer is: analysts choose among what a
+        # validated mechanism has already proposed, which is the shape
+        # CLAUDE.md describes and the cutover it says is manual.
+        strat_veto, gated_lean = "", None
+        if self.require_strategy_signal:
+            action, strat_veto, gated_lean = strategy_gate(action, sigs)
+
         # NaN from indicator edge cases must never reach SQLite (it becomes
         # NULL → NOT NULL violation → crash-loop → duplicate entries)
         def _clean(x: float, default: float = 0.0) -> float:
@@ -449,7 +496,10 @@ class Orchestrator:
             strategy_signals=[vars(s) | {"action": s.action.value}
                               for s in sigs])
         d.executed = False
+        d.gated_lean = gated_lean            # set only when the gate fired
         skip_bits = []
+        if strat_veto:
+            skip_bits.append(strat_veto)
         if veto_reason:
             skip_bits.append(veto_reason)
         if action != Action.HOLD and not entry_allowed:
@@ -467,10 +517,20 @@ class Orchestrator:
         # every directional decision — taken OR skipped — becomes a
         # falsifiable prediction with resolved outcomes. Skipped setups are
         # the majority of evidence; without them the learning loop starves.
+        lean = getattr(decision, "gated_lean", None)
         if decision.action != Action.HOLD:
             self.journal.schedule_outcome(
                 decision.id, decision.cycle_id, decision.symbol,
                 decision.ts, decision.action.value, snap.price)
+        elif lean is not None:
+            # The strategy gate turned a directional call into a HOLD. Grade
+            # it anyway, always — not at the shadow sampler's 15%. If the
+            # analyst blend does have edge the gate is throwing away, this
+            # column is where that shows up, and the gate can be reopened on
+            # evidence instead of opinion.
+            self.journal.schedule_outcome(
+                decision.id, decision.cycle_id, decision.symbol,
+                decision.ts, lean.value, snap.price)
         else:
             self._maybe_shadow_outcome(decision, snap)
 
