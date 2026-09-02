@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from .vector_backtest import simulate
+from .vector_backtest import funding_for, simulate
 
 log = logging.getLogger(__name__)
 
@@ -111,6 +111,7 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
             continue
         recent = df.iloc[-n:].reset_index(drop=True)
         derivs = derivs_for(sym) if derivs_for else None
+        fund = funding_for(sym, recent, risk_cfg)
         try:
             # NOTE: universe carries the FULL frames, not `recent` — a
             # cross-sectional feature aligns peers onto the base symbol's
@@ -121,7 +122,7 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
                                       derivs=derivs, universe=universe,
                                       symbol=sym)
             r = simulate(lo, sh, recent, compiled.spec.exit, risk_cfg,
-                         symbol=sym)
+                         symbol=sym, funding=fund)
         except Exception as e:
             log.warning(f"recent {compiled.spec.id} {sym}: {e}")
             continue

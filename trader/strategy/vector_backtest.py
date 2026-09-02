@@ -60,13 +60,28 @@ def _target_distance(exit_spec: ExitSpec, ref_px: float, atr: float,
 def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
              exit_spec: ExitSpec, risk_cfg: dict, equity: float = 2000.0,
              genome_id: str = "", symbol: str = "BT",
-             exit_sig: np.ndarray | None = None) -> BacktestResult:
+             exit_sig: np.ndarray | None = None,
+             funding: np.ndarray | None = None) -> BacktestResult:
+    """`funding`, when given, is the SIGNED 8-hourly rate per bar.
+
+    Without it the engine charges abs(flat rate) to both sides, which bills a
+    short for carry it would actually receive. That is conservative, so it is
+    the default and stays the default wherever the real series is unknown —
+    a NaN bar falls back to it rather than to a fabricated zero. With the
+    real series a long pays a positive rate and a short is paid it, which is
+    what the venue does.
+    """
     res = BacktestResult(genome_id=genome_id, symbol=symbol, bars=len(df))
     fee = float(risk_cfg.get("taker_fee_pct", 0.05)) / 100.0
     slip_frac = float(risk_cfg.get("slippage_atr_frac", 0.06))
     risk_frac = float(risk_cfg["risk_per_trade_pct"]) / 100.0
     funding_8h = float(risk_cfg.get("funding_rate_8h", 0.0001))
     bar_minutes = float(risk_cfg.get("bar_minutes", 15))
+    fund_arr = None
+    if funding is not None:
+        fund_arr = np.asarray(funding, dtype=float)
+        if len(fund_arr) != len(df):
+            fund_arr = None                 # misaligned is unknown, not zero
 
     n = len(df)
     if n <= WARMUP + 1:
@@ -136,8 +151,18 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
         gross = (exit_px - entry) * sign * amount
         fees = fee * (entry + exit_px) * amount
         hours = (exit_i - i) * bar_minutes / 60.0
-        funding = abs(funding_8h) * (hours / 8.0) * exit_px * amount
-        pnl = gross - fees - funding
+        if fund_arr is None:
+            carry = abs(funding_8h) * (hours / 8.0)
+        else:
+            held = fund_arr[i:exit_i]
+            known = held[np.isfinite(held)]
+            per_bar = bar_minutes / 60.0 / 8.0
+            # the real signed rate where the venue told us, the flat
+            # conservative charge for every bar it did not
+            carry = float(np.sum(known) * sign * per_bar) \
+                + abs(funding_8h) * (len(held) - len(known)) * per_bar
+        funding_cost = carry * exit_px * amount
+        pnl = gross - fees - funding_cost
 
         res.trades += 1
         res.pnl_usdt += pnl
@@ -167,6 +192,31 @@ def vector_backtest(compiled, frames: dict, risk_cfg: dict, btc=None,
                     symbol=symbol, exit_sig=ex)
 
 
+#: (symbol, first bar, bar count) -> aligned signed funding, or None
+_FUNDING_CACHE: dict = {}
+
+
+def funding_for(symbol: str, df, risk_cfg: dict):
+    """The real signed funding series for this frame, or None to charge flat.
+
+    Off when `real_funding` is false, and off for the synthetic symbols the
+    equivalence harness uses. Cached per frame because a gauntlet scores the
+    same symbol many times.
+    """
+    if not risk_cfg.get("real_funding", True) or not symbol or symbol == "BT":
+        return None
+    if df is None or not len(df) or "ts" not in getattr(df, "columns", ()):
+        return None
+    key = (symbol, str(df["ts"].iloc[0]), len(df))
+    if key not in _FUNDING_CACHE:
+        try:
+            from . import spec_evidence
+            _FUNDING_CACHE[key] = spec_evidence.funding_series(symbol, df)
+        except Exception:
+            _FUNDING_CACHE[key] = None
+    return _FUNDING_CACHE[key]
+
+
 def vector_walk_forward(compiled, frames: dict, risk_cfg: dict,
                         split: float = 0.7, btc=None, derivs=None,
                         symbol: str = "BT", universe=None, market=None) -> dict:
@@ -184,12 +234,14 @@ def vector_walk_forward(compiled, frames: dict, risk_cfg: dict,
     ex = compiled.exit_signal(frames, btc=btc, derivs=derivs,
                               universe=universe, market=market, symbol=symbol)
     cut = int(len(df) * split)
+    fund = funding_for(symbol, df, risk_cfg)
 
     def run(a, b):
         return simulate(lo[a:b], sh[a:b], df.iloc[a:b].reset_index(drop=True),
                         compiled.spec.exit, risk_cfg,
                         genome_id=compiled.spec.id, symbol=symbol,
-                        exit_sig=None if ex is None else ex[a:b])
+                        exit_sig=None if ex is None else ex[a:b],
+                        funding=None if fund is None else fund[a:b])
 
     train, test = run(0, cut), run(cut, len(df))
     ok_train, f_train = train.passes()
