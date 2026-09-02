@@ -40,6 +40,6 @@ time:   max 64 bars
 
 Related: [[Regime Playbook]], [[MOC]]
 
-Same family (`spec`): [[Aggressor_Divergence_At_Highs]], [[BTC_Rotation_Momentum]], [[Donchian_Breakout_Trail]], [[Funding_Price_Divergence]]
+Same family (`spec`): [[Aggressor_Divergence_At_Highs]], [[BTC_Rotation_Momentum]], [[Donchian_Breakout_Trail]], [[Funding_Price_Divergence]], [[Momentum_Divergence_Trail]]
 
 Filed by [[Strategist]]

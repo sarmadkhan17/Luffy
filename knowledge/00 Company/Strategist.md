@@ -24,6 +24,7 @@ Reports to [[Manager]].
 - [[EMA_Stack_Pullback]]
 - [[Funding_Price_Divergence]]
 - [[Liquidity_Sweep_Reversal]]
+- [[Momentum_Divergence_Trail]]
 - [[RSI_Exhaustion_Reclaim]]
 - [[VWAP_Extreme_Fade]]
 - [[ema_trend_harvested]]

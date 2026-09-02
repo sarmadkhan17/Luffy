@@ -271,9 +271,10 @@ register's highest-severity items were all closed on 2026-09-02; see
   the only strategy that beat both a rotation null and an always-long/
   always-short control, and it has taken **zero live trades**. Everything
   known about it is backtest.
-- Both engines charge funding through `abs(funding_8h)`, billing a short for
-  funding it would actually receive. Conservative, so it stays until it can be
-  replaced with the real per-symbol series rather than a flat rate.
+- Funding coverage is **12 of 16** book symbols and ~80% of each 4h frame.
+  The rest of each frame, and any symbol without history, still pays the flat
+  conservative `abs(funding_8h)`. Deepen it before trusting a carry-sensitive
+  spec.
 - `promotion.py` still applies lifetime PF to the legacy genomes. All of them
   are retired, so it currently governs nothing.
 - The Researcher agent still does not exist; `research`-stream ideas queue up
@@ -336,6 +337,14 @@ These are facts about the search space, not beliefs the Theorist may rewrite.
   spec validated with a 2.0x4h stop (BTC: 2.12%) traded behind 0.40% and was
   trailed at 0.38% where it was validated at 4.23%. Spec-aware exits
   (`SpecExit`) are cosmetic unless the frame travels with the multiple.
+- **Funding is signed, and charging `abs()` to both sides is not neutral.**
+  The flat model bills 10.95%/yr to longs AND shorts where BTC's own mean
+  settlement is 6.96%/yr paid by longs — over-charging one side by half and
+  mis-signing the other. Switching Donchian to the venue's real series moved
+  median PF 1.39 → 1.42 and the median null percentile 88% → 90%, on every
+  symbol and in the same direction; p stayed 3.5e-04. A cost correction that
+  moves every symbol a little and the verdict not at all is the shape a
+  correct one should have.
 - **4h beat 1h on every mechanism tested**, because cost is charged per round
   trip.
 - **Judge a small account by compound growth, not yield on starting capital.**
