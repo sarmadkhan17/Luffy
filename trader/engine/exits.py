@@ -108,7 +108,15 @@ class ExitEngine:
         if not sl or not amount:
             return None
 
-        initial_risk = abs(entry - sl)          # per base unit
+        # The risk the position was SIZED on, frozen at entry. Reading it
+        # from the CURRENT stop meant the first trail ratchet shrank the
+        # denominator toward zero: a live +2% trade logged R=83.06, and the
+        # time stop (r_now < 0.5), the flip exit (r_now < 1.0) and TP1 all
+        # gate on R. A trend spec's 500-bar time cap could therefore never
+        # fire once trailing began — the engine silently stopped matching
+        # the geometry the strategy was validated with.
+        initial_risk = float(trade.get("initial_risk") or 0) \
+            or abs(entry - sl)                 # per base unit
         if initial_risk <= 0:
             return None
         r_now = (mark - entry) * direction / initial_risk    # R multiple

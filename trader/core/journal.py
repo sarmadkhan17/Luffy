@@ -172,6 +172,12 @@ class Journal:
                 "ALTER TABLE strategies ADD COLUMN state_changed_at TEXT DEFAULT ''",
                 # meta-labeling: the secondary model's live judgment
                 "ALTER TABLE decisions ADD COLUMN meta_p REAL DEFAULT NULL",
+                # the stop distance the trade was SIZED on. Every R multiple
+                # was computed against the CURRENT stop, so the first trail
+                # ratchet shrank the denominator and R exploded — a live
+                # trail logged R=83 on a +2% position. Everything gated on R
+                # (the time stop, the flip exit, TP1) then read nonsense.
+                "ALTER TABLE trades ADD COLUMN initial_risk REAL DEFAULT NULL",
             ):
                 try:
                     c.execute(stmt)
@@ -260,16 +266,19 @@ class Journal:
                 "INSERT INTO trades (id,decision_id,symbol,side,amount,"
                 "entry_price,notional_usdt,leverage,stop_loss,take_profit,"
                 "sl_order_id,strategy_id,strategy_name,market_type,exec_mode,"
-                "opened_at,realized_pnl,status,tp1_done) "
+                "opened_at,realized_pnl,status,tp1_done,initial_risk) "
                 "VALUES (:id,:decision_id,:symbol,:side,:amount,:entry_price,"
                 ":notional_usdt,:leverage,:stop_loss,:take_profit,:sl_order_id,"
                 ":strategy_id,:strategy_name,:market_type,:exec_mode,"
-                ":opened_at,0,'open',0)",
+                ":opened_at,0,'open',0,:initial_risk)",
                 {"id": p.id, "decision_id": p.decision_id or "",
                  "symbol": p.symbol, "side": p.side.value, "amount": p.amount,
                  "entry_price": p.entry_price,
                  "notional_usdt": p.notional_usdt, "leverage": p.leverage,
                  "stop_loss": p.stop_loss, "take_profit": p.take_profit,
+                 # frozen at entry: the risk the position was sized on
+                 "initial_risk": round(abs(p.entry_price - p.stop_loss), 10)
+                 if p.stop_loss else None,
                  "sl_order_id": getattr(p, "sl_order_id", ""),
                  "strategy_id": p.strategy_id,
                  "strategy_name": p.strategy_name,
