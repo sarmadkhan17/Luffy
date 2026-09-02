@@ -220,10 +220,16 @@ class ExitEngine:
             log.warning(f"stale stop {old_oid} on {sym} survives — "
                         f"new stop {new_oid} is in force")
         try:
-            self.journal.update_position_protection(
-                trade["id"], round(new_sl, 6), trade.get("take_profit"))
-            self.journal.query("UPDATE trades SET sl_order_id=? WHERE id=?",
-                               (new_oid, trade["id"]))
+            # Both writes in ONE committed transaction. This used to journal
+            # the new stop id through Journal.query(), which runs on a
+            # thread-local connection with no transaction wrapper and DOES
+            # NOT COMMIT — so the id stayed invisible to every other
+            # connection while holding a write lock, and the next ratchet
+            # tried to cancel an id that was already superseded.
+            with self.journal._tx() as c:
+                c.execute("UPDATE trades SET stop_loss=?, sl_order_id=? "
+                          "WHERE id=?",
+                          (round(new_sl, 6), new_oid, trade["id"]))
         except Exception as e:
             log.warning(f"stop move journalling failed {sym}: {e}")
         trade["stop_loss"] = new_sl
