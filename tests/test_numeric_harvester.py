@@ -192,3 +192,145 @@ def test_harvest_once_journals_the_brief(journal):
 def test_harvest_once_with_no_symbols_does_nothing(journal):
     cfg = {**CFG, "derivatives": {"symbols": []}}
     assert _h(journal, cfg=cfg).harvest_once()["symbols"] == 0
+
+
+# ── Coinalyze: the three faults a live key exposed (2026-09-03) ──────────
+# Every one of these was a silent wrong answer, not a crash: a 400 that read
+# as "no data", another venue's book read as Binance's, and a funding series
+# 100x too large overwriting the one the backtest charges every trade with.
+
+def test_interval_is_translated_to_the_documented_enum():
+    """Coinalyze names intervals '4hour', not '4h'. Sending ours 400s, and a
+    400 degrades to an empty frame — which reads as 'no history', not as
+    'we asked wrongly'."""
+    from trader.data.coinalyze import to_interval
+    assert to_interval("4h") == "4hour"
+    assert to_interval("1h") == "1hour"
+    assert to_interval("1d") == "daily"
+    assert to_interval("4hour") == "4hour"      # already canonical
+
+
+def test_an_unmappable_interval_is_refused_not_sent():
+    from trader.data.coinalyze import to_interval
+    with pytest.raises(ValueError):
+        to_interval("3h")
+
+
+def _markets_payload():
+    """/future-markets returns one row per exchange per market. Bybit sorts
+    before Binance for BTC, which is how BTC/USDT silently resolved to Bybit."""
+    return [
+        {"symbol": "BTCUSDT.6", "exchange": "6", "base_asset": "BTC",
+         "quote_asset": "USDT", "is_perpetual": True,
+         "has_long_short_ratio_data": True, "has_ohlcv_data": True},
+        {"symbol": "BTCUSDT_PERP.A", "exchange": "A", "base_asset": "BTC",
+         "quote_asset": "USDT", "is_perpetual": True,
+         "has_long_short_ratio_data": True, "has_ohlcv_data": True},
+        {"symbol": "ETHUSDT_PERP.4", "exchange": "4", "base_asset": "ETH",
+         "quote_asset": "USDT", "is_perpetual": True,
+         "has_long_short_ratio_data": False, "has_ohlcv_data": True},
+    ]
+
+
+class _Client(Coinalyze):
+    """A Coinalyze whose HTTP layer is a canned dict, so resolution and unit
+    handling are testable without a key."""
+
+    def __init__(self, payloads):
+        super().__init__(key="test-key")
+        self.payloads, self.calls = payloads, []
+
+    def _get(self, path, params):
+        self.calls.append((path, dict(params)))
+        return self.payloads.get(path)
+
+
+def test_a_market_resolves_to_binance_not_whichever_row_came_first():
+    c = _Client({"/future-markets": _markets_payload()})
+    assert c.resolve("BTC/USDT") == "BTCUSDT_PERP.A"
+
+
+def test_a_symbol_binance_does_not_list_resolves_to_nothing():
+    """Better no series than another venue's book stored under our key."""
+    c = _Client({"/future-markets": _markets_payload()})
+    assert c.resolve("ETH/USDT") == ""
+
+
+def test_long_short_is_not_requested_when_the_venue_has_no_such_data():
+    c = _Client({"/future-markets": [
+        {"symbol": "XUSDT_PERP.A", "exchange": "A", "base_asset": "X",
+         "quote_asset": "USDT", "is_perpetual": True,
+         "has_long_short_ratio_data": False, "has_ohlcv_data": True}]})
+    assert c.history("X/USDT", "ls_account_ratio").empty
+    assert not [p for p, _ in c.calls if "long-short" in p]
+
+
+def test_funding_is_rescaled_from_percent_to_fraction():
+    """Coinalyze serves funding in percent and derivs.db stores a fraction:
+    measured against Binance's own series the ratio is exactly 100."""
+    c = _Client({"/future-markets": _markets_payload(),
+                 "/funding-rate-history": [{"history": [
+                     {"t": 1_700_000_000, "c": 0.005}]}]})
+    df = c.history("BTC/USDT", "funding")
+    assert df["value"].iloc[0] == pytest.approx(0.00005)
+
+
+def test_open_interest_is_stored_as_served():
+    """Measured ratio against the stored Binance series is 0.9998 — same
+    quantity, same units, so a scale here would introduce the error."""
+    c = _Client({"/future-markets": _markets_payload(),
+                 "/open-interest-history": [{"history": [
+                     {"t": 1_700_000_000, "c": 107692.0}]}]})
+    assert c.history("BTC/USDT", "oi")["value"].iloc[0] == pytest.approx(107692.0)
+
+
+def test_the_global_account_ratio_is_its_own_series():
+    """Coinalyze's long/short is Binance's globalLongShortAccountRatio
+    (corr +1.0000, max abs diff 0.00000 over 179 points). The recorder stores
+    topLongShortPositionRatio, which is anti-correlated with it at -0.64.
+    Merging them would fabricate a measurement."""
+    from trader.data.derivatives import SERIES
+    assert "ls_account_ratio" in SERIES
+    c = _Client({"/future-markets": _markets_payload(),
+                 "/long-short-ratio-history": [{"history": [
+                     {"t": 1_700_000_000, "r": 1.3137}]}]})
+    df = c.history("BTC/USDT", "ls_account_ratio")
+    assert df["value"].iloc[0] == pytest.approx(1.3137)
+    assert [p for p, _ in c.calls if "long-short" in p]
+
+
+def test_deepen_never_touches_funding(journal):
+    """derivs.db holds 4-5 years of Binance-native funding; Coinalyze offers
+    334 days. save() is INSERT OR REPLACE keyed by (symbol, series, ts), so
+    fetching funding here can only overwrite good rows with shallower ones."""
+    asked = []
+
+    class _Deep:
+        available = True
+
+        def history(self, symbol, series, years=2.0, interval="4hour"):
+            asked.append(series)
+            ts = pd.to_datetime([1_700_000_000_000], unit="ms", utc=True)
+            return pd.DataFrame({"ts": ts, "value": [1.0]})
+
+    h = _h(journal, _days("oi", 31.0))
+    h.coinalyze, h.delay = _Deep(), 0.0
+    h.deepen()
+    assert "funding" not in asked
+    assert set(asked) == {"oi", "ls_account_ratio"}
+
+
+def test_deepen_writes_the_account_ratio_without_disturbing_ls_ratio(journal):
+    class _Deep:
+        available = True
+
+        def history(self, symbol, series, years=2.0, interval="4hour"):
+            ts = pd.to_datetime([1_700_000_000_000], unit="ms", utc=True)
+            return pd.DataFrame({"ts": ts, "value": [1.0]})
+
+    h = _h(journal, _days("oi", 31.0))
+    h.coinalyze, h.delay = _Deep(), 0.0
+    h.deepen()
+    written = {series for _, series, _ in h.deriv.saved}
+    assert "ls_account_ratio" in written
+    assert "ls_ratio" not in written

@@ -125,6 +125,22 @@ def _ls_z(ctx, n):
     return ind.zscore_series(_deriv(ctx, "ls_ratio"), int(n), fill=None)
 
 
+# `ls_ratio` above is Binance's topLongShortPositionRatio — how much notional
+# the top traders hold each way, ~33 days deep. The two below are
+# globalLongShortAccountRatio: how many ACCOUNTS lean each way, 334 days deep
+# via Coinalyze. Measured corr between them is -0.64, so they answer different
+# questions and a mechanism must name the one it means.
+register("ls_account_ratio", domain=(0.0, 5.0), requires=("ls_account_ratio",))(
+    lambda ctx: _deriv(ctx, "ls_account_ratio"))
+
+
+@register("ls_account_ratio_z", arg_specs=((int, 12, 2000),),
+          domain=(-4.0, 4.0), requires=("ls_account_ratio",))
+def _ls_acct_z(ctx, n):
+    return ind.zscore_series(_deriv(ctx, "ls_account_ratio"), int(n),
+                             fill=None)
+
+
 # ── basis (years of history — backtestable today) ────────────────────────
 register("basis", domain=(-0.1, 0.1), requires=("basis",))(
     lambda ctx: _deriv(ctx, "basis"))

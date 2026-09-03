@@ -30,7 +30,12 @@ log = logging.getLogger(__name__)
 
 FAPI = "https://fapi.binance.com"
 SAPI = "https://api.binance.com"      # spot — the other half of the basis
-SERIES = ("funding", "oi", "taker_ratio", "ls_ratio", "basis")
+#: `ls_ratio` is Binance's topLongShortPositionRatio (what the recorder
+#: polls); `ls_account_ratio` is globalLongShortAccountRatio, which only
+#: Coinalyze serves deeply. They are anti-correlated (-0.64 measured), so
+#: they are two series and never one.
+SERIES = ("funding", "oi", "taker_ratio", "ls_ratio", "ls_account_ratio",
+          "basis")
 
 #: how many 1000-row klines pages `basis_history` may walk. At 1h that is
 #: 41.6 days a page, so 96 pages reach back just under 11 years — deeper
