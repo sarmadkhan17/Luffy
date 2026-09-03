@@ -123,9 +123,13 @@ class Harvester:
         if not (self._ccfg.get("enabled", True) and self.coinalyze.available):
             return out
         years = float(self._ccfg.get("history_years", 2.0))
-        interval = self._ccfg.get("interval", "4h")
+        interval = self._ccfg.get("interval", "4hour")
+        # NOT funding: Binance serves it natively over 4-5 years, Coinalyze
+        # over 334 days and in percent rather than a fraction, and `save` is
+        # INSERT OR REPLACE — so fetching it here could only overwrite good
+        # rows with shallower ones. See coinalyze.ENDPOINTS.
         for sym in self.symbols:
-            for series in ("oi", "ls_ratio", "funding"):
+            for series in ("oi", "ls_account_ratio"):
                 try:
                     df = self.coinalyze.history(sym, series, years=years,
                                                 interval=interval)

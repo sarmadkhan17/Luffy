@@ -215,7 +215,14 @@ harvester:                     # numbers: series acquisition + coverage brief
   coinalyze:
     enabled: true              # no-op without COINALYZE_API_KEY
     history_years: 2.0
-    interval: 4h
+    # Coinalyze's enum, NOT our timeframe name — "4h" answers 400 and a 400
+    # degrades to an empty frame, which reads as "no history". Retention is a
+    # ~2000-bar rolling buffer per interval, measured 2026-09-03:
+    #   1hour 84d | 4hour 334d | 12hour 1000d | daily 2190d
+    # so 4hour gives 334 days, against a 75-day coverage floor. Deeper is not
+    # available at any interval we trade. Funding is deliberately NOT fetched
+    # here; Binance serves it natively over 4-5 years.
+    interval: 4hour
 
 mcp:                           # MCP servers the KERNEL may call at runtime
   servers:                     # (.mcp.json configures the coding agent's own)

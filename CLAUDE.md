@@ -51,8 +51,12 @@ Optional — each degrades to a silent no-op:
   free, keyless ForexFactory feed. A Finnhub key is tried first only if
   present, and the free tier cannot read that endpoint (HTTP 403), so the
   fallback is the normal path.
-- `COINALYZE_API_KEY` — deep history for open interest / taker / long-short,
-  which Binance truncates at ~30 days.
+- `COINALYZE_API_KEY` — deep history for open interest and the global
+  long/short account ratio, which Binance truncates at ~30 days. **Live since
+  2026-09-03.** Retention there is a ~2000-bar rolling buffer PER INTERVAL,
+  not a horizon: 1hour 84d, 4hour 334d, 12hour 1000d, daily 2190d. Older
+  windows return empty rather than a truncated page, so there is nothing to
+  page toward — 334 days at our 4h frame is the whole of it.
 
 `BINANCE_DEMO=true` routes every order to Binance Demo Trading. Trades are
 journalled `exec_mode="live"`, meaning real orders were sent — to a demo venue.
@@ -168,7 +172,7 @@ Population changes take effect within one brain tick (~1h), no restart.
 ## The strategy language
 
 A spec's logic is a restricted expression DSL over a feature registry —
-**71 features** in `strategy/features.py`, `features_deriv.py`, `features_xs.py`.
+**73 features** in `strategy/features.py`, `features_deriv.py`, `features_xs.py`.
 A strategy can only express a mechanism whose observables are registered, so
 the registry is the ceiling on what the system can discover.
 
@@ -221,7 +225,7 @@ invisible to other connections and holding a write lock — until some later
   split the same market's history across both. **Closed bars only** — a
   forming bar is not a bar; see `core.types.closed_bars` and
   `scripts/repair_partial_bars.py`. |
-| `data/derivs.db` | funding (4-5y, 32 symbols), basis (2y, 29), OI/taker/long-short (~32d, 5) |
+| `data/derivs.db` | funding (5y, 36 symbols), basis (2y, 32), oi + ls_account_ratio (334d, the declared 16), taker_ratio + ls_ratio (~34d, 5) |
 | `data/doctrine.json` | versioned operating beliefs |
 | `data/agent_weights.json` | measured analyst accuracy (weekly) |
 | `data/ewa_state.json` | online expert weights |
@@ -229,9 +233,17 @@ invisible to other connections and holding a write lock — until some later
 | `knowledge/` | Obsidian vault — the human-readable narrative |
 
 A derivative series must span **75 days** (90% of the backtest frame) before a
-spec built on it can be scored rather than refused. `funding` and `basis`
-clear it; `oi`, `taker_ratio` and `ls_ratio` sit at ~32 days and cannot reach
-75 from Binance alone.
+spec built on it can be scored rather than refused. `funding`, `basis`, `oi`
+and `ls_account_ratio` clear it; `taker_ratio` and `ls_ratio` sit at ~34 days
+over 5 symbols and cannot reach 75 from Binance alone.
+
+**`ls_ratio` and `ls_account_ratio` are different measurements and must never
+be merged.** `ls_ratio` is Binance's `topLongShortPositionRatio` — how much
+notional the top traders hold each way, what the recorder polls, ~34 days.
+`ls_account_ratio` is `globalLongShortAccountRatio` — how many ACCOUNTS lean
+each way, what Coinalyze serves, 334 days. Measured correlation between them
+is **-0.64**: substituting one for the other does not rescale a signal, it
+inverts it.
 
 ## Control states
 
@@ -664,7 +676,7 @@ These are facts about the search space, not beliefs the Theorist may rewrite.
   is wrong against the store's open-time labels — do not use it to build
   higher timeframes.
 
-- **The registry was never the ceiling; the mechanism list was.** 71 features
+- **The registry was never the ceiling; the mechanism list was.** 73 features
   are registered and the screen reached about twenty of them.
   `efficiency_ratio`, `corr_btc`, `vol_of_vol`, `streak`, `bars_since`,
   `swing_high/low`, the wick/body shape family and `rel_volume` had never
@@ -672,9 +684,8 @@ These are facts about the search space, not beliefs the Theorist may rewrite.
   inventing a feature. None survived. What the DSL genuinely CANNOT express,
   verified rather than assumed: order-book/microstructure (no book history is
   stored anywhere, so the `depth` analyst's domain is unbacktestable);
-  open interest and long/short ratio (33.5 days over 5 symbols against a
-  75-day floor, and Binance's public OI endpoint caps at 30 — `COINALYZE_API_KEY`
-  is unset and is the one concrete unlock); multi-leg construction
+  open interest and long/short ratio — **CLOSED 2026-09-03**, see below;
+  multi-leg construction
   (`StrategySpec` is one symbol, one direction, one exit, so `xs_rank` can
   select but never hedge); cross-asset context beyond BTC; event time (
   MacroGuard holds the calendar, the DSL cannot see it); and position state
@@ -710,6 +721,38 @@ These are facts about the search space, not beliefs the Theorist may rewrite.
   figures omit the derisk ladder and the halt breaker, which the spec's own
   `portfolio_expectation` models — that is why it reads 9.6%/yr where this
   reads 17.3%. The comparison between rows is what this measures.
+
+- **A never-exercised client is not a working client, and its failures are
+  silent by construction.** `COINALYZE_API_KEY` was the one concrete unlock
+  named above. A live key (2026-09-03) showed the client had three faults, and
+  every one produced a plausible wrong answer rather than an error:
+  (1) it sent `interval="4h"` where the API's enum is `"4hour"`, and the 400
+  degrades to an empty frame — which reads downstream as "no history exists",
+  not as "we asked wrongly"; (2) `/future-markets` returns ONE ROW PER
+  EXCHANGE and `markets()` took the first match, so `BTC/USDT` resolved to
+  **Bybit** while SOL/LINK/UNI happened to land on Binance — mixed venues
+  under one symbol key; (3) the docstring claimed it paged and it did not,
+  though that turned out not to matter.
+  The units were the dangerous part. Measured against what `derivs.db`
+  already held for BTC: **funding is served in PERCENT where we store a
+  fraction — ratio exactly 100.0000**; open interest agrees as served
+  (0.9998, p10-p90 within 0.6%); and the long/short series is Binance's
+  `globalLongShortAccountRatio` (corr **+1.0000**, max abs difference
+  **0.00000** over 179 points) while the recorder stores
+  `topLongShortPositionRatio`, which is ANTI-correlated with it at **-0.64**.
+  `deriv.save` is INSERT OR REPLACE keyed by (symbol, series, ts) and
+  `coinalyze.enabled` defaults true, so dropping a key into `.env` before
+  this was found would have overwritten 334 days of funding with values 100x
+  too large — silently, with plausible numbers, on the series that charges
+  every trade in the backtest that had just been corrected.
+  `deepen()` therefore fetches `oi` and `ls_account_ratio` and **never
+  funding**: Binance serves funding natively over 4-5 years, so there was
+  nothing to gain and a cost model to lose.
+  Result: `oi` and `ls_account_ratio` now span **334 days over the declared
+  16** and read `usable` in the coverage brief where `oi` was `thin`. An
+  entire mechanism family is scoreable rather than refused. Caveat: 334 days
+  is ONE regime, and the cross-symbol consistency test remains the only
+  control that survives that.
 
 - **Validate the config, not just the strategy.** At the old 1.5% risk with 4
   positions, Donchian tripped `halt_drawdown_pct` and stopped for good. 0.5%

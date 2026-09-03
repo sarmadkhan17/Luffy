@@ -21,7 +21,11 @@ def test_symbol_conversion():
 
 
 def test_known_series_names():
-    assert SERIES == ("funding", "oi", "taker_ratio", "ls_ratio", "basis")
+    # `ls_ratio` is topLongShortPositionRatio (the recorder's, ~33d) and
+    # `ls_account_ratio` is globalLongShortAccountRatio (Coinalyze's, 334d).
+    # Measured corr -0.64: two questions, never one series.
+    assert SERIES == ("funding", "oi", "taker_ratio", "ls_ratio",
+                      "ls_account_ratio", "basis")
 
 
 def test_store_roundtrip(feed):
