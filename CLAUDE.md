@@ -29,6 +29,11 @@ Everything runs through the local venv.
 ./venv/bin/python -m trader.kernel --panic    # flatten everything, go FROZEN
 ./venv/bin/python -m trader.dashboard.server  # dashboard on :8080
 ./restart.sh kernel | dashboard               # kill the old PID, start detached
+scripts/watchdog.sh                           # cron, @reboot + every 5 min: starts a
+                                              # dead kernel/dashboard, restarts a kernel
+                                              # whose heartbeat is >10 min old.
+                                              # `touch data/watchdog.off` before any
+                                              # deliberate stop, or it comes straight back
 
 ./venv/bin/python -m pytest tests/            # 748 tests
 ./venv/bin/python -m pytest tests/test_phase0.py -k test_state_transitions
@@ -393,7 +398,30 @@ register's highest-severity items were all closed on 2026-09-02; see
   below says neither is worth adding.
 - **Nothing has yet traded under correct geometry.** The 15m-ATR fault above
   was fixed on 2026-09-02 and Donchian has taken no trade since, so the
-  validated geometry has still never met the venue.
+  validated geometry has still never met the venue. **The reason is uptime,
+  not the strategy.** The kernel was down 2026-09-03 09:30 → 09-11 00:53 UTC
+  and again after the host cut the VM's power at 06:42 UTC on 09-11 (no
+  guest-side shutdown; journald "uncleanly shut down"). Replaying the rule
+  on closed 4h bars finds 19 fresh breaks since 09-01: the two that fired
+  while the kernel was up were the UNI breaks blocked by the dust position,
+  and the other 17 fired while nothing was listening. The backtest over that
+  week reads 9 trades, **-2.08R** (six stopped at -1R, one open at +1.9R) —
+  a losing week, which 59% of this mechanism's weeks are. Nothing restarted
+  the kernel because nothing was supervising it; `scripts/watchdog.sh` now
+  does, from cron.
+- **A spec can be admitted with no null evidence at all.** On 2026-09-11 the
+  Analyst admitted `spec_funding_filtered_trend_pullback` (15m, OI + funding
+  filters, no declared universe). Every rule held; together they let it
+  through: 1h and 4h were UNTESTED (open interest covers 19-31% of those
+  frames), so 15m won by elimination; the window doubled 90 → 180 days to
+  reach exactly the 20-trade floor; pooled PF 2.46 came from 1-7 trades a
+  symbol (SUI, the only symbol with 7, reads PF 0.39); `_null_percentiles`
+  skips any symbol under 8 test trades, so the null ran on **0 symbols**,
+  p=None, and "silence does not block admission". Persistence (0 windows)
+  and regime fit (False) are context, never gates. With an empty `include`
+  it was judged on the five config backtest symbols and trades the whole
+  venue scan (21 symbols). Left trading on demo by operator decision; watch
+  whether its forward record looks like its 20 trades or like noise.
 - The seven analysts show a **negative point estimate and no established
   significance**. The earlier reading — "-0.695% a call, t=-3.84, losing on
   BOTH sides" — was **pseudo-replication** and does not survive de-duplication.
