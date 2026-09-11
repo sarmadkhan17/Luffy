@@ -333,8 +333,6 @@ brain:
   model_deep: deepseek-reasoner        # R1 — autopsies, strategy verdicts
   evolution_interval_minutes: 120      # NOT IMPLEMENTED — vestigial; the
                                        # generate/retire loop is mechanism.*
-  judge_interval_minutes: 360          # Brain-Judge portfolio review cadence
-  judge_meta_every_hours: 168          # weekly "right direction?" deep review
   daily_token_budget: 200000
   # Reserved daily slices (tokens). A listed purpose spends only its own
   # slice; unlisted purposes (strategist, tv, legacy_review, misc) share what
