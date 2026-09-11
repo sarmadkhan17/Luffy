@@ -74,6 +74,8 @@ def parse(expr: str) -> ast.Expression:
                 raise SpecError(f"{name}() takes {len(spec)} arg(s), "
                                 f"got {len(node.args)}")
             _check_args(name, node, spec)
+            if name == "ref":
+                _check_ref(node)
         elif isinstance(node, ast.Name):
             if id(node) in callees:
                 continue
@@ -99,6 +101,32 @@ def _check_args(name: str, node: ast.Call, spec: tuple) -> None:
             raise SpecError(f"{name}() arg {i} must be numeric")
 
 
+#: what cannot mean anything on a reference series: other frames, the
+#: book, BTC context, the traded symbol's derivatives
+_NOT_IN_REF = {"ref", "htf", "xs_rank", "breadth", "dispersion",
+               "btc_ret", "btc_ema_dist", "corr_btc", "rel_strength_btc"}
+
+
+def _check_ref(node: ast.Call) -> None:
+    from ..data.references import REFS
+    key = node.args[0].value
+    if key not in REFS:
+        raise SpecError(f"ref(): unknown reference '{key}' "
+                        f"(known: {', '.join(sorted(REFS))})")
+    for sub in ast.walk(node.args[1]):
+        if isinstance(sub, ast.Call) and isinstance(sub.func, ast.Name):
+            name = sub.func.id
+        elif isinstance(sub, ast.Name):
+            name = sub.id
+        else:
+            continue
+        if name not in FEATURES:
+            continue
+        if name in _NOT_IN_REF or tuple(FEATURES[name].requires) != ("ohlcv",):
+            raise SpecError(f"ref(): '{name}' cannot be evaluated on a "
+                            f"reference series")
+
+
 def features_used(tree: ast.Expression) -> set[str]:
     out: set[str] = set()
     for node in ast.walk(tree):
@@ -118,6 +146,10 @@ def data_requires(*trees: ast.Expression) -> tuple[str, ...]:
     """
     req: set[str] = set()
     for tree in trees:
+        for node in ast.walk(tree):
+            if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                    and node.func.id == "ref"):
+                req.add(f"ref:{node.args[0].value}")
         for name in features_used(tree):
             req.update(FEATURES[name].requires)
     return tuple(sorted(req or {"ohlcv"}))
@@ -157,6 +189,8 @@ def _eval(node, ctx):
 
     if isinstance(node, ast.Call):
         name = node.func.id
+        if name == "ref":
+            return _eval_ref(node, ctx)
         if name == "htf":
             return _eval_htf(node, ctx)
         if name in ("xs_rank", "breadth", "dispersion"):
@@ -235,6 +269,39 @@ def _eval_htf(node: ast.Call, ctx):
     arr = vals.to_numpy(dtype=float)
     out = np.where(pos >= 0, arr[np.clip(pos, 0, None)], np.nan)
     return pd.Series(out, index=ctx.index)
+
+
+def _eval_ref(node: ast.Call, ctx):
+    """`ref(key, expr)` — evaluate `expr` on reference market `key`, then
+    give each base bar the value that was KNOWN when that bar closed.
+
+    A reference bar is known at its stamp plus its source's close_after
+    (trader.data.references.REFS); a base bar closes at its stamp plus its
+    own bar length. searchsorted side='right' minus one — the htf rule — on
+    those two clocks, so a bar never reads a value from after its own close.
+    Past the source's max_stale the feed is treated as dead: NaN, never the
+    last value carried forever.
+    """
+    from ..core.types import TF_MS
+    from ..data.references import REFS, to_ms
+    from .features import FeatureCtx
+    key = node.args[0].value
+    ref = REFS[key]
+    frame = (ctx.market or {}).get(key)
+    if frame is None or not len(frame):
+        return pd.Series(np.nan, index=ctx.index)
+    sub = FeatureCtx(frames={ref.tf: frame}, tf=ref.tf, market=None,
+                     symbol=key, _cache={})
+    vals = _eval(node.args[1], sub)
+    if not isinstance(vals, pd.Series):
+        return pd.Series(vals, index=ctx.index)
+    known = to_ms(frame["ts"]) + ref.close_after_ms
+    base_close = to_ms(ctx.df["ts"]) + TF_MS.get(ctx.tf, 0)
+    pos = np.searchsorted(known, base_close, side="right") - 1
+    safe = np.clip(pos, 0, None)
+    arr = vals.to_numpy(dtype=float)
+    fresh = (pos >= 0) & (base_close - known[safe] <= ref.max_stale_ms)
+    return pd.Series(np.where(fresh, arr[safe], np.nan), index=ctx.index)
 
 
 def _bar_interval(ts: np.ndarray) -> np.timedelta64:

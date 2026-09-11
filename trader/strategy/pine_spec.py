@@ -29,6 +29,8 @@ strategy("LUFFY {name}", overlay=true, initial_capital=10000, default_qty_type=s
 
 #: features with no Pine analogue — a spec using one cannot be TV-tested
 _NO_PINE = {
+    "ref": "reference markets (S&P, DXY, BTC dominance, ...) are not on the "
+           "symbol's Pine chart",
     "funding": "perpetual funding rate is not available on a Pine chart",
     "funding_z": "perpetual funding rate is not available on a Pine chart",
     "funding_cum": "perpetual funding rate is not available on a Pine chart",
