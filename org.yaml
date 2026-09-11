@@ -69,12 +69,12 @@ employees:
   - name: Theorist
     title: Theorist
     reports_to: Manager
-    wraps: [trader.brain.theorist]
+    wraps: [trader.brain.postmortem, trader.brain.doctrine]
     authors: [postmortem]
     status_source: events
-    events: [autopsy, doctrine_updated, doctrine_created]
+    events: [postmortem, doctrine_created]
     category: RESEARCH
-    desc: Autopsies losing clusters and edge decay into doctrine.
+    desc: Checks every live strategy against the envelope it was admitted on — data only, no LLM.
 
   - name: Risk Officer
     title: Risk Officer
