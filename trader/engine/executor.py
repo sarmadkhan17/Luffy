@@ -12,11 +12,13 @@ from __future__ import annotations
 import logging
 import time
 import threading
+from datetime import datetime, timedelta
 
 from ..core.config import ROOT
 from ..core.journal import Journal
 from ..core.types import Action, Decision, MarketType, Position, Side, new_id
 from . import protective
+from .reconcile import venue_realized_pnl
 
 log = logging.getLogger(__name__)
 
@@ -57,6 +59,8 @@ class Executor:
         self.taker_fee = float(r.get("taker_fee_pct", 0.05)) / 100.0
         self._locks: dict[str, threading.Lock] = {}
         self._reg = threading.Lock()
+        #: backoff between fill-history reads after an exit; tests set 0
+        self.fill_retry_s = 1.0
 
     def _lock_for(self, symbol: str) -> threading.Lock:
         with self._reg:
@@ -229,6 +233,68 @@ class Executor:
                           f"unprotected! Consider manual flatten.")
                 return ""
 
+    # ── venue truth for exits ────────────────────────────────────────────
+    def _order_fills(self, symbol: str, order_id: str,
+                     since_ms: int) -> list[dict]:
+        """This order's own fills as the venue reports them; [] if unavailable.
+
+        A demo market order returns neither `average` nor `price`, so booking
+        `order["average"] or order["price"] or hint` booked the hint: 8 of 8
+        exits on 2026-09-11 were journalled better than they filled.
+        """
+        fetch = getattr(self.ex, "fetch_my_trades", None)
+        if fetch is None or not order_id:
+            return []
+        for attempt in range(3):
+            try:
+                fills = [
+                    f for f in (fetch(symbol, since=since_ms, limit=100) or [])
+                    if str(f.get("order")
+                           or (f.get("info") or {}).get("orderId")
+                           or "") == str(order_id)]
+                if fills:
+                    return fills
+            except Exception as e:
+                log.warning(f"fill history {symbol}: {e}")
+            if attempt < 2:
+                time.sleep(self.fill_retry_s)
+        return []
+
+    @staticmethod
+    def _vwap(fills: list[dict]) -> tuple[float, float]:
+        qty = sum(float(f["amount"]) for f in fills)
+        px = sum(float(f["price"]) * float(f["amount"]) for f in fills) / qty
+        return px, qty
+
+    @staticmethod
+    def _fills_net(fills: list[dict]) -> float:
+        """The venue's realized P&L on these fills, net of their commission."""
+        return sum(float((f.get("info") or {}).get("realizedPnl") or 0)
+                   - float((f.get("info") or {}).get("commission") or 0)
+                   for f in fills)
+
+    def _pnl_window_start(self, trade: dict) -> str:
+        """Where this trade's fills begin, as an ISO timestamp.
+
+        The entry fill lands seconds before `opened_at` is stamped, so reading
+        from `opened_at` drops the entry commission. Look back 30s, but never
+        into the previous trade on the same symbol.
+        """
+        start = datetime.fromisoformat(trade["opened_at"]) - timedelta(seconds=30)
+        prev = self.journal.query(
+            "SELECT MAX(closed_at) t FROM trades WHERE symbol=? AND id<>? "
+            "AND status='closed' AND closed_at <= ?",
+            (trade["symbol"], trade["id"], trade["opened_at"]))
+        if prev and prev[0]["t"]:
+            start = max(start, datetime.fromisoformat(prev[0]["t"])
+                        + timedelta(milliseconds=1))
+        return start.isoformat()
+
+    def _book_estimate(self, trade: dict, why: str) -> None:
+        log.warning(f"P&L ESTIMATED {trade['symbol']} {trade['id']}: {why}")
+        self.journal.log_brain_event("pnl_estimated", trade["id"],
+                                     {"symbol": trade["symbol"], "why": why})
+
     def close_partial(self, trade: dict, amount: float,
                       price_hint: float = 0.0, reason: str = "partial") -> bool:
         """Reduce-only partial close; journal amount shrinks, trade stays open."""
@@ -241,14 +307,23 @@ class Executor:
             log.info(f"partial skipped {sym}: below one lot")
             return False
         try:
+            sent_ms = int(time.time() * 1000) - 60_000
             order = self.ex.create_order(sym, "market", side_close, amount,
                                          params={"reduceOnly": True})
-            fill = float(order.get("average") or order.get("price")
-                         or price_hint or 0)
-            direction = 1.0 if trade["side"] == "long" else -1.0
-            gross = ((fill - float(trade["entry_price"])) * direction * amount)
-            fees = self.taker_fee * (amount * fill + amount * float(trade["entry_price"]))
-            pnl = gross - fees
+            fills = self._order_fills(sym, str(order.get("id") or ""), sent_ms)
+            if fills:
+                # this leg's own fills; the entry commission is settled when
+                # the final close re-bases the trade to the venue's total
+                fill, amount = self._vwap(fills)
+                pnl = self._fills_net(fills)
+            else:
+                fill = float(order.get("average") or order.get("price")
+                             or price_hint or 0)
+                direction = 1.0 if trade["side"] == "long" else -1.0
+                gross = ((fill - float(trade["entry_price"])) * direction * amount)
+                fees = self.taker_fee * (amount * fill + amount * float(trade["entry_price"]))
+                pnl = gross - fees
+                self._book_estimate(trade, "venue fills unavailable at partial")
             new_amt = float(trade["amount"]) - amount
             # notional must shrink with the position. It did not, so a
             # half-closed trade still charged its FULL size against the 15%
@@ -287,22 +362,39 @@ class Executor:
         try:
             if trade.get("sl_order_id"):
                 protective.cancel_stop(self.ex, trade["sl_order_id"], sym)
+            sent_ms = int(time.time() * 1000) - 60_000
             order = self.ex.create_order(sym, "market", side_close, amount,
                                          params={"reduceOnly": True})
-            fill = float(order.get("average") or order.get("price")
-                         or exit_price_hint)
-            # reduce-only fills only what the venue still holds. Sending 169
-            # against a 1-coin residue closes 1, and pricing the exit over
-            # the journalled 169 invents 168 coins of P&L out of rounding.
-            amount = float(order.get("filled") or 0) or amount
+            fills = self._order_fills(sym, str(order.get("id") or ""), sent_ms)
+            if fills:
+                fill, amount = self._vwap(fills)
+            else:
+                fill = float(order.get("average") or order.get("price")
+                             or exit_price_hint)
+                # reduce-only fills only what the venue still holds. Sending 169
+                # against a 1-coin residue closes 1, and pricing the exit over
+                # the journalled 169 invents 168 coins of P&L out of rounding.
+                amount = float(order.get("filled") or 0) or amount
             entry = float(trade["entry_price"])
             direction = 1.0 if trade["side"] == "long" else -1.0
             gross = ((fill - entry) * direction * amount)
             fees = self.taker_fee * (amount * entry + amount * fill)
             pnl = gross - fees
+            venue = (venue_realized_pnl(self.ex, sym, self._pnl_window_start(trade))
+                     if fills else None)
+            if venue is not None:
+                # close_trade ADDS this leg, so pass venue total minus what
+                # the partials already banked: the trade then totals the venue
+                banked = self.journal.query(
+                    "SELECT realized_pnl FROM trades WHERE id=?", (trade["id"],))
+                pnl = venue - float((banked[0]["realized_pnl"] if banked else 0) or 0)
+            else:
+                self._book_estimate(trade, "venue fills unavailable at close"
+                                    if not fills else "venue P&L unavailable")
             self.journal.close_trade(trade["id"], fill, round(pnl, 8), reason)
             log.info(f"TRADE CLOSE {sym} @{fill} reason={reason} "
-                     f"gross={gross:+.2f} fees={fees:.2f} pnl={pnl:+.2f}")
+                     f"gross={gross:+.2f} fees={fees:.2f} pnl={pnl:+.2f} "
+                     f"({'venue' if venue is not None else 'estimate'})")
             return True
         except Exception as e:
             log.error(f"CLOSE FAILED {sym}: {e}")
