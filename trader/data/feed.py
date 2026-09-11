@@ -104,6 +104,13 @@ class DataFeed:
                 "symbol TEXT NOT NULL, tf TEXT NOT NULL, ts INTEGER NOT NULL,"
                 "open REAL, high REAL, low REAL, close REAL, volume REAL,"
                 "taker_buy REAL, PRIMARY KEY (symbol, tf, ts))")
+            # where the venue's history for a (symbol, tf) begins: once a
+            # walk has reached it, a store shorter than the requested limit
+            # is complete, not a reason to re-walk from the listing date
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS candle_floor ("
+                "symbol TEXT NOT NULL, tf TEXT NOT NULL, first_ts INTEGER "
+                "NOT NULL, PRIMARY KEY (symbol, tf))")
             conn.commit()
             self._local.conn = conn
         return conn
@@ -258,6 +265,40 @@ class DataFeed:
         self._store_save(symbol, tf, df)
         return df
 
+    @staticmethod
+    def _first_ms(df: pd.DataFrame) -> int:
+        return int(pd.to_datetime(df["ts"], utc=True).iloc[0].timestamp()
+                   * 1000)
+
+    def _floor(self, symbol: str, tf: str) -> int | None:
+        """Where the venue's history for this series begins, once known."""
+        try:
+            r = self.db.execute(
+                "SELECT first_ts FROM candle_floor WHERE symbol=? AND tf=?",
+                (norm_symbol(symbol), tf)).fetchone()
+        except Exception:
+            return None
+        return int(r[0]) if r else None
+
+    def _at_floor(self, symbol: str, tf: str, stored) -> bool:
+        floor = self._floor(symbol, tf)
+        return floor is not None and self._first_ms(stored) <= floor
+
+    def _note_floor(self, symbol: str, tf: str, limit: int, df):
+        """A walk that came back shorter than `limit` reached the start of the
+        venue's history. Remember where, so the next call does not re-walk a
+        young symbol from its listing date just because it is younger than
+        the limit asked for."""
+        if df is not None and len(df) and len(df) < limit:
+            try:
+                self.db.execute(
+                    "INSERT OR REPLACE INTO candle_floor VALUES (?,?,?)",
+                    (norm_symbol(symbol), tf, self._first_ms(df)))
+                self.db.commit()
+            except Exception as e:
+                log.warning(f"candle floor {symbol} {tf}: {e}")
+        return df
+
     def _fetch_paged(self, symbol: str, tf: str, limit: int) -> list:
         """Exchanges cap a single klines request (1000 on binanceusdm);
         walk backwards in pages until `limit` bars are assembled."""
@@ -313,7 +354,12 @@ class DataFeed:
             return hit[1]
 
         stored = self._store_load(symbol, tf, limit)
-        have_full = stored is not None and len(stored) >= limit
+        # "full" = the window asked for is stored, OR the store already
+        # reaches back to where the venue's history begins (a symbol younger
+        # than `limit` can never hold `limit` bars, and must not be re-walked
+        # from its listing date on every call for want of them)
+        have_full = stored is not None and len(stored) > 0 and (
+            len(stored) >= limit or self._at_floor(symbol, tf, stored))
         fresh_tail = (stored is not None and
                       now_ms - self._last_ms(stored) <=
                       self.ttl.get(tf, 300) * 1000)
@@ -321,10 +367,12 @@ class DataFeed:
             return finish(stored)
 
         try:
-            if not force and stored is not None and len(stored) > 0:
+            # force means "refresh now", not "forget the store": history
+            # already on disk is extended from its tail, never re-downloaded
+            if stored is not None and len(stored) > 0:
                 # extend/refresh whatever is stored instead of redownloading
                 last = self._last_ms(stored)
-                if len(stored) < limit:
+                if not have_full:
                     raw = (self._fetch_paged(symbol, tf, limit)
                            if limit > 1000 else
                            self._klines(
@@ -344,7 +392,9 @@ class DataFeed:
                 new = self._frame(raw or [])
                 if new.empty:
                     return finish(stored)
-                return finish(self._merge_save(symbol, tf, stored, new))
+                return finish(self._note_floor(symbol, tf, limit,
+                                           self._merge_save(symbol, tf,
+                                                            stored, new)))
             # cold symbol or force refresh
             raw = (self._fetch_paged(symbol, tf, limit) if limit > 1000
                    else self._klines(symbol, tf, limit=limit))
@@ -352,7 +402,9 @@ class DataFeed:
                 return hit[1] if hit else (stored if stored is not None
                                            and len(stored) >= min_bars else None)
             new = self._frame(raw)
-            return finish(self._merge_save(symbol, tf, stored, new))
+            return finish(self._note_floor(symbol, tf, limit,
+                                           self._merge_save(symbol, tf,
+                                                            stored, new)))
         except Exception as e:
             if self._note_dead(symbol, e):
                 log.warning(f"ohlcv {symbol} {tf}: {e} — symbol marked dead, "
