@@ -20,9 +20,13 @@ from .vector_backtest import funding_for, vector_walk_forward
 
 log = logging.getLogger(__name__)
 
-#: spec data_requires name -> series name in derivs.db
+#: spec data_requires name -> series name in derivs.db. A name missing here
+#: is invisible everywhere: load_derivs skips it (features go NaN, zero
+#: trades) and missing_data does not count it as needed (scored, not
+#: UNTESTED). `ls_account_ratio` was absent from 2026-09-03 to 2026-09-11.
 _SERIES_FOR = {"funding": "funding", "open_interest": "oi",
                "taker_ratio": "taker_ratio", "ls_ratio": "ls_ratio",
+               "ls_account_ratio": "ls_account_ratio",
                "basis": "basis"}
 
 
