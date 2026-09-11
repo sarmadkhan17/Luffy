@@ -373,10 +373,11 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         _autopsy_lock["busy"] = True
         try:
             import asyncio
-            from ..brain.theorist import Theorist
+            from ..brain.postmortem import run_postmortem
+            from ..knowledge.vault import Vault
             loop = asyncio.get_event_loop()
             rep = await loop.run_in_executor(
-                None, lambda: Theorist(journal, cfg).run_autopsy())
+                None, lambda: run_postmortem(journal, Vault(journal)))
             return rep
         except Exception as e:
             return JSONResponse({"ran": False, "reason": str(e)},
@@ -743,7 +744,7 @@ def build_company(journal, cfg: dict) -> dict:
         "Strategist": lambda: [["Reviews", str(_ev_count(["review_complete"]))],
                                ["Active", str(active_strats)],
                                ["Promoted", str(_ev_count(["proposal_accepted"]))]],
-        "Theorist": lambda: [["Autopsies", str(_ev_count(["autopsy"]))],
+        "Theorist": lambda: [["Post-mortems", str(_ev_count(["postmortem"]))],
                              ["Beliefs", str(belief_count)],
                              ["Last run", "—"]],  # filled with real ts below
     }

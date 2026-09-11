@@ -444,8 +444,8 @@ class Kernel:
         """Doctrine + the numeric coverage brief, as one prompt payload."""
         out: dict = {}
         try:
-            from .brain.theorist import Theorist
-            out["doctrine"] = Theorist._load_doctrine()
+            from .brain.doctrine import load_doctrine
+            out["doctrine"] = load_doctrine()
         except Exception as e:
             log.debug(f"doctrine unavailable: {e}")
         try:
@@ -1111,15 +1111,15 @@ class Kernel:
                     upgrade_24h(self.journal, frames)
             except Exception as e:
                 log.warning(f"24h outcome upgrade failed: {e}")
-        if Kernel._outcome_tick % 360 == 5:     # ~every 6h: theorist autopsy
+        if Kernel._outcome_tick % 360 == 5:     # ~every 6h: book post-mortem
             try:
-                from .brain.theorist import Theorist
-                rep = Theorist(self.journal, self.cfg).run_autopsy()
-                if rep.get("ran"):
-                    log.info(f"theorist autopsy → {rep['note']} "
-                             f"(doctrine v{rep.get('doctrine_version')})")
+                from .brain.postmortem import run_postmortem
+                from .knowledge.vault import Vault
+                rep = run_postmortem(self.journal, Vault(self.journal))
+                if rep.get("changed"):
+                    log.info(f"postmortem: verdicts changed {rep['changed']}")
             except Exception as e:
-                log.warning(f"theorist failed: {e}")
+                log.warning(f"postmortem failed: {e}")
         if Kernel._outcome_tick % 60 == 1:      # ~hourly brain/vault tick
             try:
                 maybe_refit_calibration(
