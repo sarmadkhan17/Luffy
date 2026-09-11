@@ -788,6 +788,23 @@ These are facts about the search space, not beliefs the Theorist may rewrite.
   is ONE regime, and the cross-symbol consistency test remains the only
   control that survives that.
 
+- **Scoreable is not testable: at 333 days the gate cannot see the
+  incumbent.** First screen of the positioning family (2026-09-11): 7
+  mechanisms on `oi_ret`, `oi_price_div` and `ls_account_ratio_z`, both
+  signs of each idea, thresholds at measured discovery p10/p90, both
+  geometries, 19 discovery / 17 held-out at 4h. Nothing survives; the best,
+  `acct_contrarian`, reads PF 1.26, discovery p=3.4e-01, held-out p=6.8e-01.
+  That is NOT a finding about positioning. `CONTROL_oi_window` — Donchian
+  confined to the same window — reads discovery p=2.5e-01 / 5.2e-01 and
+  held-out 6.8e-01 / 5.0e-01. A gate that cannot detect the known-good rule
+  inside a window cannot refute a challenger inside it, so the family is
+  **untested at this depth**. The one lever is Coinalyze's 12hour buffer
+  (1000 days), at the cost of a 12h signal frame. Before the screen could
+  run at all, it looked up a feature's requirement name (`open_interest`)
+  in a dict keyed by series name (`oi`), and so skipped every OI mechanism
+  on every symbol as "lacked data"; it only ever worked for funding and
+  basis because their two names happen to match.
+
 - **Validate the config, not just the strategy.** At the old 1.5% risk with 4
   positions, Donchian tripped `halt_drawdown_pct` and stopped for good. 0.5%
   with 8 beats 0.75% with 4 on BOTH return and drawdown: a trend book earns
