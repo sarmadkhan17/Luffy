@@ -1127,15 +1127,13 @@ class Kernel:
             except Exception as e:
                 log.warning(f"ewa/meta tick failed: {e}")
             try:
-                from .brain.strategist import Strategist
+                # Lifecycle rules for the legacy genomes. The LLM strategist
+                # review that used to follow was removed on 2026-09-11: its
+                # "mutate" verdict, Proposer and invention pass were three
+                # creation paths that bypassed the Analyst, and one of them
+                # resurrected a retired genome into paper and traded it.
                 from .strategy.promotion import evaluate_population
                 evaluate_population(self.journal, self.notifier)
-                report = Strategist(self.journal, self.cfg,
-                                    self.notifier).review()
-                if report.get("reviewed"):
-                    log.info(f"strategist review: {report['why']} → "
-                             f"{len(report.get('actions', []))} actions "
-                             f"(llm={report.get('used_llm')})")
             except Exception as e:
                 log.warning(f"brain tick failed: {e}")
             try:
