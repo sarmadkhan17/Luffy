@@ -386,7 +386,7 @@ def refine_with_llm(genome, base_code: str, llm) -> tuple[str, bool]:
         'Reply as one JSON object: {"code":"<full improved script>"} '
         "or {\"skip\":true}. Do not change strategy() metadata lines.")
     try:
-        raw = llm.chat_json(prompt, deep=False)
+        raw = llm.chat_json(prompt, deep=False, purpose="tv")
     except Exception as e:
         log.warning(f"pine refine llm failed: {e}")
         return base_code, False

@@ -19,6 +19,12 @@ class BrainLLM:
         self.max_tokens_deep = int(b.get("max_tokens_deep",
                                          max(16000, self.max_tokens)))
         self.daily_budget = int(b["daily_token_budget"])
+        #: purpose -> reserved daily cap. A listed purpose spends only its
+        #: own slice; unlisted purposes share what is left of daily_budget
+        #: after every reservation, so no consumer can eat another's slice.
+        self.purpose_budgets: dict[str, int] = {
+            k: int(v) for k, v in (b.get("purpose_budgets") or {}).items()}
+        self._usage_path = ROOT / "data" / "brain_usage.json"
         self._base_url = b.get("base_url", "https://api.deepseek.com")
         self._key = Env.deepseek_key()
         self._client = None
@@ -27,22 +33,31 @@ class BrainLLM:
     def available(self) -> bool:
         return bool(self._key)
 
-    def _tokens_today(self) -> int:
+    def _usage(self) -> dict:
         try:
-            p = ROOT / "data" / "brain_usage.json"
-            data = json.loads(p.read_text())
-            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-            return data.get(today, 0)
+            return json.loads(self._usage_path.read_text())
         except Exception:
-            return 0
+            return {}
 
-    def _spend(self, tokens: int) -> None:
+    @staticmethod
+    def _today() -> str:
+        return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    def _tokens_today(self) -> int:
+        """Every token spent today, tagged or not."""
+        return int(self._usage().get(self._today(), 0))
+
+    def _purpose_today(self) -> dict[str, int]:
+        return dict((self._usage().get("_by_purpose") or {})
+                    .get(self._today()) or {})
+
+    def _spend(self, tokens: int, purpose: str = "misc") -> None:
         try:
-            p = ROOT / "data" / "brain_usage.json"
-            data = json.loads(p.read_text()) if p.exists() else {}
-            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-            data[today] = data.get(today, 0) + tokens
-            p.write_text(json.dumps(data))
+            data, today = self._usage(), self._today()
+            data[today] = int(data.get(today, 0)) + tokens
+            bp = data.setdefault("_by_purpose", {}).setdefault(today, {})
+            bp[purpose] = int(bp.get(purpose, 0)) + tokens
+            self._usage_path.write_text(json.dumps(data))
         except Exception:
             pass
 
@@ -51,12 +66,20 @@ class BrainLLM:
         against max_tokens, so deep calls get a much larger ceiling."""
         return self.max_tokens_deep if deep else self.max_tokens
 
-    def budget_left(self) -> int:
-        return max(0, self.daily_budget - self._tokens_today())
+    def budget_left(self, purpose: str = "misc") -> int:
+        total_left = max(0, self.daily_budget - self._tokens_today())
+        used = self._purpose_today()
+        if purpose in self.purpose_budgets:
+            own = self.purpose_budgets[purpose] - used.get(purpose, 0)
+        else:
+            shared = self.daily_budget - sum(self.purpose_budgets.values())
+            own = shared - sum(v for k, v in used.items()
+                               if k not in self.purpose_budgets)
+        return max(0, min(total_left, own))
 
     def chat(self, prompt: str, deep: bool = False,
-             json_mode: bool = False) -> str | None:
-        if not self.available or self.budget_left() <= 0:
+             json_mode: bool = False, purpose: str = "misc") -> str | None:
+        if not self.available or self.budget_left(purpose) <= 0:
             return None
         try:
             from openai import OpenAI
@@ -73,9 +96,9 @@ class BrainLLM:
             choice = resp.choices[0]
             text = choice.message.content or ""
             used = getattr(resp.usage, "total_tokens", 0) or 0
-            self._spend(used)
-            log.info(f"brain call: {used} tokens "
-                     f"(budget left {self.budget_left()})")
+            self._spend(used, purpose)
+            log.info(f"brain call [{purpose}]: {used} tokens "
+                     f"(budget left {self.budget_left(purpose)})")
             if not text:
                 # reasoner models spend max_tokens on chain-of-thought before
                 # emitting content; a "length" stop leaves content empty
@@ -91,10 +114,10 @@ class BrainLLM:
             return None
 
     def chat_tools(self, messages: list[dict], tools: list[dict],
-                   deep: bool = False):
+                   deep: bool = False, purpose: str = "misc"):
         """OpenAI-compatible tool-calling. Returns the assistant message
         object (.content, .tool_calls) or None on no-budget/error."""
-        if not self.available or self.budget_left() <= 0:
+        if not self.available or self.budget_left(purpose) <= 0:
             return None
         try:
             from openai import OpenAI
@@ -108,14 +131,15 @@ class BrainLLM:
                 max_tokens=self._cap(deep),
                 timeout=120)
             used = getattr(resp.usage, "total_tokens", 0) or 0
-            self._spend(used)
+            self._spend(used, purpose)
             return resp.choices[0].message
         except Exception as e:
             log.warning(f"brain tool call failed: {e}")
             return None
 
-    def chat_json(self, prompt: str, deep: bool = False) -> dict | None:
-        text = self.chat(prompt, deep=deep, json_mode=True)
+    def chat_json(self, prompt: str, deep: bool = False,
+                  purpose: str = "misc") -> dict | None:
+        text = self.chat(prompt, deep=deep, json_mode=True, purpose=purpose)
         if not text:
             return None
         cleaned = text

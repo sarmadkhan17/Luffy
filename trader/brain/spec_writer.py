@@ -219,7 +219,8 @@ class SpecWriter:
         prompt = _prompt(idea, doctrine, avoid or [], data)
         trace: dict = {"attempts": []}
         for attempt in range(MAX_REPAIRS + 1):
-            raw = self.llm.chat_json(prompt, deep=(attempt == 0))
+            raw = self.llm.chat_json(prompt, deep=(attempt == 0),
+                                     purpose="strategist")
             if not isinstance(raw, dict):
                 trace["attempts"].append({"error": "non-JSON reply"})
                 prompt = _prompt(idea, doctrine, avoid or [], data) + \

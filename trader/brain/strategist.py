@@ -73,7 +73,8 @@ class Strategist:
         snap = self._population_report()
         verdicts = None
         if self.llm.available and snap:
-            raw = self.llm.chat_json(self._build_prompt(snap), deep=True)
+            raw = self.llm.chat_json(self._build_prompt(snap), deep=True,
+                                     purpose="legacy_review")
             if raw and isinstance(raw.get("verdicts"), list):
                 verdicts = {v["id"]: v for v in raw["verdicts"]
                             if isinstance(v, dict) and "id" in v}
@@ -83,7 +84,7 @@ class Strategist:
             "why": why,
             "llm": bool(verdicts),
             "actions": applied,
-            "budget_left": self.llm.budget_left(),
+            "budget_left": self.llm.budget_left("legacy_review"),
         })
         try:
             Vault(self.journal).run_full_refresh()

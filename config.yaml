@@ -336,6 +336,13 @@ brain:
   judge_interval_minutes: 360          # Brain-Judge portfolio review cadence
   judge_meta_every_hours: 168          # weekly "right direction?" deep review
   daily_token_budget: 200000
+  # Reserved daily slices (tokens). A listed purpose spends only its own
+  # slice; unlisted purposes (strategist, tv, legacy_review, misc) share what
+  # is left of daily_token_budget. `research` is held for the research
+  # pipeline's Reason step so no other consumer can starve it.
+  purpose_budgets:
+    research: 120000
+    chat: 30000
   max_tokens_per_call: 4000
   # deepseek-reasoner spends max_tokens on chain-of-thought FIRST; if the cap
   # is hit while still reasoning it returns empty content. Deep calls need

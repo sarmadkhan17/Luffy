@@ -40,9 +40,9 @@ def _isolate_budget(llm):
     against the production file they both read the live day's usage (failing
     outright once the real budget is exhausted) and add to it.
     """
-    spent = {"n": 0}
-    llm._tokens_today = lambda: spent["n"]
-    llm._spend = lambda tokens: spent.__setitem__("n", spent["n"] + tokens)
+    import pathlib
+    import tempfile
+    llm._usage_path = pathlib.Path(tempfile.mkdtemp()) / "brain_usage.json"
     return llm
 
 
@@ -64,7 +64,7 @@ def test_chat_tools_none_when_no_budget(monkeypatch):
     llm = BrainLLM(_cfg())
     llm._key = "x"
     _isolate_budget(llm)
-    monkeypatch.setattr(llm, "budget_left", lambda: 0)
+    monkeypatch.setattr(llm, "budget_left", lambda purpose="misc": 0)
     assert llm.chat_tools([{"role": "user", "content": "hey"}], []) is None
 
 
@@ -119,7 +119,7 @@ class _StubLLM:
         self.script = list(script)
         self.calls = []
 
-    def chat_tools(self, messages, tools, deep=False):
+    def chat_tools(self, messages, tools, deep=False, purpose="misc"):
         self.calls.append(messages)
         return self.script.pop(0)
 

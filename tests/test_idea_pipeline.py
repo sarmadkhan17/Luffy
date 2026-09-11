@@ -321,7 +321,7 @@ def test_writer_passes_the_brief_through_to_the_prompt():
         def __init__(self):
             self.prompts = []
 
-        def chat_json(self, prompt, deep=False):
+        def chat_json(self, prompt, deep=False, purpose="misc"):
             self.prompts.append(prompt)
             return None
 

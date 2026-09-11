@@ -25,7 +25,6 @@ from urllib.robotparser import RobotFileParser
 import requests
 
 from . import ideas
-from ..brain.llm import BrainLLM
 from ..core.journal import Journal
 from .scraper import (DEFAULT_RSS_FEEDS, STRATEGY_TERMS, UA, Scraper,
                         scrape_feed)
@@ -172,7 +171,6 @@ class DeepCrawler:
         self.queue_budget = int(c.get("passages_per_queue", 40))
         self.per_host_delay = float(c.get("per_host_delay_s", 1.5))
         self.scraper = Scraper(journal, cfg, feed, notifier)
-        self.llm = self.scraper.llm
         self._robots: dict[str, tuple[float, RobotFileParser | None]] = {}
         self._last_hit: dict[str, float] = {}
 

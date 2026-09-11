@@ -29,7 +29,7 @@ class FakeLLM:
         self.prompts = []
         self.available = True
 
-    def chat_json(self, prompt, deep=False):
+    def chat_json(self, prompt, deep=False, purpose="misc"):
         self.prompts.append(prompt)
         return self.replies.pop(0) if self.replies else None
 
