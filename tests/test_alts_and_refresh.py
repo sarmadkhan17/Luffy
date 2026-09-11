@@ -50,8 +50,15 @@ def test_a_member_missing_a_bar_does_not_fake_its_return():
 
 
 class _Ex:
+    """One bar, then the venue runs dry — only an empty page ends paging."""
+
+    def __init__(self):
+        self.served = False
+
     def fetch_ohlcv(self, symbol, tf, since=None, limit=None):
-        # one bar per call: a short page ends the paging loop
+        if self.served:
+            return []
+        self.served = True
         return [[since, 1.0, 2.0, 0.5, 1.5, 9.0]]
 
 

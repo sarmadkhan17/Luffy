@@ -95,7 +95,14 @@ def coingecko_global(get=get_json) -> dict:
 
 
 def binance_klines(fetch, symbol: str, tf: str, since_ms: int, now_ms: int,
-                   page: int = 1500) -> pd.DataFrame:
+                   page: int = 1000) -> pd.DataFrame:
+    """Page forward until the venue returns nothing new.
+
+    A short page is NOT the end: asked for 1,500 bars the venue answered
+    1,000, and a loop that stopped on the first short page stored BTCDOM
+    from 2021-06-21 to 2021-12-04 and nothing after. Stop only on an empty
+    page or one that makes no progress.
+    """
     rows, since, step = [], int(since_ms), TF_MS[tf]
     while since < now_ms:
         batch = fetch(symbol, tf, since=since, limit=page) or []
@@ -106,8 +113,6 @@ def binance_klines(fetch, symbol: str, tf: str, since_ms: int, now_ms: int,
         if nxt <= since:
             break
         since = nxt
-        if len(batch) < page:
-            break
     if not rows:
         return _empty()
     df = pd.DataFrame([r[:6] for r in rows], columns=COLS)
