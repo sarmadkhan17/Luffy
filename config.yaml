@@ -352,5 +352,12 @@ notify:
                                  # unconditional (kernel sends on every entry)
   daily_digest_hour_utc: 20      # NOT IMPLEMENTED — no digest job exists
 
+rent:                            # Luffy pays rent. See
+                                 # docs/superpowers/specs/2026-09-11-luffy-pays-rent-design.md
+  weekly_usdt: 50                # net trading income per Monday-to-Monday UTC week
+  first_week_start: "2026-09-14" # earlier weeks get a tally, never a verdict
+  check_minutes: 60              # tally refresh; the verdict lands on the first
+                                 # check after Monday 00:00 UTC
+
 logging:
   level: INFO

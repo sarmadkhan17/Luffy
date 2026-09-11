@@ -244,6 +244,9 @@ class Kernel:
         if self.cfg.get("brain", {}).get("judge_interval_minutes"):
             threading.Thread(target=self._brain_judge_loop, daemon=True,
                              name="brain-judge").start()
+        if self.cfg.get("rent", {}).get("weekly_usdt"):
+            threading.Thread(target=self._rent_loop, daemon=True,
+                             name="rent-check").start()
 
     def _filter_universe_to_venue(self) -> None:
         """Universe comes from production data; drop symbols the trading
@@ -507,6 +510,19 @@ class Kernel:
             except Exception as e:
                 log.warning(f"brain-judge review failed: {e}")
             _t.sleep(interval)
+
+    def _rent_loop(self) -> None:
+        """Luffy pays rent: the week's net off the venue ledger, hourly.
+        Reports only. The verdict is Sarmad's to act on."""
+        from .engine.rent_keeper import RentKeeper
+        keeper = RentKeeper(self.exchange, self.journal, self.notifier, self.cfg)
+        every = float(self.cfg.get("rent", {}).get("check_minutes", 60)) * 60
+        while not self._stop:
+            try:
+                keeper.tick()
+            except Exception as e:
+                log.warning(f"rent check failed: {e}")
+            time.sleep(every)
 
     def _maybe_validate_agents(self) -> None:
         """Re-run analyst validation weekly (or at boot if stale/missing)."""
@@ -1295,6 +1311,9 @@ class Kernel:
             reply(f"{emoji} news guard: "
                   f"{'ARMED — entering suppressed' if st.get('active') else 'quiet — trading normal'}"
                   f"\n{st.get('why', '')}")
+        elif msg.startswith("/rent"):
+            from .engine.rent_keeper import status_text
+            reply(status_text(self.journal))
         elif msg.startswith("/scouts"):
             try:
                 rows = self.journal.agent_accuracy(since_hours=336)
