@@ -117,9 +117,10 @@ GEOS = {
 # not read cannot change them. Everything after is a family this screen could
 # not express until the context above was plumbed through.
 #
-# oi / taker_ratio / ls_ratio are deliberately absent. They hold ~33 days over
-# 5 symbols, far under the 75-day span a spec needs to be scored rather than
-# refused, so screening them would measure noise.
+# taker_ratio / ls_ratio are deliberately absent: they hold ~33 days, far
+# under the 75-day span a spec needs to be scored rather than refused.
+# oi and ls_account_ratio are NOT absent any more: since 2026-09-11 both span
+# 333 days on all 36 symbols (Coinalyze, 4hour), so they are screened below.
 MECHS=[
  # CONTROL, and it must stay first. A screen that prints "nothing survives"
  # is making a claim about its own power before it makes one about the
@@ -262,6 +263,54 @@ MECHS=[
  # the continuation WINDOW after a break, not the break itself
  ("post_break",      "bars_since(close > donchian_hi(100)) < 10 and close > ema(50)",
                      "bars_since(close < donchian_lo(100)) < 10 and close < ema(50)", ()),
+
+ # ── 2026-09-11: positioning. Open interest and the global long/short
+ # ACCOUNT ratio now span 333 days on all 36 symbols (Coinalyze, 4hour) and
+ # had never been screened: first the series were ~31 days deep, then this
+ # screen's skip check and spec_evidence's series map each made them
+ # invisible. Thresholds at measured percentiles over the 19 discovery
+ # symbols at 4h (31-38k bars each):
+ #
+ #   oi_ret(6)               p10 -0.045  p50 -0.001  p90 +0.049
+ #   oi_ret(24)              p10 -0.090  p50 +0.002  p90 +0.103
+ #   oi_price_div(24)        p10 -0.108  p50 +0.006  p90 +0.145
+ #   ls_account_ratio_z(360) p10 -1.41   p50 -0.19   p90 +1.51
+ #
+ # Both signs of each idea are screened: which side pays is the question,
+ # not an assumption. 333 days is ONE regime, and the cross-symbol
+ # consistency test is the only control that survives that.
+ # CONTROL for this family. Positioning signals can only fire in the last
+ # ~333 days, less a 360-bar z warm-up, so their test slice is a fraction
+ # of what CONTROL_donchian100 is judged on and its power does not transfer.
+ # This row is the known-good rule confined to the same window — oi_z is NaN
+ # before open interest begins, so the conjunction cannot fire there. If
+ # the gate cannot see Donchian here, "no positioning mechanism survives"
+ # is a statement about the window's power, not about the market.
+ ("CONTROL_oi_window", "close > donchian_hi(100) and oi_z(360) > -99",
+                       "close < donchian_lo(100) and oi_z(360) > -99", ("open_interest",)),
+ # new money entering with the trend
+ ("oi_build_trend",  "oi_ret(24) > 0.103 and close > ema(50)",
+                     "oi_ret(24) > 0.103 and close < ema(50)", ("open_interest",)),
+ # a liquidation flush: open interest collapses into a sharp move — fade it
+ ("oi_flush_revert", "oi_ret(6) < -0.045 and ret(6) < -0.02",
+                     "oi_ret(6) < -0.045 and ret(6) > 0.02", ("open_interest",)),
+ # positioning building AGAINST price: the crowded side gets squeezed ...
+ ("oi_div_squeeze",  "oi_price_div(24) > 0.145",
+                     "oi_price_div(24) < -0.108", ("open_interest",)),
+ # ... or the crowd is right and the move continues
+ ("oi_div_follow",   "oi_price_div(24) < -0.108",
+                     "oi_price_div(24) > 0.145", ("open_interest",)),
+ # the crowd of ACCOUNTS leans hard one way: fade it ...
+ ("acct_contrarian", "ls_account_ratio_z(360) < -1.41",
+                     "ls_account_ratio_z(360) > 1.51", ("ls_account_ratio",)),
+ # ... or follow it
+ ("acct_follow",     "ls_account_ratio_z(360) > 1.51",
+                     "ls_account_ratio_z(360) < -1.41", ("ls_account_ratio",)),
+ # leverage building on the crowded side: accounts lean one way AND open
+ # interest grows, so the side that is both crowded and levered is faded
+ ("acct_oi_crowded", "ls_account_ratio_z(360) < -1.41 and oi_ret(24) > 0.103",
+                     "ls_account_ratio_z(360) > 1.51 and oi_ret(24) > 0.103",
+                     ("ls_account_ratio", "open_interest")),
 ]
 
 def spec_for(name, lo, sh, tf, geo, requires=()):
@@ -282,6 +331,11 @@ def load(sym, tf):
 
 TFS = tuple(a for a in sys.argv[1:] if a in ("4h", "1h", "15m")) or ("4h",)
 GKEYS = tuple(a for a in sys.argv[1:] if a in GEOS) or tuple(GEOS)
+# Naming mechanisms on the command line screens only those. The control row
+# always runs first regardless, so a narrowed screen still states its power.
+PICK = tuple(a for a in sys.argv[1:] if a in {m[0] for m in MECHS})
+if PICK:
+    MECHS = [m for m in MECHS if m[0] == "CONTROL_donchian100" or m[0] in PICK]
 
 from trader.strategy.null_baseline import consistency_p as consistency
 
@@ -327,7 +381,14 @@ for gname in GKEYS:
                          universe=uni_held if is_held else uni_disc)
               # a mechanism cannot be judged on a symbol whose series is
               # absent; that is silence, not a failing score
-              if requires and any(ctx["derivs"].get(k) is None for k in requires):
+              # `derivs` is keyed by SERIES name ("oi"), `requires` by the
+              # feature's requirement name ("open_interest"). Looking the
+              # requirement up directly only ever worked because funding and
+              # basis happen to share both names; every OI mechanism would
+              # have been skipped on every symbol as "lacked data".
+              if requires and any(
+                      ctx["derivs"].get(spec_evidence._SERIES_FOR.get(k, k)) is None
+                      for k in requires):
                   skipped.append(sym); continue
               try: r=vector_walk_forward(c, sf, risk, symbol=sym, **ctx)
               except Exception as e:
