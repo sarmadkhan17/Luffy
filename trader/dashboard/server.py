@@ -144,10 +144,13 @@ def create_app(cfg: dict | None = None) -> FastAPI:
 
     @app.get("/api/klines")
     async def klines(symbol: str = "BTC/USDT", tf: str = "15m", limit: int = 300):
-        from ..data.feed import DataFeed, make_exchange
+        from ..data.feed import DataFeed
         try:
             if not _feed_cache:
-                _feed_cache.append(DataFeed(make_exchange("futures")))
+                # DataFeed() reads PRODUCTION public data. An injected
+                # make_exchange("futures") follows BINANCE_DEMO, and every
+                # chart view merged simulated candles into the shared store.
+                _feed_cache.append(DataFeed())
             df = _feed_cache[0].fetch_ohlcv(symbol, tf, limit=limit,
                                             min_bars=1)
             if df is None:
