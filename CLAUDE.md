@@ -149,6 +149,7 @@ in-process by `ExitEngine`; if the kernel dies, only the stop protects.
 |---|---|---|
 | `tg-listener` | 4s | Telegram commands |
 | `derivs-recorder` | 15m | funding, OI, taker, long/short, basis |
+| `ref-recorder` | 1h | reference markets for `ref()`: Yahoo (S&P, DXY, gold, 10y, VIX, oil — daily and hourly), Binance BTCDOM, the alt index, DefiLlama stablecoin supply; CoinGecko dominance every 4h |
 | `strategy-mechanism` | 12h | retire decayed specs, write one new one |
 | `scraper` | 4h | scrape and queue |
 | `crawler` | 6h | deep-read and queue |
@@ -214,6 +215,16 @@ expression must be evaluated once per universe member. They need
 `FeatureCtx.universe` and `symbol`, supplied by `rolling.py` in the backtest
 and by `Snapshot` live.
 
+**`ref(key, expr)`** (2026-09-11) evaluates any OHLCV indicator on a
+reference market (`trader/data/references.REFS`) and gives each base bar the
+value KNOWN at its close: reference stamp + `close_after_ms` against base
+stamp + bar length, `searchsorted(side="right") - 1`. Past `max_stale_ms` it
+is NaN — a dead feed, not a closed market. Every daily reference is known
+one day after its stamp (Yahoo stamps the S&P at the 13:30 open).
+`data_requires` carries `ref:<key>`; evidence carries the frames as
+`frames["_market"]`, live as `Snapshot.market`. Only OHLCV features may
+appear inside a `ref()`.
+
 ## Journal schema
 
 `data/luffy.db` tables: `cycles`, `votes`, `decisions`, `outcomes`, `trades`,
@@ -242,7 +253,8 @@ invisible to other connections and holding a write lock — until some later
   forming bar is not a bar; see `core.types.closed_bars` and
   `scripts/repair_partial_bars.py`. |
 | `data/derivs.db` | funding (5y, 36 symbols), basis (2y, 32), oi + ls_account_ratio (334d, the declared 16), taker_ratio + ls_ratio (~34d, 5) |
-| `data/doctrine.json` | versioned operating beliefs |
+| `data/candles.db` → `refs` table | reference markets for `ref()`, closed bars only, keyed by `REFS` (`trader/data/references.py`): S&P/DXY/gold/10y/VIX/oil daily since 2016 and hourly since 2023-24 (Yahoo), BTCDOM 4h since 2021-06, the alt index 4h since 2021-08, stablecoin supply daily since 2017-11, CoinGecko dominance recorded forward from 2026-09-11. NOT the `candles` table: `norm_symbol` splits on ':' and the repair script walks candle symbols |
+| `data/doctrine.json` | versioned operating beliefs (frozen at v25) |
 | `data/agent_weights.json` | measured analyst accuracy (weekly) |
 | `data/ewa_state.json` | online expert weights |
 | `data/agent_calibration.json` | per-agent conviction calibration |
@@ -757,7 +769,8 @@ These are facts about the search space, not beliefs to be rewritten.
   open interest and long/short ratio — **CLOSED 2026-09-03**, see below;
   multi-leg construction
   (`StrategySpec` is one symbol, one direction, one exit, so `xs_rank` can
-  select but never hedge); cross-asset context beyond BTC; event time (
+  select but never hedge); cross-asset context beyond BTC — **CLOSED
+  2026-09-11** by `ref()`; event time (
   MacroGuard holds the calendar, the DSL cannot see it); and position state
   (entries are stateless boolean arrays). Flow is NOT a gap — `taker_buy`
   rides in the klines with full history.
