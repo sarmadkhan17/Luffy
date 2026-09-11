@@ -1,31 +1,38 @@
-"""Strategist — the evolving brain of the playbook.
+"""Strategist (legacy) — LLM verdicts over the legacy genome book.
 
 Event-driven reviews (REQUIREMENTS §6): fires when ≥8 closed trades since
-last review OR 7 days elapsed. For each strategy it asks DeepSeek for a
-verdict (keep / mutate / retire + rationale); mutations perturb genes
-within family bounds and enter paper probation again. Falls back to
-deterministic verdicts when the LLM is unavailable or out of budget.
+last review OR 7 days elapsed. For each LIVE legacy genome it asks DeepSeek
+for a verdict (keep / retire + rationale). Falls back to the deterministic
+promotion engine when the LLM is unavailable or out of budget.
 
-Anti-overfit: ≤6 proposals/day; every mutation carries parent_id +
-generation so lineage failures can be flagged later.
+It CREATES NOTHING. It used to answer a "mutate" verdict by inserting a
+perturbed child straight into `paper`, and to run the legacy Proposer and its
+invention pass — three population-writing paths beside the one the firm
+allows (Scraper queues → spec_writer writes a spec → Analyst admits). On
+2026-09-11 a mutate verdict on a RETIRED genome (strat_606048ec95, live PF
+0.168) produced a trade-eligible child with no backtest and stats={}, and the
+next cycle opened 7 correlated shorts on it. The kernel no longer runs this
+review; the restrictions below hold if anything wires it back in.
+
+It never sees or touches a spec (`kind='spec'`) — the Analyst's rolling gate
+owns those — nor a retired row.
 """
 from __future__ import annotations
 
 import json
 import logging
-import random
 from datetime import datetime, timezone
 
 from ..core.journal import Journal
 from ..knowledge.vault import Vault
-from ..strategy.genome import FAMILY_GENE_SPECS
 from .llm import BrainLLM
 
 log = logging.getLogger(__name__)
 
 REVIEW_TRADES_TRIGGER = 8
 REVIEW_DAYS_TRIGGER = 7
-MAX_MUTATIONS_PER_DAY = 6
+#: the only rows a legacy verdict may read or write
+LIVE_STATES = ["paper", "active", "demoted"]
 
 
 class Strategist:
@@ -34,7 +41,6 @@ class Strategist:
         self.cfg = cfg
         self.notifier = notifier
         self.llm = BrainLLM(cfg)
-        self.rng = random.Random()
 
     # ── trigger ─────────────────────────────────────────────────────────
     def should_review(self) -> tuple[bool, str]:
@@ -64,41 +70,14 @@ class Strategist:
         if not should:
             return {"reviewed": False, "reason": why}
 
-        snap = population_snapshot = self._population_report()
-        prompt = self._build_prompt(snap)
+        snap = self._population_report()
         verdicts = None
-        if self.llm.available:
-            raw = self.llm.chat_json(prompt, deep=True)
+        if self.llm.available and snap:
+            raw = self.llm.chat_json(self._build_prompt(snap), deep=True)
             if raw and isinstance(raw.get("verdicts"), list):
                 verdicts = {v["id"]: v for v in raw["verdicts"]
                             if isinstance(v, dict) and "id" in v}
         applied = self._apply(verdicts) if verdicts else self._fallback()
-
-        try:
-            from ..strategy.proposer import Proposer
-            from ..data.feed import DataFeed, make_exchange
-            feed = DataFeed(make_exchange("futures"))
-            proposer = Proposer(self.journal, self.cfg, feed, self.notifier,
-                                llm=self.llm)
-            prop = proposer.propose()
-            if prop.get("proposed"):
-                applied.append({"strategy": prop["strategy"]["name"],
-                                "action": "proposed",
-                                "rationale": "gauntlet-passed new genome"})
-
-            # Invention is an INDEPENDENT pass. It used to sit at the tail of
-            # propose(), behind four early returns, so it only ran on a day
-            # when a proposal had already succeeded — and never once did.
-            inv = proposer.propose_invention()
-            if inv.get("invented"):
-                applied.append({"strategy": inv["strategy"]["name"],
-                                "action": "invented",
-                                "rationale": "new family passed internal "
-                                             "walk-forward"})
-            else:
-                log.info(f"invention pass: {inv.get('reason')}")
-        except Exception as e:
-            log.warning(f"proposal pass failed: {e}")
 
         self.journal.log_brain_event("review_complete", "strategist", {
             "why": why,
@@ -117,9 +96,14 @@ class Strategist:
         return {"reviewed": True, "why": why,
                 "used_llm": bool(verdicts), "actions": applied}
 
+    def _live_legacy(self) -> list[dict]:
+        return [r for r in self.journal.list_strategies(LIVE_STATES)
+                if r["kind"] != "spec"]
+
     def _population_report(self) -> list[dict]:
         from ..strategy.promotion import population_snapshot
-        return population_snapshot(self.journal)
+        live = {r["id"] for r in self._live_legacy()}
+        return [p for p in population_snapshot(self.journal) if p["id"] in live]
 
     def _build_prompt(self, pop: list[dict]) -> str:
         return (
@@ -127,96 +111,39 @@ class Strategist:
             "system. Below is each live trading strategy with its measured "
             "record. For EACH strategy output a verdict.\n\n"
             "Rules:\n"
-            "- mutate only when record is marginal (PF 0.9-1.15): propose ONE "
-            "parameter change within reason\n"
             "- retire clear losers (PF<0.85 with ≥20 trades or ≥6 straight losses)\n"
-            "- keep winners untouched ('if it earns, don't touch it')\n"
-            "- never invent new parameter names\n\n"
-            'Output JSON: {"verdicts":[{"id","action":"keep|mutate|retire",'
-            '"param": "<name or null>", "new_value": <number or null>, '
+            "- keep everything else untouched\n\n"
+            'Output JSON: {"verdicts":[{"id","action":"keep|retire",'
             '"rationale":"one sentence"}]}\n\n'
             f"STRATEGIES:\n{json.dumps(pop, indent=1)}")
 
     # ── actions ─────────────────────────────────────────────────────────
-    def _mutations_today(self) -> int:
-        day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        evts = self.journal.query(
-            "SELECT COUNT(*) n FROM brain_events WHERE kind='mutate' AND ts LIKE ?",
-            (f"{day}%",))
-        return evts[0]["n"]
-
     def _apply(self, verdicts: dict[str, dict]) -> list[dict]:
+        rows = {r["id"]: r for r in self._live_legacy()}
         applied = []
         for sid, v in verdicts.items():
-            row = next((r for r in self.journal.list_strategies()
-                        if r["id"] == sid), None)
+            row = rows.get(sid)
             if not row:
-                continue
+                continue        # a spec, a retired row, or an id the LLM made up
             action = v.get("action")
             rationale = (v.get("rationale") or "")[:300]
             if action == "retire":
-                self.journal.query(
-                    "UPDATE strategies SET state='retired', "
-                    "retire_reason=? WHERE id=?", (rationale, sid))
+                with self.journal._tx() as c:
+                    c.execute("UPDATE strategies SET state='retired', "
+                              "retire_reason=?, state_changed_at=? WHERE id=?",
+                              (rationale,
+                               datetime.now(timezone.utc).isoformat(), sid))
                 self.journal.log_brain_event("retire", sid, rationale)
                 applied.append({"strategy": row["name"], "action": "retire",
                                 "rationale": rationale})
-            elif action == "mutate":
-                if self._mutations_today() >= MAX_MUTATIONS_PER_DAY:
-                    continue
-                mut = self._mutate_row(row, v.get("param"),
-                                       v.get("new_value"), rationale)
-                if mut:
-                    applied.append({"strategy": row["name"], "action": "mutate",
-                                    "rationale": mut["detail"]})
-                    self.journal.log_brain_event("mutate", sid, mut)
             elif action == "keep":
                 self.journal.log_brain_event("keep_verdict", sid, rationale)
                 applied.append({"strategy": row["name"], "action": "keep",
                                 "rationale": rationale})
+            elif action:
+                log.info(f"strategist: refused '{action}' verdict on {sid} — "
+                         f"only keep/retire are applied")
         return applied
-
-    def _mutate_row(self, row: dict, param: str | None,
-                    new_value, rationale: str) -> dict | None:
-        spec = FAMILY_GENE_SPECS.get(row["kind"], {})
-        params = json.loads(row["params"])
-        if param and param in spec:
-            typ, lo, hi, _def = spec[param]
-            val = new_value if isinstance(new_value, (int, float)) \
-                else params.get(param)
-            if val is None:
-                return None
-            val = max(lo, min(hi, float(val)))
-        else:
-            numeric = [(k, s) for k, s in spec.items() if s[0] in (int, float)]
-            if not numeric:
-                return None
-            k, s = self.rng.choice(numeric)
-            typ, lo, hi, cur_def = s
-            cur = float(params.get(k, cur_def))
-            delta = (hi - lo) * self.rng.uniform(0.08, 0.25) * \
-                self.rng.choice((-1, 1))
-            val = max(lo, min(hi, round(cur + delta, 4)))
-            param = k
-        new_params = {**params, param: int(val) if typ is int else float(val)}
-
-        new_id = f"{row['id']}_m{self.rng.randint(100, 999)}"
-        self.journal.query(
-            "INSERT INTO strategies (id,name,kind,params,state,description,"
-            "origin,hypothesis,invalidation,regime_filter,markets,generation,"
-            "parent_id,created_at,stats_json) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (new_id, f"{row['name']} ·{param}={new_params[param]}",
-             row["kind"], json.dumps(new_params), "paper",
-             row["description"], "mutation",
-             row["hypothesis"], row["invalidation"],
-             row["regime_filter"], row["markets"],
-             (row["generation"] or 0) + 1, row["id"],
-             datetime.now(timezone.utc).isoformat(), "{}"))
-        detail = {"parent": row["id"], "child": new_id, "param": param,
-                  "value": new_params[param],
-                  "rationale": rationale, "state": "paper"}
-        return detail
 
     def _fallback(self) -> list[dict]:
         """Deterministic verdicts when no LLM: mirror statistical engine."""
