@@ -17,7 +17,7 @@
 manager:
   name: Manager
   title: Manager
-  wraps: [trader.kernel, trader.engine.orchestrator, trader.brain.judge]
+  wraps: [trader.kernel, trader.engine.orchestrator]
   authors: [daily-review]
   status_source: manager
   category: BRAIN
