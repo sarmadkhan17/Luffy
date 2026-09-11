@@ -347,6 +347,18 @@ brain:
   # room for reasoning + answer (autopsy measured at ~12.4k completion tokens).
   max_tokens_deep: 16000
 
+references:                     # reference markets for ref(key, expr) — trader/data/references.py
+  enabled: true
+  interval_minutes: 60          # Yahoo, BTCDOM, stables and the alt index; CoinGecko snapshots every 4h
+  # the alt index: the 36 crypto perps the mechanism screens use, minus BTC
+  alts_members: [ETH/USDT, SOL/USDT, XRP/USDT, BNB/USDT, DOGE/USDT, ADA/USDT,
+                 LINK/USDT, AVAX/USDT, LTC/USDT, 1000PEPE/USDT, APT/USDT,
+                 BCH/USDT, DASH/USDT, FET/USDT, INJ/USDT, T/USDT, WLD/USDT,
+                 XMR/USDT, UNI/USDT, SUI/USDT, TAO/USDT, ZEC/USDT, NEAR/USDT,
+                 FIL/USDT, AAVE/USDT, HYPE/USDT, TRUMP/USDT, 1000SHIB/USDT,
+                 ARB/USDT, CRV/USDT, DOT/USDT, ICP/USDT, OP/USDT, TRX/USDT,
+                 XLM/USDT]
+
 dashboard:
   host: 0.0.0.0
   port: 8080
