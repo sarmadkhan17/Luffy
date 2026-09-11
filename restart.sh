@@ -19,5 +19,8 @@ for PID in $(pgrep -f "$MOD"); do
 done
 sleep 1
 cd "$DIR"
+# /tmp is wiped on reboot; a redirect into a missing directory fails and bash
+# then never runs the command, so "started" would print over a dead process.
+mkdir -p "$(dirname "$LOG")"
 setsid nohup ./venv/bin/python -m "$MOD" > "$LOG" 2>&1 < /dev/null &
 echo "started $MOD"
