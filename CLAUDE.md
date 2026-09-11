@@ -92,7 +92,10 @@ They never call each other. They share `data/luffy.db` (SQLite, WAL).
 **There is exactly one strategy-creation path**: Scraper queues → Strategist
 writes a spec → Analyst admits. The old path, where the Scraper mapped scraped
 text onto legacy genomes and wrote them straight into the population, was
-deleted. Do not reintroduce a second creation path.
+deleted. So, on 2026-09-11, was its twin: the legacy `brain/strategist.py`
+review, whose "mutate" verdict, Proposer and invention pass wrote into the
+population from the kernel's hourly brain tick. Do not reintroduce a second
+creation path; `tests/test_single_creation_path.py` guards it.
 
 ### The idea queue
 
@@ -283,6 +286,32 @@ there is.
 `docs/superpowers/plans/` carries the current plans. The 2026-09-01 audit
 register's highest-severity items were all closed on 2026-09-02; see
 `git log 413da6e..` for the evidence behind each. What replaced them:
+
+- **A second creation path filled the whole book with an unvalidated
+  strategy (2026-09-11).** First brain tick after a week offline: the legacy
+  `Strategist.review()` asked DeepSeek for verdicts over EVERY strategies row
+  — retired genomes and the Donchian spec included — and answered "mutate" on
+  `strat_606048ec95`, retired on 09-02 for live PF 0.168, by inserting
+  `strat_606048ec95_m237` straight into `paper`: trade-eligible, no backtest,
+  no Analyst, `stats={}`. The next cycle opened 7 correlated shorts (AVAX,
+  FIL, HYPE, LINK, TAO, XRP, ZEC) and a BTC short followed — all 8 slots.
+  The review then crashed on `mut["detail"]`, a key that never existed, so
+  neither `mutate` nor `review_complete` was journalled: the 6/day cap read 0
+  and `should_review()` stayed true. The INSERT went through `Journal.query()`
+  and was committed as a side effect of a later `_tx()`.
+  Fixed: the kernel no longer runs the legacy review; `strategist.py` is
+  keep/retire only, over live legacy genomes, never a spec. m237 was retired
+  by hand, and its 8 positions closed by hand at 01:40 UTC on the operator's
+  call. **The journal booked them at +$46.33; the venue's income ledger says
+  +$11.83.** Entries match the venue to the tick; every EXIT was booked
+  better than it filled (AVAX short: 7.447 booked, 7.484 filled), because
+  `executor.close()` books `order["average"] or order["price"] or price_hint`
+  rather than the fill. Unfixed — any P&L read off `trades` is flattered
+  until it is. **Still open:** `strategy/proposer.py` still exists with no
+  caller;
+  `test_macro_guard::test_a_restart_reuses_the_cached_calendar` fails on the
+  wall clock since the week of 2026-09-04 passed (cache freshness reads real
+  time while the test pins `_now`).
 
 - **The book's only strategy does not generalise off its declared universe,
   and only forward trading can now settle it.** Donchian Breakout Trail scores
