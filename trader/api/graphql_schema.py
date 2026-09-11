@@ -64,6 +64,24 @@ class NewsGuardType:
 
 
 @strawberry.type
+class RentWeekType:
+    week_start: str
+    verdict: str
+    net: Optional[float]
+
+
+@strawberry.type
+class RentType:
+    week_start: str
+    net: Optional[float]
+    bar: float
+    days_left: float
+    status: str
+    updated_at: str
+    history: list[RentWeekType]
+
+
+@strawberry.type
 class BrainEventType:
     ts: str
     kind: str
@@ -252,6 +270,22 @@ def build_query(journal: Journal):
             except Exception:
                 return NewsGuardType(active=False, why="no data yet",
                                      checked_at="")
+
+        @strawberry.field
+        def rent(self) -> RentType:
+            from ..engine.rent_keeper import snapshot
+            snap = snapshot(journal)
+            s = snap["state"]
+            return RentType(
+                week_start=str(s.get("week_start", "")),
+                net=s.get("net"),
+                bar=float(s.get("bar", 50)),
+                days_left=float(s.get("days_left") or 0),
+                status=str(s.get("status", "no reading yet")),
+                updated_at=str(s.get("updated_at", "")),
+                history=[RentWeekType(week_start=h["week_start"],
+                                      verdict=str(h["verdict"]), net=h["net"])
+                         for h in snap["history"]])
 
         @strawberry.field
         def recent_vetoes(self, limit: int = 10) -> list[DecisionType]:

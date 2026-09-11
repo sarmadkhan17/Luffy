@@ -104,8 +104,10 @@ def test_manager_core_tiles():
     c = _company()
     m = c["employees"][0]
     assert m["name"] == "Manager" and m["category"] == "BRAIN"
-    assert "core" in m and len(m["core"]) == 4
-    assert [t[0] for t in m["core"]] == ["Equity", "Control", "Cycle", "Heat"]
+    assert "core" in m and len(m["core"]) == 6
+    # Rent and Weeks: the weekly verdict Sarmad deletes Luffy on (2026-09-11)
+    assert [t[0] for t in m["core"]] == ["Equity", "Control", "Cycle", "Heat",
+                                         "Rent", "Weeks"]
 
 
 def test_research_group_covers_strategist_and_theorist():

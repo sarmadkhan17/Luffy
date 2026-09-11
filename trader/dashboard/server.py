@@ -831,13 +831,25 @@ def build_company(journal, cfg: dict) -> dict:
         state = ("alert" if control in ("HALTED", "FROZEN")
                  else _state_from_age(_age_min(ts)))
         heat_str = f"{heat_pct:.1f}%" if heat_pct is not None else "—"
+        from ..engine.rent_keeper import snapshot as _rent_snapshot
+        _rent = _rent_snapshot(journal)
+        rs = _rent["state"]
+        rent_str = ("—" if not rs else
+                    "unreadable" if rs.get("net") is None else
+                    f"{rs['net']:+.0f} / {float(rs.get('bar', 50)):.0f}, "
+                    f"{float(rs.get('days_left') or 0):.1f}d left")
+        # last verdicts, oldest first: P pass, F fail, ? unknown
+        weeks_str = "".join({"PASS": "P", "FAIL": "F"}.get(h["verdict"], "?")
+                            for h in reversed(_rent["history"])) or "—"
         return {"metric": metric, "out": out, "ts": ts, "state": state,
                 "feed": [], "stats": [], "bar": 0,
                 "signal": _spark("cycles", "ts"),
                 "core": [["Equity", f"${equity_now:,.0f}" if equity_now else "—"],
                          ["Control", control],
                          ["Cycle", _age_str(ts)],
-                         ["Heat", heat_str]]}
+                         ["Heat", heat_str],
+                         ["Rent", rent_str],
+                         ["Weeks", weeks_str]]}
 
     def librarian(e):
         import re
