@@ -95,6 +95,7 @@ class Snapshot:
     btc_ctx: dict = field(default_factory=dict)   # leader context (see regime.btc_context)
     universe: dict | None = None      # {symbol: {tf: df}} for cross-sectional
     derivs: dict | None = None        # {series: obs frame} for funding/OI/taker specs
+    market: dict | None = None        # {ref key: frame} for ref() specs
 
     def df(self, tf: str):
         return self.dfs.get(tf)

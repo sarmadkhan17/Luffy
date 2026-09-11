@@ -102,6 +102,7 @@ class CompiledStrategy:
                 lo, sh = self.entries(frames, btc=btc,
                                       derivs=getattr(snap, "derivs", None),
                                       universe=getattr(snap, "universe", None),
+                                      market=getattr(snap, "market", None),
                                       symbol=snap.symbol)
             except Exception as e:
                 # Silence here cost three authored specs their entire live

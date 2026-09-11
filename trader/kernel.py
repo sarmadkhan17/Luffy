@@ -186,6 +186,7 @@ class Kernel:
         self._spec_requires = tuple(sorted(requires))
         self._spec_exits = spec_exits
         self._derivs_cache = {}
+        self._market_cache = None
         if pop:
             log.info(f"loaded {len(pop)} compiled spec(s) into the population"
                      + (f", needing {list(self._spec_requires)}"
@@ -214,6 +215,32 @@ class Kernel:
         self._derivs_cache[symbol] = (now, out)
         return out
 
+    _MARKET_TTL = 300.0                # the recorder refreshes hourly
+
+    def _market_for(self) -> dict | None:
+        """The reference frames the book's specs read through ref().
+
+        Keyed on the book, not the symbol: the S&P is the same series for
+        every coin, so it is loaded once per TTL and shared by every
+        snapshot.
+        """
+        reqs = [r for r in getattr(self, "_spec_requires", ())
+                if isinstance(r, str) and r.startswith("ref:")]
+        if not reqs:
+            return None
+        hit = getattr(self, "_market_cache", None)
+        now = time.time()
+        if hit and now - hit[0] < self._MARKET_TTL:
+            return hit[1]
+        try:
+            from .strategy.spec_evidence import load_refs
+            out = load_refs(reqs) or None
+        except Exception as e:
+            log.warning(f"reference series unavailable: {e}")
+            out = None
+        self._market_cache = (now, out)
+        return out
+
     def boot(self) -> None:
         log.info(f"LUFFY BOOT | market={self.market_type.value} "
                  f"state={self.state_machine.state.value} "
@@ -231,6 +258,9 @@ class Kernel:
                          name="tg-listener").start()
         threading.Thread(target=self._derivatives_recorder, daemon=True,
                          name="derivs-recorder").start()
+        if (self.cfg.get("references", {}) or {}).get("enabled", True):
+            threading.Thread(target=self._reference_recorder, daemon=True,
+                             name="ref-recorder").start()
         threading.Thread(target=self._strategy_mechanism_loop, daemon=True,
                          name="strategy-mechanism").start()
         threading.Thread(target=self._maybe_validate_agents, daemon=True,
@@ -310,6 +340,37 @@ class Kernel:
                 log.warning(f"derivatives recorder: {e}")
             # sleep in slices so shutdown is not delayed a full interval
             for _ in range(int(interval)):
+                if self._stop:
+                    return
+                _t.sleep(1)
+
+    def _reference_recorder(self) -> None:
+        """Keep the reference markets current: S&P, DXY, gold, the 10y, VIX,
+        oil, BTC dominance, the alt index, stablecoin supply, CoinGecko.
+
+        A reference nobody records goes stale, and a stale reference reads
+        NaN — so a ref() spec would go silent rather than wrong, which is
+        the right failure, but still a failure. Each source is isolated
+        inside refresh_all: Yahoo's API is unofficial and may break alone.
+        """
+        import time as _t
+        rcfg = self.cfg.get("references", {}) or {}
+        if not rcfg.get("enabled", True):
+            log.info("reference recorder disabled")
+            return
+        from .data.ref_sources import refresh_all
+        every = float(rcfg.get("interval_minutes", 60)) * 60
+        members = list(rcfg.get("alts_members") or [])
+        _t.sleep(60)                        # let boot settle
+        while not self._stop:
+            try:
+                rep = refresh_all(self.feed, members)
+                errs = {k: v for k, v in rep.items() if isinstance(v, str)}
+                log.info(f"references refreshed: {len(rep) - len(errs)} ok"
+                         + (f", errors {errs}" if errs else ""))
+            except Exception as e:
+                log.warning(f"reference recorder: {e}")
+            for _ in range(int(every)):
                 if self._stop:
                     return
                 _t.sleep(1)
@@ -556,7 +617,8 @@ class Kernel:
                         market_type=self.market_type.value,
                         btc_ctx=self._btc_ctx,
                         universe=universe,
-                        derivs=self._derivs_for(symbol))
+                        derivs=self._derivs_for(symbol),
+                        market=self._market_for())
 
     def _refresh_btc_context(self) -> None:
         """Leader context computed once per cycle, shared by all scouts."""
