@@ -91,8 +91,14 @@ They never call each other. They share `data/luffy.db` (SQLite, WAL).
 | Trader | `engine/executor.py`, `exits.py` | Places the order and arms the protective stop. |
 | Risk Officer | `engine/risk.py`, `agents/macro_guard.py`, `news_guard.py` | Sizes, caps, and blocks. Max **8** open trades, 0.5% risk each. |
 | Librarian | `knowledge/vault.py` | Writes the human-readable record into `knowledge/`. |
-| Theorist | `brain/theorist.py` | Autopsies losing clusters into `data/doctrine.json` (versioned beliefs). |
-| Manager | `brain/judge.py` | Reviews the book every 6h, weekly meta-review. |
+| Theorist | `brain/postmortem.py`, `brain/doctrine.py` | Every 6h, checks each live strategy against the envelope it was admitted on — data only, no LLM. `data/doctrine.json` is frozen at v25: read, never rewritten. |
+| Manager | `kernel.py`, `engine/orchestrator.py` | Coordinates. `/judge` reports book health and rent from data. The LLM Judge was removed 2026-09-11 (56 of 58 reviews applied nothing). |
+
+**LLM spend is per-purpose.** Every `BrainLLM` call passes `purpose=`;
+`brain.purpose_budgets` reserves slices (research 120k, chat 30k) that no
+other consumer can eat, and the rest share the remainder of
+`daily_token_budget`. `data/brain_usage.json` keeps the per-purpose tally
+under `_by_purpose`.
 
 **There is exactly one strategy-creation path**: Scraper queues → Strategist
 writes a spec → Analyst admits. The old path, where the Scraper mapped scraped
@@ -146,12 +152,11 @@ in-process by `ExitEngine`; if the kernel dies, only the stop protects.
 | `strategy-mechanism` | 12h | retire decayed specs, write one new one |
 | `scraper` | 4h | scrape and queue |
 | `crawler` | 6h | deep-read and queue |
-| `brain-judge` | 6h | review the book |
 | `agent-validator` | at boot | **runs once and exits** — it is not a loop |
 | `rent-check` | 1h | the week's net off the venue income ledger against the $50 bar; daily Telegram tally, Monday verdict (`rent_verdict` event). Reports only — never stops Luffy |
 
 Three more ride the cycle counter: outcome resolution (~12 cycles), the
-brain/vault tick (~60 cycles), the Theorist autopsy (~360 cycles).
+brain/vault tick (~60 cycles), the data-only book post-mortem (~360 cycles).
 
 ## Strategy lifecycle
 
@@ -160,7 +165,8 @@ brain/vault tick (~60 cycles), the Theorist autopsy (~360 cycles).
 - **Admission** (Analyst): pooled PF ≥ 1.15 over ≥ 20 trades, signal overlap
   < 0.6 against the book, AND a cross-symbol rotation-null consistency
   p < 0.01 (`select_null_max_p`). Fewer than 4 symbols carrying a percentile
-  is silence, not a pass, and does not block on its own.
+  is **untestable, and REFUSED** — since 2026-09-11, when silence admitted a
+  spec on 20 trades with the null run on 0 symbols.
   The evidence window **starts at 90 days and doubles** until it holds 20
   trades, capped at `select_max_days` (365). A fixed calendar window is
   8,640 bars of 15m and 540 of 4h, so it asks a different question of each
@@ -317,8 +323,8 @@ register's highest-severity items were all closed on 2026-09-02; see
   the order's own fills and re-base the trade to `venue_realized_pnl` over a
   window that includes the entry commission; an estimate is booked only when
   the venue will not answer, and says so in a `pnl_estimated` event. Rows
-  closed before the fix are still flattered. **Still open:** `strategy/proposer.py` still exists with no
-  caller;
+  closed before the fix are still flattered. `strategy/proposer.py`, left
+  with no caller, was deleted the same day. **Still open:**
   `test_macro_guard::test_a_restart_reuses_the_cached_calendar` fails on the
   wall clock since the week of 2026-09-04 passed (cache freshness reads real
   time while the test pins `_now`).
@@ -422,6 +428,8 @@ register's highest-severity items were all closed on 2026-09-02; see
   it was judged on the five config backtest symbols and trades the whole
   venue scan (21 symbols). Left trading on demo by operator decision; watch
   whether its forward record looks like its 20 trades or like noise.
+  **Closed for new admissions 2026-09-11:** untestable is now REFUSED
+  (`Analyst.admit`).
 - The seven analysts show a **negative point estimate and no established
   significance**. The earlier reading — "-0.695% a call, t=-3.84, losing on
   BOTH sides" — was **pseudo-replication** and does not survive de-duplication.
@@ -456,7 +464,7 @@ register's highest-severity items were all closed on 2026-09-02; see
 ## What measurement established (do not re-litigate)
 
 Written 2026-09-02, after the candle store turned out to be simulator data.
-These are facts about the search space, not beliefs the Theorist may rewrite.
+These are facts about the search space, not beliefs to be rewritten.
 
 - **A profit factor alone is a statement about arithmetic.** Exit geometry
   sets a win rate by itself: TP 4.5 ATR over SL 2.5 ATR pays a coin flip 35.7%
