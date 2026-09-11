@@ -345,6 +345,14 @@ def _rel_strength_btc(ctx, n):
 register("htf", arg_specs=((str, None, None), SERIES_ARG))(
     lambda ctx, tf, expr: expr)
 
+# ── reference markets ────────────────────────────────────────────────────
+# A MARKER, like htf: dsl.evaluate() special-cases `ref(key, expr)`. `expr`
+# is evaluated on the reference market's own frame (FeatureCtx.market[key])
+# and aligned onto the base bars by the moment each reference bar became
+# KNOWN — see trader.data.references.REFS for each source's clock.
+register("ref", arg_specs=((str, None, None), SERIES_ARG))(
+    lambda ctx, key, expr: expr)
+
 # ── bar shape and participation ──────────────────────────────────────────
 @register("efficiency_ratio", arg_specs=((int, 5, 200),), domain=(0.0, 1.0))
 def _efficiency_ratio(ctx, n):
