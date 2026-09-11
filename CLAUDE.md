@@ -143,6 +143,7 @@ in-process by `ExitEngine`; if the kernel dies, only the stop protects.
 | `crawler` | 6h | deep-read and queue |
 | `brain-judge` | 6h | review the book |
 | `agent-validator` | at boot | **runs once and exits** — it is not a loop |
+| `rent-check` | 1h | the week's net off the venue income ledger against the $50 bar; daily Telegram tally, Monday verdict (`rent_verdict` event). Reports only — never stops Luffy |
 
 Three more ride the cycle counter: outcome resolution (~12 cycles), the
 brain/vault tick (~60 cycles), the Theorist autopsy (~360 cycles).
@@ -208,7 +209,8 @@ and by `Snapshot` live.
 `equity`, `brain_events`, `control_events`, `strategies`, **`state_kv`**.
 
 `state_kv` is the kernel↔dashboard channel: `control_state`,
-`panic_requested`, `news_guard_state`, `macro_guard_state`.
+`panic_requested`, `news_guard_state`, `macro_guard_state`, `close_requests`,
+`rent_state`, `rent_tally_day`.
 
 **`Journal.query()` does not commit.** It runs on a thread-local connection
 with no transaction wrapper, so an INSERT/UPDATE through it stays uncommitted —
@@ -253,7 +255,7 @@ inverts it.
 `ACTIVE` → entries allowed · `FROZEN` → no new entries, exits managed ·
 `HALTED` → neither, though exchange stops stay armed.
 
-Telegram: `/panic /halt /freeze /resume /status /news /scouts /judge /tv`
+Telegram: `/panic /halt /freeze /resume /status /news /rent /scouts /judge /tv`
 
 ## Protective stops are ALGO orders
 
@@ -306,8 +308,11 @@ register's highest-severity items were all closed on 2026-09-02; see
   +$11.83.** Entries match the venue to the tick; every EXIT was booked
   better than it filled (AVAX short: 7.447 booked, 7.484 filled), because
   `executor.close()` books `order["average"] or order["price"] or price_hint`
-  rather than the fill. Unfixed — any P&L read off `trades` is flattered
-  until it is. **Still open:** `strategy/proposer.py` still exists with no
+  rather than the fill. Fixed the same day: `close()`/`close_partial()` book
+  the order's own fills and re-base the trade to `venue_realized_pnl` over a
+  window that includes the entry commission; an estimate is booked only when
+  the venue will not answer, and says so in a `pnl_estimated` event. Rows
+  closed before the fix are still flattered. **Still open:** `strategy/proposer.py` still exists with no
   caller;
   `test_macro_guard::test_a_restart_reuses_the_cached_calendar` fails on the
   wall clock since the week of 2026-09-04 passed (cache freshness reads real
