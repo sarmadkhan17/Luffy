@@ -342,10 +342,17 @@ class Analyst:
         ev = self._with_null_evidence(ev, self._null_percentiles(spec, tf))
         # A spec that cannot beat a rotation of its OWN entries across
         # independent symbols has no edge, whatever its profit factor says.
-        # Too few symbols to test is not a pass and not a failure — it is
-        # silence, and silence does not block admission on its own.
+        # Too few symbols to run that test used to be "silence", and silence
+        # did not block: on 2026-09-11 that admitted a spec on 20 trades with
+        # the null run on 0 symbols. Untestable is now a refusal.
         p = ev.get("null_consistency_p")
-        if p is not None and p > self.null_max_p:
+        if p is None:
+            from ..strategy import null_baseline
+            return False, {**ev, "untestable": True, "reason":
+                           f"untestable: the rotation null ran on "
+                           f"{ev['null_symbols']} symbols, fewer than the "
+                           f"{null_baseline.MIN_SYMBOLS} needed to judge it"}
+        if p > self.null_max_p:
             return False, {**ev, "reason":
                            f"beats its own rotation no more often than chance "
                            f"across {ev['null_symbols']} symbols "

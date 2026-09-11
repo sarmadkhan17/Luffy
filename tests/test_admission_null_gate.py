@@ -87,12 +87,23 @@ def test_a_spec_that_does_not_is_refused_with_the_number(monkeypatch):
     assert "rotation" in ev["reason"] and "p=0.27" in ev["reason"]
 
 
-def test_too_few_symbols_does_not_block_admission_on_its_own(monkeypatch):
-    """Silence is not a failing verdict — the PF and overlap gates still run."""
+def test_too_few_symbols_to_test_is_refused_as_untestable(monkeypatch):
+    """2026-09-11: spec_funding_filtered_trend_pullback was admitted on 20
+    trades with the rotation null run on 0 symbols, because silence did not
+    block. A spec nobody can test is refused, not waved through."""
     ok, ev = _admit_with(monkeypatch, {0: 0.5, 1: 0.5})
-    assert ok is True
+    assert ok is False
     assert ev["null_consistency_p"] is None
     assert ev["null_symbols"] == 2
+    assert ev["untestable"] is True
+    assert "untestable" in ev["reason"]
+
+
+def test_no_symbol_carrying_a_percentile_is_refused(monkeypatch):
+    ok, ev = _admit_with(monkeypatch, {})
+    assert ok is False
+    assert ev["null_symbols"] == 0
+    assert ev["untestable"] is True
 
 
 def test_the_record_keeps_the_readable_summary_too(monkeypatch):
