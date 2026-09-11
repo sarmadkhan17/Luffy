@@ -44,6 +44,23 @@ def load_derivs(symbol: str, requires, feed: DerivFeed | None = None) -> dict:
     return out
 
 
+def load_refs(requires, store=None) -> dict:
+    """{reference key: frame} for every `ref:<key>` a spec requires."""
+    keys = [r.split(":", 1)[1] for r in requires or ()
+            if isinstance(r, str) and r.startswith("ref:")]
+    if not keys:
+        return {}
+    if store is None:
+        from ..data.references import RefStore
+        store = RefStore()
+    out = {}
+    for k in keys:
+        df = store.load(k)
+        if df is not None and len(df):
+            out[k] = df
+    return out
+
+
 def funding_series(symbol: str, df, feed: DerivFeed | None = None):
     """The venue's SIGNED 8-hourly funding rate, aligned onto `df`'s bars.
 
@@ -91,7 +108,7 @@ MIN_COVERAGE = 0.9
 
 
 def missing_data(spec, symbols: list, feed: DerivFeed | None = None,
-                 frames: dict | None = None) -> dict:
+                 frames: dict | None = None, ref_store=None) -> dict:
     """{symbol: [problems]}. Empty = honestly testable.
 
     Presence is not enough. Binance retains open interest, taker ratio and
@@ -102,22 +119,31 @@ def missing_data(spec, symbols: list, feed: DerivFeed | None = None,
     this pipeline exists to prevent.
     """
     needed = [r for r in spec.data_requires if r in _SERIES_FOR]
-    if not needed:
+    # a reference market is a series like any other: two years of hourly
+    # S&P cannot score a five-year frame
+    ref_needed = [r for r in spec.data_requires
+                  if isinstance(r, str) and r.startswith("ref:")]
+    if not needed and not ref_needed:
         return {}
-    feed = feed or DerivFeed()
+    if needed:
+        feed = feed or DerivFeed()
+    refs = load_refs(ref_needed, ref_store) if ref_needed else {}
     gaps: dict = {}
     for sym in symbols:
-        have = load_derivs(sym, spec.data_requires, feed)
+        have = load_derivs(sym, spec.data_requires, feed) if needed else {}
         problems = [f"{r}: absent" for r in needed
                     if _SERIES_FOR[r] not in have]
+        problems += [f"{r}: absent" for r in ref_needed
+                     if r.split(":", 1)[1] not in refs]
         frame = (frames or {}).get(sym)
         if frame is not None and len(frame) and "ts" in frame.columns:
             import pandas as pd
             f0 = pd.to_datetime(frame["ts"], utc=True).iloc[0]
             f1 = pd.to_datetime(frame["ts"], utc=True).iloc[-1]
             span = (f1 - f0).total_seconds()
-            for r in needed:
-                df = have.get(_SERIES_FOR[r])
+            series = [(r, have.get(_SERIES_FOR[r])) for r in needed] + \
+                     [(r, refs.get(r.split(":", 1)[1])) for r in ref_needed]
+            for r, df in series:
                 if df is None or span <= 0:
                     continue
                 d0 = pd.to_datetime(df["ts"], utc=True).iloc[0]

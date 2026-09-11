@@ -94,6 +94,24 @@ class Analyst:
         those five and p=3.5e-04 on the sixteen it actually trades.
         """
         frames = self.frames(tf, self._declared(spec))
+        # reference markets travel the way _btc_1h does: as an underscore
+        # key every symbol loop already skips. Copied, never written into
+        # the cached dict, because the references differ per spec.
+        # Derived from the expressions alone. compile_spec() validates the
+        # whole spec first, and a spec that failed validation fell back to
+        # its stored data_requires — ["ohlcv"] unless compiled before — so
+        # its references silently never loaded.
+        from ..strategy import dsl
+        try:
+            exprs = [spec.entry_long, spec.entry_short, *(spec.filters or []),
+                     getattr(spec.exit, "signal_exit", "")]
+            req = dsl.data_requires(*[dsl.parse(e) for e in exprs
+                                      if (e or "").strip()])
+        except Exception:
+            req = tuple(spec.data_requires or ())
+        market = spec_evidence.load_refs(req)
+        if market:
+            frames = {**frames, "_market": market}
         btc = frames.get("_btc_1h")
         return (frames,
                 {"15m": btc} if btc is not None else None,
@@ -277,7 +295,9 @@ class Analyst:
                 StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf}))
             a_lo, a_sh = cand.entries({tf: frames[sym]}, btc=btc,
                                       derivs=derivs_for(sym),
-                                      universe=universe, symbol=sym)
+                                      universe=universe,
+                                      market=frames.get("_market"),
+                                      symbol=sym)
         except Exception:
             return 0.0, ""
         worst, who = 0.0, ""
@@ -291,7 +311,9 @@ class Analyst:
                 b_lo, b_sh = oc.entries(
                     {tf: frames[sym]}, btc=btc,
                     derivs=spec_evidence.load_derivs(sym, other.data_requires),
-                    universe=universe, symbol=sym)
+                    universe=universe,
+                    market=spec_evidence.load_refs(other.data_requires) or None,
+                    symbol=sym)
             except Exception:
                 continue
             r = signal_overlap(a_lo, a_sh, b_lo, b_sh)
@@ -376,7 +398,8 @@ class Analyst:
                 sf = spec_evidence.frames_for(frames[sym], tf)
                 r = vector_walk_forward(compiled, sf, risk, btc=btc,
                                         derivs=derivs_for(sym), symbol=sym,
-                                        universe=universe)
+                                        universe=universe,
+                                        market=frames.get("_market"))
                 if r["test"].trades < 8:
                     continue           # a 2-trade profit factor is noise
                 # the null must be charged what the actual was charged
@@ -384,6 +407,7 @@ class Analyst:
                 a = null_baseline.assess(
                     compiled, sf, risk, r["test"].profit_factor, btc=btc,
                     derivs=derivs_for(sym), universe=universe, symbol=sym,
+                    market=frames.get("_market"),
                     draws=40, split=0.7, part="test", funding=fund)
                 if a.get("percentile") is not None:
                     out[sym] = a["percentile"]
