@@ -36,7 +36,7 @@ class AnalystAgent:
         messages.append({"role": "user", "content": message})
 
         for _ in range(self.max_steps):
-            msg = self.llm.chat_tools(messages, T.TOOL_SCHEMAS)
+            msg = self.llm.chat_tools(messages, T.TOOL_SCHEMAS, purpose="chat")
             if msg is None:
                 return FALLBACK
             calls = getattr(msg, "tool_calls", None)
@@ -57,7 +57,8 @@ class AnalystAgent:
         # ran out of steps — force a final answer without tools
         msg = self.llm.chat_tools(
             messages + [{"role": "user",
-                         "content": "Answer now with what you have."}], [])
+                         "content": "Answer now with what you have."}], [],
+            purpose="chat")
         text = (getattr(msg, "content", None) or "").strip() if msg else ""
         return text or FALLBACK
 

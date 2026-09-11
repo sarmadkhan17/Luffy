@@ -5,8 +5,9 @@ token-free relevance filter) → QUEUE the surviving ideas whole for the
 Strategist, which is the only path that turns raw text into a strategy.
 
 Everything is journaled: scraped-idea ids (dedupe), per-cycle yield by
-source. Budget-guarded by BrainLLM (used only for downstream consumers,
-not for genome extraction here).
+source. No LLM: screening is the token-free `ideas.score()` heuristic. The
+BrainLLM handle this class used to hold was never called and was removed
+on 2026-09-11.
 """
 from __future__ import annotations
 
@@ -19,7 +20,6 @@ import time
 import requests
 
 from . import ideas
-from ..brain.llm import BrainLLM
 from ..core.journal import Journal
 
 log = logging.getLogger(__name__)
@@ -221,7 +221,6 @@ class Scraper:
         self.cfg = cfg
         self.feed = feed
         self.notifier = notifier
-        self.llm = BrainLLM(cfg)
         h = cfg.get("scraper", cfg.get("harvester", {}))   # old key still honoured
         self.tags = h.get("tv_tags", h.get("tags", DEFAULT_TV_TAGS))
         self.tv_pages = int(h.get("tv_pages", 2))

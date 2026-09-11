@@ -100,7 +100,7 @@ class ChatEngine:
                 f"{h['who']}: {h['text'][:300]}" for h in history[-6:]) + "\n\n"
         prompt += f"OPERATOR ASKS: {message}"
 
-        answer = self.llm.chat(prompt, deep=False)
+        answer = self.llm.chat(prompt, deep=False, purpose="chat")
         if not answer:
             return ("Brain offline (no budget or API error). "
                     "Ops still work: try 'freeze', 'close all', 'briefing'.")

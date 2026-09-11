@@ -89,7 +89,7 @@ class FakeLLM:
     def __init__(self, reply):
         self.reply = reply
 
-    def chat_json(self, prompt, deep=False):
+    def chat_json(self, prompt, deep=False, purpose="misc"):
         return self.reply
 
 
