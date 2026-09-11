@@ -9,8 +9,11 @@ population-writing paths on the hourly brain tick, none through the Analyst.
 It also showed the LLM every row, specs included, and would have acted on a
 "retire" verdict against the book's one validated spec.
 """
+import importlib
 import inspect
 import json
+
+import pytest
 
 from trader.core.config import load_config
 from trader.core.journal import Journal
@@ -79,24 +82,11 @@ def test_the_llm_is_shown_only_live_legacy_genomes(tmp_path):
     assert {p["id"] for p in s._population_report()} == {"live"}
 
 
-def test_review_runs_no_proposer(tmp_path, monkeypatch):
-    import trader.strategy.proposer as P
-    built = []
-
-    class Spy:
-        def __init__(self, *a, **k):
-            built.append(1)
-
-        def propose(self):
-            return {}
-
-        def propose_invention(self):
-            return {}
-
-    monkeypatch.setattr(P, "Proposer", Spy)
-    j, s = _strategist(tmp_path)
-    s.review()
-    assert not built, "the legacy Proposer is a second creation path"
+def test_the_legacy_proposer_is_gone():
+    """It had no caller after 2026-09-11; a module that writes strategies
+    and is called by nothing is a second creation path waiting for one."""
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("trader.strategy.proposer")
 
 
 def test_the_mutation_path_is_gone():
