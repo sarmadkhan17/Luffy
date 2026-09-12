@@ -178,6 +178,11 @@ class Journal:
                 # trail logged R=83 on a +2% position. Everything gated on R
                 # (the time stop, the flip exit, TP1) then read nonsense.
                 "ALTER TABLE trades ADD COLUMN initial_risk REAL DEFAULT NULL",
+                # the research search's StrategySpec population, alongside
+                # the legacy genome rows (see upsert_spec/list_specs) — added
+                # here too so a fresh database has it from the first query,
+                # not only after the first spec write.
+                "ALTER TABLE strategies ADD COLUMN spec_json TEXT",
             ):
                 try:
                     c.execute(stmt)
