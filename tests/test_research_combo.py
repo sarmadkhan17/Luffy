@@ -122,6 +122,22 @@ def test_a_single_has_no_subsets():
     assert subsets(_c([A])) == []
 
 
+def test_object_equality_agrees_with_the_canonical_hash():
+    """A later `if c not in seen: seen.add(c)` must deduplicate by identity.
+
+    The default frozen-dataclass equality compares every field in the order
+    given, so it would treat two orderings of one rule as two rules — the
+    double-counting the hash exists to prevent.
+    """
+    one, two = _c([A, B]), _c([B, A])
+    assert one == two
+    assert len({one, two}) == 1
+    assert _c([A, B], geo="fixed") != _c([A, B], geo="trail")
+    # provenance is how a rule was reached, not what it is
+    assert Combination((A, B), "4h", "trail", round="grow",
+                       parent="cafe") == one
+
+
 def test_a_combination_survives_a_round_trip_through_a_dict():
     c = Combination((A, B), "1h", "fixed", trigger="ret24>p90",
                     round="grow", parent="cafe")
