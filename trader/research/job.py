@@ -63,7 +63,12 @@ def measure_job(payload: dict) -> dict:
 
 
 def evaluate_job(payload: dict) -> dict:
-    """Score a batch of combinations that share one horizon and geometry."""
+    """Score a batch of combinations that share one horizon and geometry.
+
+    One combination never costs the batch. A rule that raises is recorded
+    as a LOOK that failed, with its reason, and the batch carries on --
+    the time axis and the failure axis get the same treatment.
+    """
     t0 = time.monotonic()
     combos = [Combination.from_dict(d) for d in payload.get("combos") or []]
     soft = float(payload.get("soft_deadline_s", 600.0))
@@ -80,7 +85,23 @@ def evaluate_job(payload: dict) -> dict:
         if time.monotonic() - t0 >= soft:
             skipped += 1
             continue
-        results.append(ev.evaluate(c, b, draws=int(payload.get("draws", 30)),
-                                   seed=int(payload.get("seed", 17))))
+        try:
+            results.append(ev.evaluate(
+                c, b, draws=int(payload.get("draws", 30)),
+                seed=int(payload.get("seed", 17))))
+        except Exception as exc:
+            # A failure is a LOOK with a reason, never a deferral.
+            # `skipped` means "the deadline hit, come back to it", so a
+            # failure routed there would be re-offered by the planner
+            # forever and one poisonous rule would stall its window,
+            # re-burning the whole child timeout on every attempt.
+            # `error` is the key growth.decide reads; `window` keeps the
+            # row filed under its own window instead of defaulting to ohlcv.
+            results.append({"hash": c.hash, "tf": c.tf, "geo": c.geo,
+                            "k": c.k, "window": c.window,
+                            "parts": list(c.keys), "round": c.round,
+                            "parent": c.parent, "trigger": c.trigger,
+                            "trades": 0, "verdict": "error",
+                            "error": f"{type(exc).__name__}: {exc}"[:300]})
     return {"results": results, "done": len(results), "skipped": skipped,
             "elapsed_s": round(time.monotonic() - t0, 2)}
