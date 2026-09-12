@@ -12,12 +12,14 @@ config ENABLES and what the store CARRIES agree.
 """
 import pytest
 
-from trader.core.config import load_config
+from trader.core.config import ROOT, load_config
 
 pytest.importorskip("pandas")
 
 
 def _store_counts(tf):
+    if not (ROOT / "data" / "candles.db").exists():
+        pytest.skip("no candle store (data/candles.db absent)")
     from trader.research.universe import coverage
     return coverage([tf]).get(tf, {})
 
