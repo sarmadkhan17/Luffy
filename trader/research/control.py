@@ -48,12 +48,23 @@ MASKS = {
     "taker_ratio": "taker_ratio_z(360) > -99",
 }
 
+#: fewer symbols than this and the control cannot calibrate anything.
+#: `consistency_p` is a Bonferroni-corrected binomial tail, so the universe
+#: size sets what it can DETECT: at 8 symbols the 0.01 bar is unreachable
+#: even when every symbol clears the no-edge median, and a control that can
+#: never read as powered would label every window UNDERPOWERED — silently
+#: converting "no edge here" into "we cannot see here" for the whole search.
+#: At 12, all-twelve-above-median reaches 7e-04 and the bar is reachable.
+MIN_CONTROL_SYMBOLS = 12
+
 
 def incumbent_universe(journal=None) -> list:
     """The declared 16, read from the book when it is available.
 
     Falls back to the recorded constant: a control that silently ran on a
-    different universe than it claims would be worse than no control.
+    different universe than it claims would be worse than no control, and a
+    TRUNCATED universe is exactly that — it reads as a weaker incumbent
+    rather than as a smaller sample.
     """
     if journal is None:
         return list(INCUMBENT_UNIVERSE)
@@ -65,8 +76,17 @@ def incumbent_universe(journal=None) -> list:
         if rows and rows[0].get("spec_json"):
             inc = (json.loads(rows[0]["spec_json"]).get("universe") or {}
                    ).get("include") or []
-            if len(inc) >= 8:
+            if len(inc) >= MIN_CONTROL_SYMBOLS:
+                if len(inc) != len(INCUMBENT_UNIVERSE):
+                    log.warning(
+                        f"incumbent control universe is {len(inc)} symbols, "
+                        f"not the recorded {len(INCUMBENT_UNIVERSE)} — the "
+                        f"book's declared set has changed")
                 return list(inc)
+            log.warning(f"book declares only {len(inc)} symbols for the "
+                        f"incumbent; falling back to the recorded set, "
+                        f"below {MIN_CONTROL_SYMBOLS} the control cannot "
+                        f"calibrate")
     except Exception as e:                              # noqa: BLE001
         log.debug(f"incumbent universe unavailable: {e}")
     return list(INCUMBENT_UNIVERSE)
