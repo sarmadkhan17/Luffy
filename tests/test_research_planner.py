@@ -82,24 +82,50 @@ def test_a_combination_already_in_the_ledger_is_never_re_enqueued(led):
 
 
 def test_a_window_without_a_control_holds_back_its_combinations(led):
-    """Parts needing funding cannot be scored until the funding window's
-    control says whether an edge could register there at all."""
+    """No returned batch may offer a combination whose own window lacks a
+    recorded control — true of every round, not only singles.
+
+    A grown rule can extend into a window (or a composite of two, e.g.
+    `basis|funding`) that no single alone ever requested a control for,
+    because a single carries at most one part. This drives the planner past
+    an exhausted singles round into growth, from a state where the growth
+    parent's own window ("funding") was never controlled — only "ohlcv"
+    was — so a planner that only gates singles would hand back a "grow"
+    batch straight away. A correct one must hand back "control" first.
+    """
     _gauges(led)
     led.record_control("4h", "ohlcv", {"consistency_p": 0.001}, True)
-    seen_windows = set()
-    for _ in range(40):
+    from trader.research import vocab
+    from trader.research.combo import Combination
+    parts = vocab.parts_for("4h", led.gauges("4h"))
+    root = next(p for p in parts if p.gauge == "fundz360")
+    # the singles round is exhausted — every part has a verdict — but the
+    # "funding" window root lives in has no control on record. This is the
+    # exact state `_grow_children` runs from.
+    for p in parts:
+        c = Combination((p,), "4h", "trail")
+        led.record_result(_res(c.hash, parts=[p.key]),
+                          "grow" if p is root else "prune", "", {})
+    seen_rounds = set()
+    for _ in range(200):
         b = planner.next_batch(led, CFG)
         if b.kind != "evaluate":
             break
+        seen_rounds.add(b.round)
+        if b.round != "control":
+            for c in b.combos:
+                assert led.control("4h", c.window) is not None, (
+                    f"{b.round} batch offered {c.hash[:8]} in "
+                    f"uncontrolled window {c.window!r}")
         for c in b.combos:
-            seen_windows.add(c.window)
             led.record_result(_res(c.hash, k=c.k, parts=list(c.keys)),
                               "prune", "", {})
         if b.round == "control":
             for c in b.combos:
                 led.record_control("4h", c.window,
                                    {"consistency_p": 0.5}, False)
-    assert "ohlcv" in seen_windows
+    # actually reached growth — this isn't just stuck issuing controls
+    assert "grow" in seen_rounds
 
 
 def test_growth_extends_only_parents_that_carried_information(led):

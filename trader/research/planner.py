@@ -15,6 +15,20 @@ The order is forced by what each step needs from the one before:
 
 Held-out results never enter this file. If a held-out failure steered the
 next round, the held-out set would silently become part of the search.
+
+TWO RULES ON CONTROL GATING (found by review, both load-bearing):
+
+- Control gating is PER WINDOW, not per horizon. Singles in an already
+  controlled window proceed while another window still awaits its control;
+  gating globally would stall every horizon behind its slowest window.
+- EVERY batch about to be returned has its windows controlled first —
+  growth, ablation and seeded combinations as much as singles. A grown rule
+  can span two restricted windows (`funding` + `basis` -> the composite
+  window `basis|funding`) that no single alone ever requests a control for,
+  and this module is the ONLY gatekeeper: evaluate.py and growth.py never
+  look at a control. `_gate()` is the one place this runs, called from
+  every round, so a rule reaching a verdict with no baseline is not
+  possible by construction rather than by each round remembering to check.
 """
 from __future__ import annotations
 
@@ -136,6 +150,32 @@ def _ready(combos, led, tf) -> list:
     return [c for c in combos if led.control(tf, c.window) is not None]
 
 
+def _gate(combos, led, tf, geo, size) -> tuple:
+    """Route one round's candidates: what is ready to evaluate now, or the
+    controls its still-pending combos need first.
+
+    Applies to every round, not only singles — a grown rule, an ablation
+    subset or a seeded pairing can land in a window (or a composite of two,
+    e.g. `basis|funding`) that no single alone ever asked a control for.
+    This function is the single place that check runs, so calling it from
+    every round is what makes "no returned batch ever contains an
+    uncontrolled window" true rather than aspirational.
+
+    Per-window, not per-horizon: a combo whose own window already has a
+    control goes out immediately even while a DIFFERENT window among the
+    same candidates is still uncalibrated. Returns (ready, controls_needed);
+    at most one is non-empty.
+    """
+    pending = _pending(combos, led, tf, geo)
+    if not pending:
+        return [], []
+    ready = _take(_ready(pending, led, tf), led, tf, geo, size)
+    if ready:
+        return ready, []
+    return [], _take(_windows_needing_control(led, tf, pending), led, tf,
+                     geo, size)
+
+
 def needs_ablation(led, tf: str, geo: str, parts_by_key: dict) -> list:
     """Subsets of grown children that have not been scored yet."""
     out = []
@@ -199,28 +239,33 @@ def next_batch(led, cfg: dict, journal=None) -> Batch:
         for geo in geos:
             singles = [Combination((p,), tf, geo, trigger=p.key,
                                    round="singles") for p in parts]
-            pending = _pending(singles, led, tf, geo)
-            take = _take(_ready(pending, led, tf), led, tf, geo, size)
+            take, ctrl = _gate(singles, led, tf, geo, size)
             if take:
                 return Batch("evaluate", tf, geo, "singles", take,
                              "every condition alone, both directions")
-            if pending:
-                ctrl = _windows_needing_control(led, tf, pending)
-                take = _take(ctrl, led, tf, geo, size)
-                if take:
-                    return Batch("evaluate", tf, geo, "control", take,
-                                 "a window cannot be read without its control")
+            if ctrl:
+                return Batch("evaluate", tf, geo, "control", ctrl,
+                             "a window cannot be read without its control")
+
             abl = needs_ablation(led, tf, geo, by_key)
-            take = _take(abl, led, tf, geo, size)
+            take, ctrl = _gate(abl, led, tf, geo, size)
             if take:
                 return Batch("evaluate", tf, geo, "ablation", take,
                              "a part is not kept until its removal is priced")
+            if ctrl:
+                return Batch("evaluate", tf, geo, "control", ctrl,
+                             "a window cannot be read without its control")
+
             if max_parts > 1:
                 grown = _grow_children(led, tf, geo, parts, beam, max_parts)
-                take = _take(grown, led, tf, geo, size)
+                take, ctrl = _gate(grown, led, tf, geo, size)
                 if take:
                     return Batch("evaluate", tf, geo, "grow", take,
                                  "extend what carried information")
+                if ctrl:
+                    return Batch("evaluate", tf, geo, "control", ctrl,
+                                 "a window cannot be read without its control")
+
             seeds = seed_parts(journal)
             if seeds and max_parts > 1:
                 seeded = []
@@ -231,9 +276,12 @@ def next_batch(led, cfg: dict, journal=None) -> Batch:
                             seeded.append(Combination(
                                 cand, tf, geo, trigger=s.key,
                                 round="seeded"))
-                take = _take(seeded, led, tf, geo, size)
+                take, ctrl = _gate(seeded, led, tf, geo, size)
                 if take:
                     return Batch("evaluate", tf, geo, "seeded", take,
                                  "context around what the book already trades")
+                if ctrl:
+                    return Batch("evaluate", tf, geo, "control", ctrl,
+                                 "a window cannot be read without its control")
     return Batch("idle", horizons[0] if horizons else "",
                  reason="nothing left to evaluate at this depth")
