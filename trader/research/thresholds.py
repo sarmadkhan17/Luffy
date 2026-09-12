@@ -39,7 +39,7 @@ def _values(tree, ctx) -> np.ndarray:
 
 def measure(exprs, ctxs, min_samples: int = MIN_SAMPLES,
             min_finite_frac: float = MIN_FINITE_FRAC) -> dict:
-    """{expr: {p10, p25, p75, p90, n, finite, finite_frac, usable}}.
+    """{expr: {p10, p25, p75, p90, n, finite_frac, usable}}.
 
     `ctxs` are ready-built FeatureCtx objects — one per discovery symbol,
     already carrying the universe, the leader, the derivatives and the
@@ -53,8 +53,8 @@ def measure(exprs, ctxs, min_samples: int = MIN_SAMPLES,
             tree = dsl.parse(expr)
         except Exception as e:                          # noqa: BLE001
             out[expr] = {"usable": False, "error": str(e), "n": 0,
-                         "finite": 0, "finite_frac": 0.0,
-                         **{f"p{int(q * 100)}": None for q in QUANTILES}}
+                         "finite_frac": 0.0,
+                         **{f"p{int(round(q * 100))}": None for q in QUANTILES}}
             continue
         total, vals = 0, []
         for ctx in ctxs:
@@ -68,7 +68,7 @@ def measure(exprs, ctxs, min_samples: int = MIN_SAMPLES,
         finite = np.concatenate(vals) if vals else np.array([], dtype=float)
         n = int(finite.size)
         frac = (n / total) if total else 0.0
-        rec = {"n": n, "finite": n, "finite_frac": round(frac, 4)}
+        rec = {"n": n, "finite_frac": round(frac, 4)}
         usable = n >= int(min_samples) and frac >= float(min_finite_frac)
         for q in QUANTILES:
             key = f"p{int(round(q * 100))}"
