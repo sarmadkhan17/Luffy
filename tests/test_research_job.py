@@ -13,7 +13,6 @@ and the planner offers them again.
 import sqlite3
 
 import numpy as np
-import pandas as pd
 import pytest
 
 from trader.core.child import run_child
@@ -104,6 +103,40 @@ def test_the_result_is_json_able_so_it_can_cross_the_pipe(store):
     out = job.evaluate_job(
         _payload(store, [Combination((DONCH,), "4h", "trail")]))
     json.dumps(out)
+
+
+FUNDZ = Part("g:fundz360>p90", "gauge", "fundz360",
+             "funding_z(360) > 1.5", "0 - funding_z(360) < -1.5")
+
+
+def test_a_poisonous_combination_does_not_cost_the_batch(store, monkeypatch):
+    """One rule raising must not discard the results already scored, and
+    must not be routed to `skipped` — that would have the planner re-offer
+    it forever, re-burning the whole child timeout on a rule that can never
+    succeed. The errored row must also carry the metadata `growth.decide`
+    and `ledger.record_result` read: `error` (not some other key) and its
+    own `window` rather than a silently-defaulted `"ohlcv"`."""
+    good = Combination((DONCH,), "4h", "trail")
+    bad = Combination((DONCH, FUNDZ), "4h", "trail")
+    assert bad.window == "funding"    # genuinely not ohlcv, not faked
+    real_evaluate = job.ev.evaluate
+
+    def _boom(c, b, **kw):
+        if c.hash == bad.hash:
+            raise RuntimeError("poisoned rule")
+        return real_evaluate(c, b, **kw)
+
+    monkeypatch.setattr(job.ev, "evaluate", _boom)
+    out = job.evaluate_job(_payload(store, [good, bad]))
+
+    assert out["done"] == 2
+    assert out["skipped"] == 0
+    by_hash = {r["hash"]: r for r in out["results"]}
+    assert by_hash[good.hash]["verdict"] != "error"
+    bad_row = by_hash[bad.hash]
+    assert bad_row["verdict"] == "error"
+    assert "poisoned rule" in bad_row["error"]
+    assert bad_row["window"] == "funding"
 
 
 def test_a_soft_deadline_returns_what_was_finished(store):
