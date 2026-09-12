@@ -98,16 +98,16 @@ TRADFI=[]
 # Trail stayed invisible until the geometry sweep found it. Screening every
 # mechanism under one exit shape asks "which entries pay under THIS exit",
 # never "which mechanism is real".
-GEOS = {
-    "fixed": ExitSpec(stop={"kind": "atr", "mult": 3.0},
-                      target={"kind": "rr", "v": 3.0},
-                      trail={"kind": "none"}, time={"max_bars": 96}),
-    # the shape the only validated strategy was admitted under
-    "trail": ExitSpec(stop={"kind": "atr", "mult": 2.0},
-                      target={"kind": "none"},
-                      trail={"kind": "atr", "mult": 4.0, "arm_at_r": 1.0},
-                      time={"max_bars": 500}),
-}
+# Geometry is a screen DIMENSION, not a constant. The first pass here fixed
+# it at RR 3 with no trail — and a fixed target amputates the tail a
+# continuation mechanism lives on, which is exactly how Donchian Breakout
+# Trail stayed invisible until the geometry sweep found it. Screening every
+# mechanism under one exit shape asks "which entries pay under THIS exit",
+# never "which mechanism is real".
+#
+# Defined in trader/strategy/geometries.py so the research search scores
+# candidates under the same two shapes this screen reports.
+from trader.strategy.geometries import GEOS
 
 # (name, long, short, requires). `requires` drives which derivative series
 # must be loaded AND which symbols are skipped for want of it.
