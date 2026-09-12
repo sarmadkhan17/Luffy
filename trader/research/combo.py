@@ -20,10 +20,9 @@ import hashlib
 import json
 from dataclasses import dataclass
 
-from ..strategy import dsl
 from ..strategy.geometries import GEOS
 from ..strategy.spec import StrategySpec
-from .vocab import Part
+from .vocab import Part, part_requires
 
 #: 1 trigger + 5 context, per the spec
 MAX_PARTS = 6
@@ -63,7 +62,7 @@ def compatible(parts) -> bool:
     return True
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class Combination:
     parts: tuple
     tf: str
@@ -83,6 +82,19 @@ class Combination:
                            "geo": self.geo, "dir": "both",
                            "parts": list(self.keys)}, sort_keys=True)
         return hashlib.sha256(blob.encode()).hexdigest()[:16]
+
+    # Python's own equality must agree with the canonical hash. Without
+    # this, `@dataclass(frozen=True)` compares every field in the order it
+    # was given — so a later `if c not in seen: seen.add(c)`, the idiomatic
+    # way to deduplicate, would dedup by part ORDER and by provenance and
+    # silently reintroduce the double-counting this hash exists to prevent.
+    # Provenance (trigger, round, parent) is how a rule was REACHED, not
+    # what it is; two paths to the same set of parts are one rule.
+    def __eq__(self, other) -> bool:
+        return isinstance(other, Combination) and self.hash == other.hash
+
+    def __hash__(self) -> int:
+        return hash(self.hash)
 
     @property
     def k(self) -> int:
@@ -106,7 +118,7 @@ class Combination:
     def requires(self) -> tuple:
         req: set = set()
         for p in self.parts:
-            req.update(dsl.data_requires(dsl.parse(p.long), dsl.parse(p.short)))
+            req.update(part_requires(p))       # one definition, in vocab
         return tuple(sorted(req or {"ohlcv"}))
 
     @property
