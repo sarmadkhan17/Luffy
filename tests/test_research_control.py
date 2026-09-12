@@ -72,6 +72,50 @@ def test_the_incumbent_universe_is_the_sixteen_it_declares():
         assert s in u
 
 
+class _Journal:
+    """Just enough journal to answer the one query control.py makes."""
+
+    def __init__(self, rows):
+        self._rows = rows
+
+    def query(self, _sql, _params=()):
+        return self._rows
+
+
+def _row(symbols):
+    import json
+    return [{"spec_json": json.dumps({"universe": {"include": symbols}})}]
+
+
+def test_the_book_s_own_declared_universe_wins_when_it_is_full():
+    syms = [f"S{i}/USDT" for i in range(16)]
+    assert control.incumbent_universe(_Journal(_row(syms))) == syms
+
+
+def test_a_truncated_universe_falls_back_rather_than_weakening_the_control():
+    """8 symbols cannot reach p<0.01 at all, so a control run on them would
+    read as unpowered forever and label every window UNDERPOWERED."""
+    short = [f"S{i}/USDT" for i in range(8)]
+    assert control.incumbent_universe(_Journal(_row(short))) == \
+        list(control.INCUMBENT_UNIVERSE)
+
+
+def test_a_malformed_or_missing_row_falls_back_without_raising():
+    for rows in ([], [{"spec_json": ""}], [{"spec_json": "{not json"}],
+                 [{"spec_json": "{}"}]):
+        assert control.incumbent_universe(_Journal(rows)) == \
+            list(control.INCUMBENT_UNIVERSE)
+
+
+def test_a_journal_that_raises_falls_back():
+    class _Boom:
+        def query(self, *_a, **_k):
+            raise RuntimeError("database is locked")
+
+    assert control.incumbent_universe(_Boom()) == \
+        list(control.INCUMBENT_UNIVERSE)
+
+
 def test_powered_reads_the_gate_the_admission_uses():
     assert control.powered({"consistency_p": 0.0005}, max_p=0.01)
     assert not control.powered({"consistency_p": 0.25}, max_p=0.01)
