@@ -113,6 +113,39 @@ mechanism:
   specs_per_cycle: 1
   max_specs: 8
 
+research:                        # the search — docs/superpowers/specs/
+                                 # 2026-09-11-luffy-research-pipeline-design.md
+  enabled: false                 # turned on in Task 14, after calibration
+  # A horizon is searched only if its discovery universe can carry the test.
+  # consistency_p is a binomial tail: at 8 symbols the 0.01 gate is
+  # unreachable even when every symbol clears the no-edge median. Measured
+  # 2026-09-11: 19 symbols at 4h, 8 at 1h and 15m before the store was
+  # deepened. A horizon that still falls short is refused, not relaxed.
+  horizons: ["4h"]
+  min_discovery_symbols: 16
+  geometries: ["trail", "fixed"]
+  # Discovery ranks; it does not gate. 60 draws is 96% of the cost of an
+  # evaluation (measured: 10.9s of 12.3s at 4h over 19 symbols), and the
+  # gate that decides anything is phase 3's held-out look, which keeps 60.
+  # Clamped at runtime to null_baseline.MIN_DRAWS (20) if set below it.
+  discovery_null_draws: 30
+  seed: 17
+  batch_combos: 40
+  batch_seconds: 900             # hard deadline for one child
+  soft_margin_s: 60              # the child returns what it finished
+  interval_seconds: 60
+  nice: 19
+  # Trade cycle p50 17.7s, p90 26.1s, p99 65.3s. Stand down for genuine
+  # congestion, not for normal variation.
+  skip_if_cycle_s: 45
+  beam: 12                       # parents extended per level
+  max_parts: 6                   # 1 trigger + 5 context
+  grow_max_p: 0.25               # worth extending; NOT an admission bar
+  control_max_p: 0.01            # a window has power if the incumbent reads this
+  min_finite_frac: 0.5           # a gauge NaN over half the slice is not usable
+  min_threshold_samples: 5000
+  equity: 2000.0                 # the account the compounded return is walked on
+
 strategies:
   max_active: 6                  # concurrently active strategies
   # NOT IMPLEMENTED — nothing reads this key. TradingView confirmation is
