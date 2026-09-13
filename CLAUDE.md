@@ -155,6 +155,7 @@ in-process by `ExitEngine`; if the kernel dies, only the stop protects.
 | `crawler` | 6h | deep-read and queue |
 | `agent-validator` | at boot | **runs once and exits** — it is not a loop |
 | `rent-check` | 1h | the week's net off the venue income ledger against the $50 bar; daily Telegram tally, Monday verdict (`rent_verdict` event). Reports only — never stops Luffy |
+| `research` | 60s | one search batch: plan → niced child → ledger. Stands down while the last trade cycle took > 45s. `python -m trader.research --status`. **Ships DISABLED** — `research.enabled: false` in `config.yaml`; measured 2026-09-13, not yet turned on by the operator |
 
 Three more ride the cycle counter: outcome resolution (~12 cycles), the
 brain/vault tick (~60 cycles), the data-only book post-mortem (~360 cycles).
@@ -225,6 +226,49 @@ one day after its stamp (Yahoo stamps the S&P at the 13:30 open).
 `frames["_market"]`, live as `Snapshot.market`. Only OHLCV features may
 appear inside a `ref()`.
 
+## The search
+
+`trader/research/` generates combinations of measured conditions — up to 6
+parts, both directions, both fixed geometries — scores each against a
+rotation of its own entries on a discovery slice, and records everything.
+It proposes nothing yet: the held-out gates, the error budget and the
+handoff into `_mechanism_once` are phase 3. **Ships disabled** —
+`research.enabled: false` — pending the operator's review of the 2026-09-13
+measurement below.
+
+- **The discovery slice is one CALENDAR cut per horizon**, at 70% of the
+  universe's span. Per-symbol splits leak era across symbols: a market
+  listed in 2023 would have its "discovery" slice inside BTC's held-out era.
+- **Thresholds are measured percentiles** (10/25/75/90) of each expression's
+  own distribution on that slice, and a gauge finite over less than half of
+  it is dropped. That is why open interest and `ls_account_ratio` are absent
+  from the 4h vocabulary: measured 2026-09-13, both read `finite_frac 0.0`
+  on the discovery slice — the series begins 2025-10, after the 4h cut of
+  2025-03-08. `basis_z(360)` is dropped the same way (`finite_frac 0.10`).
+- **Every condition carries its own mirror expression**, written so the same
+  rank means the mirror state (`ret(24)` / `0 - ret(24)`, `lower_wick()` /
+  `upper_wick()`). Thresholds for each side are measured separately.
+- **A part earns its place only by improving BOTH** the cross-symbol
+  `consistency_p` and compounded return over one account, and a survivor
+  must beat every one of its one-part ablations. Judging on profit factor
+  alone is what made every filter look free while it halved the CAGR.
+- **A horizon is searched only if it carries ≥16 discovery symbols AND its
+  plain-window control is powered.** `consistency_p` is a binomial tail and
+  at 8 symbols the 0.01 gate is unreachable. Task 1 deepened the store so
+  all three horizons now carry 19/19 discovery symbols — but measured
+  2026-09-13, the incumbent rule confined to the plain `ohlcv` window at a
+  duration-matched channel (~17 days) reads p=2.4e-03 at 4h (POWERED) and
+  p=3.2e-01 at 1h / p=2.4e-01 at 15m (UNDERPOWERED at both). 1h and 15m are
+  refused, not relaxed: `research.horizons` is `["4h"]` only.
+- **Every window runs the incumbent rule beside the challengers**, on its
+  declared 16. A negative in a window where the known-good rule also cannot
+  register is recorded as UNDERPOWERED, never as no-edge.
+- Discovery uses 30 null draws, not 60: it ranks, it does not gate, and the
+  null is 96% of an evaluation's cost.
+- **Measured throughput, 4h, one niced child** (2026-09-13): the control
+  round scored 12 windows in 58s; the first singles round scored 40
+  one-part combinations in 301s — about 478 evaluations/hour on this box.
+
 ## Journal schema
 
 `data/luffy.db` tables: `cycles`, `votes`, `decisions`, `outcomes`, `trades`,
@@ -243,7 +287,12 @@ invisible to other connections and holding a write lock — until some later
 
 | file | holds |
 |---|---|
-| `data/luffy.db` | the journal — single source of truth |
+| `data/luffy.db` | the journal — single source of truth. Also holds the
+  search's ledger, disjoint from every trading table: every combination
+  evaluated under a canonical hash (`research_combos`), the measured
+  percentiles per horizon (`research_gauges`), each window's control
+  (`research_controls`), the discovery cut (`research_slices`) and every
+  batch (`research_batches`). Phase 2 writes nothing to `strategies` |
 | `data/candles.db` | OHLCV: 5y at 4h, 3y at 1h, 1y at 15m. **Production**
   public data — until 2026-09-02 it was Binance Demo, whose volume is
   simulated (15x inflated) though its prices track to ~0.04%. Rebuilt; the
