@@ -168,3 +168,40 @@ def test_a_symbol_that_raises_does_not_lose_the_whole_combination():
     r = evaluate.evaluate(_combo([DONCH]), b, draws=20)
     assert r["verdict"] in ("scored", "untestable")
     assert r["symbols"]["S1/USDT"].get("error")
+
+
+def test_a_symbol_whose_null_assessment_raises_is_visible_not_silent(
+        monkeypatch):
+    """This is a DIFFERENT failure path from the one above: that symbol
+    never even produced trades (`entries`/`simulate` raised). Here the
+    symbol trades fine and only `null_baseline.assess` blows up — before
+    the fix that was swallowed with a `continue` and no trace, so a
+    systematic `assess` failure read in `scored_symbols` as "too few
+    symbols carried a percentile" rather than as an error."""
+    b = _bundle()
+    real_assess = evaluate.null_baseline.assess
+
+    def _boom(*args, **kwargs):
+        if kwargs.get("symbol") == "S1/USDT":
+            raise RuntimeError("boom: poisoned null assessment")
+        return real_assess(*args, **kwargs)
+
+    monkeypatch.setattr(evaluate.null_baseline, "assess", _boom)
+    r = evaluate.evaluate(_combo([DONCH]), b, draws=20)
+
+    rec = r["symbols"]["S1/USDT"]
+    assert rec["trades"] >= evaluate.MIN_SYMBOL_TRADES     # it DID trade
+    assert rec["null_pctile"] is None
+    assert "boom: poisoned null assessment" in rec.get("null_error", "")
+
+    # not counted among scored symbols
+    scored = [s for s, v in r["symbols"].items()
+              if v["null_pctile"] is not None]
+    assert "S1/USDT" not in scored
+    assert len(scored) == r["scored_symbols"]
+    assert r["scored_symbols"] < len(b.frames)
+
+    # the rest of the combination still evaluates — one symbol's null
+    # failure does not lose the others
+    assert r["scored_symbols"] >= 4
+    assert r["verdict"] == "scored"
