@@ -115,12 +115,23 @@ mechanism:
 
 research:                        # the search — docs/superpowers/specs/
                                  # 2026-09-11-luffy-research-pipeline-design.md
-  enabled: false                 # turned on in Task 14, after calibration
-  # A horizon is searched only if its discovery universe can carry the test.
-  # consistency_p is a binomial tail: at 8 symbols the 0.01 gate is
-  # unreachable even when every symbol clears the no-edge median. Measured
-  # 2026-09-11: 19 symbols at 4h, 8 at 1h and 15m before the store was
-  # deepened. A horizon that still falls short is refused, not relaxed.
+  enabled: false                 # measured 2026-09-13 (Task 15); the operator
+                                 # turns this on after reviewing the measurement
+  # A horizon is searched only if its discovery universe can carry the test
+  # AND its plain-window control is powered. consistency_p is a binomial
+  # tail: at 8 symbols the 0.01 gate is unreachable even when every symbol
+  # clears the no-edge median. All three horizons now carry 19/19 discovery
+  # symbols (Task 1 deepened the store), so symbol count no longer decides
+  # this — the control does. Measured 2026-09-13 on the incumbent's declared
+  # 16, plain `ohlcv` window, trail geometry:
+  #   4h  (100-bar / ~17d channel) p=2.4e-03 — POWERED, kept
+  #   1h  (400-bar / ~17d channel) p=3.2e-01 — UNDERPOWERED, refused
+  #   15m (1600-bar/ ~17d channel) p=2.4e-01 — UNDERPOWERED, refused
+  # 1h and 15m are not merely thin on symbols any more; the known-good rule
+  # itself cannot register on either at this channel length, so widening
+  # the search to them would spend two cores on a question the gate cannot
+  # answer. Re-measure with `--measure --tf <x>` and `--once --tf <x>`
+  # before adding either back.
   horizons: ["4h"]
   min_discovery_symbols: 16
   geometries: ["trail", "fixed"]
