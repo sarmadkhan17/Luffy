@@ -771,12 +771,11 @@ These are facts about the search space, not beliefs to be rewritten.
   the 1/3/0 bps variants, and the conclusion survives a 5x error in the
   slippage estimate (20.2%/yr at 10 bps/fill).
 
-  **Still open:** `executor.close()` and `close_partial()` compute journalled
-  P&L as `taker_fee * notional` (`executor.py:250, 301`) instead of reading
-  the venue's own `commission` field, which it returns on every fill. The
-  fee constant is now right so the error is small, but the venue's number is
-  free and exact — `reconcile.venue_realized_pnl` already does this properly.
-  Also unmeasured: the signal-to-fill delay cost. The backtest fills at the
+  **Closed 2026-09-11:** `close_partial()` books its own fills net of the
+  venue's `commission` field and `close()` re-bases the trade to
+  `reconcile.venue_realized_pnl`; the `taker_fee` estimate is used only when
+  the venue will not answer, and says so in a `pnl_estimated` event.
+  Still unmeasured: the signal-to-fill delay cost. The backtest fills at the
   4h close; live the order goes out at best 60s later and, when risk blocks
   it, hours later. `signal_bar_age_min` was added to make that measurable.
 
