@@ -56,6 +56,25 @@ Setting `BINANCE_DEMO=false`, enabling 1d trading, and flipping
   order; the kernel must never read the production key. Creating the key is
   a human step — the plan needs a checkpoint for it.
   — **Reversibility:** reversible — the key can be revoked on Binance at any time.
+- **D-03a (MEASURED 2026-09-13, during discussion):** the operator supplied a
+  production key and the read was taken. Evidence:
+  `.planning/phases/01-correctness-booking-fixes/01-production-fees.json`.
+  - Key restrictions (`/sapi/v1/account/apiRestrictions`): enableReading
+    true; enableFutures, enableSpotAndMarginTrading, enableWithdrawals,
+    enableInternalTransfer, enableMargin, permitsUniversalTransfer all
+    false. **ipRestrict false**, not the IP restriction D-03 asked for.
+  - `/fapi/v1/commissionRate` on all 16 declared symbols: **taker 0.0500%,
+    maker 0.0200%, uniform**. The demo read 0.0400% taker on 14 of the 16
+    (0.0500% on TAO and HYPE), so `taker_fee_pct: 0.04` under-charges
+    production by 1 bp per side on 14 symbols (25%).
+  - The key was pasted into the chat transcript, so treat it as exposed:
+    the operator should delete it on Binance. The remaining FIX-03 work is
+    recording (CLAUDE.md replaces "Production fees are UNMEASURED", plus a
+    durable data file) and committing a repeatable read script under
+    `scripts/` that takes credentials from the D-03 env names. A fresh
+    key is needed only to re-measure. Per D-04, `config.yaml` stays at 0.04
+    and there is no boot guard. Say plainly in CLAUDE.md that backtests
+    charge the demo rate.
 - **D-04:** **Record only — no boot guard.** The operator explicitly declined
   a kernel startup refusal on `BINANCE_DEMO=false` without a recorded fee.
   Record the measured rates in a durable data file plus CLAUDE.md (replace
