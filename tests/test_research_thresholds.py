@@ -75,3 +75,17 @@ def test_a_boolean_expression_still_measures():
     is a float, and a measurement of it must not crash on dtype."""
     out = thresholds.measure(["close > ema(50)"], [_ctx()], min_samples=100)
     assert out["close > ema(50)"]["n"] > 0
+
+
+def test_a_usable_gauge_reports_its_observed_range():
+    """`min`/`max` are what `vocab.parts_for` uses to drop an unattainable
+    cut — a `<` cut at the floor or a `>` cut at the ceiling never fires."""
+    out = thresholds.measure(["ret(24)"], [_ctx()], min_samples=100)
+    m = out["ret(24)"]
+    assert m["min"] < m["p10"] < m["p90"] < m["max"]
+
+
+def test_an_unusable_gauge_carries_no_range_either():
+    out = thresholds.measure(["funding_z(360)"], [_ctx()], min_samples=100)
+    m = out["funding_z(360)"]
+    assert m["min"] is None and m["max"] is None

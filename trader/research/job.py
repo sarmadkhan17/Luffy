@@ -104,4 +104,5 @@ def evaluate_job(payload: dict) -> dict:
                             "trades": 0, "verdict": "error",
                             "error": f"{type(exc).__name__}: {exc}"[:300]})
     return {"results": results, "done": len(results), "skipped": skipped,
+            "loaded_symbols": len(b.frames),
             "elapsed_s": round(time.monotonic() - t0, 2)}

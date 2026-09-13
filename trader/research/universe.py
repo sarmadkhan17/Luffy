@@ -12,9 +12,13 @@ trading kernel depend on its working directory.
 """
 from __future__ import annotations
 
+import logging
+import sqlite3
 import time
 
 from ..data.feed import DataFeed
+
+log = logging.getLogger(__name__)
 
 # The screen's two universes, verbatim from scripts/screen_mechanisms.py.
 # The split rule is fixed there so it cannot be chosen to flatter a result;
@@ -48,28 +52,36 @@ class NoExchange:
 
 
 def coverage(tfs=None, feed=None) -> dict:
-    """{tf: {symbol: bars}} for every symbol carrying at least MIN_BARS.
+    """{tf: {symbol: bars}} for every symbol carrying at least MIN_BARS, or
+    `{"skipped": "coverage_unavailable"}` when the store could not be read
+    at all.
 
     COUNTED in SQL, not loaded: the research thread asks this on every step,
     and reading 36 full frames to learn their lengths would put seconds of
     pandas work on a kernel thread to answer a question SQLite answers in
     one pass.
+
+    A locked store or a schema change must read as "we could not look",
+    never as "nothing exists here" — the empty map used to mean the LATTER,
+    and the caller then fell back to trusting every configured symbol was
+    present, which is the flattering wrong answer in exactly the direction
+    that disables `min_discovery_symbols` when it matters most. Only
+    `sqlite3.Error` is swallowed into that signal; anything else is a real
+    bug and must surface.
     """
     feed = feed or DataFeed(exchange=NoExchange())
     want = set(DISCOVERY + HELDOUT)
     out = {}
     for tf in (tfs or list(TARGETS)):
-        have = {}
         try:
             rows = feed.db.execute(
                 "SELECT symbol, COUNT(*) FROM candles WHERE tf=? "
                 "GROUP BY symbol", (tf,)).fetchall()
-        except Exception:                              # noqa: BLE001
-            rows = []
-        for sym, n in rows:
-            if sym in want and int(n) >= MIN_BARS:
-                have[sym] = int(n)
-        out[tf] = have
+        except sqlite3.Error as e:
+            log.warning(f"research coverage unavailable for {tf}: {e}")
+            return {"skipped": "coverage_unavailable"}
+        out[tf] = {sym: int(n) for sym, n in rows
+                   if sym in want and int(n) >= MIN_BARS}
     return out
 
 

@@ -120,6 +120,66 @@ def test_the_catalogue_is_large_enough_to_be_a_search():
     assert sum(1 for p in parts if p.kind == "event") >= 5
 
 
+def test_a_cut_at_or_beyond_the_observed_range_is_dropped():
+    """`streak()` is non-negative, so a p10/p25 of 0 renders `< 0`, which can
+    never fire — measured 2026-09-11 on live thresholds. That must drop the
+    part entirely rather than enter the vocabulary as a testable rule that
+    happens to take zero trades."""
+    th = _thresholds(vocab.expressions("4h"))
+    for e in ("streak(close > prev(close, 1))",
+              "streak(close < prev(close, 1))"):
+        th[e].update({"min": 0.0, "max": 3.0, "p10": 0.0, "p25": 0.0,
+                     "p75": 1.0, "p90": 3.0})
+    parts = vocab.parts_for("4h", th)
+    streak_parts = {p.key: p for p in parts if p.gauge == "streak"}
+    # the `<` cuts at the floor (0) never fire and must be absent
+    assert "streak<p10" not in streak_parts
+    assert "streak<p25" not in streak_parts
+    # the `>` cut at the ceiling (3) never fires either
+    assert "streak>p90" not in streak_parts
+    # a `>` cut strictly inside the range is unaffected
+    assert "streak>p75" in streak_parts
+
+
+def test_a_gauge_at_the_extremes_of_a_bounded_range_contributes_nothing():
+    """`breadth(...)` is bounded [0,1] — measured 2026-09-11: p10=0 and
+    p90=1 are both the edges of the range and neither cut can ever fire."""
+    th = _thresholds(vocab.expressions("4h"))
+    for e in ("breadth(close > ema(50))", "1 - breadth(close > ema(50))"):
+        th[e].update({"min": 0.0, "max": 1.0, "p10": 0.0, "p25": 0.157895,
+                      "p75": 0.894737, "p90": 1.0})
+    parts = vocab.parts_for("4h", th)
+    breadth_parts = {p.key for p in parts if p.gauge == "breadth50"}
+    assert breadth_parts == {"breadth50<p25", "breadth50>p75"}
+
+
+def test_duplicate_rendered_cuts_on_one_side_keep_only_the_first():
+    """Two different quantiles of one gauge can render identical text (the
+    underlying values tie) without either being at the edge of the range —
+    that must still mint only ONE canonical part, not two hashes for one
+    rule."""
+    th = _thresholds(vocab.expressions("4h"))
+    th["ret(24)"].update({"min": -10.0, "max": 10.0,
+                          "p10": -0.5, "p25": -0.5,     # tie: same rendering
+                          "p75": 0.5, "p90": 1.25})
+    parts = vocab.parts_for("4h", th)
+    ret24 = {p.key: p for p in parts if p.gauge == "ret24"}
+    assert "ret24<p10" in ret24
+    assert "ret24<p25" not in ret24     # duplicate of p10's rendered text
+    assert ret24["ret24<p10"].long == "ret(24) < -0.5"
+
+
+def test_a_measurement_from_before_this_check_existed_rules_out_nothing():
+    """An old ledger row has no `min`/`max` at all — that must not be read
+    as 'everything is unattainable'."""
+    th = _thresholds(vocab.expressions("4h"))
+    for v in th.values():
+        v.pop("min", None)
+        v.pop("max", None)
+    parts = vocab.parts_for("4h", th)
+    assert len(parts) >= 150
+
+
 def test_exactly_one_event_may_appear_in_a_combination_later():
     """The compatibility rule lives in combo.py; the KIND it reads lives
     here, so an event must be labelled as one."""

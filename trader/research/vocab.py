@@ -223,29 +223,65 @@ def _fmt(v: float) -> str:
     return str(int(r)) if float(r).is_integer() else str(r)
 
 
+def _attainable(op: str, v: float, lo, hi) -> bool:
+    """False when the observed range cannot produce a bar that satisfies
+    this cut. A `<` cut at or below the observed minimum, or a `>` cut at or
+    above the observed maximum, never fires — `streak()` is non-negative, so
+    its own p10 (0) renders `< 0`, which is dead on arrival, and reads in the
+    ledger as "no trades on the discovery slice" (tested, no edge) rather
+    than "never testable" (not a cut at all). `lo`/`hi` are None when the
+    measurement predates this check (an old ledger row); then nothing is
+    ruled out by it.
+    """
+    if op == "<" and lo is not None and v <= lo:
+        return False
+    if op == ">" and hi is not None and v >= hi:
+        return False
+    return True
+
+
 def parts_for(tf: str, thresholds: dict) -> list[Part]:
     """The concrete catalogue at this horizon.
 
-    `thresholds` maps expression -> {"p10","p25","p75","p90","usable"}. A
-    gauge whose either side is missing or unusable contributes NOTHING: a
-    one-sided condition is a market-direction bet wearing a strategy's
-    clothes, and an unmeasured threshold is a guess.
+    `thresholds` maps expression -> {"p10","p25","p75","p90","min","max",
+    "usable"}. A gauge whose either side is missing or unusable contributes
+    NOTHING: a one-sided condition is a market-direction bet wearing a
+    strategy's clothes, and an unmeasured threshold is a guess.
+
+    Two further prunings, both about a cut that would enter the vocabulary
+    having never been attainable rather than never having found an edge:
+    a cut outside the observed range (see `_attainable`), and a cut whose
+    rendered text duplicates an earlier quantile's on the SAME side of the
+    SAME gauge — `breadth(...)`'s p10 and a bounded gauge's degenerate
+    quantile can render identically, minting two canonical hashes for one
+    rule and defeating the point of a canonical hash.
     """
     out: list[Part] = []
     for g in gauges_for(tf):
         a, b = thresholds.get(g.long), thresholds.get(g.short)
         if not a or not b or not a.get("usable") or not b.get("usable"):
             continue
+        seen_long: set = set()
+        seen_short: set = set()
         for q in QUANTILES:
             name = f"p{int(round(q * 100))}"
             va, vb = a.get(name), b.get(name)
             if va is None or vb is None:
                 continue
             op = "<" if q < 0.5 else ">"
+            if not _attainable(op, va, a.get("min"), a.get("max")):
+                continue
+            if not _attainable(op, vb, b.get("min"), b.get("max")):
+                continue
+            long_expr = f"{g.long} {op} {_fmt(va)}"
+            short_expr = f"{g.short} {op} {_fmt(vb)}"
+            if long_expr in seen_long or short_expr in seen_short:
+                continue
+            seen_long.add(long_expr)
+            seen_short.add(short_expr)
             out.append(Part(
                 key=f"{g.key}{op}{name}", kind="gauge", gauge=g.key,
-                long=f"{g.long} {op} {_fmt(va)}",
-                short=f"{g.short} {op} {_fmt(vb)}"))
+                long=long_expr, short=short_expr))
     for p in BOOL_PARTS:
         if _allowed(_BOOL_TFS.get(p.key, ()), tf):
             out.append(p)

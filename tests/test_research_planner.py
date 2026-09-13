@@ -216,3 +216,81 @@ def test_seed_parts_come_from_the_live_book(led):
     seeds = planner.seed_parts(led.journal)
     assert any(s.key.startswith("seed:") for s in seeds)
     assert seeds[0].long == "close > donchian_hi(100)"
+
+
+def _insert_seed_strategy(journal):
+    import json
+    with journal._tx() as c:
+        c.execute(
+            "INSERT INTO strategies (id,name,kind,params,state,description,"
+            "origin,hypothesis,invalidation,regime_filter,markets,generation,"
+            "parent_id,created_at,stats_json,spec_json) VALUES "
+            "(?,?,'spec','{}','paper','d','seed','h','i','[]',"
+            "'[\"futures\"]',0,'','2026-09-01T00:00:00+00:00','{}',?)",
+            ("auth_donchian_breakout_trail", "Donchian Breakout Trail",
+             json.dumps({"entry_long": "close > donchian_hi(100)",
+                         "entry_short": "close < donchian_lo(100)",
+                         "timeframe": "4h"})))
+
+
+def test_a_seeded_combination_reaches_ablation_not_silently_dropped(led):
+    """A part keyed `seed:<id>` exists nowhere in `vocab.parts_for`. Before
+    the fix, `needs_ablation` could only reconstruct a row from the
+    vocabulary catalogue, silently skipped any row it could not fully
+    rebuild, and so a seeded pairing that scored `grow` was NEVER ablated."""
+    _insert_seed_strategy(led.journal)
+    _gauges(led)
+    led.record_control("4h", "ohlcv", {"consistency_p": 0.001}, True)
+    from trader.research import vocab
+    from trader.research.combo import Combination
+
+    all_parts = vocab.parts_for("4h", led.gauges("4h"))
+    companion = next(p for p in all_parts if p.key == "ret24>p90")
+    seed = planner.seed_parts(led.journal)[0]
+    assert seed.key == "seed:auth_donchian_breakout_trail"
+
+    # exhaust the singles round so the planner does not stop there
+    for p in all_parts:
+        c = Combination((p,), "4h", "trail")
+        led.record_result(_res(c.hash, parts=[p.key]), "prune", "", {})
+
+    # as if an earlier seeded round already scored this pairing and it grew
+    seeded = Combination((seed, companion), "4h", "trail", round="seeded")
+    led.record_result(_res(seeded.hash, k=2, parts=list(seeded.keys)),
+                      "grow", "", {})
+
+    b = planner.next_batch(led, CFG, journal=led.journal)
+    assert b.kind == "evaluate" and b.round == "ablation"
+    assert any(seed.key in c.keys for c in b.combos)
+
+
+def test_a_seeded_grow_parent_can_be_extended(led):
+    """Once its ablation is filled in, a seeded `grow` row must be usable
+    as a parent for the next level too — `_grow_children` reconstructs it
+    from the SAME union map."""
+    _insert_seed_strategy(led.journal)
+    _gauges(led)
+    led.record_control("4h", "ohlcv", {"consistency_p": 0.001}, True)
+    from trader.research import vocab
+    from trader.research.combo import Combination
+
+    all_parts = vocab.parts_for("4h", led.gauges("4h"))
+    companion = next(p for p in all_parts if p.key == "ret24>p90")
+    seed = planner.seed_parts(led.journal)[0]
+
+    for p in all_parts:
+        c = Combination((p,), "4h", "trail")
+        led.record_result(_res(c.hash, parts=[p.key]), "prune", "", {})
+    seeded = Combination((seed, companion), "4h", "trail", round="seeded")
+    led.record_result(_res(seeded.hash, k=2, parts=list(seeded.keys)),
+                      "grow", "", {})
+    # the missing ablation subset (the seed alone) is now scored too, so the
+    # ablation round for this row is exhausted
+    seed_alone = Combination((seed,), "4h", "trail")
+    led.record_result(_res(seed_alone.hash, k=1, parts=[seed.key]),
+                      "prune", "", {})
+
+    b = planner.next_batch(led, CFG, journal=led.journal)
+    assert b.kind == "evaluate" and b.round == "grow"
+    assert all(c.k == 3 for c in b.combos)
+    assert all(seed.key in c.keys for c in b.combos)

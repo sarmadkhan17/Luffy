@@ -422,11 +422,19 @@ class Kernel:
             log.info("research search disabled")
             return
         from .research.runner import ResearchRunner
-        runner = ResearchRunner(self.journal, self.cfg)
+        runner = None
         every = float(rcfg.get("interval_seconds", 60))
         _t.sleep(300)                      # let boot and the first cycles settle
         while not self._stop:
             try:
+                # Constructed lazily, inside the loop: `ResearchRunner.__init__`
+                # calls `Ledger.ensure()`, and building it once outside the
+                # loop would let a single failure there (a locked database at
+                # boot) kill this thread silently for the rest of the
+                # process's life. Retrying here means a transient failure is
+                # just another skipped cycle.
+                if runner is None:
+                    runner = ResearchRunner(self.journal, self.cfg)
                 rep = runner.step(cycle_seconds=self._last_cycle_s)
                 if rep.get("skipped") not in (None, "idle"):
                     log.debug(f"research: {rep}")
@@ -1434,7 +1442,6 @@ class Kernel:
             try:
                 info = self.cycle()
                 dur = time.time() - t0
-                self._last_cycle_s = dur
                 bits = [f"cycle #{n}",
                         f"{info['scanned']} symbols",
                         f"{info['decisions']} decisions"]
@@ -1451,6 +1458,13 @@ class Kernel:
                 log.info(" · ".join(bits))
             except Exception as e:
                 log.exception(f"cycle #{n} failed: {e}")
+            finally:
+                # ALWAYS updated, success or failure: the research thread
+                # reads this to stand down while the kernel is slow, and a
+                # cycle that raises must not leave the previous fast value
+                # in place — a kernel that is slow AND failing would then
+                # never be recognised as busy.
+                self._last_cycle_s = time.time() - t0
             self._funding_cache = None                 # refresh funding hourly-ish
             time.sleep(max(1.0, interval - (time.time() - t0)))
         log.info("kernel stopped cleanly")

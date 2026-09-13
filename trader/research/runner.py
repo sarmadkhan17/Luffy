@@ -79,12 +79,21 @@ class ResearchRunner:
     def _symbols(self, tf: str):
         from .universe import DISCOVERY, HELDOUT, coverage
         try:
-            have = coverage([tf]).get(tf, {})
+            cov = coverage([tf])
         except Exception as e:                          # noqa: BLE001
             log.warning(f"research coverage unavailable: {e}")
-            have = {}
-        disc = [s for s in DISCOVERY if not have or s in have]
-        held = [s for s in HELDOUT if not have or s in have]
+            return [], []
+        if "skipped" in cov:
+            log.warning(f"research coverage unavailable for {tf}: "
+                        f"{cov['skipped']}")
+            return [], []
+        # a symbol absent from coverage is NOT in the universe — an empty
+        # or failed lookup must never be read as "no information, so use
+        # every configured symbol": that is exactly the flattering wrong
+        # answer that hid a 3-symbol universe behind a guard reporting 19.
+        have = cov.get(tf, {})
+        disc = [s for s in DISCOVERY if s in have]
+        held = [s for s in HELDOUT if s in have]
         return disc, held
 
     # ── one step ─────────────────────────────────────────────────────────
@@ -188,6 +197,26 @@ class ResearchRunner:
                     "round": batch.round, "ok": False, "skipped": None,
                     "error": res.error}
 
+        # The guard at `step()` reads `coverage()`, taken BEFORE the child
+        # ever opens the store; a bundle that silently drops symbols the
+        # coverage count claimed were present would search a degraded
+        # universe while the guard still reports the full one. Read the
+        # bundle's own count when the child reports it (an older or mocked
+        # child that does not is trusted, not refused).
+        loaded = (res.value or {}).get("loaded_symbols")
+        min_syms = int(self._r("min_discovery_symbols"))
+        if loaded is not None and int(loaded) < min_syms:
+            msg = (f"bundle loaded only {loaded} of {len(symbols)} "
+                   f"requested symbols, below min_discovery_symbols="
+                   f"{min_syms} — refusing rather than searching a "
+                   f"degraded universe")
+            self.ledger.finish_batch(bid, False, time.monotonic() - t0, msg)
+            log.warning(f"research batch {batch.tf}/{batch.geo}/"
+                        f"{batch.round}: {msg}")
+            return {"kind": "evaluate", "tf": batch.tf, "geo": batch.geo,
+                    "round": batch.round, "ok": False, "skipped": None,
+                    "error": msg}
+
         by_hash = {c.hash: c for c in batch.combos}
         recorded = 0
         for r in (res.value or {}).get("results", []):
@@ -213,12 +242,39 @@ class ResearchRunner:
             # schema never intended it to hold ("survivor | grow | prune").
             # Writing it there put a tied-score control row in front of the
             # real singles on any unfiltered `rows()` read.
+            #
+            # A control that could not be EVALUATED (the child crashed, or
+            # it took no trades) must not be recorded at all: that would
+            # permanently convert "we could not calibrate this window" into
+            # "this window has no power", for the life of the ledger, since
+            # `research_controls` is keyed (tf, window) with no retry path
+            # beyond `led.control(...) is None`. A control that evaluated
+            # but could not carry a percentile ("untestable") IS recorded,
+            # under its own status, so `--status` can tell "could not
+            # calibrate" apart from "calibrated, no power" — but it is not
+            # retried, unlike the crash/empty case.
+            verdict = r.get("verdict")
+            if verdict in ("error", "empty"):
+                log.warning(
+                    f"research control {batch.tf}/"
+                    f"{r.get('window', 'ohlcv')} could not be evaluated "
+                    f"({verdict}: {r.get('error', 'no trades')}) — leaving "
+                    f"the window uncontrolled so the planner retries it, "
+                    f"rather than recording a crash as measured absence of "
+                    f"power")
+                return
+            if verdict == "untestable":
+                self.ledger.record_control(
+                    batch.tf, r.get("window", "ohlcv"), r, False,
+                    status="untestable")
+                return
             powered = control.powered(r, float(self._r("control_max_p")))
             self.ledger.record_control(batch.tf, r.get("window", "ohlcv"),
-                                       r, powered)
+                                       r, powered, status="measured")
             return
         ctrl = self.ledger.control(batch.tf, r.get("window", "ohlcv"))
-        label = control.label(r, bool(ctrl and ctrl["powered"]))
+        label = control.label(r, bool(ctrl and ctrl["powered"]),
+                              max_p=float(self._r("control_max_p")))
         parent = self.ledger.result(r["parent"]) if r.get("parent") else None
         subset_results = {}
         if c is not None and c.k >= 2:

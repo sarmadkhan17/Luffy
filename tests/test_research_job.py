@@ -98,6 +98,15 @@ def test_evaluate_scores_every_combination_it_is_given(store):
     assert all("verdict" in r for r in out["results"])
 
 
+def test_evaluate_reports_how_many_symbols_the_bundle_actually_loaded(store):
+    """The `min_discovery_symbols` guard in `runner._evaluate` reads THIS
+    number, not the coverage count the planner used to size the request —
+    a bundle that silently drops symbols must be visible to it."""
+    out = job.evaluate_job(
+        _payload(store, [Combination((DONCH,), "4h", "trail")]))
+    assert out["loaded_symbols"] == 5
+
+
 def test_the_result_is_json_able_so_it_can_cross_the_pipe(store):
     import json
     out = job.evaluate_job(

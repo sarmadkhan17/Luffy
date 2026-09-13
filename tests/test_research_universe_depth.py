@@ -47,6 +47,44 @@ def test_every_enabled_horizon_carries_enough_discovery_symbols():
             f"(need {need}); deepen the store or drop the horizon")
 
 
+def test_a_locked_store_is_reported_as_unavailable_not_as_empty():
+    """A locked store or a schema change must read as 'we could not look',
+    never as 'nothing exists here' — the empty map used to mean the LATTER,
+    and the caller fell back to trusting every configured symbol was
+    present. That is the flattering wrong answer in exactly the direction
+    that disables `min_discovery_symbols` when it matters."""
+    import sqlite3
+
+    from trader.research.universe import coverage
+
+    class _BrokenDB:
+        def execute(self, *_a, **_k):
+            raise sqlite3.OperationalError("database is locked")
+
+    class _BrokenFeed:
+        db = _BrokenDB()
+
+    assert coverage(["4h"], feed=_BrokenFeed()) == \
+        {"skipped": "coverage_unavailable"}
+
+
+def test_a_non_sql_failure_is_not_swallowed_into_the_skip_signal():
+    """Only `sqlite3.Error` reads as 'the store could not be read' — anything
+    else is a real bug in this module and must surface, not be reported as
+    a thin store."""
+    from trader.research.universe import coverage
+
+    class _WeirdDB:
+        def execute(self, *_a, **_k):
+            raise ValueError("not a sql problem")
+
+    class _WeirdFeed:
+        db = _WeirdDB()
+
+    with pytest.raises(ValueError):
+        coverage(["4h"], feed=_WeirdFeed())
+
+
 def test_four_hour_is_deep_enough_today():
     """The horizon the book already trades. If this regresses, the candle
     store lost history and every Phase 2 number is suspect."""

@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS research_gauges (
     tf TEXT NOT NULL,
     expr TEXT NOT NULL,
     p10 REAL, p25 REAL, p75 REAL, p90 REAL,
+    min REAL, max REAL,
     n INTEGER,
     finite_frac REAL,
     usable INTEGER,
@@ -72,9 +73,19 @@ CREATE TABLE IF NOT EXISTS research_controls (
     window TEXT NOT NULL,
     consistency_p REAL,
     powered INTEGER,
+    status TEXT,                   -- measured | uncalibrated | untestable
     detail TEXT,
     measured_at TEXT,
     PRIMARY KEY (tf, window)
+);
+
+CREATE TABLE IF NOT EXISTS research_archive (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tf TEXT,
+    vintage TEXT,
+    table_name TEXT,
+    row_json TEXT,
+    archived_at TEXT
 );
 
 CREATE TABLE IF NOT EXISTS research_slices (
@@ -100,6 +111,23 @@ class Ledger:
     def ensure(self) -> None:
         with self.journal._tx() as c:
             c.executescript(SCHEMA)
+            self._migrate(c)
+
+    def _migrate(self, c) -> None:
+        """Add columns to tables created before this fix, without touching
+        their existing rows. `CREATE TABLE IF NOT EXISTS` cannot widen a
+        table that already exists under the old shape, and the live ledger
+        already held rows measured before `min`/`max`/`status` existed."""
+        additions = {
+            "research_gauges": (("min", "REAL"), ("max", "REAL")),
+            "research_controls": (("status", "TEXT"),),
+        }
+        for table, cols in additions.items():
+            have = {r[1] for r in
+                    c.execute(f"PRAGMA table_info({table})").fetchall()}
+            for name, typ in cols:
+                if name not in have:
+                    c.execute(f"ALTER TABLE {table} ADD COLUMN {name} {typ}")
 
     # ── the vocabulary's measurements ────────────────────────────────────
     def record_gauges(self, tf: str, rows: dict) -> int:
@@ -108,11 +136,12 @@ class Ledger:
             for expr, m in rows.items():
                 c.execute(
                     "INSERT OR REPLACE INTO research_gauges "
-                    "(tf, expr, p10, p25, p75, p90, n, finite_frac, usable, "
-                    "measured_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                    "(tf, expr, p10, p25, p75, p90, min, max, n, "
+                    "finite_frac, usable, measured_at) "
+                    "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                     (tf, expr, m.get("p10"), m.get("p25"), m.get("p75"),
-                     m.get("p90"), int(m.get("n", 0)),
-                     float(m.get("finite_frac", 0.0)),
+                     m.get("p90"), m.get("min"), m.get("max"),
+                     int(m.get("n", 0)), float(m.get("finite_frac", 0.0)),
                      1 if m.get("usable") else 0, now))
         return len(rows)
 
@@ -122,6 +151,7 @@ class Ledger:
                 "SELECT * FROM research_gauges WHERE tf=?", (tf,)):
             out[r["expr"]] = {"p10": r["p10"], "p25": r["p25"],
                               "p75": r["p75"], "p90": r["p90"],
+                              "min": r.get("min"), "max": r.get("max"),
                               "n": r["n"], "finite_frac": r["finite_frac"],
                               "usable": bool(r["usable"])}
         return out
@@ -146,14 +176,14 @@ class Ledger:
 
     # ── the window controls ──────────────────────────────────────────────
     def record_control(self, tf: str, window: str, res: dict,
-                       powered: bool) -> None:
+                       powered: bool, status: str = "measured") -> None:
         with self.journal._tx() as c:
             c.execute(
                 "INSERT OR REPLACE INTO research_controls "
-                "(tf, window, consistency_p, powered, detail, measured_at) "
-                "VALUES (?,?,?,?,?,?)",
+                "(tf, window, consistency_p, powered, status, detail, "
+                "measured_at) VALUES (?,?,?,?,?,?,?)",
                 (tf, window, res.get("consistency_p"), 1 if powered else 0,
-                 json.dumps(res)[:20000], now_utc().isoformat()))
+                 status, json.dumps(res)[:20000], now_utc().isoformat()))
 
     def control(self, tf: str, window: str) -> dict | None:
         rows = self.journal.query(
@@ -163,7 +193,8 @@ class Ledger:
             return None
         return {"tf": tf, "window": window,
                 "consistency_p": rows[0]["consistency_p"],
-                "powered": bool(rows[0]["powered"])}
+                "powered": bool(rows[0]["powered"]),
+                "status": rows[0].get("status") or "measured"}
 
     # ── the combinations ─────────────────────────────────────────────────
     def record_result(self, res: dict, verdict: str, reason: str,
@@ -226,10 +257,52 @@ class Ledger:
             sql += " AND verdict=?"
             args.append(verdict)
         sql += " ORDER BY consistency_p IS NULL, consistency_p, " \
-               "total_pct DESC"
+               "total_pct DESC, hash"
         if limit:
             sql += f" LIMIT {int(limit)}"
         return self.journal.query(sql, tuple(args))
+
+    # ── re-measurement ───────────────────────────────────────────────────
+    def combos_exist(self, tf: str) -> int:
+        """How many `research_combos` rows already stand for this horizon.
+
+        Thresholds are frozen once measured, deliberately: a hash carries a
+        threshold's percentile RANK, never its value, so a silent
+        re-measure re-points every stored hash at different numbers while
+        `known()` still treats it as already evaluated. `--measure` reads
+        this before touching a horizon that has scored rows.
+        """
+        rows = self.journal.query(
+            "SELECT COUNT(*) AS n FROM research_combos WHERE tf=?", (tf,))
+        return int(rows[0]["n"]) if rows else 0
+
+    def archive_horizon(self, tf: str, vintage: str) -> dict:
+        """Move every `research_combos`/`research_controls` row for `tf`
+        aside, stamped with `vintage`, before its gauges are re-measured.
+
+        This is what makes a deliberate re-measure honest rather than a
+        no-op: without it, the old rows stay in place under hashes that now
+        mean a different threshold, and `known()` would silently treat them
+        as "already evaluated" under numbers that no longer exist anywhere.
+        """
+        moved = {"combos": 0, "controls": 0}
+        now = now_utc().isoformat()
+        with self.journal._tx() as c:
+            for table, key in (("research_combos", "combos"),
+                               ("research_controls", "controls")):
+                cur = c.execute(f"SELECT * FROM {table} WHERE tf=?", (tf,))
+                rows = cur.fetchall()
+                cols = [d[0] for d in cur.description]
+                for row in rows:
+                    c.execute(
+                        "INSERT INTO research_archive "
+                        "(tf, vintage, table_name, row_json, archived_at) "
+                        "VALUES (?,?,?,?,?)",
+                        (tf, vintage, table,
+                         json.dumps(dict(zip(cols, row))), now))
+                moved[key] = len(rows)
+                c.execute(f"DELETE FROM {table} WHERE tf=?", (tf,))
+        return moved
 
     # ── batches ──────────────────────────────────────────────────────────
     def start_batch(self, tf: str, geo: str, round_: str, n: int) -> int:

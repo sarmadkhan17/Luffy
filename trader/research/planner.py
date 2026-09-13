@@ -105,7 +105,8 @@ def _windows_needing_control(led, tf: str, combos) -> list:
             else:
                 # cannot be calibrated; record that rather than pretend
                 led.record_control(tf, w, {"verdict": "uncalibrated",
-                                           "consistency_p": None}, False)
+                                           "consistency_p": None}, False,
+                                  status="uncalibrated")
     return missing
 
 
@@ -194,8 +195,16 @@ def needs_ablation(led, tf: str, geo: str, parts_by_key: dict) -> list:
     return out
 
 
-def _grow_children(led, tf, geo, parts, beam, max_parts) -> list:
-    """Extend the best parents at the deepest level that has any."""
+def _grow_children(led, tf, geo, parts_by_key: dict, beam, max_parts) -> list:
+    """Extend the best parents at the deepest level that has any.
+
+    `parts_by_key` must be the UNION of the vocabulary and the seeded parts
+    (see `next_batch`): a seeded pairing is keyed `seed:<strategy id>`, which
+    exists nowhere in `vocab.parts_for`, and a lookup that only checks the
+    vocabulary silently drops every row it cannot reconstruct — so a seeded
+    parent that grew could never itself be extended.
+    """
+    all_parts = list(parts_by_key.values())
     for k in range(1, int(max_parts)):
         parents = [r for r in led.rows(tf, geo, k=k, verdict="grow")]
         if not parents:
@@ -205,11 +214,10 @@ def _grow_children(led, tf, geo, parts, beam, max_parts) -> list:
         out = []
         for row in parents[:int(beam)]:
             keys = json.loads(row["parts"] or "[]")
-            by_key = {p.key: p for p in parts}
-            base = [by_key[x] for x in keys if x in by_key]
+            base = [parts_by_key[x] for x in keys if x in parts_by_key]
             if len(base) != len(keys):
-                continue
-            for p in parts:
+                continue                    # vocabulary changed under the row
+            for p in all_parts:
                 cand = tuple(base) + (p,)
                 if not compatible(cand):
                     continue
@@ -233,9 +241,15 @@ def next_batch(led, cfg: dict, journal=None) -> Batch:
         if not gauges:
             return Batch("measure", tf, reason="no thresholds measured yet")
         parts = _parts(led, tf)
-        by_key = {p.key: p for p in parts}
         if not parts:
             continue
+        seeds = seed_parts(journal)
+        # ONE key->Part map, unioning the vocabulary with the book's own
+        # seeded parts, handed to every reconstructor below. A part keyed
+        # `seed:<id>` exists nowhere in `vocab.parts_for`, so a map built
+        # from the vocabulary alone silently drops any row it cannot look
+        # up — the seeded round could grow but never be ablated or extended.
+        by_key = {p.key: p for p in list(parts) + list(seeds)}
         for geo in geos:
             singles = [Combination((p,), tf, geo, trigger=p.key,
                                    round="singles") for p in parts]
@@ -257,7 +271,7 @@ def next_batch(led, cfg: dict, journal=None) -> Batch:
                              "a window cannot be read without its control")
 
             if max_parts > 1:
-                grown = _grow_children(led, tf, geo, parts, beam, max_parts)
+                grown = _grow_children(led, tf, geo, by_key, beam, max_parts)
                 take, ctrl = _gate(grown, led, tf, geo, size)
                 if take:
                     return Batch("evaluate", tf, geo, "grow", take,
@@ -266,7 +280,6 @@ def next_batch(led, cfg: dict, journal=None) -> Batch:
                     return Batch("evaluate", tf, geo, "control", ctrl,
                                  "a window cannot be read without its control")
 
-            seeds = seed_parts(journal)
             if seeds and max_parts > 1:
                 seeded = []
                 for s in seeds:

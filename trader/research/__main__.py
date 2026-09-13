@@ -43,9 +43,15 @@ def _status(led: Ledger, cfg: dict) -> None:
               f"discovery symbols {len(s.get('discovery') or {})} · "
               f"cut {cut}")
         for r in led.journal.query(
-                "SELECT window, consistency_p, powered FROM "
+                "SELECT window, consistency_p, powered, status FROM "
                 "research_controls WHERE tf=? ORDER BY window", (tf,)):
-            mark = "powered" if r["powered"] else "UNDERPOWERED"
+            status = r.get("status") or "measured"
+            if status != "measured":
+                mark = f"COULD NOT CALIBRATE ({status})"
+            elif r["powered"]:
+                mark = "powered"
+            else:
+                mark = "UNDERPOWERED"
             p = r["consistency_p"]
             print(f"    control {r['window']:<24} "
                   f"p={p if p is None else round(p, 6)} — {mark}")
@@ -81,6 +87,11 @@ def main() -> int:
     ap.add_argument("--top", type=int, default=0)
     ap.add_argument("--once", action="store_true")
     ap.add_argument("--measure", action="store_true")
+    ap.add_argument("--rekey", action="store_true",
+                    help="archive this horizon's research_combos/"
+                         "research_controls rows before --measure "
+                         "re-points its thresholds — required once the "
+                         "ledger already holds rows scored under them")
     ap.add_argument("--tf", default="")
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO,
@@ -97,8 +108,29 @@ def main() -> int:
         from .runner import ResearchRunner
         cfg.setdefault("research", {})["enabled"] = True
         if args.measure:
-            # drop the horizon's measurements so it is re-measured now
+            # Thresholds are frozen once measured, deliberately: a stored
+            # hash carries a percentile RANK, never its value, so silently
+            # re-measuring would re-point every existing hash at different
+            # numbers while `Ledger.known()` still treats it as "already
+            # evaluated" under the OLD ones — a ledger of mixed vintages
+            # under stable identities. Refuse unless the horizon's rows are
+            # archived aside first.
             for tf in cfg["research"].get("horizons") or []:
+                n = led.combos_exist(tf)
+                if n and not args.rekey:
+                    print(f"refusing to re-measure {tf}: research_combos "
+                          f"already holds {n} row(s) scored under its "
+                          f"current thresholds. Re-measuring would change "
+                          f"what those stored hashes mean without changing "
+                          f"the hashes themselves. Pass --rekey to archive "
+                          f"them first.")
+                    return 1
+                if n:
+                    from ..core.types import now_utc
+                    moved = led.archive_horizon(tf, now_utc().isoformat())
+                    print(f"archived {moved['combos']} combo(s) and "
+                          f"{moved['controls']} control row(s) for {tf} "
+                          f"before re-measuring")
                 with j._tx() as c:
                     c.execute("DELETE FROM research_gauges WHERE tf=?", (tf,))
         rep = ResearchRunner(j, cfg).step()
