@@ -6,8 +6,6 @@ failure modes are handled here rather than in the child, because the child
 may not survive them: a batch that times out, a batch that crashes, and a
 trade cycle running slow enough that the search should stand down.
 """
-import pytest
-
 from trader.core.child import ChildResult
 from trader.core.journal import Journal
 from trader.research import vocab
@@ -107,6 +105,29 @@ def test_results_are_written_with_a_verdict_and_a_reason(tmp_path):
     assert rows[0]["verdict"] in ("grow", "prune", "survivor")
     assert rows[0]["reason"]
     assert out["recorded"] == len(rows) or out["recorded"] > 0
+
+
+def test_a_successful_evaluate_step_separates_skipped_from_deferred(
+        tmp_path):
+    """`"skipped"` is always a skip REASON (or None when the step ran) and
+    `"deferred"` is always the child's own count of combos it did not
+    finish — a consumer must never have to tell them apart by type."""
+    r, _ = _runner(tmp_path, _measured)
+    r.step()                         # measure
+    out = r.step()                   # control — an evaluate step
+    assert out["kind"] == "evaluate"
+    assert out["skipped"] is None
+    assert isinstance(out["deferred"], int) and out["deferred"] == 0
+
+
+def test_a_stood_down_step_exposes_only_the_reason_string(tmp_path):
+    r, calls = _runner(tmp_path, _measured)
+    disabled = {**CFG, "research": {**CFG["research"], "enabled": False}}
+    r.cfg = disabled
+    assert r.step()["skipped"] == "disabled"
+    r.cfg = CFG
+    assert r.step(cycle_seconds=60.0)["skipped"] == "busy"
+    assert calls == []
 
 
 def test_a_control_batch_records_the_window_s_power(tmp_path):

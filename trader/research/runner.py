@@ -89,6 +89,17 @@ class ResearchRunner:
 
     # ── one step ─────────────────────────────────────────────────────────
     def step(self, cycle_seconds: float | None = None) -> dict:
+        """One planner-driven step.
+
+        `"skipped"` is ALWAYS present and always a skip REASON: `None` when
+        the step actually ran (whether it then succeeded or failed — `ok`/
+        `error` say that), otherwise one of "disabled", "busy", "idle",
+        "underpowered_universe". It never carries a count: an evaluate
+        step's count of child-deferred combos is `"deferred"`, a separate
+        key with a separate, always-integer meaning — a consumer must never
+        have to tell "batch failed", "nothing was deferred" and "the whole
+        step was a no-op" apart by the type of one overloaded field.
+        """
         if not (self.cfg.get("research") or {}).get("enabled",
                                                     DEFAULTS["enabled"]):
             return {"skipped": "disabled"}
@@ -135,7 +146,7 @@ class ResearchRunner:
                                      res.error)
             log.warning(f"research measure {batch.tf} failed: {res.error}")
             return {"kind": "measure", "tf": batch.tf, "ok": False,
-                    "skipped": False, "error": res.error}
+                    "skipped": None, "error": res.error}
         v = res.value or {}
         n = self.ledger.record_gauges(batch.tf, v.get("gauges", {}))
         self.ledger.record_slices(batch.tf, v.get("cut_ms", 0),
@@ -145,7 +156,7 @@ class ResearchRunner:
                      if m.get("usable"))
         log.info(f"research measured {batch.tf}: {usable}/{n} gauges usable")
         return {"kind": "measure", "tf": batch.tf, "ok": True,
-                "skipped": False, "gauges": n, "usable": usable}
+                "skipped": None, "gauges": n, "usable": usable}
 
     def _evaluate(self, batch, disc, held) -> dict:
         symbols = disc
@@ -174,7 +185,7 @@ class ResearchRunner:
             log.warning(f"research batch {batch.tf}/{batch.geo}/"
                         f"{batch.round} failed: {res.error}")
             return {"kind": "evaluate", "tf": batch.tf, "geo": batch.geo,
-                    "round": batch.round, "ok": False, "skipped": False,
+                    "round": batch.round, "ok": False, "skipped": None,
                     "error": res.error}
 
         by_hash = {c.hash: c for c in batch.combos}
@@ -183,13 +194,14 @@ class ResearchRunner:
             self._record(r, by_hash.get(r["hash"]), batch)
             recorded += 1
         self.ledger.finish_batch(bid, True, time.monotonic() - t0)
+        deferred = (res.value or {}).get("skipped", 0)
         log.info(f"research {batch.tf}/{batch.geo}/{batch.round}: "
                  f"{recorded} evaluated in "
                  f"{(res.value or {}).get('elapsed_s', 0):.0f}s "
-                 f"({(res.value or {}).get('skipped', 0)} deferred)")
+                 f"({deferred} deferred)")
         return {"kind": "evaluate", "tf": batch.tf, "geo": batch.geo,
-                "round": batch.round, "ok": True, "recorded": recorded,
-                "skipped": (res.value or {}).get("skipped", 0)}
+                "round": batch.round, "ok": True, "skipped": None,
+                "recorded": recorded, "deferred": deferred}
 
     def _record(self, r: dict, c, batch) -> None:
         if batch.round == "control":
