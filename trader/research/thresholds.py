@@ -74,11 +74,17 @@ def measure(exprs, ctxs, min_samples: int = MIN_SAMPLES,
             key = f"p{int(round(q * 100))}"
             rec[key] = (round(float(np.quantile(finite, q)), 8)
                         if usable else None)
+        # the observed range: a `<` cut at or below it, or a `>` cut at or
+        # above it, can never fire — see vocab.parts_for's `_attainable`.
+        rec["min"] = round(float(finite.min()), 8) if usable else None
+        rec["max"] = round(float(finite.max()), 8) if usable else None
         # a constant quantity has no percentiles worth comparing against
         if usable and rec["p10"] == rec["p90"]:
             usable = False
             for q in QUANTILES:
                 rec[f"p{int(round(q * 100))}"] = None
+            rec["min"] = None
+            rec["max"] = None
         rec["usable"] = bool(usable)
         out[expr] = rec
     return out

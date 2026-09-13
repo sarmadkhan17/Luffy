@@ -65,6 +65,51 @@ def test_an_unknown_requirement_has_no_mask():
     assert control.mask_part("not_a_series") is None
 
 
+def test_a_mask_confines_the_rule_to_where_its_series_actually_exists():
+    """The masks are the entire basis of the window-control claim — a NaN
+    comparison is False, so ANDing a rule with `mask_part()` must make it
+    take no signal before the series begins and resume once it does. Built
+    on synthetic data so this is proven, not merely asserted from the
+    generated text (only the text was checked anywhere before this)."""
+    import numpy as np
+    import pandas as pd
+
+    from trader.research.combo import Combination
+    from trader.research.vocab import Part
+    from trader.strategy import spec_evidence
+    from trader.strategy.compile import compile_spec
+
+    n = 1200
+    ts = pd.to_datetime(np.arange(n) * 14_400_000, unit="ms", utc=True)
+    # alternating up/down bars: a rule that fires on EITHER side every bar
+    # if nothing confines it, so a silent front half would show up loudly
+    up = (np.arange(n) % 2 == 0)
+    open_ = np.full(n, 100.0)
+    close = np.where(up, 101.0, 99.0)
+    df = pd.DataFrame({"ts": ts, "open": open_, "high": np.maximum(open_, close),
+                       "low": np.minimum(open_, close), "close": close,
+                       "volume": np.ones(n), "taker_buy": np.full(n, 0.5)})
+    sf = spec_evidence.frames_for(df, "4h")
+
+    alt = Part(key="st:alt", kind="state", gauge="st:alt",
+              long="close > open", short="close < open")
+    mask = control.mask_part("funding")
+    c = Combination((alt, mask), "4h", "trail")
+    compiled = compile_spec(c.to_spec())
+
+    cut = 600
+    rng = np.random.default_rng(0)
+    funding = pd.DataFrame({
+        "ts": ts[cut:],
+        "value": 0.0001 + rng.normal(0, 0.00002, n - cut)})
+    lo, sh = compiled.entries(sf, derivs={"funding": funding})
+    fired = np.asarray(lo) | np.asarray(sh)
+
+    assert not fired[:cut].any(), "the masked rule fired before funding began"
+    assert fired[cut + 400:].any(), "the masked rule never fired once " \
+                                    "funding existed"
+
+
 def test_the_incumbent_universe_is_the_sixteen_it_declares():
     u = control.INCUMBENT_UNIVERSE
     assert len(u) == 16
@@ -129,3 +174,12 @@ def test_a_negative_in_an_unpowered_window_is_labelled_underpowered():
                          is_powered=True) == "no_edge"
     assert control.label({"verdict": "scored", "consistency_p": 0.001},
                          is_powered=False) == "scored"
+
+
+def test_label_s_gate_matches_whatever_max_p_powered_was_given():
+    """`label()` used to hardcode 0.01 while `powered()` took `max_p` from
+    config — a configured `control_max_p` other than 0.01 would then have
+    the two halves of one gate disagree."""
+    res = {"verdict": "scored", "consistency_p": 0.3}
+    assert control.label(res, is_powered=True) == "no_edge"       # default
+    assert control.label(res, is_powered=True, max_p=0.5) == "scored"

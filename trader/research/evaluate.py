@@ -225,6 +225,7 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
                 split=None, funding=fund)
         except Exception as e:                          # noqa: BLE001
             log.debug(f"research null {c.hash} {sym}: {e}")
+            rec["null_error"] = str(e)[:200]
             continue
         p = a.get("percentile")
         if p is None:

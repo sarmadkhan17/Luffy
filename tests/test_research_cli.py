@@ -55,6 +55,61 @@ def test_once_exits_0_when_the_step_ran_and_succeeded(monkeypatch, tmp_path,
     assert cli.main() == 0
 
 
+def test_measure_refuses_a_horizon_that_already_holds_scored_combos(
+        monkeypatch, tmp_path, capsys):
+    """Thresholds are frozen once measured, deliberately: a stored hash
+    carries a percentile RANK, never its value, so a silent re-measure
+    would re-point every existing hash at different numbers while
+    `Ledger.known()` still treats it as already evaluated under the old
+    ones."""
+    _use_tmp_journal(monkeypatch, tmp_path)
+    j = cli._journal()
+    from trader.research.ledger import Ledger
+    led = Ledger(j)
+    led.ensure()
+    led.record_result(
+        {"hash": "a", "tf": "4h", "geo": "trail", "k": 1,
+         "consistency_p": 0.01, "portfolio": {"total_pct": 10.0}},
+        "grow", "carries information", {})
+    stepped = []
+    monkeypatch.setattr(ResearchRunner, "step",
+                        lambda self, cycle_seconds=None: stepped.append(1)
+                        or {"skipped": None, "ok": True})
+    monkeypatch.setattr(sys, "argv",
+                        ["trader.research", "--measure", "--tf", "4h"])
+    assert cli.main() == 1
+    assert stepped == []                    # never ran — refused first
+    out = capsys.readouterr().out
+    assert "refusing" in out
+    assert led.combos_exist("4h") == 1      # nothing was archived either
+
+
+def test_measure_rekey_archives_then_proceeds(monkeypatch, tmp_path, capsys):
+    _use_tmp_journal(monkeypatch, tmp_path)
+    j = cli._journal()
+    from trader.research.ledger import Ledger
+    led = Ledger(j)
+    led.ensure()
+    led.record_result(
+        {"hash": "a", "tf": "4h", "geo": "trail", "k": 1,
+         "consistency_p": 0.01, "portfolio": {"total_pct": 10.0}},
+        "grow", "carries information", {})
+    monkeypatch.setattr(
+        ResearchRunner, "step",
+        lambda self, cycle_seconds=None: {"skipped": None, "ok": True,
+                                          "gauges": 3})
+    monkeypatch.setattr(
+        sys, "argv",
+        ["trader.research", "--measure", "--tf", "4h", "--rekey"])
+    assert cli.main() == 0
+    out = capsys.readouterr().out
+    assert "archived 1 combo" in out
+    assert led.combos_exist("4h") == 0
+    archived = led.journal.query(
+        "SELECT * FROM research_archive WHERE tf='4h'")
+    assert archived and archived[0]["table_name"] == "research_combos"
+
+
 def test_top_on_an_empty_ledger_says_so_rather_than_staying_silent(
         monkeypatch, tmp_path, capsys):
     _use_tmp_journal(monkeypatch, tmp_path)

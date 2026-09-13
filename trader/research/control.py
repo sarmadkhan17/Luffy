@@ -135,16 +135,21 @@ def powered(res, max_p: float = 0.01) -> bool:
     return p is not None and float(p) <= float(max_p)
 
 
-def label(res, is_powered: bool) -> str:
+def label(res, is_powered: bool, max_p: float = 0.01) -> str:
     """What a result in this window is allowed to be called.
 
     A rule that registers is `scored` whatever the control says — power is
     about false negatives. A rule that does not register in a window where
     the known-good rule also cannot register is UNDERPOWERED, never no_edge.
+
+    `max_p` must be the SAME `control_max_p` `powered()` was called with —
+    the default here only matches `runner.DEFAULTS`, so a caller that reads
+    a different value from config and does not thread it through here would
+    have the two halves of one gate disagree.
     """
     if not res or res.get("verdict") != "scored":
         return (res or {}).get("verdict", "error")
     p = res.get("consistency_p")
-    if p is not None and float(p) <= 0.01:
+    if p is not None and float(p) <= float(max_p):
         return "scored"
     return "no_edge" if is_powered else "underpowered"
