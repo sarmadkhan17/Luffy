@@ -13,10 +13,12 @@ working now", never "did this survive five years". Do not reintroduce lifetime
 pass/fail gates — under one, all 27 candidates scored zero.
 
 **The intended shape is strategy-first:** strategies own entry and exit,
-analysts supply which coins and which direction. The code does not do that
-yet — `Orchestrator.decide()` still blends 7 analyst votes with strategy
-signals into one score. That blend is **temporary**, kept until the Strategist
-has enough validated material to stand alone, and the cutover is manual. See
+analysts supply which coins and which direction. **The cutover is live**
+(`orchestrator:` in `config.yaml`): `require_strategy_signal: true` refuses
+any direction no strategy proposed, and `strategy_leads: true` means that once
+a strategy signals, `strategy_score()` sets the score instead of the 7-analyst
+blend. `Orchestrator.decide()` still computes the blend and journals every
+vote, so analyst skill stays measurable and both flags stay reversible. See
 `docs/superpowers/specs/2026-09-01-researcher-and-strategy-first-core-design.md`.
 
 ## Commands
@@ -35,7 +37,7 @@ scripts/watchdog.sh                           # cron, @reboot + every 5 min: sta
                                               # `touch data/watchdog.off` before any
                                               # deliberate stop, or it comes straight back
 
-./venv/bin/python -m pytest tests/            # 748 tests
+./venv/bin/python -m pytest tests/            # 1218 tests
 ./venv/bin/python -m pytest tests/test_phase0.py -k test_state_transitions
 
 ./venv/bin/python -m trader.brain.tv_harness --login   # one-time TV login
@@ -73,7 +75,7 @@ All knobs live in `config.yaml`; `trader/core/config.py` loads both.
 They never call each other. They share `data/luffy.db` (SQLite, WAL).
 
 - **Kernel** (`trader/kernel.py`) — the only writer of truth. Trade loop plus
-  seven daemon threads.
+  up to nine daemon threads (see below).
 - **Dashboard** (`trader/dashboard/server.py`) — FastAPI + GraphQL + WebSocket,
   read-mostly. Buttons write a flag into the **`state_kv`** table (not `kv`)
   that the kernel picks up next cycle.
@@ -127,8 +129,8 @@ Every 60s, over 3 majors plus up to 12 scanned alts.
 Universe.symbols()        → which markets
 DataFeed.fetch_multi()    → candles: RAM → candles.db → exchange
 7 × Analyst.evaluate()    → each returns Vote(conviction, confidence)
-Orchestrator.decide()     → weighted votes + strategy signals vs threshold
-RiskManager.check_entry() → sizing, heat cap, breakers, 4-trade cap
+Orchestrator.decide()     → strategy signal sets the score (votes journalled) vs threshold
+RiskManager.check_entry() → sizing, heat cap, breakers, 8-trade cap
 Executor.open()           → market order + native STOP on the exchange
 ExitEngine.manage()       → 1.5R partial, trailing stop, time exit
 Journal.log_*()           → every decision AND every rejection
@@ -189,7 +191,7 @@ Population changes take effect within one brain tick (~1h), no restart.
 ## The strategy language
 
 A spec's logic is a restricted expression DSL over a feature registry —
-**73 features** in `strategy/features.py`, `features_deriv.py`, `features_xs.py`.
+**74 features** in `strategy/features.py`, `features_deriv.py`, `features_xs.py`.
 A strategy can only express a mechanism whose observables are registered, so
 the registry is the ceiling on what the system can discover.
 
@@ -292,7 +294,10 @@ invisible to other connections and holding a write lock — until some later
   evaluated under a canonical hash (`research_combos`), the measured
   percentiles per horizon (`research_gauges`), each window's control
   (`research_controls`), the discovery cut (`research_slices`) and every
-  batch (`research_batches`). Phase 2 writes nothing to `strategies` |
+  batch (`research_batches`). A deliberate re-measure first moves a
+  horizon's combos and controls into `research_archive`, stamped with a
+  vintage, so old hashes never pass as evaluated under new thresholds.
+  Phase 2 writes nothing to `strategies` |
 | `data/candles.db` | OHLCV: 5y at 4h, 3y at 1h, 1y at 15m. **Production**
   public data — until 2026-09-02 it was Binance Demo, whose volume is
   simulated (15x inflated) though its prices track to ~0.04%. Rebuilt; the
@@ -430,7 +435,8 @@ register's highest-severity items were all closed on 2026-09-02; see
 - `promotion.py` still applies lifetime PF to the legacy genomes. All of them
   are retired, so it currently governs nothing.
 - The Researcher agent still does not exist; `research`-stream ideas queue up
-  unconsumed.
+  unconsumed. `trader/research/` is the combination search, not that agent —
+  it reads no idea queue.
 - **(CLOSED 2026-09-02 18:48)** A $5.74 dust position from a RETIRED genome
   sat naked on UNI/USDT and blocked its symbol. Closed by hand at 5.821; the
   venue is flat and the journal holds zero open trades. What it taught: A
