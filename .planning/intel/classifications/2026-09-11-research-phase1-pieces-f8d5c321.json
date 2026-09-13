@@ -1,0 +1,12 @@
+{
+  "source_path": "/home/sarmad/trader/.claude/worktrees/claude-md-refresh/docs/superpowers/plans/2026-09-11-research-phase1-pieces.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Research pipeline — Phase 1: the pieces — Implementation Plan",
+  "summary": "Task-by-task implementation plan for adding reference market context and ref() operator to the trading DSL.",
+  "scope": ["reference markets", "DSL", "evidence", "rolling windows", "alt index", "Python modules", "testing", "Yahoo", "Binance BTCDOM", "DefiLlama", "CoinGecko", "point-in-time alignment"],
+  "cross_refs": ["docs/superpowers/specs/2026-09-11-luffy-research-pipeline-design.md"],
+  "locked": false,
+  "precedence": 4
+}

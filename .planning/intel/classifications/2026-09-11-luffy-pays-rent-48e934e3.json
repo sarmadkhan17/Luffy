@@ -1,0 +1,12 @@
+{
+  "source_path": "/home/sarmad/trader/.claude/worktrees/claude-md-refresh/docs/superpowers/plans/2026-09-11-luffy-pays-rent.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Luffy Pays Rent Implementation Plan",
+  "summary": "Step-by-step implementation plan for a weekly rent check that reads Luffy's net trading income from the venue ledger.",
+  "scope": ["Luffy", "rent check", "weekly verdict", "trading income", "venue ledger", "RentKeeper", "kernel", "executor", "GraphQL", "Telegram", "dashboard"],
+  "cross_refs": ["docs/superpowers/specs/2026-09-11-luffy-pays-rent-design.md"],
+  "locked": false,
+  "precedence": 4
+}

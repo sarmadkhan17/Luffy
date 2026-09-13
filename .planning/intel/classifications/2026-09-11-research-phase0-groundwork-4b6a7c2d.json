@@ -1,0 +1,13 @@
+{
+  "source_path": "/home/sarmad/trader/.claude/worktrees/claude-md-refresh/docs/superpowers/plans/2026-09-11-research-phase0-groundwork.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Research pipeline — Phase 0: groundwork — Implementation Plan",
+  "summary": "Implementation plan to clear research pipeline groundwork: fix admission refusal, tag LLM calls with budgets, replace LLM Theorist, remove Judge, add child runner.",
+  "scope": ["research pipeline", "implementation", "admission", "LLM budget", "post-mortem", "doctrine", "kernel refactoring"],
+  "cross_refs": ["docs/superpowers/specs/2026-09-11-luffy-research-pipeline-design.md"],
+  "locked": false,
+  "precedence": 4,
+  "notes": ""
+}

@@ -1,0 +1,24 @@
+{
+  "source_path": "/home/sarmad/trader/.claude/worktrees/claude-md-refresh/docs/superpowers/specs/2026-09-11-luffy-pays-rent-design.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Luffy pays rent — a weekly verdict read off the venue",
+  "summary": "Technical specification for Luffy's weekly rent verdict system, which reads verified trading income from the venue ledger.",
+  "scope": [
+    "rent ledger module",
+    "rent daemon thread",
+    "weekly verdict",
+    "venue income API",
+    "Telegram interface",
+    "Dashboard rent card",
+    "executor journal",
+    "income types",
+    "profit factor",
+    "weekly bar"
+  ],
+  "cross_refs": [],
+  "locked": false,
+  "precedence": 1,
+  "notes": ""
+}

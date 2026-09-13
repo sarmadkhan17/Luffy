@@ -1,0 +1,13 @@
+{
+  "source_path": "/home/sarmad/trader/.claude/worktrees/claude-md-refresh/CLAUDE.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "CLAUDE.md",
+  "summary": "Project operating guide documenting Luffy trading system architecture, commands, roles, and known-good invariants.",
+  "scope": ["Luffy trading system", "kernel", "dashboard", "strategy specifications", "backtest framework", "risk management", "Binance API", "SQLite database", "daemon threads"],
+  "cross_refs": ["docs/superpowers/specs/2026-09-01-researcher-and-strategy-first-core-design.md", "docs/superpowers/plans/", "config.yaml", "org.yaml", "trader/core/config.py"],
+  "locked": false,
+  "precedence": 0,
+  "notes": ""
+}

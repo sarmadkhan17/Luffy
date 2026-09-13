@@ -1,0 +1,12 @@
+{
+  "source_path": "/home/sarmad/trader/.claude/worktrees/claude-md-refresh/docs/superpowers/plans/2026-08-31-strategy-foundation.md",
+  "type": "DOC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Strategy Foundation Implementation Plan",
+  "summary": "Implementation plan for replacing Genome with StrategySpec DSL-based strategy system.",
+  "scope": ["StrategySpec", "DSL", "feature registry", "vectorized backtester", "expression language"],
+  "cross_refs": ["docs/superpowers/specs/2026-08-31-strategy-generation-rebuild-design.md"],
+  "locked": false,
+  "precedence": 5
+}

@@ -1,0 +1,35 @@
+{
+  "source_path": "/home/sarmad/trader/.claude/worktrees/claude-md-refresh/docs/superpowers/specs/2026-09-11-luffy-research-pipeline-design.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "The research pipeline — discover, explain, prove, repeat",
+  "summary": "Technical specification for Luffy's strategy research pipeline: discovery via combination search, validation gates, LLM thesis reasoning, and forward testing phases.",
+  "scope": [
+    "research pipeline",
+    "strategy discovery",
+    "reference store",
+    "DSL features",
+    "validation gates",
+    "LLM thesis generation",
+    "search mechanisms",
+    "error budget",
+    "child process execution",
+    "configuration"
+  ],
+  "cross_refs": [
+    "CLAUDE.md",
+    "config.yaml",
+    "data/candles.db",
+    "data/derivs.db",
+    "data/doctrine.json",
+    "scripts/backtest_equivalence.py",
+    "scripts/bench_vector_backtest.py",
+    "scripts/monitor.py",
+    "tests/test_series_map_covers_registry.py",
+    "tests/test_single_creation_path.py",
+    "docs/superpowers/specs/2026-09-01-researcher-and-strategy-first-core-design.md"
+  ],
+  "locked": false,
+  "precedence": 1
+}

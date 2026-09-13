@@ -1,0 +1,13 @@
+{
+  "source_path": "/home/sarmad/trader/.claude/worktrees/claude-md-refresh/docs/superpowers/specs/2026-08-30-agents-command-deck-design.md",
+  "type": "SPEC",
+  "confidence": "high",
+  "manifest_override": true,
+  "title": "Agents Command Deck — Design Spec",
+  "summary": "Technical specification for wiring command-deck cockpit UI into live dashboard Agents tab, driven by enriched API data.",
+  "scope": ["command deck", "Agents tab", "dashboard", "API endpoint", "employee data", "org structure", "frontend UI", "backend enrichment"],
+  "cross_refs": ["design/agents-cockpit-v2/command-deck.html", "org.yaml", "trader/org.py", "index.html", "risk.py", "tests/test_brain_reconnect.py"],
+  "locked": false,
+  "precedence": 3,
+  "notes": ""
+}
