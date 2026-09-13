@@ -52,10 +52,13 @@ def _status(led: Ledger, cfg: dict) -> None:
 
 
 def _top(led: Ledger, cfg: dict, n: int) -> None:
-    for tf in (cfg.get("research") or {}).get("horizons") or []:
+    horizons = (cfg.get("research") or {}).get("horizons") or []
+    printed_any = False
+    for tf in horizons:
         rows = led.rows(tf, limit=n)
         if not rows:
             continue
+        printed_any = True
         print(f"\n[{tf}] best discovery results — DISCOVERY EVIDENCE ONLY, "
               f"which is a description of the markets it was found on")
         print(f"  {'p':>9} {'PF':>5} {'CAGR%':>7} {'k':>2} {'verdict':<9} "
@@ -67,6 +70,9 @@ def _top(led: Ledger, cfg: dict, n: int) -> None:
                   f"{(r['total_pct'] or 0):>7.1f} {r['k']:>2} "
                   f"{r['verdict'] or '':<9} "
                   f"{','.join(json.loads(r['parts'] or '[]'))}")
+    if not printed_any:
+        print(f"no discovery results yet for any of: "
+              f"{', '.join(horizons) if horizons else '(no horizons configured)'}")
 
 
 def main() -> int:
@@ -97,7 +103,7 @@ def main() -> int:
                     c.execute("DELETE FROM research_gauges WHERE tf=?", (tf,))
         rep = ResearchRunner(j, cfg).step()
         print(json.dumps(rep, indent=2, default=str))
-        return 0
+        return 1 if rep.get("ok") is False else 0
     if args.top:
         _top(led, cfg, args.top)
         return 0

@@ -17,8 +17,6 @@ read as no-edge rather than as an opportunity.
 import sqlite3
 
 import numpy as np
-import pandas as pd
-import pytest
 
 from trader.research import growth, job
 from trader.research.combo import Combination
