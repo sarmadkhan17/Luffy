@@ -103,6 +103,9 @@ class Kernel:
                                               for st, _g in self.population},
                                 spec_exits=self._spec_exits)
         self._stop = False
+        #: how long the last trade cycle took. The research thread stands
+        #: down when this runs long: two cores, and the trade loop wins.
+        self._last_cycle_s = 0.0
         self._book_cache: dict[str, tuple[float, dict]] = {}
         self._funding_cache: dict[str, float] | None = None
         self._oi_cache: tuple[float, dict[str, dict]] = (0.0, {})
@@ -274,6 +277,9 @@ class Kernel:
         if self.cfg.get("rent", {}).get("weekly_usdt"):
             threading.Thread(target=self._rent_loop, daemon=True,
                              name="rent-check").start()
+        if (self.cfg.get("research", {}) or {}).get("enabled", False):
+            threading.Thread(target=self._research_loop, daemon=True,
+                             name="research").start()
 
     def _filter_universe_to_venue(self) -> None:
         """Universe comes from production data; drop symbols the trading
@@ -398,6 +404,35 @@ class Kernel:
             except Exception as e:
                 log.warning(f"strategy mechanism cycle failed: {e}")
             for _ in range(int(interval)):
+                if self._stop:
+                    return
+                _t.sleep(1)
+
+    def _research_loop(self) -> None:
+        """The search: generate combinations, score them, keep what pays.
+
+        This thread owns the schedule and every write; the arithmetic runs in
+        a spawned child at nice 19 with a wall-clock limit, because the
+        kernel's pandas work holds the GIL and a CPU-heavy search on a thread
+        would slow the trade loop directly.
+        """
+        import time as _t
+        rcfg = self.cfg.get("research", {}) or {}
+        if not rcfg.get("enabled", False):
+            log.info("research search disabled")
+            return
+        from .research.runner import ResearchRunner
+        runner = ResearchRunner(self.journal, self.cfg)
+        every = float(rcfg.get("interval_seconds", 60))
+        _t.sleep(300)                      # let boot and the first cycles settle
+        while not self._stop:
+            try:
+                rep = runner.step(cycle_seconds=self._last_cycle_s)
+                if rep.get("skipped") not in (None, "idle"):
+                    log.debug(f"research: {rep}")
+            except Exception as e:         # noqa: BLE001
+                log.warning(f"research step failed: {e}")
+            for _ in range(int(every)):
                 if self._stop:
                     return
                 _t.sleep(1)
@@ -1399,6 +1434,7 @@ class Kernel:
             try:
                 info = self.cycle()
                 dur = time.time() - t0
+                self._last_cycle_s = dur
                 bits = [f"cycle #{n}",
                         f"{info['scanned']} symbols",
                         f"{info['decisions']} decisions"]
