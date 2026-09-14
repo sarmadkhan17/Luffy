@@ -286,3 +286,84 @@ B (the later era) only.**
   It keeps the market's clustering, so a rule that merely trades more
   during volatile eras is compared against itself. Task 1's decision point
   on Donchian settles that before anything depends on it.
+
+## Execution record (2026-09-14)
+
+Tasks 1–8 are built and committed (`39b2b1b`, `8925756`, `a7dd560`). Task 9
+hit its stop rule, and Task 10 was deployed with `referee: false`.
+
+### Changes from the plan, each for a measured reason
+
+- **Exact draws, not an extrapolated tail.** LORD++ levels are tiny: α₁ =
+  0.0025, and α₂ ≈ 0.0005 with no rejection. An empirical p from 199 draws
+  bottoms out at 0.005. A normal fit on log growth was tried and refused:
+  under no edge it reads P(p ≤ 1e-4) = 0.0036 with a heavy-tailed null,
+  36× the nominal rate. Instead, one trade is now `vector_backtest._trade()`,
+  shared by `simulate` and a per-bar `trade_table`, and `walk_table`
+  reproduces `simulate` exactly (tested on both geometries with
+  NaN-gapped funding). A draw costs about 21 ms at 4h over 19 symbols, so
+  19,999 draws fit one child batch. Equivalence PASS, bench PASS.
+- **Held-out B starts at the later of the recorded and recomputed cut.**
+  `load_bundle` recomputes the cut every batch and it drifts forward as the
+  store grows (recorded 2025-03-08, recomputed 2025-03-09).
+- **The referee sits in `runner.py`, not `planner.py`.** The planner's
+  contract is that it never reads a held-out result.
+
+### Task 1 — measured
+
+| input | slice | trades | actual | null median | common-rotation p |
+|---|---|---|---|---|---|
+| Donchian, declared set (16 legs) | full frame | 1,725 | +195% | −35% | 0.005 (199 draws, beats all) |
+| `bb20>p75,r_alts_z96>p90`, trail | discovery | 1,689 | +214% | −33% | 5.0e-04 (1,999 draws, beats all) |
+
+The alt-index survivor is not *only* the 19-votes artefact. It beats a null
+that keeps its cross-symbol clustering. It has not been looked at on
+held-out data, and must not be outside the budget.
+
+### Task 9 — STOP: the gate cannot see the incumbent on B
+
+Donchian on held-out B: 15 legs (HYPE has no pre-cut context), 541 trades,
+cut 2025-03-09.
+
+| reading | p |
+|---|---|
+| per-symbol consistency | 9.2e-05 |
+| common rotation, capped compounded return | **0.0485** |
+| common rotation, mean R | 0.057 |
+| common rotation, sum R uncapped | 0.075 |
+| gate 3 vs empty book | pass (+65.7%, maxDD 15.1%) |
+
+On discovery (same 15 legs) the same three statistics read 0.0015, 0.024
+and 0.032. Compounded return is the most powerful of them, so the weakness
+is not the choice of statistic.
+
+**What it means.** Once every symbol's entries move together, the evidence
+for Donchian over 18 months is about p=0.05. Crypto trend-following over
+these markets is largely one bet on a few market-wide trend episodes. The
+per-symbol p of 9e-05 counts those episodes 15 times over, which is the same
+dependence the phase was written to catch, now found in the incumbent. That
+agrees with CLAUDE.md's standing verdict that the prior on Donchian "should
+be lower than it was".
+
+**Consequence.** As built, gate 1 (p = max of three, charged to LORD++)
+cannot admit the known-good rule: 0.0485 against α₁ = 0.0025. Switching the
+referee on would spend the budget on looks that cannot succeed. Per this
+plan's own rule, the gate was not relaxed. The known-bad calibration waits
+on the gate decision, because it has to calibrate whichever gate is chosen.
+
+### Open decision (operator)
+
+1. **Keep the dependence-respecting gate, and accept that it admits
+   nothing.** The honest reading is that no crypto mechanism, the incumbent
+   included, is established at FDR 10% over one 18-month era. The referee
+   stays off, or runs purely to record.
+2. **Consistency p carries the LORD++ test; the common rotation is a fixed
+   filter** (for example p ≤ 0.10). This is calibrated on the known-good:
+   Donchian passes (9e-05 ≤ 0.0025, 0.049 ≤ 0.10). It is weaker: the FDR
+   claim rests on a p that overstates evidence under cross-symbol
+   dependence, and the filter only removes pure regime artefacts.
+3. **Correct consistency p for dependence** by estimating the effective
+   number of independent symbols (from cross-symbol correlation of trade
+   outcomes), and charge that. This is the principled middle, but it is new
+   statistics and must itself be calibrated on the shared-regime no-edge
+   case and on Donchian before use.

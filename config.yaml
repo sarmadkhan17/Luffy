@@ -161,7 +161,11 @@ research:                        # the search — docs/superpowers/specs/
   min_threshold_samples: 5000
   equity: 2000.0                 # the account the compounded return is walked on
   # ── the referee (phase 3) — docs/superpowers/plans/2026-09-14-research-phase3-referee.md
-  referee: true                  # examine survivors on held-out A (unseen
+  # OFF pending a gate decision (2026-09-14, plan Task 9): the known-good
+  # rule reads common-rotation p=0.049 on held-out B, so the referee as
+  # built cannot admit the incumbent, and switching it on would spend the
+  # LORD++ budget on looks that cannot succeed.
+  referee: false                 # examine survivors on held-out A (unseen
                                  # markets) and B (the era after the cut)
   fdr_target: 0.10               # LORD++ target false-discovery rate
   lord_w0: 0.05                  # initial wealth; alpha_1 = 0.0025
