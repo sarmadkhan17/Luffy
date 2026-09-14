@@ -144,3 +144,23 @@ def test_a_previous_look_makes_a_new_candidate_a_twin():
 def test_entries_round_trip():
     ent = rf.entry_set([_leg("S", [1, 5]), _leg("T", [2])])
     assert rf.decode_entries(rf.encode_entries(ent)) == ent
+
+
+def test_examine_runs_end_to_end_on_a_real_store(store):
+    """No mocks: load both held-out slices, both gates, and the book."""
+    from trader.research.combo import Combination
+    from trader.research.vocab import Part
+    donch = Part("ev:donch20", "event", "ev:donch20",
+                 "close > donchian_hi(20)", "close < donchian_lo(20)")
+    c = Combination((donch,), "4h", "trail")
+    out = rf.examine(c, {
+        "cfg": {**CFG, "research": {"equity": 2000.0}},
+        "paths": {"candles": store}, "cut_ms": CUT_BAR * TF_MS,
+        "discovery_symbols": ["D1/USDT"],
+        "heldout_symbols": ["A1/USDT", "A2/USDT", "LATE/USDT"],
+        "draws": 19, "seed": 3, "book": []})
+    assert out["looked"] is True
+    assert out["cut_ms"] >= CUT_BAR * TF_MS
+    assert "p" in out["gate1"] and out["gate1"]["p"] == 1.0   # 2-3 symbols
+    assert "untestable" in out["gate1"]["reason"]
+    assert set(out["gate3"]) >= {"passed", "reason", "with", "without"}

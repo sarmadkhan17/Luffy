@@ -106,3 +106,34 @@ def evaluate_job(payload: dict) -> dict:
     return {"results": results, "done": len(results), "skipped": skipped,
             "loaded_symbols": len(b.frames),
             "elapsed_s": round(time.monotonic() - t0, 2)}
+
+
+def select_job(payload: dict) -> dict:
+    """Discovery entry sets for survivors about to be queued — twin
+    detection's input. Reads the discovery slice only."""
+    from . import referee
+    t0 = time.monotonic()
+    combos = [Combination.from_dict(d) for d in payload.get("combos") or []]
+    reqs = {"ohlcv"}
+    for c in combos:
+        reqs.update(c.requires)
+    b = ev.load_bundle(payload["tf"], payload["symbols"], payload["cfg"],
+                       requires=tuple(sorted(reqs)),
+                       paths=payload.get("paths"))
+    return {"entries": referee.discovery_entries(combos, b),
+            "elapsed_s": round(time.monotonic() - t0, 2)}
+
+
+def referee_job(payload: dict) -> dict:
+    """Gates 1 and 3 for ONE candidate. The only job that reads held-out
+    prices; a failure after that point still reports `looked`."""
+    from . import referee
+    t0 = time.monotonic()
+    c = Combination.from_dict(payload["combo"])
+    try:
+        out = referee.examine(c, payload)
+    except Exception as exc:                            # noqa: BLE001
+        out = {"hash": c.hash, "looked": True,
+               "error": f"{type(exc).__name__}: {exc}"[:300]}
+    out["elapsed_s"] = round(time.monotonic() - t0, 2)
+    return out

@@ -28,7 +28,7 @@ import numpy as np
 
 from ..strategy import null_baseline, spec_evidence
 from ..strategy.portfolio_evidence import portfolio_curve
-from ..strategy.vector_backtest import WARMUP, funding_for, simulate
+from ..strategy.vector_backtest import WARMUP, walk_table
 from . import portfolio_null as pn
 from . import slices
 from .evaluate import Bundle
@@ -125,21 +125,41 @@ def load_heldout(tf: str, part: str, symbols, cut: int, cfg: dict,
 
 
 # ── gate 1 ───────────────────────────────────────────────────────────────
-def consistency(legs, exit_spec, risk: dict, draws: int = CONSISTENCY_DRAWS,
-                seed: int = 17,
+def _pf(walk, risk: dict, equity: float = 2000.0) -> float:
+    """Profit factor of a `walk_table` result, in USDT against the leg's own
+    running balance — the arithmetic `simulate` does, so the same number."""
+    frac = float(risk["risk_per_trade_pct"]) / 100.0
+    eq, win, loss = float(equity), 0.0, 0.0
+    for _i, _e, r in walk:
+        pnl = r * eq * frac
+        if pnl > 0:
+            win += pnl
+        else:
+            loss += -pnl
+        eq += pnl
+    if loss == 0:
+        return float("inf") if win > 0 else 0.0
+    return win / loss
+
+
+def consistency(legs, exit_spec, risk: dict, tf: str,
+                draws: int = CONSISTENCY_DRAWS, seed: int = 17,
                 min_symbol_trades: int = 8) -> dict:
     """Per-symbol rotation percentiles and their cross-symbol p, respecting
-    each leg's `first_bar` (a rotation is taken, THEN masked)."""
+    each leg's `first_bar` (a rotation is taken, THEN masked). Walks the
+    legs' trade tables, so the null costs a walk per draw, not an engine
+    run."""
+    pn._prepare(legs, exit_spec, risk, tf)
     pcts, trades, per = [], 0, {}
     for l in legs:
-        lo = pn._mask(l.long, l.first_bar)
-        sh = pn._mask(l.short, l.first_bar)
-        r = simulate(lo, sh, l.df, exit_spec, risk, symbol=l.symbol,
-                     funding=l.funding)
-        trades += int(r.trades)
-        per[l.symbol] = {"trades": int(r.trades),
-                         "pf": round(float(r.profit_factor), 3)}
-        if r.trades < min_symbol_trades:
+        lo, sh = pn._mask(l._long, l.first_bar), pn._mask(l._short,
+                                                          l.first_bar)
+        w = walk_table(l.table, lo, sh, risk)
+        pf = _pf(w, risk)
+        trades += len(w)
+        per[l.symbol] = {"trades": len(w),
+                         "pf": round(pf, 3) if np.isfinite(pf) else None}
+        if len(w) < min_symbol_trades:
             continue
         n = len(l.df) - l.first_bar
         lo_off, hi_off = WARMUP + 1, n - WARMUP - 1
@@ -148,21 +168,21 @@ def consistency(legs, exit_spec, risk: dict, draws: int = CONSISTENCY_DRAWS,
         rng = np.random.default_rng(seed)
         null = []
         for off in rng.integers(lo_off, hi_off, size=int(draws)):
-            nr = simulate(pn._mask(np.roll(l.long, off), l.first_bar),
-                          pn._mask(np.roll(l.short, off), l.first_bar),
-                          l.df, exit_spec, risk, symbol=l.symbol,
-                          funding=l.funding)
-            if nr.trades > 0:
-                null.append(float(nr.profit_factor))
-        pct = null_baseline.edge_percentile(float(r.profit_factor), null) \
+            nw = walk_table(l.table,
+                            pn._mask(np.roll(l._long, off), l.first_bar),
+                            pn._mask(np.roll(l._short, off), l.first_bar),
+                            risk)
+            if nw:
+                null.append(_pf(nw, risk))
+        pct = null_baseline.edge_percentile(pf, null) \
             if len(null) >= null_baseline.MIN_DRAWS else None
         if pct is not None:
             per[l.symbol]["null_pctile"] = round(pct, 4)
             pcts.append(pct)
+    pfs = [v["pf"] for v in per.values() if v["pf"] is not None]
     return {"consistency_p": null_baseline.consistency_p(pcts),
             "scored_symbols": len(pcts), "trades": trades,
-            "median_pf": round(st.median([v["pf"] for v in per.values()]), 3)
-            if per else 0.0,
+            "median_pf": round(st.median(pfs), 3) if pfs else 0.0,
             "symbols": per}
 
 
@@ -276,3 +296,122 @@ def decode_entries(s: str | None) -> set:
     if not s:
         return set()
     return {(sym, int(t)) for sym, v in json.loads(s).items() for t in v}
+
+
+# ── the child's work ─────────────────────────────────────────────────────
+def discovery_entries(combos, bundle) -> dict:
+    """{hash: encoded entry set} over the discovery bundle — what twin
+    detection compares. Discovery only: no held-out price is read."""
+    from ..strategy.compile import compile_spec
+    out = {}
+    for c in combos:
+        try:
+            legs = pn.legs_for(compile_spec(c.to_spec()), bundle)
+            out[c.hash] = encode_entries(entry_set(legs))
+        except Exception as e:                          # noqa: BLE001
+            log.warning(f"referee entries {c.hash}: {e}")
+    return out
+
+
+def _bar_minutes(tf: str) -> float:
+    from ..core.types import TF_MS
+    return TF_MS.get(tf, 900_000) / 60_000
+
+
+def book_fills(specs, cut: int, grid_tf: str, t0: int, cfg: dict,
+               paths: dict | None, default_symbols) -> tuple[list, dict]:
+    """The live book's fills over held-out B, on the candidate's bar grid.
+
+    Each spec on its OWN declared universe and timeframe; a spec whose frame
+    has no history before the cut contributes nothing, and says so."""
+    from ..strategy.compile import compile_spec
+    fills, notes = [], {}
+    for spec in specs:
+        syms = list((spec.universe or {}).get("include") or default_symbols)
+        risk = {**(cfg.get("risk") or {}),
+                "bar_minutes": _bar_minutes(spec.timeframe)}
+        try:
+            b = load_heldout(spec.timeframe, "b", syms, cut,
+                             {**cfg, "risk": risk},
+                             requires=tuple(spec.data_requires or ()),
+                             paths=paths)
+            legs = pn.legs_for(compile_spec(spec), b)
+            if not legs:
+                notes[spec.id] = f"no {spec.timeframe} history before the cut"
+                continue
+            f, n = pn.fills_for(legs, spec.exit, risk, grid_tf, t0=t0)
+            fills.extend(f)
+            notes[spec.id] = f"{n} trades on {len(legs)} symbols"
+        except Exception as e:                          # noqa: BLE001
+            notes[spec.id] = f"error: {e}"[:200]
+    return fills, notes
+
+
+def current_cut(tf: str, discovery_symbols, paths: dict | None,
+                recorded: int) -> int:
+    """The LATEST cut any discovery evaluation can have used.
+
+    `evaluate.load_bundle` recomputes the cut from the store on every batch,
+    and the store grows, so the cut drifts forward: recorded 2025-03-08,
+    recomputed 2025-03-09 a week later. Held-out B must start after every
+    bar discovery could have seen, so it takes the later of the two."""
+    from ..data.feed import DataFeed
+    from .universe import NoExchange
+    feed = DataFeed(exchange=NoExchange(), db_path=(paths or {}).get("candles"))
+    frames = {}
+    for sym in discovery_symbols:
+        try:
+            df = feed.cached_ohlcv(sym, tf, limit=200000)
+        except Exception:                               # noqa: BLE001
+            continue
+        if df is not None and len(df) >= 500:
+            frames[sym] = df
+    now = slices.cut_ms(frames) or 0
+    return max(int(recorded), int(now))
+
+
+def examine(c, payload: dict) -> dict:
+    """Gate 1 and gate 3 for one candidate. `looked` flips to True the
+    moment a held-out price has been read; from then on the look counts."""
+    from ..strategy.compile import compile_spec
+    from ..strategy.spec import StrategySpec
+    cfg, paths, tf = payload["cfg"], payload.get("paths"), c.tf
+    cut = current_cut(tf, payload["discovery_symbols"], paths,
+                      int(payload["cut_ms"]))
+    out = {"hash": c.hash, "looked": False}
+    compiled = compile_spec(c.to_spec())
+    risk = cfg.get("risk") or {}
+
+    a_b = load_heldout(tf, "a", payload["heldout_symbols"], cut, cfg,
+                       requires=c.requires, paths=paths)
+    out["looked"] = True
+    b_b = load_heldout(tf, "b", list(payload["discovery_symbols"])
+                       + list(payload["heldout_symbols"]), cut, cfg,
+                       requires=c.requires, paths=paths)
+    legs_a, legs_b = pn.legs_for(compiled, a_b), pn.legs_for(compiled, b_b)
+    seed = int(payload.get("seed", 17))
+    a = consistency(legs_a, compiled.spec.exit, risk, tf, seed=seed) \
+        if legs_a else {"trades": 0, "consistency_p": None,
+                        "scored_symbols": 0}
+    b = consistency(legs_b, compiled.spec.exit, risk, tf, seed=seed) \
+        if legs_b else {"trades": 0, "consistency_p": None,
+                        "scored_symbols": 0}
+    rot = pn.common_rotation(legs_b, compiled.spec.exit, risk, tf,
+                             b_b.equity, b_b.risk_pct, b_b.max_open,
+                             draws=int(payload["draws"]), seed=seed) \
+        if legs_b else {"p": None, "reason": "no B legs"}
+    for r in (a, b):
+        r.pop("symbols", None)
+    out.update(a=a, b=b, rotation=rot, gate1=gate1(a, b, rot), cut_ms=cut)
+
+    if legs_b:
+        t0 = min(int(pn._clock(l.df)[0]) for l in legs_b)
+        cand, _ = pn.fills_for(legs_b, compiled.spec.exit, risk, tf, t0=t0)
+        specs = [StrategySpec.from_dict(d) for d in payload.get("book") or []]
+        book, notes = book_fills(specs, cut, tf, t0, cfg, paths,
+                                 payload["discovery_symbols"])
+        out["gate3"] = {**gate3(cand, book, b_b.equity, b_b.risk_pct,
+                                b_b.max_open), "book": notes}
+    else:
+        out["gate3"] = {"passed": False, "reason": "no B legs", "book": {}}
+    return out
