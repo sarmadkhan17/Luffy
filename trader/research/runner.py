@@ -203,11 +203,21 @@ class ResearchRunner:
         # universe while the guard still reports the full one. Read the
         # bundle's own count when the child reports it (an older or mocked
         # child that does not is trusted, not refused).
+        # A control runs on the incumbent's declared set, not the discovery
+        # universe, so it answers to the control floor. HYPE's 4h history
+        # begins 2025-05, after the discovery cut, so the declared 16 can
+        # never load more than 15 here — under the discovery floor this
+        # refused every control batch forever (273 of 335 on 2026-09-14).
         loaded = (res.value or {}).get("loaded_symbols")
-        min_syms = int(self._r("min_discovery_symbols"))
+        if batch.round == "control":
+            floor_key, min_syms = ("MIN_CONTROL_SYMBOLS",
+                                   control.MIN_CONTROL_SYMBOLS)
+        else:
+            floor_key = "min_discovery_symbols"
+            min_syms = int(self._r("min_discovery_symbols"))
         if loaded is not None and int(loaded) < min_syms:
             msg = (f"bundle loaded only {loaded} of {len(symbols)} "
-                   f"requested symbols, below min_discovery_symbols="
+                   f"requested symbols, below {floor_key}="
                    f"{min_syms} — refusing rather than searching a "
                    f"degraded universe")
             self.ledger.finish_batch(bid, False, time.monotonic() - t0, msg)
