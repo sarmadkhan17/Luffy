@@ -115,8 +115,12 @@ mechanism:
 
 research:                        # the search — docs/superpowers/specs/
                                  # 2026-09-11-luffy-research-pipeline-design.md
-  enabled: false                 # measured 2026-09-13 (Task 15); the operator
-                                 # turns this on after reviewing the measurement
+  enabled: true                  # measured 2026-09-13 (Task 15), reviewed, and
+                                 # turned ON the same day. The thread is started
+                                 # at boot only (kernel.py `_research_loop` is
+                                 # spawned behind this flag), so flipping this
+                                 # needs a kernel restart, and the loop then
+                                 # sleeps 300s before its first step.
   # A horizon is searched only if its discovery universe can carry the test
   # AND its plain-window control is powered. consistency_p is a binomial
   # tail: at 8 symbols the 0.01 gate is unreachable even when every symbol

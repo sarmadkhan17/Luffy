@@ -345,6 +345,25 @@ def test_a_batch_is_refused_when_the_bundle_loaded_too_few_symbols(
     assert Ledger(r.journal).control("4h", "ohlcv") is None
 
 
+def test_a_control_answers_to_the_control_floor_not_the_discovery_floor(
+        tmp_path):
+    """The incumbent's declared 16 includes HYPE, whose 4h history starts
+    after the discovery cut, so a real control bundle loads 15. Judged
+    against `min_discovery_symbols=16` that refused every control batch,
+    forever; the control's own floor is `MIN_CONTROL_SYMBOLS`."""
+    def fifteen(fn, payload):
+        res = _short_bundle(fn, payload)
+        if fn.__name__ != "measure_job":
+            res.value["loaded_symbols"] = 15
+        return res
+
+    r, _ = _runner(tmp_path, fifteen)
+    r.step()                             # measure
+    out = r.step()                       # control — 15 of the declared 16
+    assert out["ok"] is True
+    assert Ledger(r.journal).control("4h", "ohlcv") is not None
+
+
 def test_the_label_gate_uses_the_configured_control_max_p(tmp_path):
     """`control.label()` used to hardcode 0.01 while `powered()` read
     `control_max_p` from config — the two halves of one gate would then
