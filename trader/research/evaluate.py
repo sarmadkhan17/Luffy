@@ -61,6 +61,9 @@ class Bundle:
     equity: float = 2000.0
     risk_pct: float = 0.5
     max_open: int = 8
+    # symbol -> first tradeable bar. Empty on discovery; on held-out B the
+    # bars before it are warmup context from before the cut.
+    first_bars: dict = field(default_factory=dict)
 
 
 def load_bundle(tf: str, symbols, cfg: dict, requires=(),

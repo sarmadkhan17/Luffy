@@ -95,6 +95,34 @@ CREATE TABLE IF NOT EXISTS research_slices (
     measured_at TEXT
 );
 
+-- the error budget's sequence: one row per held-out look, never reset
+CREATE TABLE IF NOT EXISTS research_tests (
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    hash TEXT, tf TEXT, geo TEXT,
+    gate TEXT,                     -- gate1 (phase 4 adds gate2)
+    p REAL,
+    alpha_t REAL,
+    rejected INTEGER,
+    braked INTEGER,
+    detail TEXT,
+    at TEXT
+);
+
+-- what the referee did with each survivor
+CREATE TABLE IF NOT EXISTS research_candidates (
+    hash TEXT PRIMARY KEY,
+    tf TEXT, geo TEXT,
+    state TEXT,                    -- queued | twin | deferred | gate1_fail |
+                                   -- gate3_fail | referee_passed |
+                                   -- reason_passed | admitted | refused
+    twin_of TEXT,
+    rank REAL,
+    gate1 TEXT, gate3 TEXT,
+    entries TEXT,                  -- JSON {symbol: [entry bar ms, ...]}
+    reason TEXT,
+    updated_at TEXT
+);
+
 CREATE TABLE IF NOT EXISTS research_batches (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     started TEXT, finished TEXT,
@@ -322,6 +350,66 @@ class Ledger:
                 "error=? WHERE id=?",
                 (now_utc().isoformat(), 1 if ok else 0, float(elapsed_s),
                  (error or "")[:500], int(batch_id)))
+
+    # ── the error budget ─────────────────────────────────────────────────
+    def tests(self) -> list:
+        return self.journal.query(
+            "SELECT * FROM research_tests ORDER BY seq")
+
+    def next_alpha(self, alpha: float, w0: float,
+                   brake: float = 1.0) -> tuple[int, float]:
+        """(t, alpha_t) for the next look — the sequence survives restarts
+        because it IS the table."""
+        from . import fdr
+        rows = self.tests()
+        t = len(rows) + 1
+        rej = [i for i, r in enumerate(rows, start=1) if r["rejected"]]
+        return t, fdr.alpha_at(t, rej, alpha, w0) * float(brake)
+
+    def record_test(self, h: str, tf: str, geo: str, gate: str, p: float,
+                    alpha_t: float, braked: bool, detail: dict) -> bool:
+        rejected = p is not None and float(p) <= float(alpha_t)
+        with self.journal._tx() as c:
+            c.execute(
+                "INSERT INTO research_tests (hash, tf, geo, gate, p, alpha_t, "
+                "rejected, braked, detail, at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (h, tf, geo, gate, p, float(alpha_t), 1 if rejected else 0,
+                 1 if braked else 0, json.dumps(detail)[:20000],
+                 now_utc().isoformat()))
+        return rejected
+
+    # ── the referee's candidates ─────────────────────────────────────────
+    def candidate(self, h: str) -> dict | None:
+        rows = self.journal.query(
+            "SELECT * FROM research_candidates WHERE hash=?", (h,))
+        return dict(rows[0]) if rows else None
+
+    def candidates(self, tf: str | None = None, geo: str | None = None,
+                   state: str | None = None) -> list:
+        sql, args = "SELECT * FROM research_candidates WHERE 1=1", []
+        for col, v in (("tf", tf), ("geo", geo), ("state", state)):
+            if v is not None:
+                sql += f" AND {col}=?"
+                args.append(v)
+        return self.journal.query(sql + " ORDER BY rank DESC, hash",
+                                  tuple(args))
+
+    def set_candidate(self, h: str, tf: str, geo: str, state: str,
+                      **fields) -> None:
+        cur = self.candidate(h) or {}
+        row = {"twin_of": cur.get("twin_of"), "rank": cur.get("rank"),
+               "gate1": cur.get("gate1"), "gate3": cur.get("gate3"),
+               "entries": cur.get("entries"), "reason": cur.get("reason")}
+        for k, v in fields.items():
+            row[k] = json.dumps(v) if isinstance(v, (dict, list)) else v
+        with self.journal._tx() as c:
+            c.execute(
+                "INSERT OR REPLACE INTO research_candidates (hash, tf, geo, "
+                "state, twin_of, rank, gate1, gate3, entries, reason, "
+                "updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (h, tf, geo, state, row["twin_of"], row["rank"], row["gate1"],
+                 row["gate3"], row["entries"], (row["reason"] or "")[:500],
+                 now_utc().isoformat()))
 
     # ── reporting ────────────────────────────────────────────────────────
     def counts(self) -> dict:
