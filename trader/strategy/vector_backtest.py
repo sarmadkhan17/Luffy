@@ -58,6 +58,139 @@ def _target_distance(exit_spec: ExitSpec, ref_px: float, atr: float,
     return ref_px * float(t.get("v", 0.02))          # pct
 
 
+def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
+           max_bars, trail_mult, arm_at_r, exit_sig, fund_arr, funding_8h,
+           bar_minutes):
+    """One trade entered at bar `i`'s close: (exit_i, stop distance, P&L per
+    unit of size). Every cost scales with size, so P&L = unit P&L x amount
+    and the R multiple — unit P&L / stop distance — does not depend on the
+    balance. `simulate` and the research rotation table both call this, so
+    there is one definition of a trade."""
+    sign = 1.0 if side == "long" else -1.0
+    px = closes[i]
+    slip = atr[i] * slip_frac
+    entry = px + sign * slip
+    n = len(closes)
+    # stop distance is measured from the CLOSE (as the old engine does),
+    # then applied from the slipped entry
+    sl_dist = _stop_distance(exit_spec, px, atr[i], df, i, side)
+    tp_dist = _target_distance(exit_spec, px, atr[i], sl_dist)
+    sl = entry - sign * sl_dist
+    tp = entry + sign * tp_dist if tp_dist is not None else None
+
+    end = min(i + max_bars, n - 1)
+    exit_i, exit_px = end, closes[end]
+    best = entry
+    for j in range(i + 1, end + 1):
+        if trail_mult:
+            best = max(best, highs[j]) if side == "long" \
+                else min(best, lows[j])
+            if abs(best - entry) >= arm_at_r * sl_dist:
+                trailed = best - sign * trail_mult * atr[j]
+                sl = max(sl, trailed) if side == "long" \
+                    else min(sl, trailed)
+        hit_sl = lows[j] <= sl if side == "long" else highs[j] >= sl
+        hit_tp = tp is not None and (
+            highs[j] >= tp if side == "long" else lows[j] <= tp)
+        if hit_sl:                                    # pessimistic: stop first
+            exit_i, exit_px = j, sl
+            break
+        if hit_tp:
+            exit_i, exit_px = j, tp
+            break
+        if exit_sig is not None and exit_sig[j]:
+            exit_i, exit_px = j, closes[j]
+            break
+
+    exit_px = exit_px - sign * slip                   # exits pay the spread too
+    gross = (exit_px - entry) * sign
+    fees = fee * (entry + exit_px)
+    hours = (exit_i - i) * bar_minutes / 60.0
+    if fund_arr is None:
+        carry = abs(funding_8h) * (hours / 8.0)
+    else:
+        held = fund_arr[i:exit_i]
+        known = held[np.isfinite(held)]
+        per_bar = bar_minutes / 60.0 / 8.0
+        # the real signed rate where the venue told us, the flat
+        # conservative charge for every bar it did not
+        carry = float(np.sum(known) * sign * per_bar) \
+            + abs(funding_8h) * (len(held) - len(known)) * per_bar
+    return exit_i, sl_dist, gross - fees - carry * exit_px
+
+
+def trade_table(df: pd.DataFrame, exit_spec: ExitSpec, risk_cfg: dict,
+                funding: np.ndarray | None = None,
+                first_bar: int = 0) -> dict:
+    """Every bar's trade, both sides, computed once: {side: (exit_i, r,
+    px_over_stop)} arrays with exit_i = -1 where no trade can open.
+
+    A rotation of the entries re-uses these outcomes instead of re-running
+    the engine, which is what makes thousands of null draws affordable.
+    `simulate` over the same entries is reproduced exactly by
+    `walk_table` — tests/test_research_portfolio_null.py holds that."""
+    n = len(df)
+    fee = float(risk_cfg.get("taker_fee_pct", 0.05)) / 100.0
+    slip_frac = float(risk_cfg.get("slippage_atr_frac", 0.06))
+    funding_8h = float(risk_cfg.get("funding_rate_8h", 0.0001))
+    bar_minutes = float(risk_cfg.get("bar_minutes", 15))
+    fund_arr = None
+    if funding is not None:
+        fund_arr = np.asarray(funding, dtype=float)
+        if len(fund_arr) != n:
+            fund_arr = None
+    closes = df["close"].to_numpy(float)
+    highs = df["high"].to_numpy(float)
+    lows = df["low"].to_numpy(float)
+    atr = atr_series(df, 14).to_numpy(float)
+    max_bars = int(exit_spec.time.get("max_bars", 32) or 32)
+    trail = exit_spec.trail or {"kind": "none"}
+    trail_mult = float(trail.get("mult", 0.0)) \
+        if trail.get("kind") == "atr" else 0.0
+    arm_at_r = float(trail.get("arm_at_r", 1.0))
+    out = {}
+    for side in ("long", "short"):
+        ex = np.full(n, -1, dtype=np.int64)
+        r = np.zeros(n)
+        pos = np.zeros(n)
+        for i in range(max(WARMUP, int(first_bar)), n - 1):
+            if not np.isfinite(atr[i]) or atr[i] <= 0:
+                continue
+            e, sl_dist, unit = _trade(
+                i, side, df, closes, highs, lows, atr, exit_spec, slip_frac,
+                fee, max_bars, trail_mult, arm_at_r, None, fund_arr,
+                funding_8h, bar_minutes)
+            ex[i], r[i], pos[i] = e, unit / sl_dist, closes[i] / sl_dist
+        out[side] = (ex, r, pos)
+    return out
+
+
+def walk_table(table: dict, long: np.ndarray, short: np.ndarray,
+               risk_cfg: dict, equity: float = 2000.0) -> list:
+    """`simulate`'s entry walk over a `trade_table`: [(entry_i, exit_i, r)].
+    One position at a time, long wins a bar both sides fire on, and the
+    dust guard replays against the leg's own running balance."""
+    risk_frac = float(risk_cfg["risk_per_trade_pct"]) / 100.0
+    lex, lr, lpos = table["long"]
+    sex, sr, spos = table["short"]
+    n = len(lex)
+    eq, cursor, out = float(equity), WARMUP, []
+    for i in np.flatnonzero(long | short):
+        i = int(i)
+        if i < cursor or i >= n - 1:
+            continue
+        ex, r, pos = (lex, lr, lpos) if long[i] else (sex, sr, spos)
+        if ex[i] < 0:
+            continue
+        staked = eq * risk_frac
+        if staked * pos[i] < 10:                      # dust guard
+            continue
+        out.append((i, int(ex[i]), float(r[i])))
+        eq += r[i] * staked
+        cursor = int(ex[i]) + 1
+    return out
+
+
 def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
              exit_spec: ExitSpec, risk_cfg: dict, equity: float = 2000.0,
              genome_id: str = "", symbol: str = "BT",
@@ -111,60 +244,15 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
         if not np.isfinite(atr[i]) or atr[i] <= 0:
             continue
         side = "long" if long[i] else "short"
-        sign = 1.0 if side == "long" else -1.0
         px = closes[i]
-        slip = atr[i] * slip_frac
-        entry = px + sign * slip
-        # stop distance is measured from the CLOSE (as the old engine does),
-        # then applied from the slipped entry
-        sl_dist = _stop_distance(exit_spec, px, atr[i], df, i, side)
-        tp_dist = _target_distance(exit_spec, px, atr[i], sl_dist)
-        sl = entry - sign * sl_dist
-        tp = entry + sign * tp_dist if tp_dist is not None else None
+        exit_i, sl_dist, unit_pnl = _trade(
+            i, side, df, closes, highs, lows, atr, exit_spec, slip_frac,
+            fee, max_bars, trail_mult, arm_at_r, exit_sig, fund_arr,
+            funding_8h, bar_minutes)
         amount = (equity_curve[-1] * risk_frac) / sl_dist
         if amount * px < 10:                          # dust guard
             continue
-
-        end = min(i + max_bars, n - 1)
-        exit_i, exit_px = end, closes[end]
-        best = entry
-        for j in range(i + 1, end + 1):
-            if trail_mult:
-                best = max(best, highs[j]) if side == "long" \
-                    else min(best, lows[j])
-                if abs(best - entry) >= arm_at_r * sl_dist:
-                    trailed = best - sign * trail_mult * atr[j]
-                    sl = max(sl, trailed) if side == "long" \
-                        else min(sl, trailed)
-            hit_sl = lows[j] <= sl if side == "long" else highs[j] >= sl
-            hit_tp = tp is not None and (
-                highs[j] >= tp if side == "long" else lows[j] <= tp)
-            if hit_sl:                                # pessimistic: stop first
-                exit_i, exit_px = j, sl
-                break
-            if hit_tp:
-                exit_i, exit_px = j, tp
-                break
-            if exit_sig is not None and exit_sig[j]:
-                exit_i, exit_px = j, closes[j]
-                break
-
-        exit_px = exit_px - sign * slip               # exits pay the spread too
-        gross = (exit_px - entry) * sign * amount
-        fees = fee * (entry + exit_px) * amount
-        hours = (exit_i - i) * bar_minutes / 60.0
-        if fund_arr is None:
-            carry = abs(funding_8h) * (hours / 8.0)
-        else:
-            held = fund_arr[i:exit_i]
-            known = held[np.isfinite(held)]
-            per_bar = bar_minutes / 60.0 / 8.0
-            # the real signed rate where the venue told us, the flat
-            # conservative charge for every bar it did not
-            carry = float(np.sum(known) * sign * per_bar) \
-                + abs(funding_8h) * (len(held) - len(known)) * per_bar
-        funding_cost = carry * exit_px * amount
-        pnl = gross - fees - funding_cost
+        pnl = unit_pnl * amount
 
         if fills_out is not None:
             # R is measured against the equity actually staked at THIS entry,
