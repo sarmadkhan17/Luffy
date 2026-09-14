@@ -390,10 +390,10 @@ register's highest-severity items were all closed on 2026-09-02; see
   window that includes the entry commission; an estimate is booked only when
   the venue will not answer, and says so in a `pnl_estimated` event. Rows
   closed before the fix are still flattered. `strategy/proposer.py`, left
-  with no caller, was deleted the same day. **Still open:**
-  `test_macro_guard::test_a_restart_reuses_the_cached_calendar` fails on the
-  wall clock since the week of 2026-09-04 passed (cache freshness reads real
-  time while the test pins `_now`).
+  with no caller, was deleted the same day.
+  `test_macro_guard::test_a_restart_reuses_the_cached_calendar`, failing on
+  the wall clock since 2026-09-04, was fixed 2026-09-14: `_load_cached` now
+  reads cache age and the event horizon off `_now()`, the guard's one clock.
 
 - **The book's only strategy does not generalise off its declared universe,
   and only forward trading can now settle it.** Donchian Breakout Trail scores
@@ -746,9 +746,14 @@ These are facts about the search space, not beliefs to be rewritten.
     (no BNB discount active). Volume-weighted commission **4.078 bps**, and
     `fapiPrivateGetCommissionRate` confirms taker **0.0400%** on 14 of the 16
     declared symbols, 0.0500% on TAO and HYPE. Config charged 0.05 on
-    everything. Now 0.04. **Production fees are UNMEASURED** — a production
-    `commissionRate` call answers -2015 on the demo key, and Binance's
-    published VIP0 taker is 0.05%. Re-read it before `BINANCE_DEMO=false`.
+    everything. Now 0.04. **Production fees, measured 2026-09-13** with a
+    reading-only production key (the demo key answers -2015): **taker
+    0.0500%, maker 0.0200% on all 16 declared symbols** — Binance VIP0. So
+    `taker_fee_pct: 0.04` is the DEMO rate: every backtest and the live
+    booking estimate under-charge production by 1 bp a side on 14 of the 16.
+    Left at 0.04 deliberately — switching belongs to the `BINANCE_DEMO=false`
+    decision. Re-measure with `scripts/read_prod_fee.py` (credentials from
+    `BINANCE_PROD_READONLY_KEY`/`_SECRET`, names the kernel never reads).
   - **Slippage.** Of 56 real orders >= $1,000, **41 filled at a single
     price**, median intra-order range 0.00 bps — there is no measurable
     impact term at this size. Walking the live production book (16 symbols x
