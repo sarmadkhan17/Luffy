@@ -408,3 +408,130 @@ def test_discovery_null_draws_at_or_above_the_floor_passes_through(tmp_path):
                                "discovery_null_draws": MIN_DRAWS + 10}}
     r = ResearchRunner(Journal(tmp_path / "j.db"), cfg, run=None)
     assert r._null_draws() == MIN_DRAWS + 10
+
+
+# ── the referee (phase 3) ────────────────────────────────────────────────
+def _survivors(r, n=3):
+    """Measure, then write `n` testable survivors straight into the ledger."""
+    from trader.research.combo import Combination
+    r.cfg = {**CFG, "research": {**CFG["research"], "referee": False}}
+    r.step()                                             # measure
+    r.cfg = CFG
+    parts = vocab.parts_for("4h", r.ledger.gauges("4h"))
+    out = []
+    for i in range(n):
+        c = Combination((parts[i],), "4h", "trail")
+        r.ledger.record_result(
+            {"hash": c.hash, "tf": "4h", "geo": "trail", "k": 1,
+             "parts": list(c.keys), "window": c.window, "trades": 300,
+             "consistency_p": 1e-4, "portfolio": {"total_pct": 50.0 - i,
+                                                  "max_dd_pct": 20.0},
+             "scored_symbols": 19, "testable": True, "verdict": "scored"},
+            "survivor", "every part earns its place", {})
+        out.append(c)
+    return out
+
+
+def _referee_reply(entries, examine=None, fail=False):
+    def reply(fn, payload):
+        if fn.__name__ == "select_job":
+            return ChildResult(ok=True, elapsed_s=1.0, value={
+                "entries": {d_hash: entries[d_hash] for d_hash in entries}})
+        if fn.__name__ == "referee_job":
+            if fail:
+                return ChildResult(ok=False, elapsed_s=1.0, error="boom")
+            return ChildResult(ok=True, elapsed_s=1.0, value=examine)
+        return _measured(fn, payload)
+    return reply
+
+
+def _setup(tmp_path, examine=None, fail=False, overlap=True):
+    from trader.research import referee as rf
+    holder = {"entries": {}}
+
+    def reply(fn, payload):
+        return _referee_reply(holder["entries"], examine, fail)(fn, payload)
+
+    r, calls = _runner(tmp_path, reply)
+    combos = _survivors(r)
+    same = rf.encode_entries({("BTC/USDT", 1), ("BTC/USDT", 2)})
+    other = rf.encode_entries({("ETH/USDT", 9)})
+    holder["entries"] = {combos[0].hash: same,
+                         combos[1].hash: same if overlap else other,
+                         combos[2].hash: other}
+    return r, calls, combos
+
+
+def _passing(p=1e-5, gate3=True):
+    return {"hash": "x", "looked": True,
+            "a": {"trades": 300, "consistency_p": 1e-6},
+            "b": {"trades": 300, "consistency_p": 1e-6},
+            "rotation": {"p": p},
+            "gate1": {"p": p, "reason": f"B common rotation p={p:.2e}"},
+            "gate3": {"passed": gate3, "reason": "adds compounded return"
+                      if gate3 else "book return 10% -> 9% with it"}}
+
+
+def test_survivors_are_queued_and_twins_cost_nothing(tmp_path):
+    r, _calls, combos = _setup(tmp_path)
+    out = r.step()
+    assert out["kind"] == "referee_select"
+    assert out["queued"] == 2 and out["twins"] == 1
+    assert Ledger(r.journal).candidate(combos[1].hash)["state"] == "twin"
+    assert Ledger(r.journal).tests() == []
+
+
+def test_a_candidate_that_clears_both_gates_is_referee_passed(tmp_path):
+    r, calls, combos = _setup(tmp_path, examine=_passing())
+    r.step()                                             # select
+    out = r.step()                                       # examine best
+    assert out["kind"] == "referee" and out["state"] == "referee_passed"
+    assert out["hash"] == combos[0].hash                 # highest rank first
+    tests = Ledger(r.journal).tests()
+    assert len(tests) == 1 and tests[0]["rejected"] == 1
+    payload = [c for c in calls if c["fn"] == "referee_job"][0]["payload"]
+    assert payload["draws"] >= 1599                      # alpha_1 = 0.0025
+
+
+def test_gate1_fail_and_gate3_fail_are_recorded_with_reasons(tmp_path):
+    r, _c, combos = _setup(tmp_path, examine=_passing(p=0.2))
+    r.step()
+    assert r.step()["state"] == "gate1_fail"
+    assert Ledger(r.journal).tests()[0]["rejected"] == 0
+
+    r2, _c, _ = _setup(tmp_path / "b", examine=_passing(gate3=False))
+    r2.step()
+    assert r2.step()["state"] == "gate3_fail"
+
+
+def test_a_crashing_look_retries_then_is_charged(tmp_path):
+    r, _c, combos = _setup(tmp_path, fail=True)
+    r.step()                                             # select
+    for _ in range(2):
+        assert r.step()["ok"] is False
+        assert Ledger(r.journal).tests() == []
+        assert Ledger(r.journal).candidate(combos[0].hash)["state"] == \
+            "queued"
+    r.step()                                             # third failure
+    tests = Ledger(r.journal).tests()
+    assert len(tests) == 1 and tests[0]["p"] == 1.0
+    assert Ledger(r.journal).candidate(combos[0].hash)["state"] == \
+        "gate1_fail"
+
+
+def test_a_level_the_draws_cannot_resolve_defers_without_spending(tmp_path):
+    r, calls, combos = _setup(tmp_path, examine=_passing())
+    r.cfg = {**CFG, "research": {**CFG["research"],
+                                 "referee_max_draws": 100}}
+    r.step()
+    out = r.step()
+    assert out["state"] == "deferred"
+    assert Ledger(r.journal).tests() == []
+    assert not [c for c in calls if c["fn"] == "referee_job"]
+
+
+def test_the_referee_can_be_switched_off(tmp_path):
+    r, calls, _ = _setup(tmp_path, examine=_passing())
+    r.cfg = {**CFG, "research": {**CFG["research"], "referee": False}}
+    r.step()
+    assert not [c for c in calls if c["fn"] in ("select_job", "referee_job")]

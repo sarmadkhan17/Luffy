@@ -61,16 +61,18 @@ def _mask(a, first_bar: int) -> np.ndarray:
     return a
 
 
-def _prepare(legs, exit_spec, risk: dict, tf: str):
+def _prepare(legs, exit_spec, risk: dict, tf: str, t0: int | None = None):
     """Build each leg's trade table and bar grid once — a draw re-uses them.
-    The grid is relative to the earliest leg, so it is rebuilt only when the
-    set of legs changes."""
-    key = (tf, tuple(id(l) for l in legs))
+    The grid is relative to `t0` (default: the earliest leg), so it is
+    rebuilt only when the set of legs or the origin changes. `tf` sets the
+    grid's bar length, which need not be the legs' own timeframe."""
+    key = (tf, t0, tuple(id(l) for l in legs))
     if all(getattr(l, "_prep_key", None) == key for l in legs):
         return
     step = _TF_SECONDS.get(tf, 900)
     clocks = {id(l): _clock(l.df) for l in legs}
-    t0 = min(int(c[0]) for c in clocks.values())
+    if t0 is None:
+        t0 = min(int(c[0]) for c in clocks.values())
     for l in legs:
         if l.table is None:
             l.table = trade_table(l.df, exit_spec, risk, funding=l.funding,
@@ -81,10 +83,10 @@ def _prepare(legs, exit_spec, risk: dict, tf: str):
         l._prep_key = key
 
 
-def fills_for(legs, exit_spec, risk: dict, tf: str,
-              offset: int = 0) -> tuple[list, int]:
+def fills_for(legs, exit_spec, risk: dict, tf: str, offset: int = 0,
+              t0: int | None = None) -> tuple[list, int]:
     """Every leg's fills on one bar grid, entries rolled by `offset` bars."""
-    _prepare(legs, exit_spec, risk, tf)
+    _prepare(legs, exit_spec, risk, tf, t0)
     fills, trades = [], 0
     for l in legs:
         lo = _mask(np.roll(l._long, offset), l.first_bar)
