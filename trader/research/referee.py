@@ -8,7 +8,8 @@ Spec Part 4. Cheapest first, first failure recorded with its reason:
            times on one regime)
 - gate 1   held-out A (unseen markets, same era) AND held-out B (every
            market, the later era): cross-symbol consistency on both, plus
-           the common-rotation null on B. One candidate spends ONE test —
+           the common-rotation null on B. Consistency is read corrected
+           for cross-symbol dependence. One candidate spends ONE test —
            its p is the max of the three, valid for "works on both".
 - gate 3   the book with the candidate beats the book without it on
            compounded return over B, return/drawdown no worse. Not a
@@ -42,6 +43,8 @@ B_CONTEXT_BARS = WARMUP + 400
 MIN_TRADES = 60
 #: per-symbol null draws for the consistency reading on held-out slices
 CONSISTENCY_DRAWS = 60
+#: matched-offset draws for the cross-symbol dependence estimate
+DEPENDENCE_DRAWS = 200
 #: a candidate whose entries overlap an earlier look's by more than this is
 #: the same question — the Analyst's own redundancy cut
 MAX_OVERLAP = 0.6
@@ -142,15 +145,58 @@ def _pf(walk, risk: dict, equity: float = 2000.0) -> float:
     return win / loss
 
 
+def null_dependence(legs, risk: dict, draws: int = DEPENDENCE_DRAWS,
+                    seed: int = 29) -> dict:
+    """Mean pairwise rank correlation of the legs' null profit factors when
+    every leg is rotated by the SAME offset.
+
+    Under no edge each symbol's actual is one draw from its rotation null,
+    and the symbols' actuals are one JOINT draw — so how their null
+    statistics move together at matched offsets is how their percentiles
+    move together. Legs must already be `_prepare`d. Offsets come from the
+    shortest leg's range, so every draw is a legal rotation of every leg.
+    """
+    legs = [l for l in legs if getattr(l, "table", None) is not None]
+    if len(legs) < 2:
+        return {"rho_bar": None, "pairs": 0, "draws": 0}
+    n = min(len(l.df) - l.first_bar for l in legs)
+    lo_off, hi_off = WARMUP + 1, n - WARMUP - 1
+    if hi_off <= lo_off:
+        return {"rho_bar": None, "pairs": 0, "draws": 0}
+    offs = np.random.default_rng(seed).integers(lo_off, hi_off,
+                                                size=int(draws))
+    mat = np.full((len(offs), len(legs)), np.nan)
+    for j, l in enumerate(legs):
+        for k, off in enumerate(offs):
+            nw = walk_table(l.table,
+                            pn._mask(np.roll(l._long, off), l.first_bar),
+                            pn._mask(np.roll(l._short, off), l.first_bar),
+                            risk)
+            if nw:
+                mat[k, j] = min(_pf(nw, risk), 1e6)
+    import pandas as pd
+    corr = pd.DataFrame(mat).corr(method="spearman",
+                                  min_periods=null_baseline.MIN_DRAWS)
+    c = corr.to_numpy()
+    iu = np.triu_indices(len(legs), 1)
+    vals = c[iu]
+    vals = vals[np.isfinite(vals)]
+    if not len(vals):
+        return {"rho_bar": None, "pairs": 0, "draws": len(offs)}
+    return {"rho_bar": round(float(vals.mean()), 4), "pairs": int(len(vals)),
+            "draws": int(len(offs))}
+
+
 def consistency(legs, exit_spec, risk: dict, tf: str,
                 draws: int = CONSISTENCY_DRAWS, seed: int = 17,
-                min_symbol_trades: int = 8) -> dict:
+                min_symbol_trades: int = 8,
+                dependence_draws: int = DEPENDENCE_DRAWS) -> dict:
     """Per-symbol rotation percentiles and their cross-symbol p, respecting
     each leg's `first_bar` (a rotation is taken, THEN masked). Walks the
     legs' trade tables, so the null costs a walk per draw, not an engine
     run."""
     pn._prepare(legs, exit_spec, risk, tf)
-    pcts, trades, per = [], 0, {}
+    pcts, trades, per, scored = [], 0, {}, []
     for l in legs:
         lo, sh = pn._mask(l._long, l.first_bar), pn._mask(l._short,
                                                           l.first_bar)
@@ -179,8 +225,17 @@ def consistency(legs, exit_spec, risk: dict, tf: str,
         if pct is not None:
             per[l.symbol]["null_pctile"] = round(pct, 4)
             pcts.append(pct)
+            scored.append(l)
     pfs = [v["pf"] for v in per.values() if v["pf"] is not None]
+    dep = null_dependence(scored, risk, draws=dependence_draws, seed=seed) \
+        if len(scored) >= null_baseline.MIN_SYMBOLS else {"rho_bar": None}
+    rho = dep.get("rho_bar")
     return {"consistency_p": null_baseline.consistency_p(pcts),
+            "consistency_p_dep": null_baseline.consistency_p_dependent(
+                pcts, rho),
+            "rho_bar": rho,
+            "n_eff": round(null_baseline.effective_n(len(pcts), rho), 2)
+            if rho is not None else None,
             "scored_symbols": len(pcts), "trades": trades,
             "median_pf": round(st.median(pfs), 3) if pfs else 0.0,
             "symbols": per}
@@ -206,8 +261,15 @@ def gate1(a: dict, b: dict, rot: dict,
     if rot.get("p") is None:
         return {"p": 1.0, "reason": "untestable: common rotation on B "
                                     f"({rot.get('reason', 'no fills')})"}
-    ps = {"A consistency": float(a["consistency_p"]),
-          "B consistency": float(b["consistency_p"]),
+    # the dependence-corrected p, never the raw one: the raw binomial counts
+    # one market-wide effect once per symbol (2026-09-14: Donchian on B read
+    # 9.2e-05 raw, 0.24 corrected). A missing estimate is untestable.
+    for name, r in (("A", a), ("B", b)):
+        if r.get("consistency_p_dep") is None:
+            return {"p": 1.0, "reason": f"untestable: held-out {name} has no "
+                                        f"dependence estimate"}
+    ps = {"A consistency": float(a["consistency_p_dep"]),
+          "B consistency": float(b["consistency_p_dep"]),
           "B common rotation": float(rot["p"])}
     worst = max(ps, key=ps.get)
     return {"p": ps[worst], "worst": worst, "ps": ps,

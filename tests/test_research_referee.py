@@ -70,12 +70,27 @@ def test_held_out_b_trades_from_the_cut_with_warmup_from_before_it(store):
 
 
 def test_gate1_spends_one_p_the_worst_of_three():
-    a = {"trades": 200, "consistency_p": 0.001, "scored_symbols": 10}
-    b = {"trades": 200, "consistency_p": 0.002, "scored_symbols": 12}
+    a = {"trades": 200, "consistency_p": 1e-6, "consistency_p_dep": 0.001,
+         "scored_symbols": 10}
+    b = {"trades": 200, "consistency_p": 1e-6, "consistency_p_dep": 0.002,
+         "scored_symbols": 12}
     g = rf.gate1(a, b, {"p": 0.004})
     assert g["p"] == 0.004 and g["worst"] == "B common rotation"
     g = rf.gate1(a, b, {"p": 0.02})
     assert g["p"] == 0.02 and "B common rotation" in g["reason"]
+
+
+def test_gate1_charges_the_dependence_corrected_consistency():
+    """Raw consistency reads 9e-05 for a shared-market effect that is worth
+    four symbols, not fifteen; the gate must charge the corrected p."""
+    a = {"trades": 200, "consistency_p": 9e-05, "consistency_p_dep": 0.001,
+         "scored_symbols": 15}
+    b = {"trades": 540, "consistency_p": 9e-05, "consistency_p_dep": 0.24,
+         "scored_symbols": 15}
+    g = rf.gate1(a, b, {"p": 0.049})
+    assert g["p"] == 0.24 and g["worst"] == "B consistency"
+    b.pop("consistency_p_dep")
+    assert rf.gate1(a, b, {"p": 0.049})["reason"].startswith("untestable")
 
 
 def test_gate1_untestable_is_charged_as_p_one():
