@@ -155,7 +155,7 @@ in-process by `ExitEngine`; if the kernel dies, only the stop protects.
 | `crawler` | 6h | deep-read and queue |
 | `agent-validator` | at boot | **runs once and exits** — it is not a loop |
 | `rent-check` | 1h | the week's net off the venue income ledger against the $50 bar; daily Telegram tally, Monday verdict (`rent_verdict` event). Reports only — never stops Luffy |
-| `research` | 60s | one search batch: plan → niced child → ledger. Stands down while the last trade cycle took > 45s. `python -m trader.research --status`. **Ships DISABLED** — `research.enabled: false` in `config.yaml`; measured 2026-09-13, not yet turned on by the operator |
+| `research` | 60s | one search batch: plan → niced child → ledger. Stands down while the last trade cycle took > 45s. `python -m trader.research --status`. Enabled since 2026-09-13; the phase-3 referee is off |
 
 Three more ride the cycle counter: outcome resolution (~12 cycles), the
 brain/vault tick (~60 cycles), the data-only book post-mortem (~360 cycles).
@@ -231,10 +231,21 @@ appear inside a `ref()`.
 `trader/research/` generates combinations of measured conditions — up to 6
 parts, both directions, both fixed geometries — scores each against a
 rotation of its own entries on a discovery slice, and records everything.
-It proposes nothing yet: the held-out gates, the error budget and the
-handoff into `_mechanism_once` are phase 3. **Ships disabled** —
-`research.enabled: false` — pending the operator's review of the 2026-09-13
-measurement below.
+It proposes nothing. **Running since 2026-09-13** (`research.enabled: true`).
+Phase 3's referee is built but **off** (`research.referee: false`), and its
+handoff into `analyst.admit` is closed (`research.handoff: false`). See
+`docs/superpowers/plans/2026-09-14-research-phase3-referee.md`.
+
+- **Cross-symbol consistency overstates evidence for market-wide
+  mechanisms.** A per-symbol rotation null moves each symbol out of a shared
+  regime, so one effect is counted once per symbol. `portfolio_null` rotates
+  every symbol by ONE offset instead. Measured 2026-09-14: Donchian on
+  held-out B reads per-symbol p=9.2e-05 but common-rotation p=0.049. The
+  referee therefore cannot admit the incumbent under LORD++ (α₁=0.0025), and
+  stays off pending an operator decision on the gate.
+- `vector_backtest._trade()` is the one definition of a trade, shared by
+  `simulate` and `trade_table`. `walk_table` must keep reproducing
+  `simulate` exactly; that is what makes 20k null draws affordable.
 
 - **The discovery slice is one CALENDAR cut per horizon**, at 70% of the
   universe's span. Per-symbol splits leak era across symbols: a market

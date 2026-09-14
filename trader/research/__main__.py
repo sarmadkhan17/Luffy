@@ -55,6 +55,28 @@ def _status(led: Ledger, cfg: dict) -> None:
             p = r["consistency_p"]
             print(f"    control {r['window']:<24} "
                   f"p={p if p is None else round(p, 6)} — {mark}")
+    _referee_status(led, cfg)
+
+
+def _referee_status(led: Ledger, cfg: dict) -> None:
+    from . import portfolio_null as pn
+    r = cfg.get("research") or {}
+    tests = led.tests()
+    t, alpha = led.next_alpha(float(r.get("fdr_target", 0.10)),
+                              float(r.get("lord_w0", 0.05)))
+    cap = int(r.get("referee_max_draws", 19999))
+    reachable = pn.draws_for(alpha, cap) is not None
+    print(f"\nreferee                : {'ON' if r.get('referee') else 'OFF'}"
+          f" · handoff {'OPEN' if r.get('handoff') else 'closed'}")
+    print(f"  held-out looks spent : {len(tests)} "
+          f"({sum(1 for x in tests if x['rejected'])} rejected the null)")
+    print(f"  next look            : test {t} at alpha={alpha:.2e} — "
+          + ("resolvable" if reachable else
+             f"BUDGET CANNOT RESOLVE IT at {cap} draws; looks defer"))
+    by = {}
+    for row in led.candidates():
+        by[row["state"]] = by.get(row["state"], 0) + 1
+    print(f"  candidates by state  : {by or 'none yet'}")
 
 
 def _top(led: Ledger, cfg: dict, n: int) -> None:
