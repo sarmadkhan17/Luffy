@@ -22,7 +22,7 @@ from math import comb
 
 import numpy as np
 
-from .vector_backtest import WARMUP, simulate
+from .vector_backtest import WARMUP, simulate, warm_window
 
 #: draws below this make the percentile too coarse to act on
 MIN_DRAWS = 20
@@ -40,8 +40,8 @@ def rotate_entries(a: np.ndarray, offset: int) -> np.ndarray:
 
 def null_pfs(long: np.ndarray, short: np.ndarray, df, exit_spec,
              risk_cfg: dict, draws: int = 100, seed: int = 0,
-             symbol: str = "BT", funding: np.ndarray | None = None
-             ) -> list[float]:
+             symbol: str = "BT", funding: np.ndarray | None = None,
+             score_from: int = 0) -> list[float]:
     """Profit factors from `draws` rotations of the same signals.
 
     `funding` is the same signed per-bar series the actual result was charged.
@@ -53,17 +53,36 @@ def null_pfs(long: np.ndarray, short: np.ndarray, df, exit_spec,
     which inflates the percentile of every strategy measured against it.
     """
     n = len(df)
-    if n <= WARMUP + 2:
-        return []
     rng = np.random.default_rng(seed)
-    # keep the rotation clear of the warmup edge at both ends
-    lo_off, hi_off = WARMUP + 1, max(WARMUP + 2, n - WARMUP - 1)
-    if hi_off <= lo_off:
+    if score_from > 0:
+        # A window with real history before it (`warm_window`): rotate only
+        # the window's own entries and lay them back over it, so the prefix
+        # warms indicators and never contributes a signal.
+        w = n - score_from
+        lo_off, hi_off = 1, w
+    else:
+        if n <= WARMUP + 2:
+            return []
+        # keep the rotation clear of the warmup edge at both ends
+        lo_off, hi_off = WARMUP + 1, max(WARMUP + 2, n - WARMUP - 1)
+    # Fewer distinct rotations than draws means repeated draws of the same
+    # few nulls: a narrow null that reads as a confident one. Refuse it —
+    # an empty null is UNTESTED downstream, never a score.
+    if hi_off - lo_off < int(draws):
         return []
+
+    def rotated(sig, off):
+        if score_from <= 0:
+            return rotate_entries(sig, off)
+        out_sig = np.zeros(n, dtype=bool)
+        out_sig[score_from:] = rotate_entries(sig[score_from:], off)
+        return out_sig
+
     out: list[float] = []
     for off in rng.integers(lo_off, hi_off, size=int(draws)):
-        r = simulate(rotate_entries(long, off), rotate_entries(short, off),
-                     df, exit_spec, risk_cfg, symbol=symbol, funding=funding)
+        r = simulate(rotated(long, off), rotated(short, off),
+                     df, exit_spec, risk_cfg, symbol=symbol, funding=funding,
+                     score_from=score_from)
         if r.trades > 0:
             out.append(float(r.profit_factor))
     return out
@@ -97,15 +116,19 @@ def assess(compiled, frames: dict, risk_cfg: dict, actual_pf: float,
     df = frames[tf]
     lo, sh = compiled.entries(frames, btc=btc, derivs=derivs,
                               universe=universe, market=market, symbol=symbol)
+    score_from = 0
     if split is not None:
         cut = int(len(df) * float(split))
-        sl = slice(cut, len(df)) if part == "test" else slice(0, cut)
+        # the same bars vector_walk_forward scores the actual PF on
+        sl, score_from = (warm_window(cut, len(df)) if part == "test"
+                          else warm_window(0, cut))
         df = df.iloc[sl].reset_index(drop=True)
         lo, sh = lo[sl], sh[sl]
         if funding is not None:
             funding = np.asarray(funding, dtype=float)[sl]
     pfs = null_pfs(lo, sh, df, compiled.spec.exit, risk_cfg,
-                   draws=draws, seed=seed, symbol=symbol, funding=funding)
+                   draws=draws, seed=seed, symbol=symbol, funding=funding,
+                   score_from=score_from)
     if len(pfs) < MIN_DRAWS:
         return {"draws": len(pfs), "bars": len(df), "percentile": None,
                 "reason": f"only {len(pfs)} usable null draws"}

@@ -37,7 +37,7 @@ scripts/watchdog.sh                           # cron, @reboot + every 5 min: sta
                                               # `touch data/watchdog.off` before any
                                               # deliberate stop, or it comes straight back
 
-./venv/bin/python -m pytest tests/            # 1218 tests
+./venv/bin/python -m pytest tests/            # 1227 tests
 ./venv/bin/python -m pytest tests/test_phase0.py -k test_state_transitions
 
 ./venv/bin/python -m trader.brain.tv_harness --login   # one-time TV login
@@ -806,13 +806,28 @@ These are facts about the search space, not beliefs to be rewritten.
   +16.8%/yr vs **-4.4%/yr at 49.9% maxDD**), so the instrument is the same
   instrument.
 
-- **`vector_backtest.WARMUP = 210` is a BAR COUNT, not a duration.** `simulate`
-  skips the first 210 bars of every slice it is handed, including the test
-  half. At 4h that is 35 days and harmless. At 1d it discards 210 of a
-  550-bar test half — 38% — and collapses the rotation null, whose offsets
-  are drawn from `[WARMUP+1, n-WARMUP-1]`: only 129 distinct offsets remain
-  for 60 draws. Any future higher-timeframe work through this engine loses
-  210 bars per slice silently. Unfixed; it is not a fault at 4h or below.
+- **`vector_backtest.WARMUP = 210` is a BAR COUNT, not a duration — and it
+  blinded the decay gate at 4h.** `simulate` skipped the first 210 bars of
+  every slice it was handed, and every caller that judges a window cut one
+  out: the 30-day decay window, the admission window, the walk-forward test
+  half, the rolling and regime windows. The note here used to call that
+  "harmless at 4h". It was not: a 4h 30-day decay window is 180 bars, under
+  the 211-bar floor, so **the decay check on Donchian — the book's only live
+  4h strategy — read 0 trades, "idle", every time, and could never retire
+  it.** A 4h 90-day admission window lost 39% of its bars.
+  Fixed 2026-09-14: `simulate(score_from=)` plus `warm_window(a, b)` hand
+  each window up to WARMUP bars of the REAL history before it, so indicators
+  warm on real bars and only the window's own bars trade. With no prior
+  history the floor still holds; nothing is fabricated. The null rotates only
+  the window's own entries, and refuses (empty → UNTESTED) when a window
+  has fewer distinct rotations than draws. Measured on live data by
+  `scripts/decay_evidence.py` (read-only): Donchian decay 0 trades/idle →
+  **34 trades, PF 4.53, still working**; its 90-day admission 57 trades PF
+  2.35 → 84 trades PF 1.55; `spec_funding_filtered_trend_pullback` (15m)
+  decay 3 → 4 trades, still idle. Walk-forward test halves now score 210
+  bars more, so admission figures recorded before 2026-09-14 are not
+  directly comparable with later ones. `WARMUP` stays 210 and is still
+  thinner than some features' own declared lookback; 1d work remains out.
   Related: `backtest.resample()` uses `closed="right", label="right"`, which
   is wrong against the store's open-time labels — do not use it to build
   higher timeframes.

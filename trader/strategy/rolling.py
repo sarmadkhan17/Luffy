@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from .vector_backtest import funding_for, simulate
+from .vector_backtest import funding_for, simulate, warm_window
 
 log = logging.getLogger(__name__)
 
@@ -92,8 +92,10 @@ def rolling_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
             continue
         for a in range(0, len(df) - win, step):
             b = a + win
-            r = simulate(lo[a:b], sh[a:b], df.iloc[a:b].reset_index(drop=True),
-                         compiled.spec.exit, risk_cfg, symbol=sym)
+            sl, score_from = warm_window(a, b)
+            r = simulate(lo[sl], sh[sl], df.iloc[sl].reset_index(drop=True),
+                         compiled.spec.exit, risk_cfg, symbol=sym,
+                         score_from=score_from)
             if r.trades >= min_trades:
                 st.n_windows += 1
                 st.trades.append(r.trades)
@@ -111,7 +113,12 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     for sym, df in frames.items():
         if sym.startswith("_") or df is None or len(df) < n:
             continue
-        recent = df.iloc[-n:].reset_index(drop=True)
+        # the window plus up to WARMUP bars of the history before it: the
+        # evaluator and ATR warm on real bars, only the window's own bars
+        # can trade. Handing over the bare window left a 4h 30-day decay
+        # check (180 bars) nothing to score at all.
+        sl, score_from = warm_window(len(df) - n, len(df))
+        recent = df.iloc[sl].reset_index(drop=True)
         derivs = derivs_for(sym) if derivs_for else None
         fund = funding_for(sym, recent, risk_cfg)
         try:
@@ -125,7 +132,7 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
                                       market=frames.get("_market"),
                                       symbol=sym)
             r = simulate(lo, sh, recent, compiled.spec.exit, risk_cfg,
-                         symbol=sym, funding=fund)
+                         symbol=sym, funding=fund, score_from=score_from)
         except Exception as e:
             log.warning(f"recent {compiled.spec.id} {sym}: {e}")
             continue
@@ -262,8 +269,10 @@ def regime_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
             dominant = labels.value_counts().idxmax()
             if labels.value_counts().iloc[0] / len(labels) < 0.5:
                 continue                    # too mixed to attribute
-            r = simulate(lo[a:b], sh[a:b], df.iloc[a:b].reset_index(drop=True),
-                         compiled.spec.exit, risk_cfg, symbol=sym)
+            sl, score_from = warm_window(a, b)
+            r = simulate(lo[sl], sh[sl], df.iloc[sl].reset_index(drop=True),
+                         compiled.spec.exit, risk_cfg, symbol=sym,
+                         score_from=score_from)
             if r.trades < min_trades:
                 continue
             st = by_regime.setdefault(dominant, WindowStats())
