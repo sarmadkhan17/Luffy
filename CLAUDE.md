@@ -241,8 +241,15 @@ handoff into `analyst.admit` is closed (`research.handoff: false`). See
   regime, so one effect is counted once per symbol. `portfolio_null` rotates
   every symbol by ONE offset instead. Measured 2026-09-14: Donchian on
   held-out B reads per-symbol p=9.2e-05 but common-rotation p=0.049. The
-  referee therefore cannot admit the incumbent under LORD++ (α₁=0.0025), and
-  stays off pending an operator decision on the gate.
+  referee therefore cannot admit the incumbent under LORD++ (α₁=0.0025).
+  **Gate decision taken 2026-09-15 (option 3):** gate 1 charges
+  `consistency_p_dependent`, where the symbol count is deflated by ρ̄. ρ̄ is
+  the null PFs' rank correlation at matched offsets. Under a shared-factor
+  no-edge market, raw consistency p false-positives at 14-24% (α=0.05); the
+  corrected p holds at 0%. Donchian on B corrects to p=0.24 (n_eff 3.65 of
+  15). The gate is valid and still cannot admit the incumbent, so the
+  referee stays off: 15 correlated perps carry roughly 4 markets' worth of
+  evidence.
 - `vector_backtest._trade()` is the one definition of a trade, shared by
   `simulate` and `trade_table`. `walk_table` must keep reproducing
   `simulate` exactly; that is what makes 20k null draws affordable.

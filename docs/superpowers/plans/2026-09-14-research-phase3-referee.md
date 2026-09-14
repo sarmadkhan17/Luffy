@@ -367,3 +367,48 @@ on the gate decision, because it has to calibrate whichever gate is chosen.
    outcomes), and charge that. This is the principled middle, but it is new
    statistics and must itself be calibrated on the shared-regime no-edge
    case and on Donchian before use.
+
+### Decision taken: option 3 (2026-09-15)
+
+`null_baseline.consistency_p_dependent` deflates the symbol count to
+`n_eff = n / (1 + (n−1)·ρ̄)` and reads the binomial tail continuously
+(regularised incomplete beta; equal to `_tail_p` at integers to 3e-15, and
+equal to `consistency_p` at ρ̄=0). ρ̄ is the mean pairwise Spearman
+correlation of the symbols' null profit factors at **matched** rotation
+offsets (`referee.null_dependence`, 200 draws). Trade-outcome correlation was
+not used, because trades on different symbols have no common alignment. The
+matched-offset null does: under no edge the actuals are one joint draw from
+it. Percentile correlation bounds the clear/not-clear indicator correlation
+from above, so the correction errs conservative. Gate 1 now charges
+`max(A dep, B dep, B common rotation)`.
+
+**Calibration** (`scripts/calibrate_null_dependence.py`, 16 symbols, 2000
+4h bars, trail geometry):
+
+| case | seeds | ρ̄ median | raw p≤0.05 | dep p≤0.05 | raw p≤0.0025 | dep p≤0.0025 |
+|---|---|---|---|---|---|---|
+| independent, no edge | 120 | 0.00 | 1.7% | 1.7% | 0.0% | 0.0% |
+| shared factor, own-price breakout, no edge | 120 | 0.22 | **14.2%** | 0.0% | **8.3%** | 0.0% |
+| shared factor, identical entries, no edge | 120 | 0.46 | **24.2%** | 0.0% | **11.7%** | 0.0% |
+| shared factor, planted per-symbol edge | 40 | 0.19 | 100% | 100% | 100% | 87.5% |
+
+The raw test is invalid under a shared market: 8-12% false positives at
+α₁'s level. The corrected test holds its size, and keeps power on a real
+per-symbol edge. It is conservative (0/120 at 0.05, against ~6 expected).
+
+**Known-good, Donchian on its declared 16:**
+
+| slice | raw p | ρ̄ | n_eff | corrected p | common rotation p |
+|---|---|---|---|---|---|
+| held-out B | 9.2e-05 | 0.22 | 3.65 | **0.24** | 0.049 |
+| discovery | 1.3e-02 | 0.14 | 5.14 | **0.30** | 0.024 |
+
+**Stop rule applies again.** The corrected gate is valid, but it cannot see
+the incumbent either, and the conservatism is not the reason. At n_eff≈3.7,
+even every market clearing the 90th percentile reads about 3·0.1^3.65 ≈
+7e-04. Cross-symbol consistency over this universe cannot carry much more
+evidence than about four independent markets would. So there is no gate over
+one 18-month era, of either construction, that admits Donchian at α₁=0.0025.
+`referee: false` stays. This is option 1's outcome, reached with a valid
+statistic rather than assumed. Evidence at LORD++ levels needs more
+independent eras, not more symbols.

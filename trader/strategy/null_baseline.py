@@ -171,3 +171,90 @@ def consistency_p(percentiles) -> float | None:
     best = min(_tail_p(sum(1 for v in vals if _clears(v, q)), n, 1.0 - q)
                for q in _CUTS)
     return min(1.0, best * len(_CUTS))
+
+
+# ── dependence ───────────────────────────────────────────────────────────
+def _betacf(a: float, b: float, x: float) -> float:
+    """Continued fraction for the incomplete beta (modified Lentz)."""
+    tiny, qab, qap, qam = 1e-300, a + b, a + 1.0, a - 1.0
+    c, d = 1.0, 1.0 - qab * x / qap
+    d = 1.0 / (d if abs(d) > tiny else tiny)
+    h = d
+    for m in range(1, 400):
+        m2 = 2 * m
+        aa = m * (b - m) * x / ((qam + m2) * (a + m2))
+        d = 1.0 + aa * d
+        d = 1.0 / (d if abs(d) > tiny else tiny)
+        c = 1.0 + aa / c
+        c = c if abs(c) > tiny else tiny
+        h *= d * c
+        aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))
+        d = 1.0 + aa * d
+        d = 1.0 / (d if abs(d) > tiny else tiny)
+        c = 1.0 + aa / c
+        c = c if abs(c) > tiny else tiny
+        delta = d * c
+        h *= delta
+        if abs(delta - 1.0) < 1e-13:
+            break
+    return h
+
+
+def _betainc(a: float, b: float, x: float) -> float:
+    """Regularized incomplete beta I_x(a, b)."""
+    from math import exp, lgamma, log
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
+    front = exp(lgamma(a + b) - lgamma(a) - lgamma(b)
+                + a * log(x) + b * log(1.0 - x))
+    if x < (a + 1.0) / (a + b + 2.0):
+        return front * _betacf(a, b, x) / a
+    return 1.0 - front * _betacf(b, a, 1.0 - x) / b
+
+
+def tail_p_real(k: float, n: float, q: float) -> float:
+    """`_tail_p` for real k and n: P(K >= k) = I_q(k, n - k + 1), which is
+    the binomial tail exactly at integers and interpolates between them."""
+    if k <= 0:
+        return 1.0
+    if k > n:
+        return 0.0
+    return _betainc(k, n - k + 1.0, q)
+
+
+def effective_n(n: int, rho_bar: float) -> float:
+    """Independent symbols n correlated ones are worth: the design effect
+    n / (1 + (n-1)·ρ̄). ρ̄ is clipped to [0, 1] — a negative mean cannot be
+    evidence of MORE than n independent markets."""
+    rho = min(1.0, max(0.0, float(rho_bar)))
+    return n / (1.0 + (n - 1) * rho)
+
+
+def consistency_p_dependent(percentiles, rho_bar: float) -> float | None:
+    """`consistency_p` with the symbol count deflated for dependence.
+
+    Per-symbol percentiles are votes, and `consistency_p` counts them as
+    independent. When symbols share a market — a trend episode, an alt-index
+    regime — their percentiles move together under NO edge, and the binomial
+    counts one effect once per symbol. On 2026-09-14 Donchian on held-out B
+    read p=9.2e-05 that way against 0.049 under a common rotation.
+
+    `rho_bar` is the mean pairwise rank correlation of the symbols' null
+    statistics at MATCHED rotation offsets (`referee.null_dependence`): under
+    no edge each actual is one draw from that joint null, so it is the
+    dependence of the percentiles themselves. It is used as the correlation
+    of the clear/not-clear indicators, which it bounds from above, so the
+    deflation errs conservative. Counts k of n become k·n_eff/n of n_eff and
+    the tail is read continuously. ρ̄=0 reproduces `consistency_p` exactly.
+    """
+    vals = [float(v) for v in percentiles if v is not None]
+    n = len(vals)
+    if n < MIN_SYMBOLS or rho_bar is None or not np.isfinite(rho_bar):
+        return None
+    ne = effective_n(n, rho_bar)
+    best = min(tail_p_real(sum(1 for v in vals if _clears(v, q)) * ne / n,
+                           ne, 1.0 - q)
+               for q in _CUTS)
+    return min(1.0, best * len(_CUTS))
