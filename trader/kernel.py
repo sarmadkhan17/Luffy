@@ -468,6 +468,14 @@ class Kernel:
         # 2. generate replacements — from what the Researcher actually read
         added = []
         consumed = []
+        # 2a. the search's candidates go first, through the SAME admit().
+        # Closed unless research.handoff is on; and even then it reads only
+        # candidates that passed the reasoning test (phase 4).
+        if len(book) < max_book:
+            spec = self._research_handoff(analyst, book)
+            if spec is not None:
+                book.append(spec)
+                added.append(spec.name)
         if len(book) < max_book:
             writer = SpecWriter(BrainLLM(self.cfg))
             # what the Strategist is allowed to build on: the firm's operating
@@ -507,31 +515,9 @@ class Kernel:
                         "spec_rejected", spec.id,
                         {"name": spec.name, "evidence": ev, "idea": iid})
                     continue
-                # regime_filter as written is a guess; measure it before the
-                # orchestrator starts gating live signals on it
-                spec.timeframe = ev.get("chosen_timeframe", spec.timeframe)
-                rf = analyst.set_measured_regimes(spec)
-                # TradingView second opinion — ADVISORY. It is recorded next
-                # to the spec and never blocks admission; see
-                # Analyst.confirm_on_tv for why a TV gate would be wrong.
-                if (self.cfg.get("tv_harness", {}) or {}).get("enabled", False):
-                    try:
-                        ev["tv"] = analyst.confirm_on_tv(spec)
-                    except Exception as e:
-                        log.debug(f"tv confirmation skipped: {e}")
-                self.journal.upsert_spec(spec, state="paper")
-                self.journal.log_brain_event(
-                    "spec_admitted", spec.id,
-                    {"name": spec.name, "evidence": ev, "regimes": rf,
-                     "idea": iid})
+                self._install_spec(spec, ev, analyst, {"idea": iid})
                 book.append(spec)
                 added.append(spec.name)
-                if self.notifier:
-                    self.notifier.send(
-                        f"\U0001f9ec New strategy: {spec.name} "
-                        f"({spec.timeframe}, {'/'.join(spec.regime_filter)})\n"
-                        f"recent PF {ev['recent']['pooled_pf']} over "
-                        f"{ev['recent']['trades']} trades \u2192 paper")
 
         if retired or added:
             self.population = self._load_population()   # hot reload
@@ -540,6 +526,82 @@ class Kernel:
                "ideas_pending": len(idea_queue.pending(self.journal))}
         log.info(f"mechanism: {rep}")
         return rep
+
+    def _install_spec(self, spec, ev: dict, analyst, extra: dict) -> None:
+        """Everything that follows an Analyst admission, whoever proposed."""
+        # regime_filter as written is a guess; measure it before the
+        # orchestrator starts gating live signals on it
+        spec.timeframe = ev.get("chosen_timeframe", spec.timeframe)
+        rf = analyst.set_measured_regimes(spec)
+        # TradingView second opinion — ADVISORY. It is recorded next
+        # to the spec and never blocks admission; see
+        # Analyst.confirm_on_tv for why a TV gate would be wrong.
+        if (self.cfg.get("tv_harness", {}) or {}).get("enabled", False):
+            try:
+                ev["tv"] = analyst.confirm_on_tv(spec)
+            except Exception as e:
+                log.debug(f"tv confirmation skipped: {e}")
+        self.journal.upsert_spec(spec, state="paper")
+        self.journal.log_brain_event(
+            "spec_admitted", spec.id,
+            {"name": spec.name, "evidence": ev, "regimes": rf, **extra})
+        if self.notifier:
+            self.notifier.send(
+                f"\U0001f9ec New strategy: {spec.name} "
+                f"({spec.timeframe}, {'/'.join(spec.regime_filter)})\n"
+                f"recent PF {ev['recent']['pooled_pf']} over "
+                f"{ev['recent']['trades']} trades \u2192 paper")
+
+    def _research_handoff(self, analyst, book):
+        """One `reason_passed` search candidate through `analyst.admit`.
+
+        The search never writes `strategies`; this is its only way in, and
+        it is the same gate every other proposer faces. Returns the admitted
+        spec, or None.
+        """
+        rcfg = self.cfg.get("research") or {}
+        if not rcfg.get("handoff", False):
+            return None
+        try:
+            from .research.ledger import Ledger
+            from .research.runner import ResearchRunner
+            from .research.universe import DISCOVERY, HELDOUT
+            led = Ledger(self.journal)
+            led.ensure()
+            rows = led.candidates(state="reason_passed")
+            if not rows:
+                return None
+            cand = rows[0]
+            h, tf, geo = cand["hash"], cand["tf"], cand["geo"]
+            combo_rows = self.journal.query(
+                "SELECT * FROM research_combos WHERE hash=?", (h,))
+            runner = ResearchRunner(self.journal, self.cfg,
+                                    run=lambda *a, **k: None)
+            c = runner._combo(combo_rows[0], tf, geo) if combo_rows else None
+            if c is None:
+                led.set_candidate(h, tf, geo, "refused",
+                                  reason="cannot be rebuilt at handoff")
+                return None
+            spec = c.to_spec()
+            # it was examined on discovery + held-out; that is what it has
+            # evidence for, so that is the universe it declares
+            spec.universe = {"include": list(DISCOVERY) + list(HELDOUT),
+                             "exclude": []}
+            spec.provenance = {**(spec.provenance or {}), "research_hash": h}
+            ok, ev = analyst.admit(spec, book)
+        except Exception as e:                          # noqa: BLE001
+            log.warning(f"research handoff failed: {e}")
+            return None
+        if not ok:
+            led.set_candidate(h, tf, geo, "refused",
+                              reason=str(ev.get("reason", ""))[:400])
+            self.journal.log_brain_event(
+                "spec_rejected", spec.id,
+                {"name": spec.name, "evidence": ev, "research_hash": h})
+            return None
+        self._install_spec(spec, ev, analyst, {"research_hash": h})
+        led.set_candidate(h, tf, geo, "admitted", reason="analyst admitted")
+        return spec
 
     def _strategist_knowledge(self) -> dict:
         """Doctrine + the numeric coverage brief, as one prompt payload."""

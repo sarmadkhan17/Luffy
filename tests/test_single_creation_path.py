@@ -102,3 +102,89 @@ def test_the_kernel_brain_tick_runs_no_legacy_review():
     src = inspect.getsource(K)
     assert "brain.strategist import" not in src
     assert "Strategist(" not in src
+
+
+# ── the search's handoff (research phase 3) ──────────────────────────────
+def test_no_research_module_writes_the_strategies_table():
+    """The search reaches the book only through kernel._research_handoff,
+    which calls analyst.admit. Reading `strategies` (seed parts, the
+    incumbent's universe, the brake) is fine; writing it is a second path."""
+    import pathlib
+    import re
+    pat = re.compile(r"(INSERT\s+(OR\s+\w+\s+)?INTO|UPDATE|DELETE\s+FROM)"
+                     r"\s+strategies\b|upsert_spec", re.I)
+    for f in pathlib.Path("trader/research").glob("*.py"):
+        assert not pat.search(f.read_text()), f"{f} writes strategies"
+
+
+def _handoff_kernel(tmp_path, handoff, admit_ok=True):
+    from trader.core.child import ChildResult  # noqa: F401
+    from trader.kernel import Kernel
+    from trader.research import vocab
+    from trader.research.combo import Combination
+    from trader.research.ledger import Ledger
+
+    j = Journal(tmp_path / "j.db")
+    led = Ledger(j)
+    led.ensure()
+    led.record_gauges("4h", {e: {"p10": -1.0, "p25": -0.5, "p75": 0.5,
+                                 "p90": 1.0, "n": 9000, "finite_frac": 0.99,
+                                 "usable": True}
+                             for e in vocab.expressions("4h")})
+    part = vocab.parts_for("4h", led.gauges("4h"))[0]
+    c = Combination((part,), "4h", "trail")
+    led.record_result({"hash": c.hash, "tf": "4h", "geo": "trail", "k": 1,
+                       "parts": list(c.keys), "trades": 300,
+                       "portfolio": {"total_pct": 40.0, "max_dd_pct": 20.0},
+                       "testable": True, "verdict": "scored"},
+                      "survivor", "r", {})
+    led.set_candidate(c.hash, "4h", "trail", "reason_passed", rank=40.0)
+
+    seen = []
+
+    class _Analyst:
+        def admit(self, spec, book):
+            seen.append(spec)
+            return admit_ok, {"reason": "test", "chosen_timeframe": "4h",
+                              "recent": {"pooled_pf": 1.3, "trades": 30}}
+
+        def set_measured_regimes(self, spec):
+            return []
+
+    k = Kernel.__new__(Kernel)
+    k.journal = j
+    k.cfg = {"research": {"handoff": handoff}}
+    k.notifier = None
+    return k, _Analyst(), seen, c, led
+
+
+def test_a_closed_handoff_admits_nothing(tmp_path):
+    k, analyst, seen, c, led = _handoff_kernel(tmp_path, handoff=False)
+    assert k._research_handoff(analyst, []) is None
+    assert seen == []
+    assert led.candidate(c.hash)["state"] == "reason_passed"
+
+
+def test_an_open_handoff_goes_through_admit_and_nothing_else(tmp_path):
+    k, analyst, seen, c, led = _handoff_kernel(tmp_path, handoff=True)
+    spec = k._research_handoff(analyst, [])
+    assert spec is not None and len(seen) == 1
+    assert seen[0].provenance["research_hash"] == c.hash
+    assert len(seen[0].universe["include"]) == 36
+    assert led.candidate(c.hash)["state"] == "admitted"
+    assert _states(k.journal)[spec.id] == "paper"
+
+
+def test_a_refused_candidate_is_recorded_and_not_installed(tmp_path):
+    k, analyst, seen, c, led = _handoff_kernel(tmp_path, handoff=True,
+                                               admit_ok=False)
+    assert k._research_handoff(analyst, []) is None
+    assert led.candidate(c.hash)["state"] == "refused"
+    assert _states(k.journal) == {}
+
+
+def test_only_reason_passed_candidates_are_handed_off(tmp_path):
+    k, analyst, seen, c, led = _handoff_kernel(tmp_path, handoff=True)
+    led.set_candidate(c.hash, "4h", "trail", "referee_passed")
+    assert k._research_handoff(analyst, []) is None
+    assert seen == []
