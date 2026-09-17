@@ -1,9 +1,94 @@
+# Secrets and credentials
 .env
+.env.*
+!.env.example
+!.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local agent / tooling state (machine-specific, not project source)
+.mcp.json
+.claude/settings.local.json
+.claude/worktrees/
+.codex/
+.codex.json
+
+# Python environments
 venv/
+.venv/
+env/
+
+# Python caches and build artifacts
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+build/
+dist/
+*.egg-info/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Runtime data (deliberate seed inputs stay tracked)
+/data/**
+!/data/.gitkeep
+!/data/seed_specs/
+!/data/seed_specs/**
+!/data/authored_specs/
+!/data/authored_specs/**
+
+# Databases and SQLite sidecars
 data/*.db*
 data/*.json
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite3-journal
+
+# Logs, temp files, locks and pids
 logs/
+*.log
+tmp/
+*.tmp
+*.lock
+*.pid
+# Dependency lockfiles are project source, not runtime locks
+!uv.lock
+!poetry.lock
+!Pipfile.lock
+!pdm.lock
+!requirements.lock
+
+# Frozen research evidence (retained locally, not published)
+/docs/superpowers/artifacts/
+
+# Generated knowledge (authored notes stay tracked)
+/knowledge/30 Postmortems/
+/knowledge/40 Regimes/
+/knowledge/50 Daily/
 knowledge/.obsidian/
-.pytest_cache/
+
+# Editor and OS debris
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
