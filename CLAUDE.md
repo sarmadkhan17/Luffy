@@ -126,7 +126,8 @@ Paths below are relative to `trader/` unless otherwise stated.
   pass BTC, derivative and reference contexts where required.
 - Backtests use `DataFeed.cached_ohlcv()`. Preserve `_trade()` as the shared
   trade definition and `walk_table`/`simulate` equivalence. `WARMUP=210` is
-  a bar count. Do not use legacy `backtest.resample()` for open-labelled
+  a bar count; `warm_window` supplies prior history and `score_from` limits
+  scoring to the requested window. Do not use legacy `backtest.resample()` for open-labelled
   higher-timeframe bars without correcting/verifying alignment.
 - Funding is signed and actual/null runs must use the same cost model.
   `ls_ratio` (positions) and `ls_account_ratio` (accounts) are different

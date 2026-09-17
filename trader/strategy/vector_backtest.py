@@ -29,6 +29,18 @@ from .spec import ExitSpec
 WARMUP = 210
 
 
+def warm_window(a: int, b: int) -> tuple[slice, int]:
+    """The slice to hand `simulate` for window [a, b) of a longer history,
+    and the `score_from` that keeps its first bar the first scorable one.
+
+    WARMUP is a bar count, so a window cut out of a history used to lose its
+    first 210 bars to warm-up even when the bars before it were right there:
+    a 4h 30-day decay window is 180 bars and could never see a trade.
+    """
+    lo = max(0, a - WARMUP)
+    return slice(lo, b), a - lo
+
+
 def _stop_distance(exit_spec: ExitSpec, ref_px: float, atr: float,
                    df: pd.DataFrame, i: int, side: str) -> float:
     kind = exit_spec.stop.get("kind", "atr")
@@ -196,7 +208,8 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
              genome_id: str = "", symbol: str = "BT",
              exit_sig: np.ndarray | None = None,
              funding: np.ndarray | None = None,
-             fills_out: list | None = None) -> BacktestResult:
+             fills_out: list | None = None,
+             score_from: int = 0) -> BacktestResult:
     """`funding`, when given, is the SIGNED 8-hourly rate per bar.
 
     Without it the engine charges abs(flat rate) to both sides, which bills a
@@ -205,7 +218,14 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
     a NaN bar falls back to it rather than to a fabricated zero. With the
     real series a long pays a positive rate and a short is paid it, which is
     what the venue does.
+
+    `score_from` is where the scored window begins inside `df`. A caller that
+    judges a window of a longer history passes the window plus up to WARMUP
+    bars of the history before it, so indicators and ATR warm on real bars
+    and only the window's own bars can open a trade. WARMUP still floors it:
+    with no prior history the first WARMUP bars stay unscored, never faked.
     """
+    score_from = max(WARMUP, int(score_from))
     res = BacktestResult(genome_id=genome_id, symbol=symbol, bars=len(df))
     fee = float(risk_cfg.get("taker_fee_pct", 0.05)) / 100.0
     slip_frac = float(risk_cfg.get("slippage_atr_frac", 0.06))
@@ -219,7 +239,7 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
             fund_arr = None                 # misaligned is unknown, not zero
 
     n = len(df)
-    if n <= WARMUP + 1:
+    if n <= score_from + 1:
         return res
     closes = df["close"].to_numpy(float)
     highs = df["high"].to_numpy(float)
@@ -235,7 +255,7 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
     equity_curve = [equity]
     peak = equity
     candidates = np.flatnonzero(long | short)
-    cursor = WARMUP
+    cursor = score_from
 
     for raw_i in candidates:
         i = int(raw_i)
@@ -322,7 +342,8 @@ def vector_walk_forward(compiled, frames: dict, risk_cfg: dict,
     Signals are computed ONCE over the full frame and then sliced, so an
     indicator near the split boundary is warmed up exactly as it would be
     live — the old engine re-ran the evaluator on a truncated frame, which
-    cost the test half its first 210 bars.
+    cost the test half its first 210 bars. Handing `simulate` the bare half
+    still cost them, until `warm_window` (2026-09-14).
     """
     tf = compiled.spec.timeframe
     df = frames[tf]
@@ -334,11 +355,13 @@ def vector_walk_forward(compiled, frames: dict, risk_cfg: dict,
     fund = funding_for(symbol, df, risk_cfg)
 
     def run(a, b):
-        return simulate(lo[a:b], sh[a:b], df.iloc[a:b].reset_index(drop=True),
+        sl, score_from = warm_window(a, b)
+        return simulate(lo[sl], sh[sl], df.iloc[sl].reset_index(drop=True),
                         compiled.spec.exit, risk_cfg,
                         genome_id=compiled.spec.id, symbol=symbol,
-                        exit_sig=None if ex is None else ex[a:b],
-                        funding=None if fund is None else fund[a:b])
+                        exit_sig=None if ex is None else ex[sl],
+                        funding=None if fund is None else fund[sl],
+                        score_from=score_from)
 
     train, test = run(0, cut), run(cut, len(df))
     ok_train, f_train = train.passes()
