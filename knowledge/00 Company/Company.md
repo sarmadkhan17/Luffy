@@ -1,6 +1,6 @@
 ---
 type: org-chart
-updated: 2026-09-02
+updated: 2026-09-17
 ---
 # Company
 
@@ -13,7 +13,7 @@ updated: 2026-09-02
 | [[Harvester]] | Harvester | Reads numbers — venue APIs and MCP servers — and reports coverage. |
 | [[Strategist]] | Strategist | Reviews the strategy book; promotes and demotes. |
 | [[Strategy Analyst]] | Strategy Analyst | Tests specs on stored data and TradingView; ranks them by regime fit. |
-| [[Theorist]] | Theorist | Autopsies losing clusters and edge decay into doctrine. |
+| [[Theorist]] | Theorist | Checks every live strategy against the envelope it was admitted on — data only, no LLM. |
 | [[Risk Officer]] | Risk Officer | Sizing, heat cap, daily breaker, macro/news event freezes. |
 | [[Trader]] | Trader | Executes entries; manages trailing stops and time exits. |
 | [[Librarian]] | Librarian | Keeps the knowledge vault and the map of content current. |

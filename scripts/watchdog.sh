@@ -48,3 +48,20 @@ if ! pgrep -f -x '.*/python[0-9.]* -m trader\.dashboard\.server' >/dev/null; the
   say "dashboard not running -> starting"
   act ./restart.sh dashboard
 fi
+
+# Separate shadow consumer: bounded once-per-watchdog work, no venue calls.
+# flock prevents overlapping manual/cron invocations; timeout bounds DB stalls.
+# The module reads its own opt-in configuration and records structured health.
+act flock -n "$DIR/data/attention_learning.lock" timeout 20s \
+  ./venv/bin/python -m trader.observability.learning --once
+
+# Opt-in continuing investigations: independent process, internal lock and deadline.
+if [ -e "$DIR/data/investigation.enabled" ]; then
+  act timeout 25s ./venv/bin/python -m trader.observability.investigation --once --enable
+fi
+
+# Read-only demo accounting: independent lock, bounded retries and no memory import.
+# Keep after population consumers so slow venue history cannot delay their capture.
+if [ -e "$DIR/data/accounting.enabled" ]; then
+  act timeout --kill-after=5s 50s ./venv/bin/python -m trader.observability.accounting --once --enable
+fi

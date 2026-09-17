@@ -27,14 +27,8 @@ def create_app(cfg: dict | None = None) -> FastAPI:
     cfg = cfg or load_config()
     journal = Journal(str(ROOT / "data" / "luffy.db"))
     app = FastAPI(title="Luffy")
-    token = os.environ.get("DASH_TOKEN", "luffy")
-
-    def authed_from(q, h) -> bool:
-        return token in (q, h) or token == "luffy"
-
-    def authed(request) -> bool:
-        return authed_from(request.query_params.get("token"),
-                           request.headers.get("x-luffy-token"))
+    from .auth import DashboardAuth
+    DashboardAuth(os.environ.get("DASH_TOKEN")).install(app)
 
     def _nocache(response):
         response.headers["Cache-Control"] = "no-store, max-age=0"
@@ -47,6 +41,57 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         from fastapi import Response
         html = (WEB / "index.html").read_text()
         return _nocache(Response(html, media_type="text/html"))
+
+    @app.get("/attention.js")
+    async def attention_script():
+        from fastapi.responses import FileResponse
+        return _nocache(FileResponse(WEB / "attention.js", media_type="application/javascript"))
+
+    @app.get("/investigation.js")
+    async def investigation_script():
+        from fastapi.responses import FileResponse
+        return _nocache(FileResponse(WEB / "investigation.js", media_type="application/javascript"))
+
+    @app.get("/api/investigations/latest")
+    def investigations_latest():
+        from ..observability.investigation import owner_view
+        return _nocache(JSONResponse(owner_view(ROOT / "data" / "investigation.db")))
+
+    @app.get("/api/attention/latest")
+    def attention_latest():
+        from ..observability.attention import settings
+        from ..observability.store import read_latest
+        raw = cfg.get("attention") or {}
+        if raw.get("enabled") is not True:
+            return _nocache(JSONResponse({"status": "disabled", "scan": None, "causes": []}))
+        try:
+            acfg = settings(raw)
+        except ValueError:
+            return _nocache(JSONResponse({"status": "configuration_error", "scan": None, "causes": []}))
+        healths = []
+        for filename, field in (("attention_health.json", None), ("heartbeat_luffy.json", "attention")):
+            try:
+                data = json.loads((ROOT / "data" / filename).read_text())
+                health = data.get(field) if field else data
+                if isinstance(health, dict):
+                    healths.append(health)
+            except (OSError, ValueError):
+                pass
+        health = max(healths, key=lambda h: h.get("updated_ms", 0), default={})
+        result = read_latest(ROOT / "data" / "attention.db", health=health,
+                             stale_seconds=acfg["stale_seconds"])
+        if (cfg.get("attention_learning") or {}).get("enabled"):
+            from ..observability.learning import read_health
+            result["learning"] = read_health(ROOT / "data" / "attention_learning_health.json")
+        from ..engine.recovery import read as read_recovery
+        try:
+            recovery = read_recovery(journal)
+            result["execution_recovery"] = ({k: recovery.get(k) for k in
+                ("id", "symbol", "phase", "reason", "attempts", "updated_ms", "error_type")}
+                if recovery else None)
+        except (ValueError, TypeError):
+            result["execution_recovery"] = {"reason": "recovery_ledger_unreadable"}
+        return _nocache(JSONResponse(result))
 
     @app.get("/api/summary", dependencies=[])
     async def summary():
@@ -117,11 +162,6 @@ def create_app(cfg: dict | None = None) -> FastAPI:
 
     @app.websocket("/ws/live")
     async def ws_live(ws: WebSocket):
-        q = dict(ws.query_params).get("token")
-        h = ws.headers.get("x-luffy-token")
-        if not (token in (q, h) or token == "luffy"):
-            await ws.close(code=4401)
-            return
         await ws.accept()
         try:
             while True:
@@ -421,25 +461,6 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             return {"tail": []}
         content = p.read_text(errors="replace").splitlines()[-lines:]
         return {"tail": content}
-
-    class TokenGuard:                    # raw ASGI: never touches websockets
-        def __init__(self, app):
-            self.app = app
-
-        async def __call__(self, scope, receive, send):
-            if scope["type"] == "http" and scope["path"].startswith("/api/"):
-                qs = dict(pair.split("=", 1) for pair in
-                          scope.get("query_string", b"").decode().split("&")
-                          if "=" in pair)
-                hdrs = {k.decode().lower(): v.decode()
-                        for k, v in scope.get("headers", [])}
-                if not authed_from(qs.get("token"), hdrs.get("x-luffy-token")):
-                    await JSONResponse({"error": "bad token"},
-                                       status_code=401)(scope, receive, send)
-                    return
-            await self.app(scope, receive, send)
-
-    app.add_middleware(TokenGuard)
 
     return app
 
@@ -912,7 +933,7 @@ def main() -> None:
     import uvicorn
     host = cfg["dashboard"]["host"]
     port = int(cfg["dashboard"]["port"])
-    uvicorn.run(app, host=host, port=port, log_level="warning")
+    uvicorn.run(app, host=host, port=port, log_level="warning", access_log=False)
 
 
 if __name__ == "__main__":

@@ -130,6 +130,18 @@ CREATE TABLE IF NOT EXISTS control_events (
     detail TEXT
 );
 
+CREATE TABLE IF NOT EXISTS trade_accounting_bookings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    trade_id TEXT NOT NULL,
+    payload TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS trade_accounting_bookings_trade ON trade_accounting_bookings(trade_id,id);
+
+CREATE TABLE IF NOT EXISTS execution_accounting (
+    id TEXT PRIMARY KEY,
+    payload TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS state_kv (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL              -- control_state, market_type, proving_trades, ...
@@ -164,6 +176,7 @@ class Journal:
         with self._conn() as c:
             c.executescript(SCHEMA)
             for stmt in (
+                "ALTER TABLE decisions ADD COLUMN scan_id TEXT DEFAULT NULL",
                 "ALTER TABLE decisions ADD COLUMN signals_json TEXT DEFAULT '[]'",
                 "ALTER TABLE trades ADD COLUMN tp1_done INTEGER DEFAULT 0",
                 "ALTER TABLE strategies ADD COLUMN retire_reason TEXT DEFAULT ''",
@@ -246,11 +259,11 @@ class Journal:
                 "INSERT OR REPLACE INTO decisions "
                 "(id,cycle_id,ts,symbol,action,score,threshold,confidence,"
                 "executed,skip_reason,size_usdt,entry_price,strategy_ids,"
-                "signals_json,meta_p) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "signals_json,meta_p,scan_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (d.id, d.cycle_id, d.ts, d.symbol, d.action.value, d.score,
                  d.threshold, d.confidence, int(d.executed), d.skip_reason,
                  d.size_usdt, None, strat_ids, signals,
-                 d.meta_p if d.meta_p else None))
+                 d.meta_p if d.meta_p else None, getattr(d, "scan_id", None)))
 
     def update_decision_outcome(self, decision_id: str, executed: bool,
                                 size_usdt: float = 0.0,
@@ -265,7 +278,7 @@ class Journal:
             c.execute("UPDATE decisions SET entry_price=? WHERE id=?",
                       (price, decision_id))
 
-    def add_trade(self, p) -> None:
+    def add_trade(self, p, accounting: dict | None = None) -> None:
         with self._tx() as c:
             c.execute(
                 "INSERT INTO trades (id,decision_id,symbol,side,amount,"
@@ -289,25 +302,36 @@ class Journal:
                  "strategy_name": p.strategy_name,
                  "market_type": p.market_type, "exec_mode": p.exec_mode,
                  "opened_at": p.opened_at})
+            from ..engine.booking import persist
+            persist(c, p.id, "entry", None, accounting)
 
     def close_trade(self, trade_id: str, exit_price: float, pnl: float,
-                    reason: str, closed_at: str | None = None) -> None:
+                    reason: str, closed_at: str | None = None,
+                    accounting: dict | None = None) -> None:
         closed_at = closed_at or now_utc().isoformat()
         with self._tx() as c:
+            from ..engine.booking import persist, snapshot
+            before = snapshot(c.execute('SELECT * FROM trades WHERE id=?', (trade_id,)).fetchone())
+            if before is None or before['status'] == 'closed':
+                return  # duplicate close callbacks must not double-book P&L
             # `pnl` is this leg, not the trade. It used to be written over
             # realized_pnl, discarding whatever close_partial had already
             # banked — so every trade that took its 1.5R partial recorded
             # only the final leg, and the pooled PF, the decay gate and the
             # judge all graded the book on a fraction of what it earned.
-            c.execute(
+            updated = c.execute(
                 "UPDATE trades SET exit_price=?, "
                 "realized_pnl=COALESCE(realized_pnl,0)+?, close_reason=?, "
-                "closed_at=?, status='closed' WHERE id=?",
+                "closed_at=?, status='closed' WHERE id=? AND status='open'",
                 (exit_price, pnl, reason, closed_at, trade_id))
+            if not updated.rowcount:
+                return
+            persist(c, trade_id, "close:"+reason, before, accounting)
 
     def align_trade_amount(self, trade_id: str, amount: float,
                            notional: float, pnl_delta: float = 0.0,
-                           pnl_total: float | None = None) -> None:
+                           pnl_total: float | None = None,
+                           accounting: dict | None = None, tp1_done: bool = False) -> None:
         """Pull an open trade's size back to what the venue actually holds.
 
         Used when the venue closed part of a position without us — a stop or
@@ -320,6 +344,10 @@ class Journal:
         contains every leg, so adding to it double-counts the partial.
         """
         with self._tx() as c:
+            from ..engine.booking import persist, snapshot
+            before = snapshot(c.execute('SELECT * FROM trades WHERE id=?', (trade_id,)).fetchone())
+            if before is None or before['status'] == 'closed':
+                return
             if pnl_total is not None:
                 c.execute("UPDATE trades SET amount=?, notional_usdt=?, "
                           "realized_pnl=? WHERE id=?",
@@ -330,6 +358,9 @@ class Journal:
                           "realized_pnl=COALESCE(realized_pnl,0)+? WHERE id=?",
                           (round(amount, 8), round(notional, 2),
                            round(pnl_delta, 8), trade_id))
+            if tp1_done:
+                c.execute("UPDATE trades SET tp1_done=1 WHERE id=?", (trade_id,))
+            persist(c, trade_id, "align_total" if pnl_total is not None else "align_delta", before, accounting)
 
     def record_stop_order(self, trade_id: str, order_id: str,
                           stop_price: float) -> None:

@@ -289,9 +289,18 @@ def register_evaluator(family: str, fn) -> None:
     EVALUATORS[family] = fn
 
 
-def evaluate(genome: Genome, snap: Snapshot) -> StrategySignal | None:
+def evaluate(genome: Genome, snap: Snapshot, diagnostic=None) -> StrategySignal | None:
+    if diagnostic is not None:
+        callback = diagnostic
+        def diagnostic(reason, exc=None):
+            try:
+                callback(reason, exc)
+            except Exception as error:
+                log.warning("strategy diagnostic failed: %s", type(error).__name__)
     fn = EVALUATORS.get(genome.family)
     if not fn:
+        if diagnostic:
+            diagnostic("missing_evaluator")
         return None
     try:
         # mined genomes may arrive with missing params — fill from the
@@ -301,10 +310,23 @@ def evaluate(genome: Genome, snap: Snapshot) -> StrategySignal | None:
         if any(k not in genome.params for k in defaults):
             merged = {**defaults, **genome.params}
             genome = replace(genome, params=merged)
-        return fn(genome, snap)
+        reported = False
+        def report(reason, exc=None):
+            nonlocal reported
+            reported = True
+            diagnostic(reason, exc)
+        if diagnostic and getattr(fn, "_diagnostic_capable", False):
+            result = fn(genome, snap, diagnostic=report)
+        else:
+            result = fn(genome, snap)
     except Exception as e:
+        if diagnostic:
+            diagnostic("evaluation_failed", e)
         log.warning(f"strategy {genome.strategy_id} ({genome.family}) error: {e}")
         return None
+    if diagnostic and not reported:
+        diagnostic("emitted_signal" if result is not None else "returned_none")
+    return result
 
 
 # ── The seeds themselves ────────────────────────────────────────────────

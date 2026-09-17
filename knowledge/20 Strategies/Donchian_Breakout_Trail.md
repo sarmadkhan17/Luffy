@@ -34,12 +34,12 @@ time:   max 500 bars
 
 
 ## Live record
-- closed trades: 0 · wins: 0
-- realized P&L: +0.00 USDT
+- closed trades: 6 · wins: 0
+- realized P&L: -37.54 USDT
 - state: **paper**
 
 Related: [[Regime Playbook]], [[MOC]]
 
-Same family (`spec`): [[Aggressor_Divergence_At_Highs]], [[Aggressor_Thrust_Breakout]], [[BTC_Rotation_Momentum]], [[Funding_Price_Divergence]], [[Momentum_Divergence_Trail]]
+Same family (`spec`): [[Aggressor_Divergence_At_Highs]], [[Aggressor_Thrust_Breakout]], [[BTC_Rotation_Momentum]], [[Funding_Filtered_Trend_Pullback]], [[Funding_Price_Divergence]], [[Momentum_Divergence_Trail]]
 
 Filed by [[Strategist]]

@@ -5,12 +5,13 @@ reports_to: Manager
 ---
 # Theorist
 
-> Autopsies losing clusters and edge decay into doctrine.
+> Checks every live strategy against the envelope it was admitted on — data only, no LLM.
 
 Reports to [[Manager]].
 
 ## Wraps
-- `trader.brain.theorist`
+- `trader.brain.postmortem`
+- `trader.brain.doctrine`
 
 ## Files here
 - [[20260824-2032 ZEC duplicate-entry crash-loop]]
@@ -52,5 +53,14 @@ Reports to [[Manager]].
 - [[20260902-0232 Autopsy]]
 - [[20260902-0240 Meta-review 2026-09-02]]
 - [[20260902-0257 Autopsy]]
+- [[20260903-0043 Meta-review 2026-09-03]]
+- [[20260911-0150 Meta-review 2026-09-11]]
+- [[20260911-0229 Autopsy]]
+- [[20260911-0239 Meta-review 2026-09-11]]
+- [[20260911-1122 Autopsy]]
+- [[20260911-1132 Meta-review 2026-09-11]]
+- [[20260911-1229 Autopsy]]
+- [[20260911-1239 Meta-review 2026-09-11]]
+- [[20260911-1624 Book health]]
 
 Related: [[Company]], [[MOC]]

@@ -20,9 +20,10 @@ OPEN_MS = int(datetime.fromisoformat(OPENED_AT).timestamp() * 1000)
 
 
 def _fill(side, price, amount, commission, realized, order=None, t=0):
-    return {"order": order, "side": side, "price": price, "amount": amount,
+    return {"id": f"fill-{side}-{price}-{amount}-{commission}-{realized}-{order}-{t}",
+            "symbol": "AVAX/USDT", "order": order, "side": side, "price": price, "amount": amount,
             "timestamp": t,
-            "info": {"commission": str(commission), "realizedPnl": str(realized)}}
+            "info": {"commission": str(commission), "commissionAsset": "USDT", "realizedPnl": str(realized)}}
 
 
 class DemoEx:
@@ -118,10 +119,13 @@ def test_the_previous_trade_on_the_symbol_is_not_counted(book):
         -8.463 - 0.81387 - 0.81725, abs=1e-6)
 
 
-def test_an_unreadable_venue_books_an_estimate_and_says_so(book):
+def test_an_unreadable_venue_leaves_the_trade_open_and_says_so(book):
     ex, j, e = book
     ex.fetch_raises = True
-    assert e.close(_row(j), exit_price_hint=7.447, reason="manual")
-    assert _row(j)["exit_price"] == pytest.approx(7.447)
-    ev = j.query("SELECT subject FROM brain_events WHERE kind='pnl_estimated'")
-    assert [x["subject"] for x in ev] == ["pos_avax"]
+    assert not e.close(_row(j), exit_price_hint=7.447, reason="manual")
+    row = _row(j)
+    assert row["status"] == "open"
+    assert row["exit_price"] is None
+    ev = j.query("SELECT event FROM control_events "
+                 "WHERE event='close_fill_unconfirmed'")
+    assert [x["event"] for x in ev] == ["close_fill_unconfirmed"]

@@ -407,6 +407,18 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
 
 <!-- ══════════ OVERVIEW ══════════ -->
 <div id="v-overview">
+ <section class="card" style="margin-bottom:16px" aria-label="Market investigations">
+  <h2>Market investigations</h2>
+  <p id="investigation-status" role="status">Investigations: loading…</p>
+  <p class="sub">Continuing questions about observed markets. Explanations remain uncertain; investigations do not authorize trades.</p>
+  <div id="investigation-content"></div>
+ </section>
+ <section class="card" style="margin-bottom:16px" aria-label="Luffy attention">
+  <h3>What Luffy is examining</h3>
+  <p id="attention-status" role="status">Attention diagnostics: loading…</p>
+  <p class="sub">Observations from the current scan subset. Attention does not authorize a trade.</p>
+  <div id="attention-content"></div>
+ </section>
  <div class="tickstrip" id="tickstrip"><span class="ti" style="color:var(--dimmer)">loading prices…</span></div>
 
  <div class="kpis">
@@ -1663,4 +1675,4 @@ setInterval(()=>{if(!$('#v-company').classList.contains('hidden'))loadCompany(tr
 const dkVisible=()=>!$('#v-os').classList.contains('hidden')&&!$('#os-agents').classList.contains('hidden');
 setInterval(()=>{if(dkVisible())loadDeck(true);},8000);
 addEventListener('resize',()=>{if(_dkBuilt&&dkVisible())requestAnimationFrame(dkWires);});
-</script></body></html>
+</script><script src="/attention.js"></script><script src="/investigation.js"></script></body></html>

@@ -1,0 +1,1 @@
+{"observed_utc": "2026-09-16T17:03:42.468618+00:00", "reason_code": "roadmap_document_validation_passed", "local_links_checked": 38, "missing_links": [], "milestones": 11, "checklist_items": 55, "accepted_items": ["M0.1", "M0.2", "M0.3", "M0.4", "M0.5"], "owner_requirement_sections_mapped": 24, "next_item": "M1.1", "application_changes": false, "runtime_mutations": false}

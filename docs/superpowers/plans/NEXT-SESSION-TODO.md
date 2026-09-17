@@ -1,5 +1,9 @@
 # Luffy — next session handoff
 
+> Historical handoff from August 31. For the current work queue, start with
+> [docs/NEXT_SESSION.md](../../NEXT_SESSION.md) and its canonical checklist.
+> The historical contents below are preserved as context.
+
 **State on 2026-08-31.** Everything below is committed on `master`. The kernel
 is running with the spec population loaded (`population=19` = 15 legacy
 genomes + 4 compiled specs). 414 tests pass.
