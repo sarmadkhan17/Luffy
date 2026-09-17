@@ -1,6 +1,6 @@
 ---
 type: strategy
-state: demoted
+state: retired
 family: breakout_retest
 origin: seed
 author: Strategist
@@ -19,7 +19,7 @@ author: Strategist
 ## Live record
 - closed trades: 0 · wins: 0
 - realized P&L: +0.00 USDT
-- state: **demoted**
+- state: **retired**
 
 Related: [[Behavioral Momentum]], [[Regime Playbook]], [[MOC]]
 

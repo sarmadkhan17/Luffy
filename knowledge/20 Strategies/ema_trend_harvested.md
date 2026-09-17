@@ -23,6 +23,6 @@ author: Researcher
 
 Related: [[Behavioral Momentum]], [[Regime Playbook]], [[MOC]]
 
-Same family (`ema_trend`): [[EMA_Stack_Pullback]], [[ema_trend_variant_(22.0)]]
+Same family (`ema_trend`): [[EMA_Stack_Pullback]], [[ema_trend_variant_(22.0)]], [[ema_trend_variant_(22.0)_·adx_min=26.8812]]
 
 Filed by [[Researcher]]

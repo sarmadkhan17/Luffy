@@ -29,8 +29,8 @@ from .agents.regime import btc_context
 from .agents.structure import StructureAnalyst
 from .core.config import ROOT, load_config
 from .core.journal import Journal
-from .core.types import (Action, ControlState, MarketType, Snapshot,
-                         norm_symbol)
+from .core.types import (Action, ControlState, MarketType, RiskError,
+                         Snapshot, norm_symbol)
 from .data.feed import DataFeed, Universe, make_exchange
 from .engine.executor import Executor
 from .engine.outcomes import resolve_pending
@@ -110,6 +110,27 @@ class Kernel:
         self._funding_cache: dict[str, float] | None = None
         self._oi_cache: tuple[float, dict[str, dict]] = (0.0, {})
         self._btc_ctx: dict = {}
+        self._attention = None
+        self._attention_error = None
+        if (cfg.get("attention") or {}).get("enabled") is True:
+            try:
+                from .observability.collector import Collector
+                self._attention = Collector(ROOT / "data", cfg["attention"])
+            except Exception as exc:
+                self._attention_error = type(exc).__name__
+                log.warning("attention startup failed: %s", self._attention_error)
+
+    def _attention_call(self, method, *args):
+        """Telemetry failure must never prevent entry checks or exit management."""
+        collector = getattr(self, "_attention", None)
+        if collector is None:
+            return None
+        try:
+            return getattr(collector, method)(*args)
+        except Exception as exc:
+            self._attention_error = type(exc).__name__
+            log.warning("attention %s failed: %s", method, self._attention_error)
+            return None
 
     def _make_agent(self, key: str):
         if key == "positioning":
@@ -122,6 +143,11 @@ class Kernel:
     def _load_population(self) -> list[tuple]:
         pop = []
         for row in self.journal.list_strategies(["paper", "active", "demoted"]):
+            if row.get("kind") == "spec":
+                # Specs enter through the compiled path below. Treating the
+                # same row as a legacy genome produces a second, evaluatorless
+                # entry and misleading missing-evaluator receipts.
+                continue
             st = type("S", (), {})()          # light strategy shim over row
             st.id, st.name, st.state = row["id"], row["name"], row["state"]
             st.params = json.loads(row["params"])
@@ -249,7 +275,14 @@ class Kernel:
                  f"state={self.state_machine.state.value} "
                  f"population={len(self.population)}")
         self._filter_universe_to_venue()
-        report = reconcile_futures(self.exchange, self.journal)
+        try:
+            recovery = self.executor.recovery.pending()
+        except Exception:
+            log.exception("boot recovery ledger unreadable; preserve venue stops and block entries")
+            report = {"error": "recovery_ledger_unreadable"}
+        else:
+            report = reconcile_futures(self.exchange, self.journal,
+                                       exclude_symbols=[recovery["symbol"]] if recovery else [])
         if any(report.get(k) for k in ("adopted", "ghosts")):
             self.notifier.send(f"🔧 boot reconciliation: {report}")
         start_stall_monitor(
@@ -307,6 +340,7 @@ class Kernel:
             log.warning(f"universe venue-filter failed: {e}")
 
     def _graceful(self, signum, _frame) -> None:
+        self._attention_call("close")
         log.warning(f"signal {signum} — shutting down")
         self._stop = True
 
@@ -793,8 +827,12 @@ class Kernel:
     def cycle(self) -> dict:
         stats = {"scanned": 0, "decisions": 0, "entries": 0,
                  "skips": 0, "exits_detected": 0}
+        self.state_machine.refresh()
         balance = self._fetch_balance()
         status = self.risk.update_equity(balance)
+        if status.get("halt_breached"):
+            self.state_machine.set(ControlState.HALTED, "risk_engine",
+                                   f"drawdown {status['drawdown_pct']}%")
 
         stats["manual_closed"] = self._drain_close_requests()
 
@@ -810,7 +848,9 @@ class Kernel:
         # Only auto-resumes if MacroGuard owns the current freeze, not operator.
         macro = self.macro_guard.check()
         macro_owns_freeze = self.journal.kv_get("macro_guard_froze", "0") == "1"
-        _cur = self.state_machine.state
+        operator_hold = self.journal.kv_get(
+            "macro_guard_operator_hold", "0") == "1"
+        _cur = self.state_machine.refresh()
         if macro.get("active") and _cur == ControlState.ACTIVE:
             self.state_machine.set(ControlState.FROZEN, "macro_guard",
                                    macro.get("event", "macro event"))
@@ -819,7 +859,7 @@ class Kernel:
                 f"🔒 MacroGuard FREEZE: {macro.get('event', 'macro event')} "
                 f"until {macro.get('until', '?')}")
         elif (not macro.get("active") and macro_owns_freeze
-              and _cur == ControlState.FROZEN):
+              and not operator_hold and _cur == ControlState.FROZEN):
             self.state_machine.set(ControlState.ACTIVE, "macro_guard",
                                    "macro event cleared")
             self.journal.kv_set("macro_guard_froze", "0")
@@ -830,9 +870,14 @@ class Kernel:
             "until": macro.get("until"),
             "ts": dt.datetime.now(dt.timezone.utc).isoformat()}))
 
-        state = self.state_machine.state
+        state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
         entry_allowed = state == ControlState.ACTIVE
         blocked = "" if entry_allowed else f"state={state.value}"
+        if self.market_type == MarketType.FUTURES and self.executor.recovery_pending():
+            entry_allowed = False
+            blocked = "execution_recovery_pending"
         if entry_allowed and status.get("daily_pnl_pct", 0) <= \
                 -self.risk.daily_loss_block * 100:
             entry_allowed = False
@@ -857,11 +902,22 @@ class Kernel:
         # instead of a list hardcoded beside it.
         scan_symbols = self._scan_symbols()
         universe_frames = self._universe_frames(scan_symbols)
+        scan_id = self._attention_call("begin", universe_frames, scan_symbols)
+        attention_causes = []
+        # Bound producer work even if the trading universe is much larger.
+        attention_cap = getattr(getattr(self, "_attention", None), "cfg", {}).get("max_symbols", 0)
 
         scanned: set = set()
         for symbol in scan_symbols:
+            if (entry_allowed and self.market_type == MarketType.FUTURES
+                    and self.executor.recovery_pending()):
+                entry_allowed = False
+                blocked = "execution_recovery_pending"
             snap = self._snapshot_for(symbol, universe=universe_frames)
             if snap is None:
+                if scan_id and len(attention_causes) < attention_cap:
+                    attention_causes.append({"symbol": symbol, "decision_id": None,
+                                             "reason": "missing_snapshot"})
                 continue
             stats["scanned"] += 1
             self.positioning_agent.set_context(symbol, funding.get(symbol),
@@ -870,6 +926,7 @@ class Kernel:
             d = self.orchestrator.decide(snap, self.population,
                                          entry_allowed=entry_allowed,
                                          blocked_reason=blocked)
+            d.scan_id = scan_id
             self.orchestrator.journalize(snap, d, self.market_type.value,
                                          mode="live")
             stats["decisions"] += 1
@@ -880,7 +937,16 @@ class Kernel:
                     log.info(f"SKIP {symbol} {d.action} score={d.score:+.3f} "
                              f"| {d.skip_reason}")
                 elif entry_allowed:
-                    ok = self._try_enter(d, snap, balance, closed_count)
+                    try:
+                        ok = self._try_enter(d, snap, balance, closed_count)
+                    except RiskError as e:
+                        self.state_machine.set(ControlState.HALTED,
+                                               "risk_engine", str(e))
+                        d.skip_reason = f"risk halt: {e}"
+                        ok = False
+                        entry_allowed = False
+                        blocked = "state=HALTED"
+                        log.error(f"RISK HALT {d.symbol}: {e}")
                     self.journal.update_decision_outcome(
                         d.id, d.executed, d.size_usdt, d.skip_reason)
                     if ok:
@@ -889,15 +955,23 @@ class Kernel:
                             f"🎯 <b>{d.action}</b> {symbol} @ {snap.price:.4g} "
                             f"score {d.score:+.2f} conf {d.confidence:.0%}")
 
+            if scan_id and len(attention_causes) < attention_cap:
+                attention_causes.append({"symbol": symbol, "decision_id": d.id,
+                    "cycle_id": d.cycle_id, "action": d.action.value,
+                    "executed": d.executed, "entry_allowed": entry_allowed,
+                    "blocked": bool(d.skip_reason),
+                    "reason": "decision_recorded", "decision_detail": "see decisions.skip_reason",
+                    "evaluations": d.evaluation_causes, "omitted_causes": d.omitted_causes})
             stats["exits_detected"] += self._detect_exchange_exits(symbol)
             scanned.add(symbol)
             for t in self.journal.open_trades():
                 if t["symbol"] != symbol:
                     continue
                 score = d.score if d.symbol == symbol else None
-                r = self._manage_one(t, snap, score)
-                if r:
-                    stats["exit_action"] = r
+                if self._manages_exits():
+                    r = self._manage_one(t, snap, score)
+                    if r:
+                        stats["exit_action"] = r
 
         # Positions whose symbol has left the universe are still positions.
         # Both calls above live inside the scan loop, so before this pass a
@@ -905,6 +979,12 @@ class Kernel:
         stats["orphans_managed"] = self._manage_orphan_positions(scanned)
 
         self._maybe_resolve_outcomes()
+        self._attention_call("causes", scan_id, attention_causes)
+        attention_health = self._attention_call("health")
+        attention_error = getattr(self, "_attention_error", None)
+        if attention_health or attention_error:
+            stats["attention"] = attention_health or {"enabled": True, "status": "error"}
+            stats["attention"]["kernel_error"] = attention_error
         self.heartbeat.beat({"equity": round(balance, 2),
                              "state": state.value, **stats})
         self.journal.log_equity(status["equity"], balance,
@@ -1097,6 +1177,10 @@ class Kernel:
                 f"↪ {t['symbol']} exit: {reason} @ {snap.price:.4g}")
         return reason
 
+    def _manages_exits(self) -> bool:
+        sm = getattr(self, "state_machine", None)
+        return sm.manages_exits() if sm is not None else True
+
     def _manage_orphan_positions(self, scanned: set) -> int:
         """Manage open positions whose symbol was not scanned this cycle.
 
@@ -1121,7 +1205,8 @@ class Kernel:
                                 f"cannot manage this cycle")
                     continue
                 self._detect_exchange_exits(sym)
-                self._manage_one(t, snap, None)
+                if self._manages_exits():
+                    self._manage_one(t, snap, None)
                 n += 1
             except Exception as e:
                 log.warning(f"orphan position {sym}: {e}")

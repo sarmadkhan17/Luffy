@@ -24,7 +24,7 @@ def _now() -> str:
 
 
 def venue_realized_pnl(exchange, symbol: str,
-                       since_iso: str) -> float | None:
+                       since_iso: str, observation: dict | None = None) -> float | None:
     """What the venue says this position has realized, net of commission.
 
     The only honest answer when the journal and the venue disagree about a
@@ -35,25 +35,30 @@ def venue_realized_pnl(exchange, symbol: str,
 
     None when the venue will not answer; the caller falls back to the mark.
     """
+    from .accounting import safe_fill
+    from .booking import monetary_total
+    import time
+    observation = observation if observation is not None else {}
+    observation.update(basis="symbol_time_window_subtotal_unattributed", symbol=symbol,
+                       since_iso=since_iso, observed_ms=int(time.time()*1000), fills=[],
+                       funding_usdt=None, learning_eligible=False)
     try:
         since = int(datetime.fromisoformat(since_iso).timestamp() * 1000)
-    except Exception:
-        return None
-    try:
         fills = exchange.fetch_my_trades(symbol, since=since, limit=1000)
-    except Exception as e:
-        log.warning(f"venue fill history unavailable for {symbol}: {e}")
+        if not isinstance(fills, list):
+            raise ValueError("invalid_fill_response")
+        observation['fills'] = [safe_fill(f) for f in fills]
+    except Exception as exc:
+        observation['reason'] = "fill_history_unavailable:"+type(exc).__name__
+        log.warning("venue fill history unavailable for %s (%s)", symbol, type(exc).__name__)
         return None
-    if not fills:
+    if len(fills) >= 1000:
+        observation['reason'] = "history_page_full_retry_required"
         return None
-    total = 0.0
-    for f in fills:
-        i = f.get("info") or {}
-        try:
-            total += float(i.get("realizedPnl") or 0) - float(
-                i.get("commission") or 0)
-        except (TypeError, ValueError):
-            continue
+    total = monetary_total(observation['fills'])
+    observation['reason'] = ("numeric_subtotal_not_trade_attribution" if total is not None
+                             else "missing_or_invalid_fee_pnl_identity_currency")
+    observation['net_excluding_funding'] = total
     return total
 
 
@@ -66,7 +71,7 @@ def _mark(exchange, symbol: str, fallback: float) -> float:
         return fallback
 
 
-def reconcile_futures(exchange, journal: Journal) -> dict:
+def reconcile_futures(exchange, journal: Journal, exclude_symbols=()) -> dict:
     """Align journal open trades with live exchange positions."""
     try:
         ex_positions = {
@@ -78,11 +83,14 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
         log.error(f"reconcile: cannot fetch positions ({e}) — keeping journal as-is")
         return {"adopted": 0, "ghosts": 0, "aligned": 0, "error": str(e)}
 
-    j_open = {t["symbol"]: t for t in journal.open_trades()}
+    excluded = set(exclude_symbols)
+    j_open = {t["symbol"]: t for t in journal.open_trades() if t["symbol"] not in excluded}
     adopted = ghosts = aligned = 0
 
     # 1. adopt orphans
     for sym, p in ex_positions.items():
+        if sym in excluded:
+            continue  # durable entry recovery owns this exposure and its risk intent
         contracts = float(p.get("contracts") or 0)
         side_raw = (p.get("side") or "long").lower()
         entry = float(p.get("entryPrice") or p.get("markPrice") or 0)
@@ -112,9 +120,10 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
                 # Growing is an accounting error, never a realized gain.
                 pnl = 0.0
                 total = None
+                observation = {"basis": "position_alignment_without_fill_attribution"}
                 if contracts < jamt:
                     total = venue_realized_pnl(
-                        exchange, sym, str(jt["opened_at"] or ""))
+                        exchange, sym, str(jt["opened_at"] or ""), observation=observation)
                     if total is None:
                         entry = float(jt["entry_price"])
                         px = _mark(exchange, sym, entry)
@@ -128,7 +137,7 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
                 journal.align_trade_amount(
                     jt["id"], contracts, float(p.get("notional") or 0),
                     pnl_delta=round(pnl, 8),
-                    pnl_total=None if total is None else round(total, 8))
+                    pnl_total=None if total is None else round(total, 8), accounting=observation)
                 booked = total if total is not None else pnl
                 log.info(f"ALIGNED {sym}: amount {jt['amount']} → {contracts}"
                          + (f" | realized {booked:+.2f}"
@@ -169,8 +178,9 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
         open_now = journal.open_trades()
         keep = {str(t["sl_order_id"]) for t in open_now if t.get("sl_order_id")}
         protected = {t["symbol"] for t in open_now if t.get("sl_order_id")}
-        swept, failed_sweep = protective.sweep_orphans(
-            exchange, keep, set(ex_positions.keys()), protected)
+        if not excluded:
+            swept, failed_sweep = protective.sweep_orphans(
+                exchange, keep, set(ex_positions.keys()), protected)
     except Exception as e:
         log.warning(f"orphan stop sweep failed: {e}")
 
@@ -207,7 +217,7 @@ def reconcile_futures(exchange, journal: Journal) -> dict:
         # `venue_key` is the one spelling both collapse to
         covered = {protective.venue_key(str(o.get("symbol") or ""))
                    for o in stops}
-        bare = [sym for sym in ex_positions
+        bare = [sym for sym in ex_positions if sym not in excluded
                 if protective.venue_key(sym) not in covered]
         naked = len(bare)
         j_now = {t["symbol"]: t for t in journal.open_trades()}

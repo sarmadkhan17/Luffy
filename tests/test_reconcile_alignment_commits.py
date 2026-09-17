@@ -145,9 +145,9 @@ class _ExWithFills(_Ex):
 def _uni_fills():
     """The real 2026-09-02 UNI legs: entry, TP1, then the trailing stop."""
     return [
-        {"info": {"realizedPnl": "0",           "commission": "1.4309"}},
-        {"info": {"realizedPnl": "31.73912520", "commission": "0.7270"}},
-        {"info": {"realizedPnl": "89.00612520", "commission": "0.7499"}},
+        {"id": "entry", "info": {"realizedPnl": "0", "commission": "1.4309", "commissionAsset": "USDT"}},
+        {"id": "partial", "info": {"realizedPnl": "31.73912520", "commission": "0.7270", "commissionAsset": "USDT"}},
+        {"id": "stop", "info": {"realizedPnl": "89.00612520", "commission": "0.7499", "commissionAsset": "USDT"}},
     ]
 
 

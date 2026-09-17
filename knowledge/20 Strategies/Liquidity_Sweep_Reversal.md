@@ -1,6 +1,6 @@
 ---
 type: strategy
-state: demoted
+state: retired
 family: sweep_reversal
 origin: seed
 author: Strategist
@@ -19,7 +19,7 @@ author: Strategist
 ## Live record
 - closed trades: 18 · wins: 10
 - realized P&L: -98.95 USDT
-- state: **demoted**
+- state: **retired**
 
 Related: [[Auction Market Theory]], [[Regime Playbook]], [[MOC]]
 

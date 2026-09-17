@@ -65,7 +65,7 @@ def cancel_stop(ex, order_id: str, symbol: str) -> bool:
         return False
 
 
-def open_stops(ex, symbol: str | None = None) -> list[dict]:
+def open_stops(ex, symbol: str | None = None, *, strict: bool = False) -> list[dict]:
     """Every live protective order, algo and ordinary, as one flat list.
 
     Each entry: {id, symbol, side, amount, stop_price, kind}. `symbol` is the
@@ -76,6 +76,9 @@ def open_stops(ex, symbol: str | None = None) -> list[dict]:
     if hasattr(ex, "fapiPrivateGetOpenAlgoOrders"):
         try:
             r = ex.fapiPrivateGetOpenAlgoOrders()
+            if strict and not (isinstance(r, list) or
+                               isinstance(r, dict) and isinstance(r.get("orders"), list)):
+                raise ValueError("invalid protective order snapshot")
             rows = r.get("orders", []) if isinstance(r, dict) else (r or [])
             for o in rows:
                 out.append({
@@ -84,8 +87,12 @@ def open_stops(ex, symbol: str | None = None) -> list[dict]:
                     "side": str(o.get("side") or "").lower(),
                     "amount": float(o.get("quantity") or 0),
                     "stop_price": float(o.get("triggerPrice") or 0),
+                    "reduce_only": str(o.get("reduceOnly", "")).lower() == "true",
+                    "order_type": str(o.get("orderType") or o.get("type") or "").upper(),
                     "kind": "algo"})
         except Exception as e:
+            if strict:
+                raise
             log.debug(f"algo order listing failed: {e}")
     try:
         rows = ex.fetch_open_orders(symbol) if symbol else []
@@ -100,8 +107,12 @@ def open_stops(ex, symbol: str | None = None) -> list[dict]:
                 "side": str(o.get("side") or "").lower(),
                 "amount": float(o.get("amount") or 0),
                 "stop_price": float(sp),
+                "reduce_only": str(o.get("reduceOnly", info.get("reduceOnly", ""))).lower() == "true",
+                "order_type": str(info.get("origType") or info.get("type") or o.get("type") or "").upper(),
                 "kind": "order"})
     except Exception as e:
+        if strict:
+            raise
         log.debug(f"plain order listing failed: {e}")
     if symbol:
         key = venue_key(symbol)

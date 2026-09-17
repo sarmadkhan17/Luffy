@@ -1,6 +1,6 @@
 ---
 type: strategy
-state: demoted
+state: retired
 family: vwap_fade
 origin: seed
 author: Strategist
@@ -19,7 +19,7 @@ author: Strategist
 ## Live record
 - closed trades: 0 · wins: 0
 - realized P&L: +0.00 USDT
-- state: **demoted**
+- state: **retired**
 
 Related: [[Statistical Mean Reversion]], [[Regime Playbook]], [[MOC]]
 

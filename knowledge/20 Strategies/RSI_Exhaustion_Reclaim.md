@@ -1,6 +1,6 @@
 ---
 type: strategy
-state: demoted
+state: retired
 family: rsi_extreme
 origin: analyst
 author: Strategist
@@ -19,7 +19,7 @@ author: Strategist
 ## Live record
 - closed trades: 2 · wins: 0
 - realized P&L: -120.62 USDT
-- state: **demoted**
+- state: **retired**
 
 Related: [[Statistical Mean Reversion]], [[Regime Playbook]], [[MOC]]
 

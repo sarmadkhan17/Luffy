@@ -145,7 +145,7 @@ class MacroGuard:
         # Treating it as a live source would report "quiet week" while the
         # guard is actually blind — the exact failure this class exists to
         # avoid — so it is discarded instead.
-        horizon = datetime.now(timezone.utc) - timedelta(minutes=self.post_min)
+        horizon = self._now() - timedelta(minutes=self.post_min)
         events = []
         for e in raw.get("events", []):
             try:

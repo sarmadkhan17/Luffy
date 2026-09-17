@@ -25,14 +25,33 @@ class ControlStateMachine:
         raw = journal.kv_get("control_state", ControlState.ACTIVE.value)
         self.state = ControlState(raw)
 
+    def refresh(self) -> ControlState:
+        """Reload operator state written by another process."""
+        raw = self.state.value
+        try:
+            raw = self.journal.kv_get("control_state", raw)
+            self.state = ControlState(raw)
+        except (TypeError, ValueError) as e:
+            log.warning("invalid persisted control state %r: %s", raw, e)
+        return self.state
+
     def can_enter(self) -> bool:
+        self.refresh()
         return self.state == ControlState.ACTIVE
 
     def manages_exits(self) -> bool:
         """FROZEN still manages exits to natural close; HALTED does not."""
+        self.refresh()
         return self.state in (ControlState.ACTIVE, ControlState.FROZEN)
 
     def set(self, new: ControlState, actor: str, detail: str = "") -> None:
+        self.refresh()
+        # A same-state operator freeze still records an explicit hold, so
+        # MacroGuard cannot later auto-resume a freeze it did not own.
+        if new == ControlState.FROZEN and actor != "macro_guard":
+            self.journal.kv_set("macro_guard_operator_hold", "1")
+        elif new == ControlState.ACTIVE and actor != "macro_guard":
+            self.journal.kv_set("macro_guard_operator_hold", "0")
         if new == self.state:
             return
         if new not in VALID_TRANSITIONS[self.state]:
@@ -46,6 +65,7 @@ class ControlStateMachine:
 
     def panic(self, actor: str = "operator") -> int:
         """Journal panic; actual flattening is executed by the kernel loop."""
+        self.refresh()
         self.journal.log_control_event("panic", actor,
                                        from_state=self.state.value,
                                        to_state="FROZEN",

@@ -18,7 +18,10 @@ from ..core.config import ROOT
 from ..core.journal import Journal
 from ..core.types import Action, Decision, MarketType, Position, Side, new_id
 from . import protective
+from .booking import monetary_total, order_evidence
+from .accounting import safe_fill
 from .reconcile import venue_realized_pnl
+from .recovery import EntryRecovery
 
 log = logging.getLogger(__name__)
 
@@ -61,6 +64,29 @@ class Executor:
         self._reg = threading.Lock()
         #: backoff between fill-history reads after an exit; tests set 0
         self.fill_retry_s = 1.0
+        self._entry_lock = threading.RLock()
+        self.recovery = EntryRecovery(self)
+
+    def recovery_pending(self) -> bool:
+        if self.market_type != MarketType.FUTURES:
+            return False
+        try:
+            return bool(self.recovery.pending())
+        except Exception:
+            log.exception("recovery ledger unreadable; new entries blocked")
+            return True
+
+    def recover_entries(self) -> None:
+        if self.market_type == MarketType.FUTURES:
+            with self._entry_lock:
+                try:
+                    intent = self.recovery.pending()
+                    if intent:
+                        with self._lock_for(intent["symbol"]):
+                            self.recovery.tick()
+                except Exception:
+                    # Recovery storage failures must not prevent existing exits.
+                    log.exception("entry recovery unavailable; new entries remain blocked")
 
     def _lock_for(self, symbol: str) -> threading.Lock:
         with self._reg:
@@ -71,6 +97,15 @@ class Executor:
              stop_loss: float, take_profit: float,
              strategy_id: str, strategy_name: str,
              exec_mode: str = "live") -> Position | None:
+        with self._entry_lock:
+            if self.recovery_pending():
+                decision.skip_reason = "execution_recovery_pending"
+                return None
+            return self._open_serialized(decision, amount, atr, stop_loss,
+                                         take_profit, strategy_id, strategy_name, exec_mode)
+
+    def _open_serialized(self, decision, amount, atr, stop_loss, take_profit,
+                         strategy_id, strategy_name, exec_mode):
         lock = self._lock_for(decision.symbol)
         if not lock.acquire(blocking=False):
             log.warning(f"[{decision.symbol}] entry already in flight")
@@ -125,10 +160,27 @@ class Executor:
         if amount <= 0:
             log.warning(f"ENTRY SKIPPED {sym}: size rounds to zero lots")
             return None
+        position_id = new_id("pos")
+        intent = None
+        if self.market_type == MarketType.FUTURES:
+            intent = self.recovery.begin(Position(
+                id=position_id, symbol=sym, side=pos_side, amount=amount,
+                entry_price=0, notional_usdt=0, leverage=self.leverage,
+                stop_loss=stop_loss, take_profit=take_profit,
+                strategy_id=strategy_id, strategy_name=strategy_name,
+                decision_id=decision.id, market_type=self.market_type.value,
+                exec_mode=exec_mode, confidence=decision.confidence))
+            params["newClientOrderId"] = intent["client_order_id"]
         try:
             order = self.ex.create_order(sym, "market", side_ccxt, amount,
                                          params=params)
         except Exception as e:
+            if intent:
+                from ccxt import InvalidOrder, InsufficientFunds, AuthenticationError, PermissionDenied
+                if isinstance(e, (InvalidOrder, InsufficientFunds, AuthenticationError, PermissionDenied)):
+                    self.recovery.finish(intent, "entry_explicitly_rejected")
+                else:
+                    self.recovery.save(intent, "entry_submission_ambiguous")
             from ..data.feed import is_untradeable_error, mark_untradeable
             if is_untradeable_error(e):
                 # venue lists it but this account can never trade it
@@ -139,28 +191,36 @@ class Executor:
                     "symbol_untradeable", sym, {"error": str(e)[:200]})
             log.error(f"ENTRY FAILED {sym}: {e}")
             return None
+        if intent:
+            intent["order_id"] = str(order.get("id") or "")
+            self.recovery.save(intent, "entry_submitted")
         fill, filled = self._confirm_fill(sym, str(order.get("id") or ""),
                                           order, amount)
         oid = str(order.get("id") or "")
         if filled and filled > 0:
             amount = filled          # the venue's number is the only truth
         if fill is None:
-            # order may still have filled — reconciliation will adopt it at
-            # next boot; never place a stop against an unknown fill
+            # Persisted intent is retried by the running recovery loop.
             log.critical(f"ENTRY {sym}: fill unconfirmed (order {oid}) — "
-                         f"position UNJOURNALED, reconcile will adopt")
+                         f"position UNJOURNALED, continuous recovery pending")
             self.journal.log_control_event(
                 "fill_unconfirmed", "executor",
                 detail={"symbol": sym, "order_id": oid})
+            if intent:
+                self.recovery.save(intent, "entry_fill_unconfirmed")
             return None
 
         sl_oid = ""
         if self.market_type == MarketType.FUTURES:
             sl_oid = self._place_native_stop(sym, pos_side, amount,
                                               stop_loss)
+            if not sl_oid:
+                self._recover_unprotected_entry(sym, pos_side, amount, fill,
+                                                oid)
+                return None
 
         pos = Position(
-            id=new_id("pos"), symbol=sym, side=pos_side, amount=amount,
+            id=position_id, symbol=sym, side=pos_side, amount=amount,
             entry_price=fill,
             notional_usdt=round(amount * fill, 2),
             leverage=self.leverage if self.market_type == MarketType.FUTURES else 1,
@@ -169,7 +229,7 @@ class Executor:
             decision_id=decision.id,
             market_type=self.market_type.value, exec_mode=exec_mode,
             confidence=decision.confidence, sl_order_id=sl_oid)
-        self.journal.add_trade(pos)
+        self.journal.add_trade(pos, accounting={"basis": "entry_order_confirmation", "order_id": oid, "confirmed_quantity": amount, "confirmed_price": fill})
         decision.executed = True
         decision.size_usdt = pos.notional_usdt
         self.journal.set_decision_entry_price(decision.id, fill)
@@ -182,7 +242,36 @@ class Executor:
         log.info(f"TRADE OPEN {sym} {pos_side.value} {amount} @ {fill} "
                  f"| SL {stop_loss:.6g}{(' oid=' + sl_oid) if sl_oid else ''} "
                  f"| TP {tp_note} | est RT fees ≈ {fee_note:.2f}% notional")
+        if intent:
+            self.recovery.finish(intent, "entry_protected_and_journalled")
         return pos
+
+    def _recover_unprotected_entry(self, symbol: str, side: Side, amount: float,
+                                   fill: float, order_id: str) -> None:
+        """Immediately flatten an entry whose native stop could not be armed."""
+        try:
+            amount = quantize(self.ex, symbol, amount)
+            if amount <= 0:
+                raise ValueError("filled size rounds below one lot")
+            intent = self.recovery.pending()
+            if not intent or intent["symbol"] != symbol:
+                raise RuntimeError("missing persisted entry intent")
+            self.recovery.submit_close(intent, amount)
+            log.critical(f"ENTRY {symbol}: native stop failed after fill "
+                         f"{order_id}; sent emergency reduce-only close "
+                         f"for {amount} @~{fill}")
+            self.journal.log_control_event(
+                "entry_stop_failed_close_pending", "executor",
+                detail={"symbol": symbol, "order_id": order_id,
+                        "amount": amount, "entry_price": fill})
+        except Exception as e:
+            log.critical(f"ENTRY {symbol}: native stop failed after fill "
+                         f"{order_id}; emergency close also failed: {e}")
+            self.journal.log_control_event(
+                "entry_stop_failed_unprotected", "executor",
+                detail={"symbol": symbol, "order_id": order_id,
+                        "amount": amount, "entry_price": fill,
+                        "error": str(e)[:200]})
 
     def _confirm_fill(self, symbol: str, order_id: str, order: dict,
                       amount: float) -> tuple[float | None, float]:
@@ -194,9 +283,10 @@ class Executor:
         that later legs can never close.
         """
         for attempt in range(6):
-            fill = float(order.get("average") or order.get("price") or 0)
+            fill = float(order.get("average") or 0)
             got = float(order.get("filled") or 0)
-            if fill > 0:
+            terminal = str(order.get("status", "")).lower() in {"closed", "canceled", "expired"}
+            if fill > 0 and got > 0 and (terminal or self.market_type != MarketType.FUTURES):
                 return fill, got
             if not order_id:
                 return None, got
@@ -205,13 +295,7 @@ class Executor:
                 order = self.ex.fetch_order(order_id, symbol)
             except Exception as e:
                 log.warning(f"fill confirm retry {symbol}: {e}")
-        # last resort: mark price
-        try:
-            t = self.ex.fetch_ticker(symbol)
-            px = float(t.get("last") or 0)
-            return (px if px > 0 else None), float(order.get("filled") or 0)
-        except Exception:
-            return None, float(order.get("filled") or 0)
+        return None, float(order.get("filled") or 0)
 
     def _place_native_stop(self, symbol: str, side: Side, amount: float,
                            stop_price: float) -> str:
@@ -253,9 +337,19 @@ class Executor:
                            or (f.get("info") or {}).get("orderId")
                            or "") == str(order_id)]
                 if fills:
-                    return fills
+                    unique = {}
+                    unkeyed = []
+                    for f in fills:
+                        fid = f.get('id')
+                        if not fid:
+                            unkeyed.append(f)  # retained as unverified evidence
+                        elif str(fid) in unique and safe_fill(unique[str(fid)]) != safe_fill(f):
+                            raise ValueError("conflicting_fill_identity")
+                        else:
+                            unique[str(fid)] = f
+                    return list(unique.values()) + unkeyed
             except Exception as e:
-                log.warning(f"fill history {symbol}: {e}")
+                log.warning("fill history %s (%s)", symbol, type(e).__name__)
             if attempt < 2:
                 time.sleep(self.fill_retry_s)
         return []
@@ -267,11 +361,9 @@ class Executor:
         return px, qty
 
     @staticmethod
-    def _fills_net(fills: list[dict]) -> float:
+    def _fills_net(fills: list[dict]) -> float | None:
         """The venue's realized P&L on these fills, net of their commission."""
-        return sum(float((f.get("info") or {}).get("realizedPnl") or 0)
-                   - float((f.get("info") or {}).get("commission") or 0)
-                   for f in fills)
+        return monetary_total([safe_fill(f) for f in fills])
 
     def _pnl_window_start(self, trade: dict) -> str:
         """Where this trade's fills begin, as an ISO timestamp.
@@ -316,9 +408,18 @@ class Executor:
                 # the final close re-bases the trade to the venue's total
                 fill, amount = self._vwap(fills)
                 pnl = self._fills_net(fills)
+                if pnl is None:
+                    direction = 1.0 if trade["side"] == "long" else -1.0
+                    pnl = ((fill-float(trade["entry_price"]))*direction*amount
+                           - self.taker_fee*amount*(fill+float(trade["entry_price"])))
+                    self._book_estimate(trade, "missing exact partial fee/P&L/currency")
             else:
-                fill = float(order.get("average") or order.get("price")
-                             or price_hint or 0)
+                fill = float(order.get("average") or 0)
+                amount = float(order.get("filled") or 0)
+                if fill <= 0 or amount <= 0:
+                    self.journal.log_control_event("partial_fill_unconfirmed", "executor", detail={
+                        "trade_id": trade["id"], "symbol": sym, "order_id": str(order.get("id") or "")})
+                    return False
                 direction = 1.0 if trade["side"] == "long" else -1.0
                 gross = ((fill - float(trade["entry_price"])) * direction * amount)
                 fees = self.taker_fee * (amount * fill + amount * float(trade["entry_price"]))
@@ -332,13 +433,10 @@ class Executor:
             # actually left, understating the PnL of every trade that took
             # a partial.
             new_notional = round(new_amt * float(trade["entry_price"]), 2)
-            with self.journal._tx() as c:
-                c.execute("UPDATE trades SET amount=?, notional_usdt=?, "
-                          "realized_pnl=realized_pnl+? WHERE id=?",
-                          (round(new_amt, 8), new_notional,
-                           round(pnl, 8), trade["id"]))
-                c.execute("UPDATE trades SET tp1_done=1 WHERE id=? AND "
-                          "tp1_done=0", (trade["id"],))
+            evidence = order_evidence(trade, order, fills, amount, sent_ms,
+                                      "venue_order_fills" if fills else "estimated_order_booking")
+            self.journal.align_trade_amount(trade["id"], new_amt, new_notional,
+                                            pnl_delta=round(pnl, 8), accounting=evidence, tp1_done=True)
             trade["amount"] = round(new_amt, 8)
             trade["notional_usdt"] = new_notional
             log.info(f"PARTIAL {sym}: -{amount} @{fill:.4g} {reason} "
@@ -360,8 +458,6 @@ class Executor:
                         f"nothing the venue will accept")
             return False
         try:
-            if trade.get("sl_order_id"):
-                protective.cancel_stop(self.ex, trade["sl_order_id"], sym)
             sent_ms = int(time.time() * 1000) - 60_000
             order = self.ex.create_order(sym, "market", side_close, amount,
                                          params={"reduceOnly": True})
@@ -369,18 +465,42 @@ class Executor:
             if fills:
                 fill, amount = self._vwap(fills)
             else:
-                fill = float(order.get("average") or order.get("price")
-                             or exit_price_hint)
+                fill = float(order.get("average") or order.get("price") or 0)
                 # reduce-only fills only what the venue still holds. Sending 169
                 # against a 1-coin residue closes 1, and pricing the exit over
                 # the journalled 169 invents 168 coins of P&L out of rounding.
-                amount = float(order.get("filled") or 0) or amount
+                amount = float(order.get("filled") or 0)
+                if fill <= 0 or amount <= 0:
+                    log.error(f"CLOSE {sym}: fill unconfirmed for order "
+                              f"{order.get('id') or ''}; journal left open")
+                    self.journal.log_control_event(
+                        "close_fill_unconfirmed", "executor",
+                        detail={"symbol": sym, "trade_id": trade["id"],
+                                "order_id": str(order.get("id") or "")})
+                    return False
             entry = float(trade["entry_price"])
             direction = 1.0 if trade["side"] == "long" else -1.0
             gross = ((fill - entry) * direction * amount)
             fees = self.taker_fee * (amount * entry + amount * fill)
             pnl = gross - fees
-            venue = (venue_realized_pnl(self.ex, sym, self._pnl_window_start(trade))
+            requested = float(trade["amount"])
+            residual = max(0.0, requested - amount)
+            if residual > max(requested * 0.01, 1e-9):
+                leg_net = self._fills_net(fills) if fills else None
+                if leg_net is not None:
+                    pnl = leg_net
+                else:
+                    self._book_estimate(trade, "partial final-close accounting unavailable")
+                self.journal.align_trade_amount(
+                    trade["id"], residual, residual * entry, pnl_delta=pnl,
+                    accounting=order_evidence(trade, order, fills, amount, sent_ms,
+                                              "venue_order_fills" if fills else "estimated_order_booking"))
+                log.warning(f"CLOSE PARTIAL {sym}: venue filled {amount:g} "
+                            f"of {requested:g}; residual {residual:g} "
+                            "left open with existing stop")
+                return False
+            window_observation = {}
+            venue = (venue_realized_pnl(self.ex, sym, self._pnl_window_start(trade), observation=window_observation)
                      if fills else None)
             if venue is not None:
                 # close_trade ADDS this leg, so pass venue total minus what
@@ -391,7 +511,14 @@ class Executor:
             else:
                 self._book_estimate(trade, "venue fills unavailable at close"
                                     if not fills else "venue P&L unavailable")
-            self.journal.close_trade(trade["id"], fill, round(pnl, 8), reason)
+            if trade.get("sl_order_id"):
+                protective.cancel_stop(self.ex, trade["sl_order_id"], sym)
+            evidence = order_evidence(trade, order, fills, amount, sent_ms,
+                                      "venue_order_fills" if fills else "estimated_order_booking")
+            evidence['booked_pnl_basis'] = "symbol_time_window_subtotal_unattributed" if venue is not None else "estimated"
+            evidence['venue_window_net_excluding_funding'] = venue
+            evidence['venue_window_observation'] = window_observation
+            self.journal.close_trade(trade["id"], fill, round(pnl, 8), reason, accounting=evidence)
             log.info(f"TRADE CLOSE {sym} @{fill} reason={reason} "
                      f"gross={gross:+.2f} fees={fees:.2f} pnl={pnl:+.2f} "
                      f"({'venue' if venue is not None else 'estimate'})")

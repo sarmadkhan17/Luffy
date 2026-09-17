@@ -429,7 +429,7 @@ references:                     # reference markets for ref(key, expr) — trade
                  XLM/USDT]
 
 dashboard:
-  host: 0.0.0.0
+  host: 192.168.126.131
   port: 8080
 
 notify:
@@ -447,3 +447,21 @@ rent:                            # Luffy pays rent. See
 
 logging:
   level: INFO
+
+# Forward-only shadow diagnostics; no influence on trading decisions.
+# Enable during a coordinated demo rollout of kernel AND dashboard.
+attention:
+  enabled: true
+  timeframe: 4h
+  max_symbols: 16               # subset cap, not venue-wide coverage
+  max_causes: 64                # evaluator receipts per symbol
+  queue_size: 16
+  timeout_seconds: 10
+  stale_seconds: 300
+  max_scans: 512
+  max_age_seconds: 604800       # seven days; pruned on writes
+  max_bytes: 67108864           # SQLite main-file ceiling; journal needs headroom
+
+# Forward shadow forecasts only; independent watchdog consumer, never admission.
+attention_learning:
+  enabled: true

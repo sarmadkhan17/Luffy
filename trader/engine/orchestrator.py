@@ -237,6 +237,12 @@ class Orchestrator:
     def __init__(self, analysts: list[Analyst], journal: Journal,
                  base_threshold: float = 0.24,
                  news_guard=None, cfg: dict | None = None):
+        from ..observability.diagnostics import Receipts
+        self._receipts_type = Receipts
+        attention = (cfg or {}).get("attention") or {}
+        self.diagnostics_enabled = attention.get("enabled") is True
+        cap = attention.get("max_causes", 64)
+        self.diagnostics_cap = cap if type(cap) is int and 1 <= cap <= 256 else 64
         self.analysts = {a.name: a for a in analysts}
         self.journal = journal
         self.base_threshold = base_threshold
@@ -379,6 +385,7 @@ class Orchestrator:
     def decide(self, snap: Snapshot, population: list[tuple],
                entry_allowed: bool = True,
                blocked_reason: str = "") -> Decision:
+        receipts = self._receipts_type(self.diagnostics_enabled, self.diagnostics_cap)
         cycle_id = new_id("cyc")
         regime_info = classify(snap.df("15m"), snap.df("1h"))
         snap.regime = regime_info["regime"]
@@ -398,10 +405,13 @@ class Orchestrator:
             try:
                 v = analyst.evaluate(snap)
             except Exception as e:
+                receipts.add("analyst", name, "evaluation_failed", e)
                 log.warning(f"analyst {name} failed on {snap.symbol}: {e}")
                 continue
             if v is None:
+                receipts.add("analyst", name, "returned_none")
                 continue
+            receipts.add("analyst", name, "emitted_vote")
             measured = (self.measured_fit.get(v.agent) or {}).get(snap.regime)
             v.meta["regime_fit"] = measured if measured is not None else \
                 fit_multiplier(analyst.regime_affinity, snap.regime)
@@ -421,17 +431,26 @@ class Orchestrator:
         sigs: list[StrategySignal] = []
         for st, genome in population:
             if not st.is_trade_eligible:
+                receipts.add("strategy", st.id, "ineligible_state")
                 continue
             if snap.market_type not in genome.markets:
+                receipts.add("strategy", st.id, "ineligible_market")
                 continue
             if not regime_allows(genome, snap.regime):
+                receipts.add("strategy", st.id, "ineligible_regime")
                 continue
             # a strategy may only speak about the markets it was validated on
             if not symbol_allows(genome, snap.symbol):
+                receipts.add("strategy", st.id, "ineligible_symbol")
                 continue
             try:
-                sig = strat_lib.evaluate(genome, snap)
+                if receipts.enabled:
+                    sig = strat_lib.evaluate(genome, snap, diagnostic=lambda reason, exc=None:
+                                             receipts.add("strategy", st.id, reason, exc))
+                else:
+                    sig = strat_lib.evaluate(genome, snap)
             except Exception as e:
+                receipts.add("strategy", st.id, "evaluation_failed", e)
                 log.warning(f"strategy {st.id} failed on {snap.symbol}: {e}")
                 continue
             if sig is not None:
@@ -570,6 +589,8 @@ class Orchestrator:
             votes=[v.as_dict() for v in votes],
             strategy_signals=[vars(s) | {"action": s.action.value}
                               for s in sigs])
+        d.evaluation_causes = receipts.items
+        d.omitted_causes = receipts.omitted
         d.executed = False
         d.gated_lean = gated_lean            # set only when the gate fired
         skip_bits = []

@@ -74,7 +74,7 @@ class CompiledStrategy:
         this under f"spec:{id}" makes library.evaluate()'s family dispatch
         (library.py:293) find it like any other evaluator.
         """
-        def _evaluate(_genome, snap):
+        def _evaluate(_genome, snap, *, diagnostic=None):
             # Judge CLOSED bars only. The live frame's last row is the bar
             # currently forming, whose `close` is just the last trade — but
             # the statistics that admitted this spec came from
@@ -95,6 +95,8 @@ class CompiledStrategy:
                 if len(v):
                     frames[k] = v
             if self.spec.timeframe not in frames:
+                if diagnostic:
+                    diagnostic("missing_closed_timeframe")
                 return None
             btc = ({"15m": frames["BTC_1h"]}
                    if frames.get("BTC_1h") is not None else None)
@@ -107,10 +109,14 @@ class CompiledStrategy:
             except Exception as e:
                 # Silence here cost three authored specs their entire live
                 # career: they raised on every bar and read as "no signal".
+                if diagnostic:
+                    diagnostic("evaluation_failed", e)
                 log.warning("spec %s failed to evaluate on %s: %s",
                             self.spec.id, snap.symbol, e)
                 return None
             if not len(lo):
+                if diagnostic:
+                    diagnostic("empty_entry_series")
                 return None
             if lo[-1]:
                 action, why = Action.BUY, self.spec.entry_long
@@ -139,6 +145,7 @@ class CompiledStrategy:
                 rationale=f"{self.spec.name}: {why}",
                 params={"spec_id": self.spec.id,
                         "signal_bar_age_min": bar_age_min})
+        _evaluate._diagnostic_capable = True
         return _evaluate
 
     # ── tradingview path ─────────────────────────────────────────────────
