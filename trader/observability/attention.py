@@ -134,6 +134,7 @@ def code_manifest():
     base = Path(__file__).resolve().parents[1]
     names = ("observability/attention.py", "observability/store.py",
              "observability/collector.py", "observability/worker.py",
+             "observability/declared.py",
              "cognition/attention.py", "cognition/contracts.py",
              "observability/diagnostics.py", "strategy/library.py", "strategy/compile.py",
              "engine/orchestrator.py", "kernel.py")

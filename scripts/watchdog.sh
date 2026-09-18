@@ -49,6 +49,12 @@ if ! pgrep -f -x '.*/python[0-9.]* -m trader\.dashboard\.server' >/dev/null; the
   act ./restart.sh dashboard
 fi
 
+# Declared-universe public observation, bounded and isolated from trading.
+# Complete membership attempts precede both consumers; errors never fall back.
+if [ -e "$DIR/data/declared_population.enabled" ]; then
+  act timeout --kill-after=5s 120s ./venv/bin/python -m trader.observability.declared --once
+fi
+
 # Separate shadow consumer: bounded once-per-watchdog work, no venue calls.
 # flock prevents overlapping manual/cron invocations; timeout bounds DB stalls.
 # The module reads its own opt-in configuration and records structured health.

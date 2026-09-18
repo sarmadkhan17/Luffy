@@ -122,7 +122,11 @@ def step(attention_path, ledger_path, now_ms=None, population_config=None):
         collector_evidence={}
         try:
             source,collector_evidence=H.bound_snapshot(attention_path,now_ms=now_ms,fresh_ms=PROTOCOL['fresh_ms'])
+            if (pop and source[0].get('scope',{}).get('kind')=='declared_population'
+                    and source[0]['scope'].get('declaration_version')!=pop.version):
+                raise H.Refused('declared_binding_mismatch')
         except H.Refused as exc:
+            source = None
             status, reason = 'degraded', exc.reason
             collector_evidence=dict(exc.evidence,accepted=False,reason=exc.reason)
         H.record(db,pop,collector_evidence,now)
@@ -252,9 +256,10 @@ def main():
     if (not args.once or not (cfg.get("attention_learning") or {}).get("enabled")
             or not (cfg.get("attention") or {}).get("enabled")):
         print(encode({"status": "disabled"})); return 0
+    from .declared import source_path
     data = ROOT/"data"
     try:
-        result = step(data/"attention.db", data/"attention_learning.db", population_config=population.configured(data))
+        result = step(source_path(data), data/"attention_learning.db", population_config=population.configured(data))
     except Exception as exc:
         result = {"status": "error", "updated_ms": int(time.time()*1000), "error_type": type(exc).__name__,
                   "reason": str(exc)[:100] if isinstance(exc, ValueError) and str(exc).startswith("population_") else "consumer_failed"}

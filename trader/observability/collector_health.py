@@ -43,6 +43,8 @@ class Refused(ValueError):
 
 
 def validate(h, now, fresh_ms):
+    if h.get('health_schema') == 'declared-population-health.v1':
+        return validate_declared(h, now, fresh_ms)
     def refuse(code):
         raise Refused(code, {k:h.get(k) for k in ('instance_id','failure_generation','errors','fence_seq','updated_ms')})
     if h.get('health_schema') != SCHEMA:
@@ -115,6 +117,16 @@ def bound_snapshot(path, *, now_ms=None, fresh_ms=300000):
             scan=json.loads(row[0]); ident=scan.get('collector_identity')
             expected=dict(schema=IDENTITY_SCHEMA,instance_id=h['instance_id'],seq=h['last_complete']['seq'])
             if ident!=expected or scan.get('scan_id')!=sid: raise Refused('snapshot_identity_mismatch',ev)
+            if h.get('health_schema') == 'declared-population-health.v1':
+                scope=scan.get('scope',{})
+                members=[m['symbol'] for m in scan.get('membership',[])]
+                receipts=scope.get('availability_receipts',[])
+                if (scope.get('protocol')!=h.get('protocol')
+                        or scope.get('declaration_version')!=h.get('declaration_version')
+                        or not 1<=len(members)<=64 or len(set(members))!=len(members)
+                        or [r.get('symbol') for r in receipts]!=members
+                        or scope.get('excluded_count')!=0):
+                    raise Refused('declared_membership_mismatch',ev)
             count,size=db.execute('SELECT COUNT(*),MAX(length(v.payload)) FROM versions v JOIN scan_versions s ON s.version_id=v.id WHERE s.scan_id=?',(sid,)).fetchone()
             if count>4096 or (size or 0)>4096: raise Refused('input_bound_exceeded',ev)
             bars={}
@@ -157,3 +169,16 @@ def record(db, pop, evidence, now):
             pop.emit('collector-recovery:'+evidence['instance_id']+':'+str(evidence['failure_generation']), 'gap',
                      dict(reason='collector_outage',observed_ms=now,interval_ms=[evidence['first_error_ms'],cert['issued_ms']],evidence=evidence))
         db.execute('INSERT OR REPLACE INTO collector_receipts VALUES (?,?)',(key,json.dumps(evidence,sort_keys=True)))
+
+
+def validate_declared(h, now, fresh_ms):
+    """Scheduled pass health: completed persistence, not a live daemon claim."""
+    complete=h.get('last_complete')
+    if (h.get('status')!='ok' or h.get('protocol')!='declared-population-public-4h.v1'
+            or not integer(h.get('started_ms')) or not integer(h.get('updated_ms'))
+            or not h['started_ms'] <= h['updated_ms'] <= now
+            or now-h['updated_ms']>fresh_ms or not isinstance(complete,dict)
+            or not isinstance(complete.get('scan_id'),str)
+            or not identity(dict(schema=IDENTITY_SCHEMA,instance_id=h.get('instance_id'),seq=complete.get('seq')))):
+        raise Refused('declared_collector_unavailable', dict(protocol=h.get('protocol')))
+    return {k:h.get(k) for k in ('health_schema','protocol','last_complete','declaration_version')}

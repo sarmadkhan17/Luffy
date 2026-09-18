@@ -205,6 +205,9 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
         snapshot = None
         try:
             source, detail['collector_evidence'] = H.bound_snapshot(source_path,now_ms=now_ms,fresh_ms=FRESH_MS)
+            if (pop and source[0].get('scope',{}).get('kind')=='declared_population'
+                    and source[0]['scope'].get('declaration_version')!=pop.version):
+                raise H.Refused('declared_binding_mismatch')
             H.record(db,pop,detail['collector_evidence'],now)
             if source:
                 scan = source[0]
@@ -226,7 +229,7 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
             if isinstance(exc, ValueError):
                 detail["reason"] = str(exc)[:100]
         import_now = int(time.time()*1000) if now_ms is None else now
-        detail["typed_outcomes"] = outcome_store.ingest(db, Path(source_path).parent, import_now)
+        detail["typed_outcomes"] = outcome_store.ingest(db, Path(dest_path).parent, import_now)
         detail["counterfactuals"] = outcome_store.resolve_counterfactuals(db, snapshot, now)
         active = db.execute("SELECT * FROM cases WHERE terminal_ms IS NULL ORDER BY created_ms,id").fetchall()
         for row in active:
@@ -380,6 +383,7 @@ def main():
     if not args.once or not args.enable:
         print(I.encode({"status": "disabled"})); return 0
     from trader.core.config import ROOT
+    from .declared import source_path as configured_source_path
     data = ROOT / "data"
     lock = (data / "investigation.lock").open("a")
     try:
@@ -392,7 +396,7 @@ def main():
     old_handler = signal.signal(signal.SIGALRM, timeout)
     signal.setitimer(signal.ITIMER_REAL, I.MAX_RUNTIME_MS / 1000)
     try:
-        result = step(data / "attention.db", data / "investigation.db", population_config=population.configured(data))
+        result = step(configured_source_path(data), data / "investigation.db", population_config=population.configured(data))
     except Exception as exc:
         result = {"status": "error", "error_type": type(exc).__name__, "updated_ms": int(time.time()*1000),
                   "reason": str(exc)[:100] if isinstance(exc, ValueError) and str(exc).startswith("population_") else "consumer_failed"}

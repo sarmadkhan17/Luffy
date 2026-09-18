@@ -153,6 +153,10 @@ class Store:
                         vid, first_seen = prev["id"], prev["first_seen_ms"]
                     else:
                         first_seen = event["as_of_ms"]
+                        if event.get('scope', {}).get('kind') == 'declared_population':
+                            first_seen = candle['available_ms']
+                            if type(first_seen) is not int or not 0 <= first_seen <= event['as_of_ms']:
+                                raise ValueError('declared_observation_clock')
                         vid = digest([scan_id, tf, content])
                         self.db.execute("INSERT INTO versions VALUES (?,?,?,?,?,?,?,?)",
                                         (vid, candle["symbol"], tf, candle["open_ms"], first_seen,
