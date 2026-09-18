@@ -216,6 +216,7 @@ class Producer:
             'missing_symbols': sorted(set(self.declaration['universe'])-{r['symbol'] for r in decisions}),
             'membership': scan.get('membership'),
             'source_code_manifest': scan.get('code_manifest'),
+            **({'collector_evidence': scan['collector_evidence']} if scan.get('collector_evidence') else {}),
             'reason': 'consumer_observed_scan_only', 'complete_sampling_claim': False})
 
 

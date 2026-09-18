@@ -14,7 +14,7 @@ from pathlib import Path
 import sqlite3
 import time
 
-from . import population
+from . import population, collector_health as H
 
 from trader.cognition.forecast_protocol import TF, PROTOCOL, PROTOCOL_ID, encode, usable
 
@@ -119,20 +119,17 @@ def step(attention_path, ledger_path, now_ms=None, population_config=None):
                 current['registration_reason'] = reason
             skipped[reason] = skipped.get(reason, 0)+1
         source = None
+        collector_evidence={}
         try:
-            health = json.loads(Path(attention_path).with_name("attention_health.json").read_text())
-            if (not 0 <= now-health.get("updated_ms", 0) <= PROTOCOL["fresh_ms"]
-                    or health.get("last_error") or health.get("errors")
-                    or health.get("status") != "ok" or not health.get("worker_alive")):
-                status, reason = "degraded", "collector_unhealthy"
-            else:
-                source = source_snapshot(attention_path)
-        except (OSError, ValueError, sqlite3.Error):
-            status, reason = "degraded", "source_unavailable"
+            source,collector_evidence=H.bound_snapshot(attention_path,now_ms=now_ms,fresh_ms=PROTOCOL['fresh_ms'])
+        except H.Refused as exc:
+            status, reason = 'degraded', exc.reason
+            collector_evidence=dict(exc.evidence,accepted=False,reason=exc.reason)
+        H.record(db,pop,collector_evidence,now)
         if source:
             scan, bars, causes = source
             as_of = scan["as_of_ms"]
-            if (scan["timeframe"] != "4h" or not 0 <= now-as_of <= PROTOCOL["fresh_ms"]):
+            if (scan["timeframe"] != "4h" or as_of>now):
                 status, reason = "degraded", "stale_future_or_wrong_timeframe"
             elif as_of < activated:
                 reason = "awaiting_post_activation_scan"
@@ -207,6 +204,7 @@ def step(attention_path, ledger_path, now_ms=None, population_config=None):
                         "consumer_code_hash": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
                         "decisions": [c.get("decision_id") for c in causes if c["symbol"]==symbol],
                         "hypotheses": PROTOCOL["hypotheses"], "probability": None,
+                        "collector_evidence": collector_evidence,
                         "neutral_bps": PROTOCOL["neutral_bps"], "target_open_ms": target_open,
                         "invalidation": "opposite move beyond neutral band supports competitor; neutral is unresolved"}
                     eid = hashlib.sha256(encode([PROTOCOL_ID,symbol,target_open]).encode()).hexdigest()
@@ -225,12 +223,12 @@ def step(attention_path, ledger_path, now_ms=None, population_config=None):
                     registered += cur.rowcount
                     available -= cur.rowcount
                 if pop:
-                    pop.scan(scan, decisions)
+                    pop.scan(dict(scan,collector_evidence=collector_evidence), decisions)
                 if available <= 0:
                     status, reason = "degraded", "ledger_capacity_reached"
         if pop and not decisions and pop.declaration['start_ms'] <= now < pop.declaration['discovery_cut_ms']:
             pop.emit('gap:invocation:'+str(now), 'gap', {'reason': reason, 'observed_ms': now})
-        detail = {"reason": reason, "registered": registered, "resolved": resolved,
+        detail = {"collector_evidence":collector_evidence,"reason": reason, "registered": registered, "resolved": resolved,
                   "skipped": skipped, "outcome_retries": retries, "source_scan_id": source[0]["scan_id"] if source else None}
         db.execute("INSERT INTO diagnostics VALUES (?,?,?)", (now,status,encode(detail)))
         db.execute("DELETE FROM diagnostics WHERE rowid NOT IN (SELECT rowid FROM diagnostics ORDER BY rowid DESC LIMIT 512)")

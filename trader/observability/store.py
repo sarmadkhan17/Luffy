@@ -14,8 +14,41 @@ import time
 from .attention import SCHEMA, code_manifest, digest, evaluate_snapshot
 
 
+IDENTITY_SCHEMA = "attention-scan-identity.v1"
+IDENTITY_KEYS = frozenset(("schema", "instance_id", "seq"))
+
+
 def encode(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
+
+
+def valid_identity(value):
+    """Versioned collector identity metadata. Old records carry none."""
+    return (isinstance(value, dict) and set(value) == IDENTITY_KEYS
+            and value["schema"] == IDENTITY_SCHEMA
+            and isinstance(value["instance_id"], str) and 0 < len(value["instance_id"]) <= 64
+            and type(value["seq"]) is int and value["seq"] >= 1)
+
+
+def _identity(event):
+    ident = event.get("identity")
+    if ident is not None and not valid_identity(ident):
+        raise ValueError("invalid_identity")
+    return ident
+
+
+def _proof(db, scan_id, kind):
+    """Read back what was persisted for both halves; returned to the parent."""
+    row = db.execute("SELECT payload,causes_complete FROM scans WHERE scan_id=?", (scan_id,)).fetchone()
+    idents = {encode(json.loads(p).get("collector_identity")) for (p,) in
+              db.execute("SELECT payload FROM causes WHERE scan_id=?", (scan_id,))}
+    rows = db.execute("SELECT COUNT(*) FROM causes WHERE scan_id=?", (scan_id,)).fetchone()[0]
+    return {"scan_id": scan_id, "kind": kind, "present": row is not None,
+            "payload": bool(row and row[0] is not None),
+            "causes_complete": bool(row and row[1]),
+            "scan_identity": json.loads(row[0]).get("collector_identity") if row and row[0] else None,
+            "cause_identities": [json.loads(i) for i in sorted(idents)], "cause_rows": rows,
+            "completion_marker": any(json.loads(r[0]).get('collector_completion') is True for r in db.execute('SELECT payload FROM causes WHERE scan_id=?',(scan_id,)))}
 
 
 class Store:
@@ -62,8 +95,10 @@ class Store:
                         "(SELECT version_id FROM scan_versions)")
 
     def write(self, event):
+        """Persist one event; return the read-back identity proof of its scan."""
         now_ms = int(time.time() * 1000)
         scan_id = event["scan_id"]
+        ident = _identity(event)
         if len(encode(event)) > self.cfg["max_bytes"] // 2:
             raise ValueError("snapshot exceeds storage budget")
         # Prune before allocation so a full store can recover on the next job.
@@ -86,8 +121,16 @@ class Store:
             self.db.execute("INSERT OR IGNORE INTO scans (scan_id,as_of_ms,payload) VALUES (?,?,NULL)",
                             (scan_id, event["as_of_ms"]))
             if event["kind"] == "causes":
+                if ident:
+                    marker=dict(collector_completion=True, collector_identity=ident, symbol='')
+                    mid=digest([scan_id,'collector_completion'])
+                    old=self.db.execute('SELECT payload FROM causes WHERE event_id=?',(mid,)).fetchone()
+                    if old and json.loads(old[0])!=marker: raise ValueError('identity_conflict')
+                    self.db.execute('INSERT OR IGNORE INTO causes VALUES (?,?,?,?)',(mid,scan_id,'',encode(marker)))
                 self.db.execute("UPDATE scans SET causes_complete=1 WHERE scan_id=?", (scan_id,))
-                for item in event["items"]:
+                for original in event["items"]:
+                    item=dict(original)
+                    if ident: item['collector_identity']=ident
                     eid = digest([scan_id, item["symbol"], item.get("decision_id")])
                     self.db.execute("INSERT OR IGNORE INTO causes VALUES (?,?,?,?)",
                                     (eid, scan_id, item["symbol"], encode(item)))
@@ -95,7 +138,9 @@ class Store:
                 prior = self.db.execute("SELECT payload FROM scans WHERE scan_id=?",
                                         (scan_id,)).fetchone()[0]
                 if prior is not None:
-                    return  # immutable published scan; retries cannot rewrite it
+                    if json.loads(prior).get('collector_identity')!=ident:
+                        raise ValueError('identity_conflict')
+                    return _proof(self.db,scan_id,event['kind'])
                 refs = []
                 for candle in event["input"]["candles"]:
                     tf = event["input"]["timeframe"]
@@ -117,6 +162,7 @@ class Store:
                     refs.append({"version_id": vid, "first_seen_ms": first_seen,
                                  "symbol": candle["symbol"], "open_ms": candle["open_ms"]})
                 payload = evaluate_snapshot(event)
+                if ident: payload['collector_identity']=ident
                 payload.update(input_versions=refs, code_manifest=code_manifest(),
                                input_hash=digest(event["input"]),
                                membership=event["input"]["membership"],
@@ -127,12 +173,24 @@ class Store:
             else:
                 raise ValueError("unknown event kind")
             self._prune(now_ms)
+        return _proof(self.db,scan_id,event["kind"])
 
 
 def read_latest(path, *, now_ms=None, stale_seconds=300, health=None):
     """Read-only API helper. Never creates a database or masks a stale success."""
+    explicit_now = now_ms
     now_ms = int(time.time() * 1000) if now_ms is None else now_ms
     health = health or {}
+    from . import collector_health as H
+    if health.get('health_schema') == H.SCHEMA:
+        try:
+            source,evidence=H.bound_snapshot(path,now_ms=explicit_now, fresh_ms=stale_seconds*1000)
+            return dict(schema_version=SCHEMA,status='ok',collector_status=health.get('status'),
+                        health=health,scan=source[0],causes=source[2],causes_complete=True,
+                        age_seconds=max(0,(now_ms-source[0]['as_of_ms'])/1000),collector_evidence=evidence)
+        except H.Refused as exc:
+            return dict(schema_version=SCHEMA,status='degraded',health=health,scan=None,causes=[],
+                        collector_status=exc.reason,collector_evidence=exc.evidence)
     failed = bool(health.get("errors", 0) or health.get("last_error") or health.get("kernel_error"))
     result = {"schema_version": SCHEMA, "status": "error" if failed else "waiting",
               "health": health, "scan": None, "causes": []}
@@ -169,6 +227,7 @@ def read_latest(path, *, now_ms=None, stale_seconds=300, health=None):
                 result["collector_status"] = health.get("status", "unknown")
     except (sqlite3.Error, ValueError, OSError):
         result["status"] = "unavailable"
+    if result['status']=='ok': result['status']='health_unknown'
     return result
 
 

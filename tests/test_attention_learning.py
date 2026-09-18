@@ -36,12 +36,18 @@ def publish(path, now, sid="s", target_close=None):
     store = Store(path, settings())
     # Synthetic snapshots must use their own clock for age-based retention.
     with patch('trader.observability.store.time', SimpleNamespace(time=lambda: now/1000)):
-        store.write(event(sid, now, data))
+        ident=dict(schema='attention-scan-identity.v1',instance_id='1'*32,seq=now)
+        store.write(dict(event(sid, now, data),identity=ident))
         store.write({"kind":"causes", "scan_id":sid, "as_of_ms":now,
-                     "items":[{"symbol":s,"decision_id":"d_"+s} for s in data]})
+                     "identity":ident,"items":[{"symbol":s,"decision_id":"d_"+s} for s in data]})
     store.close()
     path.with_name("attention_health.json").write_text(json.dumps({
-        "updated_ms":now, "status":"ok", "worker_alive":True, "errors":0}))
+        "health_schema":"attention-collector-health.v2", "instance_id":"1"*32,
+        "updated_ms":now, "status":"ok", "worker_alive":True, "errors":0,
+        "capture_errors":0,"worker_errors":0,"dropped":0,"details_lost":0,
+        "process_started_ms":0,"failure_generation":0,"fence_seq":0,"certificate":None,
+        "last_error":None,"first_error_ms":None,"last_error_ms":None,
+        "last_complete":{"scan_id":sid,"seq":now}}))
 
 
 def episodes(path):
@@ -80,14 +86,13 @@ def test_register_resolve_and_learn_without_rewriting_prediction(fixture):
     assert [(p,o) for p,o in episodes(dest) if o] == resolved
 
 
-@pytest.mark.parametrize("offset,reason", [(-300_001,"stale_future_or_wrong_timeframe"),
-                                           (1,"stale_future_or_wrong_timeframe"),
+@pytest.mark.parametrize("offset,reason", [(-300_001,"snapshot_stale"),
+                                           (1,"snapshot_future"),
                                            (-1,"awaiting_post_activation_scan")])
 def test_no_historical_stale_or_future_proposals(fixture,offset,reason):
     source,dest,now=fixture
     publish(source,now+offset)
-    source.with_name("attention_health.json").write_text(json.dumps({
-        "updated_ms":now,"status":"ok","worker_alive":True}))
+    update_health(source, updated_ms=now)
     r=L.step(source,dest,now)
     assert r["registered"]==0 and r["reason"]==reason
 
@@ -111,10 +116,9 @@ def test_missing_target_never_substitutes_a_nearby_price(fixture):
 def test_unhealthy_collector_refuses_forecasts_and_logs_reason(fixture):
     source,dest,now=fixture
     publish(source,now)
-    source.with_name("attention_health.json").write_text(json.dumps({
-        "updated_ms":now,"status":"error","worker_alive":True,"errors":1}))
+    update_health(source, status="error",errors=1,worker_errors=1,failure_generation=1,last_error="WorkerError")
     r=L.step(source,dest,now)
-    assert r["reason"]=="collector_unhealthy" and not r["counts"]
+    assert r["reason"]=="collector_failing" and not r["counts"]
     with sqlite3.connect(dest) as db:
         assert json.loads(db.execute("SELECT detail FROM diagnostics").fetchone()[0])["reason"]==r["reason"]
 
@@ -172,3 +176,9 @@ def test_malformed_target_is_missing_not_a_price_outcome(fixture):
             db.execute("UPDATE versions SET payload=? WHERE id=?",(json.dumps(bar),vid))
     r=L.step(source,dest,deadline+1)
     assert r["resolved"]==0 and r["counts"]=={"pending":6}
+
+
+def update_health(path, **fields):
+    path=path.with_name('attention_health.json')
+    value=json.loads(path.read_text());value.update(fields)
+    path.write_text(json.dumps(value))

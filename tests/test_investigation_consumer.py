@@ -7,7 +7,7 @@ import pytest
 
 from trader.cognition import investigation as I
 from trader.observability import investigation as C
-from tests.test_attention_learning import publish
+from tests.test_attention_learning import publish, update_health
 
 
 @pytest.fixture
@@ -33,11 +33,11 @@ def test_persistence_restart_no_repeated_scan_or_episode(paths):
         assert db.execute("SELECT activated_ms FROM protocols").fetchone()[0] == now
 
 
-@pytest.mark.parametrize("offset,reason", [(-300001,"stale_or_future_scan"), (1,"stale_or_future_scan"), (-1,"awaiting_post_activation_scan")])
+@pytest.mark.parametrize("offset,reason", [(-300001,"snapshot_stale"), (1,"snapshot_future"), (-1,"awaiting_post_activation_scan")])
 def test_pre_activation_stale_future_refused(paths, offset, reason):
     source, dest, now = paths
     publish(source, now+offset)
-    source.with_name("attention_health.json").write_text(json.dumps({"updated_ms":now,"status":"ok","worker_alive":True}))
+    update_health(source, updated_ms=now)
     r = C.step(source, dest, now)
     assert r["registered"] == 0 and r["reason"] == reason
 
@@ -114,8 +114,8 @@ def test_timeout_rolls_back_registration(paths, monkeypatch):
 def test_collector_failure_and_write_lock_are_visible(paths):
     source, dest, now = paths
     publish(source, now)
-    source.with_name('attention_health.json').write_text(json.dumps({'updated_ms':now,'status':'error','worker_alive':True}))
-    assert C.step(source, dest, now)['reason'] == 'collector_unhealthy'
+    update_health(source,status='error')
+    assert C.step(source, dest, now)['reason'] == 'collector_failing'
     with sqlite3.connect(dest) as db:
         db.execute('BEGIN EXCLUSIVE')
         with pytest.raises(sqlite3.OperationalError):

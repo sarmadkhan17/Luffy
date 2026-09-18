@@ -20,7 +20,7 @@ from trader.cognition.attention import CognitionConfig, evaluate
 from trader.cognition.contracts import INPUT_SCHEMA, is_timestamp, load_input
 from trader.cognition import investigation as I
 from .attention import SCHEMA as ATTENTION_SCHEMA, digest
-from . import population
+from . import population, collector_health as H
 from . import memory as memory_store
 from trader.cognition import memory as memory_core
 from . import outcomes as outcome_store
@@ -204,22 +204,22 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
         outcome_store.retain(db, now)
         snapshot = None
         try:
-            health = json.loads(Path(source_path).with_name("attention_health.json").read_text())
-            if (not 0 <= now-health.get("updated_ms", 0) <= FRESH_MS
-                    or health.get("status") != "ok" or not health.get("worker_alive")
-                    or health.get("errors") or health.get("last_error")):
-                raise ValueError("collector_unhealthy")
-            source = source_snapshot(source_path)
+            source, detail['collector_evidence'] = H.bound_snapshot(source_path,now_ms=now_ms,fresh_ms=FRESH_MS)
+            H.record(db,pop,detail['collector_evidence'],now)
             if source:
                 scan = source[0]
                 detail["source_scan_id"] = scan["scan_id"]
-                if not 0 <= now - scan["as_of_ms"] <= FRESH_MS:
+                if scan["as_of_ms"] > now:
                     raise ValueError("stale_or_future_scan")
                 if scan["as_of_ms"] < activated:
                     detail["reason"] = "awaiting_post_activation_scan"
                 else:
                     snapshot = adapt(source, now)
                     detail.update(status="ok", reason="forward_scan_processed")
+        except H.Refused as exc:
+            detail.update(status='degraded',reason=exc.reason,error_type='ValueError',
+                          collector_evidence=dict(exc.evidence,accepted=False,reason=exc.reason))
+            H.record(db,pop,detail['collector_evidence'],now)
         except (OSError, ValueError, KeyError, TypeError, sqlite3.Error) as exc:
             detail.update(status="degraded", reason="source_refused", error_type=type(exc).__name__)
             # Reason codes only; no arbitrary source text or credentials.
@@ -283,12 +283,13 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
                 if pop:
                     pop.registration(inv.investigation_id, symbol, now,
                         dict(memory_store.source_archive(db, inv.investigation_id),
-                             memory=memory_store.owner_context(db, inv.investigation_id)))
+                             memory=memory_store.owner_context(db, inv.investigation_id),
+                             collector_evidence=detail.get("collector_evidence")))
                 _append(db, I.advance(inv, I.measure(inv, (), now, now)))
                 current.update(registration_reason='registered', episode_id=inv.investigation_id)
                 detail["registered"] += 1
             if pop:
-                pop.scan(snapshot.scan, decisions)
+                pop.scan(dict(snapshot.scan,collector_evidence=detail.get("collector_evidence")), decisions)
         if pop and snapshot is None and pop.declaration['start_ms'] <= now < pop.declaration['discovery_cut_ms']:
             pop.emit('gap:invocation:'+str(now), 'gap', {'reason': detail['reason'], 'observed_ms': now})
         if (detail["memory"]["refused"] or detail["typed_outcomes"]["refused"]

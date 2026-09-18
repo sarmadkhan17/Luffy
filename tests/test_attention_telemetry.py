@@ -87,7 +87,7 @@ def test_versions_first_seen_revisions_export_and_retention(tmp_path):
     store.write({'kind': 'causes', 'scan_id': 's3', 'as_of_ms': now+2,
                  'items': [{'symbol': 'S0/USDT', 'decision_id': 'd1'}]})
     latest = read_latest(store.path, now_ms=now+2, health={'updated_ms':now+2, 'status':'ok'})
-    assert latest['status'] == 'ok' and latest['causes_complete']
+    assert latest['status'] == 'health_unknown' and latest['causes_complete']  # legacy receipt has no v2 proof
     assert latest['causes'][0]['decision_id'] == 'd1'
     export_scan(store.path, 's1', tmp_path/'frozen.json')
     with pytest.raises(FileExistsError):
