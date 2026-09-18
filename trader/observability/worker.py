@@ -5,7 +5,6 @@ import json
 import sys
 
 from .store import Store
-from .collector_health import code_hash
 
 
 def main():
@@ -13,8 +12,8 @@ def main():
     try:
         job = json.load(sys.stdin)
         store = Store(job["path"], job["settings"])
-        proof=store.write(job["event"])
-        print(json.dumps({"ok": True,"proof":proof,"code_hash":code_hash()}))
+        store.write(job["event"])
+        print(json.dumps({"ok": True}))
         return 0
     except Exception as exc:
         # Never echo arbitrary exception messages, input or credentials.
