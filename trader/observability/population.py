@@ -39,6 +39,34 @@ def configured(directory):
     return json.loads(path.read_text())
 
 
+def meta(db, key):
+    row = db.execute('SELECT payload FROM population_meta WHERE key=?', (key,)).fetchone()
+    return row[0] if row else None
+
+
+def legacy_version(db):
+    """The first window keeps the original un-namespaced keys, byte-for-byte."""
+    raw = meta(db, 'binding')
+    return json.loads(raw)['declaration_version'] if raw else None
+
+
+def active_version(db):
+    return meta(db, 'active') or legacy_version(db)
+
+
+def expected_binding(db, version, directory, freeze):
+    """(meta key, exact payload) binding this ledger to one frozen window.
+
+    Later windows are namespaced per declaration version and also pin the
+    freeze receipt, so neither a directory nor a refreeze can be rebound.
+    """
+    if legacy_version(db) in (None, version):
+        return 'binding', encode({'declaration_version': version, 'directory': str(directory.resolve())})
+    return 'binding:'+version, encode({'schema_version': 'pit-population-binding.v2',
+        'declaration_version': version, 'directory': str(directory.resolve()),
+        'freeze_sha256': D.digest(freeze)})
+
+
 class Producer:
     def __init__(self, db, config, stream, now):
         self.db, self.stream, self.now = db, stream, now
@@ -50,29 +78,83 @@ class Producer:
         self.version = D.declaration_version(self.declaration)
         self.directory = Path(config['export_directory']) / stream
         schema(db)
-        old = db.execute("SELECT payload FROM population_meta WHERE key='binding'").fetchone()
-        binding = encode({'declaration_version': self.version, 'directory': str(self.directory.resolve())})
-        if old and old[0] != binding:
+        key, binding = expected_binding(db, self.version, self.directory, self.freeze)
+        suffix = key[len('binding'):]
+        old = meta(db, key)
+        if old and old != binding:
             raise ValueError('population_binding_conflict')
-        db.execute("INSERT OR IGNORE INTO population_meta VALUES ('binding',?)", (binding,))
-        old = db.execute("SELECT payload FROM population_meta WHERE key='activation'").fetchone()
+        # Validate everything before the first write; failures leave the ledger unchanged.
+        windows = self.rotation(config) if old is None and suffix else None
+        if windows is None and active_version(db) not in (None, self.version):
+            raise ValueError('population_window_closed')
+        clocks = [int(r[0]) for r in db.execute(
+            "SELECT payload FROM population_meta WHERE key='last_invocation' OR key LIKE 'last_invocation:%'")]
+        if clocks and now < max(clocks):
+            raise ValueError('population_clock_regression')
+        if windows is not None:
+            for version, window in windows.items():
+                db.execute('INSERT OR IGNORE INTO population_meta VALUES (?,?)', ('window:'+version, encode(window)))
+            db.execute("INSERT OR REPLACE INTO population_meta VALUES ('active',?)", (self.version,))
+        db.execute('INSERT OR IGNORE INTO population_meta VALUES (?,?)', (key, binding))
+        old = meta(db, 'activation'+suffix)
         if not old:
-            db.execute("INSERT INTO population_meta VALUES ('activation',?)", (str(now),))
-            self.emit('activation', 'activation', {'activated_ms': now,
+            db.execute('INSERT INTO population_meta VALUES (?,?)', ('activation'+suffix, str(now)))
+            source = {'activated_ms': now,
                 'missed_registration_interval': [self.declaration['start_ms'], min(now, self.declaration['discovery_cut_ms'])]
                 if now > self.declaration['start_ms'] else None,
-                'reason': 'not_collected_before_activation', 'complete_sampling_claim': False})
-        self.activated = int(old[0]) if old else now
-        previous = db.execute("SELECT payload FROM population_meta WHERE key='last_invocation'").fetchone()
-        if previous and now < int(previous[0]):
-            raise ValueError('population_clock_regression')
-        if previous and now-int(previous[0]) > 600_000:
-            start = max(int(previous[0]), self.declaration['start_ms'])
+                'reason': 'not_collected_before_activation', 'complete_sampling_claim': False}
+            if windows is not None:
+                # Earlier episodes stay in the underlying ledger; this window neither
+                # backfills them nor writes into the closed window's export stream.
+                source.update(previous_declaration_version=self.previous,
+                              existing_episodes='registered_before_start_ms_ineligible_not_backfilled')
+            self.emit('activation', 'activation', source)
+        self.activated = int(old) if old else now
+        previous = meta(db, 'last_invocation'+suffix)
+        if previous and now-int(previous) > 600_000:
+            start = max(int(previous), self.declaration['start_ms'])
             end = min(now, self.declaration['discovery_cut_ms'])
             if start < end:
                 self.emit('gap:cadence:'+str(now), 'gap', {'reason': 'collection_cadence_gap',
                                                         'interval_ms': [start, end]})
-        db.execute("INSERT OR REPLACE INTO population_meta VALUES ('last_invocation',?)", (str(now),))
+        db.execute('INSERT OR REPLACE INTO population_meta VALUES (?,?)', ('last_invocation'+suffix, str(now)))
+
+    def rotation(self, config):
+        """Refuse any later window that could rebind, overlap or strand receipts.
+
+        Returns {version: window} for every bound window. An un-namespaced first
+        window must be identified by its archived declaration (`prior_declarations`).
+        """
+        db, decl = self.db, self.declaration
+        if self.freeze['observed_frozen_ms'] > decl['start_ms']:
+            raise ValueError('population_retroactive_freeze')
+        directory = str(self.directory.resolve())
+        if self.directory.exists() and any(self.directory.iterdir()):
+            raise ValueError('population_directory_conflict')
+        archived = {}
+        for path in config.get('prior_declarations', []):
+            prior = json.loads(Path(path).read_text())
+            archived[D.declaration_version(prior)] = {k: prior[k] for k in ('start_ms', 'discovery_cut_ms')}
+        windows = {}
+        for (payload,) in db.execute("SELECT payload FROM population_meta WHERE key='binding' OR key LIKE 'binding:%'"):
+            bound = json.loads(payload)
+            version = bound['declaration_version']
+            if bound['directory'] == directory:
+                raise ValueError('population_directory_conflict')
+            recorded = meta(db, 'window:'+version)
+            window = json.loads(recorded) if recorded else archived.get(version)
+            if window is None:
+                raise ValueError('population_prior_window_unknown')
+            if decl['start_ms'] < window['discovery_cut_ms']:
+                raise ValueError('population_window_overlap')
+            if self.now < window['discovery_cut_ms']:
+                raise ValueError('population_prior_window_open')
+            windows[version] = window
+        if db.execute('SELECT 1 FROM population_events WHERE payload IS NOT NULL').fetchone():
+            raise ValueError('population_prior_window_pending')
+        self.previous = active_version(db)
+        windows[self.version] = {k: decl[k] for k in ('start_ms', 'discovery_cut_ms')}
+        return windows
 
     def eligible(self, symbol, registered):
         return (symbol in self.declaration['universe'] and
@@ -145,12 +227,29 @@ def flush(db, config, stream):
     """
     schema(db)
     directory = Path(config['export_directory']) / stream
+    declaration = json.loads(Path(config['declaration']).read_text())
+    version = D.declaration_version(declaration)
+    freeze = json.loads(Path(config['receipt']).read_text())
+    D.validate_freeze(freeze, declaration)
+    key, binding = expected_binding(db, version, directory, freeze)
+    bound = meta(db, key)
+    if bound is not None and bound != binding:
+        raise ValueError('population_binding_conflict')
+    # Only this window's receipts route here. Another window's pending receipts
+    # must first be exported through their own config; a closed older window may
+    # still drain its own prefix without touching the active one.
+    prefix = version+':'+stream+':'
+    closed = bound is not None and active_version(db) != version
+    if not closed and db.execute('SELECT 1 FROM population_events WHERE payload IS NOT NULL AND substr(id,1,?)!=?',
+                                 (len(prefix), prefix)).fetchone():
+        raise ValueError('population_prior_window_pending')
     directory.mkdir(parents=True, exist_ok=True)
     files = list(directory.iterdir())
     if len(files) > MAX_EVENTS:
         raise ValueError('population_export_capacity')
     size = sum(p.stat().st_size for p in files)
-    for key, payload in db.execute('SELECT id,payload FROM population_events WHERE payload IS NOT NULL ORDER BY rowid').fetchall():
+    for key, payload in db.execute('SELECT id,payload FROM population_events WHERE payload IS NOT NULL AND substr(id,1,?)=? ORDER BY rowid',
+                                   (len(prefix), prefix)).fetchall():
         path = directory / (hashlib.sha256(key.encode()).hexdigest()+'.json')
         raw = payload.encode()
         if path.exists():
@@ -198,15 +297,17 @@ def capture(config, now):
         if ledger_path:
             with closing(sqlite3.connect(Path(ledger_path).resolve().as_uri()+'?mode=ro', uri=True, timeout=.1)) as db:
                 db.execute('BEGIN')
-                binding = db.execute("SELECT payload FROM population_meta WHERE key='binding'").fetchone()
-                expected = encode({'declaration_version': D.declaration_version(declaration),
-                                   'directory': str(directory.resolve())})
-                if not binding or binding[0] != expected:
+                version = D.declaration_version(declaration)
+                key, expected = expected_binding(db, version, directory, freeze)
+                if meta(db, key) != expected:
                     raise ValueError('population_local_receipt_mismatch')
                 if db.execute('SELECT COUNT(*) FROM population_events').fetchone()[0] > MAX_EVENTS:
                     raise ValueError('population_index_capacity')
+                # A shared ledger may index later windows; each capture sees only its own.
+                prefix = version+':'+stream+':'
                 local_indices[stream] = [dict(id=r[0], hash=r[1], local_imported_ms=r[2], pending=bool(r[3]))
-                    for r in db.execute('SELECT id,hash,local_imported_ms,payload IS NOT NULL FROM population_events ORDER BY id')]
+                    for r in db.execute('SELECT id,hash,local_imported_ms,payload IS NOT NULL FROM population_events '
+                                        'WHERE substr(id,1,?)=? ORDER BY id', (len(prefix), prefix))]
         indexed = {r['id']: r for r in local_indices.get(stream, [])}
         paths = sorted(directory.glob('*.json'))
         if len(paths) > MAX_EVENTS:
