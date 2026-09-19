@@ -1,0 +1,1287 @@
+{
+ "title": "M3.2 conditioning-scheme synthetic comparison (SYNTHETIC ONLY, exploratory, no freeze)",
+ "written_utc_note": "written before any random simulation; do not tune after results. v2: v1 (sha in prespec_v1_discarded.sha256) replaced BEFORE any random run because its main regime pattern left Q1xR1 empty. v3: v2 (prespec_v2_discarded.sha256) replaced BEFORE any random run because it omitted the scenario list",
+ "master_seed": 20260919,
+ "seeding": {
+  "world_data": "np.random.default_rng(SeedSequence([20260919, scenario_code, world_index])); identical world data across schemes (paired) and across effects 0/.2/.5 (common random numbers; power world i = null world i of the same base scenario plus effect)",
+  "permutations": "np.random.default_rng(SeedSequence([20260919, scenario_code, world_index, scheme_index, 7])) scheme_index A=0,B=1,C=2,D=3; forced diagnostics add tag 99",
+  "family": "SeedSequence([20260919, 500 + scenario_code, world_index]) for data; tag 11 for permutations"
+ },
+ "design": {
+  "n_blocks": 48,
+  "block_spacing_days": 28,
+  "first_block_start_utc": "2020-01-06T00:00:00+00:00",
+  "blocks": [
+   {
+    "k": 0,
+    "start_utc": "2020-01-06T00:00:00+00:00",
+    "year_month": "2020-01",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 1,
+    "start_utc": "2020-02-03T00:00:00+00:00",
+    "year_month": "2020-02",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 2,
+    "start_utc": "2020-03-02T00:00:00+00:00",
+    "year_month": "2020-03",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 3,
+    "start_utc": "2020-03-30T00:00:00+00:00",
+    "year_month": "2020-03",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 4,
+    "start_utc": "2020-04-27T00:00:00+00:00",
+    "year_month": "2020-04",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 2
+   },
+   {
+    "k": 5,
+    "start_utc": "2020-05-25T00:00:00+00:00",
+    "year_month": "2020-05",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 2
+   },
+   {
+    "k": 6,
+    "start_utc": "2020-06-22T00:00:00+00:00",
+    "year_month": "2020-06",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 2
+   },
+   {
+    "k": 7,
+    "start_utc": "2020-07-20T00:00:00+00:00",
+    "year_month": "2020-07",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 3
+   },
+   {
+    "k": 8,
+    "start_utc": "2020-08-17T00:00:00+00:00",
+    "year_month": "2020-08",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 3
+   },
+   {
+    "k": 9,
+    "start_utc": "2020-09-14T00:00:00+00:00",
+    "year_month": "2020-09",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 3
+   },
+   {
+    "k": 10,
+    "start_utc": "2020-10-12T00:00:00+00:00",
+    "year_month": "2020-10",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 4
+   },
+   {
+    "k": 11,
+    "start_utc": "2020-11-09T00:00:00+00:00",
+    "year_month": "2020-11",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 4
+   },
+   {
+    "k": 12,
+    "start_utc": "2020-12-07T00:00:00+00:00",
+    "year_month": "2020-12",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 4
+   },
+   {
+    "k": 13,
+    "start_utc": "2021-01-04T00:00:00+00:00",
+    "year_month": "2021-01",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 14,
+    "start_utc": "2021-02-01T00:00:00+00:00",
+    "year_month": "2021-02",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 15,
+    "start_utc": "2021-03-01T00:00:00+00:00",
+    "year_month": "2021-03",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 16,
+    "start_utc": "2021-03-29T00:00:00+00:00",
+    "year_month": "2021-03",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 17,
+    "start_utc": "2021-04-26T00:00:00+00:00",
+    "year_month": "2021-04",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 2
+   },
+   {
+    "k": 18,
+    "start_utc": "2021-05-24T00:00:00+00:00",
+    "year_month": "2021-05",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 2
+   },
+   {
+    "k": 19,
+    "start_utc": "2021-06-21T00:00:00+00:00",
+    "year_month": "2021-06",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 2
+   },
+   {
+    "k": 20,
+    "start_utc": "2021-07-19T00:00:00+00:00",
+    "year_month": "2021-07",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 3
+   },
+   {
+    "k": 21,
+    "start_utc": "2021-08-16T00:00:00+00:00",
+    "year_month": "2021-08",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 3
+   },
+   {
+    "k": 22,
+    "start_utc": "2021-09-13T00:00:00+00:00",
+    "year_month": "2021-09",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 3
+   },
+   {
+    "k": 23,
+    "start_utc": "2021-10-11T00:00:00+00:00",
+    "year_month": "2021-10",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 4
+   },
+   {
+    "k": 24,
+    "start_utc": "2021-11-08T00:00:00+00:00",
+    "year_month": "2021-11",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 4
+   },
+   {
+    "k": 25,
+    "start_utc": "2021-12-06T00:00:00+00:00",
+    "year_month": "2021-12",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 4
+   },
+   {
+    "k": 26,
+    "start_utc": "2022-01-03T00:00:00+00:00",
+    "year_month": "2022-01",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 27,
+    "start_utc": "2022-01-31T00:00:00+00:00",
+    "year_month": "2022-01",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 28,
+    "start_utc": "2022-02-28T00:00:00+00:00",
+    "year_month": "2022-02",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 29,
+    "start_utc": "2022-03-28T00:00:00+00:00",
+    "year_month": "2022-03",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 30,
+    "start_utc": "2022-04-25T00:00:00+00:00",
+    "year_month": "2022-04",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 2
+   },
+   {
+    "k": 31,
+    "start_utc": "2022-05-23T00:00:00+00:00",
+    "year_month": "2022-05",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 2
+   },
+   {
+    "k": 32,
+    "start_utc": "2022-06-20T00:00:00+00:00",
+    "year_month": "2022-06",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 2
+   },
+   {
+    "k": 33,
+    "start_utc": "2022-07-18T00:00:00+00:00",
+    "year_month": "2022-07",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 3
+   },
+   {
+    "k": 34,
+    "start_utc": "2022-08-15T00:00:00+00:00",
+    "year_month": "2022-08",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 3
+   },
+   {
+    "k": 35,
+    "start_utc": "2022-09-12T00:00:00+00:00",
+    "year_month": "2022-09",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 3
+   },
+   {
+    "k": 36,
+    "start_utc": "2022-10-10T00:00:00+00:00",
+    "year_month": "2022-10",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 4
+   },
+   {
+    "k": 37,
+    "start_utc": "2022-11-07T00:00:00+00:00",
+    "year_month": "2022-11",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 4
+   },
+   {
+    "k": 38,
+    "start_utc": "2022-12-05T00:00:00+00:00",
+    "year_month": "2022-12",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 4
+   },
+   {
+    "k": 39,
+    "start_utc": "2023-01-02T00:00:00+00:00",
+    "year_month": "2023-01",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 40,
+    "start_utc": "2023-01-30T00:00:00+00:00",
+    "year_month": "2023-01",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 41,
+    "start_utc": "2023-02-27T00:00:00+00:00",
+    "year_month": "2023-02",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 42,
+    "start_utc": "2023-03-27T00:00:00+00:00",
+    "year_month": "2023-03",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 1
+   },
+   {
+    "k": 43,
+    "start_utc": "2023-04-24T00:00:00+00:00",
+    "year_month": "2023-04",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 2
+   },
+   {
+    "k": 44,
+    "start_utc": "2023-05-22T00:00:00+00:00",
+    "year_month": "2023-05",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 2
+   },
+   {
+    "k": 45,
+    "start_utc": "2023-06-19T00:00:00+00:00",
+    "year_month": "2023-06",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 2
+   },
+   {
+    "k": 46,
+    "start_utc": "2023-07-17T00:00:00+00:00",
+    "year_month": "2023-07",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 3
+   },
+   {
+    "k": 47,
+    "start_utc": "2023-08-14T00:00:00+00:00",
+    "year_month": "2023-08",
+    "weekday": "Mon",
+    "hour": 0,
+    "quarter": 3
+   }
+  ],
+  "n_symbols_fixed_roster": 16,
+  "unique_outcome_keys_per_symbol": 5,
+  "slots_per_symbol": 6,
+  "linked_topology": "slot 5 is a repeated/linked copy of key 4 (same canonical key, same mask); identical in every block; block means de-duplicate by canonical key",
+  "regime_patterns": {
+   "main_regime1_blocks": [
+    2,
+    3,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    19,
+    20,
+    21,
+    22,
+    33,
+    34,
+    35,
+    36,
+    43,
+    44,
+    45
+   ],
+   "main_quarter_regime_cells": {
+    "Q1_R0": 14,
+    "Q1_R1": 2,
+    "Q2_R0": 6,
+    "Q2_R1": 6,
+    "Q3_R0": 2,
+    "Q3_R1": 9,
+    "Q4_R0": 7,
+    "Q4_R1": 2
+   },
+   "main_yearmonth_regime_cells_size_gt1": {
+    "2020-03_R1": 2,
+    "2021-03_R0": 2,
+    "2022-01_R0": 2,
+    "2023-01_R0": 2
+   },
+   "rare_regime1_blocks": [
+    3,
+    17,
+    30,
+    44
+   ],
+   "rare_quarter_regime_cells": {
+    "Q1_R0": 15,
+    "Q1_R1": 1,
+    "Q2_R0": 9,
+    "Q2_R1": 3,
+    "Q3_R0": 11,
+    "Q4_R0": 9
+   }
+  }
+ },
+ "dgp_baseline": {
+  "cell": "Y[b,s,t] = nuis_y(b) + delta*SD_UNIT*x_b + lambda_s*f[b,t] + e[b,s,t] (+ jump_b in shocks)",
+  "feature": "x_b = nuis_x(b) + N(0,1)",
+  "lambda_s": [
+   0.6,
+   0.6533333333333333,
+   0.7066666666666667,
+   0.76,
+   0.8133333333333332,
+   0.8666666666666667,
+   0.9199999999999999,
+   0.9733333333333333,
+   1.0266666666666666,
+   1.08,
+   1.1333333333333333,
+   1.1866666666666665,
+   1.2399999999999998,
+   1.2933333333333332,
+   1.3466666666666667,
+   1.4
+  ],
+  "sigma_s": [
+   0.5,
+   0.5666666666666667,
+   0.6333333333333333,
+   0.7,
+   0.7666666666666666,
+   0.8333333333333333,
+   0.9,
+   0.9666666666666667,
+   1.0333333333333332,
+   1.1,
+   1.1666666666666665,
+   1.2333333333333334,
+   1.3,
+   1.3666666666666667,
+   1.4333333333333333,
+   1.5
+  ],
+  "factor": "f[b,.] AR(1) rho=0.5 over the 5 keys, unit stationary variance; gaussian innovations (shocks: student-t df=3 innovations scaled to unit variance, plus common block jump w.p. 0.10 of size 2*t3/sqrt(3) added to every cell)",
+  "idiosyncratic": "e[b,s,.] AR(1) rho=0.3, stationary sd sigma_s",
+  "SD_UNIT_analytic": 0.6834212077644519,
+  "SD_UNIT_formula": "sqrt(mean(lambda)^2 * 1'R_f1/25 + sum(sigma^2) * 1'R_e1/6400)",
+  "effects": [
+   0.0,
+   0.2,
+   0.5
+  ],
+  "effect_unit": "baseline complete-block (80 unique keys) observed-mean noise SD, analytic (no simulation outcomes)",
+  "masks": {
+   "mcar": "independent per block and key; symbol rate = rate*linspace(0.5,1.5,16); non-identical across blocks",
+   "template": "one deterministic common mask (every symbol's keys with (s*5+t) % 10 < 3 missing -> 30%) identical in every block",
+   "coverage_class": "latent class c_b ~ Cat(.25,.25,.25,.25); per-key MCAR rate {0.08,0.30,0.50,0.72}[c_b]; REALIZED missing-fraction class (bins [0,.2),[.2,.4),[.4,.6),[.6,1]) shifts x by [-0.9,-0.3,0.3,0.9] and outcome cells by [-1.0,-0.3,0.4,1.1]*SD_UNIT (exogenous; missingness independent of outcomes given class)",
+   "publication_lag": "per block and symbol lag L=min(Geometric(0.5)-1,5); the last L keys (latest maturity) censored; independent of outcomes; does not extend the frozen cut",
+   "informative": "key missing w.p. 0.6 if its outcome < 0 and it is not the first key (outcome-dependent)"
+  },
+  "nuisance_quarter_regime": {
+   "x_quarter": [
+    -0.8,
+    -0.2,
+    0.4,
+    0.9
+   ],
+   "x_regime": [
+    0.0,
+    1.2
+   ],
+   "y_quarter_sdunits": [
+    0.9,
+    -0.5,
+    0.3,
+    -1.0
+   ],
+   "y_regime_sdunits": [
+    0.0,
+    1.5
+   ]
+  },
+  "invalid_dgps": {
+   "between_block_ar": "block-level AR(1) phi=0.8 in BOTH x and a common outcome block shift (1*SD_UNIT innovations)",
+   "drift_mean": "linear trend over block index from -1 to +1 in x and from -1 to +1 SD_UNIT in outcomes",
+   "drift_variance": "outcome noise scale multiplied by linspace(1,3,48) (and x variance likewise)"
+  }
+ },
+ "schemes": {
+  "A": {
+   "strata": "UTC year-month x weekday x hour (literal) x regime x exact mask",
+   "tensor_moves_with_mask": true,
+   "covers": [
+    "year_month",
+    "quarter",
+    "regime",
+    "coverage_class",
+    "exact_mask"
+   ]
+  },
+  "B": {
+   "strata": "recurring calendar quarter (Q1..Q4) x regime x exact mask",
+   "tensor_moves_with_mask": true,
+   "covers": [
+    "quarter",
+    "regime",
+    "coverage_class",
+    "exact_mask"
+   ]
+  },
+  "C": {
+   "strata": "recurring quarter x regime; whole outcome+mask tensors travel together; no mask conditioning",
+   "tensor_moves_with_mask": true,
+   "covers": [
+    "quarter",
+    "regime"
+   ]
+  },
+  "D": {
+   "strata": "recurring quarter x regime x predeclared missing-fraction class [0,.2),[.2,.4),[.4,.6),[.6,1]",
+   "tensor_moves_with_mask": true,
+   "covers": [
+    "quarter",
+    "regime",
+    "coverage_class"
+   ]
+  },
+  "rule": "No independent symbol/row transforms; one synchronized permutation of whole block tensors (outcomes, masks, dispositions, linked copies) within strata; features stay with block slots."
+ },
+ "scenarios": [
+  {
+   "name": "baseline",
+   "kind": "null_valid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "complete",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 1
+  },
+  {
+   "name": "shocks",
+   "kind": "null_valid",
+   "dgp": {
+    "factor": "t3",
+    "jumps": true,
+    "mask": "complete",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 2
+  },
+  {
+   "name": "mcar10",
+   "kind": "null_valid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "mcar",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false,
+    "mcar_rate": 0.1
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 3
+  },
+  {
+   "name": "mcar30",
+   "kind": "null_valid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "mcar",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false,
+    "mcar_rate": 0.3
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 4
+  },
+  {
+   "name": "mcar50",
+   "kind": "null_valid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "mcar",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false,
+    "mcar_rate": 0.5
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 5
+  },
+  {
+   "name": "template30",
+   "kind": "null_valid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "template",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false,
+    "template_rate": 0.3
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 6
+  },
+  {
+   "name": "quarter_regime_nuisance",
+   "kind": "null_valid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "complete",
+    "regime": "main",
+    "nuisance": "quarter_regime",
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": [
+     "quarter",
+     "regime"
+    ]
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 7
+  },
+  {
+   "name": "coverage_class_confounding",
+   "kind": "null_valid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "coverage_class",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": true,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": [
+     "coverage_class"
+    ]
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 8
+  },
+  {
+   "name": "publication_lag_censoring",
+   "kind": "null_valid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "publication_lag",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 9
+  },
+  {
+   "name": "rare_regime_small_strata",
+   "kind": "null_valid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "complete",
+    "regime": "rare",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 10
+  },
+  {
+   "name": "between_block_ar_invalid",
+   "kind": "null_invalid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "complete",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.8,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": true,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 21
+  },
+  {
+   "name": "drift_mean_invalid",
+   "kind": "null_invalid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "complete",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 1.0,
+    "drift_var": 0.0,
+    "informative_missing": false
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": true,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 22
+  },
+  {
+   "name": "drift_variance_invalid",
+   "kind": "null_invalid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "complete",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 3.0,
+    "informative_missing": false
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": true,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 23
+  },
+  {
+   "name": "informative_missingness_invalid",
+   "kind": "null_invalid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "informative",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": true
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": true,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 24
+  },
+  {
+   "name": "missing_certificate_invalid",
+   "kind": "null_invalid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "complete",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": false,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 25
+  },
+  {
+   "name": "cross_boundary_feature_invalid",
+   "kind": "null_invalid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "complete",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 500,
+    "feature_start_offset_h": -100,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 26
+  },
+  {
+   "name": "cross_boundary_horizon_invalid",
+   "kind": "null_invalid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "complete",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 200,
+    "outcome_maturity_day_max": 25.9,
+    "sequence_links_cross_boundary": false
+   },
+   "code": 27
+  },
+  {
+   "name": "cross_boundary_sequence_invalid",
+   "kind": "null_invalid",
+   "dgp": {
+    "factor": "gaussian",
+    "jumps": false,
+    "mask": "complete",
+    "regime": "main",
+    "nuisance": null,
+    "coverage_confounding": false,
+    "between_block_ar": 0.0,
+    "drift_mean": 0.0,
+    "drift_var": 0.0,
+    "informative_missing": false
+   },
+   "oracle_provenance": {
+    "certified_exchangeable": true,
+    "between_block_dependence": false,
+    "unconditioned_drift_mean": false,
+    "unconditioned_drift_variance": false,
+    "outcome_dependent_missingness": false,
+    "confounders": []
+   },
+   "declared_clocks_links": {
+    "feature_lookback_h": 400,
+    "feature_start_offset_h": 0,
+    "feature_available_by_day": 17,
+    "outcome_horizon_h": 24,
+    "outcome_maturity_day_max": 24.99,
+    "sequence_links_cross_boundary": true
+   },
+   "code": 28
+  }
+ ],
+ "statistic": {
+  "name": "SURROGATE within-stratum centered covariance (NOT the historical M3.2 statistic)",
+  "definition": "ybar_b = raw mean of observed unique-key outcomes in block b; xc,yc centered within scheme strata; T = |sum_b xc_b*yc_b| (two-sided)",
+  "p_value": "(1 + #{T_perm >= T_obs - 1e-12*max(1,|T_obs|)}) / (1 + B); B draws uniform with replacement from the full within-strata permutation group (identity included)"
+ },
+ "refusal_guards_pre_randomization": [
+  "oracle: certified_exchangeable false -> no_exchangeability_certificate",
+  "oracle: between_block_dependence -> between_block_dependence",
+  "oracle: unconditioned_drift_mean -> unconditioned_drift_mean",
+  "oracle: unconditioned_drift_variance -> unconditioned_drift_variance",
+  "oracle: outcome_dependent_missingness -> outcome_dependent_missingness",
+  "oracle: confounder not covered by scheme -> omitted_confounder:<name>",
+  "clock: feature_lookback_h>400 or feature_start_offset_h<0 or availability after day 17 -> feature_footprint_outside_block",
+  "clock: outcome_horizon_h>24 or maturity >= day 25 -> outcome_horizon_or_maturity_violation",
+  "link: sequence_links_cross_boundary -> cross_boundary_link",
+  "floor: any block with <8 observed unique keys -> eight_label_floor_unmet",
+  "support: movable blocks == 0 -> no_nonidentity_exchangeable_blocks (zero orbit)",
+  "support: movable blocks < 3 -> three_group_floor_unmet",
+  "support: zero norm of centered x or y over movable blocks -> degenerate_score_no_support",
+  "post-draw: all drawn statistics identical -> degenerate_orbit_no_support (never p=1)"
+ ],
+ "oracle_caveat": "Oracle guards read synthetic DGP provenance; they do NOT detect empirical exchangeability. Real data cannot supply this metadata; inability to establish robust invalid refusal without the oracle remains a limitation.",
+ "valid_null_assumptions": "Under the null, whole-block joint outcome+mask tensors are exchangeable within the scheme strata and independent of the block feature given strata; missingness is independent of outcomes (given declared class where applicable).",
+ "expected_validity": {
+  "quarter_regime_nuisance": "all schemes condition on quarter (A via year-month) and regime -> valid",
+  "coverage_class_confounding": "A,B (exact mask) and D valid; C omits coverage_class -> oracle refusal; forced C reported only as a noninferential diagnostic",
+  "mcar/publication_lag": "C and D valid; A/B valid but expected untestable (non-identical masks)"
+ },
+ "sample_sizes": {
+  "null_worlds": 2000,
+  "null_B": 1999,
+  "power_worlds": 1000,
+  "power_B": 1999,
+  "power_scenarios": [
+   "baseline",
+   "shocks",
+   "mcar30",
+   "mcar50"
+  ],
+  "power_effects": [
+   0.2,
+   0.5
+  ],
+  "forced_diagnostic_worlds": 1000,
+  "forced_diagnostic_B": 999,
+  "family_check": {
+   "worlds": 100,
+   "m": 384,
+   "B": 9999,
+   "scheme": "D",
+   "scenarios": [
+    "baseline",
+    "mcar30"
+   ],
+   "true_feature_effect": 0.5,
+   "features": "384 independent N(0,1) block features; feature 0 carries the effect"
+  }
+ },
+ "reporting": {
+  "size_power": "Wilson 95% on tested worlds; tested and refused counts separate; refusal reasons tabulated",
+  "p_cdf_points": [
+   0.01,
+   0.05,
+   0.1,
+   0.5,
+   0.9
+  ],
+  "p_quantiles": [
+   0.05,
+   0.25,
+   0.5,
+   0.75,
+   0.95
+  ],
+  "availability": "n strata, movable blocks, log10 prod n_k!, theoretical two-sided exact floor where derivable (2/|G| when all movable strata have size 2; else lower bound 1/|G|), successful draws, distinct drawn statistics per world, zero-orbit refusals, floor>alpha count",
+  "paired": "per scenario, C vs D and B vs D discordant rejection counts on commonly tested worlds"
+ },
+ "decision_rules": {
+  "size": "size control REJECTED for (scheme, scenario) if Wilson 95% lower bound > 0.05 (exploratory; no post-hoc tuning)",
+  "invalid": "every invalid scenario must refuse 100% before randomization in all schemes",
+  "untestable": "tested fraction 0 means UNTESTABLE, not size control",
+  "freeze": "no scheme is recommended for freeze by this exploratory suite; at most a conditional candidate"
+ },
+ "bh_resolution_analytic": {
+  "m": 384,
+  "q": 0.05,
+  "first_threshold_q_over_m": 0.00013020833333333333,
+  "min_B_rank_one_attainable": 7679,
+  "B_rel_MCSE_10pct_at_threshold": 767900,
+  "B_rel_MCSE_20pct_at_threshold": 191975,
+  "B_zero_exceedance_one_sided95_upper_le_threshold": 23006,
+  "B_zero_exceedance_clopper_pearson_two_sided95_upper_le_threshold": 28329,
+  "note": "Computed analytically. Attainability (1/(B+1) <= q/m) is necessary, not sufficient; precision needs far larger B. Discrete orbit floor (1/|G|, 2/|G| under two-sided sign symmetry) is separate from the Monte Carlo draw floor 1/(B+1). The frozen draw budget, family size and alpha are NOT changed by this document."
+ },
+ "checks": [
+  "uniform enumeration of within-strata permutations (strata sizes 3,2; |G|=12; 120000 draws; chi-square df=11)",
+  "identical mask treatment: permuting whole tensors then recomputing means/masks/classes == permuting block summaries with the same permutation; masks stay attached",
+  "guard unit cases: each oracle/clock/link guard fires alone; valid metadata passes; degenerate refuses"
+ ]
+}

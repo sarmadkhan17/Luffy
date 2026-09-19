@@ -1,0 +1,18 @@
+{
+  "schema": "m32-conditioning-comparison-reference-outputs.v1",
+  "note": "Immutable reference outputs from the original 2026-09-19 M3.2 conditioning-comparison run. Preserve these bytes; replication must use separate outputs. Paths are relative to /home/sarmad/trader. These Git-ignored files are referenced by hash and are not included in this commit. This freezes the original evidence, not a statistical protocol or scheme approval.",
+  "artifacts": [
+    {
+      "path": "docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/checks.json",
+      "sha256": "3a05670915b8e3431d4ea3855b9726644099a79121f690c2d2199602c28f2515"
+    },
+    {
+      "path": "docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/results.json",
+      "sha256": "d2093bc8f83ed648247afeabcf397ab385ca8c7e7c4f6ed4179a97e61c33a67c"
+    },
+    {
+      "path": "docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/run.log",
+      "sha256": "588d55d8ca3fb78528d398102c5e8448d0c3648e24a9d2fcdaec9bfdb09f5e99"
+    }
+  ]
+}
