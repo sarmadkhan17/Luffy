@@ -1,0 +1,61 @@
+{
+  "schema": "m32-scheme-d-replication-outputs.v1",
+  "note": "Outputs of the single authorized M3.2 scheme D coverage_class_confounding independent-seed replication (seed 2026091901, SYNTHETIC ONLY). Paths are relative to /home/sarmad/trader. Preserve these bytes; do not rerun into this or any other directory. SHA256SUMS covers the other five files and excludes itself. This records evidence; it does not freeze or approve scheme D.",
+  "prespec_and_runner_commit": "a947630ceabe5d1c9292c4345891791f00cf8faa",
+  "frozen_base_commit": "12ffa3e9b8e28a816a53ad00c7b63d7e773793e8",
+  "prespec": {
+    "path": "scripts/m32_scheme_d_replication_20260919/replication_prespec.json",
+    "sha256": "35786d1833fd0a5f67b1d3896ab9e5be71b66c0155da1169970d7ff3d199b747"
+  },
+  "runner": {
+    "path": "scripts/m32_scheme_d_replication_20260919/run_replication.py",
+    "sha256": "f843bd6e06a84cc0b51bc01e71026f3ae9a55c77f9a6e2aa9b234c5e2f8af190"
+  },
+  "artifacts": [
+    {
+      "path": "docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/attempt_marker.json",
+      "sha256": "2624db25b83863b35f3e6cca0f0af8ee940e3a536b659b6e710fc2bf4cc062df"
+    },
+    {
+      "path": "docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/run_start_receipt.json",
+      "sha256": "a881e3ec02ec5265655ab72accadf993d2a436d0bc1605ae6d92d406aceebd20"
+    },
+    {
+      "path": "docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/worlds.jsonl",
+      "sha256": "5d2d175364834637262c406303a08833ec8111ac9b33f404c8b484bec6d57675"
+    },
+    {
+      "path": "docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/progress.log",
+      "sha256": "43344f3acefbc0e1ee3cf3303d4e6f1c1d521823ded693f54f6d175504cc6d92"
+    },
+    {
+      "path": "docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/results.json",
+      "sha256": "2009ffe35d5b8e5b114cf39be222468bdfbdbb22b47246aff71ad8d7a16c97f4"
+    },
+    {
+      "path": "docs/superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/SHA256SUMS",
+      "sha256": "423b455dda5a7bae62344429f2b105c76f1a9d290c49d19698c99a5cd1b33c3e"
+    }
+  ],
+  "immutable_original_reference_outputs": {
+    "note": "Original independent-seed evidence (seed 20260919, 2000 worlds, 120/2000). Separate; not pooled with, adjusted by, or replaced by this replication. Governed by scripts/m32_conditioning_comparison_20260919/reference_outputs_manifest.json.",
+    "manifest": {
+      "path": "scripts/m32_conditioning_comparison_20260919/reference_outputs_manifest.json",
+      "sha256": "12311ab247853d08fc51a57a87613b213a2fc2bf43a04054adbaeae6bb5653ad"
+    },
+    "artifacts": [
+      {
+        "path": "docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/checks.json",
+        "sha256": "3a05670915b8e3431d4ea3855b9726644099a79121f690c2d2199602c28f2515"
+      },
+      {
+        "path": "docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/results.json",
+        "sha256": "d2093bc8f83ed648247afeabcf397ab385ca8c7e7c4f6ed4179a97e61c33a67c"
+      },
+      {
+        "path": "docs/superpowers/artifacts/m32-conditioning-comparison/2026-09-19/run.log",
+        "sha256": "588d55d8ca3fb78528d398102c5e8448d0c3648e24a9d2fcdaec9bfdb09f5e99"
+      }
+    ]
+  }
+}
