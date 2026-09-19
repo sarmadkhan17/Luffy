@@ -34,8 +34,8 @@ time:   max 500 bars
 
 
 ## Live record
-- closed trades: 6 · wins: 0
-- realized P&L: -37.54 USDT
+- closed trades: 11 · wins: 0
+- realized P&L: -42.14 USDT
 - state: **paper**
 
 Related: [[Regime Playbook]], [[MOC]]

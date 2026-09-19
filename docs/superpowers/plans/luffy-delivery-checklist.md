@@ -22,7 +22,7 @@ evidence. Never count a design document as implementation evidence.
 | M0 bounded foundations | ACCEPTED within its listed scope | 5/5 | Attention, receipts, shadow consumer, dashboard, entry recovery |
 | M1 persistent investigations | ACCEPTED engineering scope | 5/5 | Authenticated live dossiers and bounded worker; forward outcomes pending |
 | M2 memory changes reasoning | PARTIAL; M2.3/M2.4 accepted synthetically | 2/5 | Typed forecasts/trades/skips/simulations and raw replay delivered; case producers/references delivered; M3/M8 dependencies and live maturity pending |
-| M3 pattern-to-candidate discovery | PARTIAL; M3.1 cohort implemented | 0/5 | PIT builder/replay, prospective capture and neutral cohort; natural window coverage review pending |
+| M3 pattern-to-candidate discovery | PARTIAL; M3.1 cohort implemented | 0/5 | PIT builder/replay, prospective capture and neutral cohort; frozen-window review complete Sep 18, coverage NOT accepted (~53% in >10-min gap intervals) |
 | M4 comparative validation/population | PARTIAL components | 0/5 | Existing rolling Analyst/admission/decay; no new intelligence-derived strategy accepted |
 | M5 dynamic market coverage | PARTIAL components | 0/5 | Universe/feed, derivatives, reference sources; not complete accessible-market coverage |
 | M6 expression and portfolio intelligence | PARTIAL components | 0/5 | Directional strategies, deterministic portfolio limits/evidence |
@@ -70,7 +70,7 @@ forward consumer. Preserve existing ledger/protocol versions.
 Depends on M1–M2. Reuse `research/`, `brain/spec_writer.py`, `strategy/dsl.py`,
 feature contracts and candidate-dossier artifacts. Preserve discovery boundaries.
 
-- [ ] **M3.1** Build a point-in-time dataset of state/transition/sequence episodes and outcomes, including ignored assets and failure cases; declare its discovery cut, coverage and dependence units before searching. Partial: versioned bounded builder and freeze/capture CLI implemented; 268 relevant final-source tests passed. Saved synthetic replay includes selected/ignored, failure, transition and sequence cases; live retrospective capture has 78 observation-only skips and zero PIT rows. Forward window September 17 00:00 to September 18 00:00 UTC frozen September 16 20:38:40 UTC. Prospective population/coverage hooks now implemented, tested (269 relevant final-source tests) and enabled in existing watchdog consumers before the window. Classification-neutral cohort/replay and local-index reconciliation now implemented (277 final-source tests); natural window coverage review remains pending. Classification-conditioned typed cases do not establish population rates. See [cohort delivery](../reports/2026-09-16-pit-cohort-delivery.md). See [dataset delivery](../reports/2026-09-16-pit-dataset-delivery.md) and [population delivery](../reports/2026-09-16-pit-population-delivery.md).
+- [ ] **M3.1** Build a point-in-time dataset of state/transition/sequence episodes and outcomes, including ignored assets and failure cases; declare its discovery cut, coverage and dependence units before searching. Partial: versioned bounded builder and freeze/capture CLI implemented; 268 relevant final-source tests passed. Saved synthetic replay includes selected/ignored, failure, transition and sequence cases; live retrospective capture has 78 observation-only skips and zero PIT rows. Forward window September 17 00:00 to September 18 00:00 UTC frozen September 16 20:38:40 UTC. Prospective population/coverage hooks now implemented, tested (269 relevant final-source tests) and enabled in existing watchdog consumers before the window. Classification-neutral cohort/replay and local-index reconciliation now implemented (277 final-source tests). Full-window review completed September 18 01:17 UTC: capture replay passed, indices match exports (331/331, 239/239), but coverage is **not accepted** — ~53% of the window inside >10-minute observation-gap intervals (no scans after 15:20 UTC; `collector_unhealthy` from 16:00 — origin diagnosed Sep 18 (strongly supported inference): live-tree git operations removed the worker module across 37 cycles, and the cumulative error count has no recovery semantics; see [collector-health diagnosis](../reports/2026-09-18-collector-health-diagnosis.md)), every scan misses at least one declared symbol (LSK, TAO or SUI), 16/30 forecast rows overdue-unresolved at cut, typed dataset 14 rows with three declared kinds absent and 0 sequences; diagnosis done; coordinator-reviewed fix proposal ([brief](2026-09-18-collector-recovery-health-brief.md)) with implementation and runtime verification pending; a new frozen window only after healthy verification. See [window-close review](../reports/2026-09-18-m31-window-close-review.md). Classification-conditioned typed cases do not establish population rates. See [cohort delivery](../reports/2026-09-16-pit-cohort-delivery.md). See [dataset delivery](../reports/2026-09-16-pit-dataset-delivery.md) and [population delivery](../reports/2026-09-16-pit-population-delivery.md). Latest engineering: [declared-universe delivery](../reports/2026-09-18-declared-population-delivery.md), `51101d0`, 203 tests, guarded deployment and natural 16/16 capture. Preserve Sep 18→19 freeze; distinct Sep 19 08:00→Sep 20 08:00 freeze awaits activation after prior cut review. Coverage remains unaccepted.
 - [ ] **M3.2** Implement the smallest useful quantitative/ML search for repeated patterns and failure conditions, with simple baselines, common calendar cuts and registered search budgets. Demonstrate discoveries beyond merely renaming existing indicators. Evidence: pending.
 - [ ] **M3.3** Connect an investigation/pattern to competing mechanism claims and at least one falsifier, confound or ablation test. Surprise prioritizes research; LLM prose cannot substitute for computed measurements. Evidence: pending.
 - [ ] **M3.4** Produce a reproducible StrategySpec candidate containing mechanical entry/exit/invalidation, universe, timeframe, data needs, costs and lineage back to events/cases. Route through the existing spec writer/admission interface; no second creation path. Evidence: pending.
@@ -131,7 +131,7 @@ Runs alongside intelligence for concrete dependencies. Reuse
 `engine/{executor,recovery,protective,reconcile,exits,risk,state}.py` and journal.
 M0.5 is the already-delivered bounded entry recovery, not completion of this list.
 
-- [ ] **M8.1** Attribute actual fills, commissions, funding and realized P&L across normal, partial, emergency and restarted trades; explicit unknowns/estimates cannot enter learning as fabricated actual results. Partial: emergency order archive plus normal/partial/close booking provenance and offline replay implemented and demo-deployed; 195 relevant final-source tests passed. Exact leg evidence is distinguished from estimates and unverified symbol-window subtotals. A subsequent manual whole-trade reconciler and verified-outcome bridge pass 232 final-source tests: exact ownership/quantity joins, bounded history completeness, signed funding-event matching and explicit fee currencies. Synthetic complete receipts replay; actual funding/economics and first natural booking remain unknown. A bounded automatic capture/retry worker is now demo-enabled through the watchdog; 247 relevant tests pass. See [worker delivery](../reports/2026-09-17-accounting-worker-delivery.md). A manual emergency-whole-accounting/native-exit-provenance slice is now implemented (DERIVED whole-trade arithmetic, never learning-eligible; native leg-only mapping against the official Binance algo-order field contract, partial exits unsupported/retry); 246 final-source targeted tests pass. See [exit-provenance delivery](../reports/2026-09-17-exit-provenance-delivery.md). Natural complete capture/import, non-USDT conversion acceptance (attribution evidence blocked, see [conversion evidence](../reports/2026-09-17-conversion-evidence-delivery.md)), an actually observed natural emergency/native exit and legacy consumer migration remain unfinished. See [whole-trade delivery](../reports/2026-09-16-whole-trade-accounting-delivery.md). See [normal accounting delivery](../reports/2026-09-16-normal-accounting-delivery.md) and [emergency accounting delivery](../reports/2026-09-16-emergency-accounting-delivery.md).
+- [ ] **M8.1** Attribute actual fills, commissions, funding and realized P&L across normal, partial, emergency and restarted trades; explicit unknowns/estimates cannot enter learning as fabricated actual results. Partial: emergency order archive plus normal/partial/close booking provenance and offline replay implemented and demo-deployed; 195 relevant final-source tests passed. Exact leg evidence is distinguished from estimates and unverified symbol-window subtotals. A subsequent manual whole-trade reconciler and verified-outcome bridge pass 232 final-source tests: exact ownership/quantity joins, bounded history completeness, signed funding-event matching and explicit fee currencies. Synthetic complete receipts replay; at that (historical) snapshot actual funding/economics and first natural booking were unknown. Since then the controlled diagnostic sample `pos_05a5e8f981` completed with actual funding/economics (September 17), while natural non-diagnostic complete receipts remain unavailable (September 18: LINK/AAVE legacy entries cannot clear under the current reconciler by time or publication alone; NEAR/ZEC/UNI waiting close). A bounded automatic capture/retry worker is now demo-enabled through the watchdog; 247 relevant tests pass. See [worker delivery](../reports/2026-09-17-accounting-worker-delivery.md). A manual emergency-whole-accounting/native-exit-provenance slice is now implemented (DERIVED whole-trade arithmetic, never learning-eligible; native leg-only mapping against the official Binance algo-order field contract, partial exits unsupported/retry); 246 final-source targeted tests pass. See [exit-provenance delivery](../reports/2026-09-17-exit-provenance-delivery.md). Natural complete capture/import, non-USDT conversion acceptance (attribution evidence blocked, see [conversion evidence](../reports/2026-09-17-conversion-evidence-delivery.md)), an actually observed natural emergency/native exit and legacy consumer migration remain unfinished. See [whole-trade delivery](../reports/2026-09-16-whole-trade-accounting-delivery.md). See [normal accounting delivery](../reports/2026-09-16-normal-accounting-delivery.md) and [emergency accounting delivery](../reports/2026-09-16-emergency-accounting-delivery.md).
 - [ ] **M8.2** Provide a reviewed recovery workflow for unknown order existence, ownership/size conflicts, ambiguous protection and residual stops; preserve protection and owner holds while states remain unresolved. Evidence: pending.
 - [ ] **M8.3** Verify panic, close/retry, partial-stop residues and continuous reconciliation across restarts/outages without prematurely deleting protection or booking guessed fills. Evidence: pending for complete failure matrix.
 - [ ] **M8.4** Preserve deterministic risk under concurrent decisions, stale balances, correlation/heat limits and any newly supported multi-leg execution; bound leg risk and verify venue truth before allowing more exposure. Evidence: pending.
@@ -159,6 +159,140 @@ Depends on M1–M9. Visibility and diagnostics must also ship with each earlier 
 - [ ] **M10.5** Publish a final owner-goal acceptance matrix and operational handoff with evidence for every requirement and remaining conditional scope decisions. Explicit owner authorization is required before any real-money or unsupported-market expansion. Evidence: pending.
 
 ## Session update block
+
+**Latest: check-now, September 18 18:46–18:50 UTC (bounded, snapshot only).**
+[Check-now 1846 report](../reports/2026-09-18-check-now-1846.md).
+**⚠ Session error:** an accidental run of legacy `scripts.validate_population` retired
+`spec_funding_filtered_trend_pullback` (paper → retired, false "duplicate"), wrote brain_events 1602–1605,
+rewrote vault notes, and may have sent Telegram. **Corrected at 18:50:46 UTC**: restored paper, cleared false reason,
+restored the previously clean Funding note, retained audit event 1606. Historical prior timestamp unknown; correction uses actual time.
+Notification delivery remains unverified. Do not rerun this legacy script for inspection; a separate guard/spec-dedup fix is recorded.
+Active window 18:47: 215/170 matched (was 111/97), 32 forecasts (08:00 cohort 16/16 resolved, 16:00 cohort 16 unresolved),
+investigations HYPE and new BNB, both unresolved. There were no new cadence gaps and no missing members. New error: AVAX `ValueError` at 16:00
+(1 missing-target retry, resolved 16:05). BTC is terminal and unchanged; BZ is still not terminal (expires Sep 19 04:00). M8.1: new retry
+XRP `pos_3f5e7f308c` (6 attempts), LINK/AAVE at 10 each, no natural complete, controlled SOL still complete. Sep 19 04:00 cut
+review is still due; the Sep 19 08:00 window is inactive.
+
+**Previous: check-now, September 18 12:44–12:52 UTC (read-only).**
+[Check-now report](../reports/2026-09-18-check-now-1244.md).
+**Observed execution/collection interruption around 11:31→12:42 UTC; root cause unconfirmed.**
+NIC/clock and cron evidence is consistent with an environment pause, not proof of host suspension.
+The active window has an explicit ~75-minute cadence gap (11:30→12:45). The 12:45 resume scan logged
+AAVE/AVAX/BNB/BR `TimeoutExpired`, and 09:00 logged BTC/DOGE/SOL `ValueError`. Every other receipt was available,
+and LSK/TAO/SUI appeared in every scan. Active captures replay: 108/92 → 111/97 matched. There are 16 unresolved
+immature forecasts and 1 new HYPE investigation. Old window unchanged: 347/240 matched,
+at-cut 331/239 plus 17 late supplements. **BTC `investigation_ec2bad86c8f4189e` terminal at 12:45:14 UTC**
+(measured; same/opposite contradicted, normalization compatible), 45 minutes after the deadline, following the observation gap.
+This is supplemental ledger evidence. BZ is still unresolved (10 exact keys missing, expires Sep 19 04:00).
+M8.1: no natural complete receipt. Controlled SOL is still complete. LINK/AAVE have 9 retries each, NEAR/ZEC/UNI
+are waiting on close, and a new open HYPE trade is queued. The window stays open to Sep 19 04:00, and the Sep 19 08:00 freeze
+is inactive. Next steps unchanged. The interruption and 09:00 ValueError are recorded, not fixed. Latest 12:50 scan is 16/16 available;
+12:49 venue check verifies all five native stops, ACTIVE/demo and watchdog enabled. **12/55**.
+
+**Latest: declared-universe collection deployed, September 18.**
+[Delivery report](../reports/2026-09-18-declared-population-delivery.md).
+Main `51101d0`; **203 relevant tests passed**, isolated review and guarded deployment.
+New off-path collector attempts every frozen member, independent of trading selection
+and the first-16 cap; per-symbol availability/error receipts and exact first-seen/version
+provenance retained. **Natural 02:35 UTC pass: 16/16, both consumers accepted the same scan**;
+investigation memory remains separately source-refused. Native demo stops, unchanged
+`ACTIVE`/empty recovery and restored watchdog verified. 882 prior files unchanged;
+12 captures replayed. Claude session-limited; authorized direct work completed.
+Old window reviewed, coverage unaccepted: frozen 331/239 unchanged; current old exports
+reconcile 347/240, late evidence supplemental (28 resolved / 2 unresolved forecasts
+at capture; 14/16 at the original cut). Existing Sep 18 04:00 → Sep 19 04:00 freeze
+preserved, still coverage-risk. **Distinct Sep 19 08:00 → Sep 20 08:00 window frozen,
+not activated**, same universe. Next: Sep 18 04:00 active-window receipt/BZ supplemental
+check; Sep 18 12:00 BTC `investigation_ec2bad86c8f4189e` in underlying ledger; Sep 19
+04:00 full cut review/reconciliation, then activate the already-frozen future config
+before 08:00. Report has exact procedure and rollback `28e03d7`.
+M8.1 no natural complete receipt; controlled SOL stays complete; LINK/AAVE legacy
+retries and NEAR/ZEC/UNI waiting close. No M3.2, Gate 2, backfill or deferred diagnostic
+exclusion change. **12/55**. These are engineering/deployment observations, not
+coverage/performance acceptance. Legacy outcome verifier reads only kernel attention;
+use retained source receipts/new bound snapshots for declared scans (recorded follow-up).
+
+**Latest: recovery deployed and new window activated, September 18.**
+[Delivery report](../reports/2026-09-18-collector-recovery-delivery.md).
+Main `e344a65`; 186 distinct relevant tests passed; guarded graceful restart,
+native demo protection and `ACTIVE` verified; watchdog restored. Natural 02:15 pass
+accepted exact collector evidence in both streams; investigation remains separately
+`memory_source_refused`. Seven frozen captures replay; 867 prior files preserved.
+New frozen window: **Sep 18 04:00 → Sep 19 04:00 UTC**, original 16-symbol universe,
+separate exports/bindings; manual pre-window activation 1/1 receipts and replay passed.
+**Known blocker: waiting alone cannot fix symbol coverage.** Current scan captures
+16 of 20 candidates and omits LSK/TAO; public production candles for LSK/TAO/SUI
+are available. **Next engineering step:** bounded declared-universe observation
+independent of trading selection, with explicit per-symbol receipts. Preserve this
+freeze; any collection-protocol change needs a distinct subsequent frozen window.
+Next evidence checks: BZ 04:00 (outside-universe supplemental), BTC investigation
+Sep 18 12:00 in the underlying ledger (old export stream closed), full new-window
+review Sep 19 04:00. Old cut remains coverage-unaccepted; new late old-export events
+are supplemental, not a revised at-cut claim (now 347/240, original 331/239 unchanged).
+M8.1 no natural complete receipt; controlled SOL complete; LINK/AAVE legacy-entry
+retries, NEAR/ZEC/UNI waiting close. No forced trade, M3.2, Gate 2, diagnostic exclusion
+fix or research flag change. **12/55**.
+
+- **Historical pre-implementation: collector-health diagnosis rev. 2 (coordinator-reviewed), September 18:** [diagnosis](../reports/2026-09-18-collector-health-diagnosis.md),
+  [brief](2026-09-18-collector-recovery-health-brief.md) — **proposal only; implementation and
+  runtime verification pending; no proposed-fix test run or passed** (only the existing failure
+  was reproduced). Read-only; production DBs byte-copied (never opened) or `mode=ro`; no
+  source/config/control change, no restart/trading/import/freeze; frozen hashes match.
+  **74 worker errors:** strongly supported inference, not per-event observation — git operations
+  in the live tree removed `trader/observability/` from 15:20:50 to 15:57:48 UTC; 37 cycles
+  (#255–#291) ended inside, 37 × (scan+causes) = 74; no per-job trace retained. Saved counters
+  (timeline 01:38:05.970): submitted 1736, processed 1662, errors 74, 0 drops/capture/timeouts.
+  Retained scans 23:11:48.994→01:37:18.890, all complete. Class reproduced (`JSONDecodeError`), not
+  retained. **16:00 onset** = first consumer pass after restore; cumulative `errors` cannot recover.
+  **15:20→16:00:** old checked-out `watchdog.sh` without consumers (observed). **07:05→11:05:**
+  guest-execution interruption hypothesis (journal empty 07:09:55→11:04:25, NIC down/up, clock
+  change); host suspend not observed. Transient refusals: clock race is a reproduced possible
+  explanation, not determined. Brief: instance-UUID + failure generation/fence (highest issued
+  seq) + exact complete-scan certificate, health re-read after snapshot, strict clocks (no future
+  tolerance), producer failure channel, bounded tracking fail-closed; 2 scans/300 s are engineering
+  defaults. Deployment needs separate authorization and a graceful-stop barrier (`watchdog.off`
+  alone does not stop the kernel), recorded-state restore and a pre-reviewed revert. **Next:**
+  Slice 1 (recovery + diagnostics), optional Slice 2 (scheduler receipts); no new freeze before
+  healthy verification; no branch operations in the live tree. **M8.1 unchanged** (01:37): SOL
+  complete (diagnostic); LINK/AAVE legacy-entry retry; NEAR/ZEC/UNI `waiting_close`; no natural
+  receipt. **12/55**.
+
+- **Previous review September 18 (evidence from 01:17:05 UTC):** [M3.1 window-close review](../reports/2026-09-18-m31-window-close-review.md).
+  Read-only; no source/config/control change, no worker invocation, import,
+  trading or restart. New maturity/capture/review files; capture `d95e8e1a…`
+  **replay passed**, freeze identical, five frozen hashes match, **0 events after
+  cut**; indices = exports **331/331, 239/239**; independent
+  [coordinator cut verification](../artifacts/pit-dataset/2026-09-18-coordinator-cut-verification.json)
+  reproduces the at-cut view, 257 pre-existing files preserved. At-cut
+  denominator **31**: forecast 14 terminal-resolved, **16 mature-unresolved-overdue**
+  (LSK target missing; 15 of the 11:10 batch, deadline 16:00, with no scan/outcome
+  processing recorded after 15:20); BTC `investigation_ec2bad86c8f4189e`
+  immature/unresolved (matures Sep 18 12:00). No capture-vs-cut differences: no
+  post-cut events and no deadline between cut and capture. Typed dataset only
+  **14 rows**; `false_signal`/`regime_transition`/`skip` absent, 0 sequences,
+  LSK/TAO absent. Verifier: 55 matured = 33 source-version retry + 22 outcome
+  retry. Supplemental, outside frozen universe: BZ
+  `investigation_3864bce371354aac` (04:00, immature at cut) and 7 forecasts incl.
+  SAMSUNG — not in the frozen denominator. **Review complete; coverage NOT
+  accepted:** no scans after **15:20:02 UTC**; gap share 53.1%/53.8% (sum of
+  >10-minute observation-gap intervals ÷ 24h, not a precise missing-observation
+  measure; missed counts unknown); every scan misses at least one declared symbol
+  (LSK, TAO or SUI). Present refusal condition
+  ([collector-health review](../artifacts/pit-dataset/2026-09-18-collector-health-review.json)):
+  consumers refuse the collector's cumulative `errors` (74) despite `status=ok`;
+  origin of the 74 errors, the 16:00 onset and the watchdog pass gaps remain
+  **unresolved**. Builder limitations recorded, not fixed.
+  **M8.1:** no natural complete receipt. LINK `pos_0136aef3df` (8 attempts) and
+  AAVE `pos_57c828f65a` (7) refuse `legacy_entry_receipt_missing_retry`
+  (pre-receipt entries) — cannot clear by time/publication under the current
+  reconciler; NEAR/ZEC/UNI opened Sep 17 are `waiting_close` — next natural
+  candidates. Controlled sample stays complete. Diagnostic-consumer exclusion
+  owner-deferred. **Next:** bounded read-only investigation of the worker errors
+  and collector recovery/health semantics, producing a concrete proposed fix for
+  owner review before implementation (no status-only weakening of the safety
+  contract); separately, a new frozen window. Owner merge validation (2015 passed,
+  5 pre-existing failures, equivalence PASS, 373.9x) is validation only — not
+  runtime deployment or performance evidence. M3.1 and M8.1 partial, **12/55**.
 
 - **Latest review September 17 11:05–11:16 UTC:** [post-publication accounting review](../reports/2026-09-17-post-publication-accounting-review.md).
   Read-only; no production source/config/control change, no trading, no restart,

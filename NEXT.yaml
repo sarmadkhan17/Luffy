@@ -1,0 +1,44 @@
+project: LUFFY
+sdd_version: v3-draft
+
+work_package:
+  id: A1-REPO-RECONCILIATION
+  type: AUDIT
+  priority: CRITICAL
+  status: READY
+
+  objective: >
+    Reconcile the actual local LUFFY repository against the target SDD
+    and STATE.yaml.
+
+  why_now: >
+    Progress cannot be trusted until local/newer code is mapped.
+    Local Graphify already contains code not visible in the GitHub snapshot.
+
+  instructions:
+    - Use the local repository as implementation truth.
+    - Read SDD.md for target capabilities and architectural boundaries.
+    - Use Graphify code-only first.
+    - Read source only where required.
+    - Do not redesign LUFFY during this audit.
+    - Classify every capability as KEEP, HARDEN, EXTEND, REFACTOR, REPLACE, or MISSING.
+    - Give exact files/classes/functions supporting each classification.
+    - Find implemented capabilities missing from STATE.yaml.
+    - Find STATE.yaml claims unsupported by local code.
+    - Exclude legacy/dead/duplicate paths from progress.
+    - Do not modify production code.
+
+  deliverables:
+    - Capability-by-capability reconciliation report
+    - Correct maturity state for every capability
+    - Correct evidence references
+    - Local-only code inventory
+    - Stale documentation assumptions
+    - Recommended first implementation work package
+
+  acceptance:
+    - Every STATE capability has real local-code evidence or is marked MISSING.
+    - Local cognition/attention/replay code is fully mapped.
+    - No progress score depends only on old documentation.
+    - Dead and legacy paths are excluded from progress.
+    - STATE.yaml can be corrected without guessing.

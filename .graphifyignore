@@ -1,0 +1,10 @@
+.git/
+venv/
+graphify-out/
+.pytest_cache/
+**/__pycache__/
+logs/
+.claude/worktrees/
+
+design/agents-cockpit/
+design/agents-cockpit-v2/

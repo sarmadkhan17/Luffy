@@ -1,0 +1,130 @@
+project: LUFFY
+sdd_version: v3-draft
+updated_at: '2026-09-19'
+status: PROVISIONAL
+
+progress_method:
+  rule: Progress is acceptance-evidence based, not code-volume based.
+  maturity_states:
+    - DEFINED
+    - IMPLEMENTED
+    - TESTED
+    - SHADOW
+    - PROVEN
+    - ACTIVE
+    - DEGRADED
+    - RETIRED
+  provisional_rule: Any capability not fully reconciled against the local repo remains PROVISIONAL.
+
+overall:
+  progress_pct: 55
+  production_readiness_pct: 58
+  intelligence_progress_pct: 34
+  research_progress_pct: 48
+  trading_core_progress_pct: 78
+  safety_progress_pct: 74
+  confidence: LOW-MEDIUM
+  note: Recalculate after full local repository reconciliation.
+
+capabilities:
+
+  data_and_provenance:
+    weight: 8
+    state: TESTED
+    progress_pct: 78
+    confidence: MEDIUM
+
+  market_perception:
+    weight: 6
+    state: IMPLEMENTED
+    progress_pct: 68
+    confidence: MEDIUM
+
+  attention_engine:
+    weight: 6
+    state: IMPLEMENTED
+    progress_pct: 45
+    confidence: LOW
+
+  world_model:
+    weight: 10
+    state: DEFINED
+    progress_pct: 15
+    confidence: MEDIUM
+
+  hypothesis_and_critic:
+    weight: 9
+    state: DEFINED
+    progress_pct: 25
+    confidence: MEDIUM
+
+  autonomous_research_intelligence:
+    weight: 12
+    state: IMPLEMENTED
+    progress_pct: 48
+    confidence: MEDIUM
+
+  strategy_discovery_and_validation:
+    weight: 10
+    state: TESTED
+    progress_pct: 72
+    confidence: MEDIUM-HIGH
+
+  opportunity_and_expression:
+    weight: 6
+    state: DEFINED
+    progress_pct: 28
+    confidence: MEDIUM
+
+  capital_allocation_and_portfolio:
+    weight: 10
+    state: DEFINED
+    progress_pct: 22
+    confidence: MEDIUM
+
+  risk_authority:
+    weight: 8
+    state: TESTED
+    progress_pct: 82
+    confidence: MEDIUM-HIGH
+
+  execution_and_reconciliation:
+    weight: 8
+    state: TESTED
+    progress_pct: 84
+    confidence: HIGH
+
+  memory_and_knowledge:
+    weight: 7
+    state: IMPLEMENTED
+    progress_pct: 58
+    confidence: MEDIUM
+
+  explanation_and_operator_interface:
+    weight: 4
+    state: IMPLEMENTED
+    progress_pct: 52
+    confidence: MEDIUM
+
+  monitoring_and_alerting:
+    weight: 5
+    state: IMPLEMENTED
+    progress_pct: 62
+    confidence: MEDIUM
+
+  autonomous_learning_and_adaptation:
+    weight: 7
+    state: IMPLEMENTED
+    progress_pct: 50
+    confidence: MEDIUM
+
+critical_blockers:
+  - Full local repository reconciliation is not complete.
+  - World model is not yet a first-class shared system.
+  - Autonomous Research Intelligence is incomplete.
+  - Global capital allocation/portfolio optimization is incomplete.
+  - Progress percentages remain provisional until the local codebase is audited.
+
+next_audit:
+  id: A1
+  name: Full local repository reconciliation

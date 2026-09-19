@@ -199,3 +199,61 @@ history/context preloads, avoid duplicate implementations or reviews of the
 same work, reuse existing artifacts and passing checks, keep results concise,
 and match effort/budget to the size of the task. This does not impose new
 permission steps and makes no pricing claims.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+
+## Luffy memory lookup
+
+For exact trading-memory questions, prefer:
+
+./venv/bin/python scripts/memory_lookup.py "<Concept>" [relation]
+
+Examples:
+./venv/bin/python scripts/memory_lookup.py "Absorption"
+./venv/bin/python scripts/memory_lookup.py "Absorption" contradicts
+
+Use this before opening the full Obsidian note.
+
+For memory_lookup results, answer only the requested relation by default. Do not add neighboring relations unless they are necessary to avoid a misleading answer or the user asks for broader context.
+
+## Luffy memory lookup
+
+For exact trading-memory questions, prefer:
+
+./venv/bin/python scripts/memory_lookup.py "<Concept>" [relation]
+
+Examples:
+./venv/bin/python scripts/memory_lookup.py "Absorption"
+./venv/bin/python scripts/memory_lookup.py "Absorption" contradicts
+
+Use this before opening the full Obsidian note.
+
+For memory_lookup results, answer only the requested relation by default. Do not add neighboring relations unless they are necessary to avoid a misleading answer or the user asks for broader context.
+
+For conceptual trading-memory questions, if memory_lookup resolves the concept, answer from that exact memory only. Do not expand into strategy performance, backtests, source files, research history, or Graphify neighbors unless the user explicitly asks for broader context, validation, or implementation details.
+
+For questions like "which mechanisms work in X regime?" or "what fails in X?", use reverse memory lookup:
+
+./venv/bin/python scripts/memory_lookup.py --reverse <relation> "<target>"
+
+Examples:
+./venv/bin/python scripts/memory_lookup.py --reverse works_in "Ranging Regime"
+./venv/bin/python scripts/memory_lookup.py --reverse fails_in "Strong Trend Expansion"
+
+Answer only from the returned concepts unless broader context is explicitly requested.
+
+## Graphify cost control
+
+Use Graphify as a code-only engineering graph for normal repository work.
+
+- Prefer `graphify explain`, `graphify query`, and `graphify update .` against the existing code-only graph.
+- Do not run full semantic extraction of the repository or knowledge vault unless the user explicitly requests it.
+- Trading knowledge should come from `scripts/memory_lookup.py` and structured Obsidian YAML, not semantic Graphify extraction.
