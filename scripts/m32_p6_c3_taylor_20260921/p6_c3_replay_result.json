@@ -1,0 +1,127 @@
+{
+  "distinct_configuration": {
+    "axis": true,
+    "inner_traversal": true,
+    "order": true,
+    "precision": true
+  },
+  "kernels_replayed": 8,
+  "primary_precision_bits": 224,
+  "replay_precision_bits": 384,
+  "result": "PASS",
+  "rows": [
+    {
+      "classification_match": true,
+      "interval_overlap": {
+        "conditional_hit_interval": true,
+        "conditional_miss_interval": true,
+        "joint_hit_interval": true,
+        "joint_miss_interval": true,
+        "population_interval": true,
+        "signed_lift_interval": true
+      },
+      "kernel_id": "0a1637679c1456f959ab",
+      "result": "PASS",
+      "winner_triple_match": true
+    },
+    {
+      "classification_match": true,
+      "interval_overlap": {
+        "conditional_hit_interval": true,
+        "conditional_miss_interval": true,
+        "joint_hit_interval": true,
+        "joint_miss_interval": true,
+        "population_interval": true,
+        "signed_lift_interval": true
+      },
+      "kernel_id": "3cc260c76449c068d392",
+      "result": "PASS",
+      "winner_triple_match": true
+    },
+    {
+      "classification_match": true,
+      "interval_overlap": {
+        "conditional_hit_interval": true,
+        "conditional_miss_interval": true,
+        "joint_hit_interval": true,
+        "joint_miss_interval": true,
+        "population_interval": true,
+        "signed_lift_interval": true
+      },
+      "kernel_id": "7dff14c356c8ce2d6260",
+      "result": "PASS",
+      "winner_triple_match": true
+    },
+    {
+      "classification_match": true,
+      "interval_overlap": {
+        "conditional_hit_interval": true,
+        "conditional_miss_interval": true,
+        "joint_hit_interval": true,
+        "joint_miss_interval": true,
+        "population_interval": true,
+        "signed_lift_interval": true
+      },
+      "kernel_id": "a9e4a3a0e3cbc9ae4b4d",
+      "result": "PASS",
+      "winner_triple_match": true
+    },
+    {
+      "classification_match": true,
+      "interval_overlap": {
+        "conditional_hit_interval": true,
+        "conditional_miss_interval": true,
+        "joint_hit_interval": true,
+        "joint_miss_interval": true,
+        "population_interval": true,
+        "signed_lift_interval": true
+      },
+      "kernel_id": "b10fa79c353f595cb688",
+      "result": "PASS",
+      "winner_triple_match": true
+    },
+    {
+      "classification_match": true,
+      "interval_overlap": {
+        "conditional_hit_interval": true,
+        "conditional_miss_interval": true,
+        "joint_hit_interval": true,
+        "joint_miss_interval": true,
+        "population_interval": true,
+        "signed_lift_interval": true
+      },
+      "kernel_id": "b3bc2b2a3e245b0236c4",
+      "result": "PASS",
+      "winner_triple_match": true
+    },
+    {
+      "classification_match": true,
+      "interval_overlap": {
+        "conditional_hit_interval": true,
+        "conditional_miss_interval": true,
+        "joint_hit_interval": true,
+        "joint_miss_interval": true,
+        "population_interval": true,
+        "signed_lift_interval": true
+      },
+      "kernel_id": "d4943315538638e73a34",
+      "result": "PASS",
+      "winner_triple_match": true
+    },
+    {
+      "classification_match": true,
+      "interval_overlap": {
+        "conditional_hit_interval": true,
+        "conditional_miss_interval": true,
+        "joint_hit_interval": true,
+        "joint_miss_interval": true,
+        "population_interval": true,
+        "signed_lift_interval": true
+      },
+      "kernel_id": "f851e8e3226de21f6f32",
+      "result": "PASS",
+      "winner_triple_match": true
+    }
+  ],
+  "schema": "m32.p6-c3-higher-precision-replay-check.v1"
+}

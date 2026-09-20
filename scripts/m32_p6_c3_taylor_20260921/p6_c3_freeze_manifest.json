@@ -1,0 +1,25 @@
+{
+  "schema": "m32.p6-c3-freeze-manifest.v1",
+  "frozen_on": "2026-09-21",
+  "scope": "P6/C3 only; exactly eight frozen categorical kernels",
+  "status": "ACCEPTED",
+  "categorical_truth_complete": true,
+  "rng_used": false,
+  "broader_kernel_run": false,
+  "protocol_changed": false,
+  "primary_precision_bits": 224,
+  "replay_precision_bits": 384,
+  "replay_result": "PASS",
+  "sha256": {
+    "certify_p6_c3_taylor.py": "66d8777a6c02577d0ca9050a17f509982e1657c96d7070c39932857b99d7c428",
+    "verify_p6_c3_replay.py": "eaffa45a6de10f1155ae2b1b464e40163245a8fc1620b4967e852d4df25075a3",
+    "p6_c3_primary_checkpoint.jsonl": "19d76f2adab8b3ec11febfb100c460fc121a6e354ba1024b6eebdc0f04fac4a6",
+    "p6_c3_primary.json": "25e488dac614e50d40bdcfe33502c30fe1f238a81ab7482deef13336738d5c5d",
+    "p6_c3_replay_checkpoint.jsonl": "26eb72016fea306eda2693c105dbd144fd808f620fbc3a706b8f70bb7bc02146",
+    "p6_c3_replay.json": "ce70e4dbcc40d65a723706603c06579054c565feeaab142b539bc4813ffeee47",
+    "p6_c3_replay_result.json": "782143291cc5294c4b3a8424c29d501e0b40d3828b17446a5eb5a1c9a6dbdbbd",
+    "p6_c3_freeze_report.md": "35e8201aa56061e9953bbf5bb6d33c53819cb43e7df0fe9afe0a56d2d121baf6",
+    "source_p6_c3_certificate.json": "00e2f10ef2fea33eac1d93f6019fe795c5ccf9c0979aefc2babfdc5af863761d",
+    "frozen_estimand_spec.json": "8c1ed60f8b6e9f22608c6c491506e8b0c888dd296c02b62c266a1e40ace92755"
+  }
+}
