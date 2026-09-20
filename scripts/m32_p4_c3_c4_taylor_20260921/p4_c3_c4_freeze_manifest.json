@@ -1,0 +1,49 @@
+{
+  "schema": "m32.p4-c3-c4-freeze-manifest.v1",
+  "date": "2026-09-21",
+  "scope": [
+    "P4/C3",
+    "P4/C4"
+  ],
+  "status": "certified",
+  "classifications": {
+    "P4/C3": {
+      "hit": 0,
+      "miss": 0,
+      "population": 0,
+      "lift": "[0,0]",
+      "kind": "true_null"
+    },
+    "P4/C4": {
+      "hit": 0,
+      "miss": 0,
+      "population": 0,
+      "lift": "[0,0]",
+      "kind": "true_null"
+    }
+  },
+  "replay": {
+    "precision_bits": 384,
+    "P4/C3": "pass",
+    "P4/C4": "pass"
+  },
+  "sha256": {
+    "certifier": "0c271383a7df43f7b40a360877532a1594b19871854945075b57fac7f43abc79",
+    "primary_c3": "e22b7140bca4a7ca59da68b0a349583e143ab5d8a3a1b951124f7d9882993d82",
+    "primary_c3_checkpoint": "5b788de7ca57f6c0e3173dee20357d8394e9ebcb4f0369c1092f63d0914b4ac1",
+    "replay_c3": "fe49be1d362a86b22d843e66d1d00562890b6e377089f3d762e6eb9d0a8af8a0",
+    "replay_c3_checkpoint": "897ec2dfacbc960f79bef6237d319a536d4593ae374b0751d453a11c998add18",
+    "primary_c4": "25fc2c88d0519585ccda2bcbce7f69df90dc66f8bd2ba31428c1a1ca8e475155",
+    "primary_c4_checkpoint": "a816eb68566a26db660f13672df868c68f6540546ef15c0fe73f8ac4ce5bac98",
+    "replay_c4": "66a545c7c15e64d67a684588a34179898e798401d6bc7fe29f9d5cdaab7914f1",
+    "replay_c4_checkpoint": "caebd92f3bc268e1a59c41c2f1e97160c85574803fd9e53a3a8f2d8d9e5e88cc",
+    "report": "184c9a99171f04668bad50b63715675eb269069a4d0d5e097406f4ab7d6a3cbc",
+    "frozen_estimand_spec": "8c1ed60f8b6e9f22608c6c491506e8b0c888dd296c02b62c266a1e40ace92755",
+    "reference_batch_certificate": "00e2f10ef2fea33eac1d93f6019fe795c5ccf9c0979aefc2babfdc5af863761d"
+  },
+  "remaining_unresolved_categorical_families": [
+    "P5/C4",
+    "P6/C3"
+  ],
+  "single_next_task": "Independently certify P5/C4 only with its existing analytic reduction and the unchanged frozen estimand."
+}

@@ -1,0 +1,114 @@
+{
+  "analytic_reduction_preserved": true,
+  "cell": "P4/C4",
+  "checkpoint": "scripts/m32_p4_c3_c4_taylor_20260921/primary_c4.jsonl",
+  "classification": "true_null",
+  "conditional_hit_interval": {
+    "decimal": "[0.7159349583089351654052734375000000000000000000000000000 +/- 0.0685]",
+    "lower": "0.647435666061937808990478515625000000000000000000000000000000000000",
+    "lower_dyadic": {
+      "exponent": -30,
+      "mantissa": 695178753
+    },
+    "upper": "0.784434250555932521820068359375000000000000000000000000000000000000",
+    "upper_dyadic": {
+      "exponent": -30,
+      "mantissa": 842279863
+    }
+  },
+  "conditional_miss_interval": {
+    "decimal": "[0.9389801500365138053894042968750000000000000000000000000 +/- 0.0219]",
+    "lower": "0.917155690491199493408203125000000000000000000000000000000000000000",
+    "lower_dyadic": {
+      "exponent": -27,
+      "mantissa": 123098553
+    },
+    "upper": "0.960804609581828117370605468750000000000000000000000000000000000000",
+    "upper_dyadic": {
+      "exponent": -29,
+      "mantissa": 515828047
+    }
+  },
+  "deterministic": true,
+  "family": "c4",
+  "final_band_count": 138,
+  "full_kernel_run": false,
+  "initial_axis": 128,
+  "iterations": 10,
+  "joint_hit_interval": {
+    "decimal": "[0.1431869916516335783797224856637750234726690973569572176 +/- 0.0137]",
+    "lower": "[0.129487133857070292373271832587603148472669097356957217592375222009 +/- 3.43e-67]",
+    "lower_dyadic": {
+      "exponent": -223,
+      "mantissa": 1745483111434405499254877414499679617224435562892866020450214229439
+    },
+    "upper": "[0.156886849446196864386173138739946898472669097356957217592375222009 +/- 3.43e-67]",
+    "upper_dyadic": {
+      "exponent": -223,
+      "mantissa": 2114830546923379676310194758963564860580225111403072465665241527743
+    }
+  },
+  "joint_miss_interval": {
+    "decimal": "[0.7511841205202029237982551311385682529517602964422665164 +/- 0.0175]",
+    "lower": "[0.733724554892115775727919742954974502951760296442266516386403808437 +/- 4.94e-67]",
+    "lower_dyadic": {
+      "exponent": -224,
+      "mantissa": 19781174868270283368705144733432069999089439034829682455352033659521
+    },
+    "upper": "[0.768643686148290071868590519322162002951760296442266516386403808437 +/- 4.94e-67]",
+    "upper_dyadic": {
+      "exponent": -224,
+      "mantissa": 20722592784599975317876273438469141652149090576884350866888303823489
+    }
+  },
+  "kernel_id": "b5e19762bc239f1aa844",
+  "lift_radius_target": "1e-12",
+  "majority_boundary": {
+    "denominator": 31,
+    "numerator": 20
+  },
+  "majority_sides": {
+    "hit": "above_20_over_31",
+    "miss": "above_20_over_31",
+    "population": "above_20_over_31"
+  },
+  "method": "rigorous_1d_arb_taylor_moment_enclosure_with_direct_range_guard",
+  "population_interval": {
+    "decimal": "[0.8943711121536466081425190520440424951744293937992237340 +/- 7.46e-3]",
+    "lower": "[0.886912820969780513344669396892675307674429393799223733978140155006 +/- 1.76e-67]",
+    "lower_dyadic": {
+      "exponent": -224,
+      "mantissa": 23911122351757406223706599578187021336409005284995642677031521884497
+    },
+    "upper": "[0.901829403337512702940368707195409682674429393799223733978140155006 +/- 1.76e-67]",
+    "upper_dyadic": {
+      "exponent": -224,
+      "mantissa": 24313272616847625667850794071291337173062647797794274579207773624657
+    }
+  },
+  "precision_bits": 224,
+  "protocol_changed": false,
+  "rng_used": false,
+  "runtime_seconds": 0.17390220699599013,
+  "schema": "m32.p4-reduced-taylor-certificate.v1",
+  "signed_lift_interval": {
+    "decimal": "0",
+    "lower": "0",
+    "lower_dyadic": {
+      "exponent": 0,
+      "mantissa": 0
+    },
+    "upper": "0",
+    "upper_dyadic": {
+      "exponent": 0,
+      "mantissa": 0
+    }
+  },
+  "signed_lift_midpoint": "0",
+  "signed_lift_radius": "0",
+  "status": "certified",
+  "tail_limit": 16,
+  "taylor_degree": 14,
+  "zero_separation": "0",
+  "zero_separation_target_non_null": "1e-10"
+}

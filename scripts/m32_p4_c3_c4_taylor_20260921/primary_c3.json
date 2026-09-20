@@ -1,0 +1,114 @@
+{
+  "analytic_reduction_preserved": true,
+  "cell": "P4/C3",
+  "checkpoint": "scripts/m32_p4_c3_c4_taylor_20260921/primary_c3.jsonl",
+  "classification": "true_null",
+  "conditional_hit_interval": {
+    "decimal": "[0.8064491106197237968444824218750000000000000000000000000 +/- 0.0518]",
+    "lower": "0.754712204448878765106201171875000000000000000000000000000000000000",
+    "lower_dyadic": {
+      "exponent": -30,
+      "mantissa": 810366059
+    },
+    "upper": "0.858186016790568828582763671875000000000000000000000000000000000000",
+    "upper_dyadic": {
+      "exponent": -30,
+      "mantissa": 921470219
+    }
+  },
+  "conditional_miss_interval": {
+    "decimal": "[0.9089525695890188217163085937500000000000000000000000000 +/- 0.0178]",
+    "lower": "0.891176556237041950225830078125000000000000000000000000000000000000",
+    "lower_dyadic": {
+      "exponent": -30,
+      "mantissa": 956893541
+    },
+    "upper": "0.926728582940995693206787109375000000000000000000000000000000000000",
+    "upper_dyadic": {
+      "exponent": -30,
+      "mantissa": 995067239
+    }
+  },
+  "deterministic": true,
+  "family": "c3",
+  "final_band_count": 128,
+  "full_kernel_run": false,
+  "initial_axis": 128,
+  "iterations": 0,
+  "joint_hit_interval": {
+    "decimal": "[0.1612898222910863163774391990262858978367542491180764455 +/- 0.0104]",
+    "lower": "[0.150942441711753495306291280325114022836754249118076445540970970361 +/- 2.67e-68]",
+    "lower_dyadic": {
+      "exponent": -226,
+      "mantissa": 16277600713433473435737776747749043800601612524053096287667346558767
+    },
+    "upper": "[0.171637202870419137448587117727457772836754249118076445540970970361 +/- 2.67e-68]",
+    "upper_dyadic": {
+      "exponent": -226,
+      "mantissa": 18509319341941658602190687599211373083137158723921629042478791610159
+    }
+  },
+  "joint_miss_interval": {
+    "decimal": "[0.7271620558062320968576516907578954699596130596663979591 +/- 0.0143]",
+    "lower": "[0.712941247944811770922764758384848594959613059666397959068562467236 +/- 3.05e-67]",
+    "lower_dyadic": {
+      "exponent": -224,
+      "mantissa": 19220858021403946026631611199321032365636141539871975009356552476795
+    },
+    "upper": "[0.741382863667652422792538623130942344959613059666397959068562467236 +/- 3.05e-67]",
+    "upper_dyadic": {
+      "exponent": -224,
+      "mantissa": 19987642464419323093932715285905029265400130302034417008357297231995
+    }
+  },
+  "kernel_id": "bc9047a9a11203b3b29e",
+  "lift_radius_target": "1e-12",
+  "majority_boundary": {
+    "denominator": 31,
+    "numerator": 20
+  },
+  "majority_sides": {
+    "hit": "above_20_over_31",
+    "miss": "above_20_over_31",
+    "population": "above_20_over_31"
+  },
+  "method": "rigorous_1d_arb_taylor_moment_enclosure_with_direct_range_guard",
+  "population_interval": {
+    "decimal": "[0.8884518780864044768138157509292008990463673087844744046 +/- 5.86e-3]",
+    "lower": "[0.882600046704671413205407776686036836546367308784474404608894562157 +/- 2.56e-67]",
+    "lower_dyadic": {
+      "exponent": -223,
+      "mantissa": 11897425093791302544793001401460898561754023777684616916085976901581
+    },
+    "upper": "[0.894303709468137540422223725172364961546367308784474404608894562157 +/- 2.56e-67]",
+    "upper_dyadic": {
+      "exponent": -223,
+      "mantissa": 12055190155747984376383969223717381735018599186010621847562739558349
+    }
+  },
+  "precision_bits": 224,
+  "protocol_changed": false,
+  "rng_used": false,
+  "runtime_seconds": 0.20487956702709198,
+  "schema": "m32.p4-reduced-taylor-certificate.v1",
+  "signed_lift_interval": {
+    "decimal": "0",
+    "lower": "0",
+    "lower_dyadic": {
+      "exponent": 0,
+      "mantissa": 0
+    },
+    "upper": "0",
+    "upper_dyadic": {
+      "exponent": 0,
+      "mantissa": 0
+    }
+  },
+  "signed_lift_midpoint": "0",
+  "signed_lift_radius": "0",
+  "status": "certified",
+  "tail_limit": 16,
+  "taylor_degree": 14,
+  "zero_separation": "0",
+  "zero_separation_target_non_null": "1e-10"
+}
