@@ -33,6 +33,19 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 P6/C4 full reduced certificate, September 21
+
+Artifact commit `581d661`; [immutable manifest](../scripts/m32_p6_c4_taylor_20260921/p6_c4_freeze_manifest.json)
+and [report](../scripts/m32_p6_c4_taylor_20260921/p6_c4_freeze_report.md).
+The unchanged analytic bivariate Gaussian reduction is now fully certified:
+hit class `2`, miss class `0`, population class `0`. The `224`-bit primary and
+independent `384`-bit replay have overlapping hit, miss, population, and signed
+macro-F1 lift intervals. Lift is positive near `0.125340933509545`; radii are
+`9.540324361404e-13` / `7.229725986716e-13`. No RNG, protocol change, or
+remaining-kernel run occurred. This certifies P6/C4 only, not M3.2.
+**Single next task:** owner review of this frozen bounded certificate before
+authorizing another categorical kernel or broader run.
+
 ### Latest: M3.2 P5/C3 hit/miss and macro-F1 freeze, September 21
 
 Artifact commit `6ade4ae`; [immutable manifest](../scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_freeze_manifest.json)
