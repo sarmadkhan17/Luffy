@@ -33,6 +33,19 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 P4/C3 and P4/C4 reduced certificates, September 21
+
+Artifact commit `afb3eeb`; [immutable manifest](../scripts/m32_p4_c3_c4_taylor_20260921/p4_c3_c4_freeze_manifest.json)
+and [report](../scripts/m32_p4_c3_c4_taylor_20260921/p4_c3_c4_freeze_report.md).
+The preserved one-dimensional analytic reductions are now fully certified for
+P4/C3 and P4/C4. Hit, miss, and population all resolve to class `0` in both
+families, making both frozen signed macro-F1 lifts exactly `[0,0]` with radius
+zero. The `224`-bit primaries and independent `384`-bit finer replays agree and
+their guarded probability intervals overlap. No RNG, protocol change, or
+broader kernel run occurred. Remaining unresolved categorical families are
+P5/C4 and P6/C3. **Single next task:** independently certify P5/C4 only with
+its existing analytic reduction and the unchanged frozen estimand.
+
 ### Latest: M3.2 P6/C4 full reduced certificate, September 21
 
 Artifact commit `581d661`; [immutable manifest](../scripts/m32_p6_c4_taylor_20260921/p6_c4_freeze_manifest.json)
