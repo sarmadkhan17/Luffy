@@ -33,6 +33,20 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 P5/C4 full reduced certificate, September 21
+
+Artifact commit `e963787`; [immutable manifest](../scripts/m32_p5_c4_taylor_20260921/p5_c4_freeze_manifest.json)
+and [report](../scripts/m32_p5_c4_taylor_20260921/p5_c4_freeze_report.md).
+All six frozen P5/C4 kernels are fully certified with the preserved 1D analytic
+reduction. Four non-null kernels resolve hit/miss/population to `2 / 0 / 0`;
+the two empty-sector focal variants resolve to algebraic true nulls with
+`0 / 0 / 0`. The largest primary lift radius is `6.198e-14`; the independent
+`384`-bit replay passed with overlapping probability and lift intervals. No
+RNG, P6/C3 work, protocol change, or broader kernel run occurred. P6/C3 is the
+only unresolved categorical family. **Single next task:** independently
+certify P6/C3 only with its existing analytic reduction and unchanged frozen
+estimand.
+
 ### Latest: M3.2 P4/C3 and P4/C4 reduced certificates, September 21
 
 Artifact commit `afb3eeb`; [immutable manifest](../scripts/m32_p4_c3_c4_taylor_20260921/p4_c3_c4_freeze_manifest.json)
