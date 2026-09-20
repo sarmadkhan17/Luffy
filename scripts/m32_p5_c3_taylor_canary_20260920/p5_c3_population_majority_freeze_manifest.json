@@ -1,0 +1,96 @@
+{
+  "accepted_classification": "population majority strictly above 20/31",
+  "canary": "P5/C3",
+  "certificate_status": "accepted",
+  "checkpoint_receipt": {
+    "action_counts": {
+      "initial": 1,
+      "split_g": 23,
+      "split_z": 110
+    },
+    "all_independent_refinement_decisions_matched": true,
+    "checkpoint_records": 134,
+    "final_bands": 39,
+    "final_evaluations": 49435,
+    "final_leaves": 918,
+    "initial_bands": 16,
+    "initial_evaluations": 1280,
+    "initial_leaves": 256,
+    "refinement_decisions_matched": 133,
+    "refinements": 133,
+    "terminal_checkpoint_matches_primary_report": true
+  },
+  "freeze_date": "2026-09-20",
+  "hash_algorithm": "SHA-256",
+  "immutable": true,
+  "inputs": {
+    "frozen_estimand_spec": {
+      "path": "scripts/m32_categorical_equivalence_20260920/estimand_spec.json",
+      "sha256": "8c1ed60f8b6e9f22608c6c491506e8b0c888dd296c02b62c266a1e40ace92755"
+    },
+    "primary_certifier": {
+      "path": "scripts/m32_p5_c3_taylor_canary_20260920/certify_population_taylor.py",
+      "sha256": "76814e9bd8a57beb3360ece0f61a69a98ff9d3e34405eb00a499f1ddb61dbf05"
+    },
+    "primary_checkpoint": {
+      "path": "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_checkpoint.jsonl",
+      "sha256": "3f5bdcd54590c14dae4c94670cbbb86973ba729b3b06697d9eebe34e52b59066"
+    },
+    "primary_report": {
+      "path": "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_report.json",
+      "sha256": "65d2d35f4ed8fdd4d73cf6047b91f6f42d85300b20b615387361033491bcfc36"
+    }
+  },
+  "majority_threshold": "20/31",
+  "primary_certificate": {
+    "interval_decimal": {
+      "lower": "0.645216427771829392546478549481683481928584334281467566037294269634151944648755335137471153",
+      "upper": "0.662187252542225967878166476727777231928584334281467566037294269634151944648755335137471153"
+    },
+    "interval_dyadic": {
+      "lower": {
+        "exponent": -223,
+        "mantissa": 8697500240748986669135701181549387930913145526230195357700525822495
+      },
+      "upper": {
+        "exponent": -223,
+        "mantissa": 8926266506102712005605949575154265736191374775256504455129134699039
+      }
+    },
+    "precision_bits": 224
+  },
+  "protocol_changed": false,
+  "replay_certificate": {
+    "independent_implementation": true,
+    "interval_decimal": {
+      "lower": "0.645216427771705111575396679089493803661445700301031304870729099062428241714014254309347057",
+      "upper": "0.662187252542101686907084606335587553661445700301031304870729099062428241714014254309347057"
+    },
+    "interval_dyadic": {
+      "lower": {
+        "exponent": -383,
+        "mantissa": 12711410842538117873977764837786207204361646269626487102198789896129945702374865028277018491063344369171409166894093
+      },
+      "upper": {
+        "exponent": -383,
+        "mantissa": 13045753113918663262069514901334595818665474904473691561840246868860626166962352371939050672936229738513001525249037
+      }
+    },
+    "lower_bound_margin_over_20_31": {
+      "decimal": "0.0000551374491244664141063565088486423711231196558700145481484539011379191333690930190244763868",
+      "denominator": 610731096044114427790325121552226013978735958692214423353198547765808687458206764476921126950716192432502733849755648,
+      "numerator": 33674154736861970520308969936285284413641653766633488679552737571099058648709762444910674114519036247404270648723
+    },
+    "precision_bits": 384,
+    "result": "PASS"
+  },
+  "interval_relationship": {
+    "overlap": true,
+    "primary_contained_within_replay": false,
+    "replay_contained_within_primary": false
+  },
+  "rng_used": false,
+  "schema": "m3.2-p5-c3-population-majority-freeze.v1",
+  "scope": "population_only",
+  "supersession_policy": "Do not edit this frozen artifact; append a separately identified artifact under separately authorized protocol if new evidence is required."
+}
