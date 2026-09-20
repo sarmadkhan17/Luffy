@@ -1,0 +1,519 @@
+{
+  "analytic_reduction_preserved": true,
+  "axis": 82,
+  "broader_kernel_run": false,
+  "cell": "P5/C4",
+  "kernels": {
+    "2ca6beeb42d57d3f72d6": {
+      "classification": "true_null",
+      "conditional_hit_interval": {
+        "decimal": "[0.8235376506400541725268061370159261656148652619435779343 +/- 3.52e-15]",
+        "lower_dyadic": {
+          "exponent": -78,
+          "mantissa": 248898982320882346096951
+        },
+        "radius_decimal": "3.5129458094904340994353228455615579e-15",
+        "upper_dyadic": {
+          "exponent": -78,
+          "mantissa": 248898982320884469542397
+        },
+        "width_decimal": "7.0258916189808681988706456911231157e-15"
+      },
+      "conditional_miss_interval": {
+        "decimal": "[0.6572097317181881610481698797207681522758448977583611850 +/- 1.39e-14]",
+        "lower_dyadic": {
+          "exponent": -76,
+          "mantissa": 49657363348506527578301
+        },
+        "radius_decimal": "1.3841670839104235621926791699465298e-14",
+        "upper_dyadic": {
+          "exponent": -76,
+          "mantissa": 49657363348508619272459
+        },
+        "width_decimal": "2.7683341678208471243853583398930596e-14"
+      },
+      "population_interval": {
+        "decimal": "[0.6987917114486546661485238842841094517609750925985918400 +/- 1.13e-14]",
+        "lower_dyadic": {
+          "exponent": -383,
+          "mantissa": 13766897672244275232442933773321254542511653286689274255750469289037541409550611319820426980706691396611343101662065
+        },
+        "radius_decimal": "1.1259082589814255062968251230870464e-14",
+        "upper_dyadic": {
+          "exponent": -383,
+          "mantissa": 13766897672244718862884903351799765756498900323072373810950430154244705476740113063660960280941451450207079757976433
+        },
+        "width_decimal": "2.2518165179628510125936502461740929e-14"
+      },
+      "reason": "accepted",
+      "signed_lift_interval": {
+        "decimal": "0",
+        "lower_dyadic": {
+          "exponent": 0,
+          "mantissa": 0
+        },
+        "radius_decimal": "0",
+        "upper_dyadic": {
+          "exponent": 0,
+          "mantissa": 0
+        },
+        "width_decimal": "0"
+      },
+      "signed_lift_radius": "0",
+      "spec": {
+        "correlation": 4,
+        "h_kind": 0,
+        "h_sector": 1,
+        "is_target": false,
+        "r_d": 11,
+        "r_n": 10,
+        "scenario": 5,
+        "sector_counts": [
+          [
+            8,
+            16
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      "status": "certified",
+      "strict_argmax": {
+        "hit": 0,
+        "miss": 0,
+        "population": 0
+      },
+      "zero_separation": "0"
+    },
+    "6f3f08bc43774f2f2c2d": {
+      "classification": "non_null",
+      "conditional_hit_interval": {
+        "decimal": "[0.3786219443172370474730218905179066068988902316050371155 +/- 9.39e-15]",
+        "lower_dyadic": {
+          "exponent": -76,
+          "mantissa": 28607865272361808466647
+        },
+        "radius_decimal": "9.3894333960196281496125847443323664e-15",
+        "upper_dyadic": {
+          "exponent": -76,
+          "mantissa": 28607865272363227357705
+        },
+        "width_decimal": "1.8778866792039256299225169488664733e-14"
+      },
+      "conditional_miss_interval": {
+        "decimal": "[0.8055149671591272125360482332038624536663107278400275391 +/- 1.82e-14]",
+        "lower_dyadic": {
+          "exponent": -74,
+          "mantissa": 15215747529448078682887
+        },
+        "radius_decimal": "1.8142150405052524624049947732373766e-14",
+        "upper_dyadic": {
+          "exponent": -74,
+          "mantissa": 15215747529448764073951
+        },
+        "width_decimal": "3.6284300810105049248099895464747533e-14"
+      },
+      "population_interval": {
+        "decimal": "[0.6987917114486546661485238842841094517609750925985918400 +/- 1.13e-14]",
+        "lower_dyadic": {
+          "exponent": -383,
+          "mantissa": 13766897672244275232442933773321254542511653286689274255750469289037541409550611319820426980706691396611343101662065
+        },
+        "radius_decimal": "1.1259082589814255062968251230870464e-14",
+        "upper_dyadic": {
+          "exponent": -383,
+          "mantissa": 13766897672244718862884903351799765756498900323072373810950430154244705476740113063660960280941451450207079757976433
+        },
+        "width_decimal": "2.2518165179628510125936502461740929e-14"
+      },
+      "reason": "accepted",
+      "signed_lift_interval": {
+        "decimal": "[0.1860725434902368452508813690913956733393360328439788039 +/- 3.41e-14]",
+        "lower_dyadic": {
+          "exponent": -385,
+          "mantissa": 14663263023159699689760655380659591186972618928118725791737891518409945296918202809317076161792331687820828038834859
+        },
+        "radius_decimal": "3.4098456268508311149678657869799281e-14",
+        "upper_dyadic": {
+          "exponent": -385,
+          "mantissa": 14663263023165073880101372383250654654238396842810313465784973090463670292907976361113752037374959052342617594047147
+        },
+        "width_decimal": "6.8196912537016622299357315739598562e-14"
+      },
+      "signed_lift_radius": "3.4098456268508311149678657869799281e-14",
+      "spec": {
+        "correlation": 4,
+        "h_kind": 0,
+        "h_sector": 0,
+        "is_target": true,
+        "r_d": 11,
+        "r_n": 10,
+        "scenario": 5,
+        "sector_counts": [
+          [
+            8,
+            16
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      "status": "certified",
+      "strict_argmax": {
+        "hit": 2,
+        "miss": 0,
+        "population": 0
+      },
+      "zero_separation": "0.18607254349020274679461286078024599"
+    },
+    "80c0bb2935ef7accbdc2": {
+      "classification": "non_null",
+      "conditional_hit_interval": {
+        "decimal": "[0.3474999026358726830208107738511003059755921640316955745 +/- 1.20e-14]",
+        "lower_dyadic": {
+          "exponent": -76,
+          "mantissa": 26256350288128858720123
+        },
+        "radius_decimal": "1.1978357994385552709893510980876385e-14",
+        "upper_dyadic": {
+          "exponent": -76,
+          "mantissa": 26256350288130668838405
+        },
+        "width_decimal": "2.3956715988771105419787021961752771e-14"
+      },
+      "conditional_miss_interval": {
+        "decimal": "[0.7866146636518501480191144161776108448269617667847342091 +/- 1.71e-14]",
+        "lower_dyadic": {
+          "exponent": -75,
+          "mantissa": 29717461780505567432829
+        },
+        "radius_decimal": "1.7068657587756511529591962883500855e-14",
+        "upper_dyadic": {
+          "exponent": -75,
+          "mantissa": 29717461780506857104133
+        },
+        "width_decimal": "3.4137315175513023059183925767001710e-14"
+      },
+      "population_interval": {
+        "decimal": "[0.6987917114486546661485238842841094517609750925985918400 +/- 1.13e-14]",
+        "lower_dyadic": {
+          "exponent": -383,
+          "mantissa": 13766897672244275232442933773321254542511653286689274255750469289037541409550611319820426980706691396611343101662065
+        },
+        "radius_decimal": "1.1259082589814255062968251230870464e-14",
+        "upper_dyadic": {
+          "exponent": -383,
+          "mantissa": 13766897672244718862884903351799765756498900323072373810950430154244705476740113063660960280941451450207079757976433
+        },
+        "width_decimal": "2.2518165179628510125936502461740929e-14"
+      },
+      "reason": "accepted",
+      "signed_lift_interval": {
+        "decimal": "[0.1696464654747387048034242562000289041475771985763761525 +/- 3.40e-14]",
+        "lower_dyadic": {
+          "exponent": -385,
+          "mantissa": 13368822167661479055211214684382900803634031259908991609792195527856790796357628940907622438898698791235812216973995
+        },
+        "radius_decimal": "3.3932399270847368212555839050992290e-14",
+        "upper_dyadic": {
+          "exponent": -385,
+          "mantissa": 13368822167666827073636528522425366885073065620667511574807437245462352626550807098268220156445891810344238364404395
+        },
+        "width_decimal": "6.7864798541694736425111678101984580e-14"
+      },
+      "signed_lift_radius": "3.3932399270847368212555839050992290e-14",
+      "spec": {
+        "correlation": 4,
+        "h_kind": 1,
+        "h_sector": 0,
+        "is_target": true,
+        "r_d": 11,
+        "r_n": 10,
+        "scenario": 5,
+        "sector_counts": [
+          [
+            8,
+            16
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      "status": "certified",
+      "strict_argmax": {
+        "hit": 2,
+        "miss": 0,
+        "population": 0
+      },
+      "zero_separation": "0.16964646547470477240415340883181635"
+    },
+    "927c037efde9d39f01ec": {
+      "classification": "non_null",
+      "conditional_hit_interval": {
+        "decimal": "[0.3701676854833319446394819371746283051538561892357392935 +/- 1.25e-14]",
+        "lower_dyadic": {
+          "exponent": -76,
+          "mantissa": 27969079535485766129191
+        },
+        "radius_decimal": "1.2476354101534553109938835424586046e-14",
+        "upper_dyadic": {
+          "exponent": -76,
+          "mantissa": 27969079535487651502517
+        },
+        "width_decimal": "2.4952708203069106219877670849172091e-14"
+      },
+      "conditional_miss_interval": {
+        "decimal": "[0.7809477179399853335120831737545732051386515593094372889 +/- 1.72e-14]",
+        "lower_dyadic": {
+          "exponent": -75,
+          "mantissa": 29503370624585944633727
+        },
+        "radius_decimal": "1.7193156607926316729179072595457001e-14",
+        "upper_dyadic": {
+          "exponent": -75,
+          "mantissa": 29503370624587243711911
+        },
+        "width_decimal": "3.4386313215852633458358145190914001e-14"
+      },
+      "population_interval": {
+        "decimal": "[0.6987917114486546661485238842841094517609750925985918400 +/- 1.13e-14]",
+        "lower_dyadic": {
+          "exponent": -383,
+          "mantissa": 13766897672244275232442933773321254542511653286689274255750469289037541409550611319820426980706691396611343101662065
+        },
+        "radius_decimal": "1.1259082589814255062968251230870464e-14",
+        "upper_dyadic": {
+          "exponent": -383,
+          "mantissa": 13766897672244718862884903351799765756498900323072373810950430154244705476740113063660960280941451450207079757976433
+        },
+        "width_decimal": "2.2518165179628510125936502461740929e-14"
+      },
+      "reason": "accepted",
+      "signed_lift_interval": {
+        "decimal": "[0.1633170360869970352127692588370653075750353148502351056 +/- 3.42e-14]",
+        "lower_dyadic": {
+          "exponent": -385,
+          "mantissa": 12870037735750581814925676724130379544743638977854785850896774776358573523444393731216540703938474841398958989071701
+        },
+        "radius_decimal": "3.4187212827644589824283016810113622e-14",
+        "upper_dyadic": {
+          "exponent": -385,
+          "mantissa": 12870037735755969994012365959942893717193681667737668317009109552940402400261769536341311633012676849269999804962133
+        },
+        "width_decimal": "6.8374425655289179648566033620227245e-14"
+      },
+      "signed_lift_radius": "3.4187212827644589824283016810113622e-14",
+      "spec": {
+        "correlation": 4,
+        "h_kind": 1,
+        "h_sector": 0,
+        "is_target": false,
+        "r_d": 11,
+        "r_n": 10,
+        "scenario": 5,
+        "sector_counts": [
+          [
+            8,
+            16
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      "status": "certified",
+      "strict_argmax": {
+        "hit": 2,
+        "miss": 0,
+        "population": 0
+      },
+      "zero_separation": "0.16331703608696284799994161424724102"
+    },
+    "cda53e68321634ca8982": {
+      "classification": "non_null",
+      "conditional_hit_interval": {
+        "decimal": "[0.4017041742607110404798669169414496171732764651096658781 +/- 1.19e-14]",
+        "lower_dyadic": {
+          "exponent": -76,
+          "mantissa": 30351909256920847449255
+        },
+        "radius_decimal": "1.1878353525924006570905350210765050e-14",
+        "upper_dyadic": {
+          "exponent": -76,
+          "mantissa": 30351909256922642455289
+        },
+        "width_decimal": "2.3756707051848013141810700421530100e-14"
+      },
+      "conditional_miss_interval": {
+        "decimal": "[0.7978208905113025477080953238044527114913861964851093944 +/- 1.90e-14]",
+        "lower_dyadic": {
+          "exponent": -75,
+          "mantissa": 30140821061469588164241
+        },
+        "radius_decimal": "1.8971790510116803168440269278249843e-14",
+        "upper_dyadic": {
+          "exponent": -75,
+          "mantissa": 30140821061471021632203
+        },
+        "width_decimal": "3.7943581020233606336880538556499687e-14"
+      },
+      "population_interval": {
+        "decimal": "[0.6987917114486546661485238842841094517609750925985918400 +/- 1.13e-14]",
+        "lower_dyadic": {
+          "exponent": -383,
+          "mantissa": 13766897672244275232442933773321254542511653286689274255750469289037541409550611319820426980706691396611343101662065
+        },
+        "radius_decimal": "1.1259082589814255062968251230870464e-14",
+        "upper_dyadic": {
+          "exponent": -383,
+          "mantissa": 13766897672244718862884903351799765756498900323072373810950430154244705476740113063660960280941451450207079757976433
+        },
+        "width_decimal": "2.2518165179628510125936502461740929e-14"
+      },
+      "reason": "accepted",
+      "signed_lift_interval": {
+        "decimal": "[0.1784213914213435011190376879762703801746148712936701486 +/- 3.70e-14]",
+        "lower_dyadic": {
+          "exponent": -75,
+          "mantissa": 6740569589399549629063
+        },
+        "radius_decimal": "3.6950654165232159646323206736440170e-14",
+        "upper_dyadic": {
+          "exponent": -75,
+          "mantissa": 6740569589402341541555
+        },
+        "width_decimal": "7.3901308330464319292646413472880340e-14"
+      },
+      "signed_lift_radius": "3.6950654165232159646323206736440170e-14",
+      "spec": {
+        "correlation": 4,
+        "h_kind": 0,
+        "h_sector": 0,
+        "is_target": false,
+        "r_d": 11,
+        "r_n": 10,
+        "scenario": 5,
+        "sector_counts": [
+          [
+            8,
+            16
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      "status": "certified",
+      "strict_argmax": {
+        "hit": 2,
+        "miss": 0,
+        "population": 0
+      },
+      "zero_separation": "0.17842139142130655046487245581662406"
+    },
+    "dcc1c4cae778c6d4e914": {
+      "classification": "true_null",
+      "conditional_hit_interval": {
+        "decimal": "[0.8340590016086802205041960108235199987392061160562661826 +/- 2.48e-15]",
+        "lower_dyadic": {
+          "exponent": -78,
+          "mantissa": 252078865531682515329705
+        },
+        "radius_decimal": "2.4712668614790228815937186968021422e-15",
+        "upper_dyadic": {
+          "exponent": -78,
+          "mantissa": 252078865531684009118863
+        },
+        "width_decimal": "4.9425337229580457631874373936042844e-15"
+      },
+      "conditional_miss_interval": {
+        "decimal": "[0.6649748889086482827558987201705797270845366142566490453 +/- 1.35e-14]",
+        "lower_dyadic": {
+          "exponent": -76,
+          "mantissa": 50244082037313646298773
+        },
+        "radius_decimal": "1.3456411667331009995082075070271799e-14",
+        "upper_dyadic": {
+          "exponent": -76,
+          "mantissa": 50244082037315679774211
+        },
+        "width_decimal": "2.6912823334662019990164150140543597e-14"
+      },
+      "population_interval": {
+        "decimal": "[0.6987917114486546661485238842841094517609750925985918400 +/- 1.13e-14]",
+        "lower_dyadic": {
+          "exponent": -383,
+          "mantissa": 13766897672244275232442933773321254542511653286689274255750469289037541409550611319820426980706691396611343101662065
+        },
+        "radius_decimal": "1.1259082589814255062968251230870464e-14",
+        "upper_dyadic": {
+          "exponent": -383,
+          "mantissa": 13766897672244718862884903351799765756498900323072373810950430154244705476740113063660960280941451450207079757976433
+        },
+        "width_decimal": "2.2518165179628510125936502461740929e-14"
+      },
+      "reason": "accepted",
+      "signed_lift_interval": {
+        "decimal": "0",
+        "lower_dyadic": {
+          "exponent": 0,
+          "mantissa": 0
+        },
+        "radius_decimal": "0",
+        "upper_dyadic": {
+          "exponent": 0,
+          "mantissa": 0
+        },
+        "width_decimal": "0"
+      },
+      "signed_lift_radius": "0",
+      "spec": {
+        "correlation": 4,
+        "h_kind": 1,
+        "h_sector": 1,
+        "is_target": false,
+        "r_d": 11,
+        "r_n": 10,
+        "scenario": 5,
+        "sector_counts": [
+          [
+            8,
+            16
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      "status": "certified",
+      "strict_argmax": {
+        "hit": 0,
+        "miss": 0,
+        "population": 0
+      },
+      "zero_separation": "0"
+    }
+  },
+  "lift_radius_target": "1e-12",
+  "method": "rigorous_1d_Arb_centered_Taylor_moments_with_validated_integral_guard",
+  "p6_c3_touched": false,
+  "precision_bits": 384,
+  "protocol_changed": false,
+  "replay": true,
+  "rng_used": false,
+  "runtime_seconds": 2.393144005036447,
+  "schema": "m32.p5-c4-reduced-taylor-certificate.v1",
+  "status": "certified",
+  "taylor_order": 16,
+  "validated_abs_tol": "1e-18",
+  "zero_separation_target_non_null": "1e-10"
+}

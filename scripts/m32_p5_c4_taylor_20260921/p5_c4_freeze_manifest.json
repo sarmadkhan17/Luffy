@@ -1,0 +1,38 @@
+{
+  "schema": "m32.p5-c4-freeze-manifest.v1",
+  "date": "2026-09-21",
+  "scope": "P5/C4 only",
+  "status": "certified",
+  "kernel_classifications": {
+    "2ca6beeb42d57d3f72d6": {"hit": 0, "miss": 0, "population": 0, "classification": "true_null"},
+    "6f3f08bc43774f2f2c2d": {"hit": 2, "miss": 0, "population": 0, "classification": "non_null"},
+    "80c0bb2935ef7accbdc2": {"hit": 2, "miss": 0, "population": 0, "classification": "non_null"},
+    "927c037efde9d39f01ec": {"hit": 2, "miss": 0, "population": 0, "classification": "non_null"},
+    "cda53e68321634ca8982": {"hit": 2, "miss": 0, "population": 0, "classification": "non_null"},
+    "dcc1c4cae778c6d4e914": {"hit": 0, "miss": 0, "population": 0, "classification": "true_null"}
+  },
+  "thresholds": {
+    "signed_lift_radius_at_most": "1e-12",
+    "non_null_zero_exclusion_at_least": "1e-10",
+    "primary_max_non_null_radius": "6.1972490288843685816988493542112337e-14",
+    "replay_max_non_null_radius": "3.6950654165232159646323206736440170e-14",
+    "primary_min_non_null_zero_separation": "0.16331703608695111226917925094945325"
+  },
+  "replay": {
+    "precision_bits": 384,
+    "result": "pass",
+    "all_probability_and_lift_intervals_overlap": true
+  },
+  "sha256": {
+    "certifier": "323760d98ce52b1f93fb45c512ea140d94df915b766fc43c4119d1fc8e707ee5",
+    "primary_certificate": "384f4a8e95ddcc8bb3f14c2282ed014ecd36b5f8859a0525a9bf51649c2b45be",
+    "primary_checkpoint": "fbb653ee421b41d483e4a56aae2912612ab18bf936b1859dec5c4462e731dc4f",
+    "replay_certificate": "38229bba4e413ee7dd3c4fcb1569403ed5ea142ebb64818ef3961123c87bd612",
+    "replay_checkpoint": "c415f524f35aec4b69624826cd7a120e3dd9994c8dd2693a87bb77ed25f78f8d",
+    "report": "dba53c4759aac8cae809417646d456f52561e3b1196beb0a1c2d16b69653809c",
+    "frozen_estimand_spec": "8c1ed60f8b6e9f22608c6c491506e8b0c888dd296c02b62c266a1e40ace92755",
+    "reference_batch_certificate": "00e2f10ef2fea33eac1d93f6019fe795c5ccf9c0979aefc2babfdc5af863761d"
+  },
+  "remaining_unresolved_categorical_families": ["P6/C3"],
+  "single_next_task": "Independently certify P6/C3 only with its existing analytic reduction and the unchanged frozen estimand."
+}
