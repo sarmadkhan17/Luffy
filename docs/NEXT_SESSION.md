@@ -33,6 +33,20 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 P5/C3 hit/miss and macro-F1 freeze, September 21
+
+Artifact commit `6ade4ae`; [immutable manifest](../scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_freeze_manifest.json)
+and [report](../scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_freeze_report.md).
+The `224`-bit primary and independent `384`-bit replay both certify the hit
+majority strictly below and miss majority strictly above `20/31`; all hit,
+miss, population, and macro-F1 intervals overlap across runs. Frozen signed
+macro-F1 lift is positive near `0.124233003330958`; primary/replay radii are
+`9.871566116078e-13` / `9.894745003273e-13`, with zero separation above
+`0.124233003329968`. No RNG, population rework, protocol change, or full
+27-kernel run occurred. P5/C3 is fully certified; this does not certify M3.2.
+**Single next task:** owner review of this frozen bounded certificate before
+authorizing another categorical kernel or any broader run.
+
 ### Latest: M3.2 P5/C3 population-majority freeze, September 20
 
 Freeze commit `8f7879c16f4af3e57832e596c526e6b428dd3cd4`;
