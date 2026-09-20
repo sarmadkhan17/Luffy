@@ -15,6 +15,30 @@ including partial code, prototypes and waiting-for-evidence work. Each new check
 must link a dated report and identify synthetic/offline/demo/forward/quantitative
 evidence. Never count a design document as implementation evidence.
 
+## Session update — September 20, P5/C3 population-majority freeze
+
+Freeze commit `8f7879c16f4af3e57832e596c526e6b428dd3cd4`;
+[immutable manifest](../../../scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_majority_freeze_manifest.json)
+and [report](../../../scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_majority_freeze_report.md).
+P5/C3 population majority is independently certified strictly above `20/31`.
+Primary `224`-bit interval:
+`[0.645216427771829392546478549481683481928584334281467566037294269634151944648755335137471153, 0.662187252542225967878166476727777231928584334281467566037294269634151944648755335137471153]`.
+Independent `384`-bit replay interval:
+`[0.645216427771705111575396679089493803661445700301031304870729099062428241714014254309347057, 0.662187252542101686907084606335587553661445700301031304870729099062428241714014254309347057]`;
+replay **PASS**. The intervals overlap; neither contains the other.
+
+Verified SHA-256 identities: certifier
+`76814e9bd8a57beb3360ece0f61a69a98ff9d3e34405eb00a499f1ddb61dbf05`,
+checkpoint
+`3f5bdcd54590c14dae4c94670cbbb86973ba729b3b06697d9eebe34e52b59066`,
+primary report
+`65d2d35f4ed8fdd4d73cf6047b91f6f42d85300b20b615387361033491bcfc36`,
+and frozen categorical estimand spec
+`8c1ed60f8b6e9f22608c6c491506e8b0c888dd296c02b62c266a1e40ace92755`.
+No RNG and no protocol change. This bounded certificate does not accept M3.2;
+the 12/55 count is unchanged. **P5/C3 hit/miss certification remains
+outstanding and is the single next task.**
+
 ## Current board
 
 | Milestone | Status | Accepted | Existing work to reuse |
@@ -71,7 +95,7 @@ Depends on M1–M2. Reuse `research/`, `brain/spec_writer.py`, `strategy/dsl.py`
 feature contracts and candidate-dossier artifacts. Preserve discovery boundaries.
 
 - [ ] **M3.1** Build a point-in-time dataset of state/transition/sequence episodes and outcomes, including ignored assets and failure cases; declare its discovery cut, coverage and dependence units before searching. Partial: versioned bounded builder and freeze/capture CLI implemented; 268 relevant final-source tests passed. Saved synthetic replay includes selected/ignored, failure, transition and sequence cases; live retrospective capture has 78 observation-only skips and zero PIT rows. Forward window September 17 00:00 to September 18 00:00 UTC frozen September 16 20:38:40 UTC. Prospective population/coverage hooks now implemented, tested (269 relevant final-source tests) and enabled in existing watchdog consumers before the window. Classification-neutral cohort/replay and local-index reconciliation now implemented (277 final-source tests). Full-window review completed September 18 01:17 UTC: capture replay passed, indices match exports (331/331, 239/239), but coverage is **not accepted** — ~53% of the window inside >10-minute observation-gap intervals (no scans after 15:20 UTC; `collector_unhealthy` from 16:00 — origin diagnosed Sep 18 (strongly supported inference): live-tree git operations removed the worker module across 37 cycles, and the cumulative error count has no recovery semantics; see [collector-health diagnosis](../reports/2026-09-18-collector-health-diagnosis.md)), every scan misses at least one declared symbol (LSK, TAO or SUI), 16/30 forecast rows overdue-unresolved at cut, typed dataset 14 rows with three declared kinds absent and 0 sequences; diagnosis done; coordinator-reviewed fix proposal ([brief](2026-09-18-collector-recovery-health-brief.md)) with implementation and runtime verification pending; a new frozen window only after healthy verification. See [window-close review](../reports/2026-09-18-m31-window-close-review.md). Classification-conditioned typed cases do not establish population rates. See [cohort delivery](../reports/2026-09-16-pit-cohort-delivery.md). See [dataset delivery](../reports/2026-09-16-pit-dataset-delivery.md) and [population delivery](../reports/2026-09-16-pit-population-delivery.md). Latest engineering: [declared-universe delivery](../reports/2026-09-18-declared-population-delivery.md), `51101d0`, 203 tests, guarded deployment and natural 16/16 capture. Preserve Sep 18→19 freeze; distinct Sep 19 08:00→Sep 20 08:00 freeze awaits activation after prior cut review. Coverage remains unaccepted.
-- [ ] **M3.2** Implement the smallest useful quantitative/ML search for repeated patterns and failure conditions, with simple baselines, common calendar cuts and registered search budgets. Demonstrate discoveries beyond merely renaming existing indicators. Evidence: pending.
+- [ ] **M3.2** Implement the smallest useful quantitative/ML search for repeated patterns and failure conditions, with simple baselines, common calendar cuts and registered search budgets. Demonstrate discoveries beyond merely renaming existing indicators. Partial evidence: P5/C3 population majority independently certified strictly above `20/31` and frozen at `8f7879c16f4af3e57832e596c526e6b428dd3cd4`; P5/C3 hit/miss certification remains outstanding, so M3.2 is not accepted.
 - [ ] **M3.3** Connect an investigation/pattern to competing mechanism claims and at least one falsifier, confound or ablation test. Surprise prioritizes research; LLM prose cannot substitute for computed measurements. Evidence: pending.
 - [ ] **M3.4** Produce a reproducible StrategySpec candidate containing mechanical entry/exit/invalidation, universe, timeframe, data needs, costs and lineage back to events/cases. Route through the existing spec writer/admission interface; no second creation path. Evidence: pending.
 - [ ] **M3.5** Publish an owner-readable candidate dossier with source cases, exact rules, measured discovery evidence, contrary evidence and the next frozen test. Record rejected/untestable ideas as well as promising ones. Evidence: pending.

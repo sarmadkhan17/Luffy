@@ -33,6 +33,30 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 P5/C3 population-majority freeze, September 20
+
+Freeze commit `8f7879c16f4af3e57832e596c526e6b428dd3cd4`;
+[immutable manifest](../scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_majority_freeze_manifest.json)
+and [report](../scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_population_majority_freeze_report.md).
+P5/C3 population majority is independently certified strictly above `20/31`.
+The primary `224`-bit interval is
+`[0.645216427771829392546478549481683481928584334281467566037294269634151944648755335137471153, 0.662187252542225967878166476727777231928584334281467566037294269634151944648755335137471153]`.
+The independent `384`-bit replay interval is
+`[0.645216427771705111575396679089493803661445700301031304870729099062428241714014254309347057, 0.662187252542101686907084606335587553661445700301031304870729099062428241714014254309347057]`;
+replay **PASS**. The intervals overlap; neither contains the other.
+
+Verified SHA-256 identities: certifier
+`76814e9bd8a57beb3360ece0f61a69a98ff9d3e34405eb00a499f1ddb61dbf05`,
+checkpoint
+`3f5bdcd54590c14dae4c94670cbbb86973ba729b3b06697d9eebe34e52b59066`,
+primary report
+`65d2d35f4ed8fdd4d73cf6047b91f6f42d85300b20b615387361033491bcfc36`,
+and frozen categorical estimand spec
+`8c1ed60f8b6e9f22608c6c491506e8b0c888dd296c02b62c266a1e40ace92755`.
+No RNG was used and the protocol did not change. This is a bounded P5/C3
+population-majority acceptance, not M3.2 acceptance. **P5/C3 hit/miss
+certification remains outstanding and is the single next task.**
+
 **Latest: check-now, September 18 18:46–18:50 UTC (bounded, snapshot only).**
 [Check-now 1846 report](superpowers/reports/2026-09-18-check-now-1846.md).
 **⚠ Session error:** an accidental run of legacy `scripts.validate_population` retired
