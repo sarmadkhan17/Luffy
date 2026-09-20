@@ -1,0 +1,80 @@
+{
+  "accepted_classifications": {
+    "hit": "strictly below 20/31; class 2",
+    "miss": "strictly above 20/31; class 0",
+    "population": "strictly above 20/31; class 0"
+  },
+  "canary": "P6/C4",
+  "certificate_status": "accepted",
+  "freeze_date": "2026-09-21",
+  "fully_certified": true,
+  "hash_algorithm": "SHA-256",
+  "immutable": true,
+  "inputs": {
+    "frozen_estimand_spec": {
+      "path": "scripts/m32_categorical_equivalence_20260920/estimand_spec.json",
+      "sha256": "8c1ed60f8b6e9f22608c6c491506e8b0c888dd296c02b62c266a1e40ace92755"
+    },
+    "prior_reduced_certifier": {
+      "path": "scripts/m32_categorical_arb_box_canary_20260920/certify_box_canaries.py",
+      "sha256": "7cd320734306f34c2b4cc02dd7f6b7ba37bb419eb05c778cd42ee921c4efb992"
+    },
+    "prior_reduced_report": {
+      "path": "scripts/m32_categorical_arb_box_canary_20260920/p6_c4_report.json",
+      "sha256": "2b02c75d1aa668ce02e2ff80d8c70a6bf62b45f3678f2f8fc2de033682a9e7e4"
+    },
+    "taylor_certifier": {
+      "path": "scripts/m32_p6_c4_taylor_20260921/certify_p6_c4_taylor.py",
+      "sha256": "7e2a5313f62e331a4b4cf8b06d3a63c767331b02a275b8330c5f70e9185715a6"
+    }
+  },
+  "primary": {
+    "checkpoint": {
+      "path": "scripts/m32_p6_c4_taylor_20260921/p6_c4_primary_checkpoint.jsonl",
+      "sha256": "2000b81c66120489e893efb94c6e3e3f9481974ced67aedebecf6afe69f59c89"
+    },
+    "precision_bits": 224,
+    "report": {
+      "path": "scripts/m32_p6_c4_taylor_20260921/p6_c4_primary.json",
+      "sha256": "f09d07a485121651265f3690be991b2d359cdebe62e35276b15f2f2e29a2ffb2"
+    },
+    "runtime_seconds": 63.20319119800115,
+    "signed_lift_radius": "9.5403243614042114451034848343624617e-13",
+    "zero_separation": "0.12534093350859104279391218770533153"
+  },
+  "protocol_changed": false,
+  "reduction": "unchanged analytic bivariate Gaussian two-factor reduction",
+  "replay": {
+    "checkpoint": {
+      "path": "scripts/m32_p6_c4_taylor_20260921/p6_c4_replay_checkpoint.jsonl",
+      "sha256": "707fab335c6117ba51280178cbb44a2602aa535e1ed970c3ba04413a07ef451d"
+    },
+    "distinct_deterministic_partition": true,
+    "intervals_overlap_primary": {
+      "hit": true,
+      "macro_f1_lift": true,
+      "miss": true,
+      "population": true
+    },
+    "precision_bits": 384,
+    "report": {
+      "path": "scripts/m32_p6_c4_taylor_20260921/p6_c4_replay.json",
+      "sha256": "0be21ece08f7c60389d8edfaaabf54d5b6e44070c2b54e209a406f894bf4697e"
+    },
+    "result": "PASS",
+    "runtime_seconds": 71.2943937079981,
+    "signed_lift_radius": "7.2297259867161456359241356040001847e-13",
+    "zero_separation": "0.12534093350882209842049786916937104"
+  },
+  "report": {
+    "path": "scripts/m32_p6_c4_taylor_20260921/p6_c4_freeze_report.md",
+    "sha256": "8f29048a7b9c1ad04c07b1ee5f53bba022dc7b7146d03505fa56d61cafcbfd93"
+  },
+  "requirements": {
+    "non_null_zero_exclusion_minimum": "1e-10",
+    "signed_lift_radius_maximum": "1e-12"
+  },
+  "rng_used": false,
+  "schema": "m3.2-p6-c4-reduced-taylor-freeze.v1",
+  "supersession_policy": "Do not edit this frozen artifact; append separately identified evidence under separately authorized protocol."
+}
