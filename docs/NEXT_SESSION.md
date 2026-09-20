@@ -33,6 +33,23 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 P6/C3 full reduced certificate, September 21
+
+Artifact commit `58c4eb7`; [immutable manifest](../scripts/m32_p6_c3_taylor_20260921/p6_c3_freeze_manifest.json)
+and [report](../scripts/m32_p6_c3_taylor_20260921/p6_c3_freeze_report.md).
+P6/C3's eight frozen kernels are fully certified with the preserved C3
+global/cluster analytic reduction and rigorous outward Taylor/centered-moment
+enclosures. Every kernel resolves hit/miss/population to `2 / 0 / 2` and is a
+positive non-null. The largest primary signed-lift radius is
+`9.922459497791044e-13`; minimum primary zero separation is
+`0.08606385721183165`. The independent `384`-bit replay used a finer partition,
+higher Taylor order, and reversed inner traversal; all classifications and
+winner triples match and every probability/lift interval overlaps. No RNG,
+broader kernel run, or protocol change occurred. P6/C3 is fully certified and
+categorical truth is now complete for the frozen scope. **Single next task:**
+owner review of the complete frozen categorical truth before authorizing any
+downstream M3.2 use; do not start search or Gate 2.
+
 ### Latest: M3.2 P5/C4 full reduced certificate, September 21
 
 Artifact commit `e963787`; [immutable manifest](../scripts/m32_p5_c4_taylor_20260921/p5_c4_freeze_manifest.json)
