@@ -15,6 +15,17 @@ including partial code, prototypes and waiting-for-evidence work. Each new check
 must link a dated report and identify synthetic/offline/demo/forward/quantitative
 evidence. Never count a design document as implementation evidence.
 
+## Session update — September 21, M3.2 phase-90 benchmark
+
+[Report](../reports/2026-09-21-m32-phase90-benchmark.md); authorization, receipt and
+hashes in `../../../scripts/m32_scheme_d_phase90_benchmark_20260921/` (authorization SHA-256
+`e3d27eb5…3771b8`, bound to bundle-v2 `397961d9…`). One phase-90 C0/N1 world, 2 permutation maps,
+384 tested hypotheses, reference `_metric`: 26.1 s, 61.6 MiB peak, 8.70 s per 384-hypothesis
+vector. Extrapolated full run: 1.39e8 CPU-hours = 15,871 CPU-years (about 3,968 wall-years on 4
+cores), roughly 9,000x the protocol's naive figure. **Full validation is not practical as
+written.** No validation, search, Gate 2, referee/handoff or protocol/truth change.
+Checklist count unchanged (M3.2 not accepted).
+
 ## Session update — September 21, M3.2 validation bundle revision 2
 
 [Report](../reports/2026-09-21-m32-validation-bundle-v2.md), bundle

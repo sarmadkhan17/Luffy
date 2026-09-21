@@ -33,6 +33,20 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 phase-90 benchmark done, September 21
+
+[Report](superpowers/reports/2026-09-21-m32-phase90-benchmark.md); authorization, receipt and
+hashes in `scripts/m32_scheme_d_phase90_benchmark_20260921/` (authorization SHA-256
+`e3d27eb5…3771b8`, bound to bundle-v2 `397961d9…`). One phase-90 C0/N1 world, 2 permutation maps,
+384 tested hypotheses, reference `_metric`: 26.1 s, 61.6 MiB peak, 8.70 s per 384-hypothesis
+vector. Extrapolated full run: 1.39e8 CPU-hours = 15,871 CPU-years (about 3,968 wall-years on 4
+cores), roughly 9,000x the protocol's naive figure. **Full validation is not practical as
+written.** No validation, search, Gate 2, referee/handoff or protocol/truth change.
+**Single next task:** build, RNG-free, an optimized statistic that is exactly equivalent to
+the imported `_metric` (bit-identical float64 on deterministic fixtures, including ties and
+degenerate cases), with its own equivalence certificate; any further benchmark or run needs a
+new owner authorization.
+
 ### Latest: M3.2 validation bundle revision 2, September 21
 
 [Report](superpowers/reports/2026-09-21-m32-validation-bundle-v2.md), bundle

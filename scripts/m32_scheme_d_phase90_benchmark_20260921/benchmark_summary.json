@@ -1,0 +1,88 @@
+{
+ "environment": {
+  "openblas_threads": "1",
+  "python": "3.12.3"
+ },
+ "extrapolation": {
+  "cpu_hours": 139122834.25591886,
+  "cpu_seconds": 500842203321.3079,
+  "cpu_years": 15870.731719817348,
+  "full_run_metric_calls": 22118400000000,
+  "full_run_statistic_vectors": 57600000000,
+  "host_cpu_count": 4,
+  "method": "runner_seconds / (1 observed + 2 permuted vectors) x 75,000 x (1 + 767,999) vectors; upper bound because fixed world-generation cost is included in every vector",
+  "protocol_estimate_cpu_hours": {
+   "expected_optimized": "hundreds to low thousands",
+   "naive_384_statistic": 15200
+  },
+  "speedup_needed_for_2000_cpu_hours": 69561.41712795943,
+  "wall_years_on_this_host_cores": 3967.682929954337
+ },
+ "hashes": {
+  "authorization_sha256": "e3d27eb512e87bea554f7bbced44f5f4f329acdfb7e14111051ea148e03771b8",
+  "bundle_manifest_sha256": "397961d944f98f730eb723d537594d56428cf72db349449ad848678ad85f0c4e",
+  "receipt_internal_sha256": "548814b215be966a3f526d4d10647c509e68c91b143fe830af1d83c7e400243e",
+  "receipt_sha256": "94ddf656a6b26f180c19b622de00b4c6afd072cc02ba0811aa747b7e9d4b6d14",
+  "runner_sha256": "3879630c9627615a99f8c4e128dca5114fd9d452ea64f7f584a12cef0122e01e",
+  "wrapper_sha256": "f3c8b9d9407f237b1bcbf71f2d922b4bb7e05d8290bc06e25c55f8c50841451b"
+ },
+ "inferential_validation_run": false,
+ "memory": {
+  "peak_rss_bytes": 64643072,
+  "peak_rss_mib": 61.6484375
+ },
+ "mode": "benchmark",
+ "runtime": {
+  "child_cpu_system_seconds": 0.158376,
+  "child_cpu_user_seconds": 26.130561,
+  "process_wall_seconds": 26.35261217999505,
+  "runner_seconds": 26.085531422984786
+ },
+ "schema": "m3.2-scheme-d-phase90-benchmark-summary.v1",
+ "throughput": {
+  "metric_calls_per_second": 44.16241253896543,
+  "permutation_maps_per_second": 0.07667085510237054,
+  "seconds_per_statistic_vector_upper_bound": 8.695177140994929,
+  "statistic_vectors_per_second": 0.1150062826535558
+ },
+ "workload": {
+  "bh_rejections": 0,
+  "cell": "BENCH/C0/N1",
+  "correlation": "C0",
+  "dgp": "N1",
+  "hypotheses_refused": 0,
+  "hypotheses_tested": 384,
+  "metric_calls": 1152,
+  "permutation_maps": 2,
+  "phase_code": 90,
+  "reference_metric": "trader.cognition.m32_search._metric (imported)",
+  "seed_tuples": {
+   "data": [
+    2026091902,
+    90,
+    0,
+    1,
+    0,
+    0
+   ],
+   "membership": [
+    2026091902,
+    90,
+    0,
+    1,
+    0,
+    1
+   ],
+   "permutation": [
+    2026091902,
+    90,
+    0,
+    1,
+    0,
+    2
+   ]
+  },
+  "statistic_vectors": 3,
+  "worlds": 1
+ }
+}
