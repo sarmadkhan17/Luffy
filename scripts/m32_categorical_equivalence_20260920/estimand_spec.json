@@ -1,0 +1,267 @@
+{
+  "spec_id": "m32-categorical-macro-f1-estimand",
+  "version": "1.0.0",
+  "frozen_on": "2026-09-20",
+  "status": "frozen",
+  "purpose": "Document, without restating it in executable production code, the exact authoritative M3.2 categorical macro-F1 estimand as implemented today: the empirical statistic computed by trader.cognition.m32_search._metric on its categorical branch, and the analytic probability-mass counterpart used by the Scheme D truth tables. This file is evidence, not an implementation. It may be replayed for equivalence checking; it must not be used to justify changing production behaviour.",
+  "scope": {
+    "covers": [
+      "categorical label families evaluated by _metric (case_kind, continuation)",
+      "the analytic population class model and probability-mass macro-F1 lift used to derive Scheme D categorical ground truth"
+    ],
+    "excludes": [
+      "the persistence label family, which is a median/MAD location estimand and not a macro-F1 estimand",
+      "RNG-backed world generation, injection sampling, permutation kernels and any certificate computation"
+    ]
+  },
+
+  "authority": {
+    "empirical": [
+      {
+        "path": "trader/cognition/m32_search.py",
+        "function": "_metric",
+        "lines": "251-281",
+        "role": "authoritative empirical categorical macro-F1 lift statistic (categorical branch, i.e. label != 'persistence')"
+      },
+      {
+        "path": "trader/cognition/m32_search.py",
+        "function": "_target",
+        "lines": "223-235",
+        "role": "authoritative per-row target extraction; returns None for a row with no usable target"
+      },
+      {
+        "path": "trader/cognition/m32_search.py",
+        "function": "_eligible_for_label",
+        "lines": "237-249",
+        "role": "row eligibility, applied by callers before _metric; not part of the estimand itself"
+      }
+    ],
+    "analytic": [
+      {
+        "path": "trader/cognition/m32_scheme_d_validation.py",
+        "function": "_class_probs_after_or",
+        "lines": "491-496",
+        "role": "authoritative population class-probability model p = (13/20*g, 1/4*g, 1 - 9/10*g) with survival g"
+      },
+      {
+        "path": "trader/cognition/m32_scheme_d_validation.py",
+        "function": "apply_injections",
+        "lines": "448-478",
+        "role": "authoritative sequential realized-label switch: base 0.10, target = OR*base/(1-base+OR*base), q = (target-base)/(1-base), switch to class 2"
+      },
+      {
+        "path": "trader/cognition/m32_scheme_d_validation.py",
+        "function": "_bernoulli_count_distribution",
+        "lines": "480-489",
+        "role": "exact distribution of the number of overlapping injected hypotheses hitting a row"
+      },
+      {
+        "path": "trader/cognition/m32_scheme_d_validation.py",
+        "function": "_mixture_probs",
+        "lines": "499-508",
+        "role": "mixture of _class_probs_after_or over that count distribution, with an optional forced hit"
+      },
+      {
+        "path": "trader/cognition/m32_scheme_d_validation.py",
+        "function": "_macro_f1_lift_c0",
+        "lines": "510-538",
+        "role": "authoritative probability-mass macro-F1 lift (analytic counterpart of the empirical statistic)"
+      },
+      {
+        "path": "trader/cognition/m32_scheme_d_validation.py",
+        "function": "generate_world",
+        "lines": "205-265",
+        "role": "declares the heavy-tail categorical base probabilities (0.65, 0.25, 0.10) at line 256"
+      },
+      {
+        "path": "trader/cognition/m32_scheme_d_validation.py",
+        "function": "_arranged_rows",
+        "lines": "364-384",
+        "role": "maps a synthetic world into the row dicts consumed by the production _metric"
+      },
+      {
+        "path": "trader/cognition/m32_scheme_d_validation.py",
+        "function": "actual_statistic_vector",
+        "lines": "386-399",
+        "role": "evaluates every hypothesis through the imported production _metric; signed_effect is the statistic carried forward"
+      }
+    ]
+  },
+
+  "empirical_estimand": {
+    "inputs": {
+      "rows": "ordered sequence of row dicts; order is part of the estimand (see tie_rules.empirical)",
+      "matched": "set of row_id values selected by the hypothesis/pattern",
+      "label": "categorical label family name",
+      "lookup": "auxiliary row lookup consumed by _target for the continuation family"
+    },
+    "steps": [
+      {
+        "id": "1_target_extraction",
+        "rule": "values = [(row, _target(row, label, lookup)) for row in rows]"
+      },
+      {
+        "id": "2_empirical_target_filtering",
+        "rule": "drop every pair whose target is None",
+        "notes": "Filtering is empirical: it is driven by the realized target value, not by a declared eligibility mask. A row whose label is missing is excluded from the evaluation population, from the fit strata, and from the class set. Missing is never imputed, never mapped to a sentinel class, and never counted as a negative."
+      },
+      {
+        "id": "3_fit_strata",
+        "rule": "hit = [(row, v) in values if row['row_id'] in matched]; nonhit = [v for (row, v) in values if row['row_id'] not in matched]",
+        "notes": "Exactly two fit strata: matched and nonmatched. Membership is by row_id against the matched set, evaluated after filtering."
+      },
+      {
+        "id": "4_untestable_guard",
+        "rule": "if not hit or not values: return {effect: null, signed_effect: null, observed: len(hit), baseline: null, status: 'untestable'}",
+        "notes": "No score, no baseline and no class set are produced. Untestable is a refusal, not a zero effect."
+      },
+      {
+        "id": "5_evaluation_population",
+        "rule": "all valid rows (matched and nonmatched together) form the single evaluation population for every per-class count",
+        "notes": "tp/fp/fn are always accumulated over all valid rows. The strata only choose which prediction each row receives; they do not subset the scoring population."
+      },
+      {
+        "id": "6_predictors",
+        "rule": "majority = Counter(all_labels).most_common(1)[0][0]; hit_majority = Counter(hit_labels).most_common(1)[0][0]; nonhit_majority = Counter(nonhit).most_common(1)[0][0] if nonhit else hit_majority",
+        "no_nonmatched_fallback": "When every valid row is matched, nonhit is empty and nonhit_majority falls back to hit_majority. The scored prediction then equals the baseline prediction everywhere, so signed_effect is exactly 0.0 rather than undefined."
+      },
+      {
+        "id": "7_class_set",
+        "rule": "classes = sorted(set(all_labels), key=str)",
+        "notes": "Classes come from the valid-row targets only, deduplicated, and ordered by str() of the label. A class that appears in the data but is never predicted still contributes a term to the macro average. A class that appears nowhere in the valid rows does not exist for this estimand."
+      },
+      {
+        "id": "8_per_class_counts",
+        "rule": "for cls in classes, with predicted(row) = pred_match if row_id in matched else pred_nonmatch: tp = count(v == cls and predicted(row) == cls); fp = count(v != cls and predicted(row) == cls); fn = count(v == cls and predicted(row) != cls)",
+        "notes": "True negatives are not used."
+      },
+      {
+        "id": "9_per_class_f1",
+        "rule": "f1_cls = 0.0 if (2*tp + fp + fn) == 0 else 2*tp / (2*tp + fp + fn)",
+        "zero_denominator_value": 0.0,
+        "notes": "The zero-denominator case can only arise for a class with no support and no predictions; it contributes 0.0, it is not skipped and it is not treated as 1.0."
+      },
+      {
+        "id": "10_macro_average",
+        "rule": "macro = sum(f1_cls for cls in classes) / len(classes)",
+        "weighting": "unweighted",
+        "denominator": "len(classes)",
+        "notes": "Support-weighted averaging is not used."
+      },
+      {
+        "id": "11_baseline",
+        "rule": "baseline = macro_f1(pred_match=majority, pred_nonmatch=majority)",
+        "notes": "Global-majority baseline: the single most frequent valid-row label predicted for every row, ignoring the matched/nonmatched split."
+      },
+      {
+        "id": "12_score",
+        "rule": "score = macro_f1(pred_match=hit_majority, pred_nonmatch=nonhit_majority)",
+        "notes": "Per-stratum majority predictor."
+      },
+      {
+        "id": "13_lift",
+        "rule": "signed_effect = score - baseline",
+        "notes": "Score-minus-baseline lift. It can be negative."
+      },
+      {
+        "id": "14_effect",
+        "rule": "effect = abs(signed_effect)",
+        "notes": "effect is the two-sided magnitude; signed_effect carries direction and is the value Scheme D's actual_statistic_vector consumes."
+      }
+    ],
+    "result_keys": {
+      "scored": ["effect", "signed_effect", "observed", "baseline", "score", "status"],
+      "untestable": ["effect", "signed_effect", "observed", "baseline", "status"],
+      "observed": "len(hit) = number of matched rows with a non-None target",
+      "status_values": ["scored", "untestable"]
+    },
+    "no_smoothing_or_clipping": {
+      "additive_smoothing": "none",
+      "prior_or_pseudocounts": "none",
+      "clipping_or_winsorizing": "none",
+      "minimum_support_threshold": "none inside the estimand",
+      "notes": "No epsilon is added to any denominator; the only denominator guard is the exact ==0 branch returning 0.0. Effects are not clipped to any range. Support requirements, if any, are the caller's concern and live outside this estimand."
+    },
+    "arithmetic": {
+      "production": "IEEE-754 double precision",
+      "replay": "exact rational (fractions.Fraction) permitted; a replay must agree with production to within double-precision rounding"
+    }
+  },
+
+  "analytic_population_model": {
+    "classes": [0, 1, 2],
+    "base_probabilities": ["13/20", "1/4", "1/10"],
+    "base_probabilities_decimal": [0.65, 0.25, 0.10],
+    "switch_target_class": 2,
+    "population_class_model": {
+      "formula": "p = (13/20 * g, 1/4 * g, 1 - 9/10 * g)",
+      "survival_symbol": "g",
+      "identity_at_g_equals_1": "p = (13/20, 1/4, 1/10) = base_probabilities"
+    },
+    "sequential_or_switch": {
+      "base": "1/10",
+      "target": "target = odds_ratio * base / (1 - base + odds_ratio * base) = odds_ratio / (9 + odds_ratio)",
+      "switch_probability": "q_switch = (target - base) / (1 - base) = (odds_ratio - 1) / (9 + odds_ratio)",
+      "applies_to": "rows matched by the injected hypothesis whose realized class is not already 2",
+      "survival_per_injection": "1 - q_switch = 10 / (9 + odds_ratio)",
+      "survival_after_count_injections": "g = (10 / (9 + odds_ratio)) ** count",
+      "composition_warning": "Overlapping injections compose the survival probability multiplicatively because each injection re-switches the realized label. g is NOT odds_ratio ** count, and the composed marginal is NOT the odds-ratio transform of the base applied count times."
+    },
+    "count_mixture": {
+      "count_distribution": "Poisson-binomial over the per-hypothesis membership probabilities of the other injected categorical hypotheses (exact convolution)",
+      "forced_hit": "conditional_hit fixes the focal hypothesis as hit (forced=1); conditional_miss fixes it as miss (forced=0)",
+      "mixture": "P(class) = sum over count of P(count) * p(count)"
+    },
+    "probability_mass_f1": {
+      "matched_mass": "q",
+      "nonmatched_mass": "1 - q",
+      "population": "population[c] = q * conditional_hit[c] + (1 - q) * conditional_miss[c]",
+      "predictors": {
+        "pred_hit": "argmax_c conditional_hit[c]",
+        "pred_miss": "argmax_c conditional_miss[c]",
+        "pred_base": "argmax_c population[c]"
+      },
+      "per_class": {
+        "tp": "(q * conditional_hit[c] if pred_match == c else 0) + ((1 - q) * conditional_miss[c] if pred_nonmatch == c else 0)",
+        "predicted_mass": "(q if pred_match == c else 0) + ((1 - q) if pred_nonmatch == c else 0)",
+        "fp": "predicted_mass - tp",
+        "fn": "population[c] - tp",
+        "f1": "0 if (2*tp + fp + fn) == 0 else 2*tp / (2*tp + fp + fn)"
+      },
+      "macro": "sum of the three per-class F1 values / 3",
+      "lift": "score(pred_hit, pred_miss) - score(pred_base, pred_base)",
+      "arithmetic": "exact fractions.Fraction throughout; no floating point",
+      "correspondence": "These are the empirical tp/fp/fn counts divided by the population size. Because macro-F1 is invariant to a common positive rescaling of tp, fp and fn, an empirical population whose per-stratum class counts are exactly proportional to (q*conditional_hit, (1-q)*conditional_miss) reproduces the analytic lift exactly."
+    }
+  },
+
+  "tie_rules": {
+    "empirical": {
+      "rule": "first_encounter",
+      "mechanism": "collections.Counter is a dict subclass preserving first-insertion order, and Counter.most_common performs a stable sort by count; among labels with equal maximal counts, most_common(1) therefore returns the one whose first occurrence comes earliest in the iteration order of the list it was built from.",
+      "iteration_orders": {
+        "majority": "order of all_labels, i.e. the order of valid rows within the caller-supplied rows sequence",
+        "hit_majority": "order of hit_labels, i.e. the order of valid matched rows within that same sequence",
+        "nonhit_majority": "order of nonhit, i.e. the order of valid nonmatched rows within that same sequence"
+      },
+      "consequence": "Production categorical ties are encounter-order dependent. Reordering rows can change hit_majority, and therefore score, signed_effect and effect, with no change to the underlying multiset of labels.",
+      "replay_requirement": "Any replay claiming equivalence MUST iterate rows in the caller-supplied order and MUST reproduce first-encounter tie resolution. Sorting labels, using max() over a dict, or resolving ties by class order would silently disagree with production."
+    },
+    "analytic": {
+      "rule": "fail_closed",
+      "on_tie": "raise; do not pick a winner",
+      "applies_to": ["pred_hit", "pred_miss", "pred_base"],
+      "rationale": "The analytic estimand works on probability masses, where there is no row order and therefore no encounter order to inherit. Because production resolves an empirical tie by encounter order, an exactly tied analytic argmax has no well-defined production counterpart: any choice would be an invention, and the two candidates can give different lifts. A tie must therefore stop the derivation rather than be broken arbitrarily. Note that _macro_f1_lift_c0 uses max(range(3), key=...), which silently returns the lowest class index on a tie; that path is only exercised on the frozen parameter grid, and this spec records the fail-closed rule as the requirement for any replay or re-derivation.",
+      "scope_note": "This rule governs replays and re-derivations built from this spec; it does not authorize editing production code."
+    }
+  },
+
+  "prohibited_without_new_authorization": [
+    "changing any step above in production and calling the result the same estimand",
+    "introducing smoothing, clipping, minimum-support imputation or support-weighted macro averaging",
+    "treating a missing label as a class or as a negative",
+    "treating an untestable result as a zero effect",
+    "breaking an analytic argmax tie silently",
+    "using this file as a substitute for the authoritative source modules listed under authority"
+  ]
+}
