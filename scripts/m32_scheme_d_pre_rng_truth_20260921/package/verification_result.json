@@ -1,0 +1,37 @@
+{
+ "categorical_rows_by_source": {
+  "base_certificate": 1784,
+  "completion_certificate": 1280,
+  "p4_c3_primary": 4,
+  "p4_c4_primary": 4,
+  "p5_c3_primary": 16,
+  "p5_c4_primary": 256,
+  "p6_c3_primary": 256,
+  "p6_c4_primary": 48
+ },
+ "cells_checked": 55,
+ "classification_counts": {
+  "analytic_non_null:-1": 256,
+  "analytic_non_null:1": 4075,
+  "true_null:None": 16341,
+  "unclassifiable:None": 448
+ },
+ "freeze_possible": false,
+ "independent_implementation": true,
+ "manifest_entries_checked": 56,
+ "regression_vs_v3": {
+  "changed": 0,
+  "compared": 9216
+ },
+ "result": "PASS",
+ "rng_constructed": false,
+ "rows_checked": 21120,
+ "schema": "m3.2-scheme-d-pre-rng-package-verification.v4",
+ "sources_checked": 21,
+ "uncertified_categorical_kernels": 9,
+ "unresolved_cells": {
+  "P5/C3": 240,
+  "P6/C4": 208
+ },
+ "unresolved_rows": 448
+}
