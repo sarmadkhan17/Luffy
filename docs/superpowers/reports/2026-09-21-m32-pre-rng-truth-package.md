@@ -55,3 +55,17 @@ regression against the superseded v3 tables: 9,216 resolved rows compared, 0
 changed. Tamper tests (categorical sign flip, fake-resolving an uncertified
 kernel, persistence sign flip, theorem-premise edit) are each rejected even with
 the manifest rehashed. Generator output is byte-deterministic.
+
+## Resolution (same day): the nine kernels are certified
+
+The 448 unresolved rows are closed by the nine-kernel certificate in
+`scripts/m32_p5c3_p6c4_remaining_20260921/` ([report](../../../scripts/m32_p5c3_p6c4_remaining_20260921/freeze_report.md),
+manifest `freeze_manifest.json`): 9 attempted, 9 certified, 0 refused; every
+kernel is a strict `2 / 0 / 0` positive non-null, largest primary lift radius
+`9.9928e-13`, smallest zero separation `0.0903`, independent 384-bit replay
+PASS. The package was regenerated (55 cells x 384 rows = 21,120; 0 unresolved,
+0 uncertified kernels) and the independent verifier passes, including tamper
+tests (sign flip, fake common-majority null, hidden un-resolve, source drift;
+each rejected with the manifest rehashed where applicable) and 0 changes
+against v3 over 9,216 resolved rows. `freeze_possible` is now `true`. No RNG,
+search, Gate 2 or protocol change.

@@ -33,6 +33,22 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 remaining categorical kernels certified; pre-RNG freeze possible, September 21
+
+[Report](../scripts/m32_p5c3_p6c4_remaining_20260921/freeze_report.md),
+manifest `scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json`. The 9
+kernels left by the truth package (P5/C3 x4, 240 rows; P6/C4 x5, 208 rows) are
+all certified (9 attempted / 9 certified / 0 refused): strict hit/miss/population
+classes `2 / 0 / 0`, positive non-null signed lifts `0.0903`–`0.1377`, largest
+primary radius `9.99e-13`, min zero separation `0.0903`; independent 384-bit
+replay (different axis/order, reversed traversal) PASS for all nine. The same
+generalised certifier reproduces the two frozen canaries. The 55 x 384 package
+(21,120 rows) was regenerated with **0 unresolved rows** and the independent
+verifier PASSes (tamper tests rejected), so `freeze_possible` is **true**. No
+RNG, search, Gate 2 or protocol change. **Single next task:** owner review of the
+complete pre-RNG truth package and an explicit decision to freeze it; nothing
+downstream (RNG validation run, search, Gate 2) starts before that decision.
+
 ### Latest: M3.2 pre-RNG truth package merge, September 21
 
 Artifact commit `4a1d54c` (sources `36ce7a7`); [report](superpowers/reports/2026-09-21-m32-pre-rng-truth-package.md),

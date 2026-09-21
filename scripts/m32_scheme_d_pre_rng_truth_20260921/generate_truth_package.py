@@ -61,6 +61,10 @@ SOURCES = (
     ("p7c4_persistence_primary", "scripts/m32_p7c4_persistence_20260921/primary_certificate.json"),
     ("p7c4_persistence_replay", "scripts/m32_p7c4_persistence_20260921/replay_certificate.json"),
     ("p7c4_persistence_replay_check", "scripts/m32_p7c4_persistence_20260921/replay_result.json"),
+    ("remaining_primary", "scripts/m32_p5c3_p6c4_remaining_20260921/primary.json"),
+    ("remaining_replay", "scripts/m32_p5c3_p6c4_remaining_20260921/replay.json"),
+    ("remaining_replay_check", "scripts/m32_p5c3_p6c4_remaining_20260921/replay_result.json"),
+    ("remaining_certifier", "scripts/m32_p5c3_p6c4_remaining_20260921/certify_remaining.py"),
 )
 P5C3_KERNEL = "3b715db927f6e887cfda"   # focal linked target in a (2 state, 4 linked) cluster; see registry rule
 PERSISTENCE_THEOREM = (
@@ -342,6 +346,16 @@ def frozen_kernel_evidence() -> tuple[dict[str, dict], dict[str, str]]:
                     and pk["spec"]["scenario"] == cell and kernel_id(pk["spec"]) == kid:
                 add(kid, f"{tag}_primary", assess(pk, rk, ("conditional_hit_interval", "conditional_miss_interval",
                                                               "population_interval"), "signed_lift_interval"))
+    # the nine remaining P5/C3 and P6/C4 kernels: multi-kernel primary + higher-precision replay
+    p, r, chk = load(SOURCES[21][1]), load(SOURCES[22][1]), load(SOURCES[23][1])
+    if (chk["result"] == "PASS" and chk["kernels_checked"] == 9 and set(p["kernels"]) == set(r["kernels"])
+            and not p["rng_used"] and not r["rng_used"] and not p["search_performed"]):
+        for kid, pk in p["kernels"].items():
+            rk = r["kernels"][kid]
+            if pk["status"] == rk["status"] == "certified" and pk["spec"] == rk["spec"] == spec_by_id.get(kid) \
+                    and kernel_id(pk["spec"]) == kid:
+                add(kid, "remaining_primary", assess(pk, rk, ("conditional_hit_interval", "conditional_miss_interval",
+                                                                "population_interval"), "signed_lift_interval"))
     # canaries: one kernel each.  P6/C4 carries its spec; P5/C3 is matched structurally (registry rule).
     p, r = load(SOURCES[16][1]), load(SOURCES[17][1])
     if p["accepted"] and r["accepted"] and p["spec"] == r["spec"] and not p["rng_constructed"]:

@@ -7,16 +7,16 @@
   "p5_c3_primary": 16,
   "p5_c4_primary": 256,
   "p6_c3_primary": 256,
-  "p6_c4_primary": 48
+  "p6_c4_primary": 48,
+  "remaining_primary": 448
  },
  "cells_checked": 55,
  "classification_counts": {
   "analytic_non_null:-1": 256,
-  "analytic_non_null:1": 4075,
-  "true_null:None": 16341,
-  "unclassifiable:None": 448
+  "analytic_non_null:1": 4523,
+  "true_null:None": 16341
  },
- "freeze_possible": false,
+ "freeze_possible": true,
  "independent_implementation": true,
  "manifest_entries_checked": 56,
  "regression_vs_v3": {
@@ -27,11 +27,8 @@
  "rng_constructed": false,
  "rows_checked": 21120,
  "schema": "m3.2-scheme-d-pre-rng-package-verification.v4",
- "sources_checked": 21,
- "uncertified_categorical_kernels": 9,
- "unresolved_cells": {
-  "P5/C3": 240,
-  "P6/C4": 208
- },
- "unresolved_rows": 448
+ "sources_checked": 25,
+ "uncertified_categorical_kernels": 0,
+ "unresolved_cells": {},
+ "unresolved_rows": 0
 }

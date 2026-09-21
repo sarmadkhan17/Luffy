@@ -84,6 +84,12 @@ D = {  # id -> (path, manifest path or None, manifest key/basename)
     "p7c4_persistence_replay_check": ("scripts/m32_p7c4_persistence_20260921/replay_result.json",
                                       "scripts/m32_p7c4_persistence_20260921/p7c4_persistence_freeze_manifest.json",
                                       "replay_result.json"),
+    "remaining_primary": ("scripts/m32_p5c3_p6c4_remaining_20260921/primary.json", "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json", "primary.json"),
+    "remaining_replay": ("scripts/m32_p5c3_p6c4_remaining_20260921/replay.json", "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json", "replay.json"),
+    "remaining_replay_check": ("scripts/m32_p5c3_p6c4_remaining_20260921/replay_result.json", "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+                               "replay_result.json"),
+    "remaining_certifier": ("scripts/m32_p5c3_p6c4_remaining_20260921/certify_remaining.py", "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+                            "certify_remaining.py"),
 }
 
 
@@ -277,6 +283,17 @@ def raw_evidence() -> dict[str, tuple]:
                 put(k, f"{tag}_primary",
                     verdict(pk, rk, ("conditional_hit_interval", "conditional_miss_interval", "population_interval"),
                             "signed_lift_interval"))
+    p, r, chk = jload(D["remaining_primary"][0]), jload(D["remaining_replay"][0]), jload(D["remaining_replay_check"][0])
+    need(chk["result"] == "PASS" and chk["kernels_checked"] == 9 and set(p["kernels"]) == set(r["kernels"]),
+         "remaining replay check")
+    need(p["rng_used"] is False and r["rng_used"] is False and p["search_performed"] is False, "remaining flags")
+    for k, pk in p["kernels"].items():
+        rk = r["kernels"][k]
+        need(pk["spec"] == ids[k] == rk["spec"], f"remaining spec/id mismatch {k}")
+        if pk["status"] == rk["status"] == "certified":
+            put(k, "remaining_primary",
+                verdict(pk, rk, ("conditional_hit_interval", "conditional_miss_interval", "population_interval"),
+                        "signed_lift_interval"))
     p, r = jload(D["p6_c4_primary"][0]), jload(D["p6_c4_replay"][0])
     kid = hashlib.sha256(json.dumps(p["spec"], sort_keys=True, separators=(",", ":")).encode()).hexdigest()[:20]
     need(kid in ids and ids[kid] == p["spec"] == r["spec"], "p6 c4 canary spec not a known kernel")
