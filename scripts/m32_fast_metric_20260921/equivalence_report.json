@@ -1,0 +1,32 @@
+{
+ "comparisons": 7592064,
+ "coverage_counters": {
+  "categorical_vectors": 19384,
+  "fallback_vectors": 110,
+  "hit_ties": 1062344,
+  "nonhit_ties": 1049074,
+  "overall_ties": 3884,
+  "persistence_even": 873672,
+  "persistence_vectors": 18496,
+  "zero_lift": 794943
+ },
+ "fixtures": 4529,
+ "mismatch_details": [],
+ "mismatches": 0,
+ "protocol_master_seed_used": false,
+ "quick": false,
+ "schema": "m3.2-fast-metric-equivalence-report.v1",
+ "seconds": 485.9047628000262,
+ "sections": {
+  "adversarial_hand_built_fixtures": 64,
+  "compensated_sum_vs_builtin_sum": 2006000,
+  "exhaustive_tiny_geometry_fixtures": 1458,
+  "fallback_domain_fixtures": 3,
+  "full_geometry_fixtures": 4,
+  "randomized_fixed_seed_fixtures": 3000,
+  "reference_row_builder_vs_harness_arranged_rows": 3
+ },
+ "statistic_vectors": 22314,
+ "test_seed": 314159265,
+ "untestable_none_cases": 467069
+}

@@ -15,6 +15,18 @@ including partial code, prototypes and waiting-for-evidence work. Each new check
 must link a dated report and identify synthetic/offline/demo/forward/quantitative
 evidence. Never count a design document as implementation evidence.
 
+## Session update — September 21, M3.2 optimized exact-equivalent metric
+
+[Report](../reports/2026-09-21-m32-fast-metric.md); module `trader/cognition/m32_fast_metric.py`,
+suite/benchmark/report in `../../../scripts/m32_fast_metric_20260921/`. Optimized exact-equivalent `_metric`: **0
+mismatches in 7,592,064 bit-level comparisons** (22,314 vectors: exhaustive tiny geometry, adversarial ties
+and boundaries, 3,000 fixed-seed random fixtures with a fixture-only seed, full-geometry fixtures). 7.62 s ->
+0.91 ms per 384-hypothesis vector (8,356x), 0.98 ms per end-to-end draw; 87 MiB RSS. Projected full run
+15,636 CPU-hours (1.78 CPU-years) vs 1.22e8 for the reference: practical only off-box (about 2.5 days on 256
+vCPUs, estimate), not on this 4-core host. Runner and bundle v2 untouched; no protocol world, protocol seed,
+validation run, search or Gate 2.
+Checklist count unchanged (M3.2 not accepted).
+
 ## Session update — September 21, M3.2 phase-90 benchmark
 
 [Report](../reports/2026-09-21-m32-phase90-benchmark.md); authorization, receipt and

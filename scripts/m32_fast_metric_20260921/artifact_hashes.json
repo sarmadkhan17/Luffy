@@ -1,0 +1,12 @@
+{
+ "reference_metric_source": "trader/cognition/m32_search.py",
+ "schema": "m3.2-fast-metric-artifact-hashes.v1",
+ "sha256": {
+  "scripts/m32_fast_metric_20260921/benchmark_fast_metric.py": "7eb17fe925f8d10f67fa5d94d5aae4093568c2bd7c057adf7d7c19b513635d19",
+  "scripts/m32_fast_metric_20260921/benchmark_result.json": "da7c26d7ea08bbdae13144703579f689b47d882b06faed3efc75f61deee58a1f",
+  "scripts/m32_fast_metric_20260921/equivalence_report.json": "435d6754198b430130f79a2e2651e4ff5117d2445dedd20f042db0195cafecb2",
+  "scripts/m32_fast_metric_20260921/equivalence_suite.py": "5cabfe07ae1c07ca0e631ba354976ada5ccf794128ba2d00fa9478869963e1b6",
+  "trader/cognition/m32_fast_metric.py": "892be0d02537b7ad1d353456a7a960e7181afefd6101983d47764944c95105d0",
+  "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b"
+ }
+}

@@ -1,0 +1,39 @@
+{
+ "fast_precompute_seconds_per_world_first_use": 0.37544342898763716,
+ "fast_seconds_per_draw_end_to_end": 0.0009771235617032894,
+ "fast_seconds_per_vector_statistic_only": 0.0009113767649978399,
+ "fixture": "synthetic full geometry (censoring-style masks, N1-like probabilities), fixture-only seed",
+ "host": {
+  "cpu_count": 4,
+  "openblas_threads": "1"
+ },
+ "hypotheses": 384,
+ "memory": {
+  "process_peak_rss_bytes": 91099136,
+  "process_peak_rss_mib": 86.87890625,
+  "tensor_bytes": 33940912,
+  "tracemalloc_peak_bytes": 40125705
+ },
+ "mismatches_on_benchmark_fixture": 0,
+ "projection": {
+  "draws_per_world": 767999,
+  "fast_cpu_hours": 15635.932421778609,
+  "fast_cpu_years": 1.7837020786879545,
+  "note": "excludes world generation, refusal evaluation and receipt writing (small, per world) and any parallel overhead",
+  "per_world_fixed_seconds": 0.09386085724690929,
+  "reference_cpu_hours": 121850897.85605669,
+  "speedup_projected": 7793.0048921377975,
+  "vectors_per_world": 768000,
+  "worlds": 75000
+ },
+ "reference_seconds_per_vector": 7.615681116003543,
+ "reference_vector_seconds_each": [
+  8.644649947003927,
+  6.984071084007155,
+  7.218322316999547
+ ],
+ "rows": 3840,
+ "schema": "m3.2-fast-metric-benchmark.v1",
+ "speedup_end_to_end_per_draw": 7793.979609629042,
+ "speedup_statistic_only": 8356.237956123003
+}
