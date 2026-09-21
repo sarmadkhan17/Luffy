@@ -33,6 +33,22 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 pre-RNG truth package merge, September 21
+
+Artifact commit `4a1d54c` (sources `36ce7a7`); [report](superpowers/reports/2026-09-21-m32-pre-rng-truth-package.md),
+package `scripts/m32_scheme_d_pre_rng_truth_20260921/package/`. All 55 cells x
+384 rows (21,120) are merged from the frozen family certificates and verified by
+an independent stdlib verifier (PASS; tamper tests rejected; 0 changes against
+v3). Persistence: the "monotone shift" slogan is replaced by an explicit
+Gaussian-coupling theorem whose premises are checked row by row; 2,475 rows in
+24 cells proved, P7/C4's 128 rows by the frozen Arb certificate, none refused.
+**Correction:** categorical truth was *not* complete. The earlier P5/C3 and
+P6/C4 certificates each covered one canary kernel; 448 rows remain unresolved in
+P5/C3 (4 kernels, 240 rows) and P6/C4 (5 kernels, 208 rows), so `freeze_possible`
+is `false`. **Single next task:** certify exactly those 9 kernels (listed in the
+report) with the existing P5/C3 and P6/C4 analytic reductions and the unchanged
+estimand, then regenerate and re-verify the package. No RNG, search or Gate 2.
+
 ### Latest: M3.2 P7/C4 persistence truth certificate, September 21
 
 Artifact commit `03ba946`; [immutable manifest](../scripts/m32_p7c4_persistence_20260921/p7c4_persistence_freeze_manifest.json)
