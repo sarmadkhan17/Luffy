@@ -15,6 +15,22 @@ including partial code, prototypes and waiting-for-evidence work. Each new check
 must link a dated report and identify synthetic/offline/demo/forward/quantitative
 evidence. Never count a design document as implementation evidence.
 
+## Session update — September 21, M3.2 pre-RNG truth package frozen
+
+[FREEZE.json](../../../scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json) (git tag
+`m32-pre-rng-truth-freeze`). Certified base commit `4998e36`; package SHA-256
+(`package/manifest.sha256`) `a100a19c0d789acf42ab42e53355b4eb4d3827ddfbca866fb6a9231e6e7013eb`. 55 cells x 384 rows = 21,120 analytic truth
+rows; `freeze_possible=true`; 0 unresolved rows and 0 uncertified kernels;
+independent verifier PASS; 25 sources checked against 9 family manifests, every
+hash recorded. Five previously untracked pinned inputs (both protocol documents,
+`trader/cognition/m32_scheme_d_validation.py`, `trader/cognition/m32_search.py`)
+were committed unchanged; their hashes were already verified. The package is
+**immutable**: `freeze_package.py --check` and `tests/test_m32_pre_rng_freeze.py`
+fail on any drift. No RNG, search, Gate 2 or protocol change.
+This freezes the analytic truth tables (protocol section 14 item 4) only; the other
+section 14 items remain outstanding, no validation has run, and the checklist
+count is unchanged (M3.2 not accepted).
+
 ## Session update — September 20, P5/C3 population-majority freeze
 
 Freeze commit `8f7879c16f4af3e57832e596c526e6b428dd3cd4`;
@@ -95,7 +111,7 @@ Depends on M1–M2. Reuse `research/`, `brain/spec_writer.py`, `strategy/dsl.py`
 feature contracts and candidate-dossier artifacts. Preserve discovery boundaries.
 
 - [ ] **M3.1** Build a point-in-time dataset of state/transition/sequence episodes and outcomes, including ignored assets and failure cases; declare its discovery cut, coverage and dependence units before searching. Partial: versioned bounded builder and freeze/capture CLI implemented; 268 relevant final-source tests passed. Saved synthetic replay includes selected/ignored, failure, transition and sequence cases; live retrospective capture has 78 observation-only skips and zero PIT rows. Forward window September 17 00:00 to September 18 00:00 UTC frozen September 16 20:38:40 UTC. Prospective population/coverage hooks now implemented, tested (269 relevant final-source tests) and enabled in existing watchdog consumers before the window. Classification-neutral cohort/replay and local-index reconciliation now implemented (277 final-source tests). Full-window review completed September 18 01:17 UTC: capture replay passed, indices match exports (331/331, 239/239), but coverage is **not accepted** — ~53% of the window inside >10-minute observation-gap intervals (no scans after 15:20 UTC; `collector_unhealthy` from 16:00 — origin diagnosed Sep 18 (strongly supported inference): live-tree git operations removed the worker module across 37 cycles, and the cumulative error count has no recovery semantics; see [collector-health diagnosis](../reports/2026-09-18-collector-health-diagnosis.md)), every scan misses at least one declared symbol (LSK, TAO or SUI), 16/30 forecast rows overdue-unresolved at cut, typed dataset 14 rows with three declared kinds absent and 0 sequences; diagnosis done; coordinator-reviewed fix proposal ([brief](2026-09-18-collector-recovery-health-brief.md)) with implementation and runtime verification pending; a new frozen window only after healthy verification. See [window-close review](../reports/2026-09-18-m31-window-close-review.md). Classification-conditioned typed cases do not establish population rates. See [cohort delivery](../reports/2026-09-16-pit-cohort-delivery.md). See [dataset delivery](../reports/2026-09-16-pit-dataset-delivery.md) and [population delivery](../reports/2026-09-16-pit-population-delivery.md). Latest engineering: [declared-universe delivery](../reports/2026-09-18-declared-population-delivery.md), `51101d0`, 203 tests, guarded deployment and natural 16/16 capture. Preserve Sep 18→19 freeze; distinct Sep 19 08:00→Sep 20 08:00 freeze awaits activation after prior cut review. Coverage remains unaccepted.
-- [ ] **M3.2** Implement the smallest useful quantitative/ML search for repeated patterns and failure conditions, with simple baselines, common calendar cuts and registered search budgets. Demonstrate discoveries beyond merely renaming existing indicators. Partial evidence: P5/C3 population majority independently certified strictly above `20/31` and frozen at `8f7879c16f4af3e57832e596c526e6b428dd3cd4`; P5/C3 hit/miss certification remains outstanding, so M3.2 is not accepted.
+- [ ] **M3.2** Implement the smallest useful quantitative/ML search for repeated patterns and failure conditions, with simple baselines, common calendar cuts and registered search budgets. Demonstrate discoveries beyond merely renaming existing indicators. Partial evidence: the complete 55x384 pre-RNG analytic truth package is frozen (Sept 21 update; base `4998e36`, package SHA-256 `a100a19c0d789acf42ab42e53355b4eb4d3827ddfbca866fb6a9231e6e7013eb`); no RNG validation, search or Gate 2 has run, so M3.2 is not accepted.
 - [ ] **M3.3** Connect an investigation/pattern to competing mechanism claims and at least one falsifier, confound or ablation test. Surprise prioritizes research; LLM prose cannot substitute for computed measurements. Evidence: pending.
 - [ ] **M3.4** Produce a reproducible StrategySpec candidate containing mechanical entry/exit/invalidation, universe, timeframe, data needs, costs and lineage back to events/cases. Route through the existing spec writer/admission interface; no second creation path. Evidence: pending.
 - [ ] **M3.5** Publish an owner-readable candidate dossier with source cases, exact rules, measured discovery evidence, contrary evidence and the next frozen test. Record rejected/untestable ideas as well as promising ones. Evidence: pending.

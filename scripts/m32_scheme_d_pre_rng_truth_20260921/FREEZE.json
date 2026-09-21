@@ -1,0 +1,351 @@
+{
+ "authority_documents_sha256": {
+  "docs/superpowers/specs/2026-09-19-m32-scheme-d-actual-statistic-validation-protocol.md": "8b9e36c3767f5550607901b6410553fdab6d0b0c70e8d4c632e82eed0b59d7ac",
+  "docs/superpowers/specs/2026-09-20-m32-scheme-d-actual-statistic-validation-protocol-pre-rng-correction.md": "2e925ebaa5beea9a3d04e5c687406642d5305053a639edb16b27d3e970495163"
+ },
+ "certified_base_commit": "4998e368671e40576cb1b28b4f9e7dec1fd3a09f",
+ "checks": {
+  "cells": 55,
+  "freeze_possible": true,
+  "independent_implementation": true,
+  "regression_vs_v3": {
+   "changed": 0,
+   "compared": 9216
+  },
+  "rng_constructed": false,
+  "rows": 21120,
+  "uncertified_categorical_kernels": 0,
+  "unresolved_cells": [],
+  "unresolved_rows": 0,
+  "verifier_result": "PASS"
+ },
+ "downstream_authorization": {
+  "authorized": "Assemble and independently verify the remaining RNG-free protocol section 14 freeze items (config, membership and effect-assignment tables, C0-C4 loading/covariance PSD records, runner and deterministic check suite, requirements lock, hash verification, import isolation) as one SHA-256-manifested pre-run freeze bundle that consumes this package unchanged; then request owner authorization.",
+  "not_authorized": [
+   "any RNG construction",
+   "validation worlds or seed tuples",
+   "benchmark run",
+   "historical search",
+   "Gate 2 or held-out look",
+   "referee/handoff",
+   "any protocol, scenario, truth-row or threshold change",
+   "demo/live action"
+  ]
+ },
+ "family_manifest_count": 9,
+ "family_manifests": {
+  "scripts/m32_categorical_arb_completion_20260920/manifest.sha256": "3288791b619e5fe12688c339998f03b06cf07140a138faf7c508edcd8450564e",
+  "scripts/m32_categorical_equivalence_20260920/manifest.sha256": "e628dc2b2afef63c0ce3f3d51139021cb2f83c70e2522ed6ad8d79bb3d39c001",
+  "scripts/m32_p4_c3_c4_taylor_20260921/p4_c3_c4_freeze_manifest.json": "e3db05fd44debed6db5c1fce3a09abb5d8a4b145da4506dbc8aa10d6740abd67",
+  "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_freeze_manifest.json": "277848ffd50b91241e0fac124974d2579a4713e67a2f1b206786b3121698f187",
+  "scripts/m32_p5_c4_taylor_20260921/p5_c4_freeze_manifest.json": "392db765618fbe499e271c0f5aaca65be722798aa9f3d4a184146943bb775080",
+  "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json": "71c6878a5401d579e29ffeb6a7364a826c7d608e4e71696df01032ba1d7755a3",
+  "scripts/m32_p6_c3_taylor_20260921/p6_c3_freeze_manifest.json": "cde2f07ac58ab6bc21b154101729a6c831696b281488ffe1dfd9085e3ec2dd7e",
+  "scripts/m32_p6_c4_taylor_20260921/p6_c4_freeze_manifest.json": "d63465932291e20d758ac5362e53ef970b47cf2356dcca44052040f94dad5985",
+  "scripts/m32_p7c4_persistence_20260921/p7c4_persistence_freeze_manifest.json": "189eb8fb9e906d29114fa5015af68580df032fa9ef0b0a086fb39d7be1d86b5a"
+ },
+ "immutability_policy": "Do not edit any file listed here. Any change to a listed hash invalidates the freeze; revision requires a new dated protocol and package.",
+ "immutable": true,
+ "implementation_sha256": {
+  "scripts/m32_scheme_d_pre_rng_truth_20260921/freeze_package.py": "1105f84af518a104ceb37511d787c925ceb059f489913a2dc78d9bd7923dc371",
+  "scripts/m32_scheme_d_pre_rng_truth_20260921/generate_truth_package.py": "73d7ba854cc6a82aff226a24215da1c80076be5b67a44a1f48710f096f887602",
+  "scripts/m32_scheme_d_pre_rng_truth_20260921/verify_truth_package.py": "9b06105d1c5b1b7fe797a9d010b4e27c05831f4b4c5f411b1867b5950bd21dbb",
+  "tests/test_m32_pre_rng_freeze.py": "99893d3b0dadf0a50d3f265de4f5b2c1e3ea21d09a51fee9799d9ea872afe9ef",
+  "tests/test_m32_pre_rng_truth_package.py": "f9dd6741d6b75d0094465df01f6ffea2933f269c1da4e606b4afc1a1cc04fb35",
+  "tests/test_m32_remaining_categorical_kernels.py": "88bfbe07fadcaf574b9554eea0a58112aeb0f464f7d608300407492d3abc5434"
+ },
+ "no_rng_no_search_no_gate2_no_protocol_change": true,
+ "package_files": {
+  "manifest.sha256": "a100a19c0d789acf42ab42e53355b4eb4d3827ddfbca866fb6a9231e6e7013eb",
+  "proof_certificate.json": "dd5b6e662189af9709db98cacb46fdaee28a6c9b05f3d0f2c33a0ca6c2f621b8",
+  "tables/N0_C0.json": "f9f907717b84f3a86b40989bd756d79ccbc24065579fe2cd0f8c7cb41beea157",
+  "tables/N0_C1.json": "6de5fe6e42a4ac579d34667ff3ee4fc32f439423244241c97cd817c2488684e9",
+  "tables/N0_C2.json": "71218e8c1524722ea0d730bcd15a8dac8fa374683aaa3cfd5c36bfb5cf9c03e0",
+  "tables/N0_C3.json": "8ff3c30cf1358cdbcbb151d1db59a08b07ed4c422b85bf82f95a6f36e046082e",
+  "tables/N0_C4.json": "e034c0e8df73d26d9652e764cec912c31d95412f01e071326b80ee83a4cebd2f",
+  "tables/N1_C0.json": "18d73beb607ed95598ee3acef0b8bdd709c1c7b37756ff516b696766f89c7ac2",
+  "tables/N1_C1.json": "239aeffec025e4901082c643f32185dff511125e0acbbb54602036d665584dfb",
+  "tables/N1_C2.json": "5ed7a8f591cd0ceeb342f012ac4f76899778cd6a0aa3afc6f935ff676c23e7b5",
+  "tables/N1_C3.json": "e3a4e11fee039f3582862846595d966f802262fc59529ecdbe9997ca51adbd9a",
+  "tables/N1_C4.json": "f074bcb017a6d801c547669b3b1c6f3ac325917c76d0f8643243c5e01bbb75c0",
+  "tables/N2_C0.json": "55c5e32e1537ca6a89240835ccf0730183a098bc0990edfd8a832cd61a2788ba",
+  "tables/N2_C1.json": "19ac62df70644fe166959fd12f9fc339c659a0cf3a66a102f16b158668a0d924",
+  "tables/N2_C2.json": "2bbdea71cb836de852282621b7a4dcd0df6d56ae11fc142a2a863ce89c969121",
+  "tables/N2_C3.json": "a24dfc272447f0f429c77da72da7087f44505c83982277098f80089dd27c67cb",
+  "tables/N2_C4.json": "066a17f569585a4237f5263bb73a16b9d1ef2f4d8ff063e996db603fada812f6",
+  "tables/N3_C0.json": "f28ed2d6f88cb766376c07eba9a26fd778884b8acb2a15a25cdc1400cb9d97b2",
+  "tables/N3_C1.json": "9016afc15ec63d01d3bc536782b42fc9cb72f58860089172d3de43227d878588",
+  "tables/N3_C2.json": "36dd950b37f194a0528d252e1ecea7a08f902e6afb6d3afcecfa955f1db58712",
+  "tables/N3_C3.json": "5261e3f5ff914cdb1b0dab9bb4fa9af7609a813ca149f09797edb28288d13014",
+  "tables/N3_C4.json": "b11200f496425d2d1e9182be9b03ae1289fbe382a7405271819366fd8b4b58c5",
+  "tables/P1_C0.json": "00a86982875037c8ead3fad01af1c0e4b51faf77ff370fecf0c430e0d7aa233d",
+  "tables/P1_C1.json": "950a92e087b3773056c7f0d1b4a92bea62690e1a8e98a38a14a13dbd92131393",
+  "tables/P1_C2.json": "d7ec5f03fd873507719e37f5a455deb0bd3e8af905333e53d87252719cb58667",
+  "tables/P1_C3.json": "74342f3549e26fbf053b60a13a41fd41979c82e826313030eb6bd49007027c2a",
+  "tables/P1_C4.json": "97cd0bce1d71a5672b33cb624df12d7b5e437d8a1e13db33370ce6c693f5ab28",
+  "tables/P2_C0.json": "229676e98cc05e4ccd125467f13ec4a8edf9bd10c9ee69aae7ea5b98859af460",
+  "tables/P2_C1.json": "a31719f5382b10de590c3885cc897453b3281e7d286ae70684abf58981093155",
+  "tables/P2_C2.json": "6f8610c8c0ecf997aa2fd7768d21e8e9fffadd8644aaab8fa04263c4a5f46f8d",
+  "tables/P2_C3.json": "676490843b92cdfdbdded795eb3dbbf7d2a11d28766fde3288fdaad98c9290b0",
+  "tables/P2_C4.json": "20da0cb6100f2c8adc846b4b2d18dc8e18edf8b166dc9e11c24d447e957b3fab",
+  "tables/P3_C0.json": "8d160c2ce884faf7f8a36f6d26e6f762fa8a8fba0402f8f3202a121e44276d56",
+  "tables/P3_C1.json": "4687b4a716169ca904501a699a0f285a3317e6d3f91ba4febf64cfc7fc514c15",
+  "tables/P3_C2.json": "3c4d46c7664b07bf073534eb0d5492d931e4b41af16bf877cd0604d5ad61c806",
+  "tables/P3_C3.json": "76ef2ce7fd72d3f905d2e086dae28f81e43ec9691e4a0d5fff5f5e52004c549b",
+  "tables/P3_C4.json": "4cf94fb71700a1f29e6bdcf57bb40f0df41e32edfb1a6559c6fa5f7e464ec97f",
+  "tables/P4_C0.json": "d8e3dca297699300b39aaf527c6f3dbd44ae668596f85af01b986fb3c0902a4f",
+  "tables/P4_C1.json": "fbfba5dc5bc38c116fe0a7ef3f6e7166354c5603240a3de8c9752d22641c5b4d",
+  "tables/P4_C2.json": "44b4031f1e09a28a4e3f679ab7cccb6cc5d104e4b3849d1216348b9b30d008ad",
+  "tables/P4_C3.json": "1bad16a78ae76d74e6a5524218f4fdacb76b7cf74c80cd01fdd30fd8b8765b3f",
+  "tables/P4_C4.json": "c40c9fe84ed8b8d5ee3bfcaf43e754b7666ebe22299e5d800c764d16d7552371",
+  "tables/P5_C0.json": "c02a84d688b130f4f5868b9a410f7e8837f3e13d919ec4c1baa35d95bf607d46",
+  "tables/P5_C1.json": "84f6c31fce5b10899aeb66a4362539e64d2b7652a4e4cd94050e20d26ca2eeac",
+  "tables/P5_C2.json": "7b9617d029c46c8857622fc3325aee962b590bf1834e881f40f9dfd22cd7caad",
+  "tables/P5_C3.json": "b0345422855cec5e97dbf884a44b1e3c0af8523e4abf08cd75f9548ef71f92e8",
+  "tables/P5_C4.json": "83f02711475e5b560d0566ad5257acc2a0df69ff0792ccf0ad0990b88cb0b9fd",
+  "tables/P6_C0.json": "d2c50e7ef2e667ae282f850a46d0b2c5127ffd351777a57dbab756a4232145d1",
+  "tables/P6_C1.json": "b62dc4e0b7cb9058370714c34209c556ba987cc451ccd65e5dcaedaba5310dc5",
+  "tables/P6_C2.json": "5780181e44bc7cbb969e739b8de5ed8671a583081559698075d9476439d89105",
+  "tables/P6_C3.json": "2b9874c88ef710a8b4975b5dbe6702344a1b9cfb12b14dbd590ab821b288c04c",
+  "tables/P6_C4.json": "e33b2846e7098ea0f8bea054f77160239eefaf83835d00065d96fba5efaa0a06",
+  "tables/P7_C0.json": "2e7e93f0caafdd77389cfeb621c61195520d2ccdadac79721ea7d5af97e1c829",
+  "tables/P7_C1.json": "08850f005ac7196246cbcec98e21342a72b8c21417f6741c6dc89e14dbcdb12e",
+  "tables/P7_C2.json": "952d95c20dbb5159a2212bcbf1e2b594bce69acca283fdc4fd13f8a8117e7d0f",
+  "tables/P7_C3.json": "e48f6ed9433c8a91dcfd4707eb4897125e8c964ff9c811b01826d10a11c95ad7",
+  "tables/P7_C4.json": "9f37efd6628ebfeba8582487076b7ae6314ea47fd9ad8a220e5819620437e6d8",
+  "verification_result.json": "aa5ef9122f68e75d2ad7a8288adcc685976fed01dbd6481d1014a6e7c00b590d"
+ },
+ "package_sha256": "a100a19c0d789acf42ab42e53355b4eb4d3827ddfbca866fb6a9231e6e7013eb",
+ "package_sha256_definition": "SHA-256 of package/manifest.sha256, which lists proof_certificate.json and all 55 table hashes; proof_certificate.json in turn pins all 25 source hashes and the generator/verifier hashes",
+ "package_tree_sha256": "d06359a06851f6ac9d6c778ecccfd812957eb97b82884ba4531f0011d17b8491",
+ "package_tree_sha256_definition": "SHA-256 of the sorted '<sha256>  <name>' lines of every file under package/",
+ "proof_certificate_sha256": "dd5b6e662189af9709db98cacb46fdaee28a6c9b05f3d0f2c33a0ca6c2f621b8",
+ "schema": "m3.2-pre-rng-truth-package-freeze.v1",
+ "scope": "N0-N3 and P1-P7 x C0-C4: 55 cells x 384 rows = 21,120 analytic truth rows",
+ "source_count": 25,
+ "sources": {
+  "base_certificate": {
+   "family_manifest": "scripts/m32_categorical_equivalence_20260920/manifest.sha256",
+   "family_manifest_key": "certificate.json",
+   "family_manifest_recorded_sha256": "67abe8d4545f97d9240bb7454e8a1f61fad078ec17880da8319d7fc50ed29a56",
+   "path": "scripts/m32_categorical_equivalence_20260920/certificate.json",
+   "sha256": "67abe8d4545f97d9240bb7454e8a1f61fad078ec17880da8319d7fc50ed29a56"
+  },
+  "base_replay": {
+   "family_manifest": "scripts/m32_categorical_equivalence_20260920/manifest.sha256",
+   "family_manifest_key": "replay.json",
+   "family_manifest_recorded_sha256": "78c2e23aa3b3964737d580b2cd2dbe8de42b5413a75fb84ccb9afd98713a52bf",
+   "path": "scripts/m32_categorical_equivalence_20260920/replay.json",
+   "sha256": "78c2e23aa3b3964737d580b2cd2dbe8de42b5413a75fb84ccb9afd98713a52bf"
+  },
+  "completion_certificate": {
+   "family_manifest": "scripts/m32_categorical_arb_completion_20260920/manifest.sha256",
+   "family_manifest_key": "certificate.json",
+   "family_manifest_recorded_sha256": "e77048995ee9d509b0237ea86064a9d8836801a05bcfee6e32a208af17267df4",
+   "path": "scripts/m32_categorical_arb_completion_20260920/certificate.json",
+   "sha256": "e77048995ee9d509b0237ea86064a9d8836801a05bcfee6e32a208af17267df4"
+  },
+  "completion_replay": {
+   "family_manifest": "scripts/m32_categorical_arb_completion_20260920/manifest.sha256",
+   "family_manifest_key": "replay.json",
+   "family_manifest_recorded_sha256": "6ea1324526c89163a23366bb060452edad4417c955c7d7359aab8a96897f2d1b",
+   "path": "scripts/m32_categorical_arb_completion_20260920/replay.json",
+   "sha256": "6ea1324526c89163a23366bb060452edad4417c955c7d7359aab8a96897f2d1b"
+  },
+  "estimand_spec": {
+   "family_manifest": "scripts/m32_p4_c3_c4_taylor_20260921/p4_c3_c4_freeze_manifest.json",
+   "family_manifest_key": "frozen_estimand_spec",
+   "family_manifest_recorded_sha256": "8c1ed60f8b6e9f22608c6c491506e8b0c888dd296c02b62c266a1e40ace92755",
+   "path": "scripts/m32_categorical_equivalence_20260920/estimand_spec.json",
+   "sha256": "8c1ed60f8b6e9f22608c6c491506e8b0c888dd296c02b62c266a1e40ace92755"
+  },
+  "p4_c3_primary": {
+   "family_manifest": "scripts/m32_p4_c3_c4_taylor_20260921/p4_c3_c4_freeze_manifest.json",
+   "family_manifest_key": "primary_c3",
+   "family_manifest_recorded_sha256": "e22b7140bca4a7ca59da68b0a349583e143ab5d8a3a1b951124f7d9882993d82",
+   "path": "scripts/m32_p4_c3_c4_taylor_20260921/primary_c3.json",
+   "sha256": "e22b7140bca4a7ca59da68b0a349583e143ab5d8a3a1b951124f7d9882993d82"
+  },
+  "p4_c3_replay": {
+   "family_manifest": "scripts/m32_p4_c3_c4_taylor_20260921/p4_c3_c4_freeze_manifest.json",
+   "family_manifest_key": "replay_c3",
+   "family_manifest_recorded_sha256": "fe49be1d362a86b22d843e66d1d00562890b6e377089f3d762e6eb9d0a8af8a0",
+   "path": "scripts/m32_p4_c3_c4_taylor_20260921/replay_c3.json",
+   "sha256": "fe49be1d362a86b22d843e66d1d00562890b6e377089f3d762e6eb9d0a8af8a0"
+  },
+  "p4_c4_primary": {
+   "family_manifest": "scripts/m32_p4_c3_c4_taylor_20260921/p4_c3_c4_freeze_manifest.json",
+   "family_manifest_key": "primary_c4",
+   "family_manifest_recorded_sha256": "25fc2c88d0519585ccda2bcbce7f69df90dc66f8bd2ba31428c1a1ca8e475155",
+   "path": "scripts/m32_p4_c3_c4_taylor_20260921/primary_c4.json",
+   "sha256": "25fc2c88d0519585ccda2bcbce7f69df90dc66f8bd2ba31428c1a1ca8e475155"
+  },
+  "p4_c4_replay": {
+   "family_manifest": "scripts/m32_p4_c3_c4_taylor_20260921/p4_c3_c4_freeze_manifest.json",
+   "family_manifest_key": "replay_c4",
+   "family_manifest_recorded_sha256": "66a545c7c15e64d67a684588a34179898e798401d6bc7fe29f9d5cdaab7914f1",
+   "path": "scripts/m32_p4_c3_c4_taylor_20260921/replay_c4.json",
+   "sha256": "66a545c7c15e64d67a684588a34179898e798401d6bc7fe29f9d5cdaab7914f1"
+  },
+  "p5_c3_certifier": {
+   "family_manifest": "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_freeze_manifest.json",
+   "family_manifest_key": "certify_hit_miss_taylor.py",
+   "family_manifest_recorded_sha256": "5c7141ef357fe7aaf2ff80fa025d35d65d4687b979b80c4b99858e2cfba94020",
+   "path": "scripts/m32_p5_c3_taylor_canary_20260920/certify_hit_miss_taylor.py",
+   "sha256": "5c7141ef357fe7aaf2ff80fa025d35d65d4687b979b80c4b99858e2cfba94020"
+  },
+  "p5_c3_primary": {
+   "family_manifest": "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_freeze_manifest.json",
+   "family_manifest_key": "p5_c3_hit_miss_primary.json",
+   "family_manifest_recorded_sha256": "bf2c65f48682a38d1ebf06b19e0dd9c4fd29b36a32c8b10e7020cfd147950f3a",
+   "path": "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_primary.json",
+   "sha256": "bf2c65f48682a38d1ebf06b19e0dd9c4fd29b36a32c8b10e7020cfd147950f3a"
+  },
+  "p5_c3_replay": {
+   "family_manifest": "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_freeze_manifest.json",
+   "family_manifest_key": "p5_c3_hit_miss_replay.json",
+   "family_manifest_recorded_sha256": "8884983b4fb51236654a954dd7e3c676323229d7dc0eec3ee4c422732b4f8c1b",
+   "path": "scripts/m32_p5_c3_taylor_canary_20260920/p5_c3_hit_miss_replay.json",
+   "sha256": "8884983b4fb51236654a954dd7e3c676323229d7dc0eec3ee4c422732b4f8c1b"
+  },
+  "p5_c4_primary": {
+   "family_manifest": "scripts/m32_p5_c4_taylor_20260921/p5_c4_freeze_manifest.json",
+   "family_manifest_key": "primary_certificate",
+   "family_manifest_recorded_sha256": "384f4a8e95ddcc8bb3f14c2282ed014ecd36b5f8859a0525a9bf51649c2b45be",
+   "path": "scripts/m32_p5_c4_taylor_20260921/p5_c4_primary.json",
+   "sha256": "384f4a8e95ddcc8bb3f14c2282ed014ecd36b5f8859a0525a9bf51649c2b45be"
+  },
+  "p5_c4_replay": {
+   "family_manifest": "scripts/m32_p5_c4_taylor_20260921/p5_c4_freeze_manifest.json",
+   "family_manifest_key": "replay_certificate",
+   "family_manifest_recorded_sha256": "38229bba4e413ee7dd3c4fcb1569403ed5ea142ebb64818ef3961123c87bd612",
+   "path": "scripts/m32_p5_c4_taylor_20260921/p5_c4_replay.json",
+   "sha256": "38229bba4e413ee7dd3c4fcb1569403ed5ea142ebb64818ef3961123c87bd612"
+  },
+  "p6_c3_primary": {
+   "family_manifest": "scripts/m32_p6_c3_taylor_20260921/p6_c3_freeze_manifest.json",
+   "family_manifest_key": "p6_c3_primary.json",
+   "family_manifest_recorded_sha256": "25e488dac614e50d40bdcfe33502c30fe1f238a81ab7482deef13336738d5c5d",
+   "path": "scripts/m32_p6_c3_taylor_20260921/p6_c3_primary.json",
+   "sha256": "25e488dac614e50d40bdcfe33502c30fe1f238a81ab7482deef13336738d5c5d"
+  },
+  "p6_c3_replay": {
+   "family_manifest": "scripts/m32_p6_c3_taylor_20260921/p6_c3_freeze_manifest.json",
+   "family_manifest_key": "p6_c3_replay.json",
+   "family_manifest_recorded_sha256": "ce70e4dbcc40d65a723706603c06579054c565feeaab142b539bc4813ffeee47",
+   "path": "scripts/m32_p6_c3_taylor_20260921/p6_c3_replay.json",
+   "sha256": "ce70e4dbcc40d65a723706603c06579054c565feeaab142b539bc4813ffeee47"
+  },
+  "p6_c4_primary": {
+   "family_manifest": "scripts/m32_p6_c4_taylor_20260921/p6_c4_freeze_manifest.json",
+   "family_manifest_key": "p6_c4_primary.json",
+   "family_manifest_recorded_sha256": "f09d07a485121651265f3690be991b2d359cdebe62e35276b15f2f2e29a2ffb2",
+   "path": "scripts/m32_p6_c4_taylor_20260921/p6_c4_primary.json",
+   "sha256": "f09d07a485121651265f3690be991b2d359cdebe62e35276b15f2f2e29a2ffb2"
+  },
+  "p6_c4_replay": {
+   "family_manifest": "scripts/m32_p6_c4_taylor_20260921/p6_c4_freeze_manifest.json",
+   "family_manifest_key": "p6_c4_replay.json",
+   "family_manifest_recorded_sha256": "0be21ece08f7c60389d8edfaaabf54d5b6e44070c2b54e209a406f894bf4697e",
+   "path": "scripts/m32_p6_c4_taylor_20260921/p6_c4_replay.json",
+   "sha256": "0be21ece08f7c60389d8edfaaabf54d5b6e44070c2b54e209a406f894bf4697e"
+  },
+  "p7c4_persistence_primary": {
+   "family_manifest": "scripts/m32_p7c4_persistence_20260921/p7c4_persistence_freeze_manifest.json",
+   "family_manifest_key": "primary_certificate.json",
+   "family_manifest_recorded_sha256": "943e78a512daa759a53e8442511899a1e3dd4e9f2ed4b4772fb888f498af28be",
+   "path": "scripts/m32_p7c4_persistence_20260921/primary_certificate.json",
+   "sha256": "943e78a512daa759a53e8442511899a1e3dd4e9f2ed4b4772fb888f498af28be"
+  },
+  "p7c4_persistence_replay": {
+   "family_manifest": "scripts/m32_p7c4_persistence_20260921/p7c4_persistence_freeze_manifest.json",
+   "family_manifest_key": "replay_certificate.json",
+   "family_manifest_recorded_sha256": "87576ec81e2a03a606fe35649ee8d8f1aa45dfe27e8436a03479aa691bc2f508",
+   "path": "scripts/m32_p7c4_persistence_20260921/replay_certificate.json",
+   "sha256": "87576ec81e2a03a606fe35649ee8d8f1aa45dfe27e8436a03479aa691bc2f508"
+  },
+  "p7c4_persistence_replay_check": {
+   "family_manifest": "scripts/m32_p7c4_persistence_20260921/p7c4_persistence_freeze_manifest.json",
+   "family_manifest_key": "replay_result.json",
+   "family_manifest_recorded_sha256": "fd030bdf5f06f4be8757cb7d2750bfe861adda205a07bf47ced4c6d8304c26fa",
+   "path": "scripts/m32_p7c4_persistence_20260921/replay_result.json",
+   "sha256": "fd030bdf5f06f4be8757cb7d2750bfe861adda205a07bf47ced4c6d8304c26fa"
+  },
+  "remaining_certifier": {
+   "family_manifest": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+   "family_manifest_key": "certify_remaining.py",
+   "family_manifest_recorded_sha256": "1224d5679b861e73a9023269b60789bba730205d629ef0d4992319c89d0df23f",
+   "path": "scripts/m32_p5c3_p6c4_remaining_20260921/certify_remaining.py",
+   "sha256": "1224d5679b861e73a9023269b60789bba730205d629ef0d4992319c89d0df23f"
+  },
+  "remaining_primary": {
+   "family_manifest": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+   "family_manifest_key": "primary.json",
+   "family_manifest_recorded_sha256": "ed8eb73aeb57c9298875607913155f39745b0413366f2bff9201e009bf898889",
+   "path": "scripts/m32_p5c3_p6c4_remaining_20260921/primary.json",
+   "sha256": "ed8eb73aeb57c9298875607913155f39745b0413366f2bff9201e009bf898889"
+  },
+  "remaining_replay": {
+   "family_manifest": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+   "family_manifest_key": "replay.json",
+   "family_manifest_recorded_sha256": "c19685f0a0b7dc122db01508581db683995731e5e5512172831acaf43366c6ac",
+   "path": "scripts/m32_p5c3_p6c4_remaining_20260921/replay.json",
+   "sha256": "c19685f0a0b7dc122db01508581db683995731e5e5512172831acaf43366c6ac"
+  },
+  "remaining_replay_check": {
+   "family_manifest": "scripts/m32_p5c3_p6c4_remaining_20260921/freeze_manifest.json",
+   "family_manifest_key": "replay_result.json",
+   "family_manifest_recorded_sha256": "e9661181c39f277fafc734e000f1d9a6fc34994edcc56b76e4968b1d9925f572",
+   "path": "scripts/m32_p5c3_p6c4_remaining_20260921/replay_result.json",
+   "sha256": "e9661181c39f277fafc734e000f1d9a6fc34994edcc56b76e4968b1d9925f572"
+  }
+ },
+ "status": "FROZEN",
+ "untracked_pinned_inputs": [],
+ "v3_certificate_files_sha256": {
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/manifest.sha256": "6832cd6c493750cad521a3754d2f5a7d2ea5c34f5f8475784b26a61bf397cbfa",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/proof_certificate.json": "e2cf0251529513bcdb07fd58c094d49f5db3be3c774d690040dbdce135859c3e",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/replay_result.json": "f1475e8d29888d954f838f0d8a265656985c342e7af81d60a81d90c44524a7d3",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C0.json": "d2bc1fbcc7f18542fb962d17ba48a421e9ab3ed44005f22afb137fab4a15cdd4",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C1.json": "d573879080c53dae7beb85518eee9cb6db4eb04f32de3e73a51d0bb481b1b92f",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C2.json": "f482fd901248736f0c96306a14239883aa01fa75cca43a0b3f7835d85c4d4042",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C3.json": "c21f5c72cb943962f0798f28203056e504079270d679418d11c26d0e6b409492",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P1_C4.json": "677cb5c40c7753f6af60744b716ee993cdea636c10a856a5d3711a5185185d46",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C0.json": "061995477e325241ba0d6769b2aca413f621a9988d5506c0d09b35fa8a49fbdb",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C1.json": "46b4b91662abaccecbca1c96b50651cc6e98e730ee80ea6aa46df8df66122762",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C2.json": "9a71c709d7a7d48e36c909a0d26f7d62c28a1468eddc06fbedf70dbfdd3064a5",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C3.json": "7dbfe17a8e5b71b1855a3fb3c602dbdc8518324096ebf55b09ea2b2133a3890e",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P2_C4.json": "ed961b5aeb158e1c653ce128dcced9087f2d7717feee5fd72db88f98c07c23ea",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C0.json": "d2b428755d0eff6f8030788fda10f7de8736ff806ecef8ec52795d8f53d6b51f",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C1.json": "66bc9db9a06d821a6140baa3c40a693fa24ee28d81b3e511b8a215507f181929",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C2.json": "e2909b1e194eed7d444ebc3b3cd72e5b5ae17b3820aaddb164896d63e4755aa4",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C3.json": "9c26ca7ddce800bbf1be4187f587e208097f2097af081ee610bf4052fd2c403f",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P3_C4.json": "77cdd28d173f4025f1fcc3bbdb1c2e111a3f8e220e21af6560718d550605dac6",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C0.json": "872458fdedb1653568886cce0b77013e38c970d333ff4f64bc35983a21ce907b",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C1.json": "3518aa149b6c85d8170612d2c8ff5cf5ebf1bfaa875d1c7f1c45ae784e67b3e2",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C2.json": "175c1ff958ecac76ecb691ac718d41ff272cbde0eb6ba99b272ace28e52dfea2",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C3.json": "4713c5c9643d07c0e6d4aee79fbae15138cadb613f0fc02aac98809328d09869",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P4_C4.json": "59d960560c59ac72e57921f2fa36b11c5141ffe8041ac168f3d2fbfb6e65db01",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C0.json": "d411adcca47071f5731accbb63c76b74c05920119f99a4e53fdc3981da5c3d2e",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C1.json": "6c2ea77d8a749a3e5ee7bd386079db2cba77b93a9bda0c9641a5c56c67c20810",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C2.json": "02b5ca7b5925fcf72925652ecc37078b851534e3b705a3adb4f3dd04dc032e1a",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C3.json": "997aae8e30edda470a175da02e08441546659681db688701e99a241b2eb174d5",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P5_C4.json": "38bcf338ba74ce1ca1f9b23560ec946d9e2e5b2777b2e13d77d0aeb64fa65664",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C0.json": "800b59fe1c9b8b0bffc86764e565d734cf2270d4624d434ab07633b40418125f",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C1.json": "850d04c17935a62485812975997b1e249692f0132e8f6b70348da1e676277afb",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C2.json": "eff579cd3d5e875ad209664b130c290d0cbc2ce21243095ae1b678ead1b7bed0",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C3.json": "1239a349e12d525770300c1268d3b56c125d382e11a7be846de1da5e399de303",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P6_C4.json": "bcccb3a67f51f9ebe9eb5a6f6fbf07a8972a1ed1680410d7094e8c61c768a4fd",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C0.json": "ff715b7a1b086ce99e9721126ab5897caf6810ee87c86e296b69472187777e85",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C1.json": "c3a04e83950ad88db26e47685f1c0b7c70028e441f88516ebb59da91debe7a6d",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C2.json": "dbf94c38d1a05d0ca7e0156c3125a83dbe24c01926e98c2d772c44d7a20d7443",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C3.json": "9c7e1357ebbe35d1348c5ef27b6926b778ba46ad21fca9ef52fc7018f5f342f9",
+  "scripts/m32_scheme_d_pre_rng_truth_20260920/certificates/tables/P7_C4.json": "91f3a0a5f37551e9a45f1433e3ea330ccc0e1644910af02d128b58d323abf569"
+ },
+ "v3_frozen_input_sha256": {
+  "docs/superpowers/specs/2026-09-20-m32-scheme-d-actual-statistic-validation-protocol-pre-rng-correction.md": "2e925ebaa5beea9a3d04e5c687406642d5305053a639edb16b27d3e970495163",
+  "trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61",
+  "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b"
+ },
+ "verification_result_sha256": "aa5ef9122f68e75d2ad7a8288adcc685976fed01dbd6481d1014a6e7c00b590d"
+}

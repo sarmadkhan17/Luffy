@@ -33,6 +33,28 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 pre-RNG truth package FROZEN, September 21
+
+[FREEZE.json](../scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json) (git tag
+`m32-pre-rng-truth-freeze`). Certified base commit `4998e36`; package SHA-256
+(`package/manifest.sha256`) `a100a19c0d789acf42ab42e53355b4eb4d3827ddfbca866fb6a9231e6e7013eb`. 55 cells x 384 rows = 21,120 analytic truth
+rows; `freeze_possible=true`; 0 unresolved rows and 0 uncertified kernels;
+independent verifier PASS; 25 sources checked against 9 family manifests, every
+hash recorded. Five previously untracked pinned inputs (both protocol documents,
+`trader/cognition/m32_scheme_d_validation.py`, `trader/cognition/m32_search.py`)
+were committed unchanged; their hashes were already verified. The package is
+**immutable**: `freeze_package.py --check` and `tests/test_m32_pre_rng_freeze.py`
+fail on any drift. No RNG, search, Gate 2 or protocol change.
+**Single next task (authorized):** assemble and independently verify the
+remaining RNG-free protocol section 14 freeze items (config, membership and
+effect-assignment tables, C0-C4 loading/covariance PSD records, runner and
+deterministic check suite, requirements lock, hash verification, import
+isolation) as one SHA-256-manifested pre-run bundle that consumes this package
+unchanged, then request owner authorization. **Not authorized:** any RNG,
+validation world or seed tuple, benchmark run, historical search, Gate 2,
+referee/handoff, protocol/truth-row change, or demo/live action. The protocol
+stays NOT AUTHORIZED TO RUN.
+
 ### Latest: M3.2 remaining categorical kernels certified; pre-RNG freeze possible, September 21
 
 [Report](../scripts/m32_p5c3_p6c4_remaining_20260921/freeze_report.md),
