@@ -33,6 +33,26 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 P7/C4 persistence truth certificate, September 21
+
+Artifact commit `03ba946`; [immutable manifest](../scripts/m32_p7c4_persistence_20260921/p7c4_persistence_freeze_manifest.json)
+and [report](../scripts/m32_p7c4_persistence_20260921/p7c4_persistence_freeze_report.md).
+The 24 P7/C4 persistence targets (8 sector A, 16 sector B) are certified: all
+four A/B x target/non-target signed effects are strict positive non-nulls
+(`0.0765`, `0.0445`, `0.3280`, `0.2947` for A-target, A-non-target, B-target,
+B-non-target; minimum zero separation `0.0445`, largest primary radius
+`4.7e-17`). A Mehler-Hermite reduction replaced an earlier 2-D integration whose
+`rel_tol=arb(1)` let Arb stop at 100% relative error (discarded, never used).
+The independent `384`-bit replay (order 60, wider bound, reversed traversal)
+passed all 19 overlap/classification checks. No RNG, simulation, categorical
+rework or protocol change. This closes P7/C4 persistence only: the consolidated
+truth tables and `proof_certificate.json` still show `freeze_possible: false`
+(16 refused cells) and are not regenerated. **Single next task:** merge every
+frozen family certificate (categorical, persistence including this one, and the
+persistence monotone-association rows for P4-P7 x C1-C3 and P4-P6 x C4) into
+the 55-cell, 384-row truth tables with a deterministic independent verifier,
+then report whether the pre-RNG freeze is possible.
+
 ### Latest: M3.2 P6/C3 full reduced certificate, September 21
 
 Artifact commit `58c4eb7`; [immutable manifest](../scripts/m32_p6_c3_taylor_20260921/p6_c3_freeze_manifest.json)
