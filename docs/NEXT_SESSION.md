@@ -33,6 +33,23 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 validation bundle revision 2, September 21
+
+[Report](superpowers/reports/2026-09-21-m32-validation-bundle-v2.md), bundle
+`scripts/m32_scheme_d_validation_bundle_v2_20260921/`, **bundle-v2 SHA-256 `397961d944f98f730eb723d537594d56428cf72db349449ad848678ad85f0c4e`**;
+[owner-clarification addendum](superpowers/specs/2026-09-21-m32-scheme-d-owner-clarifications-i1-i8.md)
+records owner decisions I1-I8 (I4: only a constant outcome column is degenerate; an
+observed zero lift is valid evidence and is never refused). v2 supersedes v1
+(`0b42c6a3…`, left byte-identical; do not authorize it). Only three code changes:
+integer half-open coverage classes (16/80 masked is class 1), a world with zero tested
+hypotheses is a refused world (I3), and refused-h(w) worlds leave the marginal-calibration
+ECDF denominator (I6). Frozen truth package unchanged. Preflight 27/27 (0 generator
+constructions), independent verifier PASS, 9 tamper cases rejected. No RNG, seeds,
+benchmark worlds, search or Gate 2.
+**Single next task:** the owner decides whether to create a phase-90 benchmark
+authorization record bound to the v2 bundle SHA-256 (benchmark only; full run still
+requires an exact-equivalence-proven optimized statistic and its own benchmark).
+
 ### Latest: M3.2 validation bundle assembled, September 21
 
 [Report](superpowers/reports/2026-09-21-m32-validation-bundle.md), bundle

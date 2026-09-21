@@ -1,0 +1,88 @@
+{
+ "codes": {
+  "C0": {
+   "construction": "Z_h = e_h",
+   "factors": [],
+   "name": "independent",
+   "residual_variance": "1/1"
+  },
+  "C1": {
+   "construction": "Z_h = sqrt(3/10) f + sqrt(7/10) e_h",
+   "factors": [
+    {
+     "loading_signs": "all +",
+     "name": "f",
+     "weight": "3/10"
+    }
+   ],
+   "name": "equicorrelated",
+   "residual_variance": "7/10"
+  },
+  "C2": {
+   "construction": "Z_h = sqrt(7/10) f + sqrt(3/10) e_h",
+   "factors": [
+    {
+     "loading_signs": "all +",
+     "name": "f",
+     "weight": "7/10"
+    }
+   ],
+   "name": "equicorrelated",
+   "residual_variance": "3/10"
+  },
+  "C3": {
+   "construction": "Z_h = sqrt(1/10) g + sqrt(3/5) f_{c(h)} + sqrt(3/10) e_h",
+   "factors": [
+    {
+     "loading_signs": "all +",
+     "name": "g",
+     "weight": "1/10"
+    },
+    {
+     "loading_signs": "indicator of h mod 32 = c",
+     "name": "f_c (32 cluster factors)",
+     "weight": "3/5"
+    }
+   ],
+   "name": "clustered",
+   "residual_variance": "3/10"
+  },
+  "C4": {
+   "construction": "Z_h = sqrt(3/5) (l_h . f) + sqrt(2/5) e_h, f in R^2",
+   "factors": [
+    {
+     "loading_signs": "all +",
+     "name": "f1",
+     "weight": "3/20"
+    },
+    {
+     "loading_signs": "+ for h mod 32 < 16 else -",
+     "name": "f2",
+     "weight": "9/20"
+    }
+   ],
+   "lambda": "3/5",
+   "name": "signed sectors",
+   "residual_variance": "2/5",
+   "sector_A_loading_binary64": [
+    "0x1.0000000000000p-1",
+    "0x1.bb67ae8584caap-1"
+   ],
+   "sector_A_loading_exact": [
+    "1/2",
+    "sqrt(3)/2"
+   ],
+   "sector_B_loading_binary64": [
+    "0x1.0000000000000p-1",
+    "-0x1.bb67ae8584caap-1"
+   ],
+   "sector_B_loading_exact": [
+    "1/2",
+    "-sqrt(3)/2"
+   ],
+   "theta_degrees": 60
+  }
+ },
+ "family_size": 384,
+ "schema": "m3.2-scheme-d-latent-loadings.v1"
+}

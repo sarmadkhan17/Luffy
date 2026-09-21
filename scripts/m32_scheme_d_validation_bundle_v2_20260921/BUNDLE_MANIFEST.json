@@ -1,0 +1,54 @@
+{
+ "baseline_commit": "ab9e39683f5e9f756fc7ef6690133ecb5b608f64",
+ "bundle_revision": 2,
+ "clarification_addendum": {
+  "path": "docs/superpowers/specs/2026-09-21-m32-scheme-d-owner-clarifications-i1-i8.md",
+  "sha256": "09a70e84121e6b613732820f346f74c1fd53587f4c5dca300aa3eebb349471dc"
+ },
+ "files_sha256": {
+  "scripts/m32_scheme_d_validation_bundle_v2_20260921/artifacts/config.json": "0e69746db49eb17abbdcfcc470ff662194bb817af1e32f771c865d5c6cb9af35",
+  "scripts/m32_scheme_d_validation_bundle_v2_20260921/artifacts/covariance_psd.json": "660cd6f69d37475025c34993f5641f7287b67766059becf8bd7521baba895a1e",
+  "scripts/m32_scheme_d_validation_bundle_v2_20260921/artifacts/effect_assignment_table.json": "1153db3afc3bf6d6f23113a1128eae8f9d0819abec771b8db3f305de52e2b6a4",
+  "scripts/m32_scheme_d_validation_bundle_v2_20260921/artifacts/environment_lock.json": "4d9c4fcceec550bdc8113ab6002700bae24bd30958a78998ffa2e40e7b29742a",
+  "scripts/m32_scheme_d_validation_bundle_v2_20260921/artifacts/loadings.json": "8804acb74aa389bd0b61e09d9afaeedc3bdfb73dc7fda9da4a850b63b413ff45",
+  "scripts/m32_scheme_d_validation_bundle_v2_20260921/artifacts/membership_table.json": "2370f1a203bc345f06ef59038095ceb2cb8f025ef851d04f0ec966e841e0429e",
+  "scripts/m32_scheme_d_validation_bundle_v2_20260921/artifacts/preflight_report.json": "41c813b3577ac8d2ba8564bbbe1a3dc8809ab5c38fef7fa299b3d5b7e8965cff",
+  "scripts/m32_scheme_d_validation_bundle_v2_20260921/build_bundle.py": "8d3f7c3d9e5afd4724ec67c8666abdd27fbf932a9058ca16cf7e28db03631831",
+  "scripts/m32_scheme_d_validation_bundle_v2_20260921/requirements.lock": "70611fe947ce6d8153b4ac394321bd31be6f157a64bf824d1e4f6d37ae005f53",
+  "scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/acceptance.py": "aa56bbf28c9334d4766f3e14ae5dbd2426a1a8413d9cc493c2574e338d34c95c",
+  "scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/preflight.py": "9d48d0cf906ca4c8d6dcb3720dda49fb49d8b179be4ed68ad39f5c0902cae989",
+  "scripts/m32_scheme_d_validation_bundle_v2_20260921/runner/scheme_d_runner.py": "3879630c9627615a99f8c4e128dca5114fd9d452ea64f7f584a12cef0122e01e",
+  "scripts/m32_scheme_d_validation_bundle_v2_20260921/verify_bundle.py": "ab84c4b2b6e01ebf923f510625507d85016f7d838014bc4310c5eb44ca23e9f0"
+ },
+ "frozen_truth_commit": "7279ce0e4b9e245a00a45e69c6914d5d47d32903",
+ "frozen_truth_package": {
+  "freeze_json": "scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json",
+  "freeze_json_sha256": "f3b93fae43d1cae5d1c8e35c18c654232fcac8b9a0b2e15e7391f4e473ce651f",
+  "package_dir": "scripts/m32_scheme_d_pre_rng_truth_20260921/package",
+  "package_sha256": "a100a19c0d789acf42ab42e53355b4eb4d3827ddfbca866fb6a9231e6e7013eb",
+  "rows": 21120,
+  "unresolved_rows": 0
+ },
+ "implementation_hashes_protocol_section_2": {
+  "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7",
+  "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+  "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b"
+ },
+ "no_rng_no_seed_generation_no_worlds_no_search_no_gate2": true,
+ "pinned_inputs_sha256": {
+  "docs/superpowers/specs/2026-09-19-m32-scheme-d-actual-statistic-validation-protocol.md": "8b9e36c3767f5550607901b6410553fdab6d0b0c70e8d4c632e82eed0b59d7ac",
+  "docs/superpowers/specs/2026-09-20-m32-scheme-d-actual-statistic-validation-protocol-pre-rng-correction.md": "2e925ebaa5beea9a3d04e5c687406642d5305053a639edb16b27d3e970495163",
+  "docs/superpowers/specs/2026-09-21-m32-scheme-d-owner-clarifications-i1-i8.md": "09a70e84121e6b613732820f346f74c1fd53587f4c5dca300aa3eebb349471dc",
+  "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7",
+  "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+  "trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61",
+  "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b"
+ },
+ "schema": "m3.2-scheme-d-validation-bundle-manifest.v2",
+ "status": "FROZEN_PRE_RUN_BUNDLE_NOT_AUTHORIZED_TO_RUN",
+ "supersedes": {
+  "bundle_manifest": "scripts/m32_scheme_d_validation_bundle_20260921/BUNDLE_MANIFEST.json",
+  "bundle_sha256": "0b42c6a38c3329eff6ec760176b682003ff993b0976d45588f72eebb4be78a3e",
+  "v1_manifest_file_sha256": "0b42c6a38c3329eff6ec760176b682003ff993b0976d45588f72eebb4be78a3e"
+ }
+}

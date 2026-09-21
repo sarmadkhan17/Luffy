@@ -1,0 +1,98 @@
+{
+ "codes": {
+  "C0": {
+   "entry_rule": {
+    "diagonal": "1",
+    "off_diagonal": "0"
+   },
+   "exact_factor_form_reproduces_all_384x384_entries": true,
+   "exact_minimum_eigenvalue": "1/1",
+   "factor_count": 0,
+   "implementation_loading_vs_exact_max_abs_error": null,
+   "matrix_float64_row_major_sha256": "6b90fe930edb637ed1b753363bb94f4aa0c0ebc3255af87ebdc2449a6265ced0",
+   "numeric_cholesky_succeeded": true,
+   "numeric_maximum_eigenvalue": "1.0000000000",
+   "numeric_minimum_eigenvalue": "1.0000000000",
+   "psd_proof": "Sigma = d*I + sum_k w_k s_k s_k^T with every w_k >= 0 and d > 0, so Sigma - d*I is a nonnegative combination of rank-one Gram matrices (PSD) and Sigma >= d*I > 0. The factor count is below 384, so Sigma - d*I is singular and lambda_min(Sigma) = d exactly.",
+   "residual_variance": "1/1",
+   "unit_variance_definition": "for every h: sum_k w_k s_k[h]^2 + d == 1 (exact)",
+   "unit_variance_identity": "1/1"
+  },
+  "C1": {
+   "entry_rule": {
+    "diagonal": "1",
+    "off_diagonal": "3/10"
+   },
+   "exact_factor_form_reproduces_all_384x384_entries": true,
+   "exact_minimum_eigenvalue": "7/10",
+   "factor_count": 1,
+   "implementation_loading_vs_exact_max_abs_error": null,
+   "matrix_float64_row_major_sha256": "0924bce973fa1722d8128defa9d7c871a2ed1393ff57d1b7f3b0414b237ab14d",
+   "numeric_cholesky_succeeded": true,
+   "numeric_maximum_eigenvalue": "115.9000000000",
+   "numeric_minimum_eigenvalue": "0.7000000000",
+   "psd_proof": "Sigma = d*I + sum_k w_k s_k s_k^T with every w_k >= 0 and d > 0, so Sigma - d*I is a nonnegative combination of rank-one Gram matrices (PSD) and Sigma >= d*I > 0. The factor count is below 384, so Sigma - d*I is singular and lambda_min(Sigma) = d exactly.",
+   "residual_variance": "7/10",
+   "unit_variance_definition": "for every h: sum_k w_k s_k[h]^2 + d == 1 (exact)",
+   "unit_variance_identity": "1/1"
+  },
+  "C2": {
+   "entry_rule": {
+    "diagonal": "1",
+    "off_diagonal": "7/10"
+   },
+   "exact_factor_form_reproduces_all_384x384_entries": true,
+   "exact_minimum_eigenvalue": "3/10",
+   "factor_count": 1,
+   "implementation_loading_vs_exact_max_abs_error": null,
+   "matrix_float64_row_major_sha256": "2a79295baa4eaf22569a233e1be4e0791173b3b48e497f210bcbce8c67dfb3d9",
+   "numeric_cholesky_succeeded": true,
+   "numeric_maximum_eigenvalue": "269.1000000000",
+   "numeric_minimum_eigenvalue": "0.3000000000",
+   "psd_proof": "Sigma = d*I + sum_k w_k s_k s_k^T with every w_k >= 0 and d > 0, so Sigma - d*I is a nonnegative combination of rank-one Gram matrices (PSD) and Sigma >= d*I > 0. The factor count is below 384, so Sigma - d*I is singular and lambda_min(Sigma) = d exactly.",
+   "residual_variance": "3/10",
+   "unit_variance_definition": "for every h: sum_k w_k s_k[h]^2 + d == 1 (exact)",
+   "unit_variance_identity": "1/1"
+  },
+  "C3": {
+   "entry_rule": {
+    "cross_cluster": "1/10",
+    "diagonal": "1",
+    "same_cluster": "7/10"
+   },
+   "exact_factor_form_reproduces_all_384x384_entries": true,
+   "exact_minimum_eigenvalue": "3/10",
+   "factor_count": 33,
+   "implementation_loading_vs_exact_max_abs_error": null,
+   "matrix_float64_row_major_sha256": "34fe79e070047adb054bdc9648c88fd02403267b64ffcfb11b8363cbcb3ed911",
+   "numeric_cholesky_succeeded": true,
+   "numeric_maximum_eigenvalue": "45.9000000000",
+   "numeric_minimum_eigenvalue": "0.3000000000",
+   "psd_proof": "Sigma = d*I + sum_k w_k s_k s_k^T with every w_k >= 0 and d > 0, so Sigma - d*I is a nonnegative combination of rank-one Gram matrices (PSD) and Sigma >= d*I > 0. The factor count is below 384, so Sigma - d*I is singular and lambda_min(Sigma) = d exactly.",
+   "residual_variance": "3/10",
+   "unit_variance_definition": "for every h: sum_k w_k s_k[h]^2 + d == 1 (exact)",
+   "unit_variance_identity": "1/1"
+  },
+  "C4": {
+   "entry_rule": {
+    "cross_sector": "-3/10",
+    "diagonal": "1",
+    "same_sector": "3/5"
+   },
+   "exact_factor_form_reproduces_all_384x384_entries": true,
+   "exact_minimum_eigenvalue": "2/5",
+   "factor_count": 2,
+   "implementation_loading_vs_exact_max_abs_error": 1.1102230246251565e-16,
+   "matrix_float64_row_major_sha256": "a200c02554bda3eb1b34733c7fce1b4ecb65bdda613c218347dbdd6a2c3dccd2",
+   "numeric_cholesky_succeeded": true,
+   "numeric_maximum_eigenvalue": "173.2000000000",
+   "numeric_minimum_eigenvalue": "0.4000000000",
+   "psd_proof": "Sigma = d*I + sum_k w_k s_k s_k^T with every w_k >= 0 and d > 0, so Sigma - d*I is a nonnegative combination of rank-one Gram matrices (PSD) and Sigma >= d*I > 0. The factor count is below 384, so Sigma - d*I is singular and lambda_min(Sigma) = d exactly.",
+   "residual_variance": "2/5",
+   "unit_variance_definition": "for every h: sum_k w_k s_k[h]^2 + d == 1 (exact)",
+   "unit_variance_identity": "1/1"
+  }
+ },
+ "family_size": 384,
+ "schema": "m3.2-scheme-d-covariance-psd-certificates.v1"
+}
