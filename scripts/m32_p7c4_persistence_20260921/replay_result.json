@@ -1,0 +1,35 @@
+{
+  "distinct_configuration": {
+    "gaussian_bound": true,
+    "hermite_order": true,
+    "precision": true,
+    "traversal": true
+  },
+  "interval_overlap_and_classification_checks": {
+    "A_non_target_classification": true,
+    "A_non_target_effect": true,
+    "A_non_target_masses": true,
+    "A_non_target_median": true,
+    "A_target_classification": true,
+    "A_target_effect": true,
+    "A_target_masses": true,
+    "A_target_median": true,
+    "B_non_target_classification": true,
+    "B_non_target_effect": true,
+    "B_non_target_masses": true,
+    "B_non_target_median": true,
+    "B_target_classification": true,
+    "B_target_effect": true,
+    "B_target_masses": true,
+    "B_target_median": true,
+    "population_MAD": true,
+    "population_masses": true,
+    "population_median": true
+  },
+  "largest_primary_effect_radius": 4.6586630222649334e-17,
+  "largest_replay_effect_radius": 1.0690674478882488e-20,
+  "primary_precision_bits": 224,
+  "replay_precision_bits": 384,
+  "result": "PASS",
+  "schema": "m32.p7-c4-persistence-higher-precision-replay-check.v1"
+}

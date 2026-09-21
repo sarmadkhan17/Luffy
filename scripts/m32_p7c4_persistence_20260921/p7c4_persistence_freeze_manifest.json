@@ -1,0 +1,48 @@
+{
+  "categorical_rework": false,
+  "classification": {
+    "A_non_target": {
+      "classification": "analytic_non_null",
+      "sign": 1
+    },
+    "A_target": {
+      "classification": "analytic_non_null",
+      "sign": 1
+    },
+    "B_non_target": {
+      "classification": "analytic_non_null",
+      "sign": 1
+    },
+    "B_target": {
+      "classification": "analytic_non_null",
+      "sign": 1
+    }
+  },
+  "frozen_on": "2026-09-21",
+  "persistence_truth_complete_for_p7_c4": true,
+  "primary_precision_bits": 224,
+  "protocol_changed": false,
+  "replay_precision_bits": 384,
+  "replay_result": "PASS",
+  "rng_used": false,
+  "schema": "m32.p7-c4-persistence-freeze-manifest.v1",
+  "scope": "P7/C4 persistence only; 24 targets (8 sector A, 16 sector B); four conditional medians, population median and MAD",
+  "sha256": {
+    "certify_p7c4_persistence.py": "07d70a9be18faaf455cb681185cc295f5f8c939afb446f3b993d09eefee7c35b",
+    "hermite_checkpoint_224.json": "b964223d26c1fcfe521fdfb66519bbfe25e5d2416311dcfc2f28fd103e5731e8",
+    "hermite_checkpoint_384.json": "2b0e9c01e68d278948c3e2ef71eceecdfaca783e4a718694e99eb5063f0773c0",
+    "p7c4_persistence_freeze_report.md": "b3ce869d3c932a38f8719c83746bfc8f124c6e176c8b2d7147e04e1047577c72",
+    "primary_certificate.json": "943e78a512daa759a53e8442511899a1e3dd4e9f2ed4b4772fb888f498af28be",
+    "replay_certificate.json": "87576ec81e2a03a606fe35649ee8d8f1aa45dfe27e8436a03479aa691bc2f508",
+    "replay_result.json": "fd030bdf5f06f4be8757cb7d2750bfe861adda205a07bf47ced4c6d8304c26fa",
+    "verify_p7c4_replay.py": "eb298e1710facb102d58a55949ce7c5c82fb42dda8ffc218ec1936cc0292489a"
+  },
+  "simulation_worlds_constructed": 0,
+  "source_sha256": {
+    "docs/superpowers/specs/2026-09-19-m32-scheme-d-actual-statistic-validation-protocol.md": "8b9e36c3767f5550607901b6410553fdab6d0b0c70e8d4c632e82eed0b59d7ac",
+    "docs/superpowers/specs/2026-09-20-m32-scheme-d-actual-statistic-validation-protocol-pre-rng-correction.md": "2e925ebaa5beea9a3d04e5c687406642d5305053a639edb16b27d3e970495163",
+    "trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61",
+    "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b"
+  },
+  "status": "ACCEPTED"
+}
