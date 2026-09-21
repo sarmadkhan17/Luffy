@@ -1,0 +1,1825 @@
+{
+ "base_dgp": "N1",
+ "null_mad_reference": {
+  "N1": "0.47472299235208826",
+  "gaussian": "0.6744897501960817"
+ },
+ "scenarios": [
+  {
+   "application_order": "ascending hypothesis index; persistence shifts deterministic (no RNG); categorical switches use injection stream 3 uniforms",
+   "assignments": [
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 0,
+     "new_class2_probability": "1/4",
+     "odds_ratio": "3/1",
+     "switch_probability": "1/6",
+     "target": "categorical",
+     "target_class_index": 2
+    }
+   ],
+   "role": "acceptance",
+   "scenario": "P1",
+   "scenario_code": 101,
+   "size": 1,
+   "targets": [
+    0
+   ],
+   "targets_by_label": {
+    "case_kind": 1
+   }
+  },
+  {
+   "application_order": "ascending hypothesis index; persistence shifts deterministic (no RNG); categorical switches use injection stream 3 uniforms",
+   "assignments": [
+    {
+     "effect": "shift",
+     "hypothesis": 128,
+     "magnitude_null_mad_units": "1",
+     "target": "persistence"
+    }
+   ],
+   "role": "acceptance",
+   "scenario": "P2",
+   "scenario_code": 102,
+   "size": 1,
+   "targets": [
+    128
+   ],
+   "targets_by_label": {
+    "persistence": 1
+   }
+  },
+  {
+   "application_order": "ascending hypothesis index; persistence shifts deterministic (no RNG); categorical switches use injection stream 3 uniforms",
+   "assignments": [
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 320,
+     "new_class2_probability": "1/4",
+     "odds_ratio": "3/1",
+     "switch_probability": "1/6",
+     "target": "categorical",
+     "target_class_index": 2
+    }
+   ],
+   "role": "acceptance",
+   "scenario": "P3",
+   "scenario_code": 103,
+   "size": 1,
+   "targets": [
+    320
+   ],
+   "targets_by_label": {
+    "continuation": 1
+   }
+  },
+  {
+   "application_order": "ascending hypothesis index; persistence shifts deterministic (no RNG); categorical switches use injection stream 3 uniforms",
+   "assignments": [
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 0,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 33,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 130,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 163,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 260,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 293,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 326,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 359,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    }
+   ],
+   "role": "acceptance",
+   "scenario": "P4",
+   "scenario_code": 104,
+   "size": 8,
+   "targets": [
+    0,
+    33,
+    130,
+    163,
+    260,
+    293,
+    326,
+    359
+   ],
+   "targets_by_label": {
+    "case_kind": 2,
+    "continuation": 4,
+    "persistence": 2
+   }
+  },
+  {
+   "application_order": "ascending hypothesis index; persistence shifts deterministic (no RNG); categorical switches use injection stream 3 uniforms",
+   "assignments": [
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 0,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 1,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 2,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 3,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 32,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 33,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 34,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 35,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 128,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 129,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 130,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 131,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 160,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 161,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 162,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 163,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 256,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 257,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 258,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 259,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 288,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 289,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 290,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 291,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 320,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 321,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 322,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 323,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 352,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 353,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 354,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 355,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    }
+   ],
+   "role": "acceptance",
+   "scenario": "P5",
+   "scenario_code": 105,
+   "size": 32,
+   "targets": [
+    0,
+    1,
+    2,
+    3,
+    32,
+    33,
+    34,
+    35,
+    128,
+    129,
+    130,
+    131,
+    160,
+    161,
+    162,
+    163,
+    256,
+    257,
+    258,
+    259,
+    288,
+    289,
+    290,
+    291,
+    320,
+    321,
+    322,
+    323,
+    352,
+    353,
+    354,
+    355
+   ],
+   "targets_by_label": {
+    "case_kind": 8,
+    "continuation": 16,
+    "persistence": 8
+   }
+  },
+  {
+   "application_order": "ascending hypothesis index; persistence shifts deterministic (no RNG); categorical switches use injection stream 3 uniforms",
+   "assignments": [
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 0,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 1,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 2,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 3,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 4,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 5,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 6,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 7,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 136,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 137,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 138,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 139,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 140,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 141,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 142,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 143,
+     "magnitude_null_mad_units": "1/2",
+     "target": "persistence"
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 272,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 273,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 274,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 275,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 276,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 277,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 278,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 279,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 344,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 345,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 346,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 347,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 348,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 349,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 350,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 351,
+     "new_class2_probability": "2/11",
+     "odds_ratio": "2/1",
+     "switch_probability": "1/11",
+     "target": "categorical",
+     "target_class_index": 2
+    }
+   ],
+   "role": "acceptance",
+   "scenario": "P6",
+   "scenario_code": 106,
+   "size": 32,
+   "targets": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    272,
+    273,
+    274,
+    275,
+    276,
+    277,
+    278,
+    279,
+    344,
+    345,
+    346,
+    347,
+    348,
+    349,
+    350,
+    351
+   ],
+   "targets_by_label": {
+    "case_kind": 8,
+    "continuation": 16,
+    "persistence": 8
+   }
+  },
+  {
+   "application_order": "ascending hypothesis index; persistence shifts deterministic (no RNG); categorical switches use injection stream 3 uniforms",
+   "assignments": [
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 0,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 1,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 2,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 3,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 4,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 5,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 6,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 7,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 8,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 9,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 10,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 11,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 12,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 13,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 14,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 15,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 16,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 17,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 18,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 19,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 20,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 21,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 22,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 23,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 136,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 137,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 138,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 139,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 140,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 141,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 142,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 143,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 144,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 145,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 146,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 147,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 148,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 149,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 150,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 151,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 152,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 153,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 154,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 155,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 156,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 157,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 158,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "effect": "shift",
+     "hypothesis": 159,
+     "magnitude_null_mad_units": "1/4",
+     "target": "persistence"
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 272,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 273,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 274,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 275,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 276,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 277,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 278,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 279,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 280,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 281,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 282,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 283,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 284,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 285,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 286,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 287,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 288,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 289,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 290,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 291,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 292,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 293,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 294,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 295,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 320,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 321,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 322,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 323,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 324,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 325,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 326,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 327,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 328,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 329,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 330,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 331,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 332,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 333,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 334,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 335,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 344,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 345,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 346,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 347,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 348,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 349,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 350,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    },
+    {
+     "base_class2_probability": "1/10",
+     "effect": "odds_ratio",
+     "hypothesis": 351,
+     "new_class2_probability": "1/7",
+     "odds_ratio": "3/2",
+     "switch_probability": "1/21",
+     "target": "categorical",
+     "target_class_index": 2
+    }
+   ],
+   "role": "sensitivity_only",
+   "scenario": "P7",
+   "scenario_code": 107,
+   "size": 96,
+   "targets": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    136,
+    137,
+    138,
+    139,
+    140,
+    141,
+    142,
+    143,
+    144,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    151,
+    152,
+    153,
+    154,
+    155,
+    156,
+    157,
+    158,
+    159,
+    272,
+    273,
+    274,
+    275,
+    276,
+    277,
+    278,
+    279,
+    280,
+    281,
+    282,
+    283,
+    284,
+    285,
+    286,
+    287,
+    288,
+    289,
+    290,
+    291,
+    292,
+    293,
+    294,
+    295,
+    320,
+    321,
+    322,
+    323,
+    324,
+    325,
+    326,
+    327,
+    328,
+    329,
+    330,
+    331,
+    332,
+    333,
+    334,
+    335,
+    344,
+    345,
+    346,
+    347,
+    348,
+    349,
+    350,
+    351
+   ],
+   "targets_by_label": {
+    "case_kind": 24,
+    "continuation": 48,
+    "persistence": 24
+   }
+  }
+ ],
+ "schema": "m3.2-scheme-d-effect-assignment-table.v1"
+}

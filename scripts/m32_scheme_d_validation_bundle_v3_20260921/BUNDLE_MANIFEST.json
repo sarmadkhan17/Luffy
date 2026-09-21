@@ -1,0 +1,81 @@
+{
+ "baseline_commit": "ab9e39683f5e9f756fc7ef6690133ecb5b608f64",
+ "bundle_revision": 3,
+ "clarification_addendum": {
+  "path": "docs/superpowers/specs/2026-09-21-m32-scheme-d-owner-clarifications-i1-i8.md",
+  "sha256": "09a70e84121e6b613732820f346f74c1fd53587f4c5dca300aa3eebb349471dc"
+ },
+ "fast_metric": {
+  "commit": "a43336d488deb86139b32c8335c36e7b951a2939",
+  "equivalence": {
+   "comparisons": 7592064,
+   "fixtures": 4529,
+   "mismatches": 0,
+   "statistic_vectors": 22314
+  },
+  "module": "trader/cognition/m32_fast_metric.py",
+  "reference": "trader/cognition/m32_search.py"
+ },
+ "files_sha256": {
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/artifacts/compute_projection.json": "a602b6b07fac1cd121127c53109f084d8a2db2c8b9346d5873831afb827f78d0",
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/artifacts/config.json": "f627d989309ca9077468bab097c5257f79a9001a5f1dcef1167ac5010ee8b278",
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/artifacts/covariance_psd.json": "660cd6f69d37475025c34993f5641f7287b67766059becf8bd7521baba895a1e",
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/artifacts/effect_assignment_table.json": "1153db3afc3bf6d6f23113a1128eae8f9d0819abec771b8db3f305de52e2b6a4",
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/artifacts/environment_lock.json": "4d9c4fcceec550bdc8113ab6002700bae24bd30958a78998ffa2e40e7b29742a",
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/artifacts/equivalence_receipt.json": "7a72a944e276971dcd0eb09c1f9a58e4d67d9a867dbe7624efb3aa010e5f4339",
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/artifacts/loadings.json": "8804acb74aa389bd0b61e09d9afaeedc3bdfb73dc7fda9da4a850b63b413ff45",
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/artifacts/membership_table.json": "2370f1a203bc345f06ef59038095ceb2cb8f025ef851d04f0ec966e841e0429e",
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/artifacts/preflight_report.json": "e9d5a2e963abaad9edd68ab6d9a2cc62f20e2d12691ee1dde117803a263c86b7",
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/build_bundle.py": "7365e35e465824c971293aa7e84d00a69cb8ded15dfb0f2f108df70bf1127651",
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/requirements.lock": "70611fe947ce6d8153b4ac394321bd31be6f157a64bf824d1e4f6d37ae005f53",
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/acceptance.py": "aa56bbf28c9334d4766f3e14ae5dbd2426a1a8413d9cc493c2574e338d34c95c",
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/preflight.py": "11ee6b42b266fe313534697f93df5c1fcd2feadd2bce9cb0cea83269b8e6d29a",
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/runner/scheme_d_runner.py": "6578265958d73ae7647fed94bd0860f3b7b588e13132c1e70dd66ef252e21063",
+  "scripts/m32_scheme_d_validation_bundle_v3_20260921/verify_bundle.py": "890072c91617beaf8d21e51f376655e18e10bfacc129a2fd14ad4e2ef28d1568"
+ },
+ "frozen_truth_commit": "7279ce0e4b9e245a00a45e69c6914d5d47d32903",
+ "frozen_truth_package": {
+  "freeze_json": "scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json",
+  "freeze_json_sha256": "f3b93fae43d1cae5d1c8e35c18c654232fcac8b9a0b2e15e7391f4e473ce651f",
+  "package_dir": "scripts/m32_scheme_d_pre_rng_truth_20260921/package",
+  "package_sha256": "a100a19c0d789acf42ab42e53355b4eb4d3827ddfbca866fb6a9231e6e7013eb",
+  "rows": 21120,
+  "unresolved_rows": 0
+ },
+ "implementation_hashes_protocol_section_2": {
+  "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7",
+  "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+  "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b"
+ },
+ "no_rng_no_seed_generation_no_worlds_no_search_no_gate2": true,
+ "pinned_inputs_sha256": {
+  "docs/superpowers/specs/2026-09-19-m32-scheme-d-actual-statistic-validation-protocol.md": "8b9e36c3767f5550607901b6410553fdab6d0b0c70e8d4c632e82eed0b59d7ac",
+  "docs/superpowers/specs/2026-09-20-m32-scheme-d-actual-statistic-validation-protocol-pre-rng-correction.md": "2e925ebaa5beea9a3d04e5c687406642d5305053a639edb16b27d3e970495163",
+  "docs/superpowers/specs/2026-09-21-m32-scheme-d-owner-clarifications-i1-i8.md": "09a70e84121e6b613732820f346f74c1fd53587f4c5dca300aa3eebb349471dc",
+  "scripts/m32_fast_metric_20260921/artifact_hashes.json": "4bd789b3d81a965997f1ff713fb22a1fed4fb67138592bb6655bbf7da2c21e89",
+  "scripts/m32_fast_metric_20260921/benchmark_fast_metric.py": "7eb17fe925f8d10f67fa5d94d5aae4093568c2bd7c057adf7d7c19b513635d19",
+  "scripts/m32_fast_metric_20260921/benchmark_result.json": "da7c26d7ea08bbdae13144703579f689b47d882b06faed3efc75f61deee58a1f",
+  "scripts/m32_fast_metric_20260921/equivalence_report.json": "435d6754198b430130f79a2e2651e4ff5117d2445dedd20f042db0195cafecb2",
+  "scripts/m32_fast_metric_20260921/equivalence_suite.py": "5cabfe07ae1c07ca0e631ba354976ada5ccf794128ba2d00fa9478869963e1b6",
+  "tests/test_m32_fast_metric_equivalence.py": "736bf8f381d7db3d53fb1c03932b30bf0fe441bdeb695861566a22f722c660af",
+  "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7",
+  "trader/cognition/m32_fast_metric.py": "892be0d02537b7ad1d353456a7a960e7181afefd6101983d47764944c95105d0",
+  "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+  "trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61",
+  "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b"
+ },
+ "schema": "m3.2-scheme-d-validation-bundle-manifest.v3",
+ "status": "FROZEN_PRE_RUN_BUNDLE_NOT_AUTHORIZED_TO_RUN",
+ "supersedes": {
+  "bundle_manifest": "scripts/m32_scheme_d_validation_bundle_v2_20260921/BUNDLE_MANIFEST.json",
+  "bundle_sha256": "397961d944f98f730eb723d537594d56428cf72db349449ad848678ad85f0c4e",
+  "earlier": [
+   {
+    "bundle_manifest": "scripts/m32_scheme_d_validation_bundle_20260921/BUNDLE_MANIFEST.json",
+    "bundle_sha256": "0b42c6a38c3329eff6ec760176b682003ff993b0976d45588f72eebb4be78a3e",
+    "manifest_file_sha256": "0b42c6a38c3329eff6ec760176b682003ff993b0976d45588f72eebb4be78a3e"
+   }
+  ],
+  "v2_manifest_file_sha256": "397961d944f98f730eb723d537594d56428cf72db349449ad848678ad85f0c4e"
+ }
+}

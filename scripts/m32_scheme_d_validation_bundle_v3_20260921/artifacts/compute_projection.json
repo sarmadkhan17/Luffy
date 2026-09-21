@@ -1,0 +1,47 @@
+{
+ "assumptions": [
+  "perfect linear scaling across vCPUs (embarrassingly parallel by world); add 10-20% for real overhead",
+  "excludes world generation, refusal evaluation and receipt writing (small per world)",
+  "measured single-core on a fixed synthetic full-geometry fixture, not a protocol world"
+ ],
+ "benchmark_result_sha256": "da7c26d7ea08bbdae13144703579f689b47d882b06faed3efc75f61deee58a1f",
+ "fast_seconds_per_draw_end_to_end": 0.0009771235617032894,
+ "fast_seconds_per_vector_statistic_only": 0.0009113767649978399,
+ "fixture": "synthetic full geometry (censoring-style masks, N1-like probabilities), fixture-only seed",
+ "hypotheses": 384,
+ "memory": {
+  "process_peak_rss_bytes": 91099136,
+  "process_peak_rss_mib": 86.87890625,
+  "tensor_bytes": 33940912,
+  "tracemalloc_peak_bytes": 40125705
+ },
+ "projection": {
+  "draws_per_world": 767999,
+  "fast_cpu_hours": 15635.932421778609,
+  "fast_cpu_years": 1.7837020786879545,
+  "per_world_fixed_seconds": 0.09386085724690929,
+  "reference_cpu_hours": 121850897.85605669,
+  "speedup_projected": 7793.0048921377975,
+  "worlds": 75000
+ },
+ "reference_seconds_per_vector": 7.615681116003543,
+ "rows": 3840,
+ "schema": "m3.2-fast-metric-compute-projection.v1",
+ "speedup_end_to_end_per_draw": 7793.979609629042,
+ "speedup_statistic_only": 8356.237956123003,
+ "throughput_draws_per_second_single_core": 1023.4120219727719,
+ "wall_time_estimate": {
+  "256": {
+   "days": 2.544910875940529,
+   "hours": 61.07786102257269
+  },
+  "4": {
+   "days": 162.87429606019384,
+   "hours": 3908.983105444652
+  },
+  "64": {
+   "days": 10.179643503762115,
+   "hours": 244.31144409029076
+  }
+ }
+}

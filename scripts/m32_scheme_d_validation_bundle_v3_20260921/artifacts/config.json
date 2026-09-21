@@ -1,0 +1,536 @@
+{
+ "acceptance": {
+  "calibration": {
+   "clopper_pearson_alpha": "1/6000",
+   "hypothesis_for_world": "w mod 384",
+   "refused_h_of_w": "world excluded from the ECDF denominator (owner decision I6)",
+   "t": [
+    "1/100",
+    "5/100",
+    "1/10"
+   ]
+  },
+  "fdr": {
+   "bootstrap_upper_max": 0.06,
+   "mean_max": 0.05,
+   "order_statistic": 9750,
+   "resamples": 10000,
+   "seed": "[2026091902, 30, correlation_code, scenario_code, 0, 4]"
+  },
+  "p7": "descriptive only",
+  "power": {
+   "P1_P3": {
+    "wilson_lower_min": 0.8
+   },
+   "P4": [
+    {
+     "at_least": 1,
+     "min": 0.9
+    },
+    {
+     "at_least": 4,
+     "min": 0.75
+    }
+   ],
+   "P5_P6": [
+    {
+     "at_least": 1,
+     "min": 0.95
+    },
+    {
+     "at_least": 16,
+     "min": 0.75
+    }
+   ]
+  },
+  "type_one": {
+   "point_max": 0.05,
+   "wilson_upper_max": 0.06
+  },
+  "wilson_z": 1.959964
+ },
+ "authority": {
+  "baseline_commit": "ab9e39683f5e9f756fc7ef6690133ecb5b608f64",
+  "clarification_addendum": "docs/superpowers/specs/2026-09-21-m32-scheme-d-owner-clarifications-i1-i8.md",
+  "clarification_addendum_sha256": "09a70e84121e6b613732820f346f74c1fd53587f4c5dca300aa3eebb349471dc",
+  "correction": "docs/superpowers/specs/2026-09-20-m32-scheme-d-actual-statistic-validation-protocol-pre-rng-correction.md",
+  "correction_sha256": "2e925ebaa5beea9a3d04e5c687406642d5305053a639edb16b27d3e970495163",
+  "frozen_truth_commit": "7279ce0e4b9e245a00a45e69c6914d5d47d32903",
+  "protocol": "docs/superpowers/specs/2026-09-19-m32-scheme-d-actual-statistic-validation-protocol.md",
+  "protocol_sha256": "8b9e36c3767f5550607901b6410553fdab6d0b0c70e8d4c632e82eed0b59d7ac"
+ },
+ "bundle_revision": 3,
+ "cells": {
+  "acceptance_partition": {
+   "null": 20,
+   "p1_p3_calibration": 10,
+   "p2_p4_p5_p6_power": 20,
+   "p7_sensitivity": 5
+  },
+  "null": {
+   "count": 20,
+   "worlds_each": 2000
+  },
+  "power": {
+   "count": 35,
+   "worlds_each": 1000
+  },
+  "worlds_total": 75000
+ },
+ "consumption_order": [
+  "data: coverage classes / masks / lags",
+  "membership: Z",
+  "data: common jumps",
+  "data: persistence noise",
+  "data: categorical labels",
+  "injection (power only)",
+  "observed statistics",
+  "permutation"
+ ],
+ "correlations": "artifacts/loadings.json, artifacts/covariance_psd.json",
+ "design": {
+  "block_days": 28,
+  "blocks": 48,
+  "class_rule": "integer counts: class = [5m >= T] + [5m >= 2T] + [5m >= 3T], m masked of T = 80 unique rows; half-open edges, no binary-float fraction",
+  "keys": 5,
+  "linked_copy_of_key_4": "moves with its block; excluded from every statistic, floor and support count",
+  "missing_fraction_class_edges": [
+   [
+    0,
+    0.2
+   ],
+   [
+    0.2,
+    0.4
+   ],
+   [
+    0.4,
+    0.6
+   ],
+   [
+    0.6,
+    1
+   ]
+  ],
+  "n0_orbit": "(8!)^4 * (4!)^4",
+  "quarter": "1 + (b mod 4)",
+  "regime": "(b // 3) mod 2",
+  "rows_per_block": 80,
+  "rows_per_world": 3840,
+  "strata_sizes": {
+   "(1,0)": 8,
+   "(1,1)": 4,
+   "(2,0)": 4,
+   "(2,1)": 8,
+   "(3,0)": 8,
+   "(3,1)": 4,
+   "(4,0)": 4,
+   "(4,1)": 8
+  },
+  "symbols": 16
+ },
+ "dgp": {
+  "N0": {
+   "categorical": [
+    "1/3",
+    "1/3",
+    "1/3"
+   ],
+   "missingness": "none",
+   "persistence": "gaussian"
+  },
+  "N1": {
+   "categorical": [
+    "13/20",
+    "1/4",
+    "1/10"
+   ],
+   "missingness": "none",
+   "persistence": "t3/sqrt(3) + common jump p=0.10 x 2*t3/sqrt(3)"
+  },
+  "N2": {
+   "categorical": [
+    "1/3",
+    "1/3",
+    "1/3"
+   ],
+   "coverage": {
+    "classes": 4,
+    "rates": [
+     "8/100",
+     "3/10",
+     "1/2",
+     "18/25"
+    ]
+   },
+   "membership_shift_by_realized_class": [
+    "0",
+    "2/5",
+    "4/5",
+    "6/5"
+   ],
+   "persistence": "gaussian",
+   "persistence_shift_null_mad_units_by_realized_class": [
+    "0",
+    "1/2",
+    "1",
+    "3/2"
+   ]
+  },
+  "N3": {
+   "categorical": [
+    "13/20",
+    "1/4",
+    "1/10"
+   ],
+   "censoring": "L = min(G-1, 5), G ~ Geometric(1/2) on {1,2,...}; keys 5-L..4 masked",
+   "membership_shift_by_quarter": [
+    "-4/5",
+    "-1/5",
+    "2/5",
+    "9/10"
+   ],
+   "membership_shift_regime1": "6/5",
+   "persistence": "t3/sqrt(3) + common jump",
+   "persistence_shift_null_mad_units_by_quarter": [
+    "9/10",
+    "-1/2",
+    "3/10",
+    "-1"
+   ],
+   "persistence_shift_regime1": "3/2"
+  }
+ },
+ "environment": {
+  "OPENBLAS_NUM_THREADS": "1",
+  "numpy": "2.5.2",
+  "python": "3.12.3"
+ },
+ "family": {
+  "clusters": 32,
+  "ranges": {
+   "case_kind": [
+    0,
+    127
+   ],
+   "persistence": [
+    128,
+    255
+   ],
+   "sequence": [
+    320,
+    383
+   ],
+   "transition": [
+    256,
+    319
+   ]
+  },
+  "sectors": 2,
+  "size": 384,
+  "table": "artifacts/membership_table.json",
+  "thresholds": {
+   "linked": "0.8416212335729143",
+   "state": "0.6744897501960817"
+  }
+ },
+ "fast_metric": {
+  "artifact_hashes": {
+   "path": "scripts/m32_fast_metric_20260921/artifact_hashes.json",
+   "sha256": "4bd789b3d81a965997f1ff713fb22a1fed4fb67138592bb6655bbf7da2c21e89"
+  },
+  "benchmark_result": {
+   "path": "scripts/m32_fast_metric_20260921/benchmark_result.json",
+   "sha256": "da7c26d7ea08bbdae13144703579f689b47d882b06faed3efc75f61deee58a1f"
+  },
+  "benchmark_script": {
+   "path": "scripts/m32_fast_metric_20260921/benchmark_fast_metric.py",
+   "sha256": "7eb17fe925f8d10f67fa5d94d5aae4093568c2bd7c057adf7d7c19b513635d19"
+  },
+  "commit": "a43336d488deb86139b32c8335c36e7b951a2939",
+  "equivalence": {
+   "comparison_level": "float64 bit patterns (uint64 view); None <-> untestable",
+   "comparisons": 7592064,
+   "coverage_counters": {
+    "categorical_vectors": 19384,
+    "fallback_vectors": 110,
+    "hit_ties": 1062344,
+    "nonhit_ties": 1049074,
+    "overall_ties": 3884,
+    "persistence_even": 873672,
+    "persistence_vectors": 18496,
+    "zero_lift": 794943
+   },
+   "fixtures": 4529,
+   "mismatches": 0,
+   "protocol_master_seed_used": false,
+   "sections": {
+    "adversarial_hand_built_fixtures": 64,
+    "compensated_sum_vs_builtin_sum": 2006000,
+    "exhaustive_tiny_geometry_fixtures": 1458,
+    "fallback_domain_fixtures": 3,
+    "full_geometry_fixtures": 4,
+    "randomized_fixed_seed_fixtures": 3000,
+    "reference_row_builder_vs_harness_arranged_rows": 3
+   },
+   "statistic_vectors": 22314,
+   "test_seed": 314159265,
+   "untestable_none_cases": 467069
+  },
+  "equivalence_report": {
+   "path": "scripts/m32_fast_metric_20260921/equivalence_report.json",
+   "sha256": "435d6754198b430130f79a2e2651e4ff5117d2445dedd20f042db0195cafecb2"
+  },
+  "equivalence_test": {
+   "path": "tests/test_m32_fast_metric_equivalence.py",
+   "sha256": "736bf8f381d7db3d53fb1c03932b30bf0fe441bdeb695861566a22f722c660af"
+  },
+  "fixture_seed_note": "randomized fixtures use fixture-only seed 314159265, never the protocol master seed or seed map",
+  "module": {
+   "path": "trader/cognition/m32_fast_metric.py",
+   "sha256": "892be0d02537b7ad1d353456a7a960e7181afefd6101983d47764944c95105d0"
+  },
+  "reference": {
+   "path": "trader/cognition/m32_search.py",
+   "sha256": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b"
+  },
+  "suite": {
+   "path": "scripts/m32_fast_metric_20260921/equivalence_suite.py",
+   "sha256": "5cabfe07ae1c07ca0e631ba354976ada5ccf794128ba2d00fa9478869963e1b6"
+  }
+ },
+ "frozen_truth_package": {
+  "consumed_unchanged": true,
+  "freeze_json": "scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json"
+ },
+ "injections": "artifacts/effect_assignment_table.json",
+ "master_seed": 2026091902,
+ "multiplicity": {
+  "exact_rule": "reject the k* smallest, k* = max k with 7680*(1+X_(k)) <= k*(B+1) (integer arithmetic)",
+  "m": 384,
+  "method": "BH step-up",
+  "q": "1/20",
+  "refused_p_value": null,
+  "refused_stay_in_denominator": true
+ },
+ "null_mad": {
+  "gaussian": "0.6744897501960817",
+  "t3_common_jump": "0.47472299235208826",
+  "t3_derivation": "deterministic Gauss-Legendre + bisection of the frozen mixture; verified by preflight and the independent verifier"
+ },
+ "owner_decisions": {
+  "addendum": "docs/superpowers/specs/2026-09-21-m32-scheme-d-owner-clarifications-i1-i8.md",
+  "decisions": [
+   {
+    "changed_vs_v1": false,
+    "changed_vs_v2": false,
+    "decision": "dependence group = block index; episode = unique row/episode identity",
+    "id": "I1",
+    "implementation": "unchanged from v1"
+   },
+   {
+    "changed_vs_v1": false,
+    "changed_vs_v2": false,
+    "decision": "permutation-invariant support accounting; observed support sufficient for the statistic to be defined",
+    "id": "I2",
+    "implementation": "unchanged from v1: matched/episodes/groups invariant; observed floor on the observed arrangement and on the worst-case slot bound; transition/sequence need worst-case observed >= 1"
+   },
+   {
+    "changed_vs_v1": true,
+    "changed_vs_v2": false,
+    "decision": "hypothesis-level refusal; a world with zero tested hypotheses is a refused world, excluded from Type-I/FDR and failed for power",
+    "id": "I3",
+    "implementation": "world_receipt returns world_refused=[no_tested_hypotheses]; counted in the world-refusal blocker"
+   },
+   {
+    "changed_vs_v1": false,
+    "changed_vs_v2": false,
+    "decision": "degenerate = the hypothesis outcome column is constant; an observed zero lift is valid evidence and is never refused",
+    "id": "I4",
+    "implementation": "unchanged from v1 (constant-column refusal only); recorded in the addendum"
+   },
+   {
+    "changed_vs_v1": false,
+    "changed_vs_v2": false,
+    "decision": "sampler order frozen through the hash-bound runner",
+    "id": "I5",
+    "implementation": "consumption_order below plus runner/scheme_d_runner.py hash"
+   },
+   {
+    "changed_vs_v1": true,
+    "changed_vs_v2": false,
+    "decision": "marginal-calibration worlds where h(w) is refused are excluded from the empirical CDF denominator",
+    "id": "I6",
+    "implementation": "acceptance.calibration_pass drops None entries"
+   },
+   {
+    "changed_vs_v1": false,
+    "changed_vs_v2": false,
+    "decision": "exact integer BH comparison",
+    "id": "I7",
+    "implementation": "unchanged from v1 (exact_bh)"
+   },
+   {
+    "changed_vs_v1": false,
+    "changed_vs_v2": true,
+    "decision": "reference _metric path only for the phase-90 benchmark; full-run optimized implementation needs the section 3 exact-equivalence proof and a separate benchmark",
+    "id": "I8",
+    "implementation": "v3: FastMetric with a recorded exact-equivalence suite (7,592,064 comparisons, 0 mismatches) behind a fail-closed gate; the separate optimized benchmark is still required before any full-run authorization (validation mode refuses without a measured runtime and benchmark receipt hash)"
+   },
+   {
+    "changed_vs_v1": true,
+    "changed_vs_v2": false,
+    "decision": "implement protocol section 5 half-open coverage classes without binary-float boundary ambiguity",
+    "id": "class_edge",
+    "implementation": "integer-count rule in runner.missing_class"
+   }
+  ],
+  "status": "DECIDED_2026-09-21"
+ },
+ "pinned_sources_sha256": {
+  "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7",
+  "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+  "trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61",
+  "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b"
+ },
+ "power_worlds": {
+  "base_dgp": "N1",
+  "pairing": "pre-injection family from streams 0 and 1 of tuple (20,c,P,w); injection from stream 3"
+ },
+ "refusal": {
+  "blocking_rate": "1/100 of worlds; 1/100 of (world, hypothesis) pairs over 384 x non-refused worlds",
+  "hypothesis_level_floors": {
+   "sequence": {
+    "episodes": 3,
+    "matched": 8
+   },
+   "state": {
+    "episodes": 3,
+    "matched": 12,
+    "observed": 8
+   },
+   "transition": {
+    "episodes": 3,
+    "matched": 8
+   }
+  },
+  "world_level": [
+   "frozen mismatch",
+   "invalid certificate",
+   "between-block dependence",
+   "footprint or link crossing",
+   "unconditioned drift",
+   "outcome-dependent missingness",
+   "omitted confounder",
+   "clock or link violation",
+   "family size != 384",
+   "movable blocks < 24 or movable strata < 3",
+   "orbit < 1,536,000 or 2/|G| > 1/768000",
+   "zero tested hypotheses (owner decision I3)"
+  ]
+ },
+ "rng": {
+  "bit_generator": "numpy.random.PCG64",
+  "constructed_by": "runner/scheme_d_runner.py::SeedRegistry.generator only",
+  "generator": "numpy.random.Generator",
+  "seeding": "numpy.random.SeedSequence([master, phase, correlation, dgp, world, stream])"
+ },
+ "sampling": {
+  "identity_included": true,
+  "movable_strata_only": true,
+  "p_value": "(1 + X) / (B + 1)",
+  "permutations_per_world": 767999,
+  "replacement_of_failed_draws": false,
+  "tie_rule": "T* >= T - 1e-12 * max(1, |T|)",
+  "with_replacement": true
+ },
+ "schema": "m3.2-scheme-d-validation-config.v3",
+ "seed_map": {
+  "benchmark_isolation": "phase 90 only; phases 10/20/30 refused outside an authorized validation run",
+  "bootstrap_stream_phase": 30,
+  "correlation_code": {
+   "C0": 0,
+   "C1": 1,
+   "C2": 2,
+   "C3": 3,
+   "C4": 4
+  },
+  "dgp_code_phase_10": {
+   "N0": 0,
+   "N1": 1,
+   "N2": 2,
+   "N3": 3
+  },
+  "dgp_code_phase_20": {
+   "P1": 101,
+   "P2": 102,
+   "P3": 103,
+   "P4": 104,
+   "P5": 105,
+   "P6": 106,
+   "P7": 107
+  },
+  "dgp_code_phase_30": "scenario code of the cell being checked",
+  "distinct_tuples": {
+   "checks_bootstrap": 30,
+   "null": 120000,
+   "power": 140000,
+   "total": 260030
+  },
+  "phase_code": {
+   "benchmark": 90,
+   "checks": 30,
+   "null": 10,
+   "power": 20
+  },
+  "stream_code": {
+   "bootstrap": 4,
+   "data": 0,
+   "injection": 3,
+   "membership": 1,
+   "permutation": 2
+  },
+  "tuple_materialisation": "none in this bundle; the runner registry rejects duplicates at run time",
+  "world_index": {
+   "checks": [
+    0,
+    0
+   ],
+   "null": [
+    0,
+    1999
+   ],
+   "power": [
+    0,
+    999
+   ]
+  }
+ },
+ "statistic": {
+  "function": "_metric",
+  "gate": "equivalence_gate_static (hashes + recorded receipt) then, in RNG modes, assert_equivalence_gate (bundle manifest, pinned inputs, recorded preflight PASS incl. live equivalence)",
+  "note": "The optimized statistic is bit-identical to the imported _metric on the recorded equivalence suite; the reference path is kept for the live bit-identity check of the phase-90 benchmark.",
+  "optimized_path": "trader.cognition.m32_fast_metric.FastMetric",
+  "path": "fast_metric_exact_equivalent",
+  "reference_path": "reference_metric_import",
+  "sha256": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+  "source": "trader/cognition/m32_search.py"
+ },
+ "status": "FROZEN_CONFIG_NOT_AUTHORIZED_TO_RUN",
+ "supersedes": {
+  "bundle_manifest": "scripts/m32_scheme_d_validation_bundle_v2_20260921/BUNDLE_MANIFEST.json",
+  "bundle_sha256": "397961d944f98f730eb723d537594d56428cf72db349449ad848678ad85f0c4e",
+  "earlier": [
+   {
+    "bundle_manifest": "scripts/m32_scheme_d_validation_bundle_20260921/BUNDLE_MANIFEST.json",
+    "bundle_sha256": "0b42c6a38c3329eff6ec760176b682003ff993b0976d45588f72eebb4be78a3e"
+   }
+  ]
+ },
+ "v3_changes": [
+  "statistic path = exact-equivalent FastMetric behind a hash/receipt gate",
+  "runner verifies pinned inputs (incl. the reference and optimized sources) on every RNG mode",
+  "phase-90 benchmark core: reference-vs-fast bit identity on the generated world, fast throughput, projection",
+  "validation authorization must carry a measured fast-benchmark runtime and receipt hash"
+ ]
+}

@@ -1,0 +1,4 @@
+# pinned runner environment (protocol section 14 item 7)
+python==3.12.3
+numpy==2.5.2
+env OPENBLAS_NUM_THREADS=1

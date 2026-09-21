@@ -33,6 +33,20 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 validation bundle revision 3 (FastMetric), September 21
+
+[Report](superpowers/reports/2026-09-21-m32-validation-bundle-v3.md), bundle
+`scripts/m32_scheme_d_validation_bundle_v3_20260921/`, **bundle-v3 SHA-256 `eab05d5d5acf1e4d435010b30005c9fda164da1b8c9fc0377502579c7d21dc01`**; supersedes v2
+(`397961d9…`) and v1 (both byte-identical). Integrates the exact-equivalent `FastMetric` (commit `a43336d`)
+behind a fail-closed hash/receipt/preflight gate; records 7,592,064 comparisons / 0 mismatches. Preflight
+33/33 (0 generator constructions); independent verifier PASS, including a full reproduction of the
+equivalence receipt and its own 147,456-comparison probe. Projection 15,636 CPU-hours: 4 vCPUs 162.9 days,
+64 vCPUs 10.2 days, 256 vCPUs 2.5 days. v2 semantics and the frozen truth package are unchanged. No protocol
+RNG, worlds, search, Gate 2, referee/handoff; no v3 authorization exists.
+**Single next task:** the owner decides whether to create a phase-90 benchmark-only authorization bound
+to the v3 SHA-256. A full-run authorization is not requestable until that optimized benchmark has run and
+deterministic world sharding exists.
+
 ### Latest: M3.2 optimized exact-equivalent metric, September 21
 
 [Report](superpowers/reports/2026-09-21-m32-fast-metric.md); module `trader/cognition/m32_fast_metric.py`,
