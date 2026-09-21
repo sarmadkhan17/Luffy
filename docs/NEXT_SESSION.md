@@ -33,6 +33,27 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 validation bundle assembled, September 21
+
+[Report](superpowers/reports/2026-09-21-m32-validation-bundle.md), bundle
+`scripts/m32_scheme_d_validation_bundle_20260921/BUNDLE_MANIFEST.json`, bundle
+SHA-256 `0b42c6a38c3329eff6ec760176b682003ff993b0976d45588f72eebb4be78a3e`. Assembled RNG-free on the frozen truth package (`7279ce0`, package
+`a100a19c…13eb`, consumed unchanged): config, 384-row membership table, P1-P7
+effect table, C0-C4 loadings, covariance matrices with exact PSD certificates
+(`lambda_min = d`), runner + acceptance evaluators, 22-check preflight (PASS, 0
+generator constructions), pinned environment lock (Python 3.12.3, NumPy 2.5.2,
+`OPENBLAS_NUM_THREADS=1`), import-isolation check. Independent verifier PASS; 12
+tamper cases rejected. Eight protocol gaps are fixed as flagged interpretations
+(I1-I8) for owner review. **The full run is infeasible as built** (reference
+statistic ~7.2 s per 384-hypothesis vector, about 13,000 CPU-years naive, fixture
+timing only); validation mode refuses without a measured runtime estimate. No RNG,
+seed tuples, benchmark, worlds, search, Gate 2 or protocol change.
+**Single next task:** owner review of the bundle and interpretations I1-I8, and a
+decision whether to authorize the phase-90 benchmark **only** (an owner-created
+authorization record bound to the bundle SHA-256). Full-run authorization is not
+requestable until a measured benchmark and an exact-equivalence-proven optimized
+statistic exist.
+
 ### Latest: M3.2 pre-RNG truth package FROZEN, September 21
 
 [FREEZE.json](../scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json) (git tag

@@ -1,0 +1,428 @@
+{
+ "acceptance": {
+  "calibration": {
+   "clopper_pearson_alpha": "1/6000",
+   "hypothesis_for_world": "w mod 384",
+   "t": [
+    "1/100",
+    "5/100",
+    "1/10"
+   ]
+  },
+  "fdr": {
+   "bootstrap_upper_max": 0.06,
+   "mean_max": 0.05,
+   "order_statistic": 9750,
+   "resamples": 10000,
+   "seed": "[2026091902, 30, correlation_code, scenario_code, 0, 4]"
+  },
+  "p7": "descriptive only",
+  "power": {
+   "P1_P3": {
+    "wilson_lower_min": 0.8
+   },
+   "P4": [
+    {
+     "at_least": 1,
+     "min": 0.9
+    },
+    {
+     "at_least": 4,
+     "min": 0.75
+    }
+   ],
+   "P5_P6": [
+    {
+     "at_least": 1,
+     "min": 0.95
+    },
+    {
+     "at_least": 16,
+     "min": 0.75
+    }
+   ]
+  },
+  "type_one": {
+   "point_max": 0.05,
+   "wilson_upper_max": 0.06
+  },
+  "wilson_z": 1.959964
+ },
+ "authority": {
+  "baseline_commit": "ab9e39683f5e9f756fc7ef6690133ecb5b608f64",
+  "correction": "docs/superpowers/specs/2026-09-20-m32-scheme-d-actual-statistic-validation-protocol-pre-rng-correction.md",
+  "correction_sha256": "2e925ebaa5beea9a3d04e5c687406642d5305053a639edb16b27d3e970495163",
+  "frozen_truth_commit": "7279ce0e4b9e245a00a45e69c6914d5d47d32903",
+  "protocol": "docs/superpowers/specs/2026-09-19-m32-scheme-d-actual-statistic-validation-protocol.md",
+  "protocol_sha256": "8b9e36c3767f5550607901b6410553fdab6d0b0c70e8d4c632e82eed0b59d7ac"
+ },
+ "cells": {
+  "acceptance_partition": {
+   "null": 20,
+   "p1_p3_calibration": 10,
+   "p2_p4_p5_p6_power": 20,
+   "p7_sensitivity": 5
+  },
+  "null": {
+   "count": 20,
+   "worlds_each": 2000
+  },
+  "power": {
+   "count": 35,
+   "worlds_each": 1000
+  },
+  "worlds_total": 75000
+ },
+ "consumption_order": [
+  "data: coverage classes / masks / lags",
+  "membership: Z",
+  "data: common jumps",
+  "data: persistence noise",
+  "data: categorical labels",
+  "injection (power only)",
+  "observed statistics",
+  "permutation"
+ ],
+ "correlations": "artifacts/loadings.json, artifacts/covariance_psd.json",
+ "design": {
+  "block_days": 28,
+  "blocks": 48,
+  "keys": 5,
+  "linked_copy_of_key_4": "moves with its block; excluded from every statistic, floor and support count",
+  "missing_fraction_class_edges": [
+   [
+    0,
+    0.2
+   ],
+   [
+    0.2,
+    0.4
+   ],
+   [
+    0.4,
+    0.6
+   ],
+   [
+    0.6,
+    1
+   ]
+  ],
+  "n0_orbit": "(8!)^4 * (4!)^4",
+  "quarter": "1 + (b mod 4)",
+  "regime": "(b // 3) mod 2",
+  "rows_per_block": 80,
+  "rows_per_world": 3840,
+  "strata_sizes": {
+   "(1,0)": 8,
+   "(1,1)": 4,
+   "(2,0)": 4,
+   "(2,1)": 8,
+   "(3,0)": 8,
+   "(3,1)": 4,
+   "(4,0)": 4,
+   "(4,1)": 8
+  },
+  "symbols": 16
+ },
+ "dgp": {
+  "N0": {
+   "categorical": [
+    "1/3",
+    "1/3",
+    "1/3"
+   ],
+   "missingness": "none",
+   "persistence": "gaussian"
+  },
+  "N1": {
+   "categorical": [
+    "13/20",
+    "1/4",
+    "1/10"
+   ],
+   "missingness": "none",
+   "persistence": "t3/sqrt(3) + common jump p=0.10 x 2*t3/sqrt(3)"
+  },
+  "N2": {
+   "categorical": [
+    "1/3",
+    "1/3",
+    "1/3"
+   ],
+   "coverage": {
+    "classes": 4,
+    "rates": [
+     "8/100",
+     "3/10",
+     "1/2",
+     "18/25"
+    ]
+   },
+   "membership_shift_by_realized_class": [
+    "0",
+    "2/5",
+    "4/5",
+    "6/5"
+   ],
+   "persistence": "gaussian",
+   "persistence_shift_null_mad_units_by_realized_class": [
+    "0",
+    "1/2",
+    "1",
+    "3/2"
+   ]
+  },
+  "N3": {
+   "categorical": [
+    "13/20",
+    "1/4",
+    "1/10"
+   ],
+   "censoring": "L = min(G-1, 5), G ~ Geometric(1/2) on {1,2,...}; keys 5-L..4 masked",
+   "membership_shift_by_quarter": [
+    "-4/5",
+    "-1/5",
+    "2/5",
+    "9/10"
+   ],
+   "membership_shift_regime1": "6/5",
+   "persistence": "t3/sqrt(3) + common jump",
+   "persistence_shift_null_mad_units_by_quarter": [
+    "9/10",
+    "-1/2",
+    "3/10",
+    "-1"
+   ],
+   "persistence_shift_regime1": "3/2"
+  }
+ },
+ "environment": {
+  "OPENBLAS_NUM_THREADS": "1",
+  "numpy": "2.5.2",
+  "python": "3.12.3"
+ },
+ "family": {
+  "clusters": 32,
+  "ranges": {
+   "case_kind": [
+    0,
+    127
+   ],
+   "persistence": [
+    128,
+    255
+   ],
+   "sequence": [
+    320,
+    383
+   ],
+   "transition": [
+    256,
+    319
+   ]
+  },
+  "sectors": 2,
+  "size": 384,
+  "table": "artifacts/membership_table.json",
+  "thresholds": {
+   "linked": "0.8416212335729143",
+   "state": "0.6744897501960817"
+  }
+ },
+ "frozen_truth_package": {
+  "consumed_unchanged": true,
+  "freeze_json": "scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json"
+ },
+ "injections": "artifacts/effect_assignment_table.json",
+ "interpretations_flagged_for_owner_review": [
+  {
+   "choice": "episode = unique row; dependence group = block index (the protocol's exchangeable unit)",
+   "id": "I1",
+   "topic": "episode and dependence group in synthetic rows",
+   "why": "support_accounting falls back to row_id for episodes and to one 'unknown' group, which would refuse every hypothesis"
+  },
+  {
+   "choice": "matched = matched unique rows; observed = matched rows observed; worst case = sum over matched slots of the minimum slot mask across blocks of the slot's stratum; transition/sequence additionally need worst-case observed >= 1",
+   "id": "I2",
+   "topic": "matched / observed floors and worst-case bound",
+   "why": "protocol gives the bound in words; metric must be defined for every draw"
+  },
+  {
+   "choice": "refuses all 384 hypotheses of the world (hypothesis-level)",
+   "id": "I3",
+   "topic": "blocks below 8 observed unique labels",
+   "why": "listed under hypothesis-level refusals"
+  },
+  {
+   "choice": "refused only when the outcome column is constant over observed rows (constant across the permutation group); an exactly zero observed lift is NOT refused",
+   "id": "I4",
+   "topic": "zero or degenerate centered statistic",
+   "why": "refusing zero lifts would refuse most categorical hypotheses under N1 and trip the 1% blocker"
+  },
+  {
+   "choice": "coverage, jumps, persistence noise, categorical labels",
+   "id": "I5",
+   "topic": "consumption order inside the data stream",
+   "why": "protocol orders jumps before outcomes only"
+  },
+  {
+   "choice": "the world stays in the ECDF denominator and its null p counts as not <= t",
+   "id": "I6",
+   "topic": "marginal calibration when h(w) is refused",
+   "why": "refusals never count as evidence"
+  },
+  {
+   "choice": "exact integer comparison instead of float p <= k*0.05/384",
+   "id": "I7",
+   "topic": "BH boundary arithmetic",
+   "why": "p can equal the threshold exactly (1+X = 100k)"
+  },
+  {
+   "choice": "reference path only (production _metric import); no vectorized rewrite, so no equivalence proof is needed or offered",
+   "id": "I8",
+   "topic": "statistic implementation",
+   "why": "section 3 forbids unproven rewrites"
+  }
+ ],
+ "master_seed": 2026091902,
+ "multiplicity": {
+  "exact_rule": "reject the k* smallest, k* = max k with 7680*(1+X_(k)) <= k*(B+1) (integer arithmetic)",
+  "m": 384,
+  "method": "BH step-up",
+  "q": "1/20",
+  "refused_p_value": null,
+  "refused_stay_in_denominator": true
+ },
+ "null_mad": {
+  "gaussian": "0.6744897501960817",
+  "t3_common_jump": "0.47472299235208826",
+  "t3_derivation": "deterministic Gauss-Legendre + bisection of the frozen mixture; verified by preflight and the independent verifier"
+ },
+ "pinned_sources_sha256": {
+  "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7",
+  "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+  "trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61",
+  "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b"
+ },
+ "power_worlds": {
+  "base_dgp": "N1",
+  "pairing": "pre-injection family from streams 0 and 1 of tuple (20,c,P,w); injection from stream 3"
+ },
+ "refusal": {
+  "blocking_rate": "1/100 of worlds; 1/100 of (world, hypothesis) pairs over 384 x non-refused worlds",
+  "hypothesis_level_floors": {
+   "sequence": {
+    "episodes": 3,
+    "matched": 8
+   },
+   "state": {
+    "episodes": 3,
+    "matched": 12,
+    "observed": 8
+   },
+   "transition": {
+    "episodes": 3,
+    "matched": 8
+   }
+  },
+  "world_level": [
+   "frozen mismatch",
+   "invalid certificate",
+   "between-block dependence",
+   "footprint or link crossing",
+   "unconditioned drift",
+   "outcome-dependent missingness",
+   "omitted confounder",
+   "clock or link violation",
+   "family size != 384",
+   "movable blocks < 24 or movable strata < 3",
+   "orbit < 1,536,000 or 2/|G| > 1/768000"
+  ]
+ },
+ "rng": {
+  "bit_generator": "numpy.random.PCG64",
+  "constructed_by": "runner/scheme_d_runner.py::SeedRegistry.generator only",
+  "generator": "numpy.random.Generator",
+  "seeding": "numpy.random.SeedSequence([master, phase, correlation, dgp, world, stream])"
+ },
+ "sampling": {
+  "identity_included": true,
+  "movable_strata_only": true,
+  "p_value": "(1 + X) / (B + 1)",
+  "permutations_per_world": 767999,
+  "replacement_of_failed_draws": false,
+  "tie_rule": "T* >= T - 1e-12 * max(1, |T|)",
+  "with_replacement": true
+ },
+ "schema": "m3.2-scheme-d-validation-config.v1",
+ "seed_map": {
+  "benchmark_isolation": "phase 90 only; phases 10/20/30 refused outside an authorized validation run",
+  "bootstrap_stream_phase": 30,
+  "correlation_code": {
+   "C0": 0,
+   "C1": 1,
+   "C2": 2,
+   "C3": 3,
+   "C4": 4
+  },
+  "dgp_code_phase_10": {
+   "N0": 0,
+   "N1": 1,
+   "N2": 2,
+   "N3": 3
+  },
+  "dgp_code_phase_20": {
+   "P1": 101,
+   "P2": 102,
+   "P3": 103,
+   "P4": 104,
+   "P5": 105,
+   "P6": 106,
+   "P7": 107
+  },
+  "dgp_code_phase_30": "scenario code of the cell being checked",
+  "distinct_tuples": {
+   "checks_bootstrap": 30,
+   "null": 120000,
+   "power": 140000,
+   "total": 260030
+  },
+  "phase_code": {
+   "benchmark": 90,
+   "checks": 30,
+   "null": 10,
+   "power": 20
+  },
+  "stream_code": {
+   "bootstrap": 4,
+   "data": 0,
+   "injection": 3,
+   "membership": 1,
+   "permutation": 2
+  },
+  "tuple_materialisation": "none in this bundle; the runner registry rejects duplicates at run time",
+  "world_index": {
+   "checks": [
+    0,
+    0
+   ],
+   "null": [
+    0,
+    1999
+   ],
+   "power": [
+    0,
+    999
+   ]
+  }
+ },
+ "statistic": {
+  "function": "_metric",
+  "note": "The runner imports the production _metric. No vectorized rewrite is included; the full protocol is not runnable at reference speed and validation mode refuses without a measured benchmark estimate.",
+  "optimized_path": null,
+  "path": "reference_metric_import",
+  "sha256": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+  "source": "trader/cognition/m32_search.py"
+ },
+ "status": "FROZEN_CONFIG_NOT_AUTHORIZED_TO_RUN"
+}

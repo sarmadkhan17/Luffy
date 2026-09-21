@@ -1,0 +1,222 @@
+{
+ "checks_passed": 22,
+ "checks_total": 22,
+ "result": "PASS",
+ "results": [
+  {
+   "check": "frozen_environment_and_sources",
+   "detail": {
+    "numpy": "2.5.2",
+    "openblas_threads": "1",
+    "python": "3.12.3",
+    "source_hashes": 3
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "family_design_and_membership_table",
+   "detail": {
+    "cluster_size": 12,
+    "clusters": 32,
+    "rows": 384
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "config_matches_runner_and_design",
+   "detail": {
+    "cells": 55,
+    "distinct_seed_tuples": 260030,
+    "worlds": 75000
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "effect_assignment_table_matches_pinned_sets",
+   "detail": {
+    "scenarios": 7,
+    "sizes": {
+     "P1": 1,
+     "P2": 1,
+     "P3": 1,
+     "P4": 8,
+     "P5": 32,
+     "P6": 32,
+     "P7": 96
+    }
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "null_mad_derivation",
+   "detail": {
+    "derived": 0.474722992352088,
+    "gaussian": 0.6744897501960817,
+    "t3_common_jump": 0.47472299235208826
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "loadings_and_covariance_psd",
+   "detail": {
+    "exact_min_eigenvalue": {
+     "C0": "1/1",
+     "C1": "7/10",
+     "C2": "3/10",
+     "C3": "3/10",
+     "C4": "2/5"
+    }
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "metric_equivalence_fixtures",
+   "detail": {
+    "bit_identical": true,
+    "hypotheses_compared": 384,
+    "permuted": true
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "bh_exact_with_refusals_in_denominator",
+   "detail": {
+    "boundary_p": "1/7680",
+    "denominator": 384
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "p_value_and_tie_rule",
+   "detail": {
+    "floor": "1/768000",
+    "tolerance": 1e-12
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "with_replacement_sampling_includes_identity",
+   "detail": {
+    "identity_allowed": true,
+    "strata": 8
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "orbit_floor_and_strata",
+   "detail": {
+    "approx": "8.769e+23",
+    "n0_orbit": "876853541939718389760000"
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "invalid_case_refusals_all_100_percent",
+   "detail": {
+    "cases": 15,
+    "refused": 15
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "hypothesis_level_refusals",
+   "detail": {
+    "reasons_exercised": 7
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "seed_map_and_registry_gates",
+   "detail": {
+    "distinct_tuples": 260030,
+    "gates": "authorization/phase/stream/duplicate"
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "authorization_records_fail_closed",
+   "detail": {
+    "missing": true,
+    "wrong_hash": true,
+    "wrong_mode": true
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "exclusive_create_behaviour",
+   "detail": {
+    "collision_refused": true
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "import_isolation_and_network_block",
+   "detail": {
+    "denied_modules_loaded": 0,
+    "socket_creation_blocked": true,
+    "trader_modules_loaded": 4
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "static_scan_rng_and_imports",
+   "detail": {
+    "runner_imports": [
+     "__future__",
+     "acceptance",
+     "argparse",
+     "collections",
+     "fractions",
+     "hashlib",
+     "json",
+     "math",
+     "numpy",
+     "os",
+     "pathlib",
+     "preflight",
+     "sys",
+     "time",
+     "trader"
+    ]
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "acceptance_evaluators",
+   "detail": {
+    "clopper_pearson": "exact",
+    "p7": "descriptive",
+    "wilson": "verified"
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "world_generation_and_injection_logic_with_stub",
+   "detail": {
+    "cells_generated_with_stub": 20
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "receipt_pipeline_with_stub",
+   "detail": {
+    "receipt_hashing": true,
+    "refused_world": "link_crossing"
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "frozen_truth_package_consumed_unchanged",
+   "detail": {
+    "package_sha256": "a100a19c0d789acf42ab42e53355b4eb4d3827ddfbca866fb6a9231e6e7013eb",
+    "rows": 21120
+   },
+   "result": "PASS"
+  }
+ ],
+ "rng_constructed": false,
+ "rng_construction_attempts": 0,
+ "schema": "m3.2-scheme-d-preflight-report.v1",
+ "seed_tuples_materialised": 0,
+ "worlds_generated_from_random_generator": 0
+}
