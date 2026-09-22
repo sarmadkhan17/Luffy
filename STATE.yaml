@@ -1,130 +1,222 @@
 project: LUFFY
-sdd_version: v3-draft
-updated_at: '2026-09-19'
-status: PROVISIONAL
+sdd_version: '3.1'
+updated_at: '2026-09-22'
+status: EVIDENCE_BASED
 
 progress_method:
   rule: Progress is acceptance-evidence based, not code-volume based.
-  maturity_states:
-    - DEFINED
-    - IMPLEMENTED
-    - TESTED
-    - SHADOW
-    - PROVEN
-    - ACTIVE
-    - DEGRADED
-    - RETIRED
-  provisional_rule: Any capability not fully reconciled against the local repo remains PROVISIONAL.
-
-overall:
-  progress_pct: 55
-  production_readiness_pct: 58
-  intelligence_progress_pct: 34
-  research_progress_pct: 48
-  trading_core_progress_pct: 78
-  safety_progress_pct: 74
-  confidence: LOW-MEDIUM
-  note: Recalculate after full local repository reconciliation.
+  maturity_states: [DEFINED, IMPLEMENTED, TESTED, SHADOW, PROVEN, ACTIVE, DEGRADED, RETIRED]
+  evidence_rule: Every state claim must cite current repository code/tests/artifacts or be marked UNKNOWN/MISSING.
+  scoring_rule: No percentage progress scores are authoritative.
 
 capabilities:
 
-  data_and_provenance:
-    weight: 8
-    state: TESTED
-    progress_pct: 78
-    confidence: MEDIUM
-
-  market_perception:
-    weight: 6
-    state: IMPLEMENTED
-    progress_pct: 68
-    confidence: MEDIUM
-
-  attention_engine:
-    weight: 6
-    state: IMPLEMENTED
-    progress_pct: 45
-    confidence: LOW
-
-  world_model:
-    weight: 10
-    state: DEFINED
-    progress_pct: 15
-    confidence: MEDIUM
-
-  hypothesis_and_critic:
-    weight: 9
-    state: DEFINED
-    progress_pct: 25
-    confidence: MEDIUM
-
-  autonomous_research_intelligence:
-    weight: 12
-    state: IMPLEMENTED
-    progress_pct: 48
-    confidence: MEDIUM
-
-  strategy_discovery_and_validation:
-    weight: 10
-    state: TESTED
-    progress_pct: 72
-    confidence: MEDIUM-HIGH
-
-  opportunity_and_expression:
-    weight: 6
-    state: DEFINED
-    progress_pct: 28
-    confidence: MEDIUM
-
-  capital_allocation_and_portfolio:
-    weight: 10
-    state: DEFINED
-    progress_pct: 22
-    confidence: MEDIUM
-
-  risk_authority:
-    weight: 8
-    state: TESTED
-    progress_pct: 82
-    confidence: MEDIUM-HIGH
-
   execution_and_reconciliation:
-    weight: 8
     state: TESTED
-    progress_pct: 84
-    confidence: HIGH
+    evidence:
+      - trader/engine/executor.py
+      - trader/engine/reconcile.py
+      - trader/engine/recovery.py
+      - trader/engine/protective.py
+    proven_facts:
+      - durable ambiguous-entry recovery exists
+      - exchange-first position reconciliation exists
+      - orphan/ghost handling exists
+      - missing protective-stop detection/re-arm logic exists
+    gaps:
+      - unified RECOVERY control state from SDD v3.1 is not yet implemented
+      - supervisor orchestration across recovery stages is not yet unified
+
+  control_state:
+    state: IMPLEMENTED
+    evidence:
+      - trader/engine/state.py
+    proven_facts:
+      - ACTIVE/FROZEN/HALTED are persisted and journaled
+    gaps:
+      - RECOVERY state from SDD v3.1 is missing
+
+  strategy_spec_and_live_parity:
+    state: TESTED
+    evidence:
+      - trader/strategy/spec.py
+      - trader/strategy/compile.py
+      - trader/engine/exits.py
+      - scripts/backtest_equivalence.py
+      - tests/test_compile.py
+      - tests/test_vector_backtest.py
+    proven_facts:
+      - StrategySpec is compiled into the live evaluator path
+      - live spec exits are derived from the strategy spec
+      - equivalence harness exists for backtest/live-engine semantics
+      - derivative-backed live/vector signal parity has explicit tests
+    gaps:
+      - immutable family/version/spec_hash approval binding from SDD v3.1 is not yet established end-to-end
+
+  research_and_referee:
+    state: TESTED
+    evidence:
+      - trader/research/runner.py
+      - trader/research/referee.py
+      - trader/research/evaluate.py
+      - trader/research/growth.py
+      - trader/research/ledger.py
+    proven_facts:
+      - discovery and held-out evaluation paths exist
+      - held-out gate1 and book-level gate3 exist
+      - candidate state referee_passed exists
+    gaps:
+      - research-to-live approval/handoff is not yet the finalized SDD v3.1 path
+      - M3.2 Scheme-D v4 correction work is still pending
+
+  strategy_decay_and_lifecycle:
+    state: TESTED
+    evidence:
+      - trader/strategy/rolling.py
+      - trader/strategy/promotion.py
+    proven_facts:
+      - recent selection and decay logic are separate
+      - legacy genome lifecycle no longer governs kind=spec rows
+    gaps:
+      - Strategy Governor as one explicit authority/service is not yet established
+
+  attention:
+    state: IMPLEMENTED
+    evidence:
+      - trader/cognition/attention.py
+      - trader/observability/attention.py
+    proven_facts:
+      - current GitHub repository contains cognition attention code
+      - attention produces structured observations and selection reasons
+    gaps:
+      - SDD v3.1 dynamic full connected-account universe is not yet proven
+      - final integration with Opportunity Context is not yet implemented
+
+  investigation:
+    state: IMPLEMENTED
+    evidence:
+      - trader/cognition/investigation.py
+      - trader/observability/investigation.py
+    proven_facts:
+      - episode_id and investigation_id exist
+      - investigations persist updates and terminal state
+    gaps:
+      - separate lightweight trading Opportunity registry from SDD v3.1 is not yet implemented
+
+  operator_api_and_auth:
+    state: IMPLEMENTED
+    evidence:
+      - trader/api/graphql_schema.py
+      - trader/dashboard/auth.py
+      - trader/dashboard/server.py
+    proven_facts:
+      - protected GraphQL API exists
+      - DASH_TOKEN and signed dashboard session exist
+      - same-origin checks exist
+      - control mutations exist
+    gaps:
+      - Needs You approval objects are not yet implemented
+      - authenticated narrow remote-gateway API is not yet implemented
+      - actor identity is still partly caller-supplied in mutations
+
+  luffy_chat:
+    state: IMPLEMENTED
+    evidence:
+      - trader/chat/agent.py
+      - trader/chat/engine.py
+      - trader/chat/tools.py
+      - trader/brain/llm.py
+    proven_facts:
+      - read-only tool-calling chat exists
+      - current LLM client is provider-swappable through OpenAI-compatible base_url
+      - token budgets by purpose exist
+    gaps:
+      - deterministic/fast/deep router from SDD v3.1 is not yet implemented
+      - chat identity remains crypto-centric in current prompts
+      - no finalized Needs You integration
+
+  accounting_and_truth:
+    state: IMPLEMENTED
+    evidence:
+      - trader/engine/accounting.py
+      - trader/engine/trade_accounting.py
+      - trader/engine/reconcile.py
+    proven_facts:
+      - venue reconciliation paths exist
+    gaps:
+      - exact SDD v3.1 exchange-authoritative accounting contract is not yet proven across all monetary fields
 
   memory_and_knowledge:
-    weight: 7
     state: IMPLEMENTED
-    progress_pct: 58
-    confidence: MEDIUM
+    evidence:
+      - trader/knowledge/
+      - trader/observability/memory.py
+      - graphify-out/
+    gaps:
+      - final layered owner-facing Knowledge/Evidence/Timeline/Code model is not yet proven
+      - hot/warm/cold historical-intelligence architecture is not yet fully established
 
-  explanation_and_operator_interface:
-    weight: 4
+  world_model:
+    state: DEFINED
+    evidence:
+      - SDD.md
+    gaps:
+      - no repo evidence yet of a complete first-class shared hierarchical world model
+
+  opportunity_context:
+    state: DEFINED
+    evidence:
+      - SDD.md
+    gaps:
+      - coherent frozen Opportunity Context object is not yet implemented
+
+  portfolio_allocation:
+    state: DEFINED
+    evidence:
+      - SDD.md
+      - existing risk/orchestrator code provides partial inputs
+    gaps:
+      - final lightweight Portfolio Allocator authority from SDD v3.1 is not yet implemented/proven
+      - one-asset-one-real-position rule is not yet proven end-to-end
+
+  process_isolation_and_secrets:
+    state: DEFINED
+    evidence:
+      - trader/core/config.py
+      - trader/kernel.py
+    proven_facts:
+      - current kernel still runs multiple background duties as daemon threads
+      - current secrets are loaded from repo-level .env
+    gaps:
+      - Core/Research/UI/Gateway isolation is not yet implemented
+      - per-service least-privilege secrets are not yet implemented
+      - Clawd/gateway filesystem and credential isolation is not yet implemented
+
+  monitoring_and_recovery:
     state: IMPLEMENTED
-    progress_pct: 52
-    confidence: MEDIUM
+    evidence:
+      - trader/engine/watchdog.py
+      - trader/engine/recovery.py
+      - trader/engine/reconcile.py
+    gaps:
+      - unified Supervisor authority and RECOVERY state are not yet implemented
 
-  monitoring_and_alerting:
-    weight: 5
-    state: IMPLEMENTED
-    progress_pct: 62
-    confidence: MEDIUM
+current_active_work:
+  id: M3.2-SCHEME-D-V4
+  status: PARKED
+  reason: Astra session limit was reached during the v4 correction task.
+  next_action: Resume the already-defined v4 correction task when Astra is available.
+  constraints:
+    - do not run RNG validation
+    - do not spend cloud money
+    - leave v1/v2/v3 and frozen truth package untouched
 
-  autonomous_learning_and_adaptation:
-    weight: 7
-    state: IMPLEMENTED
-    progress_pct: 50
-    confidence: MEDIUM
+known_stale_docs:
+  - REQUIREMENTS.md contains older frozen decisions and is not the current architecture authority.
+  - LUFFY_Official_Solution_Design_v3.md duplicates an older SDD snapshot and is not the authority.
+  - NEXT.yaml prior A1 rationale about cognition code being absent from GitHub is stale.
 
-critical_blockers:
-  - Full local repository reconciliation is not complete.
-  - World model is not yet a first-class shared system.
-  - Autonomous Research Intelligence is incomplete.
-  - Global capital allocation/portfolio optimization is incomplete.
-  - Progress percentages remain provisional until the local codebase is audited.
-
-next_audit:
-  id: A1
-  name: Full local repository reconciliation
+authority:
+  target: SDD.md
+  current_state: STATE.yaml
+  immediate_work: NEXT.yaml
