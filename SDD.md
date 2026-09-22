@@ -1,9 +1,9 @@
-# LUFFY Official Solution Design (SD) v3.0
+# LUFFY Official Solution Design (SD) v3.1
 
 **Status:** Official Target Architecture - Freeze Candidate  
 **Purpose:** Single build authority for AI development agents  
 **Target:** Autonomous multi-market trading intelligence and execution system  
-**Date:** 2026-09-19
+**Date:** 2026-09-22
 
 > This document defines the LUFFY we want to build. It is not a manual for the current codebase. AI agents are expected to read the codebase themselves. Existing implementation appears only in the final migration section so agents can measure progress against the target.
 
@@ -11,7 +11,7 @@
 
 # 1. System Mission / End Goal
 
-LUFFY is an autonomous multi-market trading intelligence system whose primary economic objective is to **maximize absolute profit within owner-defined risk limits**.
+LUFFY is an autonomous multi-market trading intelligence system whose primary economic objective is to **maximize sustainable net account growth and capital efficiency within owner-defined survival constraints**. Cash/no-trade is a valid outcome; LUFFY has no trade-count or daily-profit quota.
 
 LUFFY must continuously:
 
@@ -42,9 +42,9 @@ These are product decisions, not implementation suggestions.
 
 ## 2.1 Objective
 
-Primary optimization objective: **maximize expected absolute profit** subject to hard risk constraints and capital-survival rules.
+Primary optimization objective: **maximize sustainable expected net account growth and capital efficiency** subject to owner-defined survival constraints.
 
-Risk is a constraint, not the objective function. LUFFY must not maximize Sharpe at the expense of materially lower absolute profit unless the owner later changes the objective.
+Risk is a constraint on growth, not a substitute objective. Risk-adjusted measures are diagnostics and decision inputs; they must not create a hidden mandate to maximize Sharpe or force trading. Cash/no-trade is valid whenever expected net economic value is insufficient.
 
 ## 2.2 Market scope
 
@@ -60,7 +60,7 @@ Ultimate scope: any legally/technically accessible market, including where appro
 - options only after dedicated pricing/Greeks/volatility/risk support exists;
 - additional market types added through adapters and validation.
 
-Availability is discovered from venue capability data, never assumed from symbol names or marketing materials.
+Availability is discovered dynamically from the connected venue/account capability and eligibility data, never assumed from symbol names, static watchlists, or marketing materials. Every instrument actually available to the connected account remains part of the eligible universe unless a deterministic safety/data/account constraint makes it temporarily non-executable. Attention prioritizes compute; it does not redefine the tradable universe.
 
 ## 2.3 Capital range
 
@@ -81,7 +81,7 @@ Within owner-defined limits LUFFY may autonomously:
 - create/reconfigure intelligence components that fit the approved architecture;
 - recalibrate models and thresholds where the SD explicitly allows adaptation.
 
-A newly validated strategy requires **owner approval before its first real-money deployment**. After approval, LUFFY may manage its allocation automatically within risk limits.
+A newly validated strategy requires **owner approval before its first real-money deployment**. Approval binds to the exact immutable strategy version/spec hash and its evidence receipt; a materially changed version requires a new first-live approval. After approval, LUFFY may manage allocation, pause, reactivate, and retire that approved version automatically within owner limits.
 
 ## 2.5 Architecture and production-code changes
 
@@ -95,9 +95,9 @@ Architecture/code changes are then designed by development agents and approved b
 
 Risk-limit changes require owner approval. LUFFY may recommend changes but cannot expand hard risk boundaries itself.
 
-Absolute account drawdown hard stop: **20%** from high-water mark, owner-configurable.
+Exact hard percentages and catastrophe/drawdown thresholds belong to a **versioned owner risk policy**, not to the architecture itself. The active policy is authoritative and must be bound to decisions for replay.
 
-Capital-preservation mode is required before the catastrophe limit is reached when evidence indicates abnormal risk or system uncertainty.
+Capital-preservation mode is required before the active catastrophe boundary is reached when evidence indicates abnormal risk or system uncertainty.
 
 ## 2.7 Research/data spending
 
@@ -247,9 +247,16 @@ Research must never starve the live core.
 
 ## 5.2 Deployment principle
 
-Begin with the smallest reliable topology: one live kernel process plus operator/dashboard process if needed, local durable databases, and background workers where safe.
+Begin with the smallest reliable topology and scale out only when measured resource contention, data volume, availability, or security boundaries justify it.
 
-Scale out only when measured resource contention, data volume, or availability requirements justify it.
+The target runtime separates four logical process groups:
+
+1. **Trading Core** — live market state, Attention, analysts, Decision, Risk, Execution, Exit, reconciliation, supervisor, hot state.
+2. **Research/Learning** — research, experiments, validation, strategy building, learning, scraping/crawling; lower resource priority than live trading.
+3. **UI/API** — dashboard, grounded LUFFY conversation, read/query interfaces.
+4. **Remote Gateway** — Telegram and optional future gateways such as Clawd; no trading credentials.
+
+These are logical isolation boundaries, not a mandate for microservices. Components may initially coexist where safe. Research/scraping/crawling must never starve or crash the Trading Core.
 
 ## 5.3 Technology baseline
 
@@ -349,6 +356,18 @@ capability version
 ```
 
 All internal portfolio/risk logic uses canonical IDs rather than raw venue strings.
+
+## 6.5 Events, commands and provenance
+
+LUFFY distinguishes **events** (facts that happened) from **commands** (requests to do something). Cross-component communication uses typed, versioned contracts rather than arbitrary internal calls.
+
+Where relevant, envelopes carry:
+
+`event_id | type | event_time | source | symbol/instrument_id | cycle/decision/opportunity reference | schema_version | payload`
+
+Existing `cycle_id -> decision_id -> trade/outcome` lineage remains canonical where it already provides the required trace. A higher-level opportunity identifier may group several cycles that belong to the same evolving setup; it references evidence rather than duplicating it.
+
+Material decisions must be reconstructible from persisted provenance.
 
 ---
 
@@ -769,7 +788,7 @@ For equity curve `E_t`:
 
 `MDD = max_t DD_t`
 
-Hard owner stop: `MDD >= 20%` => no new risk; enter halt/capital-preservation behavior as defined by risk state.
+Hard catastrophe/drawdown boundaries come from the active versioned owner risk policy. When a hard boundary is reached, no new risk is permitted and LUFFY enters the policy-defined halt/capital-preservation behavior.
 
 ## 13.5 Null models
 
@@ -864,8 +883,10 @@ A strategy is an executable, testable mapping from approved information to trade
 Minimum fields:
 
 ```text
-strategy_id
-version
+strategy_family_id
+strategy_version_id
+parent_version_id
+spec_hash
 hypothesis/research references
 instrument/universe rules
 timeframe/horizon
@@ -879,13 +900,15 @@ validated evidence
 capacity estimate
 ```
 
+A strategy version is immutable. Material changes to entry, exit, required features, timeframe/horizon, or invalidation create a new version rather than silently rewriting the deployed artifact.
+
 ## 14.2 Single creation path
 
 There is one authoritative path:
 
-`research/idea -> strategy specification -> quantitative validation -> shadow/paper -> owner approval for first real deployment -> active`
+`research/idea -> strategy specification -> quantitative validation/referee -> freeze immutable spec + evidence receipt -> shadow/paper -> approval required -> owner approval for exact version/hash -> active`
 
-No scraper, LLM, dashboard, or legacy component may directly inject an unvalidated strategy into live eligibility.
+Research never writes directly into live execution authority. No scraper, LLM, dashboard, or legacy component may directly inject an unvalidated strategy into live eligibility. Live activation must load the exact approved strategy hash; if it cannot reproduce that artifact, activation is refused.
 
 ## 14.3 Strategy states
 
@@ -923,6 +946,10 @@ For each executable candidate, estimate:
 - portfolio interaction;
 - uncertainty.
 
+Before Decision, LUFFY builds one coherent **Opportunity Context** for the asset/setup. It contains the current market/feature state, relevant timeframes, strategy candidates, required and available analyst evidence, regime, costs, supporting/opposing evidence, freshness/quality, and portfolio/risk context. Strategies declare required analysts/features, optional analysts/features, and freshness limits. Missing optional evidence does not block; missing required evidence does.
+
+The context is frozen with the decision/rejection so LUFFY can later answer what it knew at that time.
+
 ## 15.1 Required economic edge
 
 A new position requires positive expected net value after expected costs and an uncertainty reserve.
@@ -947,11 +974,17 @@ At minimum retain:
 - regime fit;
 - execution/liquidity confidence.
 
+Analyst reliability is contextual rather than one global score: where evidence supports it, reliability is tracked by asset/asset class, timeframe, regime, signal type, direction, and strategy family. Reliability changes evidence weight; it does not turn an analyst into ground truth. Updates are conservative and require sufficient independent evidence.
+
 A calibrated composite score may be produced for sizing/ranking, but components remain visible.
 
 ## 15.3 Position expression
 
 Current target supports directional single-instrument positions as the primary unit.
+
+For the connected personal account, **one asset/instrument has one real account position**. Multiple same-direction strategies strengthen supporting evidence; they do not create independently stacked strategy-owned positions. Opposing strategies remain recorded as conflict/learning evidence.
+
+The winning strategy supplies the direction, proposed size, and approved exit plan for a new position. After entry, changing confidence does not continuously resize the position. Exposure changes occur only through the approved trade plan or safety/risk actions such as planned scale-in, partial exit, stop/trail/invalidation, or emergency protection.
 
 Multi-leg/pair/basket expressions are allowed as a future capability only when they clearly add value and the dedicated execution/risk architecture is implemented. They must not complicate the initial system merely because they are theoretically attractive.
 
@@ -965,7 +998,7 @@ Cash/no-trade is an explicit candidate. It wins whenever no opportunity offers s
 
 LUFFY optimizes the whole portfolio, not individual trades independently.
 
-Objective: maximize expected absolute profit subject to owner risk constraints, capacity, liquidity, margin, and evidence quality.
+Objective: maximize sustainable expected net account growth and capital efficiency subject to owner survival constraints, capacity, liquidity, margin, and evidence quality.
 
 ## 16.1 Opportunity score
 
@@ -1046,7 +1079,7 @@ Risk is deterministic and cannot be bypassed by LLMs or strategies.
 - per-instrument/asset/cluster concentration;
 - daily/period loss limits;
 - drawdown de-risking;
-- 20% hard drawdown stop;
+- owner-defined catastrophe/drawdown boundary from the active versioned risk policy;
 - stale-data protection;
 - venue-health protection;
 - order-size/precision constraints;
@@ -1097,7 +1130,7 @@ Required capabilities:
 
 ## 18.1 Venue truth
 
-When local journal and venue disagree, query the venue.
+When local journal and venue disagree, the venue is authoritative for monetary and position truth where the venue exposes that truth: fills, executed quantity/price, commissions/fees, funding, open position quantity, order/stop state, balance/equity, and realized P&L where available. Raw venue receipts are preserved. LUFFY derives only metrics the venue does not provide, such as R, MFE/MAE, entry-edge quality, exit efficiency, strategy attribution, counterfactuals, and decision lineage. Discrepancies produce explicit reconciliation evidence; they are never silently overwritten.
 
 ## 18.2 Protection
 
@@ -1274,14 +1307,17 @@ Do not use an LLM for:
 - indicator calculations;
 - known statistical formulas.
 
-## 22.3 Cost hierarchy
+## 22.3 LLM router and cost hierarchy
 
-Use:
+Before every LLM call ask: **can structured data, arithmetic, statistics, or deterministic rules answer this correctly?** If yes, do not call an LLM.
 
-1. deterministic filter;
-2. metadata/search relevance;
-3. small/cheap model where needed;
-4. deep reasoning only for high-value questions.
+Use three levels:
+
+1. **Deterministic/no LLM** — live trading, risk, execution, accounting, routine factual owner queries, known calculations and structured reasons.
+2. **Fast/bounded model** — concise explanation, unstructured extraction, hypothesis wording, or synthesis where deterministic tools are insufficient.
+3. **Deep reasoning model** — only for genuinely difficult research/reasoning tasks or when the owner explicitly requests deeper analysis.
+
+Normal live trading requires zero LLM calls. LLM/provider outage must not stop safe live operation.
 
 ## 22.4 Budgeting
 
@@ -1391,7 +1427,13 @@ The owner must be able to ask:
 
 Responses must be grounded in journal/research/memory records, not invented narrative.
 
-Natural-language control maps into the same typed commands as dashboard/API controls.
+Primary operator navigation target:
+
+`Overview | Trades | Research | Strategies | LUFFY | Operations | Live System | Knowledge | Diagnostics`
+
+**Needs You** appears on Overview whenever owner action is pending. Full approval discussion/evidence lives in LUFFY; serious incidents and owner-decision alerts are also sent through Telegram when configured. LUFFY chat stays concise by default and links to evidence/details rather than dumping them into conversation: **LUFFY speaks; the dashboard proves.**
+
+Natural-language control maps into the same typed commands as dashboard/API controls. Deterministic/simple emergency commands may be available conversationally, but configuration/governance changes use explicit structured owner actions.
 
 ---
 
@@ -1408,7 +1450,12 @@ Minimum requirements:
 - external code/snippets treated as untrusted;
 - research tools cannot directly call live execution;
 - runtime LLM cannot obtain a raw unrestricted shell;
-- destructive operations use explicit typed commands.
+- destructive operations use explicit typed commands;
+- production secrets are least-privilege per service/process rather than one shared global environment;
+- a remote gateway such as Clawd must not receive Binance/execution credentials, read LUFFY secret files/directories, access the LUFFY repository/database arbitrarily, or obtain Docker/host-level escape paths;
+- remote gateways communicate through a narrow authenticated Owner Interface API with only their required scopes.
+
+Compromise of the remote gateway must not imply compromise of exchange credentials.
 
 ---
 
@@ -1426,9 +1473,17 @@ Protect:
 
 Backups are off-host, integrity-checked, and periodically restore-tested.
 
-After catastrophic restart:
+The deterministic control-state model includes:
 
-`restore -> query venue truth -> reconcile -> verify protection -> validate data -> start FROZEN -> resume entries only after health passes`
+`ACTIVE | FROZEN | HALTED | RECOVERY`
+
+`RECOVERY` means LUFFY is rebuilding/reconciling and cannot accept new entries. A process restart never implies that trading is safe.
+
+After a serious fault or catastrophic restart:
+
+`detect -> contain/freeze -> RECOVERY -> query venue truth -> reconcile -> rebuild state -> verify every open position/protection -> validate data/health -> ACTIVE or Needs You`
+
+Minor/transient failures may auto-recover when safety is provable. Uncertain venue state, unrecoverable protection, repeated execution/reconciliation failure, critical-state corruption, or recovery that cannot prove safety remains FROZEN/RECOVERY and requires owner action before returning ACTIVE.
 
 Every material decision must bind an artifact/config/version set sufficient for exact replay.
 
@@ -1609,7 +1664,7 @@ Build:
 - portfolio optimizer;
 - replacement/opportunity-cost logic.
 
-**Exit:** LUFFY selects among competing opportunities based on whole-book expected absolute profit under risk limits rather than taking every independent signal.
+**Exit:** LUFFY selects among competing opportunities based on whole-book sustainable expected net growth/capital efficiency under owner survival limits rather than taking every independent signal.
 
 ## Stage 7 - Learning and Closed Loop
 
@@ -1707,7 +1762,7 @@ Target architecture, rules, methods, and delivery sequence.
 Compact current status. Example:
 
 ```yaml
-sdd_version: '3.0'
+sdd_version: '3.1'
 capabilities:
   world_model:
     state: IMPLEMENTED
@@ -1750,7 +1805,7 @@ Pass when LUFFY can create/test/retire strategies itself through the one pipelin
 
 ## 33.6 Portfolio optimizer
 
-Pass when new opportunities are evaluated incrementally against existing book, common-factor concentration, liquidity, capacity, opportunity cost, and cash, and decisions maximize expected absolute profit subject to hard risk.
+Pass when new opportunities are evaluated incrementally against the existing book, common-factor concentration, liquidity, capacity, opportunity cost, and cash, and decisions maximize sustainable expected net growth/capital efficiency subject to owner survival constraints.
 
 ## 33.7 Risk/execution safety
 
@@ -1863,7 +1918,7 @@ When the mandatory target is complete, LUFFY can:
 - recognize multiple positions as one common-factor exposure;
 - allocate capital globally rather than trade every signal;
 - keep cash when no opportunity is economically worthwhile;
-- protect capital through deterministic risk with a 20% hard owner drawdown stop;
+- protect capital through deterministic risk and the active owner-defined catastrophe/drawdown policy;
 - reconcile with real venue state after faults/restarts;
 - learn from trades and non-trades;
 - remember failed research so it does not repeatedly waste time and money;
