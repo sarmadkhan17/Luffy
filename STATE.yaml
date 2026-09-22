@@ -1,6 +1,6 @@
 project: LUFFY
 sdd_version: '3.1'
-updated_at: '2026-09-22'
+updated_at: '2026-09-23'
 status: EVIDENCE_BASED
 
 progress_method:
@@ -67,7 +67,7 @@ capabilities:
       - candidate state referee_passed exists
     gaps:
       - research-to-live approval/handoff is not yet the finalized SDD v3.1 path
-      - M3.2 Scheme-D v4 correction work is still pending
+      - M3.2 Scheme-D v4 is frozen and shard-integrated but has no validation authorization (see current_active_work)
 
   strategy_decay_and_lifecycle:
     state: TESTED
@@ -203,13 +203,31 @@ capabilities:
 
 current_active_work:
   id: M3.2-SCHEME-D-V4
-  status: PARKED
-  reason: Astra session limit was reached during the v4 correction task.
-  next_action: Resume the already-defined v4 correction task when Astra is available.
+  state: TESTED
+  status: DETERMINISTIC_INTEGRATION_QUALIFIED_NOT_AUTHORIZED_TO_RUN
+  evidence:
+    - docs/superpowers/reports/2026-09-22-m32-validation-bundle-v4.md
+    - docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-shard-integration.md
+    - scripts/m32_scheme_d_sharding_v4_20260923/LAYER_MANIFEST.json
+    - scripts/m32_scheme_d_qualification_v4_20260923/QUALIFICATION_RECEIPT.json
+    - tests/test_m32_shard_layer_v4.py
+  proven_facts:
+    - v4 bundle frozen at 079e8b5c590429aeb0ca5c7b0b261328291c6b2e (tag m32-scheme-d-v4-freeze); bundle SHA a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023
+    - v4 shard layer integrated at 2324c4186a062eba2d9c1b70fd5c1a2d9d3adf8a; dispatches injection on has_scenario so P1/P3 perturbed_null cells keep injection
+    - focused shard tests tests/test_m32_shard_layer_v4.py - 23 passed
+    - deterministic qualification PASS at 4d3a0ae195cf7ae1eca9b536b5cb4c309c9afd0a; receipt SHA 5055e9d8998cf6a524663982133b8fb668acfbc05e15fb2bc8d7526bd031cb41
+    - RNG constructor attempts 0, random variates requested 0, validation worlds generated 0
+    - no authorization minted; production/full validation authorization is false
+    - v1/v2/v3 bundles, v3 shard layer and frozen truth package unchanged
+  blockers:
+    - owner review of the v4 preparation exception (40 RNG objects constructed by one draft test; no variates drawn)
+    - measured v4 benchmark/runtime evidence (runtime_estimate_cpu_hours + fast_benchmark_receipt_sha256) before any full-validation authorization; v3 benchmark/projection artifacts are not reusable and a v4 benchmark needs owner-authorized RNG
+    - full v4 host/filesystem/performance qualification (multi-process exclusivity, worker scaling, shared mount); qualify_v4 is single-host in-process deterministic binding only
+    - v4-bound owner validation authorization binding bundle_sha256, shard_layer_sha256 and shard_worlds; v3 authorizations/pilot are refused or non-transferable
   constraints:
-    - do not run RNG validation
+    - do not run RNG validation or benchmarks without explicit owner authorization
     - do not spend cloud money
-    - leave v1/v2/v3 and frozen truth package untouched
+    - leave v1/v2/v3, frozen v4 and frozen truth package untouched
 
 known_stale_docs:
   - REQUIREMENTS.md contains older frozen decisions and is not the current architecture authority.
