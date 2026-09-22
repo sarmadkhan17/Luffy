@@ -1,44 +1,71 @@
 project: LUFFY
-sdd_version: v3-draft
+sdd_version: '3.1'
 
 work_package:
-  id: A1-REPO-RECONCILIATION
-  type: AUDIT
+  id: M3.2-SCHEME-D-V4-CORRECTION
+  type: QUANT_VALIDATION_INFRA
   priority: CRITICAL
-  status: READY
+  status: PARKED
 
   objective: >
-    Reconcile the actual local LUFFY repository against the target SDD
-    and STATE.yaml.
+    Build the v4 Scheme-D validation bundle that corrects the stale v3
+    acceptance/runner treatment of P1 and P3 while preserving the frozen
+    truth package, RNG identities, generators, FastMetric behavior, and
+    prior v1/v2/v3 artifacts.
 
-  why_now: >
-    Progress cannot be trusted until local/newer code is mapped.
-    Local Graphify already contains code not visible in the GitHub snapshot.
+  authority:
+    correction_spec: docs/superpowers/specs/2026-09-20-m32-scheme-d-actual-statistic-validation-protocol-pre-rng-correction.md
 
-  instructions:
-    - Use the local repository as implementation truth.
-    - Read SDD.md for target capabilities and architectural boundaries.
-    - Use Graphify code-only first.
-    - Read source only where required.
-    - Do not redesign LUFFY during this audit.
-    - Classify every capability as KEEP, HARDEN, EXTEND, REFACTOR, REPLACE, or MISSING.
-    - Give exact files/classes/functions supporting each classification.
-    - Find implemented capabilities missing from STATE.yaml.
-    - Find STATE.yaml claims unsupported by local code.
-    - Exclude legacy/dead/duplicate paths from progress.
-    - Do not modify production code.
+  verified_problem:
+    - Frozen truth marks P1/P3 as true-null perturbed calibration cells.
+    - P1/P3 are not power alternatives.
+    - Current v3 acceptance.py still includes scenario ids 101/103 in POWER_RULES.
+    - Current v3 FDR_SCENARIOS still includes 101/103.
+    - Current v3 runner cell_plan marks P1-P7 as power.
+    - Therefore v3 acceptance semantics conflict with the frozen correction spec.
+
+  required_v4_behavior:
+    - P1/P3 keep seed identity and injection generation but are role perturbed_null/calibration.
+    - P1/P3 use Type-I/false-positive acceptance only.
+    - P1/P3 have no power gate.
+    - P1/P3 have no mixed-null bootstrap-FDR gate.
+    - P1/P3 have no marginal-p calibration gate.
+    - P2/P4/P5/P6 remain power plus FDR.
+    - P7 remains descriptive.
+    - N0-N3 remain ordinary null plus marginal calibration.
+    - Preserve 55 cells and 75000 worlds.
+    - Preserve frozen generators, injection logic, FastMetric, truth package, RNG mapping, BH/refusal/effect definitions.
+
+  required_tests:
+    - POWER_RULES excludes 101 and 103.
+    - FDR_SCENARIOS excludes 101 and 103.
+    - P1/P3 cell plan role is perturbed_null/calibration.
+    - P1/P3 injection generation still occurs.
+    - Any P1/P3 rejection is counted as a false positive.
+    - Zero P1/P3 rejections passes the calibration gate.
+    - Excessive P1/P3 rejections fail the calibration gate.
+    - v3 remains byte-for-byte untouched.
+    - v4 preflight is RNG-free and fail-closed.
+
+  execution_constraints:
+    - Do not run RNG validation.
+    - Do not run cloud compute.
+    - Do not spend money.
+    - Do not modify frozen truth artifacts.
+    - Do not modify v1/v2/v3 bundles.
+    - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
   deliverables:
-    - Capability-by-capability reconciliation report
-    - Correct maturity state for every capability
-    - Correct evidence references
-    - Local-only code inventory
-    - Stale documentation assumptions
-    - Recommended first implementation work package
+    - New v4 Scheme-D validation bundle.
+    - v4 manifest/checksums.
+    - Deterministic tests.
+    - RNG-free preflight result.
+    - Report of changed files, tests, preflight result, v4 SHA and blockers.
 
-  acceptance:
-    - Every STATE capability has real local-code evidence or is marked MISSING.
-    - Local cognition/attention/replay code is fully mapped.
-    - No progress score depends only on old documentation.
-    - Dead and legacy paths are excluded from progress.
-    - STATE.yaml can be corrected without guessing.
+  parked_reason: >
+    Astra High session limit was reached during this task. Resume the existing
+    task when Astra is available; do not redesign it.
+
+after_completion:
+  - Update STATE.yaml with the verified v4 evidence.
+  - Re-evaluate whether any architecture implementation package should start.
