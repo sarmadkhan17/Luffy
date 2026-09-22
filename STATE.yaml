@@ -210,6 +210,8 @@ current_active_work:
     - docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-shard-integration.md
     - scripts/m32_scheme_d_sharding_v4_20260923/LAYER_MANIFEST.json
     - scripts/m32_scheme_d_qualification_v4_20260923/QUALIFICATION_RECEIPT.json
+    - scripts/m32_scheme_d_phase90_fast_benchmark_v4_20260923/benchmark_summary.json
+    - docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-fast-benchmark.md
     - tests/test_m32_shard_layer_v4.py
   proven_facts:
     - v4 bundle frozen at 079e8b5c590429aeb0ca5c7b0b261328291c6b2e (tag m32-scheme-d-v4-freeze); bundle SHA a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023
@@ -217,15 +219,16 @@ current_active_work:
     - focused shard tests tests/test_m32_shard_layer_v4.py - 23 passed
     - deterministic qualification PASS at 4d3a0ae195cf7ae1eca9b536b5cb4c309c9afd0a; receipt SHA 5055e9d8998cf6a524663982133b8fb668acfbc05e15fb2bc8d7526bd031cb41
     - RNG constructor attempts 0, random variates requested 0, validation worlds generated 0
-    - no authorization minted; production/full validation authorization is false
-    - owner reviewed and accepted the documented v4 preparation exception on 2026-09-23; the historical audit remains unchanged and this acceptance grants no execution authorization
+    - no validation authorization minted; production/full validation authorization is false
+    - owner reviewed and accepted the documented v4 preparation exception on 2026-09-23; the historical audit remains unchanged and this acceptance grants no validation authorization
+    - owner authorized and completed one local-CPU phase-90 v4 benchmark only; benchmark evidence commit 137ca2f, authorization SHA f0c9cccf45aedbe893d17afd3b126abc9f8f0c32ed376b894ad9bf53274bdba4, receipt SHA f70ace0a02ab6187647ecc33446238cf5ba9dbe97320194ea75f32876972f23e
+    - benchmark measured 975.4548174287327 draws/s/core and projected 16406.782531828467 CPU-hours; bitwise identity PASS; no cloud and no validation run
     - v1/v2/v3 bundles, v3 shard layer and frozen truth package unchanged
   blockers:
-    - measured v4 benchmark/runtime evidence (runtime_estimate_cpu_hours + fast_benchmark_receipt_sha256) before any full-validation authorization; v3 benchmark/projection artifacts are not reusable and a v4 benchmark needs owner-authorized RNG
     - full v4 host/filesystem/performance qualification (multi-process exclusivity, worker scaling, shared mount); qualify_v4 is single-host in-process deterministic binding only
     - v4-bound owner validation authorization binding bundle_sha256, shard_layer_sha256 and shard_worlds; v3 authorizations/pilot are refused or non-transferable
   constraints:
-    - do not run RNG validation or benchmarks without explicit owner authorization
+    - do not run additional RNG benchmarks or any validation without explicit owner authorization
     - do not spend cloud money
     - leave v1/v2/v3, frozen v4 and frozen truth package untouched
 
