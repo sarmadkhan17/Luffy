@@ -1,0 +1,36 @@
+{
+  "schema": "m3.2-scheme-d-pilot-verdict.v1",
+  "date": "2026-09-22",
+  "verdict": "GO",
+  "scope": "non-final pilot only; does not satisfy full Scheme D validation or Gate 2",
+  "bindings": {
+    "pilot_prespec_sha256": "e31be86a16b1abfb55ae329ccd4c22a37056d572ea59afdb4e53489d3d602ff2",
+    "authorization_sha256": "38926ce3d273a6fdd3f5973280359dc9496378a7d26dcc804c1a7e598fca9b5a",
+    "run_result_sha256": "968f7ee1f637e686138dbc32c0319ca905923c87b57e24d3fb35efd3b6fcf828",
+    "merge_manifest_sha256": "d5d2c24a26ef5d1d0c29928592aefb58b2eca353e7dc51b3e99dfa87a5ab4718"
+  },
+  "integrity": {
+    "shards_complete": 16,
+    "shards_total": 16,
+    "integrity_stop": false,
+    "world_refusal_rate": 0.0
+  },
+  "null_cells": {
+    "N0/C0_type_one_rate": 0.0,
+    "N3/C4_type_one_rate": 0.05
+  },
+  "positive_cells": {
+    "P1/C0": {
+      "median_signed_target_lift": 0.0,
+      "positive_worlds": 0,
+      "worlds": 20
+    },
+    "P6/C4": {
+      "median_signed_target_lift": 0.13311869,
+      "positive_worlds": 20,
+      "worlds": 20,
+      "attribution_errors": 6874
+    }
+  },
+  "interpretation": "Pilot GO criterion satisfied by P6/C4. Scheme D shows sufficient signal to justify targeted further validation. Full validation remains unsatisfied, with attribution contamination requiring investigation."
+}
