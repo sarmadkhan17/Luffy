@@ -117,7 +117,7 @@ def test_v4_tampered_runner_file_is_refused_before_any_import(tmp_path):
     runner_copy.write_bytes(runner_copy.read_bytes() + b"\n# tampered\n")
     m = fresh_v4_layer()
     m.BUNDLE = tampered_root / V4_BUNDLE_DIR.relative_to(ROOT)
-    with pytest.raises(SL.ShardError, match=r"v4_hash_binding_mismatch:scheme_d_runner\.py"):
+    with pytest.raises(m.ShardError, match=r"v4_hash_binding_mismatch:scheme_d_runner\.py"):
         m.runner()
     assert "module" not in m._RUNNER                                   # refused before caching anything
 
@@ -132,7 +132,7 @@ def test_v4_tampered_bundle_manifest_is_refused():
             (tampered_root / "BUNDLE_MANIFEST.json").read_bytes() + b" ")
         m = fresh_v4_layer()
         m.BUNDLE = tampered_root
-        with pytest.raises(SL.ShardError, match=r"v4_hash_binding_mismatch:BUNDLE_MANIFEST\.json"):
+        with pytest.raises(m.ShardError, match=r"v4_hash_binding_mismatch:BUNDLE_MANIFEST\.json"):
             m.runner()
 
 

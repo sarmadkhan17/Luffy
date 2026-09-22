@@ -1,0 +1,81 @@
+{
+ "authorization_minted": false,
+ "bindings": {
+  "scripts/m32_scheme_d_validation_bundle_v4_20260922/BUNDLE_MANIFEST.json": "a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023",
+  "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/acceptance.py": "a575c07fcef86948c50467dc1f32a7bdba1ea32d78a3897b0e2eb1d4569d7ec1",
+  "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/scheme_d_runner.py": "7e4d693bdaffc7cf35370fe3425858ea195fc70eb0c6425c4461836008410548"
+ },
+ "check_order": [
+  "own_hash_bindings",
+  "v3_untouched",
+  "equivalence_gate_static",
+  "fixture_canary"
+ ],
+ "checks": {
+  "equivalence_gate_static": {
+   "detail": {
+    "bundle_sha256": "a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023",
+    "comparisons": 7592064,
+    "mismatches": 0,
+    "module_sha256": "892be0d02537b7ad1d353456a7a960e7181afefd6101983d47764944c95105d0",
+    "reference_sha256": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+    "shard_layer_sha256": "5e322153c62b103d00e9e898b30df4efc2031ea66c7144b79d5037b4d03c2170",
+    "suite_sha256": "5cabfe07ae1c07ca0e631ba354976ada5ccf794128ba2d00fa9478869963e1b6"
+   },
+   "status": "PASS"
+  },
+  "fixture_canary": {
+   "detail": {
+    "merge_deterministic_sha256": "5befd22ac017358f5bdb28f2173c403d5b5aa3066637c5f0de2aa72e5f252553",
+    "overall_cells_evaluated": 3,
+    "shards": 3,
+    "worlds": 5
+   },
+   "status": "PASS"
+  },
+  "own_hash_bindings": {
+   "detail": {
+    "checked": [
+     "scripts/m32_scheme_d_validation_bundle_v4_20260922/BUNDLE_MANIFEST.json",
+     "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/acceptance.py",
+     "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/scheme_d_runner.py"
+    ],
+    "problems": []
+   },
+   "status": "PASS"
+  },
+  "v3_untouched": {
+   "detail": {
+    "files_checked": 13,
+    "freeze_commit": "079e8b5c590429aeb0ca5c7b0b261328291c6b2e",
+    "freeze_tag": "m32-scheme-d-v4-freeze",
+    "problems": []
+   },
+   "status": "PASS"
+  }
+ },
+ "freeze_commit": "079e8b5c590429aeb0ca5c7b0b261328291c6b2e",
+ "freeze_tag": "m32-scheme-d-v4-freeze",
+ "no_rng_no_seed_generation_no_worlds_no_authorization_no_cloud": true,
+ "not_full_host_or_performance_qualification": true,
+ "production_gate": {
+  "authorized": false,
+  "reason": "PRODUCTION_ENTRY_BLOCKED_PENDING_FUTURE_V4_OWNER_AUTHORIZATION_AND_HOST_QUALIFICATION",
+  "requires": [
+   "a separate owner authorization whose bundle_sha256 matches this exact v4 bundle (a v3 pilot/validation authorization is refused by construction: different bundle_sha256)",
+   "shard_layer_sha256 and shard_worlds bound in that authorization, matching this exact v4 shard layer",
+   "a measured optimized-benchmark receipt (owner-authorized, RNG) for runtime_estimate_cpu_hours",
+   "a future full host/filesystem/performance qualification pass (out of scope for this tool)"
+  ]
+ },
+ "receipt_sha256": "5055e9d8998cf6a524663982133b8fb668acfbc05e15fb2bc8d7526bd031cb41",
+ "rng_guard_counters": {
+  "constructor_attempts": 0,
+  "random_variates_requested": 0,
+  "validation_worlds_generated": 0
+ },
+ "schema": "m3.2-scheme-d-v4-qualification-receipt.v1",
+ "scope": "single_host_in_process_deterministic_binding_only",
+ "tool_sha256": "17f07ee4a42efcb19fdb8ed325c87e6b22f424869a568532c2def5dd77746e8f",
+ "verdict": "PASS"
+}
