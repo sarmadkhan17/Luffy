@@ -5,7 +5,7 @@ work_package:
   id: M3.2-SCHEME-D-V4-PRE-RUN-DECISIONS
   type: QUANT_VALIDATION_INFRA
   priority: CRITICAL
-  status: BLOCKED_ON_OWNER
+  status: BLOCKED_ON_BENCHMARK_AUTHORIZATION
 
   objective: >
     Move the frozen, shard-integrated v4 Scheme-D bundle toward a runnable
@@ -19,38 +19,33 @@ work_package:
     - deterministic qualification PASS 4d3a0ae195cf7ae1eca9b536b5cb4c309c9afd0a, receipt SHA 5055e9d8998cf6a524663982133b8fb668acfbc05e15fb2bc8d7526bd031cb41
     - integration manifest scripts/m32_scheme_d_sharding_v4_20260923/LAYER_MANIFEST.json
     - report docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-shard-integration.md
+    - owner reviewed and accepted the documented v4 preparation exception on 2026-09-23; historical audit unchanged; no benchmark/pilot/validation authorization granted
 
   next_steps:
     - step: 1
-      owner_decision: true
-      action: >
-        Owner reviews the v4 preparation exception
-        (scripts/m32_scheme_d_validation_bundle_v4_20260922/artifacts/preparation_audit.json)
-        and accepts or rejects the v4 bundle on that basis.
-    - step: 2
       owner_decision: true
       action: >
         Owner decides whether to authorize a bounded, RNG-using v4 optimized
         benchmark (local CPU, no cloud) to measure runtime_estimate_cpu_hours
         and produce a fast_benchmark_receipt_sha256 bound to the v4 bundle and
         shard layer.
-    - step: 3
-      requires: step 2 authorization
+    - step: 2
+      requires: step 1 authorization
       action: >
         Build and run the v4 benchmark plus a full v4 host/filesystem/performance
         qualification covering multi-process flock exclusivity, worker scaling
         and shared-mount capability. Use new v4-dated directories and leave
         the v3 benchmark, projection, qualification and pilot artifacts untouched.
-    - step: 4
+    - step: 3
       owner_decision: true
-      requires: steps 1-3
+      requires: steps 1-2
       action: >
         Owner decides on a v4-bound validation authorization binding
         bundle_sha256, shard_layer_sha256, shard_worlds and the measured
         benchmark. It covers any v4 pilot first and any full run separately.
 
   claude_executable_now:
-    - Prepare the owner decision brief for steps 1-2 using existing artifacts only (no RNG, no compute).
+    - Prepare the owner decision brief for step 1 using existing artifacts only (no RNG, no compute).
 
   execution_constraints:
     - Do not construct RNG, run benchmarks or run validation without explicit owner authorization.
