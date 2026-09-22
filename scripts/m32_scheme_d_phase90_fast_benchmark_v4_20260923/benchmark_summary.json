@@ -1,0 +1,17 @@
+{
+ "authorization_sha256": "f0c9cccf45aedbe893d17afd3b126abc9f8f0c32ed376b894ad9bf53274bdba4",
+ "benchmark_receipt_internal_sha256": "c9d81319f6ba09cc05a0a8500088e3a1e837f1d72926b7b8ba59a62d366158eb",
+ "benchmark_receipt_sha256": "f70ace0a02ab6187647ecc33446238cf5ba9dbe97320194ea75f32876972f23e",
+ "bitwise_identical": true,
+ "bundle_sha256": "a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023",
+ "cloud_used": false,
+ "cpu_hours": 16406.782531828467,
+ "cpu_years": 1.871638436211324,
+ "draws_per_second_per_core": 975.4548174287327,
+ "inferential_validation_run": false,
+ "mode": "benchmark",
+ "runtime_seconds": 22.24969653703738,
+ "schema": "m3.2-scheme-d-v4-fast-benchmark-summary.v1",
+ "shard_layer_sha256": "5e322153c62b103d00e9e898b30df4efc2031ea66c7144b79d5037b4d03c2170",
+ "validation_authorized": false
+}

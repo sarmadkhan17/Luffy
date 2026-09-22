@@ -1,0 +1,6 @@
+{
+  "schema": "m3.2-scheme-d-owner-authorization.v1",
+  "mode": "benchmark",
+  "bundle_sha256": "a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023",
+  "authorized_by": "owner"
+}
