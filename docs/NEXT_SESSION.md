@@ -33,6 +33,37 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 validation bundle revision 4, September 22
+
+[Report](superpowers/reports/2026-09-22-m32-validation-bundle-v4.md), bundle
+`scripts/m32_scheme_d_validation_bundle_v4_20260922/`. Supersedes frozen v3
+without changing v1/v2/v3 or the pre-RNG truth package. Implements the already-frozen
+September 20 correction: P1/P3 are perturbed true-null calibration cells, with
+Type-I gates only; their phase-20 N1 generation, injections and world seed identities
+are preserved. P2/P4/P5/P6 retain power/FDR gates, N0–N3 retain Type-I/marginal
+calibration, and P7 retains descriptive treatment and the refusal blocker.
+The plan remains 55 cells and 75,000 worlds. Only deterministic tests and preflight
+are in scope; no validation RNG or cloud execution is authorized.
+
+Manifest SHA-256:
+`a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023`.
+Final regression suite: 38 passed; final preflight: 35/35 passed with zero RNG
+construction attempts. See the report for the independent verifier result.
+
+**Preparation exception requiring owner review:** a draft delegated dispatch test
+constructed 40 RNG objects through the real seed registry. Its generation,
+injection and receipt callbacks were stubs: no random variates were requested and
+no stochastic validation worlds or validation results were produced. The final
+test uses an inert registry stub under constructor guards. The v4 manifest binds
+`artifacts/preparation_audit.json` and does not claim the whole preparation session
+was RNG-free. Final guarded verification cannot erase this exception.
+
+The shard layer, host qualification, benchmark and pilot bindings described below
+still refer to v3. They do not authorize v4 execution. In particular, the shard
+layer's injection dispatch also requires a separate correction for perturbed-null
+cells before it can consume v4. Review the v4 report and exact manifest before any
+separate integration, freeze or execution authorization.
+
 ### Latest: M3.2 host / filesystem qualification tool, September 22
 
 [Report](superpowers/reports/2026-09-22-m32-host-qualification.md), tool `scripts/m32_scheme_d_qualification_20260922/qualify.py`, bound to bundle-v3 `eab05d5d…dc01` and layer `68195fb6…ab0657`. One host evidenced (this VM): PASS, 4 qualified workers, single-host scope only; multi-host, cross-host flock and cross-CPU canary comparison are built but not yet run on real execution hosts. Not ready for a multi-host authorization.

@@ -1,0 +1,23 @@
+{
+ "OPENBLAS_NUM_THREADS": "1",
+ "blas": {
+  "name": "scipy-openblas",
+  "version": "0.3.34.0.0"
+ },
+ "implementation": "CPython",
+ "installed_distribution_count": 86,
+ "installed_distributions_sha256": "c3bea3dc4158bdfabe74f25aea41a020af0bf42e02c127ca3d3e1be1b58ed9e0",
+ "note": "gates: python, numpy, OPENBLAS_NUM_THREADS. blas/platform/installed set are informational locks.",
+ "numpy": "2.5.2",
+ "numpy_dist_record_sha256": "d0120bf1ca05abe257831ea29f031afaeba99cca1c39d14861bcca8698dabdae",
+ "platform": {
+  "machine": "x86_64",
+  "system": "Linux"
+ },
+ "python": "3.12.3",
+ "requirements_lock": "requirements.lock",
+ "runner_third_party_imports": [
+  "numpy"
+ ],
+ "schema": "m3.2-scheme-d-environment-lock.v1"
+}

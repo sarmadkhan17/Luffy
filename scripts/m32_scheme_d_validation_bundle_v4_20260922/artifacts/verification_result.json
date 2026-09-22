@@ -1,0 +1,137 @@
+{
+ "bundle_files": 16,
+ "bundle_sha256": "a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023",
+ "effect_scenarios": 7,
+ "environment": {
+  "numpy": "2.5.2",
+  "numpy_record_sha256": "d0120bf1ca05abe257831ea29f031afaeba99cca1c39d14861bcca8698dabdae",
+  "openblas_threads": "1",
+  "python": "3.12.3"
+ },
+ "equivalence_suite_replay": "not replayed in v4 (see v3 revision 3); hash/receipt binding re-verified above",
+ "fast_metric": {
+  "comparisons": 7592064,
+  "draws_per_second_single_core": 1023.4,
+  "fast_cpu_hours": 15635.932421778609,
+  "mismatches": 0,
+  "reference_cpu_hours": 121850897.85605669,
+  "wall_days": {
+   "256": 2.54,
+   "4": 162.87,
+   "64": 10.18
+  }
+ },
+ "git_tracked_pending": [
+  "artifacts/compute_projection.json",
+  "artifacts/config.json",
+  "artifacts/covariance_psd.json",
+  "artifacts/effect_assignment_table.json",
+  "artifacts/environment_lock.json",
+  "artifacts/equivalence_receipt.json",
+  "artifacts/loadings.json",
+  "artifacts/membership_table.json",
+  "artifacts/preflight_report.json",
+  "artifacts/preparation_audit.json",
+  "build_bundle.py",
+  "requirements.lock",
+  "runner/acceptance.py",
+  "runner/preflight.py",
+  "runner/scheme_d_runner.py",
+  "verify_bundle.py"
+ ],
+ "hypotheses": 384,
+ "import_isolation": {
+  "denied_modules_loaded": 0,
+  "sqlite3_loaded": false
+ },
+ "independent_equivalence_probe": {
+  "comparisons": 147456,
+  "fixtures": 96,
+  "mismatches": 0
+ },
+ "independent_implementation": true,
+ "null_mad_t3_rederived": 0.47472299235208826,
+ "p1_p3_correction": {
+  "cell_kinds": {
+   "null": 20,
+   "perturbed_null": 10,
+   "power": 25
+  },
+  "gate_keys": [
+   "refusal_blocker_absent",
+   "type_one"
+  ],
+  "power_rules": [
+   102,
+   104,
+   105,
+   106
+  ],
+  "truth_tables_checked": 5376
+ },
+ "pinned_inputs": 14,
+ "preflight": {
+  "checks": 35,
+  "passed": 35,
+  "rng_construction_attempts": 0
+ },
+ "preparation_audit": {
+  "owner_review_required": true,
+  "path": "scripts/m32_scheme_d_validation_bundle_v4_20260922/artifacts/preparation_audit.json",
+  "sha256": "0605d4588db1215d54bdd7975459bb38715b5db9fe87a26bd3ffa1ab9b0c5823"
+ },
+ "psd": {
+  "C0": {
+   "exact_min_eigenvalue": "1/1",
+   "factors": 0,
+   "numeric_max": "1.000000",
+   "numeric_min": "1.0000000000"
+  },
+  "C1": {
+   "exact_min_eigenvalue": "7/10",
+   "factors": 1,
+   "numeric_max": "115.900000",
+   "numeric_min": "0.7000000000"
+  },
+  "C2": {
+   "exact_min_eigenvalue": "3/10",
+   "factors": 1,
+   "numeric_max": "269.100000",
+   "numeric_min": "0.3000000000"
+  },
+  "C3": {
+   "exact_min_eigenvalue": "3/10",
+   "factors": 33,
+   "numeric_max": "45.900000",
+   "numeric_min": "0.3000000000"
+  },
+  "C4": {
+   "exact_min_eigenvalue": "2/5",
+   "factors": 2,
+   "numeric_max": "173.200000",
+   "numeric_min": "0.4000000000"
+  }
+ },
+ "result": "PASS",
+ "rng_constructed": false,
+ "rng_constructions_outside_seed_registry": 0,
+ "runner_gate": {
+  "assert_equivalence_gate": "PASS",
+  "closed_gate_refuses": true,
+  "default_path": "fast",
+  "run_mode_gates": [
+   "assert_environment",
+   "assert_equivalence_gate",
+   "assert_isolation",
+   "authorize"
+  ]
+ },
+ "schema": "m3.2-scheme-d-validation-bundle-verification.v4",
+ "truth_package_sha256": "a100a19c0d789acf42ab42e53355b4eb4d3827ddfbca866fb6a9231e6e7013eb",
+ "v2_semantics": {
+  "class_edges": "exact half-open (16->1, 32->2, 48->3)",
+  "i3": "zero tested hypotheses = refused world",
+  "i6": "refused h(w) excluded from ECDF denominator"
+ },
+ "whole_preparation_session_rng_free": false
+}

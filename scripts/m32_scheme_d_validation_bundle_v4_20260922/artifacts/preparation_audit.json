@@ -1,0 +1,20 @@
+{
+ "schema": "m3.2-scheme-d-v4-preparation-audit.v1",
+ "status": "PREPARATION_CONSTRAINT_BREACH_REQUIRES_OWNER_REVIEW",
+ "owner_review_required": true,
+ "event": "A delegated draft dispatch test wrapped the real SeedRegistry.generator instead of using a pure stub. The test passed before the parent reviewed and replaced it.",
+ "draft_test_sha256": "5726d36a1e11009382271870f971508f210f4bd7a984b5cce0392238fe321c1d",
+ "draft_pytest_log_sha256": "51da637a8e7272523ecee8f4747272a1ed6a0cdd1f64d20cb61a4b62836f69ae",
+ "draft_test": "test_run_cell_dispatch_spy_all_ten_p1_p3_cells",
+ "draft_registry_spy": "orig_generator = R.SeedRegistry.generator\ndef spy_generator(self, phase, correlation, dgp, world, stream):\n    calls[\"generator\"].append([phase, correlation, dgp, world, stream])\n    return orig_generator(self, phase, correlation, dgp, world, stream)\nR.SeedRegistry.generator = spy_generator",
+ "observed_log_entry": "tests/test_m32_validation_bundle_v4.py::test_run_cell_dispatch_spy_all_ten_p1_p3_cells PASSED [ 29%]",
+ "rng_objects_constructed": {"Generator": 40, "PCG64": 40, "SeedSequence": 40},
+ "seed_coordinates": {"master": 2026091902, "phase": 20, "correlations": [0, 1, 2, 3, 4], "scenarios": [101, 103], "world": 0, "streams_in_call_order": [0, 1, 3, 2]},
+ "random_variate_requests": 0,
+ "validation_worlds_generated": 0,
+ "validation_results_produced": 0,
+ "cloud_execution": false,
+ "evidence": "The draft spy returned orig_generator(self, phase, correlation, dgp, world, stream). generate_world, apply_injection and world_receipt were replaced by deterministic spies and never consumed the returned generators. The interrupted pytest log records this test PASSED.",
+ "remediation": "The final dispatch test uses RegistryStub returning inert objects. Test subprocesses guard NumPy and stdlib RNG constructors. The final preflight independently guards RNG construction. No authorization file was created.",
+ "interpretation": "The final deterministic checks do not erase this preparation exception. No claim is made that the whole preparation session was RNG-free. No stochastic validation world or validation run occurred. Owner review and a separate v4 authorization remain required."
+}

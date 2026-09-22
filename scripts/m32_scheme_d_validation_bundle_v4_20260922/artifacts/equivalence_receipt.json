@@ -1,0 +1,37 @@
+{
+ "artifact_hashes_sha256": "4bd789b3d81a965997f1ff713fb22a1fed4fb67138592bb6655bbf7da2c21e89",
+ "comparisons": 7592064,
+ "coverage_counters": {
+  "categorical_vectors": 19384,
+  "fallback_vectors": 110,
+  "hit_ties": 1062344,
+  "nonhit_ties": 1049074,
+  "overall_ties": 3884,
+  "persistence_even": 873672,
+  "persistence_vectors": 18496,
+  "zero_lift": 794943
+ },
+ "equivalence_report_sha256": "435d6754198b430130f79a2e2651e4ff5117d2445dedd20f042db0195cafecb2",
+ "fast_metric_commit": "a43336d488deb86139b32c8335c36e7b951a2939",
+ "fast_metric_sha256": "892be0d02537b7ad1d353456a7a960e7181afefd6101983d47764944c95105d0",
+ "fixtures": 4529,
+ "mismatches": 0,
+ "protocol_master_seed_used": false,
+ "reference_sha256": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+ "reproduction": "verify_bundle.py rechecks hash/receipt binding; the full equivalence suite is not replayed (see v3 revision 3 for the original suite reproduction)",
+ "result": "PASS_0_MISMATCHES",
+ "schema": "m3.2-fast-metric-equivalence-receipt.v1",
+ "sections": {
+  "adversarial_hand_built_fixtures": 64,
+  "compensated_sum_vs_builtin_sum": 2006000,
+  "exhaustive_tiny_geometry_fixtures": 1458,
+  "fallback_domain_fixtures": 3,
+  "full_geometry_fixtures": 4,
+  "randomized_fixed_seed_fixtures": 3000,
+  "reference_row_builder_vs_harness_arranged_rows": 3
+ },
+ "statistic_vectors": 22314,
+ "suite_sha256": "5cabfe07ae1c07ca0e631ba354976ada5ccf794128ba2d00fa9478869963e1b6",
+ "test_seed": 314159265,
+ "untestable_none_cases": 467069
+}

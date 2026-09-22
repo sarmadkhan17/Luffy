@@ -1,0 +1,378 @@
+{
+ "checks_passed": 35,
+ "checks_total": 35,
+ "result": "PASS",
+ "results": [
+  {
+   "check": "fast_metric_hash_binding",
+   "detail": {
+    "benchmark_result_sha256": "da7c26d7ea08bbdae13144703579f689b47d882b06faed3efc75f61deee58a1f",
+    "commit": "a43336d488deb86139b32c8335c36e7b951a2939",
+    "equivalence_report_sha256": "435d6754198b430130f79a2e2651e4ff5117d2445dedd20f042db0195cafecb2",
+    "module_sha256": "892be0d02537b7ad1d353456a7a960e7181afefd6101983d47764944c95105d0",
+    "reference_sha256": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+    "suite_sha256": "5cabfe07ae1c07ca0e631ba354976ada5ccf794128ba2d00fa9478869963e1b6"
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "frozen_environment_and_sources",
+   "detail": {
+    "numpy": "2.5.2",
+    "openblas_threads": "1",
+    "python": "3.12.3",
+    "source_hashes": 3
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "family_design_and_membership_table",
+   "detail": {
+    "cluster_size": 12,
+    "clusters": 32,
+    "rows": 384
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "config_matches_runner_and_design",
+   "detail": {
+    "cells": 55,
+    "distinct_seed_tuples": 260020,
+    "worlds": 75000
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "power_rules_and_fdr_scenarios_exclude_p1_p3",
+   "detail": {
+    "fdr_scenarios": [
+     102,
+     104,
+     105,
+     106
+    ],
+    "power_rules": [
+     102,
+     104,
+     105,
+     106
+    ]
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "p1_p3_role_and_cell_kind_and_truth",
+   "detail": {
+    "p1_p3_kind": "perturbed_null",
+    "p1_p3_role": "calibration",
+    "p1_p3_truth_rows_checked": 3840
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "effect_assignment_table_matches_pinned_sets",
+   "detail": {
+    "scenarios": 7,
+    "sizes": {
+     "P1": 1,
+     "P2": 1,
+     "P3": 1,
+     "P4": 8,
+     "P5": 32,
+     "P6": 32,
+     "P7": 96
+    }
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "null_mad_derivation",
+   "detail": {
+    "derived": 0.474722992352088,
+    "gaussian": 0.6744897501960817,
+    "t3_common_jump": 0.47472299235208826
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "loadings_and_covariance_psd",
+   "detail": {
+    "exact_min_eigenvalue": {
+     "C0": "1/1",
+     "C1": "7/10",
+     "C2": "3/10",
+     "C3": "3/10",
+     "C4": "2/5"
+    }
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "metric_equivalence_fixtures",
+   "detail": {
+    "bit_identical": true,
+    "hypotheses_compared": 384,
+    "permuted": true
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "bh_exact_with_refusals_in_denominator",
+   "detail": {
+    "boundary_p": "1/7680",
+    "denominator": 384
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "p_value_and_tie_rule",
+   "detail": {
+    "floor": "1/768000",
+    "tolerance": 1e-12
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "with_replacement_sampling_includes_identity",
+   "detail": {
+    "identity_allowed": true,
+    "strata": 8
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "orbit_floor_and_strata",
+   "detail": {
+    "approx": "8.769e+23",
+    "n0_orbit": "876853541939718389760000"
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "invalid_case_refusals_all_100_percent",
+   "detail": {
+    "cases": 15,
+    "refused": 15
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "hypothesis_level_refusals",
+   "detail": {
+    "reasons_exercised": 7
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "seed_map_and_registry_gates",
+   "detail": {
+    "distinct_tuples": 260020,
+    "gates": "authorization/phase/stream/duplicate"
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "authorization_records_fail_closed",
+   "detail": {
+    "missing": true,
+    "wrong_hash": true,
+    "wrong_mode": true
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "exclusive_create_behaviour",
+   "detail": {
+    "collision_refused": true
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "import_isolation_and_network_block",
+   "detail": {
+    "denied_modules_loaded": 0,
+    "socket_creation_blocked": true,
+    "trader_modules_loaded": 5
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "static_scan_rng_and_imports",
+   "detail": {
+    "runner_imports": [
+     "__future__",
+     "acceptance",
+     "argparse",
+     "collections",
+     "fractions",
+     "hashlib",
+     "inspect",
+     "json",
+     "math",
+     "numpy",
+     "os",
+     "pathlib",
+     "preflight",
+     "sys",
+     "time",
+     "trader"
+    ]
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "acceptance_evaluators",
+   "detail": {
+    "clopper_pearson": "exact",
+    "p1_p3": "type_one_only",
+    "p7": "descriptive",
+    "wilson": "verified"
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "world_generation_and_injection_logic_with_stub",
+   "detail": {
+    "cells_generated_with_stub": 20,
+    "p1_p3_injection_dispatch": "by scenario"
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "receipt_pipeline_with_stub",
+   "detail": {
+    "p1_p3_all_rejections_false": true,
+    "receipt_hashing": true,
+    "refused_world": "link_crossing"
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "class_edges_half_open_integer",
+   "detail": {
+    "exact_edges": {
+     "16": 1,
+     "32": 2,
+     "48": 3
+    },
+    "masked_counts_checked": 81
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "world_generation_class_edges_at_exact_boundaries",
+   "detail": {
+    "lag_to_class": {
+     "1": 0,
+     "2": 1,
+     "3": 2,
+     "4": 3,
+     "5": 3
+    }
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "zero_tested_world_is_refused",
+   "detail": {
+    "excluded_from_type_one_fdr": true,
+    "power_failure": true,
+    "refused_world": "no_tested_hypotheses"
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "zero_observed_lift_is_tested_not_refused",
+   "detail": {
+    "constant_outcome_refused": true,
+    "p": "3/3",
+    "zero_lift_tested": true
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "calibration_excludes_refused_marginal_worlds",
+   "detail": {
+    "denominator_after_exclusion": 1000,
+    "refused_marginal_worlds_ignored": true
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "equivalence_receipt_recorded",
+   "detail": {
+    "comparisons": 7592064,
+    "fast_cpu_hours": 15635.932421778609,
+    "mismatches": 0
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "fast_metric_live_equivalence_deterministic",
+   "detail": {
+    "bit_identical": true,
+    "comparisons": 360099,
+    "fixtures": 64,
+    "rng_free": true
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "runner_fast_equals_reference_receipts",
+   "detail": {
+    "default_path": "fast",
+    "receipts_identical": true,
+    "worlds": 2
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "equivalence_gate_fails_closed",
+   "detail": {
+    "reasons": [
+     "fast_metric_equivalence_counts_invalid",
+     "fast_metric_equivalence_receipt_mismatch",
+     "fast_metric_equivalence_report_invalid",
+     "fast_metric_hash_mismatch:benchmark_result",
+     "fast_metric_hash_mismatch:module",
+     "fast_metric_hash_mismatch:reference",
+     "fast_metric_hash_mismatch:suite",
+     "fast_metric_registry_mismatch:module"
+    ],
+    "tamper_cases_rejected": 12
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "benchmark_core_with_stub",
+   "detail": {
+    "identity_checked_hypotheses": 12,
+    "projection_keys": [
+     "cpu_hours",
+     "cpu_seconds",
+     "cpu_years",
+     "draws_per_world",
+     "note",
+     "wall_hours",
+     "worlds"
+    ]
+   },
+   "result": "PASS"
+  },
+  {
+   "check": "frozen_truth_package_consumed_unchanged",
+   "detail": {
+    "p1_p3_true_null_checked": true,
+    "package_sha256": "a100a19c0d789acf42ab42e53355b4eb4d3827ddfbca866fb6a9231e6e7013eb",
+    "rows": 21120
+   },
+   "result": "PASS"
+  }
+ ],
+ "rng_constructed": false,
+ "rng_construction_attempts": 0,
+ "schema": "m3.2-scheme-d-preflight-report.v1",
+ "seed_tuples_materialised": 0,
+ "worlds_generated_from_random_generator": 0
+}

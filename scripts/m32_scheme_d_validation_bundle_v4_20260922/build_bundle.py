@@ -1,0 +1,552 @@
+#!/usr/bin/env python3
+"""Deterministically build the RNG-free M3.2 validation bundle artifacts.
+
+Everything is typed from the protocol text here; it imports neither the runner
+nor the pinned harness.  No random generator or seed sequence is constructed.
+Order: artifacts -> preflight report (separate step) -> BUNDLE_MANIFEST.json (--manifest).
+
+Bundle revision 4 implements the 2026-09-20 pre-RNG correction (P1/P3
+classification and gates): P1 and P3 are corrected from power scenarios to
+true-null perturbed-calibration scenarios (protocol correction section 3).
+Every 384-row truth table already marks P1/P3 true_null (frozen, unchanged).
+The only behavioural change is the acceptance-side evaluation: P1/P3 lose the
+power/bootstrap-FDR/marginal-calibration gates and gain a Type-I false-positive
+gate (point <= 0.05 and Wilson-95 upper <= 0.06) computed on non-refused
+worlds, where world FDP is 1 if any BH rejection occurred, else 0.  DGP
+geometry, correlations, effects, injections, seeds, BH, refusal logic and the
+FastMetric equivalence gate are unchanged from v3.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import importlib.metadata as md
+import json
+import platform
+import subprocess
+import sys
+from fractions import Fraction
+from pathlib import Path
+
+import numpy as np
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[1]
+ART = HERE / "artifacts"
+FREEZE_COMMIT = "7279ce0e4b9e245a00a45e69c6914d5d47d32903"
+BASELINE_COMMIT = "ab9e39683f5e9f756fc7ef6690133ecb5b608f64"
+PROTOCOL = "docs/superpowers/specs/2026-09-19-m32-scheme-d-actual-statistic-validation-protocol.md"
+CORRECTION = "docs/superpowers/specs/2026-09-20-m32-scheme-d-actual-statistic-validation-protocol-pre-rng-correction.md"
+ADDENDUM = "docs/superpowers/specs/2026-09-21-m32-scheme-d-owner-clarifications-i1-i8.md"
+V1_MANIFEST = "scripts/m32_scheme_d_validation_bundle_20260921/BUNDLE_MANIFEST.json"
+V1_SHA256 = "0b42c6a38c3329eff6ec760176b682003ff993b0976d45588f72eebb4be78a3e"
+V2_MANIFEST = "scripts/m32_scheme_d_validation_bundle_v2_20260921/BUNDLE_MANIFEST.json"
+V2_SHA256 = "397961d944f98f730eb723d537594d56428cf72db349449ad848678ad85f0c4e"
+V3_MANIFEST = "scripts/m32_scheme_d_validation_bundle_v3_20260921/BUNDLE_MANIFEST.json"
+V3_SHA256 = "eab05d5d5acf1e4d435010b30005c9fda164da1b8c9fc0377502579c7d21dc01"
+FAST_COMMIT = "a43336d488deb86139b32c8335c36e7b951a2939"
+FAST_DIR = "scripts/m32_fast_metric_20260921"
+FAST = {"module": "trader/cognition/m32_fast_metric.py", "suite": FAST_DIR + "/equivalence_suite.py",
+        "benchmark_script": FAST_DIR + "/benchmark_fast_metric.py", "equivalence_report": FAST_DIR + "/equivalence_report.json",
+        "benchmark_result": FAST_DIR + "/benchmark_result.json", "artifact_hashes": FAST_DIR + "/artifact_hashes.json",
+        "reference": "trader/cognition/m32_search.py", "equivalence_test": "tests/test_m32_fast_metric_equivalence.py"}
+EXPECTED_EQUIVALENCE = {"comparisons": 7_592_064, "statistic_vectors": 22_314, "fixtures": 4_529, "mismatches": 0}
+VCPUS = (4, 64, 256)
+PINNED = {
+    "trader/cognition/m32_search.py": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+    "trader/cognition/m32_protocol.py": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+    "trader/cognition/m32_correction.py": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7",
+    "trader/cognition/m32_scheme_d_validation.py": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61",
+}
+STATE_T, LINKED_T = 0.6744897501960817, 0.8416212335729143
+N1_NULL_MAD = 0.47472299235208826
+H = 384
+INJECTIONS = {
+    101: [0], 102: [128], 103: [320],
+    104: [0, 33, 130, 163, 260, 293, 326, 359],
+    105: sorted(x for c in range(4) for x in (c, c + 32, 128 + c, 160 + c, 256 + c, 288 + c, 320 + c, 352 + c)),
+    106: list(range(0, 8)) + list(range(136, 144)) + list(range(272, 280)) + list(range(344, 352)),
+    107: (list(range(0, 24)) + list(range(136, 160)) + list(range(272, 288)) + list(range(288, 296))
+          + list(range(320, 336)) + list(range(344, 352))),
+}
+OR = {101: "3", 103: "3", 104: "2", 105: "2", 106: "2", 107: "3/2"}
+SHIFT = {102: "1", 104: "1/2", 105: "1/2", 106: "1/2", 107: "1/4"}
+# v4 correction (protocol correction section 2): P1/P3 role is true-null perturbed calibration, not acceptance/power.
+ROLE = {101: "calibration", 102: "acceptance", 103: "calibration", 104: "acceptance", 105: "acceptance",
+        106: "acceptance", 107: "sensitivity_only"}
+# scenarios still subject to the mixed-null FDR/bootstrap and acceptance-power gates (P1/P3 excluded by the correction)
+FDR_POWER_SCENARIOS = (102, 104, 105, 106)
+
+
+def sha(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def canon(obj) -> str:
+    return json.dumps(obj, sort_keys=True, indent=1, ensure_ascii=True) + "\n"
+
+
+def fs(x: Fraction) -> str:
+    return f"{x.numerator}/{x.denominator}"
+
+
+def kind_label(h: int) -> tuple[str, str]:
+    if h < 128:
+        return "state", "case_kind"
+    if h < 256:
+        return "state", "persistence"
+    return ("transition", "continuation") if h < 320 else ("sequence", "continuation")
+
+
+def membership_table() -> dict:
+    rows = []
+    for h in range(H):
+        kind, label = kind_label(h)
+        thr = STATE_T if h < 256 else LINKED_T
+        rows.append({"hypothesis": h, "kind": kind, "label": label,
+                     "outcome_column": "persistence" if label == "persistence" else "categorical",
+                     "threshold": repr(thr), "threshold_binary64_hex": float(thr).hex(),
+                     "cluster": h % 32, "sector": "A" if h % 32 < 16 else "B"})
+    return {"schema": "m3.2-scheme-d-hypothesis-membership-table.v1", "hypotheses": H, "rows": rows,
+            "ranges": {"case_kind": [0, 127], "persistence": [128, 255], "transition": [256, 319],
+                       "sequence": [320, 383]},
+            "cluster_rule": "h mod 32", "sector_rule": "A if cluster < 16 else B",
+            "membership_rule": "M_h(r) = 1{Z_h(r) + s(r) > tau_h}; Z drawn independently per unique row (protocol 6.1)"}
+
+
+def effect_table() -> dict:
+    out = []
+    for code, targets in INJECTIONS.items():
+        entries = []
+        for h in sorted(targets):
+            kind, label = kind_label(h)
+            if label == "persistence":
+                entries.append({"hypothesis": h, "target": "persistence", "effect": "shift",
+                                "magnitude_null_mad_units": SHIFT[code]})
+            else:
+                odds = Fraction(OR[code])
+                p2 = Fraction(1, 10)
+                p2n = odds * p2 / (1 - p2 + odds * p2)
+                entries.append({"hypothesis": h, "target": "categorical", "effect": "odds_ratio", "odds_ratio": fs(odds),
+                                "target_class_index": 2, "base_class2_probability": "1/10",
+                                "new_class2_probability": fs(p2n),
+                                "switch_probability": fs((p2n - p2) / (1 - p2))})
+        counts = {}
+        for h in targets:
+            counts[kind_label(h)[1]] = counts.get(kind_label(h)[1], 0) + 1
+        out.append({"scenario_code": code, "scenario": f"P{code - 100}", "role": ROLE[code], "size": len(targets),
+                    "targets": sorted(targets), "targets_by_label": counts, "assignments": entries,
+                    "application_order": "ascending hypothesis index; persistence shifts deterministic (no RNG); "
+                                         "categorical switches use injection stream 3 uniforms"})
+    return {"schema": "m3.2-scheme-d-effect-assignment-table.v1", "base_dgp": "N1", "scenarios": out,
+            "null_mad_reference": {"N1": repr(N1_NULL_MAD), "gaussian": repr(STATE_T)}}
+
+
+# ------------------------------------------------------------------ correlation structures
+def structure(c: int) -> dict:
+    """Exact factor form: Sigma = sum_k w_k s_k s_k^T + d I, all w_k >= 0, d > 0, unit diagonal."""
+    if c == 0:
+        return {"factors": [], "residual": Fraction(1)}
+    if c in (1, 2):
+        return {"factors": [(Fraction(3, 10) if c == 1 else Fraction(7, 10), [1] * H)],
+                "residual": Fraction(7, 10) if c == 1 else Fraction(3, 10)}
+    if c == 3:
+        f = [(Fraction(1, 10), [1] * H)]
+        f += [(Fraction(3, 5), [1 if h % 32 == k else 0 for h in range(H)]) for k in range(32)]
+        return {"factors": f, "residual": Fraction(3, 10)}
+    return {"factors": [(Fraction(3, 20), [1] * H),
+                        (Fraction(9, 20), [1 if h % 32 < 16 else -1 for h in range(H)])],
+            "residual": Fraction(2, 5)}
+
+
+def exact_entry(c: int, i: int, j: int) -> Fraction:
+    if i == j:
+        return Fraction(1)
+    if c == 0:
+        return Fraction(0)
+    if c == 1:
+        return Fraction(3, 10)
+    if c == 2:
+        return Fraction(7, 10)
+    if c == 3:
+        return Fraction(1, 10) + (Fraction(3, 5) if i % 32 == j % 32 else Fraction(0))
+    return Fraction(3, 5) * (Fraction(1, 4) + (1 if (i % 32 < 16) == (j % 32 < 16) else -1) * Fraction(3, 4))
+
+
+def matrix(c: int) -> np.ndarray:
+    m = np.empty((H, H), dtype=np.float64)
+    for i in range(H):
+        for j in range(H):
+            e = exact_entry(c, i, j)
+            m[i, j] = e.numerator / e.denominator
+    return m
+
+
+def factor_covariance_exact_matches(c: int) -> bool:
+    """Sigma from the factor form equals the entry rule exactly, for every one of the 384x384 entries."""
+    s = structure(c)
+    for i in range(H):
+        for j in range(H):
+            total = sum((w * v[i] * v[j] for w, v in s["factors"]), Fraction(0))
+            if i == j:
+                total += s["residual"]
+            if total != exact_entry(c, i, j):
+                return False
+    return True
+
+
+def loadings() -> dict:
+    root3_2 = float(np.sqrt(3.0) / 2.0)
+    return {"schema": "m3.2-scheme-d-latent-loadings.v1", "family_size": H, "codes": {
+        "C0": {"name": "independent", "construction": "Z_h = e_h", "factors": [], "residual_variance": "1/1"},
+        "C1": {"name": "equicorrelated", "construction": "Z_h = sqrt(3/10) f + sqrt(7/10) e_h",
+               "factors": [{"name": "f", "weight": "3/10", "loading_signs": "all +"}], "residual_variance": "7/10"},
+        "C2": {"name": "equicorrelated", "construction": "Z_h = sqrt(7/10) f + sqrt(3/10) e_h",
+               "factors": [{"name": "f", "weight": "7/10", "loading_signs": "all +"}], "residual_variance": "3/10"},
+        "C3": {"name": "clustered", "construction": "Z_h = sqrt(1/10) g + sqrt(3/5) f_{c(h)} + sqrt(3/10) e_h",
+               "factors": [{"name": "g", "weight": "1/10", "loading_signs": "all +"},
+                           {"name": "f_c (32 cluster factors)", "weight": "3/5", "loading_signs": "indicator of h mod 32 = c"}],
+               "residual_variance": "3/10"},
+        "C4": {"name": "signed sectors", "construction": "Z_h = sqrt(3/5) (l_h . f) + sqrt(2/5) e_h, f in R^2",
+               "lambda": "3/5", "theta_degrees": 60,
+               "sector_A_loading_exact": ["1/2", "sqrt(3)/2"], "sector_B_loading_exact": ["1/2", "-sqrt(3)/2"],
+               "sector_A_loading_binary64": [float(0.5).hex(), float(root3_2).hex()],
+               "sector_B_loading_binary64": [float(0.5).hex(), float(-root3_2).hex()],
+               "factors": [{"name": "f1", "weight": "3/20", "loading_signs": "all +"},
+                           {"name": "f2", "weight": "9/20", "loading_signs": "+ for h mod 32 < 16 else -"}],
+               "residual_variance": "2/5"}}}
+
+
+def covariance_psd() -> dict:
+    out = {"schema": "m3.2-scheme-d-covariance-psd-certificates.v1", "family_size": H, "codes": {}}
+    for c in range(5):
+        s, m = structure(c), matrix(c)
+        d = s["residual"]
+        variances = {sum((w * v[h] ** 2 for w, v in s["factors"]), Fraction(0)) + d for h in range(H)}
+        variance = variances.pop() if len(variances) == 1 else Fraction(-1)
+        eig = np.linalg.eigvalsh(m)
+        np.linalg.cholesky(m)                       # raises on non-PD
+        loading = np.array([[np.sqrt(0.6) * 0.5, np.sqrt(0.6) * s_] for s_ in
+                            [np.sqrt(3.0) / 2.0 if h % 32 < 16 else -np.sqrt(3.0) / 2.0 for h in range(H)]])
+        impl = (loading @ loading.T + 0.4 * np.eye(H)) if c == 4 else None
+        out["codes"][f"C{c}"] = {
+            "entry_rule": {"diagonal": "1"} | {
+                0: {"off_diagonal": "0"}, 1: {"off_diagonal": "3/10"}, 2: {"off_diagonal": "7/10"},
+                3: {"same_cluster": "7/10", "cross_cluster": "1/10"},
+                4: {"same_sector": "3/5", "cross_sector": "-3/10"}}[c],
+            "factor_count": len(s["factors"]), "residual_variance": fs(d),
+            "unit_variance_identity": fs(variance),
+            "unit_variance_definition": "for every h: sum_k w_k s_k[h]^2 + d == 1 (exact)",
+            "exact_factor_form_reproduces_all_384x384_entries": factor_covariance_exact_matches(c),
+            "psd_proof": ("Sigma = d*I + sum_k w_k s_k s_k^T with every w_k >= 0 and d > 0, so Sigma - d*I is a nonnegative "
+                          "combination of rank-one Gram matrices (PSD) and Sigma >= d*I > 0. The factor count is below 384, so "
+                          "Sigma - d*I is singular and lambda_min(Sigma) = d exactly."),
+            "exact_minimum_eigenvalue": fs(d),
+            "numeric_minimum_eigenvalue": f"{eig[0]:.10f}", "numeric_maximum_eigenvalue": f"{eig[-1]:.10f}",
+            "numeric_cholesky_succeeded": True,
+            "matrix_float64_row_major_sha256": hashlib.sha256(m.astype("<f8").tobytes()).hexdigest(),
+            "implementation_loading_vs_exact_max_abs_error": (float(np.max(np.abs(impl - m))) if impl is not None else None),
+        }
+    return out
+
+
+# ------------------------------------------------------------------ config
+def config() -> dict:
+    return {
+        "schema": "m3.2-scheme-d-validation-config.v4",
+        "bundle_revision": 4,
+        "supersedes": {"bundle_manifest": V3_MANIFEST, "bundle_sha256": V3_SHA256,
+                       "earlier": [{"bundle_manifest": V2_MANIFEST, "bundle_sha256": V2_SHA256}]},
+        "v4_changes": ["applies the 2026-09-20 pre-RNG correction: P1/P3 role corrected from power to "
+                       "true-null perturbed calibration (protocol correction section 2-3)",
+                       "acceptance.POWER_RULES and acceptance.FDR_SCENARIOS restricted to {102, 104, 105, 106}; "
+                       "P1/P3 no longer receive power, bootstrap-FDR or marginal-calibration gates",
+                       "new evaluate_cell(kind='perturbed_null') gate: world FDP = 1 if any BH rejection else 0 "
+                       "(every P1/P3 rejection is a false discovery); point estimate <= 0.05 and Wilson-95 upper "
+                       "<= 0.06 on non-refused worlds; refusal blocker unchanged",
+                       "cell_plan() tags the ten P1/P3 x C0-C4 cells kind='perturbed_null'; world generation, "
+                       "injection dispatch (by scenario), seeds and truth tables are unchanged",
+                       "checks_bootstrap seed-tuple count reduced from 30 to 20 (bootstrap stream 4 is no longer "
+                       "constructed for P1/P3, which are outside FDR_SCENARIOS)"],
+        "status": "FROZEN_CONFIG_NOT_AUTHORIZED_TO_RUN",
+        "authority": {"protocol": PROTOCOL, "protocol_sha256": sha(ROOT / PROTOCOL), "correction": CORRECTION,
+                      "correction_sha256": sha(ROOT / CORRECTION), "clarification_addendum": ADDENDUM,
+                      "clarification_addendum_sha256": sha(ROOT / ADDENDUM), "baseline_commit": BASELINE_COMMIT,
+                      "frozen_truth_commit": FREEZE_COMMIT},
+        "master_seed": 2026091902,
+        "rng": {"bit_generator": "numpy.random.PCG64", "seeding": "numpy.random.SeedSequence([master, phase, correlation, dgp, world, stream])",
+                "generator": "numpy.random.Generator", "constructed_by": "runner/scheme_d_runner.py::SeedRegistry.generator only"},
+        "seed_map": {"phase_code": {"null": 10, "power": 20, "checks": 30, "benchmark": 90},
+                     "correlation_code": {"C0": 0, "C1": 1, "C2": 2, "C3": 3, "C4": 4},
+                     "dgp_code_phase_10": {"N0": 0, "N1": 1, "N2": 2, "N3": 3},
+                     "dgp_code_phase_20": {f"P{k}": 100 + k for k in range(1, 8)},
+                     "dgp_code_phase_30": "scenario code of the cell being checked",
+                     "world_index": {"null": [0, 1999], "power": [0, 999], "checks": [0, 0]},
+                     "stream_code": {"data": 0, "membership": 1, "permutation": 2, "injection": 3, "bootstrap": 4},
+                     "bootstrap_stream_phase": 30,
+                     "benchmark_isolation": "phase 90 only; phases 10/20/30 refused outside an authorized validation run",
+                     "distinct_tuples": {"null": 4 * 5 * 2000 * 3, "power": 7 * 5 * 1000 * 4,
+                                         "checks_bootstrap": len(FDR_POWER_SCENARIOS) * 5,
+                                         "total": 4 * 5 * 2000 * 3 + 7 * 5 * 1000 * 4 + len(FDR_POWER_SCENARIOS) * 5},
+                     "tuple_materialisation": "none in this bundle; the runner registry rejects duplicates at run time"},
+        "environment": {"python": "3.12.3", "numpy": "2.5.2", "OPENBLAS_NUM_THREADS": "1"},
+        "design": {"blocks": 48, "block_days": 28, "symbols": 16, "keys": 5, "rows_per_block": 80, "rows_per_world": 3840,
+                   "linked_copy_of_key_4": "moves with its block; excluded from every statistic, floor and support count",
+                   "quarter": "1 + (b mod 4)", "regime": "(b // 3) mod 2",
+                   "strata_sizes": {"(1,0)": 8, "(1,1)": 4, "(2,0)": 4, "(2,1)": 8, "(3,0)": 8, "(3,1)": 4, "(4,0)": 4, "(4,1)": 8},
+                   "missing_fraction_class_edges": [[0, 0.2], [0.2, 0.4], [0.4, 0.6], [0.6, 1]],
+                   "class_rule": "integer counts: class = [5m >= T] + [5m >= 2T] + [5m >= 3T], m masked of T = 80 unique rows; "
+                                 "half-open edges, no binary-float fraction",
+                   "n0_orbit": "(8!)^4 * (4!)^4"},
+        "family": {"size": 384, "ranges": {"case_kind": [0, 127], "persistence": [128, 255], "transition": [256, 319],
+                                            "sequence": [320, 383]},
+                   "thresholds": {"state": repr(STATE_T), "linked": repr(LINKED_T)}, "clusters": 32, "sectors": 2,
+                   "table": "artifacts/membership_table.json"},
+        "statistic": {"source": "trader/cognition/m32_search.py", "function": "_metric",
+                      "sha256": PINNED["trader/cognition/m32_search.py"], "path": "fast_metric_exact_equivalent",
+                      "reference_path": "reference_metric_import", "optimized_path": "trader.cognition.m32_fast_metric.FastMetric",
+                      "gate": "equivalence_gate_static (hashes + recorded receipt) then, in RNG modes, assert_equivalence_gate "
+                              "(bundle manifest, pinned inputs, recorded preflight PASS incl. live equivalence)",
+                      "note": "The optimized statistic is bit-identical to the imported _metric on the recorded equivalence suite; "
+                              "the reference path is kept for the live bit-identity check of the phase-90 benchmark."},
+        "fast_metric": fast_metric_config(),
+        "sampling": {"permutations_per_world": 767999, "with_replacement": True, "identity_included": True,
+                     "replacement_of_failed_draws": False, "movable_strata_only": True,
+                     "tie_rule": "T* >= T - 1e-12 * max(1, |T|)", "p_value": "(1 + X) / (B + 1)"},
+        "multiplicity": {"method": "BH step-up", "q": "1/20", "m": 384, "refused_stay_in_denominator": True,
+                         "refused_p_value": None,
+                         "exact_rule": "reject the k* smallest, k* = max k with 7680*(1+X_(k)) <= k*(B+1) (integer arithmetic)"},
+        "correlations": "artifacts/loadings.json, artifacts/covariance_psd.json",
+        "dgp": {"N0": {"persistence": "gaussian", "categorical": ["1/3", "1/3", "1/3"], "missingness": "none"},
+                "N1": {"persistence": "t3/sqrt(3) + common jump p=0.10 x 2*t3/sqrt(3)", "categorical": ["13/20", "1/4", "1/10"],
+                       "missingness": "none"},
+                "N2": {"persistence": "gaussian", "categorical": ["1/3", "1/3", "1/3"],
+                       "coverage": {"classes": 4, "rates": ["8/100", "3/10", "1/2", "18/25"]},
+                       "membership_shift_by_realized_class": ["0", "2/5", "4/5", "6/5"],
+                       "persistence_shift_null_mad_units_by_realized_class": ["0", "1/2", "1", "3/2"]},
+                "N3": {"persistence": "t3/sqrt(3) + common jump", "categorical": ["13/20", "1/4", "1/10"],
+                       "censoring": "L = min(G-1, 5), G ~ Geometric(1/2) on {1,2,...}; keys 5-L..4 masked",
+                       "membership_shift_by_quarter": ["-4/5", "-1/5", "2/5", "9/10"], "membership_shift_regime1": "6/5",
+                       "persistence_shift_null_mad_units_by_quarter": ["9/10", "-1/2", "3/10", "-1"],
+                       "persistence_shift_regime1": "3/2"}},
+        "null_mad": {"gaussian": repr(STATE_T), "t3_common_jump": repr(N1_NULL_MAD),
+                     "t3_derivation": "deterministic Gauss-Legendre + bisection of the frozen mixture; verified by preflight and the independent verifier"},
+        "power_worlds": {"base_dgp": "N1", "pairing": "pre-injection family from streams 0 and 1 of tuple (20,c,P,w); injection from stream 3"},
+        "injections": "artifacts/effect_assignment_table.json",
+        "consumption_order": ["data: coverage classes / masks / lags", "membership: Z", "data: common jumps",
+                              "data: persistence noise", "data: categorical labels", "injection (power and perturbed-null only)",
+                              "observed statistics", "permutation"],
+        "cells": {"null": {"count": 20, "worlds_each": 2000}, "power": {"count": 25, "worlds_each": 1000},
+                  "perturbed_null": {"count": 10, "worlds_each": 1000},
+                  "acceptance_partition": {"null": 20, "p1_p3_calibration": 10, "p2_p4_p5_p6_power": 20, "p7_sensitivity": 5},
+                  "worlds_total": 75000},
+        "refusal": {"world_level": ["frozen mismatch", "invalid certificate", "between-block dependence",
+                                    "footprint or link crossing", "unconditioned drift", "outcome-dependent missingness",
+                                    "omitted confounder", "clock or link violation", "family size != 384",
+                                    "movable blocks < 24 or movable strata < 3", "orbit < 1,536,000 or 2/|G| > 1/768000",
+                                    "zero tested hypotheses (owner decision I3)"],
+                    "hypothesis_level_floors": {"state": {"matched": 12, "observed": 8, "episodes": 3},
+                                                "transition": {"matched": 8, "episodes": 3},
+                                                "sequence": {"matched": 8, "episodes": 3}},
+                    "blocking_rate": "1/100 of worlds; 1/100 of (world, hypothesis) pairs over 384 x non-refused worlds"},
+        "acceptance": {"wilson_z": 1.959964, "type_one": {"point_max": 0.05, "wilson_upper_max": 0.06},
+                       "p1_p3_false_positive": {"point_max": 0.05, "wilson_upper_max": 0.06,
+                                                "definition": "world FDP = 1 if any BH rejection else 0 (every P1/P3 "
+                                                              "rejection is a false discovery); computed on non-refused "
+                                                              "worlds; no power, bootstrap-FDR or marginal-calibration gate "
+                                                              "applies (protocol correction section 3.2-3.3)"},
+                       "fdr": {"mean_max": 0.05, "bootstrap_upper_max": 0.06, "resamples": 10000, "order_statistic": 9750,
+                               "seed": "[2026091902, 30, correlation_code, scenario_code, 0, 4]",
+                               "scenarios": list(FDR_POWER_SCENARIOS)},
+                       "calibration": {"t": ["1/100", "5/100", "1/10"], "clopper_pearson_alpha": "1/6000",
+                                       "hypothesis_for_world": "w mod 384",
+                                       "refused_h_of_w": "world excluded from the ECDF denominator (owner decision I6)"},
+                       "power": {"P2": {"wilson_lower_min": 0.80},
+                                 "P4": [{"at_least": 1, "min": 0.90}, {"at_least": 4, "min": 0.75}],
+                                 "P5_P6": [{"at_least": 1, "min": 0.95}, {"at_least": 16, "min": 0.75}]},
+                       "p1_p3": "no power gate; a P1/P3 rejection is never power and never a true discovery "
+                               "(protocol correction section 3.2); governed by p1_p3_false_positive only",
+                       "p7": "descriptive only"},
+        "owner_decisions": {
+            "status": "DECIDED_2026-09-21", "addendum": ADDENDUM,
+            "decisions": [
+                {"id": "I1", "decision": "dependence group = block index; episode = unique row/episode identity",
+                 "implementation": "unchanged from v1", "changed_vs_v1": False, "changed_vs_v2": False, "changed_vs_v3": False},
+                {"id": "I2", "decision": "permutation-invariant support accounting; observed support sufficient for the statistic to be defined",
+                 "implementation": "unchanged from v1: matched/episodes/groups invariant; observed floor on the observed arrangement and on the worst-case "
+                                   "slot bound; transition/sequence need worst-case observed >= 1", "changed_vs_v1": False, "changed_vs_v2": False,
+                 "changed_vs_v3": False},
+                {"id": "I3", "decision": "hypothesis-level refusal; a world with zero tested hypotheses is a refused world, excluded from "
+                                         "Type-I/FDR and failed for power",
+                 "implementation": "world_receipt returns world_refused=[no_tested_hypotheses]; counted in the world-refusal blocker",
+                 "changed_vs_v1": True, "changed_vs_v2": False, "changed_vs_v3": False},
+                {"id": "I4", "decision": "degenerate = the hypothesis outcome column is constant; an observed zero lift is valid evidence and is never refused",
+                 "implementation": "unchanged from v1 (constant-column refusal only); recorded in the addendum", "changed_vs_v1": False,
+                 "changed_vs_v2": False, "changed_vs_v3": False},
+                {"id": "I5", "decision": "sampler order frozen through the hash-bound runner",
+                 "implementation": "consumption_order below plus runner/scheme_d_runner.py hash", "changed_vs_v1": False, "changed_vs_v2": False,
+                 "changed_vs_v3": False},
+                {"id": "I6", "decision": "marginal-calibration worlds where h(w) is refused are excluded from the empirical CDF denominator",
+                 "implementation": "acceptance.calibration_pass drops None entries", "changed_vs_v1": True, "changed_vs_v2": False,
+                 "changed_vs_v3": False},
+                {"id": "I7", "decision": "exact integer BH comparison", "implementation": "unchanged from v1 (exact_bh)", "changed_vs_v1": False,
+                 "changed_vs_v2": False, "changed_vs_v3": False},
+                {"id": "I8", "decision": "reference _metric path only for the phase-90 benchmark; full-run optimized implementation needs the "
+                                         "section 3 exact-equivalence proof and a separate benchmark",
+                 "implementation": "v3: FastMetric with a recorded exact-equivalence suite (7,592,064 comparisons, 0 mismatches) behind "
+                                   "a fail-closed gate; the separate optimized benchmark is still required before any full-run "
+                                   "authorization (validation mode refuses without a measured runtime and benchmark receipt hash)",
+                 "changed_vs_v1": False, "changed_vs_v2": True, "changed_vs_v3": False},
+                {"id": "class_edge", "decision": "implement protocol section 5 half-open coverage classes without binary-float boundary ambiguity",
+                 "implementation": "integer-count rule in runner.missing_class", "changed_vs_v1": True, "changed_vs_v2": False,
+                 "changed_vs_v3": False},
+                {"id": "correction_2026-09-20", "decision": "P1/P3 reclassified true-null perturbed calibration (not power); the original "
+                                                            "power table's P1/P3 entries are deleted; a Type-I false-positive gate applies instead "
+                                                            "(protocol correction section 2-3)",
+                 "implementation": "v4: acceptance.POWER_RULES and acceptance.FDR_SCENARIOS restricted to {102,104,105,106}; "
+                                   "evaluate_cell(kind='perturbed_null') computes point/Wilson-upper on non-refused worlds; "
+                                   "cell_plan() tags the ten P1/P3 cells kind='perturbed_null'; truth tables (frozen, unchanged) "
+                                   "already mark every P1/P3 row true_null",
+                 "changed_vs_v1": True, "changed_vs_v2": True, "changed_vs_v3": True}]},
+        "frozen_truth_package": {"freeze_json": "scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json",
+                                 "consumed_unchanged": True},
+        "pinned_sources_sha256": PINNED,
+    }
+
+
+# ------------------------------------------------------------------ environment lock
+def environment_lock() -> dict:
+    dist = md.distribution("numpy")
+    record = (Path(dist.locate_file("")) / f"numpy-{dist.version}.dist-info" / "RECORD")
+    cfg = {}
+    try:
+        cfg = np.show_config(mode="dicts")
+    except Exception:
+        pass
+    blas = cfg.get("Build Dependencies", {}).get("blas", {}) if isinstance(cfg, dict) else {}
+    freeze = sorted(f"{d.metadata['Name']}=={d.version}" for d in md.distributions())
+    return {"schema": "m3.2-scheme-d-environment-lock.v1", "python": platform.python_version(),
+            "implementation": platform.python_implementation(), "numpy": np.__version__,
+            "numpy_dist_record_sha256": sha(record) if record.is_file() else None,
+            "blas": {"name": blas.get("name"), "version": blas.get("version")},
+            "OPENBLAS_NUM_THREADS": "1", "runner_third_party_imports": ["numpy"],
+            "requirements_lock": "requirements.lock", "installed_distribution_count": len(freeze),
+            "installed_distributions_sha256": hashlib.sha256("\n".join(freeze).encode()).hexdigest(),
+            "platform": {"system": platform.system(), "machine": platform.machine()},
+            "note": "gates: python, numpy, OPENBLAS_NUM_THREADS. blas/platform/installed set are informational locks."}
+
+
+def fast_metric_config() -> dict:
+    """Bind the reference and optimized implementations, the equivalence suite and its results (read from disk)."""
+    cfg = {k: {"path": p, "sha256": sha(ROOT / p)} for k, p in FAST.items()}
+    report = json.loads((ROOT / FAST["equivalence_report"]).read_text())
+    for key, want in EXPECTED_EQUIVALENCE.items():
+        if report[key if key != "statistic_vectors" else "statistic_vectors"] != want:
+            raise SystemExit(f"fail closed: equivalence report {key} != {want}")
+    if report["quick"] is not False or report["protocol_master_seed_used"] is not False or report["mismatch_details"] != []:
+        raise SystemExit("fail closed: equivalence report is not a clean full run")
+    cfg["commit"] = FAST_COMMIT
+    cfg["equivalence"] = {**EXPECTED_EQUIVALENCE, "test_seed": report["test_seed"], "sections": report["sections"],
+                          "coverage_counters": report["coverage_counters"], "untestable_none_cases": report["untestable_none_cases"],
+                          "protocol_master_seed_used": False, "comparison_level": "float64 bit patterns (uint64 view); None <-> untestable"}
+    cfg["fixture_seed_note"] = "randomized fixtures use fixture-only seed 314159265, never the protocol master seed or seed map"
+    return cfg
+
+
+def equivalence_receipt() -> dict:
+    report = json.loads((ROOT / FAST["equivalence_report"]).read_text())
+    return {"schema": "m3.2-fast-metric-equivalence-receipt.v1", "result": "PASS_0_MISMATCHES",
+            "comparisons": report["comparisons"], "statistic_vectors": report["statistic_vectors"], "fixtures": report["fixtures"],
+            "mismatches": report["mismatches"], "test_seed": report["test_seed"], "protocol_master_seed_used": False,
+            "sections": report["sections"], "coverage_counters": report["coverage_counters"],
+            "untestable_none_cases": report["untestable_none_cases"], "fast_metric_commit": FAST_COMMIT,
+            "equivalence_report_sha256": sha(ROOT / FAST["equivalence_report"]), "suite_sha256": sha(ROOT / FAST["suite"]),
+            "fast_metric_sha256": sha(ROOT / FAST["module"]), "reference_sha256": sha(ROOT / FAST["reference"]),
+            "artifact_hashes_sha256": sha(ROOT / FAST["artifact_hashes"]),
+            "reproduction": "verify_bundle.py rechecks hash/receipt binding; the full equivalence suite is not replayed "
+                            "(see v3 revision 3 for the original suite reproduction)"}
+
+
+def compute_projection() -> dict:
+    bench = json.loads((ROOT / FAST["benchmark_result"]).read_text())
+    proj = bench["projection"]
+    recomputed = proj["worlds"] * (proj["per_world_fixed_seconds"] + proj["vectors_per_world"]
+                                   * bench["fast_seconds_per_draw_end_to_end"]) / 3600
+    if abs(recomputed - proj["fast_cpu_hours"]) > 1e-9 * recomputed:
+        raise SystemExit("fail closed: benchmark projection does not recompute")
+    cpu_hours = proj["fast_cpu_hours"]
+    return {"schema": "m3.2-fast-metric-compute-projection.v1", "benchmark_result_sha256": sha(ROOT / FAST["benchmark_result"]),
+            "fixture": bench["fixture"], "hypotheses": bench["hypotheses"], "rows": bench["rows"],
+            "reference_seconds_per_vector": bench["reference_seconds_per_vector"],
+            "fast_seconds_per_vector_statistic_only": bench["fast_seconds_per_vector_statistic_only"],
+            "fast_seconds_per_draw_end_to_end": bench["fast_seconds_per_draw_end_to_end"],
+            "speedup_statistic_only": bench["speedup_statistic_only"], "speedup_end_to_end_per_draw": bench["speedup_end_to_end_per_draw"],
+            "throughput_draws_per_second_single_core": 1.0 / bench["fast_seconds_per_draw_end_to_end"],
+            "memory": bench["memory"],
+            "projection": {"worlds": proj["worlds"], "draws_per_world": proj["draws_per_world"],
+                           "per_world_fixed_seconds": proj["per_world_fixed_seconds"],
+                           "reference_cpu_hours": proj["reference_cpu_hours"], "fast_cpu_hours": cpu_hours,
+                           "fast_cpu_years": proj["fast_cpu_years"], "speedup_projected": proj["speedup_projected"]},
+            "wall_time_estimate": {str(n): {"hours": cpu_hours / n, "days": cpu_hours / n / 24} for n in VCPUS},
+            "assumptions": ["perfect linear scaling across vCPUs (embarrassingly parallel by world); add 10-20% for real overhead",
+                            "excludes world generation, refusal evaluation and receipt writing (small per world)",
+                            "measured single-core on a fixed synthetic full-geometry fixture, not a protocol world"]}
+
+
+def build_artifacts() -> None:
+    ART.mkdir(exist_ok=True)
+    for name, obj in (("membership_table.json", membership_table()), ("effect_assignment_table.json", effect_table()),
+                      ("loadings.json", loadings()), ("covariance_psd.json", covariance_psd()),
+                      ("config.json", config()), ("environment_lock.json", environment_lock()),
+                      ("equivalence_receipt.json", equivalence_receipt()), ("compute_projection.json", compute_projection())):
+        (ART / name).write_text(canon(obj), encoding="utf-8")
+    (HERE / "requirements.lock").write_text("# pinned runner environment (protocol section 14 item 7)\n"
+                                            f"python=={platform.python_version()}\nnumpy==2.5.2\n"
+                                            "env OPENBLAS_NUM_THREADS=1\n", encoding="utf-8")
+
+
+BUNDLE_FILES = ("build_bundle.py", "verify_bundle.py", "requirements.lock", "artifacts/config.json",
+                "artifacts/membership_table.json", "artifacts/effect_assignment_table.json", "artifacts/loadings.json",
+                "artifacts/covariance_psd.json", "artifacts/environment_lock.json", "artifacts/preflight_report.json",
+                "artifacts/equivalence_receipt.json", "artifacts/compute_projection.json",
+                "runner/scheme_d_runner.py", "runner/acceptance.py", "runner/preflight.py", "artifacts/preparation_audit.json")
+
+
+def write_manifest() -> None:
+    rel = lambda p: str((HERE / p).relative_to(ROOT))
+    freeze = ROOT / "scripts/m32_scheme_d_pre_rng_truth_20260921"
+    fz = json.loads((freeze / "FREEZE.json").read_text())
+    files = {rel(p): sha(HERE / p) for p in BUNDLE_FILES}
+    pinned = {**{p: sha(ROOT / p) for p in PINNED}, PROTOCOL: sha(ROOT / PROTOCOL), CORRECTION: sha(ROOT / CORRECTION),
+              ADDENDUM: sha(ROOT / ADDENDUM), **{p: sha(ROOT / p) for p in FAST.values() if p not in PINNED}}
+    manifest = {
+        "schema": "m3.2-scheme-d-validation-bundle-manifest.v4", "bundle_revision": 4,
+        "supersedes": {"bundle_manifest": V3_MANIFEST, "bundle_sha256": V3_SHA256,
+                       "v3_manifest_file_sha256": sha(ROOT / V3_MANIFEST),
+                       "earlier": [{"bundle_manifest": V2_MANIFEST, "bundle_sha256": V2_SHA256,
+                                    "manifest_file_sha256": sha(ROOT / V2_MANIFEST)}]},
+        "fast_metric": {"commit": FAST_COMMIT, "module": FAST["module"], "reference": FAST["reference"],
+                        "equivalence": EXPECTED_EQUIVALENCE},
+        "clarification_addendum": {"path": ADDENDUM, "sha256": sha(ROOT / ADDENDUM)},
+        "status": "PRE_RUN_BUNDLE_REQUIRES_PREPARATION_REVIEW_NOT_AUTHORIZED_TO_RUN",
+        "no_rng_no_seed_generation_no_worlds_no_search_no_gate2": False,
+        "preparation_audit": {"path": rel("artifacts/preparation_audit.json"),
+                              "sha256": sha(ART / "preparation_audit.json"), "owner_review_required": True},
+        "frozen_truth_commit": FREEZE_COMMIT, "baseline_commit": BASELINE_COMMIT,
+        "frozen_truth_package": {"package_dir": "scripts/m32_scheme_d_pre_rng_truth_20260921/package",
+                                 "package_sha256": fz["package_sha256"],
+                                 "freeze_json": "scripts/m32_scheme_d_pre_rng_truth_20260921/FREEZE.json",
+                                 "freeze_json_sha256": sha(freeze / "FREEZE.json"),
+                                 "rows": fz["checks"]["rows"], "unresolved_rows": fz["checks"]["unresolved_rows"]},
+        "files_sha256": files, "pinned_inputs_sha256": pinned,
+        "implementation_hashes_protocol_section_2": {p: pinned[p] for p in list(PINNED)[:3]},
+    }
+    (HERE / "BUNDLE_MANIFEST.json").write_text(canon(manifest), encoding="utf-8")
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--manifest", action="store_true", help="write BUNDLE_MANIFEST.json (after preflight_report.json exists)")
+    a = ap.parse_args()
+    write_manifest() if a.manifest else build_artifacts()
+    print("manifest written" if a.manifest else "artifacts written")
