@@ -33,6 +33,22 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: M3.2 host / filesystem qualification tool, September 22
+
+[Report](superpowers/reports/2026-09-22-m32-host-qualification.md), tool `scripts/m32_scheme_d_qualification_20260922/qualify.py`, bound to bundle-v3 `eab05d5d…dc01` and layer `68195fb6…ab0657`. One host evidenced (this VM): PASS, 4 qualified workers, single-host scope only; multi-host, cross-host flock and cross-CPU canary comparison are built but not yet run on real execution hosts. Not ready for a multi-host authorization.
+
+### Latest: M3.2 deterministic sharding / resume layer, September 21
+
+[Report](superpowers/reports/2026-09-21-m32-shard-layer.md), layer `scripts/m32_scheme_d_sharding_20260921/`
+(`shard_layer.py` SHA-256 `68195fb6…ab0657` (hardened 2026-09-22; supersedes `2c72e369…57fedf`)), bound to bundle-v3 `eab05d5d…dc01` (unchanged). RNG-free: worlds are
+contiguous ranges inside a cell, exclusive-create shard receipts with per-shard checksums and bindings, per-world
+resume, audit, deterministic atomic merge. 38 tests pass; merged output is byte-identical to the real sequential
+`run_validation` on non-inferential fixtures (also after crash and SIGKILL restarts). Measured 1/2/4-worker
+efficiency 1.00/0.86/0.68 on this shared VM; 18,886 CPU-hours projects to 49/25/12/6.2/3.1 days at
+16/32/64/128/256 workers (shard size 5). No RNG, worlds, search, Gate 2, referee/handoff; no authorization exists.
+**Single next task:** independent verification of the shard layer, then an owner authorization-request packet
+(shard-layer hash, shard size, worker plan, 18,886 CPU-hour estimate, phase-90 receipt `920ff7c0…`).
+
 ### Latest: M3.2 validation bundle revision 3 (FastMetric), September 21
 
 [Report](superpowers/reports/2026-09-21-m32-validation-bundle-v3.md), bundle
@@ -281,6 +297,43 @@ and frozen categorical estimand spec
 No RNG was used and the protocol did not change. This is a bounded P5/C3
 population-majority acceptance, not M3.2 acceptance. **P5/C3 hit/miss
 certification remains outstanding and is the single next task.**
+
+### Latest: M3.2 scheme D replication, September 19 (synthetic only)
+
+[Report](superpowers/reports/2026-09-19-m32-scheme-d-replication.md);
+[results](superpowers/artifacts/m32-scheme-d-replication/2026-09-19-seed-2026091901/results.json).
+Seed 2026091901, 10000 worlds, 9994 tested (6 `eight_label_floor_unmet`
+refusals with no p), 495/9994 = 4.9529718%, Wilson 95% 4.5446264%–5.3959339%.
+Size control not rejected, so the original 120/2000 rejection did not
+replicate. The original result stays separate and is not pooled. This is
+consistent with Monte Carlo fluctuation, not proof of cause or equivalence.
+Scheme D is only a conditional candidate for more synthetic validation. It
+stays blocked for freeze and historical use: the statistic is a surrogate,
+invalid refusals are oracle-dependent, and correlated BH384 power/resolution is
+unvalidated.
+**Single next task (draft only, do not run):** a prespecified synthetic
+validation protocol for unchanged scheme D with the actual M3.2 statistic and
+declared correlated 384-hypothesis family. It must fix refusal and
+draw-resolution requirements before outcomes.
+
+**Latest M3.2 evidence correction, September 19:** offline machinery corrected;
+[report](superpowers/reports/2026-09-19-m32-evidence-corrections.md), 162 tests passed.
+Corrected current evidence: one dependence component, zero eligible verified
+execution outcomes, zero PIT-recorded regimes; power gate remains closed.
+Synthetic block calibration done:
+[report](superpowers/reports/2026-09-19-m32-synthetic-calibration.md). Lab null
+pooled .0501 [.0463,.0541] is descriptive only; market_shocks 64/1000 Wilson
+[.050436,.080901] is an unresolved per-scenario excursion. Literal calendar
+design untestable (0 permutations); independent per-block missingness masks
+untestable; BH384 measured adjusted power 0/250 at 2000 draws. Not freezable;
+proposal unfrozen, family/support/budget unchanged.
+Single next task: synthetic-only design comparison of prespecified
+calendar/missingness conditioning schemes under non-exchangeability stressors.
+BH384 draw-budget change and actual-metric calibration remain subsequent,
+unresolved and unauthorized.
+No M3.2 search, new collection activation, Gate 2 or trading/risk/exit change.
+Earlier operational snapshots below remain historical, not instructions to activate
+an elapsed window.
 
 **Latest: check-now, September 18 18:46–18:50 UTC (bounded, snapshot only).**
 [Check-now 1846 report](superpowers/reports/2026-09-18-check-now-1846.md).

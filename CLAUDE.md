@@ -186,13 +186,16 @@ Paths below are relative to `trader/` unless otherwise stated.
 
 ## Working roles and token efficiency
 
-Claude handles implementation, edits, tests, simulations, routine
-investigation and report generation, and other labour. The coordinating
-agent handles bounded planning, statistical judgment, independent review and
-verification. Check Claude availability through the local Claude CLI even if
-the built-in agent roster lacks a Claude entry. If Claude cannot execute a
-task, report the limitation; do not silently transfer the labour to another
-model.
+Use Claude for coding, edits, tests, simulations, routine investigation and
+report generation whenever it can execute. Reserve Astra for bounded planning,
+statistical judgment, coordination and independent review to conserve its token
+budget. Before substantial implementation, verify availability with a minimal
+execution through the local Claude CLI; an installed CLI or successful --help
+is not evidence that Claude can execute. Give Claude a bounded brief and reuse
+its artifacts and passing checks instead of duplicating its work. If Claude is
+unavailable or rate-limited, report the limitation and follow the current
+session's authorized fallback; do not silently transfer coding to Astra. This
+rule does not require repeated permission for already-authorized work.
 
 For efficiency: give bounded briefs with exact relevant paths, avoid broad
 history/context preloads, avoid duplicate implementations or reviews of the

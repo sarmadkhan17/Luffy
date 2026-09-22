@@ -1,0 +1,40 @@
+{
+  "conditioned_margin": "[0.348954223701730370521545410156 +/- 0.0725]",
+  "conditioned_pgf_bounds_dyadic": [
+    [
+      801591635,
+      -31
+    ],
+    [
+      1002421473,
+      -31
+    ]
+  ],
+  "final_signed_metric_enclosure": "[0,0]",
+  "flint": "3.6.0",
+  "implementation_sha256": "3f932b562f4ffa2a5c7e8defca2aff7a210db432c30789176a1903ef39ea88a4",
+  "independent_implementation": true,
+  "partitions_per_axis": 256,
+  "peak_rss_kib": 91292,
+  "population_margin": "[0.182333313229010130099498561224 +/- 0.0279]",
+  "population_pgf_bounds_dyadic": [
+    [
+      1599195546074375159613571002215193025055250596010946730523,
+      -191
+    ],
+    [
+      1712144440053404220401620866417190980470548622580318214683,
+      -191
+    ]
+  ],
+  "precision_bits": 192,
+  "primary_encloses_replay_conditioned_interval": true,
+  "primary_encloses_replay_population_interval": true,
+  "python_flint": "0.9.0",
+  "result": "PASS",
+  "rng_constructed": false,
+  "runtime_seconds": 10.001151914009824,
+  "same_exact_zero_metric_conclusion": true,
+  "schema": "m3.2-p7-c4-categorical-pgf-arb-replay.v1",
+  "source_certificate_sha256": "c5d47d76d0a06eb2d9caa2188fd2b9e6166a88a04963ab90551bc5174fbf8e7c"
+}

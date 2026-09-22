@@ -1,0 +1,25 @@
+{
+ "draws": 300,
+ "load_average_1m": 0.83056640625,
+ "note": "median across fresh single-worker processes of a token world; slower per draw than the real phase-90 world, used only as a ratio (per-process speed varies about 1.5x on the reference VM)",
+ "phase90_draws_per_second_per_core": 847.626892634036,
+ "phase90_projection_cpu_hours": 18880.62077238084,
+ "phase90_seconds_per_draw_end_to_end": 0.0011797643617611731,
+ "phase90_summary_sha256": "86b8e05caf1850fe730abf6732f686fa541fd2daf1904dd3dc9d011a52ffdf28",
+ "process_draws_per_second": [
+  526.8618976628849,
+  516.0014340575965,
+  615.8966434219099,
+  698.0318677209386,
+  729.7046603829007,
+  758.6142870938942,
+  739.8131247788791,
+  696.1936389804381,
+  691.4414662450718
+ ],
+ "processes": 9,
+ "proxy_draws_per_second": 696.1936389804381,
+ "proxy_seconds_per_draw_end_to_end": 0.0014363819834155341,
+ "reference_host": "sarmad-VMware-Virtual-Platform",
+ "schema": "m3.2-scheme-d-qualification-reference-calibration.v1"
+}

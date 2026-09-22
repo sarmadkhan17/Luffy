@@ -1,0 +1,104 @@
+{
+ "authorization_prerequisites_outside_this_tool": [
+  "owner authorization with shard_layer_sha256 and shard_worlds bound",
+  "measured optimized-benchmark receipt (owner-authorized, RNG) for runtime_estimate_cpu_hours",
+  "target hosts running this tool and the peer flock protocol on the real shared mount"
+ ],
+ "bindings": {
+  "bundle_sha256": "eab05d5d5acf1e4d435010b30005c9fda164da1b8c9fc0377502579c7d21dc01",
+  "shard_layer_sha256": "68195fb6f8548722d3055a00e5892d9d5fdc1caaab0735b3f706e05bc1ab0657"
+ },
+ "compatibility_classes": [
+  [
+   "sarmad-VMware-Virtual-Platform"
+  ]
+ ],
+ "cpu_blas_compatibility": "SINGLE_HOST_NO_CROSS_HOST_COMPARISON",
+ "execution_hosts_ready_for_authorization": false,
+ "filesystem_capability": {
+  "sarmad-VMware-Virtual-Platform": {
+   "atomic_publish": "PASS",
+   "filesystem_policy": "PASS",
+   "flock_cross_host": "NOT_EXERCISED",
+   "flock_exclusivity": "PASS",
+   "fstype": "ext4",
+   "fsync_file_and_dir": "PASS",
+   "hardlink_eexist": "PASS",
+   "renameat2_noreplace": "PASS"
+  }
+ },
+ "hosts": {
+  "sarmad-VMware-Virtual-Platform": {
+   "check_statuses": {
+    "atomic_publish": "PASS",
+    "bindings": "PASS",
+    "canary_fixture": "PASS",
+    "canary_numeric": "PASS",
+    "cpu_features": "PASS",
+    "environment_gate": "PASS",
+    "environment_lock_hash": "PASS",
+    "fastmetric_bit_identity": "PASS",
+    "fastmetric_throughput": "PASS",
+    "filesystem_policy": "PASS",
+    "flock_cross_host": "NOT_EXERCISED",
+    "flock_exclusivity": "PASS",
+    "fsync_file_and_dir": "PASS",
+    "hardlink_eexist": "PASS",
+    "numpy_openblas_identity": "PASS",
+    "renameat2_noreplace": "PASS",
+    "worker_scaling": "PASS"
+   },
+   "compatibility_key": {
+    "bit_identity": "PASS",
+    "canary_fixture": "cac435d83d46de4f229d3784063139998c3a559f1b0b6089ba2809778ec479d6",
+    "canary_numeric": "2ad8836148d346da673f34ca6fcf56511d49edcb0515850668d3182cc8c3ed56",
+    "hardware_identity": "3d577a9e32054a74d09a61ac26120c75b82b331637cc8c4a0e83e75b30c69d59"
+   },
+   "flock_cross_host": {
+    "detail": {
+     "reason": "no --flock-peer-label"
+    },
+    "seconds": 0,
+    "status": "NOT_EXERCISED"
+   },
+   "hostname": "sarmad-VMware-Virtual-Platform",
+   "kernel_boot_id": "528800156a5ed7e64647f8037661d0cdfb81e9c56ece8980e50b587352ea4f95",
+   "mount_fstype": "ext4",
+   "mount_source": "/dev/sda2",
+   "qualified_workers": 4,
+   "receipt_sha256": "0a7364abd45efe911e3762b046c46256deecc3268fb4968b4959dd77bbae5af2",
+   "throughput": {
+    "calibrated_draws_per_second_per_core": 862.8432312568253,
+    "calibrated_full_run_cpu_hours": 18547.65887539459,
+    "draws_per_second_1_worker": 708.6914941686312,
+    "proxy_full_run_cpu_hours": 22580.334212189577,
+    "seconds_per_draw_end_to_end": 0.0014110512235977998,
+    "speed_ratio_vs_reference_host": 1.0179516940236568
+   },
+   "verdict": "PASS"
+  }
+ },
+ "invalid_receipts": [],
+ "multi_host_qualified": false,
+ "not_ready_reasons": [
+  "only_one_host_evidenced: no cross-host flock, no cross-host canary comparison",
+  "capacity: projected full run 252 days on the qualified workers"
+ ],
+ "numeric_canary_differing_ops": {},
+ "projected_full_run_wall_days_at_qualified_workers": 252.34619518843962,
+ "projected_full_run_wall_hours_at_qualified_workers": 6056.308684522551,
+ "qualified_worker_count": 4,
+ "qualified_workers_per_host": {
+  "sarmad-VMware-Virtual-Platform": 4
+ },
+ "receipts_sha256": {
+  "sarmad-VMware-Virtual-Platform": "0a7364abd45efe911e3762b046c46256deecc3268fb4968b4959dd77bbae5af2"
+ },
+ "report_sha256": "52ab3aa38ad10f6f7ba67909bffed14fb6d258031ba66a4994d93a2ead5b4bcf",
+ "schema": "m3.2-scheme-d-qualification-report.v1",
+ "selected_hosts": [
+  "sarmad-VMware-Virtual-Platform"
+ ],
+ "single_host_qualified": true,
+ "tool_sha256": "dabeaeb773aebde37b91cd8298828bd00125936e2d889e42c96d3eb1ba1c0458"
+}

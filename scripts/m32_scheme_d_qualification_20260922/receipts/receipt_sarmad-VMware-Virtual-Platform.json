@@ -1,0 +1,539 @@
+{
+ "authorization_read": false,
+ "bindings": {
+  "bundle_sha256": "eab05d5d5acf1e4d435010b30005c9fda164da1b8c9fc0377502579c7d21dc01",
+  "shard_layer_sha256": "68195fb6f8548722d3055a00e5892d9d5fdc1caaab0735b3f706e05bc1ab0657"
+ },
+ "checks": {
+  "atomic_publish": {
+   "detail": {
+    "dir_publish_files": 200,
+    "dir_readers": [
+     {
+      "full_listings": 2075,
+      "partial_listings": 0
+     },
+     {
+      "full_listings": 2143,
+      "partial_listings": 0
+     }
+    ],
+    "rounds": [
+     {
+      "identical_host_pid_clock": false,
+      "problems": [],
+      "reader_reads": 323,
+      "refusals": 5,
+      "torn_reads": 0,
+      "winners": 1
+     },
+     {
+      "identical_host_pid_clock": true,
+      "problems": [],
+      "reader_reads": 281,
+      "refusals": 5,
+      "torn_reads": 0,
+      "winners": 1
+     }
+    ]
+   },
+   "seconds": 3.537,
+   "status": "PASS"
+  },
+  "bindings": {
+   "detail": {
+    "bundle_sha256": "eab05d5d5acf1e4d435010b30005c9fda164da1b8c9fc0377502579c7d21dc01",
+    "equivalence_comparisons": 7592064,
+    "expected_bundle_sha256": "eab05d5d5acf1e4d435010b30005c9fda164da1b8c9fc0377502579c7d21dc01",
+    "expected_shard_layer_sha256": "68195fb6f8548722d3055a00e5892d9d5fdc1caaab0735b3f706e05bc1ab0657",
+    "fast_metric_module_sha256": "892be0d02537b7ad1d353456a7a960e7181afefd6101983d47764944c95105d0",
+    "runner_sha256": "6578265958d73ae7647fed94bd0860f3b7b588e13132c1e70dd66ef252e21063",
+    "shard_layer_sha256": "68195fb6f8548722d3055a00e5892d9d5fdc1caaab0735b3f706e05bc1ab0657",
+    "tool_sha256": "dabeaeb773aebde37b91cd8298828bd00125936e2d889e42c96d3eb1ba1c0458"
+   },
+   "seconds": 0.115,
+   "status": "PASS"
+  },
+  "canary_fixture": {
+   "detail": {
+    "canary_id": "cac435d83d46de4f229d3784063139998c3a559f1b0b6089ba2809778ec479d6",
+    "equals_sequential_runner": true,
+    "files_sha256": {
+     "N1_C0.receipts.jsonl": "2053e92b0c9a2c2f33cc02126b8d5137d2684bf6fb234e29c5a820c313c04f01",
+     "N3_C4.receipts.jsonl": "61354c9ac357c99e93c8befb135a1dbef3ec044b3e45a5f1f016b365f7a2b435",
+     "P1_C0.receipts.jsonl": "c88b7f9e5355ca6db316e2c360e268ace5a7524f34e24ba83cae5d96881704a0",
+     "P4_C3.receipts.jsonl": "dd1c52d1817bf84ed6b45ca666d9c803371221bec2efc2c05ffd944975f90631",
+     "P7_C1.receipts.jsonl": "2abd865e5111785f341744cf40fe9dc977203f98f0f0c9d8740c42a25259fabd",
+     "run_result.json": "5cceb5670a6cda13e05b7db06a66b36b483d331db51defc67dfa2841ff92589e"
+    },
+    "manifest_deterministic_sha256": "9b11622c889d637aa5369e2131b3059b926c49e36a5d2b3d13112a470bc27259",
+    "run_manifest_sha256": "8b0fdb3886dab860cee9424a177e693d651ba02a6ebbf56cb676f130a314e185",
+    "shards": 7,
+    "shards_tree_sha256": "1805ab637eeaf12abb07fdd0e53b9f5573bafb7fd7c6eba8b0309a413cdb667a",
+    "worlds": 16
+   },
+   "seconds": 11.507,
+   "status": "PASS"
+  },
+  "canary_numeric": {
+   "detail": {
+    "canary_id": "2ad8836148d346da673f34ca6fcf56511d49edcb0515850668d3182cc8c3ed56",
+    "hashes": {
+     "arctan": "0e310fdcbfc7998c612eef62e6d966139986c696ed79bb42504f40ed3db70436",
+     "argsort": "d7213135d5cbdc8be467240e11e9e7c4bcfc539fd4f3f098b9e9a9d8228278a6",
+     "cholesky": "b4f6fc4406081a1184542ce29b3063df08dc23153f832d6039b779fd416daae7",
+     "cos": "5b1e6fcdf4a82915784a7980a8ad7484e1e4ec71d8b12218ca1574a4164c2513",
+     "eigvalsh": "2c03c3a7c0f295fff5188a600dd930648a6348cec9516d8cd17e8c5b27877e6c",
+     "einsum": "339d9c126faefa080b76c5195f1496088b01bce831e6b10b1b30088f526b2789",
+     "exp": "43bdcd46efe90ccaecdb6432985091153bfd7140fa0473c56b586a4c693e2342",
+     "gemv": "cd71cf4bb72b210d1cc299d5f40729cd048227e069ddc87283609cb879897008",
+     "gram_f64": "e34a4171a5cb1bd67c1ab614077f74ef076d7e6fb0dc6e76b765e26659003d38",
+     "log": "965744cd02b9eb38dd4bf0fbf4dd18123dc0b46ec274f829c6c118ea633edc38",
+     "matmul_f32_int": "ad8570470e488efd0490d8da609942913fa79b34d713ea962d0dcce93013923e",
+     "matmul_f64": "20863a76fcb01758b1a679186b5e057f2a74bd982bbac4fe7055a78d00f435fe",
+     "power": "ecdb0ac474a52e12e0e4b9ea193126b2f8ea289f830d01123a9bf03df8e76827",
+     "searchsorted": "4f89c5a490cf04eb197b441429b597d7141ac7366a7c33d448e1832693eb6642",
+     "sin": "8c7af9847266a475b46cf8c4c7ba4b8753d1fb5f20740383d8bd2582674d8da7",
+     "solve": "337f6f42a035b293370bcf782412598cbafdccc7584bd84d5452274e167c8984",
+     "sqrt": "b78e326157d00ead7ef68454af3179f08911494b4777c53f338397a448463adf",
+     "sum": "f1974ceb2f541800fbea71e314a76b5ebead8031eb0e9245b8b3254cdcc14a50",
+     "sum_f32": "05939189c2eaffadb631613a06fa08732740a636c0acdf82a3a5ee099d5bcbb0",
+     "tanh": "4a12475b6c5bc4d47fa05fcec3d8fe3802374d902fba4471c830ad799f542a13"
+    }
+   },
+   "seconds": 0.069,
+   "status": "PASS"
+  },
+  "cpu_features": {
+   "detail": {
+    "affinity_cpus": 4,
+    "cpu_flag_count": 95,
+    "cpu_flags_sha256": "bd0340b89e4c0c613d7903e7f0b8b0c19b25e79dd96be5ee0cdc6125e1e37dc5",
+    "cpu_model": "AMD Ryzen 5 5600H with Radeon Graphics",
+    "logical_cpus": 4,
+    "machine": "x86_64",
+    "numpy_cpu_features": [
+     "AVX",
+     "AVX2",
+     "BMI",
+     "BMI2",
+     "CX16",
+     "F16C",
+     "FMA3",
+     "LAHF",
+     "LZCNT",
+     "MMX",
+     "MOVBE",
+     "POPCNT",
+     "SSE",
+     "SSE2",
+     "SSE3",
+     "SSE41",
+     "SSE42",
+     "SSSE3",
+     "VAES",
+     "VPCLMULQDQ",
+     "X86_V2",
+     "X86_V3"
+    ],
+    "simd_class": "avx2"
+   },
+   "seconds": 0.0,
+   "status": "PASS"
+  },
+  "environment_gate": {
+   "detail": {
+    "numpy": "2.5.2",
+    "openblas_threads": "1",
+    "python": "3.12.3"
+   },
+   "seconds": 0.0,
+   "status": "PASS"
+  },
+  "environment_lock_hash": {
+   "detail": {
+    "environment_lock_sha256": "4d9c4fcceec550bdc8113ab6002700bae24bd30958a78998ffa2e40e7b29742a",
+    "installed_distribution_count": 86,
+    "installed_distributions_sha256": "c3bea3dc4158bdfabe74f25aea41a020af0bf42e02c127ca3d3e1be1b58ed9e0",
+    "lock_installed_distributions_sha256": "c3bea3dc4158bdfabe74f25aea41a020af0bf42e02c127ca3d3e1be1b58ed9e0",
+    "warnings": []
+   },
+   "seconds": 0.116,
+   "status": "PASS"
+  },
+  "fastmetric_bit_identity": {
+   "detail": {
+    "bitwise_identical": true,
+    "hypotheses_compared": 768,
+    "reference_seconds_per_vector": 8.304504983476363,
+    "reference_vectors": 2,
+    "tested_hypotheses": 384
+   },
+   "seconds": 17.311,
+   "status": "PASS"
+  },
+  "fastmetric_throughput": {
+   "detail": {
+    "calibrated": true,
+    "calibrated_draws_per_second_per_core": 862.8432312568253,
+    "calibrated_full_run_cpu_hours": 18547.65887539459,
+    "calibrated_seconds_per_draw_end_to_end": 0.001158959082918679,
+    "draws": 300,
+    "draws_per_second_1_worker": 708.6914941686312,
+    "encode_seconds": 0.16870246198959649,
+    "load_average_1m": 1.68798828125,
+    "logical_cpus": 4,
+    "note": "projection: recorded phase-90 real-world rate scaled by this host's token-world speed ratio",
+    "process_draws_per_second": [
+     681.3121494776798,
+     708.6914941686312,
+     734.0323845374205,
+     666.4776727117023,
+     693.5200625857293,
+     764.0948236656707,
+     756.0063626648839
+    ],
+    "process_spread_max_over_min": 1.1464672485678218,
+    "processes": 7,
+    "proxy_full_run_cpu_hours": 22580.334212189577,
+    "reps_per_process": 3,
+    "seconds_per_draw_end_to_end": 0.0014110512235977998,
+    "speed_ratio_vs_reference_host": 1.0179516940236568,
+    "statistic": "median across fresh single-worker processes",
+    "tested_hypotheses": 384
+   },
+   "seconds": 14.416,
+   "status": "PASS"
+  },
+  "filesystem_policy": {
+   "detail": {
+    "class": "local",
+    "mount": {
+     "fstype": "ext4",
+     "mount_point": "/",
+     "options": "rw,relatime",
+     "source": "/dev/sda2",
+     "super_options": "rw"
+    },
+    "warnings": []
+   },
+   "seconds": 0.0,
+   "status": "PASS"
+  },
+  "flock_cross_host": {
+   "detail": {
+    "reason": "no --flock-peer-label"
+   },
+   "seconds": 0,
+   "status": "NOT_EXERCISED"
+  },
+  "flock_exclusivity": {
+   "detail": {
+    "cross_process_blocked": true,
+    "released_after_sigkill_seconds": 1.025001984089613e-05,
+    "same_process": "second_descriptor_blocked"
+   },
+   "seconds": 0.369,
+   "status": "PASS"
+  },
+  "fsync_file_and_dir": {
+   "detail": {
+    "dir_fsync_ms_median": 0.020103005226701498,
+    "fdatasync": true,
+    "file_fsync_ms_median": 1.2383894645608962,
+    "note": "semantic success only: durability across power loss cannot be proven by a software probe"
+   },
+   "seconds": 0.082,
+   "status": "PASS"
+  },
+  "hardlink_eexist": {
+   "detail": {
+    "eexist": 7,
+    "errno_eexist": 17,
+    "nlink_after_link": 2,
+    "racers": 8,
+    "winners": 1
+   },
+   "seconds": 0.379,
+   "status": "PASS"
+  },
+  "numpy_openblas_identity": {
+   "detail": {
+    "blas_build": {
+     "name": "scipy-openblas",
+     "openblas configuration": "OpenBLAS 0.3.34.0.0  USE64BITINT DYNAMIC_ARCH NO_AFFINITY Haswell MAX_THREADS=64",
+     "version": "0.3.34.0.0"
+    },
+    "blas_runtime_corename": "Haswell",
+    "blas_runtime_library": "libscipy_openblas64_-61654e39.so",
+    "blas_runtime_library_sha256": "6cad8d2ad994ddc43d2ccdb0fb5d9458373ff1b87ef7ff420f2f94406eb8f082",
+    "hardware_identity": "3d577a9e32054a74d09a61ac26120c75b82b331637cc8c4a0e83e75b30c69d59",
+    "numpy": "2.5.2",
+    "openblas_coretype_env": null,
+    "openblas_num_threads": "1",
+    "problems": []
+   },
+   "seconds": 0.0,
+   "status": "PASS"
+  },
+  "renameat2_noreplace": {
+   "detail": {
+    "dir_over_empty_dir_errno": 17,
+    "file_over_file_errno": 17,
+    "layer_primitive_used": "renameat2_noreplace",
+    "plain_rename_replaces_empty_dir": true,
+    "primitive": "renameat2_noreplace"
+   },
+   "seconds": 0.002,
+   "status": "PASS"
+  },
+  "worker_scaling": {
+   "detail": {
+    "affinity_cpus": 4,
+    "efficiency_baseline_draws_per_second": 708.6914941686312,
+    "ladder": {
+     "1": {
+      "aggregate_draws_per_second": 725.0712894493103,
+      "efficiency": 1.0231127301730838,
+      "peak_rss_mib_max": 171.0859375,
+      "per_worker_draws_per_second": [
+       725.0712894493103
+      ],
+      "wall_seconds": 0.7292295549996197
+     },
+     "2": {
+      "aggregate_draws_per_second": 1354.5595439481808,
+      "efficiency": 0.9556764509620791,
+      "peak_rss_mib_max": 171.0859375,
+      "per_worker_draws_per_second": [
+       667.1736253790983,
+       687.3859185690824
+      ],
+      "wall_seconds": 0.8102333080023527
+     },
+     "4": {
+      "aggregate_draws_per_second": 2170.3926874344443,
+      "efficiency": 0.7656338143230225,
+      "peak_rss_mib_max": 171.0859375,
+      "per_worker_draws_per_second": [
+       569.162288678013,
+       541.8806455309226,
+       530.0240093963256,
+       529.3257438291832
+      ],
+      "wall_seconds": 0.9525810059858486
+     }
+    },
+    "load_average_1m_before": 1.90625,
+    "mem_available_mib": 5162.20703125,
+    "memory_bound_workers": 16,
+    "min_efficiency": 0.6,
+    "peak_rss_mib_per_worker": 171.0859375,
+    "qualified_workers": 4,
+    "rule": "largest ladder size with parallel efficiency >= min_efficiency, capped by affinity CPUs and by MemAvailable*0.8 / (peak RSS * 1.5)"
+   },
+   "seconds": 4.444,
+   "status": "PASS"
+  }
+ },
+ "compatibility_key": {
+  "bit_identity": "PASS",
+  "canary_fixture": "cac435d83d46de4f229d3784063139998c3a559f1b0b6089ba2809778ec479d6",
+  "canary_numeric": "2ad8836148d346da673f34ca6fcf56511d49edcb0515850668d3182cc8c3ed56",
+  "hardware_identity": "3d577a9e32054a74d09a61ac26120c75b82b331637cc8c4a0e83e75b30c69d59"
+ },
+ "finished": 1790033638.775765,
+ "host": {
+  "boot_id_sha256": "528800156a5ed7e64647f8037661d0cdfb81e9c56ece8980e50b587352ea4f95",
+  "hostname": "sarmad-VMware-Virtual-Platform",
+  "kernel": "7.0.0-31-generic",
+  "machine": "x86_64",
+  "machine_id_sha256": "282b85275ca91d80a2a3c16bb3fa844db3aaafa6b04019fbfeb1738e85bba903",
+  "system": "Linux"
+ },
+ "label": "sarmad-VMware-Virtual-Platform",
+ "non_inferential": true,
+ "provenance": {
+  "blas": {
+   "build": {
+    "name": "scipy-openblas",
+    "openblas configuration": "OpenBLAS 0.3.34.0.0  USE64BITINT DYNAMIC_ARCH NO_AFFINITY Haswell MAX_THREADS=64",
+    "version": "0.3.34.0.0"
+   },
+   "runtime_config": "OpenBLAS 0.3.34.0.0  USE64BITINT DYNAMIC_ARCH NO_AFFINITY Haswell MAX_THREADS=64",
+   "runtime_corename": "Haswell",
+   "runtime_library": "libscipy_openblas64_-61654e39.so",
+   "runtime_library_sha256": "6cad8d2ad994ddc43d2ccdb0fb5d9458373ff1b87ef7ff420f2f94406eb8f082"
+  },
+  "cpu_flags": [
+   "3dnowprefetch",
+   "abm",
+   "adx",
+   "aes",
+   "apic",
+   "arat",
+   "avx",
+   "avx2",
+   "bmi1",
+   "bmi2",
+   "clflush",
+   "clflushopt",
+   "clwb",
+   "clzero",
+   "cmov",
+   "constant_tsc",
+   "cpuid",
+   "cr8_legacy",
+   "cx16",
+   "cx8",
+   "de",
+   "erms",
+   "extapic",
+   "extd_apicid",
+   "f16c",
+   "fma",
+   "fpu",
+   "fsgsbase",
+   "fsrm",
+   "fxsr",
+   "fxsr_opt",
+   "hypervisor",
+   "ibpb",
+   "invpcid",
+   "lahf_lm",
+   "lm",
+   "mca",
+   "mce",
+   "misalignsse",
+   "mmx",
+   "mmxext",
+   "movbe",
+   "msr",
+   "mtrr",
+   "nonstop_tsc",
+   "nopl",
+   "nx",
+   "ospke",
+   "osvw",
+   "overflow_recov",
+   "pae",
+   "pat",
+   "pclmulqdq",
+   "pdpe1gb",
+   "pge",
+   "pku",
+   "pni",
+   "popcnt",
+   "pse",
+   "pse36",
+   "rdpid",
+   "rdrand",
+   "rdseed",
+   "rdtscp",
+   "rep_good",
+   "sep",
+   "sha_ni",
+   "smap",
+   "smep",
+   "ssbd",
+   "sse",
+   "sse2",
+   "sse4_1",
+   "sse4_2",
+   "sse4a",
+   "ssse3",
+   "succor",
+   "syscall",
+   "topoext",
+   "tsc",
+   "tsc_known_freq",
+   "tsc_reliable",
+   "umip",
+   "vaes",
+   "vme",
+   "vmmcall",
+   "vpclmulqdq",
+   "wbnoinvd",
+   "x2apic",
+   "xgetbv1",
+   "xsave",
+   "xsavec",
+   "xsaveopt",
+   "xsaves",
+   "xtopology"
+  ],
+  "cpu_model": "AMD Ryzen 5 5600H with Radeon Graphics",
+  "environment": {
+   "numpy": "2.5.2",
+   "openblas_coretype": null,
+   "openblas_threads": "1",
+   "python": "3.12.3"
+  },
+  "environment_lock_sha256": "4d9c4fcceec550bdc8113ab6002700bae24bd30958a78998ffa2e40e7b29742a",
+  "hardware_identity": "3d577a9e32054a74d09a61ac26120c75b82b331637cc8c4a0e83e75b30c69d59",
+  "hostname": "sarmad-VMware-Virtual-Platform",
+  "informational": true,
+  "numpy_cpu_features": [
+   "AVX",
+   "AVX2",
+   "BMI",
+   "BMI2",
+   "CX16",
+   "F16C",
+   "FMA3",
+   "LAHF",
+   "LZCNT",
+   "MMX",
+   "MOVBE",
+   "POPCNT",
+   "SSE",
+   "SSE2",
+   "SSE3",
+   "SSE41",
+   "SSE42",
+   "SSSE3",
+   "VAES",
+   "VPCLMULQDQ",
+   "X86_V2",
+   "X86_V3"
+  ],
+  "schema": "m3.2-scheme-d-shard-provenance.v1",
+  "sha256": "33654a1e78b910443a4e9e9fc0d04ab1c9b0adb0ea74d10c79258c1ad7811e02"
+ },
+ "qualified_workers": 4,
+ "quick": false,
+ "receipt_sha256": "0a7364abd45efe911e3762b046c46256deecc3268fb4968b4959dd77bbae5af2",
+ "rng_constructed": false,
+ "schema": "m3.2-scheme-d-host-qualification-receipt.v1",
+ "signature": {
+  "note": "hash-bound only: no HMAC key was provisioned",
+  "scheme": "none"
+ },
+ "started": 1790033586.3795762,
+ "target": {
+  "dir": "/home/sarmad/trader/data",
+  "mount": {
+   "fstype": "ext4",
+   "mount_point": "/",
+   "options": "rw,relatime",
+   "source": "/dev/sda2",
+   "super_options": "rw"
+  },
+  "work_dir": "/home/sarmad/trader/data/qual_sarmad-VMware-Virtual-Platform_1574918_1790033586379391442"
+ },
+ "throughput": {
+  "calibrated_draws_per_second_per_core": 862.8432312568253,
+  "calibrated_full_run_cpu_hours": 18547.65887539459,
+  "draws_per_second_1_worker": 708.6914941686312,
+  "proxy_full_run_cpu_hours": 22580.334212189577,
+  "seconds_per_draw_end_to_end": 0.0014110512235977998,
+  "speed_ratio_vs_reference_host": 1.0179516940236568
+ },
+ "tool_sha256": "dabeaeb773aebde37b91cd8298828bd00125936e2d889e42c96d3eb1ba1c0458",
+ "validation_worlds": 0,
+ "verdict": "PASS",
+ "verdict_detail": {
+  "cross_host_flock": "NOT_EXERCISED",
+  "renameat2_fallback": false
+ }
+}

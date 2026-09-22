@@ -1,0 +1,190 @@
+{
+  "arithmetic": {
+    "directed_rounding": "Arb midpoint-radius balls with rigorous outward error bounds",
+    "flint": "3.6.0",
+    "partitions_per_axis": 128,
+    "precision_bits": 128,
+    "python_flint": "0.9.0"
+  },
+  "case": "P7/C4 categorical h=24 (non-target, sector B)",
+  "classification": "true_null",
+  "exact_structure": {
+    "C4_factor_correlation": "-1/2",
+    "C4_residual_variance": "2/5",
+    "C4_systematic_variance": "3/5",
+    "conditioning_event": "h24 state membership in sector B",
+    "odds_ratio": "3/2",
+    "pgf_argument": "20/21",
+    "sector_A_target_counts": {
+      "linked_q_1_5": 24,
+      "state_q_1_4": 16
+    },
+    "sector_B_target_counts": {
+      "linked_q_1_5": 24,
+      "state_q_1_4": 8
+    }
+  },
+  "factorized_integration_dimension": 2,
+  "frozen_binary64_inputs": {
+    "linked_threshold": {
+      "binary64_hex": "0x1.aee8fa73a1334p-1",
+      "decimal_text": "0.8416212335729143",
+      "exact_binary64_rational": "1895162536953037/2251799813685248"
+    },
+    "state_threshold": {
+      "binary64_hex": "0x1.5956b87528a49p-1",
+      "decimal_text": "0.6744897501960817",
+      "exact_binary64_rational": "6075263575296585/9007199254740992"
+    }
+  },
+  "full_orthant_engine_constructed": false,
+  "gaussian_tail_bound": {
+    "conditioned_pgf_additive_contribution_upper_bound": {
+      "decimal": "[1.21917648386568411204590955184e-22 +/- 2.86e-52]",
+      "lower_dyadic": {
+        "exponent": -194,
+        "mantissa": 3061157929046366936286851191876554271
+      },
+      "radius_decimal": "9.33882854845e-59",
+      "upper_dyadic": {
+        "exponent": -199,
+        "mantissa": 97957053729483741961179238140049736823
+      }
+    },
+    "method": "P(outside) <= 4*Q(10), Q(x)=erfc(x/sqrt(2))/2 evaluated by Arb",
+    "outside_square": {
+      "decimal": "[3.04794120966421042638933730064e-23 +/- 2.77e-54]",
+      "lower_dyadic": {
+        "exponent": -202,
+        "mantissa": 195914107458967493324524911026285934305
+      },
+      "radius_decimal": "2.31914959521e-59",
+      "upper_dyadic": {
+        "exponent": -202,
+        "mantissa": 195914107458967493324524911026285934605
+      }
+    },
+    "population_pgf_additive_contribution": {
+      "decimal": "[3.04794120966421042638933730064e-23 +/- 2.77e-54]",
+      "lower_dyadic": {
+        "exponent": -202,
+        "mantissa": 195914107458967493324524911026285934305
+      },
+      "radius_decimal": "2.31914959521e-59",
+      "upper_dyadic": {
+        "exponent": -202,
+        "mantissa": 195914107458967493324524911026285934605
+      }
+    },
+    "truncation_box": "[-10,10]^2 in independent factor coordinates"
+  },
+  "implementation_sha256": "7ebed67e319a7687c6495e06a1017f44c48c87509305cc67b6e8a32267fc8296",
+  "majority_proof": {
+    "both_unique_class_2": true,
+    "conditioned_margin": {
+      "decimal": "[0.348988825595006346702575683594 +/- 0.157]",
+      "lower_dyadic": {
+        "exponent": -127,
+        "mantissa": 32738185295498291377411101627079511245
+      },
+      "radius_decimal": "0.156571066240",
+      "upper_dyadic": {
+        "exponent": -127,
+        "mantissa": 86016558306929058872910415745944177869
+      }
+    },
+    "criterion": "class 2 is unique majority iff 1-(31/20)*E[(20/21)^K] > 0",
+    "exact_metric_identity": "same constant class-2 classifier => macro-F1 lift = 0 exactly",
+    "population_margin": {
+      "decimal": "[0.182521484199238902003814342572 +/- 0.0596]",
+      "lower_dyadic": {
+        "exponent": -126,
+        "mantissa": 10461987078205377316467417872299355821
+      },
+      "radius_decimal": "0.0595414171112",
+      "upper_dyadic": {
+        "exponent": -126,
+        "mantissa": 20592434250414464773833465520151752365
+      }
+    }
+  },
+  "peak_rss_kib": 91232,
+  "quadrature": {
+    "condition_probability_enclosure": {
+      "decimal": "[0.250000000000000011997816998344 +/- 2.38e-31]",
+      "lower_dyadic": {
+        "exponent": -127,
+        "mantissa": 42535295865117309974244608969313416893
+      },
+      "radius_decimal": "3.04419038498e-39",
+      "upper_dyadic": {
+        "exponent": -128,
+        "mantissa": 85070591730234619948489217938626833789
+      }
+    },
+    "conditioned_enclosure_radius": "0.101013590582",
+    "conditioned_numerator_enclosure": {
+      "decimal": "[0.105001802257016468813533512281 +/- 0.0253]",
+      "lower_dyadic": {
+        "exponent": -131,
+        "mantissa": 217095808461304877909260022530649156627
+      },
+      "radius_decimal": "0.0252533971216",
+      "upper_dyadic": {
+        "exponent": -129,
+        "mantissa": 88647095096601390683869966505028958981
+      }
+    },
+    "conditioned_pgf_enclosure": {
+      "decimal": "[0.420007209293544292449951171875 +/- 0.102]",
+      "lower_dyadic": {
+        "exponent": -29,
+        "mantissa": 171258395
+      },
+      "radius_decimal": "0.101013590582",
+      "upper_dyadic": {
+        "exponent": -25,
+        "mantissa": 17482557
+      }
+    },
+    "method": "composite Arb interval boxes weighted by Arb-enclosed exact Gaussian cell masses",
+    "population_enclosure_radius": "0.0384138173540",
+    "population_pgf_enclosure": {
+      "decimal": "[0.527405494065007159997539133825 +/- 0.0385]",
+      "lower_dyadic": {
+        "exponent": -128,
+        "mantissa": 166395245155855679136972228003400036567
+      },
+      "radius_decimal": "0.0384138173540",
+      "upper_dyadic": {
+        "exponent": -128,
+        "mantissa": 192538334539239519937573372831265763543
+      }
+    }
+  },
+  "raw_threshold_event_dimension": 73,
+  "rng_constructed": false,
+  "runtime_seconds": 1.943400451040361,
+  "schema": "m3.2-p7-c4-categorical-pgf-arb-spike.v1",
+  "sign": null,
+  "simulation_worlds_constructed": 0,
+  "status": "PASS",
+  "truth_rule": {
+    "delta_truth": "1e-10",
+    "final_signed_metric_enclosure": {
+      "decimal": "0",
+      "lower_dyadic": {
+        "exponent": 0,
+        "mantissa": 0
+      },
+      "radius_decimal": "0",
+      "upper_dyadic": {
+        "exponent": 0,
+        "mantissa": 0
+      }
+    },
+    "maximum_final_radius": "1e-12",
+    "non_null_zero_exclusion_applicable": false,
+    "tolerance_met": true
+  }
+}

@@ -1,0 +1,131 @@
+{
+ "by_shard_worlds": {
+  "1": {
+   "hours_per_shard": 0.25180811396007685,
+   "shards": 75000,
+   "workers": {
+    "128": {
+     "quantisation_loss": 0.00010666666666669933,
+     "wall_days": 6.148314782525209,
+     "wall_days_at_this_host_efficiency": 8.982061355459114,
+     "wall_hours": 147.55955478060503,
+     "waves": 586
+    },
+    "16": {
+     "quantisation_loss": 0.00010666666666669933,
+     "wall_days": 49.18651826020167,
+     "wall_days_at_this_host_efficiency": 71.85649084367292,
+     "wall_hours": 1180.4764382448402,
+     "waves": 4688
+    },
+    "256": {
+     "quantisation_loss": 0.00010666666666669933,
+     "wall_days": 3.0741573912626046,
+     "wall_days_at_this_host_efficiency": 4.491030677729557,
+     "wall_hours": 73.77977739030251,
+     "waves": 293
+    },
+    "32": {
+     "quantisation_loss": 0.00010666666666669933,
+     "wall_days": 24.593259130100837,
+     "wall_days_at_this_host_efficiency": 35.92824542183646,
+     "wall_hours": 590.2382191224201,
+     "waves": 2344
+    },
+    "64": {
+     "quantisation_loss": 0.00010666666666669933,
+     "wall_days": 12.296629565050418,
+     "wall_days_at_this_host_efficiency": 17.96412271091823,
+     "wall_hours": 295.11910956121005,
+     "waves": 1172
+    }
+   }
+  },
+  "25": {
+   "hours_per_shard": 6.295202849001922,
+   "shards": 3000,
+   "workers": {
+    "128": {
+     "quantisation_loss": 0.02400000000000002,
+     "wall_days": 6.295202849001921,
+     "wall_days_at_this_host_efficiency": 9.19664985200592,
+     "wall_hours": 151.0848683760461,
+     "waves": 24
+    },
+    "16": {
+     "quantisation_loss": 0.002666666666666595,
+     "wall_days": 49.31242231718172,
+     "wall_days_at_this_host_efficiency": 72.04042384071305,
+     "wall_hours": 1183.4981356123612,
+     "waves": 188
+    },
+    "256": {
+     "quantisation_loss": 0.02400000000000002,
+     "wall_days": 3.1476014245009605,
+     "wall_days_at_this_host_efficiency": 4.59832492600296,
+     "wall_hours": 75.54243418802305,
+     "waves": 12
+    },
+    "32": {
+     "quantisation_loss": 0.002666666666666595,
+     "wall_days": 24.65621115859086,
+     "wall_days_at_this_host_efficiency": 36.02021192035652,
+     "wall_hours": 591.7490678061806,
+     "waves": 94
+    },
+    "64": {
+     "quantisation_loss": 0.002666666666666595,
+     "wall_days": 12.32810557929543,
+     "wall_days_at_this_host_efficiency": 18.01010596017826,
+     "wall_hours": 295.8745339030903,
+     "waves": 47
+    }
+   }
+  },
+  "5": {
+   "hours_per_shard": 1.2590405698003844,
+   "shards": 15000,
+   "workers": {
+    "128": {
+     "quantisation_loss": 0.006933333333333236,
+     "wall_days": 6.190282801518555,
+     "wall_days_at_this_host_efficiency": 9.043372354472487,
+     "wall_hours": 148.56678723644532,
+     "waves": 118
+    },
+    "16": {
+     "quantisation_loss": 0.0005333333333332746,
+     "wall_days": 49.20750226969835,
+     "wall_days_at_this_host_efficiency": 71.88714634317961,
+     "wall_hours": 1180.9800544727605,
+     "waves": 938
+    },
+    "256": {
+     "quantisation_loss": 0.006933333333333236,
+     "wall_days": 3.0951414007592777,
+     "wall_days_at_this_host_efficiency": 4.521686177236243,
+     "wall_hours": 74.28339361822266,
+     "waves": 59
+    },
+    "32": {
+     "quantisation_loss": 0.0005333333333332746,
+     "wall_days": 24.603751134849176,
+     "wall_days_at_this_host_efficiency": 35.943573171589804,
+     "wall_hours": 590.4900272363802,
+     "waves": 469
+    },
+    "64": {
+     "quantisation_loss": 0.002666666666666595,
+     "wall_days": 12.32810557929543,
+     "wall_days_at_this_host_efficiency": 18.01010596017826,
+     "wall_hours": 295.8745339030903,
+     "waves": 235
+    }
+   }
+  }
+ },
+ "cpu_hours": 18885.608547005766,
+ "measured_4_worker_efficiency_this_host": 0.6845104413352051,
+ "per_world_cpu_seconds": 906.5092102562767,
+ "schema": "m3.2-shard-full-run-projection.v1"
+}

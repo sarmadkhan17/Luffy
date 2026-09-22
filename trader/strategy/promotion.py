@@ -54,15 +54,45 @@ def evaluate_population(journal: Journal, notifier=None) -> list[dict]:
         sid, state = row["id"], row["state"]
         if state == "retired":
             continue
+        # The branches below are the LEGACY GENOME lifecycle rules.
+        # `list_strategies()` applies no kind filter, so without this they also
+        # swept `kind='spec'` rows — and on 2026-09-20 retired the Donchian
+        # spec on 6 closed trades while 6 winners sat open, with no
+        # retire_reason written. Specs retire through
+        # analyst.review_deployed -> rolling.has_decayed, which scores pooled
+        # backtested evidence on the spec's own universe and treats too few
+        # recent trades as idle, not decay.
+        # OBSERVED, NOT GOVERNED: a spec still has its stats blob refreshed at
+        # the foot of this loop — the dashboard and the vault read it — it is
+        # only excluded from every branch that can change state.
+        # See docs/superpowers/reports/2026-09-20-donchian-retirement-attribution-audit.md
+        observe_only = row["kind"] == "spec"
         st = _stats_for(journal, sid)
 
         def transition(new_state: str, reason: str):
             if new_state == state:
                 return          # no-op: don't spam events/alerts each cycle
-            journal.query("UPDATE strategies SET state=?, state_changed_at=? "
-                          "WHERE id=?",
-                          (new_state, datetime.now(timezone.utc).isoformat(),
-                           sid))
+            # State, its timestamp and its REASON land in ONE statement inside
+            # ONE transaction, so a row can never carry a changed state without
+            # the provenance that explains it. Donchian was retired here on
+            # 2026-09-20 with an empty retire_reason and had to be traced by
+            # elimination against the other writers; this is that gap closed.
+            # `retire_reason` is the existing state-change reason column —
+            # tv.py already wrote demotion verdicts into it, and
+            # scripts/repair_proxy_demotions.py reads it on demoted rows.
+            # `AND state=?` makes the write deterministic on the shared WAL:
+            # if another writer moved the row first, this transition does not
+            # fire at all rather than clobbering it, and no event is emitted.
+            with journal._tx() as c:
+                changed = c.execute(
+                    "UPDATE strategies SET state=?, state_changed_at=?, "
+                    "retire_reason=? WHERE id=? AND state=?",
+                    (new_state, datetime.now(timezone.utc).isoformat(),
+                     reason, sid, state)).rowcount
+            if not changed:
+                log.warning(f"STRATEGY {row['name']}: {state} → {new_state} "
+                            f"skipped — row is no longer in state '{state}'")
+                return
             journal.log_brain_event(
                 "statistical_transition", sid,
                 {"from": state, "to": new_state, "reason": reason,
@@ -72,7 +102,9 @@ def evaluate_population(journal: Journal, notifier=None) -> list[dict]:
             actions.append({"strategy": row["name"], "id": sid,
                             "from": state, "to": new_state, "reason": reason})
 
-        if state == "paper":
+        if observe_only:
+            pass                # no legacy lifecycle branch may run on a spec
+        elif state == "paper":
             if st["trades"] >= PROMOTE_MIN_TRADES and \
                     st["winrate"] >= PROMOTE_MIN_WINRATE and \
                     st["pf"] >= PROMOTE_MIN_PF:
@@ -105,8 +137,12 @@ def evaluate_population(journal: Journal, notifier=None) -> list[dict]:
                 if age_days > RETIRE_DEMOTED_DAYS and st["pf"] < PROMOTE_MIN_PF:
                     transition("retired", f"no recovery in {age_days}d "
                                           f"since demotion")
-        # refresh persisted stats blob either way
-        journal.query("UPDATE strategies SET stats_json=? WHERE id=?",
+        # Refresh the persisted stats blob either way — for governed genomes
+        # and for observed specs alike. `query()` does not commit, so this
+        # write used to ride on whatever _tx() happened to follow it; a sweep
+        # that produced no transition could leave it uncommitted.
+        with journal._tx() as c:
+            c.execute("UPDATE strategies SET stats_json=? WHERE id=?",
                       (json.dumps({"trades": st["trades"], "wins": st["wins"],
                                    "pnl_usdt": round(st["pnl"], 4),
                                    "pf": round(min(st["pf"], 99), 3)}), sid))

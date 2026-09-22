@@ -15,6 +15,14 @@ including partial code, prototypes and waiting-for-evidence work. Each new check
 must link a dated report and identify synthetic/offline/demo/forward/quantitative
 evidence. Never count a design document as implementation evidence.
 
+## Session update — September 21, M3.2 deterministic sharding / resume layer
+
+[Report](../reports/2026-09-21-m32-shard-layer.md), layer `../../../scripts/m32_scheme_d_sharding_20260921/`,
+bound to bundle-v3 `eab05d5d…dc01` (unchanged). Deterministic world-range shards, exclusive-create receipts, resume,
+audit and deterministic atomic merge; byte-identical to the sequential runner on non-inferential fixtures; 38 tests
+pass. Scaling on this VM 1.00/0.86/0.68 at 1/2/4 workers; full run 18,886 CPU-hours (49/25/12/6.2/3.1 days at
+16/32/64/128/256 workers). No RNG, worlds, search, Gate 2, referee/handoff, authorization. Checklist count unchanged.
+
 ## Session update — September 21, M3.2 validation bundle revision 3
 
 [Report](../reports/2026-09-21-m32-validation-bundle-v3.md), bundle
@@ -122,6 +130,25 @@ and frozen categorical estimand spec
 No RNG and no protocol change. This bounded certificate does not accept M3.2;
 the 12/55 count is unchanged. **P5/C3 hit/miss certification remains
 outstanding and is the single next task.**
+
+## Session update — September 19, M3.2 evidence corrections
+
+Offline evidence validators and canonical whole-trade dataset adapter corrected;
+[report](../reports/2026-09-19-m32-evidence-corrections.md), **162 tests passed**.
+Current corrected audit: **1 dependence component, 0 eligible verified execution
+outcomes, 0 PIT-recorded regimes**, one month; inference/power still refused.
+No M3.2 acceptance, search rerun, collection activation, Gate 2, research flag,
+risk or exit change. Synthetic block calibration of the
+[unfrozen proposal](../specs/2026-09-19-m32-block-sampling-proposal.md) done:
+[report](../reports/2026-09-19-m32-synthetic-calibration.md); proposal not
+freezable (strict calendar and independent per-block missingness untestable;
+BH384 measured adjusted power 0/250 at 2000 draws; market_shocks size
+excursion unresolved; pooled size descriptive only). Proposal unfrozen;
+family/support/budget unchanged.
+**Next:** synthetic-only design comparison of prespecified calendar/missingness
+conditioning schemes under non-exchangeability stressors. Draw-budget change
+and actual-metric calibration remain subsequent unresolved items.
+The 12/55 acceptance count is unchanged.
 
 ## Current board
 

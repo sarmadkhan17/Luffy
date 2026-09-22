@@ -1,0 +1,99 @@
+{
+ "bit_identity": {
+  "bitwise_identical": true,
+  "hypotheses_compared": 1152
+ },
+ "environment": {
+  "host_cpu_count": 4,
+  "openblas_threads": "1",
+  "python": "3.12.3"
+ },
+ "hashes": {
+  "authorization_sha256": "af3a64614a04b40dcdd105d231394d192445ff68c9ce0f2a0f02a7e86db4574c",
+  "bundle_manifest_sha256": "eab05d5d5acf1e4d435010b30005c9fda164da1b8c9fc0377502579c7d21dc01",
+  "receipt_internal_sha256": "856ba8604f2d94c677fd400bcec5fe13fd26b5d4256616e7e962fed6d19ab6b6",
+  "receipt_sha256": "920ff7c0f9ff62b7130d6db237b5c0a6314d260e9d7e4b53317b17fe7c0729bb",
+  "runner_sha256": "6578265958d73ae7647fed94bd0860f3b7b588e13132c1e70dd66ef252e21063",
+  "wrapper_sha256": "bf97a80ac3aec9f45470a346ad4051810c1bf315ca5ee67445c4abe98e53bdc1"
+ },
+ "inferential_validation_run": false,
+ "memory": {
+  "peak_rss_bytes": 97976320,
+  "peak_rss_mib": 93.4375
+ },
+ "mode": "benchmark",
+ "projection": {
+  "cpu_hours": 18880.62077238084,
+  "cpu_years": 2.1538467684668996,
+  "note": "linear scaling; excludes world generation, refusal evaluation, receipts",
+  "wall_days_linear": {
+   "16": 49.16828326140844,
+   "256": 3.0730177038380275,
+   "32": 24.58414163070422,
+   "4": 196.67313304563376,
+   "64": 12.29207081535211
+  },
+  "wall_days_with_20pct_overhead": {
+   "16": 59.00193991369012,
+   "256": 3.6876212446056327,
+   "32": 29.50096995684506,
+   "4": 236.0077596547605,
+   "64": 14.75048497842253
+  },
+  "wall_hours_linear": {
+   "16": 1180.0387982738025,
+   "256": 73.75242489211266,
+   "32": 590.0193991369013,
+   "4": 4720.15519309521,
+   "64": 295.0096995684506
+  }
+ },
+ "runtime": {
+  "child_cpu_system_seconds": 0.169848,
+  "child_cpu_user_seconds": 27.578431,
+  "process_wall_seconds": 27.793979290989228,
+  "runner_seconds": 27.480638694018126
+ },
+ "schema": "m3.2-scheme-d-phase90-fast-benchmark-summary.v1",
+ "throughput": {
+  "fast_draws_per_second_per_core": 847.626892634036,
+  "reference_seconds_per_vector": 8.920817365986295,
+  "seconds_per_draw_end_to_end": 0.0011797643617611731,
+  "speedup_vs_reference": 7561.5247036867095
+ },
+ "workload": {
+  "block_maps": 302,
+  "cell": "BENCH/C0/N1",
+  "fast_draws_timed": 300,
+  "fast_vectors_identity": 3,
+  "phase": 90,
+  "reference_vectors": 3,
+  "seed_tuples": {
+   "data": [
+    2026091902,
+    90,
+    0,
+    1,
+    0,
+    0
+   ],
+   "membership": [
+    2026091902,
+    90,
+    0,
+    1,
+    0,
+    1
+   ],
+   "permutation": [
+    2026091902,
+    90,
+    0,
+    1,
+    0,
+    2
+   ]
+  },
+  "tested_hypotheses": 384
+ }
+}

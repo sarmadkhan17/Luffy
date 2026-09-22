@@ -54,6 +54,10 @@ class SpecExit:
     has_target: bool
     stop_atr_mult: float = 0.0
     stop_pct: float = 0.0
+    #: R multiple the spec declared its trail arms at. None means the spec
+    #: declared none and the engine keeps its configured default — the same
+    #: 1.0 the vector backtest falls back to, so the two stay in step.
+    arm_at_r: float | None = None
 
     @classmethod
     def from_spec(cls, spec) -> "SpecExit":
@@ -69,7 +73,9 @@ class SpecExit:
             stop_atr_mult=float(stop.get("mult", 0.0))
             if stop.get("kind") == "atr" else 0.0,
             stop_pct=float(stop.get("v", 0.0))
-            if stop.get("kind") == "pct" else 0.0)
+            if stop.get("kind") == "pct" else 0.0,
+            arm_at_r=float(trail["arm_at_r"])
+            if trail.get("kind") == "atr" and "arm_at_r" in trail else None)
 
     @property
     def max_hold_hours(self) -> float:
@@ -169,7 +175,7 @@ class ExitEngine:
                     return "tp1"
 
         # ── 3. trailing stop (after activation R) ───────────────────────
-        if tp1_done or r_now >= self.c.trail_after_r:
+        if tp1_done or r_now >= self._arm_at_r(trade):
             trail = mark - direction * atr * self._trail_mult(trade)
             cur_sl = float(trade.get("stop_loss") or 0)
             better = trail > cur_sl if side == "long" else trail < cur_sl
@@ -205,6 +211,20 @@ class ExitEngine:
         if se is not None and se.trail_atr_mult > 0:
             return se.trail_atr_mult
         return self.c.trail_atr_mult
+
+    def _arm_at_r(self, trade: dict) -> float:
+        """The R multiple THIS trade's trail arms at.
+
+        Same fault as the trail multiple and the ATR frame: the engine armed
+        every trade at the config default while the spec was validated at
+        whatever it declared. A spec declaring 2.0 trailed from 1.0 live —
+        ratcheting the stop up through a band the backtest left alone.
+        A spec that declares nothing keeps the configured default.
+        """
+        se = self.spec_exits.get(trade.get("strategy_id") or "")
+        if se is not None and se.arm_at_r is not None:
+            return se.arm_at_r
+        return self.c.trail_after_r
 
     def _takes_partial(self, trade: dict) -> bool:
         """A spec with no target keeps its whole position.

@@ -279,7 +279,7 @@ def _producer(record):
         return 'journal'
     if 'decision' in s:
         return 'journal_unlinked'
-    if 'accounting' in s:
+    if 'accounting' in s or 'whole_trade_capture' in s:
         return 'verified_execution'
     if 'registration' in s and 'target' in s:
         return 'counterfactual'
@@ -387,7 +387,17 @@ def _counterfactual_row(record):
 
 
 def _execution_row(record):
-    r = record['source']['registration']
+    source = record['source']
+    if 'whole_trade_capture' in source:
+        from trader.engine.trade_accounting import verified_outcome
+        capture = source['whole_trade_capture']
+        if verified_outcome(capture, record['imported_ms']) != record:
+            raise ValueError('whole_trade_outcome_mismatch')
+        trade = capture['bookings']['trade']
+        r = dict(trade_id=trade['id'], symbol=trade['symbol'], venue=capture['venue'],
+                 environment=capture['environment'], registered_ms=capture['start_ms'])
+    else:
+        r = source['registration']
     features = dict(as_of_ms=r['registered_ms'], symbol=r['symbol'], venue=r['venue'],
                     feature_availability='frozen_execution_registration_receipt',
                     environment=r['environment'], trade_id=r['trade_id'],

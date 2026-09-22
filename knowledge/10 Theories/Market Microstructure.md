@@ -3,16 +3,15 @@ type: theory
 family: flow
 status: core-belief
 ---
-
 # Market Microstructure
 
-Price moves when aggressive orders interact with passive liquidity and available depth.
+Price moves when aggressive orders consume passive liquidity.
 
-## Core mechanisms
-- [[Aggressor Flow]]
-- [[Order Book Imbalance]]
-- [[Funding Crowding]]
-- [[Absorption]]
+## What we measure
+- Order-book imbalance within ±2% of mid.
+- Taker buy ratio (aggressor share) on 15m klines.
+- Funding crowding: ≥0.06%/interval = crowded longs → fade fuel.
+- Absorption: heavy volume, zero progress.
 
 ## Open questions
-- [ ] Does demo-platform order-book depth mirror production closely enough to trust depth-based signals?
+- [ ] Does demo-platform order-book depth mirror production? (verify before trusting flow on demo)

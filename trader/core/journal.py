@@ -196,6 +196,14 @@ class Journal:
                 # here too so a fresh database has it from the first query,
                 # not only after the first spec write.
                 "ALTER TABLE strategies ADD COLUMN spec_json TEXT",
+                # intrabar maximum favourable/adverse excursion in R, and the
+                # provenance that says which frame measured it and how well
+                # the candles covered the hold. Observation only — nothing
+                # reads these to make a decision. NULL means "not measured",
+                # never "no excursion"; see engine/excursion.py.
+                "ALTER TABLE trades ADD COLUMN mfe_r REAL DEFAULT NULL",
+                "ALTER TABLE trades ADD COLUMN mae_r REAL DEFAULT NULL",
+                "ALTER TABLE trades ADD COLUMN excursion_json TEXT DEFAULT NULL",
             ):
                 try:
                     c.execute(stmt)

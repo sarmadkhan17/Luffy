@@ -979,6 +979,7 @@ class Kernel:
         stats["orphans_managed"] = self._manage_orphan_positions(scanned)
 
         self._maybe_resolve_outcomes()
+        self._record_excursions()
         self._attention_call("causes", scan_id, attention_causes)
         attention_health = self._attention_call("health")
         attention_error = getattr(self, "_attention_error", None)
@@ -1176,6 +1177,34 @@ class Kernel:
             self.notifier.send(
                 f"↪ {t['symbol']} exit: {reason} @ {snap.price:.4g}")
         return reason
+
+    def _record_excursions(self) -> int:
+        """Book intrabar MFE/MAE for trades that have just closed.
+
+        Pure observation, appended after the cycle's decisions are already
+        made: it reads the local candle store and writes two columns plus
+        provenance. Nothing here can move a stop, a size or a state, and any
+        failure is swallowed so accounting can never disturb trading.
+        """
+        try:
+            from .engine import excursion
+
+            def bars_for(symbol: str, tf: str):
+                df = self.feed.cached_ohlcv(symbol, tf)
+                if df is None or not len(df):
+                    return []
+                ts = df["ts"]
+                ms = (ts.astype("int64") // 10 ** 6
+                      if str(ts.dtype).startswith("datetime64") else ts)
+                return list(zip(ms.tolist(), df["high"].tolist(),
+                                df["low"].tolist()))
+
+            specs = {sp.id: sp.timeframe
+                     for _row, sp in getattr(self, "_spec_rows", [])}
+            return excursion.sweep(self.journal, bars_for, specs.get)
+        except Exception as e:
+            log.warning(f"excursion sweep: {e}")
+            return 0
 
     def _manages_exits(self) -> bool:
         sm = getattr(self, "state_machine", None)

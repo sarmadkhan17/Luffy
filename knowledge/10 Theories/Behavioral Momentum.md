@@ -3,15 +3,11 @@ type: theory
 family: momentum
 status: core-belief
 ---
-
 # Behavioral Momentum
 
-Under-reaction, anchoring and herding can create short-term trend persistence, while crowded mature trends can become exhausted.
+Under-reaction then over-reaction (anchoring, herding) makes trends persist
+short-term and overshoot long-term.
 
-## Core mechanisms
-- [[Trend Persistence]]
-- [[Trend Exhaustion]]
-
-## Related
-- [[Momentum Divergence Trail]]
-- [[EMA Stack Pullback]]
+## Rules derived
+- Trade WITH full EMA stacks only when ADX confirms quality.
+- RSI extremes *inside* a trend warn of exhaustion — discount continuation.
