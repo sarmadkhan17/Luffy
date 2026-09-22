@@ -74,24 +74,29 @@ Commits: v4 freeze `079e8b5c590429aeb0ca5c7b0b261328291c6b2e` (tag
 The manifest was generated twice with identical output. Every file hash
 matches the pinned constants in `shard_layer.py` and the qualification receipt.
 
+## Owner decision on preparation exception
+
+The owner reviewed and **accepted** the documented v4 preparation exception on
+2026-09-23. The historical preparation audit remains unchanged and continues
+to record that one delegated draft test constructed 40
+Generator/PCG64/SeedSequence objects, with zero random variates drawn and zero
+validation worlds generated. This acceptance does **not** authorize a benchmark,
+pilot, validation run, cloud execution, or any other RNG-using execution.
+
 ## Remaining blockers (nothing below is authorized)
 
-1. **Owner review of the v4 preparation exception.** One delegated draft test
-   constructed 40 Generator/PCG64/SeedSequence objects while preparing the v4
-   bundle. No random variates were drawn and no worlds were generated
-   (`preparation_audit.owner_review_required=true`).
-2. **Measured v4 benchmark/runtime evidence before any full-validation
+1. **Measured v4 benchmark/runtime evidence before any full-validation
    authorization.** `production_context` requires `runtime_estimate_cpu_hours`
    and a 64-hex `fast_benchmark_receipt_sha256`. The existing phase-90
    benchmark, scaling and projection artifacts are bound to v3 and cannot be
    reused. A v4 benchmark draws RNG, so it needs separate owner authorization.
-3. **Full host/filesystem/performance qualification for v4.** This covers
+2. **Full host/filesystem/performance qualification for v4.** This covers
    multi-process flock exclusivity, worker scaling and shared-mount
    capability. It was out of scope for `qualify_v4.py`.
-4. **v4-bound owner validation authorization.** It must bind this
+3. **v4-bound owner validation authorization.** It must bind this
    `bundle_sha256`, `shard_layer_sha256` and `shard_worlds`. A v3
    pilot/validation authorization is refused by construction.
-5. Any v4 pilot needs its own authorization. The v3 pilot is not transferable.
+4. Any v4 pilot needs its own authorization. The v3 pilot is not transferable.
 
 No search, Gate 2, referee/handoff, risk, demo or live-system change was made.
 `research.referee=false` and `research.handoff=false` are unaffected.
