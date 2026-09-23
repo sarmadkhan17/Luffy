@@ -212,6 +212,9 @@ current_active_work:
     - scripts/m32_scheme_d_qualification_v4_20260923/QUALIFICATION_RECEIPT.json
     - scripts/m32_scheme_d_phase90_fast_benchmark_v4_20260923/benchmark_summary.json
     - docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-fast-benchmark.md
+    - scripts/m32_scheme_d_host_qualification_v4_20260923/QUALIFICATION_REPORT.json
+    - scripts/m32_scheme_d_host_qualification_v4_20260923/receipts/receipt_sarmad-VMware-Virtual-Platform.json
+    - docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-host-qualification.md
     - tests/test_m32_shard_layer_v4.py
   proven_facts:
     - v4 bundle frozen at 079e8b5c590429aeb0ca5c7b0b261328291c6b2e (tag m32-scheme-d-v4-freeze); bundle SHA a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023
@@ -223,10 +226,14 @@ current_active_work:
     - owner reviewed and accepted the documented v4 preparation exception on 2026-09-23; the historical audit remains unchanged and this acceptance grants no validation authorization
     - owner authorized and completed one local-CPU phase-90 v4 benchmark only; benchmark evidence commit 137ca2f, authorization SHA f0c9cccf45aedbe893d17afd3b126abc9f8f0c32ed376b894ad9bf53274bdba4, receipt SHA f70ace0a02ab6187647ecc33446238cf5ba9dbe97320194ea75f32876972f23e
     - benchmark measured 975.4548174287327 draws/s/core and projected 16406.782531828467 CPU-hours; bitwise identity PASS; no cloud and no validation run
+    - full v4 single-host host/filesystem/performance qualification PASS at evidence commit 4238660; ext4 /dev/sda2; 4 qualified workers; all exercised checks PASS; cross-host flock NOT_EXERCISED
+    - host qualification constructed no RNG, read no authorization, ran no benchmark and generated 0 validation worlds
+    - combined qualification report: single_host_qualified true, execution_hosts_ready_for_authorization false, projected full-run wall time 190.1348913893578 days on 4 qualified workers
     - v1/v2/v3 bundles, v3 shard layer and frozen truth package unchanged
   blockers:
-    - full v4 host/filesystem/performance qualification (multi-process exclusivity, worker scaling, shared mount); qualify_v4 is single-host in-process deterministic binding only
-    - v4-bound owner validation authorization binding bundle_sha256, shard_layer_sha256 and shard_worlds; v3 authorizations/pilot are refused or non-transferable
+    - owner decision on whether to authorize a bounded v4 pilot on the qualified single host; any pilot authorization must bind exact bundle_sha256, shard_layer_sha256, shard_worlds and measured v4 benchmark evidence
+    - full 75,000-world validation is not capacity-feasible on the current 4-worker host; multi-host execution is not qualified
+    - any future full v4 validation requires separate owner authorization and adequate qualified execution capacity; v3 authorizations/pilot are refused or non-transferable
   constraints:
     - do not run additional RNG benchmarks or any validation without explicit owner authorization
     - do not spend cloud money
