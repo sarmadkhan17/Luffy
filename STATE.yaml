@@ -154,7 +154,8 @@ capabilities:
       - automatic Attention selection is not active in production; live supplemental symbol selection remains explicit/configured
       - the registry selector is not wired into the Kernel
       - live RegistrySnapshot production and refresh are not established
-      - durable cursor and selection-record transaction is not established
+      - durable cursor and selection-record transaction is not established; Kernel selector wiring is blocked until it is TESTED (dependency audit at 72400ea, decision B)
+      - live RegistrySnapshot production requires new read-only venue metadata acquisition; retained boot CCXT metadata lacks adequate observation-time/provenance truth and must not be re-stamped as a fresh snapshot
       - durable RegistrySnapshot historical store is not established; durable historical replay is not claimed
       - live max_snapshot_age_ms config wiring is not established
       - registry-backed rotation is limited to the one supplemental slot in the pure selector; broader fairness policy is not implemented
@@ -311,39 +312,71 @@ capabilities:
       - production recovery behavior beyond deterministic tests is not established here
 
 current_active_work:
-  id: SDD-STAGE-3-ATTENTION-LIVE-SELECTION-DEPENDENCY-AUDIT
-  type: DEPENDENCY_AUDIT
+  id: SDD-STAGE-3-ATTENTION-SELECTION-PERSISTENCE
+  type: IMPLEMENTATION
   state: DEFINED
-  status: AUDIT_QUEUED_NOT_STARTED
-  objective: Determine the correct implementation order among live RegistrySnapshot production, durable selection/cursor persistence and Kernel selector integration; audit only.
-  completed_prerequisite:
-    id: SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR
-    state: TESTED
-    evidence:
-      - 6eb7eb4 Add deterministic registry Attention selector
-      - trader/observability/registry_selector.py
-      - tests/test_registry_attention_selector.py
-      - 275 affected selector/registry/Attention tests passed
-    scope: pure selector component only; Attention overall remains IMPLEMENTED
+  status: READY_NOT_STARTED
+  objective: Implement durable Attention selection persistence so the complete deterministic selection record and cursor_after commit atomically before any future supplemental fetch, with fetch outcomes recorded separately and unable to roll the cursor back.
+  completed_prerequisites:
+    - id: SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR
+      state: TESTED
+      evidence:
+        - 6eb7eb4 Add deterministic registry Attention selector
+        - trader/observability/registry_selector.py
+        - tests/test_registry_attention_selector.py
+        - 275 affected selector/registry/Attention tests passed
+      scope: pure selector component only; Attention overall remains IMPLEMENTED
+    - id: SDD-STAGE-3-ATTENTION-LIVE-SELECTION-DEPENDENCY-AUDIT
+      type: DEPENDENCY_AUDIT
+      state: COMPLETED_DESIGN_EVIDENCE
+      audited_at: 72400ea
+      decision: B - SELECTION-PERSISTENCE
+      dependency_order: SELECTION-PERSISTENCE -> LIVE-REGISTRY-PRODUCER -> KERNEL-INTEGRATION
+      scope: design evidence only; no code, persistence, producer or Kernel wiring was implemented
+      findings:
+        - Kernel must not invoke the registry Attention selector/fetch path until the selection record and cursor_after can be committed atomically before the network attempt.
+        - Attention Store/Collector is not suitable for this authority because it is bounded/drop-capable and retention-pruned.
+        - Journal/SQLite provides the appropriate durable transaction boundary.
+        - Live RegistrySnapshot production requires new read-only venue metadata acquisition; current retained boot CCXT metadata lacks adequate observation-time/provenance truth.
+        - Existing boot metadata must not be re-stamped as a fresh registry snapshot.
+        - Live registry ownership should eventually be separate from Universe/DataFeed trading selection.
+        - No live RegistrySnapshot producer exists yet.
+        - Durable RegistrySnapshot history still does not exist.
+        - Kernel selector wiring remains blocked until selection persistence is TESTED.
+        - SQLite transaction blocking/busy-time behavior must be evaluated before later Kernel live integration; durability alone does not make the persistence method live-loop-safe.
+        - Demo-vs-production registry venue provenance remains a live-producer issue.
+        - Selection cadence remains a later Kernel integration decision.
   gaps:
-    - no live RegistrySnapshot producer or refresh
-    - no Kernel selector wiring
-    - no durable cursor and selection-record transaction
+    - no durable cursor and selection-record transaction (this package)
+    - no live RegistrySnapshot producer or refresh (queued after this package)
+    - no Kernel selector wiring (blocked until selection persistence is TESTED and a live producer exists)
     - no durable RegistrySnapshot historical store
     - no live max_snapshot_age_ms config wiring
+    - live-loop SQLite busy-time budget not evaluated
+    - demo-vs-production registry venue provenance unresolved
+    - selection cadence undecided
     - automatic Attention selection is therefore not active in production
+  queued_after:
+    - LIVE-REGISTRY-PRODUCER
+    - KERNEL-INTEGRATION
   evidence:
     - SDD.md
+    - trader/core/journal.py
     - trader/core/instrument_registry.py
     - trader/data/binance_usdm_registry.py
     - trader/observability/registry_selector.py
     - trader/observability/supplemental.py
+    - trader/observability/attention.py
     - trader/cognition/attention.py
+    - trader/kernel.py
+    - trader/data/feed.py
   constraints:
     - "locked = don't redesign; implemented = verify; discuss only gaps"
-    - audit only; no code, Kernel, config or persistence changes
+    - persist-before-fetch ordering is locked; do not reopen it
+    - no network, exchange/API calls, Kernel wiring, config wiring or Attention Store/Collector use
     - strategy scan, Universe, trading eligibility, Risk and Execution unchanged
     - keep observation separate from trading scan, strategy eligibility, Risk and Execution
+    - Attention overall maturity remains IMPLEMENTED
     - preserve the parked Scheme-D pilot blocker and authorization constraints; no new pilot or full validation work
 
 parked_scheme_d_work:
