@@ -6,9 +6,11 @@ from .perception import (
     PerceptionInputError, PerceptionSpec, perceive,
 )
 from .state import WorldState
+from .model import HierarchyNode, Horizon, Scope, ScopeLevel, WorldModel
 
 __all__ = [
     "AmbiguousInputError", "InputRequirement", "Measurement", "MissingInputError",
     "Observation", "ObservationIdentity", "PerceptionInputError", "PerceptionSpec",
-    "Quality", "SnapshotObservation", "WorldState", "perceive",
+    "Quality", "SnapshotObservation", "WorldState", "HierarchyNode", "Horizon",
+    "Scope", "ScopeLevel", "WorldModel", "perceive",
 ]
