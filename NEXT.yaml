@@ -2,6 +2,31 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
+  id: SDD-STAGE-3-ATTENTION-AUDIT
+  type: EVIDENCE_AUDIT
+  priority: ACTIVE
+  status: READY
+
+  objective: >
+    Begin Stage 3 — Attention and Research Intelligence with a targeted audit
+    of the existing Attention implementation against SDD Stage 3 requirements.
+
+  working_rule: "locked = don't redesign; implemented = verify; discuss only gaps"
+
+  next_steps:
+    - step: 1
+      action: Audit current Attention code and tests against SDD Stage 3 Attention requirements.
+    - step: 2
+      action: Classify each Attention requirement as TESTED, merely IMPLEMENTED, or missing, with exact evidence.
+    - step: 3
+      action: Select the smallest genuine gap as the next work package; do not implement Stage 3 during this audit.
+
+  constraints:
+    - Preserve the completed Scheme-D bounded pilot as parked, non-final evidence.
+    - Do not run another pilot, additional RNG benchmark, full validation, or cloud compute without separate explicit owner authorization.
+    - Do not alter frozen research or pilot artifacts.
+
+parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
   type: QUANT_VALIDATION_INFRA
   priority: CRITICAL
@@ -55,4 +80,4 @@ work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Await the separate owner decision on future full-validation capacity and authorization.
+  - Record the Attention evidence classification and the smallest genuine Stage 3 gap as the next active work package.

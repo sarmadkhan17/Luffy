@@ -70,7 +70,7 @@ capabilities:
       - candidate state referee_passed exists
     gaps:
       - research-to-live approval/handoff is not yet the finalized SDD v3.2 path
-      - bounded M3.2 Scheme-D v4 pilot is non-final; full validation remains unauthorized (see current_active_work)
+      - bounded M3.2 Scheme-D v4 pilot is non-final; full validation remains unauthorized (see parked_scheme_d_work)
 
   strategy_decay_and_lifecycle:
     state: TESTED
@@ -160,11 +160,40 @@ capabilities:
       - hot/warm/cold historical-intelligence architecture is not yet fully established
 
   world_model:
-    state: DEFINED
+    state: TESTED
     evidence:
-      - SDD.md
+      - trader/world/observation.py
+      - trader/world/state.py
+      - trader/world/perception.py
+      - trader/world/model.py
+      - trader/world/relationship.py
+      - trader/world/claim.py
+      - trader/world/replay.py
+      - trader/strategy/compile.py
+      - trader/strategy/features.py
+      - trader/research/evaluate.py
+      - tests/test_world_observation.py
+      - tests/test_world_state.py
+      - tests/test_world_perception.py
+      - tests/test_world_model.py
+      - tests/test_world_relationship.py
+      - tests/test_world_claim.py
+      - tests/test_world_replay.py
+      - tests/test_research_evaluate.py
+    proven_facts:
+      - immutable point-in-time Observation contract is tested
+      - immutable WorldState is tested
+      - typed deterministic perception transform interface is tested
+      - hierarchical multi-horizon WorldModel is tested
+      - point-in-time cross-market relationship state is tested
+      - world claims track explicit confidence and supporting/contradicting evidence
+      - self-contained historical WorldModel replay/archive resolves exact cuts
+      - current strategy accepts an optional ordinary WorldModel and historical research resolves WorldHistory.get_exact(Bundle.cut); both query the same typed WorldModel API and equivalent contexts yield equivalent typed claims
+      - legacy strategy and research behavior is preserved when WorldModel is absent
+      - final Stage 2 integration verification passed 127 tests
     gaps:
-      - no repo evidence yet of a complete first-class shared hierarchical world model
+      - production/shadow operation and actual correlation/beta computation are not established by Stage 2 tests
+      - full analyst integration and full strategy migration are not established
 
   opportunity_context:
     state: DEFINED
@@ -210,6 +239,19 @@ capabilities:
       - production recovery behavior beyond deterministic tests is not established here
 
 current_active_work:
+  id: SDD-STAGE-3-ATTENTION-AUDIT
+  state: DEFINED
+  status: EVIDENCE_AUDIT_NEXT
+  objective: Audit existing Attention code and tests against SDD Stage 3 before selecting the smallest genuine implementation gap.
+  evidence:
+    - SDD.md
+    - trader/cognition/attention.py
+    - trader/observability/attention.py
+  constraints:
+    - "locked = don't redesign; implemented = verify; discuss only gaps"
+    - preserve the parked Scheme-D pilot blocker and authorization constraints
+
+parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
   state: TESTED
   status: BOUNDED_PILOT_GO_NON_FINAL_FULL_VALIDATION_UNAUTHORIZED
