@@ -2,16 +2,14 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: M3.2-SCHEME-D-V4-PRE-RUN-DECISIONS
+  id: M3.2-SCHEME-D-V4-POST-PILOT
   type: QUANT_VALIDATION_INFRA
   priority: CRITICAL
-  status: PILOT_PREPARATION_AUTHORIZED
+  status: PILOT_COMPLETE_AWAITING_SEPARATE_OWNER_DECISION
 
   objective: >
-    Move the frozen, shard-integrated v4 Scheme-D bundle toward a runnable
-    state without weakening any gate: obtain the owner decisions, then produce
-    measured v4 runtime evidence and full host qualification, which a
-    v4-bound validation authorization will require.
+    Preserve the completed bounded v4 pilot evidence and await a separate owner
+    decision on any future full-validation capacity and authorization.
 
   completed_prerequisites:
     - v4 bundle frozen at 079e8b5c590429aeb0ca5c7b0b261328291c6b2e (tag m32-scheme-d-v4-freeze), bundle SHA a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023
@@ -26,35 +24,35 @@ work_package:
     - qualification generated no RNG, read no authorization, ran no benchmark and generated 0 validation worlds
     - combined report sets single_host_qualified true but execution_hosts_ready_for_authorization false; projected full-run wall time is about 190.13 days on this host
     - owner explicitly authorized one bounded v4 pilot on 2026-09-23; full validation remains unauthorized
+    - RECOVERY control state and entry/control fence TESTED at f6d6b2e
+    - deterministic Supervisor recovery orchestration TESTED at 5d586f4
+    - bounded v4 pilot completed successfully; 80 worlds across 16 shards, integrity clean
+    - pilot verdict GO with reason p6_encouraging_effect; P6/C4 positive in 20/20 worlds, median signed target lift 0.20497145020781576
+    - PILOT_VERDICT.json SHA256 38c5010ed353f1cccb71f337d9b86672091ff709d87a13ba5f19f003594e3cc4
+    - pilot evidence scripts/m32_scheme_d_pilot_v4_20260923/PILOT_VERDICT.json is non-final only; it does not satisfy full Scheme-D validation, Gate 2, search, referee, handoff or live trading
 
   next_steps:
     - step: 1
       action: >
-        Finish deterministic preparation/freeze verification of the already-authorized
-        bounded v4 pilot package against corrected v4 semantics. Do not execute RNG
-        until exact hashes, evaluator rules and authorization bindings are verified.
+        Preserve the bounded v4 pilot evidence, including the verdict, receipts,
+        manifests and integrity record. Do not alter the pilot artifacts.
     - step: 2
-      requires: step 1
-      action: >
-        Run only the owner-authorized bounded v4 pilot and preserve separate pilot
-        evidence. Do not treat pilot evidence as full validation.
-    - step: 3
       owner_decision: true
-      requires: pilot evidence and adequate qualified execution capacity
+      requires: preserved pilot evidence and adequate qualified execution capacity
       action: >
-        Owner separately decides on any future full v4 validation authorization.
-        The current 4-worker host is not capacity-feasible for the full 75,000-world run.
+        Await a separate owner decision on capacity and authorization for any
+        future full v4 validation. The 75,000-world run remains unauthorized and
+        locally capacity-infeasible at about 190 days on 4 qualified workers.
 
   claude_executable_now:
-    - Finish and verify the bounded v4 pilot package only; pilot execution is allowed only within the already approved bounded scope after the package is frozen.
+    - Preserve and report the completed pilot evidence without initiating another run.
 
   execution_constraints:
-    - One bounded v4 pilot is explicitly authorized. Do not exceed that scope; do not run additional RNG benchmarks or full validation without separate explicit owner authorization.
+    - The one authorized bounded v4 pilot is complete. Do not run another pilot, additional RNG benchmark or full validation without separate explicit owner authorization.
     - Do not run cloud compute or spend money.
     - Do not mint or fabricate owner authorization.
     - Do not modify frozen v4/v3/v2/v1 bundles, the v3 shard layer, or the frozen truth package.
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Update STATE.yaml with the verified evidence.
-  - Re-evaluate whether any architecture implementation package should start.
+  - Await the separate owner decision on future full-validation capacity and authorization.

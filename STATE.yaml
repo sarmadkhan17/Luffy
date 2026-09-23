@@ -18,23 +18,26 @@ capabilities:
       - trader/engine/reconcile.py
       - trader/engine/recovery.py
       - trader/engine/protective.py
+      - trader/engine/control_fence.py
+      - tests/test_entry_control_fence.py
     proven_facts:
       - durable ambiguous-entry recovery exists
       - exchange-first position reconciliation exists
       - orphan/ghost handling exists
       - missing protective-stop detection/re-arm logic exists
+      - RECOVERY entry/control fence is TESTED at f6d6b2e
     gaps:
-      - unified RECOVERY control state from SDD v3.2 is not yet implemented
-      - supervisor orchestration across recovery stages is not yet unified
+      - recovery behavior beyond the tested control fence and deterministic Supervisor orchestration is not established here
 
   control_state:
-    state: IMPLEMENTED
+    state: TESTED
     evidence:
       - trader/engine/state.py
+      - trader/engine/control_fence.py
+      - tests/test_control_state_recovery.py
+      - tests/test_entry_control_fence.py
     proven_facts:
-      - ACTIVE/FROZEN/HALTED are persisted and journaled
-    gaps:
-      - RECOVERY state from SDD v3.2 is missing
+      - ACTIVE/FROZEN/HALTED/RECOVERY control state and entry/control fence are TESTED at f6d6b2e
 
   strategy_spec_and_live_parity:
     state: TESTED
@@ -67,7 +70,7 @@ capabilities:
       - candidate state referee_passed exists
     gaps:
       - research-to-live approval/handoff is not yet the finalized SDD v3.2 path
-      - M3.2 Scheme-D v4 is frozen and shard-integrated but has no validation authorization (see current_active_work)
+      - bounded M3.2 Scheme-D v4 pilot is non-final; full validation remains unauthorized (see current_active_work)
 
   strategy_decay_and_lifecycle:
     state: TESTED
@@ -193,18 +196,23 @@ capabilities:
       - Clawd/gateway filesystem and credential isolation is not yet implemented
 
   monitoring_and_recovery:
-    state: IMPLEMENTED
+    state: TESTED
     evidence:
       - trader/engine/watchdog.py
       - trader/engine/recovery.py
       - trader/engine/reconcile.py
+      - trader/engine/supervisor.py
+      - tests/test_supervisor.py
+      - tests/test_control_state_recovery.py
+    proven_facts:
+      - deterministic Supervisor recovery orchestration is TESTED at 5d586f4
     gaps:
-      - unified Supervisor authority and RECOVERY state are not yet implemented
+      - production recovery behavior beyond deterministic tests is not established here
 
 current_active_work:
   id: M3.2-SCHEME-D-V4
   state: TESTED
-  status: DETERMINISTIC_INTEGRATION_QUALIFIED_NOT_AUTHORIZED_TO_RUN
+  status: BOUNDED_PILOT_GO_NON_FINAL_FULL_VALIDATION_UNAUTHORIZED
   evidence:
     - docs/superpowers/reports/2026-09-22-m32-validation-bundle-v4.md
     - docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-shard-integration.md
@@ -216,12 +224,13 @@ current_active_work:
     - scripts/m32_scheme_d_host_qualification_v4_20260923/receipts/receipt_sarmad-VMware-Virtual-Platform.json
     - docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-host-qualification.md
     - tests/test_m32_shard_layer_v4.py
+    - scripts/m32_scheme_d_pilot_v4_20260923/PILOT_VERDICT.json
   proven_facts:
     - v4 bundle frozen at 079e8b5c590429aeb0ca5c7b0b261328291c6b2e (tag m32-scheme-d-v4-freeze); bundle SHA a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023
     - v4 shard layer integrated at 2324c4186a062eba2d9c1b70fd5c1a2d9d3adf8a; dispatches injection on has_scenario so P1/P3 perturbed_null cells keep injection
     - focused shard tests tests/test_m32_shard_layer_v4.py - 23 passed
     - deterministic qualification PASS at 4d3a0ae195cf7ae1eca9b536b5cb4c309c9afd0a; receipt SHA 5055e9d8998cf6a524663982133b8fb668acfbc05e15fb2bc8d7526bd031cb41
-    - RNG constructor attempts 0, random variates requested 0, validation worlds generated 0
+    - deterministic qualification constructed 0 RNG instances, requested 0 random variates and generated 0 validation worlds
     - no validation authorization minted; production/full validation authorization is false
     - owner reviewed and accepted the documented v4 preparation exception on 2026-09-23; the historical audit remains unchanged and this acceptance grants no validation authorization
     - owner authorized and completed one local-CPU phase-90 v4 benchmark only; benchmark evidence commit 137ca2f, authorization SHA f0c9cccf45aedbe893d17afd3b126abc9f8f0c32ed376b894ad9bf53274bdba4, receipt SHA f70ace0a02ab6187647ecc33446238cf5ba9dbe97320194ea75f32876972f23e
@@ -229,15 +238,18 @@ current_active_work:
     - full v4 single-host host/filesystem/performance qualification PASS at evidence commit 4238660; ext4 /dev/sda2; 4 qualified workers; all exercised checks PASS; cross-host flock NOT_EXERCISED
     - host qualification constructed no RNG, read no authorization, ran no benchmark and generated 0 validation worlds
     - combined qualification report: single_host_qualified true, execution_hosts_ready_for_authorization false, projected full-run wall time 190.1348913893578 days on 4 qualified workers
-    - owner explicitly authorized one bounded v4 pilot on 2026-09-23; this does not authorize the full 75,000-world validation
+    - owner authorized one bounded v4 pilot on 2026-09-23; that pilot completed successfully with 80 worlds across 16 shards and clean integrity
+    - pilot verdict GO, reason p6_encouraging_effect; P6/C4 positive in 20/20 worlds with median signed target lift 0.20497145020781576
+    - PILOT_VERDICT.json SHA256 38c5010ed353f1cccb71f337d9b86672091ff709d87a13ba5f19f003594e3cc4
+    - pilot is non-final only; it does not satisfy full Scheme-D validation, Gate 2, search, referee, handoff or live trading
+    - pilot completion does not authorize another run or full validation
     - SDD v3.2 is the sole architecture authority and reconciles finalized kernel/component/dashboard/approval/storage/LLM/security decisions
     - v1/v2/v3 bundles, v3 shard layer and frozen truth package unchanged
   blockers:
-    - bounded v4 pilot package must be frozen/verified against the corrected v4 semantics before the authorized pilot is executed; full validation remains unauthorized
-    - full 75,000-world validation is not capacity-feasible on the current 4-worker host; multi-host execution is not qualified
+    - full 75,000-world validation remains unauthorized and locally capacity-infeasible at about 190 days on 4 qualified workers; multi-host execution is not qualified
     - any future full v4 validation requires separate owner authorization and adequate qualified execution capacity; v3 authorizations/pilot are refused or non-transferable
   constraints:
-    - owner has authorized one bounded v4 pilot only; do not run full validation or any additional RNG benchmark without separate explicit owner authorization
+    - the one authorized bounded v4 pilot is complete; do not run another pilot, full validation or any additional RNG benchmark without separate explicit owner authorization
     - do not spend cloud money
     - leave v1/v2/v3, frozen v4 and frozen truth package untouched
 

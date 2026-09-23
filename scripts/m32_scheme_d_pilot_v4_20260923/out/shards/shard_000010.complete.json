@@ -1,0 +1,54 @@
+{
+ "bindings": {
+  "authorization_request_sha256": "cac2a896da48cf4bf87e3eece42fd76107de882b5b128d001e7194eb7afde1b5",
+  "authorization_sha256": "5ea93514127d5d7828747217057da2dfd3e4c29ff0d03a8341468d4863889816",
+  "bundle_sha256": "a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023",
+  "draws": 767999,
+  "environment": {
+   "numpy": "2.5.2",
+   "openblas_threads": "1",
+   "python": "3.12.3"
+  },
+  "environment_lock_sha256": "4d9c4fcceec550bdc8113ab6002700bae24bd30958a78998ffa2e40e7b29742a",
+  "master_seed": 2026091902,
+  "mode": "validation",
+  "non_inferential": false,
+  "pilot_evaluator_sha256": "eaff4525ce5dbe0fe3a7960bf3575840edb25d7bfa747ee9338e419761d8ba6d",
+  "pilot_launcher_sha256": "d1ae1620a6d97f7c6acbe29a1643eb312922b38bfad8c64830401374792a2516",
+  "pilot_prespec_sha256": "04c508efd924e04d9d52bb516843b461b6d5be5168c52906c7c7dff2873d7c95",
+  "pilot_scope": "pilot_only_non_final",
+  "plan_sha256": "dc9ee56ad15cddaacb463aaed1280013d57417cf72bd34b48c8fbaea85f47d6a",
+  "runner_sha256": "7e4d693bdaffc7cf35370fe3425858ea195fc70eb0c6425c4461836008410548",
+  "schema": "m3.2-scheme-d-shard-bindings.v4",
+  "shard_layer_sha256": "5e322153c62b103d00e9e898b30df4efc2031ea66c7144b79d5037b4d03c2170",
+  "shard_plan_sha256": "004937eb683800c8fc68671c9611d42cd4a46951c57597a580be8ae0ea9fb653",
+  "shard_worlds": 5,
+  "shards": 16,
+  "statistic_path": "fast",
+  "worlds": 80
+ },
+ "receipts_bytes": 75802,
+ "receipts_file": "shard_000010.receipts.jsonl",
+ "receipts_sha256": "bc95ac54502b3947cf06bc9da76b360aa14b52a668a82ae62876491fda0e7b8d",
+ "refused_worlds": 0,
+ "run_manifest_sha256": "1143aa96c12ff8ffefde1a3384370bcba919ab83abdfc0c971b7103951c63ca0",
+ "schema": "m3.2-scheme-d-shard-completion.v4",
+ "sha256": "795b1b7cc7f0593829a1ee9b0af2ea8d5ef9057115e7d3137562bf1a980c6df6",
+ "shard": {
+  "cell": "P1/C0",
+  "cell_index": 2,
+  "global_hi": 55,
+  "global_lo": 50,
+  "hi": 15,
+  "id": 10,
+  "lo": 10
+ },
+ "world_receipt_sha256": [
+  "fe2ba7d55ebc60b8724bf6e1441956cdd9a678f529b8b23928cf83322b4e3ce3",
+  "e6e471aa2976c0fcfff6c9ae978abf01716cc126e34ac4dd44636b1ac87bc8ba",
+  "86684a94e8c03a3b67d447b2a974fd07177ab089de341edebf16c82dd81ed2c5",
+  "f9705b35a98bace454464251a47b809dd63b8ab17f696bbf04bbfe32a1a28ad2",
+  "383e3c0173a1813d89feb5fc493d4be2b8921c486e2e9e33e9f57e76ef049090"
+ ],
+ "worlds": 5
+}

@@ -1,0 +1,483 @@
+{
+ "bindings": {
+  "authorization_request_sha256": "cac2a896da48cf4bf87e3eece42fd76107de882b5b128d001e7194eb7afde1b5",
+  "authorization_sha256": "5ea93514127d5d7828747217057da2dfd3e4c29ff0d03a8341468d4863889816",
+  "bundle_sha256": "a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023",
+  "merge_deterministic_sha256": "ff2b5ff512ac7a53496d6e1091ca33454ed092d882048a6627954c004b824c4d",
+  "merge_manifest_sha256": "6cc45c96433d2f9b91bac1bb15c9f98829c8218020a16a848396f32a951aeb35",
+  "pilot_evaluator_sha256": "eaff4525ce5dbe0fe3a7960bf3575840edb25d7bfa747ee9338e419761d8ba6d",
+  "pilot_launcher_sha256": "d1ae1620a6d97f7c6acbe29a1643eb312922b38bfad8c64830401374792a2516",
+  "pilot_prespec_sha256": "04c508efd924e04d9d52bb516843b461b6d5be5168c52906c7c7dff2873d7c95",
+  "run_result_sha256": "6290b67355a56e8a9e1def6dc08109ffd130dacfcdc5cdc6bdf502945abee12f",
+  "shard_layer_sha256": "5e322153c62b103d00e9e898b30df4efc2031ea66c7144b79d5037b4d03c2170"
+ },
+ "full_protocol_acceptance_output": {
+  "note": "frozen v4 acceptance on 20 worlds/cell; not the pilot verdict",
+  "overall": {
+   "cells_evaluated": 4,
+   "failing_cells": [
+    "N0/C0",
+    "N3/C4",
+    "P1/C0",
+    "P6/C4"
+   ],
+   "integrity_stop": false,
+   "passes": false,
+   "truth_table_refusal": false
+  }
+ },
+ "integrity": {
+  "failures": [],
+  "provenance_files": 1,
+  "shards_complete": 16,
+  "shards_total": 16,
+  "worker_hardware_identities_distinct": 1,
+  "worlds": 80
+ },
+ "non_final_statements": [
+  "pilot/non-final only",
+  "does not satisfy Scheme-D validation",
+  "does not establish Gate 2",
+  "does not admit search",
+  "does not enable referee/handoff",
+  "does not authorize live trading",
+  "does not authorize full validation"
+ ],
+ "p1_perturbed_null": {
+  "every_rejection_is_false_discovery": true,
+  "non_refused_worlds": 20,
+  "rate": 0.05,
+  "rejecting_worlds": 1,
+  "statement": "P1/C0 is a perturbed-null Type-I / false-positive stress cell: every P1 rejection is a false discovery, never power or a true discovery. 20 pilot worlds cannot establish the frozen protocol's final P1 Type-I/Wilson acceptance requirement (point <= 0.05 and Wilson upper <= 0.06); this pilot criterion is diagnostic only.",
+  "wilson_95": [
+   0.008881448702335523,
+   0.23613119546428119
+  ]
+ },
+ "p6_effect": {
+  "attribution_errors": 6874,
+  "effect_evaluable_worlds": 20,
+  "effect_unevaluable_worlds": 0,
+  "family_means_are_descriptive_only": true,
+  "family_median_of_world_means": {
+   "0-7": 0.11251018815504177,
+   "136-143": 0.443437947097017,
+   "272-279": 0.13228193080034217,
+   "344-351": 0.13236892348267948
+  },
+  "historical_v3_note": "The historical repository preserves the v3 pilot verdict value 0.13311869 but not enough computation evidence to reconstruct its exact derivation; composite_signed_target_lift is not claimed to reproduce it.",
+  "median_signed_target_lift": 0.20497145020781576,
+  "nature": "equal-weight, unstandardized, cross-family pilot diagnostic; NOT a formal Scheme-D effect-size statistic and not part of Scheme-D acceptance",
+  "non_positive_worlds": 0,
+  "non_refused_worlds": 20,
+  "positive_worlds": 20,
+  "statistic": "composite_signed_target_lift",
+  "targets": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   136,
+   137,
+   138,
+   139,
+   140,
+   141,
+   142,
+   143,
+   272,
+   273,
+   274,
+   275,
+   276,
+   277,
+   278,
+   279,
+   344,
+   345,
+   346,
+   347,
+   348,
+   349,
+   350,
+   351
+  ],
+  "true_discoveries": 640,
+  "worlds": [
+   {
+    "composite_signed_target_lift": 0.21906186039057607,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11717368084505286,
+     "136-143": 0.4880868287370573,
+     "272-279": 0.13482073369190703,
+     "344-351": 0.13616619828828705
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 0
+   },
+   {
+    "composite_signed_target_lift": 0.19922028214430046,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.10187384327553534,
+     "136-143": 0.42725288044270526,
+     "272-279": 0.13305702567516184,
+     "344-351": 0.1346973791837994
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 1
+   },
+   {
+    "composite_signed_target_lift": 0.1992985547899738,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.10973182274637566,
+     "136-143": 0.4323677849310833,
+     "272-279": 0.12751300312111488,
+     "344-351": 0.12758160836132137
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 2
+   },
+   {
+    "composite_signed_target_lift": 0.20263781601298364,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11202562460531004,
+     "136-143": 0.4439204896758718,
+     "272-279": 0.12860823216622988,
+     "344-351": 0.1259969176045228
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 3
+   },
+   {
+    "composite_signed_target_lift": 0.19913975295098163,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11764707058857496,
+     "136-143": 0.41578186716721494,
+     "272-279": 0.1315637165370143,
+     "344-351": 0.1315663575111224
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 4
+   },
+   {
+    "composite_signed_target_lift": 0.20496265747174858,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.1161813811434148,
+     "136-143": 0.43623548663053807,
+     "272-279": 0.13242592137270626,
+     "344-351": 0.13500784074033523
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 5
+   },
+   {
+    "composite_signed_target_lift": 0.21088443500530477,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.10945881085066575,
+     "136-143": 0.4646565941453996,
+     "272-279": 0.13359209628047566,
+     "344-351": 0.135830238744678
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 6
+   },
+   {
+    "composite_signed_target_lift": 0.2007736015587982,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11228097667154552,
+     "136-143": 0.42756740680615146,
+     "272-279": 0.13074519128996334,
+     "344-351": 0.13250083146753247
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 7
+   },
+   {
+    "composite_signed_target_lift": 0.2068433607238254,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11468881383143426,
+     "136-143": 0.4424570638764513,
+     "272-279": 0.13593114562577954,
+     "344-351": 0.13429641956163654
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 8
+   },
+   {
+    "composite_signed_target_lift": 0.21094880203617633,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11578273717605615,
+     "136-143": 0.46883407743694294,
+     "272-279": 0.1282711367193457,
+     "344-351": 0.13090725681236048
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 9
+   },
+   {
+    "composite_signed_target_lift": 0.20720708595898044,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11002129503227442,
+     "136-143": 0.4501846583644812,
+     "272-279": 0.13461525999753748,
+     "344-351": 0.13400713044162865
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 10
+   },
+   {
+    "composite_signed_target_lift": 0.20498024294388295,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11029371681142817,
+     "136-143": 0.4562927520517118,
+     "272-279": 0.1265889426158178,
+     "344-351": 0.126745560296574
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 11
+   },
+   {
+    "composite_signed_target_lift": 0.19625168581376656,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11275601858224474,
+     "136-143": 0.411334622595894,
+     "272-279": 0.1305321178469457,
+     "344-351": 0.13038398422998185
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 12
+   },
+   {
+    "composite_signed_target_lift": 0.20031861805752596,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11227270616253293,
+     "136-143": 0.4246268103417663,
+     "272-279": 0.13213794022797806,
+     "344-351": 0.1322370154978265
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 13
+   },
+   {
+    "composite_signed_target_lift": 0.20995080189550008,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11750317740302892,
+     "136-143": 0.460117890658353,
+     "272-279": 0.13171374254256685,
+     "344-351": 0.1304683969780515
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 14
+   },
+   {
+    "composite_signed_target_lift": 0.20443855124963886,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.10305406719260107,
+     "136-143": 0.4447365138290242,
+     "272-279": 0.13522514807152608,
+     "344-351": 0.13473847590540408
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 15
+   },
+   {
+    "composite_signed_target_lift": 0.20498582115233932,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11231619730564849,
+     "136-143": 0.4429554045181622,
+     "272-279": 0.13453244844133083,
+     "344-351": 0.13013923434421576
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 16
+   },
+   {
+    "composite_signed_target_lift": 0.21227977205992743,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11953313195800941,
+     "136-143": 0.4558140932136731,
+     "272-279": 0.1388026301050907,
+     "344-351": 0.13496923296293645
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 17
+   },
+   {
+    "composite_signed_target_lift": 0.2080373523831144,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11370607941393558,
+     "136-143": 0.44877516023367564,
+     "272-279": 0.13711444752780522,
+     "344-351": 0.13255372235704121
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 18
+   },
+   {
+    "composite_signed_target_lift": 0.20308166374671313,
+    "effect_evaluable": true,
+    "effect_refusal": null,
+    "effect_status": "EVALUABLE",
+    "family_means": {
+     "0-7": 0.11270417900443505,
+     "136-143": 0.43739773219671574,
+     "272-279": 0.13193834824580372,
+     "344-351": 0.13028639553989801
+    },
+    "target_refused_count": 0,
+    "target_tested_count": 32,
+    "world": 19
+   }
+  ]
+ },
+ "reason": "p6_encouraging_effect",
+ "refusal": {
+  "N0/C0": {
+   "exceeds_limit": false,
+   "hypothesis_refusal_rate": 0.0,
+   "non_refused_worlds": 20,
+   "refused_worlds": 0,
+   "world_refusal_rate": 0.0,
+   "worlds": 20
+  },
+  "N3/C4": {
+   "exceeds_limit": false,
+   "hypothesis_refusal_rate": 0.0,
+   "non_refused_worlds": 20,
+   "refused_worlds": 0,
+   "world_refusal_rate": 0.0,
+   "worlds": 20
+  },
+  "P1/C0": {
+   "exceeds_limit": false,
+   "hypothesis_refusal_rate": 0.0,
+   "non_refused_worlds": 20,
+   "refused_worlds": 0,
+   "world_refusal_rate": 0.0,
+   "worlds": 20
+  },
+  "P6/C4": {
+   "exceeds_limit": false,
+   "hypothesis_refusal_rate": 0.0,
+   "non_refused_worlds": 20,
+   "refused_worlds": 0,
+   "world_refusal_rate": 0.0,
+   "worlds": 20
+  }
+ },
+ "schema": "m3.2-scheme-d-pilot-verdict.v2",
+ "scope": "pilot_only_non_final",
+ "type_one_diagnostics": {
+  "N0/C0": {
+   "non_refused_worlds": 20,
+   "rate": 0.0,
+   "rejecting_worlds": 0,
+   "stop": false,
+   "wilson_95": [
+    0.0,
+    0.16112516018512965
+   ]
+  },
+  "N3/C4": {
+   "non_refused_worlds": 20,
+   "rate": 0.05,
+   "rejecting_worlds": 1,
+   "stop": false,
+   "wilson_95": [
+    0.008881448702335523,
+    0.23613119546428119
+   ]
+  },
+  "P1/C0": {
+   "non_refused_worlds": 20,
+   "rate": 0.05,
+   "rejecting_worlds": 1,
+   "stop": false,
+   "wilson_95": [
+    0.008881448702335523,
+    0.23613119546428119
+   ]
+  }
+ },
+ "verdict": "GO"
+}
