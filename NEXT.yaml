@@ -1,11 +1,11 @@
 project: LUFFY
-sdd_version: '3.1'
+sdd_version: '3.2'
 
 work_package:
   id: M3.2-SCHEME-D-V4-PRE-RUN-DECISIONS
   type: QUANT_VALIDATION_INFRA
   priority: CRITICAL
-  status: BLOCKED_ON_PILOT_OWNER_DECISION
+  status: PILOT_PREPARATION_AUTHORIZED
 
   objective: >
     Move the frozen, shard-integrated v4 Scheme-D bundle toward a runnable
@@ -25,19 +25,19 @@ work_package:
     - full v4 single-host qualification PASS at evidence commit 4238660 on ext4 /dev/sda2; 4 qualified workers; cross-host flock NOT_EXERCISED because only one host is available
     - qualification generated no RNG, read no authorization, ran no benchmark and generated 0 validation worlds
     - combined report sets single_host_qualified true but execution_hosts_ready_for_authorization false; projected full-run wall time is about 190.13 days on this host
+    - owner explicitly authorized one bounded v4 pilot on 2026-09-23; full validation remains unauthorized
 
   next_steps:
     - step: 1
-      owner_decision: true
       action: >
-        Owner decides whether to authorize one bounded v4 pilot on the qualified
-        single host. Any pilot authorization must bind the exact v4 bundle_sha256,
-        shard_layer_sha256, shard_worlds and measured v4 benchmark receipt.
+        Finish deterministic preparation/freeze verification of the already-authorized
+        bounded v4 pilot package against corrected v4 semantics. Do not execute RNG
+        until exact hashes, evaluator rules and authorization bindings are verified.
     - step: 2
-      requires: step 1 authorization
+      requires: step 1
       action: >
-        If authorized, prepare and run only the bounded v4 pilot, preserving
-        separate pilot evidence. Do not treat pilot evidence as full validation.
+        Run only the owner-authorized bounded v4 pilot and preserve separate pilot
+        evidence. Do not treat pilot evidence as full validation.
     - step: 3
       owner_decision: true
       requires: pilot evidence and adequate qualified execution capacity
@@ -46,10 +46,10 @@ work_package:
         The current 4-worker host is not capacity-feasible for the full 75,000-world run.
 
   claude_executable_now:
-    - Prepare the bounded v4 pilot authorization package only after explicit owner approval.
+    - Finish and verify the bounded v4 pilot package only; pilot execution is allowed only within the already approved bounded scope after the package is frozen.
 
   execution_constraints:
-    - Do not run additional RNG benchmarks, pilot or validation without explicit owner authorization.
+    - One bounded v4 pilot is explicitly authorized. Do not exceed that scope; do not run additional RNG benchmarks or full validation without separate explicit owner authorization.
     - Do not run cloud compute or spend money.
     - Do not mint or fabricate owner authorization.
     - Do not modify frozen v4/v3/v2/v1 bundles, the v3 shard layer, or the frozen truth package.
