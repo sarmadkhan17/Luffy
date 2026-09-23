@@ -114,6 +114,9 @@ capabilities:
       - trader/observability/supplemental.py
       - trader/observability/_supplemental_child.py
       - tests/test_attention_supplemental.py
+      - 6eb7eb4 Add deterministic registry Attention selector
+      - trader/observability/registry_selector.py
+      - tests/test_registry_attention_selector.py
     proven_facts:
       - current GitHub repository contains cognition attention code
       - attention produces structured observations and selection reasons
@@ -133,14 +136,28 @@ capabilities:
       - usable supplemental data reaches Attention capture only; the symbol remains outside the trading scan, strategy frames, Orchestrator, Risk and Execution
       - no configured supplemental symbol preserves legacy behavior
       - focused verification passed 91 tests; commit evidence 9b95d4f
+      - SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR is TESTED at 6eb7eb4 as a pure selector component only; 275 affected selector/registry/Attention tests passed
+      - the pure deterministic selector accepts an injected immutable RegistrySnapshot
+      - the venue-active observation predicate is venue_listing == PRESENT and venue_status == TRADING
+      - UNKNOWN, ELIGIBLE and INELIGIBLE account eligibility can all remain observable recorded state; INELIGIBLE is never promoted into trading permission
+      - strict Binance USD-M perpetual mapping fails closed
+      - only the unambiguous strategy-scan symbol BASE/USDT:USDT establishes existing USD-M coverage; an ambiguous BASE/USDT scan symbol does not suppress a futures observation
+      - the explicit snapshot freshness limit is enforced; a future snapshot is refused; a stale snapshot selects nothing and leaves the cursor unchanged
+      - canonical lower-bound plus wrap cursor semantics are deterministic; repeated pure calls prevent starvation among selectable non-scan candidates
+      - the selection result is immutable and deterministically serialized and hashed
+      - the selector has no network, Kernel, journal or persistence dependency
     gaps:
       - live kernel does not currently supply a WorldModel to Attention; production use of this evaluator input is not established
       - venue-active instruments with account_eligibility=UNKNOWN may be observed by Attention without implying trade permission; registry, Attention, trading, Risk and Execution authority remain separate (trader/core/instrument_registry.py; trader/observability/attention.py)
       - the 2-second timeout is an implementation choice, not an SDD constant
       - pathological OS uninterruptible-process states cannot guarantee both finite cleanup and confirmed reaping
-      - supplemental symbol selection remains explicit/configured, not automatic
-      - registry-backed fairness and rotation are not implemented
+      - automatic Attention selection is not active in production; live supplemental symbol selection remains explicit/configured
+      - the registry selector is not wired into the Kernel
       - live RegistrySnapshot production and refresh are not established
+      - durable cursor and selection-record transaction is not established
+      - durable RegistrySnapshot historical store is not established; durable historical replay is not claimed
+      - live max_snapshot_age_ms config wiring is not established
+      - registry-backed rotation is limited to the one supplemental slot in the pure selector; broader fairness policy is not implemented
       - the current 90-day listing-age filter belongs to trading Universe/history selection, not Attention eligibility (config.yaml; trader/data/feed.py)
       - SDD v3.2 connected eligible-universe and fairness gap remains
       - portfolio signals remain missing from Attention priority
@@ -294,38 +311,40 @@ capabilities:
       - production recovery behavior beyond deterministic tests is not established here
 
 current_active_work:
-  id: SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR
+  id: SDD-STAGE-3-ATTENTION-LIVE-SELECTION-DEPENDENCY-AUDIT
+  type: DEPENDENCY_AUDIT
   state: DEFINED
-  status: DESIGN_CLOSED_NOT_IMPLEMENTED
-  objective: Define a pure deterministic selector over an injected RegistrySnapshot choosing at most one rotating supplemental Attention observation symbol per cycle from venue-active instruments without changing trading eligibility.
-  proven_facts:
-    - SDD-STAGE-3-ATTENTION-COVERAGE-SEAM design audit completed; it recommended a pure selector over an injected snapshot as the smallest next slice; no code changed
-  design_decisions:
-    - one reserved rotating supplemental slot; strategy-scan order and the Attention max_symbols cap are unchanged
-    - observation candidates require venue_listing PRESENT and venue_status TRADING; UNKNOWN, ELIGIBLE and INELIGIBLE account eligibility all remain observable as recorded state; INELIGIBLE never becomes trading permission
-    - strict Binance USD-M mapping to BASE/USDT:USDT with explicit refusal reasons; base never inferred by suffix stripping
-    - explicit max_snapshot_age_ms input; registry_age_ms = cycle_as_of_ms - snapshot.as_of_ms; future snapshot refused; age above the limit selects nothing with reason snapshot_stale; both values recorded; no hardcoded freshness constant
-    - cursor is the next canonical candidate ID with lower-bound plus wrap; already_in_strategy_scan, predicate and mapping exclusions are recorded and traversal continues; first fetchable candidate is selected; cursor_after is the next candidate after the selected ID
-    - nothing selectable yields null selected_id and mapped symbol, retains all exclusion reasons, and leaves cursor_after equal to cursor_before
-    - replay scope is limited to identical snapshot, cycle cut, full strategy scan, cursor and freshness limit producing an identical record; output retains snapshot_id and snapshot.as_of_ms; no RegistrySnapshot store in this slice
+  status: AUDIT_QUEUED_NOT_STARTED
+  objective: Determine the correct implementation order among live RegistrySnapshot production, durable selection/cursor persistence and Kernel selector integration; audit only.
+  completed_prerequisite:
+    id: SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR
+    state: TESTED
+    evidence:
+      - 6eb7eb4 Add deterministic registry Attention selector
+      - trader/observability/registry_selector.py
+      - tests/test_registry_attention_selector.py
+      - 275 affected selector/registry/Attention tests passed
+    scope: pure selector component only; Attention overall remains IMPLEMENTED
   gaps:
-    - selector is not implemented or tested
-    - durable RegistrySnapshot retention is deferred; durable historical replay is not established
-    - Kernel wiring, live RegistrySnapshot producer, max_snapshot_age_ms config wiring and durable selection-record plus cursor persistence are not established
+    - no live RegistrySnapshot producer or refresh
+    - no Kernel selector wiring
+    - no durable cursor and selection-record transaction
+    - no durable RegistrySnapshot historical store
+    - no live max_snapshot_age_ms config wiring
+    - automatic Attention selection is therefore not active in production
   evidence:
     - SDD.md
-    - b35fe41 Add immutable instrument capability registry
     - trader/core/instrument_registry.py
     - trader/data/binance_usdm_registry.py
-    - tests/test_instrument_registry.py
+    - trader/observability/registry_selector.py
+    - trader/observability/supplemental.py
     - trader/cognition/attention.py
-    - 9b95d4f Add isolated supplemental Attention data path
   constraints:
     - "locked = don't redesign; implemented = verify; discuss only gaps"
-    - pure selector implementation only; no Kernel changes, network, journal writes or live registry producer
-    - strategy scan, Universe, Risk and Execution unchanged
+    - audit only; no code, Kernel, config or persistence changes
+    - strategy scan, Universe, trading eligibility, Risk and Execution unchanged
     - keep observation separate from trading scan, strategy eligibility, Risk and Execution
-    - preserve the parked Scheme-D pilot blocker and authorization constraints
+    - preserve the parked Scheme-D pilot blocker and authorization constraints; no new pilot or full validation work
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
