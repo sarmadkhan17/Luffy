@@ -66,6 +66,21 @@ class InstrumentId:
         return f"{self.venue}:{self.market_type.value}:{self.venue_symbol}"
 
 
+def is_canonical_instrument_id(value: object) -> bool:
+    """True when `value` is exactly what some `InstrumentId.value` produces.
+    The instrument need not exist in any snapshot."""
+    if not isinstance(value, str):
+        return False
+    parts = value.split(":")
+    if len(parts) != 3:
+        return False
+    try:
+        iid = InstrumentId(parts[0], MarketType(parts[1]), parts[2])
+    except ValueError:
+        return False
+    return iid.value == value
+
+
 @dataclass(frozen=True)
 class EligibilityBasis:
     kind: EligibilityBasisKind

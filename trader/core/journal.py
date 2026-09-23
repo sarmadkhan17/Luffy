@@ -164,6 +164,44 @@ CREATE TABLE IF NOT EXISTS strategies (
     created_at TEXT,
     stats_json TEXT DEFAULT '{}'
 );
+
+-- Attention supplemental selection: one row per pure-selector Selection,
+-- written in the same transaction as the rotating cursor it implies. The
+-- canonical JSON is authoritative; the other columns are its projection.
+CREATE TABLE IF NOT EXISTS attention_selections (
+    selection_id TEXT PRIMARY KEY,   -- sha256(canonical_json)
+    rule_version TEXT NOT NULL,
+    cycle_as_of_ms INTEGER NOT NULL,
+    outcome TEXT NOT NULL,
+    snapshot_id TEXT NOT NULL,
+    snapshot_as_of_ms INTEGER NOT NULL,
+    registry_age_ms INTEGER NOT NULL,
+    max_snapshot_age_ms INTEGER NOT NULL,
+    selected_id TEXT,
+    selected_symbol TEXT,
+    cursor_before TEXT,
+    cursor_after TEXT,
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL
+);
+
+-- durable rotating cursors; an absent row is "no cursor"
+CREATE TABLE IF NOT EXISTS attention_cursor (
+    name TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+-- what a later supplemental fetch did; never touches attention_cursor
+CREATE TABLE IF NOT EXISTS attention_fetch_outcomes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    selection_id TEXT NOT NULL REFERENCES attention_selections(selection_id),
+    status TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    started_ms INTEGER,
+    ended_ms INTEGER,
+    recorded_at_ms INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS attention_fetch_outcomes_sel ON attention_fetch_outcomes(selection_id,id);
 """
 
 
@@ -431,6 +469,77 @@ class Journal:
                 "(decision_id,cycle_id,symbol,ts,action,entry_price) "
                 "VALUES (?,?,?,?,?,?)",
                 (decision_id, cycle_id, symbol, ts, action, entry_price))
+
+    # -- Attention selection: primitives only; the Selection adapter is
+    # observability/selection_persistence.py --------------------------------
+    _SELECTION_COLUMNS = ("selection_id", "rule_version", "cycle_as_of_ms", "outcome",
+                          "snapshot_id", "snapshot_as_of_ms", "registry_age_ms",
+                          "max_snapshot_age_ms", "selected_id", "selected_symbol",
+                          "cursor_before", "cursor_after", "canonical_json")
+
+    def record_attention_selection(self, row: dict, *, cursor_name: str,
+                                   recorded_at_ms: int) -> str:
+        """Insert one selection row and set cursor `cursor_name` to its
+        cursor_after in ONE transaction; a None cursor_after deletes the row.
+
+        "inserted" on a write. "duplicate" when an identical row (ignoring
+        recorded_at_ms) exists: nothing is written, so a late replay cannot
+        rewind the cursor. "conflict" when the ID exists with other content:
+        nothing is written. "cursor_conflict" when a new row's cursor_before
+        is not exactly the durable cursor (None = no cursor row), e.g. another
+        writer advanced it first: nothing is written. The cursor is read under
+        BEGIN IMMEDIATE so no other connection can move it before the write."""
+        values = tuple(row[k] for k in self._SELECTION_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {','.join(self._SELECTION_COLUMNS)} FROM attention_selections "
+                "WHERE selection_id=?", (row["selection_id"],)).fetchone()
+            if old is not None:
+                return "duplicate" if tuple(old) == values else "conflict"
+            cur = c.execute("SELECT value FROM attention_cursor WHERE name=?",
+                            (cursor_name,)).fetchone()
+            if (cur[0] if cur else None) != row["cursor_before"]:
+                return "cursor_conflict"
+            c.execute(
+                f"INSERT INTO attention_selections({','.join(self._SELECTION_COLUMNS)},"
+                f"recorded_at_ms) VALUES ({','.join('?' * (len(values) + 1))})",
+                values + (recorded_at_ms,))
+            if row["cursor_after"] is None:
+                c.execute("DELETE FROM attention_cursor WHERE name=?", (cursor_name,))
+            else:
+                c.execute("INSERT OR REPLACE INTO attention_cursor(name,value) VALUES (?,?)",
+                          (cursor_name, row["cursor_after"]))
+        return "inserted"
+
+    def attention_cursor(self, name: str) -> str | None:
+        """The raw stored cursor, None when no row exists. Unvalidated."""
+        row = self._conn().execute(
+            "SELECT value FROM attention_cursor WHERE name=?", (name,)).fetchone()
+        return row["value"] if row else None
+
+    def attention_selection(self, selection_id: str) -> dict | None:
+        row = self._conn().execute(
+            "SELECT * FROM attention_selections WHERE selection_id=?",
+            (selection_id,)).fetchone()
+        return dict(row) if row else None
+
+    def record_attention_fetch_outcome(self, selection_id: str, status: str, reason: str,
+                                       started_ms: int | None, ended_ms: int | None,
+                                       recorded_at_ms: int) -> int:
+        """Its own transaction; never touches attention_cursor. The selection
+        must already exist (foreign key)."""
+        with self._tx() as c:
+            cur = c.execute(
+                "INSERT INTO attention_fetch_outcomes(selection_id,status,reason,"
+                "started_ms,ended_ms,recorded_at_ms) VALUES (?,?,?,?,?,?)",
+                (selection_id, status, reason, started_ms, ended_ms, recorded_at_ms))
+            return int(cur.lastrowid)
+
+    def attention_fetch_outcomes(self, selection_id: str) -> list[dict]:
+        return self.query("SELECT * FROM attention_fetch_outcomes WHERE selection_id=? "
+                          "ORDER BY id", (selection_id,))
 
     # -- strategy population ------------------------------------------------
     def upsert_strategy(self, st) -> None:

@@ -25,7 +25,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from trader.core.instrument_registry import (
-    InstrumentId, InstrumentRecord, Presence, RegistrySnapshot,
+    InstrumentRecord, Presence, RegistrySnapshot, is_canonical_instrument_id,
 )
 from trader.core.types import MarketType
 
@@ -176,19 +176,6 @@ def scan_coverage(scan_symbols: Iterable[str]) -> tuple[frozenset[str], tuple[st
     return frozenset(covered), tuple(sorted(unmatched))
 
 
-def _is_canonical_id(value: str) -> bool:
-    """True when `value` is exactly what some `InstrumentId.value` produces.
-    The instrument need not exist in any snapshot."""
-    parts = value.split(":")
-    if len(parts) != 3:
-        return False
-    try:
-        iid = InstrumentId(parts[0], MarketType(parts[1]), parts[2])
-    except ValueError:
-        return False
-    return iid.value == value
-
-
 def _check_int(name: str, value, minimum: int = 0) -> None:
     if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
         raise SelectionRefused("invalid_input", f"{name} must be an int >= {minimum}")
@@ -207,7 +194,7 @@ def select(snapshot: RegistrySnapshot, *, cycle_as_of_ms: int, max_snapshot_age_
     if any(not isinstance(s, str) or not s for s in scan):
         raise SelectionRefused("invalid_input", "strategy_scan symbols must be nonempty strings")
     if cursor_before is not None and (not isinstance(cursor_before, str)
-                                      or not _is_canonical_id(cursor_before)):
+                                      or not is_canonical_instrument_id(cursor_before)):
         raise SelectionRefused("invalid_input", "cursor_before must be a canonical ID or None")
 
     age = cycle_as_of_ms - snapshot.as_of_ms
