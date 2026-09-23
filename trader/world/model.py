@@ -15,6 +15,7 @@ from .observation import Observation, _text, _timestamp
 from .state import WorldState
 
 if TYPE_CHECKING:
+    from .claim import ClaimCollection, WorldClaim
     from .relationship import RelationshipCollection
 
 
@@ -85,6 +86,7 @@ class WorldModel:
     horizons: tuple[Horizon, ...] = tuple(Horizon)
     schema_version: str = SCHEMA_VERSION
     relationships: RelationshipCollection | None = None
+    claims: ClaimCollection | None = None
     model_id: str = field(init=False)
 
     def __post_init__(self) -> None:
@@ -100,6 +102,12 @@ class WorldModel:
                 raise TypeError("relationships must be RelationshipCollection or None")
             if self.relationships.as_of_ms != self.as_of_ms:
                 raise ValueError("relationship collection cut does not match model cut")
+        if self.claims is not None:
+            from .claim import ClaimCollection
+            if not isinstance(self.claims, ClaimCollection):
+                raise TypeError("claims must be ClaimCollection or None")
+            if self.claims.as_of_ms != self.as_of_ms:
+                raise ValueError("claim collection cut does not match model cut")
         if not horizons or len(set(horizons)) != len(horizons):
             raise ValueError("horizons must be nonempty and unique")
         scopes = [node.scope for node in nodes]
@@ -131,6 +139,21 @@ class WorldModel:
             for observation in state.observations:
                 if observation.horizon is not None and observation.horizon not in horizons:
                     raise ValueError("observation horizon is not declared by model")
+        if self.claims is not None:
+            from .claim import ClaimEvidenceRef
+            present = {ClaimEvidenceRef.from_observation(obs)
+                       for state in states for obs in state.observations}
+            if self.relationships is not None:
+                present.update(ClaimEvidenceRef.from_relationship(rel)
+                               for rel in self.relationships.relationships)
+            for claim in self.claims.claims:
+                if claim.coordinate.scope not in scope_set:
+                    raise ValueError("claim scope has no hierarchy node")
+                if claim.coordinate.horizon not in horizons:
+                    raise ValueError("claim horizon is not declared by model")
+                if any(ref not in present for ref in
+                       claim.supporting_evidence + claim.contradicting_evidence):
+                    raise ValueError("claim evidence is not an exact record in model")
         nodes = tuple(sorted(nodes, key=lambda node: (
             node.scope.level.value, node.scope.identifier)))
         states = tuple(sorted(states, key=lambda state: state.instrument))
@@ -191,6 +214,21 @@ class WorldModel:
             raise LookupError(f"expected one observation, found {len(matches)}")
         return matches[0]
 
+    def get_claims(self, scope: Scope, horizon: Horizon,
+                   *, dimension: str | None = None) -> tuple[WorldClaim, ...]:
+        self._node(scope)
+        if not isinstance(horizon, Horizon) or horizon not in self.horizons:
+            raise ValueError("horizon must be a declared Horizon")
+        if self.claims is None:
+            return ()
+        return self.claims.query(scope=scope, horizon=horizon, dimension=dimension)
+
+    def get_one_claim(self, scope: Scope, horizon: Horizon, *, dimension: str) -> WorldClaim:
+        matches = self.get_claims(scope, horizon, dimension=dimension)
+        if len(matches) != 1:
+            raise LookupError(f"expected exactly one claim, found {len(matches)}")
+        return matches[0]
+
     def to_dict(self) -> dict[str, Any]:
         record = {"schema_version": self.schema_version, "as_of_ms": self.as_of_ms,
                 "horizons": [horizon.value for horizon in self.horizons],
@@ -198,6 +236,8 @@ class WorldModel:
                 "states": [state.to_dict() for state in self.states]}
         if self.relationships is not None:
             record["relationships"] = self.relationships.to_dict()
+        if self.claims is not None:
+            record["claims"] = self.claims.to_dict()
         return record
 
     def to_json(self) -> str:

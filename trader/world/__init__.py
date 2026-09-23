@@ -9,6 +9,8 @@ from .state import WorldState
 from .model import HierarchyNode, Horizon, Scope, ScopeLevel, WorldModel
 from .relationship import (EvidenceRef, RelationshipCollection,
                            RelationshipCoordinate, RelationshipState)
+from .claim import (ClaimCollection, ClaimCoordinate, ClaimEvidenceRef,
+                    ClaimEvidenceType, WorldClaim)
 
 __all__ = [
     "AmbiguousInputError", "InputRequirement", "Measurement", "MissingInputError",
@@ -17,4 +19,6 @@ __all__ = [
     "Scope", "ScopeLevel", "WorldModel", "perceive",
     "EvidenceRef", "RelationshipCollection", "RelationshipCoordinate",
     "RelationshipState",
+    "ClaimCollection", "ClaimCoordinate", "ClaimEvidenceRef", "ClaimEvidenceType",
+    "WorldClaim",
 ]
