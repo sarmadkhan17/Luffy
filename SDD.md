@@ -236,6 +236,74 @@ Operator/Chat explains and controls through typed interfaces.
 
 The architecture is logically layered but does **not** require one software service per box. In the initial implementation, most layers should remain Python modules inside a small number of processes.
 
+## 4.1 Canonical component map
+
+The target names below define responsibility boundaries. Existing repository classes may map into them during migration; do not create duplicate subsystems merely to match a name.
+
+### Trading Core components
+
+- **Kernel** — scheduler/orchestrator only.
+- **Instrument Registry** — connected venue/account universe and instrument capabilities.
+- **Data Feed / Market State** — point-in-time observations and data quality.
+- **Feature / State Engine** — derived features, regime classification and world-state updates.
+- **Attention Agent** — prioritizes where compute/investigation goes; never decides trades.
+- **Technical Analyst** — price structure/trend/value/volatility technical evidence.
+- **Order Flow Analyst** — order-book/trade/liquidity/flow evidence.
+- **Derivatives Analyst** — funding/OI/basis/liquidation/positioning evidence.
+- **Macro Analyst** — macro/event/rates/risk-regime evidence.
+- **On-chain Analyst** — on-chain evidence only where valid data exists.
+- **Cross-Market Analyst** — relative strength, factors, correlations, breadth and cross-asset evidence.
+- **Strategy Runtime Engine** — evaluates immutable approved StrategySpecs against point-in-time context.
+- **Opportunity Context Builder** — freezes one coherent decision snapshot.
+- **Decision Orchestrator** — deterministic candidate comparison/decision.
+- **Portfolio Allocator** — whole-book capital allocation and opportunity-cost decisions.
+- **Risk Agent / Risk Authority** — deterministic hard permission/sizing/risk veto.
+- **Execution Agent** — venue order execution and fill management.
+- **Exit Agent** — approved exit-plan/protection lifecycle.
+- **Accounting Agent** — exchange-authoritative monetary truth plus derived attribution.
+- **Supervisor** — health, containment, recovery-state orchestration and safe resume logic.
+
+### Research/Learning components
+
+- **Researcher** — question/evidence/source investigation.
+- **Experimenter** — reproducible experiment execution.
+- **Validator / Referee** — statistical admission/falsification gates; no promotion by narrative.
+- **Strategy Builder** — converts validated hypotheses into typed StrategySpecs.
+- **Strategy Governor** — active strategy lifecycle/allocation authority within approved bounds.
+- **Learning Agent** — conservative evidence updates to reliability/confidence/allocation/research priority; no hard-risk expansion and no production-code rewrite.
+
+### Owner/UI/knowledge components
+
+- **Journal / Operational Store** — durable operational truth/provenance.
+- **Research Bank** — structured research objects and negative results.
+- **Knowledge/Evidence Store** — semantic/evidence/timeline/code-linked knowledge.
+- **Owner Interface API** — typed authenticated query/control/approval interface.
+- **LUFFY Conversation** — grounded partner conversation over typed tools/evidence.
+- **Dashboard** — browser-rendered operational interface.
+- **Remote Gateway** — optional Telegram/Clawd-style narrow gateway with no trading secrets.
+
+## 4.2 Canonical live decision path
+
+```text
+Instrument Registry
+      -> Data / Feature / World State
+      -> Attention
+      -> Strategies + required Analyst evidence
+      -> frozen Opportunity Context
+      -> Decision Orchestrator
+      -> Portfolio Allocator
+      -> deterministic Risk Authority
+      -> Execution
+      -> Exit / Protection
+      -> Accounting / Venue Reconciliation
+      -> Outcome / Attribution
+      -> Learning / Research / Knowledge
+```
+
+Normal live trading requires **zero LLM calls**.
+
+Analysts provide evidence. Strategies propose executable logic. Decision compares candidates. Portfolio decides book expression. Risk decides permission and bounded size. Execution/Exit interact with the venue. Accounting records truth. Supervisor can freeze/recover the system. These authorities must not be collapsed into an opaque “AI brain.”
+
 ---
 
 # 5. Runtime and Infrastructure Architecture
@@ -288,6 +356,8 @@ The target runtime separates four logical process groups:
 
 These are logical isolation boundaries, not a mandate for microservices. Components may initially coexist where safe. Research/scraping/crawling must never starve or crash the Trading Core.
 
+No analyst gets its own process merely because it is called an “agent.” In LUFFY, an agent is a responsibility/contract. Most agents are ordinary Python modules or objects. Process boundaries exist for isolation, reliability, resource control, and security—not branding.
+
 ## 5.3 Technology baseline
 
 Primary language: **Python**.
@@ -303,11 +373,54 @@ Baseline technology classes:
 - WebSocket for live dashboard updates;
 - GraphQL only where it materially simplifies operator/agent querying;
 - SQLite/WAL initially for operational truth;
-- Parquet for analytical bulk history where useful;
-- YAML/Markdown for structured human-readable semantic memory;
+- Parquet for analytical bulk history;
+- DuckDB for local analytical querying over Parquet/history where useful;
+- PostgreSQL only after measured concurrency/availability/scale need justifies migration;
+- YAML/Markdown for structured human-readable semantic memory where human-readable artifacts are useful;
 - pytest for deterministic tests.
 
 A future language transition is not prescribed. If Python becomes a measured blocker, a separate transition design is created at that time.
+
+## 5.4 Initial deployment/resource envelope
+
+The initial deployment target is the owner's laptop/VM environment, not a permanent architectural ceiling:
+
+- Windows host, Linux VM;
+- current VM class: approximately 4 vCPU and 8 GB RAM;
+- host GPU is not required by the trading core;
+- normal live-core target: approximately <=2 CPU cores sustained and 4–6 GB RAM where practical;
+- research may use remaining local CPU opportunistically but yields to live trading;
+- browser-side graphics use the owner's browser/Windows GPU rather than backend trading compute;
+- additional RAM/compute/cloud is added only when measurement justifies it and paid/cloud use follows owner approval.
+
+Research workload must back off when live-cycle latency or system pressure rises. The live trading loop always wins resource contention.
+
+## 5.5 Kernel contract
+
+The **Kernel** is the runtime coordinator/scheduler for the Trading Core. It is not LUFFY's “brain,” not a super-agent, and not allowed to bypass component contracts.
+
+The Kernel owns or coordinates:
+
+- boot/shutdown;
+- control-state enforcement;
+- live cycle timing;
+- canonical market/universe refresh;
+- invoking Attention, perception/state, strategy evaluation, analyst measurement, Decision, Portfolio, Risk, Execution, Exit, Accounting, Supervisor/reconciliation;
+- heartbeats and health;
+- safe background-task scheduling;
+- publishing typed events and recording durable cycle lineage.
+
+The Kernel must not:
+
+- invent strategy logic;
+- make discretionary LLM trade calls;
+- override Risk;
+- place orders except through Execution;
+- silently mutate strategy versions;
+- hide component failures;
+- run research workloads that can starve the live cycle.
+
+The target is a thin orchestration kernel with explicit component contracts, even if the current implementation is a larger monolith that must be migrated incrementally.
 
 ---
 
@@ -398,6 +511,32 @@ Where relevant, envelopes carry:
 Existing `cycle_id -> decision_id -> trade/outcome` lineage remains canonical where it already provides the required trace. A higher-level opportunity identifier may group several cycles that belong to the same evolving setup; it references evidence rather than duplicating it.
 
 Material decisions must be reconstructible from persisted provenance.
+
+## 6.6 Live bus, journal and storage ownership
+
+Use a lightweight **in-process typed live event bus** for low-latency coordination and a **durable append-oriented journal** for facts that must survive restart/replay. Kafka, Redis, or another distributed broker is not an initial requirement.
+
+SQLite/WAL is the initial operational database. Preserve disciplined write ownership:
+
+- one logical authority owns each mutable truth domain;
+- do not introduce uncontrolled multi-process writers;
+- operator/UI components may submit typed control intents through the API, but they do not write monetary/trade truth directly;
+- the Trading Core/Accounting path is authoritative for durable trade/accounting state after venue reconciliation;
+- readers may be many; writes must remain serialized/transactional and measurable.
+
+Historical analytical volume should move to Parquet and be queried locally with DuckDB when that reduces SQLite pressure. PostgreSQL is a measured future migration, not a default upgrade.
+
+## 6.7 Hot state versus durable truth
+
+Hot in-memory state exists for speed and may be rebuilt. Durable journal/venue truth exists for recovery.
+
+A restart must reconstruct hot state from durable records plus current venue truth. No safety-critical state may exist only in an unpersisted Python object.
+
+## 6.8 Instrument Registry
+
+The Instrument Registry is the canonical source for discovered venue/account capabilities and instrument metadata. It refreshes from connected venue/account truth, preserves capability/version history, and feeds Attention, Strategy, Portfolio, Risk and Execution.
+
+There is no permanent hardcoded top-N trading list. Attention may narrow compute focus, but the eligible universe comes from connected capability and deterministic account/data constraints.
 
 ---
 
