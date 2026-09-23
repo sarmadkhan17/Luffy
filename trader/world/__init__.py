@@ -11,6 +11,7 @@ from .relationship import (EvidenceRef, RelationshipCollection,
                            RelationshipCoordinate, RelationshipState)
 from .claim import (ClaimCollection, ClaimCoordinate, ClaimEvidenceRef,
                     ClaimEvidenceType, WorldClaim)
+from .replay import WorldHistory, WorldModelRecord, reconstruct_world_model
 
 __all__ = [
     "AmbiguousInputError", "InputRequirement", "Measurement", "MissingInputError",
@@ -21,4 +22,5 @@ __all__ = [
     "RelationshipState",
     "ClaimCollection", "ClaimCoordinate", "ClaimEvidenceRef", "ClaimEvidenceType",
     "WorldClaim",
+    "WorldHistory", "WorldModelRecord", "reconstruct_world_model",
 ]
