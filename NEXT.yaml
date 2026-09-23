@@ -2,42 +2,100 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-COVERAGE-SEAM
-  type: DESIGN_AUDIT
+  id: SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR
+  type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
 
   objective: >
-    Define the smallest deterministic registry-backed observation-selection seam
-    that can choose bounded Attention candidates from venue-active instruments
-    without changing trading eligibility.
+    Define a pure, deterministic selector over an injected RegistrySnapshot that
+    chooses at most one rotating supplemental Attention observation symbol per
+    cycle from venue-active instruments without changing trading eligibility.
 
   working_rule: "locked = don't redesign; implemented = verify; discuss only gaps"
 
   completed_prerequisite:
     - Bounded isolated supplemental Attention data path is TESTED at 9b95d4f; 91 focused tests passed.
-    - One explicitly configured observation-only symbol can reach Attention capture without entering trading paths.
+    - SDD-STAGE-3-ATTENTION-COVERAGE-SEAM design audit completed; it recommended this pure selector over an injected snapshot as the smallest next slice.
+    - A live RegistrySnapshot producer is required for live automatic selection but not for defining or verifying the selection rule.
 
-  audit_questions:
-    - Which exact RegistrySnapshot records can safely enter the Attention observation candidate population?
-    - How should UNKNOWN per-symbol account eligibility be handled for observation without implying trade permission?
-    - Should known INELIGIBLE instruments be excluded from Attention or retained for market observation? Reconcile SDD semantics and the previous audit; do not assume.
-    - Which registry fields are mandatory for observation among venue status, supported market type, symbol/feed mapping, data availability, account-global canTrade, shortability and order constraints?
-    - What deterministic rule prevents starvation while keeping the existing Attention cap bounded?
-    - Compare only stable round-robin, one reserved rotating supplemental slot, and stable partition with priority plus rotation.
-    - What state or cursor must persist for deterministic replay?
-    - Where should selection happen without altering _scan_symbols(), Universe, strategy frames, Risk or Execution?
-    - Is a live RegistrySnapshot producer required first, or can the selector accept an injected snapshot initially?
-    - Define the smallest next implementation slice without implementing it.
+  selector_contract:
+    - Pure function or module over an injected RegistrySnapshot; no Kernel changes, no network, no journal writes and no live registry producer.
+    - One reserved rotating supplemental slot; existing strategy-scan members keep their current order as the primary Attention set and the Attention max_symbols cap is unchanged.
+    - Observation candidates require venue_listing PRESENT and venue_status TRADING; UNKNOWN or any other status is excluded with an explicit reason.
+    - Account eligibility UNKNOWN, ELIGIBLE and INELIGIBLE all remain observable with the recorded state; INELIGIBLE is recorded prominently and never becomes strategy, Risk or Execution permission.
+    - Account-global canTrade, symbol_config, leverage_bracket, data_availability, shortability, order constraints and asset_class UNKNOWN are not observation gates.
+    - Listing age and volume do not enter the registry predicate or rotation; they remain trading Universe and scan-plan rules.
+    - Strict Binance USD-M mapping only - venue binance_usdm, market type futures, contract PERPETUAL, quote and settlement USDT, base matching [A-Z0-9]{1,24} and venue_symbol equal to base_asset + USDT; the mapped symbol is BASE/USDT:USDT. Mismatched or ambiguous metadata, other venues, contracts or markets and out-of-grammar symbols are refused with explicit reasons. The base is never inferred by stripping a USDT suffix.
+    - Canonical identity remains InstrumentId.value; candidates are sorted by canonical ID.
+    - Strategy scan, Universe, strategy frames, Risk and Execution are unchanged.
+
+  closed_design_gaps:
+    snapshot_freshness:
+      - The selector receives an explicit max_snapshot_age_ms input; no hardcoded or SDD freshness constant is invented.
+      - registry_age_ms = cycle_as_of_ms - snapshot.as_of_ms.
+      - A future-dated snapshot (registry_age_ms < 0) is refused.
+      - registry_age_ms greater than max_snapshot_age_ms selects nothing with explicit reason snapshot_stale.
+      - If a stale snapshot results in no selection, cursor_after equals cursor_before.
+      - The selection record carries both registry_age_ms and max_snapshot_age_ms.
+      - The caller eventually supplies the configured threshold; live config wiring is out of scope for this slice.
+    cursor_traversal:
+      - The cursor is the next canonical candidate ID from which traversal starts, using deterministic lower-bound plus wrap semantics; a missing cursor ID resolves to its sorted lower-bound position, wrapping to the first candidate.
+      - Traversal visits each candidate at most once per call.
+      - A candidate already covered by the full strategy scan is recorded as already_in_strategy_scan and traversal continues.
+      - Predicate and mapping exclusions are recorded with their reasons and traversal continues.
+      - The first fetchable candidate encountered is selected.
+      - When a candidate is selected, cursor_after is the next canonical candidate after the selected ID, wrapping as needed.
+      - The live caller advances to cursor_after after the selection attempt even if the later fetch fails.
+    nothing_selectable:
+      - If one full traversal finds no selectable candidate, selected_id and the mapped symbol are null.
+      - All exclusion reasons are retained.
+      - cursor_after equals cursor_before; the cursor is not advanced merely because nothing could be attempted.
+    replay_scope:
+      - This slice creates no RegistrySnapshot store.
+      - Replay guarantee is limited to - the same immutable RegistrySnapshot, cycle cut, full strategy scan, cursor and freshness limit produce the same selection record.
+      - The output retains snapshot_id and snapshot.as_of_ms.
+      - Durable snapshot retention and retrieval are deferred to live registry and persistence integration; durable historical replay must not be claimed until such a store exists.
+
+  selection_record_fields:
+    - selection-rule version
+    - cycle cut (cycle_as_of_ms)
+    - registry snapshot_id and snapshot.as_of_ms
+    - registry_age_ms and max_snapshot_age_ms
+    - sorted canonical candidate IDs
+    - predicate, mapping and already_in_strategy_scan exclusions with reasons, plus snapshot-level refusal or snapshot_stale when applicable
+    - selected canonical ID and mapped feed symbol, or null
+    - cursor_before and cursor_after
+
+  required_tests:
+    - every registry field state, including UNKNOWN, ELIGIBLE and INELIGIBLE account eligibility, remains observable only as recorded state
+    - exact mapping refusals for each strict Binance USD-M mapping condition
+    - future snapshot refusal, stale snapshot with snapshot_stale, and age exactly at max_snapshot_age_ms
+    - strategy-scan exclusion recorded as already_in_strategy_scan
+    - a symbol entering the strategy scan while the cursor points at or near it
+    - a symbol leaving the strategy scan while the cursor points at or near it
+    - rotation and wrap across membership changes, including a cursor ID that disappears from the snapshot
+    - nothing selectable leaves cursor_after equal to cursor_before and retains all exclusion reasons
+    - selection advances cursor_after regardless of later fetch outcome
+    - identical inputs (snapshot, cycle cut, strategy scan, cursor, freshness limit) produce an identical selection record
+
+  authorized_after_reconciliation_commit:
+    - the pure selector module and its focused tests as specified by selector_contract, closed_design_gaps and required_tests
 
   do_not_implement:
-    - Attention selection or fairness logic during this audit
-    - live registry producer or refresh
-    - trading eligibility or execution changes
+    - Kernel wiring, live RegistrySnapshot producer or refresh, config wiring for max_snapshot_age_ms
+    - journal persistence of the selection record or cursor, or a RegistrySnapshot store
+    - trading eligibility, Universe, strategy scan, Risk or Execution changes
+    - broader Attention fairness policy beyond the one rotating supplemental slot
+
+  deferred_integration:
+    - live integration must add one durable transaction writing the selection record and cursor before the network attempt
+    - live RegistrySnapshot producer and refresh
+    - durable RegistrySnapshot retention for historical replay
 
   constraints:
-    - Audit only; preserve the completed bounded Attention data prerequisite.
     - "locked = don't redesign; implemented = verify; discuss only gaps"
+    - Preserve the completed bounded Attention data prerequisite; the isolated supplemental fetch remains the only data path for the selected symbol.
     - Preserve SDD v3.2 as architecture authority and keep trading and execution eligibility unchanged.
     - Preserve the completed Scheme-D bounded pilot as parked, non-final evidence.
     - Do not run another pilot, additional RNG benchmark, full validation, or cloud compute without separate explicit owner authorization.
@@ -97,4 +155,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Record the audit's recommended seam and smallest implementation slice in the control plane before implementing selection.
+  - After implementing the pure selector, record the tested selector evidence in STATE.yaml and queue Kernel wiring, live producer and durable persistence as separate integration work.

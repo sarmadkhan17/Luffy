@@ -294,10 +294,24 @@ capabilities:
       - production recovery behavior beyond deterministic tests is not established here
 
 current_active_work:
-  id: SDD-STAGE-3-ATTENTION-COVERAGE-SEAM
+  id: SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR
   state: DEFINED
-  status: AUDIT_ONLY_NEXT
-  objective: Define the smallest deterministic registry-backed observation-selection seam for bounded Attention candidates from venue-active instruments without changing trading eligibility.
+  status: DESIGN_CLOSED_NOT_IMPLEMENTED
+  objective: Define a pure deterministic selector over an injected RegistrySnapshot choosing at most one rotating supplemental Attention observation symbol per cycle from venue-active instruments without changing trading eligibility.
+  proven_facts:
+    - SDD-STAGE-3-ATTENTION-COVERAGE-SEAM design audit completed; it recommended a pure selector over an injected snapshot as the smallest next slice; no code changed
+  design_decisions:
+    - one reserved rotating supplemental slot; strategy-scan order and the Attention max_symbols cap are unchanged
+    - observation candidates require venue_listing PRESENT and venue_status TRADING; UNKNOWN, ELIGIBLE and INELIGIBLE account eligibility all remain observable as recorded state; INELIGIBLE never becomes trading permission
+    - strict Binance USD-M mapping to BASE/USDT:USDT with explicit refusal reasons; base never inferred by suffix stripping
+    - explicit max_snapshot_age_ms input; registry_age_ms = cycle_as_of_ms - snapshot.as_of_ms; future snapshot refused; age above the limit selects nothing with reason snapshot_stale; both values recorded; no hardcoded freshness constant
+    - cursor is the next canonical candidate ID with lower-bound plus wrap; already_in_strategy_scan, predicate and mapping exclusions are recorded and traversal continues; first fetchable candidate is selected; cursor_after is the next candidate after the selected ID
+    - nothing selectable yields null selected_id and mapped symbol, retains all exclusion reasons, and leaves cursor_after equal to cursor_before
+    - replay scope is limited to identical snapshot, cycle cut, full strategy scan, cursor and freshness limit producing an identical record; output retains snapshot_id and snapshot.as_of_ms; no RegistrySnapshot store in this slice
+  gaps:
+    - selector is not implemented or tested
+    - durable RegistrySnapshot retention is deferred; durable historical replay is not established
+    - Kernel wiring, live RegistrySnapshot producer, max_snapshot_age_ms config wiring and durable selection-record plus cursor persistence are not established
   evidence:
     - SDD.md
     - b35fe41 Add immutable instrument capability registry
@@ -308,7 +322,8 @@ current_active_work:
     - 9b95d4f Add isolated supplemental Attention data path
   constraints:
     - "locked = don't redesign; implemented = verify; discuss only gaps"
-    - audit only; do not implement Attention coverage or selection during reconciliation
+    - pure selector implementation only; no Kernel changes, network, journal writes or live registry producer
+    - strategy scan, Universe, Risk and Execution unchanged
     - keep observation separate from trading scan, strategy eligibility, Risk and Execution
     - preserve the parked Scheme-D pilot blocker and authorization constraints
 
