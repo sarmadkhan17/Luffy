@@ -1,0 +1,42 @@
+{
+  "authorization_channel": "explicit owner approval in chat",
+  "authorization_request_sha256": "cac2a896da48cf4bf87e3eece42fd76107de882b5b128d001e7194eb7afde1b5",
+  "authorized_by": "owner",
+  "authorized_on": "2026-09-23",
+  "bundle_sha256": "a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023",
+  "cloud_spend": false,
+  "compute": "local CPU only",
+  "cross_host_qualification": "not_exercised",
+  "fast_benchmark_receipt_sha256": "f70ace0a02ab6187647ecc33446238cf5ba9dbe97320194ea75f32876972f23e",
+  "full_validation_authorized": false,
+  "host_qualification_evidence_commit": "42386606c14bdc7a2b6351dcbf78512163621608",
+  "host_receipt_sha256": "451c1c5ec33ce5a1cc03008344a8cbe99e7644c676a6d8d7d135ca625b9998ae",
+  "mode": "validation",
+  "not_authorized": [
+    "full validation",
+    "cloud",
+    "Gate 2",
+    "search admission",
+    "referee/handoff",
+    "live trading"
+  ],
+  "p6_effect_statistic": "composite_signed_target_lift (equal-weight, unstandardized, cross-family pilot diagnostic; not a formal Scheme-D effect-size statistic)",
+  "p6_truth_table_sha256": "e33b2846e7098ea0f8bea054f77160239eefaf83835d00065d96fba5efaa0a06",
+  "pilot_evaluator_sha256": "eaff4525ce5dbe0fe3a7960bf3575840edb25d7bfa747ee9338e419761d8ba6d",
+  "pilot_launcher_sha256": "d1ae1620a6d97f7c6acbe29a1643eb312922b38bfad8c64830401374792a2516",
+  "pilot_prespec_sha256": "04c508efd924e04d9d52bb516843b461b6d5be5168c52906c7c7dff2873d7c95",
+  "qualification_report_sha256": "b54a14104c8850d68991578610a29b13e8b29e22a40f1f30b24efb5986b5858d",
+  "qualified_workers": 4,
+  "runtime_estimate_cpu_hours": 17.500568033950366,
+  "schema": "m3.2-scheme-d-owner-authorization.v1",
+  "scope": "pilot_only_non_final",
+  "shard_layer_sha256": "5e322153c62b103d00e9e898b30df4efc2031ea66c7144b79d5037b4d03c2170",
+  "shard_worlds": 5,
+  "single_host_qualified": true,
+  "target_filesystem": {
+    "fstype": "ext4",
+    "source": "/dev/sda2"
+  },
+  "workers": 2,
+  "worlds": 80
+}

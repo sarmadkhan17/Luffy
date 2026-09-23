@@ -1,0 +1,124 @@
+{
+  "schema": "m3.2-scheme-d-pilot-prespec.v2",
+  "status": "FROZEN_BEFORE_RNG",
+  "date": "2026-09-23",
+  "purpose": "One bounded, local-CPU, zero-cloud-cost, non-final M3.2 Scheme-D v4 engineering/statistical pilot. Structural reference only: scripts/m32_scheme_d_pilot_20260922 (v3 pilot, historical, unchanged).",
+  "pilot_only": true,
+  "full_protocol_unchanged": true,
+  "full_validation_authorized": false,
+  "bundle": {
+    "path": "scripts/m32_scheme_d_validation_bundle_v4_20260922",
+    "sha256": "a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023",
+    "runner_path": "scripts/m32_scheme_d_validation_bundle_v4_20260922/runner/scheme_d_runner.py",
+    "runner_sha256": "7e4d693bdaffc7cf35370fe3425858ea195fc70eb0c6425c4461836008410548",
+    "acceptance_sha256": "a575c07fcef86948c50467dc1f32a7bdba1ea32d78a3897b0e2eb1d4569d7ec1",
+    "truth_package_sha256": "a100a19c0d789acf42ab42e53355b4eb4d3827ddfbca866fb6a9231e6e7013eb",
+    "statistic": "FastMetric exact-equivalent to reference _metric; used unchanged"
+  },
+  "shard_layer": {
+    "path": "scripts/m32_scheme_d_sharding_v4_20260923/shard_layer.py",
+    "sha256": "5e322153c62b103d00e9e898b30df4efc2031ea66c7144b79d5037b4d03c2170"
+  },
+  "benchmark": {
+    "receipt_path": "scripts/m32_scheme_d_phase90_fast_benchmark_v4_20260923/out/phase90_benchmark_receipt.json",
+    "receipt_sha256": "f70ace0a02ab6187647ecc33446238cf5ba9dbe97320194ea75f32876972f23e",
+    "draws_per_second_per_core": 975.4548174287327,
+    "full_workload_cpu_hours": 16406.782531828467,
+    "full_workload_worlds": 75000
+  },
+  "host_qualification": {
+    "evidence_commit": "42386606c14bdc7a2b6351dcbf78512163621608",
+    "single_host_qualified": true,
+    "qualified_workers": 4,
+    "target_filesystem": {"fstype": "ext4", "source": "/dev/sda2"},
+    "host_receipt_path": "scripts/m32_scheme_d_host_qualification_v4_20260923/receipts/receipt_sarmad-VMware-Virtual-Platform.json",
+    "host_receipt_sha256": "451c1c5ec33ce5a1cc03008344a8cbe99e7644c676a6d8d7d135ca625b9998ae",
+    "qualification_report_path": "scripts/m32_scheme_d_host_qualification_v4_20260923/QUALIFICATION_REPORT.json",
+    "qualification_report_sha256": "b54a14104c8850d68991578610a29b13e8b29e22a40f1f30b24efb5986b5858d",
+    "cross_host_qualification": "not_exercised"
+  },
+  "cells": ["N0/C0", "N3/C4", "P1/C0", "P6/C4"],
+  "cell_roles": {
+    "N0/C0": {"kind": "null", "dgp": 0, "scenario": null, "correlation": 0, "role": "null_type_one_diagnostic"},
+    "N3/C4": {"kind": "null", "dgp": 3, "scenario": null, "correlation": 4, "role": "null_type_one_diagnostic"},
+    "P1/C0": {"kind": "perturbed_null", "dgp": 1, "scenario": 101, "correlation": 0, "injection": true,
+              "role": "perturbed_null_type_one_false_positive_stress; every rejection is a false discovery; never power, never a true discovery, never evaluated with power/FDR criteria"},
+    "P6/C4": {"kind": "power", "dgp": 1, "scenario": 106, "correlation": 4, "injection": true,
+              "role": "the pilot's single power/effect cell"}
+  },
+  "injection_dispatch": "scenario is not None (v4 runner run_cell and v4 shard layer make_evaluator); P1/C0 keeps injection",
+  "world_indices": {
+    "per_cell": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+    "worlds_per_cell": 20,
+    "total_worlds": 80
+  },
+  "execution": {
+    "workers": 2,
+    "shard_worlds": 5,
+    "shards": 16,
+    "assignment": "static",
+    "compute": "local CPU only",
+    "cloud_spend": false,
+    "network": "blocked by the frozen runner's blocked_network() for every launcher command",
+    "commands": ["init", "work --worker 0", "work --worker 1", "audit", "merge"]
+  },
+  "runtime_estimate": {
+    "basis": "measured v4 benchmark 16406.782531828467 full-workload CPU-hours x 80 / 75000 worlds",
+    "cpu_hours": 17.500568033950366,
+    "two_worker_ideal_wall_hours": 8.750284016975183,
+    "planning_wall_hours_with_20_percent_overhead": 10.50034082037022
+  },
+  "outcome": {
+    "labels": ["STOP", "GO", "INCONCLUSIVE"],
+    "effect_cell": "P6/C4",
+    "effect_targets": {
+      "P6/C4": [0, 1, 2, 3, 4, 5, 6, 7, 136, 137, 138, 139, 140, 141, 142, 143, 272, 273, 274, 275, 276, 277, 278, 279, 344, 345, 346, 347, 348, 349, 350, 351]
+    },
+    "effect_target_truth_sign": 1,
+    "effect_target_source": "exactly V.INJECTIONS[106] = [0..7, 136..143, 272..279, 344..351]; evaluation is refused if the prespecified set differs",
+    "effect_target_families": {"0-7": [0, 1, 2, 3, 4, 5, 6, 7], "136-143": [136, 137, 138, 139, 140, 141, 142, 143], "272-279": [272, 273, 274, 275, 276, 277, 278, 279], "344-351": [344, 345, 346, 347, 348, 349, 350, 351]},
+    "effect_truth_table": {"path": "scripts/m32_scheme_d_pre_rng_truth_20260921/package/tables/P6_C4.json", "sha256": "e33b2846e7098ea0f8bea054f77160239eefaf83835d00065d96fba5efaa0a06", "binding": "equals proof_certificate.json table_sha256['tables/P6_C4.json']"},
+    "signed_target_lift_definition": {
+      "name": "composite_signed_target_lift",
+      "per_world": "for each non-world-refused P6/C4 receipt: tested targets = effect targets h not hypothesis-refused (str(h) not in receipt.refusals); each tested target must have a non-null signed_hex[h] (and each hypothesis-refused target a null one) or the input is refused; signed_effect = float.fromhex(signed_hex[h]) (exact binary64 decode); truth_sign = records[h].sign from the frozen P6/C4 truth table, whose records[h].classification must be analytic_non_null (else refuse); contribution = signed_effect * truth_sign; composite_signed_target_lift = arithmetic mean of contributions over tested targets; hypothesis-refused targets are excluded from that world's mean.",
+      "per_world_counts": "target_tested_count and target_refused_count are recorded for every non-world-refused world",
+      "zero_testable_targets": "if target_tested_count == 0 the world's pilot effect diagnostic is UNEVALUABLE (effect_status = UNEVALUABLE): it is not assigned zero, has no composite value, is excluded from the cell median and counts as neither positive nor non-positive. The counts of effect-evaluable and effect-unevaluable P6/C4 worlds are recorded. No new target-refusal threshold or STOP rule is introduced; the frozen world/hypothesis refusal rules and gates are unchanged.",
+      "cell_statistic": "median_signed_target_lift = statistics.median of per-world composite values across effect-evaluable P6/C4 worlds (none evaluable -> undefined; see rule 7a: never a negligible-effect STOP). Positive: composite > 0. Non-positive: composite <= 0.",
+      "family_reporting": "the four 8-target family means (0-7, 136-143, 272-279, 344-351; mean of contributions over that family's tested targets, null if none tested) are reported per world together with the across-world median of each family mean; they are descriptive only and add no decision gate",
+      "nature": "equal-weight, unstandardized, cross-family pilot diagnostic; NOT a formal Scheme-D effect-size statistic and not part of Scheme-D acceptance"
+    },
+    "rejecting_world_definition": "non-refused world whose receipt has R > 0 (at least one BH rejection)",
+    "wilson": "two-sided 95% Wilson score interval, Z = 1.959964 (identical to v4 acceptance.wilson)",
+    "rules": {
+      "1_integrity_stop": "STOP on any integrity failure: run_result overall integrity_stop or truth_table_refusal, invalid worker provenance, or more than one worker hardware identity. Tampered, incomplete, missing or mis-bound inputs are refused outright (no verdict).",
+      "2_refusal_stop": "STOP if, in any pilot cell, world refusal rate > 0.01 or hypothesis refusal rate > 0.01, using the unchanged v4 acceptance.refusal_blockers accounting",
+      "3_null_perturbed_null_stop": "applied to N0/C0, N3/C4 and P1/C0: STOP if rejecting_worlds / non_refused_worlds >= 0.25 (or non_refused_worlds == 0)",
+      "4_p6_wrong_direction_stop": "STOP if P6/C4 median signed target lift <= -0.01 AND at least 12 of its non-refused worlds have non-positive signed target lift",
+      "5_p6_negligible_stop": "STOP if the P6/C4 median signed target lift is defined and abs(median) < 0.01; never applied when no P6/C4 world is effect-evaluable (no median exists)",
+      "6_go_candidate": "GO if no STOP condition, P6/C4 median signed target lift >= 0.01 AND at least 12 of its non-refused worlds have positive signed target lift",
+      "7a_p6_no_effect_evaluable_world": "if zero P6/C4 worlds are effect-evaluable, any already-existing integrity/refusal STOP (rules 1-2) and null/perturbed-null STOP (rule 3) keeps precedence; otherwise the verdict is INCONCLUSIVE (reason p6_no_effect_evaluable_worlds), never a negligible-effect STOP",
+      "7_otherwise": "INCONCLUSIVE"
+    },
+    "thresholds": {
+      "refusal_rate_limit": 0.01,
+      "null_rejecting_rate_stop": 0.25,
+      "effect_min_abs_median": 0.01,
+      "wrong_direction_median": -0.01,
+      "min_directional_worlds": 12
+    },
+    "precedence": ["integrity/refusal STOP", "null/perturbed-null diagnostic STOP", "P6 wrong-direction/negligible STOP", "clean P6 encouraging-effect GO", "INCONCLUSIVE"],
+    "p1_reporting": "report P1/C0 rejecting-world count, rate and Wilson interval as a Type-I / false-positive stress diagnostic. 20 pilot worlds cannot establish the frozen protocol's final P1 Type-I/Wilson acceptance requirement (point <= 0.05 and Wilson upper <= 0.06; with 0/20 rejections the Wilson upper is ~0.161). The pilot criterion is diagnostic only.",
+    "p1_forbidden": ["power", "true discovery", "FDR", "effect/lift", "signed target lift"],
+    "significance": "absence of statistical significance with 20 worlds is never, by itself, a STOP condition",
+    "comparability_note": "cells, world indices and worker/shard sizes match the v3 pilot. The historical repository preserves the v3 verdict value 0.13311869 but not enough computation evidence to reconstruct its exact derivation; no claim is made that composite_signed_target_lift reproduces it, and the two values are not directly comparable."
+  },
+  "non_final_statements": [
+    "pilot/non-final only",
+    "does not satisfy Scheme-D validation",
+    "does not establish Gate 2",
+    "does not admit search",
+    "does not enable referee/handoff",
+    "does not authorize live trading",
+    "does not authorize full validation"
+  ]
+}
