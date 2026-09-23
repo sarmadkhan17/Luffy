@@ -2,120 +2,93 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-SELECTION-PERSISTENCE
+  id: SDD-STAGE-3-LIVE-REGISTRY-PRODUCER
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
 
   objective: >
-    Implement durable Attention selection persistence so the complete
-    deterministic selection record and cursor_after commit atomically before
-    any future supplemental fetch, with fetch outcomes recorded separately and
-    unable to roll the cursor back.
+    Implement a truthful read-only live RegistrySnapshot producer for the venue
+    used by supplemental Attention observation, with explicit
+    observation-time/provenance semantics and no trading authority.
 
   working_rule: "locked = don't redesign; implemented = verify; discuss only gaps"
 
   completed_prerequisite:
-    - SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR is TESTED at 6eb7eb4 (trader/observability/registry_selector.py; tests/test_registry_attention_selector.py); 275 affected selector/registry/Attention tests passed.
-    - The selector is a pure component over an injected immutable RegistrySnapshot with an explicit max_snapshot_age_ms input and caller-held cursor; it has no network, Kernel, journal or persistence dependency.
-    - Bounded isolated supplemental Attention data path is TESTED at 9b95d4f and remains the only data path for a selected symbol.
-    - SDD-STAGE-3-ATTENTION-LIVE-SELECTION-DEPENDENCY-AUDIT completed as design evidence at 72400ea; decision B - SELECTION-PERSISTENCE.
-    - Dependency order SELECTION-PERSISTENCE -> LIVE-REGISTRY-PRODUCER -> KERNEL-INTEGRATION.
-    - Journal/SQLite is the durable transaction boundary; Attention Store/Collector is unsuitable because it is bounded/drop-capable and retention-pruned.
-    - Attention overall remains IMPLEMENTED; automatic Attention selection is not active in production.
+    - SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR is TESTED at 6eb7eb4 as a pure selector over an injected immutable RegistrySnapshot.
+    - SDD-STAGE-3-ATTENTION-LIVE-SELECTION-DEPENDENCY-AUDIT completed as design evidence at 72400ea; dependency order SELECTION-PERSISTENCE -> LIVE-REGISTRY-PRODUCER -> KERNEL-INTEGRATION.
+    - SDD-STAGE-3-ATTENTION-SELECTION-PERSISTENCE is TESTED at cda0582 (trader/core/journal.py; trader/observability/selection_persistence.py; tests/test_attention_selection_persistence.py); selection record and cursor_after commit atomically, fetch outcomes cannot move the cursor; not wired into the Kernel.
+    - Retained boot CCXT metadata lacks adequate observation-time/provenance truth and must not be re-stamped as a fresh snapshot.
+    - Attention overall remains IMPLEMENTED; automatic registry-backed Attention selection is not active.
 
-  locked_ordering:
-    - 1 - pure selector produces Selection
-    - 2 - one durable transaction writes the selection record and cursor_after
-    - 3 - the transaction commits
-    - 4 - only later integration may start a supplemental fetch
-    - 5 - the fetch result is recorded separately
-    - 6 - fetch failure never rolls back the cursor
-    - This ordering is locked; do not reopen it.
+  scope:
+    required_source:
+      - public Binance USD-M /fapi/v1/exchangeInfo
+    not_required:
+      - accountConfig
+      - symbolConfig
+      - leverageBracket
+      - per-symbol eligibility
+    unknown_rule: account per-symbol eligibility, and optionally account-global trading, remain UNKNOWN unless later authoritative sources are added
+    minimal: the first implementation should be minimal
 
-  persistence_contract:
-    selection_transaction:
-      fields:
-        - selection_id
-        - rule version
-        - cycle cut
-        - outcome
-        - snapshot ID
-        - snapshot as-of
-        - registry age
-        - max snapshot age
-        - selected canonical ID or null
-        - selected supplemental symbol or null
-        - cursor before
-        - cursor after
-        - full canonical Selection JSON
-        - record timestamp
-      rule: the selection row and durable cursor are written in ONE SQLite transaction
-    cursor:
-      - provide durable load semantics
-      - absent cursor loads as None
-      - a stored non-None cursor must validate as a canonical InstrumentId.value
-      - a malformed stored cursor fails closed; never silently convert corrupt cursor state to None
-      - representation of absence follows the existing journal schema idiom; do not prematurely fix empty string, JSON null or row deletion
-    idempotency:
-      - re-recording the exact same selection_id is safe
-      - a duplicate never yields a selection row without the cursor update
-      - a duplicate never yields a cursor update without its selection record
-      - a duplicate with a different payload is refused, never silently replaced
-    fetch_outcome:
-      fields:
-        - selection ID
-        - status
-        - reason
-        - start/end times where available
-      rules:
-        - written separately, after a future fetch
-        - never modifies the cursor
-        - may fail without rolling back the already committed selection/cursor transaction
+  requirements:
+    - dedicated provider/service separate from Universe/DataFeed trading selection
+    - read-only
+    - no trading credentials required for this first slice
+    - no order APIs
+    - explicit target host/venue identity
+    - record request start and response receipt time
+    - retain serverTime when supplied
+    - retain raw-body SHA-256 and source provenance
+    - build the existing immutable RegistrySnapshot
+    - every account per-symbol eligibility remains UNKNOWN
+    - account-global trading may remain UNKNOWN
+    - never re-stamp old boot CCXT metadata as fresh
+    - a failed refresh never fabricates a new snapshot
+    - a later refresh failure keeps the last good snapshot with its original as_of_ms
+    - the publisher uses immutable snapshot replacement
+    - no Kernel selector wiring yet
 
-  dependency_boundary:
-    - trader/core/journal.py must not import Selection or other observability-domain types.
-    - Preferred direction - Journal owns schema and primitive transaction operations; an observability persistence adapter translates Selection into primitive canonical fields. An equally narrow seam preserving core -> observability separation is acceptable.
-    - Audit the existing import/dependency graph before choosing the exact seam.
+  cut_semantics:
+    - use an honest local observation cut
+    - do not claim atomic exchange time
+    - the provider must clearly document what RegistrySnapshot.as_of_ms means
+    - preserve endpoint, host and request timing provenance separately from as_of_ms
 
   required_tests:
-    - 1 - selection row and cursor commit atomically
-    - 2 - injected failure between the two operations rolls both back
-    - 3 - cursor survives Journal close/reopen
-    - 4 - malformed persisted cursor fails closed
-    - 5 - exact duplicate selection_id is idempotent
-    - 6 - conflicting duplicate payload is refused
-    - 7 - stale Selection persists with unchanged cursor
-    - 8 - nothing-selectable Selection persists with unchanged cursor
-    - 9 - selected Selection advances cursor
-    - 10 - persisted canonical JSON hashes back to selection_id
-    - 11 - fetch result cannot alter cursor
-    - 12 - fetch-result failure leaves the previously advanced cursor intact
-    - 13 - no Attention Store/Collector use
-    - 14 - no network
-    - 15 - no Kernel wiring
-    - 16 - selector tests remain unchanged and green
+    - 1 - successful exchangeInfo translation
+    - 2 - provenance and raw-body hash
+    - 3 - host/venue identity
+    - 4 - immutable latest snapshot
+    - 5 - failed first refresh yields no snapshot
+    - 6 - failed later refresh leaves the last good snapshot unchanged
+    - 7 - no re-stamping
+    - 8 - malformed response fails closed
+    - 9 - eligibility remains UNKNOWN
+    - 10 - no authenticated endpoints
+    - 11 - no order calls
+    - 12 - no Universe/DataFeed mutation
+    - 13 - no Kernel wiring
+    - 14 - deterministic translation for identical response and observation cut
 
   explicitly_deferred:
-    - live RegistrySnapshot producer
-    - exchange/API calls
-    - Kernel wiring
-    - max_snapshot_age_ms config wiring
-    - RegistrySnapshot historical store
-    - retention/pruning policy for selection records
-    - live-loop SQLite busy-time budget (must be evaluated before Kernel live integration; durability is not live-loop safety)
+    - background cadence, unless required by the provider abstraction
+    - account metadata calls
+    - Kernel integration
+    - persistence of RegistrySnapshot history
     - selection cadence
-    - demo/production venue resolution
-    - broader fairness
-    - trading eligibility changes
+    - live max_snapshot_age_ms config wiring
+    - SQLite busy-time/live-loop budget (Kernel integration)
+    - demo-vs-production registry venue resolution beyond explicit host/venue identity recording
+    - trading changes
 
   queued_after:
-    - LIVE-REGISTRY-PRODUCER - new read-only venue metadata acquisition with observation-time/provenance truth; never re-stamp boot CCXT metadata; ownership eventually separate from Universe/DataFeed; resolve demo-vs-production venue provenance.
-    - KERNEL-INTEGRATION - blocked until selection persistence is TESTED and a live producer exists; decide cadence, max_snapshot_age_ms config and SQLite busy-time budget there.
+    - KERNEL-INTEGRATION - blocked until a live producer is TESTED; decide cadence, max_snapshot_age_ms config, SQLite busy-time budget and demo-vs-production registry provenance there.
 
   constraints:
     - "locked = don't redesign; implemented = verify; discuss only gaps"
-    - The tested selector contract and its tests are locked and unchanged.
+    - The tested selector and selection-persistence contracts and their tests are locked and unchanged.
     - Preserve SDD v3.2 as architecture authority and keep trading and execution eligibility unchanged.
     - Do not promote Attention overall beyond its current maturity.
     - Preserve the completed Scheme-D bounded pilot as parked, non-final evidence.
@@ -176,4 +149,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - After selection persistence is TESTED, record its evidence in STATE.yaml and queue LIVE-REGISTRY-PRODUCER as the next package; Kernel integration stays queued behind it.
+  - After the live registry producer is TESTED, record its evidence in STATE.yaml and queue KERNEL-INTEGRATION as the next package.

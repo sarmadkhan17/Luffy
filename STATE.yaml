@@ -117,6 +117,11 @@ capabilities:
       - 6eb7eb4 Add deterministic registry Attention selector
       - trader/observability/registry_selector.py
       - tests/test_registry_attention_selector.py
+      - cda0582 Add durable Attention selection persistence
+      - trader/core/journal.py
+      - trader/observability/selection_persistence.py
+      - tests/test_attention_selection_persistence.py
+      - trader/core/instrument_registry.py
     proven_facts:
       - current GitHub repository contains cognition attention code
       - attention produces structured observations and selection reasons
@@ -146,6 +151,16 @@ capabilities:
       - canonical lower-bound plus wrap cursor semantics are deterministic; repeated pure calls prevent starvation among selectable non-scan candidates
       - the selection result is immutable and deterministically serialized and hashed
       - the selector has no network, Kernel, journal or persistence dependency
+      - SDD-STAGE-3-ATTENTION-SELECTION-PERSISTENCE is TESTED at cda0582 as a durable persistence component only
+      - the selection record and cursor_after commit atomically in one SQLite transaction
+      - BEGIN IMMEDIATE protects the cursor compare-and-swap across Journal connections; a stale writer is refused with cursor_conflict
+      - an exact duplicate selection is idempotent and cannot rewind the cursor; a conflicting duplicate payload is refused
+      - stale and nothing-selectable outcomes persist with the cursor unchanged
+      - a malformed durable cursor fails closed
+      - canonical Selection payload integrity is verified
+      - fetch outcomes persist separately and can never change or roll back the cursor
+      - Journal remains primitive and does not import observability types
+      - the persistence slice introduces no network or Kernel wiring
     gaps:
       - live kernel does not currently supply a WorldModel to Attention; production use of this evaluator input is not established
       - venue-active instruments with account_eligibility=UNKNOWN may be observed by Attention without implying trade permission; registry, Attention, trading, Risk and Execution authority remain separate (trader/core/instrument_registry.py; trader/observability/attention.py)
@@ -154,7 +169,10 @@ capabilities:
       - automatic Attention selection is not active in production; live supplemental symbol selection remains explicit/configured
       - the registry selector is not wired into the Kernel
       - live RegistrySnapshot production and refresh are not established
-      - durable cursor and selection-record transaction is not established; Kernel selector wiring is blocked until it is TESTED (dependency audit at 72400ea, decision B)
+      - durable cursor and selection-record transaction is TESTED at cda0582 but not wired; Kernel selector integration is not established
+      - SQLite busy-time and live-loop budget for the persistence transaction is unresolved for Kernel integration
+      - selection cadence is unresolved
+      - demo-vs-production registry venue provenance is unresolved
       - live RegistrySnapshot production requires new read-only venue metadata acquisition; retained boot CCXT metadata lacks adequate observation-time/provenance truth and must not be re-stamped as a fresh snapshot
       - durable RegistrySnapshot historical store is not established; durable historical replay is not claimed
       - live max_snapshot_age_ms config wiring is not established
@@ -312,11 +330,11 @@ capabilities:
       - production recovery behavior beyond deterministic tests is not established here
 
 current_active_work:
-  id: SDD-STAGE-3-ATTENTION-SELECTION-PERSISTENCE
+  id: SDD-STAGE-3-LIVE-REGISTRY-PRODUCER
   type: IMPLEMENTATION
   state: DEFINED
   status: READY_NOT_STARTED
-  objective: Implement durable Attention selection persistence so the complete deterministic selection record and cursor_after commit atomically before any future supplemental fetch, with fetch outcomes recorded separately and unable to roll the cursor back.
+  objective: Implement a truthful read-only live RegistrySnapshot producer for the venue used by supplemental Attention observation, with explicit observation-time/provenance semantics and no trading authority.
   completed_prerequisites:
     - id: SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR
       state: TESTED
@@ -324,58 +342,58 @@ current_active_work:
         - 6eb7eb4 Add deterministic registry Attention selector
         - trader/observability/registry_selector.py
         - tests/test_registry_attention_selector.py
-        - 275 affected selector/registry/Attention tests passed
-      scope: pure selector component only; Attention overall remains IMPLEMENTED
+      scope: pure selector component only
     - id: SDD-STAGE-3-ATTENTION-LIVE-SELECTION-DEPENDENCY-AUDIT
       type: DEPENDENCY_AUDIT
       state: COMPLETED_DESIGN_EVIDENCE
       audited_at: 72400ea
       decision: B - SELECTION-PERSISTENCE
       dependency_order: SELECTION-PERSISTENCE -> LIVE-REGISTRY-PRODUCER -> KERNEL-INTEGRATION
-      scope: design evidence only; no code, persistence, producer or Kernel wiring was implemented
-      findings:
-        - Kernel must not invoke the registry Attention selector/fetch path until the selection record and cursor_after can be committed atomically before the network attempt.
-        - Attention Store/Collector is not suitable for this authority because it is bounded/drop-capable and retention-pruned.
-        - Journal/SQLite provides the appropriate durable transaction boundary.
-        - Live RegistrySnapshot production requires new read-only venue metadata acquisition; current retained boot CCXT metadata lacks adequate observation-time/provenance truth.
-        - Existing boot metadata must not be re-stamped as a fresh registry snapshot.
-        - Live registry ownership should eventually be separate from Universe/DataFeed trading selection.
-        - No live RegistrySnapshot producer exists yet.
-        - Durable RegistrySnapshot history still does not exist.
-        - Kernel selector wiring remains blocked until selection persistence is TESTED.
-        - SQLite transaction blocking/busy-time behavior must be evaluated before later Kernel live integration; durability alone does not make the persistence method live-loop-safe.
-        - Demo-vs-production registry venue provenance remains a live-producer issue.
-        - Selection cadence remains a later Kernel integration decision.
+    - id: SDD-STAGE-3-ATTENTION-SELECTION-PERSISTENCE
+      state: TESTED
+      evidence:
+        - cda0582 Add durable Attention selection persistence
+        - trader/core/journal.py
+        - trader/observability/selection_persistence.py
+        - tests/test_attention_selection_persistence.py
+      scope: durable selection-record and cursor persistence component only; not wired into the Kernel; Attention overall remains IMPLEMENTED
+      proven_facts:
+        - selection record and cursor_after commit atomically in one SQLite transaction
+        - BEGIN IMMEDIATE protects cursor compare-and-swap across Journal connections
+        - stale writers are refused with cursor_conflict
+        - exact duplicate selection is idempotent and cannot rewind the cursor
+        - conflicting duplicate payload is refused
+        - stale and nothing-selectable outcomes persist with unchanged cursor
+        - malformed durable cursor fails closed
+        - canonical Selection payload integrity is verified
+        - fetch outcomes persist separately and can never change or roll back the cursor
+        - Journal remains primitive and does not import observability types
+        - no network or Kernel wiring is introduced
   gaps:
-    - no durable cursor and selection-record transaction (this package)
-    - no live RegistrySnapshot producer or refresh (queued after this package)
-    - no Kernel selector wiring (blocked until selection persistence is TESTED and a live producer exists)
-    - no durable RegistrySnapshot historical store
+    - no live RegistrySnapshot producer or refresh (this package)
+    - no Kernel selector integration (queued after this package)
+    - no RegistrySnapshot historical store
     - no live max_snapshot_age_ms config wiring
-    - live-loop SQLite busy-time budget not evaluated
+    - SQLite busy-time/live-loop budget unresolved for Kernel integration
+    - selection cadence unresolved
     - demo-vs-production registry venue provenance unresolved
-    - selection cadence undecided
-    - automatic Attention selection is therefore not active in production
+    - automatic registry-backed Attention selection is not active
   queued_after:
-    - LIVE-REGISTRY-PRODUCER
     - KERNEL-INTEGRATION
   evidence:
     - SDD.md
-    - trader/core/journal.py
     - trader/core/instrument_registry.py
     - trader/data/binance_usdm_registry.py
     - trader/observability/registry_selector.py
+    - trader/observability/selection_persistence.py
     - trader/observability/supplemental.py
-    - trader/observability/attention.py
-    - trader/cognition/attention.py
-    - trader/kernel.py
     - trader/data/feed.py
   constraints:
     - "locked = don't redesign; implemented = verify; discuss only gaps"
-    - persist-before-fetch ordering is locked; do not reopen it
-    - no network, exchange/API calls, Kernel wiring, config wiring or Attention Store/Collector use
-    - strategy scan, Universe, trading eligibility, Risk and Execution unchanged
-    - keep observation separate from trading scan, strategy eligibility, Risk and Execution
+    - read-only public Binance USD-M /fapi/v1/exchangeInfo only; no trading credentials, authenticated endpoints or order APIs
+    - never re-stamp boot CCXT metadata as a fresh snapshot; a failed refresh never fabricates a snapshot
+    - no Kernel wiring, selection cadence, RegistrySnapshot history persistence or trading changes
+    - strategy scan, Universe, DataFeed, trading eligibility, Risk and Execution unchanged
     - Attention overall maturity remains IMPLEMENTED
     - preserve the parked Scheme-D pilot blocker and authorization constraints; no new pilot or full validation work
 
