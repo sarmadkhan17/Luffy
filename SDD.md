@@ -1953,7 +1953,7 @@ Null false-positive rate, power, dependence correction, FDR behavior, strategy a
 
 ## 28.7 Shadow/probation
 
-Any capability affecting real capital progresses through deterministic tests and shadow/demo evidence before activation.
+Any new capability affecting real capital progresses through deterministic tests and appropriate shadow/paper/probation evidence before activation. Demo is not a universal substitute for venue-realistic evidence; the exact probation mode must match the capability and preserve execution/risk semantics.
 
 ---
 
@@ -2167,6 +2167,18 @@ Compare against acceptance gate
 
 Do not stop because one feature was coded. Stop when the work package's acceptance gate is met, blocked externally, or owner pauses work.
 
+## 31.1 Locked-decision rule for development agents
+
+Development agents must distinguish:
+
+- **LOCKED TARGET:** defined by this SDD; implement/verify it, do not redesign it;
+- **CURRENT REPO BEHAVIOR:** evidence in code/tests/STATE; preserve correct behavior while migrating;
+- **OPEN IMPLEMENTATION DETAIL:** may be chosen locally when the SDD intentionally leaves freedom.
+
+When a proposed implementation appears better but conflicts with an SDD decision, stop and raise a proposed SDD revision to the owner. Do not create a second architecture document, ADR hierarchy, hidden design file, or prompt-only rule that competes with this SDD.
+
+Before introducing a new agent/service/model/database/framework, prove the existing architecture cannot solve the measured problem with lower complexity.
+
 ---
 
 # 32. Three-File Project Control Plane
@@ -2182,7 +2194,7 @@ Target architecture, rules, methods, and delivery sequence.
 Compact current status. Example:
 
 ```yaml
-sdd_version: '3.1'
+sdd_version: '3.2'
 capabilities:
   world_model:
     state: IMPLEMENTED
@@ -2197,7 +2209,7 @@ capabilities:
 
 Exactly one active engineering package.
 
-Historical specs/plans/reports are not default session context.
+Historical specs/plans/reports are evidence/reference only and are not default architecture authority. Experiment-specific hashes, benchmark receipts, pilot results and current blockers belong in reports/STATE/NEXT, not as permanent architecture doctrine in this SDD.
 
 ---
 
@@ -2241,81 +2253,88 @@ Pass when every material decision can be traced to data, strategy/world state, p
 
 ---
 
-# 34. Current Repository vs Target - Migration Section
+# 34. Current Repository vs Target
 
-This section is deliberately subordinate to the target design. AI agents should inspect the codebase directly for implementation details.
+This SDD intentionally does not freeze a stale snapshot of current implementation.
 
-Known high-level mapping from prior audits:
+Authoritative current-state evidence lives in `STATE.yaml`, with exact code/tests/artifacts. The active next package lives in `NEXT.yaml`.
 
-| Target capability | Current status known from repo/local evidence | Direction |
-|---|---|---|
-| Live kernel/execution/risk | substantial implementation | HARDEN/PROVE |
-| Data/candles/derivatives | substantial implementation | HARDEN/GENERALIZE |
-| Strategy DSL/backtest | substantial implementation | HARDEN/EXTEND |
-| Statistical research/null/FDR | substantial implementation | PROVE/INTEGRATE |
-| Autonomous research discovery | partial/static-source scraper | BUILD |
-| Attention | newer local code exists | RECONCILE/PROVE |
-| Hierarchical world model | not established as complete | BUILD |
-| Hypothesis/critic | partial concepts, not unified | BUILD/INTEGRATE |
-| Global portfolio optimizer | limited compared with target | BUILD |
-| Canonical instrument identity | partial symbol normalization only | BUILD |
-| Structured semantic memory | partially built locally | HARDEN/INTEGRATE |
-| Replay/digital twin | partial/newer local code | RECONCILE/PROVE |
-| Monitoring/alerts | partial | EXTEND |
-| Grounded owner conversation | partial | EXTEND |
-| Multi-market adapters | crypto-heavy current implementation | FUTURE EXPANSION |
+A new developer must therefore read in this order:
 
-The exact status must be written into `STATE.yaml` after the Astra/local audit below.
+1. `SDD.md` — what LUFFY must become and what decisions are locked;
+2. `STATE.yaml` — what is currently implemented/tested/proven and the known gaps;
+3. `NEXT.yaml` — the one active work package;
+4. only then inspect the code/evidence relevant to that package.
+
+Do not rerun old Astra planning audits merely because they appear in historical documents. Perform a targeted repository audit only when STATE evidence is missing/stale or the active work package requires it.
 
 ---
 
-# 35. Astra Deep-Analysis Assignments Before Final Current-State Freeze
+# 35. Developer Component Contracts
 
-Astra is useful where exhaustive local repository reverse engineering is cheaper and more reliable than manually reading every file. Astra does **not** decide the target architecture; this SD does.
+The following contracts are mandatory even if current filenames/classes differ.
 
-## A1 - Local vs GitHub reconciliation - REQUIRED FIRST
+## 35.1 Attention
+Input: eligible instrument universe + current world/data/portfolio/research signals.  
+Output: prioritized attention/investigation candidates with reason/cost/urgency.  
+Forbidden: trade decision, position size, order placement.
 
-Prompt:
+## 35.2 Analysts
+Input: Opportunity Context inputs within declared scope.  
+Output: typed evidence packet.  
+Forbidden: order/risk authority, strategy activation, majority-vote control.
 
-> Read the official SDD only for capability names, then audit the full local LUFFY repository. Produce a concise target-to-current matrix. For each target capability, identify exact local files/classes/functions, maturity, tests, known gaps, and whether code is committed to GitHub. Specifically reconcile locally present `trader/cognition/*` and any other modules absent from GitHub. Do not propose architecture; report implementation facts only.
+## 35.3 Strategy Runtime
+Input: immutable StrategySpec version + point-in-time data/world state.  
+Output: strategy candidate with direction, economic estimate inputs, proposed size/exit plan and evidence references.  
+Forbidden: silent spec mutation or bypass of Decision/Portfolio/Risk.
 
-Deliverable: machine-readable matrix suitable for creating `STATE.yaml`.
+## 35.4 Decision Orchestrator
+Input: frozen Opportunity Context and eligible strategy candidates.  
+Output: selected candidate or rejection with deterministic reasons.  
+Forbidden: venue calls, risk override, opaque LLM decision.
 
-## A2 - Full quant-method inventory - REQUIRED
+## 35.5 Portfolio Allocator
+Input: decision candidates + book/equity/margin/factor/capacity/cash state.  
+Output: portfolio-level desired exposure/allocation intents.  
+Forbidden: venue calls or hard-risk override.
 
-> Inventory every quantitative/statistical method currently implemented: indicators, regime calculations, calibration, null models, dependence correction, portfolio evidence, FDR, backtest cost model, position sizing, risk formulas, execution-cost measurements. For each give formula/algorithm, implementation location, inputs, assumptions, tests, and known limitations. Mark duplicated or contradictory implementations.
+## 35.6 Risk Authority
+Input: typed proposed exposure/action + active versioned owner risk policy + venue/account state.  
+Output: allow/resize/block plus exact reason.  
+Forbidden: LLM judgment or self-expansion of hard limits.
 
-Purpose: verify this SD's quant design against code and prevent parallel formulas.
+## 35.7 Execution
+Input: risk-approved order intent.  
+Output: order/fill/cancel/retry/protection events and raw venue receipts.  
+Forbidden: changing strategy thesis or opening unapproved exposure.
 
-## A3 - Research pipeline path audit - REQUIRED
+## 35.8 Exit
+Input: live position + approved immutable exit plan + safety state.  
+Output: stop/trail/partial/invalidation/emergency exit intents.  
+Forbidden: continuous confidence-driven resizing.
 
-> Trace every path from external/internal idea to research result to strategy creation to admission/paper/active. Identify all queues, states, config gates, background loops, LLM calls, DB tables, duplicate/dead/legacy paths, and current disabled handoffs. State exactly which single path is authoritative today.
+## 35.9 Accounting
+Input: venue receipts/account state + execution/trade lineage.  
+Output: authoritative monetary/position state and derived attribution.  
+Forbidden: silent reconciliation overwrite.
 
-Purpose: plan Stage 3-5 migration without restoring hidden second paths.
+## 35.10 Supervisor
+Input: component/venue/data/storage/heartbeat/protection health.  
+Output: health state, containment/recovery transitions, Needs You.  
+Forbidden: trade-direction selection.
 
-## A4 - Risk-to-order trace - REQUIRED
+## 35.11 Research / Experiment / Validator
+Researcher asks/collects; Experimenter runs reproducible tests; Validator/Referee decides evidence gates. These roles remain separated from production activation so narrative enthusiasm cannot promote a strategy.
 
-> Starting from one candidate trade, trace every value affecting final order quantity and permission: strategy confidence, meta sizing, portfolio/heat limits, margin limits, control state, macro/news gates, stop distance, exchange minimums/precision, execution call, protection and reconcile. Identify any duplicated risk logic or path that can bypass canonical risk.
+## 35.12 Strategy Builder / Governor
+Builder creates immutable candidate specs from validated evidence. Governor manages lifecycle/allocation of already-approved versions. Neither can bypass first-live owner approval for a new version.
 
-Purpose: prove deterministic risk authority.
+## 35.13 Learning
+Updates evidence/reliability/allocation/research priorities conservatively and reproducibly. It does not rewrite production code, invent risk limits or erase negative evidence.
 
-## A5 - Data/schema/concurrency audit - REQUIRED
-
-> Inventory runtime databases/tables/files, their writers/readers, thread/process ownership, WAL/transaction behavior, timestamp semantics, retention, and migrations. Identify where world model, research bank, artifact versions, canonical instruments and alerts can be added with minimum schema complexity.
-
-## A6 - Replay/equivalence audit - REQUIRED
-
-> Trace all existing replay/backtest/live evaluator equivalence mechanisms. List all places where live semantics can differ from research: bar closure, signal age, funding alignment, reference timestamps, resampling, universe context, derivative coverage, execution delay and cost. Identify tests/scripts that prove equivalence and remaining unmeasured gaps.
-
-## A7 - Runtime scheduling/resource audit - RECOMMENDED
-
-> Map all cycles, daemon threads, processes, cron/watchdog jobs and resource-heavy tasks. Show cadence, blocking behavior, CPU/IO/LLM cost, and whether any slow workload can starve the live path. Recommend only minimal scheduling changes required by this SD.
-
-## A8 - Test coverage map - RECOMMENDED
-
-> Map the test suite to SDD capabilities/invariants and report uncovered safety-critical or quantitative behaviors. Do not list every test; produce capability-level coverage and highest-risk gaps.
-
-After A1-A6, generate the initial `STATE.yaml`; only then freeze the current-state migration section. The target architecture in Sections 1-33 does not depend on these audits.
+## 35.14 Owner Interface
+All dashboard/chat/remote controls resolve to typed authenticated commands. A browser or Telegram/remote gateway never directly places exchange orders or edits trading truth.
 
 ---
 
@@ -2350,14 +2369,16 @@ That is the LUFFY target. Existing code is only the starting point.
 
 ---
 
-# 37. Freeze Rule
+# 37. Authority and Revision Rule
 
-Once approved:
+This file is repository-root `SDD.md` and is the sole architecture authority.
 
-- this file becomes repository root `SDD.md`;
-- `STATE.yaml` is generated after Astra A1-A6 reconciliation;
-- `NEXT.yaml` begins with the highest-priority unmet prerequisite from Stage 0/1;
-- old project-control documents cease to be authority;
-- any future architectural change is discussed with the owner and incorporated into a versioned revision of `SDD.md`.
+- `STATE.yaml` must declare the SDD version it is measuring against.
+- `NEXT.yaml` must not request work that contradicts this SDD.
+- old requirements/roadmaps/design copies/reports are non-authoritative evidence unless this SDD explicitly incorporates them;
+- development agents must not reopen a locked decision under a new name;
+- any genuine architecture change is discussed with the owner first, then incorporated into a versioned SDD revision;
+- implementation detail may evolve without an SDD revision only when it does not change a locked product/component/technology/safety contract;
+- after an SDD revision, STATE must be reconciled to the new target and NEXT updated if needed.
 
 # End
