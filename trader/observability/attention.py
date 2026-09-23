@@ -1,4 +1,4 @@
-"""Bounded snapshot adapter around the unchanged offline attention evaluator.
+"""Bounded snapshot adapter around the offline attention evaluator.
 
 Only allowlisted numeric candle fields cross the process boundary. Availability
 means first observed by this collector, never inferred from a candle's close.
@@ -13,6 +13,7 @@ import time
 
 from trader.cognition.attention import CognitionConfig, evaluate
 from trader.cognition.contracts import INPUT_SCHEMA, TF_MS, load_input, to_dict
+from trader.world.model import WorldModel
 
 
 SCHEMA = "attention.telemetry.v1"
@@ -104,10 +105,15 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None):
     }
 
 
-def evaluate_snapshot(event):
+def evaluate_snapshot(event, world_model: WorldModel | None = None):
+    if world_model is not None:
+        if not isinstance(world_model, WorldModel):
+            raise TypeError("world_model must be a WorldModel or None")
+        if world_model.as_of_ms != event["as_of_ms"]:
+            raise ValueError("world_model cut does not match as_of")
     cfg = CognitionConfig(max_symbols=len(event["input"]["membership"]) or 1)
     ds = load_input(event["input"])
-    result = evaluate(ds, event["as_of_ms"], cfg, event["scan_id"], {})
+    result = evaluate(ds, event["as_of_ms"], cfg, event["scan_id"], {}, world_model)
     return {"schema_version": SCHEMA, "scan_id": event["scan_id"],
             "as_of_ms": event["as_of_ms"], "scope": event["scope"],
             "capture_ms": event["capture_ms"], "issues": event["issues"],

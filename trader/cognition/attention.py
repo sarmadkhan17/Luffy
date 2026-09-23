@@ -24,6 +24,14 @@ non-finite component is None — never a silent 0 or inf.
 
     salience = max(|volume_z|, |vol_trans_z|, |div_z|) over available components
 
+With an optional `world_model` (its cut must equal `as_of`), one exact
+INSTRUMENT/INTRADAY `volume_anomaly` observation per asset may add |value| as
+a competing `world_volume_anomaly` component: it must be the only match, share
+the dataset timeframe, sit at the anchor close, be VALID with known
+availability <= as_of, carry a finite numeric value and unit `z_score`.
+Anything else is recorded with an explicit status/reason and contributes
+nothing. Without a model the output is unchanged.
+
 Salience is direction-independent: an asset falling hard and one rising hard
 score alike. Ranking is (-salience at 12 significant digits, symbol) so ties are
 stable. An asset is selected if salience >= `min_salience`, it has no open
@@ -41,7 +49,9 @@ from __future__ import annotations
 
 import math
 import statistics
+import sys
 from dataclasses import dataclass
+from hashlib import sha256
 
 from trader.cognition.contracts import Observation, rnd, stable_id
 
@@ -90,8 +100,67 @@ def _finite(x):
     return x if x is not None and math.isfinite(x) else None
 
 
+WORLD_KIND = "volume_anomaly"
+WORLD_COMPONENT = "world_volume_anomaly"
+_QUALITY_STATUS = {"MISSING": "absent", "STALE": "stale", "UNSUPPORTED": "unsupported"}
+
+
+def _world_module(world_model):
+    """Exact WorldModel type check without importing trader.world: cognition
+    imports only stdlib and itself, and a real instance implies its module is
+    already loaded."""
+    mod = sys.modules.get("trader.world.model")
+    if mod is None or not isinstance(world_model, mod.WorldModel):
+        raise TypeError("world_model must be a WorldModel or None")
+    return mod
+
+
+def _world_volume(model, w, sym, timeframe, anchor_close, as_of):
+    """One accepted world z-score for `sym`, or an explicit no-contribution."""
+    valid = sys.modules["trader.world.observation"].Quality.VALID
+    out = {"model_id": model.model_id, "observation_id": None, "record_sha256": None,
+           "value": None, "status": "absent", "reason": "no_observation"}
+    try:
+        found = model.get_observations(w.Scope(w.ScopeLevel.INSTRUMENT, sym),
+                                       w.Horizon.INTRADAY, kind=WORLD_KIND)
+    except LookupError:
+        return dict(out, reason="unknown_scope")
+    except ValueError:
+        return dict(out, status="unsupported", reason="horizon_not_declared")
+    if not found:
+        return out
+    if len(found) > 1:
+        return dict(out, status="ambiguous", reason=f"{len(found)}_observations")
+    (o,) = found
+    v = o.value
+    out.update(observation_id=o.observation_id,
+               record_sha256=sha256(o.to_json().encode("utf-8")).hexdigest(),
+               value=v if type(v) in (int, float) else None)
+    if o.timeframe != timeframe:
+        return dict(out, status="unsupported", reason="timeframe_mismatch")
+    if o.unit != "z_score":
+        return dict(out, status="unsupported", reason="unit_not_z_score")
+    if o.quality is not valid:
+        return dict(out, status=_QUALITY_STATUS.get(o.quality.value, "invalid"),
+                    reason=f"quality_{o.quality.value.lower()}")
+    if o.available_at_ms is None or o.available_at_ms > as_of or o.observed_at_ms > as_of:
+        return dict(out, status="invalid", reason="availability_unknown")
+    if o.timestamp_ms != anchor_close:
+        return dict(out, status="stale" if o.timestamp_ms < anchor_close else "invalid",
+                    reason="not_anchor_timestamp")
+    if o.max_age_ms is not None and as_of - o.timestamp_ms > o.max_age_ms:
+        return dict(out, status="stale", reason="max_age_exceeded")
+    if type(v) not in (int, float) or not math.isfinite(v):
+        return dict(out, status="invalid", reason="non_numeric_value")
+    return dict(out, status="ok", reason="accepted")
+
+
 def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
-             open_episodes: dict) -> dict:
+             open_episodes: dict, world_model: WorldModel | None = None) -> dict:
+    if world_model is not None:
+        w = _world_module(world_model)
+        if world_model.as_of_ms != as_of:
+            raise ValueError("world_model cut does not match as_of")
     tf = ds.tf_ms
     anchor_close = (as_of // tf) * tf
     last_open = anchor_close - tf
@@ -195,6 +264,11 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
         index[("participation", sym)] = parts
         ids.extend(o.obs_id for o in parts)
         avail = {k: abs(v) for k, v in comps.items() if v is not None}
+        world = None
+        if world_model is not None:
+            world = _world_volume(world_model, w, sym, ds.timeframe, anchor_close, as_of)
+            if world["status"] == "ok":
+                avail[WORLD_COMPONENT] = abs(world["value"])
         salience = max(avail.values()) if avail else None
         dominant = min(avail, key=lambda k: (-avail[k], k)) if avail else None
         rows[sym] = {"symbol": sym, "status": "ok", "eligible": salience is not None,
@@ -202,6 +276,10 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
                      "salience": rnd(salience), "dominant": dominant,
                      "components": {k: rnd(v) for k, v in comps.items()},
                      "evidence": [index[("candle_window", sym)].obs_id] + ids}
+        if world is not None:
+            rows[sym]["components"][WORLD_COMPONENT] = (
+                rnd(world["value"]) if world["status"] == "ok" else None)
+            rows[sym]["world_model"] = dict(world, value=rnd(world["value"]))
 
     ranked = sorted((s for s in cohort if rows[s]["eligible"]),
                     key=lambda s: (-rows[s]["salience"], s))
