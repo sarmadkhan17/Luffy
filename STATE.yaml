@@ -180,16 +180,16 @@ capabilities:
       - the 2-second timeout is an implementation choice, not an SDD constant
       - pathological OS uninterruptible-process states cannot guarantee both finite cleanup and confirmed reaping
       - automatic Attention selection is not active in production; live supplemental symbol selection remains explicit/configured
-      - the registry selector is not wired into the Kernel
-      - a live read-only RegistrySnapshot producer is TESTED at 4ee6682 but refresh scheduling/cadence and Kernel integration are not established
+      - the registry selector is not wired into the Kernel; the Kernel-wiring contract is locked as design evidence by SDD-STAGE-3-ATTENTION-KERNEL-INTEGRATION (finding B - KERNEL-AUTOMATIC-SELECTION-SEAM) and queued as SDD-STAGE-3-ATTENTION-KERNEL-WIRING, not implemented
+      - a live read-only RegistrySnapshot producer is TESTED at 4ee6682; the background single-flight refresh thread is designed but not implemented
       - durable cursor and selection-record transaction is TESTED at cda0582 but not wired; Kernel selector integration is not established
-      - SQLite busy-time and live-loop budget for the persistence transaction is unresolved for Kernel integration
-      - selection cadence is unresolved
-      - the producer records an explicit validated production/demo target, but the demo-vs-production policy for live integration is unresolved
-      - provider network operation is not a strict total wall-clock deadline because DNS resolution is not bounded
+      - the existing 30-second SQLite busy-lock exposure remains a broader pre-existing Journal/live-loop limitation; Kernel wiring does not claim to solve global Journal latency
+      - selection cadence (at most one rotation slot per trading cycle) is designed but not implemented
+      - production Binance USD-M observation via explicit config (never inferred from BINANCE_DEMO) is designed but not implemented
+      - provider network operation is not a strict total wall-clock deadline because DNS resolution is not bounded; the design confines it to the background refresh thread
       - retained boot CCXT metadata lacks adequate observation-time/provenance truth and must not be re-stamped as a fresh snapshot
-      - durable RegistrySnapshot historical store is not established; durable historical replay is not claimed
-      - live max_snapshot_age_ms config wiring is not established
+      - durable RegistrySnapshot historical store is not established; historical registry replay is not claimed - selection and fetch records remain traceable by IDs, but historical registry contents cannot be reconstructed and body hash/provenance cannot be guaranteed after provider/log rotation
+      - live max_snapshot_age_ms wiring is not established; 28800000 ms (with 4-hour refresh and 300-second failure retry) is a designed implementation policy, not an SDD constant
       - registry-backed rotation is limited to the one supplemental slot in the pure selector; broader fairness policy is not implemented
       - the current 90-day listing-age filter belongs to trading Universe/history selection, not Attention eligibility (config.yaml; trader/data/feed.py)
       - SDD v3.2 connected eligible-universe and fairness gap remains
@@ -344,11 +344,11 @@ capabilities:
       - production recovery behavior beyond deterministic tests is not established here
 
 current_active_work:
-  id: SDD-STAGE-3-ATTENTION-KERNEL-INTEGRATION
-  type: DESIGN_AUDIT
+  id: SDD-STAGE-3-ATTENTION-KERNEL-WIRING
+  type: IMPLEMENTATION
   state: DEFINED
   status: READY_NOT_STARTED
-  objective: Define the smallest safe Kernel integration contract connecting the TESTED registry producer, TESTED pure selector, TESTED durable selection persistence and TESTED isolated supplemental fetch without changing trading authority.
+  objective: Wire the TESTED registry producer, pure selector, durable selection persistence and isolated supplemental fetch into the Kernel as automatic registry-backed supplemental Attention observation under the locked KERNEL-INTEGRATION audit decisions, without changing trading authority.
   completed_prerequisites:
     - id: SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR
       state: TESTED
@@ -404,18 +404,101 @@ current_active_work:
         - successful publication occurs only after complete translation succeeds
         - no trading credentials, account or order endpoints are used
         - no Kernel integration is present
+    - id: SDD-STAGE-3-ATTENTION-KERNEL-INTEGRATION
+      type: DESIGN_AUDIT
+      state: COMPLETED_DESIGN_EVIDENCE
+      audited_at: 5f2858b
+      finding: B - KERNEL-AUTOMATIC-SELECTION-SEAM
+      implementation_package: SDD-STAGE-3-ATTENTION-KERNEL-WIRING
+      evidence_note: decisions are recorded here as design evidence; no separate audit report artifact exists and nothing is implemented
+      decisions:
+        observation_venue:
+          - automatic registry Attention observes production Binance USD-M
+          - the target is explicit config and is never inferred from BINANCE_DEMO
+          - the registry provider and the supplemental kline fetch must refer to the same production environment
+          - trading may remain demo
+          - observation grants no trading permission
+        supplemental_mode:
+          - one explicit mode attention.supplemental_mode = off | manual | registry
+          - backward compatibility - key absent and supplemental_symbol set => manual; key absent and no symbol => off
+          - registry mode plus a manual supplemental_symbol is a configuration conflict
+          - a conflict disables supplemental observation only; trading continues
+          - exactly one supplemental slot exists
+        registry_refresh:
+          - registry refresh never runs in the trading cycle
+          - a dedicated single-flight background refresh thread performs refresh
+          - the cycle reads only the immutable provider.latest()
+          - a hung refresh cannot block the cycle
+          - refresh and in-flight health are exposed
+          - DNS remains unbounded inside the background refresh thread and is therefore not a trading-loop blocker
+        refresh_freshness_policy:
+          classification: implementation policy derived from current repository cadence; not SDD/architectural constants
+          normal_refresh_seconds: 14400
+          retry_after_failure_seconds: 300
+          max_snapshot_age_ms: 28800000
+        snapshot_behavior:
+          - no snapshot => no selector call, no selection row, no fetch
+          - a fresh last-good snapshot may still be used after the latest refresh failed
+          - stale snapshot => the selector's snapshot_stale Selection is persisted, cursor unchanged, no fetch
+          - an old snapshot is never re-stamped
+        scan_identity_boundary:
+          - before calling the selector in FUTURES mode, translate the Kernel's known futures BASE/USDT scan symbols into unambiguous BASE/USDT:USDT
+          - _scan_symbols() itself is not changed
+          - automatic registry mode is refused outside FUTURES market mode
+        persistence:
+          locked_order:
+            - 1 - snapshot
+            - 2 - durable cursor
+            - 3 - pure selector
+            - 4 - persist Selection + cursor atomically
+            - 5 - commit
+            - 6 - supplemental fetch
+            - 7 - persist fetch outcome separately
+            - 8 - hand usable/nonusable result to Attention according to the accepted integration policy
+          rules:
+            - persistence remains synchronous through the TESTED Journal transaction
+            - any persistence/SQLite error skips supplemental work for that cycle; trading continues
+            - the existing 30-second SQLite busy-lock exposure remains a broader pre-existing Journal/live-loop limitation; this slice does not claim to solve global Journal latency
+        selection_cadence:
+          - registry mode consumes at most one rotation slot per trading cycle
+          - failed or in-flight supplemental attempts still consume the already-persisted slot
+          - the cursor never rolls back
+        fetch_outcome_persistence:
+          - status = SupplementalResult.status
+          - reason is a deterministic token - lowercase, every character outside [a-z0-9_] replaced with _, truncated to 64 characters
+          - the exact original reason is kept in runtime stats/capture telemetry
+          - started_ms/ended_ms are Kernel wall-clock bounds around fetch(), not child-request timestamps
+        failure_policy:
+          rule: trading continues for every registry, selector, persistence or fetch failure
+          cases:
+            no_provider_snapshot: no selector call, no selection row, no fetch
+            stale_snapshot: persist the selector's snapshot_stale Selection with cursor unchanged; no fetch
+            selector_refusal: SelectionRefused (for example snapshot_future or invalid_input) yields no Selection; nothing is persisted; cursor unchanged; no fetch; reason kept in runtime telemetry
+            nothing_selectable: the nothing_selectable Selection is persisted with cursor unchanged; no fetch
+            corrupt_cursor: fail closed; automatic registry selection disabled for the process; no automatic repair
+            cursor_conflict: refused by the persistence transaction; no fetch this cycle
+            selection_persistence_error: skip supplemental work this cycle; no fetch
+            supplemental_timeout_or_error: record the fetch outcome; the persisted slot stays consumed; cursor unchanged
+            fetch_outcome_persistence_error: keep the exact reason in runtime telemetry; the persisted selection and cursor are unaffected; do not pass the supplemental result to Attention capture
+        provenance:
+          - link snapshot_id -> selection_id -> selected canonical instrument -> supplemental status -> Attention scan/capture
+          - optional capture provenance {mode, selection_id, snapshot_id}
+          - legacy/manual capture with no provenance remains unchanged
+        replay_limit:
+          - historical registry replay is not claimed
+          - without durable RegistrySnapshot/refresh-provenance retention, durable selection and fetch records remain traceable by IDs
+          - the historical registry contents cannot be reconstructed
+          - historical body hash/provenance cannot be guaranteed available after provider/log rotation
+          - full registry-backed replay remains deferred
   gaps:
-    - no Kernel selector integration (this package defines its contract; implementation is a later slice)
-    - no RegistrySnapshot historical store
-    - no live max_snapshot_age_ms wiring
-    - no refresh scheduling/cadence
-    - provider network operation is not a strict total wall-clock deadline because DNS is not bounded
-    - SQLite selection-persistence busy-time/live-loop budget unresolved
-    - selection cadence unresolved
-    - demo-vs-production policy for the live integration unresolved
+    - no Kernel selector integration (queued as this package; not implemented)
+    - no background registry refresh thread, supplemental_mode config or live max_snapshot_age_ms wiring (designed, not implemented)
+    - no RegistrySnapshot historical store; historical registry replay is not claimed
+    - provider DNS resolution is unbounded; the design confines it to the background refresh thread
+    - the existing 30-second SQLite busy-lock exposure is a broader pre-existing Journal/live-loop limitation not solved by this package
     - automatic registry-backed Attention selection is not active
   queued_after:
-    - smallest KERNEL-INTEGRATION implementation slice chosen by this audit
+    - none chosen; RegistrySnapshot history store, account metadata endpoints and broader fairness remain deferred and unqueued
   evidence:
     - SDD.md
     - trader/kernel.py
@@ -426,11 +509,12 @@ current_active_work:
     - trader/observability/supplemental.py
     - trader/core/journal.py
     - trader/data/feed.py
+    - config.yaml
   constraints:
     - "locked = don't redesign; implemented = verify; discuss only gaps"
-    - audit only; no Kernel wiring, refresh scheduler, config changes, new venue calls, snapshot history, broader fairness or trading/Risk/Execution changes
-    - preserve the tested selector contract, persist-before-fetch ordering and the single supplemental slot
-    - strategy scan, Universe, DataFeed, trading eligibility, Risk and Execution unchanged
+    - implement only the locked KERNEL-INTEGRATION decisions; no RegistrySnapshot history store, account metadata endpoints, broader fairness, trading eligibility changes or Scheme-D work
+    - preserve the tested selector, selection-persistence, supplemental-fetch and registry-producer contracts, persist-before-fetch ordering and the single supplemental slot
+    - strategy scan, Universe, DataFeed, trading eligibility, Orchestrator, Risk and Execution unchanged
     - Attention overall maturity remains IMPLEMENTED
     - preserve the parked Scheme-D pilot blocker and authorization constraints; no new pilot or full validation work
 
