@@ -2,35 +2,31 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-LIVE-CONTEXT-AUDIT
-  type: DEPENDENCY_AUDIT
+  id: SDD-STAGE-3-ATTENTION-COVERAGE-POLICY-AUDIT
+  type: EVIDENCE_AUDIT
   priority: ACTIVE
   status: READY
 
   objective: >
-    Determine whether the current kernel already has a valid, same-cut current
-    WorldModel available to pass to Attention without inventing a second builder
-    or changing trading semantics.
+    Determine the safe bounded Attention coverage policy for venue-active
+    instruments when account per-symbol eligibility is UNKNOWN, while keeping
+    trading and execution eligibility unchanged.
 
   working_rule: "locked = don't redesign; implemented = verify; discuss only gaps"
 
-  next_steps:
-    - step: 1
-      action: Locate any current WorldModel construction and ownership path.
-    - step: 2
-      action: Determine whether Kernel.cycle can receive or access that model at the Attention cut, with exact same-cut and provenance evidence.
-    - step: 3
-      action: Determine whether wiring is a small seam or requires a new live WorldModel production pipeline.
-    - step: 4
-      action: If wiring is small, define the exact integration package without implementing it.
-    - step: 5
-      action: If wiring is not small, do not force it; select the next independent genuine Attention gap instead.
-    - step: 6
-      action: Compare dependency and order against connected eligible universe, portfolio signals, and research/investigation feedback.
+  audit_questions:
+    - Can Attention observe and prioritize an UNKNOWN-eligibility instrument without implying it is tradable?
+    - Which registry states suffice to include an instrument for observation?
+    - Which registry states must exclude it even from Attention?
+    - How should venue status, data availability, account-global canTrade, static blacklist and existing safety constraints affect Attention coverage?
+    - How should young or new instruments receive bounded compute without starving established instruments?
+    - What deterministic cap and rotation policy is the smallest fair design?
+    - How is Attention coverage kept separate from trading scan population, strategy eligibility, Risk and Execution?
+    - What exact registry snapshot, cut and provenance must be retained for replay?
 
   constraints:
-    - Audit only; do not implement or change trading semantics.
-    - Do not invent a second live WorldModel builder or overstate production use.
+    - Audit only; do not implement Attention coverage or design the final fairness algorithm during this reconciliation.
+    - Preserve SDD v3.2 as architecture authority and keep trading and execution eligibility unchanged.
     - Preserve the completed Scheme-D bounded pilot as parked, non-final evidence.
     - Do not run another pilot, additional RNG benchmark, full validation, or cloud compute without separate explicit owner authorization.
     - Do not alter frozen research or pilot artifacts.
@@ -89,4 +85,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Record the live-context dependency finding and the next smallest genuine Attention work package.
+  - Record the Attention coverage policy audit findings and the next bounded work package.

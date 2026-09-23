@@ -83,6 +83,26 @@ capabilities:
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
 
+  instrument_registry:
+    state: TESTED
+    evidence:
+      - b35fe41 Add immutable instrument capability registry
+      - trader/core/instrument_registry.py
+      - trader/data/binance_usdm_registry.py
+      - tests/test_instrument_registry.py
+    proven_facts:
+      - immutable, versioned RegistrySnapshot and canonical InstrumentId for venue, market type and venue symbol exist
+      - venue listing/status, account-global trading state, symbol configuration presence, leverage/capacity metadata, data availability, shortability and account per-symbol eligibility are represented separately
+      - account per-symbol eligibility is explicitly ELIGIBLE, INELIGIBLE or UNKNOWN; positive and negative states require a typed instrument-specific authoritative basis
+      - Binance USD-M adapter makes no network calls and converts only supplied read-only response data
+      - Binance adapter leaves account per-symbol eligibility UNKNOWN
+      - asset class remains UNKNOWN without authoritative classification
+      - malformed population evidence fails closed
+      - current Universe, trading scan and execution behavior is unchanged
+    gaps:
+      - live registry refresh and a canonical positive account-eligible universe are not established
+      - Attention integration, production activation and execution authority are not established
+
   attention:
     state: IMPLEMENTED
     evidence:
@@ -253,18 +273,21 @@ capabilities:
       - production recovery behavior beyond deterministic tests is not established here
 
 current_active_work:
-  id: SDD-STAGE-3-ATTENTION-LIVE-CONTEXT-AUDIT
+  id: SDD-STAGE-3-ATTENTION-COVERAGE-POLICY-AUDIT
   state: DEFINED
   status: AUDIT_ONLY_NEXT
-  objective: Determine whether a valid same-cut current WorldModel already exists at the kernel Attention cut and can be passed through a small seam without changing trading semantics.
+  objective: Determine a safe bounded Attention coverage policy for venue-active instruments when account per-symbol eligibility is UNKNOWN, while keeping trading and execution eligibility unchanged.
   evidence:
     - SDD.md
-    - e493446 Add WorldModel evidence to Attention ranking
+    - b35fe41 Add immutable instrument capability registry
+    - trader/core/instrument_registry.py
+    - trader/data/binance_usdm_registry.py
+    - tests/test_instrument_registry.py
     - trader/cognition/attention.py
-    - trader/observability/attention.py
   constraints:
     - "locked = don't redesign; implemented = verify; discuss only gaps"
-    - audit only; do not implement or invent a second live WorldModel builder
+    - audit only; do not implement Attention coverage or design the final fairness algorithm during reconciliation
+    - keep observation separate from trading scan, strategy eligibility, Risk and Execution
     - preserve the parked Scheme-D pilot blocker and authorization constraints
 
 parked_scheme_d_work:
