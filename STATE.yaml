@@ -1,6 +1,6 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-09-23'
+updated_at: '2026-09-24'
 status: EVIDENCE_BASED
 
 progress_method:
@@ -110,6 +110,10 @@ capabilities:
       - trader/observability/attention.py
       - tests/test_cognition_attention_world.py
       - e493446 Add WorldModel evidence to Attention ranking
+      - 9b95d4f Add isolated supplemental Attention data path
+      - trader/observability/supplemental.py
+      - trader/observability/_supplemental_child.py
+      - tests/test_attention_supplemental.py
     proven_facts:
       - current GitHub repository contains cognition attention code
       - attention produces structured observations and selection reasons
@@ -119,10 +123,24 @@ capabilities:
       - missing, ambiguous, stale, invalid or unsupported world evidence contributes no fabricated signal
       - existing candle-only behavior remains unchanged when WorldModel is absent
       - this evaluator slice introduces no trade direction, sizing, order or Risk authority
+      - one explicitly supplied observation-only symbol outside _scan_symbols() can receive Attention candle data
+      - supplemental acquisition runs in an isolated child process, not through the live DataFeed
+      - the child uses only the public Binance USD-M /fapi/v1/klines endpoint and makes at most one HTTP request per invocation
+      - the child has no trading credentials, DataFeed, candle-store, Risk, Execution or journal access
+      - the parent enforces a 2-second implementation deadline plus bounded normal cleanup
+      - timeout or failure is telemetry-only and does not stop trading
+      - the parent validates response identity and schema, row count, numeric values, closed bars and the Attention window
+      - usable supplemental data reaches Attention capture only; the symbol remains outside the trading scan, strategy frames, Orchestrator, Risk and Execution
+      - no configured supplemental symbol preserves legacy behavior
+      - focused verification passed 91 tests; commit evidence 9b95d4f
     gaps:
       - live kernel does not currently supply a WorldModel to Attention; production use of this evaluator input is not established
       - venue-active instruments with account_eligibility=UNKNOWN may be observed by Attention without implying trade permission; registry, Attention, trading, Risk and Execution authority remain separate (trader/core/instrument_registry.py; trader/observability/attention.py)
-      - current live Attention data is limited to strategy-scan frames from _scan_symbols(); instruments outside that scan have no live Attention candle acquisition path (trader/kernel.py; trader/observability/attention.py)
+      - the 2-second timeout is an implementation choice, not an SDD constant
+      - pathological OS uninterruptible-process states cannot guarantee both finite cleanup and confirmed reaping
+      - supplemental symbol selection remains explicit/configured, not automatic
+      - registry-backed fairness and rotation are not implemented
+      - live RegistrySnapshot production and refresh are not established
       - the current 90-day listing-age filter belongs to trading Universe/history selection, not Attention eligibility (config.yaml; trader/data/feed.py)
       - SDD v3.2 connected eligible-universe and fairness gap remains
       - portfolio signals remain missing from Attention priority
@@ -276,10 +294,10 @@ capabilities:
       - production recovery behavior beyond deterministic tests is not established here
 
 current_active_work:
-  id: SDD-STAGE-3-ATTENTION-COVERAGE-POLICY-AUDIT
+  id: SDD-STAGE-3-ATTENTION-COVERAGE-SEAM
   state: DEFINED
   status: AUDIT_ONLY_NEXT
-  objective: Determine a safe bounded Attention coverage policy for venue-active instruments when account per-symbol eligibility is UNKNOWN, while keeping trading and execution eligibility unchanged.
+  objective: Define the smallest deterministic registry-backed observation-selection seam for bounded Attention candidates from venue-active instruments without changing trading eligibility.
   evidence:
     - SDD.md
     - b35fe41 Add immutable instrument capability registry
@@ -287,9 +305,10 @@ current_active_work:
     - trader/data/binance_usdm_registry.py
     - tests/test_instrument_registry.py
     - trader/cognition/attention.py
+    - 9b95d4f Add isolated supplemental Attention data path
   constraints:
     - "locked = don't redesign; implemented = verify; discuss only gaps"
-    - audit only; do not implement Attention coverage or design the final fairness algorithm during reconciliation
+    - audit only; do not implement Attention coverage or selection during reconciliation
     - keep observation separate from trading scan, strategy eligibility, Risk and Execution
     - preserve the parked Scheme-D pilot blocker and authorization constraints
 

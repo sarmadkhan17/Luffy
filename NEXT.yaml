@@ -2,43 +2,42 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-DATA-PREREQUISITE
-  type: IMPLEMENTATION
+  id: SDD-STAGE-3-ATTENTION-COVERAGE-SEAM
+  type: DESIGN_AUDIT
   priority: ACTIVE
   status: READY
 
   objective: >
-    Establish a bounded observation-only market-data path for Attention symbols
-    outside the strategy scan, reusing the existing DataFeed, without changing
-    trading eligibility or strategy/execution behavior.
+    Define the smallest deterministic registry-backed observation-selection seam
+    that can choose bounded Attention candidates from venue-active instruments
+    without changing trading eligibility.
 
   working_rule: "locked = don't redesign; implemented = verify; discuss only gaps"
 
-  acceptance_scope:
-    - Accept ONE explicitly supplied observation-only symbol outside _scan_symbols().
-    - Fetch only the minimal existing Attention timeframe/history needed through the existing public market-data path.
-    - Return explicit data state as appropriate: usable, warmup/insufficient, missing, stale/gap/error.
-    - Do not apply the 90-day trading-Universe age rule.
-    - Do not add the symbol to the trading scan, strategy frames, Orchestrator, Risk or Execution.
-    - Bound work so one supplemental observation cannot delay or expand the trading loop without limit.
-    - Preserve existing trading behavior when no supplemental symbol is supplied.
-    - Do not implement registry rotation or fairness selection yet.
-    - Do not require positive account eligibility; this path is observation-only.
+  completed_prerequisite:
+    - Bounded isolated supplemental Attention data path is TESTED at 9b95d4f; 91 focused tests passed.
+    - One explicitly configured observation-only symbol can reach Attention capture without entering trading paths.
 
-  likely_files:
-    - trader/data/feed.py
-    - a narrow Attention data adapter/helper
-    - kernel only if needed to prove separation
-    - focused tests
+  audit_questions:
+    - Which exact RegistrySnapshot records can safely enter the Attention observation candidate population?
+    - How should UNKNOWN per-symbol account eligibility be handled for observation without implying trade permission?
+    - Should known INELIGIBLE instruments be excluded from Attention or retained for market observation? Reconcile SDD semantics and the previous audit; do not assume.
+    - Which registry fields are mandatory for observation among venue status, supported market type, symbol/feed mapping, data availability, account-global canTrade, shortability and order constraints?
+    - What deterministic rule prevents starvation while keeping the existing Attention cap bounded?
+    - Compare only stable round-robin, one reserved rotating supplemental slot, and stable partition with priority plus rotation.
+    - What state or cursor must persist for deterministic replay?
+    - Where should selection happen without altering _scan_symbols(), Universe, strategy frames, Risk or Execution?
+    - Is a live RegistrySnapshot producer required first, or can the selector accept an injected snapshot initially?
+    - Define the smallest next implementation slice without implementing it.
 
   do_not_implement:
-    - rotation or newcomer slot policy
-    - registry live refresh or full eligible-universe threading
-    - portfolio/research inputs or WorldModel production
-    - trading changes
+    - Attention selection or fairness logic during this audit
+    - live registry producer or refresh
+    - trading eligibility or execution changes
 
   constraints:
-    - Implement only the bounded Attention data prerequisite; do not lock a rotation or fairness policy.
+    - Audit only; preserve the completed bounded Attention data prerequisite.
+    - "locked = don't redesign; implemented = verify; discuss only gaps"
     - Preserve SDD v3.2 as architecture authority and keep trading and execution eligibility unchanged.
     - Preserve the completed Scheme-D bounded pilot as parked, non-final evidence.
     - Do not run another pilot, additional RNG benchmark, full validation, or cloud compute without separate explicit owner authorization.
@@ -98,4 +97,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Record acceptance evidence for the bounded Attention data prerequisite before selecting a later coverage policy package.
+  - Record the audit's recommended seam and smallest implementation slice in the control plane before implementing selection.
