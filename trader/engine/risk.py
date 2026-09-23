@@ -143,6 +143,9 @@ class RiskManager:
             return SizingResult(False, "state=FROZEN: entries blocked", 0, 0, 0, 0)
         if state == ControlState.HALTED:
             return SizingResult(False, "state=HALTED", 0, 0, 0, 0)
+        if state != ControlState.ACTIVE:  # RECOVERY, and fail closed on any other
+            return SizingResult(False, f"state={state.value}: entries blocked",
+                                0, 0, 0, 0)
 
         st = self.update_equity(equity)
         if st["halt_breached"]:

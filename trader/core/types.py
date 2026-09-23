@@ -48,6 +48,8 @@ class ControlState(str, Enum):
     ACTIVE = "ACTIVE"      # full autonomy
     FROZEN = "FROZEN"      # no NEW entries; open positions managed to natural close
     HALTED = "HALTED"      # nothing new; exits manual-only; exchange stops stay armed
+    RECOVERY = "RECOVERY"  # rebuilding/reconciling: no NEW entries; exits,
+                           # protection and reconciliation continue (SDD v3.2 §27)
 
 
 class StrategyState(str, Enum):

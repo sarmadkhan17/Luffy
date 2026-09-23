@@ -830,7 +830,7 @@ def build_company(journal, cfg: dict) -> dict:
                 guard = (g.get("why") or "armed") if ng_active else "clear"
             except Exception:
                 guard, ng_active = ng_raw, "arm" in ng_raw.lower()
-        armed = control in ("HALTED", "FROZEN") or ng_active
+        armed = control in ("HALTED", "FROZEN", "RECOVERY") or ng_active
         metric = f"{len(opens)} pos"
         out = ("guard armed / frozen" if armed else
                (f"exposure {exposure:.1f}x equity" if exposure is not None
@@ -853,7 +853,7 @@ def build_company(journal, cfg: dict) -> dict:
         metric = f"eq ${equity_now:,.0f}" if equity_now else control
         out = f"{control} · last cycle" + (f" {_age_min(ts):.0f}m ago"
                                            if _age_min(ts) is not None else "")
-        state = ("alert" if control in ("HALTED", "FROZEN")
+        state = ("alert" if control in ("HALTED", "FROZEN", "RECOVERY")
                  else _state_from_age(_age_min(ts)))
         heat_str = f"{heat_pct:.1f}%" if heat_pct is not None else "—"
         from ..engine.rent_keeper import snapshot as _rent_snapshot

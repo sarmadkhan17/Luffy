@@ -234,7 +234,7 @@ def test_orchestrator_flag_preserves_decision_and_records_every_path(tmp_path, m
 
 
 @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
-@pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED'])
+@pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
 @pytest.mark.parametrize('recovery_pending', [False, True])
 def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
     from trader.kernel import Kernel

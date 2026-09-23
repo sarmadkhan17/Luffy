@@ -18,6 +18,7 @@ from ..core.config import ROOT
 from ..core.journal import Journal
 from ..core.types import Action, Decision, MarketType, Position, Side, new_id
 from . import protective
+from .control_fence import control_fence, entry_block_reason, persisted_state
 from .booking import monetary_total, order_evidence
 from .accounting import safe_fill
 from .reconcile import venue_realized_pnl
@@ -162,25 +163,45 @@ class Executor:
             return None
         position_id = new_id("pos")
         intent = None
-        if self.market_type == MarketType.FUTURES:
-            intent = self.recovery.begin(Position(
-                id=position_id, symbol=sym, side=pos_side, amount=amount,
-                entry_price=0, notional_usdt=0, leverage=self.leverage,
-                stop_loss=stop_loss, take_profit=take_profit,
-                strategy_id=strategy_id, strategy_name=strategy_name,
-                decision_id=decision.id, market_type=self.market_type.value,
-                exec_mode=exec_mode, confidence=decision.confidence))
-            params["newClientOrderId"] = intent["client_order_id"]
-        try:
-            order = self.ex.create_order(sym, "market", side_ccxt, amount,
-                                         params=params)
-        except Exception as e:
-            if intent:
-                from ccxt import InvalidOrder, InsufficientFunds, AuthenticationError, PermissionDenied
-                if isinstance(e, (InvalidOrder, InsufficientFunds, AuthenticationError, PermissionDenied)):
-                    self.recovery.finish(intent, "entry_explicitly_rejected")
-                else:
-                    self.recovery.save(intent, "entry_submission_ambiguous")
+        order = error = None
+        # Final entry boundary. The persisted control state — not the state
+        # cached earlier in the cycle — is re-read under the cross-process
+        # fence that ControlStateMachine.set() also takes, so a FROZEN /
+        # RECOVERY / HALTED persisted first means no order is sent. Only the
+        # intent, the submission and its immediate result are fenced; fill
+        # polling, protection and exits run outside it.
+        with control_fence(self.journal):
+            blocked = entry_block_reason(persisted_state(self.journal))
+            if blocked:
+                decision.skip_reason = blocked
+                log.warning(f"ENTRY BLOCKED {sym} at submission: {blocked}")
+                return None
+            if self.market_type == MarketType.FUTURES:
+                intent = self.recovery.begin(Position(
+                    id=position_id, symbol=sym, side=pos_side, amount=amount,
+                    entry_price=0, notional_usdt=0, leverage=self.leverage,
+                    stop_loss=stop_loss, take_profit=take_profit,
+                    strategy_id=strategy_id, strategy_name=strategy_name,
+                    decision_id=decision.id, market_type=self.market_type.value,
+                    exec_mode=exec_mode, confidence=decision.confidence))
+                params["newClientOrderId"] = intent["client_order_id"]
+            try:
+                order = self.ex.create_order(sym, "market", side_ccxt, amount,
+                                             params=params)
+            except Exception as e:
+                error = e
+                if intent:
+                    from ccxt import InvalidOrder, InsufficientFunds, AuthenticationError, PermissionDenied
+                    if isinstance(e, (InvalidOrder, InsufficientFunds, AuthenticationError, PermissionDenied)):
+                        self.recovery.finish(intent, "entry_explicitly_rejected")
+                    else:
+                        self.recovery.save(intent, "entry_submission_ambiguous")
+            else:
+                if intent:
+                    intent["order_id"] = str(order.get("id") or "")
+                    self.recovery.save(intent, "entry_submitted")
+        if error is not None:
+            e = error
             from ..data.feed import is_untradeable_error, mark_untradeable
             if is_untradeable_error(e):
                 # venue lists it but this account can never trade it
@@ -191,9 +212,6 @@ class Executor:
                     "symbol_untradeable", sym, {"error": str(e)[:200]})
             log.error(f"ENTRY FAILED {sym}: {e}")
             return None
-        if intent:
-            intent["order_id"] = str(order.get("id") or "")
-            self.recovery.save(intent, "entry_submitted")
         fill, filled = self._confirm_fill(sym, str(order.get("id") or ""),
                                           order, amount)
         oid = str(order.get("id") or "")

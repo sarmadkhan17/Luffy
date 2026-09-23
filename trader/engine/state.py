@@ -1,4 +1,9 @@
-"""Control state machine — ACTIVE / FROZEN / HALTED (REQUIREMENTS §3).
+"""Control state machine — ACTIVE / FROZEN / HALTED / RECOVERY (REQUIREMENTS §3,
+SDD v3.2 §27).
+
+Only ACTIVE permits new entries. RECOVERY is entered only after containment
+(FROZEN or HALTED), never directly from ACTIVE; it keeps exits, protection and
+reconciliation running while venue truth is rebuilt.
 
 Persisted in journal (state_kv) so restarts preserve operator intent.
 Every transition is journaled with its actor. Panic = flatten + FROZEN.
@@ -9,13 +14,18 @@ import logging
 
 from ..core.types import ControlState
 from ..core.journal import Journal
+from .control_fence import control_fence
 
 log = logging.getLogger(__name__)
 
 VALID_TRANSITIONS = {
     ControlState.ACTIVE: {ControlState.FROZEN, ControlState.HALTED},
-    ControlState.FROZEN: {ControlState.ACTIVE, ControlState.HALTED},
-    ControlState.HALTED: {ControlState.FROZEN, ControlState.ACTIVE},
+    ControlState.FROZEN: {ControlState.ACTIVE, ControlState.HALTED,
+                          ControlState.RECOVERY},
+    ControlState.HALTED: {ControlState.FROZEN, ControlState.ACTIVE,
+                          ControlState.RECOVERY},
+    ControlState.RECOVERY: {ControlState.FROZEN, ControlState.ACTIVE,
+                            ControlState.HALTED},
 }
 
 
@@ -40,11 +50,19 @@ class ControlStateMachine:
         return self.state == ControlState.ACTIVE
 
     def manages_exits(self) -> bool:
-        """FROZEN still manages exits to natural close; HALTED does not."""
+        """FROZEN and RECOVERY still manage exits; HALTED does not."""
         self.refresh()
-        return self.state in (ControlState.ACTIVE, ControlState.FROZEN)
+        return self.state in (ControlState.ACTIVE, ControlState.FROZEN,
+                              ControlState.RECOVERY)
 
     def set(self, new: ControlState, actor: str, detail: str = "") -> None:
+        # The shared entry/control fence: a transition waits for an entry
+        # submission already past the Executor's final boundary, and once it
+        # persists a blocking state no later entry can be submitted.
+        with control_fence(self.journal):
+            self._set_fenced(new, actor, detail)
+
+    def _set_fenced(self, new: ControlState, actor: str, detail: str) -> None:
         self.refresh()
         # A same-state operator freeze still records an explicit hold, so
         # MacroGuard cannot later auto-resume a freeze it did not own.
