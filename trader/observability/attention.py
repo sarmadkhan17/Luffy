@@ -44,8 +44,14 @@ def _number(value):
     return value if math.isfinite(value) else None
 
 
-def capture(frames, members, scan_id, cfg, as_of_ms=None):
-    """Detach a bounded primitive snapshot; never pass mutable DataFrames on."""
+def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None):
+    """Detach a bounded primitive snapshot; never pass mutable DataFrames on.
+
+    `supplemental` is at most one observation-only SupplementalResult for a
+    symbol outside the strategy scan. It sits outside the strategy-subset
+    cap; a usable window joins the capture input, any other status is
+    recorded as an issue without candles or membership.
+    """
     started = time.perf_counter()
     tf = cfg["timeframe"]
     tf_ms = TF_MS[tf]
@@ -54,8 +60,22 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None):
     symbols = list(dict.fromkeys(members))
     included = symbols[:cfg["max_symbols"]]
     candles, issues = [], []
-    for symbol in included:
-        df = (frames.get(symbol) or {}).get(tf)
+    sources = [(symbol, (frames.get(symbol) or {}).get(tf), "kernel.universe_frames")
+               for symbol in included]
+    extra = None
+    if supplemental is not None:
+        if supplemental.timeframe != tf:
+            raise ValueError("supplemental timeframe does not match attention")
+        if supplemental.symbol in symbols:
+            raise ValueError("supplemental symbol is already a scan member")
+        extra = supplemental.summary()
+        if supplemental.usable:
+            sources.append((supplemental.symbol, supplemental.frame, supplemental.source))
+        else:
+            issues.append({"symbol": supplemental.symbol,
+                           "reason": "supplemental_" + supplemental.status,
+                           "detail": supplemental.reason})
+    for symbol, df, source in sources:
         if df is None or not len(df):
             issues.append({"symbol": symbol, "reason": "missing_timeframe"})
             continue
@@ -77,7 +97,7 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None):
                     continue
                 rows.append({"symbol": symbol, "open_ms": ms,
                              **dict(zip(FIELDS, map(_number, values))),
-                             "available_ms": as_of, "source": "kernel.universe_frames"})
+                             "available_ms": as_of, "source": source})
             candles.extend(rows[-need:])
         except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
             issues.append({"symbol": symbol, "reason": "invalid_frame"})
@@ -87,21 +107,29 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None):
         as_of = int(time.time() * 1000)
         for candle in candles:
             candle["available_ms"] = as_of
+    membership = [{"symbol": sym, "from_ms": as_of, "to_ms": None,
+                   "available_ms": as_of, "source": "kernel.scan_symbols"}
+                  for sym in included]
+    scope = {"kind": "strategy_volume_subset", "candidate_count": len(symbols),
+             "included_count": len(included), "cap": cfg["max_symbols"],
+             "excluded_count": max(0, len(symbols) - len(included)),
+             "exclusions": "trailing candidates beyond cap; not venue-wide",
+             "universe_membership_before_capture": "unknown",
+             "upstream_endpoint_and_cache_layer": "not_recorded_by_DataFeed"}
+    if extra is not None:
+        scope["supplemental"] = extra
+        if supplemental.usable:
+            membership.append({"symbol": supplemental.symbol, "from_ms": as_of,
+                               "to_ms": None, "available_ms": as_of,
+                               "source": supplemental.source})
     return {
         "kind": "scan", "schema_version": SCHEMA, "scan_id": scan_id,
         "as_of_ms": as_of, "capture_settings": dict(cfg), "capture_ms": (time.perf_counter() - started) * 1000,
-        "scope": {"kind": "strategy_volume_subset", "candidate_count": len(symbols),
-                  "included_count": len(included), "cap": cfg["max_symbols"],
-                  "excluded_count": max(0, len(symbols) - len(included)),
-                  "exclusions": "trailing candidates beyond cap; not venue-wide",
-                  "universe_membership_before_capture": "unknown",
-                  "upstream_endpoint_and_cache_layer": "not_recorded_by_DataFeed"},
+        "scope": scope,
         "issues": issues,
         "input": {"schema": INPUT_SCHEMA, "timeframe": tf,
                   "decision_times": [as_of], "candles": candles,
-                  "membership": [{"symbol": sym, "from_ms": as_of, "to_ms": None,
-                                  "available_ms": as_of, "source": "kernel.scan_symbols"}
-                                 for sym in included], "participation": []},
+                  "membership": membership, "participation": []},
     }
 
 
@@ -138,7 +166,9 @@ def digest(value):
 
 def code_manifest():
     base = Path(__file__).resolve().parents[1]
-    names = ("observability/attention.py", "observability/store.py",
+    names = ("observability/attention.py", "observability/supplemental.py",
+             "observability/_supplemental_child.py",
+             "observability/store.py",
              "observability/collector.py", "observability/worker.py",
              "observability/declared.py",
              "cognition/attention.py", "cognition/contracts.py",

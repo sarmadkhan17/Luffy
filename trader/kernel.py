@@ -115,6 +115,10 @@ class Kernel:
         self._btc_ctx: dict = {}
         self._attention = None
         self._attention_error = None
+        #: one explicitly configured observation-only symbol; never traded
+        self._attention_extra = None
+        #: killable, isolated fetcher for that symbol; never the shared DataFeed
+        self._attention_source = None
         if (cfg.get("attention") or {}).get("enabled") is True:
             try:
                 from .observability.collector import Collector
@@ -122,6 +126,17 @@ class Kernel:
             except Exception as exc:
                 self._attention_error = type(exc).__name__
                 log.warning("attention startup failed: %s", self._attention_error)
+            try:
+                from .observability.supplemental import (
+                    DEFAULT_TIMEOUT_S, IsolatedSource, one_symbol)
+                extra = one_symbol(cfg["attention"].get("supplemental_symbol"))
+                if extra is not None:
+                    self._attention_source = IsolatedSource(cfg["attention"].get(
+                        "supplemental_timeout_seconds", DEFAULT_TIMEOUT_S))
+                    self._attention_extra = extra
+            except ValueError as exc:
+                self._attention_error = "supplemental_refused"
+                log.warning("attention supplemental symbol refused: %s", exc)
 
     def _attention_call(self, method, *args):
         """Telemetry failure must never prevent entry checks or exit management."""
@@ -133,6 +148,29 @@ class Kernel:
         except Exception as exc:
             self._attention_error = type(exc).__name__
             log.warning("attention %s failed: %s", method, self._attention_error)
+            return None
+
+    def _attention_supplemental(self, scan_symbols):
+        """One bounded data attempt for the configured observation-only symbol.
+
+        The result goes to Attention capture and nowhere else: it is not added
+        to the scan, universe frames, the Orchestrator, Risk or Execution. A
+        symbol already in the scan needs no second fetch. The fetch runs in a
+        child process killed at the source's deadline, so it bounds this
+        cycle's wait and cannot touch the shared DataFeed, cache or store.
+        """
+        symbol = getattr(self, "_attention_extra", None)
+        source = getattr(self, "_attention_source", None)
+        collector = getattr(self, "_attention", None)
+        if symbol is None or source is None or collector is None or symbol in scan_symbols:
+            return None
+        try:
+            from .observability.supplemental import fetch
+            return fetch(source, symbol, collector.cfg["timeframe"],
+                         int(time.time() * 1000))
+        except Exception as exc:
+            self._attention_error = type(exc).__name__
+            log.warning("attention supplemental failed: %s", self._attention_error)
             return None
 
     def _make_agent(self, key: str):
@@ -908,7 +946,15 @@ class Kernel:
         # instead of a list hardcoded beside it.
         scan_symbols = self._scan_symbols()
         universe_frames = self._universe_frames(scan_symbols)
-        scan_id = self._attention_call("begin", universe_frames, scan_symbols)
+        supplemental = self._attention_supplemental(scan_symbols)
+        if supplemental is None:
+            scan_id = self._attention_call("begin", universe_frames, scan_symbols)
+        else:
+            stats["attention_supplemental"] = {"symbol": supplemental.symbol,
+                                               "status": supplemental.status,
+                                               "reason": supplemental.reason}
+            scan_id = self._attention_call("begin", universe_frames, scan_symbols,
+                                           None, supplemental)
         attention_causes = []
         # Bound producer work even if the trading universe is much larger.
         attention_cap = getattr(getattr(self, "_attention", None), "cfg", {}).get("max_symbols", 0)

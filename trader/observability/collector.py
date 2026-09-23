@@ -70,7 +70,7 @@ class Collector:
             self._producer_failure(event.get("scan_id"), "queue_full", event.get("kind"))
             return False
 
-    def begin(self, frames, members, as_of_ms=None):
+    def begin(self, frames, members, as_of_ms=None, supplemental=None):
         scan_id = "scan_" + uuid4().hex
         self._issued += 1
         self._producer = (self._issued, self._producer[1], self._producer[2])
@@ -81,7 +81,7 @@ class Collector:
         self._attempts[scan_id] = self._issued
         self._health.update(last_scan_id=scan_id, last_attempt_ms=int(time.time() * 1000))
         try:
-            event = capture(frames, members, scan_id, self.cfg, as_of_ms)
+            event = capture(frames, members, scan_id, self.cfg, as_of_ms, supplemental)
             event['identity'] = dict(schema=H.IDENTITY_SCHEMA, instance_id=self.instance_id, seq=self._issued)
             ms = event["capture_ms"]
             self._health.update(capture_ms=ms, max_capture_ms=max(ms, self._health["max_capture_ms"]))

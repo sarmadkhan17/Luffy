@@ -453,6 +453,12 @@ logging:
 attention:
   enabled: true
   timeframe: 4h
+  # Supplemental child deadline, including startup and the public response.
+  # Implementation choice: 2s is small beside the 60s scan cadence, 45s
+  # research congestion threshold, 240s stall monitor and 600s watchdog.
+  # It is not an SDD-derived venue latency guarantee. No supplemental symbol
+  # is configured by default, so the child path is opt-in.
+  supplemental_timeout_seconds: 2
   max_symbols: 16               # subset cap, not venue-wide coverage
   max_causes: 64                # evaluator receipts per symbol
   queue_size: 16
