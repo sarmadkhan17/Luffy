@@ -9,10 +9,13 @@ import json
 from dataclasses import dataclass, field
 from enum import Enum
 from hashlib import sha256
-from typing import Any, Iterable
+from typing import TYPE_CHECKING, Any, Iterable
 
 from .observation import Observation, _text, _timestamp
 from .state import WorldState
+
+if TYPE_CHECKING:
+    from .relationship import RelationshipCollection
 
 
 SCHEMA_VERSION = "world.model.v1"
@@ -81,6 +84,7 @@ class WorldModel:
     states: tuple[WorldState, ...] = ()
     horizons: tuple[Horizon, ...] = tuple(Horizon)
     schema_version: str = SCHEMA_VERSION
+    relationships: RelationshipCollection | None = None
     model_id: str = field(init=False)
 
     def __post_init__(self) -> None:
@@ -90,12 +94,25 @@ class WorldModel:
         nodes = _items(self.nodes, HierarchyNode, "nodes")
         states = _items(self.states, WorldState, "states")
         horizons = _items(self.horizons, Horizon, "horizons")
+        if self.relationships is not None:
+            from .relationship import RelationshipCollection
+            if not isinstance(self.relationships, RelationshipCollection):
+                raise TypeError("relationships must be RelationshipCollection or None")
+            if self.relationships.as_of_ms != self.as_of_ms:
+                raise ValueError("relationship collection cut does not match model cut")
         if not horizons or len(set(horizons)) != len(horizons):
             raise ValueError("horizons must be nonempty and unique")
         scopes = [node.scope for node in nodes]
         if len(set(scopes)) != len(scopes):
             raise ValueError("duplicate scope identity")
         scope_set = set(scopes)
+        if self.relationships is not None:
+            for relationship in self.relationships.relationships:
+                coordinate = relationship.coordinate
+                if coordinate.source not in scope_set or coordinate.target not in scope_set:
+                    raise ValueError("relationship endpoint has no hierarchy node")
+                if coordinate.horizon not in horizons:
+                    raise ValueError("relationship horizon is not declared by model")
         if sum(scope.level is ScopeLevel.GLOBAL for scope in scopes) != 1:
             raise ValueError("exactly one GLOBAL node is required")
         for node in nodes:
@@ -175,10 +192,13 @@ class WorldModel:
         return matches[0]
 
     def to_dict(self) -> dict[str, Any]:
-        return {"schema_version": self.schema_version, "as_of_ms": self.as_of_ms,
+        record = {"schema_version": self.schema_version, "as_of_ms": self.as_of_ms,
                 "horizons": [horizon.value for horizon in self.horizons],
                 "nodes": [node.to_dict() for node in self.nodes],
                 "states": [state.to_dict() for state in self.states]}
+        if self.relationships is not None:
+            record["relationships"] = self.relationships.to_dict()
+        return record
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), sort_keys=True, separators=(",", ":"),
