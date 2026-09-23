@@ -1,0 +1,32 @@
+{
+ "bindings": {
+  "benchmark_receipt_sha256": "f70ace0a02ab6187647ecc33446238cf5ba9dbe97320194ea75f32876972f23e",
+  "bundle_sha256": "a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023",
+  "shard_layer_sha256": "5e322153c62b103d00e9e898b30df4efc2031ea66c7144b79d5037b4d03c2170"
+ },
+ "draws": 300,
+ "load_average_1m": 1.1748046875,
+ "note": "median across fresh single-worker processes of the deterministic token world (v4 runner + v4 fixture); slower per draw than the measured v4 phase-90 world, used only as a ratio; no benchmark was run",
+ "phase90_benchmark_receipt_sha256": "f70ace0a02ab6187647ecc33446238cf5ba9dbe97320194ea75f32876972f23e",
+ "phase90_draws_per_second_per_core": 975.4548174287327,
+ "phase90_projection_cpu_hours": 16406.782531828467,
+ "phase90_seconds_per_draw_end_to_end": 0.0010251628082948707,
+ "phase90_summary_sha256": "8aede3c371c71ff15f34a3986aa131b5e9eb048d2a59d572ebdc0ea672571fa2",
+ "process_draws_per_second": [
+  857.4455085362122,
+  741.2295255144886,
+  668.9420387930224,
+  663.9830728694708,
+  682.7951592716769,
+  759.242605675835,
+  672.989823281696,
+  693.6128458167618,
+  698.4472617755688
+ ],
+ "process_spread_max_over_min": 1.2913665175690001,
+ "processes": 9,
+ "proxy_draws_per_second": 693.6128458167618,
+ "proxy_seconds_per_draw_end_to_end": 0.0014417264703661203,
+ "reference_host": "sarmad-VMware-Virtual-Platform",
+ "schema": "m3.2-scheme-d-qualification-reference-calibration.v4"
+}
