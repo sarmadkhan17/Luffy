@@ -414,13 +414,14 @@ class Journal:
 
     def log_control_event(self, event: str, actor: str,
                           from_state: str = "", to_state: str = "",
-                          detail: Any = "") -> None:
+                          detail: Any = "") -> int:
         with self._tx() as c:
-            c.execute(
+            cursor = c.execute(
                 "INSERT INTO control_events(ts,event,from_state,to_state,actor,detail) "
                 "VALUES (?,?,?,?,?,?)",
                 (now_utc().isoformat(), event, from_state, to_state, actor,
                  detail if isinstance(detail, str) else json.dumps(detail)))
+            return int(cursor.lastrowid)
 
     def schedule_outcome(self, decision_id: str, cycle_id: str, symbol: str,
                          ts: str, action: str, entry_price: float) -> None:

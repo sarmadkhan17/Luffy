@@ -117,6 +117,24 @@ def test_ambiguous_submission_survives_restart_and_adopts_exact_exposure(setup):
     assert len(j.open_trades()) == 1
 
 
+def test_entry_recovery_uses_canonical_protection_match(setup, monkeypatch):
+    ex, j, e, d = setup
+    ex.entry_error = RequestTimeout('accepted, response lost')
+    enter(e, d)
+    e.recover_entries()  # submits a stop; venue lists it on the next pass
+    real_match = protective.protection_match
+    seen = []
+
+    def match(*args):
+        seen.append(args)
+        return real_match(*args)
+
+    monkeypatch.setattr(protective, "protection_match", match)
+    e.recover_entries()
+    assert seen and seen[0][3] == 2  # current venue amount
+    assert not e.recovery_pending()
+
+
 def test_explicit_rejection_releases_gate(setup):
     ex, j, e, d = setup
     ex.entry_error = InsufficientFunds('rejected')

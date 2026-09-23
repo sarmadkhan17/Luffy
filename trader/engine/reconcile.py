@@ -9,7 +9,9 @@ Spot mode: no short positions; reconcile only journal ghosts via price feed.
 """
 from __future__ import annotations
 
+import json
 import logging
+import math
 from datetime import datetime, timezone
 
 from ..core.types import ClosedTrade, Position, Side, new_id, norm_symbol
@@ -17,6 +19,7 @@ from ..core.journal import Journal
 from . import protective
 
 log = logging.getLogger(__name__)
+REARM_KEY = "reconcile_rearm_submitted"
 
 
 def _now() -> str:
@@ -71,21 +74,67 @@ def _mark(exchange, symbol: str, fallback: float) -> float:
         return fallback
 
 
-def reconcile_futures(exchange, journal: Journal, exclude_symbols=()) -> dict:
+def reconcile_futures(exchange, journal: Journal, exclude_symbols=(), *, verify=False) -> dict:
     """Align journal open trades with live exchange positions."""
     try:
+        rows = exchange.fetch_positions()
+        if not isinstance(rows, list):
+            raise ValueError("invalid position snapshot")
+        if verify:
+            seen = set()
+            for p in rows:
+                amount = float(p["contracts"])
+                if not math.isfinite(amount) or amount < 0:
+                    raise ValueError("invalid venue position size")
+                if amount > 0:
+                    key = norm_symbol(p["symbol"])
+                    if key in seen or p.get("side") not in ("long", "short"):
+                        raise ValueError("contradictory venue position ownership")
+                    seen.add(key)
         ex_positions = {
             norm_symbol(p["symbol"]): p
-            for p in (exchange.fetch_positions() or [])
+            for p in rows
             if float(p.get("contracts") or 0) > 0
         }
     except Exception as e:
         log.error(f"reconcile: cannot fetch positions ({e}) — keeping journal as-is")
-        return {"adopted": 0, "ghosts": 0, "aligned": 0, "error": str(e)}
+        if verify and str(e) == "contradictory venue position ownership":
+            return {"adopted": 0, "ghosts": 0, "aligned": 0,
+                    "positions_readable": True,
+                    "safety_issues": ["contradictory_venue_ownership"]}
+        return {"adopted": 0, "ghosts": 0, "aligned": 0,
+                "error": type(e).__name__, "positions_readable": False}
 
     excluded = set(exclude_symbols)
-    j_open = {t["symbol"]: t for t in journal.open_trades() if t["symbol"] not in excluded}
+    journal_rows = [t for t in journal.open_trades() if t["symbol"] not in excluded]
+    j_open = {t["symbol"]: t for t in journal_rows}
+    if verify:
+        ownership = []
+        if len(j_open) != len(journal_rows):
+            ownership.append("contradictory_journal_ownership")
+        for sym, p in ex_positions.items():
+            jt = j_open.get(sym)
+            if jt and jt["side"] != p["side"]:
+                ownership.append("contradictory_position_side:" + sym)
+        if ownership:
+            return {"adopted": 0, "ghosts": 0, "aligned": 0,
+                    "positions_readable": True, "position_count": len(ex_positions),
+                    "safety_issues": ownership}
     adopted = ghosts = aligned = 0
+    pending_rearms = {}
+    if verify:
+        try:
+            pending_rearms = json.loads(journal.kv_get(REARM_KEY, "{}"))
+            if not isinstance(pending_rearms, dict) or any(
+                    not isinstance(sym, str) or not isinstance(record, dict)
+                    or not isinstance(record.get("trade_id"), str)
+                    for sym, record in pending_rearms.items()):
+                raise ValueError("invalid rearm evidence")
+        except Exception as e:
+            return {"adopted": 0, "ghosts": 0, "aligned": 0,
+                    "positions_readable": True, "position_count": len(ex_positions),
+                    "safety_issues": ["protection_rearm_evidence_unreadable"],
+                    "error": type(e).__name__}
 
     # 1. adopt orphans
     for sym, p in ex_positions.items():
@@ -174,15 +223,23 @@ def reconcile_futures(exchange, journal: Journal, exclude_symbols=()) -> dict:
     # short closed days earlier — inert while flat, but exactly the closing
     # side of the next short opened in that symbol.
     swept = failed_sweep = 0
+    sweep_error = None
     try:
         open_now = journal.open_trades()
         keep = {str(t["sl_order_id"]) for t in open_now if t.get("sl_order_id")}
+        keep.update(str(v.get("order_id")) for sym, v in pending_rearms.items()
+                    if sym in ex_positions and isinstance(v, dict) and v.get("order_id"))
         protected = {t["symbol"] for t in open_now if t.get("sl_order_id")}
         if not excluded:
-            swept, failed_sweep = protective.sweep_orphans(
-                exchange, keep, set(ex_positions.keys()), protected)
+            if verify:
+                swept, failed_sweep = protective.sweep_orphans(
+                    exchange, keep, set(ex_positions.keys()), protected, strict=True)
+            else:
+                swept, failed_sweep = protective.sweep_orphans(
+                    exchange, keep, set(ex_positions.keys()), protected)
     except Exception as e:
         log.warning(f"orphan stop sweep failed: {e}")
+        sweep_error = getattr(e, "reason", type(e).__name__)
 
     # 4. the reverse of the orphan sweep — a POSITION with no stop.
     # sweep_orphans covers a protective order whose position is gone. Nothing
@@ -210,9 +267,15 @@ def reconcile_futures(exchange, journal: Journal, exclude_symbols=()) -> dict:
     #     call, not reconcile's. Those are counted as `unarmable` so the
     #     state stays visible rather than reading as a silent success.
     naked = None
+    protection_error = None
     rearmed = unarmable = 0
+    bare = []
+    newly_rearmed = set()
     try:
-        stops = protective.open_stops(exchange)
+        stops = protective.open_stops(exchange, strict=verify)
+        if not stops.complete:
+            raise protective.ProtectiveSnapshotIncomplete(
+                stops.reason or "global_stop_listing_incomplete")
         # algo rows come back as UNIUSDT while positions read UNI/USDT:USDT;
         # `venue_key` is the one spelling both collapse to
         covered = {protective.venue_key(str(o.get("symbol") or ""))
@@ -225,6 +288,8 @@ def reconcile_futures(exchange, journal: Journal, exclude_symbols=()) -> dict:
             log.error(f"NAKED POSITION {sym}: no protective order on the "
                       f"venue — the exchange is not holding a stop for it")
             t = j_now.get(sym)
+            if verify and sym in pending_rearms:
+                continue  # submitted evidence forbids a duplicate placement
             sl = float((t or {}).get("stop_loss") or 0)
             amount = float(ex_positions[sym].get("contracts") or 0)
             if t is None or sl <= 0 or amount <= 0:
@@ -242,6 +307,10 @@ def reconcile_futures(exchange, journal: Journal, exclude_symbols=()) -> dict:
                           f"-2021. This position needs CLOSING, not a stop")
                 continue
             close_side = "sell" if side == "long" else "buy"
+            if verify:
+                pending_rearms[sym] = {"trade_id": t["id"], "order_id": None,
+                                     "amount": amount, "stop_price": sl}
+                journal.kv_set(REARM_KEY, json.dumps(pending_rearms, allow_nan=False))
             try:
                 oid = protective.place_stop(exchange, sym, close_side,
                                             amount, sl)
@@ -254,7 +323,11 @@ def reconcile_futures(exchange, journal: Journal, exclude_symbols=()) -> dict:
                 unarmable += 1
                 log.error(f"  {sym}: re-arm returned no order id")
                 continue
+            if verify:
+                pending_rearms[sym]["order_id"] = oid
+                journal.kv_set(REARM_KEY, json.dumps(pending_rearms, allow_nan=False))
             rearmed += 1
+            newly_rearmed.add(sym)
             log.warning(f"  {sym}: RE-ARMED stop {oid} at {sl:.6g} on "
                         f"{amount} (venue size, not the journal's)")
             try:
@@ -265,9 +338,79 @@ def reconcile_futures(exchange, journal: Journal, exclude_symbols=()) -> dict:
     except Exception as e:
         # if the venue will not say, the answer is unknown, never "protected"
         log.warning(f"protective coverage unreadable: {e}")
+        protection_error = getattr(e, "reason", type(e).__name__)
 
     summary = {"adopted": adopted, "ghosts": ghosts, "aligned": aligned,
                "stops_swept": swept, "stops_stuck": failed_sweep}
+    if sweep_error:
+        summary["orphan_sweep_reason"] = sweep_error
+    if protection_error:
+        summary["protection_snapshot_reason"] = protection_error
+    if verify:
+        issues = []
+        listed = None
+        try:
+            listed = protective.open_stops(exchange, strict=True)
+        except Exception:
+            issues.append("protection_snapshot_unreadable")
+        if sweep_error or failed_sweep:
+            issues.append("orphan_stop_sweep_unresolved")
+        if protection_error:
+            issues.append("protection_snapshot_unreadable")
+        if unarmable:
+            issues.append("protection_cannot_restore")
+        if listed is not None and any(
+                protective.venue_key(s.get("symbol", "")) not in {
+                    protective.venue_key(sym) for sym in ex_positions}
+                for s in listed):
+            issues.append("orphan_stop_sweep_unresolved")
+        # A placement response is not confirmation. Only a listed adequate
+        # stop proves protection; a first-pass submission stays transient.
+        for sym, p in ex_positions.items():
+            if sym in excluded:
+                continue
+            try:
+                matches = protective.open_stops(exchange, sym, strict=True)
+                amount = float(p["contracts"])
+                expected = float(next((t.get("stop_loss") or 0 for t in journal.open_trades()
+                                       if t["symbol"] == sym), 0))
+                adequate_stops = [s for s in matches if protective.protection_match(
+                    exchange, sym, p["side"], amount, expected, s).matches]
+                adequate = bool(adequate_stops)
+                if adequate:
+                    submitted = pending_rearms.get(sym)
+                    if not submitted:
+                        continue
+                    submitted_id = str(submitted.get("order_id") or "")
+                    journalled = any(str(t.get("sl_order_id") or "") == submitted_id
+                                     for t in journal.open_trades() if t["symbol"] == sym)
+                    listed_submitted = any(str(s["id"]) == submitted_id
+                                           for s in adequate_stops)
+                    if submitted_id and journalled and listed_submitted:
+                        pending_rearms.pop(sym, None)
+                    elif not submitted_id or not journalled:
+                        # Otherwise a later sweep could cancel the stop after
+                        # this submission record is cleared.
+                        issues.append("protection_cannot_restore")
+                    elif sym in newly_rearmed:
+                        issues.append("protection_awaiting_verification")
+                    else:
+                        issues.append("protection_cannot_restore")
+                elif sym in pending_rearms and pending_rearms[sym].get("order_id") and sym in bare:
+                    if sym in newly_rearmed:
+                        issues.append("protection_awaiting_verification")
+                    else:
+                        issues.append("position_unprotected:" + sym)
+                else:
+                    issues.append("position_unprotected:" + sym)
+            except Exception:
+                issues.append("protection_snapshot_unreadable:" + sym)
+        for sym in list(pending_rearms):
+            if sym not in ex_positions:
+                pending_rearms.pop(sym)
+        journal.kv_set(REARM_KEY, json.dumps(pending_rearms, allow_nan=False))
+        summary.update(positions_readable=True,
+                       position_count=len(ex_positions), safety_issues=issues)
     if naked is not None:
         summary["naked"] = naked
         summary["rearmed"] = rearmed

@@ -104,6 +104,52 @@ def test_open_stops_sees_algo_orders_fetch_open_orders_cannot():
     assert ids == {"1", "2"}
 
 
+def test_global_binance_snapshot_never_fetches_symbol_less_ordinary_orders():
+    class CcxtLike(FakeEx):
+        def fetch_open_orders(self, symbol=None):
+            if symbol is None:
+                raise AssertionError("Binance USDM requires a symbol")
+            return super().fetch_open_orders(symbol)
+
+    ex = CcxtLike()
+    snapshot = P.open_stops(ex, strict=True)
+    assert snapshot == [] and snapshot.complete
+    ex.algo = [_algo(7, "BTCUSDT")]
+    assert [row["id"] for row in P.open_stops(ex, strict=True)] == ["7"]
+
+
+def test_unreadable_global_algo_snapshot_has_structured_failure():
+    ex = FakeEx()
+    ex.fapiPrivateGetOpenAlgoOrders = lambda: (_ for _ in ()).throw(OSError("offline"))
+    with pytest.raises(P.ProtectiveSnapshotIncomplete) as err:
+        P.open_stops(ex, strict=True)
+    assert err.value.reason == "algo_listing_failed"
+
+
+def test_venue_without_global_endpoint_fails_closed_and_only_queries_known_symbols():
+    class ScopedOnly:
+        def __init__(self):
+            self.calls = []
+
+        def fetch_open_orders(self, symbol):
+            if symbol is None:
+                raise AssertionError("global ordinary listing forbidden")
+            self.calls.append(symbol)
+            return []
+
+    ex = ScopedOnly()
+    with pytest.raises(P.ProtectiveSnapshotIncomplete) as err:
+        P.open_stops(ex, strict=True)
+    assert err.value.reason == "global_stop_listing_unsupported"
+    snapshot = P.open_stops(ex, known_symbols={"BTC/USDT"})
+    assert snapshot == [] and not snapshot.complete
+    assert snapshot.reason == "global_stop_listing_unsupported"
+    assert ex.calls == ["BTC/USDT"]
+    with pytest.raises(P.ProtectiveSnapshotIncomplete):
+        P.sweep_orphans(ex, set(), set(), strict=True)
+    assert ex.calls == ["BTC/USDT"]
+
+
 @pytest.mark.parametrize("spelling", ["SUIUSDT", "SUI/USDT", "SUI/USDT:USDT"])
 def test_one_market_one_key(spelling):
     assert P.venue_key(spelling) == "SUIUSDT"
@@ -157,3 +203,43 @@ def test_a_stop_that_will_not_cancel_is_reported_not_swallowed():
     ex.cancel_order = lambda oid, sym: (_ for _ in ()).throw(Exception("nope"))
     cancelled, failed = P.sweep_orphans(ex, set(), set(), set())
     assert (cancelled, failed) == (0, 1)
+
+
+def _normalized_stop(side="sell", amount=2, trigger=95):
+    return {"id": "stop-1", "symbol": "BTCUSDT", "side": side,
+            "amount": amount, "stop_price": trigger,
+            "reduce_only": True, "order_type": "STOP_MARKET"}
+
+
+@pytest.mark.parametrize("position_side,expected,actual", [
+    ("long", 95.06, 95.0), ("short", 105.04, 105.0)])
+def test_venue_price_precision_accepts_expected_tick(position_side, expected, actual):
+    class TickVenue(FakeEx):
+        def price_to_precision(self, symbol, price):
+            assert symbol == "BTC/USDT"
+            return str(round(price))
+
+    stop = _normalized_stop("sell" if position_side == "long" else "buy",
+                            trigger=actual)
+    result = P.protection_match(TickVenue(), "BTC/USDT", position_side,
+                                1, expected, stop)
+    assert result.matches and result.expected_normalized_stop == actual
+
+
+def test_stop_larger_than_remaining_venue_position_is_adequate():
+    result = P.protection_match(FakeEx(), "BTC/USDT", "long", 1, 95,
+                                _normalized_stop(amount=2))
+    assert result.matches and result.required_amount == 1 and result.actual_amount == 2
+
+
+@pytest.mark.parametrize("change,reason", [
+    ({"amount": .5}, "insufficient_amount"),
+    ({"side": "buy"}, "wrong_closing_side"),
+    ({"reduce_only": False}, "not_reduce_only"),
+    ({"order_type": "LIMIT"}, "wrong_order_type"),
+])
+def test_protection_match_rejects_inadequate_stop(change, reason):
+    stop = _normalized_stop()
+    stop.update(change)
+    result = P.protection_match(FakeEx(), "BTC/USDT", "long", 1, 95, stop)
+    assert not result.matches and result.reason == reason

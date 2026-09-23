@@ -77,6 +77,47 @@ def test_active_to_recovery_is_refused(journal):
     assert journal.kv_get("control_state", "ACTIVE") == "ACTIVE"
 
 
+def test_compare_and_set_refreshes_cross_process_state_and_leaves_no_event(journal):
+    stale = ControlStateMachine(journal)
+    owner = ControlStateMachine(journal)
+    owner.set(F, "operator")
+    before = journal.query("SELECT COUNT(*) AS n FROM control_events WHERE event='state_change'")[0]["n"]
+    assert not stale.set_if_current(A, H, "supervisor", "stale observation")
+    assert stale.refresh() == F
+    assert journal.query("SELECT COUNT(*) AS n FROM control_events WHERE event='state_change'")[0]["n"] == before
+    assert stale.set_if_current(F, R, "supervisor", "fresh observation")
+    assert owner.refresh() == R
+
+
+def test_compare_and_set_refuses_unreadable_persisted_state(journal):
+    sm = ControlStateMachine(journal)
+    journal.kv_set("control_state", "INVALID")
+    assert not sm.set_if_current(A, F, "supervisor")
+    assert journal.kv_get("control_state") == "INVALID"
+    assert not journal.query("SELECT id FROM control_events WHERE event='state_change'")
+
+
+def test_compare_and_set_returns_exact_event_and_refuses_stale_intent(journal):
+    sm = ControlStateMachine(journal)
+    owner = ControlStateMachine(journal)
+    first = sm.set_if_current(A, F, "supervisor")
+    assert first.changed and first.state == F and first.event_id
+    row = journal.query("SELECT event, actor FROM control_events WHERE id=?",
+                        (first.event_id,))[0]
+    assert row["event"] == "state_change" and row["actor"] == "supervisor"
+    owner.set(F, "operator", "explicit hold")
+    refused = sm.set_if_current(F, R, "supervisor",
+                                expected_control_event_id=first.event_id)
+    assert not refused.changed and refused.state == F and refused.event_id is None
+    assert sm.refresh() == F
+    hold_id = journal.query("SELECT MAX(id) AS id FROM control_events "
+                            "WHERE event='state_hold'")[0]["id"]
+    assert hold_id > first.event_id
+    resumed = sm.set_if_current(F, R, "supervisor",
+                                expected_control_event_id=hold_id)
+    assert resumed.changed and resumed.state == R and resumed.event_id > hold_id
+
+
 def test_risk_check_entry_blocks_recovery(journal):
     from trader.core.config import load_config
     from trader.engine.risk import RiskManager
@@ -119,6 +160,7 @@ def test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits(macro_active)
     k.news_guard = NS(check=lambda: {"active": False})
     k.market_type = MarketType.FUTURES
     k.executor = NS(recovery_pending=lambda: False, recover_entries=Mock())
+    k.supervisor = NS(cycle=Mock())
     k._funding_map = k._oi_map = lambda: {}
     k._refresh_btc_context = lambda: None
     k._scan_symbols = lambda: ["S0/USDT"]
@@ -148,6 +190,7 @@ def test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits(macro_active)
     k._manage_one.assert_called_once()                 # exits continue
     k._detect_exchange_exits.assert_called_once_with("S0/USDT")
     k.executor.recover_entries.assert_called_once()    # reconciliation continues
+    k.supervisor.cycle.assert_called_once()             # bounded Supervisor progress
     # MacroGuard neither freezes nor auto-resumes out of RECOVERY.
     assert j.kv["control_state"] == "RECOVERY"
     assert k.heartbeat.beat.call_args.args[0]["state"] == "RECOVERY"

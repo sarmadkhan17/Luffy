@@ -182,16 +182,11 @@ class EntryRecovery:
             self.save(intent, "journal_ownership_conflict")
             return
         stops = protective.open_stops(self.ex, intent["symbol"], strict=True)
-        close_side = "sell" if p["side"] == "long" else "buy"
         sl = float(template["stop_loss"])
         if not math.isfinite(sl) or sl <= 0:
             raise ValueError("invalid persisted stop")
-        candidates = [s for s in stops if s["side"] == close_side
-                      and s.get("reduce_only") is True
-                      and s.get("order_type") == "STOP_MARKET" and s.get("id")
-                      and math.isclose(s["amount"], amount, rel_tol=1e-8)
-                      and math.isfinite(s["stop_price"]) and s["stop_price"] > 0
-                      and (s["stop_price"] >= sl if p["side"] == "long" else s["stop_price"] <= sl)]
+        candidates = [s for s in stops if protective.protection_match(
+            self.ex, intent["symbol"], p["side"], amount, sl, s).matches]
         if not candidates:
             # Existing mismatched protection is preserved for inspection. Do not
             # stack replacement stops against an ambiguous placement attempt.
@@ -207,6 +202,7 @@ class EntryRecovery:
             intent["stop_attempted"] = True
             self.save(intent, "recovery_stop_intent_persisted")
             try:
+                close_side = "sell" if p["side"] == "long" else "buy"
                 protective.place_stop(self.ex, intent["symbol"], close_side, amount, sl)
             except (InvalidOrder, InsufficientFunds):
                 self.submit_close(intent, amount)

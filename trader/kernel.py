@@ -37,6 +37,7 @@ from .engine.outcomes import resolve_pending
 from .engine.reconcile import flatten_all, reconcile_futures
 from .engine.risk import RiskManager
 from .engine.state import ControlStateMachine
+from .engine.supervisor import Supervisor
 from .engine.watchdog import Heartbeat, start_stall_monitor
 from .notify.telegram import Telegram
 from .strategy.genome import Genome
@@ -92,6 +93,8 @@ class Kernel:
                                          news_guard=self.news_guard, cfg=cfg)
         self.executor = Executor(self.exchange, self.journal, cfg,
                                  self.market_type)
+        self.supervisor = Supervisor(self.journal, self.state_machine,
+                                     self.executor, self.exchange)
         from .engine.exits import ExitEngine
 
         self.population = self._load_population()
@@ -275,16 +278,14 @@ class Kernel:
                  f"state={self.state_machine.state.value} "
                  f"population={len(self.population)}")
         self._filter_universe_to_venue()
-        try:
-            recovery = self.executor.recovery.pending()
-        except Exception:
-            log.exception("boot recovery ledger unreadable; preserve venue stops and block entries")
-            report = {"error": "recovery_ledger_unreadable"}
-        else:
-            report = reconcile_futures(self.exchange, self.journal,
-                                       exclude_symbols=[recovery["symbol"]] if recovery else [])
+        recovery = (self.supervisor.pass_once(boot=True)
+                    if self.market_type == MarketType.FUTURES else None)
+        report = (recovery.actions.get("reconcile", {}) if recovery is not None
+                  else reconcile_futures(self.exchange, self.journal))
         if any(report.get(k) for k in ("adopted", "ghosts")):
             self.notifier.send(f"🔧 boot reconciliation: {report}")
+        if recovery is not None and recovery.reasons:
+            self.notifier.send(f"🔒 recovery {recovery.status}: {', '.join(recovery.reasons)}")
         start_stall_monitor(
             self.heartbeat,
             stale_after=float(self.cfg["timeframes"]["scan_interval_seconds"]) * 4)
@@ -871,6 +872,11 @@ class Kernel:
             "ts": dt.datetime.now(dt.timezone.utc).isoformat()}))
 
         state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
         if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
             self.executor.recover_entries()
         entry_allowed = state == ControlState.ACTIVE
@@ -980,6 +986,9 @@ class Kernel:
 
         self._maybe_resolve_outcomes()
         self._record_excursions()
+        if supervisor is not None and self.market_type == MarketType.FUTURES:
+            supervisor.cycle()
+            state = self.state_machine.refresh()
         self._attention_call("causes", scan_id, attention_causes)
         attention_health = self._attention_call("health")
         attention_error = getattr(self, "_attention_error", None)
