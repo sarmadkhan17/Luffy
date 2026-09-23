@@ -1,5 +1,5 @@
 project: LUFFY
-sdd_version: '3.1'
+sdd_version: '3.2'
 updated_at: '2026-09-23'
 status: EVIDENCE_BASED
 
@@ -24,7 +24,7 @@ capabilities:
       - orphan/ghost handling exists
       - missing protective-stop detection/re-arm logic exists
     gaps:
-      - unified RECOVERY control state from SDD v3.1 is not yet implemented
+      - unified RECOVERY control state from SDD v3.2 is not yet implemented
       - supervisor orchestration across recovery stages is not yet unified
 
   control_state:
@@ -34,7 +34,7 @@ capabilities:
     proven_facts:
       - ACTIVE/FROZEN/HALTED are persisted and journaled
     gaps:
-      - RECOVERY state from SDD v3.1 is missing
+      - RECOVERY state from SDD v3.2 is missing
 
   strategy_spec_and_live_parity:
     state: TESTED
@@ -51,7 +51,7 @@ capabilities:
       - equivalence harness exists for backtest/live-engine semantics
       - derivative-backed live/vector signal parity has explicit tests
     gaps:
-      - immutable family/version/spec_hash approval binding from SDD v3.1 is not yet established end-to-end
+      - immutable family/version/spec_hash approval binding from SDD v3.2 is not yet established end-to-end
 
   research_and_referee:
     state: TESTED
@@ -66,7 +66,7 @@ capabilities:
       - held-out gate1 and book-level gate3 exist
       - candidate state referee_passed exists
     gaps:
-      - research-to-live approval/handoff is not yet the finalized SDD v3.1 path
+      - research-to-live approval/handoff is not yet the finalized SDD v3.2 path
       - M3.2 Scheme-D v4 is frozen and shard-integrated but has no validation authorization (see current_active_work)
 
   strategy_decay_and_lifecycle:
@@ -89,7 +89,7 @@ capabilities:
       - current GitHub repository contains cognition attention code
       - attention produces structured observations and selection reasons
     gaps:
-      - SDD v3.1 dynamic full connected-account universe is not yet proven
+      - SDD v3.2 dynamic full connected-account universe is not yet proven
       - final integration with Opportunity Context is not yet implemented
 
   investigation:
@@ -101,7 +101,7 @@ capabilities:
       - episode_id and investigation_id exist
       - investigations persist updates and terminal state
     gaps:
-      - separate lightweight trading Opportunity registry from SDD v3.1 is not yet implemented
+      - separate lightweight trading Opportunity registry from SDD v3.2 is not yet implemented
 
   operator_api_and_auth:
     state: IMPLEMENTED
@@ -131,7 +131,7 @@ capabilities:
       - current LLM client is provider-swappable through OpenAI-compatible base_url
       - token budgets by purpose exist
     gaps:
-      - deterministic/fast/deep router from SDD v3.1 is not yet implemented
+      - deterministic/fast/deep router from SDD v3.2 is not yet implemented
       - chat identity remains crypto-centric in current prompts
       - no finalized Needs You integration
 
@@ -144,7 +144,7 @@ capabilities:
     proven_facts:
       - venue reconciliation paths exist
     gaps:
-      - exact SDD v3.1 exchange-authoritative accounting contract is not yet proven across all monetary fields
+      - exact SDD v3.2 exchange-authoritative accounting contract is not yet proven across all monetary fields
 
   memory_and_knowledge:
     state: IMPLEMENTED
@@ -176,7 +176,7 @@ capabilities:
       - SDD.md
       - existing risk/orchestrator code provides partial inputs
     gaps:
-      - final lightweight Portfolio Allocator authority from SDD v3.1 is not yet implemented/proven
+      - final lightweight Portfolio Allocator authority from SDD v3.2 is not yet implemented/proven
       - one-asset-one-real-position rule is not yet proven end-to-end
 
   process_isolation_and_secrets:
@@ -229,13 +229,15 @@ current_active_work:
     - full v4 single-host host/filesystem/performance qualification PASS at evidence commit 4238660; ext4 /dev/sda2; 4 qualified workers; all exercised checks PASS; cross-host flock NOT_EXERCISED
     - host qualification constructed no RNG, read no authorization, ran no benchmark and generated 0 validation worlds
     - combined qualification report: single_host_qualified true, execution_hosts_ready_for_authorization false, projected full-run wall time 190.1348913893578 days on 4 qualified workers
+    - owner explicitly authorized one bounded v4 pilot on 2026-09-23; this does not authorize the full 75,000-world validation
+    - SDD v3.2 is the sole architecture authority and reconciles finalized kernel/component/dashboard/approval/storage/LLM/security decisions
     - v1/v2/v3 bundles, v3 shard layer and frozen truth package unchanged
   blockers:
-    - owner decision on whether to authorize a bounded v4 pilot on the qualified single host; any pilot authorization must bind exact bundle_sha256, shard_layer_sha256, shard_worlds and measured v4 benchmark evidence
+    - bounded v4 pilot package must be frozen/verified against the corrected v4 semantics before the authorized pilot is executed; full validation remains unauthorized
     - full 75,000-world validation is not capacity-feasible on the current 4-worker host; multi-host execution is not qualified
     - any future full v4 validation requires separate owner authorization and adequate qualified execution capacity; v3 authorizations/pilot are refused or non-transferable
   constraints:
-    - do not run additional RNG benchmarks or any validation without explicit owner authorization
+    - owner has authorized one bounded v4 pilot only; do not run full validation or any additional RNG benchmark without separate explicit owner authorization
     - do not spend cloud money
     - leave v1/v2/v3, frozen v4 and frozen truth package untouched
 
