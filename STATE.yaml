@@ -100,7 +100,7 @@ capabilities:
       - malformed population evidence fails closed
       - current Universe, trading scan and execution behavior is unchanged
     gaps:
-      - live registry refresh and a canonical positive account-eligible universe are not established
+      - scheduled live registry refresh (a read-only producer is TESTED at 4ee6682 but not scheduled or Kernel-wired) and a canonical positive account-eligible universe are not established
       - Attention integration, production activation and execution authority are not established
 
   attention:
@@ -122,6 +122,9 @@ capabilities:
       - trader/observability/selection_persistence.py
       - tests/test_attention_selection_persistence.py
       - trader/core/instrument_registry.py
+      - 4ee6682 Add live read-only registry producer
+      - trader/data/registry_provider.py
+      - tests/test_registry_provider.py
     proven_facts:
       - current GitHub repository contains cognition attention code
       - attention produces structured observations and selection reasons
@@ -161,6 +164,16 @@ capabilities:
       - fetch outcomes persist separately and can never change or roll back the cursor
       - Journal remains primitive and does not import observability types
       - the persistence slice introduces no network or Kernel wiring
+      - SDD-STAGE-3-LIVE-REGISTRY-PRODUCER is TESTED at 4ee6682 as a read-only producer component only
+      - a dedicated read-only Binance USD-M registry provider exists; its only source is public /fapi/v1/exchangeInfo
+      - the provider is separate from DataFeed, Universe, Risk, Execution and Kernel
+      - production/demo target host and environment are explicit and validated
+      - RegistrySnapshot.as_of_ms equals the local full-response receipt time; exchange serverTime is provenance only and never substitutes for the local cut
+      - raw response SHA-256, byte count, host, endpoint, timings, HTTP status and outcome are retained
+      - account-global trading and per-symbol permission metadata remain UNKNOWN
+      - a failed first refresh produces no snapshot; a failed later refresh keeps the exact previous snapshot, snapshot_id and as_of
+      - a new snapshot is published only after complete translation succeeds
+      - no trading credentials, account or order endpoints are used; no Kernel integration is present
     gaps:
       - live kernel does not currently supply a WorldModel to Attention; production use of this evaluator input is not established
       - venue-active instruments with account_eligibility=UNKNOWN may be observed by Attention without implying trade permission; registry, Attention, trading, Risk and Execution authority remain separate (trader/core/instrument_registry.py; trader/observability/attention.py)
@@ -168,12 +181,13 @@ capabilities:
       - pathological OS uninterruptible-process states cannot guarantee both finite cleanup and confirmed reaping
       - automatic Attention selection is not active in production; live supplemental symbol selection remains explicit/configured
       - the registry selector is not wired into the Kernel
-      - live RegistrySnapshot production and refresh are not established
+      - a live read-only RegistrySnapshot producer is TESTED at 4ee6682 but refresh scheduling/cadence and Kernel integration are not established
       - durable cursor and selection-record transaction is TESTED at cda0582 but not wired; Kernel selector integration is not established
       - SQLite busy-time and live-loop budget for the persistence transaction is unresolved for Kernel integration
       - selection cadence is unresolved
-      - demo-vs-production registry venue provenance is unresolved
-      - live RegistrySnapshot production requires new read-only venue metadata acquisition; retained boot CCXT metadata lacks adequate observation-time/provenance truth and must not be re-stamped as a fresh snapshot
+      - the producer records an explicit validated production/demo target, but the demo-vs-production policy for live integration is unresolved
+      - provider network operation is not a strict total wall-clock deadline because DNS resolution is not bounded
+      - retained boot CCXT metadata lacks adequate observation-time/provenance truth and must not be re-stamped as a fresh snapshot
       - durable RegistrySnapshot historical store is not established; durable historical replay is not claimed
       - live max_snapshot_age_ms config wiring is not established
       - registry-backed rotation is limited to the one supplemental slot in the pure selector; broader fairness policy is not implemented
@@ -330,11 +344,11 @@ capabilities:
       - production recovery behavior beyond deterministic tests is not established here
 
 current_active_work:
-  id: SDD-STAGE-3-LIVE-REGISTRY-PRODUCER
-  type: IMPLEMENTATION
+  id: SDD-STAGE-3-ATTENTION-KERNEL-INTEGRATION
+  type: DESIGN_AUDIT
   state: DEFINED
   status: READY_NOT_STARTED
-  objective: Implement a truthful read-only live RegistrySnapshot producer for the venue used by supplemental Attention observation, with explicit observation-time/provenance semantics and no trading authority.
+  objective: Define the smallest safe Kernel integration contract connecting the TESTED registry producer, TESTED pure selector, TESTED durable selection persistence and TESTED isolated supplemental fetch without changing trading authority.
   completed_prerequisites:
     - id: SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR
       state: TESTED
@@ -369,30 +383,53 @@ current_active_work:
         - fetch outcomes persist separately and can never change or roll back the cursor
         - Journal remains primitive and does not import observability types
         - no network or Kernel wiring is introduced
+    - id: SDD-STAGE-3-LIVE-REGISTRY-PRODUCER
+      state: TESTED
+      evidence:
+        - 4ee6682 Add live read-only registry producer
+        - trader/data/registry_provider.py
+        - tests/test_registry_provider.py
+      scope: read-only registry producer component only; not scheduled and not wired into the Kernel; Attention overall remains IMPLEMENTED
+      proven_facts:
+        - dedicated read-only Binance USD-M registry provider exists
+        - source is public /fapi/v1/exchangeInfo only
+        - provider is separate from DataFeed, Universe, Risk, Execution and Kernel
+        - production/demo target host and environment are explicit and validated
+        - RegistrySnapshot.as_of_ms equals local full-response receipt time
+        - exchange serverTime is provenance only and never substitutes for the local cut
+        - raw response SHA-256, byte count, host, endpoint, timings, HTTP status and outcome are retained
+        - account-global trading and per-symbol permission metadata remain UNKNOWN
+        - failed first refresh produces no snapshot
+        - failed later refresh keeps the exact previous snapshot, snapshot_id and as_of
+        - successful publication occurs only after complete translation succeeds
+        - no trading credentials, account or order endpoints are used
+        - no Kernel integration is present
   gaps:
-    - no live RegistrySnapshot producer or refresh (this package)
-    - no Kernel selector integration (queued after this package)
+    - no Kernel selector integration (this package defines its contract; implementation is a later slice)
     - no RegistrySnapshot historical store
-    - no live max_snapshot_age_ms config wiring
-    - SQLite busy-time/live-loop budget unresolved for Kernel integration
+    - no live max_snapshot_age_ms wiring
+    - no refresh scheduling/cadence
+    - provider network operation is not a strict total wall-clock deadline because DNS is not bounded
+    - SQLite selection-persistence busy-time/live-loop budget unresolved
     - selection cadence unresolved
-    - demo-vs-production registry venue provenance unresolved
+    - demo-vs-production policy for the live integration unresolved
     - automatic registry-backed Attention selection is not active
   queued_after:
-    - KERNEL-INTEGRATION
+    - smallest KERNEL-INTEGRATION implementation slice chosen by this audit
   evidence:
     - SDD.md
+    - trader/kernel.py
     - trader/core/instrument_registry.py
-    - trader/data/binance_usdm_registry.py
+    - trader/data/registry_provider.py
     - trader/observability/registry_selector.py
     - trader/observability/selection_persistence.py
     - trader/observability/supplemental.py
+    - trader/core/journal.py
     - trader/data/feed.py
   constraints:
     - "locked = don't redesign; implemented = verify; discuss only gaps"
-    - read-only public Binance USD-M /fapi/v1/exchangeInfo only; no trading credentials, authenticated endpoints or order APIs
-    - never re-stamp boot CCXT metadata as a fresh snapshot; a failed refresh never fabricates a snapshot
-    - no Kernel wiring, selection cadence, RegistrySnapshot history persistence or trading changes
+    - audit only; no Kernel wiring, refresh scheduler, config changes, new venue calls, snapshot history, broader fairness or trading/Risk/Execution changes
+    - preserve the tested selector contract, persist-before-fetch ordering and the single supplemental slot
     - strategy scan, Universe, DataFeed, trading eligibility, Risk and Execution unchanged
     - Attention overall maturity remains IMPLEMENTED
     - preserve the parked Scheme-D pilot blocker and authorization constraints; no new pilot or full validation work

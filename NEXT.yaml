@@ -2,93 +2,77 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-LIVE-REGISTRY-PRODUCER
-  type: IMPLEMENTATION
+  id: SDD-STAGE-3-ATTENTION-KERNEL-INTEGRATION
+  type: DESIGN_AUDIT
   priority: ACTIVE
   status: READY
 
   objective: >
-    Implement a truthful read-only live RegistrySnapshot producer for the venue
-    used by supplemental Attention observation, with explicit
-    observation-time/provenance semantics and no trading authority.
+    Define the smallest safe Kernel integration contract connecting the TESTED
+    registry producer, TESTED pure selector, TESTED durable selection
+    persistence and TESTED isolated supplemental fetch without changing
+    trading authority.
 
   working_rule: "locked = don't redesign; implemented = verify; discuss only gaps"
+  mode: audit only
 
   completed_prerequisite:
-    - SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR is TESTED at 6eb7eb4 as a pure selector over an injected immutable RegistrySnapshot.
-    - SDD-STAGE-3-ATTENTION-LIVE-SELECTION-DEPENDENCY-AUDIT completed as design evidence at 72400ea; dependency order SELECTION-PERSISTENCE -> LIVE-REGISTRY-PRODUCER -> KERNEL-INTEGRATION.
-    - SDD-STAGE-3-ATTENTION-SELECTION-PERSISTENCE is TESTED at cda0582 (trader/core/journal.py; trader/observability/selection_persistence.py; tests/test_attention_selection_persistence.py); selection record and cursor_after commit atomically, fetch outcomes cannot move the cursor; not wired into the Kernel.
-    - Retained boot CCXT metadata lacks adequate observation-time/provenance truth and must not be re-stamped as a fresh snapshot.
+    - SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR is TESTED at 6eb7eb4 as a pure selector over an injected immutable RegistrySnapshot with explicit max_snapshot_age_ms and caller-held cursor.
+    - Bounded isolated supplemental Attention data path is TESTED at 9b95d4f (public /fapi/v1/klines in an isolated child, 2-second deadline, Attention capture only).
+    - SDD-STAGE-3-ATTENTION-SELECTION-PERSISTENCE is TESTED at cda0582; selection record and cursor_after commit atomically under BEGIN IMMEDIATE; fetch outcomes persist separately and cannot move the cursor.
+    - SDD-STAGE-3-LIVE-REGISTRY-PRODUCER is TESTED at 4ee6682 (trader/data/registry_provider.py; tests/test_registry_provider.py); public /fapi/v1/exchangeInfo only; explicit validated production/demo target; as_of_ms is local full-response receipt time; failed refresh never fabricates or replaces a snapshot; no Kernel integration.
     - Attention overall remains IMPLEMENTED; automatic registry-backed Attention selection is not active.
 
-  scope:
-    required_source:
-      - public Binance USD-M /fapi/v1/exchangeInfo
-    not_required:
-      - accountConfig
-      - symbolConfig
-      - leverageBracket
-      - per-symbol eligibility
-    unknown_rule: account per-symbol eligibility, and optionally account-global trading, remain UNKNOWN unless later authoritative sources are added
-    minimal: the first implementation should be minimal
+  locked_live_order:
+    - 1 - obtain an immutable RegistrySnapshot
+    - 2 - load the durable cursor
+    - 3 - run the pure selector
+    - 4 - atomically persist Selection + cursor_after
+    - 5 - only after commit, perform the isolated supplemental fetch
+    - 6 - record the fetch outcome separately
+    - 7 - feed a usable result only to Attention capture
+    - This ordering is locked; the locked persist-before-fetch transaction cannot be skipped.
 
-  requirements:
-    - dedicated provider/service separate from Universe/DataFeed trading selection
-    - read-only
-    - no trading credentials required for this first slice
-    - no order APIs
-    - explicit target host/venue identity
-    - record request start and response receipt time
-    - retain serverTime when supplied
-    - retain raw-body SHA-256 and source provenance
-    - build the existing immutable RegistrySnapshot
-    - every account per-symbol eligibility remains UNKNOWN
-    - account-global trading may remain UNKNOWN
-    - never re-stamp old boot CCXT metadata as fresh
-    - a failed refresh never fabricates a new snapshot
-    - a later refresh failure keeps the last good snapshot with its original as_of_ms
-    - the publisher uses immutable snapshot replacement
-    - no Kernel selector wiring yet
+  audit_questions:
+    - 1 - Venue target for live Attention - production, demo or explicitly configured target? Reconcile with the existing supplemental fetch venue and the current trading venue.
+    - 2 - Where and when registry refresh runs (startup, background service, cycle or another bounded mechanism) without adding unbounded network latency to the trading cycle.
+    - 3 - Justified refresh cadence.
+    - 4 - Configurable max_snapshot_age_ms and Kernel behavior when no snapshot exists, the snapshot is stale, or the last refresh failed.
+    - 5 - Safe live-loop policy for SQLite persistence given the existing busy timeout.
+    - 6 - Selection cadence; do not assume every 60-second trading cycle consumes one rotation slot.
+    - 7 - Exact live order implementing locked_live_order.
+    - 8 - Behavior on selector refusal, persistence failure, registry unavailable/stale, and supplemental timeout/failure; trading must continue unchanged in every case.
+    - 9 - One explicit authority rule for coexistence of manual attention.supplemental_symbol with automatic registry selection; never silently run two supplemental slots.
+    - 10 - Provenance/telemetry linking registry snapshot_id, selection_id, fetch result and Attention scan/capture.
+    - 11 - Whether integration can proceed without a RegistrySnapshot history store while honestly limiting replay claims.
+    - 12 - Choose the smallest implementation slice after the audit.
 
-  cut_semantics:
-    - use an honest local observation cut
-    - do not claim atomic exchange time
-    - the provider must clearly document what RegistrySnapshot.as_of_ms means
-    - preserve endpoint, host and request timing provenance separately from as_of_ms
+  known_gaps_to_resolve:
+    - no RegistrySnapshot historical store
+    - no Kernel selector integration
+    - no live max_snapshot_age_ms wiring
+    - no refresh scheduling/cadence
+    - provider network operation is not a strict total wall-clock deadline because DNS is not bounded
+    - SQLite selection-persistence busy-time/live-loop budget unresolved
+    - selection cadence unresolved
+    - demo-vs-production policy for the live integration unresolved
 
-  required_tests:
-    - 1 - successful exchangeInfo translation
-    - 2 - provenance and raw-body hash
-    - 3 - host/venue identity
-    - 4 - immutable latest snapshot
-    - 5 - failed first refresh yields no snapshot
-    - 6 - failed later refresh leaves the last good snapshot unchanged
-    - 7 - no re-stamping
-    - 8 - malformed response fails closed
-    - 9 - eligibility remains UNKNOWN
-    - 10 - no authenticated endpoints
-    - 11 - no order calls
-    - 12 - no Universe/DataFeed mutation
-    - 13 - no Kernel wiring
-    - 14 - deterministic translation for identical response and observation cut
-
-  explicitly_deferred:
-    - background cadence, unless required by the provider abstraction
-    - account metadata calls
-    - Kernel integration
-    - persistence of RegistrySnapshot history
-    - selection cadence
-    - live max_snapshot_age_ms config wiring
-    - SQLite busy-time/live-loop budget (Kernel integration)
-    - demo-vs-production registry venue resolution beyond explicit host/venue identity recording
-    - trading changes
+  do_not_implement:
+    - Kernel wiring
+    - refresh scheduler
+    - config changes
+    - new venue calls
+    - snapshot history
+    - broader fairness
+    - trading, Risk or Execution changes
 
   queued_after:
-    - KERNEL-INTEGRATION - blocked until a live producer is TESTED; decide cadence, max_snapshot_age_ms config, SQLite busy-time budget and demo-vs-production registry provenance there.
+    - The smallest KERNEL-INTEGRATION implementation slice chosen by this audit.
 
   constraints:
     - "locked = don't redesign; implemented = verify; discuss only gaps"
-    - The tested selector and selection-persistence contracts and their tests are locked and unchanged.
+    - The tested selector, selection-persistence, supplemental-fetch and registry-producer contracts and their tests are locked and unchanged.
+    - Preserve persist-before-fetch ordering and exactly one supplemental slot.
     - Preserve SDD v3.2 as architecture authority and keep trading and execution eligibility unchanged.
     - Do not promote Attention overall beyond its current maturity.
     - Preserve the completed Scheme-D bounded pilot as parked, non-final evidence.
@@ -149,4 +133,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - After the live registry producer is TESTED, record its evidence in STATE.yaml and queue KERNEL-INTEGRATION as the next package.
+  - After this audit completes, record its decisions in STATE.yaml as design evidence and queue the chosen smallest Kernel-integration implementation slice as the next package.
