@@ -1,11 +1,23 @@
-# LUFFY Official Solution Design (SD) v3.1
+# LUFFY Official Solution Design (SDD) v3.2
 
-**Status:** Official Target Architecture - Freeze Candidate  
-**Purpose:** Single build authority for AI development agents  
-**Target:** Autonomous multi-market trading intelligence and execution system  
-**Date:** 2026-09-22
+**Status:** AUTHORITATIVE TARGET ARCHITECTURE  
+**Purpose:** Complete single build authority for human and AI development agents  
+**Target:** Personal autonomous multi-market trading OS / trading intelligence and execution system  
+**Date:** 2026-09-23
 
-> This document defines the LUFFY we want to build. It is not a manual for the current codebase. AI agents are expected to read the codebase themselves. Existing implementation appears only in the final migration section so agents can measure progress against the target.
+> This document defines the LUFFY we want to build. It is the single source of truth for finalized product, architecture, component-boundary, technology, safety, operator-interface, and delivery decisions. A developer must not need this chat or historical planning documents to understand the intended system.
+>
+> STATE.yaml describes what the repository currently proves. NEXT.yaml describes the single active work package. They do not redefine the target.
+>
+> If code, an old document, an agent suggestion, or a new technology conflicts with this SDD, the SDD wins until the owner explicitly approves a versioned SDD revision. Do not silently reopen or redesign a locked decision.
+
+---
+
+## v3.2 reconciliation scope
+
+v3.2 reconciles the finalized LUFFY design into one developer-complete authority. It freezes the named runtime components and their boundaries, kernel role, analyst/decision contracts, strategy/version ownership, opportunity lifecycle, storage/concurrency model, owner approvals, frontend/dashboard technology, operator tabs, recovery authority, initial resource envelope, remote-gateway security, and the rule that already-locked architecture is verified rather than repeatedly redesigned.
+
+No separate architecture-decision ledger is authoritative. Finalized design decisions belong here.
 
 ---
 
@@ -112,7 +124,25 @@ A paid source must justify:
 
 ## 2.8 Machine learning
 
-Advanced machine-learning systems are **not a required initial architecture**. Statistical/quantitative methods and deterministic models are preferred first. ML may be added later through an approved SD revision when a measurable problem warrants it.
+Advanced machine-learning systems are **not a required initial architecture**. Statistical/quantitative methods and deterministic models are preferred first. ML may be added later through an approved SDD revision when a measurable problem warrants it.
+
+A learned System-One/decision model such as Jev is not part of the target architecture merely because it can classify or score decisions. LUFFY already has structured strategy/orchestrator/risk logic. Such a model is considered only after a concrete measured deficiency exists and shadow evaluation shows material benefit over the deterministic/statistical design and simpler local ML alternatives.
+
+## 2.9 Personal-system operating profile
+
+LUFFY is initially a **single-owner personal trading OS**, not an institutional multi-tenant platform.
+
+Owner operating preferences guide engineering but are not trade quotas:
+
+- LUFFY may trade long or short when supported;
+- portfolio hedging is valid where the required instruments and risk model exist;
+- cash/no-trade is always valid;
+- a normal successful style may produce roughly 10–15 trades in an active day, but LUFFY must never force that count;
+- positions may last hours or days when the strategy horizon requires it;
+- leverage, including values around 5x where permitted, is a risk/expression tool rather than a target and remains subject to the active owner risk policy;
+- example daily-profit figures discussed during design are illustrations, never a quota or decision trigger.
+
+LUFFY is also evaluated on **economic self-sufficiency**: over an owner-defined rolling period, report whether net trading contribution covers approved recurring system/data/LLM operating cost (earns its keep). Failure to cover cost creates evidence and a Needs You/operating-economics signal; it must never cause LUFFY to manufacture trades or increase risk to hit a weekly number.
 
 ---
 
