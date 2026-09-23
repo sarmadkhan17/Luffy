@@ -1614,6 +1614,14 @@ Normal live trading requires zero LLM calls. LLM/provider outage must not stop s
 
 Track cost/token usage by purpose. Research can be paused or degraded when budget is exhausted. Live execution/risk must never depend on LLM availability.
 
+## 22.5 Provider and model policy
+
+LLM access is behind a provider adapter; the architecture must not depend on one vendor. OpenAI-compatible provider interfaces are acceptable where useful.
+
+A new model/classifier is not added because it is fashionable. It must solve a measured gap, run in shadow/research first, and demonstrate incremental value, reliability and cost benefit over existing deterministic/statistical logic. This includes System-One decision models such as Jev.
+
+The LLM does not own routine `LONG/SHORT/SKIP` decisions. Those come from strategies, structured analyst evidence, deterministic Decision/Portfolio logic and Risk.
+
 ---
 
 # 23. External Systems, MCPs and Tools
@@ -1667,7 +1675,27 @@ MCP servers must declare:
 
 Development-agent tooling such as Graphify is an engineering aid, not a runtime trading dependency.
 
-Graphify should remain code-only under normal use to avoid unnecessary semantic indexing cost.
+Graphify should remain code-only under normal use to avoid unnecessary semantic indexing cost. The runtime owner-facing Knowledge system is a separate domain knowledge/evidence model, not Graphify itself.
+
+## 23.5 Remote gateway role
+
+Telegram and any future Clawd/Clawdbot-style product are **remote owner gateways only**. They are not trading intelligence and never become a hidden decision authority.
+
+A gateway may:
+
+- deliver alerts;
+- display Needs You items;
+- relay authenticated owner queries/commands through the Owner Interface API.
+
+It must not:
+
+- receive Binance/execution credentials;
+- read LUFFY secret directories;
+- gain arbitrary repository/database access;
+- gain Docker socket/host escape capability;
+- place venue orders directly.
+
+Product-specific capabilities of an external gateway must be re-verified at implementation time; do not design security around remembered marketing claims.
 
 ---
 
@@ -1697,9 +1725,21 @@ Persistent capability-gap alerts contain evidence such as count, affected hypoth
 
 No periodic LLM is required. Deeper AI analysis is on-demand.
 
+## 24.1 Supervisor
+
+The Supervisor is deterministic health/recovery authority. It watches heartbeat, venue/data/accounting/protection/reconciliation health and can transition the control system into containment states.
+
+It does not decide market direction.
+
+Required recovery flow:
+
+`Detect -> Contain/FROZEN -> RECOVERY -> query venue truth -> reconcile -> restore/rebuild -> verify every position/protection -> health checks -> ACTIVE or Needs You`
+
+Minor failures auto-recover only when safety can be proved. Serious or uncertain venue/protection/reconciliation/state failures remain blocked until owner resume.
+
 ---
 
-# 25. Operator Interface and Explainability
+# 25. Operator Interface, Dashboard and Explainability
 
 The owner must be able to ask:
 
@@ -1726,13 +1766,100 @@ Primary operator navigation target:
 
 Natural-language control maps into the same typed commands as dashboard/API controls. Deterministic/simple emergency commands may be available conversationally, but configuration/governance changes use explicit structured owner actions.
 
+## 25.1 Frontend technology lock
+
+Target frontend stack:
+
+- React + TypeScript + Vite;
+- Three.js + React Three Fiber + Drei for selective 3D/system visualization;
+- Motion for ordinary UI animation;
+- GSAP for cinematic/3D choreography where warranted;
+- Radix primitives + custom LUFFY design system;
+- Tailwind only selectively;
+- TanStack Query for server-state fetching/cache;
+- Zustand for small client/UI state;
+- Lightweight Charts for trading/time-series charts;
+- D3 where graph/layout/data-visualization logic benefits from it;
+- FastAPI serves the built Vite static assets and operator APIs;
+- GraphQL may remain the rich query/control contract where it fits;
+- WebSocket/live stream for real-time updates.
+
+Production does **not** require a Node server. Do not introduce Next.js, Electron, Redux, microfrontends, Redis merely for UI state, or Grafana as the primary LUFFY interface without an approved SDD revision.
+
+## 25.2 Rendering/resource rule
+
+Cinematic visuals are browser work. Three.js/WebGL runs on the user's browser/host GPU. The trading backend sends state/data; it does not render 3D.
+
+3D/motion is selective and must degrade gracefully:
+
+- adaptive quality;
+- reduced-motion support;
+- no trading-core GPU dependency;
+- visual failure must never affect trading.
+
+## 25.3 Navigation contracts
+
+Authoritative navigation:
+
+`Overview | Trades | Research | Strategies | LUFFY | Operations | Live System | Knowledge | Diagnostics`
+
+### Overview
+Account/equity/P&L, exposure, positions, risk/control state, highest-priority global signals, and **Needs You**. Overview is not a wall of every internal metric.
+
+### Trades
+Forensic trade/decision timeline: opportunity context, strategy, analyst evidence, portfolio/risk reasoning, orders/fills/exits, accounting, outcomes and replay links.
+
+### Research
+Investigations, hypotheses, experiments, falsification, validation status, evidence and research cost.
+
+### Strategies
+Strategy families/immutable versions, exact spec/evidence hashes, state, economics, reliability, capacity, allocation and Governor actions.
+
+### LUFFY
+Owner-partner conversation. Concise by default, grounded in typed tools and evidence. Contextual actions may include `[Evidence]`, `[Explain deeper]`, and `[Open trade/strategy]`. Voice is a later optional surface. **LUFFY speaks; the dashboard proves.**
+
+### Operations
+What is happening now: instruments scanned/prioritized, signals/candidates, decisions/rejections, orders, risk blocks, background research and operational activity.
+
+### Live System
+Actual runtime nodes/agents/components/connections/data movement and health (`active | idle | degraded | failing`). This view represents the system, not strategy cards. Kernel/raw internals are hidden by default and exposed only in advanced/debug detail.
+
+### Knowledge
+Layered hybrid knowledge graph with **Evidence/Provenance as the foundation**. Required lenses:
+
+`Knowledge | Evidence | Timeline | Code`
+
+The UI should be able to trace:
+
+`Observation -> Hypothesis -> Experiment -> Evidence -> Conclusion -> Strategy/Decision -> Outcome -> Learning`
+
+### Diagnostics
+Health/failures/resource/data/API/storage/recovery diagnostics. Raw internals are advanced detail, not the normal owner interface.
+
+## 25.4 Needs You / approvals
+
+`Needs You` is the single owner-action surface. Full context lives in LUFFY; Overview shows the concise pending item; Telegram can alert when the owner is away.
+
+Approval objects bind exact evidence/version/config hashes. An approval becomes stale/invalid when the referenced strategy version, evidence, capability scope, cost, or safety context materially changes.
+
+Owner approval is required for:
+
+1. first real-money activation of a new strategy/version;
+2. new capability/data/API/MCP access that exceeds already approved scope;
+3. paid spend;
+4. owner survival/risk-boundary changes;
+5. resuming after a serious recovery condition that cannot prove safe autonomous recovery;
+6. architecture/production-code design changes through the development workflow.
+
+Owner approval is **not** required for ordinary trade/skip decisions, instrument selection, position size within approved policy, research questions, strategy pause/reactivation/retirement, or allocation changes within approved boundaries.
+
 ---
 
 # 26. Security and Control Boundaries
 
 Minimum requirements:
 
-- secrets outside repository;
+- secrets outside repository and isolated by service/process privilege;
 - least-privilege exchange keys;
 - withdrawals disabled where possible;
 - explicit production-mode enablement;
@@ -1747,6 +1874,8 @@ Minimum requirements:
 - remote gateways communicate through a narrow authenticated Owner Interface API with only their required scopes.
 
 Compromise of the remote gateway must not imply compromise of exchange credentials.
+
+The exact secret-storage mechanism is an implementation decision constrained by least privilege; do not hardcode a fictitious path into architecture. The current repository-level `.env` approach is a migration concern recorded in STATE, not the target security model.
 
 ---
 
