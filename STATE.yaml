@@ -88,11 +88,25 @@ capabilities:
     evidence:
       - trader/cognition/attention.py
       - trader/observability/attention.py
+      - tests/test_cognition_attention_world.py
+      - e493446 Add WorldModel evidence to Attention ranking
     proven_facts:
       - current GitHub repository contains cognition attention code
       - attention produces structured observations and selection reasons
+      - optional exact-cut WorldModel input at the Attention evaluator is TESTED; Attention uses the existing typed WorldModel.get_observations() API
+      - one valid intraday volume_anomaly observation can deterministically affect salience and ranking
+      - model ID, observation ID, full-record hash, value, status and reason are retained for attribution
+      - missing, ambiguous, stale, invalid or unsupported world evidence contributes no fabricated signal
+      - existing candle-only behavior remains unchanged when WorldModel is absent
+      - this evaluator slice introduces no trade direction, sizing, order or Risk authority
     gaps:
-      - SDD v3.2 dynamic full connected-account universe is not yet proven
+      - live kernel does not currently supply a WorldModel to Attention; production use of this evaluator input is not established
+      - SDD v3.2 connected eligible-universe and fairness gap remains
+      - portfolio signals remain missing from Attention priority
+      - research and investigation feedback into Attention priority remains missing
+      - event-driven invocation and material-change gate remain incomplete
+      - urgency and per-candidate research cost remain incomplete
+      - broader trigger coverage remains incomplete
       - final integration with Opportunity Context is not yet implemented
 
   investigation:
@@ -239,16 +253,18 @@ capabilities:
       - production recovery behavior beyond deterministic tests is not established here
 
 current_active_work:
-  id: SDD-STAGE-3-ATTENTION-AUDIT
+  id: SDD-STAGE-3-ATTENTION-LIVE-CONTEXT-AUDIT
   state: DEFINED
-  status: EVIDENCE_AUDIT_NEXT
-  objective: Audit existing Attention code and tests against SDD Stage 3 before selecting the smallest genuine implementation gap.
+  status: AUDIT_ONLY_NEXT
+  objective: Determine whether a valid same-cut current WorldModel already exists at the kernel Attention cut and can be passed through a small seam without changing trading semantics.
   evidence:
     - SDD.md
+    - e493446 Add WorldModel evidence to Attention ranking
     - trader/cognition/attention.py
     - trader/observability/attention.py
   constraints:
     - "locked = don't redesign; implemented = verify; discuss only gaps"
+    - audit only; do not implement or invent a second live WorldModel builder
     - preserve the parked Scheme-D pilot blocker and authorization constraints
 
 parked_scheme_d_work:

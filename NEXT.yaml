@@ -2,26 +2,35 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-AUDIT
-  type: EVIDENCE_AUDIT
+  id: SDD-STAGE-3-ATTENTION-LIVE-CONTEXT-AUDIT
+  type: DEPENDENCY_AUDIT
   priority: ACTIVE
   status: READY
 
   objective: >
-    Begin Stage 3 — Attention and Research Intelligence with a targeted audit
-    of the existing Attention implementation against SDD Stage 3 requirements.
+    Determine whether the current kernel already has a valid, same-cut current
+    WorldModel available to pass to Attention without inventing a second builder
+    or changing trading semantics.
 
   working_rule: "locked = don't redesign; implemented = verify; discuss only gaps"
 
   next_steps:
     - step: 1
-      action: Audit current Attention code and tests against SDD Stage 3 Attention requirements.
+      action: Locate any current WorldModel construction and ownership path.
     - step: 2
-      action: Classify each Attention requirement as TESTED, merely IMPLEMENTED, or missing, with exact evidence.
+      action: Determine whether Kernel.cycle can receive or access that model at the Attention cut, with exact same-cut and provenance evidence.
     - step: 3
-      action: Select the smallest genuine gap as the next work package; do not implement Stage 3 during this audit.
+      action: Determine whether wiring is a small seam or requires a new live WorldModel production pipeline.
+    - step: 4
+      action: If wiring is small, define the exact integration package without implementing it.
+    - step: 5
+      action: If wiring is not small, do not force it; select the next independent genuine Attention gap instead.
+    - step: 6
+      action: Compare dependency and order against connected eligible universe, portfolio signals, and research/investigation feedback.
 
   constraints:
+    - Audit only; do not implement or change trading semantics.
+    - Do not invent a second live WorldModel builder or overstate production use.
     - Preserve the completed Scheme-D bounded pilot as parked, non-final evidence.
     - Do not run another pilot, additional RNG benchmark, full validation, or cloud compute without separate explicit owner authorization.
     - Do not alter frozen research or pilot artifacts.
@@ -80,4 +89,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Record the Attention evidence classification and the smallest genuine Stage 3 gap as the next active work package.
+  - Record the live-context dependency finding and the next smallest genuine Attention work package.
