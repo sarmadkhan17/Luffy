@@ -1098,6 +1098,30 @@ Retirement/demotion logic must distinguish:
 - temporary regime absence;
 - data failure.
 
+## 14.6 Strategy Governor authority
+
+The Strategy Governor is the single lifecycle authority after a strategy version has passed research/validation.
+
+It may, within owner-approved risk/capital boundaries:
+
+- change allocation;
+- pause;
+- reactivate;
+- degrade;
+- retire an already-approved strategy version.
+
+It may not silently mutate the strategy specification. Any material change to entry, exit, required features, timeframe/horizon or invalidation creates a **new immutable version** requiring the first-live approval path again.
+
+Duplicate/near-identical strategy variants must not multiply confidence merely by voting multiple times. Evidence correlation and common lineage must be recognized.
+
+## 14.7 Capability lifecycle
+
+New optional capabilities/data/tools follow:
+
+`PROPOSED -> TRIAL/RESEARCH_ONLY -> PROVEN_USEFUL -> PRODUCTION -> DEPRECATED`
+
+A capability that cannot yet be supported must become a structured owner-facing capability request, not an invented or silently emulated feature.
+
 ---
 
 # 15. Opportunity and Expression Decision
@@ -1160,6 +1184,79 @@ Multi-leg/pair/basket expressions are allowed as a future capability only when t
 ## 15.4 Cash
 
 Cash/no-trade is an explicit candidate. It wins whenever no opportunity offers sufficiently positive expected value after costs and uncertainty.
+
+## 15.5 Analyst evidence contract
+
+Analysts **measure and explain evidence; they never decide trades**.
+
+Every analyst packet is typed and should contain, where relevant:
+
+```text
+analyst_id
+instrument/opportunity reference
+as_of timestamp
+horizon/timeframe
+features/observations used
+directional implication if measurable
+strength/score
+uncertainty/confidence
+data quality/freshness
+supporting evidence
+contradicting evidence
+known limitations
+schema/version
+```
+
+Strategies declare which analyst/features are required versus optional and their freshness limits. The system must not wait for irrelevant analysts merely to collect a complete panel.
+
+Analyst reliability is contextual and updated slowly from sufficient evidence. It changes evidence weight; it never converts an analyst into truth.
+
+## 15.6 Decision Orchestrator contract
+
+The Decision Orchestrator is **deterministic and auditable**. It is not an LLM and not a simple majority-vote machine.
+
+It compares:
+
+- strategy eligibility and expected economics;
+- required evidence completeness/freshness;
+- analyst support/conflict and contextual reliability;
+- uncertainty;
+- regime/world state;
+- costs/liquidity;
+- current position;
+- portfolio context;
+- cash/no-trade.
+
+Its output is a typed decision proposal/rejection with exact reasons and references. Risk remains a separate final authority.
+
+## 15.7 Multi-cycle Opportunity registry
+
+Existing `cycle_id -> decision_id -> trade/outcome` lineage remains canonical. A lightweight deterministic Opportunity registry may group repeated cycles that represent the same evolving setup.
+
+Minimum fields:
+
+```text
+opportunity_id
+instrument
+direction/horizon
+opened_at
+status
+related cycle/candidate ids
+optional investigation_id
+resolution
+```
+
+Resolution values include:
+
+`TRADED | SKIPPED | EXPIRED | INVALIDATED`
+
+The registry references existing evidence; it must not create a duplicate parallel trace system.
+
+## 15.8 Direction, hedging and relative value
+
+Primary live expression is one directional position per instrument: long, short, or flat.
+
+Portfolio hedges using distinct supported instruments are allowed when their strategy/risk/cost model is explicit. Coordinated multi-leg pair/basket/relative-value execution is a later capability requiring dedicated execution, atomicity/failure handling and portfolio risk support. Do not fake a multi-leg strategy by independently opening unrelated legs.
 
 ---
 
@@ -1232,6 +1329,12 @@ Trigger on material events such as:
 - risk-state change;
 - material correlation/factor shift;
 - capital change.
+
+## 16.7 Portfolio Allocator authority
+
+The Portfolio Allocator decides **how much account capital/margin should be assigned across competing approved opportunities and existing positions**. It operates on the whole book, includes cash as an allocation, and cannot bypass hard Risk limits.
+
+It may recommend replacement/hedging/reduction when opportunity cost changes, but it does not directly place orders; changes become typed trade intents routed through Risk and Execution.
 
 ---
 
@@ -1329,9 +1432,26 @@ Track:
 
 This evidence updates future cost/capacity models.
 
----
+## 18.5 Exit Agent
 
-# 19. Outcome, Attribution and Replay
+The Exit Agent owns the approved position exit geometry after entry:
+
+- native protective stop state;
+- planned scale-ins only if the approved plan permits them;
+- partial profit-taking;
+- trailing-stop logic;
+- deterministic invalidation;
+- emergency protective exits.
+
+A change in analyst confidence alone does not continuously resize or rewrite a live position.
+
+## 18.6 Accounting Agent
+
+Accounting treats venue/exchange receipts as authoritative for monetary/position facts where available and preserves the raw receipt. Derived metrics are versioned calculations layered on top.
+
+Accounting never “fixes” a discrepancy by silently overwriting history. Reconciliation records what differed, which source won for each field, and what corrective action occurred.
+
+---
 
 ## 19.1 Outcome recording
 
@@ -1443,6 +1563,8 @@ Learning may update within approved bounds:
 - strategy state.
 
 Learning must not autonomously expand hard owner risk limits or modify production architecture.
+
+The Learning Agent updates evidence weights conservatively. It must learn from executed, rejected, missed and avoided outcomes, but must distinguish observation from causal proof. Statistical demotion/promotion requires adequate sample/evidence and must remain reproducible.
 
 ---
 
