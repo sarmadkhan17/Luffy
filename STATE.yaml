@@ -121,6 +121,9 @@ capabilities:
       - this evaluator slice introduces no trade direction, sizing, order or Risk authority
     gaps:
       - live kernel does not currently supply a WorldModel to Attention; production use of this evaluator input is not established
+      - venue-active instruments with account_eligibility=UNKNOWN may be observed by Attention without implying trade permission; registry, Attention, trading, Risk and Execution authority remain separate (trader/core/instrument_registry.py; trader/observability/attention.py)
+      - current live Attention data is limited to strategy-scan frames from _scan_symbols(); instruments outside that scan have no live Attention candle acquisition path (trader/kernel.py; trader/observability/attention.py)
+      - the current 90-day listing-age filter belongs to trading Universe/history selection, not Attention eligibility (config.yaml; trader/data/feed.py)
       - SDD v3.2 connected eligible-universe and fairness gap remains
       - portfolio signals remain missing from Attention priority
       - research and investigation feedback into Attention priority remains missing
