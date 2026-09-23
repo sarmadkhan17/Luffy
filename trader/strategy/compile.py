@@ -12,6 +12,7 @@ import time
 import numpy as np
 
 from ..core.types import TF_MS, Action, StrategySignal, closed_bars
+from ..world import WorldModel
 from . import dsl
 from .features import FeatureCtx
 from .spec import StrategySpec
@@ -34,8 +35,9 @@ class CompiledStrategy:
     # ── vectorized path (Analyst) ────────────────────────────────────────
     def entries(self, frames: dict, btc: dict | None = None,
                 derivs: dict | None = None, universe: dict | None = None,
-                market: dict | None = None, symbol: str | None = None):
-        ctx = self._ctx(frames, btc, derivs, universe, market, symbol)
+                market: dict | None = None, symbol: str | None = None,
+                world_model: WorldModel | None = None):
+        ctx = self._ctx(frames, btc, derivs, universe, market, symbol, world_model)
         n = len(ctx.index)
         keep = np.ones(n, dtype=bool)
         for f in self._filters:
@@ -57,13 +59,16 @@ class CompiledStrategy:
                                   symbol))
 
     def _ctx(self, frames, btc, derivs, universe=None,
-             market=None, symbol=None) -> FeatureCtx:
+             market=None, symbol=None, world_model: WorldModel | None = None) -> FeatureCtx:
+        if world_model is not None and not isinstance(world_model, WorldModel):
+            raise TypeError("world_model must be WorldModel or None")
         tf = self.spec.timeframe
         if tf not in frames:
             raise dsl.SpecError(f"spec timeframe '{tf}' not in frames "
                                 f"{sorted(frames)}")
         return FeatureCtx(frames=frames, tf=tf, btc=btc, derivs=derivs,
-                          universe=universe, market=market, symbol=symbol)
+                          universe=universe, market=market, symbol=symbol,
+                          world_model=world_model)
 
     # ── live path (Trader) ───────────────────────────────────────────────
     def to_evaluator(self):
@@ -74,7 +79,10 @@ class CompiledStrategy:
         this under f"spec:{id}" makes library.evaluate()'s family dispatch
         (library.py:293) find it like any other evaluator.
         """
-        def _evaluate(_genome, snap, *, diagnostic=None):
+        def _evaluate(_genome, snap, *, diagnostic=None,
+                      world_model: WorldModel | None = None):
+            if world_model is not None and not isinstance(world_model, WorldModel):
+                raise TypeError("world_model must be WorldModel or None")
             # Judge CLOSED bars only. The live frame's last row is the bar
             # currently forming, whose `close` is just the last trade — but
             # the statistics that admitted this spec came from
@@ -105,7 +113,8 @@ class CompiledStrategy:
                                       derivs=getattr(snap, "derivs", None),
                                       universe=getattr(snap, "universe", None),
                                       market=getattr(snap, "market", None),
-                                      symbol=snap.symbol)
+                                      symbol=snap.symbol,
+                                      world_model=world_model)
             except Exception as e:
                 # Silence here cost three authored specs their entire live
                 # career: they raised on every bar and read as "no signal".

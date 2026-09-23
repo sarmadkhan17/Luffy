@@ -17,10 +17,19 @@ Four things must hold, and each has cost real money or real weeks before:
 import numpy as np
 import pandas as pd
 import pytest
+from dataclasses import replace
 
 from trader.research import evaluate, slices
 from trader.research.combo import Combination
 from trader.research.vocab import Part
+from trader.core.types import Snapshot
+from trader.strategy.compile import compile_spec
+from trader.strategy import dsl
+from trader.world import (
+    ClaimCollection, ClaimCoordinate, ClaimEvidenceRef, HierarchyNode, Horizon,
+    Observation, Quality, Scope, ScopeLevel, WorldClaim, WorldHistory,
+    WorldModel, WorldModelRecord, WorldState,
+)
 
 TF_MS = 14_400_000
 DONCH = Part("ev:donch20", "event", "ev:donch20",
@@ -75,6 +84,74 @@ def _bundle(n_symbols=6, n=1400, cfg_risk=None):
 
 def _combo(parts):
     return Combination(parts=tuple(parts), tf="4h", geo="trail")
+
+
+def test_current_strategy_and_exact_research_share_world_query(monkeypatch):
+    b = _bundle(n_symbols=1)
+    root = Scope(ScopeLevel.GLOBAL, "world")
+    asset = Scope(ScopeLevel.ASSET_CLASS, "crypto")
+    instrument = Scope(ScopeLevel.INSTRUMENT, "S0/USDT")
+    observation = Observation("S0/USDT", 0, 0, "4h", "price", 1.0,
+                              "test", "bar", Quality.VALID,
+                              available_at_ms=0, horizon="intraday")
+    claim = WorldClaim(ClaimCoordinate(asset, Horizon.INTRADAY, "trend"),
+                       b.cut, "rising", Quality.VALID, 0.8, {},
+                       (ClaimEvidenceRef.from_observation(observation),), (),
+                       "test", "claim")
+    current = WorldModel(
+        b.cut, (HierarchyNode(root), HierarchyNode(asset, root),
+                HierarchyNode(instrument, asset)),
+        (WorldState("S0/USDT", b.cut, (observation,)),),
+        (Horizon.INTRADAY,), claims=ClaimCollection(b.cut, (claim,)))
+    future = WorldModel(b.cut + 1, current.nodes, (), current.horizons)
+    history = WorldHistory((WorldModelRecord.from_model(current),
+                            WorldModelRecord.from_model(future)))
+    record_before, history_before = current.to_json(), history.to_json()
+    frame_before = b.frames["S0/USDT"].copy(deep=True)
+
+    seen = []
+    original = dsl.evaluate_bool
+
+    def probe(tree, ctx):
+        if ctx.world_model is not None:
+            assert type(ctx.world_model) is WorldModel
+            seen.append(ctx.world_model.get_one_claim(
+                asset, Horizon.INTRADAY, dimension="trend"))
+        return original(tree, ctx)
+
+    monkeypatch.setattr(dsl, "evaluate_bool", probe)
+    combo = _combo([DONCH])
+    compiled = compile_spec(combo.to_spec())
+    snap = Snapshot(symbol="S0/USDT", ts="", price=1.0,
+                    dfs={"4h": b.frames["S0/USDT"]}, market_type="futures")
+    strategy = compiled.to_evaluator()
+    baseline_signal = strategy(compiled.spec, snap)
+    assert strategy(compiled.spec, snap, world_model=current) == baseline_signal
+    strategy_claims = tuple(seen)
+    assert strategy_claims and all(type(item) is WorldClaim for item in strategy_claims)
+    seen.clear()
+
+    baseline_result = evaluate.evaluate(combo, b, draws=0,
+                                        min_symbol_trades=10**9)
+    assert evaluate.evaluate(combo, b, draws=0, min_symbol_trades=10**9,
+                             world_history=history) == baseline_result
+    research_claims = tuple(seen)
+    assert research_claims and all(type(item) is WorldClaim for item in research_claims)
+    assert strategy_claims[0].to_json() == research_claims[0].to_json()
+    assert history.get_exact(b.cut).get_one_claim(
+        asset, Horizon.INTRADAY, dimension="trend").to_json() == claim.to_json()
+
+    with pytest.raises(LookupError, match="exact cut"):
+        evaluate.evaluate(combo, b,
+                          world_history=WorldHistory((WorldModelRecord.from_model(future),)))
+    with pytest.raises(ValueError, match="explicit Bundle.cut"):
+        evaluate.evaluate(combo, replace(b, cut=0), world_history=history)
+    with pytest.raises(TypeError, match="world_model"):
+        strategy(compiled.spec, snap, world_model=object())
+    assert current.to_json() == record_before
+    assert history.to_json() == history_before
+    pd.testing.assert_frame_equal(b.frames["S0/USDT"], frame_before)
+    pd.testing.assert_frame_equal(snap.dfs["4h"], frame_before)
 
 
 def test_the_bundle_holds_no_bar_at_or_after_the_cut():

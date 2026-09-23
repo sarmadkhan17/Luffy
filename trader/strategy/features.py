@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Callable
+from ..world import WorldModel
 
 import numpy as np
 import pandas as pd
@@ -62,6 +63,7 @@ class FeatureCtx:
     universe: dict | None = None      # {symbol: {tf: df}} — the rest of the book
     market: dict | None = None        # market-wide series; populated later
     symbol: str | None = None         # this ctx's own key in `universe`, if known
+    world_model: WorldModel | None = None
     _cache: dict = field(default_factory=dict, repr=False)
 
     @property
@@ -86,6 +88,7 @@ class FeatureCtx:
         return FeatureCtx(frames=self.frames, tf=tf, btc=self.btc,
                           derivs=self.derivs, universe=self.universe,
                           market=self.market, symbol=self.symbol,
+                          world_model=self.world_model,
                           _cache=self._cache)
 
     def for_symbol(self, symbol: str) -> "FeatureCtx | None":
@@ -111,7 +114,8 @@ class FeatureCtx:
         # must come out honestly NaN rather than quietly wrong.
         return FeatureCtx(frames=frames, tf=self.tf, btc=self.btc,
                           derivs=None, universe=self.universe,
-                          market=self.market, symbol=symbol, _cache={})
+                          market=self.market, symbol=symbol,
+                          world_model=self.world_model, _cache={})
 
 
 def _s(ctx: FeatureCtx, col: str) -> pd.Series:

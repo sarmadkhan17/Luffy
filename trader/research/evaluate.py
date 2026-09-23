@@ -31,6 +31,7 @@ from ..strategy import null_baseline, spec_evidence
 from ..strategy.compile import compile_spec
 from ..strategy.portfolio_evidence import Fill, portfolio_curve
 from ..strategy.vector_backtest import funding_for, simulate
+from ..world import WorldHistory
 from . import slices
 
 log = logging.getLogger(__name__)
@@ -160,8 +161,14 @@ def _clock(df) -> np.ndarray:
 
 
 def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
-             min_symbol_trades: int = MIN_SYMBOL_TRADES) -> dict:
+             min_symbol_trades: int = MIN_SYMBOL_TRADES,
+             *, world_history: WorldHistory | None = None) -> dict:
     """Score `c` over the bundle's discovery slice."""
+    if world_history is not None and not isinstance(world_history, WorldHistory):
+        raise TypeError("world_history must be WorldHistory or None")
+    if world_history is not None and b.cut <= 0:
+        raise ValueError("world_history requires an explicit Bundle.cut")
+    world_model = world_history.get_exact(b.cut) if world_history is not None else None
     spec = c.to_spec()
     out = {"hash": c.hash, "tf": c.tf, "geo": c.geo, "k": c.k,
            "round": c.round, "parent": c.parent, "trigger": c.trigger,
@@ -194,7 +201,8 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
         try:
             lo, sh = compiled.entries(
                 sf, btc=b.btc, derivs=b.derivs.get(sym),
-                universe=b.universe, market=b.market, symbol=sym)
+                universe=b.universe, market=b.market, symbol=sym,
+                world_model=world_model)
             fund = funding_for(sym, df, b.risk)
             mine: list = []
             r = simulate(lo, sh, df, spec.exit, b.risk, symbol=sym,
