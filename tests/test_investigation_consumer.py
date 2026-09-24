@@ -70,7 +70,10 @@ def test_capacity_retention_and_diagnostic_bounds(paths, monkeypatch):
     with sqlite3.connect(dest) as db:
         assert db.execute("SELECT COUNT(*) FROM diagnostics").fetchone()[0] == 512
     monkeypatch.setattr(C, "MAX_ACTIVE", 32)
-    C.step(source, dest, now+2)
+    # The capacity-blocked scan's decision is execution-closed; only a new scan may use freed capacity.
+    assert C.step(source, dest, now+2)["registered"] == 0
+    publish(source, now+3, "s2")
+    assert C.step(source, dest, now+3)["registered"] == 1
     expiry = max(d["investigation"]["measurement"]["expires_ms"] for d in C.dossiers(dest))
     C.step(source, dest, expiry+1)
     C.step(source, dest, expiry+C.RETENTION_MS+2)
