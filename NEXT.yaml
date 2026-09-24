@@ -2,55 +2,39 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-CLOCK-HEALTH-VM-ENVIRONMENT-IDENTITY-V1
+  id: SDD-STAGE-3-ATTENTION-GAP-REPRIORITIZATION-V2
   type: EVIDENCE_AUDIT
   priority: ACTIVE
   status: READY
-  objective: Identify the exact VMware hosting environment needed to determine which authoritative vendor guarantees, lifecycle interfaces and clock contracts actually apply to this LUFFY guest.
+  objective: Re-audit the remaining Stage-3 Attention gaps after the registry, WorldModel seam, portfolio observation, salience-scale work, investigation-value work, and parked liquidation experiment; identify the smallest independent next capability that can be implemented without unresolved upstream prerequisites.
   established_boundary:
+    - SDD-CLOCK-HEALTH-QUALIFICATION-PATH-DECISION-V1 is COMPLETED_DESIGN_EVIDENCE with decision PARK_CURRENT_VM_CLOCK_PATH.
+    - forced-liquidation-participation.v1 is PARKED; the current personal VMware environment cannot truthfully establish production coverage, and the experiment is not a prerequisite for other Stage-3 Attention work.
     - SDD-FORCED-LIQUIDATION-RECORDER-COVERAGE-V1 remains TESTED; RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED remains.
     - PRODUCTION_POLICY and PRODUCTION_CLOCK_HEALTH_POLICY remain null.
-    - SDD-CLOCK-HEALTH-EXTERNAL-GUARANTEE-EVIDENCE-V1 is COMPLETED_DESIGN_EVIDENCE with decision EXTERNAL_GUARANTEE_REQUIRED on the supplied authoritative review.
-    - Existing NTP remains a candidate; ALTERNATE_CLOCK_SOURCE_REQUIRED remains NOT_ESTABLISHED.
-    - NTS solves authentication only, not UTC accuracy, VM propagation or lifecycle; chrony/PTP/PHC are not automatically sufficient.
-  scope:
-    mode: Read-only local identification first, where accessible without configuration changes.
-    identify:
-      - VMware product family (ESXi/vSphere, Workstation, Fusion or other VMware product).
-      - Host/product/build/version evidence visible to the guest.
-      - Virtual hardware compatibility/version.
-      - VMware Tools/open-vm-tools version and effective time-sync settings.
-      - Whether VM Generation ID is actually exposed/bound in this guest.
-      - ACPI/device evidence relevant to VMGenID.
-      - Available guest-visible hypervisor clock interfaces.
-      - Whether vSphere GuestInfo, VMware RPC or another read-only interface exposes host/environment identity.
-      - Effective lifecycle time-sync settings where guest-visible.
-      - Evidence of snapshot/migration/event-generation interfaces accessible from the guest.
-    evidence_boundary: Do not guess from VMware Virtual Platform; distinguish observed identity/settings, inaccessible evidence and documented applicability.
-  external_evidence_boundary:
-    trigger: If required host identity/settings are not guest-visible, return OWNER_OR_PROVIDER_EVIDENCE_REQUIRED and list exactly what must be supplied externally.
-    potential_required_items:
-      - VMware product.
-      - Host version/build.
-      - Virtual hardware version.
-      - Relevant VM advanced/lifecycle settings.
-      - VMGenID exposure.
-      - Available vCenter/vSphere API.
-      - Provider/service identity.
-    request_boundary: Request only the smallest missing external information needed before continuing clock-source qualification; never request credentials or secrets.
-  decision_required:
-    cardinality: Return exactly one decision after the audit.
-    allowed:
-      - ENVIRONMENT_IDENTITY_SUFFICIENT
-      - OWNER_OR_PROVIDER_EVIDENCE_REQUIRED
-      - ENVIRONMENT_NOT_VMWARE_SUPPORTED_PATH
-    if_sufficient: Identify which existing authoritative documentation actually applies to this guest.
-    if_not_sufficient: Identify the smallest external information request required before continuing clock-source qualification.
+    - Portfolio-state input remains PARTIAL_PREREQUISITE_ESTABLISHED; NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET and TARGET_PREREQUISITE_REQUIRED remain; portfolio salience remains blocked pending applicable evidence/calibration.
+    - Attention overall remains IMPLEMENTED; this queue grants no maturity upgrade or activation.
+  re_evaluate:
+    - research/investigation feedback
+    - urgency
+    - per-candidate research cost
+    - event-driven triggers
+    - correlation breakdown
+    - positioning extremes
+    - liquidity change
+    - strategy degradation
+    - owner-question/new-data triggers
+    - replay/provenance gaps
+    - portfolio salience, preserving its current blocked/calibration state
+  deliverables:
+    - Factual gap matrix with each requirement, current evidence and provenance, established capability, missing evidence, upstream prerequisites and independent implementability; unknown is not PASS.
+    - One smallest independent next package with objective, bounded scope, evidence-backed prerequisite readiness and acceptance checks; do not select a package with unresolved upstream prerequisites.
   constraints:
-    - No implementation, commit, host/service/config changes, collection or long-lived monitoring.
-    - Do not install VMware tools/components, change VM settings or select/install an alternate clock source.
-    - No liquidation deployment, production policy activation or Attention/Risk/Execution changes.
-    - Preserve frozen protocol, unrelated knowledge edits, portfolio PARTIAL_PREREQUISITE_ESTABLISHED and all parked research boundaries; no pilot, validation, cloud or RNG work.
+    - Evidence audit only; no code, implementation, commit, collection, deployment, policy activation or Attention/Risk/Execution changes.
+    - Do not reopen parked liquidation clock work or Scheme-D; do not reopen portfolio magnitude without evidence.
+    - No further owner diagnostics, clock/source implementation, protocol redesign, external execution environment or alternate local clock source.
+    - Reopen the parked liquidation experiment only with new applicable qualification evidence or separately authorized redesign.
+    - Preserve frozen protocols, unrelated knowledge edits and all parked research boundaries; no pilot, validation, cloud or RNG work.
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -106,4 +90,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Record exact guest-visible environment evidence, applicability limits and exactly one audit decision; if needed, list the smallest owner/provider evidence request. Identity sufficiency does not establish the three clock guarantees or authorize implementation. Production coverage remains blocked and both production policy globals remain null.
+  - Return the factual gap matrix and one smallest independent next package; record evidence and unresolved prerequisites without implementing the selected package or upgrading maturity.

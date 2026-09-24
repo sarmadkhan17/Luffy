@@ -808,13 +808,104 @@ completed_clock_health_external_guarantee_evidence:
     alternatives: chrony/PTP/PHC are not automatically sufficient.
   boundary: Design evidence only; RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED remains; PRODUCTION_POLICY and PRODUCTION_CLOCK_HEALTH_POLICY remain null.
 
-current_active_work:
+completed_clock_health_vm_environment_identity:
   id: SDD-CLOCK-HEALTH-VM-ENVIRONMENT-IDENTITY-V1
+  status: COMPLETED_DESIGN_EVIDENCE
+  decision: OWNER_OR_PROVIDER_EVIDENCE_REQUIRED
+  evidence_basis: Completed audit findings supplied by the owner for reconciliation at HEAD 759a07f; no new host audit, documentation review or collection performed.
+  historical_scope: Guest-only findings below precede the completed owner review; environment identity is superseded by completed_clock_health_vm_owner_evidence.
+  established_facts:
+    - Positive guest-visible VMware product-type evidence reports Workstation; VMware hypervisor presence is confirmed.
+    - Exact Workstation edition/release/build and host operating system remain unknown.
+    - vmware-checkvm software version 6 is compatibility/backdoor information, NOT Workstation release or virtual hardware version.
+    - Exact virtualHW.version is NOT established.
+    - open-vm-tools 13.0.10 is installed/running.
+    - Periodic VMware time synchronization reports disabled; startup/resume/restore/lifecycle synchronization settings remain unknown.
+    - Active clocksource is TSC; no usable PTP/PHC source was established.
+    - VMGenID kernel support exists, but actual guest device exposure/binding is NOT established.
+    - No usable rollback-resistant generation signal is established.
+    - GuestInfo RPC works, but sampled host/version/hardware/provider/vSphere keys did not establish the missing environment identity.
+    - No vCenter/vSphere management or external lifecycle-event interface is established.
+    - Generic VMware documentation cannot be treated as applicable to an unknown Workstation version/configuration.
+  source_selection_boundary:
+    existing_ntp: CANDIDATE
+    SOURCE_CONTRACT_DESIGN_COMPLETE: NOT_ESTABLISHED
+    ALTERNATE_CLOCK_SOURCE_REQUIRED: NOT_ESTABLISHED
+  next_prerequisite: SDD-CLOCK-HEALTH-VM-OWNER-EVIDENCE-V1 is completed below; no further owner evidence is queued. SDD-CLOCK-HEALTH-QUALIFICATION-PATH-DECISION-V1 is completed below with decision PARK_CURRENT_VM_CLOCK_PATH.
+  boundary: Design evidence only; RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED remains; PRODUCTION_POLICY and PRODUCTION_CLOCK_HEALTH_POLICY remain null. No clock implementation queued.
+
+completed_clock_health_vm_owner_evidence:
+  id: SDD-CLOCK-HEALTH-VM-OWNER-EVIDENCE-V1
+  status: COMPLETED_DESIGN_EVIDENCE
+  decision: EXTERNAL_VENDOR_GUARANTEE_REQUIRED
+  evidence_basis: Completed owner/environment review supplied by the owner for reconciliation at HEAD 759a07f plus uncommitted control-plane state; no new documentation review, host diagnostics or collection performed.
+  established_environment:
+    product: VMware Player 16.1.1 build-17801498
+    host_os: Windows 11 25H2 build 26200.9457
+    management: Locally managed; no vCenter/vSphere/provider.
+    virtualHW.version: 18
+    tools.syncTime: 'FALSE'
+    additional_time_synchronize_settings: No additional explicit time.synchronize.* settings found in VMX; absence does not establish effective defaults or disabled lifecycle corrections.
+    open_vm_tools: 13.0.10
+    guest_clocksource: TSC
+    ptp_phc: Absent
+    vmgenid_exposure: UNPROVEN
+  established_findings:
+    - Player 16.1.1 predates VMware's documented Windows 11 host-support baseline; operation does not establish supported applicability.
+    - Periodic VMware time sync is explicitly disabled, but lifecycle corrections remain independently possible/unresolved.
+    - Further owner-visible diagnostics cannot supply a worst-case clock propagation guarantee.
+    - Further owner-visible diagnostics cannot supply rollback-resistant lifecycle continuity guarantees.
+    - VMGenID exposure alone would not close the lifecycle contract.
+    - Exact missing evidence is now vendor/provider contractual evidence, not owner configuration evidence.
+  required_external_guarantees:
+    - Applicability assurance for this Player/host/hardware combination.
+    - Lifecycle synchronization semantics/defaults.
+    - Finite clock-rate/holdover/error-growth guarantee.
+    - Rollback-resistant lifecycle continuity/event contract.
+    - Player-specific VMGenID semantics if that mechanism is used.
+  source_selection_boundary:
+    existing_ntp: CANDIDATE_UNQUALIFIED
+    SOURCE_CONTRACT_DESIGN_COMPLETE: NOT_ESTABLISHED
+    ALTERNATE_CLOCK_SOURCE_REQUIRED: NOT_ESTABLISHED
+    source_utc_accuracy: Qualified UTC source evidence remains missing as recorded in completed_clock_health_external_guarantee_evidence.
+  boundary: Design evidence only; RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED remains; PRODUCTION_POLICY and PRODUCTION_CLOCK_HEALTH_POLICY remain null. No production liquidation coverage established.
+
+completed_clock_health_qualification_path_decision:
+  id: SDD-CLOCK-HEALTH-QUALIFICATION-PATH-DECISION-V1
+  type: ARCHITECTURE_DECISION
+  state: COMPLETED_DESIGN_EVIDENCE
+  decision: PARK_CURRENT_VM_CLOCK_PATH
+  evidence_basis: Existing uncommitted architecture assessment and owner-directed control-plane reconciliation; no new diagnostics or qualification evidence.
+  rationale: Parking preserves the frozen protocol and truthful blocked coverage without new infrastructure or an unproven redesign; no demonstrated liquidation-experiment value currently justifies either expansion.
+  recorder_state: TESTED
+  production_coverage: RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED
+  PRODUCTION_POLICY: null
+  PRODUCTION_CLOCK_HEALTH_POLICY: null
+  constraints:
+    - No further owner diagnostics.
+    - No clock/source implementation, protocol redesign, external execution environment or alternate local clock source.
+  reopening_condition: Reopen only with new applicable qualification evidence or separately authorized redesign.
+
+parked_forced_liquidation_experiment:
+  id: forced-liquidation-participation.v1
+  state: PARKED
+  decision: PARK_CURRENT_VM_CLOCK_PATH
+  reason: The current personal VMware environment cannot truthfully establish production coverage; this experiment is not a prerequisite for other Stage-3 Attention work.
+  recorder_state: TESTED
+  production_coverage: RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED
+  PRODUCTION_POLICY: null
+  PRODUCTION_CLOCK_HEALTH_POLICY: null
+  reopening_condition: Reopen only with new applicable qualification evidence or separately authorized redesign.
+  boundary: No further owner diagnostics, clock/source implementation, protocol redesign, external execution environment or alternate local clock source; no automatic retry or diagnostic loop, collection, deployment or policy activation.
+
+current_active_work:
+  id: SDD-STAGE-3-ATTENTION-GAP-REPRIORITIZATION-V2
   type: EVIDENCE_AUDIT
   priority: ACTIVE
   status: READY
-  objective: Identify the exact VMware hosting environment needed to determine which authoritative vendor guarantees, lifecycle interfaces and clock contracts actually apply to this LUFFY guest.
-  boundary: Read-only local identification first; queue only, audit not performed by this reconciliation. No implementation, installation, host/service/config changes, collection or long-lived monitoring. If required identity/settings are not guest-visible, require owner/provider evidence without credentials or secrets.
+  objective: Re-audit the remaining Stage-3 Attention gaps after the registry, WorldModel seam, portfolio observation, salience-scale work, investigation-value work, and parked liquidation experiment; identify the smallest independent next capability that can be implemented without unresolved upstream prerequisites.
+  deliverables: Factual gap matrix and one smallest independent next package, as scoped in NEXT.yaml.
+  boundary: Audit only; no implementation or maturity upgrade. Do not reopen parked liquidation clock work, Scheme-D or portfolio magnitude without evidence; preserve portfolio salience blocked/calibration state.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
