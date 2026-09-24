@@ -2,49 +2,53 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-CLOCK-HEALTH-EXTERNAL-GUARANTEE-EVIDENCE-V1
-  type: EVIDENCE_ACQUISITION_DESIGN
+  id: SDD-CLOCK-HEALTH-VM-ENVIRONMENT-IDENTITY-V1
+  type: EVIDENCE_AUDIT
   priority: ACTIVE
   status: READY
-  objective: Determine whether the three required external guarantees can be obtained for LUFFY's existing NTP + VMware environment from authoritative provider/vendor/service contracts before considering an alternate clock source.
+  objective: Identify the exact VMware hosting environment needed to determine which authoritative vendor guarantees, lifecycle interfaces and clock contracts actually apply to this LUFFY guest.
   established_boundary:
-    - SDD-FORCED-LIQUIDATION-RECORDER-COVERAGE-V1 is TESTED at 4c63e82; 96 focused tests passed. Verified command was /home/sarmad/trader/venv/bin/python -m pytest -q tests/test_forced_liquidation_recorder.py (Python 3.12.3; websockets 17.0.1).
-    - RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED; PRODUCTION_POLICY and PRODUCTION_CLOCK_HEALTH_POLICY remain null.
-    - SDD-CLOCK-HEALTH-RECEIPT-V1 is COMPLETED_DESIGN_EVIDENCE with result CLOCK_SOURCE_INSUFFICIENT.
-    - SDD-CLOCK-HEALTH-SOURCE-CONTRACT-V1 is COMPLETED_DESIGN_EVIDENCE with decision EXTERNAL_GUARANTEE_REQUIRED on the supplied audit evidence.
-    - Existing NTP can yield a conservative offset interval without symmetric-delay assumptions, conditional on trustworthy server UTC accuracy, timestamp/error semantics and continuity assumptions.
-    - Existing NTP is not rejected; ALTERNATE_CLOCK_SOURCE_REQUIRED is not established yet.
-    - Chrony/NTS/PTP/PHC do not automatically solve all three missing guarantees; NTS authenticates source/messages but does not itself certify UTC accuracy.
-    - Local clocks and diagnostics remain supporting evidence only; do not infer guarantees from observed runtime behavior.
-  dependency_order:
-    - Review authoritative contracts for the existing NTP + VMware environment before considering an alternate source.
-    - Establish all three external guarantees supporting a finite bound before queueing any implementation.
-    - Production coverage policy completion also needs justified liveness-gap, rollover-overlap and offset-drift bounds; it is not queued concurrently.
+    - SDD-FORCED-LIQUIDATION-RECORDER-COVERAGE-V1 remains TESTED; RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED remains.
+    - PRODUCTION_POLICY and PRODUCTION_CLOCK_HEALTH_POLICY remain null.
+    - SDD-CLOCK-HEALTH-EXTERNAL-GUARANTEE-EVIDENCE-V1 is COMPLETED_DESIGN_EVIDENCE with decision EXTERNAL_GUARANTEE_REQUIRED on the supplied authoritative review.
+    - Existing NTP remains a candidate; ALTERNATE_CLOCK_SOURCE_REQUIRED remains NOT_ESTABLISHED.
+    - NTS solves authentication only, not UTC accuracy, VM propagation or lifecycle; chrony/PTP/PHC are not automatically sufficient.
   scope:
-    mode: Search/documentation design only.
-    source_utc_accuracy:
-      authoritative_sources: Identify current NTP service/source provider contracts and authoritative service documentation applicable to the exact source and trust basis.
-      required_guarantees:
-        - Exact NTP service/source trust; UTC traceability/accuracy envelope; upstream dispersion/holdover semantics; timestamp error bounds; leap/smear behavior; failure signaling.
-    vm_clock_propagation:
-      authoritative_sources: Identify VMware vendor/provider contracts and documentation applicable to the actual virtual clock and environment.
-      required_guarantees:
-        - Actual virtual clock rate-error bound; discipline/slew interaction; elapsed-time uncertainty growth; supported holdover duration; source-loss behavior.
-    lifecycle_continuity:
-      authoritative_sources: Identify VMware vendor/provider lifecycle, snapshot and migration contracts and externally maintained continuity evidence.
-      required_guarantees:
-        - Pause/stun; suspend/resume; snapshot restore; migration; startup corrections; rollback-resistant generation/continuity state.
-  acceptance:
-    - For each required guarantee, document the authoritative source, applicability to the existing environment, exact contractual support and remaining gaps.
-    - Classify each required guarantee as AUTHORITATIVE_GUARANTEE_FOUND, PARTIAL_DOCUMENTATION_ONLY or NO_GUARANTEE_FOUND.
-    - Do not infer guarantees from observed runtime behavior; partial documentation does not establish a missing guarantee.
+    mode: Read-only local identification first, where accessible without configuration changes.
+    identify:
+      - VMware product family (ESXi/vSphere, Workstation, Fusion or other VMware product).
+      - Host/product/build/version evidence visible to the guest.
+      - Virtual hardware compatibility/version.
+      - VMware Tools/open-vm-tools version and effective time-sync settings.
+      - Whether VM Generation ID is actually exposed/bound in this guest.
+      - ACPI/device evidence relevant to VMGenID.
+      - Available guest-visible hypervisor clock interfaces.
+      - Whether vSphere GuestInfo, VMware RPC or another read-only interface exposes host/environment identity.
+      - Effective lifecycle time-sync settings where guest-visible.
+      - Evidence of snapshot/migration/event-generation interfaces accessible from the guest.
+    evidence_boundary: Do not guess from VMware Virtual Platform; distinguish observed identity/settings, inaccessible evidence and documented applicability.
+  external_evidence_boundary:
+    trigger: If required host identity/settings are not guest-visible, return OWNER_OR_PROVIDER_EVIDENCE_REQUIRED and list exactly what must be supplied externally.
+    potential_required_items:
+      - VMware product.
+      - Host version/build.
+      - Virtual hardware version.
+      - Relevant VM advanced/lifecycle settings.
+      - VMGenID exposure.
+      - Available vCenter/vSphere API.
+      - Provider/service identity.
+    request_boundary: Request only the smallest missing external information needed before continuing clock-source qualification; never request credentials or secrets.
   decision_required:
-    all_contracts_established: SOURCE_CONTRACT_DESIGN_COMPLETE may be reached only when all three required external contracts are established and support a finite independently verifiable absolute-UTC interval.
-    contracts_not_established: If one or more cannot be established after authoritative-source review, evaluate ALTERNATE_CLOCK_SOURCE_REQUIRED.
-    boundary: Do not select or install an alternate source in this package.
+    cardinality: Return exactly one decision after the audit.
+    allowed:
+      - ENVIRONMENT_IDENTITY_SUFFICIENT
+      - OWNER_OR_PROVIDER_EVIDENCE_REQUIRED
+      - ENVIRONMENT_NOT_VMWARE_SUPPORTED_PATH
+    if_sufficient: Identify which existing authoritative documentation actually applies to this guest.
+    if_not_sufficient: Identify the smallest external information request required before continuing clock-source qualification.
   constraints:
-    - No implementation, commit, host/service/config changes, collection or long-running monitoring.
-    - No chrony/NTS/PTP/PHC installation or NTP configuration changes.
+    - No implementation, commit, host/service/config changes, collection or long-lived monitoring.
+    - Do not install VMware tools/components, change VM settings or select/install an alternate clock source.
     - No liquidation deployment, production policy activation or Attention/Risk/Execution changes.
     - Preserve frozen protocol, unrelated knowledge edits, portfolio PARTIAL_PREREQUISITE_ESTABLISHED and all parked research boundaries; no pilot, validation, cloud or RNG work.
 
@@ -102,4 +106,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Record authoritative-source evidence, per-guarantee classifications and the resulting decision or explicit gaps; do not queue implementation without all three required external contracts. Production coverage remains blocked; no alternate-source selection/installation, usefulness, bounded-value, deployment or collection claim.
+  - Record exact guest-visible environment evidence, applicability limits and exactly one audit decision; if needed, list the smallest owner/provider evidence request. Identity sufficiency does not establish the three clock guarantees or authorize implementation. Production coverage remains blocked and both production policy globals remain null.

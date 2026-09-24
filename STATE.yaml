@@ -768,13 +768,53 @@ completed_clock_health_source_contract_design:
         - Rollback-resistant generation/continuity state.
   boundary: Design evidence only; RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED remains; PRODUCTION_POLICY and PRODUCTION_CLOCK_HEALTH_POLICY remain null.
 
-current_active_work:
+completed_clock_health_external_guarantee_evidence:
   id: SDD-CLOCK-HEALTH-EXTERNAL-GUARANTEE-EVIDENCE-V1
-  type: EVIDENCE_ACQUISITION_DESIGN
+  status: COMPLETED_DESIGN_EVIDENCE
+  decision: EXTERNAL_GUARANTEE_REQUIRED
+  evidence_basis: Authoritative review conclusions supplied by the owner for reconciliation at HEAD 4f481ab; no new authoritative-source review, host audit or collection performed.
+  guarantee_conclusions:
+    source_utc_accuracy:
+      conclusion: Protocol semantics and partial service documentation do not establish a qualified UTC source guarantee for the actual ntp.ubuntu.com response.
+      not_established:
+        - Authenticated/accountable binding of the actual response to a qualified UTC source.
+        - Traceability chain.
+        - Finite absolute UTC accuracy envelope.
+        - Endpoint-specific holdover/dispersion guarantee.
+        - Bounded timestamp error.
+        - Applicable leap/smear contract.
+        - Bounded failure-signaling latency.
+      boundary: RFC 5905 semantics and server-advertised fields are not provider guarantees.
+    vm_clock_propagation:
+      conclusion: No applicable authoritative guarantee was found for this actual VM; existing VMware documentation is partial or version/product dependent.
+      not_established:
+        - Virtual clock rate error.
+        - Maximum drift.
+        - Holdover duration.
+        - Complete elapsed-time error-growth function.
+    lifecycle_continuity:
+      conclusion: VMware lifecycle corrections, VM-Generation ID concepts and event APIs exist, but applicability and complete rollback-resistant continuity semantics are not established for this guest.
+      safe_continuity_not_established:
+        - Pause/stun.
+        - Suspend/resume.
+        - Snapshot restore.
+        - Migration.
+        - Startup correction.
+        - Host transition.
+  source_selection_boundary:
+    existing_ntp: CANDIDATE
+    ALTERNATE_CLOCK_SOURCE_REQUIRED: NOT_ESTABLISHED
+    nts: Authentication only; does not establish UTC accuracy, VM propagation or lifecycle guarantees.
+    alternatives: chrony/PTP/PHC are not automatically sufficient.
+  boundary: Design evidence only; RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED remains; PRODUCTION_POLICY and PRODUCTION_CLOCK_HEALTH_POLICY remain null.
+
+current_active_work:
+  id: SDD-CLOCK-HEALTH-VM-ENVIRONMENT-IDENTITY-V1
+  type: EVIDENCE_AUDIT
   priority: ACTIVE
   status: READY
-  objective: Determine whether the three required external guarantees can be obtained for LUFFY's existing NTP + VMware environment from authoritative provider/vendor/service contracts before considering an alternate clock source.
-  boundary: Search/documentation design only; no implementation, host/service/config changes, collection, monitoring, liquidation deployment, production policy activation or Attention/Risk/Execution changes. Do not select or install an alternate source.
+  objective: Identify the exact VMware hosting environment needed to determine which authoritative vendor guarantees, lifecycle interfaces and clock contracts actually apply to this LUFFY guest.
+  boundary: Read-only local identification first; queue only, audit not performed by this reconciliation. No implementation, installation, host/service/config changes, collection or long-lived monitoring. If required identity/settings are not guest-visible, require owner/provider evidence without credentials or secrets.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
