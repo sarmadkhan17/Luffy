@@ -2,34 +2,39 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-PROTOCOL-V1
-  type: DESIGN
+  id: SDD-FORCED-LIQUIDATION-RECORDER-COVERAGE-V1
+  type: IMPLEMENTATION_PREREQUISITE
   priority: ACTIVE
-  status: READY
+  status: QUEUED_NOT_STARTED
   objective: >
-    Specify one concrete question protocol that instantiates investigation-value.v1
-    with frozen baseline, admissible evidence, closure rules, horizon and resource bounds.
+    Implement an off-path prospective production USD-M liquidation snapshot
+    recorder with independently replayable coverage receipts, following the frozen
+    forced-liquidation-participation.v1 protocol in STATE.yaml.
   established_boundary:
-    - MINIMAL_NEW_CONTRACT_REQUIRED; frozen concept and review reconciliation are in STATE.yaml completed_attention_investigation_value_reconciliation.
-    - Demonstrated question-specific evidential usefulness is distinct from trading profit, market movement and comparative Attention optimality.
-    - Bounded value requires ESTABLISHED, a valid protocol and WITHIN_BOUND; confirmation is not ranked above falsification.
-    - Detached portfolio observation remains TESTED at 285b0ce; live Attention portfolio input remains PARTIAL_PREREQUISITE_ESTABLISHED with no justified portfolio salience magnitude.
-  required_design:
-    - Choose one concrete decision-relevant question, knowledge gap and alternatives; freeze immutable versioned protocol/case identity and prospective registration requirements.
-    - Specify initial evidence, the routine-evidence baseline, admissible evidence and exact point-in-time provenance and missingness rules.
-    - Define deterministic predicates for PENDING, ESTABLISHED, NOT_ESTABLISHED and UNASSESSABLE, protocol validity, and the closure receipt.
-    - Freeze the horizon, deadline, stopping rules, resource bounds, accounting units and per-case cost receipt; preserve UNKNOWN separately from WITHIN_BOUND and EXCEEDED.
-    - Declare selected/shadow assignment and a bounded prospective sampling policy; investigating every unselected candidate is not required.
+    - CONCRETE_PROTOCOL_DESIGN_COMPLETE; see STATE.yaml completed_forced_liquidation_protocol_design.
+    - Aggressor participation is ABANDONED_FIRST_CANDIDATE because routine data already carries measured taker-buy volume.
+    - Throttled snapshots support observed order-side presence only; latest/largest and long/short position-side interpretations remain unresolved and unused.
+    - Design completion establishes no implementation, collected evidence, bounded value or Attention salience.
+  smallest_scope:
+    - Raw forward stream capture, explicit st=1 filter, exact InstrumentId mapping and immutable local/exchange timestamp provenance.
+    - Successful WebSocket handshake to the exact frozen raw URL wss://fstream.binance.com/market/ws/!forceOrder@arr and verified liveness under the frozen transport policy; no subscription ACK exists or is required for this raw connection. Require an ACK only if a future protocol version explicitly uses SUBSCRIBE/combined-stream mode.
+    - Session, documented ping/pong policy, reconnect/gap, persistence and clock-health receipts with durable window seals.
+    - Raw and ordered-window hashes, source/code/config/case/window identities and deterministic offline coverage replay.
+    - Measured resource telemetry with missing bounds/costs/attribution retained as UNKNOWN.
   acceptance:
-    - The versioned question protocol instantiates every minimum field of investigation-value.v1 in STATE.yaml and makes closure and resource compliance independently assessable.
-    - No universal numeric utility, probabilities, entropy or full calibration/power design is required for descriptive shadow collection.
-    - Coverage, pairing and resource telemetry can precede usefulness labels; value-labelled collection requires the concrete protocol first.
-    - Comparative priority value remains a later selected/shadow evidence question; this protocol alone cannot establish optimal Attention allocation.
+    - Fixtures prove valid BUY/SELL/BOTH observations and a fully covered empty window; no liquidation totals or causal claims.
+    - Missing st, st=2, malformed frames, identity ambiguity, receipt corruption, clock uncertainty and boundary arrivals have explicit deterministic handling.
+    - Disconnects, silent/half-open sessions, missing pongs, reconnect gaps, dropped frames, write failure and crash without an end seal cannot yield an assessable empty-window result.
+    - Planned session rollover requires proven overlapping coverage; socket-open status or reconnect success is insufficient.
+    - Independent receipt replay reproduces hashes, filter/mapping decisions, exact receipt-time window membership and coverage predicates.
+    - Liquidation evidence uses [window_start_ms, window_end_ms), ending at the final registered target bar close. Verified investigation.v2 sets measurement.deadline_ms = start + H*TF, exactly that close; retain deadline_ms/expires_ms as separate assessment timing metadata. The pre-target registration guard and assessment grace never extend evidence membership.
+    - No code path affects trading, ranking, salience, Risk, Execution or research decisions; no broad shadow-store integration.
   constraints:
-    - DESIGN / CONTROL-PLANE only; no implementation or collection in this work package.
-    - Do not queue shadow-store implementation yet.
-    - No portfolio weight, ranking, selection, Risk, Execution or research-admission change.
-    - Preserve the parked non-final Scheme-D pilot; no new pilot, full validation, cloud or RNG work.
+    - This session is DESIGN / CONTROL-PLANE only; implementation is queued, not executed.
+    - No deployment or collection by this queue update; prospective cases require a frozen finite manifest and verified transport policy before enrollment.
+    - Reuse exact registered investigation windows; no arbitrary T+60/T+300, retroactive registration or REST gap backfill.
+    - Resource bounds and sample size remain UNKNOWN until prospectively declared; no bounded-value claim.
+    - Preserve all frozen artifacts, unrelated edits and the parked non-final Scheme-D pilot; no pilot, validation, cloud or RNG work.
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -85,4 +90,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Record the target decision and shadow evidence design in STATE.yaml; retain PARTIAL_PREREQUISITE_ESTABLISHED until separate justified policy and implementation evidence exist.
+  - Record only recorder/coverage acceptance evidence; design completion does not establish usefulness, bounded value or comparative priority. Keep portfolio input PARTIAL_PREREQUISITE_ESTABLISHED and Attention salience unchanged.

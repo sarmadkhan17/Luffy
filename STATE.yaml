@@ -544,13 +544,112 @@ completed_attention_investigation_value_reconciliation:
     - One concrete versioned question protocol must instantiate investigation-value.v1 before value-labelled collection begins.
   maturity_boundary: Concept frozen only; no concrete question protocol, implementation, collection, usefulness evidence, priority calibration or ranking change is established by this reconciliation.
 
-current_active_work:
-  id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-PROTOCOL-V1
+completed_forced_liquidation_protocol_design:
   type: DESIGN
+  state: CONCRETE_PROTOCOL_DESIGN_COMPLETE
+  audit_head: 8439f5d
+  abandoned_first_candidate:
+    name: aggressor participation
+    status: ABANDONED_FIRST_CANDIDATE
+    reason: Routine DataFeed already preserves exchange taker-buy volume; this candidate does not establish the required new direct-evidence gap.
+    evidence: trader/data/feed.py DataFeed._frame and _klines
+  protocol:
+    protocol_id: forced-liquidation-participation.v1
+    instantiates: investigation-value.v1
+    status: FROZEN_DESIGN_ONLY
+    question: Which exchange order sides, if any, occur in admissible USD-M forced-liquidation snapshots received during the registered investigation window for this exact instrument?
+    knowledge_gap: investigation.v2 StateSnapshot participation is not_captured; routine evidence cannot directly identify exchange-published forced-liquidation snapshots.
+    decision_relevance: Distinguish direct published forced-order evidence from an unresolved participation narrative in an investigation; no inference about why price moved.
+    routine_baseline:
+      audit_scope: Tracked trader/ and scripts/ Python sources at audit_head; no forceOrder subscriber or direct liquidation recorder found.
+      evidence:
+        - trader/data/feed.py carries OHLCV and measured taker_buy, without a forced-order flag.
+        - trader/data/derivatives.py SERIES contains funding, oi, taker_ratio, ls_ratio, ls_account_ratio and basis, not direct liquidation snapshots.
+        - trader/cognition/investigation.py make_state marks participation missing/not_captured; existing closure measures candle paths.
+        - trader/agents/positioning.py infers a liquidation narrative from OI and price; this is not direct liquidation evidence.
+      separation: Direct exchange liquidation snapshots, OI/funding/positioning proxies and inferred liquidation narratives remain separate evidence classes.
+      comparator: Routine evidence alone leaves this direct-snapshot question unresolved; candle outcomes, proxies and narratives cannot close it.
+      per_case_freeze: Archive initial StateSnapshot, investigation, input versions, routine evidence available at registration, code/config hashes and their local availability times; hash the complete baseline manifest.
+      drift_rule: Revalidate the baseline against the case runtime; if routine data already directly answers the question, record baseline_already_observes and NOT_ESTABLISHED, never claim incremental usefulness.
+    admissible_source:
+      environment: production Binance futures public market-data WebSocket only
+      stream: '!forceOrder@arr'
+      url: 'wss://fstream.binance.com/market/ws/!forceOrder@arr'
+      documentation: 'https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/ws-streams/market#all-market-liquidation-order-streams'
+      fact_basis: Owner-supplied externally verified facts; current Binance market-stream documentation also checked at design time.
+      semantics: Throttled exchange-published liquidation snapshot; latest versus largest within 1000ms remains unresolved and is not used by any predicate.
+      filter: Require event type forceOrder and integer top-level st=1; exclude st=2 explicitly. Missing, malformed or unknown st is unclassifiable evidence, not an empty interval.
+      payload: Preserve complete raw message including E, st and order fields s, S, q, p, ap, z, T; require valid timestamps, S in BUY/SELL and finite nonnegative decimal quantity/price fields.
+      identity: Resolve exact o.s through archived production USD-M venue metadata to InstrumentId(venue=binance_usdm, market_type=MarketType.FUTURES, venue_symbol=o.s); require exact match to the case's frozen InstrumentId and retain mapping bytes/hash/availability time.
+      mapping_ref: trader/core/instrument_registry.py InstrumentId; no slash stripping, base-asset matching, spot/COIN-M substitution or account-eligibility inference.
+      missingness: Ambiguous instrument mapping, schema drift, unclassifiable frames or lost records that could affect the case make its window UNASSESSABLE; definitely unrelated valid symbols and st=2 frames are excluded with reasons.
+      prospective_only: Retired public all-market REST liquidation history cannot backfill gaps; account liquidation REST is not an equivalent source.
+      forbidden_claims: No liquidation event counts, notional totals, intensity, complete population coverage, causal attribution or BUY/SELL to short/long-liquidation mapping.
+      quantities: q, p, ap and z are retained for provenance only, not aggregated or interpreted as total liquidated exposure.
+    registration_and_window:
+      identity: Immutable case_id, protocol_id and protocol_hash bind investigation_id, exact InstrumentId, baseline_hash, window_id, assignment and registration receipt; amendments require a new version, never overwrite a frozen case.
+      registration: Persist the case receipt before window_start_ms, before inspecting target-window evidence; retain registration UTC time, monotonic clock and receipt hash. Historical cases cannot be retrospectively enrolled.
+      window: Copy window_start_ms from the earliest registered measurement.target_keys opening for the case symbol; window_end_ms is the final registered target bar close (last target opening + TF). Use the half-open interval [window_start_ms, window_end_ms).
+      contract_verification: trader/cognition/investigation.py InputBar requires close_ms == open_ms + TF; open_investigation registers H=5 targets at start + i*TF with TF=14400000 and sets measurement.deadline_ms = start + H*TF. Thus deadline_ms equals the final target close exactly, without an evaluation/guard delay; existing window semantics are unchanged.
+      assessment_timing: Retain measurement.deadline_ms and expires_ms separately as assessment timing metadata. The existing GUARD_MS=30000 is a pre-target registration guard; expires_ms = deadline_ms + GRACE_MS (86400000) is the assessment grace limit. Neither guards nor assessment delays/grace extend liquidation evidence membership beyond window_end_ms.
+      defensibility: Existing investigation.v2 registers five consecutive 4h targets; their exact registered interval supplies context, not a claim that five bars is an optimal liquidation horizon.
+      validation: Require the archived investigation's exact contiguous target keys, catalog version and matching symbol; missing or inconsistent registration is UNASSESSABLE. Do not introduce T+60/T+300 or silently recompute a new window.
+      membership: Use local durable receipt UTC time in [start,end), with monotonic ordering and validated clock mapping. E and T remain separate exchange timestamps; this is not an exchange-event-time census.
+      deadline: Stop admitting evidence at window_end_ms; atomically seal the receipt-ordered log prefix at that cut. Later snapshot arrivals cannot enter the sealed evidence prefix, including messages with earlier E or T; post-cut liveness evidence may certify the end bracket but cannot add snapshots.
+      stopping: No early closure on the first side or both sides. A failed or interrupted recorder retains diagnostics but cannot close as assessable; a missing durable end seal is UNASSESSABLE at review.
+      horizon_status: Before the end cut a valid open case is PENDING; no new delay/grace period is borrowed from candle outcome retries.
+    coverage:
+      meaning: Local recorder transport and persistence coverage, not proof that Binance published every liquidation or that its upstream publisher was healthy.
+      session_rule: A usable session starts only after a successful WebSocket handshake to the exact frozen raw stream URL wss://fstream.binance.com/market/ws/!forceOrder@arr and verified liveness according to the frozen transport policy. No subscription ACK exists or is required for this raw-stream connection; require a subscription ACK only if a future protocol version explicitly uses SUBSCRIBE/combined-stream mode. The session ends conservatively at the last positively verified live point on disconnect, timeout, crash or persistence failure.
+      liveness_rule: Archive timestamped ping/pong payload matches (or documented equivalent), continuous reader/writer health and queue/drop telemetry. Require verified live points bracketing each covered interval with every intervening obligation satisfied under the frozen documented transport policy.
+      policy: Archive transport documentation/version and actual configured ping cadence, pong timeout and finite session lifetime before collection; validate against that documentation. Missing/unverified policy or liveness records cannot produce coverage PASS. These are transport requirements, not new investigation horizons.
+      reconnect_rule: Record all attempts and uncertain intervals from last verified old-session liveness to first verified new-session liveness; a reconnect alone never fills a gap. Overlapping independently covered sessions may cover a planned rollover.
+      full_coverage_predicate: The union of verified session intervals contains the entire [start,end), with start/end liveness brackets, valid clock mapping, durable end seal, complete ordered logs and no unresolved drops, parse errors, mapping ambiguity, write failures or integrity failures affecting the case.
+      empty_window_rule: NO_PUBLISHED_SNAPSHOT_OBSERVED is permissible only after full_coverage_predicate passes and the admissible case snapshot set is empty. Silence or an open socket alone is insufficient.
+      failure_rule: Any missing/gapped/unknown coverage makes the terminal result UNASSESSABLE even if BUY or SELL evidence survives; retain such evidence diagnostically without a complete-window label.
+      receipt_fields:
+        - case_id, protocol_id/hash, investigation_id, InstrumentId, baseline_hash, window_id/start/end and registration receipt hash
+        - actual raw stream URL, environment, WebSocket handshake evidence and transport policy/documentation hash; subscription ACK is inapplicable for this raw URL and required only under a future protocol version explicitly using SUBSCRIBE/combined-stream mode
+        - session IDs, connect/close times and reasons, reconnect attempts and explicit gap/uncertainty intervals; subscribe times apply only under a future SUBSCRIBE/combined-stream protocol version
+        - timestamped ping/pong or equivalent liveness records, clock mapping, reader/writer health, queue/drop/error records and end seal
+        - per-message session ID, local receive UTC and monotonic times, persisted sequence, exchange E and T, raw bytes hash, payload index and filter/mapping disposition
+        - archived instrument mapping and hash, recorder code/dependency/config hashes, predicate results and reason codes
+        - ordered window hash binding all included raw record hashes plus control/liveness/filter records and explicit empty-window manifest
+      hashing: protocol_hash is SHA256 of canonical JSON for this protocol mapping; exclude no protocol fields. SHA256 over exact raw message bytes; manifests use UTF-8 canonical JSON with sorted keys, compact separators and no NaN. Window manifest orders records by durable recorder sequence (not E/T), includes window and session identities, and hashes that canonical byte representation.
+      replay: Preserve duplicate deliveries with their provenance; derive only side presence, never deduplicate into an alleged order count. Recompute all hashes, mapping/filter decisions, coverage and closure predicates from archived artifacts.
+    results:
+      BUY_FORCE_ORDER_OBSERVED: Full coverage and admissible side set {BUY}; does not establish absence of SELL liquidations or unpublished SELL snapshots.
+      SELL_FORCE_ORDER_OBSERVED: Full coverage and admissible side set {SELL}; does not establish absence of BUY liquidations or unpublished BUY snapshots.
+      BOTH_ORDER_SIDES_OBSERVED: Full coverage and admissible side set {BUY,SELL}; no net exposure, position-side or causal interpretation.
+      NO_PUBLISHED_SNAPSHOT_OBSERVED: Full coverage and empty admissible side set; no matching snapshot was received, not no liquidations occurred.
+      UNASSESSABLE: Invalid protocol/case or missing, uncertain or gapped coverage/evidence; takes precedence over every side-set result.
+    value_closure:
+      validity: Verify immutable prospective registration, exact window/identity, baseline and source rules, receipt integrity and deterministic predicates; preserve validity separately from coverage and cost compliance.
+      PENDING: Valid case remains before the registered end cut and no terminal failure has occurred.
+      ESTABLISHED: Valid complete-window BUY, SELL or BOTH result supplies direct evidence absent from the frozen routine baseline.
+      NOT_ESTABLISHED: Valid complete-window NO_PUBLISHED_SNAPSHOT_OBSERVED, or an assessable side result already directly observable in the frozen routine baseline; this does not falsify liquidation participation.
+      UNASSESSABLE: Invalid case or any insufficient/gapped coverage; never translate to NOT_ESTABLISHED or an empty snapshot result.
+      receipt: Bind case/protocol/window/baseline identities, source and ordered-window hashes, side set/result, validity, coverage predicates/reasons, value result, cost receipt hash and actual closure time; record delayed assessment separately from the sealed evidence cut.
+    resources_and_sampling:
+      bounds: UNKNOWN initially; no invented CPU, storage, network, sample-size or numeric utility limits. This v1 cannot establish bounded value while bounds or costs remain unknown.
+      units_and_scope: Measure wall milliseconds, CPU seconds, peak resident bytes, persisted bytes, received network bytes and connection attempts for recorder plus validation/replay; retain shared-stream totals and explicit case attribution method or UNKNOWN.
+      cost_receipt: Bind case/protocol/window, measurements, accounting scope, attribution, declared-bound status and missing measurements; zero requires measurement, never substitution for missing telemetry.
+      compliance: UNKNOWN if any required bound/measurement/attribution is missing; otherwise EXCEEDED if any measured cost exceeds its prospectively declared bound, else WITHIN_BOUND. New numeric bounds require a prospectively versioned resource policy.
+      bounded_value: ESTABLISHED plus valid protocol plus WITHIN_BOUND only; no such evidence exists at design freeze.
+      assignment: SHADOW_ONLY; retain existing Attention selected/unselected status as provenance, not as authorization or a changed assignment rule.
+      sampling: Before any collection, freeze an explicit finite case manifest with IDs, exact windows, inclusion/exclusion reasons and selection provenance; sample size is currently UNKNOWN and no cases are enrolled by this design. No adaptive enrollment after viewing liquidation evidence.
+      effects: No trading, ranking, salience, Risk, Execution, research-decision/admission or automated memory-policy effect; no comparative Attention-optimality claim.
+  remaining_prerequisite: Implement and deterministically test a forward liquidation recorder plus independently replayable coverage receipt; deployment/collection and a prospective case manifest are separate from this design freeze.
+  source_semantics_decision: No remaining source ambiguity blocks these narrow order-side snapshot predicates; latest/largest, position-side mapping and total-event semantics remain deliberately unresolved and unused.
+  maturity_boundary: Design complete only; recorder, coverage, resource compliance, collected cases and usefulness are NOT_ESTABLISHED. Attention maturity and all parked research boundaries are unchanged.
+
+current_active_work:
+  id: SDD-FORCED-LIQUIDATION-RECORDER-COVERAGE-V1
+  type: IMPLEMENTATION_PREREQUISITE
   priority: ACTIVE
-  status: READY
-  objective: Specify one concrete question protocol that instantiates investigation-value.v1 with frozen baseline, admissible evidence, closure rules, horizon and resource bounds.
-  boundary: DESIGN / CONTROL-PLANE only; no implementation, collection, shadow-store queue, portfolio weight, ranking change or trading effect.
+  status: QUEUED_NOT_STARTED
+  objective: Implement the smallest off-path forward liquidation recorder and coverage receipt for the frozen forced-liquidation-participation.v1 design.
+  boundary: Queue only in this session; no code, collection, deployment, Attention salience or decision effects authorized by this control-plane update.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
