@@ -13,6 +13,7 @@ import argparse
 import datetime as dt
 import json
 import logging
+import re
 import signal
 import sys
 import threading
@@ -43,6 +44,7 @@ from .notify.telegram import Telegram
 from .strategy.genome import Genome
 
 log = logging.getLogger("luffy")
+_ATTENTION_FUTURES_SCAN_SYMBOL = re.compile(r"[A-Z0-9]{1,24}/USDT")
 
 AGENTS = {"structure": StructureAnalyst, "flow": FlowAnalyst,
           "momentum": MomentumAnalyst, "value": ValueAnalyst,
@@ -119,6 +121,11 @@ class Kernel:
         self._attention_extra = None
         #: killable, isolated fetcher for that symbol; never the shared DataFeed
         self._attention_source = None
+        #: off | manual | registry; exactly one supplemental slot either way
+        self._attention_mode = "off"
+        #: registry mode: locked-order selector slot and its background refresh
+        self._attention_registry = None
+        self._attention_refresher = None
         if (cfg.get("attention") or {}).get("enabled") is True:
             try:
                 from .observability.collector import Collector
@@ -126,17 +133,55 @@ class Kernel:
             except Exception as exc:
                 self._attention_error = type(exc).__name__
                 log.warning("attention startup failed: %s", self._attention_error)
-            try:
-                from .observability.supplemental import (
-                    DEFAULT_TIMEOUT_S, IsolatedSource, one_symbol)
-                extra = one_symbol(cfg["attention"].get("supplemental_symbol"))
+            self._attention_supplemental_setup(cfg["attention"])
+
+    def _attention_supplemental_setup(self, raw) -> None:
+        """Resolve the one supplemental slot: off, manual or registry.
+
+        A misconfiguration disables supplemental observation only; trading
+        and the scan collector continue. Registry mode observes production
+        Binance USD-M named explicitly in config (never BINANCE_DEMO), only in
+        FUTURES mode, and grants no trading permission.
+        """
+        from .observability.attention import supplemental_mode
+        try:
+            mode = supplemental_mode(raw)
+        except ValueError as exc:
+            self._attention_error = ("supplemental_mode_conflict"
+                                     if str(exc) == "supplemental_mode_conflict"
+                                     else "supplemental_refused")
+            log.warning("attention supplemental disabled: %s", exc)
+            return
+        try:
+            from .observability.supplemental import (
+                DEFAULT_TIMEOUT_S, IsolatedSource, one_symbol)
+            timeout = raw.get("supplemental_timeout_seconds", DEFAULT_TIMEOUT_S)
+            if mode == "manual":
+                extra = one_symbol(raw.get("supplemental_symbol"))
                 if extra is not None:
-                    self._attention_source = IsolatedSource(cfg["attention"].get(
-                        "supplemental_timeout_seconds", DEFAULT_TIMEOUT_S))
+                    self._attention_source = IsolatedSource(timeout)
                     self._attention_extra = extra
-            except ValueError as exc:
-                self._attention_error = "supplemental_refused"
-                log.warning("attention supplemental symbol refused: %s", exc)
+            elif mode == "registry":
+                if self.market_type != MarketType.FUTURES:
+                    raise ValueError("registry supplemental mode requires FUTURES")
+                from .data.registry_provider import (
+                    BinanceUsdmRegistryProvider, VenueTarget)
+                from .observability.attention import (
+                    RegistryAttention, RegistryRefresher, registry_settings)
+                rc = registry_settings(raw)
+                target = VenueTarget.production()
+                provider = BinanceUsdmRegistryProvider(target)
+                source = IsolatedSource(timeout, url=target.base_url + "/fapi/v1/klines")
+                self._attention_registry = RegistryAttention(
+                    provider, source, self.journal,
+                    max_snapshot_age_ms=rc["registry_max_snapshot_age_ms"])
+                self._attention_refresher = RegistryRefresher(
+                    provider, refresh_s=rc["registry_refresh_seconds"],
+                    retry_s=rc["registry_retry_seconds"])
+            self._attention_mode = mode
+        except (ValueError, TypeError) as exc:
+            self._attention_error = "supplemental_refused"
+            log.warning("attention supplemental refused: %s", exc)
 
     def _attention_call(self, method, *args):
         """Telemetry failure must never prevent entry checks or exit management."""
@@ -172,6 +217,48 @@ class Kernel:
             self._attention_error = type(exc).__name__
             log.warning("attention supplemental failed: %s", self._attention_error)
             return None
+
+    def _attention_registry_scan(self, scan_symbols) -> list[str]:
+        """FUTURES scan symbols in the selector's unambiguous USD-M spelling.
+
+        The Kernel knows its scan is USD-M linear perps, so 'BASE/USDT'
+        becomes 'BASE/USDT:USDT' for the comparison only; _scan_symbols()
+        and the trading scan are untouched.
+        """
+        out = []
+        for sym in scan_symbols:
+            if isinstance(sym, str) and _ATTENTION_FUTURES_SCAN_SYMBOL.fullmatch(sym):
+                sym += ":USDT"
+            out.append(sym)
+        return out
+
+    def _attention_slot(self, scan_symbols, stats):
+        """The single supplemental slot: (result, provenance) or (None, None).
+
+        Registry mode never falls back to the manual path. Persistence runs
+        synchronously on this thread through the Journal; the registry itself
+        is only read (provider.latest()), never refreshed here.
+        """
+        registry = getattr(self, "_attention_registry", None)
+        if registry is None:
+            return self._attention_supplemental(scan_symbols), None
+        collector = getattr(self, "_attention", None)
+        if collector is None or self.market_type != MarketType.FUTURES:
+            return None, None
+        try:
+            result, provenance, tel = registry.run(
+                self._attention_registry_scan(scan_symbols), collector.cfg["timeframe"])
+        except Exception as exc:
+            result, provenance = None, None
+            tel = {"mode": "registry", "stage": "error", "reason": type(exc).__name__}
+        refresher = getattr(self, "_attention_refresher", None)
+        if refresher is not None:
+            try:
+                tel["refresh"] = refresher.health()
+            except Exception as exc:
+                tel["refresh"] = {"error": type(exc).__name__}
+        stats["attention_registry"] = tel
+        return result, provenance
 
     def _make_agent(self, key: str):
         if key == "positioning":
@@ -352,6 +439,9 @@ class Kernel:
         if (self.cfg.get("research", {}) or {}).get("enabled", False):
             threading.Thread(target=self._research_loop, daemon=True,
                              name="research").start()
+        if getattr(self, "_attention_refresher", None) is not None:
+            # registry refresh never runs in the trading cycle
+            self._attention_refresher.start()
 
     def _filter_universe_to_venue(self) -> None:
         """Universe comes from production data; drop symbols the trading
@@ -380,6 +470,8 @@ class Kernel:
 
     def _graceful(self, signum, _frame) -> None:
         self._attention_call("close")
+        if getattr(self, "_attention_refresher", None) is not None:
+            self._attention_refresher.close()
         log.warning(f"signal {signum} — shutting down")
         self._stop = True
 
@@ -946,15 +1038,20 @@ class Kernel:
         # instead of a list hardcoded beside it.
         scan_symbols = self._scan_symbols()
         universe_frames = self._universe_frames(scan_symbols)
-        supplemental = self._attention_supplemental(scan_symbols)
+        supplemental, provenance = self._attention_slot(scan_symbols, stats)
         if supplemental is None:
             scan_id = self._attention_call("begin", universe_frames, scan_symbols)
         else:
             stats["attention_supplemental"] = {"symbol": supplemental.symbol,
                                                "status": supplemental.status,
                                                "reason": supplemental.reason}
-            scan_id = self._attention_call("begin", universe_frames, scan_symbols,
-                                           None, supplemental)
+            if provenance is None:
+                scan_id = self._attention_call("begin", universe_frames, scan_symbols,
+                                               None, supplemental)
+            else:
+                stats["attention_supplemental"]["provenance"] = provenance
+                scan_id = self._attention_call("begin", universe_frames, scan_symbols,
+                                               None, supplemental, provenance)
         attention_causes = []
         # Bound producer work even if the trading universe is much larger.
         attention_cap = getattr(getattr(self, "_attention", None), "cfg", {}).get("max_symbols", 0)

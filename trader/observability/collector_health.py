@@ -22,6 +22,9 @@ def code_hash():
     names = ('observability/collector.py', 'observability/collector_health.py',
              'observability/attention.py', 'observability/supplemental.py',
              'observability/_supplemental_child.py',
+             'data/registry_provider.py', 'data/binance_usdm_registry.py',
+             'core/instrument_registry.py', 'observability/registry_selector.py',
+             'observability/selection_persistence.py', 'core/journal.py',
              'observability/store.py', 'observability/worker.py',
              'cognition/attention.py', 'cognition/contracts.py')
     return hashlib.sha256(b''.join(name.encode()+b'\0'+(root/name).read_bytes() for name in names)).hexdigest()

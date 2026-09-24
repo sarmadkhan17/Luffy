@@ -459,7 +459,19 @@ attention:
   # It is not an SDD-derived venue latency guarantee. No supplemental symbol
   # is configured by default, so the child path is opt-in.
   supplemental_timeout_seconds: 2
-  max_symbols: 16               # subset cap, not venue-wide coverage
+  # One supplemental slot: off | manual (supplemental_symbol) | registry.
+  # Absent: a supplemental_symbol means manual, none means off. registry plus
+  # a supplemental_symbol is a conflict that disables supplemental
+  # observation only. Registry mode needs FUTURES and observes production
+  # Binance USD-M named here, never inferred from BINANCE_DEMO; it grants no
+  # trading permission.
+  supplemental_mode: "off"
+  observation_target: production
+  # Implementation policy from current cadence, not SDD constants.
+  registry_refresh_seconds: 14400
+  registry_retry_seconds: 300
+  registry_max_snapshot_age_ms: 28800000
+  max_symbols: 16              # subset cap, not venue-wide coverage
   max_causes: 64                # evaluator receipts per symbol
   queue_size: 16
   timeout_seconds: 10

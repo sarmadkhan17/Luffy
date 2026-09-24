@@ -420,7 +420,11 @@ def test_only_endpoint_is_public_exchange_info():
     assert CODE.count("/fapi/") == 1
 
 
-def test_no_kernel_or_trading_path_wires_the_provider():
-    for path in (ROOT / "trader").rglob("*.py"):
-        if path.name != "registry_provider.py":
-            assert "registry_provider" not in path.read_text(errors="ignore"), path
+def test_provider_wiring_is_confined_to_attention_integration():
+    allowed = {ROOT / "trader" / "data" / "registry_provider.py",
+               ROOT / "trader" / "kernel.py",
+               ROOT / "trader" / "observability" / "attention.py",
+               ROOT / "trader" / "observability" / "collector_health.py"}
+    wired = {path for path in (ROOT / "trader").rglob("*.py")
+             if "registry_provider" in path.read_text(errors="ignore")}
+    assert wired == allowed
