@@ -125,6 +125,9 @@ capabilities:
       - 4ee6682 Add live read-only registry producer
       - trader/data/registry_provider.py
       - tests/test_registry_provider.py
+      - 285b0ce Add detached portfolio position observation
+      - trader/observability/portfolio_observation.py
+      - tests/test_portfolio_observation.py
     proven_facts:
       - current GitHub repository contains cognition attention code
       - attention produces structured observations and selection reasons
@@ -188,6 +191,7 @@ capabilities:
       - capture provenance links snapshot_id to selection_id to supplemental result to Attention scan; manual and legacy capture have no registry provenance
       - trading scan, Orchestrator, Risk and Execution behavior is unchanged
       - Attention code provenance and hash include the registry producer, selector, persistence and semantic dependencies
+      - SDD-STAGE-3-ATTENTION-PORTFOLIO-OBSERVATION-PREREQUISITE is TESTED at 285b0ce as capture-only evidence; it is not consumed by Attention
     gaps:
       - live Kernel does not currently supply a WorldModel to Attention; the tested evaluator input is a seam, not live production input
       - venue-active instruments with account_eligibility=UNKNOWN may be observed by Attention without implying trade permission; registry, Attention, trading, Risk and Execution authority remain separate (trader/core/instrument_registry.py; trader/observability/attention.py)
@@ -202,7 +206,7 @@ capabilities:
       - the current 90-day listing-age filter belongs to trading Universe/history selection, not Attention eligibility (config.yaml; trader/data/feed.py)
       - connected venue-active observation population is covered by registry-backed rotation when enabled, but per-symbol account eligibility remains UNKNOWN absent authoritative evidence
       - symbolConfig, leverageBracket and account-global permission enrichment are absent from the live producer
-      - portfolio-state input remains MISSING for live Attention; no truthful portfolio signal is available at the existing capture cut
+      - portfolio-state input to live Attention is PARTIAL / prerequisite-established; detached position evidence is captured but no portfolio salience signal is consumed yet
       - research and investigation feedback into Attention priority remains missing
       - event-driven invocation and material-change gate remain incomplete
       - urgency and per-candidate research cost remain incomplete
@@ -381,7 +385,7 @@ completed_attention_gap_priority_audit:
     registry_backed_venue_observation: TESTED_OPT_IN_OFF_BY_DEFAULT
     fairness_starvation: PARTIAL
     live_world_model_input: PARTIAL
-    portfolio_state_input: MISSING
+    portfolio_state_input: PARTIAL_PREREQUISITE_ESTABLISHED
     research_investigation_feedback: MISSING
     urgency: MISSING
     per_candidate_research_cost: MISSING
@@ -391,11 +395,11 @@ completed_attention_gap_priority_audit:
   findings:
     - Registry-backed venue observation is live and tested when enabled, but remains opt-in and off by default; one supplemental slot and deterministic rotation do not establish broader fairness or starvation freedom at the live population level.
     - The Attention evaluator accepts an exact-cut WorldModel input, but the live Kernel supplies no WorldModel.
-    - Portfolio-state input, research/investigation feedback, urgency and per-candidate research cost are missing from live Attention priority.
+    - Detached portfolio-position capture is now TESTED, but its input to live Attention priority remains PARTIAL / prerequisite-established; research/investigation feedback, urgency and per-candidate research cost remain missing.
     - Event-driven invocation and material-change gating are partial; the broader SDD trigger classes remain missing or upstream-blocked, including regime transition, correlation breakdown, positioning extremes, liquidity change, strategy degradation, unexplained portfolio loss, repeated rejections, WorldModel contradiction, external research claim, owner question and new-data availability.
     - Selection and fetch records retain provenance, but durable RegistrySnapshot history is absent; full historical registry replay remains unavailable.
   dependency_conclusion:
-    - Portfolio-state input is the smallest independent missing Attention input, but the existing Kernel position source is read later than the Attention capture cut and is not yet detached as point-in-time evidence.
+    - The existing Kernel position source is read later than the Attention capture cut; it is now detached as point-in-time evidence, but has no Attention consumer or proven portfolio salience signal.
     - Unexplained portfolio-loss and portfolio-impact triggers depend on portfolio-state context; neither trigger is implemented by this selection.
     - Live WorldModel contradiction and regime triggers remain blocked by the missing live Kernel WorldModel producer.
     - Full historical registry replay depends on durable RegistrySnapshot history.
@@ -411,8 +415,8 @@ completed_attention_portfolio_source_audit:
     - trader/observability/attention.py
     - trader/core/journal.py
   conclusions:
-    - Portfolio-state input remains MISSING for live Attention; no current portfolio signal can honestly be attached to the existing Attention capture cut.
-    - Attention capture precedes the Kernel's venue-position reads; successful position responses are not currently detached, timestamped or retained for Attention.
+    - At audit time, portfolio-state input was MISSING for live Attention; the later detached observation establishes a prerequisite but no Attention signal.
+    - Attention capture precedes the Kernel's venue-position reads; successful position responses are now detached and timestamped for later use, not consumed at that capture cut.
     - _fetch_balance() returns only a scalar with ambiguous live provenance and possible journal-equity fallback; it is not independent live portfolio evidence.
     - Journal and accounting rows do not substitute for current venue portfolio truth.
     - An already-existing successful, complete venue-position read is the smallest reusable live source; the first prerequisite requires no new account API call.
@@ -439,20 +443,42 @@ completed_attention_portfolio_source_audit:
     - hedging relationships
     - position absence from a failed, partial or ambiguous response
   deferred_condition: Same-response notional requires validated mark price, contract units and symbol identity.
-  maturity_boundary: Design evidence only; Attention overall remains IMPLEMENTED and portfolio-state input remains MISSING.
+  maturity_boundary: Historical design audit; Attention overall remains IMPLEMENTED and portfolio-state input is now PARTIAL / prerequisite-established.
+
+completed_attention_portfolio_observation_prerequisite:
+  id: SDD-STAGE-3-ATTENTION-PORTFOLIO-OBSERVATION-PREREQUISITE
+  type: IMPLEMENTATION
+  state: TESTED
+  evidence_commit: 285b0ce
+  evidence:
+    - trader/observability/portfolio_observation.py
+    - trader/kernel.py
+    - tests/test_portfolio_observation.py
+  proven_facts:
+    - The existing Kernel fetch_positions() call is reused; no additional position API call is introduced.
+    - Immutable detached PortfolioObservation and PositionRecord objects retain request start and response receipt timestamps; as_of_ms is local response receipt, not an atomic venue cut.
+    - Explicit environment and source_ref distinguish demo from production using the resolved trading USD-M REST endpoint, never response rows.
+    - Canonical Binance USD-M futures instrument identity is validated; side is retained only when unambiguous and absolute quantity is finite.
+    - Malformed, ambiguous, duplicate or failed responses publish no new observation; a previous good object, observation_id and as_of_ms survive later failure unchanged.
+    - Capture is not yet consumed by Attention; Attention ranking, Risk, Accounting authority, Orchestrator and Execution are unchanged.
+  boundary:
+    - Absence of an instrument from the observation is not a proven usable flat Attention signal.
+    - Unrealized P&L, notional/exposure, concentration, equity/drawdown, gross/net exposure and hedge state remain unproved for Attention.
+    - Portfolio-state input to live Attention is PARTIAL / prerequisite-established; Attention overall remains IMPLEMENTED.
 
 current_active_work:
-  id: SDD-STAGE-3-ATTENTION-PORTFOLIO-OBSERVATION-PREREQUISITE
+  id: SDD-STAGE-3-ATTENTION-PORTFOLIO-SIGNALS
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Create an immutable, detached, point-in-time venue-position observation from an existing successful complete Kernel position read, without a new account API call or Attention ranking change.
+  objective: Feed the TESTED detached portfolio-position observation into Attention as a bounded, direction-independent salience input without changing any trading authority.
   constraints:
-    - Capture only at the existing suitable position read; do not reorder the cycle or feed the observation into Attention yet.
-    - Do not change Attention ranking, strategy scan, Orchestrator, Risk, Accounting, Execution or strategy behavior.
-    - Do not add a venue-position or account API call.
-    - Do not implement salience, notional, exposure, P&L, urgency, research feedback, WorldModel production or trading authority changes.
-    - do not promote Attention overall beyond IMPLEMENTED
+    - Use verified current-position presence from an explicit PositionRecord; do not use absent-record-as-flat without separate complete and safe instrument-specific semantics.
+    - Require an explicit Attention cut and explicit freshness policy; future or stale observations contribute nothing, and accepted as_of_ms must not exceed attention_as_of_ms.
+    - Join only exact canonical instrument identity; add the smallest explicit mapping seam if needed and fail closed on ambiguity.
+    - Keep portfolio input optional and preserve identical legacy Attention output when absent.
+    - Position presence may increase salience only; no direction, sizing, strategy eligibility, registry population or trading authority change.
+    - Preserve Attention overall maturity IMPLEMENTED and the parked non-final Scheme-D pilot.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
