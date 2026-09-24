@@ -17,39 +17,42 @@ work_package:
     - No new venue request, DataFeed fetch, store table, recorder or backfill.
   missing_transformation:
     - Capture - a bounded close-only history per member, detached in the same producer pass.
-    - Attention - per-asset standardized Fisher correlation change |z| between baseline and recent windows against an exact-grid leave-one-out cohort reference.
+    - Attention - per-asset Fisher-scaled correlation change between baseline and recent windows against a captured leave-one-out peer basket.
     - Investigation - a registration-evidence family for correlation-dominant candidates.
   frozen_semantics:
     - New optional input key correlation_history [{symbol, status, first_open_ms, closes}] in cognition.input.v1; an absent key leaves every existing output and hash byte-identical.
     - capture = exactly CORRELATION_CAPTURE_CLOSES = 151 fully closed 4h closes ending at the Attention anchor (open_ms + tf <= as_of); a still-forming bar never enters the history. The bar open times are first_open_ms + i * tf_ms exactly; consecutiveness is verified at capture and again at load.
     - 151 closes produce exactly 150 log returns log(close_t / close_t-1). baseline = the previous (first) 120 returns; recent = the most recent (last) 30 returns; the windows are non-overlapping and adjacent.
     - Data alignment uses exact closed-bar timestamps only - no interpolation, no forward fill, no nearest-bar matching. A member participates in a reference only if its timestamp grid equals the candidate's grid exactly (same first_open_ms, same 151 bars) with every return finite.
-    - Reference for candidate i at each timestamp = equal-weight leave-one-out mean return of the other valid cohort members; the candidate is always excluded from its own reference; the same membership is used for baseline and recent. Fewer valid peers than the existing min_cohort -> unavailable (insufficient_cohort).
+    - Reference = the captured leave-one-out peer basket - ONE peer set per candidate, frozen from the members with the complete exact aligned 150-return history, candidate excluded, equal weights, used unchanged for every return of both windows; never rebuilt per timestamp from whichever peers exist, and an incomplete peer is excluded entirely. Fewer peers than the existing min_cohort -> unavailable (insufficient_cohort). Provenance persisted - reference_peers, reference_size, reference_membership_id, reference_policy = leave_one_out_equal_weight, baseline/recent return-bar boundaries. It is not the crypto market, a market factor, a sector or a BTC proxy; a later scan's basket may differ and no continuity is claimed across baskets.
     - r_baseline = corr(asset_baseline, loo_reference_baseline); r_recent = corr(asset_recent, loo_reference_recent); f_baseline = atanh(r_baseline); f_recent = atanh(r_recent).
-    - se = sqrt(1/(120-3) + 1/(30-3)) (fixed); signed_change_z = (f_recent - f_baseline) / se.
-    - Attention component correlation_change = abs(signed_change_z), competing in the existing max salience. The raw Fisher difference is NOT used as salience; it is retained only as evidence alongside signed_change_z, r_baseline, r_recent, f_baseline, f_recent, se and the reference cohort.
-    - Both directions matter equally - sharp decoupling (negative) and sharp convergence (positive); +z and -z of equal magnitude have identical salience. No bullish/bearish or trading direction is inferred.
-    - Explicit unavailable status, never 0 - fewer than 151 valid closed bars (warmup), timestamp gap, non-finite close/return, zero variance in candidate returns, zero variance in leave-one-out reference, insufficient valid leave-one-out cohort, non-finite correlation, |r| >= 1 (non-finite Fisher transform), malformed captured history.
-    - This is a deterministic standardized correlation-change feature. It is NOT a p-value, a calibrated significance test or proof of regime change, and no such claim enters the payload.
+    - fisher_scale = sqrt(1/(120-3) + 1/(30-3)) (fixed); signed_fisher_scaled_change = (f_recent - f_baseline) / fisher_scale.
+    - Attention component correlation_change = abs(signed_fisher_scaled_change), competing in the existing max salience. The raw Fisher difference is NOT used as salience; captured evidence retains r_baseline, r_recent, the signed change, the absolute correlation_change, f_baseline, f_recent, fisher_scale and the peer basket.
+    - Both directions matter equally - weakening (negative) and strengthening (positive) of equal magnitude have identical salience. No bullish/bearish or trading direction is inferred.
+    - Explicit unavailable status, never 0 - fewer than 151 valid closed bars (warmup), timestamp gap, non-finite close/return, zero variance in candidate returns, zero variance in leave-one-out reference, insufficient valid leave-one-out cohort, non-finite correlation, |r| >= 1 (non-finite Fisher transform; never clipped), malformed captured history.
+    - This is a deterministic Fisher-scaled correlation-change feature. It is not a p-value, confidence level, calibrated z-test or controlled false-positive result, and no such claim enters payloads, investigation text or tests.
     - No new Attention weight or threshold; the existing min_salience applies.
     - Replay and investigation consume the captured input only; no live price query.
   implementation_policy:
     CORRELATION_CAPTURE_CLOSES: 151 closed 4h closes
     CORRELATION_BASELINE: 120 returns (20 days of 4h bars)
     CORRELATION_RECENT: 30 returns (5 days of 4h bars)
-    family_assessment_threshold: 2.0 on |signed_change_z| - package-owned implementation policy, same status as POSITIONING_INVESTIGATION_THRESHOLD_POLICY; not empirically optimized and not SDD-derived.
+    family_assessment_threshold: 2.0 on |signed_fisher_scaled_change| - package-owned Attention/assessment policy, same status as POSITIONING_INVESTIGATION_THRESHOLD_POLICY; not empirically optimized and not SDD-derived.
     note: Window lengths and the threshold are package-owned deterministic policy, not SDD-derived constants.
   investigation_family:
     family: correlation_change
     protocol: investigation.correlation_change.v1 (separate frozen catalog; v2 and positioning catalogs and ids unchanged)
-    question: "Has this asset's relationship to the rest of the observed cohort changed materially relative to its prior captured relationship, and what concurrent captured evidence supports or contradicts that distinction?"
-    results: [distinct_supported, distinct_unsupported, not_distinct]
+    question: "How did this asset's contemporaneous correlation with the same captured peer basket differ between the baseline and recent windows? What captured evidence distinguishes an asset-specific change, a shared cohort change, or an unreliable comparison?"
+    results: [relationship_increased, relationship_decreased, relationship_crossed_zero, not_distinct, not_testable]
+    descriptors: [correlation_increased, correlation_decreased, correlation_unchanged, correlation_crossed_zero, baseline_relationship_positive|inverse|zero, recent_relationship_positive|inverse|zero, relationship_magnitude_increased|decreased|unchanged]
+    context_codes: [shared_cohort_context, shared_cohort_context_absent, shared_cohort_context_unavailable, peer_basket_change_context, peer_basket_change_context_absent, peer_change_evidence_unavailable, concurrent_unusual_evidence_present, concurrent_unusual_evidence_absent, concurrent_evidence_unavailable]
     rules:
       - A correlation_change-dominant candidate must not consume top-k and then receive no_investigation_family.
       - Registration-frozen captured/persisted evidence only; no live price query; closes immediately as assessed; contextual evidence only, not prospective predictive validation; no outcome-ingestion trading result.
-      - Concurrent support uses the existing captured candle components against their v2 catalog thresholds, as in positioning_extreme.
-      - A broad market move (market.broad) is recorded as a contradiction, not a result.
+      - Descriptive only; shares no assessment logic with positioning (whose vocabulary, logic, protocol and case ids are unchanged). Result from |change| and the endpoints only - |change| < 2.0 -> not_distinct; r_baseline and r_recent of differing signs -> relationship_crossed_zero (its increase/decrease is kept as a descriptor); else relationship_increased or relationship_decreased; unreadable frozen evidence -> not_testable. An isolated correlation change with ordinary volume, volatility, relative return and positioning is still a valid change.
+      - Broad cohort movement (market.broad) is context (shared_cohort_context), never a contradiction; concurrent candle/positioning evidence and the basket peers' own changes are context codes only and never change the result.
       - Confirmation and falsification are equally valid; no hedge, pair, long/short or regime conclusion is encoded.
+      - No bullish/bearish, reversal/continuation, causation, structural decoupling from crypto generally, persistent diversification or trading-permission inference.
   before_implementation:
     - Confirm the live 4h frames passed to capture hold >= 151 closed bars for members; otherwise the per-symbol status is warmup and nothing is filled.
     - Measure producer-side capture overhead with the existing telemetry before and after.
