@@ -2,72 +2,65 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-POSITIONING-EXTREMES-V1
+  id: SDD-STAGE-3-ATTENTION-POSITIONING-INVESTIGATION-FAMILY-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Let Attention notice and rank assets whose recorded derivatives positioning is extreme relative to the asset's own recent history, as an explicit, point-in-time, fail-closed salience component.
+  objective: Give positioning-dominant Attention candidates a truthful deterministic investigation family so that a valid positioning extreme does not consume an Attention slot without a research path.
   basis:
-    - SDD-STAGE-3-ATTENTION-NEXT-CAPABILITY-SELECTION-V3 selected positioning_extremes (gap matrix MISSING in Attention).
-    - The kernel derivatives recorder (config derivatives.enabled, 15-minute cadence) already writes funding and ls_ratio to the derivs table (symbol, series, ts, value).
-    - The live capture currently sends participation [] and records the limitation that derivatives inputs are not captured.
-    - The world_volume_anomaly precedent shows an optional competing z-scale component that leaves output unchanged when its input is absent.
-  source:
-    table: derivs in data/derivs.db (read-only connection)
-    series: [funding, ls_ratio]
-    excluded_series:
-      - oi (non-stationary level; participation, not positioning)
-      - taker_ratio (flow, not positioning)
-      - basis (separate observable)
-      - ls_account_ratio (not forward-recorded; production rows stop 2026-09-18)
-  frozen_semantics:
-    - New optional input key positioning [{symbol, series, ts, value}] in cognition.input.v1; an absent key leaves every existing output byte-identical.
-    - The capture reads the currently stored eligible values from the derivs table; those exact values and timestamps are persisted into cognition.input.v1 and the scan payload together with capture provenance (as_of_ms, read start/finish, bounds, status).
-    - Replay consumes the captured input only and never re-queries derivs.db.
-    - No historical point-in-time or first_seen claim is made for derivs data before its Attention capture; the recorder can overwrite a stored (symbol, series, ts) value.
-    - Eligibility, funding - funding timestamp <= as_of.
-    - Eligibility, ls_ratio - ts <= as_of; Binance ratio timestamps represent the END of the period, so no extra period delay is applied.
-    - Per series, anchor = latest eligible sample; reference = previous 20 eligible samples.
-    - z = (anchor - mean(reference)) / stdev(reference); the signed per-series z is exposed; positioning_extreme = max(|funding_z|, |ls_ratio_z|) over usable series and competes in the existing max salience on the same z-like scale. No new weight or threshold; the existing min_salience applies.
-    - Each series fails closed with an explicit status and None (never 0) for missing data, insufficient history, non-finite value, zero variance, invalid timestamp, conflicting revision, continuity gap or stale anchor; one usable series is sufficient; none usable contributes nothing.
-    - A derivs read error or timeout records positioning_unavailable and the scan continues.
-    - Reference length 20 and the continuity/freshness rules are package-owned implementation policy, not SDD-derived universal constants; any rule affecting availability is explicit, deterministic and tested.
-  implementation_policy:
-    ls_ratio_continuity: consecutive samples exactly 15 minutes apart (recorder period 15m)
-    ls_ratio_max_anchor_age: 45 minutes (one 15m recorder interval + one 15m period + one 15m slack)
-    funding_continuity: one constant settlement interval, rounded to whole minutes, across all 21 samples
-    funding_max_anchor_age: settlement interval + 30 minutes (two 15m recorder intervals)
-  implementation_boundary:
-    - trader/cognition/contracts.py - validate and load the optional positioning records; rejected records mark their series unusable instead of aborting the load.
-    - trader/cognition/attention.py - per-series positioning observations and the competing positioning_extreme component.
-    - trader/observability/positioning.py (new) - bounded read-only sqlite capture (no network, no trader.data import).
-    - trader/observability/worker.py and collector.py - the read runs in the disposable worker child under its own deadline, never on the trading-thread producer.
-    - trader/observability/store.py - persist the captured positioning input and provenance in the scan payload when present.
-    - trader/observability/investigation.py - recompute scans with the persisted positioning input.
-    - trader/kernel.py - pass the derivs.db path to the Collector; no recorder change.
-  not_in_scope:
-    - new venue requests, recorder or backfill changes
-    - OI/taker/basis/ls_account_ratio components
-    - a positioning-specific threshold or weight
-    - hypotheses/investigation template changes
-    - storage-capacity guard, downstream new-data dispatch, payload retention
+    - SDD-STAGE-3-ATTENTION-POSITIONING-EXTREMES-V1 is TESTED at 9816caa; positioning_extreme is valid Attention evidence.
+    - Known boundary POSITIONING_INVESTIGATION_FAMILY_MISSING - trader/cognition/investigation.py FAMILIES covers volume_anomaly, volatility_transition and relative_return_divergence only.
+    - A positioning-dominant candidate may legitimately enter top-k, then receives registration_reason = no_investigation_family in trader/observability/investigation.py and consumes a top-k slot without producing an investigation.
+    - This is the next downstream intelligence seam, not a failure of positioning capture or salience.
+  selection_principle:
+    - Do not redesign Attention ranking.
+    - Do not suppress positioning candidates merely because the family was missing; the signal is already accepted as valid Attention evidence.
+    - Close the missing research path instead.
+  before_implementation:
+    - Inspect the existing investigation-family/template architecture (trader/cognition/investigation.py FAMILIES and open_investigation; trader/observability/investigation.py registration) and identify the smallest existing pattern that can support positioning.
+    - Prefer reuse of the current investigation machinery; do not create a new general research framework.
+    - The investigation consumes already-captured immutable evidence only; no live derivs.db query from replay or investigation.
+  investigation_question: Is the observed positioning extreme meaningfully different from the candidate's recent positioning baseline, and what concurrent captured market evidence supports or contradicts that distinction?
+  must_not_assume:
+    - extreme long positioning is bearish
+    - extreme short positioning is bullish
+    - funding sign predicts direction
+    - a positioning extreme itself is a trading signal
+  outcome_rule: Confirmation and falsification are both valid investigation outcomes.
   preserve:
-    - Existing components, min_salience, k, dedup and tie-break unchanged.
-    - Replay and hashes of every snapshot without positioning input unchanged.
+    - Positioning z calculation unchanged.
+    - Attention salience/ranking, k and min_salience unchanged.
+    - Derivatives recorder unchanged.
+    - Existing non-positioning investigation families unchanged.
+    - Replay and hashes of snapshots without positioning input unchanged.
     - Population artifacts unchanged.
-    - No trading, Risk, Execution or strategy-authority changes; no LLM calls or venue requests.
+    - No trading, Risk, Execution or strategy-authority changes; no live LLM usage or venue requests.
     - Parked storage-capacity guard, liquidation, Scheme-D and portfolio boundaries unchanged.
   acceptance_tests:
-    - tests/test_cognition_attention_positioning.py (new) plus existing tests/test_cognition_attention.py, test_cognition_attention_world.py, test_cognition_contracts.py, test_cognition_replay.py, test_attention_telemetry.py and test_attention_kernel_wiring.py pass.
+    - A positioning-dominant candidate maps to a real investigation family.
+    - It no longer receives registration_reason = no_investigation_family.
+    - The family uses persisted captured evidence only.
+    - Replay works without derivs.db present.
+    - Positive and negative extremes are treated symmetrically.
+    - No directional trading conclusion is embedded.
+    - Existing non-positioning investigation families remain unchanged.
+    - Investigation-state allocation and idempotence tests remain passing.
+  not_in_scope:
+    - Attention ranking or salience changes; suppression of positioning candidates
+    - new derivatives series, venue requests, recorder or backfill changes
+    - a general research framework
+    - Store retention policy changes (positioning payload growth of ~45-50 KB per 16-symbol scan is recorded, not addressed here)
+    - storage-capacity guard, downstream new-data dispatch, payload retention
   established_boundary:
     - SDD-STAGE-3-ATTENTION-NEW-DATA-STORAGE-CAPACITY-GUARD-V1 is PARKED_OWNER_POLICY_REQUIRED; do not request or invent ledger_max_bytes or min_free_bytes.
     - OPERATOR_STORAGE_POLICY_REQUIRED, EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED and DOWNSTREAM_DISPATCH_PREREQUISITE_REQUIRED remain open and must not become the active package.
     - forced-liquidation-participation.v1 remains PARKED; M3.2 Scheme-D remains PARKED.
     - Portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET; portfolio salience remains BLOCKED_UPSTREAM.
     - Usefulness/outcome-weighted research feedback remains MISSING / DESIGN_ONLY.
+    - The running /home/sarmad/trader kernel does not contain positioning extremes; this package does not deploy.
     - Attention overall remains IMPLEMENTED; this package grants no maturity upgrade or activation.
   after_completion:
-    - Record TESTED evidence in STATE.yaml and set gap_matrix positioning_extremes to TESTED (live component; usefulness NOT_ESTABLISHED); no maturity upgrade.
+    - Record TESTED evidence in STATE.yaml, resolve POSITIONING_INVESTIGATION_FAMILY_MISSING only if all acceptance tests pass, and set gap_matrix positioning_investigation_family accordingly; no maturity upgrade.
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -128,4 +121,4 @@ parked_storage_capacity_guard:
   reopen_when: Owner supplies explicit ledger_max_bytes and min_free_bytes; do not request or invent them.
 
 after_completion:
-  - Record SDD-STAGE-3-ATTENTION-POSITIONING-EXTREMES-V1 evidence in STATE.yaml; keep the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch.
+  - Record SDD-STAGE-3-ATTENTION-POSITIONING-INVESTIGATION-FAMILY-V1 evidence in STATE.yaml; keep the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch.
