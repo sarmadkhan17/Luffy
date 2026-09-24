@@ -14,7 +14,10 @@ import json
 from pathlib import Path
 import signal
 import sqlite3
+import sys
+import threading
 import time
+from uuid import uuid4
 
 from trader.cognition.attention import CognitionConfig, evaluate
 from trader.cognition.contracts import INPUT_SCHEMA, is_timestamp, load_input
@@ -38,6 +41,132 @@ ALLOCATION_POLICY = "investigation-state-feedback.v1"
 ALLOCATION_SCHEMA = "investigation-allocation-decision.v1"
 LEGACY = "legacy-top-k.v0"
 _CONTEXT_KEYS = ("reason", "selected", "open_episode_id")
+
+# Per-case resource receipts: raw observational telemetry, never case identity.
+# No bound or budget is declared here; compliance stays UNKNOWN until a separate,
+# prospectively frozen policy exists. UNITS are pinned by RECEIPT_SCHEMA.
+RECEIPT_SCHEMA = "investigation-resource-receipt.v1"
+ACCOUNTING_SCOPE = "investigation_step_case_local"
+# Receipts cover committed case-local work only. Rolled-back attempts leave no
+# receipt, so their cost is UNKNOWN, never zero.
+COVERAGE = "committed_case_local_investigation_work"
+NOT_COVERED = ("total_research_cost", "total_attempted_cost",
+               "failed_or_rolled_back_attempt_cost", "end_to_end_step_duration_attributable_to_cases")
+UNITS = {
+    "wall_ns": "time.monotonic_ns elapsed inside the per-case section",
+    "cpu_ns": "time.thread_time_ns elapsed inside the per-case section",
+    "evidence_rows_read": "input-bar rows supplied to the case's registration/measurement",
+    "ledger_rows_written": "sqlite total_changes delta inside the section (receipt row excluded)",
+    "payload_bytes": "UTF-8 bytes of case, update and newly inserted input payloads",
+    "llm_calls": "0 when no egress audit event occurred in the section, else UNKNOWN",
+    "venue_requests": "0 when no egress audit event occurred in the section, else UNKNOWN",
+}
+_CLOCKS = {"wall_ns": time.monotonic_ns, "cpu_ns": time.thread_time_ns}
+_EGRESS = frozenset({"socket.connect", "socket.getaddrinfo", "socket.gethostbyname",
+                     "socket.sendto", "subprocess.Popen", "os.system", "os.posix_spawn",
+                     "os.exec", "os.spawn"})
+_local = threading.local()
+_audit_installed = False
+
+
+def _audit(event, _args):
+    counts = getattr(_local, "egress", None)
+    if counts is not None and event in _EGRESS:
+        counts[event] = counts.get(event, 0) + 1
+
+
+def _install_audit():
+    global _audit_installed
+    if not _audit_installed:
+        sys.addaudithook(_audit)
+        _audit_installed = True
+
+
+def _clock(name):
+    try:
+        value = _CLOCKS[name]()
+    except Exception:
+        return None
+    return value if type(value) is int else None
+
+
+class _Meter:
+    """Measures one bounded section. Raw clock values are never persisted."""
+
+    def __init__(self, db=None, egress=False):
+        self.db, self.rows_read, self.payload_bytes = db, 0, 0
+        self.egress = {} if egress else None
+        if egress:
+            _local.egress = self.egress
+        self.changes = db.total_changes if db is not None else None
+        self.start = {k: _clock(k) for k in _CLOCKS}
+
+    def stop(self):
+        """Elapsed per unit, or None with a reason. Never a fabricated 0."""
+        end = {k: _clock(k) for k in _CLOCKS}
+        if self.egress is not None:
+            _local.egress = None
+        values, unknown = {}, {}
+        for k in _CLOCKS:
+            if self.start[k] is None or end[k] is None:
+                values[k], unknown[k] = None, "clock_read_failed"
+            elif end[k] < self.start[k]:
+                values[k], unknown[k] = None, "non_monotonic_reading"
+            else:
+                values[k] = end[k] - self.start[k]
+        if self.db is not None:
+            values.update(evidence_rows_read=self.rows_read, payload_bytes=self.payload_bytes,
+                          ledger_rows_written=self.db.total_changes - self.changes)
+            if sum(self.egress.values()):
+                for k in ("llm_calls", "venue_requests"):
+                    values[k], unknown[k] = None, "unclassified_egress"
+            else:
+                values.update(llm_calls=0, venue_requests=0)
+        return values, unknown
+
+
+def _receipt_body(meter, inv, stage, execution_id, work, outcome, now):
+    """One measured execution of case-local work.
+
+    `execution_id` is the step invocation: each real execution is its own receipt,
+    even when its logical work context (`work`) is identical to an earlier one.
+    """
+    values, unknown = meter.stop()
+    identity = {"schema_version": RECEIPT_SCHEMA, "execution_id": execution_id,
+                "case_id": inv.investigation_id, "stage": stage, "work": work}
+    wall = values["wall_ns"]
+    return dict(identity, receipt_id=digest(identity), episode_id=inv.episode_id, symbol=inv.state.symbol,
+                family=inv.measurement.family, protocol_id=inv.measurement.catalog_id,
+                source_scan_id=work["source_scan_id"], observed_ms=now, outcome=outcome,
+                accounting_scope=ACCOUNTING_SCOPE, coverage=COVERAGE, not_covered=list(NOT_COVERED),
+                measurements=values, unknown_units=unknown,
+                elapsed_ms=None if wall is None else wall / 1e6,
+                measurement_status="UNKNOWN" if unknown else "MEASURED",
+                egress_events=dict(sorted(meter.egress.items())),
+                resource_bound=None, resource_compliance="UNKNOWN",
+                compliance_reason="no_prospectively_frozen_resource_bound")
+
+
+def _persist_receipt(db, body):
+    """Idempotent only for the SAME execution; an existing receipt is never rewritten."""
+    return db.execute("INSERT OR IGNORE INTO resource_receipts VALUES (?,?,?,?,?,?)",
+                      (body["receipt_id"], body["case_id"], body["stage"], body["execution_id"],
+                       body["observed_ms"], I.encode(body))).rowcount == 1
+
+
+def _receipt(db, meter, inv, stage, execution_id, work, outcome, now):
+    """Returns (written, measurements, unknown)."""
+    body = _receipt_body(meter, inv, stage, execution_id, work, outcome, now)
+    return _persist_receipt(db, body), body["measurements"], bool(body["unknown_units"])
+
+
+def receipts(path, case_id=None):
+    """Read-only receipt history, in append order."""
+    with closing(sqlite3.connect(Path(path).resolve().as_uri()+"?mode=ro", uri=True, timeout=.1)) as db:
+        sql, args = "SELECT payload FROM resource_receipts", ()
+        if case_id is not None:
+            sql, args = sql + " WHERE case_id=?", (case_id,)
+        return [json.loads(p) for (p,) in db.execute(sql + " ORDER BY rowid", args)]
 
 
 def source_snapshot(path):
@@ -172,6 +301,10 @@ def ledger(path):
         UNIQUE(scan_id, policy_version));
       CREATE TABLE IF NOT EXISTS allocation_bindings(declaration_version TEXT PRIMARY KEY,
         policy TEXT NOT NULL, bound_ms INTEGER NOT NULL);
+      CREATE TABLE IF NOT EXISTS resource_receipts(id TEXT PRIMARY KEY, case_id TEXT NOT NULL,
+        stage TEXT NOT NULL, execution_id TEXT NOT NULL, recorded_ms INTEGER NOT NULL,
+        payload TEXT NOT NULL);
+      CREATE INDEX IF NOT EXISTS receipt_case ON resource_receipts(case_id);
     """)
     memory_store.schema(db)
     outcome_store.schema(db)
@@ -304,32 +437,56 @@ def _frozen_allocation(db, scan, snapshot, pop, now, updates_used):
 
 
 def _save_inputs(db, iid, bars, wanted):
+    """Returns payload bytes newly inserted into `inputs`."""
+    size = 0
     for b in bars:
         if b.version_id in wanted:
             payload = I.encode(asdict(b))
             old = db.execute("SELECT payload FROM inputs WHERE id=?", (b.version_id,)).fetchone()
             if old and old[0] != payload:
                 raise ValueError("conflicting_retained_version")
-            db.execute("INSERT OR IGNORE INTO inputs VALUES (?,?)", (b.version_id, payload))
+            if db.execute("INSERT OR IGNORE INTO inputs VALUES (?,?)", (b.version_id, payload)).rowcount == 1:
+                size += len(payload.encode())
             db.execute("INSERT OR IGNORE INTO case_inputs VALUES (?,?)", (iid, b.version_id))
+    return size
 
 
 def _append(db, update):
+    """Returns the update payload bytes."""
     memory_store.append_reasoning(db, update)
+    payload = I.encode(asdict(update))
     db.execute("INSERT INTO updates VALUES (?,?,?,?)", (update.event_id, update.investigation_id,
-               update.observed_ms, I.encode(asdict(update))))
+               update.observed_ms, payload))
     if update.evidence.status != "unresolved":
         db.execute("UPDATE cases SET terminal_ms=? WHERE id=?", (update.observed_ms, update.investigation_id))
+    return len(payload.encode())
 
 
 def step(source_path, dest_path, now_ms=None, population_config=None):
     """One transaction. CLI enforces the publication/runtime bound in production."""
+    _install_audit()
+    pass_meter = _Meter()
     started = time.monotonic()
     now = int(time.time() * 1000) if now_ms is None else now_ms
     detail = {"updated_ms": now, "status": "waiting", "reason": "no_complete_scan",
               "registered": 0, "updated": 0, "skipped": {}, "source_scan_id": None}
     decisions = []
     current = None
+    charged = {"written": 0, "duplicates_ignored": 0, "unknown": 0, "wall_ns": 0, "cpu_ns": 0}
+    # One id per real step() invocation; wall-clock time is never identity.
+    execution_id = uuid4().hex
+    def charge(meter, inv, stage, outcome, previous_id, resulting_id):
+        work = {"source_scan_id": detail["source_scan_id"], "previous_update_id": previous_id,
+                "resulting_update_id": resulting_id}
+        written, values, unknown = _receipt(db, meter, inv, stage, execution_id, work, outcome, now)
+        if not written:
+            # The SAME execution persisted twice: already counted once.
+            charged["duplicates_ignored"] += 1
+            return
+        charged["written"] += 1
+        charged["unknown"] += unknown
+        for k in _CLOCKS:
+            charged[k] = None if values[k] is None or charged[k] is None else charged[k] + values[k]
     def skip(reason):
         if current is not None:
             current['registration_reason'] = reason
@@ -357,6 +514,7 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
         db.execute("DELETE FROM cases WHERE terminal_ms IS NOT NULL AND terminal_ms<?", (now-RETENTION_MS,))
         db.execute("DELETE FROM updates WHERE case_id NOT IN (SELECT id FROM cases)")
         db.execute("DELETE FROM case_inputs WHERE case_id NOT IN (SELECT id FROM cases)")
+        db.execute("DELETE FROM resource_receipts WHERE case_id NOT IN (SELECT id FROM cases)")
         db.execute("DELETE FROM inputs WHERE id NOT IN (SELECT input_id FROM case_inputs)")
         db.execute("DELETE FROM allocation_decisions WHERE decided_ms<?", (now-RETENTION_MS,))
         memory_store.retain(db)
@@ -395,6 +553,9 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
         for row in active:
             if detail["updated"] >= MAX_UPDATES:
                 skip("update_budget_exhausted"); break
+            # Case-local section. Cases passed over without assessment get no
+            # receipt; their small cost stays in the unattributed residual.
+            meter = _Meter(db, egress=True)
             inv = I.investigation_from_dict(json.loads(row["payload"]))
             last = db.execute("SELECT payload FROM updates WHERE case_id=? ORDER BY observed_ms DESC,rowid DESC LIMIT 1", (row["id"],)).fetchone()
             previous = I.update_from_dict(json.loads(last[0])) if last else None
@@ -407,19 +568,25 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
                 "SELECT payload FROM inputs JOIN case_inputs ON inputs.id=case_inputs.input_id WHERE case_id=?", (row["id"],))
                 for d in [json.loads(payload)]]
             incoming = snapshot.bars if snapshot else ()
+            meter.rows_read = len(retained) + len(incoming)
             evidence = I.measure(inv, (*retained, *incoming), snapshot.scan["as_of_ms"] if snapshot else now, now)
             update = I.advance(inv, evidence, previous)
+            prior = previous.event_id if previous else None
             if update:
                 count = db.execute("SELECT COUNT(*) FROM updates WHERE case_id=?", (inv.investigation_id,)).fetchone()[0]
                 if count >= MAX_CASE_UPDATES-1 and update.evidence.status == "unresolved":
-                    skip("case_update_capacity"); continue
-                _save_inputs(db, inv.investigation_id, incoming, {v for _, _, v in evidence.target_versions})
-                _append(db, update)
+                    skip("case_update_capacity")
+                    charge(meter, inv, "assessment", "case_update_capacity", prior, None); continue
+                meter.payload_bytes += _save_inputs(db, inv.investigation_id, incoming, {v for _, _, v in evidence.target_versions})
+                meter.payload_bytes += _append(db, update)
                 if pop:
                     pop.update(inv.investigation_id, inv.state.symbol, inv.registered_ms, update.event_id,
                                memory_store.source_archive(db, inv.investigation_id),
                                terminal=update.evidence.status != 'unresolved')
                 detail["updated"] += 1
+                charge(meter, inv, "update", "update:" + update.evidence.status, prior, update.event_id)
+            else:
+                charge(meter, inv, "assessment", "no_state_change", prior, None)
         if snapshot:
             decisions = [dict(row, registration_reason='not_selected_for_investigation')
                          for row in snapshot.scan['rows']]
@@ -443,6 +610,9 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
                         by_symbol[symbol]['registration_reason'] = 'allocation_execution_closed'
             for symbol in (allocation["selected"] if allocation and not allocation["reused"] else ()):
                 current = by_symbol[symbol]
+                # Case-local only once a case exists; refused candidates have no
+                # case to charge and stay in the unattributed residual.
+                meter = _Meter(db, egress=True)
                 if db.execute("SELECT 1 FROM cases WHERE symbol=? AND terminal_ms IS NULL", (symbol,)).fetchone():
                     skip("existing_episode"); continue
                 if detail["updated"] + detail["registered"] >= MAX_UPDATES:
@@ -464,17 +634,22 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
                     skip(str(exc)); continue
                 if db.execute("SELECT 1 FROM cases WHERE episode_id=?", (inv.episode_id,)).fetchone():
                     skip("existing_closed_episode"); continue
-                db.execute("INSERT INTO cases VALUES (?,?,?,?,NULL,?)", (inv.investigation_id, inv.episode_id, symbol, now, I.encode(asdict(inv))))
+                case_payload = I.encode(asdict(inv))
+                db.execute("INSERT INTO cases VALUES (?,?,?,?,NULL,?)", (inv.investigation_id, inv.episode_id, symbol, now, case_payload))
+                meter.rows_read = len(snapshot.bars)
+                meter.payload_bytes = len(case_payload.encode())
                 memory_store.register(db, inv)
-                _save_inputs(db, inv.investigation_id, snapshot.bars, set(inv.state.input_versions))
+                meter.payload_bytes += _save_inputs(db, inv.investigation_id, snapshot.bars, set(inv.state.input_versions))
                 if pop:
                     pop.registration(inv.investigation_id, symbol, now,
                         dict(memory_store.source_archive(db, inv.investigation_id),
                              memory=memory_store.owner_context(db, inv.investigation_id),
                              collector_evidence=detail.get("collector_evidence")))
-                _append(db, I.advance(inv, I.measure(inv, (), now, now)))
+                initial = I.advance(inv, I.measure(inv, (), now, now))
+                meter.payload_bytes += _append(db, initial)
                 current.update(registration_reason='registered', episode_id=inv.investigation_id)
                 detail["registered"] += 1
+                charge(meter, inv, "registration", "registered", None, initial.event_id)
             if pop:
                 pop.scan(dict(snapshot.scan,collector_evidence=detail.get("collector_evidence")), decisions)
         if pop and snapshot is None and pop.declaration['start_ms'] <= now < pop.declaration['discovery_cut_ms']:
@@ -487,6 +662,25 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
         # Abort whole transaction before publication if the guard can no longer hold.
         if (time.monotonic()-started) * 1000 >= I.MAX_RUNTIME_MS:
             raise TimeoutError("worker_deadline")
+        # Pass residual: everything outside case-local sections, reported once
+        # and never apportioned to candidates.
+        _local.egress = None
+        pass_values, pass_unknown = pass_meter.stop()
+        residual = {"schema_version": RECEIPT_SCHEMA, "accounting_scope": ACCOUNTING_SCOPE,
+                    "execution_id": execution_id, "coverage": COVERAGE, "not_covered": list(NOT_COVERED),
+                    "uncommitted_attempt_cost": "UNKNOWN",
+                    "written": charged["written"], "duplicates_ignored": charged["duplicates_ignored"],
+                    "unknown_receipts": charged["unknown"], "resource_compliance": "UNKNOWN",
+                    "unknown_units": {}}
+        for k, name in (("wall_ns", "wall"), ("cpu_ns", "cpu")):
+            residual[f"pass_{name}_ns"] = pass_values[k]
+            residual[f"attributed_{name}_ns"] = charged[k]
+            if pass_values[k] is None or charged[k] is None:
+                residual[f"unattributed_{name}_ns"] = None
+                residual["unknown_units"][k] = pass_unknown.get(k, "case_measurement_unknown")
+            else:
+                residual[f"unattributed_{name}_ns"] = pass_values[k] - charged[k]
+        detail["resource_receipts"] = residual
         if pop:
             detail['population'] = {'enabled': True, 'activated_ms': pop.activated,
                                     'declaration_version': pop.version}
