@@ -969,14 +969,72 @@ next_slice_selection:
   reason: A is smaller and more directly advances Attention. The retained candle version store already records version identity, first_seen_ms and value/previous-value hashes (trader/observability/store.py), so the missing piece is an idempotent trigger over existing evidence; it closes a named Attention gap (new_data_availability_trigger PARTIAL prerequisite / trigger MISSING) and advances event-driven invocation. B attributes cost but does not change what Attention examines, needs measurement/attribution plumbing across work paths, and any resource bound requires a prospectively versioned resource policy.
   deferred: SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1 remains an unqueued independent candidate.
 
-current_active_work:
+completed_attention_new_data_trigger_v1:
   id: SDD-STAGE-3-ATTENTION-NEW-DATA-TRIGGER-V1
   type: IMPLEMENTATION
+  state: TESTED_BUT_BLOCKED
+  truthful_state: EVENT_CREATION_TESTED_DOWNSTREAM_AND_CAPACITY_POLICY_BLOCKED
+  evidence:
+    - commit e3ffa3c — Add retained candle new-data events
+    - trader/observability/store.py
+    - trader/observability/new_data.py
+    - tests/test_attention_new_data_trigger.py
+  proven_facts:
+    - Store durably records immutable creator scan identity for each new candle version.
+    - Creator provenance survives creator-scan pruning while the version remains retained.
+    - Later referencing scans cannot impersonate the creator.
+    - Legacy versions without creator receipts fail explicitly when origin can no longer be proven.
+    - One deterministic attention-new-data-event.v1 is emitted per new/value-changed closed retained version.
+    - Unchanged re-observation emits no new event.
+    - Event IDs are deterministic and restart/retry idempotent.
+    - Retired event identities remain append-only tombstones and prevent re-emission even if a pruned scan/version ID is recreated.
+    - Event payload retention does not delete exactly-once identity.
+    - Store FK enforcement already existed and correctly cascades version-origin receipts.
+    - Attention source store, scan/replay contracts, ranking and salience are unchanged.
+    - No network, venue, LLM, trading, Risk or Execution changes.
+    - Downstream dispatch is NOT implemented.
+  validation:
+    new_data_tests: 28 passed
+    focused_run: 303 passed
+    larger_prior_focused_run: 690 passed, 2 failed
+    baseline_failures: The 2 failures also reproduce on clean HEAD and are not attributable to this package.
+  blockers:
+    - DOWNSTREAM_DISPATCH_PREREQUISITE_REQUIRED
+    - INPUT_VERSION_CAPACITY_POLICY_REQUIRED
+    - EVENT_IDENTITY_CAPACITY_POLICY_REQUIRED
+    - EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED
+  findings:
+    input_capacity: >-
+      MAX_VERSIONS=65_536 is invented and does not follow from allowed Store settings.
+      The Store can legitimately contain far more scan-version references than the trigger
+      can process within its current 1-second read deadline. Synthetic evidence: ~213k
+      references completed in about 0.58s; 2M references interrupted; the ~16.8M
+      allowed-reference envelope interrupted. The deadline fails closed, but a legitimate
+      large Store could permanently prevent trigger operation.
+    event_identity_capacity: >-
+      MAX_EVENTS=262_144 is an invented lifetime ceiling over active events plus retired
+      exactly-once identities. Retired identities must not be deleted merely to regain capacity.
+    payload_retention: >-
+      30-day event payload retention is borrowed, not established by the Attention Store
+      contract. Exactly-once correctness does not depend on payload retention because
+      retired identities remain.
+    read_deadline: >-
+      READ_DEADLINE_S=1.0 is implementation safety policy, not a justified production value;
+      it affects liveness, not correctness.
+  gap_matrix_update:
+    new_data_availability_trigger: EVENT_CREATION_TESTED_DOWNSTREAM_AND_CAPACITY_POLICY_BLOCKED
+    downstream_new_data_dispatch: MISSING
+    attention_overall: IMPLEMENTED
+  maturity_boundary: Downstream new-data triggering is NOT operational. Attention overall remains IMPLEMENTED; this package grants no maturity upgrade or activation. Forced-liquidation experiment and Scheme-D remain PARKED; portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET.
+
+current_active_work:
+  id: SDD-STAGE-3-ATTENTION-NEW-DATA-INPUT-CAPACITY-POLICY-V1
+  type: EVIDENCE_AUDIT
   priority: ACTIVE
   status: READY
-  objective: Emit an idempotent new-data event when a genuinely new or changed retained candle version appears, carrying source identity and first-seen time, to drive bounded downstream Attention/investigation work.
+  objective: Derive a truthful bounded-processing contract for retained candle versions and scan-version references from the existing Attention Store settings, without inventing a count ceiling or arbitrary read deadline.
   deliverables: As scoped in NEXT.yaml.
-  boundary: No salience, ranking, threshold, weight or candidate-generation change; no live WorldModel, liquidation-clock work or portfolio salience; no LLM calls or venue requests; no trading/Risk/Execution/strategy-authority change; original scan rows/hash/replay and frozen population artifacts remain unchanged; Attention overall remains IMPLEMENTED.
+  boundary: Evidence audit only; no code, Store retention change, downstream dispatch, salience/ranking change, LLM call, venue request or trading/Risk/Execution change; Attention overall remains IMPLEMENTED.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
