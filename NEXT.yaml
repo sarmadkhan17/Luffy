@@ -2,65 +2,93 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-POSITIONING-INVESTIGATION-FAMILY-V1
+  id: SDD-STAGE-3-ATTENTION-CORRELATION-CHANGE-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Give positioning-dominant Attention candidates a truthful deterministic investigation family so that a valid positioning extreme does not consume an Attention slot without a research path.
+  objective: Let Attention notice assets whose recent co-movement with the rest of the captured cohort has changed materially from their own baseline, as an explicit, point-in-time, fail-closed salience component with a registration-evidence investigation family.
   basis:
-    - SDD-STAGE-3-ATTENTION-POSITIONING-EXTREMES-V1 is TESTED at 9816caa; positioning_extreme is valid Attention evidence.
-    - Known boundary POSITIONING_INVESTIGATION_FAMILY_MISSING - trader/cognition/investigation.py FAMILIES covers volume_anomaly, volatility_transition and relative_return_divergence only.
-    - A positioning-dominant candidate may legitimately enter top-k, then receives registration_reason = no_investigation_family in trader/observability/investigation.py and consumes a top-k slot without producing an investigation.
-    - This is the next downstream intelligence seam, not a failure of positioning capture or salience.
-  selection_principle:
-    - Do not redesign Attention ranking.
-    - Do not suppress positioning candidates merely because the family was missing; the signal is already accepted as valid Attention evidence.
-    - Close the missing research path instead.
+    - SDD-STAGE-3-ATTENTION-NEXT-CAPABILITY-SELECTION-V4 selected correlation_breakdown; strategy_degradation rejected for Attention (strategy-scoped, backtest per_symbol evidence, one production event).
+    - trader/observability/attention.py capture already slices each member's in-memory DataFeed frame (default fetch depth 400 bars) on the producer; only need = window + short + 1 = 26 bars are kept.
+    - V3 blocker - a 5-return recent correlation is statistically unusable - is a capture-length limit, not a missing source.
+    - Lesson from POSITIONING_INVESTIGATION_FAMILY_MISSING - a new dominant component without a family consumes top-k slots with no_investigation_family; the family ships in the same package.
+  source:
+    - Closed 4h bars from the same DataFeed frame slice the existing capture reads; close and open_ms only.
+    - No new venue request, DataFeed fetch, store table, recorder or backfill.
+  missing_transformation:
+    - Capture - a bounded close-only history per member, detached in the same producer pass.
+    - Attention - per-asset standardized Fisher correlation change |z| between baseline and recent windows against an exact-grid leave-one-out cohort reference.
+    - Investigation - a registration-evidence family for correlation-dominant candidates.
+  frozen_semantics:
+    - New optional input key correlation_history [{symbol, status, first_open_ms, closes}] in cognition.input.v1; an absent key leaves every existing output and hash byte-identical.
+    - capture = exactly CORRELATION_CAPTURE_CLOSES = 151 fully closed 4h closes ending at the Attention anchor (open_ms + tf <= as_of); a still-forming bar never enters the history. The bar open times are first_open_ms + i * tf_ms exactly; consecutiveness is verified at capture and again at load.
+    - 151 closes produce exactly 150 log returns log(close_t / close_t-1). baseline = the previous (first) 120 returns; recent = the most recent (last) 30 returns; the windows are non-overlapping and adjacent.
+    - Data alignment uses exact closed-bar timestamps only - no interpolation, no forward fill, no nearest-bar matching. A member participates in a reference only if its timestamp grid equals the candidate's grid exactly (same first_open_ms, same 151 bars) with every return finite.
+    - Reference for candidate i at each timestamp = equal-weight leave-one-out mean return of the other valid cohort members; the candidate is always excluded from its own reference; the same membership is used for baseline and recent. Fewer valid peers than the existing min_cohort -> unavailable (insufficient_cohort).
+    - r_baseline = corr(asset_baseline, loo_reference_baseline); r_recent = corr(asset_recent, loo_reference_recent); f_baseline = atanh(r_baseline); f_recent = atanh(r_recent).
+    - se = sqrt(1/(120-3) + 1/(30-3)) (fixed); signed_change_z = (f_recent - f_baseline) / se.
+    - Attention component correlation_change = abs(signed_change_z), competing in the existing max salience. The raw Fisher difference is NOT used as salience; it is retained only as evidence alongside signed_change_z, r_baseline, r_recent, f_baseline, f_recent, se and the reference cohort.
+    - Both directions matter equally - sharp decoupling (negative) and sharp convergence (positive); +z and -z of equal magnitude have identical salience. No bullish/bearish or trading direction is inferred.
+    - Explicit unavailable status, never 0 - fewer than 151 valid closed bars (warmup), timestamp gap, non-finite close/return, zero variance in candidate returns, zero variance in leave-one-out reference, insufficient valid leave-one-out cohort, non-finite correlation, |r| >= 1 (non-finite Fisher transform), malformed captured history.
+    - This is a deterministic standardized correlation-change feature. It is NOT a p-value, a calibrated significance test or proof of regime change, and no such claim enters the payload.
+    - No new Attention weight or threshold; the existing min_salience applies.
+    - Replay and investigation consume the captured input only; no live price query.
+  implementation_policy:
+    CORRELATION_CAPTURE_CLOSES: 151 closed 4h closes
+    CORRELATION_BASELINE: 120 returns (20 days of 4h bars)
+    CORRELATION_RECENT: 30 returns (5 days of 4h bars)
+    family_assessment_threshold: 2.0 on |signed_change_z| - package-owned implementation policy, same status as POSITIONING_INVESTIGATION_THRESHOLD_POLICY; not empirically optimized and not SDD-derived.
+    note: Window lengths and the threshold are package-owned deterministic policy, not SDD-derived constants.
+  investigation_family:
+    family: correlation_change
+    protocol: investigation.correlation_change.v1 (separate frozen catalog; v2 and positioning catalogs and ids unchanged)
+    question: "Has this asset's relationship to the rest of the observed cohort changed materially relative to its prior captured relationship, and what concurrent captured evidence supports or contradicts that distinction?"
+    results: [distinct_supported, distinct_unsupported, not_distinct]
+    rules:
+      - A correlation_change-dominant candidate must not consume top-k and then receive no_investigation_family.
+      - Registration-frozen captured/persisted evidence only; no live price query; closes immediately as assessed; contextual evidence only, not prospective predictive validation; no outcome-ingestion trading result.
+      - Concurrent support uses the existing captured candle components against their v2 catalog thresholds, as in positioning_extreme.
+      - A broad market move (market.broad) is recorded as a contradiction, not a result.
+      - Confirmation and falsification are equally valid; no hedge, pair, long/short or regime conclusion is encoded.
   before_implementation:
-    - Inspect the existing investigation-family/template architecture (trader/cognition/investigation.py FAMILIES and open_investigation; trader/observability/investigation.py registration) and identify the smallest existing pattern that can support positioning.
-    - Prefer reuse of the current investigation machinery; do not create a new general research framework.
-    - The investigation consumes already-captured immutable evidence only; no live derivs.db query from replay or investigation.
-  investigation_question: Is the observed positioning extreme meaningfully different from the candidate's recent positioning baseline, and what concurrent captured market evidence supports or contradicts that distinction?
-  must_not_assume:
-    - extreme long positioning is bearish
-    - extreme short positioning is bullish
-    - funding sign predicts direction
-    - a positioning extreme itself is a trading signal
-  outcome_rule: Confirmation and falsification are both valid investigation outcomes.
-  preserve:
-    - Positioning z calculation unchanged.
-    - Attention salience/ranking, k and min_salience unchanged.
-    - Derivatives recorder unchanged.
-    - Existing non-positioning investigation families unchanged.
-    - Replay and hashes of snapshots without positioning input unchanged.
-    - Population artifacts unchanged.
-    - No trading, Risk, Execution or strategy-authority changes; no live LLM usage or venue requests.
-    - Parked storage-capacity guard, liquidation, Scheme-D and portfolio boundaries unchanged.
+    - Confirm the live 4h frames passed to capture hold >= 151 closed bars for members; otherwise the per-symbol status is warmup and nothing is filled.
+    - Measure producer-side capture overhead with the existing telemetry before and after.
+  implementation_boundary:
+    - trader/observability/attention.py - bounded close-only history detached from the existing tail slice.
+    - trader/cognition/contracts.py - validate and load optional correlation_history; rejected records mark that symbol unusable instead of aborting the load.
+    - trader/cognition/attention.py - per-asset correlation_change observation and competing component.
+    - trader/observability/store.py - persist the captured input in the scan payload when present.
+    - trader/observability/investigation.py - recompute scans with the persisted input; register the family.
+    - trader/cognition/investigation.py - correlation_change family modelled on positioning_extreme.
   acceptance_tests:
-    - A positioning-dominant candidate maps to a real investigation family.
-    - It no longer receives registration_reason = no_investigation_family.
-    - The family uses persisted captured evidence only.
-    - Replay works without derivs.db present.
-    - Positive and negative extremes are treated symmetrically.
-    - No directional trading conclusion is embedded.
-    - Existing non-positioning investigation families remain unchanged.
-    - Investigation-state allocation and idempotence tests remain passing.
+    - tests/test_cognition_attention_correlation.py (new) - exact 120/30 split from 151 closes; recent and baseline windows do not overlap; Fisher difference is divided by the fixed se = sqrt(1/117 + 1/27); the raw Fisher difference is NOT used directly as salience; leave-one-out reference excludes the candidate; timestamp grids are exact (offset grid member excluded, no fill); convergence and breakdown of equal standardized magnitude rank equally; no p-value/significance claim enters the payload.
+    - tests/test_cognition_attention_correlation.py (new) - absent input leaves outputs and hashes byte-identical; a synthetic asset decoupling from a correlated cohort ranks on correlation_change; equal-|z| breakdown and convergence rank alike; gap, warmup, non-finite, zero-variance, |r| = 1 and insufficient_cohort fail closed to None with explicit status; leave-one-out excludes the asset itself; point-in-time - a forming bar is excluded; replay recomputes from captured input only.
+    - tests/test_correlation_investigation_family.py (new) - correlation-dominant candidates map to correlation_change and never receive no_investigation_family; registration-only assessment; malformed/inconsistent evidence fails closed; deterministic case ids across retry/restart; existing families and catalogs unchanged.
+    - Existing tests/test_cognition_attention.py, test_cognition_attention_world.py, test_cognition_attention_positioning.py, test_positioning_investigation_family.py, test_cognition_contracts.py, test_cognition_replay.py, test_attention_telemetry.py, test_attention_kernel_wiring.py and test_investigation_state_feedback.py pass apart from recorded baseline failures.
+    - git diff --check clean.
+  preserve:
+    - Existing components (including positioning), min_salience, k, dedup and tie-break unchanged.
+    - Replay and hashes of every snapshot without the new input unchanged.
+    - Population artifacts unchanged.
+    - No trading, Risk, Execution or strategy-authority changes; no LLM calls or venue requests.
+    - Parked storage-capacity guard, liquidation, Scheme-D and portfolio boundaries unchanged.
   not_in_scope:
-    - Attention ranking or salience changes; suppression of positioning candidates
-    - new derivatives series, venue requests, recorder or backfill changes
-    - a general research framework
-    - Store retention policy changes (positioning payload growth of ~45-50 KB per 16-symbol scan is recorded, not addressed here)
+    - forward/prospective validation of correlation change or positioning
+    - BTC-only or external reference series; a pairs or hedge expression
+    - liquidity, urgency, owner-question, research-cost or usefulness feedback
+    - Store retention policy changes (close-only history adds roughly 16 x 151 closes per scan; recorded, not addressed)
     - storage-capacity guard, downstream new-data dispatch, payload retention
+    - deployment to the running /home/sarmad/trader kernel
   established_boundary:
     - SDD-STAGE-3-ATTENTION-NEW-DATA-STORAGE-CAPACITY-GUARD-V1 is PARKED_OWNER_POLICY_REQUIRED; do not request or invent ledger_max_bytes or min_free_bytes.
     - OPERATOR_STORAGE_POLICY_REQUIRED, EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED and DOWNSTREAM_DISPATCH_PREREQUISITE_REQUIRED remain open and must not become the active package.
     - forced-liquidation-participation.v1 remains PARKED; M3.2 Scheme-D remains PARKED.
     - Portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET; portfolio salience remains BLOCKED_UPSTREAM.
     - Usefulness/outcome-weighted research feedback remains MISSING / DESIGN_ONLY.
-    - The running /home/sarmad/trader kernel does not contain positioning extremes; this package does not deploy.
+    - Positioning - signal TESTED, investigation family TESTED, predictive usefulness NOT_ESTABLISHED, deployed NO; no further positioning audit is queued.
     - Attention overall remains IMPLEMENTED; this package grants no maturity upgrade or activation.
   after_completion:
-    - Record TESTED evidence in STATE.yaml, resolve POSITIONING_INVESTIGATION_FAMILY_MISSING only if all acceptance tests pass, and set gap_matrix positioning_investigation_family accordingly; no maturity upgrade.
+    - Record TESTED evidence in STATE.yaml and set gap_matrix correlation_breakdown to TESTED (component and family in code; usefulness NOT_ESTABLISHED; not deployed); no maturity upgrade.
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -121,4 +149,4 @@ parked_storage_capacity_guard:
   reopen_when: Owner supplies explicit ledger_max_bytes and min_free_bytes; do not request or invent them.
 
 after_completion:
-  - Record SDD-STAGE-3-ATTENTION-POSITIONING-INVESTIGATION-FAMILY-V1 evidence in STATE.yaml; keep the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch.
+  - Record SDD-STAGE-3-ATTENTION-CORRELATION-CHANGE-V1 evidence in STATE.yaml; keep the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch.

@@ -1311,14 +1311,97 @@ completed_attention_positioning_extremes_v1:
     attention_overall: IMPLEMENTED
   maturity_boundary: Attention salience component only. Attention overall remains IMPLEMENTED; this package grants no maturity upgrade, deployment or activation. Storage-capacity guard, forced-liquidation experiment and Scheme-D remain PARKED; portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET; downstream new-data dispatch is not queued.
 
-current_active_work:
+completed_attention_positioning_investigation_family_v1:
   id: SDD-STAGE-3-ATTENTION-POSITIONING-INVESTIGATION-FAMILY-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 10ff9d03a49b4c6ef86bc8cf608a31ae17844de9
+  evidence:
+    - 10ff9d0 Add positioning investigation family
+    - trader/cognition/investigation.py
+    - trader/observability/investigation.py
+    - tests/test_positioning_investigation_family.py
+    - tests/test_cognition_attention_positioning.py
+  proven_facts:
+    - Positioning-dominant candidates map deterministically to family positioning_extreme, protocol investigation.positioning_extreme.v1.
+    - They no longer fail with registration_reason = no_investigation_family.
+    - Existing volume_anomaly, volatility_transition and relative_return_divergence family mappings, the v2 catalog and its ids are unchanged.
+    - The family consumes only persisted/captured evidence; replay/investigation does not query derivs.db.
+    - Funding-only and ls_ratio-only cases are valid.
+    - Positive and negative equal-|z| cases are treated symmetrically.
+    - No bullish/bearish/long/short/reversal/continuation trading conclusion is encoded (catalog direction None, probability None, authority research_only).
+    - Malformed or inconsistent positioning evidence fails closed (positioning_evidence_missing, positioning_evidence_malformed, positioning_extreme_inconsistent).
+    - Retry/restart registration and case IDs are deterministic.
+    - Ranking, k, min_salience, deduplication and candidate ordering are unchanged.
+    - No network, LLM, trading, Risk or Execution authority was added.
+  investigation_semantics:
+    question: "Is the observed positioning extreme meaningfully different from the candidate's recent positioning baseline, and what concurrent captured market evidence supports or contradicts that distinction?"
+    results: [distinct_supported, distinct_unsupported, not_distinct]
+    rules:
+      - Assessment uses only evidence frozen at registration.
+      - Assessment closes immediately as assessed.
+      - It is NOT a measured forward outcome.
+      - It does not enter outcome ingestion as a trading result.
+      - Confirmation and falsification remain equally valid.
+    implementation_notes:
+      - When the distinction holds but no valid concurrent candle component exists, the case closes not_testable with reason concurrent_evidence_missing; no result is chosen.
+      - A positioning-dominant candidate from a scan earlier than the positioning protocol's activation is skipped with awaiting_post_activation_scan.
+  known_boundaries:
+    CURRENT_EVIDENCE_ASSESSMENT_NOT_FORWARD_VALIDATION:
+      - The family assesses the same positioning distinction that caused selection plus concurrent captured candle evidence.
+      - It does NOT establish predictive power, a future return relationship, reversal probability, continuation probability or strategy usefulness.
+      - A prospective/forward protocol would be a separate future package.
+    POSITIONING_INVESTIGATION_THRESHOLD_POLICY:
+      - 2.0 is a package-owned deterministic assessment threshold; it is not derived from SDD authority and must not be presented as empirically optimal.
+      - At current min_salience = 2.0 a genuinely positioning-dominant selected candidate will normally already satisfy this magnitude, so not_distinct is generally unreachable unless configuration changes.
+      - Not to be fixed in this package.
+    POSITIONING_SERIES_DISAGREEMENT:
+      - If both series are valid and only one reaches the assessment threshold, the state records contradiction positioning_series_disagree.
+      - This is descriptive evidence only.
+  validation:
+    new_family_tests: 22 passed
+    focused_suites: 762 passed, 2 baseline failures
+    full_suite: 3318 passed, 56 failed, 12 errors
+    full_suite_baseline: The same 68 failures/errors reproduce at HEAD without this package.
+    git_diff_check: clean
+  resolved_boundary: POSITIONING_INVESTIGATION_FAMILY_MISSING (recorded under completed_attention_positioning_extremes_v1) is resolved by this package.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: The running /home/sarmad/trader kernel contains neither positioning extremes nor this family.
+  gap_matrix_update:
+    positioning_signal: TESTED
+    positioning_investigation_family: TESTED
+    positioning_predictive_usefulness: NOT_ESTABLISHED
+    positioning_deployed: NO
+    attention_overall: IMPLEMENTED
+  maturity_boundary: Research-path completion only. No upgrade of positioning usefulness or trading maturity; Attention overall remains IMPLEMENTED. Storage-capacity guard, forced-liquidation experiment and Scheme-D remain PARKED; portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET; downstream new-data dispatch is not queued.
+
+completed_attention_candidate_selection_v4:
+  id: SDD-STAGE-3-ATTENTION-NEXT-CAPABILITY-SELECTION-V4
+  type: SELECTION
+  state: COMPLETED_DESIGN_EVIDENCE
+  evidence_basis: Read-only inspection 2026-09-24 of trader/strategy/rolling.py (has_decayed, _score_window), trader/brain/analyst.py review_deployed, trader/kernel.py _mechanism_once, trader/core/journal.py brain_events, trader/observability/attention.py capture, trader/cognition/attention.py and a read-only count of production brain_events; reuses V3 findings where still valid. No code, collection or policy change.
+  excluded: [positioning (no further audit), storage_capacity, liquidation_clock, portfolio_magnitude, scheme_d, downstream_new_data_dispatch]
+  candidate_findings:
+    strategy_degradation: REJECTED_FOR_ATTENTION. The only runtime source is the journal brain_events kind=spec_decayed written by analyst.review_deployed, followed in the same kernel pass by immediate retirement. Its per_symbol breakdown is a recent-window backtest of the strategy on each symbol, not an observation of the asset, and pooled PF is the decision; mapping it to asset salience would invent asset attribution. Production has one spec_decayed event ever (2026-09-02). A truthful consumer is a strategy-scoped research trigger, which needs a new non-asset trigger contract; not implementable in Attention without invention.
+    correlation_breakdown: SELECTED. Source exists in runtime - the in-memory DataFeed frames already sliced by trader/observability/attention.py capture (default fetch depth 400 bars). V3's blocker (only window+short+1 = 26 bars captured; a 5-return recent correlation is unusable) is addressed by a bounded close-only history capture from the same slice; no new venue request, store or recorder.
+    liquidity_change: Unchanged from V3 - no recorded spread/depth source; OHLCV price-impact proxies would be relabelled volume/volatility, not liquidity. Missing source.
+    urgency: Unchanged - no defined deadline/decay semantics or truthful source. Missing design.
+    owner_question_trigger: Unchanged - no owner-question input channel or protocol. Missing source; would require new infrastructure.
+    per_candidate_research_cost: Unchanged - investigation work is not metered per candidate; metering would not change what Luffy notices. Missing source.
+    usefulness_outcome_weighted_research_feedback: Unchanged - MISSING / DESIGN_ONLY; TARGET_PREREQUISITE_REQUIRED.
+  selected_next_capability: SDD-STAGE-3-ATTENTION-CORRELATION-CHANGE-V1
+  maturity_boundary: Selection only; no implementation, ranking change or maturity upgrade is established by this record. Attention overall remains IMPLEMENTED.
+
+current_active_work:
+  id: SDD-STAGE-3-ATTENTION-CORRELATION-CHANGE-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Give positioning-dominant Attention candidates a truthful deterministic investigation family so that a valid positioning extreme does not consume an Attention slot without a research path.
+  objective: Let Attention notice assets whose recent co-movement with the rest of the captured cohort has changed materially from their own baseline, as an explicit, point-in-time, fail-closed salience component with a registration-evidence investigation family.
   deliverables: As scoped in NEXT.yaml.
-  boundary: Close the missing research path only. No Attention ranking redesign and no suppression of positioning candidates. No change to positioning z calculation, salience/ranking, k, min_salience, the derivatives recorder, trading/Risk/Execution or live LLM usage. The family consumes persisted captured evidence only; no live derivs.db query from replay or investigation. No directional trading conclusion is embedded. Existing non-positioning families unchanged; Attention overall remains IMPLEMENTED.
+  frozen_calculation: 151 closed 4h closes -> 150 log returns; baseline = previous 120, recent = latest 30 (non-overlapping); exact-grid leave-one-out cohort mean reference excluding the candidate; signed_change_z = (atanh(r_recent) - atanh(r_baseline)) / sqrt(1/(120-3) + 1/(30-3)); Attention component correlation_change = |signed_change_z| (raw Fisher difference is never salience); signed value retained as evidence. Deterministic standardized correlation-change feature - not a p-value, calibrated significance test or proof of regime change. Family threshold 2.0 is package-owned implementation policy, not empirically optimized or SDD-derived. Every failure is an explicit unavailable status, never 0.
+  boundary: Consume only closes already held in the DataFeed frames sliced by the existing capture; no new venue request, store, recorder or backfill. Existing components, min_salience, k, dedup, tie-break and hashes/replay of snapshots without the new input unchanged. No LLM call, trading/Risk/Execution or strategy-authority change; storage-capacity guard, liquidation, Scheme-D, portfolio-magnitude and downstream dispatch boundaries unchanged; Attention overall remains IMPLEMENTED.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
