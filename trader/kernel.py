@@ -41,6 +41,7 @@ from .engine.state import ControlStateMachine
 from .engine.supervisor import Supervisor
 from .engine.watchdog import Heartbeat, start_stall_monitor
 from .notify.telegram import Telegram
+from .observability.portfolio_observation import PortfolioObservation, observe_positions, trading_source
 from .strategy.genome import Genome
 
 log = logging.getLogger("luffy")
@@ -77,6 +78,7 @@ class Kernel:
         self.market_type = MarketType(
             self.journal.kv_get("market_type", cfg["mode"]["market"]))
         self.exchange = make_exchange(self.market_type.value)
+        self.position_observation: PortfolioObservation | None = None
         # NOT DataFeed(self.exchange): that is the demo trading venue, and
         # its klines carry simulated volume. Market data comes from the
         # production public API; orders still go to self.exchange via the
@@ -1451,8 +1453,24 @@ class Kernel:
         lot-step rounding is never mistaken for an exit.
         """
         try:
+            request_start_ms = time.time_ns() // 1_000_000
+            position_rows = self.exchange.fetch_positions()
+            response_received_ms = time.time_ns() // 1_000_000
+            try:
+                environment, source_ref = trading_source(self.exchange)
+                observation = observe_positions(
+                    position_rows, exchange_id=getattr(self.exchange, "id", None),
+                    market_type=getattr(self, "market_type", None),
+                    environment=environment, source_ref=source_ref,
+                    request_start_ms=request_start_ms,
+                    response_received_ms=response_received_ms,
+                )
+            except (ValueError, TypeError, OverflowError):
+                pass  # unverified response never replaces the last good cut
+            else:
+                self.position_observation = observation
             ex_amt = {norm_symbol(p["symbol"]): float(p.get("contracts") or 0)
-                      for p in self.exchange.fetch_positions()
+                      for p in position_rows
                       if float(p.get("contracts") or 0) > 0}
         except Exception:
             return 0
