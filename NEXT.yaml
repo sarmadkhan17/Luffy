@@ -2,64 +2,61 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1
+  id: SDD-STAGE-3-INVESTIGATION-UNASSESSABLE-MEMORY-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Attribute measured investigation work to each investigation case as an immutable per-case resource receipt, so research cost becomes observable per candidate and bounded usefulness feedback has its required cost input.
+  objective: Retain verified terminal UNASSESSABLE (not_testable) investigation closures, with their protocol reason codes, as a separately typed investigation-memory record, and surface compatible prior closures as registration-time cautions, so Luffy remembers which investigations could not be assessed and why (SDD Stage 3 failed-research memory).
   basis:
-    - SDD-STAGE-3-ATTENTION-NEXT-CAPABILITY-SELECTION-V5 - liquidity (demo-venue book, unrecorded), urgency (no semantics), owner question (no structured source; no justified magnitude) and strategy degradation (no asset attribution) cannot truthfully be implemented; usefulness feedback cannot be labelled yet.
-    - investigation-value.v1 bounded_value_rule requires a per-case cost receipt with resource compliance; unknown cost remains unknown, never zero.
-    - SDD 8.2 (research_cost term) and 8.3 (cost control) require per-candidate cost to exist before it can be weighed.
-    - trader/observability/investigation.py step already measures pass-level elapsed_ms into diagnostics and enforces MAX_RUNTIME_MS; only per-case attribution is missing.
+    - SDD-STAGE-3-INVESTIGATION-USEFULNESS-LABEL-SOURCE-DETERMINATION-V1 - USEFULNESS_LABEL_SOURCE_MISSING; usefulness feedback PARKED; an independent Stage-3 path is required.
+    - SDD.md Stage 3 lists failed-research memory as a build item.
+    - trader/observability/memory.py ingest and trader/cognition/memory.py verified_case accept only v2 status measured; terminal not_testable closures of every family are never memorized.
   source:
-    - Process monotonic and thread-CPU clocks around the existing per-case registration, update and assessment work inside the investigation step.
-    - Counts the step already knows (evidence rows read, ledger rows written, persisted payload bytes).
+    - Terminal ledger updates already persisted by trader/observability/investigation.py with evidence.status not_testable, evidence.reason and next_action.kind UNASSESSABLE, plus their frozen investigation payloads and protocol/catalog ids.
     - No venue request, LLM call, DataFeed, recorder or new store.
   missing_transformation:
-    - Per-case attribution of work the step already performs; the unattributed pass residual is reported, never apportioned.
+    - Verified ingestion of terminal not_testable closures into a separately typed memory record and chronology-safe retrieval at registration.
   frozen_semantics:
-    - Receipt schema investigation-resource-receipt.v1, one per (case_id, stage, attempt), stage in {registration, update, assessment}.
-    - Declared units - wall_ns (monotonic), cpu_ns (thread CPU), evidence_rows_read, ledger_rows_written, payload_bytes, llm_calls, venue_requests.
-    - llm_calls and venue_requests are recorded as measured counts from the step (structurally 0 today), not asserted constants.
-    - Accounting scope investigation_step_case_local - only work inside the per-case section; Attention capture, scan evaluation, ledger open/commit and pass overhead are excluded and reported once per pass as unattributed_wall_ns / unattributed_cpu_ns in diagnostics.
-    - resource_bound = null and resource_compliance = UNKNOWN for every receipt; no bound, budget or threshold is declared, derived or invented.
-    - A missing or failed measurement is recorded as UNKNOWN with a reason, never 0.
-    - Receipts are written in the same SQLite transaction as the case effect they measure; a rolled-back pass leaves no receipt.
-    - Measurements are observational telemetry - excluded from case identity, case ids, catalog ids, scan hashes and replay payloads; a retry records a new attempt and never rewrites an earlier receipt.
-    - Receipt retention follows the existing case retention; no new retention policy.
+    - New record outcome_type unassessable_closure, distinct from non_economic_observation; existing investigation-memory.v1 measured-case records, winner semantics and counter_tests are unchanged.
+    - A record carries source case id, family, protocol/catalog id, config id, symbol, registered/resolved/available/recorded times and the exact frozen reason code; no score, winner, direction or probability.
+    - Ingestion verifies the terminal update against the frozen investigation (matching case id, catalog/protocol, chronology, status not_testable, NextAction UNASSESSABLE) and refuses with an explicit reason otherwise; never a partial record.
+    - Retrieval at registration includes a prior closure only when known strictly before registration (not_known_before_registration otherwise), same family, same protocol/catalog and config, and same symbol; it adds a caution naming the prior reason code and adds no counter_test, so reasoning changed flags are unaffected by this record type.
+    - The caution states that an earlier case could not be assessed for the recorded reason; it is NOT NOT_ESTABLISHED, falsification, usefulness or evidence against the hypothesis.
+    - Retrieval capacity is bounded and deterministic; every considered record appears in the audit with a reason.
+    - Memory contexts and cases with no unassessable records are byte-identical to today.
+    - Retention follows the existing case retention; no new retention policy.
   implementation_boundary:
-    - trader/observability/investigation.py - measure per-case sections; persist receipts; add unattributed pass residual to diagnostics.
-    - trader/cognition/investigation.py - receipt dataclass and encoding only, if needed.
+    - trader/cognition/memory.py - unassessable-closure record, verification and retrieval.
+    - trader/observability/memory.py - ingestion of verified not_testable terminal closures within the existing transaction and bounds.
   acceptance_tests:
-    - tests/test_investigation_resource_receipts.py (new) - one receipt per registered, updated and assessed case with all declared units; resource_bound null and resource_compliance UNKNOWN; a failed clock read yields UNKNOWN with reason, never 0; receipts roll back with the pass; retry/restart adds an attempt without rewriting an earlier receipt; case ids, catalog ids, allocation decisions and scan/replay hashes are byte-identical with and without receipts; per-case wall_ns sum plus unattributed_wall_ns does not exceed pass elapsed; llm_calls and venue_requests are 0 for every existing family.
-    - Existing tests/test_investigation_state_feedback.py, test_positioning_investigation_family.py, test_correlation_investigation_family.py, test_cognition_replay.py and test_attention_telemetry.py pass apart from recorded baseline failures.
+    - tests/test_investigation_unassessable_memory.py (new) - not_testable closures of v2, positioning and correlation families are ingested with exact reason codes; measured or assessed closures are not ingested as this type; forged, mismatched or chronologically invalid joins are refused with reasons; retrieval excludes self, later-known, other-family, other-protocol, other-config and other-symbol records; caution text carries no usefulness, falsification or direction claim; no counter_test is added; contexts without such records are byte-identical; case ids, catalog ids, allocation decisions, scan hashes and resource receipts are unchanged; records are removed with their case under existing retention.
+    - Existing tests/test_investigation_memory.py, test_memory_producers.py, test_investigation_state_feedback.py, test_positioning_investigation_family.py, test_correlation_investigation_family.py and test_investigation_resource_receipts.py pass apart from recorded baseline failures.
     - git diff --check clean.
   preserve:
     - Salience, components, min_salience, k, dedup, tie-break and allocation unchanged.
-    - Families, catalogs, protocols and case ids unchanged.
-    - MAX_RUNTIME_MS and GUARD_MS unchanged; receipts add no new deadline.
-    - Population artifacts unchanged.
+    - Families, catalogs, protocols, case ids and investigation-memory.v1 measured-case behavior unchanged.
+    - Resource receipts unchanged; resource_compliance stays UNKNOWN.
     - No trading, Risk, Execution or strategy-authority changes; no LLM calls or venue requests.
   not_in_scope:
-    - declaring resource bounds or budgets; resource_compliance other than UNKNOWN
-    - using cost in salience, ranking, allocation or pausing research
-    - a concrete investigation-value.v1 question protocol or usefulness labels
-    - attributing Attention capture or scan cost to candidates
+    - investigation-value.v1 labels, usefulness feedback or any ESTABLISHED/NOT_ESTABLISHED mapping
+    - using memory in salience, ranking, allocation or suppressing registrations
+    - memorizing positioning/correlation assessed descriptive results
+    - extending retention or a new retention policy
+    - resource bounds or budgets
     - liquidity, urgency, owner-question or strategy-degradation work
-    - more correlation or positioning work
     - storage-capacity guard, liquidation clock, portfolio magnitude, Scheme-D, downstream new-data dispatch
     - deployment to the running /home/sarmad/trader kernel
   established_boundary:
+    - SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1 is PARKED_LABEL_SOURCE_MISSING; do not invent labels from descriptive, registration-time or P&L evidence.
     - SDD-STAGE-3-ATTENTION-NEW-DATA-STORAGE-CAPACITY-GUARD-V1 is PARKED_OWNER_POLICY_REQUIRED; do not request or invent ledger_max_bytes or min_free_bytes.
     - OPERATOR_STORAGE_POLICY_REQUIRED, EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED and DOWNSTREAM_DISPATCH_PREREQUISITE_REQUIRED remain open and must not become the active package.
     - forced-liquidation-participation.v1 remains PARKED; M3.2 Scheme-D remains PARKED.
     - Portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET; portfolio salience remains BLOCKED_UPSTREAM.
-    - Positioning and correlation - signal TESTED, investigation family TESTED, predictive usefulness NOT_ESTABLISHED, deployed NO; no further work queued.
-    - Usefulness/outcome-weighted research feedback remains MISSING / DESIGN_ONLY; this package supplies only its cost-receipt prerequisite.
+    - Positioning and correlation - predictive usefulness NOT_ESTABLISHED, deployed NO; no further work queued.
+    - Per-candidate research cost MEASURED by receipts; bounds UNDECLARED; resource_compliance UNKNOWN.
     - Attention overall remains IMPLEMENTED; this package grants no maturity upgrade or activation.
   after_completion:
-    - Record TESTED evidence in STATE.yaml; set gap_matrix per_candidate_research_cost to MEASURED (receipts TESTED; bounds UNDECLARED; not used in priority); no maturity upgrade.
+    - Record TESTED evidence in STATE.yaml; set gap_matrix failed_research_memory to PARTIAL (unassessable closures retained within existing retention; not used in priority); no maturity upgrade.
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -119,5 +116,10 @@ parked_storage_capacity_guard:
   status: PARKED_OWNER_POLICY_REQUIRED
   reopen_when: Owner supplies explicit ledger_max_bytes and min_free_bytes; do not request or invent them.
 
+parked_usefulness_feedback:
+  id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
+  status: PARKED_LABEL_SOURCE_MISSING
+  reopen_when: A concrete investigation-value.v1 protocol for an active family, with frozen routine-evidence comparator and deterministic ESTABLISHED/NOT_ESTABLISHED closure predicates, is frozen and producing closure receipts, or the owner explicitly prioritizes designing one.
+
 after_completion:
-  - Record SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1 evidence in STATE.yaml; keep the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch.
+  - Record SDD-STAGE-3-INVESTIGATION-UNASSESSABLE-MEMORY-V1 evidence in STATE.yaml; keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch.

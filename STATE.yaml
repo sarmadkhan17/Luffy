@@ -216,7 +216,7 @@ capabilities:
       - investigation-state/open-case feedback into new-investigation slot allocation is TESTED at 0d07dd8 with retry-semantics test follow-up a6c7124 (SDD-STAGE-3-ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1); salience, ranks and thresholds are unchanged
       - usefulness/outcome-weighted research feedback into Attention priority remains MISSING / DESIGN_ONLY
       - event-driven invocation and material-change gate remain incomplete
-      - urgency and per-candidate research cost remain incomplete
+      - urgency remains incomplete; per-candidate research cost is MEASURED by per-case receipts (bounds UNDECLARED, not used in priority)
       - broader trigger coverage remains incomplete
       - final integration with Opportunity Context is not yet implemented
 
@@ -230,8 +230,11 @@ capabilities:
       - investigations persist updates and terminal state
       - coherent current investigation-ledger state gates new-investigation top-k slot allocation; TESTED at 0d07dd8 with retry-semantics test follow-up a6c7124 (SDD-STAGE-3-ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1)
       - correlation_change registration-evidence family (investigation.correlation_change.v1) is TESTED at e61fb82; descriptive, not prospective predictive validation
+      - committed case-local investigation work is metered per execution as investigation-resource-receipt.v1 at 9be45a9 (SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1); resource_bound null, resource_compliance UNKNOWN
     gaps:
-      - per-case research cost is not metered; investigation-value.v1 usefulness labels do not exist
+      - investigation-value.v1 usefulness labels do not exist; no protocol-defined label source (USEFULNESS_LABEL_SOURCE_MISSING, 2026-09-25)
+      - resource bounds are undeclared; rolled-back/failed attempt cost is UNKNOWN and total research cost is not established
+      - UNASSESSABLE (not_testable) closures and registration-evidence family cases are not retained in investigation memory; only v2 measured cases are ingested
       - separate lightweight trading Opportunity registry from SDD v3.2 is not yet implemented
 
   operator_api_and_auth:
@@ -1509,14 +1512,101 @@ completed_attention_candidate_selection_v5:
   selected_next_capability: SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1
   maturity_boundary: Selection only; no implementation, ranking change or maturity upgrade is established by this record. Attention overall remains IMPLEMENTED.
 
-current_active_work:
+completed_attention_investigation_resource_receipts_v1:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 9be45a9800892ccb82d8e7a12eb4145d96b516f0
+  evidence:
+    - 9be45a9 Add investigation resource receipts
+    - trader/observability/investigation.py
+    - tests/test_investigation_resource_receipts.py
+  proven_facts:
+    - Versioned receipt schema investigation-resource-receipt.v1.
+    - Receipts measure committed case-local investigation work.
+    - Every real case-local execution gets a unique execution_id.
+    - Repeated real assessment with unchanged logical context still creates a new receipt.
+    - Duplicate persistence of the same execution remains idempotent.
+    - Logical work context is stored separately as source_scan_id, previous_update_id and resulting_update_id.
+    - Stages include registration, update and assessment.
+    - No-state-change assessments are measured.
+    - Wall duration uses the monotonic clock; CPU duration uses the thread CPU clock.
+    - Raw clock readings are not persisted.
+    - Receipts include measured workload evidence such as evidence rows, ledger rows and payload bytes.
+    - Shared/unattributed work is not arbitrarily charged to cases.
+    - Rolled-back/failed attempt cost is NOT represented by committed receipts and remains UNKNOWN.
+    - Receipts do NOT establish total research cost, total attempted cost, monetary cost, efficiency or usefulness.
+    - resource_bound = null and resource_compliance = UNKNOWN; no WITHIN_BOUND / EXCEEDED inference exists.
+    - No ranking, allocation or trading behavior changed.
+    - Positioning and correlation investigation semantics are unchanged.
+  validation:
+    final_focused_suite: 248 passed
+    prior_wider_run: 607 passed, 1 baseline missing-artifact failure
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: The running /home/sarmad/trader kernel does not contain resource receipts.
+  gap_matrix_update:
+    per_candidate_research_cost: MEASURED (receipts TESTED; bounds UNDECLARED; not used in priority)
+    resource_compliance: UNKNOWN
+    usefulness_outcome_weighted_research_feedback: MISSING - label source missing (see completed_investigation_usefulness_label_source_determination)
+    attention_overall: IMPLEMENTED
+  maturity_boundary: Observational cost telemetry only. No resource bound, budget, efficiency, usefulness or priority claim; no maturity upgrade. Attention overall remains IMPLEMENTED; parked storage-capacity, liquidation, Scheme-D, portfolio-magnitude and downstream-dispatch boundaries unchanged.
+
+completed_investigation_usefulness_label_source_determination:
+  id: SDD-STAGE-3-INVESTIGATION-USEFULNESS-LABEL-SOURCE-DETERMINATION-V1
+  type: EVIDENCE_AUDIT
+  state: COMPLETED_DESIGN_EVIDENCE
+  question: Does LUFFY already possess truthful, protocol-defined labels that can be mapped to investigation-value.v1 result states (ESTABLISHED, NOT_ESTABLISHED, UNASSESSABLE, PENDING) without inventing semantics?
+  decision: USEFULNESS_LABEL_SOURCE_MISSING
+  evidence_basis: Read-only inspection 2026-09-25 at 9be45a9 of trader/cognition/investigation.py (CATALOG, POSITIONING_CATALOG, CORRELATION_CATALOG, measure, advance), trader/observability/investigation.py, trader/cognition/memory.py, trader/observability/memory.py and STATE investigation-value.v1 / forced-liquidation-participation.v1. No code, collection or policy change.
+  family_findings:
+    volume_anomaly_volatility_transition_relative_return_divergence:
+      protocol: investigation.v2 (CATALOG)
+      existing_labels: evidence status unresolved | measured | not_testable; winning path same_direction | normalization | opposite_direction; NextAction WAIT | RESEARCH | ACQUIRE | UNASSESSABLE.
+      partial_mapping_only: unresolved -> PENDING and not_testable -> UNASSESSABLE are structurally analogous.
+      blocker: measured cannot be mapped to ESTABLISHED or NOT_ESTABLISHED. The protocol registers no decision-relevant distinction and no frozen routine-evidence comparator; its own RESEARCH action says the unconditional same-window baseline comparison is still to be frozen. Which path won is a descriptive forward observation, not a distinction established beyond routine evidence.
+    positioning_extreme:
+      protocol: investigation.positioning_extreme.v1
+      existing_labels: distinct_supported | distinct_unsupported | not_distinct | not_testable.
+      blocker: Registration-time contextual assessment closing immediately; not a forward outcome and not predictive usefulness. No comparator; not_distinct is generally unreachable at current min_salience. Mapping any label to ESTABLISHED would infer usefulness from registration-time evidence.
+    correlation_change:
+      protocol: investigation.correlation_change.v1 (kind DESCRIPTIVE)
+      existing_labels: relationship_increased | relationship_decreased | relationship_crossed_zero | not_distinct | not_testable.
+      blocker: Descriptive classification of registration-frozen evidence; explicitly not prospective validation. Not usefulness.
+    forced_liquidation_participation:
+      protocol: forced-liquidation-participation.v1 (the only protocol that instantiates investigation-value.v1)
+      blocker: FROZEN_DESIGN_ONLY and PARKED; no collected cases or closure receipts exist.
+    investigation_memory:
+      finding: investigation-memory.v1 stores v2 measured paths as non_economic_observation analogues; it carries no value label.
+  cross_cutting:
+    - No existing protocol provides the investigation-value.v1 minimum contract items frozen routine-evidence comparator, deterministic ESTABLISHED/NOT_ESTABLISHED closure predicates, or selected/shadow assignment.
+    - Resource compliance is UNKNOWN for every receipt, so bounded value (ESTABLISHED + valid protocol + WITHIN_BOUND) cannot be demonstrated even if a result state existed.
+    - No trading P&L label is available or may be invented; no forward-success label may be inferred from registration-time evidence.
+  exact_missing_source: A live concrete versioned question protocol instantiating investigation-value.v1 for an active investigation family, with a frozen routine-evidence comparator and deterministic ESTABLISHED/NOT_ESTABLISHED closure predicates, producing closure receipts. None exists.
+  disposition: Usefulness feedback PARKED as SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1 (PARKED_LABEL_SOURCE_MISSING); no prerequisite chain started.
+  selected_next_capability: SDD-STAGE-3-INVESTIGATION-UNASSESSABLE-MEMORY-V1
+  selection_reasoning:
+    - SDD Stage 3 names failed-research memory as a build item; investigation-memory.v1 ingests only v2 measured cases, so terminal not_testable/UNASSESSABLE closures and their protocol reason codes are forgotten.
+    - The source already exists and is truthful (terminal ledger updates with evidence status not_testable, reason and NextAction UNASSESSABLE); only the transformation is missing.
+    - It is independent of usefulness labels, resource bounds, new venue data, LLMs and parked storage/retention policy.
+  maturity_boundary: Determination and selection only; no implementation, label, ranking change or maturity upgrade. Attention overall remains IMPLEMENTED.
+
+current_active_work:
+  id: SDD-STAGE-3-INVESTIGATION-UNASSESSABLE-MEMORY-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Attribute measured investigation work to each investigation case as an immutable per-case resource receipt, as the prerequisite for bounded usefulness feedback and the SDD research_cost term.
+  objective: Retain verified terminal UNASSESSABLE (not_testable) investigation closures with their protocol reason codes as a separately typed investigation-memory record, and surface matching prior closures as registration-time cautions, so Luffy remembers which investigations could not be assessed and why.
   deliverables: As scoped in NEXT.yaml.
-  boundary: Measurement and persistence only. No resource bound is declared or invented; resource_compliance stays UNKNOWN. Salience, ranks, k, min_salience, allocation, case identity, catalogs, scan hashes and replay unchanged. No LLM, venue request, trading/Risk/Execution or strategy-authority change; storage-capacity guard, liquidation, Scheme-D, portfolio-magnitude and downstream dispatch boundaries unchanged; Attention overall remains IMPLEMENTED.
+  boundary: Memory transformation of existing ledger evidence only. Not a usefulness, NOT_ESTABLISHED or falsification label. Salience, ranks, k, min_salience, allocation, case identity, catalogs, scan hashes, receipts and existing measured-case memory unchanged; retention follows existing case retention. No LLM, venue request, trading/Risk/Execution or strategy-authority change; parked boundaries unchanged; Attention overall remains IMPLEMENTED.
+
+parked_usefulness_feedback:
+  id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
+  status: PARKED_LABEL_SOURCE_MISSING
+  missing_source: A concrete investigation-value.v1 question protocol for an active family, with frozen routine-evidence comparator, deterministic ESTABLISHED/NOT_ESTABLISHED closure predicates and closure receipts; plus declared resource bounds before any WITHIN_BOUND claim.
+  reopen_when: Such a protocol is frozen and has produced closure receipts, or the owner explicitly prioritizes designing one. Do not invent labels from descriptive, registration-time or P&L evidence.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
