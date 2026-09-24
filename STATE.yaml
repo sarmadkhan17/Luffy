@@ -210,7 +210,8 @@ capabilities:
       - portfolio_position_present implementation was correctly blocked by an upstream salience-scale policy prerequisite, not an implementation failure; boolean presence has no justified magnitude on the current z-like scale
       - current candle components are z-like magnitudes and the optional WorldModel component requires z_score evidence; aggregation takes the maximum absolute numeric component, compares it with min_salience, and ranks by magnitude
       - assigning boolean position presence an arbitrary numeric contribution would invent ranking policy
-      - research and investigation feedback into Attention priority remains missing; research/investigation feedback is PARTIAL and live priority feedback is MISSING (SDD-STAGE-3-ATTENTION-GAP-REPRIORITIZATION-V2)
+      - investigation-state/open-case feedback into new-investigation slot allocation is TESTED at 0d07dd8 with retry-semantics test follow-up a6c7124 (SDD-STAGE-3-ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1); salience, ranks and thresholds are unchanged
+      - usefulness/outcome-weighted research feedback into Attention priority remains MISSING / DESIGN_ONLY
       - event-driven invocation and material-change gate remain incomplete
       - urgency and per-candidate research cost remain incomplete
       - broader trigger coverage remains incomplete
@@ -224,6 +225,7 @@ capabilities:
     proven_facts:
       - episode_id and investigation_id exist
       - investigations persist updates and terminal state
+      - coherent current investigation-ledger state gates new-investigation top-k slot allocation; TESTED at 0d07dd8 with retry-semantics test follow-up a6c7124 (SDD-STAGE-3-ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1)
     gaps:
       - separate lightweight trading Opportunity registry from SDD v3.2 is not yet implemented
 
@@ -925,14 +927,56 @@ completed_attention_gap_reprioritization_v2:
   selection_reason: Current live flow selects top-k with no active-investigation context, then the investigation consumer rejects duplicates afterward. This can waste available investigation capacity because eligible candidates below the original top-k cannot replace already-active candidates.
   maturity_boundary: Design evidence only; no implementation, ranking change or maturity upgrade is established by this audit.
 
-current_active_work:
+completed_attention_investigation_state_feedback_v1:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  evidence:
+    - commit 0d07dd8 — Add investigation state feedback allocation
+    - commit a6c7124 — Align investigation retry test with frozen allocation
+    - trader/observability/investigation.py
+    - tests/test_investigation_state_feedback.py
+  proven_facts:
+    - Coherent current investigation-ledger state is used before new-investigation top-k slot allocation.
+    - Existing Attention salience, ranks, thresholds, candidate generation and source scan are unchanged.
+    - Already-active investigations do not consume new-investigation slots.
+    - Lower-ranked eligible candidates can fill freed slots.
+    - Active investigations continue updating normally.
+    - The contextual allocation decision is persisted in the same SQLite transaction as its registration effects.
+    - A committed reused decision is execution-closed and cannot progressively admit more candidates.
+    - Retries and restarts preserve idempotence.
+    - Later ledger changes do not mutate the historical decision.
+    - Missing, corrupt or refused ledger evidence fails closed.
+    - Legacy/declaration cohort compatibility is preserved.
+    - Original Attention scans, hashes, replay and population artifacts remain unchanged.
+    - No LLM, venue request, trading, Risk, Execution or strategy-authority changes.
+  validation:
+    feedback_and_consumer_tests: 34 passed
+    focused_suites: 528 passed, 1 failed
+    unrelated_failure: tests/test_population_cohort.py::test_old_frozen_capture_still_replays fails because the pre-existing artifact docs/superpowers/artifacts/pit-dataset/2026-09-16-population-initial-capture.json is missing; not attributable to this package.
+  gap_matrix_update:
+    investigation_state_open_case_feedback: TESTED
+    usefulness_outcome_weighted_research_feedback: MISSING / DESIGN_ONLY
+    attention_overall: IMPLEMENTED
+  maturity_boundary: Attention overall remains IMPLEMENTED; this package grants no maturity upgrade or activation. Forced-liquidation experiment and Scheme-D remain PARKED; portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET.
+
+next_slice_selection:
+  compared:
+    - A. Retained-candle new-data trigger
+    - B. Per-investigation resource receipts
+  selected: A
+  queued: SDD-STAGE-3-ATTENTION-NEW-DATA-TRIGGER-V1
+  reason: A is smaller and more directly advances Attention. The retained candle version store already records version identity, first_seen_ms and value/previous-value hashes (trader/observability/store.py), so the missing piece is an idempotent trigger over existing evidence; it closes a named Attention gap (new_data_availability_trigger PARTIAL prerequisite / trigger MISSING) and advances event-driven invocation. B attributes cost but does not change what Attention examines, needs measurement/attribution plumbing across work paths, and any resource bound requires a prospectively versioned resource policy.
+  deferred: SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1 remains an unqueued independent candidate.
+
+current_active_work:
+  id: SDD-STAGE-3-ATTENTION-NEW-DATA-TRIGGER-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Use coherent current investigation-ledger state during investigation-slot allocation so candidates with already-open investigations do not consume top-k slots, while preserving the original Attention scan, salience ordering, thresholds, and trading authority.
+  objective: Emit an idempotent new-data event when a genuinely new or changed retained candle version appears, carrying source identity and first-seen time, to drive bounded downstream Attention/investigation work.
   deliverables: As scoped in NEXT.yaml.
-  boundary: No salience, ranking, weight, candidate-generation or trading/Risk/Execution/strategy-authority change; no LLM calls or venue requests; missing/refused ledger evidence fails closed; contextual decisions are recorded, idempotent and never attributed later ledger state; original scan rows/hash/replay, frozen population receipts and selected/shadow assignments remain unchanged; Attention overall remains IMPLEMENTED until acceptance evidence exists.
+  boundary: No salience, ranking, threshold, weight or candidate-generation change; no live WorldModel, liquidation-clock work or portfolio salience; no LLM calls or venue requests; no trading/Risk/Execution/strategy-authority change; original scan rows/hash/replay and frozen population artifacts remain unchanged; Attention overall remains IMPLEMENTED.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4

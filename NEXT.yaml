@@ -2,44 +2,42 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1
+  id: SDD-STAGE-3-ATTENTION-NEW-DATA-TRIGGER-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Use coherent current investigation-ledger state during investigation-slot allocation so candidates with already-open investigations do not consume top-k slots, while preserving the original Attention scan, salience ordering, thresholds, and trading authority.
+  objective: Emit an idempotent new-data event when a genuinely new or changed retained candle version appears, carrying source identity and first-seen time, to drive bounded downstream Attention/investigation work.
   basis:
-    - SDD-STAGE-3-ATTENTION-GAP-REPRIORITIZATION-V2 is COMPLETED_DESIGN_EVIDENCE and selected ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1.
-    - Current live flow selects top-k with no active-investigation context, then the investigation consumer rejects duplicates afterward; eligible candidates below the original top-k cannot replace already-active candidates, which can waste available investigation capacity.
+    - SDD-STAGE-3-ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1 is TESTED at 0d07dd8 with retry-semantics test follow-up a6c7124.
+    - SDD-STAGE-3-ATTENTION-GAP-REPRIORITIZATION-V2 records new_data_availability_trigger as PARTIAL prerequisite / trigger MISSING.
+    - Retained candle versions already record version identity, first_seen_ms, value_hash and previous_value_hash (trader/observability/store.py); the trigger is missing, not the evidence.
+    - Selected over SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1 as the smaller independent package that more directly advances Attention.
   established_boundary:
     - forced-liquidation-participation.v1 remains PARKED; M3.2 Scheme-D remains PARKED.
     - Portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET; portfolio salience remains BLOCKED_UPSTREAM.
+    - Usefulness/outcome-weighted research feedback remains MISSING / DESIGN_ONLY.
     - Attention overall remains IMPLEMENTED; this queue grants no maturity upgrade or activation.
   required_behavior:
-    - Reuse existing open_episodes semantics in Attention selection (trader/cognition/attention.py; trader/cognition/replay.py).
-    - Do not change salience scores or ranking.
-    - Do not add weights.
-    - Do not change Attention candidate generation.
-    - Do not modify original scan rows/hashes.
-    - Do not rewrite frozen population receipts or selected/shadow declarations.
-    - Existing active investigations continue to update normally.
-    - An eligible lower-ranked candidate may fill a slot vacated by an already-active candidate.
-    - Capacity limits remain enforced.
-    - Missing/refused ledger evidence must fail closed; never treat it as no open investigations.
-    - Each contextual selection decision records the source scan ID/hash, policy version, decision time, coherent ledger-state evidence, and the resulting selected candidate IDs.
-    - Repeated evaluation of the same contextual decision is idempotent; it cannot progressively register more candidates after, or because of, its own writes.
-    - Ledger state written after the decision cut must never be attributed to the earlier decision.
-    - No trading, Risk, Execution or strategy-authority changes.
-    - No LLM calls or venue requests.
-    - Frozen population receipts and selected/shadow assignments remain unchanged.
+    - Derive events only from retained candle versions in the existing store; do not add a second candle source.
+    - Emit exactly one event per genuinely new or value-changed version; an unchanged re-observation emits nothing.
+    - Each event records version_id, instrument/timeframe/open_ms, value_hash, previous_value_hash, source identity and first_seen_ms.
+    - Event identity is deterministic from the version identity; retries and restarts are idempotent.
+    - Only fully closed bars are eligible; a forming bar is not new data.
+    - Downstream work driven by events is bounded by existing capacity limits; no unbounded fan-out.
+    - Missing or unverifiable version/source evidence fails closed and emits no event.
+    - Do not change salience scores, ranking, thresholds or candidate generation; add no weights.
+    - Do not modify original scan rows/hashes, replay, frozen population receipts or selected/shadow declarations.
+    - No live WorldModel, liquidation-clock work or portfolio salience.
+    - No trading, Risk, Execution or strategy-authority changes; no LLM calls or venue requests.
   acceptance_checks:
-    - An eligible lower-ranked candidate fills a slot when a higher-ranked candidate already has an active investigation.
-    - With no active investigations, selection is identical to legacy behavior.
-    - Missing or refused ledger evidence fails closed.
-    - Capacity limits remain enforced.
-    - Repeating the same decision yields identical selection and no progressive admissions.
-    - Existing active investigations continue updating normally.
-    - Original Attention scan rows, hash and replay remain unchanged.
-    - Frozen population artifacts remain unchanged.
+    - A new retained version emits one event with source identity and first-seen time.
+    - A changed value for the same bar emits one event linked to the previous value hash.
+    - Re-observing an unchanged version emits no event.
+    - Repeated processing, retry and restart produce no duplicate events.
+    - Forming bars emit no event.
+    - Missing or unverifiable evidence fails closed.
+    - Downstream work stays within existing capacity limits.
+    - Original Attention scan rows, hash and replay remain unchanged; frozen population artifacts remain unchanged.
   after_completion:
     - Record test evidence and commit; do not upgrade Attention overall maturity without acceptance evidence.
 
@@ -97,4 +95,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Record implementation and test evidence for SDD-STAGE-3-ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1 in STATE.yaml; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries.
+  - Record implementation and test evidence for SDD-STAGE-3-ATTENTION-NEW-DATA-TRIGGER-V1 in STATE.yaml; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries.
