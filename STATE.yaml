@@ -703,13 +703,36 @@ forced_liquidation_prerequisite_audit:
     receipt_requirements: Bind raw source measurements/hash, source trust/provenance and versions, host/boot identity, UTC/monotonic/boottime samples, sampling uncertainty, freshness/holdover derivation and interval endpoints; reject missing evidence, unsync, steps, suspend/resume, reboot, tampering and unsupported extrapolation.
     boundary: No trustworthy whole-window source is established by this audit. Absolute uncertainty and relative offset-drift tolerance need justified source semantics and observations; no numeric tolerance is invented.
 
-current_active_work:
+completed_clock_health_receipt_design:
   id: SDD-CLOCK-HEALTH-RECEIPT-V1
+  status: COMPLETED_DESIGN_EVIDENCE
+  result: CLOCK_SOURCE_INSUFFICIENT
+  evidence_basis: Completed read-only audit findings supplied by the owner for reconciliation at HEAD 4bae7c5; no new host audit or collection performed.
+  established_findings:
+    - Existing systemd-timesyncd, timedatectl, kernel adjtimex/timex, VMware state and local clock relationships provide synchronization/relative diagnostics but do not establish a durable finite bound on absolute UTC error across a registered interval.
+    - NTPSynchronized=yes is not an absolute-error certificate.
+    - Root distance, jitter, maxerror/esterror and stable realtime-minus-monotonic relationships cannot independently establish true UTC.
+    - Current repository has no production absolute-clock producer/verifier.
+    - Snapshots cannot retrospectively certify an entire historical window.
+    - Suspend/resume, clock step, reboot, VM pause/restore/migration and source loss require explicit continuity/requalification handling.
+    - A valid whole-window receipt requires externally anchored UTC accuracy with justified trust/network/timestamp assumptions and justified uncertainty propagation/holdover across the interval.
+    - Hashes prove integrity, not UTC correctness.
+    - Today a receipt may truthfully record unqualified with uncertainty=null, but cannot populate production-valid ClockHealthEvidence.
+  candidate_collection_seam:
+    status: NECESSARY_NOT_SUFFICIENT
+    evidence: Prospective timesyncd D-Bus updates; bracketed realtime/monotonic/boottime/raw readings; adjtimex snapshots; timerfd TFD_TIMER_CANCEL_ON_SET; boot/suspend evidence.
+    boundary: No implementation queued until source/trust and propagation contracts support a finite bound.
+  decision: EXTERNAL_GUARANTEE_REQUIRED
+  decision_basis: The audited existing NTP/VM environment has no established defensible source-accuracy envelope or propagation guarantee. These require documented, independently verifiable evidence; no Ubuntu NTP pool accuracy bound or ppm/error limit is assumed. Whether an alternate source is required remains for the source-contract design.
+  boundary: Design evidence only; RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED remains; both production policy globals remain None.
+
+current_active_work:
+  id: SDD-CLOCK-HEALTH-SOURCE-CONTRACT-V1
   type: DESIGN_PREREQUISITE
   priority: ACTIVE
-  status: QUEUED_NOT_STARTED
-  objective: Qualify the existing host clock source and design the smallest durable, independently verifiable UTC-uncertainty receipt, or identify the exact missing source evidence.
-  boundary: Queue only; no implementation, deployment, prospective collection, clock/service changes or production policy activation.
+  status: READY
+  objective: Define the smallest source/trust/propagation contract that would allow LUFFY to derive a finite, independently verifiable absolute-UTC uncertainty interval using existing NTP/VM infrastructure.
+  boundary: Design only; no implementation queued until source/trust and propagation contracts support a finite bound. No deployment, collection, clock/service changes or production policy activation.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4

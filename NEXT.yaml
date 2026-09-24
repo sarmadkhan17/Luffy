@@ -2,31 +2,47 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-CLOCK-HEALTH-RECEIPT-V1
+  id: SDD-CLOCK-HEALTH-SOURCE-CONTRACT-V1
   type: DESIGN_PREREQUISITE
   priority: ACTIVE
-  status: QUEUED_NOT_STARTED
-  objective: Qualify existing timesyncd/kernel clock telemetry and design a durable receipt that can bound absolute UTC uncertainty over a registered window; return source-insufficient if unsupported.
+  status: READY
+  objective: Define the smallest source/trust/propagation contract that would allow LUFFY to derive a finite, independently verifiable absolute-UTC uncertainty interval using existing NTP/VM infrastructure.
   established_boundary:
     - SDD-FORCED-LIQUIDATION-RECORDER-COVERAGE-V1 is TESTED at 4c63e82; 96 focused tests passed. Verified command was /home/sarmad/trader/venv/bin/python -m pytest -q tests/test_forced_liquidation_recorder.py (Python 3.12.3; websockets 17.0.1).
     - RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED; PRODUCTION_POLICY and PRODUCTION_CLOCK_HEALTH_POLICY remain None.
-    - Host synchronization telemetry exists, but no verified durable whole-window UTC uncertainty receipt is established.
+    - SDD-CLOCK-HEALTH-RECEIPT-V1 is COMPLETED_DESIGN_EVIDENCE with result CLOCK_SOURCE_INSUFFICIENT; current decision is EXTERNAL_GUARANTEE_REQUIRED on the supplied audit evidence.
+    - Synchronization/relative diagnostics and integrity hashes do not certify absolute UTC; no production absolute-clock producer/verifier or retrospective whole-window certification is established.
+    - A receipt may currently record unqualified with uncertainty=null, but cannot populate production-valid ClockHealthEvidence.
   dependency_order:
-    - Transport evidence semantics are recorded in STATE.yaml; clock source/receipt qualification is the smallest next prerequisite.
+    - Establish source/trust and propagation contracts supporting a finite bound before queueing any implementation.
     - Production coverage policy completion also needs justified liveness-gap, rollover-overlap and offset-drift bounds; it is not queued concurrently.
   smallest_scope:
-    - Inspect versioned timesyncd/kernel source semantics and identify what raw measurements, trust assumptions and continuity evidence can support a conservative interval bound.
-    - Specify immutable receipt identity, raw bytes/hash, host/boot/source/version provenance, UTC/monotonic/boottime samples and deterministic independent verification.
-    - Define freshness, holdover, uncertainty propagation and step/suspend/reboot failure handling without inventing numeric thresholds.
-    - If existing telemetry is insufficient, return the smallest additional source/evidence requirement and a bounded measurement design; do not install services or run collection.
+    utc_anchor_contract:
+      - Specify acceptable evidence for NTP reference identity/trust basis and a documented, independently verifiable reference UTC-accuracy envelope; do not assume the current Ubuntu NTP pool has a known accuracy bound.
+      - Specify four-timestamp exchange or equivalent, request/reply capture/provenance, asymmetric-delay treatment and timestamping uncertainty.
+      - Specify leap/era handling and outward rounding so independent verification preserves conservative interval endpoints.
+    propagation_holdover_contract:
+      - Specify evidence needed for a local frequency-error bound, slewing behavior and elapsed-time uncertainty growth; do not invent ppm/error limits.
+      - Specify source-loss/holdover rules and maximum extrapolation supported by evidence; unsupported propagation remains unqualified.
+    lifecycle_contract:
+      - Specify invalidation/requalification rules for realtime clock step, suspend/resume, reboot, VMware pause/restore/migration, boot-id change and collector gap/failure.
+      - Require explicit continuity evidence; snapshots cannot retrospectively qualify missing portions of a registered interval.
+    candidate_collection_seam:
+      - Prospective timesyncd D-Bus updates, bracketed realtime/monotonic/boottime/raw readings, adjtimex snapshots, timerfd TFD_TIMER_CANCEL_ON_SET and boot/suspend evidence are necessary, not sufficient.
+      - Define capture/provenance requirements only; do not implement or collect until source/trust and propagation contracts can support a finite bound and collection is separately authorized.
   acceptance:
-    - Explicitly distinguish candidate telemetry from a qualified source and a verified whole-window receipt.
-    - Explain how evidence bounds the entire registered interval including uncertainty-expanded coverage brackets; a current synchronized flag is insufficient.
-    - Specify rejection cases for missing/stale/untrusted evidence, clock steps, unsync, suspend/resume, reboot, forged bounds and replay tampering.
-    - No signed recvWindow, HTTPS success, stable monotonic/UTC offset or fixture policy may authorize production PASS.
+    - Identify exactly what must be true before implementation, including externally anchored UTC accuracy under justified trust/network/timestamp assumptions and justified propagation/holdover across the entire registered interval.
+    - Specify immutable receipt identity, raw bytes/hash, host/boot/source/version provenance and deterministic independent verification; hashes establish integrity only.
+    - Explain coverage of the entire registered interval including uncertainty-expanded boundary brackets; reject missing/stale/untrusted evidence, unsupported extrapolation, forged bounds and replay tampering.
+    - No synchronized flag, root distance, jitter, maxerror/esterror, stable local clock relationship, signed recvWindow, HTTPS success or fixture policy independently authorizes production PASS.
+    - If the existing NTP/VM environment cannot supply defensible source-accuracy and propagation guarantees, identify the missing guarantees without inventing them.
+  decision_required:
+    return_exactly_one: [SOURCE_CONTRACT_DESIGN_COMPLETE, EXTERNAL_GUARANTEE_REQUIRED, ALTERNATE_CLOCK_SOURCE_REQUIRED]
+    completion_rule: SOURCE_CONTRACT_DESIGN_COMPLETE requires defensible source/trust and propagation evidence supporting a finite independently verifiable absolute-UTC interval; otherwise identify the external guarantee or alternate source required.
   constraints:
-    - DESIGN / CONTROL-PLANE only; no implementation, commit, deployment, prospective collection or clock/service changes.
-    - Neither production policy global is activated; production sealing and Attention/Risk/Execution behavior remain unchanged.
+    - DESIGN / CONTROL-PLANE only; no implementation, commit, deployment, prospective collection, long-lived monitoring or clock/service changes.
+    - Do not install chrony/PTP/PPS or change NTP configuration.
+    - Neither PRODUCTION_CLOCK_HEALTH_POLICY nor PRODUCTION_POLICY is activated; no liquidation collection or Attention/Risk/Execution changes.
     - Preserve frozen protocol, unrelated knowledge edits, portfolio PARTIAL_PREREQUISITE_ESTABLISHED and all parked research boundaries; no pilot, validation, cloud or RNG work.
 
 parked_scheme_d_work_package:
@@ -83,4 +99,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Record clock-source qualification/design evidence or explicit insufficiency only; production coverage remains blocked until both prerequisites are justified. No usefulness, bounded-value, deployment or collection claim.
+  - Record the source-contract design decision and its evidence or explicit missing guarantees only; do not queue implementation without finite source/trust and propagation bounds. Production coverage remains blocked; no usefulness, bounded-value, deployment or collection claim.
