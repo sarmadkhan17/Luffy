@@ -2,165 +2,49 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-KERNEL-WIRING
+  id: SDD-STAGE-3-ATTENTION-PORTFOLIO-SIGNALS
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-
   objective: >
-    Wire the TESTED registry producer, pure selector, durable selection
-    persistence and isolated supplemental fetch into the Kernel as automatic
-    registry-backed supplemental Attention observation, exactly as locked by
-    the SDD-STAGE-3-ATTENTION-KERNEL-INTEGRATION audit, without changing
-    trading authority.
-
-  working_rule: "locked = don't redesign; implemented = verify; discuss only gaps"
-
+    Add bounded, point-in-time portfolio-state evidence to Attention priority
+    without giving Attention any portfolio allocation, Risk, sizing or trading
+    authority.
   completed_prerequisite:
-    - SDD-STAGE-3-REGISTRY-ATTENTION-SELECTOR is TESTED at 6eb7eb4 as a pure selector over an injected immutable RegistrySnapshot with explicit max_snapshot_age_ms and caller-held cursor.
-    - Bounded isolated supplemental Attention data path is TESTED at 9b95d4f (public /fapi/v1/klines in an isolated child, 2-second deadline, Attention capture only).
-    - SDD-STAGE-3-ATTENTION-SELECTION-PERSISTENCE is TESTED at cda0582; selection record and cursor_after commit atomically under BEGIN IMMEDIATE; fetch outcomes persist separately and cannot move the cursor.
-    - SDD-STAGE-3-LIVE-REGISTRY-PRODUCER is TESTED at 4ee6682; public /fapi/v1/exchangeInfo only; explicit validated production/demo target; failed refresh never fabricates or replaces a snapshot.
-    - SDD-STAGE-3-ATTENTION-KERNEL-INTEGRATION audit completed at 5f2858b as design evidence; finding B - KERNEL-AUTOMATIC-SELECTION-SEAM; decisions recorded in STATE.yaml current_active_work and locked below.
-    - Attention overall remains IMPLEMENTED; automatic registry-backed Attention selection is not active.
-
-  locked_decisions:
-    observation_venue:
-      - automatic registry Attention observes production Binance USD-M
-      - the target is explicit config and is never inferred from BINANCE_DEMO
-      - the registry provider and the supplemental kline fetch must refer to the same production environment
-      - trading may remain demo
-      - observation grants no trading permission
-    supplemental_mode:
-      - one explicit mode attention.supplemental_mode = off | manual | registry
-      - backward compatibility - key absent and supplemental_symbol set => manual; key absent and no symbol => off
-      - registry mode plus a manual supplemental_symbol is a configuration conflict
-      - a conflict disables supplemental observation only; trading continues
-      - exactly one supplemental slot exists
-    registry_refresh:
-      - registry refresh never runs in the trading cycle
-      - a dedicated single-flight background refresh thread performs refresh
-      - the cycle reads only the immutable provider.latest()
-      - a hung refresh cannot block the cycle
-      - refresh and in-flight health are exposed
-      - DNS remains unbounded inside the background refresh thread and is therefore not a trading-loop blocker
-    refresh_freshness_policy:
-      classification: implementation policy derived from current repository cadence; not SDD/architectural constants
-      normal_refresh_seconds: 14400
-      retry_after_failure_seconds: 300
-      max_snapshot_age_ms: 28800000
-    snapshot_behavior:
-      - no snapshot => no selector call, no selection row, no fetch
-      - a fresh last-good snapshot may still be used after the latest refresh failed
-      - stale snapshot => the selector's snapshot_stale Selection is persisted, cursor unchanged, no fetch
-      - an old snapshot is never re-stamped
-    scan_identity_boundary:
-      - before calling the selector in FUTURES mode, translate the Kernel's known futures BASE/USDT scan symbols into unambiguous BASE/USDT:USDT
-      - _scan_symbols() itself is not changed
-      - automatic registry mode is refused outside FUTURES market mode
-    persistence:
-      locked_order:
-        - 1 - snapshot
-        - 2 - durable cursor
-        - 3 - pure selector
-        - 4 - persist Selection + cursor atomically
-        - 5 - commit
-        - 6 - supplemental fetch
-        - 7 - persist fetch outcome separately
-        - 8 - hand usable/nonusable result to Attention according to the accepted integration policy
-      rules:
-        - persistence remains synchronous through the TESTED Journal transaction
-        - any persistence/SQLite error skips supplemental work for that cycle; trading continues
-        - the existing 30-second SQLite busy-lock exposure remains a broader pre-existing Journal/live-loop limitation; this slice does not claim to solve global Journal latency
-    selection_cadence:
-      - registry mode consumes at most one rotation slot per trading cycle
-      - failed or in-flight supplemental attempts still consume the already-persisted slot
-      - the cursor never rolls back
-    fetch_outcome_persistence:
-      - status = SupplementalResult.status
-      - reason is a deterministic token - lowercase, every character outside [a-z0-9_] replaced with _, truncated to 64 characters
-      - the exact original reason is kept in runtime stats/capture telemetry
-      - started_ms/ended_ms are Kernel wall-clock bounds around fetch(), not child-request timestamps
-    failure_policy:
-      rule: trading continues for every registry, selector, persistence or fetch failure
-      cases:
-        no_provider_snapshot: no selector call, no selection row, no fetch
-        stale_snapshot: persist the selector's snapshot_stale Selection with cursor unchanged; no fetch
-        selector_refusal: SelectionRefused (for example snapshot_future or invalid_input) yields no Selection; nothing is persisted; cursor unchanged; no fetch; reason kept in runtime telemetry
-        nothing_selectable: the nothing_selectable Selection is persisted with cursor unchanged; no fetch
-        corrupt_cursor: fail closed; automatic registry selection disabled for the process; no automatic repair
-        cursor_conflict: refused by the persistence transaction; no fetch this cycle
-        selection_persistence_error: skip supplemental work this cycle; no fetch
-        supplemental_timeout_or_error: record the fetch outcome; the persisted slot stays consumed; cursor unchanged
-        fetch_outcome_persistence_error: keep the exact reason in runtime telemetry; the persisted selection and cursor are unaffected; do not pass the supplemental result to Attention capture
-    provenance:
-      - link snapshot_id -> selection_id -> selected canonical instrument -> supplemental status -> Attention scan/capture
-      - optional capture provenance {mode, selection_id, snapshot_id}
-      - legacy/manual capture with no provenance remains unchanged
-    replay_limit:
-      - historical registry replay is not claimed
-      - without durable RegistrySnapshot/refresh-provenance retention, durable selection and fetch records remain traceable by IDs
-      - the historical registry contents cannot be reconstructed
-      - historical body hash/provenance cannot be guaranteed available after provider/log rotation
-      - full registry-backed replay remains deferred
-
-  scope:
-    - attention.supplemental_mode config (off | manual | registry) with backward compatibility and manual/registry conflict handling
-    - explicit production Binance USD-M observation target shared by the registry provider and the supplemental kline fetch
-    - dedicated single-flight background registry refresh thread with refresh/in-flight health
-    - live refresh/freshness implementation policy (4 h refresh, 300 s failure retry, max_snapshot_age_ms 28800000)
-    - Kernel-side FUTURES scan-symbol translation BASE/USDT -> BASE/USDT:USDT before the selector; registry mode refused outside FUTURES
-    - Kernel cycle wiring in the locked persistence order, at most one rotation slot per cycle
-    - fetch-outcome persistence with tokenized reason and Kernel wall-clock bounds
-    - optional capture provenance {mode, selection_id, snapshot_id}
-
-  do_not_implement:
-    - RegistrySnapshot history store
-    - account metadata endpoints
-    - broader fairness
-    - trading eligibility changes
-    - Scheme-D work
-    - changes to _scan_symbols(), Universe, DataFeed, Orchestrator, Risk or Execution
-    - changes to the tested selector, selection-persistence, supplemental-fetch or registry-producer contracts
-
+    - SDD-STAGE-3-ATTENTION-KERNEL-WIRING is TESTED at d3c1f29; registry observation is live when enabled but off by default.
+    - SDD-STAGE-3-ATTENTION-GAP-PRIORITY-AUDIT is COMPLETED_DESIGN_EVIDENCE in STATE.yaml with finding ATTENTION-PORTFOLIO-SIGNALS.
+  first_task: Inspect existing Kernel and accounting sources and choose the smallest truthful live portfolio context seam, preferring a narrow adapter over new account API calls.
+  likely_files:
+    - trader/kernel.py
+    - trader/observability/attention.py
+    - trader/cognition/attention.py
+    - a small portfolio Attention contract module only if needed
+    - focused tests
+  evidence_contract:
+    - Introduce a typed, immutable portfolio Attention input or evidence record with explicit cut/as_of time and provenance/source on every record.
+    - Attach applicable evidence to exact instrument identity.
+    - Audit current open-position presence, represented side/direction and notional/exposure for clear live semantics.
+    - Use unrealized P&L only if point-in-time truth exists; use realized/daily P&L only if the existing accounting source is point-in-time safe.
+    - Use concentration or symbol share only if deterministically derivable from exact current state; use drawdown/equity only if already live with explicit cut semantics.
+    - Do not fabricate unavailable portfolio truth; missing, ambiguous, future or stale evidence contributes no signal.
+  behavior_contract:
+    - Portfolio contribution is a competing salience component, never a trade decision or BUY/SELL direction.
+    - Preserve direction independence where appropriate and deterministic results for identical inputs.
+    - No portfolio context preserves the legacy Attention result exactly.
+    - Strategy scan, registry observation population and existing candle/WorldModel signals remain unchanged when portfolio input is absent.
+    - Capture and replay retain enough cut, source, identity and component evidence to explain a portfolio-driven priority change.
   required_tests:
-    - 1 - supplemental_mode off/manual/registry and backward compatibility (key absent + symbol => manual; key absent + no symbol => off)
-    - 2 - manual/registry conflict disables supplemental observation only; trading continues
-    - 3 - production venue enforcement for registry provider and supplemental fetch; never inferred from BINANCE_DEMO
-    - 4 - registry mode refused outside FUTURES market mode
-    - 5 - Kernel scan-symbol conversion BASE/USDT -> BASE/USDT:USDT without changing _scan_symbols()
-    - 6 - an existing scan member cannot be selected again
-    - 7 - refresh thread performs no network in the trading cycle
-    - 8 - hung refresh does not block the cycle
-    - 9 - no snapshot => no selector, no selection row, no fetch
-    - 10 - stale snapshot => snapshot_stale Selection persisted, cursor unchanged, no fetch
-    - 11 - failed latest refresh with a fresh previous snapshot still selects from that snapshot
-    - 12 - selector refusal
-    - 13 - cursor corruption disables automatic registry selection for the process without repair
-    - 14 - cursor conflict
-    - 15 - persistence failure => no fetch
-    - 16 - persist occurs before fetch
-    - 17 - cursor advances despite later fetch failure
-    - 18 - reason-token normalization (lowercase, non [a-z0-9_] -> _, max 64 chars; exact reason kept in telemetry)
-    - 19 - fetch-outcome persistence failure prevents the supplemental result from reaching Attention capture; selection and cursor unaffected; exact reason kept in telemetry
-    - 20 - provenance links snapshot_id -> selection_id -> capture
-    - 21 - never two supplemental slots
-    - 22 - legacy/manual behavior unchanged, including capture without provenance
-    - 23 - trading scan, Orchestrator, Risk and Execution behavior unchanged
-
-  queued_after:
-    - none chosen; RegistrySnapshot history store, account metadata endpoints and broader fairness remain deferred and unqueued.
-
+    - No portfolio context preserves the legacy Attention result.
+    - Exact-cut evidence is accepted; future or stale evidence is refused or contributes nothing.
+    - Open-position state affects salience without creating trade direction.
+    - Portfolio evidence leaves trading scan and Orchestrator, Risk and Execution authority unchanged.
+    - Missing fields remain explicit; identical inputs give identical results.
+    - Telemetry records portfolio contribution and provenance; replay/capture explains the priority change.
   constraints:
-    - "locked = don't redesign; implemented = verify; discuss only gaps"
-    - The tested selector, selection-persistence, supplemental-fetch and registry-producer contracts and their tests are locked and unchanged.
-    - Preserve persist-before-fetch ordering and exactly one supplemental slot.
-    - Trading continues unchanged for every registry, selector, persistence or fetch failure; observation grants no trading permission.
-    - Preserve SDD v3.2 as architecture authority and keep trading and execution eligibility unchanged.
-    - Do not promote Attention overall beyond its current maturity.
-    - Preserve the completed Scheme-D bounded pilot as parked, non-final evidence.
-    - Do not run another pilot, additional RNG benchmark, full validation, or cloud compute without separate explicit owner authorization.
-    - Do not alter frozen research or pilot artifacts.
+    - Portfolio evidence is observational only; Attention may measure salience but may not rebalance, size, allocate, hedge, enter, exit or bypass Risk.
+    - Do not change Risk, Accounting authority, Orchestrator, Execution or strategies.
+    - Do not implement unexplained portfolio-loss triggers, urgency, research feedback, a live WorldModel producer, RegistrySnapshot history, broader fairness or Scheme-D work.
+    - Preserve Attention overall maturity IMPLEMENTED and the parked non-final Scheme-D pilot; no new pilot, full validation, cloud or RNG work.
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -216,4 +100,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - After SDD-STAGE-3-ATTENTION-KERNEL-WIRING is TESTED, record its evidence in STATE.yaml without promoting Attention overall beyond IMPLEMENTED, and leave the next package for owner selection.
+  - Record the portfolio Attention implementation and focused test evidence in STATE.yaml without promoting Attention overall beyond the evidence established.
