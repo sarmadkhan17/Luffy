@@ -11,7 +11,7 @@ import json
 import math
 import statistics
 
-from trader.cognition.contracts import Candle, is_timestamp, stable_id
+from trader.cognition.contracts import POSITIONING_SERIES, Candle, is_timestamp, stable_id
 
 SCHEMA = "investigation.v2"
 TF = 14_400_000
@@ -33,6 +33,23 @@ CATALOG = {
     "probability": None, "authority": "research_only",
 }
 CATALOG_ID = stable_id("catalog", CATALOG)
+
+# SDD-STAGE-3-ATTENTION-POSITIONING-INVESTIGATION-FAMILY-V1. A separate frozen
+# catalog so the v2 catalog (and every existing family's ids) is unchanged. It
+# investigates a distinction from registration-time captured evidence only:
+# |z| is used throughout, so a sign carries no direction and +z/-z are alike.
+POSITIONING_FAMILY = "positioning_extreme"
+POSITIONING_CATALOG = {
+    "schema": "investigation.positioning_extreme.v1", "family": POSITIONING_FAMILY,
+    "evidence": "captured Attention positioning observations (per series signed z vs its "
+                "frozen reference) and concurrent captured candle components; no later query",
+    "distinct": "max |z| over valid series >= threshold",
+    "concurrent_support": "any valid concurrent candle component |value| >= its v2 catalog threshold",
+    "threshold": 2.0, "concurrent_thresholds": CATALOG["thresholds"],
+    "alternatives": ["distinct_supported", "distinct_unsupported", "not_distinct"],
+    "direction": None, "probability": None, "authority": "research_only",
+}
+POSITIONING_CATALOG_ID = stable_id("catalog", POSITIONING_CATALOG)
 
 
 def encode(value):
@@ -172,20 +189,39 @@ QUESTIONS = {
     "volume_anomaly": "Does unusual volume persist, return toward baseline, or reverse?",
     "volatility_transition": "Does the volatility transition persist, normalize, or reverse?",
     "relative_return_divergence": "Does relative divergence continue in the same direction, converge, or reverse?",
+    POSITIONING_FAMILY: "Is the observed positioning extreme meaningfully different from the candidate's "
+                        "recent positioning baseline, and what concurrent captured market evidence supports "
+                        "or contradicts that distinction?",
 }
 UNKNOWNS = ("participation", "liquidity", "sector", "catalyst", "cross_market")
 
 
-def make_state(scan, result, symbol, bars, observed_ms):
-    """Called only after the adapter validates/recomputes the coherent prefix."""
+def make_state(scan, result, symbol, bars, observed_ms, family=None):
+    """Called only after the adapter validates/recomputes the coherent prefix.
+    Captured positioning dimensions are added only for the positioning family,
+    so existing families' states are byte-identical."""
     row = result["rows"][symbol]
     dims = tuple(Dimension(o.kind, o.value, o.status, o.obs_id,
                            "attention:" + scan["config_id"])
                  for o in result["observations"]
                  if o.symbol in (symbol, "*") and o.kind in (*FAMILIES, "market_breadth"))
-    dims += tuple(Dimension(k, None, "missing", None, "not_captured") for k in UNKNOWNS)
     components, market = row.get("components", {}), result["market"]
     contradictions = []
+    if family == POSITIONING_FAMILY:
+        pos = sorted((Dimension("positioning:" + str(o.detail.get("series")), o.value, o.status, o.obs_id,
+                                "attention:" + scan["config_id"])
+                      for o in result["observations"] if o.symbol == symbol and o.kind == "positioning"),
+                     key=lambda d: d.name)
+        ok = [d for d in pos if d.status == "ok" and isinstance(d.value, (int, float))]
+        top = min(ok, key=lambda d: (-abs(d.value), d.name)) if ok else None
+        claimed = components.get(POSITIONING_FAMILY)
+        # The dominant series is recorded by evidence id; its value is the claimed max |z|.
+        dims += (*pos, Dimension(POSITIONING_FAMILY, claimed, "ok" if claimed is not None else "missing",
+                                 top.evidence_id if top else None,
+                                 "max_abs_positioning_z:" + (top.name.split(":", 1)[1] if top else "none")))
+        if len({abs(d.value) >= POSITIONING_CATALOG["threshold"] for d in ok}) > 1:
+            contradictions.append("positioning_series_disagree")
+    dims += tuple(Dimension(k, None, "missing", None, "not_captured") for k in UNKNOWNS)
     div = components.get("relative_return_divergence")
     if market.get("broad") and div is not None and abs(div) >= scan["config"]["divergence_z"]:
         contradictions.append("broad_market_move_with_asset_divergence")
@@ -203,8 +239,69 @@ def make_state(scan, result, symbol, bars, observed_ms):
     return StateSnapshot(state_id=stable_id("state", fields), **fields)
 
 
+def positioning_evidence(state):
+    """Valid captured series -> signed z, and the dominant series; fails closed."""
+    pos = [d for d in state.dimensions if d.name.startswith("positioning:")]
+    names = [d.name.split(":", 1)[1] for d in pos]
+    if not pos:
+        raise ValueError("positioning_evidence_missing")
+    if len(set(names)) != len(names) or not set(names) <= set(POSITIONING_SERIES):
+        raise ValueError("positioning_evidence_malformed")
+    valid = {}
+    for name, d in zip(names, pos):
+        finite = isinstance(d.value, (int, float)) and not isinstance(d.value, bool) and math.isfinite(d.value)
+        if d.status == "ok":
+            if not finite or not d.evidence_id:
+                raise ValueError("positioning_evidence_malformed")
+            valid[name] = d.value
+        elif d.value is not None:
+            raise ValueError("positioning_evidence_malformed")
+    if not valid:
+        raise ValueError("positioning_evidence_missing")
+    claim = [d for d in state.dimensions if d.name == POSITIONING_FAMILY]
+    top = min(valid, key=lambda k: (-abs(valid[k]), k))
+    top_id = next(d.evidence_id for n, d in zip(names, pos) if n == top)
+    if (len(claim) != 1 or claim[0].status != "ok" or not isinstance(claim[0].value, (int, float))
+            or not math.isclose(claim[0].value, abs(valid[top]), rel_tol=1e-9, abs_tol=1e-12)
+            or claim[0].evidence_id != top_id):
+        raise ValueError("positioning_extreme_inconsistent")
+    return valid, top
+
+
+def _positioning_outcome(inv):
+    """(status, reason, winner) from frozen registration evidence only."""
+    valid, top = positioning_evidence(inv.state)
+    if abs(valid[top]) < inv.measurement.threshold:
+        return "assessed", "registration_evidence_assessed", "not_distinct"
+    concurrent = [abs(d.value) >= CATALOG["thresholds"][d.name] for d in inv.state.dimensions
+                  if d.name in FAMILIES and d.status == "ok" and d.value is not None]
+    if not concurrent:
+        return "not_testable", "concurrent_evidence_missing", None
+    return ("assessed", "registration_evidence_assessed",
+            "distinct_supported" if any(concurrent) else "distinct_unsupported")
+
+
+def _open_positioning(state, registered_ms, anchor):
+    positioning_evidence(state)
+    measurement = Measurement(POSITIONING_FAMILY, 0, POSITIONING_CATALOG["threshold"], (), None, None, (),
+                              registered_ms, registered_ms, None, POSITIONING_CATALOG_ID)
+    episode_id = stable_id("episode", POSITIONING_CATALOG_ID, state.symbol, POSITIONING_FAMILY, anchor)
+    iid = stable_id("investigation", episode_id, state.state_id, registered_ms)
+    alternatives = tuple(Alternative(name, pred, f"Invalidated when {invalid}", state.evidence_ids,
+                                     state.contradictions, ("frozen registration evidence",))
+        for name, pred, invalid in (
+            ("distinct_supported", "max |z| >= threshold and a concurrent component reaches its threshold",
+             "max |z| < threshold or no concurrent component reaches its threshold"),
+            ("distinct_unsupported", "max |z| >= threshold and every valid concurrent component is below its threshold",
+             "max |z| < threshold or a concurrent component reaches its threshold"),
+            ("not_distinct", "max |z| < threshold", "max |z| >= threshold")))
+    return Investigation(iid, episode_id, state, registered_ms, POSITIONING_FAMILY,
+                         tuple(QUESTIONS[k] for k in FAMILIES), QUESTIONS[POSITIONING_FAMILY],
+                         alternatives, measurement, UNKNOWNS)
+
+
 def open_investigation(state, family, bars, registered_ms):
-    if family not in FAMILIES or not is_timestamp(registered_ms) or registered_ms < state.observed_ms:
+    if family not in (*FAMILIES, POSITIONING_FAMILY) or not is_timestamp(registered_ms) or registered_ms < state.observed_ms:
         raise ValueError("invalid_registration")
     # Guard is part of the frozen publication protocol, not a later adjustment.
     start = (registered_ms // TF + 1) * TF
@@ -216,6 +313,8 @@ def open_investigation(state, family, bars, registered_ms):
     if len(by_key) != len(bars) or any(b.candle.available_ms > state.as_of_ms or b.candle.close_ms > state.as_of_ms for b in bars):
         raise ValueError("invalid_baseline_prefix")
     anchor = state.as_of_ms // TF * TF - TF
+    if family == POSITIONING_FAMILY:
+        return _open_positioning(state, registered_ms, anchor)
     history = [by_key.get((state.symbol, anchor - i * TF)) for i in reversed(range(N + 6))]
     mean = scale = None
     reason = None
@@ -260,6 +359,11 @@ def measure(inv, bars, as_of_ms, observed_ms):
     if not all(is_timestamp(t) for t in (as_of_ms, observed_ms)) or not inv.registered_ms <= as_of_ms <= observed_ms:
         raise ValueError("invalid_observation_time")
     m = inv.measurement
+    if m.family == POSITIONING_FAMILY:
+        status, reason, _ = _positioning_outcome(inv)
+        return OutcomeEvidence(stable_id("evidence", inv.investigation_id, (), status, reason),
+                               inv.investigation_id, as_of_ms, observed_ms, inv.state.available_ms,
+                               status, None, (), (), reason)
     best = {}
     for b in bars:
         c = b.candle
@@ -327,6 +431,13 @@ def advance(inv, evidence, previous=None):
                                 "Request timestamped Binance production taker-buy and total volume for the exact target bars, "
                                 "with actual arrival/version times, to distinguish buyer-led from seller-led turnover. "
                                 "Neither participant explanation is currently assessed; this is a recommendation only.", None)
+    elif evidence.status == "assessed":
+        winner = _positioning_outcome(inv)[2]
+        assessment = tuple((n, "compatible" if n == winner else "contradicted") for n in names)
+        action = NextAction("RESEARCH", "registration_distinction_assessed_cause_unknown",
+                            "Freeze a separate forward test before any claim: compare later captured positioning "
+                            "and candle observations for this symbol with an unconditional same-window baseline. "
+                            "The distinction carries no direction; either outcome is equally informative.", None)
     elif evidence.status == "not_testable":
         assessment = tuple((n, "not_testable") for n in names)
         action = NextAction("UNASSESSABLE", evidence.reason, "No valid discriminator within this frozen measurement contract.", None)

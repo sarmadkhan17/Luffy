@@ -405,7 +405,7 @@ def test_replay_uses_captured_positioning_not_live_db(tmp_path, monkeypatch):
     assert snap.result["universe"] == scan["rows"]
 
 
-def test_positioning_dominant_selection_gets_explicit_investigation_skip(tmp_path):
+def test_positioning_dominant_selection_registers_positioning_investigation(tmp_path):
     db = tmp_path / "derivs.db"
     derivs_db(db, symbols=[f"S{j}/USDT" for j in range(6)])
     with sqlite3.connect(db) as c:
@@ -419,6 +419,8 @@ def test_positioning_dominant_selection_gets_explicit_investigation_skip(tmp_pat
         "last_error": None, "first_error_ms": None, "last_error_ms": None,
         "last_complete": {"scan_id": "r1", "seq": 1}}))
     detail = C.step(path, tmp_path / "investigation.db", NOW)
-    assert detail["skipped"].get("no_investigation_family") == 1
+    # SDD-STAGE-3-ATTENTION-POSITIONING-INVESTIGATION-FAMILY-V1 replaced the skip.
+    assert "no_investigation_family" not in detail["skipped"]
     with sqlite3.connect(tmp_path / "investigation.db") as c:
-        assert not c.execute("SELECT 1 FROM cases WHERE symbol='S1/USDT'").fetchone()
+        [payload] = c.execute("SELECT payload FROM cases WHERE symbol='S1/USDT'").fetchone()
+    assert json.loads(payload)["primary_trigger"] == CA.POSITIONING_COMPONENT

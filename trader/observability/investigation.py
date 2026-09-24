@@ -72,8 +72,8 @@ class Snapshot:
     observed_ms: int
     dataset: object = field(default=None, repr=False, compare=False)
 
-    def state(self, symbol):
-        return I.make_state(self.scan, self.result, symbol, self.bars, self.observed_ms)
+    def state(self, symbol, family=None):
+        return I.make_state(self.scan, self.result, symbol, self.bars, self.observed_ms, family)
 
 
 def adapt(source, observed_ms):
@@ -339,6 +339,10 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
                                population.D.digest(raw), raw, terminal=saved['terminal_ms'] is not None)
         db.execute("INSERT OR IGNORE INTO protocols VALUES (?,?,?)", (I.CATALOG_ID, now, I.encode(I.CATALOG)))
         activated = db.execute("SELECT activated_ms FROM protocols WHERE id=?", (I.CATALOG_ID,)).fetchone()[0]
+        db.execute("INSERT OR IGNORE INTO protocols VALUES (?,?,?)",
+                   (I.POSITIONING_CATALOG_ID, now, I.encode(I.POSITIONING_CATALOG)))
+        positioning_activated = db.execute("SELECT activated_ms FROM protocols WHERE id=?",
+                                           (I.POSITIONING_CATALOG_ID,)).fetchone()[0]
         db.execute("DELETE FROM cases WHERE terminal_ms IS NOT NULL AND terminal_ms<?", (now-RETENTION_MS,))
         db.execute("DELETE FROM updates WHERE case_id NOT IN (SELECT id FROM cases)")
         db.execute("DELETE FROM case_inputs WHERE case_id NOT IN (SELECT id FROM cases)")
@@ -436,11 +440,13 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
                     skip("active_capacity"); continue
                 if db.execute("SELECT COUNT(*) FROM cases").fetchone()[0] >= MAX_CASES:
                     skip("retention_capacity"); continue
-                if snapshot.result["rows"][symbol]["dominant"] not in I.FAMILIES:
-                    # e.g. positioning_extreme: no investigation template yet.
+                family = snapshot.result["rows"][symbol]["dominant"]
+                if family not in (*I.FAMILIES, I.POSITIONING_FAMILY):
                     skip("no_investigation_family"); continue
+                if family == I.POSITIONING_FAMILY and snapshot.scan["as_of_ms"] < positioning_activated:
+                    skip("awaiting_post_activation_scan"); continue
                 try:
-                    inv = I.open_investigation(snapshot.state(symbol), snapshot.result["rows"][symbol]["dominant"], snapshot.bars, now)
+                    inv = I.open_investigation(snapshot.state(symbol, family), family, snapshot.bars, now)
                 except ValueError as exc:
                     skip(str(exc)); continue
                 if db.execute("SELECT 1 FROM cases WHERE episode_id=?", (inv.episode_id,)).fetchone():
