@@ -1167,14 +1167,97 @@ completed_attention_new_data_incremental_cursor_v1:
     attention_overall: IMPLEMENTED
   maturity_boundary: Incremental event creation only. Downstream new-data triggering is NOT operational. Attention overall remains IMPLEMENTED; this package grants no maturity upgrade or activation. Forced-liquidation experiment and Scheme-D remain PARKED; portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET.
 
-current_active_work:
+completed_attention_new_data_event_identity_capacity_policy_v1:
   id: SDD-STAGE-3-ATTENTION-NEW-DATA-EVENT-IDENTITY-CAPACITY-POLICY-V1
   type: EVIDENCE_AUDIT
+  state: COMPLETED_DESIGN_EVIDENCE
+  decision: OPERATOR_STORAGE_POLICY_REQUIRED
+  evidence_basis: Completed evidence audit result supplied by the owner for control-plane reconciliation; no code, implementation, commit, storage-limit change, deployment or policy activation.
+  findings:
+    - MAX_EVENTS=262144 is invented and not justified by Attention semantics, Store settings or measured storage.
+    - Active event identity plus retired identity must remain exact for the current attention-new-data-event.v1 exactly-once semantics.
+    - Retired (version_id, event_id) identity cannot be discarded without allowing duplicate emission or losing event-conflict detection.
+    - append_gaps and append_refusals are historical/audit evidence rather than duplicate-prevention state, but their storage still grows and lives in the same ledger.
+    - Exact compaction options (binary hashes, gap-range merging, fault aggregation) save only constant factors; none makes lifetime identity growth bounded.
+    - Probabilistic filters are not acceptable as exact identity storage.
+    - Partition retirement by store_instance_id is unsafe because current event/version identity is not scoped to Store instance.
+    - Changing event identity to include append sequence / Store instance would alter semantics and require a new event schema; not done here.
+    - The truthful capacity unit is bytes, not row count.
+  smallest_safe_replacement_for_max_events:
+    - exact identities retained
+    - bounded per-pass processing unchanged
+    - hard ledger allocation ceiling using SQLite page allocation / max_page_count
+    - filesystem free-space reserve checked before work
+    - fail closed as blocked / storage_capacity
+    - cursor does not advance on a failed-capacity transaction
+  illustrative_storage_measurements:
+    status: EVIDENCE_NOT_POLICY
+    note: Scratch measurements only; they must not be turned into fixed production limits.
+    active_event_row_bytes_approx: 1189
+    retired_row_bytes_approx: 312
+    refusal_row_bytes_approx: 197
+    gap_row_bytes_approx: 135
+  blockers_resolution:
+    EVENT_IDENTITY_CAPACITY_POLICY_REQUIRED: NOT fully resolved. Narrowed/replaced by OPERATOR_STORAGE_POLICY_REQUIRED; the technical enforcement design is known, but owner-controlled values ledger_max_bytes and min_free_bytes remain undefined and must not be invented.
+  owner_inputs_required:
+    - ledger_max_bytes
+    - min_free_bytes
+  open_blockers:
+    - OPERATOR_STORAGE_POLICY_REQUIRED
+    - EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED
+    - DOWNSTREAM_DISPATCH_PREREQUISITE_REQUIRED
+  operational_boundaries:
+    OPERATOR_STORE_RESTORE_POLICY_REQUIRED: Remains a separate operator boundary; unchanged by this audit.
+  gap_matrix_update:
+    new_data_availability_trigger: INCREMENTAL_EVENT_CREATION_TESTED_DOWNSTREAM_AND_OPERATOR_STORAGE_POLICY_BLOCKED
+    downstream_new_data_dispatch: MISSING
+    attention_overall: IMPLEMENTED
+  maturity_boundary: Design evidence only. MAX_EVENTS remains in code until the storage-capacity guard is implemented. Downstream new-data triggering is NOT operational. Attention overall remains IMPLEMENTED; this audit grants no maturity upgrade or activation. Forced-liquidation experiment and Scheme-D remain PARKED; portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET.
+
+parked_attention_new_data_storage_capacity_guard_v1:
+  id: SDD-STAGE-3-ATTENTION-NEW-DATA-STORAGE-CAPACITY-GUARD-V1
+  type: IMPLEMENTATION_PREREQUISITE
+  state: PARKED_OWNER_POLICY_REQUIRED
+  decision_basis: Owner direction 2026-09-24; the technical design is established and the only remaining dependency is owner/infrastructure allocation policy, which does not block other Stage-3 intelligence work.
+  missing_owner_inputs:
+    - ledger_max_bytes
+    - min_free_bytes
+  owner_input_rule: Do not request, invent, default or derive either value. Reopen only when the owner supplies both explicitly.
+  current_code_state: MAX_EVENTS=262144 remains temporarily in trader/observability/new_data.py; the guard is NOT implemented.
+  new_data_path: Incremental event creation TESTED; not operationally dispatched.
+  open_blockers:
+    - OPERATOR_STORAGE_POLICY_REQUIRED
+    - EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED
+    - DOWNSTREAM_DISPATCH_PREREQUISITE_REQUIRED
+  blocker_rule: None of these blockers may become the active Stage-3 package; downstream new-data dispatch is not queued.
+  frozen_implementation_direction: Preserved as recorded in completed_attention_new_data_event_identity_capacity_policy_v1 (byte ceiling via max_page_count, free-space reserve, fail closed blocked/storage_capacity, no count ceiling, no probabilistic identity, no identity deletion).
+
+completed_attention_candidate_selection_v3:
+  id: SDD-STAGE-3-ATTENTION-NEXT-CAPABILITY-SELECTION-V3
+  type: SELECTION
+  state: COMPLETED_DESIGN_EVIDENCE
+  evidence_basis: Read-only inspection 2026-09-24 of trader/cognition/attention.py, trader/cognition/contracts.py, trader/observability/attention.py, trader/data/derivatives.py, trader/kernel.py derivatives recorder, config.yaml derivatives/attention, and the production-recorded derivs table (read-only counts); no code, collection or policy change.
+  excluded: [storage_capacity, liquidation_clock, portfolio_magnitude, scheme_d, downstream_new_data_dispatch]
+  candidate_findings:
+    positioning_extremes: Source exists and is recorded in runtime (kernel derivatives recorder, 15-minute cadence, funding and ls_ratio for 36 symbols); missing only capture plus transformation into Attention. SELECTED.
+    correlation_breakdown: Source exists (candles already captured) but the live capture holds only window+short+1 bars; a 5-return recent correlation is statistically unusable, so a longer tail and a design decision are required first.
+    liquidity_change: Volume is already the volume_anomaly component; no recorded spread/depth source exists in runtime. Missing source.
+    strategy_degradation: Source partial (analyst rolling decay sweep over specs); it is strategy-scoped, not asset-scoped, so an Attention consumer needs a new trigger contract first.
+    owner_question_trigger: No owner-question input channel or protocol exists. Missing source.
+    urgency: No defined deadline/decay semantics or truthful source. Missing design.
+    per_candidate_research_cost: No per-candidate cost attribution exists; investigation work is not metered per candidate. Missing source.
+    usefulness_outcome_weighted_research_feedback: MISSING / DESIGN_ONLY; TARGET_PREREQUISITE_REQUIRED.
+  selected_next_capability: SDD-STAGE-3-ATTENTION-POSITIONING-EXTREMES-V1
+  maturity_boundary: Selection only; no implementation, ranking change or maturity upgrade is established by this record. Attention overall remains IMPLEMENTED.
+
+current_active_work:
+  id: SDD-STAGE-3-ATTENTION-POSITIONING-EXTREMES-V1
+  type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Define a truthful lifetime-capacity policy for immutable new-data event identities, retired tombstones, gap receipts and refusal receipts without sacrificing exactly-once semantics or inventing an arbitrary permanent ceiling.
+  objective: Let Attention notice and rank assets whose recorded derivatives positioning (funding, top-trader long/short position ratio) is extreme relative to the asset's own recent history, as an explicit, point-in-time, fail-closed salience component.
   deliverables: As scoped in NEXT.yaml.
-  boundary: Evidence audit only; no code. Do not delete identities merely to regain capacity. No payload-retention implementation or downstream dispatch; no salience/ranking/threshold, scan row/hash/replay or population-artifact change; no LLM call, venue request or trading/Risk/Execution change; Attention overall remains IMPLEMENTED.
+  boundary: Consume only the existing derivs table written by the kernel derivatives recorder; no new venue request, recorder change or backfill. Existing volume/volatility/divergence components, min_salience, k, dedup and scan hash/replay of snapshots without positioning input unchanged. No LLM call, trading/Risk/Execution or strategy-authority change; storage-capacity guard, liquidation, Scheme-D, portfolio-magnitude and downstream dispatch boundaries unchanged; Attention overall remains IMPLEMENTED.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
