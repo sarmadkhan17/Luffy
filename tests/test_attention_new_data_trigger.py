@@ -72,7 +72,8 @@ def test_changed_value_emits_one_linked_event_and_keeps_history(world):
     data['S0/USDT']['4h'].loc[last, 'close'] *= 1.001
     store.write(event('s2', now + 1, data))
     result = run(tmp_path, now_ms=now + 2)
-    assert result['emitted'] == 1 and result['existing'] == 52
+    # Incremental: only the one new append receipt is read.
+    assert result['emitted'] == 1 and result['existing'] == 0 and result['last_seq'] == 53
     after = {e['event_id']: e for e in rows(tmp_path)}
     changed = [e for e in after.values() if e['reason'] == 'value_changed']
     assert len(changed) == 1
@@ -94,10 +95,15 @@ def test_unchanged_reobservation_repeat_and_restart_emit_nothing(world):
     assert store.db.execute("SELECT COUNT(*) FROM version_origins WHERE origin_scan_id='s1'"
                             ).fetchone()[0] == 52  # no receipt for a re-observation
     again = run(tmp_path)
-    assert again['emitted'] == 0 and again['existing'] == first['emitted']
+    assert again['emitted'] == 0 and again['last_seq'] == first['last_seq'] == 52
+    assert again['more_available'] is False
     store.close()
     restarted = N.process(tmp_path / 'attention.db', tmp_path / 'events.db', 'attention')
-    assert restarted['emitted'] == 0
+    assert restarted['emitted'] == 0 and restarted['last_seq'] == 52
+    # Another label's cursor starts from seq 0 over the same ledger; the label is
+    # part of event identity, so each re-derivation conflicts and none is emitted.
+    other = N.process(tmp_path / 'attention.db', tmp_path / 'events.db', 'attention-copy')
+    assert other['emitted'] == 0 and other['refused'] == {'event_conflict': 52}
     assert len(rows(tmp_path)) == 52
 
 
@@ -175,7 +181,7 @@ def test_creator_pruned_version_still_verifies_and_emits_once(world):
     assert first['refused'] == {} and first['emitted'] == 52 and first['status'] == 'ok'
     assert all(e['first_seen_ms'] == now for e in rows(tmp_path))
     again = run(tmp_path)
-    assert again['emitted'] == 0 and again['existing'] == 52
+    assert again['emitted'] == 0 and again['last_seq'] == first['last_seq'] == 52
 
 
 def test_later_scan_cannot_impersonate_the_creator(world):
@@ -331,7 +337,14 @@ def test_retired_identities_count_toward_capacity(world, monkeypatch):
                        [(f'{i:064x}', f'{i + 1000:064x}', now) for i in range(50)])
     monkeypatch.setattr(N, 'MAX_EVENTS', 52)
     result = run(tmp_path)
-    assert result['emitted'] == 2 and result['refused'] == {'event_capacity': 50}
+    # Capacity is a ledger condition, not a row property: the cursor halts at the
+    # first identity that does not fit and nothing is recorded as refused.
+    assert result['emitted'] == 2 and result['refused'] == {}
+    assert result['status'] == 'blocked' and result['reason'] == 'event_capacity'
+    assert result['blocked'] == {'reason': 'event_capacity', 'append_seq': 3}
+    assert result['last_seq'] == 2 and result['more_available'] is True
+    with sqlite3.connect(tmp_path / 'events.db') as db:
+        assert db.execute('SELECT COUNT(*) FROM append_refusals').fetchone()[0] == 0
 
 
 def test_capacity_refusal_is_deterministic_and_never_reemits_retired(world, monkeypatch,
@@ -348,15 +361,23 @@ def test_capacity_refusal_is_deterministic_and_never_reemits_retired(world, monk
         db.executemany('INSERT INTO retired VALUES (?,?,?)',
                        [(v, e, now) for v, e in tomb.items()])
     monkeypatch.setattr(N, 'MAX_EVENTS', 3 + 5)
+    seq_order = [r[0] for r in store.db.execute(
+        'SELECT version_id FROM version_append_receipts ORDER BY seq')]
+    fits = [v for v in seq_order if v not in tomb][:5]
+    halt = seq_order.index([v for v in seq_order if v not in tomb][5])
     result = run(other, now_ms=now)
     # Tombstones consume capacity and still block re-emission ahead of the bound.
-    assert result['retired'] == 3 and result['emitted'] == 5 and result['status'] == 'degraded'
-    assert result['refused'] == {'event_capacity': 52 - 8}
+    assert result['emitted'] == 5 and result['status'] == 'blocked'
+    assert result['reason'] == 'event_capacity'
+    assert result['retired'] == sum(v in tomb for v in seq_order[:halt])
+    assert result['refused'] == {} and result['last_seq'] == halt
+    assert result['blocked'] == {'reason': 'event_capacity', 'append_seq': halt + 1}
     emitted = [e['version_id'] for e in rows(other)]
-    assert emitted == [v for v in order if v not in tomb][:5]  # canonical order
-    # Exhaustion is permanent: the identical refusal on every later pass.
+    assert sorted(emitted) == sorted(fits)  # append-sequence order
+    # Exhaustion is permanent: the identical halt on every later pass.
     again = run(other, now_ms=now + 1)
-    assert again['refused'] == result['refused'] and again['emitted'] == 0
+    assert again['refused'] == {} and again['emitted'] == 0 and again['status'] == 'blocked'
+    assert again['blocked'] == result['blocked'] and again['last_seq'] == halt
 
 
 def test_store_connection_enforces_foreign_keys(world):
@@ -392,8 +413,8 @@ def test_no_store_and_no_forbidden_imports(tmp_path):
     mods = {n.module for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)}
     mods |= {a.name for n in ast.walk(tree) if isinstance(n, ast.Import) for a in n.names}
     assert mods <= {'__future__', 'argparse', 'contextlib', 'json', 'pathlib', 're', 'sqlite3',
-                    'time', 'trader.cognition.contracts', 'attention', 'trader.core.config',
-                    'declared'}
+                    'time', 'trader.cognition.contracts', 'attention', 'store',
+                    'trader.core.config', 'declared'}
 
 
 def test_no_dispatch_is_performed(world, monkeypatch):
