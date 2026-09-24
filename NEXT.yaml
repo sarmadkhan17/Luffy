@@ -2,73 +2,33 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-PORTFOLIO-SALIENCE-CALIBRATION-DATA
-  type: EVIDENCE_COLLECTION_DESIGN
+  id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-PROTOCOL-V1
+  type: DESIGN
   priority: ACTIVE
   status: READY
   objective: >
-    Define the smallest truthful shadow-evidence pipeline needed to empirically
-    calibrate whether current-position presence has any justified
-    Attention-priority effect.
+    Specify one concrete question protocol that instantiates investigation-value.v1
+    with frozen baseline, admissible evidence, closure rules, horizon and resource bounds.
   established_boundary:
-    - Detached portfolio observation remains TESTED at 285b0ce; input to live Attention remains PARTIAL_PREREQUISITE_ESTABLISHED.
-    - SDD-STAGE-3-ATTENTION-SALIENCE-SCALE-AUDIT is COMPLETED_DESIGN_EVIDENCE with result NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET in STATE.yaml.
-    - Existing scalar salience is the maximum absolute z-like component; portfolio_position_present has no justified numeric contribution.
-    - TARGET_PREREQUISITE_REQUIRED; SDD defines investigation priority but no measurable investigation-usefulness target or boolean-to-z conversion.
-  proposed_shadow_row:
-    identity:
-      - immutable row_id and schema_version; scan_id, candidate row id, decision/evaluation as_of_ms, capture receipt ms, timeframe, candidate population and selection provenance
-      - exact InstrumentId venue, market type and venue symbol for both candidate and position; explicit validated mapping status, never a bare-symbol join
-    attention_evidence:
-      - candidate status, pre-existing components, scalar salience, rank, selected/reason, min_salience, configuration/code hashes, input version ids and availability times
-    portfolio_evidence:
-      - observation_id, observation schema, environment, source_ref, request_start_ms, response_received_ms, as_of_ms, complete flag and matched PositionRecord identity
-      - presence is true only for an explicit validated open record; long and short are the same direction-independent presence class
-      - missing record, failed/ambiguous response, unpaired observation and zero-quantity row are unknown for this question, never inferred flat
-      - pairing status and reason record absent, future, stale, environment mismatch and ambiguous identity without silently substituting the latest observation
-    outcome_evidence:
-      - target_spec_id, horizon start/end, outcome status, value and measurement units, registration time, exact input versions, observed/available times and censoring reason
-  pairing_policy:
-    - Freeze the candidate/evaluation cut and log every eligible evaluated row, including unselected candidates, before later outcomes are visible.
-    - Use only a detached PortfolioObservation whose response_received_ms and as_of_ms are at or before the candidate cut, with matching environment and exact canonical instrument identity.
-    - Require a declared maximum age before pairing; log stale/future/missing separately, retain original observation timestamps and never restamp a retained last-good object.
-    - A position response read after Attention capture cannot be paired backward to that earlier cut; pair a later cut or leave the row unpaired.
-  target_review:
-    proposed_primary: TARGET_PREREQUISITE_REQUIRED
-    reason: SDD asks what deserves investigation and mentions urgency, value, uncertainty reduction, portfolio impact and research cost; it defines no operational measure of investigation usefulness or priority benefit.
-    candidate_families:
-      - Subsequent abnormal movement and volatility expansion are measurable market-path diagnostics, but a realized anomaly alone does not prove that investigation was useful.
-      - Investigation usefulness is conceptually closest, but needs a frozen, observable usefulness rubric and complete coverage of selected and unselected candidates.
-      - Strategy or research actionability needs a separately defined, time-stamped decision contract; subsequent trade return would conflate attention, strategy and execution.
-      - Risk relevance needs a separately defined portfolio-risk event and attributable exposure at the cut; current presence alone proves neither impact nor risk reduction.
-    prerequisite: Register one primary investigation-value target, its observation protocol, horizon, loss or utility and ascertainment method before any calibration or mapping claim.
-  horizon_design:
-    - Existing investigation.v2 offers one diagnostic horizon of five consecutive 4h bars opening strictly after registration plus its 30-second guard; collect its exact target keys, deadline and availability without treating its market-path score as the primary utility target.
-    - The primary target horizon remains unchosen until the target contract is registered; do not borrow the diagnostic five-bar horizon by assumption.
-  statistical_design:
-    - Pre-register the target, candidate population, age limit, identity rules, horizons, baseline, missingness treatment, minimum detectable priority benefit and analysis before observing outcomes.
-    - Compare validated presence with a defensible explicitly validated nonpresence group only if such a group is established later; until then report presence coverage and outcomes descriptively, with no presence-versus-flat effect estimate.
-    - Conditional on a valid comparator and target, estimate incremental out-of-sample investigation value over current salience, trigger type, instrument and time/market context; use chronological train/calibration and untouched later evaluation blocks, episode/time clustering and uncertainty intervals.
-    - Any numeric mapping needs stable positive evaluation evidence, calibration on development data only, a separately approved policy decision and a later implementation package.
-  minimum_evidence:
-    - A prospective paired row ledger with exact cut, canonical identity, explicit presence and complete provenance for every evaluated candidate; report capture failures and unknowns as denominators.
-    - A registered measurable primary target and horizon, target ascertainment for selected and unselected candidates, exact future data versions and a declared missing-outcome rule.
-    - A justified comparator; enough independent presence and comparator episodes across instruments and market periods for the pre-registered power/precision target in each chronological partition; otherwise INSUFFICIENT_EVIDENCE.
-    - A separate untouched evaluation period and nonoverlapping outcome windows or dependence-aware clustered analysis; no fixed sample count is asserted before target prevalence and effect size are known.
-  leakage_controls:
-    - Freeze candidates, portfolio availability and analysis registration at the cut; never use later portfolio refreshes, revised candles, future outcomes or post-cut investigations as features.
-    - Freeze a whole episode and overlapping horizon in one split; choose thresholds or mappings only on development data and make one registered evaluation on the untouched period.
-    - Record missed captures, selected and unselected rows, expired outcomes and missing labels; do not backfill unknown historical portfolio state.
-  capture_path_assessment:
-    - The existing Attention Collector/Store already captures bounded candidate snapshots and reasons, and Kernel already captures detached PortfolioObservation from its existing fetch_positions call.
-    - Reuse those capture producers as inputs to a separate append-only shadow pairing/outcome ledger; current Attention store has bounded retention and no durable paired portfolio/outcome contract.
-    - Do not add a venue request or block the trading loop for shadow evidence.
-  smallest_implementation_after_design:
-    - First register the primary target/horizon and portfolio freshness/comparator policy; if the target remains undefined, collect pairing and coverage only.
-    - Then add a bounded shadow-only serializer and append-only pairing/outcome store linked by scan_id and observation_id, with focused cut/identity/unknown/retention tests and no evaluator input or ranking change.
+    - MINIMAL_NEW_CONTRACT_REQUIRED; frozen concept and review reconciliation are in STATE.yaml completed_attention_investigation_value_reconciliation.
+    - Demonstrated question-specific evidential usefulness is distinct from trading profit, market movement and comparative Attention optimality.
+    - Bounded value requires ESTABLISHED, a valid protocol and WITHIN_BOUND; confirmation is not ranked above falsification.
+    - Detached portfolio observation remains TESTED at 285b0ce; live Attention portfolio input remains PARTIAL_PREREQUISITE_ESTABLISHED with no justified portfolio salience magnitude.
+  required_design:
+    - Choose one concrete decision-relevant question, knowledge gap and alternatives; freeze immutable versioned protocol/case identity and prospective registration requirements.
+    - Specify initial evidence, the routine-evidence baseline, admissible evidence and exact point-in-time provenance and missingness rules.
+    - Define deterministic predicates for PENDING, ESTABLISHED, NOT_ESTABLISHED and UNASSESSABLE, protocol validity, and the closure receipt.
+    - Freeze the horizon, deadline, stopping rules, resource bounds, accounting units and per-case cost receipt; preserve UNKNOWN separately from WITHIN_BOUND and EXCEEDED.
+    - Declare selected/shadow assignment and a bounded prospective sampling policy; investigating every unselected candidate is not required.
+  acceptance:
+    - The versioned question protocol instantiates every minimum field of investigation-value.v1 in STATE.yaml and makes closure and resource compliance independently assessable.
+    - No universal numeric utility, probabilities, entropy or full calibration/power design is required for descriptive shadow collection.
+    - Coverage, pairing and resource telemetry can precede usefulness labels; value-labelled collection requires the concrete protocol first.
+    - Comparative priority value remains a later selected/shadow evidence question; this protocol alone cannot establish optimal Attention allocation.
   constraints:
-    - DESIGN / EVIDENCE COLLECTION ONLY; no ranking change, portfolio weight or portfolio salience implementation.
-    - Shadow logging has no trading, selection, Risk, Execution or research-admission effect.
+    - DESIGN / CONTROL-PLANE only; no implementation or collection in this work package.
+    - Do not queue shadow-store implementation yet.
+    - No portfolio weight, ranking, selection, Risk, Execution or research-admission change.
     - Preserve the parked non-final Scheme-D pilot; no new pilot, full validation, cloud or RNG work.
 
 parked_scheme_d_work_package:

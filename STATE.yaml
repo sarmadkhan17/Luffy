@@ -494,13 +494,63 @@ completed_attention_salience_scale_audit:
   portfolio_state_input: PARTIAL_PREREQUISITE_ESTABLISHED
   maturity_boundary: Attention overall remains IMPLEMENTED; portfolio salience is not IMPLEMENTED; this audit adds design evidence only.
 
+completed_attention_investigation_value_reconciliation:
+  type: DESIGN
+  state: COMPLETED_DESIGN_EVIDENCE
+  decision: MINIMAL_NEW_CONTRACT_REQUIRED
+  review_basis:
+    previous_target_review: NEXT.yaml at 4efc141, work_package.target_review
+    independent_architecture_review: Astra conclusions supplied by the owner in this session
+  reconciliation:
+    - Retain the prior finding that market movement, trade return and position presence do not establish investigation usefulness or a justified salience weight.
+    - Narrow the prior utility, complete selected/unselected ascertainment and up-front statistical design prerequisites to the minimal question-specific contract below.
+    - The prior calibration-data proposal is historical design context, not the active queue or authorization for a shadow store.
+  contract:
+    schema_version: investigation-value.v1
+    status: FROZEN_CONCEPT_ONLY
+    purpose: Demonstrated question-specific evidential value under bounded cost.
+    excludes: [trading_profit, market_movement, comparative_attention_optimality]
+    result_states:
+      PENDING: Assessment remains open before a registered closure condition or deadline is reached.
+      ESTABLISHED: A pre-registered decision-relevant distinction is established beyond the frozen routine-evidence baseline by admissible evidence and deterministic closure predicates.
+      NOT_ESTABLISHED: Valid assessable closure does not establish the registered distinction beyond that baseline; this is not proof that the hypothesis is false.
+      UNASSESSABLE: Protocol invalidity or insufficient admissible evidence prevents a valid assessment under the frozen closure rules.
+    resource_compliance_states: [WITHIN_BOUND, EXCEEDED, UNKNOWN]
+    bounded_value_rule: Demonstrated bounded value requires result ESTABLISHED, a valid protocol and resource compliance WITHIN_BOUND together.
+    interpretation:
+      - Result state and resource compliance are separate; ESTABLISHED alone does not demonstrate bounded value.
+      - Confirmation and falsification have equal standing when either establishes a registered decision-relevant distinction.
+      - Unknown cost remains unknown, never zero or assumed WITHIN_BOUND.
+      - Demonstrated evidential usefulness does not establish optimal use of Attention; comparative priority value requires later selected/shadow evidence.
+    minimum_contract:
+      - Immutable versioned protocol and case identity, with prospective registration receipt.
+      - Registered question and knowledge-gap reference.
+      - Alternatives and testable decision-relevant distinctions.
+      - Frozen initial evidence state with point-in-time provenance.
+      - Frozen routine-evidence comparator defining what routine evidence alone can establish.
+      - Admissible evidence rules, including availability and missingness treatment.
+      - Deterministic closure predicates and protocol-validity rules.
+      - Horizon, deadline and stopping rules.
+      - Resource bounds with declared units and accounting scope.
+      - Selected/shadow assignment and prospective sampling provenance.
+      - Closure receipt linking case/protocol identity, evidence, predicate results, validity, result state and closure time.
+      - Per-case cost receipt linked to declared bounds, with resource compliance and unknown costs preserved as unknown.
+  astra_scope_reductions:
+    - No universal numeric utility is needed.
+    - No probabilities or entropy are required.
+    - Full calibration or power design is not required before descriptive shadow collection.
+    - Shadow sampling may be bounded and prospectively declared; not every unselected candidate must be investigated.
+    - Coverage, pairing and resource telemetry may be collected before usefulness labels; this design does not authorize collection or implementation.
+    - One concrete versioned question protocol must instantiate investigation-value.v1 before value-labelled collection begins.
+  maturity_boundary: Concept frozen only; no concrete question protocol, implementation, collection, usefulness evidence, priority calibration or ranking change is established by this reconciliation.
+
 current_active_work:
-  id: SDD-STAGE-3-ATTENTION-PORTFOLIO-SALIENCE-CALIBRATION-DATA
-  type: EVIDENCE_COLLECTION_DESIGN
+  id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-PROTOCOL-V1
+  type: DESIGN
   priority: ACTIVE
   status: READY
-  objective: Define the smallest truthful shadow-evidence pipeline needed to empirically calibrate whether current-position presence has any justified Attention-priority effect.
-  boundary: Design and evidence collection only; no portfolio weight, ranking change, portfolio salience implementation or trading effect.
+  objective: Specify one concrete question protocol that instantiates investigation-value.v1 with frozen baseline, admissible evidence, closure rules, horizon and resource bounds.
+  boundary: DESIGN / CONTROL-PLANE only; no implementation, collection, shadow-store queue, portfolio weight, ranking change or trading effect.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
