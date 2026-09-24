@@ -2,48 +2,52 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-PORTFOLIO-SIGNALS
+  id: SDD-STAGE-3-ATTENTION-PORTFOLIO-OBSERVATION-PREREQUISITE
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
   objective: >
-    Add bounded, point-in-time portfolio-state evidence to Attention priority
-    without giving Attention any portfolio allocation, Risk, sizing or trading
-    authority.
+    Create an immutable, detached, point-in-time venue-position observation from
+    an already-existing successful complete Kernel position read, without new
+    account API calls and without changing Attention ranking.
   completed_prerequisite:
     - SDD-STAGE-3-ATTENTION-KERNEL-WIRING is TESTED at d3c1f29; registry observation is live when enabled but off by default.
     - SDD-STAGE-3-ATTENTION-GAP-PRIORITY-AUDIT is COMPLETED_DESIGN_EVIDENCE in STATE.yaml with finding ATTENTION-PORTFOLIO-SIGNALS.
-  first_task: Inspect existing Kernel and accounting sources and choose the smallest truthful live portfolio context seam, preferring a narrow adapter over new account API calls.
+    - SDD-STAGE-3-ATTENTION-PORTFOLIO-SOURCE-AUDIT is COMPLETED_DESIGN_EVIDENCE in STATE.yaml; portfolio-state input remains MISSING at the existing Attention cut.
+  first_task: Detach and validate an immutable observation at the Kernel's existing suitable successful complete venue-position read.
   likely_files:
     - trader/kernel.py
-    - trader/observability/attention.py
-    - trader/cognition/attention.py
-    - a small portfolio Attention contract module only if needed
+    - a small typed immutable venue-position observation contract module
     - focused tests
-  evidence_contract:
-    - Introduce a typed, immutable portfolio Attention input or evidence record with explicit cut/as_of time and provenance/source on every record.
-    - Attach applicable evidence to exact instrument identity.
-    - Audit current open-position presence, represented side/direction and notional/exposure for clear live semantics.
-    - Use unrealized P&L only if point-in-time truth exists; use realized/daily P&L only if the existing accounting source is point-in-time safe.
-    - Use concentration or symbol share only if deterministically derivable from exact current state; use drawdown/equity only if already live with explicit cut semantics.
-    - Do not fabricate unavailable portfolio truth; missing, ambiguous, future or stale evidence contributes no signal.
-  behavior_contract:
-    - Portfolio contribution is a competing salience component, never a trade decision or BUY/SELL direction.
-    - Preserve direction independence where appropriate and deterministic results for identical inputs.
-    - No portfolio context preserves the legacy Attention result exactly.
-    - Strategy scan, registry observation population and existing candle/WorldModel signals remain unchanged when portfolio input is absent.
-    - Capture and replay retain enough cut, source, identity and component evidence to explain a portfolio-driven priority change.
+  observation_contract:
+    - Prefer a small typed immutable contract with schema/version, venue/source identity, market type, request_start_ms if available at the call boundary, response_received_ms, explicit complete=True, immutable position records and deterministic observation ID/hash.
+    - Use local response receipt as the honest cut; as_of_ms == response_received_ms means the complete venue response was known to LUFFY by that local time, not that the exchange supplied an atomic cut.
+    - Each position record contains only validated canonical InstrumentId, presence/nonzero-position state, side when unambiguous, finite absolute quantity and raw/source reference as needed for provenance.
+    - Do not derive signed quantity without proven side semantics or include notional without validated same-response mark price, contract units and symbol identity.
+    - For Binance USD-M require an explicit mapping of connected venue, MarketType.FUTURES, exact venue symbol and canonical InstrumentId; norm_symbol() alone cannot prove identity.
+  failure_semantics:
+    - A failed, malformed, incomplete or ambiguous position read, duplicate/conflicting instrument rows, or unproven venue/market/symbol identity publishes NO new complete observation.
+    - Keep any prior good observation unchanged and never re-stamp it after failure.
+    - A missing, failed, partial or ambiguous observation never implies zero positions; absence is meaningful only after a successful complete unambiguous response.
+  cycle_placement:
+    - Capture and detach where Kernel already performs the suitable successful complete venue-position read; do not reorder the trading cycle solely for Attention.
+    - The latest observation may become available only to a later cycle; do not feed it into Attention in this package.
   required_tests:
-    - No portfolio context preserves the legacy Attention result.
-    - Exact-cut evidence is accepted; future or stale evidence is refused or contributes nothing.
-    - Open-position state affects salience without creating trade direction.
-    - Portfolio evidence leaves trading scan and Orchestrator, Risk and Execution authority unchanged.
-    - Missing fields remain explicit; identical inputs give identical results.
-    - Telemetry records portfolio contribution and provenance; replay/capture explains the priority change.
+    - Successful complete read produces an immutable detached observation.
+    - Request start and response receipt times are retained; as_of_ms equals response_received_ms.
+    - Exact canonical instrument identity, unambiguous side and finite absolute quantity are retained.
+    - Mutation of the input venue response cannot mutate the detached observation.
+    - The same response and same cut produce the same deterministic observation ID.
+    - Failed read and malformed row publish no new complete observation.
+    - Duplicate/conflicting symbol rows and ambiguous identity fail closed.
+    - Absence is meaningful only after a complete successful response; failed/partial responses never mean flat.
+    - Previous good observation is not re-stamped after failure.
+    - No new venue/account API call is introduced.
+    - Existing Attention ranking and output are unchanged.
+    - Trading scan, Orchestrator, Risk and Execution behavior are unchanged.
   constraints:
-    - Portfolio evidence is observational only; Attention may measure salience but may not rebalance, size, allocate, hedge, enter, exit or bypass Risk.
-    - Do not change Risk, Accounting authority, Orchestrator, Execution or strategies.
-    - Do not implement unexplained portfolio-loss triggers, urgency, research feedback, a live WorldModel producer, RegistrySnapshot history, broader fairness or Scheme-D work.
+    - Capture only; do not add portfolio salience, change Attention ranking, move Attention later, add account calls, or change Risk, Accounting, Execution or strategy behavior.
+    - Defer feeding the observation into Attention, position-presence salience, notional/exposure, concentration, unrealized P&L, unexplained-loss trigger, portfolio urgency, equity/drawdown, research feedback, WorldModel production and trading authority changes.
     - Preserve Attention overall maturity IMPLEMENTED and the parked non-final Scheme-D pilot; no new pilot, full validation, cloud or RNG work.
 
 parked_scheme_d_work_package:
@@ -100,4 +104,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Record the portfolio Attention implementation and focused test evidence in STATE.yaml without promoting Attention overall beyond the evidence established.
+  - Record the venue-position observation implementation and focused test evidence in STATE.yaml; keep live Attention portfolio-state input MISSING until a separate exact-cut integration is proven.
