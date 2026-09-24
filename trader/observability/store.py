@@ -73,6 +73,14 @@ class Store:
             scan_id TEXT REFERENCES scans(scan_id) ON DELETE CASCADE,
             version_id TEXT REFERENCES versions(id),
             PRIMARY KEY(scan_id, version_id));
+          -- Creator receipt, written with the version row: its id embeds the
+          -- creating scan, which later references cannot reproduce once that
+          -- scan is pruned. Lives and dies with the version; never updated.
+          CREATE TABLE IF NOT EXISTS version_origins (
+            version_id TEXT PRIMARY KEY REFERENCES versions(id) ON DELETE CASCADE,
+            origin_scan_id TEXT NOT NULL);
+          CREATE TRIGGER IF NOT EXISTS version_origins_immutable
+            BEFORE UPDATE ON version_origins BEGIN SELECT RAISE(ABORT, 'origin_immutable'); END;
           CREATE TABLE IF NOT EXISTS causes (
             event_id TEXT PRIMARY KEY, scan_id TEXT REFERENCES scans(scan_id)
               ON DELETE CASCADE, symbol TEXT, payload TEXT NOT NULL);
@@ -161,6 +169,7 @@ class Store:
                         self.db.execute("INSERT INTO versions VALUES (?,?,?,?,?,?,?,?)",
                                         (vid, candle["symbol"], tf, candle["open_ms"], first_seen,
                                          hashed, prev["value_hash"] if prev else None, encode(content)))
+                        self.db.execute("INSERT INTO version_origins VALUES (?,?)", (vid, scan_id))
                     candle["available_ms"] = first_seen
                     self.db.execute("INSERT OR IGNORE INTO scan_versions VALUES (?,?)", (scan_id, vid))
                     refs.append({"version_id": vid, "first_seen_ms": first_seen,
