@@ -1,6 +1,6 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-09-24'
+updated_at: '2026-09-25'
 status: EVIDENCE_BASED
 
 progress_method:
@@ -128,6 +128,8 @@ capabilities:
       - 285b0ce Add detached portfolio position observation
       - trader/observability/portfolio_observation.py
       - tests/test_portfolio_observation.py
+      - e61fb82 Add correlation change attention intelligence
+      - tests/test_cognition_attention_correlation.py
     proven_facts:
       - current GitHub repository contains cognition attention code
       - attention produces structured observations and selection reasons
@@ -192,6 +194,7 @@ capabilities:
       - trading scan, Orchestrator, Risk and Execution behavior is unchanged
       - Attention code provenance and hash include the registry producer, selector, persistence and semantic dependencies
       - SDD-STAGE-3-ATTENTION-PORTFOLIO-OBSERVATION-PREREQUISITE is TESTED at 285b0ce as capture-only evidence; it is not consumed by Attention
+      - SDD-STAGE-3-ATTENTION-CORRELATION-CHANGE-V1 is TESTED at e61fb82 (correlation_change component vs the captured leave-one-out peer basket); a deterministic heuristic feature, not a significance test; predictive usefulness NOT_ESTABLISHED; not deployed
     gaps:
       - live Kernel does not currently supply a WorldModel to Attention; the tested evaluator input is a seam, not live production input
       - venue-active instruments with account_eligibility=UNKNOWN may be observed by Attention without implying trade permission; registry, Attention, trading, Risk and Execution authority remain separate (trader/core/instrument_registry.py; trader/observability/attention.py)
@@ -226,7 +229,9 @@ capabilities:
       - episode_id and investigation_id exist
       - investigations persist updates and terminal state
       - coherent current investigation-ledger state gates new-investigation top-k slot allocation; TESTED at 0d07dd8 with retry-semantics test follow-up a6c7124 (SDD-STAGE-3-ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1)
+      - correlation_change registration-evidence family (investigation.correlation_change.v1) is TESTED at e61fb82; descriptive, not prospective predictive validation
     gaps:
+      - per-case research cost is not metered; investigation-value.v1 usefulness labels do not exist
       - separate lightweight trading Opportunity registry from SDD v3.2 is not yet implemented
 
   operator_api_and_auth:
@@ -1393,15 +1398,125 @@ completed_attention_candidate_selection_v4:
   selected_next_capability: SDD-STAGE-3-ATTENTION-CORRELATION-CHANGE-V1
   maturity_boundary: Selection only; no implementation, ranking change or maturity upgrade is established by this record. Attention overall remains IMPLEMENTED.
 
-current_active_work:
+completed_attention_correlation_change_v1:
   id: SDD-STAGE-3-ATTENTION-CORRELATION-CHANGE-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: e61fb82af3d5c6c1f2bbdc7acd5850da86136c90
+  evidence:
+    - e61fb82 Add correlation change attention intelligence
+    - trader/observability/attention.py
+    - trader/cognition/contracts.py
+    - trader/cognition/attention.py
+    - trader/observability/store.py
+    - trader/observability/investigation.py
+    - trader/cognition/investigation.py
+    - tests/_corr_synth.py
+    - tests/test_cognition_attention_correlation.py
+    - tests/test_correlation_investigation_family.py
+    - tests/test_cognition_attention_positioning.py
+    - tests/test_attention_telemetry.py
+    - tests/test_attention_store_append_sequence.py
+  proven_facts:
+    - Attention has a correlation_change component.
+    - Source is existing captured closed 4h candle history; no new venue request or recorder.
+    - 151 closed bars produce 150 log returns.
+    - baseline = previous 120 returns (~20 days); recent = latest 30 returns (~5 days); the windows do not overlap.
+    - The candidate is excluded from its own reference.
+    - One fixed complete peer basket is used across both windows.
+    - Reference policy is leave_one_out_equal_weight.
+    - The reference is truthfully described as the captured leave-one-out peer basket; it is NOT the crypto market, a market factor, a sector or a BTC proxy.
+    - Incomplete peers are excluded entirely rather than joining per-bar.
+    - Peer membership/provenance is persisted for deterministic replay.
+    - Endpoint correlations r_baseline and r_recent are retained.
+    - "Signed feature is the Fisher-scaled change (atanh(r_recent) - atanh(r_baseline)) / sqrt(1/117 + 1/27); Attention salience uses its absolute value."
+    - The score is a deterministic heuristic feature, NOT a p-value, significance test, confidence statement or calibrated statistical z-test.
+    - No clipping is performed at correlations +/-1; degenerate/saturated evidence fails closed.
+    - Equal-magnitude convergence and decoupling receive equal salience.
+    - Absence of correlation input preserves legacy behavior.
+    - Replay uses persisted captured evidence only.
+    - No LLM, trading, Risk or Execution authority was added.
+  investigation_family:
+    family: correlation_change
+    protocol: investigation.correlation_change.v1
+    kind: DESCRIPTIVE
+    question: "How did this asset's contemporaneous correlation with the same captured peer basket differ between the baseline and recent windows? What captured evidence distinguishes an asset-specific change, a shared cohort change, or an unreliable comparison?"
+    results: [relationship_increased, relationship_decreased, relationship_crossed_zero, not_distinct, not_testable]
+    rules:
+      - Concurrent volume, volatility, relative-return and positioning evidence are context only; their absence does NOT falsify a valid correlation change.
+      - Broad cohort movement is context, not contradiction.
+      - Baseline/recent relationship sign and magnitude descriptors are retained.
+      - Assessment is based only on evidence frozen at registration.
+      - This is NOT prospective predictive validation.
+      - It grants no bullish/bearish, reversal/continuation, causal or trading conclusion.
+    positioning_family: Existing positioning_extreme family semantics, vocabulary, protocol and case ids are unchanged.
+  validation:
+    final_focused_suite: 328 passed, 0 failed (correlation/positioning/investigation)
+    prior_correlation_acceptance_set: 359 passed, 1 baseline failure
+    full_implementation_run: No package-attributable failures.
+    git_diff_check: clean
+    excluded_from_evidence: Graphify updates in the working tree are unrelated generated output and are not package evidence.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: The running /home/sarmad/trader kernel does not contain this component or family.
+  gap_matrix_update:
+    correlation_breakdown: TESTED (correlation_change component in code)
+    correlation_investigation_family: TESTED
+    correlation_predictive_usefulness: NOT_ESTABLISHED
+    correlation_deployed: NO
+    attention_overall: IMPLEMENTED
+  maturity_boundary: Attention salience component and descriptive investigation family only. No predictive, trading or Attention maturity upgrade; Attention overall remains IMPLEMENTED. Storage-capacity guard, forced-liquidation experiment and Scheme-D remain PARKED; portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET; downstream new-data dispatch is not queued.
+
+completed_attention_candidate_selection_v5:
+  id: SDD-STAGE-3-ATTENTION-NEXT-CAPABILITY-SELECTION-V5
+  type: SELECTION
+  state: COMPLETED_DESIGN_EVIDENCE
+  evidence_basis: Read-only inspection 2026-09-25 of trader/kernel.py (_order_book, depth_agent context), trader/agents/orderbook_depth.py, trader/data/feed.py make_exchange, trader/api/graphql_schema.py mutations, trader/dashboard/server.py /api/chat, trader/chat/engine.py, trader/observability/investigation.py step diagnostics, trader/cognition/investigation.py families, SDD.md 8.1-8.3 and STATE investigation-value.v1; reuses V4 findings where still valid. No code, collection or policy change.
+  excluded: [correlation (V1 complete), positioning, storage_capacity, liquidation_clock, portfolio_magnitude, scheme_d, downstream_new_data_dispatch]
+  candidate_findings:
+    liquidity_change:
+      existing_source: Kernel _order_book fetches a top-20 book per scanned symbol (45 s cache) for DepthScout.
+      runtime_availability: Live, but from self.exchange, the demo trading venue (kernel.py; feed.py make_exchange) - simulated liquidity, not market liquidity; not recorded, so no baseline; read after the Attention capture cut.
+      gap: Missing truthful source and history, not only transformation. OHLCV proxies would relabel volume/volatility.
+      prerequisite_risk: HIGH - a production-book recorder is new infrastructure with new venue requests and store growth under the parked storage policy.
+    urgency:
+      existing_source: None; SDD 8.2 names urgency only as a weighted template term.
+      runtime_availability: None.
+      gap: Missing design and source (no deadline/decay semantics).
+      prerequisite_risk: HIGH - clock-based proxies overlap the excluded liquidation clock; any mapping would invent semantics.
+    owner_question_trigger:
+      existing_source: Authenticated operator GraphQL mutations (control only) and LLM-answered /api/chat; owner questions are free text and not persisted.
+      runtime_availability: Channel live; no structured owner-question record.
+      gap: Missing source (structured, persisted owner question) plus transformation.
+      prerequisite_risk: HIGH - free text needs LLM or an invented symbol/family mapping; existing family protocols assume selection by their dominant component; a categorical trigger has no justified salience magnitude (same class as NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET) and needs an owner priority-lane policy.
+    per_candidate_research_cost:
+      existing_source: Investigation step already measures pass-level elapsed_ms into diagnostics and enforces MAX_RUNTIME_MS per pass.
+      runtime_availability: Live, pass-level only.
+      gap: Missing transformation - per-case attribution; the process clock itself is a truthful source.
+      prerequisite_risk: LOW - no venue, LLM or new store; resource bounds are not declared, so compliance must stay UNKNOWN rather than invented.
+    usefulness_outcome_weighted_research_feedback:
+      existing_source: investigation-value.v1 frozen concept; ledger cases with registration-frozen descriptive results.
+      runtime_availability: Cases live; no usefulness labels.
+      gap: Missing source (labels). investigation-value.v1 bounded_value_rule requires, per case, a valid concrete protocol AND a cost receipt with resource compliance; neither exists.
+      prerequisite_risk: HIGH if attempted now - labels without a concrete protocol and cost receipts would be invented.
+    strategy_degradation:
+      finding: Still ineligible. No truthful asset attribution has become available; per_symbol remains a strategy backtest breakdown (rolling.py, analyst.review_deployed).
+  selection_reasoning:
+    - No candidate that directly changes what Attention notices (liquidity, urgency, owner question) has a truthful runtime source without new infrastructure or invented mappings.
+    - Usefulness/outcome-weighted feedback is the candidate that would materially improve prioritization, but it cannot truthfully be implemented yet.
+    - Per-case cost receipts are a genuinely necessary prerequisite of it under investigation-value.v1 (bounded value requires resource compliance), are independent of which question protocol is later frozen, and are also the SDD 8.2 research_cost term and the 8.3 cost-control input.
+    - Receipts can go straight to IMPLEMENTATION from an existing truthful source (process clocks around existing per-case work) with no venue request, LLM, recorder or ranking change.
+  selected_next_capability: SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1
+  maturity_boundary: Selection only; no implementation, ranking change or maturity upgrade is established by this record. Attention overall remains IMPLEMENTED.
+
+current_active_work:
+  id: SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Let Attention notice assets whose recent co-movement with the rest of the captured cohort has changed materially from their own baseline, as an explicit, point-in-time, fail-closed salience component with a registration-evidence investigation family.
+  objective: Attribute measured investigation work to each investigation case as an immutable per-case resource receipt, as the prerequisite for bounded usefulness feedback and the SDD research_cost term.
   deliverables: As scoped in NEXT.yaml.
-  frozen_calculation: 151 closed 4h closes -> 150 log returns; baseline = previous 120, recent = latest 30 (non-overlapping); exact-grid leave-one-out cohort mean reference excluding the candidate; signed_change_z = (atanh(r_recent) - atanh(r_baseline)) / sqrt(1/(120-3) + 1/(30-3)); Attention component correlation_change = |signed_change_z| (raw Fisher difference is never salience); signed value retained as evidence. Deterministic standardized correlation-change feature - not a p-value, calibrated significance test or proof of regime change. Family threshold 2.0 is package-owned implementation policy, not empirically optimized or SDD-derived. Every failure is an explicit unavailable status, never 0.
-  boundary: Consume only closes already held in the DataFeed frames sliced by the existing capture; no new venue request, store, recorder or backfill. Existing components, min_salience, k, dedup, tie-break and hashes/replay of snapshots without the new input unchanged. No LLM call, trading/Risk/Execution or strategy-authority change; storage-capacity guard, liquidation, Scheme-D, portfolio-magnitude and downstream dispatch boundaries unchanged; Attention overall remains IMPLEMENTED.
+  boundary: Measurement and persistence only. No resource bound is declared or invented; resource_compliance stays UNKNOWN. Salience, ranks, k, min_salience, allocation, case identity, catalogs, scan hashes and replay unchanged. No LLM, venue request, trading/Risk/Execution or strategy-authority change; storage-capacity guard, liquidation, Scheme-D, portfolio-magnitude and downstream dispatch boundaries unchanged; Attention overall remains IMPLEMENTED.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4

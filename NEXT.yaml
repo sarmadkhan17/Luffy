@@ -2,96 +2,64 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-CORRELATION-CHANGE-V1
+  id: SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Let Attention notice assets whose recent co-movement with the rest of the captured cohort has changed materially from their own baseline, as an explicit, point-in-time, fail-closed salience component with a registration-evidence investigation family.
+  objective: Attribute measured investigation work to each investigation case as an immutable per-case resource receipt, so research cost becomes observable per candidate and bounded usefulness feedback has its required cost input.
   basis:
-    - SDD-STAGE-3-ATTENTION-NEXT-CAPABILITY-SELECTION-V4 selected correlation_breakdown; strategy_degradation rejected for Attention (strategy-scoped, backtest per_symbol evidence, one production event).
-    - trader/observability/attention.py capture already slices each member's in-memory DataFeed frame (default fetch depth 400 bars) on the producer; only need = window + short + 1 = 26 bars are kept.
-    - V3 blocker - a 5-return recent correlation is statistically unusable - is a capture-length limit, not a missing source.
-    - Lesson from POSITIONING_INVESTIGATION_FAMILY_MISSING - a new dominant component without a family consumes top-k slots with no_investigation_family; the family ships in the same package.
+    - SDD-STAGE-3-ATTENTION-NEXT-CAPABILITY-SELECTION-V5 - liquidity (demo-venue book, unrecorded), urgency (no semantics), owner question (no structured source; no justified magnitude) and strategy degradation (no asset attribution) cannot truthfully be implemented; usefulness feedback cannot be labelled yet.
+    - investigation-value.v1 bounded_value_rule requires a per-case cost receipt with resource compliance; unknown cost remains unknown, never zero.
+    - SDD 8.2 (research_cost term) and 8.3 (cost control) require per-candidate cost to exist before it can be weighed.
+    - trader/observability/investigation.py step already measures pass-level elapsed_ms into diagnostics and enforces MAX_RUNTIME_MS; only per-case attribution is missing.
   source:
-    - Closed 4h bars from the same DataFeed frame slice the existing capture reads; close and open_ms only.
-    - No new venue request, DataFeed fetch, store table, recorder or backfill.
+    - Process monotonic and thread-CPU clocks around the existing per-case registration, update and assessment work inside the investigation step.
+    - Counts the step already knows (evidence rows read, ledger rows written, persisted payload bytes).
+    - No venue request, LLM call, DataFeed, recorder or new store.
   missing_transformation:
-    - Capture - a bounded close-only history per member, detached in the same producer pass.
-    - Attention - per-asset Fisher-scaled correlation change between baseline and recent windows against a captured leave-one-out peer basket.
-    - Investigation - a registration-evidence family for correlation-dominant candidates.
+    - Per-case attribution of work the step already performs; the unattributed pass residual is reported, never apportioned.
   frozen_semantics:
-    - New optional input key correlation_history [{symbol, status, first_open_ms, closes}] in cognition.input.v1; an absent key leaves every existing output and hash byte-identical.
-    - capture = exactly CORRELATION_CAPTURE_CLOSES = 151 fully closed 4h closes ending at the Attention anchor (open_ms + tf <= as_of); a still-forming bar never enters the history. The bar open times are first_open_ms + i * tf_ms exactly; consecutiveness is verified at capture and again at load.
-    - 151 closes produce exactly 150 log returns log(close_t / close_t-1). baseline = the previous (first) 120 returns; recent = the most recent (last) 30 returns; the windows are non-overlapping and adjacent.
-    - Data alignment uses exact closed-bar timestamps only - no interpolation, no forward fill, no nearest-bar matching. A member participates in a reference only if its timestamp grid equals the candidate's grid exactly (same first_open_ms, same 151 bars) with every return finite.
-    - Reference = the captured leave-one-out peer basket - ONE peer set per candidate, frozen from the members with the complete exact aligned 150-return history, candidate excluded, equal weights, used unchanged for every return of both windows; never rebuilt per timestamp from whichever peers exist, and an incomplete peer is excluded entirely. Fewer peers than the existing min_cohort -> unavailable (insufficient_cohort). Provenance persisted - reference_peers, reference_size, reference_membership_id, reference_policy = leave_one_out_equal_weight, baseline/recent return-bar boundaries. It is not the crypto market, a market factor, a sector or a BTC proxy; a later scan's basket may differ and no continuity is claimed across baskets.
-    - r_baseline = corr(asset_baseline, loo_reference_baseline); r_recent = corr(asset_recent, loo_reference_recent); f_baseline = atanh(r_baseline); f_recent = atanh(r_recent).
-    - fisher_scale = sqrt(1/(120-3) + 1/(30-3)) (fixed); signed_fisher_scaled_change = (f_recent - f_baseline) / fisher_scale.
-    - Attention component correlation_change = abs(signed_fisher_scaled_change), competing in the existing max salience. The raw Fisher difference is NOT used as salience; captured evidence retains r_baseline, r_recent, the signed change, the absolute correlation_change, f_baseline, f_recent, fisher_scale and the peer basket.
-    - Both directions matter equally - weakening (negative) and strengthening (positive) of equal magnitude have identical salience. No bullish/bearish or trading direction is inferred.
-    - Explicit unavailable status, never 0 - fewer than 151 valid closed bars (warmup), timestamp gap, non-finite close/return, zero variance in candidate returns, zero variance in leave-one-out reference, insufficient valid leave-one-out cohort, non-finite correlation, |r| >= 1 (non-finite Fisher transform; never clipped), malformed captured history.
-    - This is a deterministic Fisher-scaled correlation-change feature. It is not a p-value, confidence level, calibrated z-test or controlled false-positive result, and no such claim enters payloads, investigation text or tests.
-    - No new Attention weight or threshold; the existing min_salience applies.
-    - Replay and investigation consume the captured input only; no live price query.
-  implementation_policy:
-    CORRELATION_CAPTURE_CLOSES: 151 closed 4h closes
-    CORRELATION_BASELINE: 120 returns (20 days of 4h bars)
-    CORRELATION_RECENT: 30 returns (5 days of 4h bars)
-    family_assessment_threshold: 2.0 on |signed_fisher_scaled_change| - package-owned Attention/assessment policy, same status as POSITIONING_INVESTIGATION_THRESHOLD_POLICY; not empirically optimized and not SDD-derived.
-    note: Window lengths and the threshold are package-owned deterministic policy, not SDD-derived constants.
-  investigation_family:
-    family: correlation_change
-    protocol: investigation.correlation_change.v1 (separate frozen catalog; v2 and positioning catalogs and ids unchanged)
-    question: "How did this asset's contemporaneous correlation with the same captured peer basket differ between the baseline and recent windows? What captured evidence distinguishes an asset-specific change, a shared cohort change, or an unreliable comparison?"
-    results: [relationship_increased, relationship_decreased, relationship_crossed_zero, not_distinct, not_testable]
-    descriptors: [correlation_increased, correlation_decreased, correlation_unchanged, correlation_crossed_zero, baseline_relationship_positive|inverse|zero, recent_relationship_positive|inverse|zero, relationship_magnitude_increased|decreased|unchanged]
-    context_codes: [shared_cohort_context, shared_cohort_context_absent, shared_cohort_context_unavailable, peer_basket_change_context, peer_basket_change_context_absent, peer_change_evidence_unavailable, concurrent_unusual_evidence_present, concurrent_unusual_evidence_absent, concurrent_evidence_unavailable]
-    rules:
-      - A correlation_change-dominant candidate must not consume top-k and then receive no_investigation_family.
-      - Registration-frozen captured/persisted evidence only; no live price query; closes immediately as assessed; contextual evidence only, not prospective predictive validation; no outcome-ingestion trading result.
-      - Descriptive only; shares no assessment logic with positioning (whose vocabulary, logic, protocol and case ids are unchanged). Result from |change| and the endpoints only - |change| < 2.0 -> not_distinct; r_baseline and r_recent of differing signs -> relationship_crossed_zero (its increase/decrease is kept as a descriptor); else relationship_increased or relationship_decreased; unreadable frozen evidence -> not_testable. An isolated correlation change with ordinary volume, volatility, relative return and positioning is still a valid change.
-      - Broad cohort movement (market.broad) is context (shared_cohort_context), never a contradiction; concurrent candle/positioning evidence and the basket peers' own changes are context codes only and never change the result.
-      - Confirmation and falsification are equally valid; no hedge, pair, long/short or regime conclusion is encoded.
-      - No bullish/bearish, reversal/continuation, causation, structural decoupling from crypto generally, persistent diversification or trading-permission inference.
-  before_implementation:
-    - Confirm the live 4h frames passed to capture hold >= 151 closed bars for members; otherwise the per-symbol status is warmup and nothing is filled.
-    - Measure producer-side capture overhead with the existing telemetry before and after.
+    - Receipt schema investigation-resource-receipt.v1, one per (case_id, stage, attempt), stage in {registration, update, assessment}.
+    - Declared units - wall_ns (monotonic), cpu_ns (thread CPU), evidence_rows_read, ledger_rows_written, payload_bytes, llm_calls, venue_requests.
+    - llm_calls and venue_requests are recorded as measured counts from the step (structurally 0 today), not asserted constants.
+    - Accounting scope investigation_step_case_local - only work inside the per-case section; Attention capture, scan evaluation, ledger open/commit and pass overhead are excluded and reported once per pass as unattributed_wall_ns / unattributed_cpu_ns in diagnostics.
+    - resource_bound = null and resource_compliance = UNKNOWN for every receipt; no bound, budget or threshold is declared, derived or invented.
+    - A missing or failed measurement is recorded as UNKNOWN with a reason, never 0.
+    - Receipts are written in the same SQLite transaction as the case effect they measure; a rolled-back pass leaves no receipt.
+    - Measurements are observational telemetry - excluded from case identity, case ids, catalog ids, scan hashes and replay payloads; a retry records a new attempt and never rewrites an earlier receipt.
+    - Receipt retention follows the existing case retention; no new retention policy.
   implementation_boundary:
-    - trader/observability/attention.py - bounded close-only history detached from the existing tail slice.
-    - trader/cognition/contracts.py - validate and load optional correlation_history; rejected records mark that symbol unusable instead of aborting the load.
-    - trader/cognition/attention.py - per-asset correlation_change observation and competing component.
-    - trader/observability/store.py - persist the captured input in the scan payload when present.
-    - trader/observability/investigation.py - recompute scans with the persisted input; register the family.
-    - trader/cognition/investigation.py - correlation_change family modelled on positioning_extreme.
+    - trader/observability/investigation.py - measure per-case sections; persist receipts; add unattributed pass residual to diagnostics.
+    - trader/cognition/investigation.py - receipt dataclass and encoding only, if needed.
   acceptance_tests:
-    - tests/test_cognition_attention_correlation.py (new) - exact 120/30 split from 151 closes; recent and baseline windows do not overlap; Fisher difference is divided by the fixed se = sqrt(1/117 + 1/27); the raw Fisher difference is NOT used directly as salience; leave-one-out reference excludes the candidate; timestamp grids are exact (offset grid member excluded, no fill); convergence and breakdown of equal standardized magnitude rank equally; no p-value/significance claim enters the payload.
-    - tests/test_cognition_attention_correlation.py (new) - absent input leaves outputs and hashes byte-identical; a synthetic asset decoupling from a correlated cohort ranks on correlation_change; equal-|z| breakdown and convergence rank alike; gap, warmup, non-finite, zero-variance, |r| = 1 and insufficient_cohort fail closed to None with explicit status; leave-one-out excludes the asset itself; point-in-time - a forming bar is excluded; replay recomputes from captured input only.
-    - tests/test_correlation_investigation_family.py (new) - correlation-dominant candidates map to correlation_change and never receive no_investigation_family; registration-only assessment; malformed/inconsistent evidence fails closed; deterministic case ids across retry/restart; existing families and catalogs unchanged.
-    - Existing tests/test_cognition_attention.py, test_cognition_attention_world.py, test_cognition_attention_positioning.py, test_positioning_investigation_family.py, test_cognition_contracts.py, test_cognition_replay.py, test_attention_telemetry.py, test_attention_kernel_wiring.py and test_investigation_state_feedback.py pass apart from recorded baseline failures.
+    - tests/test_investigation_resource_receipts.py (new) - one receipt per registered, updated and assessed case with all declared units; resource_bound null and resource_compliance UNKNOWN; a failed clock read yields UNKNOWN with reason, never 0; receipts roll back with the pass; retry/restart adds an attempt without rewriting an earlier receipt; case ids, catalog ids, allocation decisions and scan/replay hashes are byte-identical with and without receipts; per-case wall_ns sum plus unattributed_wall_ns does not exceed pass elapsed; llm_calls and venue_requests are 0 for every existing family.
+    - Existing tests/test_investigation_state_feedback.py, test_positioning_investigation_family.py, test_correlation_investigation_family.py, test_cognition_replay.py and test_attention_telemetry.py pass apart from recorded baseline failures.
     - git diff --check clean.
   preserve:
-    - Existing components (including positioning), min_salience, k, dedup and tie-break unchanged.
-    - Replay and hashes of every snapshot without the new input unchanged.
+    - Salience, components, min_salience, k, dedup, tie-break and allocation unchanged.
+    - Families, catalogs, protocols and case ids unchanged.
+    - MAX_RUNTIME_MS and GUARD_MS unchanged; receipts add no new deadline.
     - Population artifacts unchanged.
     - No trading, Risk, Execution or strategy-authority changes; no LLM calls or venue requests.
-    - Parked storage-capacity guard, liquidation, Scheme-D and portfolio boundaries unchanged.
   not_in_scope:
-    - forward/prospective validation of correlation change or positioning
-    - BTC-only or external reference series; a pairs or hedge expression
-    - liquidity, urgency, owner-question, research-cost or usefulness feedback
-    - Store retention policy changes (close-only history adds roughly 16 x 151 closes per scan; recorded, not addressed)
-    - storage-capacity guard, downstream new-data dispatch, payload retention
+    - declaring resource bounds or budgets; resource_compliance other than UNKNOWN
+    - using cost in salience, ranking, allocation or pausing research
+    - a concrete investigation-value.v1 question protocol or usefulness labels
+    - attributing Attention capture or scan cost to candidates
+    - liquidity, urgency, owner-question or strategy-degradation work
+    - more correlation or positioning work
+    - storage-capacity guard, liquidation clock, portfolio magnitude, Scheme-D, downstream new-data dispatch
     - deployment to the running /home/sarmad/trader kernel
   established_boundary:
     - SDD-STAGE-3-ATTENTION-NEW-DATA-STORAGE-CAPACITY-GUARD-V1 is PARKED_OWNER_POLICY_REQUIRED; do not request or invent ledger_max_bytes or min_free_bytes.
     - OPERATOR_STORAGE_POLICY_REQUIRED, EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED and DOWNSTREAM_DISPATCH_PREREQUISITE_REQUIRED remain open and must not become the active package.
     - forced-liquidation-participation.v1 remains PARKED; M3.2 Scheme-D remains PARKED.
     - Portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET; portfolio salience remains BLOCKED_UPSTREAM.
-    - Usefulness/outcome-weighted research feedback remains MISSING / DESIGN_ONLY.
-    - Positioning - signal TESTED, investigation family TESTED, predictive usefulness NOT_ESTABLISHED, deployed NO; no further positioning audit is queued.
+    - Positioning and correlation - signal TESTED, investigation family TESTED, predictive usefulness NOT_ESTABLISHED, deployed NO; no further work queued.
+    - Usefulness/outcome-weighted research feedback remains MISSING / DESIGN_ONLY; this package supplies only its cost-receipt prerequisite.
     - Attention overall remains IMPLEMENTED; this package grants no maturity upgrade or activation.
   after_completion:
-    - Record TESTED evidence in STATE.yaml and set gap_matrix correlation_breakdown to TESTED (component and family in code; usefulness NOT_ESTABLISHED; not deployed); no maturity upgrade.
+    - Record TESTED evidence in STATE.yaml; set gap_matrix per_candidate_research_cost to MEASURED (receipts TESTED; bounds UNDECLARED; not used in priority); no maturity upgrade.
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -152,4 +120,4 @@ parked_storage_capacity_guard:
   reopen_when: Owner supplies explicit ledger_max_bytes and min_free_bytes; do not request or invent them.
 
 after_completion:
-  - Record SDD-STAGE-3-ATTENTION-CORRELATION-CHANGE-V1 evidence in STATE.yaml; keep the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch.
+  - Record SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1 evidence in STATE.yaml; keep the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch.
