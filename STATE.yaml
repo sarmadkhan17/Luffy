@@ -726,13 +726,55 @@ completed_clock_health_receipt_design:
   decision_basis: The audited existing NTP/VM environment has no established defensible source-accuracy envelope or propagation guarantee. These require documented, independently verifiable evidence; no Ubuntu NTP pool accuracy bound or ppm/error limit is assumed. Whether an alternate source is required remains for the source-contract design.
   boundary: Design evidence only; RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED remains; both production policy globals remain None.
 
-current_active_work:
+completed_clock_health_source_contract_design:
   id: SDD-CLOCK-HEALTH-SOURCE-CONTRACT-V1
-  type: DESIGN_PREREQUISITE
+  status: COMPLETED_DESIGN_EVIDENCE
+  decision: EXTERNAL_GUARANTEE_REQUIRED
+  evidence_basis: Completed audit findings supplied by the owner for reconciliation at HEAD 5f0c09b; no new authoritative-source review, host audit or collection performed.
+  established_findings:
+    - Existing NTP can mathematically produce a conservative offset interval without assuming symmetric network delay, conditional on trustworthy server UTC accuracy, timestamp/error semantics and continuity assumptions.
+    - Existing environment does not establish an authoritative source UTC-accuracy envelope, a finite local clock-rate/holdover bound or rollback-resistant VM lifecycle continuity.
+    - Existing NTP is not rejected.
+    - ALTERNATE_CLOCK_SOURCE_REQUIRED is not established yet.
+    - Chrony/NTS/PTP/PHC do not automatically solve all three missing guarantees.
+    - NTS authenticates source/messages but does not itself certify UTC accuracy.
+    - Local clocks and diagnostics remain supporting evidence only.
+  missing_external_contracts:
+    source_utc_accuracy:
+      evidence_required: Authoritative evidence covering the exact NTP service/source.
+      guarantees:
+        - Exact NTP service/source trust.
+        - UTC traceability/accuracy envelope.
+        - Upstream dispersion/holdover semantics.
+        - Timestamp error bounds.
+        - Leap/smear behavior.
+        - Failure signaling.
+    vm_clock_propagation:
+      evidence_required: Authoritative evidence covering the actual VMware virtual clock.
+      guarantees:
+        - Actual virtual clock rate-error bound.
+        - Discipline/slew interaction.
+        - Elapsed-time uncertainty growth.
+        - Supported holdover duration.
+        - Source-loss behavior.
+    lifecycle_continuity:
+      evidence_required: Externally maintained evidence covering VMware lifecycle continuity.
+      guarantees:
+        - Pause/stun.
+        - Suspend/resume.
+        - Snapshot restore.
+        - Migration.
+        - Startup corrections.
+        - Rollback-resistant generation/continuity state.
+  boundary: Design evidence only; RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED remains; PRODUCTION_POLICY and PRODUCTION_CLOCK_HEALTH_POLICY remain null.
+
+current_active_work:
+  id: SDD-CLOCK-HEALTH-EXTERNAL-GUARANTEE-EVIDENCE-V1
+  type: EVIDENCE_ACQUISITION_DESIGN
   priority: ACTIVE
   status: READY
-  objective: Define the smallest source/trust/propagation contract that would allow LUFFY to derive a finite, independently verifiable absolute-UTC uncertainty interval using existing NTP/VM infrastructure.
-  boundary: Design only; no implementation queued until source/trust and propagation contracts support a finite bound. No deployment, collection, clock/service changes or production policy activation.
+  objective: Determine whether the three required external guarantees can be obtained for LUFFY's existing NTP + VMware environment from authoritative provider/vendor/service contracts before considering an alternate clock source.
+  boundary: Search/documentation design only; no implementation, host/service/config changes, collection, monitoring, liquidation deployment, production policy activation or Attention/Risk/Execution changes. Do not select or install an alternate source.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
