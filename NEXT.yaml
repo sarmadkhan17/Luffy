@@ -2,39 +2,46 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-GAP-REPRIORITIZATION-V2
-  type: EVIDENCE_AUDIT
+  id: SDD-STAGE-3-ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1
+  type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Re-audit the remaining Stage-3 Attention gaps after the registry, WorldModel seam, portfolio observation, salience-scale work, investigation-value work, and parked liquidation experiment; identify the smallest independent next capability that can be implemented without unresolved upstream prerequisites.
+  objective: Use coherent current investigation-ledger state during investigation-slot allocation so candidates with already-open investigations do not consume top-k slots, while preserving the original Attention scan, salience ordering, thresholds, and trading authority.
+  basis:
+    - SDD-STAGE-3-ATTENTION-GAP-REPRIORITIZATION-V2 is COMPLETED_DESIGN_EVIDENCE and selected ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1.
+    - Current live flow selects top-k with no active-investigation context, then the investigation consumer rejects duplicates afterward; eligible candidates below the original top-k cannot replace already-active candidates, which can waste available investigation capacity.
   established_boundary:
-    - SDD-CLOCK-HEALTH-QUALIFICATION-PATH-DECISION-V1 is COMPLETED_DESIGN_EVIDENCE with decision PARK_CURRENT_VM_CLOCK_PATH.
-    - forced-liquidation-participation.v1 is PARKED; the current personal VMware environment cannot truthfully establish production coverage, and the experiment is not a prerequisite for other Stage-3 Attention work.
-    - SDD-FORCED-LIQUIDATION-RECORDER-COVERAGE-V1 remains TESTED; RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED remains.
-    - PRODUCTION_POLICY and PRODUCTION_CLOCK_HEALTH_POLICY remain null.
-    - Portfolio-state input remains PARTIAL_PREREQUISITE_ESTABLISHED; NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET and TARGET_PREREQUISITE_REQUIRED remain; portfolio salience remains blocked pending applicable evidence/calibration.
+    - forced-liquidation-participation.v1 remains PARKED; M3.2 Scheme-D remains PARKED.
+    - Portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET; portfolio salience remains BLOCKED_UPSTREAM.
     - Attention overall remains IMPLEMENTED; this queue grants no maturity upgrade or activation.
-  re_evaluate:
-    - research/investigation feedback
-    - urgency
-    - per-candidate research cost
-    - event-driven triggers
-    - correlation breakdown
-    - positioning extremes
-    - liquidity change
-    - strategy degradation
-    - owner-question/new-data triggers
-    - replay/provenance gaps
-    - portfolio salience, preserving its current blocked/calibration state
-  deliverables:
-    - Factual gap matrix with each requirement, current evidence and provenance, established capability, missing evidence, upstream prerequisites and independent implementability; unknown is not PASS.
-    - One smallest independent next package with objective, bounded scope, evidence-backed prerequisite readiness and acceptance checks; do not select a package with unresolved upstream prerequisites.
-  constraints:
-    - Evidence audit only; no code, implementation, commit, collection, deployment, policy activation or Attention/Risk/Execution changes.
-    - Do not reopen parked liquidation clock work or Scheme-D; do not reopen portfolio magnitude without evidence.
-    - No further owner diagnostics, clock/source implementation, protocol redesign, external execution environment or alternate local clock source.
-    - Reopen the parked liquidation experiment only with new applicable qualification evidence or separately authorized redesign.
-    - Preserve frozen protocols, unrelated knowledge edits and all parked research boundaries; no pilot, validation, cloud or RNG work.
+  required_behavior:
+    - Reuse existing open_episodes semantics in Attention selection (trader/cognition/attention.py; trader/cognition/replay.py).
+    - Do not change salience scores or ranking.
+    - Do not add weights.
+    - Do not change Attention candidate generation.
+    - Do not modify original scan rows/hashes.
+    - Do not rewrite frozen population receipts or selected/shadow declarations.
+    - Existing active investigations continue to update normally.
+    - An eligible lower-ranked candidate may fill a slot vacated by an already-active candidate.
+    - Capacity limits remain enforced.
+    - Missing/refused ledger evidence must fail closed; never treat it as no open investigations.
+    - Each contextual selection decision records the source scan ID/hash, policy version, decision time, coherent ledger-state evidence, and the resulting selected candidate IDs.
+    - Repeated evaluation of the same contextual decision is idempotent; it cannot progressively register more candidates after, or because of, its own writes.
+    - Ledger state written after the decision cut must never be attributed to the earlier decision.
+    - No trading, Risk, Execution or strategy-authority changes.
+    - No LLM calls or venue requests.
+    - Frozen population receipts and selected/shadow assignments remain unchanged.
+  acceptance_checks:
+    - An eligible lower-ranked candidate fills a slot when a higher-ranked candidate already has an active investigation.
+    - With no active investigations, selection is identical to legacy behavior.
+    - Missing or refused ledger evidence fails closed.
+    - Capacity limits remain enforced.
+    - Repeating the same decision yields identical selection and no progressive admissions.
+    - Existing active investigations continue updating normally.
+    - Original Attention scan rows, hash and replay remain unchanged.
+    - Frozen population artifacts remain unchanged.
+  after_completion:
+    - Record test evidence and commit; do not upgrade Attention overall maturity without acceptance evidence.
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -90,4 +97,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Return the factual gap matrix and one smallest independent next package; record evidence and unresolved prerequisites without implementing the selected package or upgrading maturity.
+  - Record implementation and test evidence for SDD-STAGE-3-ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1 in STATE.yaml; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries.

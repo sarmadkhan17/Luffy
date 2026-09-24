@@ -210,7 +210,7 @@ capabilities:
       - portfolio_position_present implementation was correctly blocked by an upstream salience-scale policy prerequisite, not an implementation failure; boolean presence has no justified magnitude on the current z-like scale
       - current candle components are z-like magnitudes and the optional WorldModel component requires z_score evidence; aggregation takes the maximum absolute numeric component, compares it with min_salience, and ranks by magnitude
       - assigning boolean position presence an arbitrary numeric contribution would invent ranking policy
-      - research and investigation feedback into Attention priority remains missing
+      - research and investigation feedback into Attention priority remains missing; research/investigation feedback is PARTIAL and live priority feedback is MISSING (SDD-STAGE-3-ATTENTION-GAP-REPRIORITIZATION-V2)
       - event-driven invocation and material-change gate remain incomplete
       - urgency and per-candidate research cost remain incomplete
       - broader trigger coverage remains incomplete
@@ -898,14 +898,41 @@ parked_forced_liquidation_experiment:
   reopening_condition: Reopen only with new applicable qualification evidence or separately authorized redesign.
   boundary: No further owner diagnostics, clock/source implementation, protocol redesign, external execution environment or alternate local clock source; no automatic retry or diagnostic loop, collection, deployment or policy activation.
 
-current_active_work:
+completed_attention_gap_reprioritization_v2:
   id: SDD-STAGE-3-ATTENTION-GAP-REPRIORITIZATION-V2
   type: EVIDENCE_AUDIT
+  state: COMPLETED_DESIGN_EVIDENCE
+  evidence_basis: Completed read-only audit result supplied by the owner for control-plane reconciliation; no code, implementation, collection, deployment or policy activation.
+  gap_matrix:
+    research_investigation_feedback: PARTIAL; live priority feedback MISSING
+    urgency: MISSING
+    per_candidate_research_cost: MISSING
+    event_driven_invocation_triggers: PARTIAL
+    correlation_breakdown: MISSING
+    positioning_extremes: MISSING in Attention
+    liquidity_change: MISSING in Attention
+    strategy_degradation: PARTIAL source / trigger MISSING
+    owner_question_trigger: MISSING
+    new_data_availability_trigger: PARTIAL prerequisite / trigger MISSING
+    replay_provenance: PARTIAL
+    portfolio_salience: BLOCKED_UPSTREAM / input PARTIAL
+  preserved_boundaries:
+    - forced-liquidation-participation.v1 remains PARKED.
+    - M3.2 Scheme-D remains PARKED.
+    - Portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET.
+    - Attention overall maturity remains IMPLEMENTED; this audit grants no maturity upgrade or activation.
+  selected_next_capability: ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1
+  selection_reason: Current live flow selects top-k with no active-investigation context, then the investigation consumer rejects duplicates afterward. This can waste available investigation capacity because eligible candidates below the original top-k cannot replace already-active candidates.
+  maturity_boundary: Design evidence only; no implementation, ranking change or maturity upgrade is established by this audit.
+
+current_active_work:
+  id: SDD-STAGE-3-ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1
+  type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Re-audit the remaining Stage-3 Attention gaps after the registry, WorldModel seam, portfolio observation, salience-scale work, investigation-value work, and parked liquidation experiment; identify the smallest independent next capability that can be implemented without unresolved upstream prerequisites.
-  deliverables: Factual gap matrix and one smallest independent next package, as scoped in NEXT.yaml.
-  boundary: Audit only; no implementation or maturity upgrade. Do not reopen parked liquidation clock work, Scheme-D or portfolio magnitude without evidence; preserve portfolio salience blocked/calibration state.
+  objective: Use coherent current investigation-ledger state during investigation-slot allocation so candidates with already-open investigations do not consume top-k slots, while preserving the original Attention scan, salience ordering, thresholds, and trading authority.
+  deliverables: As scoped in NEXT.yaml.
+  boundary: No salience, ranking, weight, candidate-generation or trading/Risk/Execution/strategy-authority change; no LLM calls or venue requests; missing/refused ledger evidence fails closed; contextual decisions are recorded, idempotent and never attributed later ledger state; original scan rows/hash/replay, frozen population receipts and selected/shadow assignments remain unchanged; Attention overall remains IMPLEMENTED until acceptance evidence exists.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
