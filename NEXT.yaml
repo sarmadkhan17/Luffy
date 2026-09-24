@@ -2,42 +2,63 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-NEW-DATA-INPUT-CAPACITY-POLICY-V1
-  type: EVIDENCE_AUDIT
+  id: SDD-STAGE-3-ATTENTION-STORE-APPEND-SEQUENCE-V1
+  type: IMPLEMENTATION_PREREQUISITE
   priority: ACTIVE
   status: READY
-  objective: Derive a truthful bounded-processing contract for retained candle versions and scan-version references from the existing Attention Store settings, without inventing a count ceiling or arbitrary read deadline.
+  objective: Add the smallest Store-owned durable instance identity and monotonic version-append sequence required for bounded incremental new-data processing, without changing Attention scan/replay semantics.
   basis:
-    - SDD-STAGE-3-ATTENTION-NEW-DATA-TRIGGER-V1 is TESTED_BUT_BLOCKED at e3ffa3c (EVENT_CREATION_TESTED_DOWNSTREAM_AND_CAPACITY_POLICY_BLOCKED).
-    - INPUT_VERSION_CAPACITY_POLICY_REQUIRED is the smallest prerequisite; MAX_VERSIONS=65_536 is invented and does not follow from allowed Store settings.
-    - Synthetic evidence ~213k references completed in about 0.58s; 2M references and the ~16.8M allowed-reference envelope were interrupted by the 1-second read deadline.
-    - READ_DEADLINE_S=1.0 is implementation safety policy affecting liveness, not correctness.
-  audit_scope:
-    - max_scans
-    - max_age_seconds
-    - max_bytes
-    - symbols/timeframes/bars per scan
-    - possible versions cardinality
-    - possible scan_versions cardinality
-    - SQLite read cost
-    - whether incremental cursor processing is preferable to rescanning the whole retained store
-    - whether bounded batches can preserve exactly-once semantics using deterministic version IDs
+    - SDD-STAGE-3-ATTENTION-NEW-DATA-INPUT-CAPACITY-POLICY-V1 is COMPLETED_DESIGN_EVIDENCE with decision STORE_APPEND_SEQUENCE_REQUIRED.
+    - versions.rowid is not a durable cursor (reusable after deletion, resettable after the table empties, not guaranteed across VACUUM-like rebuilds).
+    - (first_seen_ms, version_id) is deterministic but not insertion order; late/declared-population writes can fall behind it.
+    - Anti-joining against event/retired identities prevents duplicates but not bounded complete progress.
+    - The Store has no durable database-instance identity; its existing write transaction can atomically record an append receipt.
+    - Frozen design concept attention-version-append.v1 (see STATE.yaml).
   required_behavior:
-    - Derive bounds from existing Store settings and code; do not invent a global count ceiling or arbitrary read deadline.
-    - Do not change Store retention policy merely to accommodate the trigger.
-    - Prefer an incremental/cursor design if it avoids needing a global version-count ceiling.
-    - Preserve exactly-once event identity, retired-identity tombstones and fail-closed behavior.
-    - Evidence audit only; no code, commit of implementation, downstream dispatch or activation.
-    - No salience, ranking, threshold or candidate-generation change; no LLM calls or venue requests; no trading, Risk, Execution or strategy-authority changes.
+    - Add a Store instance identity created once and stable across normal reopen/restart.
+    - Add version append receipt sequencing.
+    - Receipt creation is atomic with version creation.
+    - Unchanged candle re-observation creates no new append receipt.
+    - Changed candle value creates one new version and one new append receipt.
+    - Sequence numbers are strictly increasing and never reused after committed deletes.
+    - Transaction rollback leaves no committed version or receipt.
+    - Version pruning must leave sequence-gap/high-water evidence sufficient for a later consumer to detect pruned_before_observed.
+    - No scan payload/hash/input-version/replay changes.
+    - Existing old Store is migrated safely without rewriting existing version IDs.
+    - Existing versions receive deterministic migration receipts sufficient to begin from cursor 0; migration ordering must not be misrepresented as original historical insertion chronology.
+    - Store replacement/restore semantics remain explicitly unresolved for the later cursor package; do not invent a solution here.
+    - SQLite INTEGER PRIMARY KEY AUTOINCREMENT may be used if tests prove its required behavior.
+  acceptance_tests:
+    - instance identity stable across reopen
+    - new database gets a different instance identity
+    - every new version gets exactly one append sequence
+    - unchanged re-observation adds none
+    - changed version gets next sequence
+    - sequence not reused after pruning/deletion
+    - table emptied then refilled does not reset sequence
+    - rollback creates no committed version/receipt
+    - pruning produces detectable missing sequence ranges/high-water evidence
+    - VACUUM/reopen does not alter committed sequence identities
+    - legacy Store migration succeeds without changing version IDs
+    - original scan payload/hash/replay unchanged
+    - declared-population path remains compatible
+    - no Attention ranking/salience/trading changes
+  not_in_scope:
+    - trigger cursor
+    - event batching
+    - downstream dispatch
+    - event-capacity policy
+    - payload-retention policy
   established_boundary:
     - Downstream new-data dispatch is NOT implemented and is not queued; DOWNSTREAM_DISPATCH_PREREQUISITE_REQUIRED remains.
     - EVENT_IDENTITY_CAPACITY_POLICY_REQUIRED and EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED remain open.
     - forced-liquidation-participation.v1 remains PARKED; M3.2 Scheme-D remains PARKED.
     - Portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET; portfolio salience remains BLOCKED_UPSTREAM.
     - Usefulness/outcome-weighted research feedback remains MISSING / DESIGN_ONLY.
+    - No salience, ranking, threshold or candidate-generation change; no LLM calls or venue requests; no trading, Risk, Execution or strategy-authority changes.
     - Attention overall remains IMPLEMENTED; this queue grants no maturity upgrade or activation.
   after_completion:
-    - Record the derived input-capacity contract (or the exact missing evidence) in STATE.yaml; do not mark new-data triggering operational.
+    - Record append-sequence evidence in STATE.yaml; do not mark new-data triggering operational and do not queue the trigger cursor without a separate decision.
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -93,4 +114,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Record audit evidence for SDD-STAGE-3-ATTENTION-NEW-DATA-INPUT-CAPACITY-POLICY-V1 in STATE.yaml; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch.
+  - Record implementation evidence for SDD-STAGE-3-ATTENTION-STORE-APPEND-SEQUENCE-V1 in STATE.yaml; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue trigger cursor or downstream dispatch.

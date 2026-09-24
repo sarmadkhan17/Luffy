@@ -1027,14 +1027,58 @@ completed_attention_new_data_trigger_v1:
     attention_overall: IMPLEMENTED
   maturity_boundary: Downstream new-data triggering is NOT operational. Attention overall remains IMPLEMENTED; this package grants no maturity upgrade or activation. Forced-liquidation experiment and Scheme-D remain PARKED; portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET.
 
-current_active_work:
+completed_attention_new_data_input_capacity_policy_v1:
   id: SDD-STAGE-3-ATTENTION-NEW-DATA-INPUT-CAPACITY-POLICY-V1
   type: EVIDENCE_AUDIT
+  state: COMPLETED_DESIGN_EVIDENCE
+  decision: STORE_APPEND_SEQUENCE_REQUIRED
+  evidence_basis: Completed read-only audit result supplied by the owner for control-plane reconciliation; no code, implementation, Store retention change, collection, deployment or policy activation.
+  findings:
+    - versions.rowid is not a durable cursor; it can be reused after deletion, can reset after the table empties, and SQLite does not guarantee its preservation for this table across reconstruction/VACUUM-like rebuilds.
+    - (first_seen_ms, version_id) is deterministic but not insertion order; late/declared-population writes can fall behind such a cursor.
+    - Anti-joining against event/retired identities prevents duplicates but does not provide bounded complete progress through a large retained Store.
+    - The Store has no durable database-instance identity today.
+    - The existing Store write transaction is suitable for atomically recording an append receipt when a new version is created.
+    - A Store-owned monotonic append sequence is the smallest truthful prerequisite for bounded incremental processing.
+    - MAX_VERSIONS can eventually be removed once bounded append-sequence batching exists.
+    - READ_DEADLINE_S may remain only as a fail-closed per-pass liveness guard, not a completeness/capacity guarantee.
+  frozen_design_concept:
+    id: attention-version-append.v1
+    store_side_minimum:
+      - durable Store instance identity
+      - append schema/version
+      - monotonic Store-owned append sequence
+      - exact version_id
+      - sequence assigned atomically when a version is first inserted
+      - sequence numbers never reused
+      - rollback must not create a committed phantom receipt
+      - scan payload/input hashes/replay semantics unchanged
+    implementation_latitude: SQLite INTEGER PRIMARY KEY AUTOINCREMENT may be used if tests prove its required behavior.
+    pruning_semantics:
+      - When a version is later pruned, the processing system must still be able to detect that a sequence existed and disappeared before observation.
+      - Missing sequence ranges must never be silently interpreted as "nothing happened".
+    not_designed_here: Trigger cursor ledger is deliberately not designed or implemented in this package.
+  blockers_resolution:
+    INPUT_VERSION_CAPACITY_POLICY_REQUIRED: Superseded by STORE_APPEND_SEQUENCE_REQUIRED (prerequisite queued as SDD-STAGE-3-ATTENTION-STORE-APPEND-SEQUENCE-V1).
+  open_blockers:
+    - STORE_APPEND_SEQUENCE_REQUIRED
+    - EVENT_IDENTITY_CAPACITY_POLICY_REQUIRED
+    - EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED
+    - DOWNSTREAM_DISPATCH_PREREQUISITE_REQUIRED
+  gap_matrix_update:
+    new_data_availability_trigger: EVENT_CREATION_TESTED_DOWNSTREAM_AND_CAPACITY_POLICY_BLOCKED
+    downstream_new_data_dispatch: MISSING
+    attention_overall: IMPLEMENTED
+  maturity_boundary: Design evidence only. Downstream new-data triggering is NOT operational. Attention overall remains IMPLEMENTED; this audit grants no maturity upgrade or activation. Forced-liquidation experiment and Scheme-D remain PARKED; portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET.
+
+current_active_work:
+  id: SDD-STAGE-3-ATTENTION-STORE-APPEND-SEQUENCE-V1
+  type: IMPLEMENTATION_PREREQUISITE
   priority: ACTIVE
   status: READY
-  objective: Derive a truthful bounded-processing contract for retained candle versions and scan-version references from the existing Attention Store settings, without inventing a count ceiling or arbitrary read deadline.
+  objective: Add the smallest Store-owned durable instance identity and monotonic version-append sequence required for bounded incremental new-data processing, without changing Attention scan/replay semantics.
   deliverables: As scoped in NEXT.yaml.
-  boundary: Evidence audit only; no code, Store retention change, downstream dispatch, salience/ranking change, LLM call, venue request or trading/Risk/Execution change; Attention overall remains IMPLEMENTED.
+  boundary: No trigger cursor, event batching, downstream dispatch, event-capacity policy or payload-retention policy; no salience/ranking change, LLM call, venue request or trading/Risk/Execution change; Attention overall remains IMPLEMENTED.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
