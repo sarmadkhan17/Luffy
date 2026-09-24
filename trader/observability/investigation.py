@@ -654,7 +654,8 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
                 pop.scan(dict(snapshot.scan,collector_evidence=detail.get("collector_evidence")), decisions)
         if pop and snapshot is None and pop.declaration['start_ms'] <= now < pop.declaration['discovery_cut_ms']:
             pop.emit('gap:invocation:'+str(now), 'gap', {'reason': detail['reason'], 'observed_ms': now})
-        if (detail["memory"]["refused"] or detail["typed_outcomes"]["refused"]
+        if (detail["memory"]["refused"] or detail["memory"]["unassessable"]["refused"]
+                or detail["typed_outcomes"]["refused"]
                 or detail["typed_outcomes"]["retry"]):
             detail.update(status="degraded", reason="memory_source_refused")
         if any(k in detail["skipped"] for k in ("update_budget_exhausted", "active_capacity", "retention_capacity", "case_update_capacity")):
