@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 import sqlite3
 import time
+from uuid import uuid4
 
 from .attention import SCHEMA, code_manifest, digest, evaluate_snapshot
 
@@ -51,6 +52,155 @@ def _proof(db, scan_id, kind):
             "completion_marker": any(json.loads(r[0]).get('collector_completion') is True for r in db.execute('SELECT payload FROM causes WHERE scan_id=?',(scan_id,)))}
 
 
+_SCHEMA = """
+  CREATE TABLE IF NOT EXISTS scans (
+    scan_id TEXT PRIMARY KEY, as_of_ms INTEGER NOT NULL, payload TEXT, causes_complete INTEGER DEFAULT 0);
+  CREATE TABLE IF NOT EXISTS versions (
+    id TEXT PRIMARY KEY, symbol TEXT, tf TEXT, open_ms INTEGER,
+    first_seen_ms INTEGER, value_hash TEXT, previous_value_hash TEXT,
+    payload TEXT NOT NULL);
+  CREATE INDEX IF NOT EXISTS versions_key
+    ON versions(symbol, tf, open_ms, first_seen_ms);
+  CREATE TABLE IF NOT EXISTS scan_versions (
+    scan_id TEXT REFERENCES scans(scan_id) ON DELETE CASCADE,
+    version_id TEXT REFERENCES versions(id),
+    PRIMARY KEY(scan_id, version_id));
+  -- Creator receipt, written with the version row: its id embeds the
+  -- creating scan, which later references cannot reproduce once that
+  -- scan is pruned. Lives and dies with the version; never updated.
+  CREATE TABLE IF NOT EXISTS version_origins (
+    version_id TEXT PRIMARY KEY REFERENCES versions(id) ON DELETE CASCADE,
+    origin_scan_id TEXT NOT NULL);
+  CREATE TRIGGER IF NOT EXISTS version_origins_immutable
+    BEFORE UPDATE ON version_origins BEGIN SELECT RAISE(ABORT, 'origin_immutable'); END;
+  CREATE TABLE IF NOT EXISTS causes (
+    event_id TEXT PRIMARY KEY, scan_id TEXT REFERENCES scans(scan_id)
+      ON DELETE CASCADE, symbol TEXT, payload TEXT NOT NULL);
+"""
+
+# attention-version-append.v1: Store instance identity and a Store-owned
+# version append sequence. Every new versions row gets exactly one receipt in
+# the same statement (schema trigger, so every writer is covered). Sequences
+# are enforced contiguous against a durable high-water that never decreases,
+# so for any N <= high_water with no receipt, a committed version existed at N
+# and was pruned; N > high_water was never committed. AUTOINCREMENT alone only
+# promises "larger than any ever used"; contiguity is enforced here, fail
+# closed. Restore/replacement interpretation belongs to the later cursor
+# package; this only records identity, sequence and high-water evidence.
+META_SCHEMA = "attention-store-meta.v1"
+APPEND_SCHEMA = "attention-version-append.v1"
+MIGRATION_ORDER = "migration_order_not_insertion_chronology"
+META_KEYS = ("schema", "store_instance_id", "append_schema", "append_origin",
+             "migration_receipts_through_seq", "migration_order")
+
+_APPEND_DDL = (
+    """CREATE TABLE store_meta (
+         singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
+         schema TEXT NOT NULL, store_instance_id TEXT NOT NULL,
+         append_schema TEXT NOT NULL,
+         append_origin TEXT NOT NULL CHECK (append_origin IN ('new_store', 'legacy_migration')),
+         migration_receipts_through_seq INTEGER NOT NULL,
+         migration_order TEXT)""",
+    """CREATE TRIGGER store_meta_immutable BEFORE UPDATE ON store_meta
+         BEGIN SELECT RAISE(ABORT, 'store_meta_immutable'); END""",
+    """CREATE TRIGGER store_meta_undeletable BEFORE DELETE ON store_meta
+         BEGIN SELECT RAISE(ABORT, 'store_meta_immutable'); END""",
+    """CREATE TABLE version_append_high_water (
+         singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
+         seq INTEGER NOT NULL CHECK (seq >= 0))""",
+    """CREATE TRIGGER version_append_high_water_monotonic
+         BEFORE UPDATE ON version_append_high_water WHEN NEW.seq <> OLD.seq + 1
+           OR NEW.singleton <> OLD.singleton
+         BEGIN SELECT RAISE(ABORT, 'append_high_water_monotonic'); END""",
+    """CREATE TRIGGER version_append_high_water_undeletable
+         BEFORE DELETE ON version_append_high_water
+         BEGIN SELECT RAISE(ABORT, 'append_high_water_monotonic'); END""",
+    # Receipts die with their version (pruning leaves a gap below high-water).
+    """CREATE TABLE version_append_receipts (
+         seq INTEGER PRIMARY KEY AUTOINCREMENT,
+         version_id TEXT NOT NULL UNIQUE REFERENCES versions(id) ON DELETE CASCADE)""",
+    """CREATE TRIGGER version_append_receipts_immutable
+         BEFORE UPDATE ON version_append_receipts
+         BEGIN SELECT RAISE(ABORT, 'append_receipt_immutable'); END""",
+    # Only the FK cascade may remove a receipt: it runs after the parent row is
+    # gone, so a gap below high-water always means the version was deleted.
+    """CREATE TRIGGER version_append_receipts_undeletable
+         BEFORE DELETE ON version_append_receipts
+         WHEN EXISTS (SELECT 1 FROM versions WHERE id = OLD.version_id)
+         BEGIN SELECT RAISE(ABORT, 'append_receipt_undeletable'); END""",
+    """CREATE TRIGGER version_append_receipts_contiguous
+         AFTER INSERT ON version_append_receipts
+         BEGIN
+           SELECT RAISE(ABORT, 'append_sequence_discontinuity')
+             WHERE NEW.seq IS NOT (SELECT seq + 1 FROM version_append_high_water);
+           UPDATE version_append_high_water SET seq = NEW.seq;
+         END""",
+    """CREATE TRIGGER version_append_on_insert AFTER INSERT ON versions
+         BEGIN INSERT INTO version_append_receipts (version_id) VALUES (NEW.id); END""",
+)
+
+
+def read_append_meta(db):
+    """Validated Store identity/append metadata, or None before migration."""
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' "
+                      "AND name='store_meta'").fetchone():
+        return None
+    row = db.execute("SELECT " + ",".join(META_KEYS) + " FROM store_meta").fetchall()
+    hw = db.execute("SELECT seq FROM version_append_high_water").fetchall()
+    if len(row) != 1 or len(hw) != 1:
+        raise ValueError("store_meta_invalid")
+    meta = dict(zip(META_KEYS, tuple(row[0])))
+    if (meta["schema"] != META_SCHEMA or meta["append_schema"] != APPEND_SCHEMA
+            or not 0 < len(meta["store_instance_id"] or "") <= 64):
+        raise ValueError("store_meta_invalid")
+    return meta
+
+
+def append_state(db):
+    """Committed append evidence for a later consumer; no cursor semantics."""
+    meta = read_append_meta(db)
+    if meta is None:
+        return None
+    high_water = db.execute("SELECT seq FROM version_append_high_water").fetchone()[0]
+    lo, hi, n = db.execute("SELECT MIN(seq),MAX(seq),COUNT(*) FROM version_append_receipts").fetchone()
+    return dict(meta, high_water=high_water, retained=n, min_retained_seq=lo, max_retained_seq=hi,
+                pruned_committed=high_water - n)
+
+
+def _legacy_version_ids(db):
+    # Deterministic migration order only; rowid is not stable across rebuilds.
+    return [r[0] for r in db.execute("SELECT id FROM versions ORDER BY first_seen_ms, id")]
+
+
+def _migrate_append(db):
+    """Create schema + identity + receipts in one transaction; all or nothing."""
+    db.execute("BEGIN IMMEDIATE")
+    try:
+        if read_append_meta(db) is None:  # re-check under the write lock
+            legacy = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' "
+                                "AND name='versions'").fetchone() is not None
+            statement = ""
+            for line in _SCHEMA.splitlines(keepends=True):
+                statement += line
+                if sqlite3.complete_statement(statement):
+                    db.execute(statement)
+                    statement = ""
+            for ddl in _APPEND_DDL:
+                db.execute(ddl)
+            ids = _legacy_version_ids(db) if legacy else []
+            db.execute("INSERT INTO store_meta VALUES (1,?,?,?,?,?,?)",
+                       (META_SCHEMA, uuid4().hex, APPEND_SCHEMA,
+                        "legacy_migration" if legacy else "new_store", len(ids),
+                        MIGRATION_ORDER if legacy else None))
+            db.execute("INSERT INTO version_append_high_water VALUES (1,0)")
+            for vid in ids:
+                db.execute("INSERT INTO version_append_receipts (version_id) VALUES (?)", (vid,))
+        db.commit()
+    except BaseException:
+        db.rollback()
+        raise
+
+
 class Store:
     def __init__(self, path, cfg):
         self.path, self.cfg = Path(path), cfg
@@ -60,31 +210,10 @@ class Store:
         self.db.execute("PRAGMA foreign_keys=ON")
         self.db.execute("PRAGMA auto_vacuum=FULL")
         self.db.execute("PRAGMA journal_mode=DELETE")
-        self.db.executescript("""
-          CREATE TABLE IF NOT EXISTS scans (
-            scan_id TEXT PRIMARY KEY, as_of_ms INTEGER NOT NULL, payload TEXT, causes_complete INTEGER DEFAULT 0);
-          CREATE TABLE IF NOT EXISTS versions (
-            id TEXT PRIMARY KEY, symbol TEXT, tf TEXT, open_ms INTEGER,
-            first_seen_ms INTEGER, value_hash TEXT, previous_value_hash TEXT,
-            payload TEXT NOT NULL);
-          CREATE INDEX IF NOT EXISTS versions_key
-            ON versions(symbol, tf, open_ms, first_seen_ms);
-          CREATE TABLE IF NOT EXISTS scan_versions (
-            scan_id TEXT REFERENCES scans(scan_id) ON DELETE CASCADE,
-            version_id TEXT REFERENCES versions(id),
-            PRIMARY KEY(scan_id, version_id));
-          -- Creator receipt, written with the version row: its id embeds the
-          -- creating scan, which later references cannot reproduce once that
-          -- scan is pruned. Lives and dies with the version; never updated.
-          CREATE TABLE IF NOT EXISTS version_origins (
-            version_id TEXT PRIMARY KEY REFERENCES versions(id) ON DELETE CASCADE,
-            origin_scan_id TEXT NOT NULL);
-          CREATE TRIGGER IF NOT EXISTS version_origins_immutable
-            BEFORE UPDATE ON version_origins BEGIN SELECT RAISE(ABORT, 'origin_immutable'); END;
-          CREATE TABLE IF NOT EXISTS causes (
-            event_id TEXT PRIMARY KEY, scan_id TEXT REFERENCES scans(scan_id)
-              ON DELETE CASCADE, symbol TEXT, payload TEXT NOT NULL);
-        """)
+        if read_append_meta(self.db) is None:
+            _migrate_append(self.db)
+        else:
+            self.db.executescript(_SCHEMA)
         # Enforce a hard SQLite allocation ceiling as well as logical retention.
         page_size = self.db.execute("PRAGMA page_size").fetchone()[0]
         self.db.execute(f"PRAGMA max_page_count={max(16, cfg['max_bytes'] // page_size)}")
