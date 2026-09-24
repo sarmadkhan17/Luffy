@@ -206,7 +206,10 @@ capabilities:
       - the current 90-day listing-age filter belongs to trading Universe/history selection, not Attention eligibility (config.yaml; trader/data/feed.py)
       - connected venue-active observation population is covered by registry-backed rotation when enabled, but per-symbol account eligibility remains UNKNOWN absent authoritative evidence
       - symbolConfig, leverageBracket and account-global permission enrichment are absent from the live producer
-      - portfolio-state input to live Attention is PARTIAL / prerequisite-established; detached position evidence is captured but no portfolio salience signal is consumed yet
+      - portfolio-state input to live Attention is PARTIAL_PREREQUISITE_ESTABLISHED; detached position evidence is captured but portfolio_position_present salience is NOT implemented
+      - portfolio_position_present implementation was correctly blocked by an upstream salience-scale policy prerequisite, not an implementation failure; boolean presence has no justified magnitude on the current z-like scale
+      - current candle components are z-like magnitudes and the optional WorldModel component requires z_score evidence; aggregation takes the maximum absolute numeric component, compares it with min_salience, and ranks by magnitude
+      - assigning boolean position presence an arbitrary numeric contribution would invent ranking policy
       - research and investigation feedback into Attention priority remains missing
       - event-driven invocation and material-change gate remain incomplete
       - urgency and per-candidate research cost remain incomplete
@@ -466,19 +469,38 @@ completed_attention_portfolio_observation_prerequisite:
     - Unrealized P&L, notional/exposure, concentration, equity/drawdown, gross/net exposure and hedge state remain unproved for Attention.
     - Portfolio-state input to live Attention is PARTIAL / prerequisite-established; Attention overall remains IMPLEMENTED.
 
+completed_attention_salience_scale_audit:
+  id: SDD-STAGE-3-ATTENTION-SALIENCE-SCALE-AUDIT
+  type: EVIDENCE_AUDIT
+  state: COMPLETED_DESIGN_EVIDENCE
+  result: NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET
+  evidence:
+    - LUFFY_Official_Solution_Design_v3.md section 8
+    - trader/cognition/attention.py
+    - trader/observability/attention.py
+    - trader/observability/portfolio_observation.py
+    - trader/observability/store.py
+    - trader/kernel.py
+  findings:
+    - Current candle Attention components are z-like magnitudes; the optional WorldModel component also requires z_score evidence.
+    - The evaluator takes the maximum absolute available component magnitude, ranks the resulting scalar salience, and selects subject to min_salience.
+    - Components competing directly in this scalar maximum therefore require comparable magnitude semantics.
+    - Boolean portfolio_position_present has no justified conversion to that scale today; assigning an arbitrary number would invent ranking policy.
+    - No existing calibrated position-presence mapping or sufficient paired historical Attention plus detached PortfolioObservation dataset was found in this checkout.
+    - SDD permits normalized priority dimensions and calibrated weights but supplies no boolean-to-z conversion.
+    - Typed multi-axis Attention may be architecturally compatible but requires a separate design decision.
+    - Portfolio presence can remain captured evidence without ranking effect.
+  target_boundary: TARGET_PREREQUISITE_REQUIRED; neither future return nor the existing five-bar market-path outcome is established as investigation usefulness.
+  portfolio_state_input: PARTIAL_PREREQUISITE_ESTABLISHED
+  maturity_boundary: Attention overall remains IMPLEMENTED; portfolio salience is not IMPLEMENTED; this audit adds design evidence only.
+
 current_active_work:
-  id: SDD-STAGE-3-ATTENTION-PORTFOLIO-SIGNALS
-  type: IMPLEMENTATION
+  id: SDD-STAGE-3-ATTENTION-PORTFOLIO-SALIENCE-CALIBRATION-DATA
+  type: EVIDENCE_COLLECTION_DESIGN
   priority: ACTIVE
   status: READY
-  objective: Feed the TESTED detached portfolio-position observation into Attention as a bounded, direction-independent salience input without changing any trading authority.
-  constraints:
-    - Use verified current-position presence from an explicit PositionRecord; do not use absent-record-as-flat without separate complete and safe instrument-specific semantics.
-    - Require an explicit Attention cut and explicit freshness policy; future or stale observations contribute nothing, and accepted as_of_ms must not exceed attention_as_of_ms.
-    - Join only exact canonical instrument identity; add the smallest explicit mapping seam if needed and fail closed on ambiguity.
-    - Keep portfolio input optional and preserve identical legacy Attention output when absent.
-    - Position presence may increase salience only; no direction, sizing, strategy eligibility, registry population or trading authority change.
-    - Preserve Attention overall maturity IMPLEMENTED and the parked non-final Scheme-D pilot.
+  objective: Define the smallest truthful shadow-evidence pipeline needed to empirically calibrate whether current-position presence has any justified Attention-priority effect.
+  boundary: Design and evidence collection only; no portfolio weight, ranking change, portfolio salience implementation or trading effect.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
