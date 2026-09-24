@@ -46,6 +46,9 @@ def golden():
     data["S3/USDT"]["4h"].loc[29, "volume"] = 50_000
     ev = event("golden", NOW, data)
     ev["capture_ms"] = 0.0
+    # A pre-correlation-change snapshot: the optional captured close history
+    # (SDD-STAGE-3-ATTENTION-CORRELATION-CHANGE-V1) is absent.
+    del ev["input"]["correlation_history"]
     return ev
 
 

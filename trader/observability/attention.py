@@ -13,8 +13,11 @@ from pathlib import Path
 import hashlib
 import time
 
+import numpy as np
+
 from trader.cognition.attention import CognitionConfig, evaluate
-from trader.cognition.contracts import INPUT_SCHEMA, TF_MS, load_input, to_dict
+from trader.cognition.contracts import (CORRELATION_CAPTURE_CLOSES, INPUT_SCHEMA, TF_MS,
+                                       load_input, to_dict)
 from trader.world.model import WorldModel
 
 
@@ -46,6 +49,38 @@ def _number(value):
     return value if math.isfinite(value) else None
 
 
+def _history(symbol, df, tf_ms, as_of):
+    """Bounded close-only history for correlation_change: the last
+    CORRELATION_CAPTURE_CLOSES fully closed bars of the frame, verified
+    consecutive on the exact grid. Anything else is an explicit status with
+    no closes; nothing is filled or interpolated."""
+    def rec(status, first=None, last=None, closes=()):
+        return {"symbol": symbol, "status": status, "first_open_ms": first,
+                "last_open_ms": last, "closes": list(closes)}
+
+    if df is None or not len(df):
+        return rec("missing_timeframe")
+    n = CORRELATION_CAPTURE_CLOSES
+    try:
+        # Vectorized over backing arrays: this runs on the producer thread.
+        opens = df["ts"].array[-(n + 2):].to_numpy(dtype="datetime64[ms]").astype("int64")
+        closes = np.asarray(df["close"].array[-(n + 2):], dtype="float64")
+    except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
+        return rec("invalid_frame")
+    if (np.diff(opens) <= 0).any():
+        return rec("malformed")
+    # A still-forming bar never enters the history.
+    closed = opens + tf_ms <= as_of
+    opens, closes = opens[closed][-n:], closes[closed][-n:]
+    if len(opens) < n:
+        return rec("warmup")
+    if (np.diff(opens) != tf_ms).any():
+        return rec("gap")
+    if not (np.isfinite(closes) & (closes > 0)).all():
+        return rec("non_finite")
+    return rec("ok", int(opens[0]), int(opens[-1]), closes.tolist())
+
+
 def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
             provenance=None):
     """Detach a bounded primitive snapshot; never pass mutable DataFrames on.
@@ -68,7 +103,7 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
     need = CognitionConfig().window + CognitionConfig().short + 1
     symbols = list(dict.fromkeys(members))
     included = symbols[:cfg["max_symbols"]]
-    candles, issues = [], []
+    candles, issues, histories = [], [], []
     sources = [(symbol, (frames.get(symbol) or {}).get(tf), "kernel.universe_frames")
                for symbol in included]
     extra = None
@@ -85,6 +120,7 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
                            "reason": "supplemental_" + supplemental.status,
                            "detail": supplemental.reason})
     for symbol, df, source in sources:
+        histories.append(_history(symbol, df, tf_ms, as_of))
         if df is None or not len(df):
             issues.append({"symbol": symbol, "reason": "missing_timeframe"})
             continue
@@ -140,7 +176,8 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
         "issues": issues,
         "input": {"schema": INPUT_SCHEMA, "timeframe": tf,
                   "decision_times": [as_of], "candles": candles,
-                  "membership": membership, "participation": []},
+                  "membership": membership, "participation": [],
+                  "correlation_history": histories},
     }
 
 
@@ -168,7 +205,12 @@ def evaluate_snapshot(event, world_model: WorldModel | None = None):
                             "Participation inputs are not captured in this milestone.",
                             "No hypotheses, edge claims or learned ranking are produced."]
             + (["Positioning values are as stored at capture read time; no claim they were stored at as_of."]
-               if "positioning" in event["input"] else [])}
+               if "positioning" in event["input"] else [])
+            + (["Correlation change is a deterministic Fisher-scaled correlation-change feature of "
+                "each asset against its captured leave-one-out peer basket (recent 30 vs prior 120 "
+                "returns; on 4h roughly 5 vs 20 days); it is not a calibrated test, the basket is "
+                "not the crypto market, and a later scan's basket may differ."]
+               if "correlation_history" in event["input"] else [])}
 
 
 def digest(value):

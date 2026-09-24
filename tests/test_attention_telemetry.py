@@ -335,7 +335,8 @@ def test_replay_export_reconstructs_inputs_and_evidence_without_dangling_ids(tmp
         candles.append({**json.loads(v['payload']),'available_ms':v['first_seen_ms']})
     restored={**original,'input':{'schema':INPUT_SCHEMA,'timeframe':out['scan']['timeframe'],
               'membership':out['scan']['membership'],'candles':candles,
-              'decision_times':[now],'participation':[]}}
+              'decision_times':[now],'participation':[],
+              'correlation_history':out['scan']['correlation_input']}}
     assert digest(restored['input'])==out['scan']['input_hash']
     replay=evaluate_snapshot(restored)
     assert replay['rows']==out['scan']['rows']

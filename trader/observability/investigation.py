@@ -118,10 +118,17 @@ def adapt(source, observed_ms):
         # Replay the captured positioning exactly; never re-query derivs.db.
         # Its rejected records already fail closed per series in the rows.
         raw["positioning"] = scan["positioning_input"]
+    if "correlation_input" in scan:
+        # Replay the captured close history exactly; never query prices.
+        # Its rejected records already fail closed per symbol in the rows.
+        if not isinstance(scan["correlation_input"], list) or len(scan["correlation_input"]) > 64:
+            raise ValueError("input_bound_exceeded")
+        raw["correlation_history"] = scan["correlation_input"]
     ds = load_input(raw)
-    if any(r["section"] != "positioning" for r in ds.rejected):
+    per_symbol = ("positioning", "correlation_history")
+    if any(r["section"] not in per_symbol for r in ds.rejected):
         raise ValueError("malformed_inputs:" + ",".join(sorted({r["reason"] for r in ds.rejected
-                                                                 if r["section"] != "positioning"})))
+                                                                 if r["section"] not in per_symbol})))
     bars = []
     for vid, (symbol, opened) in sorted(versions.items()):
         c = ds.bar_asof(symbol, opened, scan["as_of_ms"])
@@ -343,6 +350,10 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
                    (I.POSITIONING_CATALOG_ID, now, I.encode(I.POSITIONING_CATALOG)))
         positioning_activated = db.execute("SELECT activated_ms FROM protocols WHERE id=?",
                                            (I.POSITIONING_CATALOG_ID,)).fetchone()[0]
+        db.execute("INSERT OR IGNORE INTO protocols VALUES (?,?,?)",
+                   (I.CORRELATION_CATALOG_ID, now, I.encode(I.CORRELATION_CATALOG)))
+        correlation_activated = db.execute("SELECT activated_ms FROM protocols WHERE id=?",
+                                           (I.CORRELATION_CATALOG_ID,)).fetchone()[0]
         db.execute("DELETE FROM cases WHERE terminal_ms IS NOT NULL AND terminal_ms<?", (now-RETENTION_MS,))
         db.execute("DELETE FROM updates WHERE case_id NOT IN (SELECT id FROM cases)")
         db.execute("DELETE FROM case_inputs WHERE case_id NOT IN (SELECT id FROM cases)")
@@ -441,9 +452,11 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
                 if db.execute("SELECT COUNT(*) FROM cases").fetchone()[0] >= MAX_CASES:
                     skip("retention_capacity"); continue
                 family = snapshot.result["rows"][symbol]["dominant"]
-                if family not in (*I.FAMILIES, I.POSITIONING_FAMILY):
+                if family not in (*I.FAMILIES, *I.REGISTRATION_FAMILIES):
                     skip("no_investigation_family"); continue
-                if family == I.POSITIONING_FAMILY and snapshot.scan["as_of_ms"] < positioning_activated:
+                activated_for = {I.POSITIONING_FAMILY: positioning_activated,
+                                 I.CORRELATION_FAMILY: correlation_activated}
+                if family in activated_for and snapshot.scan["as_of_ms"] < activated_for[family]:
                     skip("awaiting_post_activation_scan"); continue
                 try:
                     inv = I.open_investigation(snapshot.state(symbol, family), family, snapshot.bars, now)

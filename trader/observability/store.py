@@ -312,6 +312,8 @@ class Store:
                                prior_availability="unknown", persisted_at_ms=now_ms)
                 if "positioning" in event["input"]:
                     payload["positioning_input"] = event["input"]["positioning"]
+                if "correlation_history" in event["input"]:
+                    payload["correlation_input"] = event["input"]["correlation_history"]
                 if "positioning_capture" in event:
                     payload["positioning_capture"] = event["positioning_capture"]
                 self.db.execute("UPDATE scans SET payload=? WHERE scan_id=?",

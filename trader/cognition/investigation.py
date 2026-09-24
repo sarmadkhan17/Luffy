@@ -11,7 +11,8 @@ import json
 import math
 import statistics
 
-from trader.cognition.contracts import POSITIONING_SERIES, Candle, is_timestamp, stable_id
+from trader.cognition.contracts import (CORRELATION_BASELINE, CORRELATION_RECENT, POSITIONING_SERIES,
+                                       Candle, is_timestamp, stable_id)
 
 SCHEMA = "investigation.v2"
 TF = 14_400_000
@@ -50,6 +51,64 @@ POSITIONING_CATALOG = {
     "direction": None, "probability": None, "authority": "research_only",
 }
 POSITIONING_CATALOG_ID = stable_id("catalog", POSITIONING_CATALOG)
+
+# SDD-STAGE-3-ATTENTION-CORRELATION-CHANGE-V1. A separate frozen catalog, so
+# the v2 and positioning catalogs and ids are unchanged. From registration-time
+# captured evidence only, it DESCRIBES how the asset's correlation with its
+# captured leave-one-out peer basket differed between the baseline and recent
+# windows. It shares no assessment logic with positioning: an isolated
+# correlation change can be exactly the novel signal, so concurrent candle,
+# positioning, peer-basket and broad cohort evidence are context codes only and
+# never change the result. The 2.0 threshold is package-owned
+# Attention/assessment policy, not empirically optimized and not SDD-derived.
+CORRELATION_FAMILY = "correlation_change"
+CORRELATION_SCALE = math.sqrt(1 / (CORRELATION_BASELINE - 3) + 1 / (CORRELATION_RECENT - 3))
+CORRELATION_CATALOG = {
+    "schema": "investigation.correlation_change.v1", "family": CORRELATION_FAMILY,
+    "evidence": "captured Attention correlation_change observations: the candidate's r_baseline, r_recent, "
+                "signed Fisher-scaled change and absolute Attention score against its captured leave-one-out "
+                "peer basket (membership and windows recorded), each basket peer's own captured change in the "
+                "same scan, the captured broad cohort flag, and concurrent captured candle and positioning "
+                "components; no later query",
+    "reference": "captured leave-one-out peer basket", "reference_policy": "leave_one_out_equal_weight",
+    "windows": "recent 30 vs prior 120 returns; on 4h bars roughly the recent 5 days vs the prior 20 days",
+    "feature": "(atanh(r_recent) - atanh(r_baseline)) / sqrt(1/(120-3) + 1/(30-3)); "
+               "deterministic Fisher-scaled correlation-change feature",
+    "distinct": "|signed Fisher-scaled change| >= threshold",
+    "result_rule": "not_distinct when |change| < threshold; otherwise relationship_crossed_zero when r_baseline "
+                   "and r_recent have differing signs, else relationship_increased (r_recent > r_baseline) or "
+                   "relationship_decreased (r_recent < r_baseline); not_testable when the frozen evidence "
+                   "cannot be read",
+    "context": "concurrent candle components (v2 thresholds), positioning series (positioning threshold), "
+               "basket peers' own changes and the broad cohort flag are recorded as context codes only; "
+               "they never change the result",
+    "threshold": 2.0, "threshold_basis": "package-owned Attention/assessment policy",
+    "concurrent_thresholds": CATALOG["thresholds"], "positioning_threshold": POSITIONING_CATALOG["threshold"],
+    "alternatives": ["relationship_increased", "relationship_decreased", "relationship_crossed_zero",
+                     "not_distinct"],
+    "descriptors": ["correlation_increased", "correlation_decreased", "correlation_unchanged",
+                    "correlation_crossed_zero",
+                    "baseline_relationship_positive", "baseline_relationship_inverse",
+                    "baseline_relationship_zero", "recent_relationship_positive",
+                    "recent_relationship_inverse", "recent_relationship_zero",
+                    "relationship_magnitude_increased", "relationship_magnitude_decreased",
+                    "relationship_magnitude_unchanged"],
+    "context_codes": ["shared_cohort_context", "shared_cohort_context_absent",
+                      "shared_cohort_context_unavailable", "peer_basket_change_context",
+                      "peer_basket_change_context_absent", "peer_change_evidence_unavailable",
+                      "concurrent_unusual_evidence_present", "concurrent_unusual_evidence_absent",
+                      "concurrent_evidence_unavailable"],
+    "interpretation": "descriptive classification of registration-time evidence; not prospective validation",
+    "direction": None, "probability": None, "authority": "research_only",
+}
+CORRELATION_CATALOG_ID = stable_id("catalog", CORRELATION_CATALOG)
+CORR_R_BASELINE = CORRELATION_FAMILY + ":r_baseline"
+CORR_R_RECENT = CORRELATION_FAMILY + ":r_recent"
+CORR_SIGNED = CORRELATION_FAMILY + ":signed_fisher_scaled_change"
+CORR_BASKET = CORRELATION_FAMILY + ":peer_basket"
+CORR_PEER = CORRELATION_FAMILY + ":peer:"
+CORR_SHARED = CORRELATION_FAMILY + ":shared_cohort_context"
+REGISTRATION_FAMILIES = (POSITIONING_FAMILY, CORRELATION_FAMILY)
 
 
 def encode(value):
@@ -192,6 +251,9 @@ QUESTIONS = {
     POSITIONING_FAMILY: "Is the observed positioning extreme meaningfully different from the candidate's "
                         "recent positioning baseline, and what concurrent captured market evidence supports "
                         "or contradicts that distinction?",
+    CORRELATION_FAMILY: "How did this asset's contemporaneous correlation with the same captured peer basket "
+                        "differ between the baseline and recent windows? What captured evidence distinguishes "
+                        "an asset-specific change, a shared cohort change, or an unreliable comparison?",
 }
 UNKNOWNS = ("participation", "liquidity", "sector", "catalyst", "cross_market")
 
@@ -221,9 +283,37 @@ def make_state(scan, result, symbol, bars, observed_ms, family=None):
                                  "max_abs_positioning_z:" + (top.name.split(":", 1)[1] if top else "none")))
         if len({abs(d.value) >= POSITIONING_CATALOG["threshold"] for d in ok}) > 1:
             contradictions.append("positioning_series_disagree")
+    if family == CORRELATION_FAMILY:
+        rule = "attention:" + scan["config_id"]
+        by_sym = {o.symbol: o for o in result["observations"] if o.kind == CORRELATION_FAMILY}
+        o = by_sym.get(symbol)
+        status, oid, detail = (o.status, o.obs_id, o.detail) if o else ("missing", None, {})
+        peers = list(detail.get("reference_peers") or ())
+        claimed = components.get(CORRELATION_FAMILY)
+        dims += (Dimension(CORR_R_BASELINE, detail.get("r_baseline"), status, oid, rule),
+                 Dimension(CORR_R_RECENT, detail.get("r_recent"), status, oid, rule),
+                 Dimension(CORR_SIGNED, o.value if o else None, status, oid, rule),
+                 Dimension(CORRELATION_FAMILY, claimed, "ok" if claimed is not None else "missing",
+                           oid if claimed is not None else None, "abs_signed_fisher_scaled_change"),
+                 Dimension(CORR_BASKET, detail.get("reference_size"), status if peers else "missing", oid,
+                           CORRELATION_CATALOG["reference_policy"] + ":"
+                           + str(detail.get("reference_membership_id"))),
+                 *(Dimension(CORR_PEER + p, by_sym[p].value if p in by_sym else None,
+                             by_sym[p].status if p in by_sym else "missing",
+                             by_sym[p].obs_id if p in by_sym else None, rule) for p in peers),
+                 # Positioning is context only for this family.
+                 *sorted((Dimension("positioning:" + str(q.detail.get("series")), q.value, q.status, q.obs_id, rule)
+                          for q in result["observations"] if q.symbol == symbol and q.kind == "positioning"),
+                         key=lambda d: d.name),
+                 # Broad cohort movement is context for this family, never a contradiction.
+                 Dimension(CORR_SHARED, None if market.get("broad") is None else float(bool(market["broad"])),
+                           "missing" if market.get("broad") is None else "ok",
+                           next((q.obs_id for q in result["observations"] if q.kind == "market_breadth"), None),
+                           "attention:market.broad"))
     dims += tuple(Dimension(k, None, "missing", None, "not_captured") for k in UNKNOWNS)
     div = components.get("relative_return_divergence")
-    if market.get("broad") and div is not None and abs(div) >= scan["config"]["divergence_z"]:
+    if (family != CORRELATION_FAMILY and market.get("broad") and div is not None
+            and abs(div) >= scan["config"]["divergence_z"]):
         contradictions.append("broad_market_move_with_asset_divergence")
     transitions = tuple(f"{k}:{'positive' if v > 0 else 'negative' if v < 0 else 'flat'}"
                         for k, v in sorted(components.items()) if v is not None)
@@ -268,6 +358,111 @@ def positioning_evidence(state):
     return valid, top
 
 
+def _real(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+
+
+def correlation_evidence(state):
+    """The captured endpoints, signed change, claim and peer basket, cross-checked; fails closed."""
+    named = lambda n: [d for d in state.dimensions if d.name == n]
+    signed = named(CORR_SIGNED)
+    if not signed:
+        raise ValueError("correlation_evidence_missing")
+    claim, rb, rr, basket = (named(CORRELATION_FAMILY), named(CORR_R_BASELINE),
+                             named(CORR_R_RECENT), named(CORR_BASKET))
+    if any(len(x) != 1 for x in (signed, claim, rb, rr, basket)):
+        raise ValueError("correlation_evidence_malformed")
+    (d,), (c,), (b,), (r,), (k,) = signed, claim, rb, rr, basket
+    if d.status != "ok":
+        if d.value is not None:
+            raise ValueError("correlation_evidence_malformed")
+        raise ValueError("correlation_evidence_missing")
+    oid = d.evidence_id
+    if not _real(d.value) or not oid:
+        raise ValueError("correlation_evidence_malformed")
+    # Endpoints are never clipped: |r| >= 1 cannot be valid evidence.
+    for e in (b, r):
+        if e.status != "ok" or e.evidence_id != oid or not _real(e.value) or not -1 < e.value < 1:
+            raise ValueError("correlation_evidence_malformed")
+    peers = [x for x in state.dimensions if x.name.startswith(CORR_PEER)]
+    names = [x.name[len(CORR_PEER):] for x in peers]
+    if (k.status != "ok" or k.evidence_id != oid or not isinstance(k.value, int) or isinstance(k.value, bool)
+            or k.value != len(peers) or len(set(names)) != len(names) or state.symbol in names or not peers):
+        raise ValueError("correlation_evidence_malformed")
+    recomputed = (math.atanh(r.value) - math.atanh(b.value)) / CORRELATION_SCALE
+    if not math.isclose(recomputed, d.value, rel_tol=1e-9, abs_tol=1e-6):
+        raise ValueError("correlation_change_inconsistent")
+    if (c.status != "ok" or not _real(c.value)
+            or not math.isclose(c.value, abs(d.value), rel_tol=1e-9, abs_tol=1e-12) or c.evidence_id != oid):
+        raise ValueError("correlation_change_inconsistent")
+    peer_changes = {}
+    for n, x in zip(names, peers):
+        if x.status == "ok":
+            if not _real(x.value) or not x.evidence_id:
+                raise ValueError("correlation_evidence_malformed")
+            peer_changes[n] = x.value
+        elif x.value is not None:
+            raise ValueError("correlation_evidence_malformed")
+        else:
+            peer_changes[n] = None
+    return {"r_baseline": b.value, "r_recent": r.value, "signed": d.value, "change": c.value,
+            "peers": peer_changes}
+
+
+def _correlation_outcome(inv):
+    """The single descriptive result from the frozen endpoints and |change| only.
+    Context (concurrent, peers, broad cohort) never enters it."""
+    ev = correlation_evidence(inv.state)
+    rb, rr = ev["r_baseline"], ev["r_recent"]
+    if ev["change"] < inv.measurement.threshold:
+        return "not_distinct"
+    if rb * rr < 0:
+        return "relationship_crossed_zero"
+    return "relationship_increased" if rr > rb else "relationship_decreased"
+
+
+def _sign_word(r):
+    return "positive" if r > 0 else "inverse" if r < 0 else "zero"
+
+
+def correlation_description(state):
+    """Deterministic endpoint descriptors then context codes. A zero crossing keeps
+    its increase/decrease fact. No direction, cause or permission is implied."""
+    ev = correlation_evidence(state)
+    rb, rr = ev["r_baseline"], ev["r_recent"]
+    codes = ["correlation_increased" if rr > rb else "correlation_decreased" if rr < rb
+             else "correlation_unchanged"]
+    if rb * rr < 0:
+        codes.append("correlation_crossed_zero")
+    codes += ["baseline_relationship_" + _sign_word(rb), "recent_relationship_" + _sign_word(rr),
+              "relationship_magnitude_" + ("increased" if abs(rr) > abs(rb) else
+                                           "decreased" if abs(rr) < abs(rb) else "unchanged")]
+    shared = [d for d in state.dimensions if d.name == CORR_SHARED]
+    if len(shared) == 1 and shared[0].status == "ok" and shared[0].value in (0.0, 1.0):
+        codes.append("shared_cohort_context" if shared[0].value else "shared_cohort_context_absent")
+    else:
+        codes.append("shared_cohort_context_unavailable")
+    changes = list(ev["peers"].values())
+    if any(v is None for v in changes):
+        codes.append("peer_change_evidence_unavailable")
+    else:
+        codes.append("peer_basket_change_context"
+                     if statistics.median(abs(v) for v in changes) >= CORRELATION_CATALOG["threshold"]
+                     else "peer_basket_change_context_absent")
+    context = [(d.name, abs(d.value) >= CATALOG["thresholds"][d.name]) for d in state.dimensions
+               if d.name in FAMILIES and d.status == "ok" and _real(d.value)]
+    context += [(d.name, abs(d.value) >= POSITIONING_CATALOG["threshold"]) for d in state.dimensions
+                if d.name.startswith("positioning:") and d.status == "ok" and _real(d.value)]
+    unusual = sorted(n for n, hit in context if hit)
+    if not context:
+        codes.append("concurrent_evidence_unavailable")
+    elif unusual:
+        codes += ["concurrent_unusual_evidence_present", *("concurrent_unusual:" + n for n in unusual)]
+    else:
+        codes.append("concurrent_unusual_evidence_absent")
+    return tuple(codes)
+
+
 def _positioning_outcome(inv):
     """(status, reason, winner) from frozen registration evidence only."""
     valid, top = positioning_evidence(inv.state)
@@ -300,8 +495,30 @@ def _open_positioning(state, registered_ms, anchor):
                          alternatives, measurement, UNKNOWNS)
 
 
+def _open_correlation(state, registered_ms, anchor):
+    correlation_evidence(state)
+    measurement = Measurement(CORRELATION_FAMILY, 0, CORRELATION_CATALOG["threshold"], (), None, None, (),
+                              registered_ms, registered_ms, None, CORRELATION_CATALOG_ID)
+    episode_id = stable_id("episode", CORRELATION_CATALOG_ID, state.symbol, CORRELATION_FAMILY, anchor)
+    iid = stable_id("investigation", episode_id, state.state_id, registered_ms)
+    change = "|signed Fisher-scaled change|"
+    alternatives = tuple(Alternative(name, pred, f"Invalidated when {invalid}", state.evidence_ids,
+                                     state.contradictions, ("frozen registration evidence",))
+        for name, pred, invalid in (
+            ("relationship_increased", f"{change} >= threshold, r_recent > r_baseline and no sign change",
+             f"{change} < threshold, r_recent <= r_baseline or the endpoints have differing signs"),
+            ("relationship_decreased", f"{change} >= threshold, r_recent < r_baseline and no sign change",
+             f"{change} < threshold, r_recent >= r_baseline or the endpoints have differing signs"),
+            ("relationship_crossed_zero", f"{change} >= threshold and r_baseline, r_recent have differing signs",
+             f"{change} < threshold or the endpoints do not have differing signs"),
+            ("not_distinct", f"{change} < threshold", f"{change} >= threshold")))
+    # Concurrent evidence is context, not further questions for this family.
+    return Investigation(iid, episode_id, state, registered_ms, CORRELATION_FAMILY, (),
+                         QUESTIONS[CORRELATION_FAMILY], alternatives, measurement, UNKNOWNS)
+
+
 def open_investigation(state, family, bars, registered_ms):
-    if family not in (*FAMILIES, POSITIONING_FAMILY) or not is_timestamp(registered_ms) or registered_ms < state.observed_ms:
+    if family not in (*FAMILIES, *REGISTRATION_FAMILIES) or not is_timestamp(registered_ms) or registered_ms < state.observed_ms:
         raise ValueError("invalid_registration")
     # Guard is part of the frozen publication protocol, not a later adjustment.
     start = (registered_ms // TF + 1) * TF
@@ -315,6 +532,8 @@ def open_investigation(state, family, bars, registered_ms):
     anchor = state.as_of_ms // TF * TF - TF
     if family == POSITIONING_FAMILY:
         return _open_positioning(state, registered_ms, anchor)
+    if family == CORRELATION_FAMILY:
+        return _open_correlation(state, registered_ms, anchor)
     history = [by_key.get((state.symbol, anchor - i * TF)) for i in reversed(range(N + 6))]
     mean = scale = None
     reason = None
@@ -359,8 +578,15 @@ def measure(inv, bars, as_of_ms, observed_ms):
     if not all(is_timestamp(t) for t in (as_of_ms, observed_ms)) or not inv.registered_ms <= as_of_ms <= observed_ms:
         raise ValueError("invalid_observation_time")
     m = inv.measurement
-    if m.family == POSITIONING_FAMILY:
-        status, reason, _ = _positioning_outcome(inv)
+    if m.family in REGISTRATION_FAMILIES:
+        if m.family == CORRELATION_FAMILY:
+            try:
+                _correlation_outcome(inv)
+                status, reason = "assessed", "registration_evidence_described"
+            except ValueError as exc:                 # fails closed: never a result
+                status, reason = "not_testable", str(exc)
+        else:
+            status, reason, _ = _positioning_outcome(inv)
         return OutcomeEvidence(stable_id("evidence", inv.investigation_id, (), status, reason),
                                inv.investigation_id, as_of_ms, observed_ms, inv.state.available_ms,
                                status, None, (), (), reason)
@@ -431,6 +657,16 @@ def advance(inv, evidence, previous=None):
                                 "Request timestamped Binance production taker-buy and total volume for the exact target bars, "
                                 "with actual arrival/version times, to distinguish buyer-led from seller-led turnover. "
                                 "Neither participant explanation is currently assessed; this is a recommendation only.", None)
+    elif evidence.status == "assessed" and inv.measurement.family == CORRELATION_FAMILY:
+        winner = _correlation_outcome(inv)
+        assessment = tuple((n, "compatible" if n == winner else "contradicted") for n in names)
+        descriptors = correlation_description(inv.state)
+        action = NextAction("RESEARCH", "registration_evidence_described_cause_unknown",
+                            "This describes registration-time evidence only; it is not prospective validation. "
+                            "Before any claim, freeze a separate forward test: compare later captured "
+                            "correlation-change observations for this symbol, each against its own captured peer "
+                            "basket (a different basket is not the same comparison), with an unconditional "
+                            "same-window baseline. No direction, cause or trading permission is implied.", None)
     elif evidence.status == "assessed":
         winner = _positioning_outcome(inv)[2]
         assessment = tuple((n, "compatible" if n == winner else "contradicted") for n in names)
@@ -447,6 +683,8 @@ def advance(inv, evidence, previous=None):
                             "Observe every exact target bar; do not grade a partial window.",
                             max(evidence.as_of_ms, inv.measurement.deadline_ms))
     reason = (evidence.reason,)
+    if evidence.status == "assessed" and inv.measurement.family == CORRELATION_FAMILY:
+        reason += descriptors
     if previous and evidence.target_versions != previous.evidence.target_versions:
         old_keys = {(s, t): v for s, t, v in previous.evidence.target_versions}
         reason += ("input_revision" if any((s, t) in old_keys and old_keys[(s, t)] != v

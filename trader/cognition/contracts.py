@@ -24,6 +24,17 @@ store, series in POSITIONING_SERIES. `ts` is the sample's own timestamp
 (symbol, series) unusable in `Dataset.positioning_invalid` instead of raising;
 an identical repeat is rejected as `duplicate` without invalidating the series.
 
+Correlation history (optional key `correlation_history`) is a list of
+{symbol, status, first_open_ms, last_open_ms, closes}, one record per symbol,
+captured from the same closed-bar frame slice as the candles. A record with
+status `ok` carries exactly CORRELATION_CAPTURE_CLOSES finite positive closes
+of consecutive bars first_open_ms + i * tf_ms ending at last_open_ms; any
+other captured status (CORRELATION_CAPTURE_STATUSES) carries no closes. An
+absent key yields `Dataset.correlation is None` and changes nothing. A
+rejected record marks its symbol unusable in `Dataset.correlation_status`
+(`non_finite` or `malformed`) instead of raising; an identical repeat is
+rejected as `duplicate` without invalidating the symbol.
+
 Missing is `None`, never 0. Invalid records are rejected with a reason and
 kept in `Dataset.rejected`; structural errors raise ValueError.
 """
@@ -95,6 +106,23 @@ class PositioningPoint:
     value: float
 
 
+# Package-owned implementation policy (SDD-STAGE-3-ATTENTION-CORRELATION-
+# CHANGE-V1), not SDD-derived constants: 151 closed closes -> 150 returns,
+# baseline = the previous 120, recent = the most recent 30 (non-overlapping).
+CORRELATION_BASELINE = 120
+CORRELATION_RECENT = 30
+CORRELATION_CAPTURE_CLOSES = CORRELATION_BASELINE + CORRELATION_RECENT + 1
+CORRELATION_CAPTURE_STATUSES = ("ok", "warmup", "gap", "non_finite", "malformed",
+                                "invalid_frame", "missing_timeframe")
+
+
+@dataclass(frozen=True)
+class CorrelationHistory:
+    symbol: str
+    first_open_ms: int
+    closes: tuple
+
+
 @dataclass
 class Dataset:
     timeframe: str
@@ -106,6 +134,8 @@ class Dataset:
     rejected: list = field(default_factory=list)
     positioning: dict | None = None          # symbol -> series -> [PositioningPoint by ts]
     positioning_invalid: dict = field(default_factory=dict)   # (symbol, series) -> reason
+    correlation: dict | None = None          # symbol -> CorrelationHistory (status ok)
+    correlation_status: dict = field(default_factory=dict)    # symbol -> non-ok status
 
     def bar_asof(self, symbol: str, open_ms: int, as_of: int) -> Candle | None:
         """Latest revision of one closed bar known at `as_of`, or None."""
@@ -300,8 +330,65 @@ def load_input(raw: dict) -> Dataset:
         lst.sort(key=lambda r: (r.event_ms, r.available_ms, r.kind, r.source))
 
     positioning, invalid = _positioning(raw, reject)
+    correlation, correlation_status = _correlation(raw, tf_ms, reject)
     return Dataset(tf, tf_ms, candles, membership, participation,
-                   sorted(set(decisions)), rejected, positioning, invalid)
+                   sorted(set(decisions)), rejected, positioning, invalid,
+                   correlation, correlation_status)
+
+
+def _correlation(raw, tf_ms, reject):
+    if "correlation_history" not in raw:
+        return None, {}
+    records = raw["correlation_history"]
+    if not isinstance(records, list):
+        raise ValueError("correlation_history must be a list")
+    ok: dict = {}
+    status: dict = {}
+    seen: dict = {}
+    conflicted: set = set()
+
+    def bad(i, reason, sym=None):
+        reject("correlation_history", i, reason)
+        if isinstance(sym, str) and sym:
+            status.setdefault(sym, reason)
+
+    for i, r in enumerate(records):
+        sym = r.get("symbol") if isinstance(r, dict) else None
+        if (not isinstance(r, dict) or not isinstance(sym, str) or not sym
+                or set(r) != {"symbol", "status", "first_open_ms", "last_open_ms", "closes"}
+                or r["status"] not in CORRELATION_CAPTURE_STATUSES
+                or not isinstance(r["closes"], list)):
+            bad(i, "malformed", sym)
+            continue
+        key = json.dumps(r, sort_keys=True, separators=(",", ":"), default=str)
+        if sym in seen:
+            if seen[sym] == key:
+                reject("correlation_history", i, "duplicate")
+            else:
+                conflicted.add(sym)
+                bad(i, "malformed", sym)
+            continue
+        seen[sym] = key
+        first, last, closes = r["first_open_ms"], r["last_open_ms"], r["closes"]
+        if r["status"] != "ok":
+            if closes or first is not None or last is not None:
+                bad(i, "malformed", sym)
+            else:
+                status[sym] = r["status"]
+            continue
+        n = CORRELATION_CAPTURE_CLOSES
+        if (not _is_ts(first) or not _is_ts(last) or first % tf_ms
+                or len(closes) != n or last - first != (n - 1) * tf_ms):
+            bad(i, "malformed", sym)
+            continue
+        if not all(_is_num(c) and c > 0 for c in closes):
+            bad(i, "non_finite", sym)
+            continue
+        ok[sym] = CorrelationHistory(sym, first, tuple(float(c) for c in closes))
+    for sym in conflicted:
+        ok.pop(sym, None)
+        status[sym] = "malformed"
+    return ok, status
 
 
 def _positioning(raw, reject):

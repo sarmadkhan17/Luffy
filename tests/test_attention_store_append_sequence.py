@@ -336,7 +336,8 @@ def test_scan_payload_hash_input_versions_and_replay_unchanged(tmp_path):
                for r in out['scan']['input_versions']]
     restored = {**original, 'input': {'schema': INPUT_SCHEMA, 'timeframe': out['scan']['timeframe'],
                 'membership': out['scan']['membership'], 'candles': candles,
-                'decision_times': [now], 'participation': []}}
+                'decision_times': [now], 'participation': [],
+                'correlation_history': out['scan']['correlation_input']}}
     assert digest(restored['input']) == out['scan']['input_hash']
     assert evaluate_snapshot(restored)['rows'] == out['scan']['rows']
     store.close()

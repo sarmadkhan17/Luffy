@@ -42,6 +42,35 @@ invalid in the input, short of history, breaks its continuity rule, has a
 stale anchor, or has zero/non-finite variance. Without the input the output is
 unchanged.
 
+With optional `correlation_history` input (Dataset.correlation not None),
+each eligible asset gets one `correlation_change` observation. Its captured
+history is CORRELATION_CAPTURE_CLOSES = 151 closed closes on the exact bar grid
+ending at the anchor bar -> 150 log returns; baseline = the previous
+CORRELATION_BASELINE = 120, recent = the most recent CORRELATION_RECENT = 30
+(non-overlapping). On 4h bars that is roughly the recent 5 days versus the
+prior 20 days.
+
+The reference is the asset's captured leave-one-out peer basket: ONE peer set,
+frozen per asset, of the other cohort members whose complete 150-return
+history is valid on the exact grid (never the asset itself), with equal
+weights, used unchanged for every return of both windows. A member with
+incomplete history is excluded entirely, never included for only the bars it
+has; nothing is interpolated, filled or nearest-bar matched. Fewer than
+`min_cohort` peers is `insufficient_cohort`. The basket is only the captured
+peers: not the crypto market, a market factor, a sector or a BTC proxy, and a
+later scan's basket may differ (no continuity is claimed across baskets).
+
+    r_b = corr(asset_baseline, ref_baseline)   r_r = corr(asset_recent, ref_recent)
+    signed_fisher_scaled_change = (atanh(r_r) - atanh(r_b)) / sqrt(1/(120-3) + 1/(30-3))
+
+|signed_fisher_scaled_change| competes as `correlation_change`; r_b, r_r, the
+signed and the absolute change are all kept as evidence. Weakening and
+strengthening of equal magnitude are equally salient; no direction is implied.
+It is a deterministic Fisher-scaled correlation-change feature, not a
+calibrated test. Degenerate inputs are never clipped: zero variance, a
+non-finite correlation and |r| >= 1 (Fisher transform undefined) are explicit
+statuses with None, never 0. Without the input the output is unchanged.
+
 Salience is direction-independent: an asset falling hard and one rising hard
 score alike. Ranking is (-salience at 12 significant digits, symbol) so ties are
 stable. An asset is selected if salience >= `min_salience`, it has no open
@@ -63,7 +92,9 @@ import sys
 from dataclasses import dataclass
 from hashlib import sha256
 
-from trader.cognition.contracts import POSITIONING_SERIES, Observation, rnd, stable_id
+from trader.cognition.contracts import (CORRELATION_BASELINE, CORRELATION_CAPTURE_CLOSES,
+                                       CORRELATION_RECENT, POSITIONING_SERIES, Observation,
+                                       rnd, stable_id)
 
 
 @dataclass(frozen=True)
@@ -116,6 +147,18 @@ _MIN_MS = 60_000
 LS_RATIO_STEP_MS = 900_000
 LS_RATIO_MAX_AGE_MS = 2_700_000           # recorder interval + period + slack
 FUNDING_AGE_SLACK_MS = 1_800_000          # two recorder intervals past settlement
+
+
+CORRELATION_COMPONENT = "correlation_change"
+# Fixed scale for the difference of two Fisher transforms over the frozen
+# window lengths (package-owned policy, not SDD-derived).
+CORRELATION_SCALE = math.sqrt(1 / (CORRELATION_BASELINE - 3) + 1 / (CORRELATION_RECENT - 3))
+CORRELATION_METHOD = ("signed_fisher_scaled_change = (atanh(r_recent) - atanh(r_baseline)) / "
+                      "sqrt(1/(120-3) + 1/(30-3)); correlation_change = |signed_fisher_scaled_change|")
+CORRELATION_INTERPRETATION = "deterministic Fisher-scaled correlation-change feature"
+CORRELATION_REFERENCE = "captured leave-one-out peer basket"
+CORRELATION_REFERENCE_POLICY = "leave_one_out_equal_weight"
+CORRELATION_WINDOWS = "recent 30 vs prior 120 returns; on 4h bars roughly the recent 5 days vs the prior 20 days"
 
 
 def _finite(x):
@@ -246,6 +289,9 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
         }
 
     cohort = sorted(feats)
+    corr_first = last_open - (CORRELATION_CAPTURE_CLOSES - 1) * ds.tf_ms
+    corr_returns = (None if ds.correlation is None
+                    else _correlation_returns(ds, cohort, last_open, as_of))
     market = {"status": "insufficient_cohort", "cohort_size": len(cohort),
               "min_cohort": cfg.min_cohort, "median_ret_short": None,
               "market_z": None, "breadth_up": None, "dispersion": None, "broad": None}
@@ -299,6 +345,12 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
             usable = [abs(o.value) for o in positioning.values() if o.status == "ok"]
             if usable:
                 avail[POSITIONING_COMPONENT] = max(usable)
+        correlation = None
+        if corr_returns is not None:
+            correlation = _correlation(ds, sym, corr_returns, corr_first, cfg, anchor_close, av, add)
+            ids.append(correlation.obs_id)
+            if correlation.status == "ok":
+                avail[CORRELATION_COMPONENT] = abs(correlation.value)
         salience = max(avail.values()) if avail else None
         dominant = min(avail, key=lambda k: (-avail[k], k)) if avail else None
         rows[sym] = {"symbol": sym, "status": "ok", "eligible": salience is not None,
@@ -314,6 +366,17 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
             rows[sym]["components"][POSITIONING_COMPONENT] = rnd(avail.get(POSITIONING_COMPONENT))
             rows[sym]["positioning"] = {k: {"status": o.status, "z": o.value, "obs_id": o.obs_id}
                                         for k, o in positioning.items()}
+        if correlation is not None:
+            rows[sym]["components"][CORRELATION_COMPONENT] = rnd(avail.get(CORRELATION_COMPONENT))
+            d = correlation.detail
+            rows[sym]["correlation"] = {"status": correlation.status,
+                                        "r_baseline": d.get("r_baseline"),
+                                        "r_recent": d.get("r_recent"),
+                                        "signed_fisher_scaled_change": correlation.value,
+                                        "correlation_change": d.get("correlation_change"),
+                                        "reference_size": d.get("reference_size"),
+                                        "reference_membership_id": d.get("reference_membership_id"),
+                                        "obs_id": correlation.obs_id}
 
     ranked = sorted((s for s in cohort if rows[s]["eligible"]),
                     key=lambda s: (-rows[s]["salience"], s))
@@ -425,3 +488,129 @@ def _positioning(ds, sym, series, as_of, add):
                    event_ms=anchor.ts)
     z = _finite((anchor.value - mean) / sd)
     return out("ok" if z is not None else "degenerate", z, detail, anchor.ts)
+
+
+def _correlation_returns(ds, cohort, last_open, as_of):
+    """symbol -> 150 log returns on the exact grid ending at the anchor bar,
+    or symbol -> (status, detail) when its captured history is unusable."""
+    first = last_open - (CORRELATION_CAPTURE_CLOSES - 1) * ds.tf_ms
+    out = {}
+    for sym in cohort:
+        h = ds.correlation.get(sym)
+        if h is None:
+            out[sym] = (ds.correlation_status.get(sym, "missing"), {})
+            continue
+        if h.first_open_ms != first:
+            # Ends before the anchor bar: stale. Anything else is off-grid.
+            out[sym] = ("stale" if h.first_open_ms < first else "malformed",
+                        {"first_open_ms": h.first_open_ms, "expected_first_open_ms": first})
+            continue
+        # The overlapping captured candles are the same closed bars: any
+        # disagreement means the history is not what Attention evaluated.
+        mismatch = False
+        for j, close in enumerate(h.closes):
+            bar = ds.bar_asof(sym, first + j * ds.tf_ms, as_of)
+            if bar is not None and bar.close != close:
+                mismatch = True
+                break
+        if mismatch:
+            out[sym] = ("malformed", {"reason": "candle_mismatch"})
+            continue
+        c = h.closes
+        r = [math.log(c[i] / c[i - 1]) for i in range(1, len(c))]
+        if not all(math.isfinite(x) for x in r):
+            out[sym] = ("non_finite", {})
+            continue
+        out[sym] = r
+    return out
+
+
+def _pearson(sxy, sxx, syy):
+    """sxy / sqrt(sxx * syy) without a silent overflow to r = 0; None if not finite.
+    Never clipped: |r| >= 1 is returned as computed and fails closed later."""
+    den = math.sqrt(sxx * syy)
+    if not math.isfinite(den) or den <= 0:
+        den = math.sqrt(sxx) * math.sqrt(syy)
+    r = sxy / den if math.isfinite(den) and den > 0 else math.nan
+    return r if math.isfinite(r) else None
+
+
+def correlation_change(asset, reference):
+    """(status, detail, signed_fisher_scaled_change) for two aligned 150-return
+    series. baseline = first CORRELATION_BASELINE, recent = last CORRELATION_RECENT."""
+    n_b, n_r = CORRELATION_BASELINE, CORRELATION_RECENT
+    if len(asset) != n_b + n_r or len(reference) != n_b + n_r:
+        return "malformed", {}, None
+    detail = {"baseline_returns": n_b, "recent_returns": n_r, "fisher_scale": rnd(CORRELATION_SCALE)}
+    fisher = {}
+    for name, sl in (("baseline", slice(0, n_b)), ("recent", slice(n_b, n_b + n_r))):
+        x, y = asset[sl], reference[sl]
+        mx, my = math.fsum(x) / len(x), math.fsum(y) / len(y)
+        dx, dy = [v - mx for v in x], [v - my for v in y]
+        sxx, syy = math.fsum(v * v for v in dx), math.fsum(v * v for v in dy)
+        if not (math.isfinite(sxx) and math.isfinite(syy)):
+            return "non_finite", detail, None
+        if sxx <= 0:
+            return "zero_variance_candidate", dict(detail, window=name), None
+        if syy <= 0:
+            return "zero_variance_reference", dict(detail, window=name), None
+        r = _pearson(math.fsum(a * b for a, b in zip(dx, dy)), sxx, syy)
+        if r is None:
+            return "non_finite_correlation", dict(detail, window=name), None
+        detail["r_" + name] = rnd(r)
+        f = math.atanh(r) if abs(r) < 1 else math.nan
+        if not math.isfinite(f):
+            return "fisher_undefined", dict(detail, window=name), None
+        fisher[name] = f
+        detail["f_" + name] = rnd(f)
+    diff = fisher["recent"] - fisher["baseline"]
+    z = _finite(diff / CORRELATION_SCALE)
+    detail.update(fisher_difference=rnd(diff), signed_fisher_scaled_change=rnd(z),
+                  correlation_change=rnd(abs(z)) if z is not None else None)
+    return ("ok" if z is not None else "non_finite"), detail, z
+
+
+def peer_basket(returns, sym):
+    """The ONE frozen leave-one-out peer set for sym: every other member with a
+    complete 150-return history. Incomplete members are excluded entirely."""
+    return sorted(s for s, r in returns.items()
+                  if s != sym and isinstance(r, list) and len(r) == len(returns[sym]))
+
+
+def basket_reference(returns, peers):
+    """Equal-weight mean return of the same peers at every bar of both windows."""
+    n = len(returns[peers[0]])
+    if any(len(returns[p]) != n for p in peers):
+        raise ValueError("peer_basket_incomplete")
+    w = 1 / len(peers)
+    return [math.fsum(returns[p][t] for p in peers) * w for t in range(n)]
+
+
+def _correlation(ds, sym, returns, first, cfg, anchor_close, available_ms, add):
+    """One correlation_change observation for sym; value is the signed Fisher-scaled change or None."""
+    tf = ds.tf_ms
+    grid = {"capture_closes": CORRELATION_CAPTURE_CLOSES,
+            # Return t runs from bar first+t*tf to bar first+(t+1)*tf; each
+            # window is labelled by the opens of the bars its returns end on.
+            "baseline_return_bar_open_ms": [first + tf, first + CORRELATION_BASELINE * tf],
+            "recent_return_bar_open_ms": [first + (CORRELATION_BASELINE + 1) * tf,
+                                          first + (CORRELATION_CAPTURE_CLOSES - 1) * tf],
+            "windows": CORRELATION_WINDOWS, "reference": CORRELATION_REFERENCE,
+            "reference_policy": CORRELATION_REFERENCE_POLICY,
+            "method": CORRELATION_METHOD, "interpretation": CORRELATION_INTERPRETATION}
+
+    def out(status, value=None, detail=None):
+        return add(CORRELATION_COMPONENT, sym, status, value, dict(grid, **(detail or {})),
+                   anchor_close, available_ms, "correlation_history")
+
+    own = returns[sym]
+    if isinstance(own, tuple):
+        return out(own[0], detail=own[1])
+    peers = peer_basket(returns, sym)
+    basket = {"reference_peers": peers, "reference_size": len(peers),
+              "reference_membership_id": stable_id("peer_basket", CORRELATION_REFERENCE_POLICY, peers),
+              "min_cohort": cfg.min_cohort}
+    if len(peers) < cfg.min_cohort:
+        return out("insufficient_cohort", detail=basket)
+    status, detail, z = correlation_change(own, basket_reference(returns, peers))
+    return out(status, z, dict(detail, **basket))
