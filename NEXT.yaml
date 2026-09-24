@@ -2,37 +2,40 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-ATTENTION-NEW-DATA-INCREMENTAL-CURSOR-V1
-  type: IMPLEMENTATION
+  id: SDD-STAGE-3-ATTENTION-NEW-DATA-EVENT-IDENTITY-CAPACITY-POLICY-V1
+  type: EVIDENCE_AUDIT
   priority: ACTIVE
   status: READY
-  objective: Replace whole-store rescanning in the new-data trigger with bounded incremental processing over the TESTED Store append sequence, preserving exactly-once event semantics and detecting pruned-before-observed gaps.
+  objective: Define a truthful lifetime-capacity policy for immutable new-data event identities, retired tombstones, gap receipts and refusal receipts without sacrificing exactly-once semantics or inventing an arbitrary permanent ceiling.
   basis:
-    - SDD-STAGE-3-ATTENTION-STORE-APPEND-SEQUENCE-V1 is TESTED at fe75afb; STORE_APPEND_SEQUENCE_REQUIRED is resolved.
-    - Store has immutable attention-store-meta.v1 identity with a stable store_instance_id.
-    - Every new candle version has exactly one attention-version-append.v1 receipt; committed sequence is contiguous, monotonic and never reused; high-water never decreases.
-    - A missing committed sequence <= high_water truthfully means its parent version was later pruned.
-    - Migration receipt order is migration order, not historical insertion chronology.
-    - INPUT_VERSION_CAPACITY_POLICY_REQUIRED is to be replaced by bounded incremental processing rather than a global count ceiling.
+    - SDD-STAGE-3-ATTENTION-NEW-DATA-INCREMENTAL-CURSOR-V1 is TESTED at a6a86e8; INPUT_VERSION_CAPACITY_POLICY_REQUIRED is resolved.
+    - MAX_EVENTS=262_144 is an invented lifetime ceiling over active events plus retired identities (trader/observability/new_data.py).
+    - Event-capacity exhaustion is a real blocked state; the cursor stops before the blocked sequence and retries stop deterministically at the same sequence.
+    - Retired event tombstones prevent re-emission; gap (pruned_before_observed) and refusal receipts are durable and committed atomically with cursor advancement.
+    - Store identity and append sequence are TESTED; committed sequences are never reused.
+  audit_questions:
+    - Expected growth rate of active events, retired identities, append gaps and append refusals.
+    - Which structures must be retained permanently for exactly-once/replay correctness.
+    - Whether tombstones can be compacted safely into range/set summaries, partitioned manifests, checkpoint hashes or another exact representation.
+    - Whether any compaction preserves exact detection of a repeated version_id/event_id.
+    - Whether bounded retention can be derived from Store instance rotation or explicit operator checkpointing.
+    - Whether MAX_EVENTS=262144 can be removed or replaced by a policy-backed capacity contract.
+    - Disk-growth implications under realistic Store append rates.
+    - Whether gap/refusal tables should share the same lifetime policy or separate ones.
   required_behavior:
-    - Bind cursor state to store label, store_instance_id and append schema/version.
-    - Process append receipts in deterministic sequence order.
-    - Use bounded batches; do not require the entire Store to fit one pass.
-    - Return/report last_seq, high_water and more_available.
-    - Cursor advances only in the same transaction as emitted events, refusal records and pruned-before-observed gap records.
-    - Crash before commit leaves cursor and ledger unchanged.
-    - Retry/restart reprocesses safely with no duplicate events.
-    - Missing sequence <= high_water becomes explicit pruned_before_observed, never silent absence.
-    - Refused rows are durably recorded once so they do not permanently block the cursor.
-    - Store instance mismatch/replacement fails closed; one Store's cursor is never applied to another.
-    - Store regression/divergence handling is explicit.
-    - Remove dependency on MAX_VERSIONS.
-    - READ_DEADLINE_S may remain only as a per-pass fail-closed liveness guard.
-    - Preserve retired event identities.
+    - Evidence audit only; no code and no implementation commit.
+    - Do not delete identities merely to regain capacity.
+    - Do not invent an arbitrary permanent ceiling; derive any bound from evidence or an explicit policy.
+    - Preserve exactly-once event identity, retired-identity tombstones, cursor atomicity and fail-closed behavior.
+    - Do not queue downstream dispatch.
+  allowed_outcomes:
+    - EVENT_IDENTITY_CAPACITY_POLICY_DESIGN_COMPLETE
+    - IDENTITY_COMPACTION_PREREQUISITE_REQUIRED
+    - OPERATOR_STORAGE_POLICY_REQUIRED
   not_in_scope:
-    - MAX_EVENTS lifetime policy
-    - event payload retention policy
+    - event payload retention implementation
     - downstream dispatch
+    - operator Store restore policy
   preserve:
     - Attention salience, ranking, thresholds and candidate generation unchanged.
     - Scan rows, hashes and replay unchanged.
@@ -41,13 +44,14 @@ work_package:
     - Parked liquidation, Scheme-D and portfolio boundaries unchanged.
   established_boundary:
     - Downstream new-data dispatch is NOT implemented and is not queued; DOWNSTREAM_DISPATCH_PREREQUISITE_REQUIRED remains.
-    - EVENT_IDENTITY_CAPACITY_POLICY_REQUIRED and EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED remain open.
+    - EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED remains open.
+    - OPERATOR_STORE_RESTORE_POLICY_REQUIRED is a separate operational boundary; it does not block normal append-sequence operation.
     - forced-liquidation-participation.v1 remains PARKED; M3.2 Scheme-D remains PARKED.
     - Portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET; portfolio salience remains BLOCKED_UPSTREAM.
     - Usefulness/outcome-weighted research feedback remains MISSING / DESIGN_ONLY.
     - Attention overall remains IMPLEMENTED; this queue grants no maturity upgrade or activation.
   after_completion:
-    - Record incremental-cursor evidence in STATE.yaml; resolve INPUT_VERSION_CAPACITY_POLICY_REQUIRED only if TESTED; do not mark new-data triggering operational and do not queue downstream dispatch without a separate decision.
+    - Record the audit decision (one allowed outcome) and evidence in STATE.yaml; resolve EVENT_IDENTITY_CAPACITY_POLICY_REQUIRED only with a truthful policy; do not mark new-data triggering operational and do not queue downstream dispatch without a separate decision.
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -103,4 +107,4 @@ parked_scheme_d_work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
-  - Record implementation evidence for SDD-STAGE-3-ATTENTION-NEW-DATA-INCREMENTAL-CURSOR-V1 in STATE.yaml; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch.
+  - Record audit evidence for SDD-STAGE-3-ATTENTION-NEW-DATA-EVENT-IDENTITY-CAPACITY-POLICY-V1 in STATE.yaml; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch.

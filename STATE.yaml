@@ -1118,14 +1118,63 @@ completed_attention_store_append_sequence_v1:
     attention_overall: IMPLEMENTED
   maturity_boundary: Store prerequisite only. Downstream new-data triggering is NOT operational. Attention overall remains IMPLEMENTED; this package grants no maturity upgrade or activation. Forced-liquidation experiment and Scheme-D remain PARKED; portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET.
 
-current_active_work:
+completed_attention_new_data_incremental_cursor_v1:
   id: SDD-STAGE-3-ATTENTION-NEW-DATA-INCREMENTAL-CURSOR-V1
   type: IMPLEMENTATION
+  state: TESTED
+  evidence:
+    - implementation commit a6a86e87e9e00d7dcbc441f7acb9222da312e4ca
+    - trader/observability/new_data.py
+    - tests/test_attention_new_data_trigger.py
+    - tests/test_attention_new_data_cursor.py
+  proven_facts:
+    - New-data processing is bounded and incremental over the TESTED Store append sequence.
+    - Cursor binds to store label, store_instance_id, metadata schema and append schema.
+    - MAX_VERSIONS is removed from normal processing.
+    - Each pass processes a bounded batch and reports last_seq, high_water and more_available.
+    - Cursor advancement commits atomically with events, refusals, gap receipts and payload retirements.
+    - Crash before commit advances nothing.
+    - Retries/restarts are idempotent.
+    - A missing committed sequence <= high_water becomes durable pruned_before_observed.
+    - Refused rows are durably recorded and do not block later valid rows.
+    - Store instance mismatch fails closed.
+    - High-water regression fails closed.
+    - Current cursor-anchor divergence fails closed.
+    - An arbitrary same-instance restore that resurrects a historical pre-anchor gap is NOT fully detectable; this remains an explicit operator restore-policy boundary.
+    - Such a restore does not rewind the cursor or re-emit historical data.
+    - Legacy-migration receipts are processed as migration order only, not claimed historical insertion chronology.
+    - Retired event tombstones continue preventing re-emission.
+    - Payload cleanup is bounded and uses point lookups instead of rescanning the Store.
+    - READ_DEADLINE_S remains a per-pass fail-closed liveness guard only.
+    - Event-capacity exhaustion is a real blocked state; the cursor stops before the blocked sequence, the CLI exits non-zero, and retries deterministically stop at the same sequence.
+    - No Attention salience/ranking/threshold/candidate-generation, trading, Risk, Execution or strategy-authority changes.
+    - No network, LLM or venue calls.
+  validation:
+    cursor_and_trigger_tests: 58 passed
+    focused_suites: 291 passed
+    git_diff_check: clean
+  blockers_resolution:
+    INPUT_VERSION_CAPACITY_POLICY_REQUIRED: Resolved by TESTED incremental cursor a6a86e8; normal processing no longer requires a global retained-version count to fit in one pass.
+  open_blockers:
+    - EVENT_IDENTITY_CAPACITY_POLICY_REQUIRED
+    - EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED
+    - DOWNSTREAM_DISPATCH_PREREQUISITE_REQUIRED
+  operational_boundaries:
+    OPERATOR_STORE_RESTORE_POLICY_REQUIRED: Separate operator boundary for arbitrary same-instance Store restore that could resurrect a historical pre-anchor gap; not detectable in full and not blocking normal append-sequence operation.
+  gap_matrix_update:
+    new_data_availability_trigger: INCREMENTAL_EVENT_CREATION_TESTED_DOWNSTREAM_AND_EVENT_CAPACITY_POLICY_BLOCKED
+    downstream_new_data_dispatch: MISSING
+    attention_overall: IMPLEMENTED
+  maturity_boundary: Incremental event creation only. Downstream new-data triggering is NOT operational. Attention overall remains IMPLEMENTED; this package grants no maturity upgrade or activation. Forced-liquidation experiment and Scheme-D remain PARKED; portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET.
+
+current_active_work:
+  id: SDD-STAGE-3-ATTENTION-NEW-DATA-EVENT-IDENTITY-CAPACITY-POLICY-V1
+  type: EVIDENCE_AUDIT
   priority: ACTIVE
   status: READY
-  objective: Replace whole-store rescanning in the new-data trigger with bounded incremental processing over the TESTED Store append sequence, preserving exactly-once event semantics and detecting pruned-before-observed gaps.
+  objective: Define a truthful lifetime-capacity policy for immutable new-data event identities, retired tombstones, gap receipts and refusal receipts without sacrificing exactly-once semantics or inventing an arbitrary permanent ceiling.
   deliverables: As scoped in NEXT.yaml.
-  boundary: No MAX_EVENTS lifetime policy, payload-retention policy or downstream dispatch; no salience/ranking/threshold, scan row/hash/replay or population-artifact change; no LLM call, venue request or trading/Risk/Execution change; Attention overall remains IMPLEMENTED.
+  boundary: Evidence audit only; no code. Do not delete identities merely to regain capacity. No payload-retention implementation or downstream dispatch; no salience/ranking/threshold, scan row/hash/replay or population-artifact change; no LLM call, venue request or trading/Risk/Execution change; Attention overall remains IMPLEMENTED.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
