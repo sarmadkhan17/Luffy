@@ -639,17 +639,77 @@ completed_forced_liquidation_protocol_design:
       assignment: SHADOW_ONLY; retain existing Attention selected/unselected status as provenance, not as authorization or a changed assignment rule.
       sampling: Before any collection, freeze an explicit finite case manifest with IDs, exact windows, inclusion/exclusion reasons and selection provenance; sample size is currently UNKNOWN and no cases are enrolled by this design. No adaptive enrollment after viewing liquidation evidence.
       effects: No trading, ranking, salience, Risk, Execution, research-decision/admission or automated memory-policy effect; no comparative Attention-optimality claim.
-  remaining_prerequisite: Implement and deterministically test a forward liquidation recorder plus independently replayable coverage receipt; deployment/collection and a prospective case manifest are separate from this design freeze.
+  remaining_prerequisite: Recorder/coverage implementation is TESTED at 4c63e82; qualify clock-health receipts before completing the production coverage policy. Deployment/collection and a prospective case manifest remain separate.
   source_semantics_decision: No remaining source ambiguity blocks these narrow order-side snapshot predicates; latest/largest, position-side mapping and total-event semantics remain deliberately unresolved and unused.
-  maturity_boundary: Design complete only; recorder, coverage, resource compliance, collected cases and usefulness are NOT_ESTABLISHED. Attention maturity and all parked research boundaries are unchanged.
+  maturity_boundary: Recorder implementation is TESTED only; production coverage, resource compliance, collected cases and usefulness are NOT_ESTABLISHED. Attention maturity and all parked research boundaries are unchanged.
+
+completed_forced_liquidation_recorder_coverage:
+  id: SDD-FORCED-LIQUIDATION-RECORDER-COVERAGE-V1
+  state: TESTED
+  commit: 4c63e82d511d9acd9228d7481e51366df4e9c527
+  status: RECORDER_TESTED_PRODUCTION_COVERAGE_BLOCKED
+  evidence:
+    - trader/observability/forced_liquidation.py
+    - trader/observability/forced_liquidation_store.py
+    - trader/observability/forced_liquidation_recorder.py
+    - trader/observability/forced_liquidation_coverage.py
+    - tests/test_forced_liquidation_recorder.py
+  proven_facts:
+    - Off-path standalone forward recorder uses production public Binance USD-M raw !forceOrder@arr; no credentials, account or order API.
+    - Strict forceOrder and integer st=1 admission; st=2 excluded; exact production USD-M InstrumentId mapping.
+    - Raw bytes/hash and durable sequence retained in append-only SQLite; deterministic replay.
+    - Local receipt-time half-open window membership; BUY/SELL/BOTH/empty side-presence diagnostics only.
+    - No liquidation counts, notional, intensity, causal or long/short-position claims.
+    - Registration receipt is verified prospectively; caller cannot supply production seal authority.
+    - Archived authority/policy state makes historical replay independent of future globals; clock-health evidence is part of seal provenance.
+    - Fixture policies cannot authorize production PASS; missing, gapped or invalid coverage fails closed.
+    - No Attention, Risk, Execution, Orchestrator or trading-loop integration.
+  validation:
+    command: /home/sarmad/trader/venv/bin/python -m pytest -q tests/test_forced_liquidation_recorder.py
+    result: 96 passed in 3.75s; independently rerun on 2026-09-24
+  production_boundary:
+    PRODUCTION_POLICY: null
+    PRODUCTION_CLOCK_HEALTH_POLICY: null
+    blockers: [COVERAGE_POLICY_PREREQUISITE_REQUIRED, CLOCK_HEALTH_POLICY_PREREQUISITE_REQUIRED]
+    meaning: Python None in both slots; production windows cannot PASS. Not ACTIVE or operationally assessable.
+    additional_gap: Production seal currently supplies no clock evidence; filling policy globals alone would not establish PASS.
+
+forced_liquidation_prerequisite_audit:
+  audited_at: '2026-09-24'
+  audit_head: 4c63e82d511d9acd9228d7481e51366df4e9c527
+  dependency_order: Define transport evidence semantics now; qualify durable absolute-UTC clock receipts first; complete production coverage policy only after clock and transport bounds are justified.
+  rationale: Coverage and clock health are independent necessary gates; coverage status precedence is not dependency order. Clock receipts need no liquidation stream and can establish the missing UTC basis before coverage-policy completion.
+  coverage_policy:
+    verified_documentation: 'https://developers.binance.com/en/docs/products/derivatives-trading-usds-futures/websocket-market-streams/Connect'
+    documented_facts: Binance specifies 24-hour sessions, server ping every 3 minutes and disconnection without a pong within 10 minutes; these are transport rules, not admissible coverage-gap bounds.
+    inspected_runtime: /home/sarmad/trader/venv/bin/python; Python 3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]; websockets 17.0.1; installed defaults verified by signature/source inspection, not by a production connection.
+    defaults: Client ping interval/timeout 20s/20s; open/close timeout 10s/10s; max_size 1048576 bytes; max_queue 16 frames; write_limit 32768 bytes; compression deflate; proxy auto-detection enabled.
+    reconnect: Library retry backoff starts uniformly in [0,5) seconds, then 3.1 seconds multiplied by 1.618 up to 90 seconds for retryable connection failures. Recorder sessions are sequential; no proactive overlapping rollover is implemented.
+    durable_evidence: Session settings/dependency versions, ping payload before send, received pong payload/match flag, server ping, handshake and failure records are archived. Server-pong transmission has no separate durable receipt; a ping intent alone proves no round trip.
+    freezable_semantics: Require same-session matched ping/pong evidence, boundary brackets, verified interval union, durable complete logs and seal; no socket-open or reconnect-success substitute. Replay can merge overlapping fixture intervals, but does not establish production rollover overlap.
+    failure_behavior: Synchronous persistence failure stops recording; frame-too-large records DROP; reader errors and missing end evidence fail closed. No REST gap backfill; no proof of upstream publisher completeness.
+    unresolved_bounds: Maximum permitted liveness gap, planned rollover overlap and clock-offset-drift tolerance are UNKNOWN; defaults, venue disconnect limits and fixture values cannot justify them.
+    smallest_transport_evidence_prerequisite: Design a bounded diagnostic measurement protocol for matched-pong intervals/RTT, scheduling and durable-write delay, reconnect/handshake latency and rollover continuity; declare selection, duration and failure reporting before a separately authorized run. Observed maxima alone are not guaranteed bounds.
+    freeze_boundary: Facts and predicates above are recordable now; production numeric policy and pre-window archived documentation/hash remain unfrozen. No diagnostic or liquidation collection is queued here.
+  clock_health:
+    inspection: Read-only timedatectl show/timesync-status/show-timesync, service status, VMware timesync status, service journal and adjtimex(modes=0); no clock or service changes.
+    available: systemd 255.4-1ubuntu8.17; systemd-timesyncd active; NTP=yes and NTPSynchronized=yes; ntp.ubuntu.com; chrony/ntp/ntpsec inactive and chronyc/ntpq/adjtimex CLIs unavailable.
+    snapshot_only: Reported root distance 3.692ms, offset +8.910ms, delay 127.392ms, jitter 20.607ms and polling 2048s. RootDistanceMaxUSec=5s is daemon configuration, not a window uncertainty bound.
+    kernel_snapshot_only: Read-only adjtimex returned TIME_OK (0), status 8193, maxerror 974500us, esterror 0; these mutable instantaneous estimates are not a durable window certificate.
+    virtualization: VMware with vmtoolsd; periodic VMware timesync reports Disabled; clocksource tsc. No hypervisor UTC-health receipt or resume/step uncertainty bound established.
+    existing_receipt: NOT_ESTABLISHED; repository search finds a ClockHealthEvidence envelope and fixture receipts, but no production clock-health producer/verifier. Daemon journal startup/contact events do not cover registered windows.
+    rejected_shortcuts: Signed recvWindow, successful HTTPS, stable monotonic/UTC offset, NTP synchronized flag or zero esterror alone cannot prove absolute UTC accuracy.
+    smallest_prerequisite: Qualify existing timesyncd plus kernel telemetry as a candidate source; define an immutable receipt and independent verifier deriving conservative UTC uncertainty over a declared interval, or return source-insufficient with exact missing evidence.
+    receipt_requirements: Bind raw source measurements/hash, source trust/provenance and versions, host/boot identity, UTC/monotonic/boottime samples, sampling uncertainty, freshness/holdover derivation and interval endpoints; reject missing evidence, unsync, steps, suspend/resume, reboot, tampering and unsupported extrapolation.
+    boundary: No trustworthy whole-window source is established by this audit. Absolute uncertainty and relative offset-drift tolerance need justified source semantics and observations; no numeric tolerance is invented.
 
 current_active_work:
-  id: SDD-FORCED-LIQUIDATION-RECORDER-COVERAGE-V1
-  type: IMPLEMENTATION_PREREQUISITE
+  id: SDD-CLOCK-HEALTH-RECEIPT-V1
+  type: DESIGN_PREREQUISITE
   priority: ACTIVE
   status: QUEUED_NOT_STARTED
-  objective: Implement the smallest off-path forward liquidation recorder and coverage receipt for the frozen forced-liquidation-participation.v1 design.
-  boundary: Queue only in this session; no code, collection, deployment, Attention salience or decision effects authorized by this control-plane update.
+  objective: Qualify the existing host clock source and design the smallest durable, independently verifiable UTC-uncertainty receipt, or identify the exact missing source evidence.
+  boundary: Queue only; no implementation, deployment, prospective collection, clock/service changes or production policy activation.
 
 parked_scheme_d_work:
   id: M3.2-SCHEME-D-V4
