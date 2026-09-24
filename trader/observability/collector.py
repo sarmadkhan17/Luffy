@@ -23,8 +23,11 @@ from . import collector_health as H
 
 
 class Collector:
-    def __init__(self, directory, raw=None, *, start=True, clock=None):
+    def __init__(self, directory, raw=None, *, start=True, clock=None,
+                 positioning_path=None):
         self.cfg = settings(raw)
+        # Read in the disposable child only; never on the producer.
+        self.positioning_path = str(positioning_path) if positioning_path else None
         self.path = Path(directory) / "attention.db"
         self.health_path = Path(directory) / "attention_health.json"
         self.queue = queue.Queue(maxsize=self.cfg["queue_size"])
@@ -230,8 +233,10 @@ class Collector:
         self._stop.set()  # never join/wait on the trading or exit thread
 
     def _run(self, event):
-        job = json.dumps({"path": str(self.path), "settings": self.cfg, "event": event},
-                         allow_nan=False, separators=(",", ":"))
+        job = {"path": str(self.path), "settings": self.cfg, "event": event}
+        if self.positioning_path:
+            job["positioning_path"] = self.positioning_path
+        job = json.dumps(job, allow_nan=False, separators=(",", ":"))
         result = subprocess.run([sys.executable, "-m", "trader.observability.worker"],
                                 input=job, text=True, capture_output=True,
                                 cwd=str(Path(__file__).resolve().parents[2]),

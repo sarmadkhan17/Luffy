@@ -131,7 +131,12 @@ class Kernel:
         if (cfg.get("attention") or {}).get("enabled") is True:
             try:
                 from .observability.collector import Collector
-                self._attention = Collector(ROOT / "data", cfg["attention"])
+                # Positioning is read (worker child, read-only) from the store
+                # the derivatives recorder writes; no recorder change.
+                derivs = (ROOT / "data" / "derivs.db"
+                          if (cfg.get("derivatives") or {}).get("enabled", True) else None)
+                self._attention = Collector(ROOT / "data", cfg["attention"],
+                                            positioning_path=derivs)
             except Exception as exc:
                 self._attention_error = type(exc).__name__
                 log.warning("attention startup failed: %s", self._attention_error)

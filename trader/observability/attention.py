@@ -166,7 +166,9 @@ def evaluate_snapshot(event, world_model: WorldModel | None = None):
                             "Availability before first capture is unknown.",
                             "First-seen and revision lineage extend only over retained snapshots.",
                             "Participation inputs are not captured in this milestone.",
-                            "No hypotheses, edge claims or learned ranking are produced."]}
+                            "No hypotheses, edge claims or learned ranking are produced."]
+            + (["Positioning values are as stored at capture read time; no claim they were stored at as_of."]
+               if "positioning" in event["input"] else [])}
 
 
 def digest(value):
@@ -186,6 +188,7 @@ def code_manifest():
              "observability/collector.py", "observability/worker.py",
              "observability/declared.py",
              "cognition/attention.py", "cognition/contracts.py",
+             "observability/positioning.py",
              "observability/diagnostics.py", "strategy/library.py", "strategy/compile.py",
              "engine/orchestrator.py", "kernel.py")
     return {name: hashlib.sha256((base / name).read_bytes()).hexdigest() for name in names}

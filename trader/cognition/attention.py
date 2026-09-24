@@ -32,6 +32,16 @@ availability <= as_of, carry a finite numeric value and unit `z_score`.
 Anything else is recorded with an explicit status/reason and contributes
 nothing. Without a model the output is unchanged.
 
+With optional `positioning` input (Dataset.positioning not None), each
+eligible asset gets one `positioning` observation per series in
+POSITIONING_SERIES: anchor = latest sample with ts <= as_of, reference = the
+POSITIONING_REFERENCE samples before it, z = (anchor - mean) / stdev, signed.
+|z| of the usable series competes as `positioning_extreme` (max over series).
+A series is unusable, with an explicit status and None, when it is missing,
+invalid in the input, short of history, breaks its continuity rule, has a
+stale anchor, or has zero/non-finite variance. Without the input the output is
+unchanged.
+
 Salience is direction-independent: an asset falling hard and one rising hard
 score alike. Ranking is (-salience at 12 significant digits, symbol) so ties are
 stable. An asset is selected if salience >= `min_salience`, it has no open
@@ -53,7 +63,7 @@ import sys
 from dataclasses import dataclass
 from hashlib import sha256
 
-from trader.cognition.contracts import Observation, rnd, stable_id
+from trader.cognition.contracts import POSITIONING_SERIES, Observation, rnd, stable_id
 
 
 @dataclass(frozen=True)
@@ -94,6 +104,18 @@ _FLOAT_BOUNDS = {                      # name: (low, high, low is exclusive)
     "persist_z": (0.0, 1e6, True), "participation_change": (0.0, 1e6, False)}
 
 COMPONENTS = ("volume_anomaly", "volatility_transition", "relative_return_divergence")
+
+
+POSITIONING_COMPONENT = "positioning_extreme"
+# Package-owned implementation policy (SDD-STAGE-3-ATTENTION-POSITIONING-
+# EXTREMES-V1), not SDD-derived constants. Continuity and freshness follow the
+# kernel derivatives recorder: 15-minute cadence; ls_ratio rows are 15m
+# periods stamped at period END; funding rows are settlement times.
+POSITIONING_REFERENCE = 20
+_MIN_MS = 60_000
+LS_RATIO_STEP_MS = 900_000
+LS_RATIO_MAX_AGE_MS = 2_700_000           # recorder interval + period + slack
+FUNDING_AGE_SLACK_MS = 1_800_000          # two recorder intervals past settlement
 
 
 def _finite(x):
@@ -269,6 +291,14 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
             world = _world_volume(world_model, w, sym, ds.timeframe, anchor_close, as_of)
             if world["status"] == "ok":
                 avail[WORLD_COMPONENT] = abs(world["value"])
+        positioning = None
+        if ds.positioning is not None:
+            positioning = {series: _positioning(ds, sym, series, as_of, add)
+                           for series in POSITIONING_SERIES}
+            ids.extend(o.obs_id for o in positioning.values())
+            usable = [abs(o.value) for o in positioning.values() if o.status == "ok"]
+            if usable:
+                avail[POSITIONING_COMPONENT] = max(usable)
         salience = max(avail.values()) if avail else None
         dominant = min(avail, key=lambda k: (-avail[k], k)) if avail else None
         rows[sym] = {"symbol": sym, "status": "ok", "eligible": salience is not None,
@@ -280,6 +310,10 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
             rows[sym]["components"][WORLD_COMPONENT] = (
                 rnd(world["value"]) if world["status"] == "ok" else None)
             rows[sym]["world_model"] = dict(world, value=rnd(world["value"]))
+        if positioning is not None:
+            rows[sym]["components"][POSITIONING_COMPONENT] = rnd(avail.get(POSITIONING_COMPONENT))
+            rows[sym]["positioning"] = {k: {"status": o.status, "z": o.value, "obs_id": o.obs_id}
+                                        for k, o in positioning.items()}
 
     ranked = sorted((s for s in cohort if rows[s]["eligible"]),
                     key=lambda s: (-rows[s]["salience"], s))
@@ -345,3 +379,49 @@ def _participation(ds, sym, as_of, cfg, add):
             max(last.available_ms, prev.available_ms) if prev else last.available_ms,
             source, series=f"{kind}|{source}"))
     return out
+
+
+def _positioning(ds, sym, series, as_of, add):
+    """One observation for (sym, series); value is the signed z or None."""
+    def out(status, value=None, detail=None, event_ms=None):
+        return add("positioning", sym, status, value,
+                   dict(detail or {}, series=series, reference=POSITIONING_REFERENCE),
+                   event_ms, None, "positioning", series=series)
+
+    reason = ds.positioning_invalid.get((sym, series))
+    if reason is not None:
+        return out("invalid", detail={"reason": reason})
+    pts = [p for p in ds.positioning.get(sym, {}).get(series, ()) if p.ts <= as_of]
+    if not pts:
+        return out("missing")
+    need = POSITIONING_REFERENCE + 1
+    if len(pts) < need:
+        return out("insufficient_history", detail={"samples": len(pts), "need": need},
+                   event_ms=pts[-1].ts)
+    pts = pts[-need:]
+    anchor, ref = pts[-1], pts[:-1]
+    steps = [b.ts - a.ts for a, b in zip(pts, pts[1:])]
+    if series == "ls_ratio":
+        step, max_age = LS_RATIO_STEP_MS, LS_RATIO_MAX_AGE_MS
+        continuous = all(d == step for d in steps)
+    else:
+        minutes = [(d + _MIN_MS // 2) // _MIN_MS for d in steps]
+        step = minutes[0] * _MIN_MS
+        max_age = step + FUNDING_AGE_SLACK_MS
+        continuous = minutes[0] > 0 and all(m == minutes[0] for m in minutes)
+    detail = {"anchor_ts": anchor.ts, "anchor_value": rnd(anchor.value),
+              "reference_first_ts": ref[0].ts, "step_ms": step, "max_age_ms": max_age,
+              "age_ms": as_of - anchor.ts}
+    if not continuous:
+        return out("gap", detail=detail, event_ms=anchor.ts)
+    if as_of - anchor.ts > max_age:
+        return out("stale", detail=detail, event_ms=anchor.ts)
+    values = [p.value for p in ref]
+    mean, sd = statistics.fmean(values), statistics.stdev(values)
+    detail.update(mean=rnd(mean) if math.isfinite(mean) else None,
+                  stdev=rnd(sd) if math.isfinite(sd) else None)
+    if not (math.isfinite(mean) and math.isfinite(sd)) or sd <= 0:
+        return out("zero_variance" if sd == 0 else "degenerate", detail=detail,
+                   event_ms=anchor.ts)
+    z = _finite((anchor.value - mean) / sd)
+    return out("ok" if z is not None else "degenerate", z, detail, anchor.ts)

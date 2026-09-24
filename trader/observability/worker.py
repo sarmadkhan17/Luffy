@@ -13,7 +13,11 @@ def main():
     try:
         job = json.load(sys.stdin)
         store = Store(job["path"], job["settings"])
-        proof=store.write(job["event"])
+        event = job["event"]
+        if job.get("positioning_path") and event.get("kind") == "scan":
+            from .positioning import attach
+            attach(event, job["positioning_path"])
+        proof=store.write(event)
         print(json.dumps({"ok": True,"proof":proof,"code_hash":code_hash()}))
         return 0
     except Exception as exc:

@@ -112,10 +112,16 @@ def adapt(source, observed_ms):
     for m in scan["membership"]:
         if not is_timestamp(m.get("available_ms")) or m["available_ms"] > scan["as_of_ms"]:
             raise ValueError("unavailable_membership")
-    ds = load_input({"schema": INPUT_SCHEMA, "timeframe": "4h", "decision_times": [scan["as_of_ms"]],
-                     "candles": candles, "membership": scan["membership"]})
-    if ds.rejected:
-        raise ValueError("malformed_inputs:" + ",".join(sorted({r["reason"] for r in ds.rejected})))
+    raw = {"schema": INPUT_SCHEMA, "timeframe": "4h", "decision_times": [scan["as_of_ms"]],
+           "candles": candles, "membership": scan["membership"]}
+    if "positioning_input" in scan:
+        # Replay the captured positioning exactly; never re-query derivs.db.
+        # Its rejected records already fail closed per series in the rows.
+        raw["positioning"] = scan["positioning_input"]
+    ds = load_input(raw)
+    if any(r["section"] != "positioning" for r in ds.rejected):
+        raise ValueError("malformed_inputs:" + ",".join(sorted({r["reason"] for r in ds.rejected
+                                                                 if r["section"] != "positioning"})))
     bars = []
     for vid, (symbol, opened) in sorted(versions.items()):
         c = ds.bar_asof(symbol, opened, scan["as_of_ms"])
@@ -430,6 +436,9 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
                     skip("active_capacity"); continue
                 if db.execute("SELECT COUNT(*) FROM cases").fetchone()[0] >= MAX_CASES:
                     skip("retention_capacity"); continue
+                if snapshot.result["rows"][symbol]["dominant"] not in I.FAMILIES:
+                    # e.g. positioning_extreme: no investigation template yet.
+                    skip("no_investigation_family"); continue
                 try:
                     inv = I.open_investigation(snapshot.state(symbol), snapshot.result["rows"][symbol]["dominant"], snapshot.bars, now)
                 except ValueError as exc:

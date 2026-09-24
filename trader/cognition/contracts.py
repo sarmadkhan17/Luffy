@@ -16,6 +16,14 @@ counts. Same identity and same `available_ms` with different `to_ms` raises.
 Participation series are (symbol, kind, source); same series, event_ms and
 available_ms with a different value raises.
 
+Positioning (optional key `positioning`) is a list of
+{symbol, series, ts, value} derivatives samples captured from the recorder's
+store, series in POSITIONING_SERIES. `ts` is the sample's own timestamp
+(funding settlement time; ratio period END). An absent key yields
+`Dataset.positioning is None` and changes nothing. A rejected record marks its
+(symbol, series) unusable in `Dataset.positioning_invalid` instead of raising;
+an identical repeat is rejected as `duplicate` without invalidating the series.
+
 Missing is `None`, never 0. Invalid records are rejected with a reason and
 kept in `Dataset.rejected`; structural errors raise ValueError.
 """
@@ -76,6 +84,17 @@ class Participation:
     source: str
 
 
+POSITIONING_SERIES = ("funding", "ls_ratio")
+
+
+@dataclass(frozen=True)
+class PositioningPoint:
+    symbol: str
+    series: str
+    ts: int
+    value: float
+
+
 @dataclass
 class Dataset:
     timeframe: str
@@ -85,6 +104,8 @@ class Dataset:
     participation: dict      # symbol -> [Participation sorted by event_ms]
     decision_times: list
     rejected: list = field(default_factory=list)
+    positioning: dict | None = None          # symbol -> series -> [PositioningPoint by ts]
+    positioning_invalid: dict = field(default_factory=dict)   # (symbol, series) -> reason
 
     def bar_asof(self, symbol: str, open_ms: int, as_of: int) -> Candle | None:
         """Latest revision of one closed bar known at `as_of`, or None."""
@@ -278,5 +299,52 @@ def load_input(raw: dict) -> Dataset:
     for lst in participation.values():
         lst.sort(key=lambda r: (r.event_ms, r.available_ms, r.kind, r.source))
 
+    positioning, invalid = _positioning(raw, reject)
     return Dataset(tf, tf_ms, candles, membership, participation,
-                   sorted(set(decisions)), rejected)
+                   sorted(set(decisions)), rejected, positioning, invalid)
+
+
+def _positioning(raw, reject):
+    if "positioning" not in raw:
+        return None, {}
+    records = raw["positioning"]
+    if not isinstance(records, list):
+        raise ValueError("positioning must be a list")
+    out: dict = {}
+    invalid: dict = {}
+    seen: dict = {}
+
+    def bad(i, reason, sym=None, series=None):
+        reject("positioning", i, reason)
+        if isinstance(sym, str) and series in POSITIONING_SERIES:
+            invalid.setdefault((sym, series), reason)
+
+    for i, p in enumerate(records):
+        sym = p.get("symbol") if isinstance(p, dict) else None
+        series = p.get("series") if isinstance(p, dict) else None
+        if not isinstance(p, dict) or any(k not in p for k in ("symbol", "series", "ts", "value")):
+            bad(i, "missing_field", sym, series)
+            continue
+        if not isinstance(sym, str) or series not in POSITIONING_SERIES:
+            bad(i, "unknown_series")
+            continue
+        ts, val = p["ts"], p["value"]
+        if not _is_ts(ts):
+            bad(i, "bad_timestamp", sym, series)
+            continue
+        if not _is_num(val):
+            bad(i, "non_finite", sym, series)
+            continue
+        rec = PositioningPoint(sym, series, ts, float(val))
+        clash = seen.get((sym, series, ts))
+        if clash is None:
+            seen[(sym, series, ts)] = rec
+            out.setdefault(sym, {}).setdefault(series, []).append(rec)
+        elif clash == rec:
+            reject("positioning", i, "duplicate")
+        else:
+            bad(i, "conflicting_revision", sym, series)
+    for by_series in out.values():
+        for lst in by_series.values():
+            lst.sort(key=lambda r: r.ts)
+    return out, invalid

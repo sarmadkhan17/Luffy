@@ -26,7 +26,8 @@ def code_hash():
              'core/instrument_registry.py', 'observability/registry_selector.py',
              'observability/selection_persistence.py', 'core/journal.py',
              'observability/store.py', 'observability/worker.py',
-             'cognition/attention.py', 'cognition/contracts.py')
+             'cognition/attention.py', 'cognition/contracts.py',
+             'observability/positioning.py')
     return hashlib.sha256(b''.join(name.encode()+b'\0'+(root/name).read_bytes() for name in names)).hexdigest()
 
 

@@ -310,6 +310,10 @@ class Store:
                                membership=event["input"]["membership"],
                                timeframe=event["input"]["timeframe"],
                                prior_availability="unknown", persisted_at_ms=now_ms)
+                if "positioning" in event["input"]:
+                    payload["positioning_input"] = event["input"]["positioning"]
+                if "positioning_capture" in event:
+                    payload["positioning_capture"] = event["positioning_capture"]
                 self.db.execute("UPDATE scans SET payload=? WHERE scan_id=?",
                                 (encode(payload), scan_id))
             else:
