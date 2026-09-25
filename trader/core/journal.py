@@ -277,6 +277,25 @@ CREATE TABLE IF NOT EXISTS research_results (
     canonical_json TEXT NOT NULL,
     recorded_at_ms INTEGER NOT NULL
 );
+
+-- research-run.v1 (cognition/research_run.py): one audit receipt per
+-- explicit offline run of the strategy-decay chain. The canonical JSON is
+-- authoritative; telemetry_json (digest telemetry_sha256) is MEASURED
+-- telemetry kept outside the receipt hash and duplicate comparison. Append-only: never updated or
+-- deleted.
+CREATE TABLE IF NOT EXISTS research_runs (
+    run_id TEXT PRIMARY KEY,         -- sha256 of the explicit run inputs
+    schema TEXT NOT NULL,
+    run_kind TEXT NOT NULL,
+    runner_id TEXT NOT NULL,
+    run_key TEXT NOT NULL,
+    run_recorded_at_ms INTEGER NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    telemetry_sha256 TEXT NOT NULL,  -- sha256 of telemetry_json
+    telemetry_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL
+);
 """
 
 
@@ -793,6 +812,43 @@ class Journal:
                               "ORDER BY rowid")
         return self.query("SELECT * FROM research_results "
                           "WHERE evidence_id=? ORDER BY rowid", (evidence_id,))
+
+    # -- research runs: primitives only; the contract is
+    # cognition/research_run.py -------------------------------------------
+    _RUN_COLUMNS = ("run_id", "schema", "run_kind", "runner_id", "run_key",
+                    "run_recorded_at_ms", "canonical_sha256",
+                    "canonical_json")
+
+    def record_research_run(self, row: dict, *, recorded_at_ms: int) -> str:
+        """Insert one research-run receipt. "inserted" on a write;
+        "duplicate" when a row with the same run_id and identical receipt
+        columns exists (telemetry_sha256, telemetry_json and recorded_at_ms
+        are not compared);
+        "conflict" when the run_id exists with another receipt. Nothing is
+        written unless "inserted"."""
+        values = tuple(row[k] for k in self._RUN_COLUMNS)
+        cols = ",".join(self._RUN_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(f"SELECT {cols} FROM research_runs "
+                            "WHERE run_id=?", (row["run_id"],)).fetchall()
+            if old:
+                return ("duplicate" if tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_runs({cols},telemetry_sha256,"
+                      f"telemetry_json,recorded_at_ms) VALUES "
+                      f"({','.join('?' * (len(values) + 3))})",
+                      values + (row["telemetry_sha256"],
+                                row["telemetry_json"], recorded_at_ms))
+        return "inserted"
+
+    def research_runs(self, run_id: str | None = None) -> list[dict]:
+        """Stored research-run rows in insertion order."""
+        if run_id is None:
+            return self.query("SELECT * FROM research_runs ORDER BY rowid")
+        return self.query("SELECT * FROM research_runs WHERE run_id=? "
+                          "ORDER BY rowid", (run_id,))
 
     # -- strategy population ------------------------------------------------
     def upsert_strategy(self, st) -> None:

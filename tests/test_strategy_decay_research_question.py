@@ -441,10 +441,11 @@ def test_nothing_in_the_live_path_calls_it():
     callers = [p for p in root.rglob("*.py")
                # research_plan.py / research_evidence.py /
                # research_result.py are the offline routing / collection /
-               # result consumers; their own tests guard that nothing live
-               # calls them
+               # result consumers and research_run.py the offline runner;
+               # their own tests guard that nothing live calls them
                if p.name not in ("research_question.py", "research_plan.py",
-                                 "research_evidence.py", "research_result.py")
+                                 "research_evidence.py", "research_result.py",
+                                 "research_run.py")
                and pat.search(p.read_text(errors="ignore"))]
     assert callers == []
 
