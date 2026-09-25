@@ -655,6 +655,7 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
         if pop and snapshot is None and pop.declaration['start_ms'] <= now < pop.declaration['discovery_cut_ms']:
             pop.emit('gap:invocation:'+str(now), 'gap', {'reason': detail['reason'], 'observed_ms': now})
         if (detail["memory"]["refused"] or detail["memory"]["unassessable"]["refused"]
+                or detail["memory"]["assessed"]["refused"]
                 or detail["typed_outcomes"]["refused"]
                 or detail["typed_outcomes"]["retry"]):
             detail.update(status="degraded", reason="memory_source_refused")

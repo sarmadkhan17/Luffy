@@ -243,3 +243,134 @@ def retrieve_unassessable(inv, records):
 
 def unassessable_from_dict(d):
     return UnassessableMemory(**dict(d, reason_codes=tuple(d['reason_codes'])))
+
+
+# SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1. Descriptive-result memory: a
+# terminal assessed registration-evidence result (positioning_extreme,
+# correlation_change) kept in its exact original vocabulary. Context only; it
+# carries no usefulness, success, prediction, edge, direction, score or count.
+ASSESSED_SCHEMA = 'investigation-assessed-memory.v1'
+ASSESSED_TYPE = 'assessed_description'
+ASSESSED_CATALOGS = {I.POSITIONING_FAMILY: I.POSITIONING_CATALOG_ID, I.CORRELATION_FAMILY: I.CORRELATION_CATALOG_ID}
+
+
+@dataclass(frozen=True)
+class AssessedMemory:
+    case_id: str
+    source_id: str
+    source_event_id: str
+    source_evidence_id: str
+    source_episode_id: str
+    source_scan_id: str
+    source_state_id: str
+    source_schema: str
+    catalog_id: str
+    config_id: str
+    family: str
+    symbol: str
+    registered_ms: int
+    resolved_ms: int
+    available_ms: int
+    recorded_ms: int
+    status: str
+    result: str
+    assessment: tuple[tuple[str, str], ...]
+    reason: str
+    reason_codes: tuple[str, ...]
+    source_evidence_ids: tuple[str, ...]
+    source_input_versions: tuple[str, ...]
+    registration_evidence: tuple[dict, ...]
+    evidence: dict
+    outcome_type: str = ASSESSED_TYPE
+    schema_version: str = ASSESSED_SCHEMA
+
+
+def verified_assessed(inv, update, bars, recorded_ms):
+    """Verify a terminal assessed description against its frozen registration and replay."""
+    if (inv.schema_version != I.SCHEMA or ASSESSED_CATALOGS.get(inv.primary_trigger) != inv.measurement.catalog_id
+            or inv.measurement.family != inv.primary_trigger):
+        raise ValueError('assessed_protocol_mismatch')
+    e = update.evidence
+    if update.investigation_id != inv.investigation_id or e.investigation_id != inv.investigation_id:
+        raise ValueError('assessed_case_mismatch')
+    if e.status != 'assessed':
+        raise ValueError('assessed_requires_assessed_result')
+    if not inv.registered_ms <= e.as_of_ms <= e.observed_ms <= recorded_ms or update.observed_ms != e.observed_ms:
+        raise ValueError('assessed_invalid_chronology')
+    if stable_id('state', {k: getattr(inv.state, k) for k in _STATE_FIELDS}) != inv.state.state_id:
+        raise ValueError('assessed_state_identity_mismatch')
+    baseline = tuple(b for b in bars if b.version_id in inv.state.input_versions)
+    if set(b.version_id for b in baseline) != set(inv.state.input_versions):
+        raise ValueError('assessed_missing_baseline_versions')
+    try:
+        rebuilt = I.open_investigation(inv.state, inv.primary_trigger, baseline, inv.registered_ms)
+    except ValueError:
+        rebuilt = None
+    if rebuilt != inv:
+        raise ValueError('assessed_frozen_registration_mismatch')
+    try:
+        replayed = I.measure(inv, (), e.as_of_ms, e.observed_ms)
+    except ValueError:
+        replayed = None
+    if e.target_versions or replayed != e:
+        raise ValueError('assessed_terminal_replay_mismatch')
+    expected = I.advance(inv, e)
+    if (update.assessment != expected.assessment or update.next_action != expected.next_action
+            or update.reason_codes != expected.reason_codes or update.rationale != expected.rationale
+            or update.event_id != stable_id('update', inv.investigation_id, update.previous_event_id, e.evidence_id)):
+        raise ValueError('assessed_assessment_mismatch')
+    [result] = [name for name, status in update.assessment if status == 'compatible']
+    fields = dict(source_id=inv.investigation_id, source_event_id=update.event_id, source_evidence_id=e.evidence_id,
+                  source_episode_id=inv.episode_id, source_scan_id=inv.state.scan_id,
+                  source_state_id=inv.state.state_id, source_schema=inv.schema_version,
+                  catalog_id=inv.measurement.catalog_id, config_id=inv.state.config_id,
+                  family=inv.primary_trigger, symbol=inv.state.symbol, registered_ms=inv.registered_ms,
+                  resolved_ms=e.observed_ms, available_ms=max(e.available_ms or 0, e.as_of_ms, e.observed_ms),
+                  recorded_ms=recorded_ms, status=e.status, result=result, assessment=update.assessment,
+                  reason=e.reason, reason_codes=update.reason_codes, source_evidence_ids=inv.state.evidence_ids,
+                  source_input_versions=inv.state.input_versions,
+                  registration_evidence=tuple(json.loads(I.encode(asdict(d))) for d in inv.state.dimensions),
+                  evidence=json.loads(I.encode(asdict(e))))
+    return AssessedMemory(case_id=stable_id('assessed_memory', fields), **fields)
+
+
+def retrieve_assessed(inv, records):
+    """Exact-key recall frozen at registration. Context only: no counter_test,
+    no salience, rank, allocation or registration effect."""
+    included, audit = [], []
+    for rec in sorted(records, key=lambda r: (-r.available_ms, r.case_id)):
+        reason = 'compatible_prior_assessed_description'
+        if rec.source_id == inv.investigation_id:
+            reason = 'self_excluded'
+        elif max(rec.resolved_ms, rec.available_ms, rec.recorded_ms) >= inv.registered_ms:
+            reason = 'not_known_before_registration'
+        elif (rec.schema_version != ASSESSED_SCHEMA or rec.outcome_type != ASSESSED_TYPE
+              or rec.source_schema != inv.schema_version):
+            reason = 'incompatible_version_or_outcome_type'
+        elif rec.family != inv.primary_trigger:
+            reason = 'incompatible_family'
+        elif rec.catalog_id != inv.measurement.catalog_id or rec.config_id != inv.state.config_id:
+            reason = 'incompatible_protocol_or_config'
+        elif rec.symbol != inv.state.symbol:
+            reason = 'incompatible_symbol'
+        elif len(included) >= MAX_RETRIEVED:
+            reason = 'retrieval_capacity'
+        else:
+            included.append(rec)
+        audit.append({'case_id': rec.case_id, 'reason': reason})
+    notes = [{'case_id': r.case_id, 'source_id': r.source_id, 'kind': 'prior_assessed_description',
+              'family': r.family, 'catalog_id': r.catalog_id, 'config_id': r.config_id, 'symbol': r.symbol,
+              'result': r.result, 'reason_codes': list(r.reason_codes), 'authority': 'context_only',
+              'text': f'An earlier {r.family} case on {r.symbol} under the same protocol and config '
+                      f'was described as {r.result} from its own registration-time evidence.'} for r in included]
+    return dict(schema_version=ASSESSED_SCHEMA, records=[asdict(r) for r in included], audit=audit, notes=notes,
+                limitation='A prior description of different registration-time evidence is not evidence about '
+                           'this case and does not change registration, priority, measurement or later action.')
+
+
+def assessed_from_dict(d):
+    return AssessedMemory(**dict(d, assessment=tuple(tuple(a) for a in d['assessment']),
+                                 reason_codes=tuple(d['reason_codes']),
+                                 source_evidence_ids=tuple(d['source_evidence_ids']),
+                                 source_input_versions=tuple(d['source_input_versions']),
+                                 registration_evidence=tuple(d['registration_evidence'])))

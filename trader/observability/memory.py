@@ -17,12 +17,19 @@ def schema(db):
       CREATE TABLE IF NOT EXISTS memory_contexts(case_id TEXT PRIMARY KEY, payload TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS memory_reasoning(event_id TEXT PRIMARY KEY, case_id TEXT, payload TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS memory_unassessable(source_id TEXT PRIMARY KEY, payload TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS memory_assessed(source_id TEXT PRIMARY KEY, family TEXT NOT NULL,
+        catalog_id TEXT NOT NULL, config_id TEXT NOT NULL, symbol TEXT NOT NULL, known_ms INTEGER NOT NULL,
+        available_ms INTEGER NOT NULL, case_id TEXT NOT NULL, payload TEXT NOT NULL);
+      CREATE INDEX IF NOT EXISTS memory_assessed_key
+        ON memory_assessed(family, catalog_id, config_id, symbol, available_ms);
+      CREATE TABLE IF NOT EXISTS memory_assessed_refused(source_id TEXT PRIMARY KEY, reason TEXT NOT NULL);
     ''')
 
 
 def retain(db):
     for table, key in (('memory_cases','source_id'), ('memory_contexts','case_id'), ('memory_reasoning','case_id'),
-                       ('memory_unassessable','source_id')):
+                       ('memory_unassessable','source_id'), ('memory_assessed','source_id'),
+                       ('memory_assessed_refused','source_id')):
         db.execute(f'DELETE FROM {table} WHERE {key} NOT IN (SELECT id FROM cases)')
 
 
@@ -45,7 +52,8 @@ def ingest(db, now):
             continue
         db.execute('INSERT INTO memory_cases VALUES (?,?)',(iid,I.encode(asdict(case))))
         added += 1
-    return {'added': added, 'refused': refused, 'unassessable': ingest_unassessable(db, now)}
+    return {'added': added, 'refused': refused, 'unassessable': ingest_unassessable(db, now),
+            'assessed': ingest_assessed(db, now)}
 
 
 def _bars(db, iid):
@@ -74,6 +82,47 @@ def ingest_unassessable(db, now):
     return {'added': added, 'refused': refused}
 
 
+def ingest_assessed(db, now):
+    """Terminal assessed registration-evidence descriptions only; same bounds as
+    measured ingestion. The candidate set holds only unexamined terminal cases of a
+    supported family whose terminal update is assessed, so other terminal cases never
+    occupy the bound. A well-formed integer evidence.observed_ms still after now is a
+    clock state, not a source defect: it is deferred before the bound, never refused,
+    and becomes eligible once now reaches it. A missing or malformed observed_ms is not
+    deferred; it is verified and refused. Once temporally eligible, verification is
+    deterministic, so a refusal is a terminal disposition: recorded once with its
+    reason and never retried. The source_id keys make retry and restart idempotent."""
+    added, refused = 0, []
+    families = sorted(M.ASSESSED_CATALOGS)
+    rows = db.execute(
+        'WITH latest AS (SELECT id,payload,created_ms,'
+        '  (SELECT u.payload FROM updates u WHERE u.case_id=cases.id'
+        '   ORDER BY u.observed_ms DESC,u.rowid DESC LIMIT 1) AS up'
+        '  FROM cases WHERE terminal_ms IS NOT NULL'
+        f"  AND json_extract(payload,'$.primary_trigger') IN ({','.join('?' * len(families))})"
+        '  AND id NOT IN (SELECT source_id FROM memory_assessed)'
+        '  AND id NOT IN (SELECT source_id FROM memory_assessed_refused))'
+        " SELECT id,payload,up FROM latest WHERE json_extract(up,'$.evidence.status')='assessed'"
+        " AND NOT (json_type(up,'$.evidence.observed_ms') IS 'integer'"
+        "          AND json_extract(up,'$.evidence.observed_ms')>?)"
+        ' ORDER BY created_ms,id LIMIT 32', (*families, now)).fetchall()
+    for iid, payload, up in rows:
+        try:
+            update = I.update_from_dict(json.loads(up))
+            record = M.verified_assessed(I.investigation_from_dict(json.loads(payload)), update, _bars(db, iid), now)
+        except (ValueError, KeyError, TypeError) as exc:
+            reason = str(exc) if isinstance(exc, ValueError) else 'assessed_malformed_source'
+            refused.append({'investigation_id': iid, 'reason': reason})
+            db.execute('INSERT INTO memory_assessed_refused VALUES (?,?)',(iid,reason))
+            continue
+        db.execute('INSERT INTO memory_assessed VALUES (?,?,?,?,?,?,?,?,?)',(
+            iid, record.family, record.catalog_id, record.config_id, record.symbol,
+            max(record.resolved_ms, record.available_ms, record.recorded_ms), record.available_ms,
+            record.case_id, I.encode(asdict(record))))
+        added += 1
+    return {'added': added, 'refused': refused}
+
+
 def register(db, inv):
     cases = [M.case_from_dict(json.loads(p)) for (p,) in db.execute('SELECT payload FROM memory_cases ORDER BY source_id LIMIT 256')]
     context = M.retrieve(inv, cases)
@@ -88,6 +137,18 @@ def register(db, inv):
         closures = M.retrieve_unassessable(inv, records)
         closures['source_archives'] = [source_archive(db, r['source_id']) for r in closures['records']]
         context['unassessable_closures'] = closures
+    # Bounded on the exact match key and known-before-registration, in recall order,
+    # so unrelated records can never crowd a compatible one out of the bound.
+    described = [M.assessed_from_dict(json.loads(p)) for (p,) in db.execute(
+        'SELECT payload FROM memory_assessed WHERE family=? AND catalog_id=? AND config_id=? AND symbol=?'
+        ' AND known_ms<? AND source_id!=? ORDER BY available_ms DESC,case_id LIMIT 256',
+        (inv.primary_trigger, inv.measurement.catalog_id, inv.state.config_id, inv.state.symbol,
+         inv.registered_ms, inv.investigation_id))]
+    if described:
+        # Absent when no compatible record exists, so such contexts stay byte-identical.
+        prior = M.retrieve_assessed(inv, described)
+        prior['source_archives'] = [source_archive(db, r['source_id']) for r in prior['records']]
+        context['assessed_descriptions'] = prior
     context['context_id'] = M.stable_id('memory_context', {k:v for k,v in context.items() if k != 'context_id'})
     db.execute('INSERT INTO memory_contexts VALUES (?,?)',(inv.investigation_id,I.encode(context)))
     return context
@@ -136,6 +197,13 @@ def replay_unassessable(archive, recorded_ms):
     return M.verified_unassessable(inv,update,bars,recorded_ms)
 
 
+def replay_assessed(archive, recorded_ms):
+    inv=I.investigation_from_dict(archive['investigation'])
+    update=I.update_from_dict(archive['updates'][-1])
+    bars=[I.InputBar(b['version_id'],I.Candle(**b['candle'])) for b in archive['inputs']]
+    return M.verified_assessed(inv,update,bars,recorded_ms)
+
+
 def export_case(db, iid):
     body={'schema_version':'investigation-archive.v1', 'source':source_archive(db,iid),
           'memory':owner_context(db,iid)}
@@ -177,6 +245,30 @@ def replay_export(archive):
             for r,raw in zip(closures['records'],sources):
                 if json.loads(I.encode(asdict(replay_unassessable(raw,r['recorded_ms']))))!=r:
                     raise ValueError('memory_archive_prior_unassessable_mismatch')
+        described=ctx.get('assessed_descriptions')
+        if described:
+            records=described['records']; sources=described.get('source_archives',[])
+            if len(sources)!=len(records): raise ValueError('memory_archive_missing_prior_source')
+            if len(records)>M.MAX_RETRIEVED: raise ValueError('memory_archive_prior_assessed_capacity')
+            if (len({r['source_id'] for r in records})!=len(records)
+                    or len({r['case_id'] for r in records})!=len(records)):
+                raise ValueError('memory_archive_prior_assessed_duplicate')
+            rebuilt=[]
+            for r,raw in zip(records,sources):
+                rec=replay_assessed(raw,r['recorded_ms'])
+                if json.loads(I.encode(asdict(rec)))!=r:
+                    raise ValueError('memory_archive_prior_assessed_mismatch')
+                rebuilt.append(rec)
+            # Every included record must be one the receiving registration's own recall
+            # would include, in its order, with its canonical context-only presentation.
+            # The audit also names excluded candidates without archives, so only its
+            # included entries can be proven here.
+            canonical=json.loads(I.encode(M.retrieve_assessed(inv,rebuilt)))
+            if ({k:described.get(k) for k in ('schema_version','records','notes','limitation')}
+                    !={k:canonical[k] for k in ('schema_version','records','notes','limitation')}
+                    or [a['case_id'] for a in described.get('audit',[])
+                        if a.get('reason')=='compatible_prior_assessed_description']!=[r['case_id'] for r in records]):
+                raise ValueError('memory_archive_prior_assessed_ineligible')
         for reasoning in body['memory']['reasoning']:
             update=next(I.update_from_dict(u) for u in source['updates'] if u['event_id']==reasoning['event_id'])
             if M.reasoning(update,ctx)!=reasoning: raise ValueError('memory_archive_reasoning_mismatch')
