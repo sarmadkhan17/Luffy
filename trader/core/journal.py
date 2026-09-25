@@ -203,6 +203,23 @@ CREATE TABLE IF NOT EXISTS attention_fetch_outcomes (
     recorded_at_ms INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS attention_fetch_outcomes_sel ON attention_fetch_outcomes(selection_id,id);
+
+-- research-question.v1 (cognition/research_question.py): one row per
+-- registered question. The canonical JSON is authoritative; the other
+-- columns are its projection. Append-only: never updated or deleted here.
+CREATE TABLE IF NOT EXISTS research_questions (
+    question_id TEXT PRIMARY KEY,    -- sha256 of the question identity
+    schema TEXT NOT NULL,
+    question_kind TEXT NOT NULL,
+    trigger TEXT NOT NULL,
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    source_kind TEXT NOT NULL,
+    source_event_id INTEGER NOT NULL,
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL,
+    UNIQUE(question_kind, source_kind, source_event_id)
+);
 """
 
 
@@ -564,6 +581,44 @@ class Journal:
     def attention_fetch_outcomes(self, selection_id: str) -> list[dict]:
         return self.query("SELECT * FROM attention_fetch_outcomes WHERE selection_id=? "
                           "ORDER BY id", (selection_id,))
+
+    # -- research questions: primitives only; the contract is
+    # cognition/research_question.py --------------------------------------
+    _QUESTION_COLUMNS = ("question_id", "schema", "question_kind", "trigger",
+                         "scope_kind", "scope_id", "source_kind",
+                         "source_event_id", "canonical_json")
+
+    def record_research_question(self, row: dict, *, recorded_at_ms: int) -> str:
+        """Insert one research-question row. "inserted" on a write;
+        "duplicate" when an identical row (ignoring recorded_at_ms) already
+        exists under the same ID; "conflict" when the ID, or another
+        question of the same kind for the same source event, exists with
+        other content. Nothing is written unless "inserted"."""
+        values = tuple(row[k] for k in self._QUESTION_COLUMNS)
+        cols = ",".join(self._QUESTION_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {cols} FROM research_questions WHERE question_id=? "
+                "OR (question_kind=? AND source_kind=? AND source_event_id=?)",
+                (row["question_id"], row["question_kind"], row["source_kind"],
+                 row["source_event_id"])).fetchall()
+            if old:
+                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_questions({cols},recorded_at_ms) "
+                      f"VALUES ({','.join('?' * (len(values) + 1))})",
+                      values + (recorded_at_ms,))
+        return "inserted"
+
+    def research_questions(self, scope_id: str | None = None) -> list[dict]:
+        """Stored research-question rows, oldest source event first."""
+        if scope_id is None:
+            return self.query("SELECT * FROM research_questions "
+                              "ORDER BY source_event_id, question_id")
+        return self.query("SELECT * FROM research_questions WHERE scope_id=? "
+                          "ORDER BY source_event_id, question_id", (scope_id,))
 
     # -- strategy population ------------------------------------------------
     def upsert_strategy(self, st) -> None:
