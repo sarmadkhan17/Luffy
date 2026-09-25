@@ -4,6 +4,7 @@ Measured investigations and separately typed price observations enrich questions
 Execution accounting, owner preferences and doctrine remain distinct types.
 """
 import json
+import sqlite3
 from dataclasses import asdict
 
 from trader.cognition import investigation as I
@@ -48,8 +49,13 @@ def ingest(db, now):
     other verification refusal is deterministic for an immutable source and is
     recorded once, like the malformed refusal. source_id keys keep retry idempotent."""
     added, refused = 0, []
-    rows = db.execute('SELECT id,payload FROM cases WHERE terminal_ms IS NOT NULL AND id NOT IN (SELECT source_id FROM memory_cases)'
-                      ' AND id NOT IN (SELECT source_id FROM memory_measured_refused) ORDER BY created_ms,id LIMIT 256').fetchall()
+    # Eligibility before the bound, by the loop's own _status(): a terminal case with no
+    # update, or whose latest status is another path's, never occupies the window.
+    _with_status(db)
+    rows = db.execute(_LATEST + ' AND id NOT IN (SELECT source_id FROM memory_cases)'
+                      ' AND id NOT IN (SELECT source_id FROM memory_measured_refused))'
+                      f" SELECT id,payload FROM latest WHERE up IS NOT NULL AND IFNULL({_STATUS}(up),'measured')='measured'"
+                      ' ORDER BY created_ms,id LIMIT 256').fetchall()
     for iid, payload in rows:
         if added + len(refused) >= 32: break
         row = db.execute('SELECT payload FROM updates WHERE case_id=? ORDER BY observed_ms DESC,rowid DESC LIMIT 1',(iid,)).fetchone()
@@ -81,6 +87,31 @@ def ingest(db, now):
         added += 1
     return {'added': added, 'refused': refused, 'unassessable': ingest_unassessable(db, now),
             'assessed': ingest_assessed(db, now)}
+
+
+_LATEST = ('WITH latest AS (SELECT id,payload,created_ms,'
+           '  (SELECT u.payload FROM updates u WHERE u.case_id=cases.id'
+           '   ORDER BY u.observed_ms DESC,u.rowid DESC LIMIT 1) AS up'
+           '  FROM cases WHERE terminal_ms IS NOT NULL')
+# _status() as a SQL function, so the pre-bound predicate is the loop's own reading
+# (last duplicate key wins, as json.loads does); SQL JSON would disagree on duplicates.
+_STATUS = 'memory_latest_status'
+
+
+def _with_status(db):
+    """Register _STATUS once per connection. SQLite refuses to replace a function
+    while any statement is active, so an existing registration is probed, not redone."""
+    try:
+        db.execute(f'SELECT {_STATUS}(NULL)').fetchone()
+    except sqlite3.OperationalError:
+        db.create_function(_STATUS, 1, _sql_status, deterministic=True)
+
+
+def _sql_status(raw):
+    """_status() narrowed to what the predicates compare: any other status becomes an
+    ASCII sentinel, since SQLite cannot encode every Python string (a lone surrogate)."""
+    status = _status(raw)
+    return status if status in (None, 'measured', 'not_testable') else 'other'
 
 
 def _status(raw):
@@ -127,15 +158,18 @@ def ingest_unassessable(db, now):
     immutable source, are recorded once. The source_id keys make retry and restart
     idempotent."""
     added, refused = 0, []
-    rows = db.execute('SELECT id,payload FROM cases WHERE terminal_ms IS NOT NULL AND id NOT IN (SELECT source_id FROM memory_unassessable)'
-                      ' AND id NOT IN (SELECT source_id FROM memory_unassessable_refused)'
-                      ' AND NOT COALESCE((SELECT CASE WHEN json_valid(u.payload)'
-                      " AND (SELECT COUNT(*) FROM json_each(u.payload) WHERE key='evidence')=1"
-                      " AND json_type(u.payload,'$.evidence')='object'"
-                      " AND (SELECT COUNT(*) FROM json_each(u.payload,'$.evidence') WHERE key='observed_ms')=1"
-                      " AND json_type(u.payload,'$.evidence.observed_ms')='integer'"
-                      " THEN json_extract(u.payload,'$.evidence.observed_ms') > ? ELSE 0 END"
-                      ' FROM updates u WHERE u.case_id=cases.id ORDER BY u.observed_ms DESC,u.rowid DESC LIMIT 1),0)'
+    # Eligibility before the bound, as in ingest(): only a latest update the loop reads
+    # as not_testable occupies the candidate window.
+    _with_status(db)
+    rows = db.execute(_LATEST + ' AND id NOT IN (SELECT source_id FROM memory_unassessable)'
+                      ' AND id NOT IN (SELECT source_id FROM memory_unassessable_refused))'
+                      f" SELECT id,payload FROM latest WHERE up IS NOT NULL AND {_STATUS}(up)='not_testable'"
+                      ' AND NOT COALESCE(CASE WHEN json_valid(up)'
+                      " AND (SELECT COUNT(*) FROM json_each(up) WHERE key='evidence')=1"
+                      " AND json_type(up,'$.evidence')='object'"
+                      " AND (SELECT COUNT(*) FROM json_each(up,'$.evidence') WHERE key='observed_ms')=1"
+                      " AND json_type(up,'$.evidence.observed_ms')='integer'"
+                      " THEN json_extract(up,'$.evidence.observed_ms') > ? ELSE 0 END,0)"
                       ' ORDER BY created_ms,id LIMIT 256',(now,)).fetchall()
     for iid, payload in rows:
         if added + len(refused) >= 32: break
