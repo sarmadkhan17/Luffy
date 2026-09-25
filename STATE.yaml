@@ -80,12 +80,18 @@ capabilities:
       - b3639d8 Add strategy health sweep observations
       - trader/strategy/health_observation.py
       - tests/test_strategy_health_observation.py
+      - 42fa0b1 Add strategy decay research questions
+      - trader/cognition/research_question.py
+      - tests/test_strategy_decay_research_question.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
       - every attempted deployed-spec decay sweep persists a strategy-health-observation.v1 record while lifecycle authority is unchanged (SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1 TESTED, not deployed)
+      - strategy-scoped research-question.v1 generation from existing strategy-health-observation.v1 decay evidence is TESTED at 42fa0b1 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-QUESTION-V1)
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
+      - strategy-degradation Attention trigger and salience/magnitude remain MISSING
+      - no Research Planner / Source Router consumer of research-question.v1 exists
 
   instrument_registry:
     state: TESTED
@@ -2281,10 +2287,63 @@ completed_investigation_memory_candidate_isolation_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Robustness hardening only; no usefulness, predictive, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_strategy_decay_research_question_v1:
+  id: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-QUESTION-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 42fa0b1
+  evidence:
+    - 42fa0b1 Add strategy decay research questions
+    - trader/cognition/research_question.py
+    - trader/core/journal.py
+    - tests/test_strategy_decay_research_question.py
+  proven_facts:
+    - A deterministic, versioned research-question.v1 schema exists.
+    - Questions are generated only from existing strategy-health-observation.v1 evidence.
+    - The first truthful decayed observation and a non-decayed->decayed transition create a question; repeated decayed observations do not.
+    - A later clean non-decayed baseline can establish a new independent episode.
+    - compile_failed and evaluation_failed observations never create decay questions.
+    - Malformed, missing or contradictory supporting evidence fails closed.
+    - Persisted questions are immutable and idempotent; conflicting duplicates never overwrite.
+    - Load re-verifies canonical content, exact source/prior evidence and bounded supporting sweeps.
+    - Bounded replay retains earlier unattributable/unplaceable evidence that could invalidate derivation.
+    - Later unrelated corruption does not invalidate an earlier valid question.
+    - Question IDs and serialization are deterministic and canonical.
+    - Questions are strategy-scoped only, with no asset attribution.
+    - No Attention trigger, salience, ranking, urgency, usefulness, probability or score was added.
+    - No LLM, network, Risk, Execution or trading authority; no live-loop caller or consumer.
+  validation:
+    package_tests: 80 passed (independently verified)
+    focused_run: 356 passed (reported)
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  limitations:
+    - Refusals are returned but not durably persisted.
+    - Bounded replay relies on documented write-order assumptions for evidence that cannot otherwise be chronologically placed.
+    - Production has no source rows because strategy-health observation (b3639d8) is not deployed.
+    - No Research Planner / Source Router consumer is implemented.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commit 42fa0b1.
+  gap_matrix_update:
+    strategy_degradation:
+      deterministic_strategy_health_source: TESTED
+      durable_health_history: TESTED
+      research_question_generation_from_decay: TESTED
+      asset_attribution: MISSING - not established
+      attention_strategy_degradation_trigger: MISSING
+      salience_magnitude: MISSING
+      downstream_research_planning_consumer: MISSING
+      deployed: NO
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Strategy-scoped research-question derivation and persistence only; no trigger, salience, usefulness, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-INVESTIGATION-MEMORY-CANDIDATE-ISOLATION-V1 is TESTED at 17f2ab6 and NOT_DEPLOYED. No next package is selected or queued.
+  note: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-QUESTION-V1 is TESTED at 42fa0b1 and NOT_DEPLOYED. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1

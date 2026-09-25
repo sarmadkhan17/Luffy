@@ -5,14 +5,14 @@ work_package:
   id: null
   status: NO_ACTIVE_PACKAGE
   last_completed:
-    id: SDD-STAGE-3-INVESTIGATION-MEMORY-CANDIDATE-ISOLATION-V1
+    id: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-QUESTION-V1
     state: TESTED
-    implementation_commit: 17f2ab6
+    implementation_commit: 42fa0b1
     evidence:
-      - trader/observability/memory.py; tests/test_investigation_memory_candidate_isolation.py
-      - Astra final review PASS; independently verified 256 tests passed; 17 candidate-isolation tests passed; git diff --check clean
+      - trader/cognition/research_question.py; trader/core/journal.py; tests/test_strategy_decay_research_question.py
+      - Astra final review PASS; independently verified 80 package tests passed; reported focused run 356 passed; git diff --check clean
     runtime_deployment: NOT_DEPLOYED
-    record: STATE.yaml completed_investigation_memory_candidate_isolation_v1
+    record: STATE.yaml completed_strategy_decay_research_question_v1
   selection: No next package is selected or queued. Selection is deferred until after this control-plane closure and must follow the STATE.yaml selection rules and parked boundaries.
   established_boundary:
     - INVESTIGATION_ASSESSED_MEMORY_CONTEXT_NOT_AUTHORITY, ASSESSED_RESULT_VOCABULARY_NOT_VALUE_LABEL and KNOWN_BEFORE_REGISTRATION_REQUIRED hold; assessed memory is context_only, is not an investigation-value.v1 label, and is not deployed.
@@ -22,6 +22,7 @@ work_package:
     - Opportunity Context persistence/replay is TESTED at eb3a10c and NOT_DEPLOYED; no live producer is established, no backfill is performed, and it grants no LLM, network, venue, Risk, Execution or trading authority.
     - Investigation memory candidate isolation is TESTED at 17f2ab6 and NOT_DEPLOYED; the broader 256-row candidate-crowding limitation is closed; 256 candidate bound, 32-per-path cap and (created_ms,id) ordering preserved; no label, usefulness, salience, ranking, Attention, Risk, Execution or trading change.
     - STRATEGY_HEALTH_OBSERVATION_NOT_TRADING_EDGE and SWEEP_OBSERVATIONS_NOT_INDEPENDENT_EVIDENCE hold; strategy-degradation asset attribution, Attention trigger and salience/magnitude remain MISSING; the package is not deployed.
+    - Strategy-decay research-question.v1 generation is TESTED at 42fa0b1 and NOT_DEPLOYED; strategy-scoped only, no asset attribution, no Attention trigger/salience/ranking/urgency/usefulness/score, no live caller or consumer; refusals are not durably persisted; Research Planner / Source Router consumer remains MISSING.
     - REJECTION_OCCURRENCE_COUNTS_ARE_SCAN_CADENCE_OBSERVATIONS holds; rejection trigger/salience remains MISSING and multi-bar episode semantics UNDETERMINED.
     - SIGNAL_OCCURRENCE_IS_NOT_OPPORTUNITY_EPISODE and REJECTION_CODES_COVER_TEXT_PRODUCING_REFUSAL_PATHS_ONLY hold.
     - SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1 is PARKED_LABEL_SOURCE_MISSING; do not invent labels from descriptive, registration-time or P&L evidence.
@@ -96,4 +97,4 @@ parked_usefulness_feedback:
   reopen_when: A concrete investigation-value.v1 protocol for an active family, with frozen routine-evidence comparator and deterministic ESTABLISHED/NOT_ESTABLISHED closure predicates, is frozen and producing closure receipts, or the owner explicitly prioritizes designing one.
 
 after_completion:
-  - SDD-STAGE-3-INVESTIGATION-MEMORY-CANDIDATE-ISOLATION-V1 evidence is recorded in STATE.yaml. No package is active and no next package is selected or queued. Keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch; do not implement a rejection or strategy-degradation Attention trigger, early-warning threshold or multi-bar episode grouping without a justified existing salience/magnitude source.
+  - SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-QUESTION-V1 evidence is recorded in STATE.yaml. No package is active and no next package is selected or queued. Keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch; do not implement a rejection or strategy-degradation Attention trigger, early-warning threshold or multi-bar episode grouping without a justified existing salience/magnitude source.
