@@ -2,50 +2,50 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-DECISION-REJECTION-REASON-CODES-V1
+  id: SDD-STAGE-3-STRATEGY-SIGNAL-OCCURRENCE-IDENTITY-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Record a structured, versioned rejection reason code at every existing refusal branch of a trading decision, alongside the unchanged skip_reason text, so LUFFY remembers why each opportunity was refused as machine-readable evidence (source for SDD 8.1 repeated rejected opportunities).
+  objective: Persist a deterministic signal-occurrence identity with each compiled strategy signal - the spec timeframe and the exact close time (ms) of the closed signal bar the signal fired on - so repeated decisions on the same signal occurrence share an exact key.
   basis:
-    - SDD-STAGE-3-CAPABILITY-SELECTION-V3 - NO_INTELLIGENCE_TRIGGER_DIRECTLY_IMPLEMENTABLE_SMALLEST_MISSING_SOURCE_SELECTED.
-    - SDD.md 8.1 names repeated rejected opportunities as an Attention trigger.
-    - Journal decisions.skip_reason is free text built from templates with embedded values and "; "-joined parts; no structured code exists, so refusals cannot be counted without parsing prose.
+    - SDD-STAGE-3-REJECTION-EPISODE-IDENTITY-DETERMINATION-V1 - REJECTION_EPISODE_IDENTITY_MISSING.
+    - decision_id is random per row; cycle_id/scan_id are per scan; signals_json carries only spec_id and a rounded wall-clock signal_bar_age_min.
+    - The compiled spec evaluator already computes the signal-bar close time (closed_at in trader/strategy/compile.py) and discards it.
+    - SDD-STAGE-3-DECISION-REJECTION-REASON-CODES-V1 TESTED at cccfbd8 supplies the refusal codes; episode identity is the remaining missing source for SDD 8.1 repeated rejected opportunities.
   source:
-    - Existing refusal branches only - trader/engine/orchestrator.py strategy_gate (no strategy signal; no strategy agrees), HTF hard veto, meta veto, entries-not-allowed/blocked_reason; trader/engine/risk.py check_entry SizingResult refusals (state FROZEN/HALTED/other, daily breaker, max positions, already exposed, heat cap, margin cap, below min notional) and RiskError halt; trader/kernel.py stop-timeframe bars missing and meta-sized below min notional; trader/engine/executor.py execution_recovery_pending and submission-time entry block.
+    - trader/strategy/compile.py compiled spec evaluator - the branch where BUY/SELL is returned and closed_at is computed.
     - No venue request, LLM call, DataFeed change, recorder or new store.
   missing_transformation:
-    - A frozen code vocabulary (decision-rejection-reason.v1) with exactly one code per existing refusal branch, set at the branch where the text is set, persisted with the decision.
+    - Record signal_timeframe and signal_bar_close_ms (integer ms, exact, from the same closed bar the entry series was evaluated on) in StrategySignal.params, persisted through the existing decisions.signals_json.
+    - Define signal-occurrence key (spec_id, symbol, action, signal_timeframe, signal_bar_close_ms) as a pure function over a persisted signal; no journal column required unless a test shows signals_json cannot carry it.
   frozen_semantics:
-    - A code names the code branch that refused; it is not a judgement that the opportunity was good, bad, missed or costly.
-    - Codes are an ordered list mirroring skip_reason composition order; executed decisions and HOLD decisions with no refusal carry an empty list.
-    - Whenever a later stage overwrites skip_reason (kernel entry path, update_decision_outcome, executor), the codes are overwritten with the same semantics, so text and codes always describe the same refusal.
-    - Every refusal branch has a code; a refusal without a code is a test failure (exhaustiveness), never a silent UNCODED.
-    - Legacy rows keep reason_codes NULL meaning not recorded; no back-fill by parsing text.
-    - skip_reason text, action, score, threshold, executed, size, order calls, control-state transitions and risk state are byte-identical to before.
+    - The key identifies one signal occurrence (one closed signal bar), not a multi-bar setup; consecutive bars on which the condition stays true are distinct occurrences.
+    - If the bar time cannot be determined exactly, the fields are null (not recorded) and the signal has no key; never a fabricated or approximated value.
+    - Legacy library.py signals, HOLDs without a signal and legacy rows carry no key; no reconstruction from ts or signal_bar_age_min.
+    - signal_bar_age_min is retained unchanged.
   implementation_boundary:
-    - trader/engine/risk.py - SizingResult carries a code; reason text unchanged.
-    - trader/engine/orchestrator.py - codes alongside skip_bits.
-    - trader/kernel.py and trader/engine/executor.py - codes set where skip_reason is set.
-    - trader/core/types.py and trader/core/journal.py - Decision field; additive decisions.reason_codes column via the existing ALTER TABLE migration pattern; log_decision/update_decision_outcome persist it.
+    - trader/strategy/compile.py - add the two params at the firing branch.
+    - A small pure helper for the occurrence key (location chosen next to existing signal/decision helpers).
   acceptance_tests:
-    - tests/test_decision_rejection_reason_codes.py (new) - each refusal branch yields exactly its code; composite orchestrator refusals yield codes in skip_bits order; executed and plain HOLD decisions carry an empty list; overwrites replace codes consistently with text; skip_reason text and action/score/size/executed/order calls identical to pre-change behavior for every branch; exhaustiveness over the vocabulary; migration idempotent on an existing journal; legacy rows stay NULL.
-    - Existing tests/test_orchestrator_abstention.py, test_orchestrator_agreement.py, test_risk_state_persistence.py, test_entry_control_fence.py, test_r_multiple_uses_entry_risk.py and test_attention_kernel_wiring.py pass apart from recorded baseline failures.
+    - tests/test_strategy_signal_occurrence_identity.py (new) - fired signals carry exact signal_bar_close_ms equal to the evaluated closed bar close for the spec timeframe; repeated evaluations of the same closed bar yield the same key; a new closed bar yields a different key; BUY/SELL and different spec_ids yield different keys; undeterminable bar time yields null fields and no key; signals_json round-trip preserves the fields; action, confidence, rationale, spec_id and signal_bar_age_min unchanged; no key for legacy/no-signal decisions.
+    - Existing compile/spec evaluator, orchestrator and tests/test_decision_rejection_reason_codes.py pass apart from recorded baseline failures.
     - scripts/backtest_equivalence.py PASS is unaffected (no backtest-engine change).
     - git diff --check clean.
   preserve:
-    - Trading decisions, sizing, Risk limits, Execution, protective stops and control state unchanged.
+    - Trading decisions, signals' direction, sizing, Risk limits, Execution, protective stops, control state, skip_reason and reason_codes unchanged.
     - Attention salience, components, min_salience, k, dedup, allocation, investigations, memory and resource receipts unchanged.
     - No LLM calls or venue requests.
   not_in_scope:
-    - repeated-rejected-opportunity Attention trigger, episode clustering or any salience/priority magnitude
+    - repeated-rejected-opportunity Attention trigger, rejection episode table or any salience/priority magnitude
+    - any time-window grouping or multi-bar setup merging
     - Opportunity registry or Opportunity Context
-    - forward-outcome, missed-profit or usefulness labels from outcomes
-    - back-filling or parsing legacy skip_reason text
+    - forward-outcome, missed-profit or usefulness labels
+    - back-filling legacy rows or parsing skip_reason text
     - correlation, positioning, resource receipts, unassessable memory, usefulness labels, storage guard
     - liquidation clock, portfolio magnitude, Scheme-D, downstream new-data dispatch
     - deployment to the running /home/sarmad/trader kernel
   established_boundary:
+    - REJECTION_CODES_COVER_TEXT_PRODUCING_REFUSAL_PATHS_ONLY holds; [] is not success.
     - SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1 is PARKED_LABEL_SOURCE_MISSING; do not invent labels from descriptive, registration-time or P&L evidence.
     - SDD-STAGE-3-ATTENTION-NEW-DATA-STORAGE-CAPACITY-GUARD-V1 is PARKED_OWNER_POLICY_REQUIRED; do not request or invent ledger_max_bytes or min_free_bytes.
     - OPERATOR_STORAGE_POLICY_REQUIRED, EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED and DOWNSTREAM_DISPATCH_PREREQUISITE_REQUIRED remain open and must not become the active package.
@@ -54,7 +54,7 @@ work_package:
     - failed_research_memory is PARTIAL; CORRELATION_UNASSESSABLE_EFFECTIVELY_UNREACHABLE and MEMORY_CONTEXT_NOT_AUTHORITY hold.
     - Attention overall remains IMPLEMENTED; this package grants no maturity upgrade or activation.
   after_completion:
-    - Record TESTED evidence in STATE.yaml; add gap_matrix repeated_rejected_opportunities as SOURCE_TESTED / trigger MISSING (episode definition and salience policy required); no maturity upgrade.
+    - Record TESTED evidence in STATE.yaml; update gap_matrix repeated_rejected_opportunities to episode identity SOURCE_TESTED / trigger MISSING (salience policy required); then gate the trigger with a narrow determination, not automatic implementation; no maturity upgrade.
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -120,4 +120,4 @@ parked_usefulness_feedback:
   reopen_when: A concrete investigation-value.v1 protocol for an active family, with frozen routine-evidence comparator and deterministic ESTABLISHED/NOT_ESTABLISHED closure predicates, is frozen and producing closure receipts, or the owner explicitly prioritizes designing one.
 
 after_completion:
-  - Record SDD-STAGE-3-DECISION-REJECTION-REASON-CODES-V1 evidence in STATE.yaml; keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch or a rejected-opportunity trigger.
+  - Record SDD-STAGE-3-STRATEGY-SIGNAL-OCCURRENCE-IDENTITY-V1 evidence in STATE.yaml; keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch; do not implement the rejected-opportunity trigger without a separate determination.

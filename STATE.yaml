@@ -1683,14 +1683,112 @@ completed_stage3_capability_selection_after_unassessable_memory:
     - No venue request, LLM, recorder, retention policy or new store; one additive decisions column.
   maturity_boundary: Selection only; no implementation, trigger, ranking change or maturity upgrade. Attention overall remains IMPLEMENTED.
 
-current_active_work:
+completed_decision_rejection_reason_codes_v1:
   id: SDD-STAGE-3-DECISION-REJECTION-REASON-CODES-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: cccfbd8
+  evidence:
+    - cccfbd8 Add structured decision rejection reason codes
+    - trader/core/reason_codes.py
+    - trader/core/types.py
+    - trader/core/journal.py
+    - trader/engine/risk.py
+    - trader/engine/orchestrator.py
+    - trader/engine/control_fence.py
+    - trader/engine/executor.py
+    - trader/engine/recovery.py
+    - trader/kernel.py
+    - tests/test_decision_rejection_reason_codes.py
+  proven_facts:
+    - Stable vocabulary decision-rejection-reason.v1.
+    - Existing text-producing refusal branches emit structured reason codes at the same branch that writes skip_reason.
+    - No free-text parsing is used to derive codes.
+    - Combined reasons preserve the existing text composition order.
+    - An overwrite of skip_reason overwrites reason_codes consistently.
+    - Risk-originated refusals originate their code in Risk and callers propagate it.
+    - Kernel-, fence- and executor-originated refusals retain their source semantics.
+    - risk_max_positions and risk_already_exposed remain distinct.
+    - strategy_no_signal and strategy_no_agreement remain distinct.
+    - stop_atr_unavailable truthfully covers the existing non-positive stop ATR predicate.
+    - Control-fence UNREADABLE has its own code.
+    - Recovery-pending suppression and submission-time blocking remain distinct.
+    - Numeric thresholds, counts and timeframes stay in existing evidence/text, not in stable codes.
+    - Migration is idempotent.
+    - Old rows remain SQL NULL and are not back-filled from text.
+    - "Explicit [] means: reason-code field recorded, but no coded text-producing refusal was present."
+    - "[] does NOT mean no refusal, all checks passed, or executed successfully."
+    - Some existing non-text failure paths remain uncoded by design.
+    - Current decision, sizing, order and state-transition behavior is unchanged.
+    - Existing skip_reason text is unchanged.
+  validation:
+    rejection_code_tests: 55 passed
+    focused_final_suites: 202 passed
+    earlier_wider_focused_run: 483 passed
+    full_suite: Same failing/error test IDs as clean HEAD.
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  boundaries:
+    REJECTION_CODES_COVER_TEXT_PRODUCING_REFUSAL_PATHS_ONLY: >-
+      Current codes establish only "this existing coded control-flow branch fired
+      and produced the retained refusal text." They do NOT establish complete
+      causal history, successful execution when codes are empty, unvisited
+      checks, opportunity quality, usefulness, missed profit, independent
+      opportunity identity or rejection episode identity.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: The running /home/sarmad/trader kernel does not contain reason codes.
+  gap_matrix_update:
+    repeated_rejected_opportunities: SOURCE_TESTED (reason codes) / episode identity MISSING / trigger MISSING
+    attention_overall: IMPLEMENTED
+  maturity_boundary: Observability source only; no trigger, episode, salience, allocation, usefulness or maturity claim. Attention overall remains IMPLEMENTED.
+
+completed_rejection_episode_identity_determination:
+  id: SDD-STAGE-3-REJECTION-EPISODE-IDENTITY-DETERMINATION-V1
+  type: EVIDENCE_AUDIT
+  state: COMPLETED_DESIGN_EVIDENCE
+  question: Can LUFFY now define a truthful repeated-rejected-opportunity episode from existing persisted decision identity, symbol, direction, reason_codes and time without inventing grouping semantics?
+  decision: REJECTION_EPISODE_IDENTITY_MISSING
+  evidence_basis: Read-only inspection 2026-09-25 at cccfbd8 of trader/core/journal.py (decisions schema, migrations, log_decision), trader/core/types.py (Decision, StrategySignal), trader/engine/orchestrator.py (Decision construction), trader/strategy/compile.py (compiled spec evaluator), trader/kernel.py (scan_id), trader/cognition/hypotheses.py and trader/cognition/replay.py, config.yaml scan interval. No code, data or policy change.
+  findings:
+    decision_id: new_id("dec") - random per decision; identifies one row, never a cross-decision opportunity.
+    cycle_id_and_scan_id: Per-cycle / per-Attention-scan identities; one per scan, so they separate repeated decisions rather than join them.
+    strategy_ids_and_signals_json: Persist which spec fired (spec_id), direction (action) and params {spec_id, signal_bar_age_min}. signal_bar_age_min is wall-clock age rounded to 0.1 min at evaluation, not an identity; reconstructing the bar from ts minus age would be inference.
+    signal_bar_close_ms: Computed inside the compiled spec evaluator (closed_at in trader/strategy/compile.py) and then discarded; not persisted. Legacy library.py signals carry no bar identity at all.
+    cognition_episode_ids: hypotheses.py episode_id = stable_id("ep", decision_id, sym) is per decision; replay.py open_episodes groups by symbol with a horizon deadline in offline replay. Neither is persisted with journal decisions, and the replay deadline is a research-horizon construct, not an opportunity identity.
+    outcomes: Keyed by decision_id; one per directional decision; no grouping key.
+    repetition_mechanism: scan_interval_seconds 60 re-evaluates the same closed signal bar many times per strategy timeframe, so repeated refusals of one setup are pseudo-replicates of one signal, not independent opportunities.
+  rejected_groupings:
+    - same symbol - not the same opportunity
+    - same reason code - not the same opportunity
+    - nearby timestamps or any time window - would invent grouping semantics
+    - (symbol, direction, spec_id) alone - cannot separate a re-fire on a new bar from a repeat of the same bar
+  exact_missing_identity: >-
+    A persisted, deterministic signal-occurrence identity per strategy signal -
+    the exact signal-bar close time (ms) and the spec timeframe it was computed
+    on, recorded at the branch where the compiled spec signal fires - giving the
+    key (spec_id, symbol, action, spec timeframe, signal_bar_close_ms). Repeated
+    decisions carrying the same key are the same signal occurrence re-evaluated.
+  identity_semantics_boundary:
+    - The key identifies one signal occurrence (one closed signal bar), not a multi-bar setup; consecutive bars on which a level condition stays true are distinct occurrences and are not merged in V1.
+    - Decisions without a keyed signal (legacy library signals, strategy_no_signal HOLDs) are not episode-eligible; they are not assigned a synthetic key.
+    - Legacy rows stay without identity; no reconstruction from signal_bar_age_min or ts.
+  selected_next_capability: SDD-STAGE-3-STRATEGY-SIGNAL-OCCURRENCE-IDENTITY-V1
+  selection_reasoning:
+    - It is the single missing identity; the value is already computed at the firing branch and only needs persisting, so it is a small, deterministic, additive receipt with no time window and no semantic interpretation.
+    - It is independently useful beyond the trigger - it makes live signal-age/execution-delay evidence exact (backtest fills at the signal bar close) and removes pseudo-replication in any decision/outcome evaluation (one decision counted many times).
+    - No venue request, LLM, recorder, retention policy or new store; no audit chain.
+  not_queued: The repeated-rejected-opportunity trigger remains MISSING (needs this identity, then a separately justified salience policy).
+  maturity_boundary: Determination and selection only; no implementation, trigger, ranking change or maturity upgrade. Attention overall remains IMPLEMENTED.
+
+current_active_work:
+  id: SDD-STAGE-3-STRATEGY-SIGNAL-OCCURRENCE-IDENTITY-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Record a structured, versioned rejection reason code at every existing refusal branch of a trading decision, alongside the unchanged skip_reason text, so refused opportunities are remembered as machine-readable evidence (source for SDD 8.1 repeated rejected opportunities).
+  objective: Persist a deterministic signal-occurrence identity (spec timeframe and exact signal-bar close time) with each compiled strategy signal so repeated decisions on the same signal occurrence share an exact key.
   deliverables: As scoped in NEXT.yaml.
-  boundary: Observability source only. Decisions, actions, sizes, orders, control state and skip_reason text byte-identical; no Attention trigger, episode clustering, salience, allocation or Opportunity registry; no back-fill by parsing legacy text. No LLM or venue request; parked boundaries unchanged; Attention overall remains IMPLEMENTED.
+  boundary: Observability receipt only. Signals, decisions, sizes, orders, control state, skip_reason and reason_codes unchanged; no episode table, trigger, salience, allocation or Opportunity registry; no time window; no back-fill. No LLM or venue request; parked boundaries unchanged; Attention overall remains IMPLEMENTED.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
