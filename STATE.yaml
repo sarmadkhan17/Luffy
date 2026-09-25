@@ -83,15 +83,20 @@ capabilities:
       - 42fa0b1 Add strategy decay research questions
       - trader/cognition/research_question.py
       - tests/test_strategy_decay_research_question.py
+      - d509963 Add strategy decay research plans
+      - trader/cognition/research_plan.py
+      - tests/test_strategy_decay_research_plan.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
       - every attempted deployed-spec decay sweep persists a strategy-health-observation.v1 record while lifecycle authority is unchanged (SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1 TESTED, not deployed)
       - strategy-scoped research-question.v1 generation from existing strategy-health-observation.v1 decay evidence is TESTED at 42fa0b1 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-QUESTION-V1)
+      - deterministic research-plan.v1 routing of persisted strategy_decay research-question.v1 to existing truthful internal evidence is TESTED at d509963 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-PLAN-V1); plans route evidence only and make no conclusion
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
       - strategy-degradation Attention trigger and salience/magnitude remain MISSING
-      - no Research Planner / Source Router consumer of research-question.v1 exists
+      - temporary-regime-absence hypothesis remains UNAVAILABLE; no truthful WorldModel/regime evidence source exists
+      - no Attention trigger, live caller, consumer or deployment of research-question.v1 / research-plan.v1 exists
 
   instrument_registry:
     state: TESTED
@@ -2340,10 +2345,67 @@ completed_strategy_decay_research_question_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Strategy-scoped research-question derivation and persistence only; no trigger, salience, usefulness, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_strategy_decay_research_plan_v1:
+  id: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-PLAN-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: d509963
+  evidence:
+    - d509963 Add strategy decay research plans
+    - trader/cognition/research_plan.py
+    - trader/cognition/research_question.py
+    - trader/core/journal.py
+    - tests/test_strategy_decay_research_plan.py
+    - tests/test_strategy_decay_research_question.py
+  proven_facts:
+    - A deterministic, versioned research-plan.v1 exists.
+    - Plans consume only verified persisted strategy_decay research-question.v1 records.
+    - Persistence is immutable and idempotent, one plan per question.
+    - The exact source question canonical content is bound into the plan and re-verified on load.
+    - Supporting health observations and sweeps are bounded and re-verified.
+    - Prior or intervening sweep edits or deletion fail closed.
+    - All four SDD 14.5 hypotheses are represented.
+    - Genuine deterioration, insufficient opportunities and data failure route only to existing truthful internal evidence.
+    - Temporary regime absence remains UNAVAILABLE because no truthful WorldModel source exists.
+    - Plans route evidence only and make no conclusion.
+    - Plans are deterministic under health-row reordering.
+    - No trades or spec mapping are invented.
+    - No asset attribution, score, probability, rank, salience, priority or usefulness was added.
+    - No Attention trigger and no live caller.
+    - No LLM, network, Risk, Execution or trading authority.
+  validation:
+    package_tests: 188 passed including 68 plan tests (independently verified)
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  limitations:
+    - Pre-registration changes lack historical hash protection.
+    - Decision evidence is a declared selection, not independent opportunity evidence.
+    - First-decayed plans can grow with supporting sweep history.
+    - Production has no source rows while upstream strategy-health observation and research-question packages remain undeployed.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commit d509963.
+  gap_matrix_update:
+    strategy_degradation:
+      deterministic_strategy_health_source: TESTED
+      durable_health_history: TESTED
+      research_question_generation_from_decay: TESTED
+      deterministic_internal_research_planning_routing: TESTED
+      asset_attribution: MISSING - not established
+      attention_strategy_degradation_trigger: MISSING
+      salience_magnitude: MISSING
+      truthful_world_model_regime_evidence: MISSING
+      live_consumer_deployment: MISSING
+      deployed: NO
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Deterministic internal evidence routing for strategy-decay questions only; no conclusion, trigger, salience, usefulness, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-QUESTION-V1 is TESTED at 42fa0b1 and NOT_DEPLOYED. No next package is selected or queued.
+  note: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-PLAN-V1 is TESTED at d509963 and NOT_DEPLOYED. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
