@@ -24,13 +24,15 @@ def schema(db):
         ON memory_assessed(family, catalog_id, config_id, symbol, available_ms);
       CREATE TABLE IF NOT EXISTS memory_assessed_refused(source_id TEXT PRIMARY KEY, reason TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS memory_measured_refused(source_id TEXT PRIMARY KEY, reason TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS memory_unassessable_refused(source_id TEXT PRIMARY KEY, reason TEXT NOT NULL);
     ''')
 
 
 def retain(db):
     for table, key in (('memory_cases','source_id'), ('memory_contexts','case_id'), ('memory_reasoning','case_id'),
                        ('memory_unassessable','source_id'), ('memory_assessed','source_id'),
-                       ('memory_assessed_refused','source_id'), ('memory_measured_refused','source_id')):
+                       ('memory_assessed_refused','source_id'), ('memory_measured_refused','source_id'),
+                       ('memory_unassessable_refused','source_id')):
         db.execute(f'DELETE FROM {table} WHERE {key} NOT IN (SELECT id FROM cases)')
 
 
@@ -111,24 +113,65 @@ def _bars(db, iid):
 
 def ingest_unassessable(db, now):
     """Terminal not_testable closures only; same bounds as measured ingestion.
-    The source_id key makes retry and restart idempotent."""
+    A malformed source (unparseable latest update, investigation or inputs, a
+    non-integer registered_ms, evidence.as_of_ms, evidence.observed_ms or
+    update.observed_ms, or a target_versions entry not shaped (symbol, open_ms,
+    version_id)) is refused once as unassessable_malformed_source, recorded, and
+    never retried. A source whose latest update carries an integer
+    evidence.observed_ms > now is not yet observable: it is deferred before the
+    candidate and work bounds, gets no disposition, and is examined normally once
+    now >= observed_ms, so future sources cannot starve observable ones. A missing,
+    non-integer or duplicated observed_ms (or evidence) key is never deferred; it
+    fails closed above.
+    Verification refusals keep their original reason and, being deterministic for an
+    immutable source, are recorded once. The source_id keys make retry and restart
+    idempotent."""
     added, refused = 0, []
-    rows = db.execute('SELECT id,payload FROM cases WHERE terminal_ms IS NOT NULL AND id NOT IN (SELECT source_id FROM memory_unassessable) ORDER BY created_ms,id LIMIT 256').fetchall()
+    rows = db.execute('SELECT id,payload FROM cases WHERE terminal_ms IS NOT NULL AND id NOT IN (SELECT source_id FROM memory_unassessable)'
+                      ' AND id NOT IN (SELECT source_id FROM memory_unassessable_refused)'
+                      ' AND NOT COALESCE((SELECT CASE WHEN json_valid(u.payload)'
+                      " AND (SELECT COUNT(*) FROM json_each(u.payload) WHERE key='evidence')=1"
+                      " AND json_type(u.payload,'$.evidence')='object'"
+                      " AND (SELECT COUNT(*) FROM json_each(u.payload,'$.evidence') WHERE key='observed_ms')=1"
+                      " AND json_type(u.payload,'$.evidence.observed_ms')='integer'"
+                      " THEN json_extract(u.payload,'$.evidence.observed_ms') > ? ELSE 0 END"
+                      ' FROM updates u WHERE u.case_id=cases.id ORDER BY u.observed_ms DESC,u.rowid DESC LIMIT 1),0)'
+                      ' ORDER BY created_ms,id LIMIT 256',(now,)).fetchall()
     for iid, payload in rows:
         if added + len(refused) >= 32: break
         row = db.execute('SELECT payload FROM updates WHERE case_id=? ORDER BY observed_ms DESC,rowid DESC LIMIT 1',(iid,)).fetchone()
         if not row: continue
         # Other statuses and unreadable payloads belong to other ingestion paths.
         if _status(row[0]) != 'not_testable': continue
-        update = I.update_from_dict(json.loads(row[0]))
         try:
-            record = M.verified_unassessable(I.investigation_from_dict(json.loads(payload)), update, _bars(db, iid), now)
-        except (ValueError, KeyError, TypeError) as exc:
-            refused.append({'investigation_id': iid, 'reason': str(exc) if isinstance(exc, ValueError) else 'unassessable_malformed_source'})
+            update = I.update_from_dict(json.loads(row[0]))
+            for value in (update.evidence.as_of_ms, update.evidence.observed_ms, update.observed_ms):
+                if type(value) is not int: raise TypeError('observation_time')
+            _check_target_versions(update.evidence.target_versions)
+            inv, bars = I.investigation_from_dict(json.loads(payload)), _bars(db, iid)
+            if type(inv.registered_ms) is not int: raise TypeError('registered_ms')
+        except (ValueError, KeyError, TypeError, AttributeError, OverflowError):
+            _refuse_unassessable(db, refused, iid)
+            continue
+        if update.evidence.observed_ms > now:                           # only a payload the store could not
+            _refuse_unassessable(db, refused, iid)                      # read canonically escapes deferral
+            continue
+        try:
+            record = M.verified_unassessable(inv, update, bars, now)
+        except ValueError as exc:
+            _refuse_unassessable(db, refused, iid, str(exc))
+            continue
+        except (KeyError, TypeError, AttributeError, OverflowError):
+            _refuse_unassessable(db, refused, iid)
             continue
         db.execute('INSERT INTO memory_unassessable VALUES (?,?)',(iid,I.encode(asdict(record))))
         added += 1
     return {'added': added, 'refused': refused}
+
+
+def _refuse_unassessable(db, refused, iid, reason='unassessable_malformed_source'):
+    refused.append({'investigation_id': iid, 'reason': reason})
+    db.execute('INSERT INTO memory_unassessable_refused VALUES (?,?)',(iid,reason))
 
 
 def ingest_assessed(db, now):
