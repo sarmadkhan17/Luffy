@@ -439,9 +439,11 @@ def test_nothing_in_the_live_path_calls_it():
     pat = re.compile(r"import\s+research_question|research_question\s+import"
                      r"|cognition\.research_question|record_from_journal")
     callers = [p for p in root.rglob("*.py")
-               # research_plan.py is the offline evidence-routing consumer;
-               # its own test guards that nothing live calls it
-               if p.name not in ("research_question.py", "research_plan.py")
+               # research_plan.py / research_evidence.py are the offline
+               # routing / collection consumers; their own tests guard that
+               # nothing live calls them
+               if p.name not in ("research_question.py", "research_plan.py",
+                                 "research_evidence.py")
                and pat.search(p.read_text(errors="ignore"))]
     assert callers == []
 
