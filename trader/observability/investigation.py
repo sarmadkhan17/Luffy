@@ -18,6 +18,7 @@ import sys
 import threading
 import time
 from uuid import uuid4
+import zlib
 
 from trader.cognition.attention import CognitionConfig, evaluate
 from trader.cognition.contracts import INPUT_SCHEMA, is_timestamp, load_input
@@ -29,6 +30,7 @@ from trader.cognition import memory as memory_core
 from . import outcomes as outcome_store
 from trader.cognition import outcomes as outcome_core
 from trader.cognition import forecast_protocol
+from trader.cognition import opportunity_context as oc
 
 MAX_ACTIVE, MAX_UPDATES, MAX_CASES = 32, 32, 256
 MAX_BYTES, RETENTION_MS, FRESH_MS = 32 * 1024**2, 30 * 86_400_000, 300_000
@@ -305,6 +307,10 @@ def ledger(path):
         stage TEXT NOT NULL, execution_id TEXT NOT NULL, recorded_ms INTEGER NOT NULL,
         payload TEXT NOT NULL);
       CREATE INDEX IF NOT EXISTS receipt_case ON resource_receipts(case_id);
+      CREATE TABLE IF NOT EXISTS opportunity_contexts(id TEXT PRIMARY KEY,
+        investigation_id TEXT NOT NULL UNIQUE, symbol TEXT NOT NULL, as_of_ms INTEGER NOT NULL,
+        scan_sha256 TEXT NOT NULL, allocation_sha256 TEXT NOT NULL, payload TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS context_evidence(sha256 TEXT PRIMARY KEY, payload BLOB NOT NULL);
     """)
     memory_store.schema(db)
     outcome_store.schema(db)
@@ -436,6 +442,177 @@ def _frozen_allocation(db, scan, snapshot, pop, now, updates_used):
     return dict(decision, reused=False)
 
 
+class ContextConflict(ValueError):
+    """A different context or retained evidence is already persisted."""
+
+
+class ContextTransactionLost(Exception):
+    """SQLite discarded the registering transaction during an optional context
+    write; the step's own writes are gone and must be redone without it."""
+
+
+def registration_context(scan, allocation, inv, initial):
+    """opportunity-context.v1 for one registration, from evidence already in hand.
+
+    The cut is the case's registration time. Only the persisted Attention scan,
+    the frozen allocation decision, the case and its initial update are bound;
+    signals, registry selection, instrument and world model stay UNKNOWN.
+    """
+    return oc.build(as_of_ms=inv.registered_ms, symbol=inv.state.symbol, attention_scan=scan,
+                    allocation={k: v for k, v in allocation.items() if k != "reused"},
+                    investigation=inv, investigation_update=initial)
+
+
+def _retain(db, value):
+    """Content-addressed, compressed copy of replay evidence whose upstream
+    store prunes on its own schedule (Attention scans, allocation decisions)."""
+    text = oc.canonical(value)
+    sha = hashlib.sha256(text.encode()).hexdigest()
+    old = db.execute("SELECT payload FROM context_evidence WHERE sha256=?", (sha,)).fetchone()
+    if old is None:
+        db.execute("INSERT INTO context_evidence VALUES (?,?)", (sha, zlib.compress(text.encode())))
+    else:
+        try:
+            same = zlib.decompress(old[0]).decode() == text
+        except (zlib.error, UnicodeDecodeError, TypeError):
+            same = False        # unreadable retained evidence is a conflict, never a crash
+        if not same:
+            raise ContextConflict("opportunity_context_evidence_conflict")
+    return sha
+
+
+def _retained(db, sha):
+    row = db.execute("SELECT payload FROM context_evidence WHERE sha256=?", (sha,)).fetchone()
+    if row is None:
+        raise LedgerRefused("replay_evidence_missing")
+    try:
+        text = zlib.decompress(row[0]).decode()
+    except (zlib.error, UnicodeDecodeError) as exc:
+        raise LedgerRefused("replay_evidence_corrupt") from exc
+    if hashlib.sha256(text.encode()).hexdigest() != sha:
+        raise LedgerRefused("replay_evidence_corrupt")
+    return json.loads(text)
+
+
+def persist_context(db, investigation_id, ctx, scan, allocation):
+    """Append-only, with the scan and allocation needed to replay it. The
+    identical context is an idempotent no-op (False); any other context for
+    this case, other bytes under this ID, or other retained evidence under the
+    same hash is refused."""
+    allocation = {k: v for k, v in allocation.items() if k != "reused"}
+    scan_sha, alloc_sha = _retain(db, scan), _retain(db, allocation)
+    if scan_sha != ctx.to_dict()["attention"].get("scan_sha256"):
+        raise ContextConflict("opportunity_context_evidence_conflict")
+    key = (ctx.context_id, investigation_id, ctx.canonical_json, scan_sha, alloc_sha)
+    rows = db.execute("SELECT id,investigation_id,payload,scan_sha256,allocation_sha256 "
+                      "FROM opportunity_contexts WHERE id=? OR investigation_id=?",
+                      (ctx.context_id, investigation_id)).fetchall()
+    for r in rows:
+        if tuple(r) != key:
+            raise ContextConflict("opportunity_context_conflict")
+    if rows:
+        return False
+    body = ctx.to_dict()
+    db.execute("INSERT INTO opportunity_contexts VALUES (?,?,?,?,?,?,?)",
+               (ctx.context_id, investigation_id, body["instrument"]["symbol_key"],
+                body["as_of_ms"], scan_sha, alloc_sha, ctx.canonical_json))
+    return True
+
+
+def _record_context(db, scan, allocation, inv, initial, counts):
+    """Best effort inside a savepoint: a refusal or recoverable write failure
+    rolls back only the context rows and is reported by reason code.
+
+    SQLite may instead discard the whole transaction (e.g. SQLITE_FULL at the
+    ledger's page ceiling). Nothing written so far survives that, so it is
+    raised as ContextTransactionLost and `step` redoes the pass without contexts.
+    """
+    db.execute("SAVEPOINT opportunity_context")
+    try:
+        written = persist_context(db, inv.investigation_id,
+                                  registration_context(scan, allocation, inv, initial),
+                                  scan, allocation)
+    except (oc.OpportunityContextRefused, ContextConflict, sqlite3.Error) as exc:
+        if not db.in_transaction:
+            raise ContextTransactionLost("opportunity_context_transaction_lost") from exc
+        try:
+            db.execute("ROLLBACK TO opportunity_context")
+            db.execute("RELEASE opportunity_context")
+        except sqlite3.Error as lost:
+            raise ContextTransactionLost("opportunity_context_transaction_lost") from lost
+        reason = getattr(exc, "reason", None) or (str(exc) if isinstance(exc, ContextConflict)
+                                                  else "opportunity_context_write_failed")
+        counts["refused"][reason] = counts["refused"].get(reason, 0) + 1
+        return
+    db.execute("RELEASE opportunity_context")
+    counts["written" if written else "duplicate"] += 1
+
+
+def context_for(path, investigation_id):
+    """Read-only persisted context for a case, re-verified; None for legacy
+    cases registered before contexts were persisted."""
+    with closing(sqlite3.connect(Path(path).resolve().as_uri()+"?mode=ro", uri=True, timeout=.1)) as db:
+        if not db.execute("SELECT 1 FROM sqlite_master WHERE name='opportunity_contexts'").fetchone():
+            return None
+        row = db.execute("SELECT id,payload FROM opportunity_contexts WHERE investigation_id=?",
+                         (investigation_id,)).fetchone()
+    if row is None:
+        return None
+    ctx = oc.OpportunityContext.from_json(row[1])
+    if ctx.context_id != row[0]:
+        raise oc.OpportunityContextRefused(oc.CORRUPT_EVIDENCE, "context row id")
+    return ctx
+
+
+def replay_context(path, investigation_id, attention_path=None):
+    """Rebuild a case's saved registration context from persisted evidence and
+    return it only if it reproduces the saved canonical payload and ID.
+
+    The case and its initial update come from the ledger; the scan and
+    allocation from their retained copies, so upstream pruning does not end
+    replay. Upstream copies still present (the allocation row, and the scan in
+    `attention_path` when given) must equal the retained ones. Any missing,
+    altered or non-reproducing evidence is refused, never substituted.
+    """
+    with closing(sqlite3.connect(Path(path).resolve().as_uri()+"?mode=ro", uri=True, timeout=.1)) as db:
+        db.execute("BEGIN")
+        row = db.execute("SELECT id,payload,scan_sha256,allocation_sha256 FROM opportunity_contexts "
+                         "WHERE investigation_id=?", (investigation_id,)).fetchone()
+        if row is None:
+            raise LedgerRefused("replay_context_missing")
+        try:
+            saved = oc.OpportunityContext.from_json(row[1])
+        except oc.OpportunityContextRefused as exc:
+            raise LedgerRefused("replay_context_corrupt") from exc
+        if saved.context_id != row[0]:
+            raise LedgerRefused("replay_context_corrupt")
+        update = saved.to_dict()["investigation"].get("latest_update", {})
+        case = db.execute("SELECT payload FROM cases WHERE id=?", (investigation_id,)).fetchone()
+        initial = db.execute("SELECT payload FROM updates WHERE id=? AND case_id=?",
+                             (update.get("event_id"), investigation_id)).fetchone()
+        if case is None or initial is None:
+            raise LedgerRefused("replay_evidence_missing")
+        scan, allocation = _retained(db, row[2]), _retained(db, row[3])
+        upstream = db.execute("SELECT payload FROM allocation_decisions WHERE id=?",
+                              (allocation.get("decision_id"),)).fetchone()
+    if upstream is not None and json.loads(upstream[0]) != allocation:
+        raise LedgerRefused("replay_evidence_conflict")
+    if attention_path is not None:
+        with closing(sqlite3.connect(Path(attention_path).resolve().as_uri()+"?mode=ro", uri=True,
+                                     timeout=.1)) as db:
+            live = db.execute("SELECT payload FROM scans WHERE scan_id=?", (scan.get("scan_id"),)).fetchone()
+        if live is not None and json.loads(live[0]) != scan:
+            raise LedgerRefused("replay_evidence_conflict")
+    try:
+        rebuilt = registration_context(scan, allocation, I.investigation_from_dict(json.loads(case[0])),
+                                       I.update_from_dict(json.loads(initial[0])))
+    except (oc.OpportunityContextRefused, TypeError, KeyError, ValueError, AttributeError) as exc:
+        raise LedgerRefused("replay_evidence_refused") from exc
+    if (rebuilt.context_id, rebuilt.canonical_json) != (saved.context_id, saved.canonical_json):
+        raise LedgerRefused("replay_mismatch")
+    return rebuilt
+
+
 def _save_inputs(db, iid, bars, wanted):
     """Returns payload bytes newly inserted into `inputs`."""
     size = 0
@@ -463,7 +640,19 @@ def _append(db, update):
 
 
 def step(source_path, dest_path, now_ms=None, population_config=None):
-    """One transaction. CLI enforces the publication/runtime bound in production."""
+    """One transaction. CLI enforces the publication/runtime bound in production.
+
+    Opportunity-context persistence is optional: if its write makes SQLite
+    discard the transaction, the whole pass is redone once, from scratch, with
+    context persistence off, so registration never depends on it.
+    """
+    try:
+        return _step(source_path, dest_path, now_ms, population_config, contexts_enabled=True)
+    except ContextTransactionLost:
+        return _step(source_path, dest_path, now_ms, population_config, contexts_enabled=False)
+
+
+def _step(source_path, dest_path, now_ms, population_config, contexts_enabled):
     _install_audit()
     pass_meter = _Meter()
     started = time.monotonic()
@@ -515,6 +704,9 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
         db.execute("DELETE FROM updates WHERE case_id NOT IN (SELECT id FROM cases)")
         db.execute("DELETE FROM case_inputs WHERE case_id NOT IN (SELECT id FROM cases)")
         db.execute("DELETE FROM resource_receipts WHERE case_id NOT IN (SELECT id FROM cases)")
+        db.execute("DELETE FROM opportunity_contexts WHERE investigation_id NOT IN (SELECT id FROM cases)")
+        db.execute("DELETE FROM context_evidence WHERE sha256 NOT IN (SELECT scan_sha256 FROM opportunity_contexts "
+                   "UNION SELECT allocation_sha256 FROM opportunity_contexts)")
         db.execute("DELETE FROM inputs WHERE id NOT IN (SELECT input_id FROM case_inputs)")
         db.execute("DELETE FROM allocation_decisions WHERE decided_ms<?", (now-RETENTION_MS,))
         memory_store.retain(db)
@@ -588,6 +780,9 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
             else:
                 charge(meter, inv, "assessment", "no_state_change", prior, None)
         if snapshot:
+            contexts = detail["opportunity_context"] = {"written": 0, "duplicate": 0, "refused": {}}
+            if not contexts_enabled:
+                contexts["disabled"] = "opportunity_context_transaction_lost"
             decisions = [dict(row, registration_reason='not_selected_for_investigation')
                          for row in snapshot.scan['rows']]
             by_symbol = {row['symbol']: row for row in decisions}
@@ -650,6 +845,9 @@ def step(source_path, dest_path, now_ms=None, population_config=None):
                 current.update(registration_reason='registered', episode_id=inv.investigation_id)
                 detail["registered"] += 1
                 charge(meter, inv, "registration", "registered", None, initial.event_id)
+                # After the receipt, so case-local measurements are unchanged.
+                if contexts_enabled:
+                    _record_context(db, source[0], allocation, inv, initial, contexts)
             if pop:
                 pop.scan(dict(snapshot.scan,collector_evidence=detail.get("collector_evidence")), decisions)
         if pop and snapshot is None and pop.declaration['start_ms'] <= now < pop.declaration['discovery_cut_ms']:
