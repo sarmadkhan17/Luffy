@@ -514,8 +514,13 @@ def test_journal_does_not_import_observability():
 
 
 def test_no_kernel_wiring():
-    """Nothing in the package imports the adapter yet; Kernel stays unwired."""
+    """Nothing in the package imports the adapter yet; Kernel stays unwired.
+    The pure Opportunity Context verifier reuses `_check_selection` only and is
+    itself unwired (tests/test_opportunity_context.py)."""
+    verifier_only = {ROOT / "trader/cognition/opportunity_context.py"}
     for path in (ROOT / "trader").rglob("*.py"):
+        if path in verifier_only:
+            continue
         assert not {m for m in _imports(path) if m.endswith("selection_persistence")}, path
     kernel = (ROOT / "trader/kernel.py").read_text()
     assert "selection_persistence" not in kernel and "registry_selector" not in kernel
