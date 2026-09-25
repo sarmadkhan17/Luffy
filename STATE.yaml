@@ -1869,14 +1869,100 @@ completed_repeated_rejection_signal_occurrence_determination:
   not_queued: The repeated-rejected-opportunity Attention trigger (firing predicate, salience, dedup) remains MISSING; multi-bar rejection-episode semantics remain UNDETERMINED.
   maturity_boundary: Determination and selection only; no implementation, trigger, ranking change or maturity upgrade. Attention overall remains IMPLEMENTED.
 
-current_active_work:
+completed_repeated_rejection_signal_occurrence_observation_v1:
   id: SDD-STAGE-3-REPEATED-REJECTION-SIGNAL-OCCURRENCE-OBSERVATION-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: be7e2f2
+  evidence:
+    - be7e2f2 Add signal occurrence rejection observations
+    - trader/strategy/signal_occurrence_observation.py
+    - trader/core/journal.py
+    - tests/test_signal_occurrence_rejection_observation.py
+    - Rejection-code test adjustment - no separate rejection-code test file changed in be7e2f2 (git show --stat lists only the three files above); decision-rejection-reason.v1 codes are exercised inside tests/test_signal_occurrence_rejection_observation.py.
+  proven_facts:
+    - Versioned observation schema strategy-signal-occurrence-observation.v1.
+    - The grouping key comes only from TESTED strategy-signal-occurrence.v1.
+    - One exact occurrence aggregates the repeated decision scans carrying that occurrence.
+    - Each (occurrence_key, decision_id) is counted once.
+    - Duplicate copies of the same occurrence inside one decision do not multiply counts.
+    - Multi-signal decisions may contribute the same decision-level outcome to several occurrence observations; this is context, not causal attribution.
+    - Buckets are mutually exclusive for valid decision outcomes - executed, coded_refusal, uncoded_non_execution, codes_not_recorded, invalid_outcome_evidence.
+    - Executed classification has precedence over reason-code state.
+    - Malformed reason codes do not erase a valid persisted execution fact.
+    - Malformed/unsupported code evidence is reported explicitly and is never treated as SQL NULL.
+    - SQL NULL means codes not recorded.
+    - "Explicit [] means no coded text-producing refusal was recorded; it does NOT mean success."
+    - executed_ever means a decision carrying the occurrence executed; it does NOT prove this signal caused or was selected for that execution.
+    - First/last observed times are based only on valid decision timestamps.
+    - Ordering is deterministic.
+    - Keyless signals are reported separately by unavailable reason.
+    - Malformed source rows fail closed and do not create fabricated occurrence groups.
+    - Observation is read-only; journal content and schema are unchanged.
+    - Counts are scan observations, NOT independent opportunities or evidence strength.
+  validation:
+    observation_tests: 40 passed
+    focused_suites: 164 passed
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  boundaries:
+    REJECTION_OCCURRENCE_COUNTS_ARE_SCAN_CADENCE_OBSERVATIONS: >-
+      The 60-second scan cadence can observe one 4h signal occurrence many
+      times. Per-occurrence counts must NOT be used directly as Attention
+      salience, opportunity count, independent evidence count, usefulness
+      score, missed-profit count or episode count.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: The running /home/sarmad/trader kernel contains neither occurrence identity nor reason codes; the observation has no production rows to read yet.
+  gap_matrix_update:
+    repeated_rejected_opportunities:
+      structured_rejection_reason_source: TESTED
+      exact_signal_occurrence_identity: TESTED
+      occurrence_level_rejection_observation: TESTED
+      multi_bar_episode_semantics: UNDETERMINED
+      trigger_salience: MISSING
+    attention_overall: IMPLEMENTED
+  not_queued: No rejection Attention trigger is queued; no existing justified salience/magnitude source was found. Do not start another rejection prerequisite chain.
+  maturity_boundary: Descriptive observation only; no trigger, episode, salience, allocation, usefulness or maturity claim. Attention overall remains IMPLEMENTED.
+
+completed_stage3_capability_selection_after_rejection_observation:
+  id: SDD-STAGE-3-CAPABILITY-SELECTION-V4
+  type: SELECTION
+  state: COMPLETED_DESIGN_EVIDENCE
+  evidence_basis: Read-only inspection 2026-09-25 at be7e2f2 of SDD.md 8.1, STATE capability gaps and prior selections, trader/brain/analyst.py (review_deployed), trader/strategy/rolling.py (has_decayed, recent_verdict), trader/kernel.py (_strategy_mechanism_loop, _mechanism_once), config.yaml mechanism/decay keys, trader/core/journal.py (log_brain_event), and a read-only query of production /home/sarmad/trader data/luffy.db brain_events and strategies. No code, data or policy change.
+  selection_rules: Existing truthful runtime data; direct implementation; improves what LUFFY notices, prioritizes, remembers or investigates; no new prerequisite/audit chain; no LLM in the live loop; no invented thresholds or semantic mappings.
+  candidates:
+    strategy_degradation_health_history:
+      sdd: SDD 8.1 strategy degradation.
+      existing_source: Analyst.review_deployed runs rolling.has_decayed for every paper/active spec each mechanism cycle (mechanism.interval_minutes 720) and computes a three-branch verdict (idle / still working / decayed) with trades, pooled_pf and window evidence under config thresholds decay_recent_days / decay_min_trades / decay_floor_pf.
+      runtime_availability: Live and deterministic (backtest over cached candles, no LLM). Only the decayed branch is persisted (brain_events spec_decayed - 1 row ever in production); idle and still-working verdicts and compile failures are discarded, so LUFFY has no memory of a deployed strategy's health before retirement.
+      exact_missing_transformation: Persist every sweep verdict as a versioned per-spec observation with a structured verdict code taken from the branch, plus a read-only history accessor.
+      prerequisite_risk: LOW - existing brain_events table, about two observations per deployed spec per day; no threshold, window or mapping invented.
+      decision: SELECTED
+    failed_research_memory_registration_results:
+      finding: Assessed descriptive positioning/correlation registration results are not retained in investigation memory, but those families were excluded by owner direction in SDD-STAGE-3-CAPABILITY-SELECTION-V3 and are not deployed; not selected.
+    world_model_contradiction_and_regime:
+      finding: Unchanged - live Kernel supplies no WorldModel; needs a producer (new infrastructure).
+    rejection_attention_trigger:
+      finding: No existing justified salience/magnitude source; counts are scan-cadence observations. Not queued.
+    liquidity_urgency_owner_question_external_claim_unexplained_loss:
+      finding: Unchanged from SDD-STAGE-3-CAPABILITY-SELECTION-V3 - no truthful runtime source without new infrastructure, an LLM mapping or invented attribution.
+  selected_next_capability: SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1
+  selection_reasoning:
+    - The strategy-degradation source is already computed live and deterministically and is thrown away except at retirement - the same pattern as the discarded closed_at before occurrence identity.
+    - Retaining every verdict lets LUFFY remember each deployed strategy's measured health trajectory (working, idle, decayed, not evaluable) and lets the owner see why a strategy was or was not retired, with the thresholds that applied.
+    - It is one direct implementation over an existing store; it does not require another audit or prerequisite.
+  not_claimed: No strategy-degradation Attention trigger, early-warning threshold, trend score, retirement-policy change or maturity upgrade.
+  maturity_boundary: Selection only. Attention overall remains IMPLEMENTED.
+
+current_active_work:
+  id: SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Derive a deterministic, descriptive per-occurrence rejection history from persisted decisions - for one exact strategy-signal-occurrence.v1 key, the observing decision scans, executed/coded-refusal/uncoded/not-recorded counts, ordered reason-code history and first/last observed times.
+  objective: Persist every deployed-spec decay-sweep verdict as a versioned strategy-health-observation.v1 record (structured verdict code, measured evidence, applied config thresholds, spec fingerprint, sweep id) and expose a read-only per-spec history.
   deliverables: As scoped in NEXT.yaml.
-  boundary: Read-only observation only. No Attention trigger, salience, threshold, dedup or allocation; no multi-bar grouping or time window; no opportunity count; no journal column, store or back-fill. Decisions, signals, sizes, orders, control state, skip_reason and reason_codes unchanged. No LLM or venue request; parked boundaries unchanged; Attention overall remains IMPLEMENTED.
+  boundary: Observation only. Retirement decisions, retire_reason text, thresholds, cadence, spec selection, trading decisions and the spec_decayed event behavior unchanged; no Attention trigger, salience, trend score, early-warning threshold or new table. No LLM or venue request; parked boundaries unchanged; Attention overall remains IMPLEMENTED.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1

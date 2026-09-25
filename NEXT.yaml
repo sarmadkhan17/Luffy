@@ -2,58 +2,59 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-REPEATED-REJECTION-SIGNAL-OCCURRENCE-OBSERVATION-V1
+  id: SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Derive a deterministic, descriptive rejection history per exact strategy-signal-occurrence.v1 key from persisted decisions - observing decision scans, executed / coded-refusal / uncoded-non-execution / codes-not-recorded counts, ordered reason-code history, whether any observing decision executed, and first/last observed decision times.
+  objective: Persist every deployed-spec decay-sweep verdict as a versioned strategy-health-observation.v1 record - structured verdict code, measured evidence, the config thresholds that applied, spec fingerprint and sweep id - and expose a deterministic read-only per-spec health history, so LUFFY remembers a strategy's measured health before, not only at, retirement.
   basis:
-    - SDD-STAGE-3-REPEATED-REJECTION-SIGNAL-OCCURRENCE-DETERMINATION-V1 - REPEATED_REJECTION_SIGNAL_OCCURRENCE_V1_IMPLEMENTABLE.
-    - SDD-STAGE-3-DECISION-REJECTION-REASON-CODES-V1 TESTED at cccfbd8 - decisions.reason_codes / reason_codes_version.
-    - SDD-STAGE-3-STRATEGY-SIGNAL-OCCURRENCE-IDENTITY-V1 TESTED at 230eaa0 - signal_occurrence() over persisted signals_json.
-    - Every scanned symbol logs one decision row per scan with every fired signal in signals_json, so the key and codes are joinable exactly within the same row.
+    - SDD-STAGE-3-CAPABILITY-SELECTION-V4 - strategy degradation (SDD 8.1) selected; rejection trigger not queued.
+    - Analyst.review_deployed (trader/brain/analyst.py) runs rolling.has_decayed for every paper/active spec each mechanism cycle (config mechanism.interval_minutes 720) and persists only decayed verdicts (brain_events spec_decayed; 1 production row ever). Idle, still-working and compile-failure outcomes are discarded.
+    - SDD-STAGE-3-STRATEGY-SIGNAL-OCCURRENCE-IDENTITY-V1 TESTED at 230eaa0 supplies spec_fingerprint().
   source:
-    - Journal decisions rows - id, ts, scan_id, symbol, action, executed, reason_codes, reason_codes_version, signals_json.
-    - trader/strategy/signal_occurrence.py signal_occurrence() - the only key derivation.
-    - No venue request, LLM call, DataFeed change, recorder, new store or new column.
+    - trader/strategy/rolling.py has_decayed() three return branches and its ev dict (trades, pooled_pf, window_days and the other recent_verdict/_score_window fields).
+    - trader/brain/analyst.py review_deployed() - thresholds decay_recent_days, decay_min_trades, decay_floor_pf read from config; compile failure branch.
+    - trader/strategy/signal_occurrence.py spec_fingerprint().
+    - Journal brain_events via log_brain_event (existing table).
+    - No venue request, LLM call, DataFeed change, new table or new column.
   missing_transformation:
-    - A pure function over decision rows that groups observing rows by exact occurrence key and returns, per key - n_observing_decisions, n_executed, n_coded_refusal (executed=0 and non-empty reason_codes), n_uncoded_non_execution (executed=0 and reason_codes '[]'), n_codes_not_recorded (reason_codes NULL), executed_ever, first_observed_ts, last_observed_ts, and the ts-ordered history of (ts, decision_id, scan_id, decision action, executed, reason_codes).
-    - Per-reason counts of signals without a key (unavailable reasons from signal_occurrence()), reported separately and never assigned a key.
-    - A thin read-only Journal accessor feeding that function; no write.
+    - has_decayed adds one structured verdict_code per return branch - idle, working, decayed - set at the branch, never parsed from verdict text; returned bool and verdict text unchanged.
+    - review_deployed writes one brain_events row kind strategy_health_observed per spec per sweep with schema strategy-health-observation.v1 - sweep_id (one per review_deployed call), spec_id, spec_fingerprint, spec state, timeframe, verdict_code, the ev evidence fields, and applied thresholds {recent_days, min_trades, floor_pf}.
+    - A spec that fails to compile is recorded with verdict_code not_evaluable and reason compile_failed, and no evidence fields; it is still skipped as today.
+    - A pure summariser plus a thin read-only Journal accessor returning per-spec ts-ordered health history and the latest verdict per spec; malformed or wrong-schema rows are reported separately, never coerced.
   frozen_semantics:
-    - Unit is one exact strategy-signal-occurrence.v1 key; consecutive signal bars are never grouped; no time window.
-    - Counts are scan observations of one occurrence, not independent opportunities; no output field is named or described as an opportunity or episode count.
-    - reason_codes and executed are decision-level - attribution reads "a decision carrying this occurrence", not "this signal caused"; decision action is reported alongside because it can differ from the occurrence action.
-    - Coded refusal requires non-empty reason_codes; '[]' is uncoded non-execution (not success, not rejection); NULL is not recorded; the three are never merged.
-    - executed is the row's persisted final value; no inference from trades, outcomes or fills.
-    - Rows without a keyed signal and legacy rows are excluded from key groups; no reconstruction from ts, signal_bar_age_min or skip_reason text.
-    - Output is descriptive; it does not emit an Attention cause, change salience or trigger anything.
+    - verdict_code comes only from the has_decayed branch that returned; idle means too few recent trades to judge and is never decay or health.
+    - Evidence values are recorded exactly as computed; missing values stay null, never zero.
+    - Thresholds are the config values actually applied in that sweep; no new threshold, early-warning band, trend or slope is defined.
+    - One observation per (sweep_id, spec_id); a sweep that raises before completion records only what was written.
+    - Observation is memory and owner visibility only; it does not trigger Attention, open investigations or change retirement.
   implementation_boundary:
-    - One new pure module next to trader/strategy/signal_occurrence.py for the per-occurrence summary.
-    - trader/core/journal.py - one read-only query method if needed; no schema change.
+    - trader/strategy/rolling.py - additive verdict_code in has_decayed ev.
+    - trader/brain/analyst.py - record observations in review_deployed; an observation write failure is logged and never prevents or alters retirement.
+    - One new pure module (e.g. trader/strategy/health_observation.py) for record construction and history summary.
+    - trader/core/journal.py - one read-only SELECT accessor for strategy_health_observed rows; no schema change.
   acceptance_tests:
-    - tests/test_repeated_rejection_signal_occurrence.py (new) - repeated scans of one occurrence aggregate into one key with exact counts and ts-ordered code history; consecutive bars, different spec fingerprint/symbol/action/timeframe stay separate keys; coded refusal, '[]' and NULL rows are counted in separate buckets; an executed row sets executed_ever and is not counted as refusal; multi-signal rows contribute to each carried key with decision-level codes and decision action reported; opposite-action occurrence in a refused row keeps its own key; keyless signals are counted by unavailable reason and never grouped; legacy rows without occurrence fields excluded; symbol aliases collapse via venue_key; result is deterministic under row reordering; function is read-only (journal unchanged).
-    - tests/test_strategy_signal_occurrence_identity.py and tests/test_decision_rejection_reason_codes.py pass apart from recorded baseline failures.
-    - scripts/backtest_equivalence.py PASS unaffected (no backtest-engine change).
+    - tests/test_strategy_health_observation.py (new) - working, idle and decayed branches each record one observation with the matching verdict_code and exact evidence; compile failure records not_evaluable/compile_failed; applied thresholds equal config values; sweep_id is shared within one review_deployed call and differs across calls; spec_fingerprint matches signal_occurrence.spec_fingerprint and changes with signal-producing content; retirement actions, retire_reason text and spec_decayed event are unchanged versus has_decayed without the observation; an observation write failure does not change returned actions; NaN/missing evidence stays null; history is ts-ordered and deterministic under row reordering; malformed and wrong-schema rows reported separately; accessor is read-only (journal unchanged).
+    - tests/test_rolling.py and tests/test_analyst.py pass apart from recorded baseline failures.
+    - scripts/backtest_equivalence.py PASS (rolling.py touched additively).
     - git diff --check clean.
   preserve:
-    - Trading decisions, signals, sizing, Risk limits, Execution, protective stops, control state, skip_reason, reason_codes and signals_json unchanged.
-    - Attention salience, components, min_salience, k, dedup, allocation, investigations, memory and resource receipts unchanged.
+    - Retirement verdicts, thresholds, cadence, selection/admission, retire_reason and spec_decayed payload semantics unchanged.
+    - Trading decisions, signals, sizing, Risk, Execution, protective stops and control state unchanged.
+    - Attention salience, components, thresholds, dedup, allocation, investigations and memory unchanged.
     - No LLM calls or venue requests.
   not_in_scope:
-    - repeated-rejected-opportunity Attention trigger, firing predicate, count threshold, salience or priority magnitude
-    - multi-bar rejection-episode grouping, time windows or setup merging
-    - independent opportunity counts, Opportunity registry or Opportunity Context
-    - coding the signal-cooldown or other non-text refusal paths
-    - forward-outcome, missed-profit or usefulness labels
-    - back-filling legacy rows or parsing skip_reason text
+    - strategy-degradation Attention trigger, early-warning threshold, trend/slope score or salience
+    - change to decay thresholds, windows, retirement policy or mechanism cadence
+    - back-filling history or parsing retire_reason / verdict text
+    - dashboard UI (the accessor may be consumed later)
+    - repeated-rejected-opportunity trigger or multi-bar episode grouping
     - correlation, positioning, resource receipts, unassessable memory, usefulness labels, storage guard
     - liquidation clock, portfolio magnitude, Scheme-D, downstream new-data dispatch
     - deployment to the running /home/sarmad/trader kernel
   established_boundary:
-    - SIGNAL_OCCURRENCE_IS_NOT_OPPORTUNITY_EPISODE holds.
-    - REJECTION_CODES_COVER_TEXT_PRODUCING_REFUSAL_PATHS_ONLY holds; [] is not success.
-    - Rejection-episode grouping semantics remain UNDETERMINED; the trigger remains MISSING.
+    - REJECTION_OCCURRENCE_COUNTS_ARE_SCAN_CADENCE_OBSERVATIONS holds; rejection trigger/salience remains MISSING and multi-bar episode semantics UNDETERMINED.
+    - SIGNAL_OCCURRENCE_IS_NOT_OPPORTUNITY_EPISODE and REJECTION_CODES_COVER_TEXT_PRODUCING_REFUSAL_PATHS_ONLY hold.
     - SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1 is PARKED_LABEL_SOURCE_MISSING; do not invent labels from descriptive, registration-time or P&L evidence.
     - SDD-STAGE-3-ATTENTION-NEW-DATA-STORAGE-CAPACITY-GUARD-V1 is PARKED_OWNER_POLICY_REQUIRED; do not request or invent ledger_max_bytes or min_free_bytes.
     - OPERATOR_STORAGE_POLICY_REQUIRED, EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED and DOWNSTREAM_DISPATCH_PREREQUISITE_REQUIRED remain open and must not become the active package.
@@ -62,7 +63,7 @@ work_package:
     - failed_research_memory is PARTIAL; CORRELATION_UNASSESSABLE_EFFECTIVELY_UNREACHABLE and MEMORY_CONTEXT_NOT_AUTHORITY hold.
     - Attention overall remains IMPLEMENTED; this package grants no maturity upgrade or activation.
   after_completion:
-    - Record TESTED evidence in STATE.yaml; update gap_matrix repeated_rejected_opportunities with occurrence-level observation TESTED / rejection-episode grouping UNDETERMINED / trigger MISSING; gate any trigger with a separate determination, not automatic implementation; no maturity upgrade.
+    - Record TESTED evidence in STATE.yaml; record strategy degradation as health observation TESTED / trigger MISSING; do not queue a degradation trigger or early-warning threshold without a justified source; no maturity upgrade.
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -128,4 +129,4 @@ parked_usefulness_feedback:
   reopen_when: A concrete investigation-value.v1 protocol for an active family, with frozen routine-evidence comparator and deterministic ESTABLISHED/NOT_ESTABLISHED closure predicates, is frozen and producing closure receipts, or the owner explicitly prioritizes designing one.
 
 after_completion:
-  - Record SDD-STAGE-3-REPEATED-REJECTION-SIGNAL-OCCURRENCE-OBSERVATION-V1 evidence in STATE.yaml; keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch; do not implement the rejected-opportunity trigger or multi-bar episode grouping without a separate determination.
+  - Record SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1 evidence in STATE.yaml; keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch; do not implement a rejection or strategy-degradation Attention trigger, early-warning threshold or multi-bar episode grouping without a justified existing salience/magnitude source.
