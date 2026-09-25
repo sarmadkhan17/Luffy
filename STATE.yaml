@@ -95,6 +95,9 @@ capabilities:
       - 05a1274 Add strategy decay research run receipts
       - trader/cognition/research_run.py
       - tests/test_strategy_decay_research_run.py
+      - b9466bc Add strategy decay research bank
+      - trader/cognition/research_bank.py
+      - tests/test_strategy_decay_research_bank.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
@@ -104,14 +107,15 @@ capabilities:
       - deterministic research-evidence.v1 collection and immutable frozen storage of ROUTED research-plan.v1 evidence is TESTED at 65449ba and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-EVIDENCE-V1); the collector makes no support/refute classification or conclusion
       - deterministic research-result.v1 structural closure of verified research-evidence.v1 is TESTED at 6deee84 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-RESULT-V1); every result is INCONCLUSIVE (no_registered_falsifier_predicates) and no SUPPORTED or REFUTED path exists
       - offline deterministic Q -> P -> E -> R research-run.v1 chain runner with durable, immutable, idempotent run receipts is TESTED at 05a1274 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-RUN-RECEIPT-V1); the runner adds no predicates, labels, scoring, suppression, salience or asset attribution
+      - deterministic versioned research-bank-object.v1, one immutable object per (run, result) built only from the verified persisted Q/P/E/R/run chain, is TESTED at b9466bc and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-BANK-OBJECT-V1); claims/next questions NOT_AVAILABLE, supporting/contradictory evidence NOT_CLASSIFIED, no scoring, rank, salience, usefulness or asset attribution
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
       - strategy-degradation Attention trigger and salience/magnitude remain MISSING
       - temporary-regime-absence hypothesis remains UNAVAILABLE; no truthful WorldModel/regime evidence source exists
       - no registered falsifier predicates exist; no evaluative conclusion on any strategy-decay hypothesis is produced (research-result.v1 is structural INCONCLUSIVE only)
-      - no Research Bank object exists
-      - no Attention trigger, live caller, consumer or deployment of research-question.v1 / research-plan.v1 / research-evidence.v1 / research-result.v1 / research-run.v1 exists
-      - research_runs storage has no size cap; the owner storage-policy boundary remains parked
+      - no failed-research recall/suppression over research-bank-object.v1 exists
+      - no Attention trigger, live caller, consumer or deployment of research-question.v1 / research-plan.v1 / research-evidence.v1 / research-result.v1 / research-run.v1 / research-bank-object.v1 exists
+      - research_runs and research-bank storage have no size cap; the owner storage-policy boundary remains parked
 
   instrument_registry:
     state: TESTED
@@ -2603,10 +2607,75 @@ completed_strategy_decay_research_run_receipt_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Offline deterministic orchestration and durable run receipts for the existing strategy-decay research chain only; no predicate, label, evaluative conclusion, trigger, salience, usefulness, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_strategy_decay_research_bank_object_v1:
+  id: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-BANK-OBJECT-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: b9466bc
+  evidence:
+    - b9466bc Add strategy decay research bank
+    - trader/cognition/research_bank.py
+    - trader/core/journal.py
+    - tests/test_strategy_decay_research_bank.py
+    - tests/test_strategy_decay_research_question.py, tests/test_strategy_decay_research_plan.py, tests/test_strategy_decay_research_evidence.py, tests/test_strategy_decay_research_result.py, tests/test_strategy_decay_research_run.py (research-chain guard tests updated for the offline Bank caller)
+  proven_facts:
+    - A deterministic versioned research-bank-object.v1 exists.
+    - It is built only from verified persisted question/plan/evidence/result/run records.
+    - Exact IDs and canonical hashes bind the complete chain.
+    - Predecessor bindings and scope consistency are verified.
+    - All four chain IDs must occur exactly once as inserted/duplicate in the run and must not appear in conflict membership.
+    - One immutable bank object exists per (run, result).
+    - The same result reached by another run gets a distinct bank object.
+    - Canonical nested schemas/types and a deterministic bank_object_id are enforced.
+    - Sources are exact references to verified frozen evidence, not reinterpretations.
+    - Extracted claims and next questions remain NOT_AVAILABLE with structural reasons.
+    - Supporting/contradictory evidence remain NOT_CLASSIFIED because no registered falsifier predicates exist.
+    - Structural INCONCLUSIVE result/status is copied without market/strategy interpretation.
+    - The experiment field is structural run-step history only.
+    - Limitations preserve exact source wording and only truthfully attributable refusals.
+    - Run telemetry/cost is copied exactly as MEASURED/NOT_MEASURED, with no budget, cap, efficiency or per-result attribution.
+    - Duplicate/restart is idempotent and conflicts never overwrite.
+    - Load re-verifies the linked chain.
+    - Unrelated corruption inside the same run may make load unavailable; accepted fail-closed availability limitation.
+    - No scoring, probability, rank, salience, usefulness or asset attribution.
+    - No Attention, Kernel, Analyst, Risk, Execution or live wiring.
+    - No LLM or network.
+  validation:
+    package_tests: 84 bank tests passed (independently verified); reported focused total 585 tests
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  limitations:
+    - Run-wide cost is not attributable to one result.
+    - Load inherits broad run fail-closed verification scope.
+    - Current-source absence state is not frozen as a historical limitation.
+    - Storage remains uncapped under the parked owner storage-policy boundary.
+    - Production has no rows while the upstream chain remains undeployed.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commit b9466bc.
+  gap_matrix_update:
+    strategy_decay_research:
+      question: TESTED
+      plan_routing: TESTED
+      evidence_collection: TESTED
+      structural_result: TESTED
+      offline_chain_runner_durable_run_receipt: TESTED
+      research_bank_object: TESTED
+      failed_research_recall_suppression: MISSING - bank objects are stored and loadable but no recall or suppression consumer exists; global failed_research_memory remains PARTIAL
+      registered_falsifier_predicates_evaluative_conclusion: MISSING
+      truthful_world_model_regime_evidence: MISSING
+      attention_trigger_salience: MISSING
+      live_caller_deployment: MISSING
+      deployed: NO
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Structured, deterministic Research Bank objects for the existing offline strategy-decay research chain only; no predicate, classification, evaluative conclusion, recall/suppression, trigger, salience, usefulness, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-RUN-RECEIPT-V1 is TESTED at 05a1274 and NOT_DEPLOYED. No next package is selected or queued.
+  note: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-BANK-OBJECT-V1 is TESTED at b9466bc and NOT_DEPLOYED. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
