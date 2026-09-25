@@ -1781,14 +1781,102 @@ completed_rejection_episode_identity_determination:
   not_queued: The repeated-rejected-opportunity trigger remains MISSING (needs this identity, then a separately justified salience policy).
   maturity_boundary: Determination and selection only; no implementation, trigger, ranking change or maturity upgrade. Attention overall remains IMPLEMENTED.
 
-current_active_work:
+completed_strategy_signal_occurrence_identity_v1:
   id: SDD-STAGE-3-STRATEGY-SIGNAL-OCCURRENCE-IDENTITY-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 230eaa0
+  evidence:
+    - 230eaa0 Add strategy signal occurrence identity
+    - trader/strategy/signal_occurrence.py
+    - trader/strategy/compile.py
+    - tests/test_strategy_signal_occurrence_identity.py
+  proven_facts:
+    - Versioned identity contract strategy-signal-occurrence.v1.
+    - Occurrence identity is (spec_id, spec_fingerprint, canonical symbol, action, signal_timeframe, exact signal_bar_close_ms).
+    - spec_fingerprint covers the signal-producing strategy content - entry_long, entry_short, filters, timeframe, universe, direction.
+    - The same spec_id with changed signal-producing content gets a different fingerprint.
+    - Symbol canonicalization uses the existing venue identity convention (engine/protective.py venue_key).
+    - signal_bar_close_ms comes only from the exact fully closed bar actually evaluated.
+    - No reconstruction from signal_bar_age_min, wall clock, nearest bar or scan time.
+    - Repeated scans of the same spec-version/bar produce the same occurrence identity.
+    - Restart/replay preserves the identity through signals_json.
+    - Consecutive closed bars remain distinct occurrences.
+    - Different spec version, symbol, action or timeframe produce distinct occurrences.
+    - Legacy/library strategies without exact trustworthy closed-bar identity receive no fabricated key.
+    - Unavailable reasons are explicit (no_closed_bar_identity, signal_bar_close_unavailable, entry_series_misaligned, invalid_occurrence_fields).
+    - Strategy behavior remains unchanged.
+  validation:
+    occurrence_identity_tests: 24 passed
+    focused_suites: 186 passed
+    full_suite: Same failing/error test IDs as clean HEAD.
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  boundaries:
+    SIGNAL_OCCURRENCE_IS_NOT_OPPORTUNITY_EPISODE: >-
+      The identity means "one signal from this exact strategy-spec version,
+      canonical instrument/action, on this exact closed bar." It does NOT
+      establish multi-bar setup identity, independent economic opportunity,
+      thesis identity, rejection episode or trade identity.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: The running /home/sarmad/trader kernel does not contain occurrence identity or reason codes; its journal has no reason_codes column and 0 decisions whose signals_json carries signal_bar_close_ms (read-only check 2026-09-25).
+  gap_matrix_update:
+    repeated_rejected_opportunities:
+      structured_rejection_reason_source: TESTED
+      exact_signal_occurrence_identity: TESTED
+      rejection_episode_grouping_semantics: UNDETERMINED
+      trigger: MISSING
+    attention_overall: IMPLEMENTED
+  maturity_boundary: Identity receipt only; no episode, trigger, salience, allocation, usefulness or maturity claim. Attention overall remains IMPLEMENTED.
+
+completed_repeated_rejection_signal_occurrence_determination:
+  id: SDD-STAGE-3-REPEATED-REJECTION-SIGNAL-OCCURRENCE-DETERMINATION-V1
+  type: EVIDENCE_AUDIT
+  state: COMPLETED_DESIGN_EVIDENCE
+  question: Can repeated rejected opportunities now be represented truthfully as repeated rejections of one exact signal occurrence, without inventing a broader multi-bar episode?
+  decision: REPEATED_REJECTION_SIGNAL_OCCURRENCE_V1_IMPLEMENTABLE
+  evidence_basis: Read-only inspection 2026-09-25 at 230eaa0 of trader/strategy/signal_occurrence.py, trader/strategy/compile.py, trader/core/journal.py (decisions schema, log_decision, update_decision_outcome, reason_codes migration), trader/engine/orchestrator.py (decide, signal cooldown, journalize), trader/kernel.py (scan loop, entry path), and a read-only query of the production /home/sarmad/trader data/luffy.db decisions table. No code, data or policy change.
+  findings:
+    per_scan_persistence: Every scanned symbol logs one decision row per scan (HOLD included) through journalize -> log_decision, and signals_json persists every fired StrategySignal with its params; so each scan that observed an occurrence carries its key and can be joined on it exactly.
+    derivable_per_occurrence:
+      - number of decision rows (scans) whose signals_json carries the key
+      - executed flag of each such row (final value after update_decision_outcome / recovery overwrite)
+      - ordered (ts, decision_id, scan_id, decision action, executed, reason_codes) history
+      - whether any observing decision was executed
+      - first and last observing decision ts
+    decision_level_attribution: reason_codes and executed belong to the decision, not the signal. A row may carry several signals (several specs, or opposing directions), and decision action may differ from the occurrence action (strategy gate, cooldown). The truthful statement is "a decision carrying this occurrence was refused with codes X", not "this signal caused refusal X".
+    uncoded_non_execution: >-
+      Not every non-executed observing row is a coded refusal. The orchestrator
+      signal cooldown rewrites a directional decision to HOLD with no
+      skip_reason text and no code (control event only); below-threshold HOLDs
+      and zero-lot/submission failures also carry '[]'. Production evidence:
+      6 of the 7 signal-bearing decisions in the last 3 days are HOLD with
+      empty skip_reason while their signal is BUY. These rows must be counted
+      separately as uncoded non-executions, never as coded rejections and
+      never as success ([] is not success; NULL is not recorded).
+    repetition_is_scan_cadence: scan_interval_seconds 60 re-observes one closed 4h signal bar up to about 240 times, so the per-occurrence scan count and refusal count are driven by scan cadence and signal-bar length, not by independent evidence. A count is descriptive only; it is not an opportunity count and does not by itself justify a firing threshold or salience.
+    runtime_data: Production journal is pre-deployment (no reason_codes column, 0 rows with occurrence fields), so V1 is validated on synthetic journal fixtures; no empirical per-occurrence distribution exists yet.
+  rejected_alternatives:
+    - grouping consecutive signal bars - multi-bar episode semantics remain UNDETERMINED
+    - counting occurrences as independent opportunities - SIGNAL_OCCURRENCE_IS_NOT_OPPORTUNITY_EPISODE
+    - treating executed=0 as rejected - conflates coded refusals with uncoded non-execution
+    - count-threshold Attention trigger or salience - no justified threshold/magnitude; counts are scan-cadence artifacts
+  selected_next_capability: SDD-STAGE-3-REPEATED-REJECTION-SIGNAL-OCCURRENCE-OBSERVATION-V1
+  selection_reasoning:
+    - The key and codes are both persisted in the same decision row, so the observation is a pure deterministic read over existing journal rows - no new store, column, time window or interpretation.
+    - It makes repeated refusals of one exact signal visible to the owner and to later Attention work without pseudo-replicating them into opportunity counts.
+  not_queued: The repeated-rejected-opportunity Attention trigger (firing predicate, salience, dedup) remains MISSING; multi-bar rejection-episode semantics remain UNDETERMINED.
+  maturity_boundary: Determination and selection only; no implementation, trigger, ranking change or maturity upgrade. Attention overall remains IMPLEMENTED.
+
+current_active_work:
+  id: SDD-STAGE-3-REPEATED-REJECTION-SIGNAL-OCCURRENCE-OBSERVATION-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Persist a deterministic signal-occurrence identity (spec timeframe and exact signal-bar close time) with each compiled strategy signal so repeated decisions on the same signal occurrence share an exact key.
+  objective: Derive a deterministic, descriptive per-occurrence rejection history from persisted decisions - for one exact strategy-signal-occurrence.v1 key, the observing decision scans, executed/coded-refusal/uncoded/not-recorded counts, ordered reason-code history and first/last observed times.
   deliverables: As scoped in NEXT.yaml.
-  boundary: Observability receipt only. Signals, decisions, sizes, orders, control state, skip_reason and reason_codes unchanged; no episode table, trigger, salience, allocation or Opportunity registry; no time window; no back-fill. No LLM or venue request; parked boundaries unchanged; Attention overall remains IMPLEMENTED.
+  boundary: Read-only observation only. No Attention trigger, salience, threshold, dedup or allocation; no multi-bar grouping or time window; no opportunity count; no journal column, store or back-fill. Decisions, signals, sizes, orders, control state, skip_reason and reason_codes unchanged. No LLM or venue request; parked boundaries unchanged; Attention overall remains IMPLEMENTED.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
