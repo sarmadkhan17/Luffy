@@ -5,15 +5,20 @@ work_package:
   id: null
   status: NO_ACTIVE_PACKAGE
   last_completed:
-    id: SDD-STAGE-3-UNASSESSABLE-MEMORY-MALFORMED-SOURCE-HARDENING-V1
+    id: SDD-STAGE-3-OPPORTUNITY-CONTEXT-V1
     state: TESTED
-    implementation_commit: 995fa9c
-    record: STATE.yaml completed_unassessable_memory_malformed_source_hardening_v1
+    implementation_commit: 6874830
+    evidence:
+      - follow_up_commit b28a2c8 Allow opportunity context selection verifier import
+      - Astra final review PASS; focused Opportunity Context and selection persistence tests passed; git diff --check clean
+    runtime_deployment: NOT_DEPLOYED
+    record: STATE.yaml completed_opportunity_context_v1
   selection: No next package is selected or queued. Selection is deferred until after this control-plane closure and must follow the STATE.yaml selection rules and parked boundaries.
   established_boundary:
     - INVESTIGATION_ASSESSED_MEMORY_CONTEXT_NOT_AUTHORITY, ASSESSED_RESULT_VOCABULARY_NOT_VALUE_LABEL and KNOWN_BEFORE_REGISTRATION_REQUIRED hold; assessed memory is context_only, is not an investigation-value.v1 label, and is not deployed.
     - Measured-memory malformed-source hardening is TESTED at 71204ca and not deployed; valid measured, assessed and not_testable memory behavior is unchanged.
     - Unassessable-memory malformed-source hardening is TESTED at 995fa9c and not deployed; valid unassessable, measured and assessed memory behavior is unchanged.
+    - Opportunity Context (opportunity-context.v1) is TESTED at 6874830 with follow-up b28a2c8 and NOT_DEPLOYED; it creates no salience, score, probability, EV, usefulness or direction and has no Kernel, Risk, Execution, LLM, network or venue wiring.
     - Broader 256-row candidate crowding from unrelated terminal statuses is a pre-existing limitation recorded in STATE capabilities.investigation.gaps only; it is NOT queued and must not become the active package without explicit selection.
     - STRATEGY_HEALTH_OBSERVATION_NOT_TRADING_EDGE and SWEEP_OBSERVATIONS_NOT_INDEPENDENT_EVIDENCE hold; strategy-degradation asset attribution, Attention trigger and salience/magnitude remain MISSING; the package is not deployed.
     - REJECTION_OCCURRENCE_COUNTS_ARE_SCAN_CADENCE_OBSERVATIONS holds; rejection trigger/salience remains MISSING and multi-bar episode semantics UNDETERMINED.

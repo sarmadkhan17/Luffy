@@ -335,11 +335,17 @@ capabilities:
       - full analyst integration and full strategy migration are not established
 
   opportunity_context:
-    state: DEFINED
+    state: TESTED
     evidence:
       - SDD.md
+      - trader/cognition/opportunity_context.py
+      - tests/test_opportunity_context.py
+      - tests/test_attention_selection_persistence.py
+    proven_facts:
+      - immutable versioned opportunity-context.v1 object is implemented and tested (6874830, follow-up b28a2c8)
     gaps:
-      - coherent frozen Opportunity Context object is not yet implemented
+      - not deployed; no Kernel, Risk, Execution, LLM, network or venue wiring
+      - no salience, score, probability, EV, usefulness or direction is produced
 
   portfolio_allocation:
     state: DEFINED
@@ -2167,10 +2173,44 @@ completed_unassessable_memory_malformed_source_hardening_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Robustness hardening only; no usefulness, predictive, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_opportunity_context_v1:
+  id: SDD-STAGE-3-OPPORTUNITY-CONTEXT-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 6874830
+  follow_up_commit: b28a2c8
+  evidence:
+    - 6874830 Add opportunity context
+    - b28a2c8 Allow opportunity context selection verifier import
+    - trader/cognition/opportunity_context.py
+    - tests/test_opportunity_context.py
+    - tests/test_attention_selection_persistence.py
+  proven_facts:
+    - Immutable, versioned opportunity-context.v1 exists.
+    - Binds existing Attention, registry selection, allocation, signal occurrence, investigation and optional WorldModel evidence.
+    - Unavailable evidence remains explicit UNKNOWN.
+    - No salience, score, probability, EV, usefulness or direction is created.
+    - SIGNAL_OCCURRENCE_IS_NOT_OPPORTUNITY_EPISODE is preserved.
+    - Source integrity and point-in-time checks fail closed.
+    - Canonical instrument identity is validated.
+    - from_json verifies the full contract, not only the checksum.
+    - Serialization and context_id are deterministic.
+    - No Kernel, Risk, Execution, LLM, network or venue wiring.
+  validation:
+    package_tests: focused Opportunity Context and selection persistence tests passed
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment or live activation is implied by commits 6874830 or b28a2c8.
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Context-binding object only; no usefulness, predictive, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-UNASSESSABLE-MEMORY-MALFORMED-SOURCE-HARDENING-V1 is TESTED at 995fa9c. No next package is selected or queued.
+  note: SDD-STAGE-3-OPPORTUNITY-CONTEXT-V1 is TESTED at 6874830 (follow-up b28a2c8). No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
