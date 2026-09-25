@@ -17,9 +17,10 @@ The question is strategy-scoped: it names a spec, never an asset, and
 carries no ranking, salience, urgency, usefulness, probability, score or
 threshold of its own. ``decayed`` keeps its health-observation meaning —
 a lenient retirement trigger on a recent close-fill backtest, not a proven
-loss of edge. Nothing consumes the question: there is no Research Planner,
-Source Router or Attention trigger behind it, and it has no network, LLM,
-Risk, Execution or trading authority.
+loss of edge. Its only consumer is the offline evidence-routing planner
+(``cognition/research_plan.py``, not live-wired); there is no Source Router
+or Attention trigger behind it, and it has no network, LLM, Risk, Execution
+or trading authority.
 
 History is read fail-closed. A candidate is refused, not guessed, when the
 history between its baseline (the latest earlier truthful observation whose
@@ -651,10 +652,12 @@ def verify_evidence(q: dict, rows) -> None:
             _fail("evidence_malformed")
         return o
 
+    # canonical text, not dict equality: 3 == 3.0 == True in Python
     src, prior = q["source"], q["prior"]
-    if _source(obs_at(src["event_id"])) != src:
+    if canonical(_source(obs_at(src["event_id"]))) != canonical(src):
         _fail("source_evidence_mismatch")
-    if prior is not None and _prior(obs_at(prior["event_id"])) != prior:
+    if (prior is not None
+            and canonical(_prior(obs_at(prior["event_id"]))) != canonical(prior)):
         _fail("prior_evidence_mismatch")
     lo = prior["event_id"] if prior else 0
     between = sorted(e for e in by_id
@@ -665,7 +668,7 @@ def verify_evidence(q: dict, rows) -> None:
         if obs_at(e)["verdict"] not in UNREADABLE:
             _fail("unreadable_evidence_mismatch")
     d = derive(_bounded(spec_id, src, rows))
-    if q not in d.questions:
+    if canonical(q) not in {canonical(x) for x in d.questions}:
         why = next((r.reason for r in d.refusals
                     if r.spec_id in (None, spec_id)), "not_derived")
         _fail(f"derivation_mismatch:{why}")
