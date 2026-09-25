@@ -89,6 +89,9 @@ capabilities:
       - 65449ba Add strategy decay research evidence
       - trader/cognition/research_evidence.py
       - tests/test_strategy_decay_research_evidence.py
+      - 6deee84 Add strategy decay research results
+      - trader/cognition/research_result.py
+      - tests/test_strategy_decay_research_result.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
@@ -96,12 +99,13 @@ capabilities:
       - strategy-scoped research-question.v1 generation from existing strategy-health-observation.v1 decay evidence is TESTED at 42fa0b1 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-QUESTION-V1)
       - deterministic research-plan.v1 routing of persisted strategy_decay research-question.v1 to existing truthful internal evidence is TESTED at d509963 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-PLAN-V1); plans route evidence only and make no conclusion
       - deterministic research-evidence.v1 collection and immutable frozen storage of ROUTED research-plan.v1 evidence is TESTED at 65449ba and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-EVIDENCE-V1); the collector makes no support/refute classification or conclusion
+      - deterministic research-result.v1 structural closure of verified research-evidence.v1 is TESTED at 6deee84 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-RESULT-V1); every result is INCONCLUSIVE (no_registered_falsifier_predicates) and no SUPPORTED or REFUTED path exists
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
       - strategy-degradation Attention trigger and salience/magnitude remain MISSING
       - temporary-regime-absence hypothesis remains UNAVAILABLE; no truthful WorldModel/regime evidence source exists
-      - no falsifier/conclusion/result layer consumes research-evidence.v1
-      - no Attention trigger, live caller, consumer or deployment of research-question.v1 / research-plan.v1 / research-evidence.v1 exists
+      - no registered falsifier predicates exist; no evaluative conclusion on any strategy-decay hypothesis is produced (research-result.v1 is structural INCONCLUSIVE only)
+      - no Attention trigger, live caller, consumer or deployment of research-question.v1 / research-plan.v1 / research-evidence.v1 / research-result.v1 exists
 
   instrument_registry:
     state: TESTED
@@ -2469,10 +2473,73 @@ completed_strategy_decay_research_evidence_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Deterministic internal evidence collection and frozen storage for strategy-decay research plans only; no classification, conclusion, trigger, salience, usefulness, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_strategy_decay_research_result_v1:
+  id: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-RESULT-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 6deee84
+  evidence:
+    - 6deee84 Add strategy decay research results
+    - trader/cognition/research_result.py
+    - trader/core/journal.py
+    - tests/test_strategy_decay_research_result.py
+    - tests/test_strategy_decay_research_evidence.py
+    - tests/test_strategy_decay_research_question.py
+  proven_facts:
+    - A deterministic, versioned research-result.v1 exists.
+    - It consumes only verified research-evidence.v1.
+    - The exact evidence ID and canonical evidence hash are bound.
+    - Persistence is immutable and idempotent, one result per evidence record.
+    - A conflicting duplicate never overwrites.
+    - Every result is structurally INCONCLUSIVE.
+    - The overall reason is no_registered_falsifier_predicates.
+    - genuine_deterioration, insufficient_recent_opportunities and data_failure stay NOT_ASSESSED.
+    - temporary_regime_absence stays UNAVAILABLE with the exact source reason no_truthful_worldmodel_source.
+    - No SUPPORTED or REFUTED path exists.
+    - The fixed four-hypothesis layout matches the current valid strategy-decay evidence contract.
+    - Limitations copy exact source values without reinterpretation.
+    - Load rebuilds and byte-compares the full canonical result.
+    - Invalid frozen evidence remains rejected even when original sources were deleted.
+    - No support/refute predicates, scores, probabilities, ranks, salience, usefulness or asset attribution.
+    - No Attention, Kernel, Analyst, Risk, Execution or live wiring.
+    - No LLM or network.
+  validation:
+    package_tests: 417 passed (independently verified)
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  limitations:
+    - Always INCONCLUSIVE until registered falsifier predicates exist.
+    - Legitimate later decision changes can make upstream evidence/result re-verification fail closed.
+    - Pre-collection decision tampering remains undetectable, inherited from research-evidence.v1.
+    - Refusals are returned but not durably stored.
+    - Production has no upstream source rows because the chain remains undeployed.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commit 6deee84.
+  gap_matrix_update:
+    strategy_degradation:
+      deterministic_strategy_health_source: TESTED
+      durable_health_history: TESTED
+      research_question_generation_from_decay: TESTED
+      deterministic_internal_research_planning_routing: TESTED
+      deterministic_evidence_collection_storage: TESTED
+      structural_result_storage: TESTED
+      registered_falsifier_predicates_evaluative_conclusion: MISSING
+      asset_attribution: MISSING - not established
+      attention_strategy_degradation_trigger: MISSING
+      salience_magnitude: MISSING
+      truthful_world_model_regime_evidence: MISSING
+      live_consumer_deployment: MISSING
+      deployed: NO
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Structural INCONCLUSIVE closure of strategy-decay research evidence only; no support/refute classification, evaluative conclusion, trigger, salience, usefulness, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-EVIDENCE-V1 is TESTED at 65449ba and NOT_DEPLOYED. No next package is selected or queued.
+  note: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-RESULT-V1 is TESTED at 6deee84 and NOT_DEPLOYED. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
