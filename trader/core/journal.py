@@ -257,6 +257,26 @@ CREATE TABLE IF NOT EXISTS research_evidence (
     recorded_at_ms INTEGER NOT NULL,
     UNIQUE(schema, evidence_kind, plan_id)
 );
+
+-- research-result.v1 (cognition/research_result.py): the structural result
+-- closing one verified research-evidence record. The canonical JSON is
+-- authoritative; the other columns are its projection. Append-only: never
+-- updated or deleted.
+CREATE TABLE IF NOT EXISTS research_results (
+    result_id TEXT PRIMARY KEY,      -- sha256 of the result identity
+    schema TEXT NOT NULL,
+    result_kind TEXT NOT NULL,
+    resolver_id TEXT NOT NULL,
+    evidence_id TEXT NOT NULL UNIQUE,
+    evidence_sha256 TEXT NOT NULL,   -- sha256 of the evidence canonical JSON
+    plan_id TEXT NOT NULL,
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    status TEXT NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL
+);
 """
 
 
@@ -734,6 +754,45 @@ class Journal:
                               "ORDER BY rowid")
         return self.query("SELECT * FROM research_evidence "
                           "WHERE plan_id=? ORDER BY rowid", (plan_id,))
+
+    # -- research results: primitives only; the contract is
+    # cognition/research_result.py ----------------------------------------
+    _RESULT_COLUMNS = ("result_id", "schema", "result_kind", "resolver_id",
+                       "evidence_id", "evidence_sha256", "plan_id",
+                       "scope_kind", "scope_id", "status",
+                       "canonical_sha256", "canonical_json")
+
+    def record_research_result(self, row: dict, *,
+                               recorded_at_ms: int) -> str:
+        """Insert one research-result row. "inserted" on a write;
+        "duplicate" when an identical row (ignoring recorded_at_ms) already
+        exists under the same ID; "conflict" when the ID, or another result
+        for the same evidence, exists with other content. Nothing is written
+        unless "inserted"."""
+        values = tuple(row[k] for k in self._RESULT_COLUMNS)
+        cols = ",".join(self._RESULT_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {cols} FROM research_results WHERE result_id=? "
+                "OR evidence_id=?",
+                (row["result_id"], row["evidence_id"])).fetchall()
+            if old:
+                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_results({cols},recorded_at_ms) "
+                      f"VALUES ({','.join('?' * (len(values) + 1))})",
+                      values + (recorded_at_ms,))
+        return "inserted"
+
+    def research_results(self, evidence_id: str | None = None) -> list[dict]:
+        """Stored research-result rows in insertion order."""
+        if evidence_id is None:
+            return self.query("SELECT * FROM research_results "
+                              "ORDER BY rowid")
+        return self.query("SELECT * FROM research_results "
+                          "WHERE evidence_id=? ORDER BY rowid", (evidence_id,))
 
     # -- strategy population ------------------------------------------------
     def upsert_strategy(self, st) -> None:
