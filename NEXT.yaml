@@ -5,14 +5,14 @@ work_package:
   id: null
   status: NO_ACTIVE_PACKAGE
   last_completed:
-    id: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-PLAN-V1
+    id: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-EVIDENCE-V1
     state: TESTED
-    implementation_commit: d509963
+    implementation_commit: 65449ba
     evidence:
-      - trader/cognition/research_plan.py; trader/cognition/research_question.py; trader/core/journal.py; tests/test_strategy_decay_research_plan.py; tests/test_strategy_decay_research_question.py
-      - Astra final review PASS; independently verified 188 tests passed including 68 plan tests; git diff --check clean
+      - trader/cognition/research_evidence.py; trader/core/journal.py; tests/test_strategy_decay_research_evidence.py; tests/test_strategy_decay_research_plan.py; tests/test_strategy_decay_research_question.py
+      - Astra final review PASS; independently verified 287 tests passed; git diff --check clean
     runtime_deployment: NOT_DEPLOYED
-    record: STATE.yaml completed_strategy_decay_research_plan_v1
+    record: STATE.yaml completed_strategy_decay_research_evidence_v1
   selection: No next package is selected or queued. Selection is deferred until after this control-plane closure and must follow the STATE.yaml selection rules and parked boundaries.
   established_boundary:
     - INVESTIGATION_ASSESSED_MEMORY_CONTEXT_NOT_AUTHORITY, ASSESSED_RESULT_VOCABULARY_NOT_VALUE_LABEL and KNOWN_BEFORE_REGISTRATION_REQUIRED hold; assessed memory is context_only, is not an investigation-value.v1 label, and is not deployed.
@@ -24,6 +24,7 @@ work_package:
     - STRATEGY_HEALTH_OBSERVATION_NOT_TRADING_EDGE and SWEEP_OBSERVATIONS_NOT_INDEPENDENT_EVIDENCE hold; strategy-degradation asset attribution, Attention trigger and salience/magnitude remain MISSING; the package is not deployed.
     - Strategy-decay research-question.v1 generation is TESTED at 42fa0b1 and NOT_DEPLOYED; strategy-scoped only, no asset attribution, no Attention trigger/salience/ranking/urgency/usefulness/score, no live caller or consumer; refusals are not durably persisted; superseded as consumer gap by research-plan.v1 below.
     - Strategy-decay research-plan.v1 is TESTED at d509963 and NOT_DEPLOYED; routes evidence only and makes no conclusion; temporary regime absence remains UNAVAILABLE (no truthful WorldModel/regime source); no asset attribution, score, probability, rank, salience, priority, usefulness, Attention trigger, live caller or trading authority. Attention trigger/salience, truthful WorldModel/regime evidence and live consumer/deployment remain MISSING.
+    - Strategy-decay research-evidence.v1 is TESTED at 65449ba and NOT_DEPLOYED; collects and immutably freezes ROUTED plan evidence only; makes no support/refute classification or conclusion; temporary regime absence remains UNAVAILABLE; no asset attribution, score, probability, rank, priority, salience, usefulness, Attention/Kernel/Analyst/Risk/Execution or live wiring. Evidence storage is uncapped. Falsifier/conclusion/result layer, truthful WorldModel/regime evidence, Attention trigger/salience and live caller/deployment remain MISSING.
     - REJECTION_OCCURRENCE_COUNTS_ARE_SCAN_CADENCE_OBSERVATIONS holds; rejection trigger/salience remains MISSING and multi-bar episode semantics UNDETERMINED.
     - SIGNAL_OCCURRENCE_IS_NOT_OPPORTUNITY_EPISODE and REJECTION_CODES_COVER_TEXT_PRODUCING_REFUSAL_PATHS_ONLY hold.
     - SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1 is PARKED_LABEL_SOURCE_MISSING; do not invent labels from descriptive, registration-time or P&L evidence.
@@ -98,4 +99,4 @@ parked_usefulness_feedback:
   reopen_when: A concrete investigation-value.v1 protocol for an active family, with frozen routine-evidence comparator and deterministic ESTABLISHED/NOT_ESTABLISHED closure predicates, is frozen and producing closure receipts, or the owner explicitly prioritizes designing one.
 
 after_completion:
-  - SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-PLAN-V1 evidence is recorded in STATE.yaml. No package is active and no next package is selected or queued. Keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch; do not implement a rejection or strategy-degradation Attention trigger, early-warning threshold or multi-bar episode grouping without a justified existing salience/magnitude source.
+  - SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-EVIDENCE-V1 evidence is recorded in STATE.yaml. No package is active and no next package is selected or queued. Keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch; do not implement a rejection or strategy-degradation Attention trigger, early-warning threshold or multi-bar episode grouping without a justified existing salience/magnitude source.
