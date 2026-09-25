@@ -341,11 +341,16 @@ capabilities:
       - trader/cognition/opportunity_context.py
       - tests/test_opportunity_context.py
       - tests/test_attention_selection_persistence.py
+      - trader/observability/investigation.py
+      - tests/test_opportunity_context_persistence.py
     proven_facts:
-      - immutable versioned opportunity-context.v1 object is implemented and tested (6874830, follow-up b28a2c8)
+      - contract TESTED - immutable versioned opportunity-context.v1 object is implemented and tested (6874830, follow-up b28a2c8)
+      - persistence/replay TESTED - opportunity-context.v1 is persisted with investigation registration in the existing registration transaction and replayed from persisted source evidence, failing closed when evidence is unavailable (eb3a10c)
     gaps:
-      - not deployed; no Kernel, Risk, Execution, LLM, network or venue wiring
+      - live producer is NOT established
+      - not deployed (NOT_DEPLOYED); no Kernel, Risk, Execution, LLM, network or venue wiring
       - no salience, score, probability, EV, usefulness or direction is produced
+      - no backfill of pre-existing investigations
 
   portfolio_allocation:
     state: DEFINED
@@ -2207,10 +2212,44 @@ completed_opportunity_context_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Context-binding object only; no usefulness, predictive, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_opportunity_context_persistence_v1:
+  id: SDD-STAGE-3-OPPORTUNITY-CONTEXT-PERSISTENCE-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: eb3a10c
+  evidence:
+    - eb3a10c Persist opportunity contexts
+    - trader/observability/investigation.py
+    - tests/test_opportunity_context_persistence.py
+  proven_facts:
+    - opportunity-context.v1 is persisted with investigation registration.
+    - Context persistence uses the existing registration transaction.
+    - Identity is immutable, one context per investigation.
+    - Identical retries are idempotent.
+    - Conflicting or unreadable context evidence is telemetry-only and cannot alter registration.
+    - Savepoint failure rolls back only the attempted context persistence.
+    - context_for() re-verifies stored contexts.
+    - Replay reproduces the context from persisted source evidence and fails closed when evidence is unavailable.
+    - Legacy cases without contexts remain supported.
+    - Retention is aligned so required replay evidence survives with retained contexts.
+    - No backfill.
+    - No scores, salience, EV, usefulness or direction.
+    - No LLM, network, venue, Risk, Execution or trading authority.
+  validation:
+    package_tests: 19 persistence tests independently passed; reported focused run 239 passed
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live producer or live activation is implied by commit eb3a10c.
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Persistence/replay of the context-binding object only; no usefulness, predictive, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-OPPORTUNITY-CONTEXT-V1 is TESTED at 6874830 (follow-up b28a2c8). No next package is selected or queued.
+  note: SDD-STAGE-3-OPPORTUNITY-CONTEXT-PERSISTENCE-V1 is TESTED at eb3a10c and NOT_DEPLOYED. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
