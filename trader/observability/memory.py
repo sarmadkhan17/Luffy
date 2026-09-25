@@ -23,37 +23,85 @@ def schema(db):
       CREATE INDEX IF NOT EXISTS memory_assessed_key
         ON memory_assessed(family, catalog_id, config_id, symbol, available_ms);
       CREATE TABLE IF NOT EXISTS memory_assessed_refused(source_id TEXT PRIMARY KEY, reason TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS memory_measured_refused(source_id TEXT PRIMARY KEY, reason TEXT NOT NULL);
     ''')
 
 
 def retain(db):
     for table, key in (('memory_cases','source_id'), ('memory_contexts','case_id'), ('memory_reasoning','case_id'),
                        ('memory_unassessable','source_id'), ('memory_assessed','source_id'),
-                       ('memory_assessed_refused','source_id')):
+                       ('memory_assessed_refused','source_id'), ('memory_measured_refused','source_id')):
         db.execute(f'DELETE FROM {table} WHERE {key} NOT IN (SELECT id FROM cases)')
 
 
 def ingest(db, now):
+    """Measured terminal closures. A malformed source (unparseable latest update,
+    investigation or inputs, a missing/non-integer evidence.as_of_ms, observed_ms or
+    registered_ms, or a
+    target_versions entry not shaped (symbol, open_ms, version_id)) is a
+    deterministic defect: refused once as measured_malformed_source, recorded, and
+    never retried, so it can neither crash the run nor occupy later bounds.
+    Verification refusals keep their original reason. Only memory_invalid_chronology
+    can become valid as now advances, so it alone is re-examined on later runs; every
+    other verification refusal is deterministic for an immutable source and is
+    recorded once, like the malformed refusal. source_id keys keep retry idempotent."""
     added, refused = 0, []
-    rows = db.execute('SELECT id,payload FROM cases WHERE terminal_ms IS NOT NULL AND id NOT IN (SELECT source_id FROM memory_cases) ORDER BY created_ms,id LIMIT 256').fetchall()
+    rows = db.execute('SELECT id,payload FROM cases WHERE terminal_ms IS NOT NULL AND id NOT IN (SELECT source_id FROM memory_cases)'
+                      ' AND id NOT IN (SELECT source_id FROM memory_measured_refused) ORDER BY created_ms,id LIMIT 256').fetchall()
     for iid, payload in rows:
         if added + len(refused) >= 32: break
-        inv = I.investigation_from_dict(json.loads(payload))
         row = db.execute('SELECT payload FROM updates WHERE case_id=? ORDER BY observed_ms DESC,rowid DESC LIMIT 1',(iid,)).fetchone()
         if not row: continue
-        update = I.update_from_dict(json.loads(row[0]))
-        if update.evidence.status != 'measured': continue
-        bars = [I.InputBar(d['version_id'], I.Candle(**d['candle'])) for (p,) in db.execute(
-            'SELECT payload FROM inputs JOIN case_inputs ON inputs.id=case_inputs.input_id WHERE case_id=?',(iid,)) for d in [json.loads(p)]]
+        status = _status(row[0])
+        if status is not None and status != 'measured': continue
+        try:
+            update = I.update_from_dict(json.loads(row[0]))
+            for key in ('as_of_ms', 'observed_ms'):
+                if type(getattr(update.evidence, key)) is not int: raise TypeError(key)
+            _check_target_versions(update.evidence.target_versions)
+            inv, bars = I.investigation_from_dict(json.loads(payload)), _bars(db, iid)
+            if type(inv.registered_ms) is not int: raise TypeError('registered_ms')
+        except (ValueError, KeyError, TypeError, AttributeError, OverflowError):
+            _refuse_measured(db, refused, iid)
+            continue
         try:
             case = M.verified_case(inv, update, bars, now)
         except ValueError as exc:
-            refused.append({'investigation_id': iid, 'reason': str(exc)})
+            if str(exc) == 'memory_invalid_chronology':
+                refused.append({'investigation_id': iid, 'reason': str(exc)})
+            else:
+                _refuse_measured(db, refused, iid, str(exc))
+            continue
+        except (KeyError, TypeError, AttributeError):
+            _refuse_measured(db, refused, iid)
             continue
         db.execute('INSERT INTO memory_cases VALUES (?,?)',(iid,I.encode(asdict(case))))
         added += 1
     return {'added': added, 'refused': refused, 'unassessable': ingest_unassessable(db, now),
             'assessed': ingest_assessed(db, now)}
+
+
+def _status(raw):
+    """Raw latest-update evidence status, or None when the payload cannot say."""
+    try:
+        status = json.loads(raw)['evidence']['status']
+    except (ValueError, KeyError, TypeError, IndexError):
+        return None
+    return status if isinstance(status, str) else None
+
+
+def _check_target_versions(versions):
+    """Deserialization shape only: (symbol, open_ms, version_id) entries, so verification
+    never unpacks a malformed entry into a retryable semantic ValueError."""
+    for v in versions:
+        if (len(v) != 3 or not isinstance(v[0], str) or type(v[1]) is not int
+                or not isinstance(v[2], str)):
+            raise TypeError('target_versions')
+
+
+def _refuse_measured(db, refused, iid, reason='measured_malformed_source'):
+    refused.append({'investigation_id': iid, 'reason': reason})
+    db.execute('INSERT INTO memory_measured_refused VALUES (?,?)',(iid,reason))
 
 
 def _bars(db, iid):
@@ -70,8 +118,9 @@ def ingest_unassessable(db, now):
         if added + len(refused) >= 32: break
         row = db.execute('SELECT payload FROM updates WHERE case_id=? ORDER BY observed_ms DESC,rowid DESC LIMIT 1',(iid,)).fetchone()
         if not row: continue
+        # Other statuses and unreadable payloads belong to other ingestion paths.
+        if _status(row[0]) != 'not_testable': continue
         update = I.update_from_dict(json.loads(row[0]))
-        if update.evidence.status != 'not_testable': continue
         try:
             record = M.verified_unassessable(I.investigation_from_dict(json.loads(payload)), update, _bars(db, iid), now)
         except (ValueError, KeyError, TypeError) as exc:
@@ -99,12 +148,16 @@ def ingest_assessed(db, now):
         '  (SELECT u.payload FROM updates u WHERE u.case_id=cases.id'
         '   ORDER BY u.observed_ms DESC,u.rowid DESC LIMIT 1) AS up'
         '  FROM cases WHERE terminal_ms IS NOT NULL'
-        f"  AND json_extract(payload,'$.primary_trigger') IN ({','.join('?' * len(families))})"
+        # json_valid guards: a malformed payload is not a candidate here and cannot
+        # raise out of ingest(); measured ingestion owns its refusal.
+        "  AND CASE WHEN json_valid(payload) THEN json_extract(payload,'$.primary_trigger') END"
+        f"      IN ({','.join('?' * len(families))})"
         '  AND id NOT IN (SELECT source_id FROM memory_assessed)'
         '  AND id NOT IN (SELECT source_id FROM memory_assessed_refused))'
-        " SELECT id,payload,up FROM latest WHERE json_extract(up,'$.evidence.status')='assessed'"
-        " AND NOT (json_type(up,'$.evidence.observed_ms') IS 'integer'"
-        "          AND json_extract(up,'$.evidence.observed_ms')>?)"
+        " SELECT id,payload,up FROM latest"
+        " WHERE CASE WHEN json_valid(up) THEN json_extract(up,'$.evidence.status') END='assessed'"
+        " AND NOT (CASE WHEN json_valid(up) THEN json_type(up,'$.evidence.observed_ms') END IS 'integer'"
+        "          AND CASE WHEN json_valid(up) THEN json_extract(up,'$.evidence.observed_ms') END>?)"
         ' ORDER BY created_ms,id LIMIT 32', (*families, now)).fetchall()
     for iid, payload, up in rows:
         try:
