@@ -239,10 +239,10 @@ capabilities:
       - terminal assessed descriptive positioning_extreme/correlation_change results are retained as investigation-assessed-memory.v1 with exact original result vocabulary and recalled at registration as context_only at 8904fef (SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1); no effect on salience, rank or allocation; not usefulness/value labels
       - malformed measured-memory (investigation.v2) sources fail closed and are dispositioned once instead of crashing ingest() at 71204ca (SDD-STAGE-3-MEASURED-MEMORY-MALFORMED-SOURCE-HARDENING-V1); valid measured/assessed/not_testable behavior unchanged
       - malformed not_testable/UNASSESSABLE memory sources fail closed and are dispositioned once; future-observed sources are deferred before processing limits and cannot starve ready valid closures at 995fa9c (SDD-STAGE-3-UNASSESSABLE-MEMORY-MALFORMED-SOURCE-HARDENING-V1); valid investigation-unassessable-memory.v1, measured and assessed behavior unchanged
+      - eligible measured/unassessable memory candidates are filtered in SQL before the 256-row LIMIT, so unrelated terminal/no-update rows cannot crowd the bounded window, at 17f2ab6 (SDD-STAGE-3-INVESTIGATION-MEMORY-CANDIDATE-ISOLATION-V1); (created_ms,id) ordering, 256 candidate bound and 32-per-path cap preserved; assessed ingestion unchanged
     gaps:
       - investigation-value.v1 usefulness labels do not exist; no protocol-defined label source (USEFULNESS_LABEL_SOURCE_MISSING, 2026-09-25)
       - resource bounds are undeclared; rolled-back/failed attempt cost is UNKNOWN and total research cost is not established
-      - broader 256-row candidate crowding from unrelated terminal statuses is a pre-existing memory-ingestion limitation; not fixed by 995fa9c; not queued. Malformed measured (71204ca) and not_testable/unassessable (995fa9c) source findings are resolved.
       - separate lightweight trading Opportunity registry from SDD v3.2 is not yet implemented
 
   operator_api_and_auth:
@@ -2172,6 +2172,7 @@ completed_unassessable_memory_malformed_source_hardening_v1:
     git_diff_check: clean
     excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
   explicit_limitation: Broader 256-row candidate crowding from unrelated terminal statuses remains a pre-existing limitation. It is NOT fixed by this package and NOT queued; do not create or queue a package for it automatically.
+  limitation_status: RESOLVED by SDD-STAGE-3-INVESTIGATION-MEMORY-CANDIDATE-ISOLATION-V1 at 17f2ab6 (see completed_investigation_memory_candidate_isolation_v1).
   runtime_deployment:
     status: NOT_DEPLOYED
     note: No deployment or live activation is implied by commit 995fa9c.
@@ -2246,10 +2247,44 @@ completed_opportunity_context_persistence_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Persistence/replay of the context-binding object only; no usefulness, predictive, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_investigation_memory_candidate_isolation_v1:
+  id: SDD-STAGE-3-INVESTIGATION-MEMORY-CANDIDATE-ISOLATION-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 17f2ab6
+  resolves: The broader 256-row candidate-crowding limitation recorded by SDD-STAGE-3-UNASSESSABLE-MEMORY-MALFORMED-SOURCE-HARDENING-V1 and capabilities.investigation.gaps.
+  evidence:
+    - 17f2ab6 Isolate investigation memory candidates
+    - trader/observability/memory.py
+    - tests/test_investigation_memory_candidate_isolation.py
+  proven_facts:
+    - Eligible measured/unassessable candidates are filtered before LIMIT 256.
+    - Unrelated terminal/no-update rows cannot crowd the bounded candidate window.
+    - Deterministic (created_ms,id) ordering is preserved.
+    - The 256 candidate bound and 32-per-path processing cap are preserved.
+    - SQL status classification preserves Python last-key-wins behavior.
+    - Duplicate-key/surrogate-status noise cannot occupy candidate windows.
+    - Malformed/refusal ownership is unchanged.
+    - Future chronology remains retryable and recovers after clock catch-up.
+    - Assessed ingestion is unchanged.
+    - Existing measured/unassessable semantics are unchanged.
+    - No labels, usefulness, salience, ranking, Attention, Risk, Execution or trading change.
+  validation:
+    package_tests: 17 candidate-isolation tests passed
+    focused_run: 256 passed (independently verified)
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment or live activation is implied by commit 17f2ab6.
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Robustness hardening only; no usefulness, predictive, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-OPPORTUNITY-CONTEXT-PERSISTENCE-V1 is TESTED at eb3a10c and NOT_DEPLOYED. No next package is selected or queued.
+  note: SDD-STAGE-3-INVESTIGATION-MEMORY-CANDIDATE-ISOLATION-V1 is TESTED at 17f2ab6 and NOT_DEPLOYED. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
