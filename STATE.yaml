@@ -231,10 +231,11 @@ capabilities:
       - coherent current investigation-ledger state gates new-investigation top-k slot allocation; TESTED at 0d07dd8 with retry-semantics test follow-up a6c7124 (SDD-STAGE-3-ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1)
       - correlation_change registration-evidence family (investigation.correlation_change.v1) is TESTED at e61fb82; descriptive, not prospective predictive validation
       - committed case-local investigation work is metered per execution as investigation-resource-receipt.v1 at 9be45a9 (SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1); resource_bound null, resource_compliance UNKNOWN
+      - verified terminal not_testable/UNASSESSABLE closures are retained as investigation-unassessable-memory.v1 and recalled at registration as context_only cautions at 8eaf90b (SDD-STAGE-3-INVESTIGATION-UNASSESSABLE-MEMORY-V1); no effect on salience, rank or allocation
     gaps:
       - investigation-value.v1 usefulness labels do not exist; no protocol-defined label source (USEFULNESS_LABEL_SOURCE_MISSING, 2026-09-25)
       - resource bounds are undeclared; rolled-back/failed attempt cost is UNKNOWN and total research cost is not established
-      - UNASSESSABLE (not_testable) closures and registration-evidence family cases are not retained in investigation memory; only v2 measured cases are ingested
+      - registration-evidence family (positioning/correlation) assessed descriptive results are not retained in investigation memory; measured v2 cases and terminal UNASSESSABLE closures are
       - separate lightweight trading Opportunity registry from SDD v3.2 is not yet implemented
 
   operator_api_and_auth:
@@ -1593,14 +1594,103 @@ completed_investigation_usefulness_label_source_determination:
     - It is independent of usefulness labels, resource bounds, new venue data, LLMs and parked storage/retention policy.
   maturity_boundary: Determination and selection only; no implementation, label, ranking change or maturity upgrade. Attention overall remains IMPLEMENTED.
 
-current_active_work:
+completed_investigation_unassessable_memory_v1:
   id: SDD-STAGE-3-INVESTIGATION-UNASSESSABLE-MEMORY-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 8eaf90b
+  evidence:
+    - 8eaf90b Add unassessable investigation memory
+    - trader/cognition/memory.py
+    - trader/observability/memory.py
+    - trader/observability/investigation.py
+    - tests/test_investigation_unassessable_memory.py
+  proven_facts:
+    - New schema investigation-unassessable-memory.v1.
+    - Terminal not_testable / UNASSESSABLE investigations are preserved separately from measured memory.
+    - Original reason and reason_codes are retained exactly.
+    - Frozen evidence and source provenance are retained.
+    - Ingestion re-verifies the original registration and the terminal assessment.
+    - Invalid or tampered closures fail closed.
+    - Retry/restart ingestion is idempotent.
+    - Unresolved, open and measured cases do not enter the unassessable-memory type.
+    - Matching is exact on symbol/instrument identity, family, immutable catalog/protocol identity and config identity.
+    - Only prior closures known strictly before the new registration are eligible; self-matches are excluded.
+    - Retrieval is deterministic and bounded.
+    - Prior unassessable closures appear as context_only cautions.
+    - Cautions do not suppress registration, change Attention rank/salience, change allocation, create cooldowns, create usefulness/failure probabilities, or imply falsification or trading direction.
+    - Changed evidence can still be investigated normally.
+    - Changed protocol/config does not silently match an older closure.
+    - Repeated historical unassessable cases remain separate observations rather than becoming a score.
+    - Existing memory retention is reused; no new retention policy.
+    - Resource-receipt behavior is unchanged.
+  validation:
+    new_tests: 31 passed
+    focused_suite: 265 passed
+    full_suite: 3450 passed, 56 failed, 12 errors
+    full_suite_baseline: Clean HEAD had the identical failing/error test IDs; the +31 passes are the new tests.
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  boundaries:
+    CORRELATION_UNASSESSABLE_EFFECTIVELY_UNREACHABLE: Current correlation registration validates the same evidence that would later produce a not-testable closure, so genuine correlation cases normally do not produce unassessable-memory records. Do not change correlation semantics to manufacture such records.
+    MEMORY_CONTEXT_NOT_AUTHORITY: Prior unassessable memory means only that a prior matching investigation could not be assessed for the recorded reason. It does NOT mean the current case will fail, the hypothesis is false, the investigation is useless, expected return is poor, or the case should receive lower priority.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: The running /home/sarmad/trader kernel does not contain unassessable memory.
+  gap_matrix_update:
+    failed_research_memory: PARTIAL - terminal UNASSESSABLE/not_testable closures now retained and recalled; broader failed-research/value learning remains incomplete.
+    usefulness_outcome_weighted_research_feedback: MISSING - label source missing (PARKED_LABEL_SOURCE_MISSING)
+    storage_capacity_guard: PARKED_OWNER_POLICY_REQUIRED
+    attention_overall: IMPLEMENTED
+  maturity_boundary: Memory context only; no usefulness, falsification or priority claim and no maturity upgrade. Attention overall remains IMPLEMENTED; usefulness feedback, storage-capacity guard, liquidation clock path, portfolio magnitude, Scheme-D and downstream new-data dispatch remain parked.
+
+completed_stage3_capability_selection_after_unassessable_memory:
+  id: SDD-STAGE-3-CAPABILITY-SELECTION-V3
+  type: SELECTION
+  state: COMPLETED_DESIGN_EVIDENCE
+  evidence_basis: Read-only inspection 2026-09-25 at 8eaf90b of SDD.md Stage 3 and 8.1-8.3, STATE gap matrices, trader/engine/orchestrator.py (strategy_gate, decide), trader/engine/risk.py (check_entry SizingResult), trader/engine/executor.py (open), trader/kernel.py (entry path), trader/core/journal.py (decisions, outcomes), trader/brain/ideas.py, trader/cognition/attention.py (world component), and a read-only count of production data/luffy.db decisions. No code or data change.
+  excluded_by_owner: correlation, positioning, resource receipts, unassessable memory, usefulness labels, storage guard
+  candidates:
+    repeated_rejected_opportunities:
+      sdd: SDD 8.1 names repeated rejected opportunities as an Attention trigger; not previously in any gap matrix.
+      existing_source: Journal decisions rows for every cycle/symbol, including directional decisions refused before execution (skip_reason) and strategy-gated leans refused to HOLD; outcomes resolves forward returns of skipped directional decisions.
+      runtime_availability: Live. Production luffy.db 2026-08-24..2026-09-24 has 516412 decisions, 307 directional, 253 directional-but-not-executed; since 2026-09-18 the refusals are risk "already exposed here" (77) and "max positions reached" (32).
+      exact_missing_transformation: skip_reason is free text composed from templates with embedded values and "; "-joined (orchestrator skip_bits, risk SizingResult.reason, kernel/executor overwrites); there is no structured reason code, so any count of repeated refusals would require parsing prose. The missing piece is a structured reason code recorded at each existing refusal branch.
+      prerequisite_risk: MEDIUM for the source (observability fields in the live entry path; decisions must stay byte-identical). HIGH for any later Attention trigger - decisions repeat per cycle (episode clustering needed) and a refusal count has no justified salience magnitude (same class as NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET).
+    world_model_contradiction_and_regime:
+      existing_source: Tested WorldModel/claims and an Attention world component seam.
+      runtime_availability: None - the live Kernel supplies no WorldModel; the seam accepts only an INTRADAY volume z_score, which duplicates volume_anomaly.
+      exact_missing_transformation: A production WorldModel producer, not a transformation.
+      prerequisite_risk: HIGH - new producer infrastructure; low incremental value from the only accepted observation kind.
+    new_external_research_claim:
+      existing_source: Scraper/crawler ideas in brain_events with dedup (trader/brain/ideas.py).
+      runtime_availability: Live.
+      exact_missing_transformation: Free-text idea to symbol/family mapping.
+      prerequisite_risk: HIGH - requires an LLM or an invented mapping; rejected.
+    unexplained_portfolio_loss:
+      existing_source: trades/accounting P&L.
+      runtime_availability: Live.
+      exact_missing_transformation: An explanation/attribution model defining "unexplained".
+      prerequisite_risk: HIGH - invents attribution semantics; portfolio magnitude blocked.
+    liquidity_change_urgency_owner_question_strategy_degradation:
+      finding: Unchanged from SDD-STAGE-3-CAPABILITY-SELECTION (next_slice_selection); still no truthful runtime source without new infrastructure or invented mappings.
+  decision: NO_INTELLIGENCE_TRIGGER_DIRECTLY_IMPLEMENTABLE_SMALLEST_MISSING_SOURCE_SELECTED
+  selected_next_capability: SDD-STAGE-3-DECISION-REJECTION-REASON-CODES-V1
+  selection_reasoning:
+    - No remaining Stage-3 trigger can change what Attention notices from a truthful runtime source without new infrastructure or invented semantics.
+    - Repeated rejected opportunities is the only named SDD 8.1 trigger whose source is already live and truthful; the single concrete missing piece is a structured reason code at each existing refusal branch, which is a deterministic 1:1 labelling of code paths, not a semantic interpretation.
+    - It makes LUFFY remember why each opportunity was refused (reason codes end to end per repository guidance) and is the source for any later episode-level rejected-opportunity trigger or Opportunity registry; neither is claimed here.
+    - No venue request, LLM, recorder, retention policy or new store; one additive decisions column.
+  maturity_boundary: Selection only; no implementation, trigger, ranking change or maturity upgrade. Attention overall remains IMPLEMENTED.
+
+current_active_work:
+  id: SDD-STAGE-3-DECISION-REJECTION-REASON-CODES-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Retain verified terminal UNASSESSABLE (not_testable) investigation closures with their protocol reason codes as a separately typed investigation-memory record, and surface matching prior closures as registration-time cautions, so Luffy remembers which investigations could not be assessed and why.
+  objective: Record a structured, versioned rejection reason code at every existing refusal branch of a trading decision, alongside the unchanged skip_reason text, so refused opportunities are remembered as machine-readable evidence (source for SDD 8.1 repeated rejected opportunities).
   deliverables: As scoped in NEXT.yaml.
-  boundary: Memory transformation of existing ledger evidence only. Not a usefulness, NOT_ESTABLISHED or falsification label. Salience, ranks, k, min_salience, allocation, case identity, catalogs, scan hashes, receipts and existing measured-case memory unchanged; retention follows existing case retention. No LLM, venue request, trading/Risk/Execution or strategy-authority change; parked boundaries unchanged; Attention overall remains IMPLEMENTED.
+  boundary: Observability source only. Decisions, actions, sizes, orders, control state and skip_reason text byte-identical; no Attention trigger, episode clustering, salience, allocation or Opportunity registry; no back-fill by parsing legacy text. No LLM or venue request; parked boundaries unchanged; Attention overall remains IMPLEMENTED.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1

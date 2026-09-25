@@ -2,49 +2,48 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-INVESTIGATION-UNASSESSABLE-MEMORY-V1
+  id: SDD-STAGE-3-DECISION-REJECTION-REASON-CODES-V1
   type: IMPLEMENTATION
   priority: ACTIVE
   status: READY
-  objective: Retain verified terminal UNASSESSABLE (not_testable) investigation closures, with their protocol reason codes, as a separately typed investigation-memory record, and surface compatible prior closures as registration-time cautions, so Luffy remembers which investigations could not be assessed and why (SDD Stage 3 failed-research memory).
+  objective: Record a structured, versioned rejection reason code at every existing refusal branch of a trading decision, alongside the unchanged skip_reason text, so LUFFY remembers why each opportunity was refused as machine-readable evidence (source for SDD 8.1 repeated rejected opportunities).
   basis:
-    - SDD-STAGE-3-INVESTIGATION-USEFULNESS-LABEL-SOURCE-DETERMINATION-V1 - USEFULNESS_LABEL_SOURCE_MISSING; usefulness feedback PARKED; an independent Stage-3 path is required.
-    - SDD.md Stage 3 lists failed-research memory as a build item.
-    - trader/observability/memory.py ingest and trader/cognition/memory.py verified_case accept only v2 status measured; terminal not_testable closures of every family are never memorized.
+    - SDD-STAGE-3-CAPABILITY-SELECTION-V3 - NO_INTELLIGENCE_TRIGGER_DIRECTLY_IMPLEMENTABLE_SMALLEST_MISSING_SOURCE_SELECTED.
+    - SDD.md 8.1 names repeated rejected opportunities as an Attention trigger.
+    - Journal decisions.skip_reason is free text built from templates with embedded values and "; "-joined parts; no structured code exists, so refusals cannot be counted without parsing prose.
   source:
-    - Terminal ledger updates already persisted by trader/observability/investigation.py with evidence.status not_testable, evidence.reason and next_action.kind UNASSESSABLE, plus their frozen investigation payloads and protocol/catalog ids.
-    - No venue request, LLM call, DataFeed, recorder or new store.
+    - Existing refusal branches only - trader/engine/orchestrator.py strategy_gate (no strategy signal; no strategy agrees), HTF hard veto, meta veto, entries-not-allowed/blocked_reason; trader/engine/risk.py check_entry SizingResult refusals (state FROZEN/HALTED/other, daily breaker, max positions, already exposed, heat cap, margin cap, below min notional) and RiskError halt; trader/kernel.py stop-timeframe bars missing and meta-sized below min notional; trader/engine/executor.py execution_recovery_pending and submission-time entry block.
+    - No venue request, LLM call, DataFeed change, recorder or new store.
   missing_transformation:
-    - Verified ingestion of terminal not_testable closures into a separately typed memory record and chronology-safe retrieval at registration.
+    - A frozen code vocabulary (decision-rejection-reason.v1) with exactly one code per existing refusal branch, set at the branch where the text is set, persisted with the decision.
   frozen_semantics:
-    - New record outcome_type unassessable_closure, distinct from non_economic_observation; existing investigation-memory.v1 measured-case records, winner semantics and counter_tests are unchanged.
-    - A record carries source case id, family, protocol/catalog id, config id, symbol, registered/resolved/available/recorded times and the exact frozen reason code; no score, winner, direction or probability.
-    - Ingestion verifies the terminal update against the frozen investigation (matching case id, catalog/protocol, chronology, status not_testable, NextAction UNASSESSABLE) and refuses with an explicit reason otherwise; never a partial record.
-    - Retrieval at registration includes a prior closure only when known strictly before registration (not_known_before_registration otherwise), same family, same protocol/catalog and config, and same symbol; it adds a caution naming the prior reason code and adds no counter_test, so reasoning changed flags are unaffected by this record type.
-    - The caution states that an earlier case could not be assessed for the recorded reason; it is NOT NOT_ESTABLISHED, falsification, usefulness or evidence against the hypothesis.
-    - Retrieval capacity is bounded and deterministic; every considered record appears in the audit with a reason.
-    - Memory contexts and cases with no unassessable records are byte-identical to today.
-    - Retention follows the existing case retention; no new retention policy.
+    - A code names the code branch that refused; it is not a judgement that the opportunity was good, bad, missed or costly.
+    - Codes are an ordered list mirroring skip_reason composition order; executed decisions and HOLD decisions with no refusal carry an empty list.
+    - Whenever a later stage overwrites skip_reason (kernel entry path, update_decision_outcome, executor), the codes are overwritten with the same semantics, so text and codes always describe the same refusal.
+    - Every refusal branch has a code; a refusal without a code is a test failure (exhaustiveness), never a silent UNCODED.
+    - Legacy rows keep reason_codes NULL meaning not recorded; no back-fill by parsing text.
+    - skip_reason text, action, score, threshold, executed, size, order calls, control-state transitions and risk state are byte-identical to before.
   implementation_boundary:
-    - trader/cognition/memory.py - unassessable-closure record, verification and retrieval.
-    - trader/observability/memory.py - ingestion of verified not_testable terminal closures within the existing transaction and bounds.
+    - trader/engine/risk.py - SizingResult carries a code; reason text unchanged.
+    - trader/engine/orchestrator.py - codes alongside skip_bits.
+    - trader/kernel.py and trader/engine/executor.py - codes set where skip_reason is set.
+    - trader/core/types.py and trader/core/journal.py - Decision field; additive decisions.reason_codes column via the existing ALTER TABLE migration pattern; log_decision/update_decision_outcome persist it.
   acceptance_tests:
-    - tests/test_investigation_unassessable_memory.py (new) - not_testable closures of v2, positioning and correlation families are ingested with exact reason codes; measured or assessed closures are not ingested as this type; forged, mismatched or chronologically invalid joins are refused with reasons; retrieval excludes self, later-known, other-family, other-protocol, other-config and other-symbol records; caution text carries no usefulness, falsification or direction claim; no counter_test is added; contexts without such records are byte-identical; case ids, catalog ids, allocation decisions, scan hashes and resource receipts are unchanged; records are removed with their case under existing retention.
-    - Existing tests/test_investigation_memory.py, test_memory_producers.py, test_investigation_state_feedback.py, test_positioning_investigation_family.py, test_correlation_investigation_family.py and test_investigation_resource_receipts.py pass apart from recorded baseline failures.
+    - tests/test_decision_rejection_reason_codes.py (new) - each refusal branch yields exactly its code; composite orchestrator refusals yield codes in skip_bits order; executed and plain HOLD decisions carry an empty list; overwrites replace codes consistently with text; skip_reason text and action/score/size/executed/order calls identical to pre-change behavior for every branch; exhaustiveness over the vocabulary; migration idempotent on an existing journal; legacy rows stay NULL.
+    - Existing tests/test_orchestrator_abstention.py, test_orchestrator_agreement.py, test_risk_state_persistence.py, test_entry_control_fence.py, test_r_multiple_uses_entry_risk.py and test_attention_kernel_wiring.py pass apart from recorded baseline failures.
+    - scripts/backtest_equivalence.py PASS is unaffected (no backtest-engine change).
     - git diff --check clean.
   preserve:
-    - Salience, components, min_salience, k, dedup, tie-break and allocation unchanged.
-    - Families, catalogs, protocols, case ids and investigation-memory.v1 measured-case behavior unchanged.
-    - Resource receipts unchanged; resource_compliance stays UNKNOWN.
-    - No trading, Risk, Execution or strategy-authority changes; no LLM calls or venue requests.
+    - Trading decisions, sizing, Risk limits, Execution, protective stops and control state unchanged.
+    - Attention salience, components, min_salience, k, dedup, allocation, investigations, memory and resource receipts unchanged.
+    - No LLM calls or venue requests.
   not_in_scope:
-    - investigation-value.v1 labels, usefulness feedback or any ESTABLISHED/NOT_ESTABLISHED mapping
-    - using memory in salience, ranking, allocation or suppressing registrations
-    - memorizing positioning/correlation assessed descriptive results
-    - extending retention or a new retention policy
-    - resource bounds or budgets
-    - liquidity, urgency, owner-question or strategy-degradation work
-    - storage-capacity guard, liquidation clock, portfolio magnitude, Scheme-D, downstream new-data dispatch
+    - repeated-rejected-opportunity Attention trigger, episode clustering or any salience/priority magnitude
+    - Opportunity registry or Opportunity Context
+    - forward-outcome, missed-profit or usefulness labels from outcomes
+    - back-filling or parsing legacy skip_reason text
+    - correlation, positioning, resource receipts, unassessable memory, usefulness labels, storage guard
+    - liquidation clock, portfolio magnitude, Scheme-D, downstream new-data dispatch
     - deployment to the running /home/sarmad/trader kernel
   established_boundary:
     - SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1 is PARKED_LABEL_SOURCE_MISSING; do not invent labels from descriptive, registration-time or P&L evidence.
@@ -52,11 +51,10 @@ work_package:
     - OPERATOR_STORAGE_POLICY_REQUIRED, EVENT_PAYLOAD_RETENTION_POLICY_REQUIRED and DOWNSTREAM_DISPATCH_PREREQUISITE_REQUIRED remain open and must not become the active package.
     - forced-liquidation-participation.v1 remains PARKED; M3.2 Scheme-D remains PARKED.
     - Portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET; portfolio salience remains BLOCKED_UPSTREAM.
-    - Positioning and correlation - predictive usefulness NOT_ESTABLISHED, deployed NO; no further work queued.
-    - Per-candidate research cost MEASURED by receipts; bounds UNDECLARED; resource_compliance UNKNOWN.
+    - failed_research_memory is PARTIAL; CORRELATION_UNASSESSABLE_EFFECTIVELY_UNREACHABLE and MEMORY_CONTEXT_NOT_AUTHORITY hold.
     - Attention overall remains IMPLEMENTED; this package grants no maturity upgrade or activation.
   after_completion:
-    - Record TESTED evidence in STATE.yaml; set gap_matrix failed_research_memory to PARTIAL (unassessable closures retained within existing retention; not used in priority); no maturity upgrade.
+    - Record TESTED evidence in STATE.yaml; add gap_matrix repeated_rejected_opportunities as SOURCE_TESTED / trigger MISSING (episode definition and salience policy required); no maturity upgrade.
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -122,4 +120,4 @@ parked_usefulness_feedback:
   reopen_when: A concrete investigation-value.v1 protocol for an active family, with frozen routine-evidence comparator and deterministic ESTABLISHED/NOT_ESTABLISHED closure predicates, is frozen and producing closure receipts, or the owner explicitly prioritizes designing one.
 
 after_completion:
-  - Record SDD-STAGE-3-INVESTIGATION-UNASSESSABLE-MEMORY-V1 evidence in STATE.yaml; keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch.
+  - Record SDD-STAGE-3-DECISION-REJECTION-REASON-CODES-V1 evidence in STATE.yaml; keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch or a rejected-opportunity trigger.
