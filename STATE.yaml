@@ -77,9 +77,13 @@ capabilities:
     evidence:
       - trader/strategy/rolling.py
       - trader/strategy/promotion.py
+      - b3639d8 Add strategy health sweep observations
+      - trader/strategy/health_observation.py
+      - tests/test_strategy_health_observation.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
+      - every attempted deployed-spec decay sweep persists a strategy-health-observation.v1 record while lifecycle authority is unchanged (SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1 TESTED, not deployed)
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
 
@@ -1955,14 +1959,90 @@ completed_stage3_capability_selection_after_rejection_observation:
   not_claimed: No strategy-degradation Attention trigger, early-warning threshold, trend score, retirement-policy change or maturity upgrade.
   maturity_boundary: Selection only. Attention overall remains IMPLEMENTED.
 
-current_active_work:
+completed_strategy_health_sweep_observation_v1:
   id: SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1
   type: IMPLEMENTATION
-  priority: ACTIVE
-  status: READY
-  objective: Persist every deployed-spec decay-sweep verdict as a versioned strategy-health-observation.v1 record (structured verdict code, measured evidence, applied config thresholds, spec fingerprint, sweep id) and expose a read-only per-spec history.
-  deliverables: As scoped in NEXT.yaml.
-  boundary: Observation only. Retirement decisions, retire_reason text, thresholds, cadence, spec selection, trading decisions and the spec_decayed event behavior unchanged; no Attention trigger, salience, trend score, early-warning threshold or new table. No LLM or venue request; parked boundaries unchanged; Attention overall remains IMPLEMENTED.
+  state: TESTED
+  implementation_commit: b3639d8
+  evidence:
+    - b3639d8 Add strategy health sweep observations
+    - trader/strategy/health_observation.py
+    - trader/strategy/rolling.py
+    - trader/brain/analyst.py
+    - trader/kernel.py
+    - trader/core/journal.py
+    - tests/test_strategy_health_observation.py
+  proven_facts:
+    - Versioned observation schema strategy-health-observation.v1.
+    - Deterministic health sweep observations persist for every attempted deployed strategy.
+    - The lifecycle branch remains exactly the existing has_decayed() result - idle, still_working or decayed.
+    - The observation verdict is separately qualified - idle, still_working, decayed, compile_failed or evaluation_failed.
+    - Incomplete or invalid evaluation coverage cannot masquerade as idle, still_working or decayed observation evidence.
+    - Lifecycle authority remains unchanged even when the observation verdict becomes evaluation_failed.
+    - Retirement telemetry is subordinate - telemetry initialization failure cannot alter retirement; telemetry build/write failure cannot alter retirement; observation writes are deferred until authoritative retirement processing cannot be rolled back by telemetry.
+    - Existing spec_decayed behavior, content and order remain unchanged.
+    - retirement_action_selected means an action was selected, NOT that lifecycle retirement was successfully applied.
+    - Lifecycle state is explicitly unknown - lifecycle_state null, lifecycle_state_reason not_supplied.
+    - Coverage records declared, attempted, scored, usable, skipped, missing and errored symbols and reasons.
+    - Zero usable/scorable bars are not treated as valid idle evidence.
+    - Missing required contextual inputs remain unavailable evidence.
+    - Raw health evidence includes trades, wins, gross_win, gross_loss, pooled_pf, pooled_pf_kind, winrate, pnl, per-symbol evidence, thresholds, evaluation windows and last closed-bar evidence.
+    - PF sentinel values remain distinguishable from empirical ratios.
+    - The health behavioral fingerprint includes strategy content relevant to the decay evaluation, including exits.
+    - The whole-content hash is artifact provenance only.
+    - Applied simulation settings are persisted separately.
+    - The code manifest is explicitly partial and does NOT claim complete reproducibility.
+    - Each review invocation has a sweep identity.
+    - Intended, evaluation-attempted, evaluation-completed, observation-recorded, observation-failed and not-evaluated sets remain distinct.
+    - Aborted evaluation and telemetry write failure remain distinct.
+    - History is descriptive only.
+    - Repeated overlapping sweep windows are NOT independent evidence.
+    - No Attention trigger, salience, ranking or allocation behavior was added.
+    - No trading, Risk or Execution authority changed.
+  validation:
+    strategy_health_tests: 40 passed
+    focused_final_suites: 162 passed, 0 failed
+    package_attributable_failures: none
+    baseline_exclusions: none
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  boundaries:
+    STRATEGY_HEALTH_OBSERVATION_NOT_TRADING_EDGE:
+      may_establish:
+        - what deterministic lifecycle branch was produced
+        - what evidence and thresholds produced it
+        - whether coverage/evaluation was sufficient
+        - whether the verdict changed between sweeps
+      does_not_establish:
+        - future profitability
+        - strategy usefulness
+        - loss of edge as a statistical fact
+        - admission-grade quality
+        - Attention salience
+        - independent evidence frequency
+        - completed retirement merely because retirement was selected
+    SWEEP_OBSERVATIONS_NOT_INDEPENDENT_EVIDENCE: >-
+      Repeated overlapping sweep windows are audit/history observations, not
+      independent statistical samples.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: The running /home/sarmad/trader kernel does not contain this package; no production strategy-health-observation.v1 rows exist from it.
+  gap_matrix_update:
+    strategy_degradation:
+      deterministic_strategy_health_source: TESTED
+      durable_health_history: TESTED
+      asset_attribution: MISSING - not established
+      attention_strategy_degradation_trigger: MISSING
+      salience_magnitude: MISSING
+      deployed: NO
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Descriptive observation and history only; no trigger, salience, allocation, usefulness, trading-edge or maturity claim. Attention overall remains IMPLEMENTED.
+
+current_active_work:
+  id: null
+  status: NO_ACTIVE_PACKAGE
+  note: SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1 is TESTED at b3639d8. No next package is selected or queued; selection is deferred to a fresh session.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1

@@ -2,57 +2,16 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1
-  type: IMPLEMENTATION
-  priority: ACTIVE
-  status: READY
-  objective: Persist every deployed-spec decay-sweep verdict as a versioned strategy-health-observation.v1 record - structured verdict code, measured evidence, the config thresholds that applied, spec fingerprint and sweep id - and expose a deterministic read-only per-spec health history, so LUFFY remembers a strategy's measured health before, not only at, retirement.
-  basis:
-    - SDD-STAGE-3-CAPABILITY-SELECTION-V4 - strategy degradation (SDD 8.1) selected; rejection trigger not queued.
-    - Analyst.review_deployed (trader/brain/analyst.py) runs rolling.has_decayed for every paper/active spec each mechanism cycle (config mechanism.interval_minutes 720) and persists only decayed verdicts (brain_events spec_decayed; 1 production row ever). Idle, still-working and compile-failure outcomes are discarded.
-    - SDD-STAGE-3-STRATEGY-SIGNAL-OCCURRENCE-IDENTITY-V1 TESTED at 230eaa0 supplies spec_fingerprint().
-  source:
-    - trader/strategy/rolling.py has_decayed() three return branches and its ev dict (trades, pooled_pf, window_days and the other recent_verdict/_score_window fields).
-    - trader/brain/analyst.py review_deployed() - thresholds decay_recent_days, decay_min_trades, decay_floor_pf read from config; compile failure branch.
-    - trader/strategy/signal_occurrence.py spec_fingerprint().
-    - Journal brain_events via log_brain_event (existing table).
-    - No venue request, LLM call, DataFeed change, new table or new column.
-  missing_transformation:
-    - has_decayed adds one structured verdict_code per return branch - idle, working, decayed - set at the branch, never parsed from verdict text; returned bool and verdict text unchanged.
-    - review_deployed writes one brain_events row kind strategy_health_observed per spec per sweep with schema strategy-health-observation.v1 - sweep_id (one per review_deployed call), spec_id, spec_fingerprint, spec state, timeframe, verdict_code, the ev evidence fields, and applied thresholds {recent_days, min_trades, floor_pf}.
-    - A spec that fails to compile is recorded with verdict_code not_evaluable and reason compile_failed, and no evidence fields; it is still skipped as today.
-    - A pure summariser plus a thin read-only Journal accessor returning per-spec ts-ordered health history and the latest verdict per spec; malformed or wrong-schema rows are reported separately, never coerced.
-  frozen_semantics:
-    - verdict_code comes only from the has_decayed branch that returned; idle means too few recent trades to judge and is never decay or health.
-    - Evidence values are recorded exactly as computed; missing values stay null, never zero.
-    - Thresholds are the config values actually applied in that sweep; no new threshold, early-warning band, trend or slope is defined.
-    - One observation per (sweep_id, spec_id); a sweep that raises before completion records only what was written.
-    - Observation is memory and owner visibility only; it does not trigger Attention, open investigations or change retirement.
-  implementation_boundary:
-    - trader/strategy/rolling.py - additive verdict_code in has_decayed ev.
-    - trader/brain/analyst.py - record observations in review_deployed; an observation write failure is logged and never prevents or alters retirement.
-    - One new pure module (e.g. trader/strategy/health_observation.py) for record construction and history summary.
-    - trader/core/journal.py - one read-only SELECT accessor for strategy_health_observed rows; no schema change.
-  acceptance_tests:
-    - tests/test_strategy_health_observation.py (new) - working, idle and decayed branches each record one observation with the matching verdict_code and exact evidence; compile failure records not_evaluable/compile_failed; applied thresholds equal config values; sweep_id is shared within one review_deployed call and differs across calls; spec_fingerprint matches signal_occurrence.spec_fingerprint and changes with signal-producing content; retirement actions, retire_reason text and spec_decayed event are unchanged versus has_decayed without the observation; an observation write failure does not change returned actions; NaN/missing evidence stays null; history is ts-ordered and deterministic under row reordering; malformed and wrong-schema rows reported separately; accessor is read-only (journal unchanged).
-    - tests/test_rolling.py and tests/test_analyst.py pass apart from recorded baseline failures.
-    - scripts/backtest_equivalence.py PASS (rolling.py touched additively).
-    - git diff --check clean.
-  preserve:
-    - Retirement verdicts, thresholds, cadence, selection/admission, retire_reason and spec_decayed payload semantics unchanged.
-    - Trading decisions, signals, sizing, Risk, Execution, protective stops and control state unchanged.
-    - Attention salience, components, thresholds, dedup, allocation, investigations and memory unchanged.
-    - No LLM calls or venue requests.
-  not_in_scope:
-    - strategy-degradation Attention trigger, early-warning threshold, trend/slope score or salience
-    - change to decay thresholds, windows, retirement policy or mechanism cadence
-    - back-filling history or parsing retire_reason / verdict text
-    - dashboard UI (the accessor may be consumed later)
-    - repeated-rejected-opportunity trigger or multi-bar episode grouping
-    - correlation, positioning, resource receipts, unassessable memory, usefulness labels, storage guard
-    - liquidation clock, portfolio magnitude, Scheme-D, downstream new-data dispatch
-    - deployment to the running /home/sarmad/trader kernel
+  id: null
+  status: NO_ACTIVE_PACKAGE
+  last_completed:
+    id: SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1
+    state: TESTED
+    implementation_commit: b3639d8
+    record: STATE.yaml completed_strategy_health_sweep_observation_v1
+  selection: No next package is selected or queued. Selection is deferred to a fresh session and must follow the STATE.yaml selection rules and parked boundaries.
   established_boundary:
+    - STRATEGY_HEALTH_OBSERVATION_NOT_TRADING_EDGE and SWEEP_OBSERVATIONS_NOT_INDEPENDENT_EVIDENCE hold; strategy-degradation asset attribution, Attention trigger and salience/magnitude remain MISSING; the package is not deployed.
     - REJECTION_OCCURRENCE_COUNTS_ARE_SCAN_CADENCE_OBSERVATIONS holds; rejection trigger/salience remains MISSING and multi-bar episode semantics UNDETERMINED.
     - SIGNAL_OCCURRENCE_IS_NOT_OPPORTUNITY_EPISODE and REJECTION_CODES_COVER_TEXT_PRODUCING_REFUSAL_PATHS_ONLY hold.
     - SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1 is PARKED_LABEL_SOURCE_MISSING; do not invent labels from descriptive, registration-time or P&L evidence.
@@ -61,9 +20,7 @@ work_package:
     - forced-liquidation-participation.v1 remains PARKED; M3.2 Scheme-D remains PARKED.
     - Portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET; portfolio salience remains BLOCKED_UPSTREAM.
     - failed_research_memory is PARTIAL; CORRELATION_UNASSESSABLE_EFFECTIVELY_UNREACHABLE and MEMORY_CONTEXT_NOT_AUTHORITY hold.
-    - Attention overall remains IMPLEMENTED; this package grants no maturity upgrade or activation.
-  after_completion:
-    - Record TESTED evidence in STATE.yaml; record strategy degradation as health observation TESTED / trigger MISSING; do not queue a degradation trigger or early-warning threshold without a justified source; no maturity upgrade.
+    - Attention overall remains IMPLEMENTED; no maturity upgrade or activation.
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -129,4 +86,4 @@ parked_usefulness_feedback:
   reopen_when: A concrete investigation-value.v1 protocol for an active family, with frozen routine-evidence comparator and deterministic ESTABLISHED/NOT_ESTABLISHED closure predicates, is frozen and producing closure receipts, or the owner explicitly prioritizes designing one.
 
 after_completion:
-  - Record SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1 evidence in STATE.yaml; keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch; do not implement a rejection or strategy-degradation Attention trigger, early-warning threshold or multi-bar episode grouping without a justified existing salience/magnitude source.
+  - SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1 evidence is recorded in STATE.yaml. No package is active. Keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch; do not implement a rejection or strategy-degradation Attention trigger, early-warning threshold or multi-bar episode grouping without a justified existing salience/magnitude source.
