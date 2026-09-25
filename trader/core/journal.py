@@ -658,6 +658,13 @@ class Journal:
         rows = self._conn().execute(sql, params).fetchall()
         return [dict(r) for r in rows]
 
+    def decision_observation_rows(self) -> list[dict]:
+        """Raw decision columns for strategy/signal_occurrence_observation.
+        SELECT only — decoding and ordering belong to the summariser."""
+        return self.query(
+            "SELECT id, ts, scan_id, symbol, action, executed, reason_codes, "
+            "reason_codes_version, signals_json FROM decisions")
+
     def open_trades(self) -> list[dict]:
         return self.query("SELECT * FROM trades WHERE status='open'")
 
