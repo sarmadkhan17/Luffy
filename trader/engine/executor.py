@@ -18,7 +18,8 @@ from ..core.config import ROOT
 from ..core.journal import Journal
 from ..core.types import Action, Decision, MarketType, Position, Side, new_id
 from . import protective
-from .control_fence import control_fence, entry_block_reason, persisted_state
+from ..core import reason_codes as rc
+from .control_fence import control_fence, entry_block, persisted_state
 from .booking import monetary_total, order_evidence
 from .accounting import safe_fill
 from .reconcile import venue_realized_pnl
@@ -101,6 +102,7 @@ class Executor:
         with self._entry_lock:
             if self.recovery_pending():
                 decision.skip_reason = "execution_recovery_pending"
+                decision.reason_codes = [rc.SUBMISSION_RECOVERY_PENDING]
                 return None
             return self._open_serialized(decision, amount, atr, stop_loss,
                                          take_profit, strategy_id, strategy_name, exec_mode)
@@ -171,9 +173,10 @@ class Executor:
         # intent, the submission and its immediate result are fenced; fill
         # polling, protection and exits run outside it.
         with control_fence(self.journal):
-            blocked = entry_block_reason(persisted_state(self.journal))
+            blocked, blocked_code = entry_block(persisted_state(self.journal))
             if blocked:
                 decision.skip_reason = blocked
+                decision.reason_codes = [blocked_code]
                 log.warning(f"ENTRY BLOCKED {sym} at submission: {blocked}")
                 return None
             if self.market_type == MarketType.FUTURES:

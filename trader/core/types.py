@@ -136,6 +136,9 @@ class Decision:
     scan_id: str | None = None
     evaluation_causes: list = field(default_factory=list)
     omitted_causes: int = 0
+    # structured twin of skip_reason, same order (core/reason_codes.py);
+    # [] = no coded text-producing refusal, NOT success — see `executed`
+    reason_codes: list = field(default_factory=list)
 
 
 @dataclass

@@ -26,6 +26,7 @@ import threading
 from contextlib import contextmanager
 from pathlib import Path
 
+from ..core import reason_codes as rc
 from ..core.types import ControlState
 
 #: duck-typed journals without a database file (unit-test doubles) only
@@ -70,12 +71,17 @@ def persisted_state(journal) -> ControlState | None:
 
 def entry_block_reason(state: ControlState | None) -> str | None:
     """Stable skip reason, matching RiskManager wording; None when ACTIVE."""
+    return entry_block(state)[0]
+
+
+def entry_block(state: ControlState | None) -> tuple:
+    """(skip reason, reason code) of the blocking branch; (None, None) when ACTIVE."""
     if state == ControlState.ACTIVE:
-        return None
+        return None, None
     if state == ControlState.FROZEN:
-        return "state=FROZEN: entries blocked"
+        return "state=FROZEN: entries blocked", rc.FENCE_STATE_FROZEN
     if state == ControlState.HALTED:
-        return "state=HALTED"
+        return "state=HALTED", rc.FENCE_STATE_HALTED
     if state is None:
-        return "state=UNREADABLE: entries blocked"
-    return f"state={state.value}: entries blocked"
+        return "state=UNREADABLE: entries blocked", rc.FENCE_STATE_UNREADABLE
+    return f"state={state.value}: entries blocked", rc.FENCE_STATE_NOT_ACTIVE

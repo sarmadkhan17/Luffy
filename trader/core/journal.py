@@ -15,6 +15,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Optional
 
+from . import reason_codes as _rc
 from .types import Decision, Snapshot, now_utc
 
 SCHEMA = """
@@ -242,6 +243,15 @@ class Journal:
                 "ALTER TABLE trades ADD COLUMN mfe_r REAL DEFAULT NULL",
                 "ALTER TABLE trades ADD COLUMN mae_r REAL DEFAULT NULL",
                 "ALTER TABLE trades ADD COLUMN excursion_json TEXT DEFAULT NULL",
+                # structured twin of skip_reason (core/reason_codes.py): a
+                # JSON list in composition order. NULL means not recorded —
+                # legacy rows are never back-filled by parsing their text —
+                # while '[]' means recorded, but no coded text-producing
+                # refusal was present. '[]' is not success: paths that fail
+                # without skip_reason text (zero-lot, submission failure)
+                # also carry '[]'. Read `executed` for the outcome.
+                "ALTER TABLE decisions ADD COLUMN reason_codes TEXT DEFAULT NULL",
+                "ALTER TABLE decisions ADD COLUMN reason_codes_version TEXT DEFAULT NULL",
             ):
                 try:
                     c.execute(stmt)
@@ -305,19 +315,33 @@ class Journal:
                 "INSERT OR REPLACE INTO decisions "
                 "(id,cycle_id,ts,symbol,action,score,threshold,confidence,"
                 "executed,skip_reason,size_usdt,entry_price,strategy_ids,"
-                "signals_json,meta_p,scan_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "signals_json,meta_p,scan_id,reason_codes,reason_codes_version) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (d.id, d.cycle_id, d.ts, d.symbol, d.action.value, d.score,
                  d.threshold, d.confidence, int(d.executed), d.skip_reason,
                  d.size_usdt, None, strat_ids, signals,
-                 d.meta_p if d.meta_p else None, getattr(d, "scan_id", None)))
+                 d.meta_p if d.meta_p else None, getattr(d, "scan_id", None),
+                 *self._reason_codes_cols(getattr(d, "reason_codes", None))))
 
     def update_decision_outcome(self, decision_id: str, executed: bool,
                                 size_usdt: float = 0.0,
-                                skip_reason: str = "") -> None:
+                                skip_reason: str = "",
+                                reason_codes: list | None = None) -> None:
+        """Overwrites skip_reason and reason_codes together, so the row's
+        text and codes always describe the same refusal. A caller that does
+        not classify (reason_codes=None) records NULL — not recorded."""
         with self._tx() as c:
             c.execute("UPDATE decisions SET executed=?, size_usdt=?, "
-                      "skip_reason=? WHERE id=?",
-                      (int(executed), size_usdt, skip_reason, decision_id))
+                      "skip_reason=?, reason_codes=?, reason_codes_version=? "
+                      "WHERE id=?",
+                      (int(executed), size_usdt, skip_reason,
+                       *self._reason_codes_cols(reason_codes), decision_id))
+
+    @staticmethod
+    def _reason_codes_cols(codes) -> tuple:
+        if codes is None:
+            return None, None
+        return _rc.encode(codes), _rc.VERSION
 
     def set_decision_entry_price(self, decision_id: str, price: float) -> None:
         with self._tx() as c:

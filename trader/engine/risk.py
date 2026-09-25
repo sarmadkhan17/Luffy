@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from ..core.types import ControlState, Position, RiskError
+from ..core import reason_codes as rc
 
 log = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ class SizingResult:
     amount: float             # base units
     risk_usdt: float
     size_mult: float          # de-risk/proving multiplier applied
+    code: str = ""            # reason code of the refusing branch; "" when ok
 
 
 class RiskManager:
@@ -140,12 +142,14 @@ class RiskManager:
                     closed_trades_count: int, market_type: str) -> SizingResult:
         """side_risk_frac: stop distance as fraction of price (e.g. 0.02)."""
         if state == ControlState.FROZEN:
-            return SizingResult(False, "state=FROZEN: entries blocked", 0, 0, 0, 0)
+            return SizingResult(False, "state=FROZEN: entries blocked", 0, 0, 0, 0,
+                                code=rc.RISK_STATE_FROZEN)
         if state == ControlState.HALTED:
-            return SizingResult(False, "state=HALTED", 0, 0, 0, 0)
+            return SizingResult(False, "state=HALTED", 0, 0, 0, 0,
+                                code=rc.RISK_STATE_HALTED)
         if state != ControlState.ACTIVE:  # RECOVERY, and fail closed on any other
             return SizingResult(False, f"state={state.value}: entries blocked",
-                                0, 0, 0, 0)
+                                0, 0, 0, 0, code=rc.RISK_STATE_NOT_ACTIVE)
 
         st = self.update_equity(equity)
         if st["halt_breached"]:
@@ -153,11 +157,14 @@ class RiskManager:
                             f"{self.halt_dd*100:.0f}% — flip HALTED")
         if st["daily_pnl_pct"] <= -self.daily_loss_block * 100:
             return SizingResult(False,
-                                f"daily breaker {st['daily_pnl_pct']:.1f}%", 0, 0, 0, 0)
+                                f"daily breaker {st['daily_pnl_pct']:.1f}%", 0, 0, 0, 0,
+                                code=rc.RISK_DAILY_LOSS_BREAKER)
         if len(open_positions) >= self.max_positions:
-            return SizingResult(False, "max positions reached", 0, 0, 0, 0)
+            return SizingResult(False, "max positions reached", 0, 0, 0, 0,
+                                code=rc.RISK_MAX_POSITIONS)
         if any(p.symbol == symbol for p in open_positions):
-            return SizingResult(False, "already exposed here", 0, 0, 0, 0)
+            return SizingResult(False, "already exposed here", 0, 0, 0, 0,
+                                code=rc.RISK_ALREADY_EXPOSED)
 
         # heat accounting: open risk + this trade's intended risk
         open_risk = sum(self._position_risk(p, price) for p in open_positions)
@@ -171,7 +178,8 @@ class RiskManager:
             return SizingResult(
                 False,
                 f"risk budget exhausted (heat {open_risk/equity:.1%}/"
-                f"{self.heat_cap:.0%})", 0, 0, 0, 0)
+                f"{self.heat_cap:.0%})", 0, 0, 0, 0,
+                code=rc.RISK_BUDGET_EXHAUSTED)
 
         mult = self.derisk_multiplier(st["drawdown_pct"])
         if closed_trades_count < self.proving_trades:
@@ -192,7 +200,7 @@ class RiskManager:
                 False,
                 f"margin cap reached ({open_margin/equity:.0%}/"
                 f"{self.max_total_margin:.0%} of equity committed)",
-                0, 0, 0, 0)
+                0, 0, 0, 0, code=rc.RISK_MARGIN_CAP)
         margin = notional / self.leverage
         if margin > margin_room:
             scale = margin_room / margin
@@ -201,7 +209,8 @@ class RiskManager:
             allowed *= scale          # the realised risk shrinks with the size
 
         if notional / self.leverage < self.min_notional:
-            return SizingResult(False, "below min notional", 0, 0, 0, 0)
+            return SizingResult(False, "below min notional", 0, 0, 0, 0,
+                                code=rc.RISK_BELOW_MIN_NOTIONAL)
         return SizingResult(True, "ok",
                             size_usdt=round(notional / self.leverage, 2),
                             amount=round(amount, 8),

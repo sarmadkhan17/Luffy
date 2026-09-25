@@ -28,6 +28,7 @@ from .agents.orderbook_depth import DepthScout
 from .agents.positioning import PositioningAnalyst
 from .agents.regime import btc_context
 from .agents.structure import StructureAnalyst
+from .core import reason_codes as rc
 from .core.config import ROOT, load_config
 from .core.journal import Journal
 from .core.types import (Action, ControlState, MarketType, RiskError,
@@ -1018,13 +1019,16 @@ class Kernel:
             self.executor.recover_entries()
         entry_allowed = state == ControlState.ACTIVE
         blocked = "" if entry_allowed else f"state={state.value}"
+        blocked_code = "" if entry_allowed else rc.CONTROL_STATE_NOT_ACTIVE
         if self.market_type == MarketType.FUTURES and self.executor.recovery_pending():
             entry_allowed = False
             blocked = "execution_recovery_pending"
+            blocked_code = rc.EXECUTION_RECOVERY_PENDING
         if entry_allowed and status.get("daily_pnl_pct", 0) <= \
                 -self.risk.daily_loss_block * 100:
             entry_allowed = False
             blocked = f"daily breaker {status['daily_pnl_pct']:.1f}%"
+            blocked_code = rc.DAILY_LOSS_BREAKER
 
         funding = self._funding_map() if self.market_type == MarketType.FUTURES else {}
         oi = self._oi_map() if self.market_type == MarketType.FUTURES else {}
@@ -1069,6 +1073,7 @@ class Kernel:
                     and self.executor.recovery_pending()):
                 entry_allowed = False
                 blocked = "execution_recovery_pending"
+                blocked_code = rc.EXECUTION_RECOVERY_PENDING
             snap = self._snapshot_for(symbol, universe=universe_frames)
             if snap is None:
                 if scan_id and len(attention_causes) < attention_cap:
@@ -1081,7 +1086,8 @@ class Kernel:
             self.depth_agent.set_context(symbol, self._order_book(symbol))
             d = self.orchestrator.decide(snap, self.population,
                                          entry_allowed=entry_allowed,
-                                         blocked_reason=blocked)
+                                         blocked_reason=blocked,
+                                         blocked_reason_code=blocked_code)
             d.scan_id = scan_id
             self.orchestrator.journalize(snap, d, self.market_type.value,
                                          mode="live")
@@ -1099,12 +1105,15 @@ class Kernel:
                         self.state_machine.set(ControlState.HALTED,
                                                "risk_engine", str(e))
                         d.skip_reason = f"risk halt: {e}"
+                        d.reason_codes = [rc.RISK_HALT]
                         ok = False
                         entry_allowed = False
                         blocked = "state=HALTED"
+                        blocked_code = rc.RISK_HALT_IN_CYCLE
                         log.error(f"RISK HALT {d.symbol}: {e}")
                     self.journal.update_decision_outcome(
-                        d.id, d.executed, d.size_usdt, d.skip_reason)
+                        d.id, d.executed, d.size_usdt, d.skip_reason,
+                        reason_codes=getattr(d, "reason_codes", None))
                     if ok:
                         stats["entries"] += 1
                         self.notifier.send(
@@ -1185,6 +1194,7 @@ class Kernel:
         if a <= 0:                       # spec frame absent — do not guess
             if se is not None:
                 d.skip_reason = f"no {atr_tf} bars to size the stop on"
+                d.reason_codes = [rc.STOP_ATR_UNAVAILABLE]
                 log.info(f"ENTRY DENY {d.symbol}: {d.skip_reason}")
                 return False
             a = _atr(snap.df(exec_tf))
@@ -1198,6 +1208,7 @@ class Kernel:
             market_type=self.market_type.value)
         if not sizing.ok:
             d.skip_reason = f"risk: {sizing.reason}"
+            d.reason_codes = [sizing.code]
             log.info(f"RISK DENY {d.symbol}: {sizing.reason}")
             return False
         # meta-label sizing: shrink-only multiplier from P(win) — bounded
@@ -1210,6 +1221,7 @@ class Kernel:
             if sizing.amount * snap.price < float(
                     self.cfg["risk"].get("min_notional_usdt", 10)):
                 d.skip_reason = "risk: meta-sized below min notional"
+                d.reason_codes = [rc.META_SIZE_BELOW_MIN_NOTIONAL]
                 log.info(f"META SIZE DENY {d.symbol}: {m:.2f}× too small")
                 return False
             log.info(f"meta size {d.symbol}: {m:.2f}× "

@@ -25,6 +25,7 @@ from datetime import datetime, timezone
 from ..agents import calibration
 from ..agents.base import Analyst
 from ..agents.regime import classify, fit_multiplier
+from ..core import reason_codes as rc
 from ..core.journal import Journal
 from ..core.types import (Action, Decision, Side, Snapshot, StrategySignal,
                           Vote, new_id)
@@ -163,15 +164,23 @@ def strategy_gate(action, sigs: list) -> tuple:
     graded like any other prediction. Reopening this must be an evidence
     decision, not an opinion.
     """
+    action, veto, _code, gated_lean = strategy_gate_coded(action, sigs)
+    return action, veto, gated_lean
+
+
+def strategy_gate_coded(action, sigs: list) -> tuple:
+    """strategy_gate plus the reason code of the refusing branch.
+    -> (action, veto, code, gated_lean); code is "" when nothing refused."""
     if action == Action.HOLD:
-        return action, "", None
+        return action, "", "", None
     if not sigs:
-        return Action.HOLD, "no strategy signal", action
+        return Action.HOLD, "no strategy signal", rc.STRATEGY_NO_SIGNAL, action
     if not any(s.action == action for s in sigs):
         return (Action.HOLD,
                 f"no strategy agrees with {action.value} "
-                f"({len(sigs)} signalled the other way)", action)
-    return action, "", None
+                f"({len(sigs)} signalled the other way)",
+                rc.STRATEGY_NO_AGREEMENT, action)
+    return action, "", "", None
 
 
 def regime_allows(genome, regime: str) -> bool:
@@ -384,7 +393,8 @@ class Orchestrator:
 
     def decide(self, snap: Snapshot, population: list[tuple],
                entry_allowed: bool = True,
-               blocked_reason: str = "") -> Decision:
+               blocked_reason: str = "",
+               blocked_reason_code: str = "") -> Decision:
         receipts = self._receipts_type(self.diagnostics_enabled, self.diagnostics_cap)
         cycle_id = new_id("cyc")
         regime_info = classify(snap.df("15m"), snap.df("1h"))
@@ -475,13 +485,14 @@ class Orchestrator:
         if news.get("active"):
             threshold += 0.08
             net *= 0.75
-        veto_reason = ""
+        veto_reason, veto_code = "", ""
         if abs(htf) > 0.35 and snap.regime != "VOLATILE":
             opposing = (net < 0 < htf) or (net > 0 > htf)
             if opposing:
                 if abs(htf) >= self.htf_hard_veto:
                     veto_reason = (f"4h trend {'UP' if htf > 0 else 'DOWN'} "
                                    f"s={htf:+.2f} — hard veto")
+                    veto_code = rc.HTF_TREND_HARD_VETO
                     net = 0.0
                 else:
                     threshold += self.htf_soft_bump
@@ -503,9 +514,10 @@ class Orchestrator:
         # behind it at all. It no longer is: analysts choose among what a
         # validated mechanism has already proposed, which is the shape
         # CLAUDE.md describes and the cutover it says is manual.
-        strat_veto, gated_lean = "", None
+        strat_veto, strat_code, gated_lean = "", "", None
         if self.require_strategy_signal:
-            action, strat_veto, gated_lean = strategy_gate(action, sigs)
+            action, strat_veto, strat_code, gated_lean = \
+                strategy_gate_coded(action, sigs)
 
         # NaN from indicator edge cases must never reach SQLite (it becomes
         # NULL → NOT NULL violation → crash-loop → duplicate entries)
@@ -576,6 +588,7 @@ class Orchestrator:
                     if p < meta_label.META_FLOOR and not lead:
                         veto_reason = (f"meta: p={p:.2f} "
                                        f"< {meta_label.META_FLOOR}")
+                        veto_code = rc.META_VETO
                     else:
                         meta_size = meta_label.size_mult(p)
             except Exception as e:
@@ -593,14 +606,21 @@ class Orchestrator:
         d.omitted_causes = receipts.omitted
         d.executed = False
         d.gated_lean = gated_lean            # set only when the gate fired
-        skip_bits = []
+        skip_bits, skip_codes = [], []
         if strat_veto:
             skip_bits.append(strat_veto)
+            skip_codes.append(strat_code)
         if veto_reason:
             skip_bits.append(veto_reason)
+            skip_codes.append(veto_code)
         if action != Action.HOLD and not entry_allowed:
             skip_bits.append(blocked_reason or "entries not allowed")
+            # the caller's code travels with the caller's text only; the
+            # generic fallback text gets the generic fallback code
+            skip_codes.append((blocked_reason and blocked_reason_code)
+                              or rc.ENTRIES_NOT_ALLOWED)
         d.skip_reason = "; ".join(skip_bits)
+        d.reason_codes = skip_codes
         return d
 
     def journalize(self, snap: Snapshot, decision: Decision,

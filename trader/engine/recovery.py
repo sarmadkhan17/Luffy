@@ -227,6 +227,7 @@ class EntryRecovery:
                 return
             self.journal.record_stop_order(template["id"], candidates[0]["id"], candidates[0]["stop_price"])
         self.journal.update_decision_outcome(template["decision_id"], True, amount*entry,
-                                             "recovered_confirmed_exposure")
+                                             "recovered_confirmed_exposure",
+                                             reason_codes=[])
         self.journal.set_decision_entry_price(template["decision_id"], entry)
         self.finish(intent, "confirmed_protected_and_journalled")
