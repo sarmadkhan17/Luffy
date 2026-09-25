@@ -385,9 +385,11 @@ def test_nothing_in_the_live_path_calls_it():
                      if p.name != "research_plan.py"
                      and pat.search(p.read_text(errors="ignore")))
     # the journal owns the storage primitive; research_evidence.py is the
-    # offline evidence-collection consumer and research_run.py the offline
-    # runner, each guarded by its own test
-    assert callers == ["cognition/research_evidence.py",
+    # offline evidence-collection consumer, research_run.py the offline
+    # runner and research_bank.py the offline bank filer, each guarded by
+    # its own test
+    assert callers == ["cognition/research_bank.py",
+                       "cognition/research_evidence.py",
                        "cognition/research_run.py", "core/journal.py"]
     journal_src = (root / "core/journal.py").read_text()
     assert "research_plan import" not in journal_src
