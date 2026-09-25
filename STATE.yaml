@@ -236,10 +236,11 @@ capabilities:
       - correlation_change registration-evidence family (investigation.correlation_change.v1) is TESTED at e61fb82; descriptive, not prospective predictive validation
       - committed case-local investigation work is metered per execution as investigation-resource-receipt.v1 at 9be45a9 (SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1); resource_bound null, resource_compliance UNKNOWN
       - verified terminal not_testable/UNASSESSABLE closures are retained as investigation-unassessable-memory.v1 and recalled at registration as context_only cautions at 8eaf90b (SDD-STAGE-3-INVESTIGATION-UNASSESSABLE-MEMORY-V1); no effect on salience, rank or allocation
+      - terminal assessed descriptive positioning_extreme/correlation_change results are retained as investigation-assessed-memory.v1 with exact original result vocabulary and recalled at registration as context_only at 8904fef (SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1); no effect on salience, rank or allocation; not usefulness/value labels
     gaps:
       - investigation-value.v1 usefulness labels do not exist; no protocol-defined label source (USEFULNESS_LABEL_SOURCE_MISSING, 2026-09-25)
       - resource bounds are undeclared; rolled-back/failed attempt cost is UNKNOWN and total research cost is not established
-      - registration-evidence family (positioning/correlation) assessed descriptive results are not retained in investigation memory; measured v2 cases and terminal UNASSESSABLE closures are
+      - existing measured-memory (investigation.v2) ingestion can crash on certain malformed persisted update payloads before its try/verification boundary; known out-of-scope robustness finding from the SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1 review; not fixed and not queued
       - separate lightweight trading Opportunity registry from SDD v3.2 is not yet implemented
 
   operator_api_and_auth:
@@ -2039,10 +2040,70 @@ completed_strategy_health_sweep_observation_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Descriptive observation and history only; no trigger, salience, allocation, usefulness, trading-edge or maturity claim. Attention overall remains IMPLEMENTED.
 
+completed_investigation_assessed_memory_v1:
+  id: SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 8904fef
+  evidence:
+    - 8904fef Add assessed investigation memory
+    - trader/cognition/memory.py
+    - trader/observability/memory.py
+    - trader/observability/investigation.py
+    - tests/test_investigation_assessed_memory.py
+  proven_facts:
+    - Versioned contract investigation-assessed-memory.v1.
+    - Retains terminal assessed descriptive results only for the existing positioning_extreme and correlation_change families.
+    - Exact original result vocabulary is retained; results are not mapped to usefulness, success/failure, prediction, edge, expected return or trading direction.
+    - Registration and terminal assessment are reverified from frozen source evidence before persistence.
+    - Source investigation/event/evidence/episode/scan/state identities, family, catalog, config, symbol, evidence IDs, input versions, dimensions, outcome evidence and chronology are retained.
+    - not_testable / UNASSESSABLE closures remain owned by investigation-unassessable-memory.v1.
+    - Existing measured investigation.v2 memory is unchanged.
+    - Retry/restart ingestion is idempotent.
+    - Supported candidate ingestion is bounded.
+    - Valid future-observed source evidence is deferred rather than permanently refused.
+    - Deferred future-observed cases do not consume the bounded eligible-work batch and become eligible after clock recovery.
+    - Malformed/non-integer/missing chronology evidence is not silently deferred and still fails closed.
+    - Immutable verification refusals are dispositioned once so they cannot starve later eligible cases.
+    - Recall requires exact family/catalog/config/symbol compatibility.
+    - Recalled evidence must have been known strictly before the receiving registration.
+    - Self-matches are excluded.
+    - Retrieval is deterministic and bounded; MAX_RETRIEVED remains 3.
+    - SQL retrieval is compatibility-key scoped, so unrelated stored memories cannot crowd out a compatible one.
+    - Recall output is context_only.
+    - Context-only assessed memories do not suppress registration, change Attention salience/rank/allocation/triggers/cooldowns, create scores/probabilities, or alter trading/Risk/Execution behavior.
+    - Export/replay reconstructs source records and reapplies receiving-case recall rules.
+    - Replay enforces uniqueness, capacity, compatibility, known-before-registration, canonical ordering, canonical context-only notes/schema/limitation.
+    - Recomputed hashes/context IDs cannot legitimize a semantically invalid assessed memory archive.
+    - Existing retention behavior is reused; no new retention policy.
+    - No LLM, network or venue dependency was added.
+  validation:
+    package_tests: 58 passed
+    required_focused_suites: 274 passed
+    independent_review: Astra final independent delta review PASS, no commit blockers
+    git_diff_check: clean (trader, tests)
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  boundaries:
+    INVESTIGATION_ASSESSED_MEMORY_CONTEXT_NOT_AUTHORITY: Prior descriptive assessed results are historical context only. They do NOT establish usefulness, predictive power, trading edge, probability, expected return, directional bias, evidence strength or priority.
+    ASSESSED_RESULT_VOCABULARY_NOT_VALUE_LABEL: positioning/correlation descriptive result names remain exactly their existing protocol vocabulary and must not be interpreted as investigation-value.v1 labels.
+    KNOWN_BEFORE_REGISTRATION_REQUIRED: max(resolved_ms, available_ms, recorded_ms) must be strictly less than the receiving investigation registered_ms for recall.
+  known_out_of_scope_finding: Existing measured-memory ingestion can crash on certain malformed persisted update payloads before its try/verification boundary. Recorded under capabilities.investigation.gaps; not fixed by this package and not queued.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment or live activation is implied by commit 8904fef; the running /home/sarmad/trader kernel does not contain assessed memory.
+  gap_matrix_update:
+    descriptive_positioning_correlation_assessed_results_in_investigation_memory: TESTED
+    failed_research_memory: PARTIAL - terminal UNASSESSABLE closures and descriptive assessed positioning/correlation results are retained and recalled as context only; this package creates no usefulness learning or value labels.
+    usefulness_outcome_weighted_research_feedback: PARKED_LABEL_SOURCE_MISSING
+    resource_compliance: UNKNOWN
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Memory context only; no usefulness, predictive, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1 is TESTED at b3639d8. No next package is selected or queued; selection is deferred to a fresh session.
+  note: SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1 is TESTED at 8904fef. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1

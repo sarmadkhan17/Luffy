@@ -5,12 +5,14 @@ work_package:
   id: null
   status: NO_ACTIVE_PACKAGE
   last_completed:
-    id: SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1
+    id: SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1
     state: TESTED
-    implementation_commit: b3639d8
-    record: STATE.yaml completed_strategy_health_sweep_observation_v1
-  selection: No next package is selected or queued. Selection is deferred to a fresh session and must follow the STATE.yaml selection rules and parked boundaries.
+    implementation_commit: 8904fef
+    record: STATE.yaml completed_investigation_assessed_memory_v1
+  selection: No next package is selected or queued. Selection is deferred until after this control-plane closure and must follow the STATE.yaml selection rules and parked boundaries.
   established_boundary:
+    - INVESTIGATION_ASSESSED_MEMORY_CONTEXT_NOT_AUTHORITY, ASSESSED_RESULT_VOCABULARY_NOT_VALUE_LABEL and KNOWN_BEFORE_REGISTRATION_REQUIRED hold; assessed memory is context_only, is not an investigation-value.v1 label, and is not deployed.
+    - The measured-memory ingestion malformed-payload robustness finding is recorded in STATE capabilities.investigation.gaps only; it is not the active package.
     - STRATEGY_HEALTH_OBSERVATION_NOT_TRADING_EDGE and SWEEP_OBSERVATIONS_NOT_INDEPENDENT_EVIDENCE hold; strategy-degradation asset attribution, Attention trigger and salience/magnitude remain MISSING; the package is not deployed.
     - REJECTION_OCCURRENCE_COUNTS_ARE_SCAN_CADENCE_OBSERVATIONS holds; rejection trigger/salience remains MISSING and multi-bar episode semantics UNDETERMINED.
     - SIGNAL_OCCURRENCE_IS_NOT_OPPORTUNITY_EPISODE and REJECTION_CODES_COVER_TEXT_PRODUCING_REFUSAL_PATHS_ONLY hold.
@@ -86,4 +88,4 @@ parked_usefulness_feedback:
   reopen_when: A concrete investigation-value.v1 protocol for an active family, with frozen routine-evidence comparator and deterministic ESTABLISHED/NOT_ESTABLISHED closure predicates, is frozen and producing closure receipts, or the owner explicitly prioritizes designing one.
 
 after_completion:
-  - SDD-STAGE-3-STRATEGY-HEALTH-SWEEP-OBSERVATION-V1 evidence is recorded in STATE.yaml. No package is active. Keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch; do not implement a rejection or strategy-degradation Attention trigger, early-warning threshold or multi-bar episode grouping without a justified existing salience/magnitude source.
+  - SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1 evidence is recorded in STATE.yaml. No package is active. Keep usefulness feedback and the storage-capacity guard parked; preserve parked liquidation, Scheme-D and portfolio-magnitude boundaries; do not queue downstream dispatch; do not implement a rejection or strategy-degradation Attention trigger, early-warning threshold or multi-bar episode grouping without a justified existing salience/magnitude source.
