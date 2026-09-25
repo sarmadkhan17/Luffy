@@ -68,6 +68,16 @@ def setup_logging(cfg: dict) -> None:
         logging.StreamHandler(sys.stdout)])
 
 
+def _flush_health(analyst) -> bool:
+    """Write the Analyst's buffered health observations. Telemetry: never
+    raises and never alters the lifecycle work before it."""
+    try:
+        flush = getattr(analyst, "flush_health_observations", None)
+        return True if flush is None else bool(flush())
+    except Exception:
+        return False
+
+
 class Kernel:
     def __init__(self, cfg: dict):
         self.cfg = cfg
@@ -637,6 +647,9 @@ class Kernel:
         if retired:
             book = [s for s in book
                     if s.id not in {a["spec"] for a in retired}]
+        # health telemetry is written only once retirement is applied; it
+        # defers itself while those UPDATEs are uncommitted (retried below)
+        _flush_health(analyst)
 
         # 2. generate replacements — from what the Researcher actually read
         added = []
@@ -698,6 +711,9 @@ class Kernel:
                "book": len(book), "ideas_used": consumed,
                "ideas_pending": len(idea_queue.pending(self.journal))}
         log.info(f"mechanism: {rep}")
+        if not _flush_health(analyst):
+            log.warning("mechanism: health observations not written — an "
+                        "uncommitted transaction was still open")
         return rep
 
     def _install_spec(self, spec, ev: dict, analyst, extra: dict) -> None:
