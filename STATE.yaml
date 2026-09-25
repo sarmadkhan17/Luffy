@@ -237,10 +237,11 @@ capabilities:
       - committed case-local investigation work is metered per execution as investigation-resource-receipt.v1 at 9be45a9 (SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1); resource_bound null, resource_compliance UNKNOWN
       - verified terminal not_testable/UNASSESSABLE closures are retained as investigation-unassessable-memory.v1 and recalled at registration as context_only cautions at 8eaf90b (SDD-STAGE-3-INVESTIGATION-UNASSESSABLE-MEMORY-V1); no effect on salience, rank or allocation
       - terminal assessed descriptive positioning_extreme/correlation_change results are retained as investigation-assessed-memory.v1 with exact original result vocabulary and recalled at registration as context_only at 8904fef (SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1); no effect on salience, rank or allocation; not usefulness/value labels
+      - malformed measured-memory (investigation.v2) sources fail closed and are dispositioned once instead of crashing ingest() at 71204ca (SDD-STAGE-3-MEASURED-MEMORY-MALFORMED-SOURCE-HARDENING-V1); valid measured/assessed/not_testable behavior unchanged
     gaps:
       - investigation-value.v1 usefulness labels do not exist; no protocol-defined label source (USEFULNESS_LABEL_SOURCE_MISSING, 2026-09-25)
       - resource bounds are undeclared; rolled-back/failed attempt cost is UNKNOWN and total research cost is not established
-      - existing measured-memory (investigation.v2) ingestion can crash on certain malformed persisted update payloads before its try/verification boundary; known out-of-scope robustness finding from the SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1 review; not fixed and not queued
+      - malformed not_testable/unassessable source hardening (investigation-unassessable-memory.v1 ingestion) is MISSING; not queued. The measured-memory malformed-source finding is resolved at 71204ca.
       - separate lightweight trading Opportunity registry from SDD v3.2 is not yet implemented
 
   operator_api_and_auth:
@@ -2100,10 +2101,42 @@ completed_investigation_assessed_memory_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Memory context only; no usefulness, predictive, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_measured_memory_malformed_source_hardening_v1:
+  id: SDD-STAGE-3-MEASURED-MEMORY-MALFORMED-SOURCE-HARDENING-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 71204ca
+  resolves: The known_out_of_scope_finding recorded by SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1 (measured-memory ingestion crash on malformed persisted update payloads).
+  evidence:
+    - 71204ca Harden measured investigation memory ingestion
+    - trader/observability/memory.py
+    - tests/test_investigation_measured_memory_hardening.py
+  proven_facts:
+    - Malformed measured-memory sources fail closed instead of crashing ingest().
+    - Immutable malformed sources are dispositioned once.
+    - Malformed prefixes cannot starve later valid sources.
+    - Retry/restart remains bounded and idempotent.
+    - Future chronology remains retryable.
+    - Valid measured-memory output is unchanged.
+    - Assessed-memory behavior is unchanged.
+    - Valid not_testable handling is unchanged.
+    - No Attention, LLM, Risk, Execution or trading semantic change.
+  validation:
+    memory_tests: 170 passed
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  explicit_gap: Malformed not_testable/unassessable source hardening remains MISSING and is NOT queued.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment or live activation is implied by commit 71204ca.
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Robustness hardening only; no usefulness, predictive, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1 is TESTED at 8904fef. No next package is selected or queued.
+  note: SDD-STAGE-3-MEASURED-MEMORY-MALFORMED-SOURCE-HARDENING-V1 is TESTED at 71204ca. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
