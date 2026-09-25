@@ -238,10 +238,11 @@ capabilities:
       - verified terminal not_testable/UNASSESSABLE closures are retained as investigation-unassessable-memory.v1 and recalled at registration as context_only cautions at 8eaf90b (SDD-STAGE-3-INVESTIGATION-UNASSESSABLE-MEMORY-V1); no effect on salience, rank or allocation
       - terminal assessed descriptive positioning_extreme/correlation_change results are retained as investigation-assessed-memory.v1 with exact original result vocabulary and recalled at registration as context_only at 8904fef (SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1); no effect on salience, rank or allocation; not usefulness/value labels
       - malformed measured-memory (investigation.v2) sources fail closed and are dispositioned once instead of crashing ingest() at 71204ca (SDD-STAGE-3-MEASURED-MEMORY-MALFORMED-SOURCE-HARDENING-V1); valid measured/assessed/not_testable behavior unchanged
+      - malformed not_testable/UNASSESSABLE memory sources fail closed and are dispositioned once; future-observed sources are deferred before processing limits and cannot starve ready valid closures at 995fa9c (SDD-STAGE-3-UNASSESSABLE-MEMORY-MALFORMED-SOURCE-HARDENING-V1); valid investigation-unassessable-memory.v1, measured and assessed behavior unchanged
     gaps:
       - investigation-value.v1 usefulness labels do not exist; no protocol-defined label source (USEFULNESS_LABEL_SOURCE_MISSING, 2026-09-25)
       - resource bounds are undeclared; rolled-back/failed attempt cost is UNKNOWN and total research cost is not established
-      - malformed not_testable/unassessable source hardening (investigation-unassessable-memory.v1 ingestion) is MISSING; not queued. The measured-memory malformed-source finding is resolved at 71204ca.
+      - broader 256-row candidate crowding from unrelated terminal statuses is a pre-existing memory-ingestion limitation; not fixed by 995fa9c; not queued. Malformed measured (71204ca) and not_testable/unassessable (995fa9c) source findings are resolved.
       - separate lightweight trading Opportunity registry from SDD v3.2 is not yet implemented
 
   operator_api_and_auth:
@@ -2133,10 +2134,43 @@ completed_measured_memory_malformed_source_hardening_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Robustness hardening only; no usefulness, predictive, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_unassessable_memory_malformed_source_hardening_v1:
+  id: SDD-STAGE-3-UNASSESSABLE-MEMORY-MALFORMED-SOURCE-HARDENING-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 995fa9c
+  resolves: The explicit_gap recorded by SDD-STAGE-3-MEASURED-MEMORY-MALFORMED-SOURCE-HARDENING-V1 (malformed not_testable/unassessable source hardening).
+  evidence:
+    - 995fa9c Harden unassessable investigation memory ingestion
+    - trader/observability/memory.py
+    - tests/test_investigation_unassessable_memory_hardening.py
+  proven_facts:
+    - Malformed not_testable/UNASSESSABLE memory sources fail closed.
+    - Immutable malformed/invalid sources are dispositioned once.
+    - Future-observed sources are deferred before processing limits.
+    - More than 32 future or malformed sources cannot starve ready valid closures.
+    - Deferred sources become eligible after clock recovery.
+    - Restart/idempotence remains bounded.
+    - Valid investigation-unassessable-memory.v1 behavior is unchanged.
+    - Measured and assessed memory behavior is unchanged.
+    - No Attention, usefulness, Risk, Execution or trading change.
+  validation:
+    package_tests: 50 passed
+    wider_focused_run: 363 passed (reported)
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  explicit_limitation: Broader 256-row candidate crowding from unrelated terminal statuses remains a pre-existing limitation. It is NOT fixed by this package and NOT queued; do not create or queue a package for it automatically.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment or live activation is implied by commit 995fa9c.
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Robustness hardening only; no usefulness, predictive, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-MEASURED-MEMORY-MALFORMED-SOURCE-HARDENING-V1 is TESTED at 71204ca. No next package is selected or queued.
+  note: SDD-STAGE-3-UNASSESSABLE-MEMORY-MALFORMED-SOURCE-HARDENING-V1 is TESTED at 995fa9c. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
