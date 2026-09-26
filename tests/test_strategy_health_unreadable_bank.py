@@ -741,7 +741,8 @@ def _at_base(path):
     "trader/cognition/research_bank.py",
     "trader/cognition/research_bank_view.py",
     "trader/cognition/research_recall.py",
-    "trader/cognition/research_cost.py",
+    # research_cost.py gained opt-in unreadable coverage; its default output
+    # is pinned byte-identical in test_research_cost_unreadable_coverage.py
     "trader/cognition/research_next_question.py",
     "trader/cognition/research_unreadable_question.py",
     "trader/cognition/research_unreadable_plan.py",

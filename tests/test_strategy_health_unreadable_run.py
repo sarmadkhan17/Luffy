@@ -835,7 +835,8 @@ def _at_base(path):
     "trader/cognition/research_run.py",
     "trader/cognition/research_bank.py",
     "trader/cognition/research_recall.py",
-    "trader/cognition/research_cost.py",
+    # research_cost.py gained opt-in unreadable coverage; its default output
+    # is pinned byte-identical in test_research_cost_unreadable_coverage.py
     "trader/cognition/research_unreadable_question.py",
     "trader/cognition/research_unreadable_plan.py",
     "trader/cognition/research_unreadable_evidence.py",
@@ -902,9 +903,11 @@ def test_nothing_calls_the_new_module():
                      if p.name != "research_unreadable_run.py"
                      and pat.search(p.read_text(errors="ignore")))
     # the journal owns the storage primitive (and names the module only in
-    # its schema comment); only the offline unreadable bank filer, guarded
-    # by its own tests, imports the contract
-    assert callers == ["cognition/research_unreadable_bank.py",
+    # its schema comment); only the offline unreadable bank filer and the
+    # read-only cost ledger's opt-in coverage, each guarded by its own
+    # tests, import the contract
+    assert callers == ["cognition/research_cost.py",
+                       "cognition/research_unreadable_bank.py",
                        "core/journal.py"]
     assert "research_unreadable_run import" not in \
         (root / "core/journal.py").read_text()

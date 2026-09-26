@@ -45,6 +45,18 @@ cannot be detected. The ledger's ``payload_sha256`` fingerprints the
 content as read now; it does not authenticate that content's history.
 Run telemetry, by contrast, is bound by its stored SHA-256.
 
+Unreadable coverage (opt-in). ``include_unreadable_runs=True`` appends a
+third, separate family, ``strategy-health-unreadable-run-telemetry.v1``
+(cognition/research_unreadable_run.py): per-step wall time and Journal rows
+of stored offline unreadable strategy-health runs, read from the existing
+``research_unreadable_runs`` rows only and checked through that module's
+own ``from_json`` and row projection. Its authority is measurement_only. It
+is never summed with, or grouped alongside, the receipt family or the
+strategy-decay run family. The ``cost`` block of an unreadable Research
+Bank object is a verbatim copy of one run's telemetry, not a separate
+cost, so Bank objects are not read. Without the opt-in the ledger is
+exactly the two-family ledger above, byte for byte.
+
 This is observation only: no budget, cap, bound, efficiency, return,
 priority, salience or usefulness, no paid-source or owner-policy inference,
 and no writer. Nothing live calls it: no Kernel, Attention, Analyst, Risk,
@@ -60,6 +72,7 @@ from contextlib import closing
 from pathlib import Path
 
 from trader.cognition import research_run as run_
+from trader.cognition import research_unreadable_run as ru_
 from trader.observability import investigation as inv
 
 SCHEMA = "research-cost-ledger.v1"
@@ -79,6 +92,10 @@ RECEIPT_UNITS = {"wall_ns": "ns", "cpu_ns": "ns", "evidence_rows_read": "rows",
                  "llm_calls": "calls", "venue_requests": "requests"}
 RUN_MEASURES = (("elapsed_wall_ns", "ns", run_.CLOCK),
                 ("rows_read", "rows", run_.ROWS_DEFINITION))
+UNREADABLE_FAMILY = ru_.TELEMETRY_SCHEMA
+UNREADABLE_AUTHORITY = "measurement_only"
+UNREADABLE_MEASURES = (("elapsed_wall_ns", "ns", ru_.CLOCK),
+                       ("rows_read", "rows", ru_.ROWS_DEFINITION))
 
 NO_ENTRIES = "no_entries"
 UNMEASURED_ENTRIES = "unmeasured_entries_present"
@@ -97,6 +114,24 @@ RUN_NOT_COVERED = (
     ("research_work_outside_offline_runner",
      "direct chain-step calls, bank filing and prior-research recall "
      "are not metered"),
+    ("sqlite_page_and_writer_reads", "excluded_by_rows_read_definition"))
+
+# Known gaps of the unreadable runner itself (research_unreadable_run.run):
+# a conflicting or aborted attempt stores no receipt or telemetry; a repeat
+# of a stored run_id only re-verifies; outcome reference reads and the
+# receipt write happen outside the metered step; the chain steps and the
+# unreadable Bank filer are also callable directly, unmetered.
+UNREADABLE_NOT_COVERED = (
+    ("unstored_unreadable_run_attempts",
+     "no_telemetry_for_conflicting_or_aborted_runs_whose_receipt_was_not_"
+     "stored"),
+    ("duplicate_unreadable_run_verification",
+     "re-running a stored run_id re-verifies it without telemetry"),
+    ("unreadable_runner_work_outside_metered_steps",
+     "outcome reference reads and the receipt write are not metered"),
+    ("unreadable_work_outside_offline_runner",
+     "direct unreadable chain-step calls and unreadable bank filing and "
+     "loading are not metered"),
     ("sqlite_page_and_writer_reads", "excluded_by_rows_read_definition"))
 
 TOTAL_REASONS = ("incommensurable_source_families",
@@ -301,16 +336,16 @@ def _receipt_family(rows):
 
 
 # ── research-run-telemetry.v1 ────────────────────────────────────────────
-def _run(row) -> tuple:
-    """(receipt, telemetry) through research_run's own contract, or
+def _run(row, mod=run_, error=run_.ResearchRunError) -> tuple:
+    """(receipt, telemetry) through the run module's own contract, or
     _Refused. References are not re-verified (telemetry only)."""
     try:
-        rec, tel = run_.from_json(row.get("canonical_json"),
-                                  row.get("telemetry_json"))
-        proj = run_.row_for(rec, tel)
+        rec, tel = mod.from_json(row.get("canonical_json"),
+                                 row.get("telemetry_json"))
+        proj = mod.row_for(rec, tel)
         if canonical(proj) != canonical({k: row.get(k) for k in proj}):
-            raise run_.ResearchRunError("row_projection")
-    except run_.ResearchRunError as e:
+            raise error("row_projection")
+    except error as e:
         raise _Refused(str(e))
     except (ValueError, OverflowError, RecursionError, TypeError) as e:
         # research_run's parser lets these escape (e.g. a 1e999 literal or
@@ -319,41 +354,77 @@ def _run(row) -> tuple:
     return rec, tel
 
 
-def _run_entries(row, rec, tel):
-    provenance = {"table": "research_runs", "run_id": rec["run_id"],
+def _run_entries(row, rec, tel, family=RUN_FAMILY, table="research_runs",
+                 measures=RUN_MEASURES):
+    provenance = {"table": table, "run_id": rec["run_id"],
                   "canonical_sha256": row["canonical_sha256"],
                   "telemetry_sha256": row["telemetry_sha256"],
                   "run_recorded_at_ms": rec["inputs"]["recorded_at_ms"]}
     out = []
     for t, s in zip(tel["steps"], rec["steps"]):
         context = {"step": s["step"], "step_status": s["status"]}
-        for name, unit, definition in RUN_MEASURES:
+        for name, unit, definition in measures:
             m = t[name]
-            out.append(_entry(RUN_FAMILY, rec["run_id"], name, m["status"],
+            out.append(_entry(family, rec["run_id"], name, m["status"],
                               m["value"], unit, definition, m["reason"],
                               provenance, context))
     return out
 
 
-def _run_family(rows):
+def _run_family(rows, prefix="run_invalid", source=(run_,
+                                                    run_.ResearchRunError),
+                entry_args=()):
     entries, refused, keyed = [], [], []
     ids = Counter(r.get("run_id") for r in rows)
     for r in rows:
         if ids[r.get("run_id")] > 1:
             refused.append({"source_id": r.get("run_id"),
-                            "reason": "run_invalid:duplicate_source_id"})
+                            "reason": f"{prefix}:duplicate_source_id"})
             continue
         try:
-            rec, tel = _run(r)
+            rec, tel = _run(r, *source)
         except _Refused as e:
             refused.append({"source_id": r.get("run_id"),
-                            "reason": f"run_invalid:{e}"})
+                            "reason": f"{prefix}:{e}"})
             continue
         keyed.append(((rec["inputs"]["recorded_at_ms"], rec["run_id"]),
-                      _run_entries(r, rec, tel)))
+                      _run_entries(r, rec, tel, *entry_args)))
     for _, es in sorted(keyed, key=lambda x: x[0]):
         entries.extend(es)
     return entries, refused
+
+
+# ── strategy-health-unreadable-run-telemetry.v1 (opt-in) ─────────────────
+def _hex64(v) -> bool:
+    return (isinstance(v, str) and len(v) == 64
+            and all(c in "0123456789abcdef" for c in v))
+
+
+def _unreadable_run_family(rows):
+    """Same per-row contract and entry shape as the decay run family, under
+    research_unreadable_run's own from_json/row projection; entries carry
+    their own family and table, never the decay run family's.
+
+    A row whose stored ``run_id`` is not a 64-hex string (a list, dict,
+    bytes/BLOB, number, null or other text) is refused before duplicate
+    counting with ``source_id`` null and the identity's type name, so no
+    unhashable or non-JSON value reaches the Counter or the ledger."""
+    valid, refused = [], []
+    for r in rows:
+        rid = r.get("run_id")
+        if _hex64(rid):
+            valid.append(r)
+        else:
+            refused.append({"source_id": None,
+                            "reason": "unreadable_run_invalid:"
+                                      "invalid_source_id:"
+                                      + type(rid).__name__})
+    entries, more = _run_family(valid, "unreadable_run_invalid",
+                                (ru_, ru_.UnreadableRunError),
+                                (UNREADABLE_FAMILY,
+                                 "research_unreadable_runs",
+                                 UNREADABLE_MEASURES))
+    return entries, refused + more
 
 
 # ── assembly ─────────────────────────────────────────────────────────────
@@ -404,11 +475,21 @@ def _family(family, rows, reader, measures, not_covered, source_semantics,
 
 
 def build(receipt_rows=None, run_rows=None, *, receipt_source=None,
-          run_source=None) -> dict:
+          run_source=None, include_unreadable_runs=False,
+          unreadable_run_rows=None, unreadable_run_source=None) -> dict:
     """Pure. ``receipt_rows``: stored ``resource_receipts`` rows (dicts with
     id, case_id, stage, execution_id, recorded_ms, payload); ``run_rows``:
     ``Journal.research_runs()`` rows. ``None`` means the source was not
-    read; ``*_source`` optionally gives (state, reason) for that case."""
+    read; ``*_source`` optionally gives (state, reason) for that case.
+
+    ``include_unreadable_runs=True`` appends the separate
+    strategy-health-unreadable-run-telemetry.v1 family from
+    ``unreadable_run_rows`` (``Journal.research_unreadable_runs()`` rows).
+    Unreadable rows or source without the opt-in are refused (ValueError),
+    never silently dropped."""
+    if not include_unreadable_runs and (unreadable_run_rows is not None
+                                        or unreadable_run_source is not None):
+        raise ValueError("unreadable_coverage_not_requested")
     receipts = _family(
         RECEIPT_FAMILY, receipt_rows, _receipt_family,
         [(k, RECEIPT_UNITS[k], inv.UNITS[k]) for k in inv.UNITS],
@@ -417,14 +498,21 @@ def build(receipt_rows=None, run_rows=None, *, receipt_source=None,
     runs = _family(RUN_FAMILY, run_rows, _run_family, RUN_MEASURES,
                    RUN_NOT_COVERED, run_.TELEMETRY_SEMANTICS,
                    *(run_source or (None, None)))
+    families = [receipts, runs]
+    if include_unreadable_runs:
+        unreadable = _family(
+            UNREADABLE_FAMILY, unreadable_run_rows, _unreadable_run_family,
+            UNREADABLE_MEASURES, UNREADABLE_NOT_COVERED,
+            ru_.TELEMETRY_SEMANTICS, *(unreadable_run_source or (None, None)))
+        families.append(dict(unreadable, authority=UNREADABLE_AUTHORITY))
     reasons = list(TOTAL_REASONS) + [
         f"source_{f['source_state'].lower()}:{f['family']}"
-        for f in (receipts, runs) if f["source_state"] != READ]
+        for f in families if f["source_state"] != READ]
     return {"schema": SCHEMA, "builder_id": BUILDER_ID,
             "semantics": SEMANTICS,
             "total_research_cost": {"state": NOT_ESTABLISHED, "value": None,
                                     "reasons": reasons},
-            "families": [receipts, runs]}
+            "families": families}
 
 
 def run_entries(journal, run_id: str) -> tuple:
@@ -446,10 +534,14 @@ def read_receipt_rows(path) -> list:
         return [dict(zip(_RECEIPT_COLUMNS, r)) for r in cur]
 
 
-def from_sources(*, journal=None, investigation_path=None) -> dict:
+def from_sources(*, journal=None, investigation_path=None,
+                 include_unreadable_runs=False) -> dict:
     """Read-only ledger from the stores. An unreadable receipt store or
     journal is UNAVAILABLE with the exception type, never treated as
-    empty; the other family is still built from its own evidence."""
+    empty; the other family is still built from its own evidence.
+    ``include_unreadable_runs=True`` also reads
+    ``Journal.research_unreadable_runs()`` (SELECT only) into the separate
+    unreadable family; without it nothing of that table is read."""
     receipt_rows, receipt_source = None, None
     if investigation_path is not None:
         try:
@@ -464,5 +556,17 @@ def from_sources(*, journal=None, investigation_path=None) -> dict:
         except sqlite3.Error as e:
             run_source = (UNAVAILABLE, "source_unreadable:"
                           + type(e).__name__)
+    if not include_unreadable_runs:
+        return build(receipt_rows, run_rows, receipt_source=receipt_source,
+                     run_source=run_source)
+    unreadable_rows, unreadable_source = None, None
+    if journal is not None:
+        try:
+            unreadable_rows = journal.research_unreadable_runs()
+        except sqlite3.Error as e:
+            unreadable_source = (UNAVAILABLE, "source_unreadable:"
+                                 + type(e).__name__)
     return build(receipt_rows, run_rows, receipt_source=receipt_source,
-                 run_source=run_source)
+                 run_source=run_source, include_unreadable_runs=True,
+                 unreadable_run_rows=unreadable_rows,
+                 unreadable_run_source=unreadable_source)

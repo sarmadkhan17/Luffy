@@ -552,8 +552,11 @@ def test_module_imports_nothing_live():
     assert mods == {"__future__", "hashlib", "json", "sqlite3", "collections",
                     "contextlib", "pathlib", "trader.cognition",
                     "trader.observability"}
+    # research_unreadable_run: the opt-in unreadable coverage reader
+    # (tests/test_research_cost_unreadable_coverage.py)
     assert names == {"annotations", "Counter", "closing", "Path",
-                     "research_run", "investigation"}
+                     "research_run", "research_unreadable_run",
+                     "investigation"}
 
 
 def test_nothing_in_the_live_path_calls_it():
