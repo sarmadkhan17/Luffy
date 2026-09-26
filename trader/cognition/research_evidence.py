@@ -445,6 +445,30 @@ def _ctx(journal, question_id) -> dict:
             "decisions": journal.decision_observation_rows()}
 
 
+def _record_ctx(journal, rec: dict) -> dict:
+    """`_ctx` for `verify_sources` of one from_json-verified record, with
+    the health rows read by the exact event ids its health items bind and
+    the question row by its primary key: verify_sources consults the
+    health map and question row only at those keys, so it sees exactly
+    what the full `_ctx` gives it. Decision rows are still read in full
+    (the selection re-runs over every current row)."""
+    ids = []
+    for s in rec["hypotheses"]:
+        for it in s["items"]:
+            try:
+                sid = _bind(it)
+                eid = it["source_identity"].get("event_id")
+            except Exception:       # verify_sources raises it itself
+                continue
+            if sid == rs.HEALTH_SOURCE_ID and rq._int(eid):
+                ids.append(eid)
+    return {"health": {r["id"]: r
+                       for r in journal.strategy_health_rows_by_id(ids)},
+            "question": journal.research_question_by_id(
+                rec["source_plan"]["question_id"]),
+            "decisions": journal.decision_observation_rows()}
+
+
 def collect(plan_text: str, plan: dict, ctx: dict) -> dict:
     """The canonical research-evidence.v1 for one fully verified plan (its
     stored canonical text and parsed form) and the resolved journal rows
@@ -660,8 +684,14 @@ def load(journal, plan_id: str | None = None) -> list:
     against its stored plan row (which must exist and hash to the bound
     plan), row projection, and every source that still exists
     (`verify_sources`). Raises ResearchEvidenceError on the first record
-    that fails."""
-    plans = {r["plan_id"]: r for r in journal.research_plans()}
+    that fails. With ``plan_id`` the plan row is read by its primary key;
+    live sources are read by the exact health event ids and question id
+    the record binds (`_record_ctx`)."""
+    if plan_id is None:
+        plans = {r["plan_id"]: r for r in journal.research_plans()}
+    else:
+        prow = journal.research_plan_by_id(plan_id)
+        plans = {plan_id: prow} if prow is not None else {}
     out = []
     for r in journal.research_evidence(plan_id=plan_id):
         prow = plans.get(r["plan_id"])
@@ -671,7 +701,6 @@ def load(journal, plan_id: str | None = None) -> list:
         if canonical(row_for(rec)) != canonical({k: r[k]
                                                  for k in row_for(rec)}):
             _fail("row_projection")
-        verify_sources(rec, _ctx(journal,
-                                 rec["source_plan"]["question_id"]))
+        verify_sources(rec, _record_ctx(journal, rec))
         out.append(rec)
     return out

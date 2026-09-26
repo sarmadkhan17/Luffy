@@ -452,36 +452,51 @@ def row_for(rec: dict, telemetry: dict) -> dict:
             "telemetry_sha256": _sha(tel), "telemetry_json": tel}
 
 
-def _verify_question(journal, rows_by_id, qid, health):
-    q = rq.from_json(rows_by_id[qid]["canonical_json"])
-    if rq.row_for(q) != {k: rows_by_id[qid][k] for k in rq.row_for(q)}:
+def _verify_question(journal, row, health_for):
+    q = rq.from_json(row["canonical_json"])
+    if rq.row_for(q) != {k: row[k] for k in rq.row_for(q)}:
         _fail("reference_invalid:question:row_projection")
-    rq.verify_evidence(q, health)
+    rq.verify_evidence(q, health_for(q["scope"]["spec_id"]))
+
+
+#: the exact primary-key reader of each step's store
+_BY_ID = {"question": "research_question_by_id",
+          "plan": "research_plan_by_id",
+          "evidence": "research_evidence_by_id",
+          "result": "research_result_by_id"}
 
 
 def _verify_references(journal, rec):
     """Every inserted/duplicate ID must be stored and verify under its own
-    contract; a conflict ID is verified where it is stored."""
-    health = journal.strategy_health_rows()
-    stores = {"question": ({r["question_id"]: r
-                            for r in journal.research_questions()}),
-              "plan": {r["plan_id"]: r for r in journal.research_plans()},
-              "evidence": {r["evidence_id"]: r
-                           for r in journal.research_evidence()},
-              "result": {r["result_id"]: r
-                         for r in journal.research_results()}}
+    contract; a conflict ID is verified where it is stored. Each ID is read
+    by its primary key and each question's evidence against its own spec's
+    health rows (`Journal.strategy_health_rows_for_spec`, the subset
+    verify_evidence consults), so unrelated stored rows are not read."""
+    health = {}
+
+    def health_for(spec_id):
+        if spec_id not in health:
+            health[spec_id] = journal.strategy_health_rows_for_spec(spec_id)
+        return health[spec_id]
+
     for s in rec["steps"]:
         if s["status"] != COMPLETED:
             continue
-        name, rows = s["step"], stores[s["step"]]
+        name, by_id = s["step"], getattr(journal, _BY_ID[s["step"]])
         out = s["outcomes"]
+        rows = {}
+        for rid in dict.fromkeys(out["inserted"] + out["duplicate"]
+                                 + out["conflict"]):
+            row = by_id(rid)
+            if row is not None:
+                rows[rid] = row
         required = out["inserted"] + out["duplicate"]
         for rid in required + [c for c in out["conflict"] if c in rows]:
             if rid not in rows:
                 _fail(f"reference_missing:{name}")
             try:
                 if name == "question":
-                    _verify_question(journal, rows, rid, health)
+                    _verify_question(journal, rows[rid], health_for)
                     continue
                 if name == "plan":
                     got = rp.load(journal, question_id=rows[rid]["question_id"])

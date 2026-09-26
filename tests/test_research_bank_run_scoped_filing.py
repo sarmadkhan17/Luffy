@@ -4,9 +4,9 @@ research_bank.record_run(journal, run_id, now_ms) files Research Bank
 objects for one stored research-run.v1 with exactly record_from_journal's
 semantics for that run: the same verification, inserted / duplicate /
 conflict / refusal outcomes and bank rows. It reads no other stored run's
-research_runs row and no stored bank object. Verification still reads the
-question/plan/evidence/result tables broadly (inherited limitation, not
-narrowed here). Nothing live calls it.
+research_runs row and no stored bank object. Chain verification reads by
+key (SDD-STAGE-3-RESEARCH-CHAIN-SCOPED-VERIFICATION-V1; see
+tests/test_research_chain_scoped_verification.py). Nothing live calls it.
 """
 import json
 import re

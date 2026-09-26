@@ -186,27 +186,29 @@ def _verified_run(journal, rid) -> dict:
 def _question(journal, qid) -> dict:
     """The stored question, verified as research_run verifies it: its own
     contract, row projection and bound evidence."""
-    rows = [r for r in journal.research_questions()
-            if r["question_id"] == qid]
-    if len(rows) != 1:
+    row = (journal.research_question_by_id(qid)
+           if isinstance(qid, str) else None)
+    if row is None:
         _fail("source_missing:question")
-    q = _src("question", rq.from_json, rows[0]["canonical_json"])
+    q = _src("question", rq.from_json, row["canonical_json"])
     if canonical(rq.row_for(q)) != canonical(
-            {k: rows[0][k] for k in rq.row_for(q)}):
+            {k: row[k] for k in rq.row_for(q)}):
         _fail("source_invalid:question:row_projection")
-    _src("question", rq.verify_evidence, q, journal.strategy_health_rows())
+    _src("question", rq.verify_evidence, q,
+         journal.strategy_health_rows_for_spec(q["scope"]["spec_id"]))
     return q
 
 
 def _chain(journal, rid, result_id, stored=None) -> dict:
-    """The verified run and the verified Q/P/E/R chain behind one result."""
+    """The verified run and the verified Q/P/E/R chain behind one result.
+    Every record is read by its key; no unrelated chain row is read."""
     stored = stored or _verified_run(journal, rid)
-    rrows = [r for r in journal.research_results()
-             if r["result_id"] == result_id]
-    if len(rrows) != 1:
+    rrow = (journal.research_result_by_id(result_id)
+            if isinstance(result_id, str) else None)
+    if rrow is None:
         _fail("source_missing:result")
     res = _one(_src("result", rr.load, journal,
-                    evidence_id=rrows[0]["evidence_id"]),
+                    evidence_id=rrow["evidence_id"]),
                "result_id", result_id, "result")
     se = res["source_evidence"]
     ev = _one(_src("evidence", re_.load, journal, plan_id=se["plan_id"]),
@@ -494,11 +496,11 @@ def record_from_journal(journal, now_ms: int) -> dict:
 def record_run(journal, run_id: str, now_ms: int) -> dict:
     """``record_from_journal`` scoped to one stored run: the same filing,
     verification and result shape, without reading any other run's
-    research_runs row or the stored bank objects. Limitation (inherited,
-    unchanged): verification still reads the question, plan, evidence and
-    result tables and the health rows broadly before filtering by ID
-    (research_run.load, _question, _chain), not only the linked chain.
-    Not wired into any live path."""
+    research_runs row or the stored bank objects. Verification reads the
+    linked question/plan/evidence/result rows by key and only the linked
+    spec's health rows; it still reads every sweep record and every
+    decision row (their contracts consult them), so this is not a bound
+    on work. Not wired into any live path."""
     res = {"inserted": [], "duplicate": [], "conflict": [], "refusals": []}
     _file_run(journal, run_id, now_ms, res)
     return res

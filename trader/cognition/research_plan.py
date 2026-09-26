@@ -519,15 +519,28 @@ def load(journal, question_id: str | None = None) -> list:
     contract-valid, evidence-verified against the current health rows),
     every supporting-record binding, byte equality with a fresh build and
     its row projection. Raises ResearchPlanError on the first plan that
-    fails."""
-    health = journal.strategy_health_rows()
-    questions = {r["question_id"]: r for r in journal.research_questions()}
+    fails. With ``question_id`` the source question is read by its primary
+    key and verified against its spec's health rows only
+    (`Journal.strategy_health_rows_for_spec`, the subset `build`
+    consults)."""
+    if question_id is None:
+        health = journal.strategy_health_rows()
+        questions = {r["question_id"]: r
+                     for r in journal.research_questions()}
+    else:
+        health = None
+        row = journal.research_question_by_id(question_id)
+        questions = {question_id: row} if row is not None else {}
     out = []
     for r in journal.research_plans(question_id=question_id):
         qrow = questions.get(r["question_id"])
         if qrow is None:
             _fail("source_question_missing")
-        plan = from_json(r["canonical_json"], _question_text(qrow), health)
+        text = _question_text(qrow)
+        if health is None:
+            # row projection verified: scope_id is the question's spec
+            health = journal.strategy_health_rows_for_spec(qrow["scope_id"])
+        plan = from_json(r["canonical_json"], text, health)
         if canonical(row_for(plan)) != canonical({k: r[k] for k in row_for(plan)}):
             _fail("row_projection")
         out.append(plan)

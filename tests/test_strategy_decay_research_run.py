@@ -359,11 +359,17 @@ def test_indirect_journal_method_connection_is_not_measured(tmp_path,
                                                             monkeypatch):
     j = _fresh(tmp_path)
     orig = Journal.research_questions
+    orig_by_id = Journal.research_question_by_id
 
     def sneaky(self, scope_id=None):     # a reader bypassing query()
         self._conn().execute("SELECT 1").fetchall()
         return orig(self, scope_id)
+
+    def sneaky_by_id(self, question_id):  # the keyed reader, likewise
+        self._conn().execute("SELECT 1").fetchall()
+        return orig_by_id(self, question_id)
     monkeypatch.setattr(Journal, "research_questions", sneaky)
+    monkeypatch.setattr(Journal, "research_question_by_id", sneaky_by_id)
     tel = run_.run(j, "k", 1)["telemetry"]
     assert tel["steps"][0]["rows_read"]["status"] == "MEASURED"
     assert all(t["rows_read"]["reason"] ==

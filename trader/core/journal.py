@@ -796,6 +796,12 @@ class Journal:
         return self.query("SELECT * FROM research_questions WHERE scope_id=? "
                           "ORDER BY source_event_id, question_id", (scope_id,))
 
+    def research_question_by_id(self, question_id: str) -> dict | None:
+        """One stored research-question row by its primary key, or None."""
+        rows = self.query("SELECT * FROM research_questions "
+                          "WHERE question_id=?", (question_id,))
+        return rows[0] if rows else None
+
     # -- research plans: primitives only; the contract is
     # cognition/research_plan.py ------------------------------------------
     _PLAN_COLUMNS = ("plan_id", "schema", "plan_kind", "planner_id",
@@ -833,6 +839,12 @@ class Journal:
                               "ORDER BY rowid")
         return self.query("SELECT * FROM research_plans "
                           "WHERE question_id=? ORDER BY rowid", (question_id,))
+
+    def research_plan_by_id(self, plan_id: str) -> dict | None:
+        """One stored research-plan row by its primary key, or None."""
+        rows = self.query("SELECT * FROM research_plans WHERE plan_id=?",
+                          (plan_id,))
+        return rows[0] if rows else None
 
     # -- research evidence: primitives only; the contract is
     # cognition/research_evidence.py --------------------------------------
@@ -874,6 +886,12 @@ class Journal:
         return self.query("SELECT * FROM research_evidence "
                           "WHERE plan_id=? ORDER BY rowid", (plan_id,))
 
+    def research_evidence_by_id(self, evidence_id: str) -> dict | None:
+        """One stored research-evidence row by its primary key, or None."""
+        rows = self.query("SELECT * FROM research_evidence "
+                          "WHERE evidence_id=?", (evidence_id,))
+        return rows[0] if rows else None
+
     # -- research results: primitives only; the contract is
     # cognition/research_result.py ----------------------------------------
     _RESULT_COLUMNS = ("result_id", "schema", "result_kind", "resolver_id",
@@ -912,6 +930,12 @@ class Journal:
                               "ORDER BY rowid")
         return self.query("SELECT * FROM research_results "
                           "WHERE evidence_id=? ORDER BY rowid", (evidence_id,))
+
+    def research_result_by_id(self, result_id: str) -> dict | None:
+        """One stored research-result row by its primary key, or None."""
+        rows = self.query("SELECT * FROM research_results "
+                          "WHERE result_id=?", (result_id,))
+        return rows[0] if rows else None
 
     # -- research runs: primitives only; the contract is
     # cognition/research_run.py -------------------------------------------
@@ -1124,6 +1148,35 @@ class Journal:
             "SELECT id, ts, kind, subject, detail FROM brain_events "
             "WHERE kind IN ('strategy_health_observed', "
             "'strategy_health_sweep')")
+
+    def strategy_health_rows_for_spec(self, spec_id: str) -> list[dict]:
+        """The subset of `strategy_health_rows` that research-question and
+        research-plan verification of one spec can consult: every sweep
+        record, the spec's own observation rows, and observation rows with
+        no usable subject (NULL, empty or non-text), which derivation must
+        still see in order to refuse them. Other specs' observation rows
+        are excluded. Id order, as `strategy_health_rows` returns them
+        (brain_events has no kind index, so that scan is in rowid order).
+        SELECT only."""
+        return self.query(
+            "SELECT id, ts, kind, subject, detail FROM brain_events "
+            "WHERE kind='strategy_health_sweep' "
+            "OR (kind='strategy_health_observed' AND (subject=? "
+            "OR subject IS NULL OR typeof(subject)<>'text' OR subject='')) "
+            "ORDER BY id", (spec_id,))
+
+    def strategy_health_rows_by_id(self, event_ids) -> list[dict]:
+        """The `strategy_health_rows` rows with the given event ids, in id
+        order. SELECT only."""
+        ids = sorted(set(event_ids))
+        if not ids:
+            return []
+        return self.query(
+            "SELECT id, ts, kind, subject, detail FROM brain_events "
+            "WHERE kind IN ('strategy_health_observed', "
+            "'strategy_health_sweep') "
+            f"AND id IN ({','.join('?' * len(ids))}) ORDER BY id",
+            tuple(ids))
 
     def open_trades(self) -> list[dict]:
         return self.query("SELECT * FROM trades WHERE status='open'")
