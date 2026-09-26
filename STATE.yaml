@@ -114,6 +114,9 @@ capabilities:
       - tests/test_research_cost_ledger.py
       - 57d8875 Scope research chain verification reads
       - tests/test_research_chain_scoped_verification.py
+      - 412a263 Add research bank read model
+      - trader/cognition/research_bank_view.py
+      - tests/test_research_bank_view.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
@@ -130,13 +133,14 @@ capabilities:
       - offline run-scoped Research Bank filing research_bank.record_run(journal, run_id, now_ms) files only the requested stored research run, with record_from_journal filing semantics preserved through a shared _file_run helper; no unrelated research_runs scan and no stored research_bank_objects enumeration; TESTED at e357c72 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-BANK-RUN-SCOPED-FILING-V1); its broad Q/P/E/R and cross-spec health verification reads are closed by SDD-STAGE-3-RESEARCH-CHAIN-SCOPED-VERIFICATION-V1 below
       - deterministic read-only research-cost-ledger.v1 copies research-run-telemetry.v1 elapsed_wall_ns and rows_read (MEASURED/NOT_MEASURED with exact reasons) and investigation-resource-receipt.v1 measurements, keeping families separate; total research cost stays NOT_ESTABLISHED; TESTED at e4b3deb and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-COST-LEDGER-V1)
       - research-run.v1 and research-bank-object.v1 verification (and the keyed research_plan.load / research_evidence.load paths they call) read Q/P/E/R records by primary key and health rows for the question's own spec plus every sweep record and every unattributable observation; results, refusals, IDs, hashes and stored records are unchanged; TESTED at 57d8875 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-CHAIN-SCOPED-VERIFICATION-V1); not a bounded-work guarantee
+      - deterministic read-only context_only research-bank-view.v1 owner read model of one exact verified Research Bank object (by bank_object_id, or by run_id only when exactly one bank object is filed for that run) is TESTED at 412a263 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-BANK-READ-MODEL-V1); persisted objects unchanged; linked next-question rows shown separately with completeness NOT_ASSERTED; requested-run telemetry entries only with total research cost NOT_ESTABLISHED; offline helper only
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
       - strategy-degradation Attention trigger and salience/magnitude remain MISSING
       - temporary-regime-absence hypothesis remains UNAVAILABLE; no truthful WorldModel/regime evidence source exists
       - no registered falsifier predicates exist; no evaluative conclusion on any strategy-decay hypothesis is produced (research-result.v1 is structural INCONCLUSIVE only)
       - no failed-research suppression/cooldown/no-repeat policy over research-bank-object.v1 exists (context-only prior-research recall is TESTED; suppression must not be inferred from recall)
-      - no Attention trigger, live caller, consumer or deployment of research-question.v1 / research-plan.v1 / research-evidence.v1 / research-result.v1 / research-run.v1 / research-bank-object.v1 / research_bank.record_run / prior-research recall exists
+      - no Attention trigger, live caller, consumer or deployment of research-question.v1 / research-plan.v1 / research-evidence.v1 / research-result.v1 / research-run.v1 / research-bank-object.v1 / research_bank.record_run / prior-research recall exists (the offline read-only research-bank-view.v1 owner read model at 412a263 is a context_only reader only, not a live caller, consumer or deployment); live/dashboard integration of the read model remains MISSING
       - automatic/live strategy-decay research invocation remains MISSING; the synchronous chain shares the Journal writer, so any live invocation requires a bounded, isolated design (an unbounded Kernel post-flush invocation was reviewed BLOCKED and abandoned uncommitted; it was never implemented at any commit or TESTED)
       - research_runs and research-bank storage have no size cap; the owner storage-policy boundary remains parked
       - total research cost is NOT_ESTABLISHED (the measured research-cost ledger is TESTED at e4b3deb); budget/cost limits remain UNDECLARED and owner-policy dependent; no budget manager authority exists
@@ -3134,10 +3138,73 @@ completed_research_next_question_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Structural gap-recording next-question objects only; no predicate, threshold, regime rule, source choice, recommendation, invocation, trigger, suppression, salience, usefulness, priority, trading-edge or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_research_bank_read_model_v1:
+  id: SDD-STAGE-3-RESEARCH-BANK-READ-MODEL-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 412a263
+  evidence:
+    - 412a263 Add research bank read model
+    - trader/cognition/research_bank_view.py
+    - trader/cognition/research_cost.py
+    - tests/test_research_bank_view.py
+  proven_facts:
+    - research-bank-view.v1 exists as read_only and context_only.
+    - It assembles one exact verified Research Bank object/run view without changing persisted research objects.
+    - Bank canonical content is preserved exactly.
+    - Persisted bank next_questions remains NOT_AVAILABLE / no_next_question_generator.
+    - Linked research-next-question.v1 rows are exposed separately as external linked context.
+    - Linked next-question completeness remains NOT_ASSERTED.
+    - Question/plan/evidence/result/run identities and hashes are verified exactly.
+    - Evidence is fully verified but represented by ID/hash plus bank-routed source references; evidence values are not copied.
+    - Requested-run telemetry cost entries are read without aggregation (research_cost.run_entries, read-only; research-cost-ledger.v1 semantics and hashes unchanged).
+    - Total research cost remains NOT_ESTABLISHED.
+    - Prior-research recall is returned unchanged and remains context_only.
+    - max_prior_objects is required, enforced and identity-bound.
+    - Deterministic canonical JSON, view_id and view_sha256.
+    - No writes; no new DB/table.
+    - No Kernel/Attention/Risk/Execution/live wiring.
+  run_selection_semantics:
+    - bank_object_id is the precise lookup.
+    - run_id convenience lookup succeeds only when exactly one bank object is filed for that run.
+    - Zero or multiple bank objects refuse.
+    - No first/latest/arbitrary selection is inferred.
+  validation:
+    package_tests: 49 read-model tests passed
+    focused_tests: 396 focused tests passed earlier (read model, bank, run-scoped filing, next-question, recall, cost ledger, scoped verification)
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  limitations:
+    - Evidence values are intentionally not copied into the view.
+    - Linked next-question rows have no completeness guarantee.
+    - Prior recall retains existing verification/failure semantics; same-scope registration corruption can refuse the view outside the returned-object bound.
+    - max_prior_objects bounds returned/examined prior objects, not database work.
+    - Read-only access bypasses Journal initialization and performs no schema creation, backfill or DB/WAL content mutation, but SQLite may create/touch -shm and may create an empty -wal sidecar; zero filesystem activity is not guaranteed.
+    - open_readonly is single-thread only.
+    - By-run lookup is ambiguous unless exactly one bank object exists.
+    - No hard bounded-work or live-readiness claim.
+    - Offline owner-facing helper only; no live caller.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commit 412a263.
+  gap_matrix_update:
+    stage_3_research:
+      research_bank_read_model: TESTED - owner-facing research accessibility/read model (offline, read-only)
+      live_dashboard_integration: MISSING
+      registered_falsifier_predicates: MISSING
+      truthful_worldmodel_source: MISSING
+      live_caller_deployment: MISSING - automatic/live research invocation MISSING
+      deployed: NO
+    failed_research_memory: PARTIAL - unchanged (no suppression/cooldown/no-repeat policy)
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Read-only context_only owner view over existing verified research objects only; no write, invocation, trigger, predicate, WorldModel evidence, suppression, novelty, salience, usefulness, priority, budget, total cost, trading-edge or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-RESEARCH-NEXT-QUESTION-V1 is TESTED at 873e9eb and NOT_DEPLOYED. It records existing gaps only; registered falsifier predicates and a truthful WorldModel source remain MISSING. Total research cost remains NOT_ESTABLISHED and budget/cost limits remain UNDECLARED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
+  note: SDD-STAGE-3-RESEARCH-BANK-READ-MODEL-V1 is TESTED at 412a263 and NOT_DEPLOYED. It is an offline read-only context_only owner view; live/dashboard integration remains MISSING. Registered falsifier predicates and a truthful WorldModel source remain MISSING. Total research cost remains NOT_ESTABLISHED and budget/cost limits remain UNDECLARED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
