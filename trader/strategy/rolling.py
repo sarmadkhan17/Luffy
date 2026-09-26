@@ -170,6 +170,98 @@ def _scoring_evidence(recent, score_from: int) -> dict:
             "last_bar_ts": _bar_ts(recent, -1)}
 
 
+#: key a failed diagnostics window leaves in the caller's dict, holding
+#: {stage, error_class, message}; everything else it held is dropped
+DIAGNOSTICS_FAILED = "diagnostics_failed"
+
+
+def _diag_failed(d, exc) -> None:
+    """Replace what `d` holds with the failure marker. Never raises."""
+    try:
+        err = _diag_error("diagnostics", exc)
+    except Exception:
+        err = {"stage": "diagnostics", "error_class": None, "message": None}
+    try:
+        log.warning(f"health diagnostics disabled for this window: "
+                    f"{err['error_class']}: {err['message']}")
+    except Exception:
+        pass
+    try:
+        d.clear()
+    except Exception:
+        pass
+    try:
+        d[DIAGNOSTICS_FAILED] = err
+    except Exception:
+        pass
+
+
+class _Diagnostics:
+    """The `diagnostics` side channel, guarded.
+
+    Every write runs through `step`. The first one that raises marks the
+    caller's dict `diagnostics_failed` and switches diagnostics off for the
+    rest of the window, so a half-built description is never handed on as
+    a whole one. Nothing raised here reaches scoring or the returned result.
+    """
+    def __init__(self, target):
+        self.d = target
+
+    def step(self, fn, *args) -> None:
+        if self.d is None:
+            return
+        try:
+            fn(self.d, *args)
+        except Exception as e:
+            d, self.d = self.d, None
+            _diag_failed(d, e)
+
+
+def _d_open(d, n):
+    d.clear()
+    d.update(window_bars=n, attempted=[], no_frame=[],
+             insufficient_history={}, errored={}, scored={})
+
+
+def _d_frame(d, sym, df, n):
+    d["attempted"].append(sym)
+    if df is None:
+        d["no_frame"].append(sym)
+    elif len(df) < n:
+        d["insufficient_history"][sym] = {"bars": len(df), "window_bars": n}
+
+
+def _d_errored(d, sym, stage, exc):
+    d["errored"][sym] = _diag_error(stage, exc)
+
+
+def _d_scored(d, sym, r, fund, recent, score_from, compiled, derivs, market):
+    # "scored" here means simulate() returned; whether it had any bar it
+    # could trade on is in `scoring` and `missing_context`
+    rec = {"trades": r.trades, "wins": r.wins,
+           "gross_win": r.gross_win, "gross_loss": r.gross_loss,
+           "funding_series_used": fund is not None}
+    try:
+        rec["scoring"] = _scoring_evidence(recent, score_from)
+    except Exception as e:
+        rec["scoring"] = {"unavailable": _diag_error("diagnostics", e)}
+    try:
+        rec["missing_context"] = _missing_context(compiled, derivs, market)
+    except Exception as e:
+        rec["missing_context"] = None
+        rec["missing_context_error"] = _diag_error("diagnostics", e)
+    d["scored"][sym] = rec
+
+
+def _d_close(d, trades, wins, gross_win, gross_loss):
+    d.update(trades=trades, wins=wins, gross_win=gross_win,
+             gross_loss=gross_loss)
+
+
+def _d_branch(d, branch):
+    d["branch"] = branch
+
+
 def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
                   recent_days: float, btc=None, derivs_for=None,
                   diagnostics: dict | None = None) -> dict:
@@ -178,25 +270,18 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     `diagnostics`, when given, is cleared and filled with the coverage and
     raw sums behind the returned dict — which symbols were scored, skipped
     or errored, and each scored symbol's window bounds. It is a side
-    channel: the returned evidence is identical with or without it.
+    channel: the returned evidence is identical with or without it, and a
+    failure while filling it only leaves `diagnostics_failed` behind.
     """
     n = bars(timeframe, recent_days)
     universe = {s: {timeframe: f} for s, f in frames.items()
                 if not s.startswith("_") and f is not None}
     per_symbol, gross_win, gross_loss, trades, wins = {}, 0.0, 0.0, 0, 0
-    d = diagnostics
-    if d is not None:
-        d.clear()
-        d.update(window_bars=n, attempted=[], no_frame=[],
-                 insufficient_history={}, errored={}, scored={})
+    diag = _Diagnostics(diagnostics)
+    diag.step(_d_open, n)
     for sym, df in frames.items():
-        if d is not None and not sym.startswith("_"):
-            d["attempted"].append(sym)
-            if df is None:
-                d["no_frame"].append(sym)
-            elif len(df) < n:
-                d["insufficient_history"][sym] = {"bars": len(df),
-                                                  "window_bars": n}
+        if not sym.startswith("_"):
+            diag.step(_d_frame, sym, df, n)
         if sym.startswith("_") or df is None or len(df) < n:
             continue
         # the window plus up to WARMUP bars of the history before it: the
@@ -223,29 +308,13 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
                          symbol=sym, funding=fund, score_from=score_from)
         except Exception as e:
             log.warning(f"recent {compiled.spec.id} {sym}: {e}")
-            if d is not None:
-                d["errored"][sym] = _diag_error(stage, e)
+            diag.step(_d_errored, sym, stage, e)
             continue
         per_symbol[sym] = {"trades": r.trades, "pf": round(r.profit_factor, 3),
                            "pnl": round(r.pnl_usdt, 2),
                            "wr": round(r.winrate, 3)}
-        if d is not None:
-            # "scored" here means simulate() returned; whether it had any
-            # bar it could trade on is in `scoring` and `missing_context`
-            rec = {"trades": r.trades, "wins": r.wins,
-                   "gross_win": r.gross_win, "gross_loss": r.gross_loss,
-                   "funding_series_used": fund is not None}
-            try:
-                rec["scoring"] = _scoring_evidence(recent, score_from)
-            except Exception as e:
-                rec["scoring"] = {"unavailable": _diag_error("diagnostics", e)}
-            try:
-                rec["missing_context"] = _missing_context(
-                    compiled, derivs, frames.get("_market"))
-            except Exception as e:
-                rec["missing_context"] = None
-                rec["missing_context_error"] = _diag_error("diagnostics", e)
-            d["scored"][sym] = rec
+        diag.step(_d_scored, sym, r, fund, recent, score_from, compiled,
+                  derivs, frames.get("_market"))
         gross_win += r.gross_win
         gross_loss += r.gross_loss
         trades += r.trades
@@ -258,9 +327,7 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
           "pooled_pf": round(pooled_pf, 3), "trades": trades,
           "winrate": round(wins / trades, 3) if trades else 0.0,
           "pnl": round(gross_win - gross_loss, 2)}
-    if d is not None:
-        d.update(trades=trades, wins=wins, gross_win=gross_win,
-                 gross_loss=gross_loss)
+    diag.step(_d_close, trades, wins, gross_win, gross_loss)
     return ev
 
 
@@ -326,7 +393,7 @@ def has_decayed(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     `diagnostics`, when given, receives the scoring coverage/raw sums and
     `branch` — the return branch taken ("idle", "decayed", "still_working"),
     set here, never parsed from the verdict text. The returned tuple is
-    identical with or without it.
+    identical with or without it, and whether or not filling it fails.
     """
     # NEVER widen here. Selection widens its window to find enough evidence;
     # retirement must not, or a spec that has STOPPED trading would have last
@@ -336,15 +403,15 @@ def has_decayed(compiled, frames: dict, risk_cfg: dict, timeframe: str,
                             recent_days=recent_days, min_trades=min_trades,
                             min_pf=floor_pf, btc=btc, derivs_for=derivs_for,
                             max_days=recent_days, diagnostics=diagnostics)
-    d = diagnostics if diagnostics is not None else {}
+    diag = _Diagnostics(diagnostics)
     if ev["trades"] < min_trades:
-        d["branch"] = "idle"
+        diag.step(_d_branch, "idle")
         return False, {**ev, "verdict": "idle — too few trades to judge"}
     if not ok:
-        d["branch"] = "decayed"
+        diag.step(_d_branch, "decayed")
         return True, {**ev, "verdict": f"decayed: pooled PF "
                                        f"{ev['pooled_pf']:.2f} < {floor_pf}"}
-    d["branch"] = "still_working"
+    diag.step(_d_branch, "still_working")
     return False, {**ev, "verdict": "still working"}
 
 

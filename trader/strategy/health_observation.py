@@ -96,6 +96,8 @@ COVERAGE_FAULTS = (SYMBOL_EVALUATION_ERRORS, REQUIRED_CONTEXT_MISSING,
                    DECLARED_NOT_LOADED, NO_FRAME, INSUFFICIENT_HISTORY)
 
 NOT_SUPPLIED = "not_supplied"
+#: rolling.DIAGNOSTICS_FAILED: the side channel failed while being filled
+DIAGNOSTICS_FAILED = "diagnostics_failed"
 
 # ── pooled PF interpretation (rolling._score_window sentinels) ───────────
 PF_RATIO = "ratio"                       # gross_loss > 0
@@ -354,11 +356,34 @@ def coverage(spec, diag: dict) -> dict:
     }
 
 
+def unavailable_coverage(spec, failure) -> dict:
+    """Coverage when the diagnostics side channel failed: nothing about
+    which symbols were scored is known, so every derived field is None —
+    never an empty list that would read as "none". Always incomplete."""
+    declared = _declared(spec)
+    return {
+        "declared_symbols": declared,
+        "declared_source": "universe.include" if declared
+        else "attempted_frames",
+        **{k: None for k in (
+            "relevant_symbols", "attempted_symbols", "returned_symbols",
+            "usable_symbols", "declared_usable_symbols",
+            "skipped_insufficient_history", "skipped_no_frame",
+            "declared_not_loaded", "errored_symbols",
+            "no_scorable_bars_symbols", "missing_required_context",
+            "unavailable_symbols")},
+        "coverage_faults": [],
+        "coverage_complete": False,
+        "diagnostics_error": failure if isinstance(failure, dict) else None,
+    }
+
+
 def classify(branch, diag, cov) -> tuple[str, str | None]:
     """(verdict, evaluation_failed reason). A branch is passed through only
     on complete usable coverage; otherwise evaluation_failed with the first
     fault in COVERAGE_FAULTS order. The branch itself is recorded as-is."""
-    if branch not in BRANCHES or not diag or "scored" not in diag:
+    if (branch not in BRANCHES or not diag or "scored" not in diag
+            or DIAGNOSTICS_FAILED in diag):
         return EVALUATION_FAILED, COVERAGE_UNAVAILABLE
     if cov["coverage_faults"]:
         return EVALUATION_FAILED, cov["coverage_faults"][0]
@@ -540,7 +565,8 @@ class Sweep:
         branch = diag.get("branch") if isinstance(diag, dict) else None
         diag = diag if isinstance(diag, dict) else {}
         ev = ev if isinstance(ev, dict) else {}
-        cov = coverage(spec, diag)
+        cov = (unavailable_coverage(spec, diag[DIAGNOSTICS_FAILED])
+               if DIAGNOSTICS_FAILED in diag else coverage(spec, diag))
         verdict, reason = classify(branch, diag, cov)
         return {
             **base, "verdict": verdict, "verdict_reason": reason,
@@ -586,6 +612,11 @@ class Sweep:
             manifest = None
         recorded, failed, completed, compile_failed = [], {}, [], []
         n_selected = 0
+        # the first failed spec write (a held lock costs the journal's full
+        # busy timeout) ends the spec writes: later records are marked failed
+        # unwritten rather than each waiting out the same lock. The sweep
+        # record is still tried once, so a lock costs at most two timeouts.
+        write_ok = True
         for kind, spec, payload in self.events:
             sid = getattr(spec, "id", None)
             if kind == "observed":
@@ -599,9 +630,10 @@ class Sweep:
             except Exception as e:
                 failed[sid] = {"step": "build", **_error("build", e)}
                 continue
-            if self._write(KIND_SPEC, sid, rec):
+            if write_ok and self._write(KIND_SPEC, sid, rec):
                 recorded.append(sid)
             else:
+                write_ok = False
                 failed[sid] = {"step": "write", "stage": "write",
                                "error_class": None, "message": None}
         attempted = list(self.attempted)
