@@ -107,6 +107,8 @@ capabilities:
       - tests/test_research_source_registry.py
       - f0b5cb2 Bind research evidence to source registry
       - tests/test_research_evidence_source_binding.py
+      - e357c72 Add run-scoped research bank filing
+      - tests/test_research_bank_run_scoped_filing.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
@@ -120,13 +122,15 @@ capabilities:
       - read-only context_only prior-research recall over exact same-strategy/spec research-bank-object.v1 records registered strictly before the new question (integrity-bound first-registration receipts) is TESTED at 89d86c9 with follow-up be10151 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-PRIOR-RESEARCH-RECALL-V1); recall never suppresses, cools down or changes future research
       - deterministic versioned internal research-source-registry.v1 covering only the existing strategy-decay chain sources is TESTED at 81effe5 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-SOURCE-REGISTRY-V1); research-plan.v1 descriptors resolve through it byte-identically; the WorldModel/regime source is explicitly UNAVAILABLE (no_truthful_worldmodel_source)
       - research-evidence.v1 collection resolves every ROUTED source through research-source-registry.v1 with collector dispatch keyed by registry source_id and no store-name fallback; valid evidence is byte-identical; TESTED at f0b5cb2 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-EVIDENCE-SOURCE-REGISTRY-BINDING-V1)
+      - offline run-scoped Research Bank filing research_bank.record_run(journal, run_id, now_ms) files only the requested stored research run, with record_from_journal filing semantics preserved through a shared _file_run helper; no unrelated research_runs scan and no stored research_bank_objects enumeration; TESTED at e357c72 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-BANK-RUN-SCOPED-FILING-V1); verification still inherits broad Q/P/E/R and health-table reads
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
       - strategy-degradation Attention trigger and salience/magnitude remain MISSING
       - temporary-regime-absence hypothesis remains UNAVAILABLE; no truthful WorldModel/regime evidence source exists
       - no registered falsifier predicates exist; no evaluative conclusion on any strategy-decay hypothesis is produced (research-result.v1 is structural INCONCLUSIVE only)
       - no failed-research suppression/cooldown/no-repeat policy over research-bank-object.v1 exists (context-only prior-research recall is TESTED; suppression must not be inferred from recall)
-      - no Attention trigger, live caller, consumer or deployment of research-question.v1 / research-plan.v1 / research-evidence.v1 / research-result.v1 / research-run.v1 / research-bank-object.v1 / prior-research recall exists
+      - no Attention trigger, live caller, consumer or deployment of research-question.v1 / research-plan.v1 / research-evidence.v1 / research-result.v1 / research-run.v1 / research-bank-object.v1 / research_bank.record_run / prior-research recall exists
+      - automatic/live strategy-decay research invocation remains MISSING; the synchronous chain shares the Journal writer, so any live invocation requires a bounded, isolated design (an unbounded Kernel post-flush invocation was reviewed BLOCKED and abandoned uncommitted; it was never implemented at any commit or TESTED)
       - research_runs and research-bank storage have no size cap; the owner storage-policy boundary remains parked
       - general/external Source Router and external-source discovery/retrieval remain MISSING; the TESTED research-source-registry.v1 is an internal, strategy-decay-only catalog
 
@@ -2895,10 +2899,58 @@ completed_research_evidence_source_registry_binding_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Source-authority hardening of offline strategy-decay evidence collection only; no router, retrieval, credibility, cost, budget, predicate, trigger, salience, usefulness, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_research_bank_run_scoped_filing_v1:
+  id: SDD-STAGE-3-RESEARCH-BANK-RUN-SCOPED-FILING-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: e357c72
+  evidence:
+    - e357c72 Add run-scoped research bank filing
+    - trader/cognition/research_bank.py
+    - tests/test_research_bank_run_scoped_filing.py
+  proven_facts:
+    - research_bank.record_run(journal, run_id, now_ms) exists as an offline helper.
+    - It files only the requested stored research run.
+    - It does not scan unrelated research_runs rows.
+    - It does not enumerate stored research_bank_objects.
+    - The shared _file_run helper preserves record_from_journal filing semantics; record_from_journal behavior is unchanged.
+    - Inserted/duplicate/conflict/refusal semantics and ordering are unchanged.
+    - Per-run filing across runs is equivalent to record_from_journal (outputs and stored rows).
+    - Retry and restart are idempotent.
+    - A missing or malformed requested run fails closed (source_missing:run, source_invalid:run:<reason>).
+    - Conflicting or tampered existing bank objects are never overwritten.
+    - Corruption in an unrelated run cannot affect record_run for the requested run.
+    - No live caller exists.
+    - No Kernel, config or research_run behavior change.
+    - No new research semantics, labels, scores, suppression or salience.
+    - No Attention, Risk or Execution wiring.
+  validation:
+    package_tests: 104 tests passed (independently verified; bank suite plus 20 run-scoped filing tests); prior focused run 356 passed (run-scoped filing, bank, run, question and recall suites)
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  limitations:
+    - Run enumeration is scoped, but verification of the requested run still inherits broad Q/P/E/R and health-table reads from existing source contracts (research_run.load, research_bank._question, research_bank._chain).
+    - Existing duplicate/conflict lookups remain necessary.
+    - This is not a bounded-work or live-invocation guarantee.
+  abandoned_scope: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-INVOCATION-V1 (automatic post-health-flush Kernel invocation, then an explicit offline per-sweep invocation module) was reviewed BLOCKED and removed before commit. It was never implemented at any commit and is not TESTED. Only record_run survives.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commit e357c72.
+  gap_matrix_update:
+    stage_3_research:
+      research_bank_run_scoped_filing: TESTED
+      live_caller_deployment: MISSING - automatic/live research invocation MISSING; requires bounded isolation
+      deployed: NO
+    failed_research_memory: PARTIAL - unchanged
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Offline run-scoped Research Bank filing helper only; no invocation, trigger, bounded-work, predicate, suppression, salience, usefulness, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-RESEARCH-EVIDENCE-SOURCE-REGISTRY-BINDING-V1 is TESTED at f0b5cb2 and NOT_DEPLOYED. No next package is selected or queued.
+  note: SDD-STAGE-3-RESEARCH-BANK-RUN-SCOPED-FILING-V1 is TESTED at e357c72 and NOT_DEPLOYED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
