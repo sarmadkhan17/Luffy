@@ -1,6 +1,6 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-09-25'
+updated_at: '2026-09-26'
 status: EVIDENCE_BASED
 
 progress_method:
@@ -102,6 +102,9 @@ capabilities:
       - be10151 Update research run fixture for registration receipts
       - trader/cognition/research_recall.py
       - tests/test_strategy_decay_research_recall.py
+      - 81effe5 Add internal research source registry
+      - trader/cognition/research_sources.py
+      - tests/test_research_source_registry.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
@@ -113,6 +116,7 @@ capabilities:
       - offline deterministic Q -> P -> E -> R research-run.v1 chain runner with durable, immutable, idempotent run receipts is TESTED at 05a1274 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-RUN-RECEIPT-V1); the runner adds no predicates, labels, scoring, suppression, salience or asset attribution
       - deterministic versioned research-bank-object.v1, one immutable object per (run, result) built only from the verified persisted Q/P/E/R/run chain, is TESTED at b9466bc and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-BANK-OBJECT-V1); claims/next questions NOT_AVAILABLE, supporting/contradictory evidence NOT_CLASSIFIED, no scoring, rank, salience, usefulness or asset attribution
       - read-only context_only prior-research recall over exact same-strategy/spec research-bank-object.v1 records registered strictly before the new question (integrity-bound first-registration receipts) is TESTED at 89d86c9 with follow-up be10151 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-PRIOR-RESEARCH-RECALL-V1); recall never suppresses, cools down or changes future research
+      - deterministic versioned internal research-source-registry.v1 covering only the existing strategy-decay chain sources is TESTED at 81effe5 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-SOURCE-REGISTRY-V1); research-plan.v1 descriptors resolve through it byte-identically; the WorldModel/regime source is explicitly UNAVAILABLE (no_truthful_worldmodel_source)
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
       - strategy-degradation Attention trigger and salience/magnitude remain MISSING
@@ -121,6 +125,7 @@ capabilities:
       - no failed-research suppression/cooldown/no-repeat policy over research-bank-object.v1 exists (context-only prior-research recall is TESTED; suppression must not be inferred from recall)
       - no Attention trigger, live caller, consumer or deployment of research-question.v1 / research-plan.v1 / research-evidence.v1 / research-result.v1 / research-run.v1 / research-bank-object.v1 / prior-research recall exists
       - research_runs and research-bank storage have no size cap; the owner storage-policy boundary remains parked
+      - general/external Source Router and external-source discovery/retrieval remain MISSING; the TESTED research-source-registry.v1 is an internal, strategy-decay-only catalog
 
   instrument_registry:
     state: TESTED
@@ -2348,7 +2353,7 @@ completed_strategy_decay_research_question_v1:
     git_diff_check: clean
     excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
   limitations:
-    - Refusals are returned but not durably persisted.
+    - Direct derive()/record_from_journal refusals are returned in memory only; when executed through research-run.v1 (05a1274) question refusals are durably preserved verbatim in the immutable run receipt; a step that raises before returning structured outcomes is recorded FAILED with later steps NOT_RUN, and any pre-failure partial refusals are not captured; there is no standalone refusal-memory object/table outside run receipts (control-plane correction 2026-09-26).
     - Bounded replay relies on documented write-order assumptions for evidence that cannot otherwise be chronologically placed.
     - Production has no source rows because strategy-health observation (b3639d8) is not deployed.
     - No Research Planner / Source Router consumer is implemented.
@@ -2527,7 +2532,7 @@ completed_strategy_decay_research_result_v1:
     - Always INCONCLUSIVE until registered falsifier predicates exist.
     - Legitimate later decision changes can make upstream evidence/result re-verification fail closed.
     - Pre-collection decision tampering remains undetectable, inherited from research-evidence.v1.
-    - Refusals are returned but not durably stored.
+    - Refusals are returned but not durably stored. Superseded by research-run.v1 (05a1274): direct record_from_journal refusals are returned in memory only; when executed through research-run.v1 result-step refusals are durably preserved verbatim in the immutable run receipt; a step that raises before returning structured outcomes is recorded FAILED with later steps NOT_RUN, and any pre-failure partial refusals are not captured; there is no standalone refusal-memory object/table (control-plane correction 2026-09-26).
     - Production has no upstream source rows because the chain remains undeployed.
   runtime_deployment:
     status: NOT_DEPLOYED
@@ -2751,10 +2756,77 @@ completed_strategy_decay_prior_research_recall_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Read-only, context_only recall of prior same-strategy/spec Research Bank objects for the existing offline strategy-decay research chain only; no suppression, cooldown, similarity, novelty, usefulness, score, rank, priority, salience, trading-edge or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_research_source_registry_v1:
+  id: SDD-STAGE-3-RESEARCH-SOURCE-REGISTRY-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 81effe5
+  evidence:
+    - 81effe5 Add internal research source registry
+    - trader/cognition/research_sources.py
+    - trader/cognition/research_plan.py
+    - tests/test_research_source_registry.py
+    - tests/fixtures/research_plan_v1_pre_source_registry.json
+    - tests/test_strategy_decay_research_question.py (live-path guard allow-lists the registry module)
+  proven_facts:
+    - A versioned, deterministic research-source-registry.v1 exists.
+    - The registry contains only existing truthful internal sources of the strategy-decay research chain.
+    - Strategy health observations, research questions and strategy-signal decisions are AVAILABLE.
+    - The WorldModel/regime source is explicitly UNAVAILABLE with reason no_truthful_worldmodel_source; it has no store or reader.
+    - Existing research-plan.v1 descriptors now resolve through the registry; each route is bound to its expected source_id.
+    - All seven pre-registry fixture plans remain byte-for-byte identical.
+    - Existing plan IDs and SHA-256 values are unchanged; no plan schema/version bump or migration.
+    - Registered-descriptor substitutions fail closed in build and from_json.
+    - Malformed or unregistered descriptors produce structured source_unregistered refusals.
+    - Unsupported credibility, primary/secondary, cost, historical-depth and rate-limit values are not invented (NOT_ASSESSED / NOT_MEASURED with exact reasons).
+    - Registry canonical ordering, hash pin and metadata are frozen and deterministic; unknown source IDs fail closed.
+    - The decision-evidence weakness remains explicit - declared selection, not independent opportunity evidence.
+    - No external sources, search broker, network or LLM were added.
+    - No Attention, Kernel, Analyst, Risk, Execution or live behavior change.
+  validation:
+    package_tests: 812 focused tests passed, including 99 registry tests (independently verified)
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  limitations:
+    - The registry covers only sources used by the strategy-decay research chain.
+    - It is not a general dynamic Source Router.
+    - External-source discovery/retrieval remains unimplemented.
+    - Credibility, cost, historical-depth and rate-limit metadata remain unassessed where no truthful source exists.
+    - research_evidence.py still resolves existing evidence semantics by store without a source_id migration.
+    - Deliberate code-level replacement of both registry content and its pinned hash is outside runtime integrity guarantees.
+  control_plane_correction:
+    research_question_refusals: Direct derive()/record_from_journal refusals are returned in memory; when executed through research-run.v1 question refusals are durably preserved verbatim in the immutable run receipt; there is no standalone refusal-memory object outside run receipts. Supersedes the broader "refusals are not durably persisted" wording.
+    strategy_decay_chain_refusals: Chain-wide (question, plan, evidence, result) - direct derive()/record_from_journal APIs return refusals in memory; when Q/P/E/R are executed through research-run.v1 each step's refusals are durably preserved verbatim in the immutable research-run.v1 receipt; a step that raises before returning structured outcomes is recorded FAILED with later steps NOT_RUN, and any pre-failure partial refusals are not captured; there is no standalone refusal-memory object/table dedicated to those refusals. Supersedes the research-question "not durably persisted" and research-result "not durably stored" limitation wording; plan and evidence records carried no contrary statement.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commit 81effe5.
+  gap_matrix_update:
+    stage_3_research:
+      research_question_generation: TESTED
+      internal_research_planning_routing: TESTED
+      internal_research_source_registry: TESTED
+      evidence_collection: TESTED
+      structural_result: TESTED
+      offline_chain_runner_durable_run_receipt: TESTED
+      research_bank_object: TESTED
+      prior_research_context_recall: TESTED
+      general_external_source_router_retrieval: MISSING
+      registered_falsifier_predicates_evaluative_conclusion: MISSING
+      truthful_world_model_regime_evidence: MISSING
+      attention_trigger_salience: MISSING
+      live_caller_deployment: MISSING
+      failed_research_suppression_cooldown_no_repeat_policy: MISSING
+      deployed: NO
+    failed_research_memory: PARTIAL - unchanged; suppression/cooldown/no-repeat policy MISSING and must not be inferred from recall.
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Frozen internal source catalog for the existing offline strategy-decay research chain only; no router, retrieval, credibility, cost, budget, predicate, trigger, salience, usefulness, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-STRATEGY-DECAY-PRIOR-RESEARCH-RECALL-V1 is TESTED at 89d86c9 (follow-up be10151) and NOT_DEPLOYED. No next package is selected or queued.
+  note: SDD-STAGE-3-RESEARCH-SOURCE-REGISTRY-V1 is TESTED at 81effe5 and NOT_DEPLOYED. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
