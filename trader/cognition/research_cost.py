@@ -427,6 +427,16 @@ def build(receipt_rows=None, run_rows=None, *, receipt_source=None,
             "families": [receipts, runs]}
 
 
+def run_entries(journal, run_id: str) -> tuple:
+    """(entries, refused sources) of the research-run-telemetry.v1 family
+    for one stored run only: the same per-row contract and entry shape as
+    the ledger's run family, reading only that run's research_runs rows.
+    No group, sum or total is formed here. Read-only."""
+    entries, refused = _run_family(journal.research_runs(run_id=run_id))
+    return entries, sorted(refused, key=lambda r: (str(r["source_id"]),
+                                                   r["reason"]))
+
+
 def read_receipt_rows(path) -> list:
     """Stored receipt rows, read-only, in append order."""
     uri = Path(path).resolve().as_uri() + "?mode=ro"

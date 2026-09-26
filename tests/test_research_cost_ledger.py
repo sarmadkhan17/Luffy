@@ -562,7 +562,8 @@ def test_nothing_in_the_live_path_calls_it():
     callers = [str(p.relative_to(root)) for p in root.rglob("*.py")
                if p.name != "research_cost.py"
                and pat.search(p.read_text(errors="ignore"))]
-    assert callers == []
+    # the offline read-only Research Bank view is the only reader
+    assert callers == ["cognition/research_bank_view.py"]
 
 
 def test_ledger_is_read_only(tmp_path, receipts_db):

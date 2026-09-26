@@ -465,8 +465,9 @@ def test_nothing_in_the_live_path_calls_it():
     callers = sorted(str(p.relative_to(root)) for p in root.rglob("*.py")
                      if p.name != "research_next_question.py"
                      and pat.search(p.read_text(errors="ignore")))
-    # the journal owns the storage primitive only
-    assert callers == ["core/journal.py"]
+    # the journal owns the storage primitive; the offline read-only
+    # Research Bank view is the only reader
+    assert callers == ["cognition/research_bank_view.py", "core/journal.py"]
     assert "import research_next_question" not in \
         (root / "core/journal.py").read_text()
 
