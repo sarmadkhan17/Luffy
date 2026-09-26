@@ -1,6 +1,6 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-09-26'
+updated_at: '2026-09-27'
 status: EVIDENCE_BASED
 
 progress_method:
@@ -179,12 +179,12 @@ capabilities:
       - temporary-regime-absence hypothesis remains UNAVAILABLE; no truthful WorldModel/regime evidence source exists
       - no registered falsifier predicates exist; no evaluative conclusion on any strategy-decay hypothesis is produced (research-result.v1 is structural INCONCLUSIVE only)
       - no failed-research suppression/cooldown/no-repeat policy over research-bank-object.v1 exists (context-only prior-research recall is TESTED; suppression must not be inferred from recall)
-      - no Attention trigger, live caller, consumer or deployment of research-question.v1 / research-plan.v1 / research-evidence.v1 / research-result.v1 / research-run.v1 / research-bank-object.v1 / research_bank.record_run / prior-research recall exists (the offline read-only research-bank-view.v1 owner read model at 412a263 is a context_only reader only, not a live caller, consumer or deployment); live/dashboard integration of the read model remains MISSING
-      - automatic/live strategy-decay research invocation remains MISSING; the synchronous chain shares the Journal writer, so any live invocation requires a bounded, isolated design (an unbounded Kernel post-flush invocation was reviewed BLOCKED and abandoned uncommitted; it was never implemented at any commit or TESTED)
+      - no Attention trigger, Kernel caller, persistent research service, recurring cadence or deployment of the research chain exists; the bounded isolated RESEARCH_SHADOW harness is TESTED at 9f7edfb and NOT_DEPLOYED, and the owner report is offline read-only context_only
+      - automatic research invocation is TESTED only in the bounded isolated RESEARCH_SHADOW harness; production-scale timing evidence and recurring-operation authorization remain MISSING (the earlier unbounded Kernel post-flush proposal was abandoned uncommitted)
       - research_runs, research_unreadable_runs, research-bank and research_unreadable_bank_objects storage have no size cap; the owner storage-policy boundary remains parked
-      - total research cost is NOT_ESTABLISHED (the measured research-cost ledger is TESTED at e4b3deb; opt-in measurement_only unreadable-run telemetry coverage is TESTED at b721f8c and nothing currently calls include_unreadable_runs=True); budget/cost limits remain UNDECLARED and owner-policy dependent; no budget manager authority exists
+      - total research cost is NOT_ESTABLISHED (the measured research-cost ledger is TESTED at e4b3deb; opt-in measurement_only unreadable-run telemetry coverage is TESTED at b721f8c and the offline RESEARCH_SHADOW owner report explicitly enables it); budget/cost limits remain UNDECLARED and owner-policy dependent; no budget manager authority exists
       - general/external Source Router and external-source discovery/retrieval remain MISSING; the TESTED research-source-registry.v1 is an internal, strategy-decay-only catalog
-      - SDD 12.2 capability/data-gap question source is PARTIAL - TESTED for unreadable strategy-health observations only (1e4fee1); downstream routing/planning for strategy-health-unreadable-question.v1 is TESTED (plan-only, aec4341); frozen unreadable evidence collection is TESTED (evidence-only, d015a76); the unreadable structural result is TESTED (INCONCLUSIVE / NOT_ASSESSED only, af57e47); unreadable run support is TESTED (offline explicit runner only, 4a4eae3); the unreadable Research Bank object is TESTED (offline context_only structural filing only, 90e2c59); unreadable cost-ledger coverage is TESTED (opt-in measurement_only run telemetry only, b721f8c); unreadable registration receipts are TESTED (first-insert question and bank-object provenance/order metadata only, 71066ab; legacy rows remain receipt-less, no backfill); unreadable prior-research recall is TESTED (read-only context_only, receipt-bound strict-cutoff recall only, 232126a; no suppression/no-repeat authority); falsifier predicates, a truthful WorldModel source and any automatic/live caller remain MISSING
+      - SDD 12.2 capability/data-gap question source is PARTIAL - TESTED for unreadable strategy-health observations only (1e4fee1); downstream routing/planning for strategy-health-unreadable-question.v1 is TESTED (plan-only, aec4341); frozen unreadable evidence collection is TESTED (evidence-only, d015a76); the unreadable structural result is TESTED (INCONCLUSIVE / NOT_ASSESSED only, af57e47); unreadable run support is TESTED (offline explicit runner only, 4a4eae3); unreadable Research Bank filing, cost-ledger coverage, registration receipts and prior-research recall are TESTED in their recorded scopes; internal two-family shadow dispatch is TESTED at 9f7edfb and NOT_DEPLOYED; falsifier predicates, a truthful WorldModel source, persistent service and recurring cadence remain MISSING
 
   instrument_registry:
     state: TESTED
@@ -3907,10 +3907,91 @@ completed_strategy_health_unreadable_prior_research_recall_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Offline read-only context_only recall of receipt-registered prior unreadable bank objects only; no novelty, suppression, cooldown, no-repeat, ranking, priority, salience, usefulness, bounded-work, execution-authenticity, trading-edge or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_research_shadow_harness_v1:
+  id: SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1
+  state: TESTED
+  implementation_commit: 9f7edfb
+  evidence:
+    - trader/cognition/research_families.py
+    - trader/cognition/research_shadow_store.py
+    - trader/cognition/research_shadow_contract.py
+    - trader/cognition/research_shadow.py
+    - trader/cognition/_research_shadow_child.py
+    - trader/cognition/research_shadow_report.py
+    - tests/test_research_family_dispatch.py
+    - tests/test_research_shadow_isolation.py
+    - tests/test_research_shadow_invocation.py
+    - tests/test_research_shadow_report.py
+    - tests/research_shadow_fixtures.py
+  validation:
+    independent_review: Astra final PASS
+    harness_tests: 190 passed
+    updated_caller_guards: four passed
+    prior_milestone_regression: 1888 passed / 1 baseline failure
+    fresh_import_comparison: 54 baseline violations / 54 current / zero new
+    git_diff_check: clean
+  proven_facts:
+    - A bounded autonomous RESEARCH_SHADOW harness exists as TESTED, NOT_DEPLOYED code in a separate parent/child process; Kernel threads and scheduling are unchanged.
+    - The source luffy.db is opened read-only, all research writes go to separate research_shadow.db, and source DB logical contents remain unchanged.
+    - The harness reuses the exact existing Q/P/E/R/Run/Bank writers; shadow outputs are byte-compatible with direct existing APIs.
+    - Only strategy_decay and strategy_health_unreadable are dispatchable; outcomes are ROUTED / NOT_ROUTED / AMBIGUOUS without preference or ranking, and ambiguity fails closed.
+    - The source cursor follows authoritative Journal event order; in-flight sweep rows are not skipped and the cursor advances only with durable completed work.
+    - Timeout or crash leaves unfinished work uncommitted and the cursor unchanged; invocation receipts are immutable and idempotent, with OK / REFUSED / TIMEOUT / FAILED outcomes and no claimed PARTIAL state.
+    - A hard child-process deadline is enforced; max_sources and wall_clock_deadline_s are required without defaults. max_sources bounds source selection only.
+    - The child environment is sanitized; exchange/API/LLM secrets are not inherited and an import guard blocks trading, network and authority modules. The trader.engine.protective exception is verified safe for venue_key only.
+    - Recovery verifies actual stored Run, telemetry and Bank content and bindings.
+    - The owner report is read-only and context_only; it requires explicit invocation_id, recall requires explicit max_objects, and the cost report explicitly enables unreadable coverage. total_research_cost remains NOT_ESTABLISHED; no latest, best or ranking default exists.
+    - No orders, sizing, stops, Risk, Execution, Orchestrator, Attention or Kernel control path or trading/control authority is established.
+    - No new import-contract violations versus baseline; NOT_DEPLOYED.
+  limitations:
+    - max_sources bounds selection, not full-history derivation, verification, filing or storage growth; existing runners may re-derive or reverify broad stored history.
+    - Repeated runs may file new Bank objects for previously reached results, increasing shadow DB size.
+    - Decisions are read from the live SQLite transaction snapshot rather than bounded to the health-event cutoff; batch-independent results are not guaranteed.
+    - Concurrent-writer safety depends on WAL mode; rollback-journal mode is not covered. Long source read snapshots may delay WAL checkpointing and grow the source WAL; SQLite may touch -shm/-wal sidecars, so zero filesystem activity is not guaranteed.
+    - The deadline covers child wait, not parent initialization or reporting.
+    - Source identity is path plus cursor/snapshot facts, not a full database version or fingerprint.
+    - Recovery verifies stored contracts and bindings; full live-evidence re-derivation remains report-time responsibility.
+    - Arbitrary rewriting inside the DB/store directory is outside the documented threat model; parent-death signal behavior is Linux-specific.
+    - Production-scale timing evidence on the approximately 1.6 GB production database is MISSING; no production max_sources, deadline or cadence is chosen.
+    - Recurring shadow cadence is not authorized; NOT_DEPLOYED.
+  gap_matrix_update:
+    stage_3_research:
+      automatic_research_invocation: TESTED - bounded isolated SHADOW harness only; NOT_DEPLOYED; no persistent service or cadence
+      internal_two_family_routing: TESTED - shadow harness only
+      owner_cross_family_report: TESTED - offline read-only context_only
+      recurring_shadow_operation: MISSING - separate owner authorization and timing evidence required
+      production_scale_timing_evidence: MISSING
+      external_source_router_retrieval: MISSING
+      registered_falsifier_predicates: MISSING
+      truthful_worldmodel_regime_source: MISSING
+      budget_manager_authority: MISSING
+      total_research_cost: NOT_ESTABLISHED
+      failed_research_suppression_no_repeat_policy: MISSING
+      deployed: NO
+    risk_execution_live_trading_readiness: UNCHANGED
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: Commit 9f7edfb grants no deployment or trading authority.
+  next_milestone_candidate: Separate owner decision for one-shot RESEARCH_SHADOW production-scale timing run; not an implementation package and not authorized.
+  one_shot_timing_authorization_must_specify:
+    - source DB path
+    - shadow DB path
+    - max_sources
+    - wall_clock_deadline_s
+    - invocation_key / recorded_at_ms
+    - observation/timing goal
+    - stop conditions
+    - acceptable WAL/checkpoint/resource impact
+  recurring_cadence_requires:
+    - one-shot production-scale timing evidence
+    - review of that evidence
+    - separate owner authorization
+  future_shadow_authorization_trading_authority: NONE
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-PRIOR-RESEARCH-RECALL-V1 is TESTED at 232126a and NOT_DEPLOYED. strategy-health-unreadable-prior-research-recall.v1 is a read-only, SELECT-only, context_only recall of exact same-spec unreadable bank objects whose verified research-registration.v1 receipts are strictly earlier than the new question's verified registration (same-time excluded) and whose source event_id is strictly earlier in numeric Journal order; legacy receipt-less and malformed/tampered relevant rows fail closed with no backfill or inference; every in-scope bank receipt is verified before cutoff; max_objects bounds selected bank objects examined, not DB work; identity facts are EQUAL / DIFFERENT / NOT_EXPOSED only with no similarity score; decay recall is unchanged and the two recalls reject each other's families. Unreadable Q/P/E/R/Run/Research Bank, cost-ledger coverage, registration receipts and prior-research recall (context_only) are TESTED. failed_research_memory may advance but no suppression/cooldown/no-repeat authority is established. Registered falsifier predicates and a truthful WorldModel source remain MISSING. Total research cost remains NOT_ESTABLISHED and budget/cost limits remain UNDECLARED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
+  note: SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1 is TESTED at 9f7edfb and NOT_DEPLOYED. Bounded isolated automatic research invocation, two-family internal dispatch and an offline read-only context_only owner report are TESTED in the shadow harness only. Recurring operation and production-scale timing evidence remain MISSING; no cadence or production bounds are chosen. No trading/control authority or live Risk/Execution path is established. A one-shot production-scale timing run is only a separate owner-decision candidate; no next implementation package is selected or queued. All parked boundaries remain unchanged.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
