@@ -50,6 +50,7 @@ import hashlib
 import json
 
 from trader.cognition import research_question as rq
+from trader.cognition import research_sources as rs
 from trader.strategy import health_observation as ho
 
 SCHEMA = "research-plan.v1"
@@ -65,12 +66,10 @@ HYPOTHESES = (GENUINE_DETERIORATION, INSUFFICIENT_RECENT_OPPORTUNITIES,
 
 ROUTED = "ROUTED"
 UNAVAILABLE = "UNAVAILABLE"
-NO_TRUTHFUL_WORLDMODEL_SOURCE = "no_truthful_worldmodel_source"
-REGIME_UNAVAILABLE_DETAIL = (
-    "no truthful WorldModel regime source: the live Kernel supplies no "
-    "WorldModel and no point-in-time regime state is persisted for strategy "
-    "health sweeps; Analyst regime_filter/regime_fitness are backtest filter "
-    "settings, not an observed regime state")
+#: the registry's UNAVAILABLE WorldModel/regime entry states the reason
+_REGIME = rs.unavailable(rs.WORLDMODEL_REGIME_SOURCE_ID)
+NO_TRUTHFUL_WORLDMODEL_SOURCE = _REGIME["reason"]
+REGIME_UNAVAILABLE_DETAIL = _REGIME["detail"]
 
 SEMANTICS = ("evidence-routing plan for one strategy-decay research question; "
              "names which existing internal records bear on each SDD 14.5 "
@@ -85,17 +84,12 @@ COMPILE_FAILED_RECORD = "compile_failed"
 EVALUATION_EXCEPTION_RECORD = "evaluation_exception"
 SWEEP_RECORD = "sweep"
 
-_HEALTH = {"store": "journal.brain_events",
-           "reader": "Journal.strategy_health_rows",
-           "record_schema": ho.SCHEMA}
-_QUESTION = {"store": "journal.research_questions",
-             "reader": "Journal.research_questions",
-             "record_schema": rq.SCHEMA}
+#: plan-facing source descriptors, read from research-source-registry.v1
+_HEALTH = rs.descriptor(rs.HEALTH_SOURCE_ID)
+_QUESTION = rs.descriptor(rs.QUESTION_SOURCE_ID)
 #: raw decision columns; the selection below runs over them. No record
 #: schema: these are journal rows, not a derived summary.
-_DECISIONS = {"store": "journal.decisions",
-              "reader": "Journal.decision_observation_rows",
-              "record_schema": None}
+_DECISIONS = rs.descriptor(rs.DECISIONS_SOURCE_ID)
 DECISION_SELECTION = "decision-signal-occurrence-selection.v1"
 DECISION_SELECTION_RULE = (
     "a decisions row is selected when its ts, parsed as a timezone-aware "
@@ -309,7 +303,13 @@ def _binding(row) -> dict:
 
 
 # ── routing ──────────────────────────────────────────────────────────────
-def _item(role, source, record_kind, variant, locator, fields, binding):
+def _item(role, source_id, source, record_kind, variant, locator, fields,
+          binding):
+    try:
+        # each route is bound to its own registry entry, not mere membership
+        rs.require(source_id, source)
+    except rs.ResearchSourceError as e:
+        raise ResearchPlanError(f"source_unregistered:{role}") from e
     return {"role": role, **source, "record_kind": record_kind,
             "record_variant": variant, "locator": locator,
             "fields": list(fields), "binding": binding}
@@ -330,8 +330,8 @@ def _routes(q: dict, rows) -> list:
         variant = _observation_variant(rec, role)
         fields = fields_for(variant)
         _require_fields(rec, fields, role)
-        return _item(role, _HEALTH, ho.KIND_SPEC, variant,
-                     {"event_id": event_id}, fields, _binding(row))
+        return _item(role, rs.HEALTH_SOURCE_ID, _HEALTH, ho.KIND_SPEC,
+                     variant, {"event_id": event_id}, fields, _binding(row))
 
     def truthful(fields):
         # verify_evidence already proved source/prior truthful, so their
@@ -361,10 +361,12 @@ def _routes(q: dict, rows) -> list:
     deterioration = truthful(_DETERIORATION_FIELDS)
     if prior is not None:
         deterioration.append(_item(
-            "question_change_flags", _QUESTION, rq.QUESTION_KIND, None,
-            {"question_id": q["question_id"]}, _CHANGE_FIELDS, None))
+            "question_change_flags", rs.QUESTION_SOURCE_ID, _QUESTION,
+            rq.QUESTION_KIND, None, {"question_id": q["question_id"]},
+            _CHANGE_FIELDS, None))
     opportunities = truthful(_OPPORTUNITY_FIELDS) + [_item(
-        "strategy_signal_decisions", _DECISIONS, "decision_row", None,
+        "strategy_signal_decisions", rs.DECISIONS_SOURCE_ID, _DECISIONS,
+        "decision_row", None,
         {"selection": DECISION_SELECTION,
          "rule": DECISION_SELECTION_RULE,
          "spec_id": sid,
@@ -372,14 +374,16 @@ def _routes(q: dict, rows) -> list:
          "signal_bar_close_ms_at_or_before": rq._ms(src["sweep_started_at"])},
         _DECISION_FIELDS, None)]
     data = truthful(_DATA_FIELDS)
-    data.append(_item("source_sweep", _HEALTH, ho.KIND_SWEEP, SWEEP_RECORD,
+    data.append(_item("source_sweep", rs.HEALTH_SOURCE_ID, _HEALTH,
+                      ho.KIND_SWEEP, SWEEP_RECORD,
                       {"sweep_id": src["sweep_id"]}, _SWEEP_FIELDS,
                       _binding(sweep_row)))
     data += [observation("unreadable_observation", e,
                          lambda v: _UNREADABLE_FIELDS[v])
              for e in q["unreadable_since_prior_event_ids"]]
-    data += [_item("history_sweep", _HEALTH, ho.KIND_SWEEP, SWEEP_RECORD,
-                   {"sweep_id": sw_id}, _HISTORY_SWEEP_FIELDS, _binding(row))
+    data += [_item("history_sweep", rs.HEALTH_SOURCE_ID, _HEALTH,
+                   ho.KIND_SWEEP, SWEEP_RECORD, {"sweep_id": sw_id},
+                   _HISTORY_SWEEP_FIELDS, _binding(row))
              for sw_id, row in history]
 
     def section(h, evidence):

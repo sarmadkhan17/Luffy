@@ -443,12 +443,13 @@ def test_nothing_in_the_live_path_calls_it():
                # research_result.py are the offline routing / collection /
                # result consumers, research_run.py the offline runner and
                # research_bank.py the offline bank filer and
-               # research_recall.py the offline context-only recall; their
-               # own tests guard that nothing live calls them
+               # research_recall.py the offline context-only recall and
+               # research_sources.py the source registry (schema constants
+               # only); their own tests guard that nothing live calls them
                if p.name not in ("research_question.py", "research_plan.py",
                                  "research_evidence.py", "research_result.py",
                                  "research_run.py", "research_bank.py",
-                                 "research_recall.py")
+                                 "research_recall.py", "research_sources.py")
                and pat.search(p.read_text(errors="ignore"))]
     assert callers == []
 
