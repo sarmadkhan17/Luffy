@@ -123,6 +123,9 @@ capabilities:
       - aec4341 Add unreadable strategy health plans
       - trader/cognition/research_unreadable_plan.py
       - tests/test_strategy_health_unreadable_plan.py
+      - d015a76 Add unreadable strategy health evidence
+      - trader/cognition/research_unreadable_evidence.py
+      - tests/test_strategy_health_unreadable_evidence.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
@@ -142,6 +145,7 @@ capabilities:
       - deterministic read-only context_only research-bank-view.v1 owner read model of one exact verified Research Bank object (by bank_object_id, or by run_id only when exactly one bank object is filed for that run) is TESTED at 412a263 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-BANK-READ-MODEL-V1); persisted objects unchanged; linked next-question rows shown separately with completeness NOT_ASSERTED; requested-run telemetry entries only with total research cost NOT_ESTABLISHED; offline helper only
       - separate immutable context_only strategy-health-unreadable-question.v1 family, one question per persisted compile_failed / evaluation_failed strategy-health observation with its stored verdict, verdict_reason, coverage_faults, error_stage and error_class copied as facts, isolated persistence (research_unreadable_questions, no registration receipt) and explicit refusal by the decay planner, is TESTED at 1e4fee1 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-RESEARCH-QUESTION-V1); the strategy-decay question family is unchanged
       - separate immutable context_only strategy-health-unreadable-plan.v1 family routes a fully re-verified strategy-health-unreadable-question.v1 to existing internal evidence only (exact source observation, exact source sweep, same-spec prior observation history) with exact routed record IDs/hashes bound; AVAILABLE / EMPTY describe routed-record presence only; no diagnosis, causal conclusion, falsifier, threshold, regime inference, asset blame, source/vendor invention, ranking, salience, priority, usefulness, suppression or budget authority; research-source-registry.v1 byte/hash unchanged and the frozen sibling routing mapping is separate from it; decay question/plan fixtures byte-identical and the decay planner still refuses unreadable questions; TESTED at aec4341 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-RESEARCH-PLAN-V1)
+      - separate immutable context_only strategy-health-unreadable-evidence.v1 family freezes exactly the unreadable plan's routed records (source observation, source sweep, same-spec observation history) after re-verifying plan and question, binding exact event_id + record_sha256 per item and preserving raw source_content; AVAILABLE / EMPTY mean presence only; no additional source discovery or history expansion; earlier sweep records remain unrouted/unbound; other-spec rows excluded; no classification, SUPPORTS/REFUTES, diagnosis or data_failure conclusion; decay evidence semantics/fixtures byte-identical and research-source-registry.v1 byte/hash unchanged; separate persistence table only; TESTED at d015a76 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-RESEARCH-EVIDENCE-V1)
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
       - strategy-degradation Attention trigger and salience/magnitude remain MISSING
@@ -153,7 +157,7 @@ capabilities:
       - research_runs and research-bank storage have no size cap; the owner storage-policy boundary remains parked
       - total research cost is NOT_ESTABLISHED (the measured research-cost ledger is TESTED at e4b3deb); budget/cost limits remain UNDECLARED and owner-policy dependent; no budget manager authority exists
       - general/external Source Router and external-source discovery/retrieval remain MISSING; the TESTED research-source-registry.v1 is an internal, strategy-decay-only catalog
-      - SDD 12.2 capability/data-gap question source is PARTIAL - TESTED for unreadable strategy-health observations only (1e4fee1); downstream routing/planning for strategy-health-unreadable-question.v1 is TESTED (plan-only, aec4341); unreadable evidence/result/run support, registration/recall integration, falsifier predicates and any automatic/live caller remain MISSING
+      - SDD 12.2 capability/data-gap question source is PARTIAL - TESTED for unreadable strategy-health observations only (1e4fee1); downstream routing/planning for strategy-health-unreadable-question.v1 is TESTED (plan-only, aec4341); frozen unreadable evidence collection is TESTED (evidence-only, d015a76); unreadable result/run support, Research Bank/recall/registration integration, falsifier predicates, a truthful WorldModel source and any automatic/live caller remain MISSING
 
   instrument_registry:
     state: TESTED
@@ -3341,10 +3345,78 @@ completed_strategy_health_unreadable_research_plan_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Plan-only context_only routing of unreadable strategy-health questions to existing internal evidence; no diagnosis, causal conclusion, predicate, threshold, regime, source choice, asset attribution, evidence/result/run, invocation, trigger, suppression, salience, usefulness, priority, budget, trading-edge or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_strategy_health_unreadable_research_evidence_v1:
+  id: SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-RESEARCH-EVIDENCE-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: d015a76
+  evidence:
+    - d015a76 Add unreadable strategy health evidence
+    - trader/cognition/research_unreadable_evidence.py
+    - trader/core/journal.py
+    - tests/test_strategy_health_unreadable_evidence.py
+    - tests/test_strategy_health_unreadable_plan.py
+    - tests/test_strategy_decay_research_question.py
+  proven_facts:
+    - strategy-health-unreadable-evidence.v1 exists as a separate immutable context_only evidence family.
+    - "Freezes exactly the unreadable plan's routed records: (1) source observation; (2) source sweep; (3) same-spec observation history."
+    - Plan and question are re-verified before collection.
+    - Every frozen item binds exact event_id + record_sha256.
+    - Raw source_content is preserved.
+    - AVAILABLE / EMPTY mean presence only.
+    - No additional source discovery or history expansion.
+    - Earlier sweep records remain unrouted/unbound.
+    - Other-spec rows are excluded.
+    - No classification, SUPPORTS/REFUTES, diagnosis or data_failure conclusion.
+    - Decay evidence semantics/fixtures remain byte-identical.
+    - research-source-registry.v1 remains byte/hash unchanged.
+    - Separate persistence table only.
+    - No result/run/Research Bank/recall/registration integration.
+    - No automatic invocation.
+    - No Attention, Kernel, Risk, Execution or live wiring.
+  validation:
+    new_tests: 38 new tests passed
+    focused_tests: Astra focused validation - 1204 checks passed
+    broader_validation: baseline/environment failures reproduced independently on clean 0512b6a
+    independent_review: Astra final PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  limitations:
+    - Frozen verification requires exact retained plan/question text and does not independently authenticate original upstream provenance.
+    - Journal load additionally requires live question/plan revalidation and byte-identical routed source detail.
+    - Source deletion or alteration can make stored evidence unloadable without changing its frozen content.
+    - Earlier unfrozen sweep membership can also affect Journal load.
+    - Item-level timestamps are omitted; the source observation timestamp remains bound through the question.
+    - Full health scans remain; no hard bounded-work or performance guarantee.
+    - Private validation-helper coupling requires regression coverage.
+    - No result/run/Research Bank/recall/registration or automatic/live wiring.
+    - Table has no size cap; owner storage-policy decision remains parked.
+    - No production rows while the upstream health observation writer remains undeployed.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commit d015a76.
+  gap_matrix_update:
+    stage_3_research:
+      capability_data_gap_question_source: PARTIAL - TESTED for unreadable strategy-health observations only
+      strategy_decay_question_family: UNCHANGED
+      unreadable_question: TESTED
+      unreadable_plan_routing: TESTED
+      unreadable_evidence: TESTED
+      unreadable_result_run_support: MISSING
+      unreadable_research_bank_recall_integration: MISSING
+      registered_falsifier_predicates: MISSING
+      truthful_worldmodel_source: MISSING
+      live_caller_deployment: MISSING - automatic/live research invocation MISSING
+      deployed: NO
+    failed_research_memory: PARTIAL - unchanged (no suppression/cooldown/no-repeat policy)
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Evidence-only context_only freezing of the unreadable plan's routed records; no classification, SUPPORTS/REFUTES, diagnosis, data_failure conclusion, predicate, threshold, regime, source choice, asset attribution, result/run, invocation, trigger, suppression, salience, usefulness, priority, budget, trading-edge or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-RESEARCH-PLAN-V1 is TESTED at aec4341 and NOT_DEPLOYED. It is an offline context_only plan family that routes re-verified unreadable strategy-health questions to existing internal evidence only (source observation, source sweep, same-spec prior observation history); no diagnosis or causal conclusion. Unreadable evidence/result/run support remains MISSING. The strategy-decay question/plan families are unchanged. Registered falsifier predicates and a truthful WorldModel source remain MISSING. Total research cost remains NOT_ESTABLISHED and budget/cost limits remain UNDECLARED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
+  note: SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-RESEARCH-EVIDENCE-V1 is TESTED at d015a76 and NOT_DEPLOYED. It is an offline context_only evidence family that freezes exactly the unreadable plan's routed records (source observation, source sweep, same-spec observation history) with exact event_id + record_sha256 bindings; no classification, SUPPORTS/REFUTES, diagnosis or data_failure conclusion. Unreadable result/run support and Research Bank/recall integration remain MISSING. The strategy-decay question/plan/evidence families are unchanged. Registered falsifier predicates and a truthful WorldModel source remain MISSING. Total research cost remains NOT_ESTABLISHED and budget/cost limits remain UNDECLARED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
