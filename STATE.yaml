@@ -112,6 +112,8 @@ capabilities:
       - e4b3deb Add research cost ledger
       - trader/cognition/research_cost.py
       - tests/test_research_cost_ledger.py
+      - 57d8875 Scope research chain verification reads
+      - tests/test_research_chain_scoped_verification.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
@@ -125,8 +127,9 @@ capabilities:
       - read-only context_only prior-research recall over exact same-strategy/spec research-bank-object.v1 records registered strictly before the new question (integrity-bound first-registration receipts) is TESTED at 89d86c9 with follow-up be10151 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-PRIOR-RESEARCH-RECALL-V1); recall never suppresses, cools down or changes future research
       - deterministic versioned internal research-source-registry.v1 covering only the existing strategy-decay chain sources is TESTED at 81effe5 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-SOURCE-REGISTRY-V1); research-plan.v1 descriptors resolve through it byte-identically; the WorldModel/regime source is explicitly UNAVAILABLE (no_truthful_worldmodel_source)
       - research-evidence.v1 collection resolves every ROUTED source through research-source-registry.v1 with collector dispatch keyed by registry source_id and no store-name fallback; valid evidence is byte-identical; TESTED at f0b5cb2 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-EVIDENCE-SOURCE-REGISTRY-BINDING-V1)
-      - offline run-scoped Research Bank filing research_bank.record_run(journal, run_id, now_ms) files only the requested stored research run, with record_from_journal filing semantics preserved through a shared _file_run helper; no unrelated research_runs scan and no stored research_bank_objects enumeration; TESTED at e357c72 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-BANK-RUN-SCOPED-FILING-V1); verification still inherits broad Q/P/E/R and health-table reads
+      - offline run-scoped Research Bank filing research_bank.record_run(journal, run_id, now_ms) files only the requested stored research run, with record_from_journal filing semantics preserved through a shared _file_run helper; no unrelated research_runs scan and no stored research_bank_objects enumeration; TESTED at e357c72 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-BANK-RUN-SCOPED-FILING-V1); its broad Q/P/E/R and cross-spec health verification reads are closed by SDD-STAGE-3-RESEARCH-CHAIN-SCOPED-VERIFICATION-V1 below
       - deterministic read-only research-cost-ledger.v1 copies research-run-telemetry.v1 elapsed_wall_ns and rows_read (MEASURED/NOT_MEASURED with exact reasons) and investigation-resource-receipt.v1 measurements, keeping families separate; total research cost stays NOT_ESTABLISHED; TESTED at e4b3deb and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-COST-LEDGER-V1)
+      - research-run.v1 and research-bank-object.v1 verification (and the keyed research_plan.load / research_evidence.load paths they call) read Q/P/E/R records by primary key and health rows for the question's own spec plus every sweep record and every unattributable observation; results, refusals, IDs, hashes and stored records are unchanged; TESTED at 57d8875 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-CHAIN-SCOPED-VERIFICATION-V1); not a bounded-work guarantee
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
       - strategy-degradation Attention trigger and salience/magnitude remain MISSING
@@ -2936,7 +2939,7 @@ completed_research_bank_run_scoped_filing_v1:
     git_diff_check: clean
     excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
   limitations:
-    - Run enumeration is scoped, but verification of the requested run still inherits broad Q/P/E/R and health-table reads from existing source contracts (research_run.load, research_bank._question, research_bank._chain).
+    - Run enumeration is scoped, but verification of the requested run still inherits broad Q/P/E/R and health-table reads from existing source contracts (research_run.load, research_bank._question, research_bank._chain). CLOSED by SDD-STAGE-3-RESEARCH-CHAIN-SCOPED-VERIFICATION-V1 at 57d8875 (keyed Q/P/E/R and same-spec health reads); all sweep rows, unattributable observations and all decision rows are still read.
     - Existing duplicate/conflict lookups remain necessary.
     - This is not a bounded-work or live-invocation guarantee.
   abandoned_scope: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-INVOCATION-V1 (automatic post-health-flush Kernel invocation, then an explicit offline per-sweep invocation module) was reviewed BLOCKED and removed before commit. It was never implemented at any commit and is not TESTED. Only record_run survives.
@@ -3008,10 +3011,74 @@ completed_research_cost_ledger_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Read-only measured research-cost ledger only; no total cost, budget, cap, bound, efficiency, ROI, priority, salience, usefulness, trading-edge or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_research_chain_scoped_verification_v1:
+  id: SDD-STAGE-3-RESEARCH-CHAIN-SCOPED-VERIFICATION-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 57d8875
+  evidence:
+    - 57d8875 Scope research chain verification reads
+    - trader/core/journal.py
+    - trader/cognition/research_run.py
+    - trader/cognition/research_bank.py
+    - trader/cognition/research_plan.py
+    - trader/cognition/research_evidence.py
+    - tests/test_research_chain_scoped_verification.py
+  proven_facts:
+    - Research run/bank verification uses scoped/keyed Q/P/E/R reads where identity is known (SELECT-only Journal helpers research_question_by_id, research_plan_by_id, research_evidence_by_id, research_result_by_id).
+    - Health verification reads same-spec observations plus the required sweep records and unattributable (NULL, empty or non-text subject) observations (Journal.strategy_health_rows_for_spec); evidence source checks read health rows by the exact event ids the record binds (Journal.strategy_health_rows_by_id).
+    - Identifiable unrelated-spec observations and unrelated Q/P/E/R rows no longer affect requested-chain verification.
+    - Requested-chain missing or tampered evidence still fails closed.
+    - Exact existing refusal/error semantics are preserved.
+    - Stored historical runs and bank objects remain unchanged.
+    - Semantic run receipt, run_id and receipt canonical_sha256 remain unchanged.
+    - Future truthful telemetry rows_read may decrease (the result step's keyed evidence verification returns fewer rows).
+    - Bank objects copy run telemetry, so a future bank object's canonical JSON/hash may differ from its old-code counterfactual.
+    - Telemetry-only differences do NOT change bank_object_id (its identity binds run/result IDs and receipt hashes, not telemetry).
+    - No schema, index or writer change; unkeyed load() calls keep their full-table reads.
+    - research_recall.py is untouched.
+    - No Kernel or live caller.
+    - No Attention, Risk or Execution behavior change.
+  validation:
+    package_tests: 53 scoped-verification tests passed
+    focused_tests: 188 focused run/bank/scoped-filing tests passed
+    broader_validation: 563 adjacent research tests passed earlier (plan, evidence, result, source-binding, question and recall suites)
+    baseline_equivalence: 21 scenario databases run through baseline 232e7b6 and patched code; all 329 compared outcomes identical (including refusals/exceptions and stored bank rows)
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  measured_read_reduction:
+    note: Returned logical rows counted by research_run._Meter over one requested run with 40 unrelated noise sets (each set is one corrupt Q/P/E/R row per table plus two unrelated-spec health observations).
+    run_load_rows: 728 -> 48
+    bank_load_rows: 1374 -> 94
+    noise_invariance: patched counts unchanged (48 / 94) with 0, 1, 40 and 100 unrelated noise sets
+  limitations:
+    - NOT a hard bounded-work guarantee.
+    - All sweep rows remain included.
+    - Unattributable observations remain included.
+    - Decision selection still reads all decision rows.
+    - SQLite may still scan underlying tables (no brain_events kind index was added).
+    - rows_read measures returned logical rows, not physical DB/page reads.
+    - Automatic/live research invocation remains MISSING.
+    - No bounded-invocation or live-readiness claim is established.
+  closes_limitation: The completed_research_bank_run_scoped_filing_v1 limitation that verification inherits broad Q/P/E/R and health-table reads (cross-spec health reads) is closed.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commit 57d8875.
+  gap_matrix_update:
+    stage_3_research:
+      research_chain_scoped_verification: TESTED
+      live_caller_deployment: MISSING - automatic/live research invocation MISSING; requires a bounded, isolated design (not closed by this package)
+      deployed: NO
+    failed_research_memory: PARTIAL - unchanged
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Read-scoping of offline research-chain verification only; no invocation, trigger, bounded-work, predicate, suppression, salience, usefulness, budget, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-RESEARCH-COST-LEDGER-V1 is TESTED at e4b3deb and NOT_DEPLOYED. Total research cost remains NOT_ESTABLISHED and budget/cost limits remain UNDECLARED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
+  note: SDD-STAGE-3-RESEARCH-CHAIN-SCOPED-VERIFICATION-V1 is TESTED at 57d8875 and NOT_DEPLOYED. Research-chain verification reads are scoped/keyed; this is not a bounded-work guarantee. Total research cost remains NOT_ESTABLISHED and budget/cost limits remain UNDECLARED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
