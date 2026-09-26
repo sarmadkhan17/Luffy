@@ -490,7 +490,10 @@ def test_nothing_live_calls_the_keyed_helpers():
     assert callers == ["cognition/research_bank.py",
                        "cognition/research_evidence.py",
                        "cognition/research_plan.py",
-                       "cognition/research_run.py", "core/journal.py"]
+                       "cognition/research_run.py",
+                       # offline unreadable-health question load (scoped read)
+                       "cognition/research_unreadable_question.py",
+                       "core/journal.py"]
 
 
 def test_no_new_table_or_schema_change(tmp_path):
