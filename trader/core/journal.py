@@ -383,6 +383,30 @@ CREATE TABLE IF NOT EXISTS research_unreadable_plans (
     UNIQUE(schema, plan_kind, question_id)
 );
 
+-- strategy-health-unreadable-evidence.v1
+-- (cognition/research_unreadable_evidence.py): one context_only frozen
+-- evidence record per verified research_unreadable_plans row. Deliberately
+-- separate from research_evidence so the strategy-decay evidence/result/run
+-- chain never reads it; no registration receipt. The canonical JSON is
+-- authoritative; the other columns are its projection. Append-only: never
+-- updated or deleted.
+CREATE TABLE IF NOT EXISTS research_unreadable_evidence (
+    evidence_id TEXT PRIMARY KEY,    -- sha256 of the evidence identity
+    schema TEXT NOT NULL,
+    evidence_kind TEXT NOT NULL,
+    collector_id TEXT NOT NULL,
+    plan_id TEXT NOT NULL,
+    plan_sha256 TEXT NOT NULL,       -- sha256 of the plan canonical JSON
+    question_id TEXT NOT NULL,
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    source_event_id INTEGER NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL,
+    UNIQUE(schema, evidence_kind, plan_id)
+);
+
 -- research-registration.v1: the first-registration receipt of one
 -- research-question.v1 / research-bank-object.v1 row, written in the same
 -- transaction as that row's first insert. envelope_json is the canonical
@@ -1237,6 +1261,52 @@ class Journal:
         return self.query("SELECT * FROM research_unreadable_plans "
                           "WHERE question_id=? ORDER BY source_event_id, "
                           "plan_id", (question_id,))
+
+    # -- unreadable strategy-health evidence: primitives only; the contract
+    # is cognition/research_unreadable_evidence.py -----------------------
+    _UNREADABLE_EVIDENCE_COLUMNS = ("evidence_id", "schema", "evidence_kind",
+                                    "collector_id", "plan_id", "plan_sha256",
+                                    "question_id", "scope_kind", "scope_id",
+                                    "source_event_id", "canonical_sha256",
+                                    "canonical_json")
+
+    def record_research_unreadable_evidence(self, row: dict, *,
+                                            recorded_at_ms: int) -> str:
+        """Insert one research_unreadable_evidence row. "inserted" on a
+        write; "duplicate" when an identical row (ignoring recorded_at_ms)
+        already exists under the same ID; "conflict" when the ID, or other
+        evidence of the same schema/kind for the same plan or source event,
+        exists with other content. Nothing is written unless "inserted"."""
+        values = tuple(row[k] for k in self._UNREADABLE_EVIDENCE_COLUMNS)
+        cols = ",".join(self._UNREADABLE_EVIDENCE_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {cols} FROM research_unreadable_evidence "
+                "WHERE evidence_id=? OR (schema=? AND evidence_kind=? "
+                "AND (plan_id=? OR source_event_id=?))",
+                (row["evidence_id"], row["schema"], row["evidence_kind"],
+                 row["plan_id"], row["source_event_id"])).fetchall()
+            if old:
+                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_unreadable_evidence({cols},"
+                      f"recorded_at_ms) VALUES "
+                      f"({','.join('?' * (len(values) + 1))})",
+                      values + (recorded_at_ms,))
+        return "inserted"
+
+    def research_unreadable_evidence(self, plan_id: str | None = None
+                                     ) -> list[dict]:
+        """Stored research_unreadable_evidence rows, oldest source event
+        first, all or those of one plan. SELECT only."""
+        if plan_id is None:
+            return self.query("SELECT * FROM research_unreadable_evidence "
+                              "ORDER BY source_event_id, evidence_id")
+        return self.query("SELECT * FROM research_unreadable_evidence "
+                          "WHERE plan_id=? ORDER BY source_event_id, "
+                          "evidence_id", (plan_id,))
 
     # -- strategy population ------------------------------------------------
     def upsert_strategy(self, st) -> None:
