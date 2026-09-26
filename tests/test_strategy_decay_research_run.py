@@ -43,7 +43,11 @@ def _fresh(tmp_path, verdicts=(W, EF, D), name="fresh.db"):
     with j._tx() as c:
         for t in TABLES:
             c.execute(f"DELETE FROM {t}")
-    return j
+        # the seed's first-registration receipts go too; the immutability
+        # triggers are dropped for this fixture only and recreated below
+        c.execute("DROP TRIGGER research_registrations_no_delete")
+        c.execute("DELETE FROM research_registrations")
+    return Journal(j.db_path)
 
 
 def _direct(j, now_ms=5):
