@@ -525,6 +525,14 @@ class Journal:
         rows = self._conn().execute(sql, params).fetchall()
         return [dict(r) for r in rows]
 
+    def strategy_health_rows(self) -> list[dict]:
+        """Raw strategy-health-observation.v1 brain_events for
+        strategy/health_observation.history. SELECT only."""
+        return self.query(
+            "SELECT id, ts, kind, subject, detail FROM brain_events "
+            "WHERE kind IN ('strategy_health_observed', "
+            "'strategy_health_sweep')")
+
     def open_trades(self) -> list[dict]:
         return self.query("SELECT * FROM trades WHERE status='open'")
 

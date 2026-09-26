@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from .vector_backtest import funding_for, simulate, warm_window
+from .vector_backtest import WARMUP, funding_for, simulate, warm_window
 
 log = logging.getLogger(__name__)
 
@@ -103,14 +103,100 @@ def rolling_windows(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     return st
 
 
+def _bar_ts(df, i):
+    """ISO time of row `i`'s `ts` cell, or None. Diagnostics only."""
+    try:
+        v = df["ts"].iloc[i]
+        return v.isoformat() if hasattr(v, "isoformat") else None
+    except Exception:
+        return None
+
+
+_MAX_MESSAGE = 300
+
+
+def _diag_error(stage: str, exc) -> dict:
+    return {"stage": stage, "error_class": type(exc).__name__,
+            "message": str(exc)[:_MAX_MESSAGE]}
+
+
+def _missing_context(compiled, derivs, market) -> list:
+    """Declared data requirements absent from what evaluation was handed.
+    Evaluation does not raise on these — features read NaN and entries
+    read False — so without this the window looks fully scored."""
+    from .spec_evidence import _SERIES_FOR
+    out = []
+    for req in getattr(compiled, "data_requires", None) or ():
+        if not isinstance(req, str):
+            continue
+        if req in _SERIES_FOR:
+            df = (derivs or {}).get(_SERIES_FOR[req])
+            if df is None or not len(df):
+                out.append(req)
+        elif req.startswith("ref:"):
+            df = (market or {}).get(req.split(":", 1)[1])
+            if df is None or not len(df):
+                out.append(req)
+    return sorted(out)
+
+
+def _scoring_evidence(recent, score_from: int) -> dict:
+    """Where simulate() could actually open a trade in `recent`: bars
+    [max(WARMUP, score_from), len-1) with a finite positive ATR — the same
+    gates simulate() applies before looking at a signal. Diagnostics only."""
+    from ..agents.indicators import atr_series
+    n = len(recent)
+    eff = max(WARMUP, int(score_from))
+    hi = n - 1                               # the last bar can never open
+    scorable_bars = None
+    if hi <= eff:
+        scorable_bars = 0
+    else:
+        try:
+            atr = atr_series(recent, 14).to_numpy(float)[eff:hi]
+            scorable_bars = int(np.count_nonzero(np.isfinite(atr) & (atr > 0)))
+        except Exception:
+            scorable_bars = None             # unknown, never invented
+    return {"source_bars": n,
+            "source_start_bar_ts": _bar_ts(recent, 0),
+            "source_end_bar_ts": _bar_ts(recent, -1),
+            "requested_score_from": int(score_from),
+            "effective_score_from": eff,
+            "scorable_range_bars": max(0, hi - eff),
+            "scorable_bars": scorable_bars,
+            "scorable_start_bar_ts": _bar_ts(recent, eff) if hi > eff else None,
+            "scorable_end_bar_ts": _bar_ts(recent, hi - 1) if hi > eff
+            else None,
+            "last_bar_ts": _bar_ts(recent, -1)}
+
+
 def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
-                  recent_days: float, btc=None, derivs_for=None) -> dict:
-    """Pooled result over the last `recent_days`, across every symbol."""
+                  recent_days: float, btc=None, derivs_for=None,
+                  diagnostics: dict | None = None) -> dict:
+    """Pooled result over the last `recent_days`, across every symbol.
+
+    `diagnostics`, when given, is cleared and filled with the coverage and
+    raw sums behind the returned dict — which symbols were scored, skipped
+    or errored, and each scored symbol's window bounds. It is a side
+    channel: the returned evidence is identical with or without it.
+    """
     n = bars(timeframe, recent_days)
     universe = {s: {timeframe: f} for s, f in frames.items()
                 if not s.startswith("_") and f is not None}
     per_symbol, gross_win, gross_loss, trades, wins = {}, 0.0, 0.0, 0, 0
+    d = diagnostics
+    if d is not None:
+        d.clear()
+        d.update(window_bars=n, attempted=[], no_frame=[],
+                 insufficient_history={}, errored={}, scored={})
     for sym, df in frames.items():
+        if d is not None and not sym.startswith("_"):
+            d["attempted"].append(sym)
+            if df is None:
+                d["no_frame"].append(sym)
+            elif len(df) < n:
+                d["insufficient_history"][sym] = {"bars": len(df),
+                                                  "window_bars": n}
         if sym.startswith("_") or df is None or len(df) < n:
             continue
         # the window plus up to WARMUP bars of the history before it: the
@@ -121,6 +207,7 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
         recent = df.iloc[sl].reset_index(drop=True)
         derivs = derivs_for(sym) if derivs_for else None
         fund = funding_for(sym, recent, risk_cfg)
+        stage = "strategy_evaluation"
         try:
             # NOTE: universe carries the FULL frames, not `recent` — a
             # cross-sectional feature aligns peers onto the base symbol's
@@ -131,14 +218,34 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
                                       derivs=derivs, universe=universe,
                                       market=frames.get("_market"),
                                       symbol=sym)
+            stage = "simulation"
             r = simulate(lo, sh, recent, compiled.spec.exit, risk_cfg,
                          symbol=sym, funding=fund, score_from=score_from)
         except Exception as e:
             log.warning(f"recent {compiled.spec.id} {sym}: {e}")
+            if d is not None:
+                d["errored"][sym] = _diag_error(stage, e)
             continue
         per_symbol[sym] = {"trades": r.trades, "pf": round(r.profit_factor, 3),
                            "pnl": round(r.pnl_usdt, 2),
                            "wr": round(r.winrate, 3)}
+        if d is not None:
+            # "scored" here means simulate() returned; whether it had any
+            # bar it could trade on is in `scoring` and `missing_context`
+            rec = {"trades": r.trades, "wins": r.wins,
+                   "gross_win": r.gross_win, "gross_loss": r.gross_loss,
+                   "funding_series_used": fund is not None}
+            try:
+                rec["scoring"] = _scoring_evidence(recent, score_from)
+            except Exception as e:
+                rec["scoring"] = {"unavailable": _diag_error("diagnostics", e)}
+            try:
+                rec["missing_context"] = _missing_context(
+                    compiled, derivs, frames.get("_market"))
+            except Exception as e:
+                rec["missing_context"] = None
+                rec["missing_context_error"] = _diag_error("diagnostics", e)
+            d["scored"][sym] = rec
         gross_win += r.gross_win
         gross_loss += r.gross_loss
         trades += r.trades
@@ -151,13 +258,17 @@ def _score_window(compiled, frames: dict, risk_cfg: dict, timeframe: str,
           "pooled_pf": round(pooled_pf, 3), "trades": trades,
           "winrate": round(wins / trades, 3) if trades else 0.0,
           "pnl": round(gross_win - gross_loss, 2)}
+    if d is not None:
+        d.update(trades=trades, wins=wins, gross_win=gross_win,
+                 gross_loss=gross_loss)
     return ev
 
 
 def recent_verdict(compiled, frames: dict, risk_cfg: dict, timeframe: str,
                    recent_days: float = 90, min_trades: int = 20,
                    min_pf: float = 1.15, btc=None, derivs_for=None,
-                   max_days: float = 365) -> tuple[bool, dict]:
+                   max_days: float = 365,
+                   diagnostics: dict | None = None) -> tuple[bool, dict]:
     """Is this spec working NOW? The selection gate.
 
     Scored on recent bars only, pooled across symbols. A per-symbol
@@ -179,13 +290,16 @@ def recent_verdict(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     A lifetime pass/fail averages the regimes an edge worked in with the
     ones it did not, and under one all 27 candidates scored zero.
     """
+    # diagnostics describe the LAST window scored; only passed when asked
+    # for, so a stand-in _score_window without the parameter still works
+    dkw = {} if diagnostics is None else {"diagnostics": diagnostics}
     ev = _score_window(compiled, frames, risk_cfg, timeframe, recent_days,
-                       btc=btc, derivs_for=derivs_for)
+                       btc=btc, derivs_for=derivs_for, **dkw)
     window = recent_days
     while ev["trades"] < min_trades and window < max_days:
         window = min(window * 2, max_days)
         ev = _score_window(compiled, frames, risk_cfg, timeframe, window,
-                           btc=btc, derivs_for=derivs_for)
+                           btc=btc, derivs_for=derivs_for, **dkw)
     ev["window_days"] = window
     ev["window_widened"] = window > recent_days
     if ev["trades"] < min_trades:
@@ -200,13 +314,19 @@ def recent_verdict(compiled, frames: dict, risk_cfg: dict, timeframe: str,
 def has_decayed(compiled, frames: dict, risk_cfg: dict, timeframe: str,
                 recent_days: float = 30, min_trades: int = 10,
                 floor_pf: float = 0.85, btc=None,
-                derivs_for=None) -> tuple[bool, dict]:
+                derivs_for=None,
+                diagnostics: dict | None = None) -> tuple[bool, dict]:
     """Has a deployed spec stopped working? The retirement trigger.
 
     Deliberately shorter and more lenient than selection: the cost of holding
     a dead strategy is continuous, the cost of retiring a live one is a
     re-test. Too few recent trades is NOT decay — a setup that has gone quiet
     is idle, and idleness is handled by the population cap, not by retirement.
+
+    `diagnostics`, when given, receives the scoring coverage/raw sums and
+    `branch` — the return branch taken ("idle", "decayed", "still_working"),
+    set here, never parsed from the verdict text. The returned tuple is
+    identical with or without it.
     """
     # NEVER widen here. Selection widens its window to find enough evidence;
     # retirement must not, or a spec that has STOPPED trading would have last
@@ -215,12 +335,16 @@ def has_decayed(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     ok, ev = recent_verdict(compiled, frames, risk_cfg, timeframe,
                             recent_days=recent_days, min_trades=min_trades,
                             min_pf=floor_pf, btc=btc, derivs_for=derivs_for,
-                            max_days=recent_days)
+                            max_days=recent_days, diagnostics=diagnostics)
+    d = diagnostics if diagnostics is not None else {}
     if ev["trades"] < min_trades:
+        d["branch"] = "idle"
         return False, {**ev, "verdict": "idle — too few trades to judge"}
     if not ok:
+        d["branch"] = "decayed"
         return True, {**ev, "verdict": f"decayed: pooled PF "
                                        f"{ev['pooled_pf']:.2f} < {floor_pf}"}
+    d["branch"] = "still_working"
     return False, {**ev, "verdict": "still working"}
 
 

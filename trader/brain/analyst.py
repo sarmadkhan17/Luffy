@@ -19,7 +19,7 @@ from datetime import datetime, timezone
 import numpy as np
 
 from ..core.journal import Journal
-from ..strategy import rolling, spec_evidence
+from ..strategy import health_observation, rolling, spec_evidence
 from ..strategy.compile import compile_spec
 from ..strategy.spec import StrategySpec
 from ..strategy.vector_backtest import funding_for, vector_walk_forward
@@ -57,6 +57,8 @@ class Analyst:
         self.feed = feed
         self.notifier = notifier
         self._frames: dict = {}
+        #: health-observation sweeps awaiting flush_health_observations()
+        self._health_sweeps: list = []
         #: how improbable a spec's cross-symbol null result must be before
         #: it is admitted. 0.01 is conventional, not fitted: the measured
         #: false-positive rate on uniform percentiles is 0.1-0.4%.
@@ -506,18 +508,42 @@ class Analyst:
         floor = float(s.get("decay_floor_pf", 0.85))
         min_trades = int(s.get("decay_min_trades", 10))
         actions = []
+        # health observation is telemetry: open_sweep never raises, the
+        # loop only appends raw facts to memory, and records are written by
+        # flush_health_observations() once the caller has applied retirement
+        sweep = health_observation.open_sweep(
+            self.journal, specs, {"decay_recent_days": days,
+                                  "decay_min_trades": min_trades,
+                                  "decay_floor_pf": floor})
+        try:
+            self.__dict__.setdefault("_health_sweeps", []).append(sweep)
+        except Exception:
+            pass
         for spec in specs:
+            sweep.attempt(spec)
             tf = spec.timeframe
-            frames, btc, derivs_for, risk = self._ctx(tf, spec)
+            try:
+                frames, btc, derivs_for, risk = self._ctx(tf, spec)
+            except Exception as e:
+                sweep.evaluation_raised(spec, "context", e)
+                self.flush_health_observations()
+                raise
             try:
                 compiled = compile_spec(spec)
             except Exception as e:
                 log.warning(f"analyst: {spec.id} will not compile: {e}")
+                sweep.compile_failed(spec, e)
                 continue
-            dead, ev = rolling.has_decayed(
-                compiled, frames, risk, tf, recent_days=days,
-                min_trades=min_trades, floor_pf=floor, btc=btc,
-                derivs_for=derivs_for)
+            diag = {}
+            try:
+                dead, ev = rolling.has_decayed(
+                    compiled, frames, risk, tf, recent_days=days,
+                    min_trades=min_trades, floor_pf=floor, btc=btc,
+                    derivs_for=derivs_for, diagnostics=diag)
+            except Exception as e:
+                sweep.evaluation_raised(spec, "evaluate", e)
+                self.flush_health_observations()
+                raise
             if dead:
                 actions.append({"spec": spec.id, "name": spec.name,
                                 "action": "retire", "evidence": ev})
@@ -526,7 +552,37 @@ class Analyst:
                     {"name": spec.name, "evidence": ev,
                      "ts": datetime.now(timezone.utc).isoformat()})
                 log.warning(f"ANALYST: {spec.name} decayed — {ev['verdict']}")
+            sweep.observed(spec, dead, ev, diag, risk)
+        sweep.finish()
         if actions and self.notifier:
             self.notifier.send("📉 Retiring decayed strategies:\n" + "\n".join(
                 f"{a['name']}: {a['evidence']['verdict']}" for a in actions))
         return actions
+
+    def flush_health_observations(self) -> bool:
+        """Write buffered health observations. Telemetry: never raises.
+
+        Called by the kernel after it has applied the retirements
+        review_deployed selected. The journal's `_tx` rolls back on failure,
+        so nothing is written while this thread's connection holds an
+        uncommitted transaction (the kernel's retirement UPDATEs): the
+        sweeps stay pending for a later call. Returns True when nothing is
+        left pending."""
+        try:
+            conn = getattr(self.journal, "_conn", None)
+            if conn is not None and conn().in_transaction:
+                return False
+            pending = self.__dict__.get("_health_sweeps") or []
+            self._health_sweeps = []
+            for sw in pending:
+                try:
+                    sw.flush()
+                except Exception:
+                    pass
+            return True
+        except Exception as e:
+            try:
+                log.warning(f"analyst: health observation flush failed: {e}")
+            except Exception:
+                pass
+            return False
