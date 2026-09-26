@@ -814,7 +814,8 @@ def test_module_imports_only_contract_modules():
     names = {a.name for n in ast.walk(ast.parse(src))
              if isinstance(n, ast.ImportFrom) for a in n.names}
     assert names == {"annotations", "datetime", "research_plan",
-                     "research_question", "health_observation",
+                     "research_question", "research_sources",
+                     "health_observation",
                      "signal_occurrence_observation"}
 
 

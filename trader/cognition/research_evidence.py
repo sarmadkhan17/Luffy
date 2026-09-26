@@ -37,6 +37,19 @@ Every item freezes the exact raw content of its bound source
 ``temporary_regime_absence`` (and any other UNAVAILABLE plan section) stays
 UNAVAILABLE with its plan reason and no items.
 
+Source authority. research-source-registry.v1 is the only source authority:
+every item's plan descriptor ``{store, reader, record_schema}`` must be
+well-formed and resolve exactly to one AVAILABLE registry entry, bound to
+that entry (``research_sources.resolve`` + ``require``), before any source
+is read, derived or checked; collection dispatches on that source_id, never
+on a store name. An unregistered, substituted or malformed descriptor, an
+UNAVAILABLE entry (with its exact registry reason) or a registered source
+with no collector fails closed, as does an UNAVAILABLE section whose
+reason/detail is not exactly an UNAVAILABLE registry entry's. The record
+itself is unchanged: no source_id is persisted, so research-evidence.v1
+text, IDs and hashes are byte-identical to records collected before the
+binding.
+
 `collect` depends only on the verified plan and the journal rows it reads.
 `record_from_journal` is the only writer (insert / duplicate / conflict).
 `load` re-verifies each stored record canonically and against its stored
@@ -56,6 +69,7 @@ from datetime import datetime
 
 from trader.cognition import research_plan as rp
 from trader.cognition import research_question as rq
+from trader.cognition import research_sources as rs
 from trader.strategy import health_observation as ho
 from trader.strategy import signal_occurrence_observation as soo
 
@@ -87,6 +101,8 @@ _ITEM_KEYS = ("hypothesis", "role", "locator", "source", "fields",
               "source_content", "values", "content_sha256")
 _SOURCE_KEYS = ("store", "reader", "record_schema", "record_kind",
                 "record_variant")
+#: the part of an item's source that is the registry's plan descriptor
+_DESCRIPTOR_KEYS = rs._DESCRIPTOR_KEYS
 _DECISION_VALUE_KEYS = ("selected_rows", "reported")
 #: routed decision columns frozen per selected row (signals_json is frozen
 #: as the selected entries only, per the plan's selection rule)
@@ -139,8 +155,16 @@ def _get(rec: dict, path: str):
 
 # ── skeleton: everything an item takes from the plan ─────────────────────
 def _source_of(e: dict) -> dict:
-    return {k: e[k] for k in ("store", "reader", "record_schema",
-                              "record_kind", "record_variant")}
+    if not all(k in e for k in _SOURCE_KEYS):
+        _fail(f"source_malformed:{e.get('role')}")
+    return {k: e[k] for k in _SOURCE_KEYS}
+
+
+def _registry_unavailable() -> list:
+    """{reason, detail} of every UNAVAILABLE registry entry."""
+    return [{"reason": e["unavailable"]["reason"],
+             "detail": e["unavailable"]["detail"]}
+            for e in rs.registry()["sources"] if e["status"] == rs.UNAVAILABLE]
 
 
 def _skeleton(plan: dict) -> list:
@@ -155,6 +179,12 @@ def _skeleton(plan: dict) -> list:
                  for e in s["evidence"]]
         if s["status"] != rp.ROUTED and items:
             _fail("plan_unavailable_section_has_evidence")
+        if s["status"] != rp.ROUTED and not (
+                s["status"] == rp.UNAVAILABLE
+                and any(_same({"reason": s["unavailable_reason"],
+                               "detail": s["unavailable_detail"]}, u)
+                        for u in _registry_unavailable())):
+            _fail(f"section_unavailable_unregistered:{s['hypothesis']}")
         out.append((sec, items))
     return out
 
@@ -340,23 +370,46 @@ def _derive_decisions(sk: dict, plan: dict, content) -> tuple:
     return dict(sk["locator"]), _sha(canonical(content)), values
 
 
-_DERIVE = {rp._HEALTH["store"]: _derive_health,
-           rp._QUESTION["store"]: _derive_question,
-           rp._DECISIONS["store"]: _derive_decisions}
+#: registry source_id -> derivation from frozen content
+_COLLECTORS = {rs.HEALTH_SOURCE_ID: _derive_health,
+               rs.QUESTION_SOURCE_ID: _derive_question,
+               rs.DECISIONS_SOURCE_ID: _derive_decisions}
 
 
-def _derive(sk: dict, plan: dict, content) -> tuple:
-    fn = _DERIVE.get(sk["source"]["store"])
-    if fn is None:
-        _fail(f"store_unsupported:{sk['source']['store']}")
-    return fn(sk, plan, content)
+# ── source binding: research-source-registry.v1 is the source authority ──
+def _bind(sk: dict) -> str:
+    """The registry source_id of an item's plan descriptor: well-formed,
+    exactly the descriptor of one AVAILABLE entry and bound to it, with a
+    collector. No fallback to store names. ResearchEvidenceError otherwise,
+    carrying the registry's exact reason (unregistered_descriptor,
+    source_unavailable:<id>:<reason>, descriptor_mismatch:<id>)."""
+    role, src = sk["role"], sk.get("source")
+    if type(src) is not dict or not all(k in src for k in _DESCRIPTOR_KEYS):
+        _fail(f"source_malformed:{role}")
+    desc = {k: src[k] for k in _DESCRIPTOR_KEYS}
+    if not rs._descriptor_ok(desc):
+        _fail(f"source_malformed:{role}")
+    try:
+        sid = rs.resolve(desc)
+        rs.require(sid, desc)
+    except rs.ResearchSourceError as e:
+        raise ResearchEvidenceError(f"source_registry:{role}:{e}") from e
+    if sid not in _COLLECTORS:
+        _fail(f"source_unsupported:{role}:{sid}")
+    return sid
+
+
+def _derive(sk: dict, plan: dict, content, sid: str | None = None) -> tuple:
+    if sid is None:
+        sid = _bind(sk)
+    return _COLLECTORS[sid](sk, plan, content)
 
 
 # ── collection: resolve live sources, then freeze ────────────────────────
-def _live_content(sk: dict, plan: dict, ctx: dict):
+def _live_content(sid: str, sk: dict, plan: dict, ctx: dict):
     """The bound source's current raw content, or ResearchEvidenceError."""
-    store, role = sk["source"]["store"], sk["role"]
-    if store == rp._HEALTH["store"]:
+    role = sk["role"]
+    if sid == rs.HEALTH_SOURCE_ID:
         ident = _health_identity(sk, plan)
         row = ctx["health"].get(ident["event_id"])
         if row is None:
@@ -365,20 +418,21 @@ def _live_content(sk: dict, plan: dict, ctx: dict):
                                                       ident["subject"]):
             _fail(f"source_identity_mismatch:{role}:{ident['event_id']}")
         return row.get("detail")
-    if store == rp._QUESTION["store"]:
+    if sid == rs.QUESTION_SOURCE_ID:
         row = ctx["question"]
         if row is None:
             _fail(f"source_missing:{role}")
         return row.get("canonical_json")
-    if store == rp._DECISIONS["store"]:
+    if sid == rs.DECISIONS_SOURCE_ID:
         values = select_decisions(sk["locator"], ctx["decisions"])
         return _decision_content(values, ctx["decisions"])
-    _fail(f"store_unsupported:{store}")
+    _fail(f"source_unsupported:{role}:{sid}")
 
 
 def _item(sk: dict, plan: dict, ctx: dict) -> dict:
-    content = _live_content(sk, plan, ctx)
-    ident, src_sha, values = _derive(sk, plan, content)
+    sid = _bind(sk)
+    content = _live_content(sid, sk, plan, ctx)
+    ident, src_sha, values = _derive(sk, plan, content, sid)
     return {**sk, "source_identity": ident, "source_sha256": src_sha,
             "source_content": content, "values": values,
             "content_sha256": _sha(canonical(values))}
@@ -504,9 +558,9 @@ def verify_sources(rec: dict, ctx: dict) -> dict:
     matched, absent = 0, []
     for s in rec["hypotheses"]:
         for it in s["items"]:
-            store, ident, role = (it["source"]["store"],
-                                  it["source_identity"], it["role"])
-            if store == rp._HEALTH["store"]:
+            sid, ident, role = (_bind(it), it["source_identity"],
+                                it["role"])
+            if sid == rs.HEALTH_SOURCE_ID:
                 row = ctx["health"].get(ident["event_id"])
                 if row is None:
                     absent.append(f"{role}:{ident['event_id']}")
@@ -516,7 +570,7 @@ def verify_sources(rec: dict, ctx: dict) -> dict:
                             it["source_content"]):
                     _fail(f"source_changed:{role}:{ident['event_id']}")
                 matched += 1
-            elif store == rp._QUESTION["store"]:
+            elif sid == rs.QUESTION_SOURCE_ID:
                 row = ctx["question"]
                 if row is None:
                     absent.append(f"{role}:{ident['question_id']}")
@@ -526,8 +580,10 @@ def verify_sources(rec: dict, ctx: dict) -> dict:
                         != ident["source_event_id"]):
                     _fail(f"source_changed:{role}")
                 matched += 1
-            else:
+            elif sid == rs.DECISIONS_SOURCE_ID:
                 matched += _verify_decisions(it, ctx["decisions"], absent)
+            else:
+                _fail(f"source_unsupported:{role}:{sid}")
     return {"matched": matched, "absent": absent}
 
 

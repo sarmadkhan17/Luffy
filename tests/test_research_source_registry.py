@@ -440,14 +440,16 @@ def test_module_imports_only_contract_modules():
     assert names == {"research_question", "health_observation"}
 
 
-def test_only_research_plan_reads_the_registry():
+def test_only_offline_research_modules_read_the_registry():
     root = ROOT / "trader"
     pat = re.compile(r"research_sources\b")
     callers = sorted(str(p.relative_to(root)) for p in root.rglob("*.py")
                      if p.name != "research_sources.py"
                      and pat.search(p.read_text(errors="ignore")))
-    # no Kernel, Attention, Analyst, Risk, Execution or journal caller
-    assert callers == ["cognition/research_plan.py"]
+    # no Kernel, Attention, Analyst, Risk, Execution or journal caller;
+    # research_evidence.py binds collected sources to the registry
+    assert callers == ["cognition/research_evidence.py",
+                       "cognition/research_plan.py"]
 
 
 def test_registry_names_no_external_source():
