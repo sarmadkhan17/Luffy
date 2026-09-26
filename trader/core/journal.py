@@ -1567,6 +1567,28 @@ class Journal:
         return self.query("SELECT * FROM research_unreadable_bank_objects "
                           "WHERE run_id=? ORDER BY rowid", (run_id,))
 
+    def research_unreadable_bank_registrations(self, record_type: str,
+                                               scope_kind: str,
+                                               scope_id: str) -> list[dict]:
+        """Every stored research_unreadable_bank_objects row of one scope
+        (its contract columns, never its own recorded_at_ms) with its
+        registration receipt columns prefixed ``reg_`` (NULL when it has
+        none). Rows only; the unreadable recall contract verifies them.
+        SELECT only."""
+        cols = ", ".join(f"b.{k}" for k in self._UNREADABLE_BANK_COLUMNS)
+        return self.query(
+            f"SELECT {cols}, r.record_type AS reg_record_type, "
+            "r.record_id AS reg_record_id, "
+            "r.canonical_sha256 AS reg_canonical_sha256, "
+            "r.recorded_at_ms AS reg_recorded_at_ms, "
+            "r.envelope_sha256 AS reg_envelope_sha256, "
+            "r.envelope_json AS reg_envelope_json "
+            "FROM research_unreadable_bank_objects b "
+            "LEFT JOIN research_registrations r ON r.record_type=? "
+            "AND r.record_id=b.bank_object_id "
+            "WHERE b.scope_kind=? AND b.scope_id=? ORDER BY b.bank_object_id",
+            (record_type, scope_kind, scope_id))
+
     # -- strategy population ------------------------------------------------
     def upsert_strategy(self, st) -> None:
         from .types import Strategy as _S   # typing only; avoid cycle at import

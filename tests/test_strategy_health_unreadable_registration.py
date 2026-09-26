@@ -456,14 +456,20 @@ def test_no_unreadable_recall_or_registration_reader_added():
                           cwd=ROOT, capture_output=True, text=True,
                           check=True).stdout
     defs = lambda s: set(re.findall(r"\n    def (\w+)\(", s))
-    assert defs(src) - defs(base) == {"_record_registered"}
+    # the one later addition: the SELECT-only receipt join read by the
+    # context-only unreadable recall (tests/test_strategy_health_unreadable_
+    # recall.py guards it)
+    assert defs(src) - defs(base) == {"_record_registered",
+                                      "research_unreadable_bank_registrations"}
     assert "class _RegistrationConflict" in src
     # the set of modules touching registrations is exactly the base set
-    grep = lambda *rev: sorted(subprocess.run(
-        ["git", "grep", "-l", "research_registration", *rev, "--",
+    grep = lambda *rev, opts=(): sorted(subprocess.run(
+        ["git", "grep", *opts, "-l", "research_registration", *rev, "--",
          "trader/"], cwd=ROOT, capture_output=True, text=True
     ).stdout.replace(f"{BASE}:", "").split())
-    assert grep() == grep(BASE)
+    # working tree including a not-yet-tracked module
+    assert grep(opts=("--untracked",)) == sorted(grep(BASE) + [
+        "trader/cognition/research_unreadable_recall.py"])
     for path in ("trader/cognition/research_unreadable_question.py",
                  "trader/cognition/research_unreadable_bank.py"):
         src_ = (ROOT / path).read_text()

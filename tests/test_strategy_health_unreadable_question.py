@@ -446,8 +446,10 @@ def test_nothing_imports_the_new_module():
                      if isinstance(node, ast.Import) else [])
             if any("research_unreadable_question" in n for n in names):
                 hits.append(p.name)
-    # only the offline sibling plan, the offline unreadable runner and the
-    # offline unreadable bank filer, whose own tests guard their callers
+    # only the offline sibling plan, the offline unreadable runner, the
+    # offline unreadable bank filer and the offline context-only unreadable
+    # recall, whose own tests guard their callers
     assert sorted(hits) == ["research_unreadable_bank.py",
                             "research_unreadable_plan.py",
+                            "research_unreadable_recall.py",
                             "research_unreadable_run.py"]
