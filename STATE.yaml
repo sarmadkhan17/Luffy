@@ -117,6 +117,9 @@ capabilities:
       - 412a263 Add research bank read model
       - trader/cognition/research_bank_view.py
       - tests/test_research_bank_view.py
+      - 1e4fee1 Add unreadable strategy health questions
+      - trader/cognition/research_unreadable_question.py
+      - tests/test_strategy_health_unreadable_question.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
@@ -134,6 +137,7 @@ capabilities:
       - deterministic read-only research-cost-ledger.v1 copies research-run-telemetry.v1 elapsed_wall_ns and rows_read (MEASURED/NOT_MEASURED with exact reasons) and investigation-resource-receipt.v1 measurements, keeping families separate; total research cost stays NOT_ESTABLISHED; TESTED at e4b3deb and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-COST-LEDGER-V1)
       - research-run.v1 and research-bank-object.v1 verification (and the keyed research_plan.load / research_evidence.load paths they call) read Q/P/E/R records by primary key and health rows for the question's own spec plus every sweep record and every unattributable observation; results, refusals, IDs, hashes and stored records are unchanged; TESTED at 57d8875 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-CHAIN-SCOPED-VERIFICATION-V1); not a bounded-work guarantee
       - deterministic read-only context_only research-bank-view.v1 owner read model of one exact verified Research Bank object (by bank_object_id, or by run_id only when exactly one bank object is filed for that run) is TESTED at 412a263 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-BANK-READ-MODEL-V1); persisted objects unchanged; linked next-question rows shown separately with completeness NOT_ASSERTED; requested-run telemetry entries only with total research cost NOT_ESTABLISHED; offline helper only
+      - separate immutable context_only strategy-health-unreadable-question.v1 family, one question per persisted compile_failed / evaluation_failed strategy-health observation with its stored verdict, verdict_reason, coverage_faults, error_stage and error_class copied as facts, isolated persistence (research_unreadable_questions, no registration receipt) and explicit refusal by the decay planner, is TESTED at 1e4fee1 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-RESEARCH-QUESTION-V1); the strategy-decay question family is unchanged
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
       - strategy-degradation Attention trigger and salience/magnitude remain MISSING
@@ -145,6 +149,7 @@ capabilities:
       - research_runs and research-bank storage have no size cap; the owner storage-policy boundary remains parked
       - total research cost is NOT_ESTABLISHED (the measured research-cost ledger is TESTED at e4b3deb); budget/cost limits remain UNDECLARED and owner-policy dependent; no budget manager authority exists
       - general/external Source Router and external-source discovery/retrieval remain MISSING; the TESTED research-source-registry.v1 is an internal, strategy-decay-only catalog
+      - SDD 12.2 capability/data-gap question source is PARTIAL - TESTED for unreadable strategy-health observations only (1e4fee1); downstream routing/plan/evidence/result/run support, registration/recall integration and any caller for strategy-health-unreadable-question.v1 remain MISSING
 
   instrument_registry:
     state: TESTED
@@ -3201,10 +3206,74 @@ completed_research_bank_read_model_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Read-only context_only owner view over existing verified research objects only; no write, invocation, trigger, predicate, WorldModel evidence, suppression, novelty, salience, usefulness, priority, budget, total cost, trading-edge or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_strategy_health_unreadable_research_question_v1:
+  id: SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-RESEARCH-QUESTION-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 1e4fee1
+  evidence:
+    - 1e4fee1 Add unreadable strategy health questions
+    - trader/cognition/research_unreadable_question.py
+    - trader/core/journal.py
+    - tests/test_strategy_health_unreadable_question.py
+    - tests/test_strategy_decay_research_question.py (live-path guard allow-lists the offline sibling module)
+    - tests/test_research_chain_scoped_verification.py (keyed-helper guard allow-lists the offline sibling module)
+  proven_facts:
+    - strategy-health-unreadable-question.v1 exists as a separate immutable context_only question family.
+    - It derives only from persisted compile_failed and evaluation_failed strategy-health observations.
+    - One question per qualifying observation.
+    - No grouping, episode, novelty or no-repeat semantics.
+    - Existing verdict, verdict_reason, coverage_faults, error_stage and error_class are copied as stored facts.
+    - No inferred diagnosis, threshold, falsifier, regime, source/vendor choice, asset attribution, salience or priority.
+    - Exact source observation and sweep identity/provenance are bound.
+    - Missing, tampered or ambiguous source history fails closed.
+    - Isolated persistence (research_unreadable_questions) keeps existing research_questions, research_plans and research_registrations unchanged.
+    - Existing strategy-decay research questions and plan fixtures remain byte-identical.
+    - The current decay planner explicitly refuses the sibling family.
+    - No registration receipt is written.
+    - Prior-research recall does not see this family.
+    - No planner, evidence, result or run support.
+    - No automatic invocation.
+    - No Attention, Kernel, Risk, Execution or live wiring.
+  validation:
+    package_tests: 37 new tests passed
+    focused_tests: fresh 170 focused tests passed
+    broader_validation: earlier broad focused run 1092 passed before allow-list-only guard fixes
+    independent_probes: independent byte-compatibility, recall-exclusion and refusal-scope probes passed
+    independent_review: Astra final PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  limitations:
+    - Private research_question helper coupling is accepted as a maintenance limitation; shared-helper changes require regression coverage for both question families.
+    - Stored reason vocabulary and required shapes are validated, but coverage verdict_reason precedence is copied and not revalidated.
+    - error_class is a stored fact, not a diagnosis.
+    - Shared fail-closed validation can refuse every candidate for an attributable spec, or the entire supplied history for unattributable records or malformed sweeps.
+    - Bounded verification is temporal only; it is not a storage, row-count or computational bound.
+    - No registration receipt / recall integration.
+    - No planner, evidence, result or run support.
+    - Table has no size cap; owner storage-policy decision remains parked.
+    - No production rows while the health observation writer is undeployed.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commit 1e4fee1.
+  gap_matrix_update:
+    stage_3_research:
+      capability_data_gap_question_source: PARTIAL - TESTED for unreadable strategy-health observations only
+      strategy_decay_question_family: UNCHANGED
+      unreadable_question_downstream_routing_plan_support: MISSING
+      registered_falsifier_predicates: MISSING
+      truthful_worldmodel_source: MISSING
+      live_caller_deployment: MISSING - automatic/live research invocation MISSING
+      deployed: NO
+    failed_research_memory: PARTIAL - unchanged (no suppression/cooldown/no-repeat policy)
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Structural context_only question family over unreadable strategy-health observations only; no diagnosis, predicate, threshold, regime, source choice, asset attribution, routing, invocation, trigger, suppression, salience, usefulness, priority, trading-edge or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-RESEARCH-BANK-READ-MODEL-V1 is TESTED at 412a263 and NOT_DEPLOYED. It is an offline read-only context_only owner view; live/dashboard integration remains MISSING. Registered falsifier predicates and a truthful WorldModel source remain MISSING. Total research cost remains NOT_ESTABLISHED and budget/cost limits remain UNDECLARED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
+  note: SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-RESEARCH-QUESTION-V1 is TESTED at 1e4fee1 and NOT_DEPLOYED. It is an offline context_only question family over unreadable strategy-health observations with isolated persistence; downstream routing/plan support remains MISSING. The strategy-decay question family is unchanged. Registered falsifier predicates and a truthful WorldModel source remain MISSING. Total research cost remains NOT_ESTABLISHED and budget/cost limits remain UNDECLARED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
