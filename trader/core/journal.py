@@ -8,6 +8,7 @@ SQLite + WAL; one writer (the OS process), many readers (dashboard, brain).
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
 import threading
@@ -318,6 +319,36 @@ CREATE TABLE IF NOT EXISTS research_bank_objects (
     recorded_at_ms INTEGER NOT NULL,
     UNIQUE(run_id, result_id)
 );
+
+-- research-registration.v1: the first-registration receipt of one
+-- research-question.v1 / research-bank-object.v1 row, written in the same
+-- transaction as that row's first insert. envelope_json is the canonical
+-- {schema, record_type, record_id, canonical_sha256, recorded_at_ms}; the
+-- other columns are its projection. Immutable: never updated or deleted.
+CREATE TABLE IF NOT EXISTS research_registrations (
+    record_type TEXT NOT NULL,       -- the record's schema
+    record_id TEXT NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of the record canonical JSON
+    recorded_at_ms INTEGER NOT NULL, -- first registration
+    envelope_sha256 TEXT NOT NULL UNIQUE,  -- sha256 of envelope_json
+    envelope_json TEXT NOT NULL,
+    PRIMARY KEY (record_type, record_id)
+);
+CREATE TRIGGER IF NOT EXISTS research_registrations_no_update
+BEFORE UPDATE ON research_registrations
+BEGIN SELECT RAISE(ABORT, 'research_registrations is immutable'); END;
+CREATE TRIGGER IF NOT EXISTS research_registrations_no_delete
+BEFORE DELETE ON research_registrations
+BEGIN SELECT RAISE(ABORT, 'research_registrations is immutable'); END;
+-- INSERT OR REPLACE deletes the conflicting row without firing the DELETE
+-- trigger (recursive_triggers is off): refuse any insert that collides with
+-- an existing receipt on either unique key
+CREATE TRIGGER IF NOT EXISTS research_registrations_no_replace
+BEFORE INSERT ON research_registrations
+WHEN EXISTS (SELECT 1 FROM research_registrations
+             WHERE (record_type=NEW.record_type AND record_id=NEW.record_id)
+                OR envelope_sha256=NEW.envelope_sha256)
+BEGIN SELECT RAISE(ABORT, 'research_registrations is immutable'); END;
 """
 
 
@@ -680,6 +711,50 @@ class Journal:
         return self.query("SELECT * FROM attention_fetch_outcomes WHERE selection_id=? "
                           "ORDER BY id", (selection_id,))
 
+    # -- research registrations: first-registration receipts ------------
+    REGISTRATION_SCHEMA = "research-registration.v1"
+
+    @classmethod
+    def registration_envelope(cls, record_type: str, record_id: str,
+                              canonical_sha256: str,
+                              recorded_at_ms: int) -> str:
+        """The canonical research-registration.v1 envelope JSON."""
+        return json.dumps({"schema": cls.REGISTRATION_SCHEMA,
+                           "record_type": record_type, "record_id": record_id,
+                           "canonical_sha256": canonical_sha256,
+                           "recorded_at_ms": recorded_at_ms},
+                          sort_keys=True, separators=(",", ":"),
+                          allow_nan=False)
+
+    def _register(self, c, record_type: str, record_id: str,
+                  canonical_json: str, recorded_at_ms: int) -> bool:
+        """Write the first-registration receipt inside the caller's insert
+        transaction. An existing receipt is never replaced: True keeps it
+        when it binds the same content, False (conflict, nothing written)
+        when it binds other content."""
+        sha = hashlib.sha256(canonical_json.encode()).hexdigest()
+        old = c.execute("SELECT canonical_sha256 FROM research_registrations "
+                        "WHERE record_type=? AND record_id=?",
+                        (record_type, record_id)).fetchone()
+        if old is not None:
+            return old[0] == sha
+        env = self.registration_envelope(record_type, record_id, sha,
+                                         recorded_at_ms)
+        c.execute("INSERT INTO research_registrations(record_type,record_id,"
+                  "canonical_sha256,recorded_at_ms,envelope_sha256,"
+                  "envelope_json) VALUES (?,?,?,?,?,?)",
+                  (record_type, record_id, sha, recorded_at_ms,
+                   hashlib.sha256(env.encode()).hexdigest(), env))
+        return True
+
+    def research_registration(self, record_type: str,
+                              record_id: str) -> dict | None:
+        """The stored registration receipt of one record, or None."""
+        rows = self.query("SELECT * FROM research_registrations "
+                          "WHERE record_type=? AND record_id=?",
+                          (record_type, record_id))
+        return rows[0] if rows else None
+
     # -- research questions: primitives only; the contract is
     # cognition/research_question.py --------------------------------------
     _QUESTION_COLUMNS = ("question_id", "schema", "question_kind", "trigger",
@@ -705,6 +780,9 @@ class Journal:
             if old:
                 return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
                         else "conflict")
+            if not self._register(c, row["schema"], row["question_id"],
+                                  row["canonical_json"], recorded_at_ms):
+                return "conflict"
             c.execute(f"INSERT INTO research_questions({cols},recorded_at_ms) "
                       f"VALUES ({','.join('?' * (len(values) + 1))})",
                       values + (recorded_at_ms,))
@@ -899,6 +977,9 @@ class Journal:
             if old:
                 return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
                         else "conflict")
+            if not self._register(c, row["schema"], row["bank_object_id"],
+                                  row["canonical_json"], recorded_at_ms):
+                return "conflict"
             c.execute(f"INSERT INTO research_bank_objects({cols},"
                       f"recorded_at_ms) VALUES "
                       f"({','.join('?' * (len(values) + 1))})",
@@ -912,6 +993,29 @@ class Journal:
                               "ORDER BY rowid")
         return self.query("SELECT * FROM research_bank_objects "
                           "WHERE run_id=? ORDER BY rowid", (run_id,))
+
+    def research_bank_registrations(self, record_type: str,
+                                    scope_kind: str,
+                                    scope_id: str) -> list[dict]:
+        """Every stored research-bank-object row of one scope with its
+        registration receipt columns (NULL when it has none): bank_object_id,
+        bank_canonical_sha256 and the research_registrations columns. Rows
+        only; the recall contract verifies them."""
+        return self.query(
+            "SELECT b.bank_object_id, b.canonical_sha256 AS "
+            "bank_canonical_sha256, r.record_type, r.record_id, "
+            "r.canonical_sha256, r.recorded_at_ms, r.envelope_sha256, "
+            "r.envelope_json FROM research_bank_objects b "
+            "LEFT JOIN research_registrations r ON r.record_type=? "
+            "AND r.record_id=b.bank_object_id "
+            "WHERE b.scope_kind=? AND b.scope_id=? ORDER BY b.bank_object_id",
+            (record_type, scope_kind, scope_id))
+
+    def research_bank_object(self, bank_object_id: str) -> dict | None:
+        """One stored research-bank-object row, or None."""
+        rows = self.query("SELECT * FROM research_bank_objects "
+                          "WHERE bank_object_id=?", (bank_object_id,))
+        return rows[0] if rows else None
 
     # -- strategy population ------------------------------------------------
     def upsert_strategy(self, st) -> None:

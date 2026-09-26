@@ -492,16 +492,18 @@ def load(journal, run_id: str | None = None) -> list:
     (so every bound ID, hash, copied field and nested type is exact), and
     the row projection. Raises ResearchBankError on the first object that
     fails."""
-    out = []
-    for r in journal.research_bank_objects(run_id=run_id):
-        rec = from_json(r["canonical_json"])
-        lk = rec["links"]
-        chain = _chain(journal, lk["run"]["run_id"],
-                       lk["result"]["result_id"])
-        if canonical(build(chain)) != r["canonical_json"]:
-            _fail("rebuild_mismatch")
-        if canonical(row_for(rec)) != canonical({k: r[k]
-                                                 for k in row_for(rec)}):
-            _fail("row_projection")
-        out.append(rec)
-    return out
+    return [verify_row(journal, r)[0]
+            for r in journal.research_bank_objects(run_id=run_id)]
+
+
+def verify_row(journal, r: dict) -> tuple:
+    """(object, verified chain) for one stored bank-object row, verified
+    exactly as `load` verifies it. Raises ResearchBankError."""
+    rec = from_json(r["canonical_json"])
+    lk = rec["links"]
+    chain = _chain(journal, lk["run"]["run_id"], lk["result"]["result_id"])
+    if canonical(build(chain)) != r["canonical_json"]:
+        _fail("rebuild_mismatch")
+    if canonical(row_for(rec)) != canonical({k: r[k] for k in row_for(rec)}):
+        _fail("row_projection")
+    return rec, chain
