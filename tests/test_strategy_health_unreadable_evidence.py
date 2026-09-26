@@ -561,7 +561,9 @@ def test_nothing_imports_the_new_module():
                      if isinstance(node, ast.Import) else [])
             if any("research_unreadable_evidence" in n for n in names):
                 hits.append(p.name)
-    assert hits == []
+    # only the offline sibling structural result, whose own tests guard its
+    # callers
+    assert hits == ["research_unreadable_result.py"]
 
 
 def test_collection_writes_nothing_but_its_own_table(tmp_path):

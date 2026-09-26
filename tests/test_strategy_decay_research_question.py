@@ -449,15 +449,17 @@ def test_nothing_in_the_live_path_calls_it():
                # sibling unreadable-health question family (reuses the
                # history rules) and research_unreadable_plan.py its offline
                # sibling plan and research_unreadable_evidence.py its
-               # offline sibling evidence collector; their own tests guard
-               # that nothing live calls them
+               # offline sibling evidence collector and
+               # research_unreadable_result.py its offline sibling structural
+               # result; their own tests guard that nothing live calls them
                if p.name not in ("research_question.py", "research_plan.py",
                                  "research_evidence.py", "research_result.py",
                                  "research_run.py", "research_bank.py",
                                  "research_recall.py", "research_sources.py",
                                  "research_unreadable_question.py",
                                  "research_unreadable_plan.py",
-                                 "research_unreadable_evidence.py")
+                                 "research_unreadable_evidence.py",
+                                 "research_unreadable_result.py")
                and pat.search(p.read_text(errors="ignore"))]
     assert callers == []
 
