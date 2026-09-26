@@ -105,6 +105,8 @@ capabilities:
       - 81effe5 Add internal research source registry
       - trader/cognition/research_sources.py
       - tests/test_research_source_registry.py
+      - f0b5cb2 Bind research evidence to source registry
+      - tests/test_research_evidence_source_binding.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
@@ -117,6 +119,7 @@ capabilities:
       - deterministic versioned research-bank-object.v1, one immutable object per (run, result) built only from the verified persisted Q/P/E/R/run chain, is TESTED at b9466bc and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-BANK-OBJECT-V1); claims/next questions NOT_AVAILABLE, supporting/contradictory evidence NOT_CLASSIFIED, no scoring, rank, salience, usefulness or asset attribution
       - read-only context_only prior-research recall over exact same-strategy/spec research-bank-object.v1 records registered strictly before the new question (integrity-bound first-registration receipts) is TESTED at 89d86c9 with follow-up be10151 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-PRIOR-RESEARCH-RECALL-V1); recall never suppresses, cools down or changes future research
       - deterministic versioned internal research-source-registry.v1 covering only the existing strategy-decay chain sources is TESTED at 81effe5 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-SOURCE-REGISTRY-V1); research-plan.v1 descriptors resolve through it byte-identically; the WorldModel/regime source is explicitly UNAVAILABLE (no_truthful_worldmodel_source)
+      - research-evidence.v1 collection resolves every ROUTED source through research-source-registry.v1 with collector dispatch keyed by registry source_id and no store-name fallback; valid evidence is byte-identical; TESTED at f0b5cb2 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-EVIDENCE-SOURCE-REGISTRY-BINDING-V1)
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
       - strategy-degradation Attention trigger and salience/magnitude remain MISSING
@@ -2795,6 +2798,7 @@ completed_research_source_registry_v1:
     - Credibility, cost, historical-depth and rate-limit metadata remain unassessed where no truthful source exists.
     - research_evidence.py still resolves existing evidence semantics by store without a source_id migration.
     - Deliberate code-level replacement of both registry content and its pinned hash is outside runtime integrity guarantees.
+  limitation_status: The research_evidence.py store-resolution limitation is RESOLVED by SDD-STAGE-3-RESEARCH-EVIDENCE-SOURCE-REGISTRY-BINDING-V1 at f0b5cb2 (see completed_research_evidence_source_registry_binding_v1); no source_id migration was needed or performed. The other limitations remain.
   control_plane_correction:
     research_question_refusals: Direct derive()/record_from_journal refusals are returned in memory; when executed through research-run.v1 question refusals are durably preserved verbatim in the immutable run receipt; there is no standalone refusal-memory object outside run receipts. Supersedes the broader "refusals are not durably persisted" wording.
     strategy_decay_chain_refusals: Chain-wide (question, plan, evidence, result) - direct derive()/record_from_journal APIs return refusals in memory; when Q/P/E/R are executed through research-run.v1 each step's refusals are durably preserved verbatim in the immutable research-run.v1 receipt; a step that raises before returning structured outcomes is recorded FAILED with later steps NOT_RUN, and any pre-failure partial refusals are not captured; there is no standalone refusal-memory object/table dedicated to those refusals. Supersedes the research-question "not durably persisted" and research-result "not durably stored" limitation wording; plan and evidence records carried no contrary statement.
@@ -2823,10 +2827,78 @@ completed_research_source_registry_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Frozen internal source catalog for the existing offline strategy-decay research chain only; no router, retrieval, credibility, cost, budget, predicate, trigger, salience, usefulness, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_research_evidence_source_registry_binding_v1:
+  id: SDD-STAGE-3-RESEARCH-EVIDENCE-SOURCE-REGISTRY-BINDING-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: f0b5cb2
+  resolves: The research-source-registry.v1 limitation "research_evidence.py still resolves existing evidence semantics by store without a source_id migration" (completed_research_source_registry_v1).
+  evidence:
+    - f0b5cb2 Bind research evidence to source registry
+    - trader/cognition/research_evidence.py
+    - tests/test_research_evidence_source_binding.py
+    - tests/fixtures/research_evidence_v1_pre_source_registry.json
+    - tests/test_research_source_registry.py (registry-reader guard allow-lists research_evidence.py)
+    - tests/test_strategy_decay_research_evidence.py (import guard allows research_sources)
+  proven_facts:
+    - Every ROUTED research-evidence.v1 source resolves through research-source-registry.v1 (resolve + require) before it is read, derived or re-verified.
+    - No raw store-name fallback remains; collector dispatch is keyed by registry source_id.
+    - Unregistered, unknown, UNAVAILABLE and collector-less sources fail closed (source_registry:<role>:<registry reason>, source_unsupported:<role>:<id>); malformed descriptors fail closed (source_malformed:<role>).
+    - Descriptor substitutions fail closed; all six directed full registered-descriptor swaps are refused (four pinned by committed tests, all six confirmed by a read-only check at f0b5cb2); mixed store/reader descriptors are unregistered.
+    - WorldModel/regime UNAVAILABLE reason/detail remain exact; an UNAVAILABLE section whose reason/detail is not an UNAVAILABLE registry entry's fails closed.
+    - Valid research-evidence.v1 schema, canonical JSON, evidence_id and hashes are byte-identical to pre-change behavior.
+    - All 12 pinned pre-change evidence fixtures (health, question and decision-selection sources; regime UNAVAILABLE sections) reproduce byte-for-byte.
+    - Historical valid evidence remains compatible; pre-change records verify under the new collector.
+    - No persisted source_id and no schema change, migration or backfill.
+    - Old stored refusal text remains unchanged.
+    - No external source, network or LLM added; no credibility, cost, historical-depth or rate-limit metadata invented; research_sources.py and its pinned hash unchanged.
+    - No Attention, Kernel, Analyst, Risk, Execution or live behavior change.
+  validation:
+    package_tests: 830 focused tests passed (reported), including 58 binding tests
+    independent_review: Astra final review PASS; independently verified package review found zero semantic drift
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  limitations:
+    - The fixture is built from deterministic health rows through collect(); journal-built evidence embeds wall-clock question timestamps and is covered by the existing journal-based evidence tests instead.
+    - The item-level UNAVAILABLE path is reachable only through a resolved UNAVAILABLE entry (exercised by a patched resolver); UNAVAILABLE registry entries carry no descriptor.
+    - A full swap to another registered descriptor is refused by that source's own contract checks, not a dedicated registry code, because no role-to-source_id binding is persisted.
+    - The binding uses registry-private helpers (_DESCRIPTOR_KEYS, _descriptor_ok).
+    - No general/external Source Router or retrieval.
+    - No truthful WorldModel/regime source.
+    - No registered falsifier predicates or evaluative conclusion.
+    - No Attention trigger or salience.
+    - No suppression/cooldown/no-repeat policy.
+    - No live caller or deployment.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commit f0b5cb2.
+  gap_matrix_update:
+    stage_3_research:
+      research_question_generation: TESTED
+      internal_research_planning_routing: TESTED
+      internal_research_source_registry: TESTED
+      evidence_collection_source_registry_binding: TESTED
+      evidence_collection: TESTED
+      structural_result: TESTED
+      offline_chain_runner_durable_run_receipt: TESTED
+      research_bank_object: TESTED
+      prior_research_context_recall: TESTED
+      general_external_source_router_retrieval: MISSING
+      registered_falsifier_predicates_evaluative_conclusion: MISSING
+      truthful_world_model_regime_evidence: MISSING
+      attention_trigger_salience: MISSING
+      live_caller_deployment: MISSING
+      failed_research_suppression_cooldown_no_repeat_policy: MISSING
+      deployed: NO
+    failed_research_memory: PARTIAL - unchanged; suppression/cooldown/no-repeat policy MISSING and must not be inferred from recall.
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Source-authority hardening of offline strategy-decay evidence collection only; no router, retrieval, credibility, cost, budget, predicate, trigger, salience, usefulness, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-RESEARCH-SOURCE-REGISTRY-V1 is TESTED at 81effe5 and NOT_DEPLOYED. No next package is selected or queued.
+  note: SDD-STAGE-3-RESEARCH-EVIDENCE-SOURCE-REGISTRY-BINDING-V1 is TESTED at f0b5cb2 and NOT_DEPLOYED. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
