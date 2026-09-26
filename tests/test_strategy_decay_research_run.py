@@ -780,8 +780,10 @@ def test_nothing_in_the_live_path_calls_it():
                      if p.name != "research_run.py"
                      and pat.search(p.read_text(errors="ignore")))
     # the journal owns the storage primitive; research_bank.py is the
-    # offline bank filer, guarded by its own test
-    assert callers == ["cognition/research_bank.py", "core/journal.py"]
+    # offline bank filer and research_cost.py the read-only cost ledger,
+    # each guarded by its own test
+    assert callers == ["cognition/research_bank.py",
+                       "cognition/research_cost.py", "core/journal.py"]
     assert "research_run import" not in (root / "core/journal.py").read_text()
 
 
