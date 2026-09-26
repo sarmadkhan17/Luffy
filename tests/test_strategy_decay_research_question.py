@@ -447,13 +447,15 @@ def test_nothing_in_the_live_path_calls_it():
                # research_sources.py the source registry (schema constants
                # only) and research_unreadable_question.py the offline
                # sibling unreadable-health question family (reuses the
-               # history rules); their own tests guard that nothing live
+               # history rules) and research_unreadable_plan.py its offline
+               # sibling plan; their own tests guard that nothing live
                # calls them
                if p.name not in ("research_question.py", "research_plan.py",
                                  "research_evidence.py", "research_result.py",
                                  "research_run.py", "research_bank.py",
                                  "research_recall.py", "research_sources.py",
-                                 "research_unreadable_question.py")
+                                 "research_unreadable_question.py",
+                                 "research_unreadable_plan.py")
                and pat.search(p.read_text(errors="ignore"))]
     assert callers == []
 

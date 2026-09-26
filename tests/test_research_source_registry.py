@@ -449,7 +449,10 @@ def test_only_offline_research_modules_read_the_registry():
     # no Kernel, Attention, Analyst, Risk, Execution or journal caller;
     # research_evidence.py binds collected sources to the registry
     assert callers == ["cognition/research_evidence.py",
-                       "cognition/research_plan.py"]
+                       "cognition/research_plan.py",
+                       # offline unreadable-health plan: read-only
+                       # descriptor/pin check of its sibling routing mapping
+                       "cognition/research_unreadable_plan.py"]
 
 
 def test_registry_names_no_external_source():

@@ -361,6 +361,28 @@ CREATE TABLE IF NOT EXISTS research_unreadable_questions (
     UNIQUE(source_kind, source_event_id)
 );
 
+-- strategy-health-unreadable-plan.v1
+-- (cognition/research_unreadable_plan.py): one context_only evidence-routing
+-- plan per verified research_unreadable_questions row. Deliberately separate
+-- from research_plans so the strategy-decay plan/evidence chain never reads
+-- it; no registration receipt. The canonical JSON is authoritative; the
+-- other columns are its projection. Append-only: never updated or deleted.
+CREATE TABLE IF NOT EXISTS research_unreadable_plans (
+    plan_id TEXT PRIMARY KEY,        -- sha256 of the plan identity
+    schema TEXT NOT NULL,
+    plan_kind TEXT NOT NULL,
+    planner_id TEXT NOT NULL,
+    question_id TEXT NOT NULL,
+    question_sha256 TEXT NOT NULL,   -- sha256 of the question canonical JSON
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    source_event_id INTEGER NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL,
+    UNIQUE(schema, plan_kind, question_id)
+);
+
 -- research-registration.v1: the first-registration receipt of one
 -- research-question.v1 / research-bank-object.v1 row, written in the same
 -- transaction as that row's first insert. envelope_json is the canonical
@@ -1170,6 +1192,51 @@ class Journal:
         return self.query("SELECT * FROM research_unreadable_questions "
                           "WHERE scope_id=? ORDER BY source_event_id, "
                           "question_id", (scope_id,))
+
+    # -- unreadable strategy-health plans: primitives only; the contract is
+    # cognition/research_unreadable_plan.py ------------------------------
+    _UNREADABLE_PLAN_COLUMNS = ("plan_id", "schema", "plan_kind",
+                                "planner_id", "question_id", "question_sha256",
+                                "scope_kind", "scope_id", "source_event_id",
+                                "canonical_sha256", "canonical_json")
+
+    def record_research_unreadable_plan(self, row: dict, *,
+                                        recorded_at_ms: int) -> str:
+        """Insert one research_unreadable_plans row. "inserted" on a write;
+        "duplicate" when an identical row (ignoring recorded_at_ms) already
+        exists under the same ID; "conflict" when the ID, or another plan of
+        the same schema/kind for the same question or source event, exists
+        with other content. Nothing is written unless "inserted"."""
+        values = tuple(row[k] for k in self._UNREADABLE_PLAN_COLUMNS)
+        cols = ",".join(self._UNREADABLE_PLAN_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {cols} FROM research_unreadable_plans "
+                "WHERE plan_id=? OR (schema=? AND plan_kind=? "
+                "AND (question_id=? OR source_event_id=?))",
+                (row["plan_id"], row["schema"], row["plan_kind"],
+                 row["question_id"], row["source_event_id"])).fetchall()
+            if old:
+                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_unreadable_plans({cols},"
+                      f"recorded_at_ms) VALUES "
+                      f"({','.join('?' * (len(values) + 1))})",
+                      values + (recorded_at_ms,))
+        return "inserted"
+
+    def research_unreadable_plans(self, question_id: str | None = None
+                                  ) -> list[dict]:
+        """Stored research_unreadable_plans rows, oldest source event first,
+        all or those of one question. SELECT only."""
+        if question_id is None:
+            return self.query("SELECT * FROM research_unreadable_plans "
+                              "ORDER BY source_event_id, plan_id")
+        return self.query("SELECT * FROM research_unreadable_plans "
+                          "WHERE question_id=? ORDER BY source_event_id, "
+                          "plan_id", (question_id,))
 
     # -- strategy population ------------------------------------------------
     def upsert_strategy(self, st) -> None:
