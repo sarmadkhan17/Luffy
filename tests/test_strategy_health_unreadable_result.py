@@ -502,8 +502,10 @@ def test_nothing_calls_the_new_module():
                      if p.name != "research_unreadable_result.py"
                      and pat.search(p.read_text(errors="ignore")))
     # the journal owns the storage primitive (and names the module only in
-    # its schema comment); nothing imports the contract
-    assert callers == ["core/journal.py"]
+    # its schema comment); only the offline unreadable runner, guarded by
+    # its own tests, imports the contract
+    assert callers == ["cognition/research_unreadable_run.py",
+                       "core/journal.py"]
     assert "research_unreadable_result import" not in \
         (root / "core/journal.py").read_text()
 

@@ -477,9 +477,10 @@ def test_nothing_imports_the_new_module():
                      if isinstance(node, ast.Import) else [])
             if any("research_unreadable_plan" in n for n in names):
                 hits.append(p.name)
-    # only the offline sibling evidence collector, whose own tests guard
-    # its callers
-    assert hits == ["research_unreadable_evidence.py"]
+    # only the offline sibling evidence collector and the offline
+    # unreadable runner, whose own tests guard their callers
+    assert sorted(hits) == ["research_unreadable_evidence.py",
+                            "research_unreadable_run.py"]
 
 
 def test_plan_writes_nothing_but_its_own_table(tmp_path):

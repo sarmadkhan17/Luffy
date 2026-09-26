@@ -493,6 +493,8 @@ def test_nothing_live_calls_the_keyed_helpers():
                        "cognition/research_run.py",
                        # offline unreadable-health question load (scoped read)
                        "cognition/research_unreadable_question.py",
+                       # offline unreadable-health run load (scoped read)
+                       "cognition/research_unreadable_run.py",
                        "core/journal.py"]
 
 

@@ -432,6 +432,27 @@ CREATE TABLE IF NOT EXISTS research_unreadable_results (
     UNIQUE(schema, result_kind, evidence_id)
 );
 
+-- strategy-health-unreadable-run.v1 (cognition/research_unreadable_run.py):
+-- one audit receipt per explicit offline run of the unreadable
+-- strategy-health chain. Deliberately separate from research_runs so the
+-- strategy-decay runner, bank, recall and cost ledger never read it. The
+-- canonical JSON is authoritative; telemetry_json (digest telemetry_sha256)
+-- is MEASURED telemetry kept outside the receipt hash and duplicate
+-- comparison. Append-only: never updated or deleted.
+CREATE TABLE IF NOT EXISTS research_unreadable_runs (
+    run_id TEXT PRIMARY KEY,         -- sha256 of the explicit run inputs
+    schema TEXT NOT NULL,
+    run_kind TEXT NOT NULL,
+    runner_id TEXT NOT NULL,
+    run_key TEXT NOT NULL,
+    run_recorded_at_ms INTEGER NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    telemetry_sha256 TEXT NOT NULL,  -- sha256 of telemetry_json
+    telemetry_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL
+);
+
 -- research-registration.v1: the first-registration receipt of one
 -- research-question.v1 / research-bank-object.v1 row, written in the same
 -- transaction as that row's first insert. envelope_json is the canonical
@@ -1378,6 +1399,77 @@ class Journal:
         return self.query("SELECT * FROM research_unreadable_results "
                           "WHERE evidence_id=? ORDER BY result_id",
                           (evidence_id,))
+
+    def _unreadable_by_id(self, table: str, key: str, value: str):
+        rows = self.query(f"SELECT * FROM {table} WHERE {key}=?", (value,))
+        return rows[0] if rows else None
+
+    def research_unreadable_question_by_id(self, question_id: str
+                                           ) -> dict | None:
+        """One research_unreadable_questions row by its primary key, or
+        None. SELECT only."""
+        return self._unreadable_by_id("research_unreadable_questions",
+                                      "question_id", question_id)
+
+    def research_unreadable_plan_by_id(self, plan_id: str) -> dict | None:
+        """One research_unreadable_plans row by its primary key, or None.
+        SELECT only."""
+        return self._unreadable_by_id("research_unreadable_plans",
+                                      "plan_id", plan_id)
+
+    def research_unreadable_evidence_by_id(self, evidence_id: str
+                                           ) -> dict | None:
+        """One research_unreadable_evidence row by its primary key, or
+        None. SELECT only."""
+        return self._unreadable_by_id("research_unreadable_evidence",
+                                      "evidence_id", evidence_id)
+
+    def research_unreadable_result_by_id(self, result_id: str
+                                         ) -> dict | None:
+        """One research_unreadable_results row by its primary key, or
+        None. SELECT only."""
+        return self._unreadable_by_id("research_unreadable_results",
+                                      "result_id", result_id)
+
+    # -- unreadable strategy-health runs: primitives only; the contract is
+    # cognition/research_unreadable_run.py ------------------------------
+    _UNREADABLE_RUN_COLUMNS = ("run_id", "schema", "run_kind", "runner_id",
+                               "run_key", "run_recorded_at_ms",
+                               "canonical_sha256", "canonical_json")
+
+    def record_research_unreadable_run(self, row: dict, *,
+                                       recorded_at_ms: int) -> str:
+        """Insert one research_unreadable_runs receipt. "inserted" on a
+        write; "duplicate" when a row with the same run_id and identical
+        receipt columns exists (telemetry_sha256, telemetry_json and
+        recorded_at_ms are not compared); "conflict" when the run_id exists
+        with another receipt. Nothing is written unless "inserted"."""
+        values = tuple(row[k] for k in self._UNREADABLE_RUN_COLUMNS)
+        cols = ",".join(self._UNREADABLE_RUN_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(f"SELECT {cols} FROM research_unreadable_runs "
+                            "WHERE run_id=?", (row["run_id"],)).fetchall()
+            if old:
+                return ("duplicate" if tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_unreadable_runs({cols},"
+                      f"telemetry_sha256,telemetry_json,recorded_at_ms) "
+                      f"VALUES ({','.join('?' * (len(values) + 3))})",
+                      values + (row["telemetry_sha256"],
+                                row["telemetry_json"], recorded_at_ms))
+        return "inserted"
+
+    def research_unreadable_runs(self, run_id: str | None = None
+                                 ) -> list[dict]:
+        """Stored research_unreadable_runs rows in insertion order.
+        SELECT only."""
+        if run_id is None:
+            return self.query("SELECT * FROM research_unreadable_runs "
+                              "ORDER BY rowid")
+        return self.query("SELECT * FROM research_unreadable_runs "
+                          "WHERE run_id=? ORDER BY rowid", (run_id,))
 
     # -- strategy population ------------------------------------------------
     def upsert_strategy(self, st) -> None:
