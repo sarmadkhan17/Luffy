@@ -456,6 +456,29 @@ def reached_results(receipt: dict) -> tuple:
     return ids, conflicts
 
 
+def _file_run(journal, rid, now_ms: int, res: dict) -> None:
+    """File one bank object per verified result the stored run ``rid``
+    reached, appending to ``res``. Reads only that run's research_runs
+    row."""
+    try:
+        stored = _verified_run(journal, rid)
+        ids, conflicts = reached_results(stored["receipt"])
+    except ResearchBankError as e:
+        res["refusals"].append((rid, None, str(e)))
+        return
+    res["refusals"] += [(rid, x, RESULT_CONFLICT_IN_RUN)
+                        for x in conflicts]
+    for xid in ids:
+        try:
+            rec = build(_chain(journal, rid, xid, stored))
+        except ResearchBankError as e:
+            res["refusals"].append((rid, xid, str(e)))
+            continue
+        status = journal.record_research_bank_object(
+            row_for(rec), recorded_at_ms=now_ms)
+        res[status].append(rec["bank_object_id"])
+
+
 def record_from_journal(journal, now_ms: int) -> dict:
     """File one bank object per verified result each completed stored run
     reached. Returns {"inserted"|"duplicate"|"conflict": [bank_object_id],
@@ -464,24 +487,20 @@ def record_from_journal(journal, now_ms: int) -> dict:
     overwritten. Not wired into any live path."""
     res = {"inserted": [], "duplicate": [], "conflict": [], "refusals": []}
     for row in journal.research_runs():
-        rid = row.get("run_id")
-        try:
-            stored = _verified_run(journal, rid)
-            ids, conflicts = reached_results(stored["receipt"])
-        except ResearchBankError as e:
-            res["refusals"].append((rid, None, str(e)))
-            continue
-        res["refusals"] += [(rid, x, RESULT_CONFLICT_IN_RUN)
-                            for x in conflicts]
-        for xid in ids:
-            try:
-                rec = build(_chain(journal, rid, xid, stored))
-            except ResearchBankError as e:
-                res["refusals"].append((rid, xid, str(e)))
-                continue
-            status = journal.record_research_bank_object(
-                row_for(rec), recorded_at_ms=now_ms)
-            res[status].append(rec["bank_object_id"])
+        _file_run(journal, row.get("run_id"), now_ms, res)
+    return res
+
+
+def record_run(journal, run_id: str, now_ms: int) -> dict:
+    """``record_from_journal`` scoped to one stored run: the same filing,
+    verification and result shape, without reading any other run's
+    research_runs row or the stored bank objects. Limitation (inherited,
+    unchanged): verification still reads the question, plan, evidence and
+    result tables and the health rows broadly before filtering by ID
+    (research_run.load, _question, _chain), not only the linked chain.
+    Not wired into any live path."""
+    res = {"inserted": [], "duplicate": [], "conflict": [], "refusals": []}
+    _file_run(journal, run_id, now_ms, res)
     return res
 
 
