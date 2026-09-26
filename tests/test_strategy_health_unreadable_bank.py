@@ -18,7 +18,8 @@ import pytest
 from tests.test_research_evidence_source_binding import (FIXTURE, build_all,
                                                          fixture_text)
 from tests.test_strategy_decay_research_plan import CF, D, EF, W
-from tests.test_strategy_health_unreadable_question import NO_FRAME, _journal
+from tests.test_strategy_health_unreadable_question import (NO_FRAME,
+                                                            _journal, pinned)
 from tests.test_strategy_health_unreadable_run import (_clock, _copy,
                                                        _decay_journal,
                                                        _spec_rows, _tamper_id,
@@ -681,16 +682,20 @@ def test_filing_leaves_every_other_table_unchanged(tmp_path, verdicts):
     assert j.research_bank_objects()
     regs = j.query("SELECT * FROM research_registrations ORDER BY rowid")
     assert regs
-    before = _tables(j)
+    before = _tables(j, skip=(TABLE, "research_registrations"))
     decay_bank = rb.load(j)
     res = ub.record_from_journal(j, now_ms=9)
     assert len(res["inserted"]) == verdicts.count(CF) + verdicts.count(EF)
     ub.load(j)
     ub.record_from_journal(j, now_ms=10)
-    assert _tables(j) == before
-    assert set(before) >= set(UNCHANGED)
-    assert j.query("SELECT * FROM research_registrations ORDER BY rowid") \
-        == regs
+    assert _tables(j, skip=(TABLE, "research_registrations")) == before
+    assert set(before) >= set(UNCHANGED) - {"research_registrations"}
+    # decay receipts unchanged; only this family's first-insert receipts added
+    after = j.query("SELECT * FROM research_registrations ORDER BY rowid")
+    assert after[:len(regs)] == regs
+    assert sorted(r["record_id"] for r in after[len(regs):]) == \
+        sorted(res["inserted"])
+    assert {r["record_type"] for r in after[len(regs):]} == {ub.SCHEMA}
     assert rb.load(j) == decay_bank
     assert rs.REGISTRY_SHA256 == _sha(rs.canonical_registry())
 
@@ -706,8 +711,10 @@ def test_decay_bank_ids_and_hashes_unchanged_by_unreadable_filing(tmp_path):
     cols = ("bank_object_id", "canonical_sha256", "canonical_json")
     assert [tuple(r[c] for c in cols) for r in a.research_bank_objects()] == \
         [tuple(r[c] for c in cols) for r in b.research_bank_objects()]
-    assert a.query("SELECT * FROM research_registrations ORDER BY rowid") == \
-        b.query("SELECT * FROM research_registrations ORDER BY rowid")
+    decay = ("SELECT * FROM research_registrations WHERE record_type "
+             "NOT IN (?,?) ORDER BY rowid")
+    assert a.query(decay, (uq.SCHEMA, ub.SCHEMA)) == \
+        b.query(decay, (uq.SCHEMA, ub.SCHEMA))
 
 
 def test_existing_decay_fixtures_are_byte_identical():
@@ -752,7 +759,8 @@ def _at_base(path):
     "tests/fixtures/research_evidence_v1_pre_source_registry.json",
     "tests/fixtures/research_plan_v1_pre_source_registry.json"])
 def test_upstream_modules_and_fixtures_are_byte_identical(path):
-    assert (ROOT / path).read_text() == _at_base(path)
+    assert pinned(path, (ROOT / path).read_text()) == \
+        pinned(path, _at_base(path))
 
 
 # ── 17 the bank view never accepts a sibling object ─────────────────────
@@ -836,11 +844,11 @@ def test_nothing_calls_the_new_module():
         (root / "core/journal.py").read_text()
 
 
-def test_journal_helpers_write_no_registration(tmp_path):
+def test_journal_helpers_register_only_through_first_insert_writer(tmp_path):
     src = (ROOT / "trader/core/journal.py").read_text()
     body = src.split("def record_research_unreadable_bank_object(", 1)[1] \
         .split("\n    def ", 1)[0]
-    assert "_register" not in body and "research_registrations" not in body
+    assert "_record_registered(" in body and "research_registrations" not in body
     reader = src.split("def research_unreadable_bank_objects(", 1)[1] \
         .split("\n    def ", 1)[0]
     assert "SELECT" in reader and not re.search(
@@ -848,7 +856,12 @@ def test_journal_helpers_write_no_registration(tmp_path):
 
 
 def test_legacy_journal_without_bank_table_gets_it_additively(tmp_path):
-    j, first = _filed(tmp_path)
+    # a legacy journal never filed bank objects, so it holds no bank
+    # receipts: drop the table on a copy taken before filing
+    j = _two(tmp_path)
+    ru.run(j, "k", 5)
+    first = ub.record_from_journal(_copy(tmp_path, j, "ref.db"), now_ms=9)
+    assert first["inserted"]
     with j._tx() as c:
         c.execute(f"DROP TABLE {TABLE}")
     j2 = Journal(j.db_path)

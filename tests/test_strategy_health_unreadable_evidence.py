@@ -18,7 +18,7 @@ from tests.test_research_evidence_source_binding import (FIXTURE, build_all,
 from tests.test_strategy_decay_research_plan import CF, D, EF, W, _FullHist
 from tests.test_strategy_health_unreadable_question import (COMPLETE,
                                                             NO_FRAME,
-                                                            _journal)
+                                                            _journal, pinned)
 from trader.cognition import research_evidence as re_
 from trader.cognition import research_plan as rp
 from trader.cognition import research_question as rq
@@ -526,7 +526,8 @@ def _at_base(path):
     "tests/fixtures/research_evidence_v1_pre_source_registry.json",
     "tests/fixtures/research_plan_v1_pre_source_registry.json"])
 def test_upstream_modules_and_fixtures_are_byte_identical(path):
-    assert (ROOT / path).read_text() == _at_base(path)
+    assert pinned(path, (ROOT / path).read_text()) == \
+        pinned(path, _at_base(path))
 
 
 # ── 18 no result / run / recall / registration / live integration ───────
@@ -579,7 +580,9 @@ def test_collection_writes_nothing_but_its_own_table(tmp_path):
     ue.record_from_journal(j, now_ms=1)
     assert _tables(j) == before
     assert len(j.research_unreadable_evidence()) == 1
-    assert j.query("SELECT * FROM research_registrations") == []
+    # only the fixture's unreadable-question receipts; this family has none
+    assert {r["record_type"] for r in j.query(
+        "SELECT * FROM research_registrations")} == {uq.SCHEMA}
     for t in ("research_results", "research_runs", "research_bank_objects",
               "research_next_questions"):
         assert j.query(f'SELECT * FROM "{t}"') == []

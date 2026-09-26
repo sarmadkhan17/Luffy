@@ -345,8 +345,11 @@ CREATE TABLE IF NOT EXISTS research_next_questions (
 -- (cognition/research_unreadable_question.py): one context_only question
 -- per unreadable strategy-health observation. Deliberately separate from
 -- research_questions so the strategy-decay question/plan chain never reads
--- it; no registration receipt. The canonical JSON is authoritative; the
--- other columns are its projection. Append-only: never updated or deleted.
+-- it. A first insert writes a research-registration.v1 receipt (record_type
+-- = this schema) in the same transaction; rows filed before receipts
+-- existed have none and are never backfilled. The canonical JSON is
+-- authoritative; the other columns are its projection. Append-only: never
+-- updated or deleted.
 CREATE TABLE IF NOT EXISTS research_unreadable_questions (
     question_id TEXT PRIMARY KEY,    -- sha256 of the question identity
     schema TEXT NOT NULL,
@@ -457,9 +460,12 @@ CREATE TABLE IF NOT EXISTS research_unreadable_runs (
 -- (cognition/research_unreadable_bank.py): one immutable context_only
 -- Research Bank object per verified result a completed unreadable run
 -- reached. Deliberately separate from research_bank_objects so the
--- strategy-decay bank, view, recall and next questions never read it; no
--- registration receipt. The canonical JSON is authoritative; the other
--- columns are its projection. Append-only: never updated or deleted.
+-- strategy-decay bank, view, recall and next questions never read it. A
+-- first insert writes a research-registration.v1 receipt (record_type =
+-- this schema) in the same transaction; rows filed before receipts existed
+-- have none and are never backfilled. The canonical JSON is authoritative;
+-- the other columns are its projection. Append-only: never updated or
+-- deleted.
 CREATE TABLE IF NOT EXISTS research_unreadable_bank_objects (
     bank_object_id TEXT PRIMARY KEY, -- sha256 of the bank object identity
     schema TEXT NOT NULL,
@@ -479,7 +485,9 @@ CREATE TABLE IF NOT EXISTS research_unreadable_bank_objects (
 );
 
 -- research-registration.v1: the first-registration receipt of one
--- research-question.v1 / research-bank-object.v1 row, written in the same
+-- research-question.v1 / research-bank-object.v1 /
+-- strategy-health-unreadable-question.v1 /
+-- strategy-health-unreadable-bank-object.v1 row, written in the same
 -- transaction as that row's first insert. envelope_json is the canonical
 -- {schema, record_type, record_id, canonical_sha256, recorded_at_ms}; the
 -- other columns are its projection. Immutable: never updated or deleted.
@@ -913,6 +921,45 @@ class Journal:
                           (record_type, record_id))
         return rows[0] if rows else None
 
+    class _RegistrationConflict(Exception):
+        """Rolls back an insert whose receipt would bind other content."""
+
+    def _record_registered(self, table: str, columns: tuple, id_key: str,
+                           dup_where: str, dup_args: tuple, row: dict,
+                           recorded_at_ms: int) -> str:
+        """Insert one row and, only when it is inserted, its
+        research-registration.v1 receipt (record_type = row["schema"], the
+        same recorded_at_ms) in the same transaction. An identical or
+        conflicting existing row returns before any registration attempt,
+        so a row filed without a receipt stays without one. Any receipt
+        already present for an absent row is a conflict (nothing written),
+        so every receipt binds its row's insert-time recorded_at_ms. A
+        failed registration rolls the insert back."""
+        values = tuple(row[k] for k in columns)
+        cols = ",".join(columns)
+        try:
+            with self._tx() as c:
+                if not c.in_transaction:
+                    c.execute("BEGIN IMMEDIATE")
+                old = c.execute(f"SELECT {cols} FROM {table} WHERE {dup_where}",
+                                dup_args).fetchall()
+                if old:
+                    return ("duplicate" if len(old) == 1
+                            and tuple(old[0]) == values else "conflict")
+                if c.execute("SELECT 1 FROM research_registrations WHERE "
+                             "record_type=? AND record_id=?",
+                             (row["schema"], row[id_key])).fetchone():
+                    return "conflict"
+                c.execute(f"INSERT INTO {table}({cols},recorded_at_ms) "
+                          f"VALUES ({','.join('?' * (len(values) + 1))})",
+                          values + (recorded_at_ms,))
+                if not self._register(c, row["schema"], row[id_key],
+                                      row["canonical_json"], recorded_at_ms):
+                    raise self._RegistrationConflict
+        except self._RegistrationConflict:
+            return "conflict"
+        return "inserted"
+
     # -- research questions: primitives only; the contract is
     # cognition/research_question.py --------------------------------------
     _QUESTION_COLUMNS = ("question_id", "schema", "question_kind", "trigger",
@@ -1257,25 +1304,15 @@ class Journal:
         write; "duplicate" when an identical row (ignoring recorded_at_ms)
         already exists under the same ID; "conflict" when the ID, or another
         question for the same source event, exists with other content.
-        Nothing is written unless "inserted"."""
-        values = tuple(row[k] for k in self._UNREADABLE_QUESTION_COLUMNS)
-        cols = ",".join(self._UNREADABLE_QUESTION_COLUMNS)
-        with self._tx() as c:
-            if not c.in_transaction:
-                c.execute("BEGIN IMMEDIATE")
-            old = c.execute(
-                f"SELECT {cols} FROM research_unreadable_questions "
-                "WHERE question_id=? OR (source_kind=? AND source_event_id=?)",
-                (row["question_id"], row["source_kind"],
-                 row["source_event_id"])).fetchall()
-            if old:
-                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
-                        else "conflict")
-            c.execute(f"INSERT INTO research_unreadable_questions({cols},"
-                      f"recorded_at_ms) VALUES "
-                      f"({','.join('?' * (len(values) + 1))})",
-                      values + (recorded_at_ms,))
-        return "inserted"
+        An insert writes its research-registration.v1 receipt in the same
+        transaction; a duplicate or conflict never registers. Nothing is
+        written unless "inserted"."""
+        return self._record_registered(
+            "research_unreadable_questions", self._UNREADABLE_QUESTION_COLUMNS,
+            "question_id",
+            "question_id=? OR (source_kind=? AND source_event_id=?)",
+            (row["question_id"], row["source_kind"], row["source_event_id"]),
+            row, recorded_at_ms)
 
     def research_unreadable_questions(self, scope_id: str | None = None
                                       ) -> list[dict]:
@@ -1510,25 +1547,15 @@ class Journal:
         write; "duplicate" when an identical row (ignoring recorded_at_ms)
         already exists under the same ID; "conflict" when the ID, or another
         object for the same (run_id, result_id), exists with other content.
-        No registration receipt. Nothing is written unless "inserted"."""
-        values = tuple(row[k] for k in self._UNREADABLE_BANK_COLUMNS)
-        cols = ",".join(self._UNREADABLE_BANK_COLUMNS)
-        with self._tx() as c:
-            if not c.in_transaction:
-                c.execute("BEGIN IMMEDIATE")
-            old = c.execute(
-                f"SELECT {cols} FROM research_unreadable_bank_objects "
-                "WHERE bank_object_id=? OR (run_id=? AND result_id=?)",
-                (row["bank_object_id"], row["run_id"],
-                 row["result_id"])).fetchall()
-            if old:
-                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
-                        else "conflict")
-            c.execute(f"INSERT INTO research_unreadable_bank_objects({cols},"
-                      f"recorded_at_ms) VALUES "
-                      f"({','.join('?' * (len(values) + 1))})",
-                      values + (recorded_at_ms,))
-        return "inserted"
+        An insert writes its research-registration.v1 receipt in the same
+        transaction; a duplicate or conflict never registers. Nothing is
+        written unless "inserted"."""
+        return self._record_registered(
+            "research_unreadable_bank_objects", self._UNREADABLE_BANK_COLUMNS,
+            "bank_object_id",
+            "bank_object_id=? OR (run_id=? AND result_id=?)",
+            (row["bank_object_id"], row["run_id"], row["result_id"]),
+            row, recorded_at_ms)
 
     def research_unreadable_bank_objects(self, run_id: str | None = None
                                          ) -> list[dict]:

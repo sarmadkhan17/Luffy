@@ -62,8 +62,15 @@ writers (insert / duplicate / conflict; a conflict never overwrites).
 rebuilds the object byte-for-byte, so an unchanged stored object becomes
 unloadable once any bound record or source row can no longer be verified.
 
+Registration: the journal writes a research-registration.v1 receipt
+(record_type = SCHEMA, the object's ID, canonical SHA-256 and insert-time
+recorded_at_ms) in the same transaction as a first insert only. A duplicate
+or conflict never registers, and objects filed before receipts existed are
+never backfilled. The receipt is provenance/order metadata only; this
+module neither writes nor reads it.
+
 Isolation: objects live in their own ``research_unreadable_bank_objects``
-table with no registration receipt. research-bank-object.v1, its table,
+table. research-bank-object.v1, its table,
 research-bank-view.v1, recall, next questions, the cost ledger, the source
 registry and every chain table are only read. A strategy-decay run, result
 or bank object is refused here, and research-bank-object.v1 refuses these

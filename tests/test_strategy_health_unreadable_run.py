@@ -20,7 +20,7 @@ from tests.test_research_evidence_source_binding import (FIXTURE, build_all,
 from tests.test_strategy_decay_research_plan import CF, D, EF, W, _FullHist
 from tests.test_strategy_health_unreadable_question import (COMPLETE,
                                                             NO_FRAME,
-                                                            _journal)
+                                                            _journal, pinned)
 from trader.cognition import research_evidence as re_
 from trader.cognition import research_plan as rp
 from trader.cognition import research_question as rq
@@ -42,8 +42,7 @@ NAMES = ("question", "plan", "evidence", "result")
 OBJ_TABLES = ("research_unreadable_questions", "research_unreadable_plans",
               "research_unreadable_evidence", "research_unreadable_results")
 DECAY_TABLES = ("research_runs", "research_questions", "research_plans",
-                "research_evidence", "research_results",
-                "research_registrations")
+                "research_evidence", "research_results")
 ID_KEYS = ("question_id", "plan_id", "evidence_id", "result_id")
 
 
@@ -66,6 +65,14 @@ def _clock(step=7):
         t["n"] += step
         return t["n"]
     return clock
+
+
+def _decay_regs(j):
+    """research_registrations minus the unreadable question/bank receipts
+    (which a first unreadable insert writes)."""
+    return j.query("SELECT * FROM research_registrations WHERE record_type "
+                   "NOT IN (?,?) ORDER BY rowid",
+                   (uq.SCHEMA, "strategy-health-unreadable-bank-object.v1"))
 
 
 def _tables(j, only=None, skip=("research_unreadable_runs",)):
@@ -771,7 +778,7 @@ def test_unreadable_runner_rejects_decay_family(tmp_path):
 def test_recording_leaves_decay_tables_byte_identical(tmp_path, verdicts):
     j = _decay_journal(tmp_path, verdicts)
     assert all(_tables(j, DECAY_TABLES[:5]).values())
-    decay = _tables(j, DECAY_TABLES)
+    decay, regs = _tables(j, DECAY_TABLES), _decay_regs(j)
     run_before = run_.load(j)
     ids_before = [(r["result_id"], r["canonical_sha256"])
                   for r in j.research_results()]
@@ -781,7 +788,10 @@ def test_recording_leaves_decay_tables_byte_identical(tmp_path, verdicts):
     objs = _tables(j, OBJ_TABLES)
     ru.load(j)
     assert ru.run(j, "k2", 8)["status"] == "inserted"
-    assert _tables(j, DECAY_TABLES) == decay
+    assert _tables(j, DECAY_TABLES) == decay and _decay_regs(j) == regs
+    assert {r["record_type"] for r in j.query(
+        "SELECT * FROM research_registrations")} - {r["record_type"]
+                                                   for r in regs} == {uq.SCHEMA}
     assert _tables(j, OBJ_TABLES) == objs
     assert run_.load(j) == run_before
     assert [(r["result_id"], r["canonical_sha256"])
@@ -802,6 +812,7 @@ def test_decay_run_ids_and_hashes_unchanged_by_unreadable_runs(tmp_path):
     assert (ra["run_id"], ra["canonical_sha256"], ra["canonical_json"]) == \
         (rb["run_id"], rb["canonical_sha256"], rb["canonical_json"])
     assert _tables(a, DECAY_TABLES[1:]) == _tables(b, DECAY_TABLES[1:])
+    assert _decay_regs(a) == _decay_regs(b)
 
 
 def test_existing_decay_fixtures_are_byte_identical():
@@ -844,7 +855,8 @@ def _at_base(path):
     "tests/fixtures/research_evidence_v1_pre_source_registry.json",
     "tests/fixtures/research_plan_v1_pre_source_registry.json"])
 def test_upstream_modules_and_fixtures_are_byte_identical(path):
-    assert (ROOT / path).read_text() == _at_base(path)
+    assert pinned(path, (ROOT / path).read_text()) == \
+        pinned(path, _at_base(path))
 
 
 def test_run_writes_only_its_table_beyond_the_steps(tmp_path):
@@ -856,10 +868,11 @@ def test_run_writes_only_its_table_beyond_the_steps(tmp_path):
     ru.load(j)
     assert _tables(j) == _tables(ref)         # all but research_unreadable_runs
     assert len(j.research_unreadable_runs()) == 1
-    for t in ("research_runs", "research_registrations",
-              "research_bank_objects", "research_next_questions",
-              "research_questions", "research_results"):
+    for t in ("research_runs", "research_bank_objects",
+              "research_next_questions", "research_questions",
+              "research_results"):
         assert j.query(f'SELECT * FROM "{t}"') == [], t
+    assert _decay_regs(j) == []            # only unreadable-question receipts
 
 
 # ── 18 no Bank / recall / registration / cost ledger / live wiring ──────

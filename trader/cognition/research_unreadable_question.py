@@ -31,9 +31,16 @@ itself for the spec, or whose outcome lists contradict the verdict, is
 refused. Stored reasons outside the health writer's vocabulary are refused.
 
 Isolation: questions live in their own ``research_unreadable_questions``
-table with no registration receipt, so the research-question.v1 table,
-its readers, research-plan.v1, evidence, result, run, bank and recall
-never see them. research-plan.v1 refuses this JSON if handed it directly.
+table, so the research-question.v1 table, its readers, research-plan.v1,
+evidence, result, run, bank and recall never see them.
+
+Registration: the journal writes a research-registration.v1 receipt
+(record_type = SCHEMA, the question's ID, canonical SHA-256 and insert-time
+recorded_at_ms) in the same transaction as a first insert only; a
+duplicate, a conflict or a receipt already present for an absent row
+never registers. Rows filed before receipts existed are never backfilled
+and have no verifiable registration provenance. The receipt is
+provenance/order metadata only; this module neither writes nor reads it. research-plan.v1 refuses this JSON if handed it directly.
 `derive` is pure; `record_from_journal` is an offline writer that nothing
 calls from the live loop. No network, LLM, Attention, Kernel, Risk,
 Execution or trading authority.

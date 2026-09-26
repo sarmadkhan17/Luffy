@@ -22,6 +22,18 @@ from trader.strategy import health_observation as ho
 from trader.strategy.spec import ExitSpec, StrategySpec
 
 ROOT = Path(__file__).resolve().parents[1]
+UQ_PATH = "trader/cognition/research_unreadable_question.py"
+
+
+def pinned(path, text):
+    """Byte-pin text for an upstream module: unchanged, except that the
+    unreadable question module's docstring (its registration contract note)
+    is dropped; every executable and comment byte after it stays pinned."""
+    if path != UQ_PATH:
+        return text
+    doc = ast.parse(text).body[0]
+    assert isinstance(doc, ast.Expr) and isinstance(doc.value, ast.Constant)
+    return "\n".join(text.split("\n")[doc.end_lineno:])
 TH = {"decay_recent_days": 60.0, "decay_min_trades": 3, "decay_floor_pf": 0.85}
 T0 = datetime(2026, 9, 20, tzinfo=timezone.utc)
 
@@ -398,12 +410,15 @@ def test_new_family_is_invisible_to_the_decay_chain_tables(tmp_path):
     j = _journal(tmp_path, {"s1": "compile"}, {"s1": NO_FRAME})
     tables = [r["name"] for r in j.query(
         "SELECT name FROM sqlite_master WHERE type='table' "
-        "AND name != 'research_unreadable_questions'")]
+        "AND name NOT IN ('research_unreadable_questions', "
+        "'research_registrations')")]
     before = {t: j.query(f'SELECT * FROM "{t}"') for t in tables}
     assert len(uq.record_from_journal(j, now_ms=1)["inserted"]) == 2
     assert {t: j.query(f'SELECT * FROM "{t}"') for t in tables} == before
     assert j.research_questions() == [] and j.research_plans() == []
-    assert j.query("SELECT * FROM research_registrations") == []
+    # only this family's own first-registration receipts appear
+    assert {r["record_type"] for r in j.query(
+        "SELECT * FROM research_registrations")} == {uq.SCHEMA}
 
 
 # ── 13 no live wiring ───────────────────────────────────────────────────
