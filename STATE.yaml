@@ -109,6 +109,9 @@ capabilities:
       - tests/test_research_evidence_source_binding.py
       - e357c72 Add run-scoped research bank filing
       - tests/test_research_bank_run_scoped_filing.py
+      - e4b3deb Add research cost ledger
+      - trader/cognition/research_cost.py
+      - tests/test_research_cost_ledger.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
@@ -123,6 +126,7 @@ capabilities:
       - deterministic versioned internal research-source-registry.v1 covering only the existing strategy-decay chain sources is TESTED at 81effe5 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-SOURCE-REGISTRY-V1); research-plan.v1 descriptors resolve through it byte-identically; the WorldModel/regime source is explicitly UNAVAILABLE (no_truthful_worldmodel_source)
       - research-evidence.v1 collection resolves every ROUTED source through research-source-registry.v1 with collector dispatch keyed by registry source_id and no store-name fallback; valid evidence is byte-identical; TESTED at f0b5cb2 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-EVIDENCE-SOURCE-REGISTRY-BINDING-V1)
       - offline run-scoped Research Bank filing research_bank.record_run(journal, run_id, now_ms) files only the requested stored research run, with record_from_journal filing semantics preserved through a shared _file_run helper; no unrelated research_runs scan and no stored research_bank_objects enumeration; TESTED at e357c72 and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-BANK-RUN-SCOPED-FILING-V1); verification still inherits broad Q/P/E/R and health-table reads
+      - deterministic read-only research-cost-ledger.v1 copies research-run-telemetry.v1 elapsed_wall_ns and rows_read (MEASURED/NOT_MEASURED with exact reasons) and investigation-resource-receipt.v1 measurements, keeping families separate; total research cost stays NOT_ESTABLISHED; TESTED at e4b3deb and NOT_DEPLOYED (SDD-STAGE-3-RESEARCH-COST-LEDGER-V1)
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
       - strategy-degradation Attention trigger and salience/magnitude remain MISSING
@@ -132,6 +136,7 @@ capabilities:
       - no Attention trigger, live caller, consumer or deployment of research-question.v1 / research-plan.v1 / research-evidence.v1 / research-result.v1 / research-run.v1 / research-bank-object.v1 / research_bank.record_run / prior-research recall exists
       - automatic/live strategy-decay research invocation remains MISSING; the synchronous chain shares the Journal writer, so any live invocation requires a bounded, isolated design (an unbounded Kernel post-flush invocation was reviewed BLOCKED and abandoned uncommitted; it was never implemented at any commit or TESTED)
       - research_runs and research-bank storage have no size cap; the owner storage-policy boundary remains parked
+      - total research cost is NOT_ESTABLISHED (the measured research-cost ledger is TESTED at e4b3deb); budget/cost limits remain UNDECLARED and owner-policy dependent; no budget manager authority exists
       - general/external Source Router and external-source discovery/retrieval remain MISSING; the TESTED research-source-registry.v1 is an internal, strategy-decay-only catalog
 
   instrument_registry:
@@ -282,6 +287,7 @@ capabilities:
       - coherent current investigation-ledger state gates new-investigation top-k slot allocation; TESTED at 0d07dd8 with retry-semantics test follow-up a6c7124 (SDD-STAGE-3-ATTENTION-INVESTIGATION-STATE-FEEDBACK-V1)
       - correlation_change registration-evidence family (investigation.correlation_change.v1) is TESTED at e61fb82; descriptive, not prospective predictive validation
       - committed case-local investigation work is metered per execution as investigation-resource-receipt.v1 at 9be45a9 (SDD-STAGE-3-ATTENTION-INVESTIGATION-RESOURCE-RECEIPTS-V1); resource_bound null, resource_compliance UNKNOWN
+      - retained investigation-resource-receipt.v1 measurements are exposed read-only, with exact UNKNOWN reasons, by research-cost-ledger.v1 at e4b3deb (SDD-STAGE-3-RESEARCH-COST-LEDGER-V1); no bound, compliance or priority use
       - verified terminal not_testable/UNASSESSABLE closures are retained as investigation-unassessable-memory.v1 and recalled at registration as context_only cautions at 8eaf90b (SDD-STAGE-3-INVESTIGATION-UNASSESSABLE-MEMORY-V1); no effect on salience, rank or allocation
       - terminal assessed descriptive positioning_extreme/correlation_change results are retained as investigation-assessed-memory.v1 with exact original result vocabulary and recalled at registration as context_only at 8904fef (SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1); no effect on salience, rank or allocation; not usefulness/value labels
       - malformed measured-memory (investigation.v2) sources fail closed and are dispositioned once instead of crashing ingest() at 71204ca (SDD-STAGE-3-MEASURED-MEMORY-MALFORMED-SOURCE-HARDENING-V1); valid measured/assessed/not_testable behavior unchanged
@@ -289,7 +295,7 @@ capabilities:
       - eligible measured/unassessable memory candidates are filtered in SQL before the 256-row LIMIT, so unrelated terminal/no-update rows cannot crowd the bounded window, at 17f2ab6 (SDD-STAGE-3-INVESTIGATION-MEMORY-CANDIDATE-ISOLATION-V1); (created_ms,id) ordering, 256 candidate bound and 32-per-path cap preserved; assessed ingestion unchanged
     gaps:
       - investigation-value.v1 usefulness labels do not exist; no protocol-defined label source (USEFULNESS_LABEL_SOURCE_MISSING, 2026-09-25)
-      - resource bounds are undeclared; rolled-back/failed attempt cost is UNKNOWN and total research cost is not established
+      - resource bounds are undeclared; rolled-back/failed attempt cost is UNKNOWN and total research cost is not established (a measured research-cost ledger is TESTED at e4b3deb; it keeps the total NOT_ESTABLISHED)
       - separate lightweight trading Opportunity registry from SDD v3.2 is not yet implemented
 
   operator_api_and_auth:
@@ -2947,10 +2953,65 @@ completed_research_bank_run_scoped_filing_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Offline run-scoped Research Bank filing helper only; no invocation, trigger, bounded-work, predicate, suppression, salience, usefulness, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_research_cost_ledger_v1:
+  id: SDD-STAGE-3-RESEARCH-COST-LEDGER-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: e4b3deb
+  evidence:
+    - e4b3deb Add research cost ledger
+    - trader/cognition/research_cost.py
+    - tests/test_research_cost_ledger.py
+    - tests/test_strategy_decay_research_run.py (live-path guard allow-lists the read-only ledger)
+  proven_facts:
+    - A deterministic, read-only research-cost-ledger.v1 exists.
+    - It reads existing investigation-resource-receipt.v1 and research-run-telemetry.v1 records.
+    - Source families remain separate.
+    - Incompatible units and semantics are never collapsed into one scalar.
+    - total_research_cost always remains NOT_ESTABLISHED.
+    - Missing, empty and unavailable sources never become zero cost.
+    - Investigation receipt measurements and exact UNKNOWN reasons are preserved.
+    - Run elapsed_wall_ns and rows_read preserve MEASURED/NOT_MEASURED states and exact reasons.
+    - elapsed_ms is not double-counted.
+    - Grouped sums cover only retained listed entries of one family and measurement.
+    - A group is SUMMED only when every retained entry is MEASURED and no source record of that family was refused.
+    - Failed/rolled-back attempt cost, retention-pruned receipt cost, unstored run attempts, work outside the offline runner and SQLite physical/writer reads remain UNKNOWN.
+    - No per-result cost attribution.
+    - No monetary total is established.
+    - No budget, cap, bound, ROI, efficiency, priority, salience or usefulness.
+    - No Attention, Kernel, Risk, Execution or live wiring.
+  validation:
+    package_tests: 173 focused tests passed (independently verified); 55 ledger tests collected
+    independent_probes: 6 independent isolation/order probes passed
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  limitations:
+    - Investigation receipt authenticity lacks a full content hash; internally consistent measurement rewrites may be undetectable (inherited source limitation).
+    - Run telemetry is verified without re-verifying the full Q/P/E/R chain.
+    - Sums cover retained records only.
+    - Receipt short unit labels are presentation labels; the carried unit_definition is authoritative.
+    - Production research-run rows remain absent while the chain is undeployed.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commit e4b3deb.
+  gap_matrix_update:
+    stage_3_research:
+      measured_research_cost_ledger: TESTED
+      total_research_cost: NOT_ESTABLISHED
+      budget_cost_limits: UNDECLARED - owner-policy dependent
+      budget_manager_authority: NOT_ESTABLISHED
+      live_caller_deployment: MISSING - automatic/live research invocation MISSING; requires bounded isolation
+      deployed: NO
+    failed_research_memory: PARTIAL - unchanged
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Read-only measured research-cost ledger only; no total cost, budget, cap, bound, efficiency, ROI, priority, salience, usefulness, trading-edge or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-RESEARCH-BANK-RUN-SCOPED-FILING-V1 is TESTED at e357c72 and NOT_DEPLOYED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
+  note: SDD-STAGE-3-RESEARCH-COST-LEDGER-V1 is TESTED at e4b3deb and NOT_DEPLOYED. Total research cost remains NOT_ESTABLISHED and budget/cost limits remain UNDECLARED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
