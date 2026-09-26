@@ -452,7 +452,9 @@ def test_nothing_in_the_live_path_calls_it():
                # offline sibling evidence collector and
                # research_unreadable_result.py its offline sibling structural
                # result and research_unreadable_run.py its offline sibling
-               # runner; their own tests guard that nothing live calls them
+               # runner and research_unreadable_bank.py its offline sibling
+               # bank filer; their own tests guard that nothing live calls
+               # them
                if p.name not in ("research_question.py", "research_plan.py",
                                  "research_evidence.py", "research_result.py",
                                  "research_run.py", "research_bank.py",
@@ -461,7 +463,8 @@ def test_nothing_in_the_live_path_calls_it():
                                  "research_unreadable_plan.py",
                                  "research_unreadable_evidence.py",
                                  "research_unreadable_result.py",
-                                 "research_unreadable_run.py")
+                                 "research_unreadable_run.py",
+                                 "research_unreadable_bank.py")
                and pat.search(p.read_text(errors="ignore"))]
     assert callers == []
 

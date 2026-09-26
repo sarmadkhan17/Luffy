@@ -453,6 +453,31 @@ CREATE TABLE IF NOT EXISTS research_unreadable_runs (
     recorded_at_ms INTEGER NOT NULL
 );
 
+-- strategy-health-unreadable-bank-object.v1
+-- (cognition/research_unreadable_bank.py): one immutable context_only
+-- Research Bank object per verified result a completed unreadable run
+-- reached. Deliberately separate from research_bank_objects so the
+-- strategy-decay bank, view, recall and next questions never read it; no
+-- registration receipt. The canonical JSON is authoritative; the other
+-- columns are its projection. Append-only: never updated or deleted.
+CREATE TABLE IF NOT EXISTS research_unreadable_bank_objects (
+    bank_object_id TEXT PRIMARY KEY, -- sha256 of the bank object identity
+    schema TEXT NOT NULL,
+    bank_kind TEXT NOT NULL,
+    builder_id TEXT NOT NULL,
+    run_id TEXT NOT NULL,
+    result_id TEXT NOT NULL,
+    evidence_id TEXT NOT NULL,
+    plan_id TEXT NOT NULL,
+    question_id TEXT NOT NULL,
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL,
+    UNIQUE(run_id, result_id)
+);
+
 -- research-registration.v1: the first-registration receipt of one
 -- research-question.v1 / research-bank-object.v1 row, written in the same
 -- transaction as that row's first insert. envelope_json is the canonical
@@ -1469,6 +1494,50 @@ class Journal:
             return self.query("SELECT * FROM research_unreadable_runs "
                               "ORDER BY rowid")
         return self.query("SELECT * FROM research_unreadable_runs "
+                          "WHERE run_id=? ORDER BY rowid", (run_id,))
+
+    # -- unreadable strategy-health bank objects: primitives only; the
+    # contract is cognition/research_unreadable_bank.py ------------------
+    _UNREADABLE_BANK_COLUMNS = ("bank_object_id", "schema", "bank_kind",
+                                "builder_id", "run_id", "result_id",
+                                "evidence_id", "plan_id", "question_id",
+                                "scope_kind", "scope_id", "canonical_sha256",
+                                "canonical_json")
+
+    def record_research_unreadable_bank_object(self, row: dict, *,
+                                               recorded_at_ms: int) -> str:
+        """Insert one research_unreadable_bank_objects row. "inserted" on a
+        write; "duplicate" when an identical row (ignoring recorded_at_ms)
+        already exists under the same ID; "conflict" when the ID, or another
+        object for the same (run_id, result_id), exists with other content.
+        No registration receipt. Nothing is written unless "inserted"."""
+        values = tuple(row[k] for k in self._UNREADABLE_BANK_COLUMNS)
+        cols = ",".join(self._UNREADABLE_BANK_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {cols} FROM research_unreadable_bank_objects "
+                "WHERE bank_object_id=? OR (run_id=? AND result_id=?)",
+                (row["bank_object_id"], row["run_id"],
+                 row["result_id"])).fetchall()
+            if old:
+                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_unreadable_bank_objects({cols},"
+                      f"recorded_at_ms) VALUES "
+                      f"({','.join('?' * (len(values) + 1))})",
+                      values + (recorded_at_ms,))
+        return "inserted"
+
+    def research_unreadable_bank_objects(self, run_id: str | None = None
+                                         ) -> list[dict]:
+        """Stored research_unreadable_bank_objects rows in insertion order.
+        SELECT only."""
+        if run_id is None:
+            return self.query("SELECT * FROM research_unreadable_bank_objects "
+                              "ORDER BY rowid")
+        return self.query("SELECT * FROM research_unreadable_bank_objects "
                           "WHERE run_id=? ORDER BY rowid", (run_id,))
 
     # -- strategy population ------------------------------------------------
