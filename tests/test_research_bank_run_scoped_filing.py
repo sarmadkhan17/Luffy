@@ -229,7 +229,9 @@ def test_no_live_caller_and_no_invocation_module():
     callers = sorted(str(p.relative_to(root)) for p in root.rglob("*.py")
                      if p.name != "research_bank.py"
                      and pat.search(p.read_text(errors="ignore")))
-    assert callers == []
+    # the offline research shadow harness child is the one caller
+    # (tests/test_research_shadow_*.py guard that nothing live calls it)
+    assert callers == ["cognition/_research_shadow_child.py"]
     assert not (root / "cognition/research_invocation.py").exists()
     hits = [str(p.relative_to(repo)) for d in ("trader", "tests")
             for p in (repo / d).rglob("*.py")

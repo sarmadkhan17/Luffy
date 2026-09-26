@@ -453,9 +453,14 @@ def test_nothing_in_the_live_path_calls_it():
                # research_unreadable_result.py its offline sibling structural
                # result and research_unreadable_run.py its offline sibling
                # runner and research_unreadable_bank.py its offline sibling
-               # bank filer; their own tests guard that nothing live calls
+               # bank filer and research_families.py the offline research
+               # shadow dispatch (derive only) and _research_shadow_child.py
+               # its isolated child (names the module in its exact import
+               # allow-list); their own tests guard that nothing live calls
                # them
                if p.name not in ("research_question.py", "research_plan.py",
+                                 "research_families.py",
+                                 "_research_shadow_child.py",
                                  "research_evidence.py", "research_result.py",
                                  "research_run.py", "research_bank.py",
                                  "research_recall.py", "research_sources.py",

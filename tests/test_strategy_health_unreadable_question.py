@@ -448,8 +448,10 @@ def test_nothing_imports_the_new_module():
                 hits.append(p.name)
     # only the offline sibling plan, the offline unreadable runner, the
     # offline unreadable bank filer and the offline context-only unreadable
-    # recall, whose own tests guard their callers
-    assert sorted(hits) == ["research_unreadable_bank.py",
+    # recall, whose own tests guard their callers; research_families.py is
+    # the offline research shadow dispatch (derive only, unchanged)
+    assert sorted(hits) == ["research_families.py",
+                            "research_unreadable_bank.py",
                             "research_unreadable_plan.py",
                             "research_unreadable_recall.py",
                             "research_unreadable_run.py"]

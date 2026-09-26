@@ -918,8 +918,13 @@ def test_nothing_calls_the_new_module():
     # the journal owns the storage primitive (and names the module only in
     # its schema comment); only the offline unreadable bank filer and the
     # read-only cost ledger's opt-in coverage, each guarded by its own
-    # tests, import the contract
-    assert callers == ["cognition/research_cost.py",
+    # tests, import the contract; the offline research shadow harness child
+    # runs it (tests/test_research_shadow_*.py)
+    assert callers == ["cognition/_research_shadow_child.py",
+                       "cognition/research_cost.py",
+                       # the research shadow parent verifies stored runs
+                       # (from_json / row_for only) during recovery
+                       "cognition/research_shadow.py",
                        "cognition/research_unreadable_bank.py",
                        "core/journal.py"]
     assert "research_unreadable_run import" not in \

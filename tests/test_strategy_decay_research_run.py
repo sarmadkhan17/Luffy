@@ -787,9 +787,14 @@ def test_nothing_in_the_live_path_calls_it():
                      and pat.search(p.read_text(errors="ignore")))
     # the journal owns the storage primitive; research_bank.py is the
     # offline bank filer and research_cost.py the read-only cost ledger,
-    # each guarded by its own test
-    assert callers == ["cognition/research_bank.py",
-                       "cognition/research_cost.py", "core/journal.py"]
+    # each guarded by its own test; the offline research shadow harness
+    # child runs it (tests/test_research_shadow_*.py)
+    assert callers == ["cognition/_research_shadow_child.py",
+                       "cognition/research_bank.py",
+                       "cognition/research_cost.py",
+                       # the research shadow parent verifies stored runs
+                       # (from_json / row_for only) during recovery
+                       "cognition/research_shadow.py", "core/journal.py"]
     assert "research_run import" not in (root / "core/journal.py").read_text()
 
 

@@ -468,7 +468,10 @@ def test_no_unreadable_recall_or_registration_reader_added():
          "trader/"], cwd=ROOT, capture_output=True, text=True
     ).stdout.replace(f"{BASE}:", "").split())
     # working tree including a not-yet-tracked module
+    # (and the read-only research shadow owner report, which shows each
+    # object's receipt state; tests/test_research_shadow_report.py)
     assert grep(opts=("--untracked",)) == sorted(grep(BASE) + [
+        "trader/cognition/research_shadow_report.py",
         "trader/cognition/research_unreadable_recall.py"])
     for path in ("trader/cognition/research_unreadable_question.py",
                  "trader/cognition/research_unreadable_bank.py"):

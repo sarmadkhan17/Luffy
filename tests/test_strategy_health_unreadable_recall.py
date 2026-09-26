@@ -696,6 +696,9 @@ def test_nothing_in_the_live_path_calls_it():
     callers = sorted(str(p.relative_to(root)) for p in root.rglob("*.py")
                      if p.name != "research_unreadable_recall.py"
                      and pat.search(p.read_text(errors="ignore")))
-    assert callers == ["core/journal.py"]
+    # the offline read-only research shadow owner report requests it
+    # explicitly (tests/test_research_shadow_report.py)
+    assert callers == ["cognition/research_shadow_report.py",
+                       "core/journal.py"]
     assert "research_unreadable_recall" not in \
         (root / "core/journal.py").read_text()

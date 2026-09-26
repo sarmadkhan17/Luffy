@@ -674,10 +674,18 @@ def test_nothing_in_the_live_path_calls_it():
                      and pat.search(p.read_text(errors="ignore")))
     # the journal owns the storage primitive; the offline context-only
     # recall, next-question derivation and the read-only view are the only
-    # readers
-    assert callers == ["cognition/research_bank_view.py",
+    # readers; the offline research shadow harness child files through
+    # record_run and its read-only owner report verifies through verify_row
+    # (tests/test_research_shadow_*.py)
+    assert callers == ["cognition/_research_shadow_child.py",
+                       "cognition/research_bank_view.py",
                        "cognition/research_next_question.py",
-                       "cognition/research_recall.py", "core/journal.py"]
+                       "cognition/research_recall.py",
+                       # the research shadow parent verifies filed objects
+                       # (from_json / row_for only) during recovery
+                       "cognition/research_shadow.py",
+                       "cognition/research_shadow_report.py",
+                       "core/journal.py"]
     assert "research_bank import" not in (root / "core/journal.py").read_text()
 
 
