@@ -3075,10 +3075,69 @@ completed_research_chain_scoped_verification_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Read-scoping of offline research-chain verification only; no invocation, trigger, bounded-work, predicate, suppression, salience, usefulness, budget, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_research_next_question_v1:
+  id: SDD-STAGE-3-RESEARCH-NEXT-QUESTION-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 873e9eb
+  evidence:
+    - 873e9eb Add structural research next questions
+    - trader/cognition/research_next_question.py
+    - trader/core/journal.py
+    - tests/test_research_next_question.py
+    - tests/test_strategy_decay_research_bank.py
+  proven_facts:
+    - research-next-question.v1 exists as an immutable context_only object.
+    - It derives only from verified persisted Research Bank/result evidence.
+    - Only two registered mappings exist - (1) NOT_ASSESSED + no_registered_falsifier_predicates -> REGISTERED_FALSIFIER_PREDICATES_MISSING; (2) UNAVAILABLE + no_truthful_worldmodel_source -> TRUTHFUL_WORLDMODEL_SOURCE_MISSING.
+    - Objects record existing gaps only.
+    - No falsifier predicate, threshold, regime rule, source/vendor choice, method, implementation plan or recommendation is generated.
+    - Exact bank/result IDs, hashes and provenance are bound.
+    - Deterministic ID, canonical JSON and hash.
+    - Identical writes are idempotent.
+    - Conflicts never overwrite.
+    - Existing Research Bank/result identities and hashes are unchanged.
+    - Repeated gaps across separate bank objects are permitted and do NOT imply a novelty/no-repeat/suppression policy.
+    - Recall remains unaffected.
+    - No score, rank, priority, salience or usefulness.
+    - No enqueue, trigger or run behavior.
+    - No Attention, Kernel, Risk, Execution or live wiring.
+  gaps_not_solved:
+    registered_falsifier_predicates: MISSING - recorded as a gap only; not solved by this package
+    truthful_worldmodel_source: MISSING - recorded as a gap only; not solved by this package
+  validation:
+    package_tests: 47 next-question tests passed
+    final_review_tests: 793 total focused/adjacent tests passed in final review
+    independent_probes: independent adversarial/interruption probes passed
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  limitations:
+    - Whole-object compatibility - research-next-question.v1 supports only its two registered status/reason mappings; any unregistered pair refuses derivation for the whole bank object without writing new rows; future result vocabulary extensions require explicit compatibility review.
+    - Persistence - next-question rows commit individually; interruption or per-row conflict may leave a partial set; load verifies existing rows without asserting completeness; with unchanged valid sources and no conflicts, retry preserves identical rows and inserts missing rows; no atomic complete-set guarantee.
+    - Some malformed stored shapes may raise raw TypeError rather than normalized ResearchNextQuestionError (nonblocking error-normalization limitation).
+    - No automatic producer/caller; offline helper only.
+    - No cross-bank deduplication/no-repeat policy.
+    - The next-question table has no size cap; the storage-policy decision remains parked.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commit 873e9eb.
+  gap_matrix_update:
+    stage_3_research:
+      research_next_question_structural: TESTED
+      registered_falsifier_predicates: MISSING
+      truthful_worldmodel_source: MISSING
+      live_caller_deployment: MISSING - automatic/live research invocation MISSING
+      deployed: NO
+    failed_research_memory: PARTIAL - unchanged (no suppression/cooldown/no-repeat policy)
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Structural gap-recording next-question objects only; no predicate, threshold, regime rule, source choice, recommendation, invocation, trigger, suppression, salience, usefulness, priority, trading-edge or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-RESEARCH-CHAIN-SCOPED-VERIFICATION-V1 is TESTED at 57d8875 and NOT_DEPLOYED. Research-chain verification reads are scoped/keyed; this is not a bounded-work guarantee. Total research cost remains NOT_ESTABLISHED and budget/cost limits remain UNDECLARED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
+  note: SDD-STAGE-3-RESEARCH-NEXT-QUESTION-V1 is TESTED at 873e9eb and NOT_DEPLOYED. It records existing gaps only; registered falsifier predicates and a truthful WorldModel source remain MISSING. Total research cost remains NOT_ESTABLISHED and budget/cost limits remain UNDECLARED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
