@@ -143,6 +143,10 @@ capabilities:
       - trader/cognition/research_unreadable_question.py
       - trader/cognition/research_unreadable_bank.py
       - tests/test_strategy_health_unreadable_registration.py
+      - 232126a Add unreadable prior research recall
+      - trader/cognition/research_unreadable_recall.py
+      - trader/core/journal.py
+      - tests/test_strategy_health_unreadable_recall.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
@@ -168,6 +172,7 @@ capabilities:
       - separate immutable context_only strategy-health-unreadable-bank-object.v1 family (bank_kind strategy_health_unreadable) files one object per verified unreadable (run, result) pair with exact Q/P/E/R/Run IDs and canonical hashes bound and re-verified; structural result INCONCLUSIVE / NOT_ASSESSED / no_registered_falsifier_predicates copied verbatim; extracted_claims and next_questions NOT_AVAILABLE; supporting/contradictory evidence NOT_CLASSIFIED; run refusals included only when they bind the exact chain IDs, without causal interpretation; run telemetry copied as run-wide measurement context (attribution run_wide_not_attributed_to_this_result, total_research_cost NOT_ESTABLISHED); telemetry-only differences may change canonical JSON/hash but not bank_object_id; separate persistence (research_unreadable_bank_objects) with no research_registrations receipt; identical refiling idempotent and conflicts never overwrite; decay bank/view reject unreadable objects and the unreadable bank rejects decay chains; existing decay bank/view/fixtures/IDs/hashes unchanged; TESTED at 90e2c59 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-RESEARCH-BANK-OBJECT-V1)
       - research-cost-ledger.v1 can append a third measurement_only family strategy-health-unreadable-run-telemetry.v1 only by explicit opt-in (include_unreadable_runs=True); default ledger output, canonical JSON, ledger_sha256 and the two existing families' ordering/content/groups/semantics remain byte-identical to 71cf905; only elapsed_wall_ns and rows_read are exposed with MEASURED/NOT_MEASURED values, units, definitions and reasons preserved exactly; unreadable and decay telemetry are never aggregated together; Bank objects are not read as additional cost sources, so multiple Bank objects from one unreadable run cannot double-count; malformed unreadable run identities are validated before duplicate counting and refuse only their own row with JSON-safe metadata; total_research_cost remains NOT_ESTABLISHED and missing/empty/unavailable sources never imply zero; no writer/table/schema migration; TESTED at b721f8c and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-COST-LEDGER-COVERAGE-V1)
       - the first successful strategy-health-unreadable-question.v1 insert and the first successful strategy-health-unreadable-bank-object.v1 insert each atomically create exactly one research-registration.v1 receipt binding exact record_type, record_id, canonical_sha256 and insert-time recorded_at_ms, committed in the same transaction as the object; orphan/conflicting receipts fail closed; registration failure rolls back object and receipt together; duplicate/refile of an existing row exits before registration; pre-existing legacy unreadable rows remain receipt-less with no fabricated or backfilled timestamp; unreadable plan/evidence/result/run families create no receipts; research-registration.v1 schema/identity semantics, decay registration writers/receipts, decay recall and unreadable canonical JSON/IDs/hashes are unchanged; receipts are provenance/order metadata only (no recall, novelty, suppression, cooldown, no-repeat, ranking, priority or usefulness authority)
+      - read-only context_only strategy-health-unreadable-prior-research-recall.v1 recalls exact same-spec unreadable bank objects using only verified unreadable questions, unreadable bank objects and research-registration.v1 receipts; the new question's registration time comes only from its verified receipt and candidate bank registration times only from verified receipts; strict cutoff < new-question registration time (same-time registrations excluded); prior source event_id must be strictly less than the new question's source event_id in numeric Journal order and same-spec chronology verification remains authoritative; every in-scope bank receipt (including later ones) is verified before cutoff selection; legacy receipt-less or malformed/tampered relevant rows fail closed with no timestamp backfill or inference; required max_objects bounds selected bank objects examined (not DB work) and unexamined objects are not certified; ordering is latest eligible registration first, then bank_object_id; identity facts are EQUAL / DIFFERENT / NOT_EXPOSED only (same_result_id_as / same_evidence_id_as exact identity only, no similarity score); decay recall byte/behavior unchanged and decay/unreadable recalls reject each other's question/bank families; SELECT-only accessor, no writes; TESTED at 232126a and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-PRIOR-RESEARCH-RECALL-V1)
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
       - strategy-degradation Attention trigger and salience/magnitude remain MISSING
@@ -179,7 +184,7 @@ capabilities:
       - research_runs, research_unreadable_runs, research-bank and research_unreadable_bank_objects storage have no size cap; the owner storage-policy boundary remains parked
       - total research cost is NOT_ESTABLISHED (the measured research-cost ledger is TESTED at e4b3deb; opt-in measurement_only unreadable-run telemetry coverage is TESTED at b721f8c and nothing currently calls include_unreadable_runs=True); budget/cost limits remain UNDECLARED and owner-policy dependent; no budget manager authority exists
       - general/external Source Router and external-source discovery/retrieval remain MISSING; the TESTED research-source-registry.v1 is an internal, strategy-decay-only catalog
-      - SDD 12.2 capability/data-gap question source is PARTIAL - TESTED for unreadable strategy-health observations only (1e4fee1); downstream routing/planning for strategy-health-unreadable-question.v1 is TESTED (plan-only, aec4341); frozen unreadable evidence collection is TESTED (evidence-only, d015a76); the unreadable structural result is TESTED (INCONCLUSIVE / NOT_ASSESSED only, af57e47); unreadable run support is TESTED (offline explicit runner only, 4a4eae3); the unreadable Research Bank object is TESTED (offline context_only structural filing only, 90e2c59); unreadable cost-ledger coverage is TESTED (opt-in measurement_only run telemetry only, b721f8c); unreadable registration receipts are TESTED (first-insert question and bank-object provenance/order metadata only, 71066ab; legacy rows remain receipt-less, no backfill); unreadable prior-research recall, falsifier predicates, a truthful WorldModel source and any automatic/live caller remain MISSING
+      - SDD 12.2 capability/data-gap question source is PARTIAL - TESTED for unreadable strategy-health observations only (1e4fee1); downstream routing/planning for strategy-health-unreadable-question.v1 is TESTED (plan-only, aec4341); frozen unreadable evidence collection is TESTED (evidence-only, d015a76); the unreadable structural result is TESTED (INCONCLUSIVE / NOT_ASSESSED only, af57e47); unreadable run support is TESTED (offline explicit runner only, 4a4eae3); the unreadable Research Bank object is TESTED (offline context_only structural filing only, 90e2c59); unreadable cost-ledger coverage is TESTED (opt-in measurement_only run telemetry only, b721f8c); unreadable registration receipts are TESTED (first-insert question and bank-object provenance/order metadata only, 71066ab; legacy rows remain receipt-less, no backfill); unreadable prior-research recall is TESTED (read-only context_only, receipt-bound strict-cutoff recall only, 232126a; no suppression/no-repeat authority); falsifier predicates, a truthful WorldModel source and any automatic/live caller remain MISSING
 
   instrument_registry:
     state: TESTED
@@ -3816,10 +3821,96 @@ completed_strategy_health_unreadable_registration_receipts_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Offline research-registration.v1 provenance/order receipts for first-insert unreadable questions and bank objects only; no recall, backfill, novelty, suppression, cooldown, no-repeat, ranking, priority, usefulness, trading-edge or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_strategy_health_unreadable_prior_research_recall_v1:
+  id: SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-PRIOR-RESEARCH-RECALL-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 232126a
+  evidence:
+    - 232126a Add unreadable prior research recall
+    - trader/cognition/research_unreadable_recall.py
+    - trader/core/journal.py
+    - tests/test_strategy_health_unreadable_recall.py
+  proven_facts:
+    - strategy-health-unreadable-prior-research-recall.v1 exists.
+    - "Authority: context_only."
+    - Recall uses only verified unreadable questions, unreadable bank objects and research-registration.v1 receipts.
+    - New-question registration time comes only from its verified registration receipt.
+    - Candidate bank registration time comes only from verified receipts.
+    - Strict registration cutoff is < new question registration time.
+    - Same-time registrations are excluded.
+    - Source ordering is strict numeric Journal event order.
+    - Prior source event_id must be strictly less than the new question source event_id.
+    - Same-spec chronology verification remains authoritative.
+    - Same/different spec isolation is enforced.
+    - Legacy receipt-less relevant rows fail closed.
+    - Malformed/tampered relevant receipts fail closed.
+    - No timestamp backfill or inference.
+    - Every in-scope bank receipt is verified before cutoff selection.
+    - max_objects is required and bounds selected bank objects examined, not DB work.
+    - Unexamined bank objects are not certified.
+    - Shared dependencies may still cause refusal.
+    - Deterministic ordering is latest eligible registration first, then bank_object_id.
+    - "Identity facts use only EQUAL / DIFFERENT / NOT_EXPOSED."
+    - same_result_id_as and same_evidence_id_as are exact identity facts only.
+    - No similarity score.
+    - Decay recall remains byte/behavior unchanged.
+    - Decay and unreadable recalls reject each other's question/bank families.
+    - Accessor is SELECT-only.
+    - No writes.
+    - No automatic/live invocation.
+    - No Attention, Kernel, Risk or Execution wiring.
+    - NOT_DEPLOYED.
+  validation:
+    recall_tests: 88 recall tests passed
+    focused_tests: 1399 focused tests passed
+    independent_review: Astra final PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes and stray untracked files are unrelated and are not package evidence.
+  limitations:
+    - Every in-scope unreadable bank registration receipt is verified before cutoff, including later registrations.
+    - Later same-spec receipt corruption or missing receipt can refuse recall even when that object would not be returned.
+    - max_objects bounds selected bank objects examined, not registration scanning, database work or transitive dependency verification.
+    - Unexamined bank objects are not certified.
+    - Shared dependencies can still make recall fail.
+    - more_known_before does not establish additional eligible context.
+    - Fully consistent receipt rewrites remain undetectable without an external anchor.
+    - Source ordering establishes recorded Journal chronology only, not external execution authenticity.
+    - Recall is context_only only and establishes no novelty, suppression, cooldown, no-repeat, ranking, priority, salience or usefulness.
+    - No automatic/live invocation or deployment.
+    - No production rows while the upstream unreadable chain remains undeployed.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commit 232126a.
+  gap_matrix_update:
+    stage_3_research:
+      capability_data_gap_question_source: PARTIAL - TESTED for unreadable strategy-health observations only
+      strategy_decay_registration_family: UNCHANGED
+      strategy_decay_recall: UNCHANGED
+      unreadable_question: TESTED
+      unreadable_plan_routing: TESTED
+      unreadable_evidence: TESTED
+      unreadable_structural_result: TESTED
+      unreadable_run_support: TESTED
+      unreadable_research_bank_object: TESTED
+      unreadable_cost_ledger_coverage: TESTED - opt-in measurement_only
+      unreadable_registration_receipts: TESTED - first-insert question and bank-object provenance/order metadata only; legacy rows receipt-less
+      unreadable_prior_research_recall: TESTED - context_only
+      registered_falsifier_predicates: MISSING
+      truthful_worldmodel_source: MISSING
+      live_caller_deployment: MISSING - automatic/live research invocation MISSING
+      total_research_cost: NOT_ESTABLISHED
+      budget_cost_limits: UNDECLARED
+      deployed: NO
+    failed_research_memory: PARTIAL - may advance (unreadable prior-research context recall TESTED); no suppression/cooldown/no-repeat authority is established
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Offline read-only context_only recall of receipt-registered prior unreadable bank objects only; no novelty, suppression, cooldown, no-repeat, ranking, priority, salience, usefulness, bounded-work, execution-authenticity, trading-edge or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-REGISTRATION-RECEIPTS-V1 is TESTED at 71066ab and NOT_DEPLOYED. The first successful unreadable question insert and the first successful unreadable bank-object insert each atomically create exactly one research-registration.v1 receipt (exact record_type, record_id, canonical_sha256, insert-time recorded_at_ms) in the same transaction as the object; orphan/conflicting receipts fail closed; registration failure rolls back both; duplicate/refile exits before registration; legacy unreadable rows remain receipt-less and nothing is backfilled; plan/evidence/result/run families create no receipts; registration schema/identity, decay registration/recall and unreadable canonical JSON/IDs/hashes are unchanged. Receipts are provenance/order metadata only. Unreadable Q/P/E/R/Run/Research Bank, cost-ledger coverage and registration receipts are TESTED; unreadable prior-research recall remains MISSING. Registered falsifier predicates and a truthful WorldModel source remain MISSING. Total research cost remains NOT_ESTABLISHED and budget/cost limits remain UNDECLARED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
+  note: SDD-STAGE-3-STRATEGY-HEALTH-UNREADABLE-PRIOR-RESEARCH-RECALL-V1 is TESTED at 232126a and NOT_DEPLOYED. strategy-health-unreadable-prior-research-recall.v1 is a read-only, SELECT-only, context_only recall of exact same-spec unreadable bank objects whose verified research-registration.v1 receipts are strictly earlier than the new question's verified registration (same-time excluded) and whose source event_id is strictly earlier in numeric Journal order; legacy receipt-less and malformed/tampered relevant rows fail closed with no backfill or inference; every in-scope bank receipt is verified before cutoff; max_objects bounds selected bank objects examined, not DB work; identity facts are EQUAL / DIFFERENT / NOT_EXPOSED only with no similarity score; decay recall is unchanged and the two recalls reject each other's families. Unreadable Q/P/E/R/Run/Research Bank, cost-ledger coverage, registration receipts and prior-research recall (context_only) are TESTED. failed_research_memory may advance but no suppression/cooldown/no-repeat authority is established. Registered falsifier predicates and a truthful WorldModel source remain MISSING. Total research cost remains NOT_ESTABLISHED and budget/cost limits remain UNDECLARED. Automatic/live research invocation remains MISSING. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
