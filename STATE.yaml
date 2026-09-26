@@ -98,6 +98,10 @@ capabilities:
       - b9466bc Add strategy decay research bank
       - trader/cognition/research_bank.py
       - tests/test_strategy_decay_research_bank.py
+      - 89d86c9 Add strategy decay prior research recall
+      - be10151 Update research run fixture for registration receipts
+      - trader/cognition/research_recall.py
+      - tests/test_strategy_decay_research_recall.py
     proven_facts:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
@@ -108,13 +112,14 @@ capabilities:
       - deterministic research-result.v1 structural closure of verified research-evidence.v1 is TESTED at 6deee84 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-RESULT-V1); every result is INCONCLUSIVE (no_registered_falsifier_predicates) and no SUPPORTED or REFUTED path exists
       - offline deterministic Q -> P -> E -> R research-run.v1 chain runner with durable, immutable, idempotent run receipts is TESTED at 05a1274 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-RUN-RECEIPT-V1); the runner adds no predicates, labels, scoring, suppression, salience or asset attribution
       - deterministic versioned research-bank-object.v1, one immutable object per (run, result) built only from the verified persisted Q/P/E/R/run chain, is TESTED at b9466bc and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-BANK-OBJECT-V1); claims/next questions NOT_AVAILABLE, supporting/contradictory evidence NOT_CLASSIFIED, no scoring, rank, salience, usefulness or asset attribution
+      - read-only context_only prior-research recall over exact same-strategy/spec research-bank-object.v1 records registered strictly before the new question (integrity-bound first-registration receipts) is TESTED at 89d86c9 with follow-up be10151 and NOT_DEPLOYED (SDD-STAGE-3-STRATEGY-DECAY-PRIOR-RESEARCH-RECALL-V1); recall never suppresses, cools down or changes future research
     gaps:
       - Strategy Governor as one explicit authority/service is not yet established
       - strategy-degradation Attention trigger and salience/magnitude remain MISSING
       - temporary-regime-absence hypothesis remains UNAVAILABLE; no truthful WorldModel/regime evidence source exists
       - no registered falsifier predicates exist; no evaluative conclusion on any strategy-decay hypothesis is produced (research-result.v1 is structural INCONCLUSIVE only)
-      - no failed-research recall/suppression over research-bank-object.v1 exists
-      - no Attention trigger, live caller, consumer or deployment of research-question.v1 / research-plan.v1 / research-evidence.v1 / research-result.v1 / research-run.v1 / research-bank-object.v1 exists
+      - no failed-research suppression/cooldown/no-repeat policy over research-bank-object.v1 exists (context-only prior-research recall is TESTED; suppression must not be inferred from recall)
+      - no Attention trigger, live caller, consumer or deployment of research-question.v1 / research-plan.v1 / research-evidence.v1 / research-result.v1 / research-run.v1 / research-bank-object.v1 / prior-research recall exists
       - research_runs and research-bank storage have no size cap; the owner storage-policy boundary remains parked
 
   instrument_registry:
@@ -2672,10 +2677,84 @@ completed_strategy_decay_research_bank_object_v1:
   not_queued: No next package is selected or queued by this reconciliation.
   maturity_boundary: Structured, deterministic Research Bank objects for the existing offline strategy-decay research chain only; no predicate, classification, evaluative conclusion, recall/suppression, trigger, salience, usefulness, trading-edge, priority or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
 
+completed_strategy_decay_prior_research_recall_v1:
+  id: SDD-STAGE-3-STRATEGY-DECAY-PRIOR-RESEARCH-RECALL-V1
+  type: IMPLEMENTATION
+  state: TESTED
+  implementation_commit: 89d86c9
+  follow_up_commit: be10151
+  evidence:
+    - 89d86c9 Add strategy decay prior research recall
+    - be10151 Update research run fixture for registration receipts
+    - trader/cognition/research_recall.py
+    - trader/cognition/research_bank.py
+    - trader/cognition/research_question.py
+    - trader/core/journal.py
+    - tests/test_strategy_decay_research_recall.py
+    - tests/test_strategy_decay_research_bank.py
+    - tests/test_strategy_decay_research_question.py
+    - tests/test_strategy_decay_research_run.py
+  proven_facts:
+    - Strategy-decay prior-research recall exists with authority context_only.
+    - Recall is read-only and writes no state.
+    - Only exact same-strategy/spec Research Bank objects are candidates.
+    - Prior bank objects and the new question use integrity-bound first-registration receipts for strictly-before eligibility.
+    - Registration receipts bind record type/id, canonical content hash and original first-registration timestamp.
+    - Receipts are immutable and written atomically on first registration.
+    - Duplicate/restart preserves the original registration timestamp.
+    - Replacement/collision attempts cannot delete or replace registration receipts.
+    - Unverifiable legacy registrations fail closed for recall.
+    - No historical timestamp is fabricated or backfilled.
+    - The source event must also be strictly earlier than the new question source event.
+    - Equal/future registrations are excluded.
+    - Every recalled bank object is fully reverified.
+    - EQUAL/DIFFERENT/NOT_EXPOSED are exact identity facts only.
+    - same_result_id_as / same_evidence_id_as use exact ID equality only.
+    - Candidate order is deterministic newest-first and bank-object verification is bounded.
+    - Prior INCONCLUSIVE research is context only.
+    - Recall never suppresses, cools down or changes future research.
+    - No similarity, novelty, redundancy, usefulness, score, rank, priority or salience.
+    - No asset attribution.
+    - No Attention, Kernel, Analyst, Risk, Execution or live wiring.
+  validation:
+    package_tests: 88 recall tests passed (independently verified)
+    independent_review: Astra final review PASS
+    git_diff_check: clean
+    excluded_from_evidence: Graphify and knowledge/ working-tree changes are unrelated and are not package evidence.
+  limitations:
+    - max_objects bounds full bank-object verification, not registration-receipt scanning, memory use or total database reads.
+    - Excluded candidates consume the candidate bound.
+    - One corrupt examined object fails the whole recall.
+    - Recall re-verifies full chains and can be relatively expensive.
+    - No live caller or deployment exists.
+    - Suppression policy remains MISSING and must not be inferred from recall.
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: No deployment, live caller or live activation is implied by commits 89d86c9 or be10151.
+  gap_matrix_update:
+    strategy_decay_research:
+      question: TESTED
+      plan_routing: TESTED
+      evidence_collection: TESTED
+      structural_result: TESTED
+      offline_chain_runner_durable_run_receipt: TESTED
+      research_bank_object: TESTED
+      prior_research_context_recall: TESTED
+      failed_research_suppression_cooldown_no_repeat_policy: MISSING - recall is context_only and must not be treated as suppression
+      registered_falsifier_predicates_evaluative_conclusion: MISSING
+      truthful_world_model_regime_evidence: MISSING
+      attention_trigger_salience: MISSING
+      live_caller_deployment: MISSING
+      deployed: NO
+    failed_research_memory: PARTIAL - strategy-decay prior-research context recall is TESTED; suppression/cooldown/no-repeat policy and broader failed-research/value learning remain incomplete.
+    attention_overall: IMPLEMENTED
+  not_queued: No next package is selected or queued by this reconciliation.
+  maturity_boundary: Read-only, context_only recall of prior same-strategy/spec Research Bank objects for the existing offline strategy-decay research chain only; no suppression, cooldown, similarity, novelty, usefulness, score, rank, priority, salience, trading-edge or maturity claim. Attention overall remains IMPLEMENTED; all parked boundaries unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-STRATEGY-DECAY-RESEARCH-BANK-OBJECT-V1 is TESTED at b9466bc and NOT_DEPLOYED. No next package is selected or queued.
+  note: SDD-STAGE-3-STRATEGY-DECAY-PRIOR-RESEARCH-RECALL-V1 is TESTED at 89d86c9 (follow-up be10151) and NOT_DEPLOYED. No next package is selected or queued.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
