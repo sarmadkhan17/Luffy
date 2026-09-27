@@ -11,6 +11,7 @@ import numpy as np
 import time
 
 from ..core.types import TF_MS as _TF_MS_SHARED, closed_bars, norm_symbol
+from .sqlite_tx import BUSY_TIMEOUT_S, close_quietly, write_tx
 from typing import Optional
 
 import pandas as pd
@@ -90,6 +91,9 @@ class DataFeed:
         return self._ex
 
     # ── persistent candle store ─────────────────────────────────────────
+    #: seconds a statement waits on a lock before "database is locked"
+    BUSY_TIMEOUT_S = BUSY_TIMEOUT_S
+
     @property
     def db(self):
         conn = getattr(self._local, "conn", None)
@@ -98,20 +102,26 @@ class DataFeed:
             if self._db_path is None:
                 from ..core.config import ROOT
                 self._db_path = str(ROOT / "data" / "candles.db")
-            conn = sqlite3.connect(self._db_path)
-            conn.execute(
-                "CREATE TABLE IF NOT EXISTS candles ("
-                "symbol TEXT NOT NULL, tf TEXT NOT NULL, ts INTEGER NOT NULL,"
-                "open REAL, high REAL, low REAL, close REAL, volume REAL,"
-                "taker_buy REAL, PRIMARY KEY (symbol, tf, ts))")
-            # where the venue's history for a (symbol, tf) begins: once a
-            # walk has reached it, a store shorter than the requested limit
-            # is complete, not a reason to re-walk from the listing date
-            conn.execute(
-                "CREATE TABLE IF NOT EXISTS candle_floor ("
-                "symbol TEXT NOT NULL, tf TEXT NOT NULL, first_ts INTEGER "
-                "NOT NULL, PRIMARY KEY (symbol, tf))")
-            conn.commit()
+            conn = sqlite3.connect(self._db_path, timeout=self.BUSY_TIMEOUT_S)
+            try:
+                conn.execute(
+                    "CREATE TABLE IF NOT EXISTS candles ("
+                    "symbol TEXT NOT NULL, tf TEXT NOT NULL, "
+                    "ts INTEGER NOT NULL, open REAL, high REAL, low REAL, "
+                    "close REAL, volume REAL, taker_buy REAL, "
+                    "PRIMARY KEY (symbol, tf, ts))")
+                # where the venue's history for a (symbol, tf) begins: once a
+                # walk has reached it, a store shorter than the requested
+                # limit is complete, not a reason to re-walk from the
+                # listing date
+                conn.execute(
+                    "CREATE TABLE IF NOT EXISTS candle_floor ("
+                    "symbol TEXT NOT NULL, tf TEXT NOT NULL, first_ts INTEGER "
+                    "NOT NULL, PRIMARY KEY (symbol, tf))")
+                conn.commit()
+            except BaseException:
+                close_quietly(conn, "init")  # setup error wins; not cached
+                raise
             self._local.conn = conn
         return conn
 
@@ -242,17 +252,20 @@ class DataFeed:
             unit = getattr(df["ts"].dt, "unit", None) or (
                 "ns" if str(df["ts"].dtype).startswith("datetime64[ns]") else "ms")
             ms = df["ts"].astype("int64") // {"ns": 10 ** 6, "us": 10 ** 3}.get(unit, 1)
-            self.db.executemany(
-                "INSERT OR REPLACE INTO candles VALUES (?,?,?,?,?,?,?,?,?)",
-                [(symbol, tf, int(t), float(o), float(h), float(l),
-                  float(c), float(v),
-                  None if b is None or b != b else float(b))
-                 for t, o, h, l, c, v, b in zip(
-                     ms, df["open"], df["high"], df["low"],
-                     df["close"], df["volume"],
-                     df["taker_buy"] if "taker_buy" in df
-                     else [None] * len(df))])
-            self.db.commit()
+            rows = [(symbol, tf, int(t), float(o), float(h), float(l),
+                     float(c), float(v),
+                     None if b is None or b != b else float(b))
+                    for t, o, h, l, c, v, b in zip(
+                        ms, df["open"], df["high"], df["low"],
+                        df["close"], df["volume"],
+                        df["taker_buy"] if "taker_buy" in df
+                        else [None] * len(df))]
+            # a failed commit must not leave this thread's connection holding
+            # the lock (and the batch) open — see sqlite_tx
+            with write_tx(self._local, self.db, "write") as conn:
+                conn.executemany(
+                    "INSERT OR REPLACE INTO candles VALUES (?,?,?,?,?,?,?,?,?)",
+                    rows)
         except Exception as e:
             log.warning(f"candle store write {symbol} {tf}: {e}")
 
@@ -291,10 +304,10 @@ class DataFeed:
         the limit asked for."""
         if df is not None and len(df) and len(df) < limit:
             try:
-                self.db.execute(
-                    "INSERT OR REPLACE INTO candle_floor VALUES (?,?,?)",
-                    (norm_symbol(symbol), tf, self._first_ms(df)))
-                self.db.commit()
+                with write_tx(self._local, self.db, "floor") as conn:
+                    conn.execute(
+                        "INSERT OR REPLACE INTO candle_floor VALUES (?,?,?)",
+                        (norm_symbol(symbol), tf, self._first_ms(df)))
             except Exception as e:
                 log.warning(f"candle floor {symbol} {tf}: {e}")
         return df
