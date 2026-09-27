@@ -5,6 +5,50 @@ work_package:
   id: null
   status: NO_ACTIVE_PACKAGE
   last_completed:
+    id: LUFFY-DASHBOARD-INTEGRATION-V1
+    state: TESTED
+    implementation_commit: 6d78be9
+    branch: dashboard-integration-v1
+    integration_verdict: PASS
+    chat_safety: PASS
+    performance: PASS
+    frontend: PASS
+    integration: COMPLETE_FOR_TESTED_PACKAGE
+    integrated_scope:
+      - chat safety implementation from da62d0a
+      - dashboard performance implementation from bcf245a
+      - owner frontend implementation from 79d2df4
+      - integration-specific test correction in tests/test_investigation_view.py
+      - new tests/test_dashboard_integration.py
+    evidence:
+      - chat separation 102 passed; integration tests 6 passed; dashboard performance 40 passed; dashboard browser 10 passed
+      - exact combined suite 317 passed / 1 known baseline HARNESS_IMPORTS failure; additional candle/creation regressions 14 passed; independent adversarial extensions 50 passed
+      - frontend typecheck/build PASS; frontend unit/component 11 passed; frontend Playwright 16 passed
+      - negative controls detected do_ops=True regression, Freeze-through-chat regression and request-sharing-guard removal
+      - current stalled-enrichment Overview p95 standalone ~87.45 ms / integrated ~89.10 ms; current warm Overview p95 standalone ~4.46 ms / integrated ~3.14 ms; the historical 4.46 ms is not the current stalled-enrichment claim; historical stalled sample conditions cannot be reconstructed conclusively (cache-state telemetry absent); no integration performance regression established; fixture/synthetic results do not establish production tail latency or trading-core isolation
+    runtime_deployment: NOT_DEPLOYED
+    running_production_dashboard: UNCHANGED
+    record: STATE.yaml completed_dashboard_integration_v1
+  previously_completed:
+    - id: OWNER-FRONTEND-V1
+      state: TESTED
+      implementation_commit: 79d2df4
+      integration: integrated by LUFFY-DASHBOARD-INTEGRATION-V1 at 6d78be9 (historical PENDING superseded)
+      runtime_deployment: NOT_DEPLOYED
+      record: STATE.yaml completed_owner_frontend_v1
+    - id: LUFFY-DASHBOARD-PERFORMANCE-V1
+      state: TESTED
+      implementation_commit: bcf245a
+      integration: integrated by LUFFY-DASHBOARD-INTEGRATION-V1 at 6d78be9 (historical PENDING superseded)
+      runtime_deployment: NOT_DEPLOYED
+      record: STATE.yaml completed_dashboard_performance_v1
+    - id: LUFFY-CHAT-CONTROL-SEPARATION-V1
+      state: TESTED
+      implementation_commit: da62d0a
+      integration: integrated by LUFFY-DASHBOARD-INTEGRATION-V1 at 6d78be9 (historical PENDING superseded)
+      runtime_deployment: NOT_DEPLOYED
+      record: STATE.yaml completed_chat_control_separation_v1
+  last_completed_research:
     id: SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1
     state: TESTED
     implementation_commit: 9f7edfb
@@ -14,7 +58,7 @@ work_package:
       - Astra final PASS; 190 harness tests passed; four updated caller guards passed; prior milestone regression 1888 passed / 1 baseline failure; fresh import comparison 54 baseline violations / 54 current / zero new; git diff --check clean
     runtime_deployment: NOT_DEPLOYED
     record: STATE.yaml completed_research_shadow_harness_v1
-  selection: No next implementation package is selected or queued. The next milestone candidate is a separate owner decision for one-shot RESEARCH_SHADOW production-scale timing evidence, not another feature package; the candidate is not authorized.
+  selection: No next implementation package is selected or queued. Deployment of LUFFY-DASHBOARD-INTEGRATION-V1 is not selected as active work, and health deployment remains parked and not authorized. The next milestone candidate is a separate owner decision for one-shot RESEARCH_SHADOW production-scale timing evidence, not another feature package; the candidate is not authorized.
   one_shot_research_shadow_timing_candidate:
     status: NOT_AUTHORIZED
     purpose: Observe production-scale timing and resource effects on the approximately 1.6 GB production database.
@@ -33,6 +77,8 @@ work_package:
       - separate owner authorization
     trading_authority: NONE
   established_boundary:
+    - LUFFY-DASHBOARD-INTEGRATION-V1 is TESTED at 6d78be9, integration COMPLETE_FOR_TESTED_PACKAGE and NOT_DEPLOYED; the running production/dashboard is unchanged. Accepted limitations - underlying whole-book pipeline reads/hashing remain; dense frontend graphs may contain unroutable edges and the UI must visibly disclose undrawn connections before real telemetry binding; the frontend remains a fixture-only DEMO not connected to production APIs/LLM/voice/operational controls; chat evidence cross-navigation and equal-time Timeline fixtures remain non-blocking; external v1 consumers still require migration.
+    - Package hygiene for 6d78be9 - no SDD changes, no knowledge/ or graphify-out/ contamination, no frontend/new/, no visual-reference archive, no service/watchdog changes.
     - INVESTIGATION_ASSESSED_MEMORY_CONTEXT_NOT_AUTHORITY, ASSESSED_RESULT_VOCABULARY_NOT_VALUE_LABEL and KNOWN_BEFORE_REGISTRATION_REQUIRED hold; assessed memory is context_only, is not an investigation-value.v1 label, and is not deployed.
     - Measured-memory malformed-source hardening is TESTED at 71204ca and not deployed; valid measured, assessed and not_testable memory behavior is unchanged.
     - Unassessable-memory malformed-source hardening is TESTED at 995fa9c and not deployed; valid unassessable, measured and assessed memory behavior is unchanged.
@@ -138,8 +184,10 @@ parked_usefulness_feedback:
   reopen_when: A concrete investigation-value.v1 protocol for an active family, with frozen routine-evidence comparator and deterministic ESTABLISHED/NOT_ESTABLISHED closure predicates, is frozen and producing closure receipts, or the owner explicitly prioritizes designing one.
 
 after_completion:
+  - LUFFY-DASHBOARD-INTEGRATION-V1 is the latest completed dashboard milestone - TESTED at 6d78be9 on dashboard-integration-v1, integrating chat safety (da62d0a), dashboard performance (bcf245a) and owner frontend (79d2df4); NOT_DEPLOYED; running production/dashboard unchanged. The earlier per-package records remain historical. Do not merge, deploy, restart services or change watchdog state without separate owner authorization.
+  - Health deployment remains parked, separate and not authorized. No new package and no deployment is selected as active work.
   - SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1 is TESTED at 9f7edfb and NOT_DEPLOYED. It establishes bounded isolated shadow invocation, internal dispatch for exactly strategy_decay and strategy_health_unreadable, and an offline read-only context_only owner report. No Kernel scheduling, persistent service, recurring cadence, Risk/Execution path or trading authority is established.
   - One-shot production-scale timing is a separate owner-decision candidate only. Authorization must specify the source DB path, shadow DB path, max_sources, wall_clock_deadline_s, invocation_key / recorded_at_ms, observation/timing goal, stop conditions and acceptable WAL/checkpoint/resource impact. Recurring cadence requires one-shot evidence, review of that evidence and separate owner authorization. Neither authorization grants trading authority.
   - max_sources bounds source selection only. Full-history derivation/verification, repeated Bank filing, WAL/checkpoint effects and storage growth remain unbounded; batch-independent results and production timing are not established. Source identity is not a full database fingerprint. Total research cost remains NOT_ESTABLISHED; budget manager authority is MISSING.
   - External Source Router/retrieval, registered falsifier predicates, a truthful WorldModel/regime source and failed-research suppression/no-repeat policy remain MISSING. Do not infer authority from context_only recall or reports. No next implementation package is selected or queued.
-  - Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged.
+  - 'Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged.'
