@@ -402,7 +402,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         history = body.get("history") or []
 
         def _run():
-            return ChatEngine(journal, cfg).handle(msg, history)
+            return ChatEngine(journal, cfg).handle(msg, history, do_ops=False)
         import asyncio
         reply = await asyncio.get_event_loop().run_in_executor(None, _run)
         return {"reply": reply}

@@ -601,7 +601,7 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
    <button class="btn" onclick="quick('how are we doing today?')">Today</button>
    <button class="btn" onclick="quick('why did you skip the last signal?')">Why skip?</button>
    <button class="btn" onclick="quick('how are the strategies doing?')">Strategy health</button>
-   <button class="btn danger" onclick="quick('freeze entries')">Freeze</button>
+   <button class="btn danger" onclick="setState('FROZEN')">Freeze</button>
   </div>
   <div style="display:flex;gap:6px;margin-top:8px;width:100%">
    <input id="chat-in" class="btn" style="flex:1;background:var(--panel)"
@@ -1639,7 +1639,7 @@ async function sendChat(){const t=$('#chat-in').value.trim();if(!t)return;
   chatHistory.push({who:'You',text:t},{who:'Luffy',text:r.reply||''});
   setLuffyState('idle'); speak(r.reply||'');
   setTimeout(refresh,1500);}
- catch(e){pending.querySelector('.txt').textContent='brain unreachable — ops still work';
+ catch(e){pending.querySelector('.txt').textContent="Brain unreachable. Chat can discuss operational actions but cannot execute them. Use the dashboard's explicit controls and confirm when prompted.";
   setLuffyState('idle');}}
 function quick(q){$('#chat-in').value=q;sendChat();}
 
