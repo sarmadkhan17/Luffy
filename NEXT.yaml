@@ -5,15 +5,21 @@ work_package:
   id: null
   status: NO_ACTIVE_PACKAGE
   last_completed:
-    id: SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1
+    id: LUFFY-CHAT-CONTROL-SEPARATION-V1
     state: TESTED
-    implementation_commit: 9f7edfb
+    implementation_commit: da62d0a
     evidence:
-      - trader/cognition/research_families.py; trader/cognition/research_shadow_store.py; trader/cognition/research_shadow_contract.py; trader/cognition/research_shadow.py; trader/cognition/_research_shadow_child.py; trader/cognition/research_shadow_report.py
-      - tests/test_research_family_dispatch.py; tests/test_research_shadow_isolation.py; tests/test_research_shadow_invocation.py; tests/test_research_shadow_report.py; tests/research_shadow_fixtures.py
-      - Astra final PASS; 190 harness tests passed; four updated caller guards passed; prior milestone regression 1888 passed / 1 baseline failure; fresh import comparison 54 baseline violations / 54 current / zero new; git diff --check clean
+      - Owner-supplied results; Opus independent PASS; 117 focused tests passed; 80 independent offline phrase/state probes passed.
+      - Mutation tests caught the tested safety regressions; DNS/network blocked, zero attempts; git diff --check clean.
+    integration_status: PENDING
     runtime_deployment: NOT_DEPLOYED
-    record: STATE.yaml completed_research_shadow_harness_v1
+    record: STATE.yaml completed_chat_control_separation_v1
+    limitations:
+      - LLM budget bookkeeping may still write files.
+      - Browser behavior was checked through a Node harness, not a real browser.
+      - No live integration testing.
+      - Explicit internal do_ops=True remains; no production caller uses it.
+    boundary: Integration pending; the running dashboard is not established as fixed. Dashboard-performance work remains separate and unfinished. No new work selected; parked boundaries unchanged.
   selection: No next implementation package is selected or queued. The next milestone candidate is a separate owner decision for one-shot RESEARCH_SHADOW production-scale timing evidence, not another feature package; the candidate is not authorized.
   one_shot_research_shadow_timing_candidate:
     status: NOT_AUTHORIZED

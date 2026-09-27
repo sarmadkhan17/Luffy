@@ -3988,10 +3988,43 @@ completed_research_shadow_harness_v1:
     - separate owner authorization
   future_shadow_authorization_trading_authority: NONE
 
+completed_chat_control_separation_v1:
+  id: LUFFY-CHAT-CONTROL-SEPARATION-V1
+  state: TESTED
+  implementation_commit: da62d0a
+  evidence:
+    - Owner-supplied implementation and independent review results for da62d0a; recorded by this control-plane-only update.
+  validation:
+    independent_review: Opus PASS
+    focused_tests: 117 passed
+    independent_offline_phrase_state_probes: 80 passed
+    mutation_tests: Caught the tested safety regressions.
+    dns_network: Blocked; zero attempts.
+    git_diff_check: clean
+  proven_facts:
+    - Engine defaults and /api/chat explicitly use do_ops=False.
+    - Ordinary conversation cannot change trading/control state.
+    - Legacy Freeze uses the existing confirmed typed action.
+    - Misleading fallback wording is corrected.
+    - Existing authentication and intentional control semantics are preserved.
+  limitations:
+    - LLM budget bookkeeping may still write files.
+    - Browser behavior was checked through a Node harness, not a real browser.
+    - No live integration testing.
+    - Explicit internal do_ops=True remains; no production caller uses it.
+  integration_status: PENDING
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: Integration is pending; this record does not establish that the running dashboard is fixed.
+  dashboard_performance:
+    status: UNFINISHED
+    note: Separate work; not completed or selected by this package.
+  not_queued: No next package is selected or queued; all parked boundaries remain unchanged.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1 is TESTED at 9f7edfb and NOT_DEPLOYED. Bounded isolated automatic research invocation, two-family internal dispatch and an offline read-only context_only owner report are TESTED in the shadow harness only. Recurring operation and production-scale timing evidence remain MISSING; no cadence or production bounds are chosen. No trading/control authority or live Risk/Execution path is established. A one-shot production-scale timing run is only a separate owner-decision candidate; no next implementation package is selected or queued. All parked boundaries remain unchanged.
+  note: LUFFY-CHAT-CONTROL-SEPARATION-V1 is TESTED at da62d0a; integration PENDING and NOT_DEPLOYED. The running dashboard is not established as fixed. Dashboard-performance work remains separate and unfinished. SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1 is TESTED at 9f7edfb and NOT_DEPLOYED. Bounded isolated automatic research invocation, two-family internal dispatch and an offline read-only context_only owner report are TESTED in the shadow harness only. Recurring operation and production-scale timing evidence remain MISSING; no cadence or production bounds are chosen. No trading/control authority or live Risk/Execution path is established. A one-shot production-scale timing run is only a separate owner-decision candidate; no next implementation package is selected or queued. All parked boundaries remain unchanged.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
