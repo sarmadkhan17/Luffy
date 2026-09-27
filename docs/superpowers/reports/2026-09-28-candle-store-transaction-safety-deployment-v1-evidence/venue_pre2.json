@@ -1,0 +1,139 @@
+{
+ "venue_positions": 8,
+ "journal_open": 8,
+ "algo_stops": 8,
+ "ordinary_orders": 0,
+ "snapshot_complete": true,
+ "rows": [
+  {
+   "sym": "SUIUSDT",
+   "side": "long",
+   "amt": 293.6,
+   "journal_amt": 293.6,
+   "journal_sl": 1.097043,
+   "journal_sl_id": "1000000220948002",
+   "venue_stop_ids": [
+    "1000000220948002"
+   ],
+   "venue_triggers": [
+    1.097
+   ],
+   "match": "matched",
+   "ok": true
+  },
+  {
+   "sym": "LINKUSDT",
+   "side": "long",
+   "amt": 32.77,
+   "journal_amt": 32.77,
+   "journal_sl": 13.252571,
+   "journal_sl_id": "1000000218214011",
+   "venue_stop_ids": [
+    "1000000218214011"
+   ],
+   "venue_triggers": [
+    13.253
+   ],
+   "match": "matched",
+   "ok": true
+  },
+  {
+   "sym": "ZECUSDT",
+   "side": "long",
+   "amt": 0.183,
+   "journal_amt": 0.183,
+   "journal_sl": 1502.958571,
+   "journal_sl_id": "1000000219870582",
+   "venue_stop_ids": [
+    "1000000219870582"
+   ],
+   "venue_triggers": [
+    1502.96
+   ],
+   "match": "matched",
+   "ok": true
+  },
+  {
+   "sym": "SOLUSDT",
+   "side": "long",
+   "amt": 5.77,
+   "journal_amt": 5.77,
+   "journal_sl": 115.658571,
+   "journal_sl_id": "1000000220387828",
+   "venue_stop_ids": [
+    "1000000220387828"
+   ],
+   "venue_triggers": [
+    115.66
+   ],
+   "match": "matched",
+   "ok": true
+  },
+  {
+   "sym": "UNIUSDT",
+   "side": "long",
+   "amt": 8.0,
+   "journal_amt": 8.0,
+   "journal_sl": 8.844571,
+   "journal_sl_id": "1000000220308029",
+   "venue_stop_ids": [
+    "1000000220308029"
+   ],
+   "venue_triggers": [
+    8.845
+   ],
+   "match": "matched",
+   "ok": true
+  },
+  {
+   "sym": "AVAXUSDT",
+   "side": "long",
+   "amt": 77.0,
+   "journal_amt": 77.0,
+   "journal_sl": 9.805571,
+   "journal_sl_id": "1000000220393748",
+   "venue_stop_ids": [
+    "1000000220393748"
+   ],
+   "venue_triggers": [
+    9.806
+   ],
+   "match": "matched",
+   "ok": true
+  },
+  {
+   "sym": "NEARUSDT",
+   "side": "long",
+   "amt": 116.0,
+   "journal_amt": 116.0,
+   "journal_sl": 4.603,
+   "journal_sl_id": "1000000220996725",
+   "venue_stop_ids": [
+    "1000000220996725"
+   ],
+   "venue_triggers": [
+    4.603
+   ],
+   "match": "matched",
+   "ok": true
+  },
+  {
+   "sym": "TAOUSDT",
+   "side": "long",
+   "amt": 1.137,
+   "journal_amt": 1.137,
+   "journal_sl": 309.848571,
+   "journal_sl_id": "1000000219374712",
+   "venue_stop_ids": [
+    "1000000219374712"
+   ],
+   "venue_triggers": [
+    309.85
+   ],
+   "match": "matched",
+   "ok": true
+  }
+ ],
+ "valid_stops": 8,
+ "journal_not_on_venue": []
+}

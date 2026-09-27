@@ -1,0 +1,9 @@
+C1 | 2026-09-28 01:23:42,483 [INFO] luffy: cycle #1 · 19 symbols · 19 decisions · eq $5,419 · dd 1.82% · 157.6s | "control_state":"FROZEN","heartbeat_age_s":62.51747965812683, | pid=2324544 cpu/rssKB=48.9 371160 | 3.1G free 94% | 01:25:02
+C2 | 2026-09-28 01:24:00,077 [INFO] luffy: cycle #2 · 19 symbols · 19 decisions · eq $5,429 · dd 1.65% · 16.6s | "control_state":"FROZEN","heartbeat_age_s":63.84196424484253, | pid=2324544 cpu/rssKB=48.7 371160 | 3.1G free 94% | 01:25:04
+C3 | 2026-09-28 01:25:05,079 [INFO] luffy: cycle #3 · 19 symbols · 19 decisions · eq $5,432 · dd 1.59% · 21.6s | "control_state":"FROZEN","heartbeat_age_s":15.099690675735474, | pid=2324544 cpu/rssKB=46.2 371160 | 3.1G free 94% | 01:25:20
+C4 | 2026-09-28 01:26:00,061 [INFO] luffy: cycle #4 · 19 symbols · 19 decisions · eq $5,433 · dd 1.57% · 16.6s | "control_state":"FROZEN","heartbeat_age_s":6.498839378356934, | pid=2324544 cpu/rssKB=41.3 398344 | 3.1G free 94% | 01:26:06
+C5 | 2026-09-28 01:26:59,385 [INFO] luffy: cycle #5 · 19 symbols · 19 decisions · eq $5,434 · dd 1.55% · 15.9s | "control_state":"FROZEN","heartbeat_age_s":8.491072654724121, | pid=2324544 cpu/rssKB=38.5 458132 | 3.1G free 94% | 01:27:08
+C6 | 2026-09-28 01:28:03,879 [INFO] luffy: cycle #6 · 19 symbols · 19 decisions · eq $5,436 · dd 1.52% · 20.4s | "control_state":"FROZEN","heartbeat_age_s":5.159976243972778, | pid=2324544 cpu/rssKB=34.4 464792 | 3.1G free 94% | 01:28:09
+C7 | 2026-09-28 01:29:00,670 [INFO] luffy: cycle #7 · 19 symbols · 19 decisions · eq $5,437 · dd 1.51% · 17.2s | "control_state":"FROZEN","heartbeat_age_s":9.592172622680664, | pid=2324544 cpu/rssKB=30.7 464804 | 3.1G free 94% | 01:29:10
+C8 | 2026-09-28 01:29:59,195 [INFO] luffy: cycle #8 · 19 symbols · 19 decisions · eq $5,436 · dd 1.51% · 15.7s | "control_state":"FROZEN","heartbeat_age_s":12.262144804000854, | pid=2324544 cpu/rssKB=27.8 464824 | 3.1G free 94% | 01:30:11
+DONE
