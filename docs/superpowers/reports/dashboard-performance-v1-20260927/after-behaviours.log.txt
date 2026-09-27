@@ -1,0 +1,6 @@
+{"name": "hidden_tab_20s", "requests_while_hidden": 0, "hidden_requests": [], "requests_first_3s_after_return": 9, "return_urls": ["/api/attention/latest", "/api/doctrine", "/api/enrichment", "/api/investigations/latest", "/api/overview", "/api/review_status", "/graphql", "/graphql", "/graphql"], "errors": []}
+{"name": "websocket_drop", "same_document": true, "ws_constructed_after_drop": 1, "ws_status": "live", "errors": []}
+{"name": "out_of_order_overview", "overview_requests": 2, "equity_text": "$1,000", "errors": []}
+{"name": "ten_manual_refreshes", "overview_requests": 2, "max_concurrent_fetches": 5, "errors": []}
+{"name": "enrichment_failure", "first_useful_local_data_ms": 637.5, "equity_text": "$1,000", "assets_text": "wallet unavailable \u00b7 last refresh failed", "errors": []}
+{"name": "session_expiry", "body_text": "Session expired \u2014 dashboard data removed. Sign in again", "equity_visible": false, "requests_next_17s": 0, "ws_closed": true, "errors": []}

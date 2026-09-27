@@ -68,5 +68,11 @@
       status.textContent = 'Attention diagnostics: unavailable (previous display may be stale)';
     } finally { clearTimeout(timeout); busy = false; }
   }
-  refreshAttention(); setInterval(refreshAttention, 8000);
+  // no polling while the page is hidden; one refresh when it returns
+  // no polling while hidden or after the dashboard session ends
+  const active = () => !document.hidden && !(globalThis.luffySession && globalThis.luffySession.lost);
+  let last = 0;   // one refresh per 8 s, whether from the timer or a visibility return
+  const tick = () => { if (active() && Date.now() - last >= 7500) { last = Date.now(); refreshAttention(); } };
+  tick(); const timer = setInterval(() => { if (globalThis.luffySession && globalThis.luffySession.lost) clearInterval(timer); else tick(); }, 8000);
+  document.addEventListener('visibilitychange', tick);
 })();

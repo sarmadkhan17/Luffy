@@ -1,0 +1,76 @@
+{
+  "mode": "before",
+  "scenarios": [
+    {
+      "name": "cold_offline_dependencies",
+      "navigation_and_composer_ms": 497.10000002384186,
+      "first_useful_local_data_ms": 1427.6999999284744,
+      "errors": [],
+      "fetch": {
+        "maxActive": 5,
+        "n": 9
+      },
+      "server": {
+        "rss_kib": 117328,
+        "network_model": {
+          "delay": 0.08,
+          "calls": 12,
+          "max_concurrent": 1
+        },
+        "threads": 5
+      }
+    },
+    {
+      "name": "warm_browser",
+      "navigation_and_composer_ms": 376.3000000715256,
+      "first_useful_local_data_ms": 533.5,
+      "errors": [],
+      "fetch": {
+        "maxActive": 4,
+        "n": 9
+      },
+      "server": {
+        "rss_kib": 118096,
+        "network_model": {
+          "delay": 0.08,
+          "calls": 12,
+          "max_concurrent": 1
+        },
+        "threads": 5
+      }
+    },
+    {
+      "name": "delayed_parser_script",
+      "navigation_and_composer_ms": 8317.700000047684,
+      "first_useful_local_data_ms": 9350.600000023842,
+      "errors": [],
+      "fetch": {
+        "maxActive": 3,
+        "n": 9
+      },
+      "server": {
+        "rss_kib": 118364,
+        "network_model": {
+          "delay": 0.08,
+          "calls": 12,
+          "max_concurrent": 1
+        },
+        "threads": 4
+      }
+    },
+    {
+      "name": "slow_serial_network",
+      "navigation_and_composer_ms": 282.89999997615814,
+      "first_useful_local_data_ms": 60933.89999997616,
+      "errors": [],
+      "fetch": {
+        "maxActive": 16,
+        "n": 33
+      },
+      "server": "server_unresponsive_within_5s",
+      "nav_during_stall_ms": 487.5280490377918
+    }
+  ],
+  "behaviours": [],
+  "browser": "151.0.7922.34"
+}
