@@ -10,12 +10,14 @@ Every transition is journaled with its actor. Panic = flatten + FROZEN.
 """
 from __future__ import annotations
 
+import json
 import logging
+from contextlib import contextmanager
 from dataclasses import dataclass
 
-from ..core.types import ControlState
+from ..core.types import ControlState, now_utc
 from ..core.journal import Journal
-from .control_fence import control_fence, persisted_state
+from .control_fence import control_fence, latest_intent_event_id, persisted_state
 
 log = logging.getLogger(__name__)
 
@@ -36,9 +38,36 @@ class TransitionResult:
     changed: bool
     state: ControlState | None
     event_id: int | None = None
+    refused: str | None = None            # the guard's refusal, when it refused
 
     def __bool__(self) -> bool:
         return self.changed
+
+
+class FencedControl:
+    """State, intent watermark and transitions read/applied under one fence hold.
+
+    Lets an operation observe the persisted state and the latest intent event,
+    journal its own request, and apply its own transition atomically: no other
+    process's set() can land between the read and the write.
+    """
+
+    def __init__(self, machine: "ControlStateMachine"):
+        self._machine = machine
+
+    @property
+    def state(self) -> ControlState | None:
+        return persisted_state(self._machine.journal)
+
+    @property
+    def watermark(self) -> int:
+        return latest_intent_event_id(self._machine.journal)
+
+    def apply(self, new: ControlState, actor: str, detail: str = "", *,
+              conn=None) -> int | None:
+        """Transition (or same-state owner hold); returns its exact event id.
+        `conn`: write inside that open transaction (e.g. a Risk hold's)."""
+        return self._machine._set_fenced(new, actor, detail, conn=conn)
 
 
 class ControlStateMachine:
@@ -67,56 +96,98 @@ class ControlStateMachine:
         return self.state in (ControlState.ACTIVE, ControlState.FROZEN,
                               ControlState.RECOVERY)
 
-    def set(self, new: ControlState, actor: str, detail: str = "") -> None:
+    def set(self, new: ControlState, actor: str, detail: str = "") -> int | None:
         # The shared entry/control fence: a transition waits for an entry
         # submission already past the Executor's final boundary, and once it
         # persists a blocking state no later entry can be submitted.
         with control_fence(self.journal):
-            self._set_fenced(new, actor, detail)
+            return self._set_fenced(new, actor, detail)
+
+    @contextmanager
+    def fenced(self):
+        """Hold the control fence for one atomic read/journal/transition step.
+
+        Not reentrant: never call set()/set_if_current() inside the block.
+        """
+        with control_fence(self.journal):
+            yield FencedControl(self)
 
     def set_if_current(self, expected: ControlState, new: ControlState,
                        actor: str, detail: str = "", *,
-                       expected_control_event_id: int | None = None) -> TransitionResult:
-        """Compare state and optional control-intent watermark under one fence."""
+                       expected_control_event_id: int | None = None,
+                       guard=None) -> TransitionResult:
+        """Compare state and optional control-intent watermark under one fence.
+
+        `guard`, if given, is a zero-argument callable returning a context
+        manager that yields None / a refusal reason, or (refusal, conn). It is
+        entered inside the fence after the state/watermark compare and held
+        across the transition (e.g. the Risk proof's hold_release); with a
+        `conn`, the transition is written in that transaction.
+        """
         with control_fence(self.journal):
             current = persisted_state(self.journal)
             if current is None or current != expected:
                 return TransitionResult(False, current)
             self.state = current
-            if expected_control_event_id is not None:
-                rows = self.journal.query(
-                    "SELECT COALESCE(MAX(id), 0) AS id FROM control_events "
-                    "WHERE event IN ('state_change','state_hold')")
-                if int(rows[0]["id"]) != expected_control_event_id:
-                    return TransitionResult(False, current)
+            if (expected_control_event_id is not None
+                    and latest_intent_event_id(self.journal) != expected_control_event_id):
+                return TransitionResult(False, current)
             if new == expected:
                 raise ValueError("compare-and-set requires a transition")
-            event_id = self._set_fenced(new, actor, detail)
+            if guard is None:
+                event_id = self._set_fenced(new, actor, detail)
+                return TransitionResult(True, new, event_id)
+            with guard() as held:
+                refusal, conn = held if isinstance(held, tuple) else (held, None)
+                if refusal:
+                    return TransitionResult(False, current, refused=str(refusal))
+                event_id = self._set_fenced(new, actor, detail, conn=conn)
             return TransitionResult(True, new, event_id)
 
-    def _set_fenced(self, new: ControlState, actor: str, detail: str) -> int | None:
+    def _kv_set(self, conn, key: str, value: str) -> None:
+        if conn is None:
+            self.journal.kv_set(key, value)
+        else:
+            conn.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES (?,?)",
+                         (key, value))
+
+    def _event(self, conn, event: str, actor: str, from_state: str, to_state: str,
+               detail) -> int:
+        if conn is None:
+            return self.journal.log_control_event(event, actor, from_state=from_state,
+                                                  to_state=to_state, detail=detail)
+        cursor = conn.execute(
+            "INSERT INTO control_events(ts,event,from_state,to_state,actor,detail) "
+            "VALUES (?,?,?,?,?,?)",
+            (now_utc().isoformat(), event, from_state, to_state, actor,
+             detail if isinstance(detail, str) else json.dumps(detail)))
+        return int(cursor.lastrowid)
+
+    def _set_fenced(self, new: ControlState, actor: str, detail: str, *,
+                    conn=None) -> int | None:
         self.refresh()
         # A same-state operator freeze still records an explicit hold, so
         # MacroGuard cannot later auto-resume a freeze it did not own.
         if new == ControlState.FROZEN and actor != "macro_guard":
-            self.journal.kv_set("macro_guard_operator_hold", "1")
+            self._kv_set(conn, "macro_guard_operator_hold", "1")
         elif new == ControlState.ACTIVE and actor != "macro_guard":
-            self.journal.kv_set("macro_guard_operator_hold", "0")
+            self._kv_set(conn, "macro_guard_operator_hold", "0")
         if new == self.state:
-            # A same-state owner freeze is still an explicit hold. Record it
-            # so an in-flight Supervisor containment loses ownership.
-            if new == ControlState.FROZEN and actor in OWNER_ACTORS:
-                return self.journal.log_control_event("state_hold", actor,
-                                                      from_state=new.value,
-                                                      to_state=new.value, detail=detail)
+            # A same-state owner FROZEN/HALTED is still explicit owner intent.
+            # Record it so any in-flight operation bound to an older intent
+            # watermark (Supervisor containment, owner recovery, rollback
+            # preparation) loses. Non-owner reassertions (a per-cycle risk
+            # re-halt) stay silent: they are refreshes, not new intent.
+            if (new in (ControlState.FROZEN, ControlState.HALTED)
+                    and actor in OWNER_ACTORS):
+                return self._event(conn, "state_hold", actor, new.value, new.value, detail)
             return None
         if new not in VALID_TRANSITIONS[self.state]:
             raise ValueError(f"illegal transition {self.state}→{new}")
-        old, self.state = self.state, new
-        self.journal.kv_set("control_state", new.value)
-        event_id = self.journal.log_control_event("state_change", actor,
-                                                  from_state=old.value, to_state=new.value,
-                                                  detail=detail)
+        old = self.state
+        self._kv_set(conn, "control_state", new.value)
+        event_id = self._event(conn, "state_change", actor, old.value, new.value, detail)
+        self.state = new
         log.warning(f"CONTROL STATE {old.value} → {new.value} (by {actor}) {detail}")
         return event_id
 

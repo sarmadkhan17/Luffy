@@ -13,6 +13,7 @@ import argparse
 import datetime as dt
 import json
 import logging
+import math
 import signal
 import sys
 import threading
@@ -37,7 +38,7 @@ from .engine.outcomes import resolve_pending
 from .engine.reconcile import flatten_all, reconcile_futures
 from .engine.risk import RiskManager
 from .engine.state import ControlStateMachine
-from .engine.supervisor import Supervisor
+from .engine.supervisor import OwnerContext, Supervisor
 from .engine.watchdog import Heartbeat, start_stall_monitor
 from .notify.telegram import Telegram
 from .strategy.genome import Genome
@@ -94,7 +95,8 @@ class Kernel:
         self.executor = Executor(self.exchange, self.journal, cfg,
                                  self.market_type)
         self.supervisor = Supervisor(self.journal, self.state_machine,
-                                     self.executor, self.exchange)
+                                     self.executor, self.exchange,
+                                     risk_release=self._risk_release)
         from .engine.exits import ExitEngine
 
         self.population = self._load_population()
@@ -285,7 +287,7 @@ class Kernel:
         if any(report.get(k) for k in ("adopted", "ghosts")):
             self.notifier.send(f"🔧 boot reconciliation: {report}")
         if recovery is not None and recovery.reasons:
-            self.notifier.send(f"🔒 recovery {recovery.status}: {', '.join(recovery.reasons)}")
+            self.notifier.send(f"🔒 recovery {recovery.outcome}: {', '.join(recovery.reasons)}")
         start_stall_monitor(
             self.heartbeat,
             stale_after=float(self.cfg["timeframes"]["scan_interval_seconds"]) * 4)
@@ -829,11 +831,7 @@ class Kernel:
         stats = {"scanned": 0, "decisions": 0, "entries": 0,
                  "skips": 0, "exits_detected": 0}
         self.state_machine.refresh()
-        balance = self._fetch_balance()
-        status = self.risk.update_equity(balance)
-        if status.get("halt_breached"):
-            self.state_machine.set(ControlState.HALTED, "risk_engine",
-                                   f"drawdown {status['drawdown_pct']}%")
+        balance, status = self._risk_step()
 
         stats["manual_closed"] = self._drain_close_requests()
 
@@ -845,31 +843,7 @@ class Kernel:
                                    f"panic flattened {n}")
             stats["panic_closed"] = n
 
-        # MacroGuard: hard-freeze during scheduled high-impact US events.
-        # Only auto-resumes if MacroGuard owns the current freeze, not operator.
-        macro = self.macro_guard.check()
-        macro_owns_freeze = self.journal.kv_get("macro_guard_froze", "0") == "1"
-        operator_hold = self.journal.kv_get(
-            "macro_guard_operator_hold", "0") == "1"
-        _cur = self.state_machine.refresh()
-        if macro.get("active") and _cur == ControlState.ACTIVE:
-            self.state_machine.set(ControlState.FROZEN, "macro_guard",
-                                   macro.get("event", "macro event"))
-            self.journal.kv_set("macro_guard_froze", "1")
-            self.notifier.send(
-                f"🔒 MacroGuard FREEZE: {macro.get('event', 'macro event')} "
-                f"until {macro.get('until', '?')}")
-        elif (not macro.get("active") and macro_owns_freeze
-              and not operator_hold and _cur == ControlState.FROZEN):
-            self.state_machine.set(ControlState.ACTIVE, "macro_guard",
-                                   "macro event cleared")
-            self.journal.kv_set("macro_guard_froze", "0")
-            self.notifier.send("✅ MacroGuard: event cleared — resuming ACTIVE")
-        self.journal.kv_set("macro_guard_state", json.dumps({
-            "active": bool(macro.get("active")),
-            "event": macro.get("event", ""),
-            "until": macro.get("until"),
-            "ts": dt.datetime.now(dt.timezone.utc).isoformat()}))
+        self._macro_step(self.macro_guard.check())
 
         state = self.state_machine.refresh()
         supervisor = getattr(self, "supervisor", None)
@@ -884,7 +858,10 @@ class Kernel:
         if self.market_type == MarketType.FUTURES and self.executor.recovery_pending():
             entry_allowed = False
             blocked = "execution_recovery_pending"
-        if entry_allowed and status.get("daily_pnl_pct", 0) <= \
+        if entry_allowed and status.get("risk_state") != "ok":
+            entry_allowed = False
+            blocked = f"risk_state={status.get('risk_state')}"
+        if entry_allowed and (status.get("daily_pnl_pct") or 0) <= \
                 -self.risk.daily_loss_block * 100:
             entry_allowed = False
             blocked = f"daily breaker {status['daily_pnl_pct']:.1f}%"
@@ -1474,6 +1451,137 @@ class Kernel:
 
     def _fetch_balance(self) -> float:
         """Collateral margin equity — the number risk sizing is allowed to use."""
+        fresh = self._fetch_balance_fresh()
+        return fresh if fresh is not None else self._last_equity_fallback()
+
+    def _risk_release(self):
+        """Risk's fresh answer to "may we be ACTIVE now?" — venue equity only,
+        never the journal fallback; None equity makes Risk fail closed."""
+        return self.risk.release_check(self._fetch_balance_fresh())
+
+    def _risk_step(self) -> tuple[float, dict]:
+        """The cycle's Risk step: track equity, HALT on the drawdown breach.
+
+        Only a fresh venue read may establish a first baseline (the journal
+        fallback is for sizing). A corrupt baseline is never re-seeded: an
+        ACTIVE state is contained (FROZEN, exits still managed) and stays
+        contained until RiskManager.repair_baseline(); release fails closed.
+        """
+        fresh = self._fetch_balance_fresh()
+        if not (isinstance(fresh, (int, float)) and not isinstance(fresh, bool)
+                and math.isfinite(fresh) and fresh > 0):
+            fresh = None                # a malformed read is no read
+        balance = fresh if fresh is not None else self._last_equity_fallback()
+        status = self.risk.update_equity(balance, authoritative=fresh is not None)
+        if status.get("halt_breached"):
+            self.state_machine.set(ControlState.HALTED, "risk_engine",
+                                   f"drawdown {status['drawdown_pct']}%")
+        elif status.get("risk_state") in ("corrupt", "unreadable"):
+            why = f"risk_state_{status['risk_state']}"
+            if self.state_machine.set_if_current(ControlState.ACTIVE, ControlState.FROZEN,
+                                                 "risk_engine", why):
+                self.notifier.send(f"🔒 {why} — FROZEN; activation blocked until "
+                                   "the Risk baseline is readable/repaired.")
+        return balance, status
+
+    # ── MacroGuard: freeze on scheduled events, release only through Risk ──
+    def _macro_freeze_event_id(self) -> int | None:
+        """The exact FROZEN event MacroGuard owns, or None if not provable."""
+        raw = self.journal.kv_get("macro_guard_freeze_event_id")
+        if raw:
+            try:
+                return int(raw)
+            except ValueError:
+                return None
+        # A freeze recorded before the event id was stored: own it only if it
+        # is still the latest intent event and it is MacroGuard's own FROZEN.
+        rows = self.journal.query(
+            "SELECT id, event, to_state, actor FROM control_events "
+            "WHERE event IN ('state_change','state_hold') ORDER BY id DESC LIMIT 1")
+        if rows and rows[0]["event"] == "state_change" and \
+                rows[0]["to_state"] == "FROZEN" and rows[0]["actor"] == "macro_guard":
+            return int(rows[0]["id"])
+        return None
+
+    def _macro_disown(self) -> None:
+        self.journal.kv_set("macro_guard_froze", "0")
+        self.journal.kv_set("macro_guard_freeze_event_id", "")
+        self.journal.kv_set("macro_guard_release_refused", "")
+
+    def _macro_step(self, macro: dict) -> None:
+        """Freeze an ACTIVE state for a macro event; on clearance *request*
+        release. MacroGuard never sets ACTIVE: the Supervisor's guarded release
+        needs a fresh Risk release (and, for futures, fresh venue/protection
+        proof) and loses to any newer HALTED/FROZEN."""
+        macro_owns_freeze = self.journal.kv_get("macro_guard_froze", "0") == "1"
+        operator_hold = self.journal.kv_get(
+            "macro_guard_operator_hold", "0") == "1"
+        _cur = self.state_machine.refresh()
+        if macro.get("active") and _cur == ControlState.ACTIVE:
+            t = self.state_machine.set_if_current(
+                ControlState.ACTIVE, ControlState.FROZEN, "macro_guard",
+                macro.get("event", "macro event"))
+            if t:
+                self.journal.kv_set("macro_guard_froze", "1")
+                self.journal.kv_set("macro_guard_freeze_event_id", str(t.event_id))
+                self.notifier.send(
+                    f"🔒 MacroGuard FREEZE: {macro.get('event', 'macro event')} "
+                    f"until {macro.get('until', '?')}")
+        elif (not macro.get("active") and macro_owns_freeze
+              and not operator_hold and _cur == ControlState.FROZEN):
+            self._macro_release()
+        self.journal.kv_set("macro_guard_state", json.dumps({
+            "active": bool(macro.get("active")),
+            "event": macro.get("event", ""),
+            "until": macro.get("until"),
+            "ts": dt.datetime.now(dt.timezone.utc).isoformat()}))
+
+    def _macro_release(self) -> None:
+        eid = self._macro_freeze_event_id()
+        if eid is None:
+            self._macro_disown()
+            self.journal.log_control_event("macro_release_refused", "macro_guard",
+                                           detail={"reasons": ["macro_freeze_not_owned"]})
+            return
+        r = self.supervisor.request_macro_release(
+            eid, venue_recovery=self.market_type == MarketType.FUTURES)
+        if r.status == "BUSY":
+            return                      # an owner request holds the pass; retry next cycle
+        if r.status == "REFUSED" and "macro_freeze_not_owned" not in r.reasons:
+            # Still MacroGuard's freeze, Risk said no: keep it and retry next
+            # cycle, but audit only when the reason changes (no per-cycle noise).
+            why = ",".join(r.reasons)
+            if self.journal.kv_get("macro_guard_release_refused", "") != why:
+                self.journal.kv_set("macro_guard_release_refused", why)
+                self.journal.log_control_event("macro_release_refused", "macro_guard",
+                                               detail={"freeze_event_id": eid,
+                                                       "reasons": list(r.reasons)})
+            return
+        self._macro_disown()            # released, handed to Supervisor, or superseded
+        self.journal.log_control_event("macro_release_result", "macro_guard",
+                                       to_state=r.control_state or "",
+                                       detail={"freeze_event_id": eid, "status": r.status,
+                                               "reasons": list(r.reasons)})
+        if r.status == "ACTIVATED":
+            self.notifier.send("✅ MacroGuard: event cleared — ACTIVE after fresh "
+                               "Risk and recovery proof")
+        elif r.status == "CONTAINED":
+            self.notifier.send(f"🔒 MacroGuard: event cleared — held in {r.control_state}: "
+                               f"{', '.join(r.reasons)}")
+
+    def owner_resume(self, ctx: OwnerContext, *, allow_unhalt: bool = False):
+        """The transport-neutral owner resume/unhalt: every channel calls this.
+
+        Futures run the full Supervisor recovery (venue + protection + Risk);
+        markets without futures venue recovery use the Risk-gated release.
+        Neither ever sets ACTIVE except by the Supervisor's guarded CAS.
+        """
+        if self.market_type == MarketType.FUTURES:
+            return self.supervisor.request_owner_recovery(ctx, allow_unhalt=allow_unhalt)
+        return self.supervisor.request_owner_release(ctx, allow_unhalt=allow_unhalt)
+
+    def _fetch_balance_fresh(self) -> float | None:
+        """Equity read from the venue now, or None. Never a stored value."""
         try:
             import hashlib, hmac as _hmac
             import requests
@@ -1509,10 +1617,10 @@ class Kernel:
                         raise
                     log.debug(f"balance retry after: {inner}")
                     time.sleep(3)
-            return total if total > 0 else self._last_equity_fallback()
+            return total if total > 0 else None
         except Exception as e:
             log.warning(f"balance fetch failed: {e}")
-            return self._last_equity_fallback()
+            return None
 
     def _last_equity_fallback(self) -> float:
         rows = self.journal.query(
@@ -1538,11 +1646,11 @@ class Kernel:
                     chat = (u.get("message") or {}).get("chat", {}).get("id")
                     if chat != int(self.notifier.chat_id):
                         continue
-                    self._handle_tg_command(msg, base)
+                    self._handle_tg_command(msg, base, update=u)
             except Exception as e:
                 log.debug(f"tg poll error: {e}")
 
-    def _handle_tg_command(self, msg: str, base: str) -> None:
+    def _handle_tg_command(self, msg: str, base: str, update: dict | None = None) -> None:
         def reply(text):
             try:
                 __import__("requests").post(
@@ -1557,9 +1665,30 @@ class Kernel:
         elif msg.startswith("/freeze"):
             self.state_machine.set(ControlState.FROZEN, "operator", "telegram")
             reply("🥶 FROZEN — no new entries; managing existing to close.")
-        elif msg.startswith("/resume"):
-            self.state_machine.set(ControlState.ACTIVE, "operator", "telegram")
-            reply("🙂 ACTIVE — full autonomy restored.")
+        elif msg.startswith(("/resume", "/unhalt")):
+            unhalt = msg.startswith("/unhalt")
+            # Channel adapter only: authenticate (chat-ID check in the
+            # listener), map this update to the transport-neutral owner
+            # context, call the typed operation, render its result. All
+            # release semantics (futures and spot) live behind owner_resume.
+            message = (update or {}).get("message") or {}
+            sender = (message.get("from") or {}).get("id")
+            ctx = OwnerContext(
+                actor="operator", channel="telegram",
+                principal=None if sender is None else str(sender),
+                request_ref=f"{(update or {}).get('update_id')}:{message.get('message_id')}",
+                meta={"command": "/unhalt" if unhalt else "/resume"})
+            r = self.owner_resume(ctx, allow_unhalt=unhalt)
+            if r.status == "ACTIVATED":
+                reply("🙂 ACTIVE — fresh recovery check proved safe.")
+            elif r.status == "ALREADY_ACTIVE":
+                reply("ℹ️ already ACTIVE — nothing changed.")
+            elif "halted_requires_explicit_unhalt" in r.reasons:
+                reply("😴 still HALTED — /resume does not release a halt; "
+                      "send /unhalt to request a contained recheck.")
+            else:
+                why = ", ".join(r.reasons) or "unproven"
+                reply(f"🔒 still {r.control_state}: {r.status} {r.outcome or ''} — {why}")
         elif msg.startswith("/halt"):
             self.state_machine.set(ControlState.HALTED, "operator", "telegram")
             reply("😴 HALTED.")

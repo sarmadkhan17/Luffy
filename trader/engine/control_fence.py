@@ -59,6 +59,18 @@ def control_fence(journal):
         os.close(fd)
 
 
+#: control events that carry control intent; the latest one is the watermark
+#: every compare-and-set and ownership check is bound to.
+INTENT_EVENTS = ("state_change", "state_hold")
+
+
+def latest_intent_event_id(journal) -> int:
+    rows = journal.query(
+        "SELECT COALESCE(MAX(id), 0) AS id FROM control_events "
+        "WHERE event IN ('state_change','state_hold')")
+    return int(rows[0]["id"])
+
+
 def persisted_state(journal) -> ControlState | None:
     """The control state as persisted now; None if unreadable (fail closed)."""
     try:

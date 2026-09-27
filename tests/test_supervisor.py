@@ -1,5 +1,6 @@
 """Supervisor containment, durable evidence and positive activation gates."""
 import json
+from contextlib import nullcontext
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -8,7 +9,18 @@ import pytest
 from trader.core.journal import Journal
 from trader.core.types import ControlState, MarketType
 from trader.engine.state import ControlStateMachine
+from trader.engine.risk import RiskRelease
 from trader.engine.supervisor import KEY, Supervisor
+
+
+def RISK_OK():
+    """Risk permits ACTIVE: these tests exercise venue/recovery safety only.
+
+    A release must carry a verifier (V2: the CAS revalidates the proof); this
+    double's verifier always holds.
+    """
+    return RiskRelease(True, "risk_release_ok", authoritative=True,
+                       verify=lambda _proof: nullcontext(None))
 
 
 class Venue:
@@ -52,7 +64,7 @@ def system(tmp_path):
     executor = SimpleNamespace(
         recovery=SimpleNamespace(pending=lambda: pending["value"]),
         recover_entries=Mock())
-    supervisor = Supervisor(journal, state, executor, venue, interval_s=0)
+    supervisor = Supervisor(journal, state, executor, venue, interval_s=0, risk_release=RISK_OK)
     return journal, state, venue, pending, executor, supervisor
 
 
@@ -113,7 +125,7 @@ def test_binance_style_orphan_algo_stop_is_swept(system):
     venue.stops = [{"algoId": "123", "symbol": "BTCUSDT", "side": "SELL",
                     "reduceOnly": True, "orderType": "STOP_MARKET",
                     "quantity": "1", "triggerPrice": "95"}]
-    supervisor = Supervisor(journal, state, executor, venue, interval_s=0)
+    supervisor = Supervisor(journal, state, executor, venue, interval_s=0, risk_release=RISK_OK)
     result = supervisor.pass_once(boot=True)
     assert result.safe_to_activate and result.actions["reconcile"]["stops_swept"] == 1
     assert venue.stops == [] and venue.open_order_symbols == []
@@ -167,7 +179,7 @@ def test_naked_position_requires_owner_and_persists_across_restart(system):
     assert "protection_cannot_restore" in result.reasons
     assert state.refresh() == ControlState.RECOVERY
     restarted = Supervisor(Journal(journal.db_path), ControlStateMachine(Journal(journal.db_path)),
-                           executor, venue)
+                           executor, venue, risk_release=RISK_OK)
     saved = restarted.status()
     assert saved["needs_owner"] is True
     assert "protection_cannot_restore" in saved["reasons"]
@@ -324,7 +336,7 @@ def test_flat_venue_without_global_listing_is_not_safe(system):
     journal, state, _, _, executor, _ = system
     venue = Venue()
     venue.fapiPrivateGetOpenAlgoOrders = None
-    supervisor = Supervisor(journal, state, executor, venue, interval_s=0)
+    supervisor = Supervisor(journal, state, executor, venue, interval_s=0, risk_release=RISK_OK)
     result = supervisor.pass_once(boot=True)
     assert not result.safe_to_activate and result.needs_owner
     assert "protection_snapshot_unreadable" in result.reasons
@@ -463,7 +475,7 @@ def test_owner_hold_persists_until_later_owner_active_and_restart(system, actor)
     assert cleared.actions["owner_ack_control_event_id"] > first.needs_owner_since_control_event_id
     assert state.refresh() == ControlState.ACTIVE
     restarted = Supervisor(Journal(journal.db_path), ControlStateMachine(Journal(journal.db_path)),
-                           executor, venue)
+                           executor, venue, risk_release=RISK_OK)
     assert not restarted.pass_once(boot=True).needs_owner
     assert journal.query("SELECT id FROM control_events "
                          "WHERE event='supervisor_owner_acknowledged'")
@@ -599,7 +611,7 @@ def _acknowledged_owner_hold(system):
     state.set(ControlState.ACTIVE, "operator", "resume previous hold")
     restarted = Supervisor(Journal(journal.db_path),
                            ControlStateMachine(Journal(journal.db_path)),
-                           executor, venue, interval_s=0)
+                           executor, venue, interval_s=0, risk_release=RISK_OK)
     return journal, state, venue, pending, executor, restarted
 
 

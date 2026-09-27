@@ -152,8 +152,9 @@ def test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits(macro_active)
     k.population = []
     k.journal = j
     k.state_machine = ControlStateMachine(j)
-    k._fetch_balance = lambda: 1000
-    k.risk = NS(update_equity=lambda _: {"equity": 1000, "drawdown_pct": 0},
+    k._fetch_balance_fresh = lambda: 1000
+    k.risk = NS(update_equity=lambda *_a, **_k: {"equity": 1000, "drawdown_pct": 0,
+                                                 "risk_state": "ok"},
                 daily_loss_block=.05)
     k._drain_close_requests = lambda: 0
     k.macro_guard = NS(check=lambda: {"active": macro_active, "event": "cpi"})
