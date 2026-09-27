@@ -5,16 +5,29 @@ work_package:
   id: null
   status: NO_ACTIVE_PACKAGE
   last_completed:
+    id: OWNER-FRONTEND-V1
+    state: TESTED
+    implementation_commit: 79d2df4
+    branch: owner-frontend-v1
+    mode: fixture-only DEMO
+    functional_preview: PASS
+    approved_visual_direction: READY
+    independent_review: Opus
+    evidence:
+      - Overview, LUFFY, Knowledge and Live System in React/TypeScript/Vite; all nine routes exist, five explicitly unavailable in preview; persistent DEMO banner; no production/API/venue/LLM/trading-control connection
+      - F1 topology and F2 stale-health truth defects closed; mobile, reduced motion, hidden-tab cleanup, route churn and bounded graph scope verified
+      - typecheck/build PASS; 11 component tests passed; 16 browser tests passed
+    integration: PENDING
+    runtime_deployment: NOT_DEPLOYED
+    running_production_dashboard: UNCHANGED
+    record: STATE.yaml completed_owner_frontend_v1
+  previous_completed:
     id: SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1
     state: TESTED
     implementation_commit: 9f7edfb
-    evidence:
-      - trader/cognition/research_families.py; trader/cognition/research_shadow_store.py; trader/cognition/research_shadow_contract.py; trader/cognition/research_shadow.py; trader/cognition/_research_shadow_child.py; trader/cognition/research_shadow_report.py
-      - tests/test_research_family_dispatch.py; tests/test_research_shadow_isolation.py; tests/test_research_shadow_invocation.py; tests/test_research_shadow_report.py; tests/research_shadow_fixtures.py
-      - Astra final PASS; 190 harness tests passed; four updated caller guards passed; prior milestone regression 1888 passed / 1 baseline failure; fresh import comparison 54 baseline violations / 54 current / zero new; git diff --check clean
     runtime_deployment: NOT_DEPLOYED
     record: STATE.yaml completed_research_shadow_harness_v1
-  selection: No next implementation package is selected or queued. The next milestone candidate is a separate owner decision for one-shot RESEARCH_SHADOW production-scale timing evidence, not another feature package; the candidate is not authorized.
+  selection: No next implementation package is selected or queued. OWNER-FRONTEND-V1 integration is PENDING and is not selected work. The next milestone candidate is a separate owner decision for one-shot RESEARCH_SHADOW production-scale timing evidence, not another feature package; the candidate is not authorized.
   one_shot_research_shadow_timing_candidate:
     status: NOT_AUTHORIZED
     purpose: Observe production-scale timing and resource effects on the approximately 1.6 GB production database.
@@ -138,8 +151,11 @@ parked_usefulness_feedback:
   reopen_when: A concrete investigation-value.v1 protocol for an active family, with frozen routine-evidence comparator and deterministic ESTABLISHED/NOT_ESTABLISHED closure predicates, is frozen and producing closure receipts, or the owner explicitly prioritizes designing one.
 
 after_completion:
+  - OWNER-FRONTEND-V1 is TESTED at 79d2df4 on owner-frontend-v1 as a fixture-only DEMO preview and NOT_DEPLOYED; integration PENDING; running production/dashboard unchanged. Do not merge, cherry-pick, deploy, restart services or change watchdog state without separate owner authorization.
+  - OWNER-FRONTEND-V1 limitations before real telemetry/topology binding - dense-graph unroutable edges need a visible "N connections not drawn — see list" notice rather than silent dropping; fixture positions/layout must be replaced; chat evidence does not yet select the matching Knowledge record; Timeline fixture timestamps are equal; voice and operational controls unavailable; fixture performance establishes no production/API/backend/trading-core performance.
+  - Keep separate - chat safety at 9aea9c6 on chat-control-separation-v1; dashboard performance closed at 4a548db on dashboard-performance-v1; health deployment paused and not authorized.
   - SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1 is TESTED at 9f7edfb and NOT_DEPLOYED. It establishes bounded isolated shadow invocation, internal dispatch for exactly strategy_decay and strategy_health_unreadable, and an offline read-only context_only owner report. No Kernel scheduling, persistent service, recurring cadence, Risk/Execution path or trading authority is established.
   - One-shot production-scale timing is a separate owner-decision candidate only. Authorization must specify the source DB path, shadow DB path, max_sources, wall_clock_deadline_s, invocation_key / recorded_at_ms, observation/timing goal, stop conditions and acceptable WAL/checkpoint/resource impact. Recurring cadence requires one-shot evidence, review of that evidence and separate owner authorization. Neither authorization grants trading authority.
   - max_sources bounds source selection only. Full-history derivation/verification, repeated Bank filing, WAL/checkpoint effects and storage growth remain unbounded; batch-independent results and production timing are not established. Source identity is not a full database fingerprint. Total research cost remains NOT_ESTABLISHED; budget manager authority is MISSING.
   - External Source Router/retrieval, registered falsifier predicates, a truthful WorldModel/regime source and failed-research suppression/no-repeat policy remain MISSING. Do not infer authority from context_only recall or reports. No next implementation package is selected or queued.
-  - Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged.
+  - 'Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged.'
