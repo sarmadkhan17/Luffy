@@ -2,6 +2,31 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
+  id: NO_ACTIVE_PACKAGE
+  status: IDLE
+  objective: Await a separate owner decision before selecting any new package or deployment.
+
+last_completed:
+  id: LUFFY-KERNEL-RECOVERY-SAFETY-V1
+  implementation_commit: f74c8b8
+  state: TESTED
+  independent_reviewer: Astra
+  package_verdict: PASS
+  deployment: NOT_DEPLOYED
+  running_production: unchanged
+  validation: 600 tests passed across 19 focused suites; V2 negative controls, exact active-setter inventory, protective and reconciliation regressions passed
+
+pending_boundaries:
+  - LUFFY-OWNER-INTERFACE-GATEWAY-V1 remains pending for OpenClaw, WhatsApp, Telegram and dashboard convergence; dashboard and chat direct ACTIVE authority remains unresolved.
+  - LUFFY-ENTRY-FENCE-SIDE-EFFECT-V1 remains separate.
+  - Kernel changes are NOT_DEPLOYED; running production is unchanged.
+  - Health deployment is parked and unauthorized; dashboard deployment is separately blocked.
+  - Telegram live reachability is an operational readiness check, not proof of safety.
+  - Disk pressure and investigation-consumer DB failures are separate operational concerns.
+  - OwnerContext and owner-recovery core are transport-neutral; Telegram is an adapter only; future adapters must call the same typed owner interface.
+  - Gateways receive no direct Risk or Execution authority or trading secrets.
+
+parked_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
   type: QUANT_VALIDATION_INFRA
   priority: CRITICAL
@@ -55,4 +80,5 @@ work_package:
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
 
 after_completion:
+  - Keep LUFFY-KERNEL-RECOVERY-SAFETY-V1 TESTED and NOT_DEPLOYED; do not infer a production change.
   - Await the separate owner decision on future full-validation capacity and authorization.

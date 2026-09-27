@@ -209,7 +209,56 @@ capabilities:
     gaps:
       - production recovery behavior beyond deterministic tests is not established here
 
+kernel_recovery_safety_v1:
+  id: LUFFY-KERNEL-RECOVERY-SAFETY-V1
+  implementation_commit: f74c8b8
+  state: TESTED
+  independent_reviewer: Astra
+  package_verdict: PASS
+  deployment: NOT_DEPLOYED
+  running_production: unchanged
+  validated_scope:
+    - kernel boot RecoveryResult.status to outcome defect fixed
+    - guarded transport-neutral owner recovery
+    - recovery concurrency and event-identity hardening
+    - HALTED and FROZEN intent preservation
+    - fresh Risk release required for activation
+    - MacroGuard activation routed through guarded release
+    - spot resume and unhalt routed through guarded release
+    - corrupt Risk baseline fails closed
+    - truthful first-init versus corrupt-state distinction
+    - hardened repair_baseline()
+    - Risk proof remains valid through final activation
+    - rollback preparation safeguards
+    - '51101d0 rollback replay: FROZEN, entries disabled, zero old-code venue changes'
+  validation:
+    - 600 tests passed across 19 focused suites
+    - V2 negative controls caught the targeted defects
+    - exact active-setter inventory coverage passed
+    - protective and reconciliation regressions passed
+    - current production Risk state read-only verified as valid
+    - no production DB or venue mutation during testing
+  architecture:
+    - OwnerContext and owner-recovery core are transport-neutral
+    - Telegram is an adapter only
+    - future OpenClaw, WhatsApp and dashboard adapters call the same typed owner interface
+    - gateways have no direct Risk or Execution authority or trading secrets
+  remaining_boundaries:
+    - kernel changes are NOT_DEPLOYED; running production is unchanged
+    - dashboard and chat direct ACTIVE authority remains a separate owner-interface and gateway problem
+    - LUFFY-OWNER-INTERFACE-GATEWAY-V1 remains pending for OpenClaw, WhatsApp, Telegram and dashboard convergence
+    - LUFFY-ENTRY-FENCE-SIDE-EFFECT-V1 remains separate
+    - Telegram live reachability is an operational readiness check, not proof of safety
+    - disk pressure is a separate operational concern
+    - investigation-consumer DB failures remain separate
+    - health deployment remains parked and unauthorized
+    - dashboard deployment remains separately blocked
+
 current_active_work:
+  id: NO_ACTIVE_PACKAGE
+  state: IDLE
+
+parked_work:
   id: M3.2-SCHEME-D-V4
   state: TESTED
   status: BOUNDED_PILOT_GO_NON_FINAL_FULL_VALIDATION_UNAUTHORIZED
