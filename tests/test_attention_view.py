@@ -14,8 +14,26 @@ def server(tmp_path, monkeypatch):
     monkeypatch.setattr(server,'ROOT',tmp_path)
     monkeypatch.setattr(server,'make_graphql_router',lambda _:APIRouter())
     monkeypatch.setenv('DASH_TOKEN','fixture-token')
-    monkeypatch.setattr(server,'_account_snapshot',lambda:pytest.fail('venue lookup'))
-    return server
+    attempts=venue_guard(monkeypatch)
+    yield server
+    # asserted on the test thread: enrichment runs loaders in worker threads
+    # and would swallow an exception raised there
+    assert attempts==[], f'venue lookup attempted: {attempts}'
+
+
+def venue_guard(monkeypatch):
+    """Record (never perform) any venue access; returns the attempt list."""
+    attempts=[]
+    def refuse(name):
+        def call(*a,**k):
+            attempts.append(name)
+            raise RuntimeError('venue lookup refused by test guard')
+        return call
+    monkeypatch.setattr('trader.dashboard.enrichment.fetch_account',refuse('account'))
+    monkeypatch.setattr('trader.dashboard.enrichment.fetch_tickers',refuse('tickers'))
+    monkeypatch.setattr('trader.dashboard.enrichment.Enrichment._exchange',
+                        lambda self,route: attempts.append('exchange') or object())
+    return attempts
 
 
 def test_api_disabled_auth_and_missing_store(server, tmp_path):
@@ -63,7 +81,7 @@ const payload={status:'stale',age_seconds:400,causes_complete:true,
  scan:{scan_id:'s',as_of_ms:1000,
  rows:[{symbol:'<img src=x onerror=alert(1)>',reason:'selected'}]},
  causes:[{symbol:'x',evaluations:[{component:'strategy',component_id:'<script>x</script>',reason:'evaluation_failed'}]}]};
-const context={document:{getElementById:id=>id==='attention-status'?status:content,createElement:()=>new Element()},
+const context={document:{hidden:false,addEventListener(){},getElementById:id=>id==='attention-status'?status:content,createElement:()=>new Element()},
  location:{search:''},fetch:async()=>({ok:true,json:async()=>payload}),
  AbortController, setTimeout, clearTimeout, setInterval:()=>0};
 vm.runInNewContext(fs.readFileSync(process.argv[2],'utf8'),context);

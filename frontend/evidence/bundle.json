@@ -1,0 +1,37 @@
+[
+  {
+    "file": "Avatar-Q7NVUiAm.js",
+    "bytes": 126979,
+    "gzipBytes": 40903
+  },
+  {
+    "file": "EquityChart-HNLhG8Th.js",
+    "bytes": 166579,
+    "gzipBytes": 53540
+  },
+  {
+    "file": "GraphView-Bo6e_hM2.js",
+    "bytes": 192527,
+    "gzipBytes": 61741
+  },
+  {
+    "file": "GraphView-DLioOiRN.css",
+    "bytes": 15413,
+    "gzipBytes": 2555
+  },
+  {
+    "file": "index-CtLKeu7-.css",
+    "bytes": 21833,
+    "gzipBytes": 5590
+  },
+  {
+    "file": "index-Sn51qOAz.js",
+    "bytes": 311708,
+    "gzipBytes": 97023
+  },
+  {
+    "file": "jsx-runtime-Dk72oS4N.js",
+    "bytes": 8823,
+    "gzipBytes": 3386
+  }
+]

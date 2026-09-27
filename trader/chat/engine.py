@@ -1,9 +1,9 @@
 """Chat brain — conversational access to everything Luffy knows.
 
 Safety model (non-negotiable):
-- OPS COMMANDS (freeze/halt/resume/close-all/panic) are matched by
-  deterministic patterns and executed directly. The LLM is NEVER allowed
-  to trigger them.
+- Chat is read-only by default. Trusted internal callers may explicitly
+  enable deterministic OPS COMMANDS with do_ops=True. The LLM is NEVER
+  allowed to trigger them.
 - The LLM only ever ANSWERS questions, grounded in a situation brief built
   from the journal. It may not invent numbers; every claim should cite
   what's in the brief or say it doesn't know.
@@ -16,7 +16,7 @@ import re
 
 from ..core.journal import Journal
 from ..brain.llm import BrainLLM
-from .agent import AnalystAgent
+from .agent import AnalystAgent, FALLBACK
 
 log = logging.getLogger(__name__)
 
@@ -102,13 +102,12 @@ class ChatEngine:
 
         answer = self.llm.chat(prompt, deep=False, purpose="chat")
         if not answer:
-            return ("Brain offline (no budget or API error). "
-                    "Ops still work: try 'freeze', 'close all', 'briefing'.")
+            return FALLBACK
         return answer.strip()
 
     # ── entrypoint ──────────────────────────────────────────────────────
     def handle(self, message: str, history: list[dict] | None = None,
-               do_ops: bool = True) -> str:
+               do_ops: bool = False) -> str:
         ops = detect_ops(message) if do_ops else None
         if ops == "panic":
             self.journal.kv_set("panic_requested", "1")

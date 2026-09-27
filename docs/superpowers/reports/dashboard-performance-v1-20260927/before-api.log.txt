@@ -1,0 +1,139 @@
+{
+ "mode": "before",
+ "conditions": "isolated synthetic fixture; simulated network model; loopback; warm OS cache; NOT production",
+ "idle": {
+  "server": [
+   {
+    "cpu_s": 1.45,
+    "rss_mib": 108.3515625
+   },
+   {
+    "cpu_s": 1.45,
+    "rss_mib": 108.3515625
+   }
+  ],
+  "core_probe": {
+   "n": 48,
+   "lock_errors": 0,
+   "write_p95_ms": 5.55,
+   "loop_p95_ms": 6.31
+  }
+ },
+ "endpoints": {
+  "/api/summary": {
+   "cold_ms": 1068.66,
+   "warm_p95_ms": 105.73,
+   "statuses": [
+    200
+   ],
+   "bytes": 1323
+  },
+  "/api/org": {
+   "cold_ms": 87.25,
+   "warm_p95_ms": 9.65,
+   "statuses": [
+    200
+   ],
+   "bytes": 7915
+  },
+  "/api/pipeline": {
+   "cold_ms": 4.64,
+   "warm_p95_ms": 4.27,
+   "statuses": [
+    200
+   ],
+   "bytes": 204
+  },
+  "/api/vault/tree": {
+   "cold_ms": 3.9,
+   "warm_p95_ms": 3.17,
+   "statuses": [
+    200
+   ],
+   "bytes": 31
+  },
+  "/api/logs?lines=90": {
+   "cold_ms": 84.36,
+   "warm_p95_ms": 92.38,
+   "statuses": [
+    200
+   ],
+   "bytes": 3610
+  },
+  "/api/review_status": {
+   "cold_ms": 3.38,
+   "warm_p95_ms": 8.75,
+   "statuses": [
+    200
+   ],
+   "bytes": 97
+  },
+  "/graphql": {
+   "cold_ms": 11.55,
+   "warm_p95_ms": 19.56,
+   "statuses": [
+    200
+   ],
+   "bytes": 2096
+  }
+ },
+ "during_stall": {
+  "stalled_request": "/api/summary",
+  "stalled_request_ms": 60706.5,
+  "index_p95_ms": 60218.0,
+  "graphql_list_p95_ms": 9.78,
+  "local_endpoint": "/api/review_status",
+  "local_p95_ms": 2.57,
+  "server_model": {
+   "rss_kib": 159356,
+   "network_model": {
+    "delay": 5.05,
+    "calls": 12,
+    "max_concurrent": 1
+   },
+   "threads": 2
+  }
+ },
+ "refresh_load": {
+  "clients": 4,
+  "paths": [
+   "/api/summary",
+   "/api/org",
+   "/api/review_status",
+   "/api/doctrine"
+  ],
+  "round_p95_ms": 1284.29,
+  "server": [
+   {
+    "cpu_s": 6.53,
+    "rss_mib": 112.94140625
+   },
+   {
+    "cpu_s": 10.27,
+    "rss_mib": 113.31640625
+   }
+  ],
+  "core_probe": {
+   "n": 102,
+   "lock_errors": 0,
+   "write_p95_ms": 7.13,
+   "loop_p95_ms": 7.45
+  }
+ },
+ "server_resource_end": {
+  "rss_kib": 159356,
+  "network_model": {
+   "delay": 0.08,
+   "calls": 12,
+   "max_concurrent": 1
+  },
+  "threads": 2
+ },
+ "passive_checkpoint": [
+  [
+   0,
+   568,
+   568
+  ]
+ ]
+}

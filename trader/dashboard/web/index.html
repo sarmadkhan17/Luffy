@@ -6,9 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Chivo:wght@400;500;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
-<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.js"></script>
 <style>
 :root{
  --bg:#08090c;--bg2:#0b0d12;--panel:#101319;--panel2:#151923;--raise:#1a1f2b;
@@ -349,6 +346,7 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
 .dk .dk-kfile:hover{background:rgba(0,209,160,.14)}
 .dk .dk-note{margin:0;font-family:var(--dk-mono);font-size:10px;line-height:1.5;white-space:pre-wrap;color:var(--dk-dim);max-height:220px;overflow-y:auto}
 @media (prefers-reduced-motion: reduce){.dk .dk-scan{animation:none;opacity:.35}}
+.stale{opacity:.6}.warnlbl{color:var(--amber)}
 </style></head>
 <body>
 
@@ -397,6 +395,7 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
   <span class="pill ACTIVE" id="state">—</span>
   <span class="chip num" id="hb">heartbeat —</span>
   <span class="chip" id="modechip">—</span>
+  <span class="chip" id="datastat" role="status">loading local data…</span>
   <div class="controls">
    <button class="btn" id="b-active" onclick="setState('ACTIVE')">ACTIVE</button>
    <button class="btn" id="b-frozen" onclick="setState('FROZEN')">FROZEN</button>
@@ -422,12 +421,13 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
  <div class="tickstrip" id="tickstrip"><span class="ti" style="color:var(--dimmer)">loading prices…</span></div>
 
  <div class="kpis">
-  <div class="card"><div class="lbl">Margin equity</div>
+  <div class="card"><div class="lbl">Equity · journal record</div>
    <div class="val accent num" id="equity">—</div>
+   <div class="sub" id="eq-src"></div>
    <div class="sub" id="assets"></div>
    <canvas class="spark" id="spark-eq" width="90" height="30"></canvas></div>
   <div class="card" style="border-color:rgba(0,209,160,.22)">
-   <div class="lbl">Unrealized P&L · live</div>
+   <div class="lbl">Unrealized P&L · estimate</div>
    <div class="val num" id="upnl">—</div>
    <div class="sub" id="upnl-sub">—</div></div>
   <div class="card"><div class="lbl">Realized today</div>
@@ -445,7 +445,7 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
 
  <div class="cols">
   <div>
-   <div class="plabel">Live positions — marked every 20s</div>
+   <div class="plabel">Open positions — journal record; marks when available</div>
    <div id="pos-cards"></div>
    <div class="empty hidden" id="pos-empty">Flat — no edge worth paying for.</div>
 
@@ -601,7 +601,7 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
    <button class="btn" onclick="quick('how are we doing today?')">Today</button>
    <button class="btn" onclick="quick('why did you skip the last signal?')">Why skip?</button>
    <button class="btn" onclick="quick('how are the strategies doing?')">Strategy health</button>
-   <button class="btn danger" onclick="quick('freeze entries')">Freeze</button>
+   <button class="btn danger" onclick="setState('FROZEN')">Freeze</button>
   </div>
   <div style="display:flex;gap:6px;margin-top:8px;width:100%">
    <input id="chat-in" class="btn" style="flex:1;background:var(--panel)"
@@ -645,6 +645,107 @@ function toast(msg,err=false){const t=document.createElement('div');
  t.className='toast'+(err?' err':'');t.textContent=msg;
  $('#toasts').appendChild(t);setTimeout(()=>t.remove(),4200);}
 
+/* ── loading: lazy libraries, single-flight resources, session/visibility ── */
+/* Optional libraries load only when their surface needs them, never as
+   parser-blocking <head> scripts, so navigation and local data never wait. */
+const LIBS={lwc:['https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js','LightweightCharts'],
+ vis:['https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js','vis'],
+ motion:['https://cdn.jsdelivr.net/npm/motion@latest/dist/motion.js','Motion']};
+const _libs={};
+function loadLib(name,ms=15000){
+ const [src,global]=LIBS[name];
+ if(window[global])return Promise.resolve(window[global]);
+ if(!_libs[name])_libs[name]=new Promise((res,rej)=>{
+  const el=document.createElement('script');el.src=src;el.async=true;
+  el.onload=()=>res(window[global]);
+  el.onerror=()=>{el.remove();delete _libs[name];rej(new Error(name+' unavailable'));};
+  document.head.appendChild(el);});
+ // a caller's deadline; the tag keeps loading and later calls see the global
+ return Promise.race([_libs[name],new Promise((_,rej)=>
+  setTimeout(()=>rej(new Error(name+' slow')),ms))]);}
+/* ── one session lifecycle for every loader, socket and render ──
+   All HTTP (resources, direct loaders, GraphQL, attention/investigation
+   panels) passes through this fetch: a 401 ends the session; ending it
+   aborts every pending read, bumps the epoch so late completions cannot
+   render, stops timers, closes the socket and removes private content. */
+const session={lost:false,epoch:0,ctrl:new AbortController()};
+window.luffySession=session;
+let authLost=false;
+const _netFetch=window.fetch.bind(window);
+function _signal(extra){
+ if(!extra)return session.ctrl.signal;
+ if(AbortSignal.any)return AbortSignal.any([session.ctrl.signal,extra]);
+ const c=new AbortController(),stop=()=>c.abort();
+ session.ctrl.signal.addEventListener('abort',stop);extra.addEventListener('abort',stop);
+ return c.signal;}
+window.fetch=function(input,init={}){
+ if(session.lost)return Promise.reject(new Error('signed out'));
+ const epoch=session.epoch;
+ return _netFetch(input,{...init,signal:_signal(init.signal)}).then(r=>{
+  if(r.status===401)endSession();
+  if(session.lost||epoch!==session.epoch)throw new Error('signed out');
+  return r;});};
+function endSession(){
+ if(session.lost)return;
+ session.lost=true;authLost=true;session.epoch++;session.ctrl.abort();
+ resources.forEach(r=>clearTimeout(r.timer));
+ inflight.clear();clearTimeout(wsTimer);
+ if(ws){const s=ws;ws=null;try{s.close(4000,'signed out');}catch(e){}}
+ OV=null;EN=null;ENK.account=ENK.tickers=null;
+ if(window.speechSynthesis)speechSynthesis.cancel();
+ const n=document.createElement('div');n.id='signed-out';n.setAttribute('role','alert');
+ n.style.cssText='padding:40px;font:14px var(--mono,monospace);color:var(--text,#ddd)';
+ n.innerHTML='Session expired — dashboard data removed. <a href="/" style="color:var(--green,#0d9)">Sign in again</a>';
+ document.body.replaceChildren(n);}
+const sessionExpired=endSession;
+/* Shared reads: one in-flight request per resource identity (URL, or
+   GraphQL query+variables) across every consumer. Reads are refused while
+   the page is hidden or signed out — including continuations after an
+   await — so nothing fetches in the background. Mutations use gql(). */
+const inflight=new Map();
+function canRead(){return !session.lost&&!document.hidden;}
+function _shared(key,make){
+ if(!canRead())return Promise.reject(new Error(session.lost?'signed out':'hidden'));
+ if(inflight.has(key))return inflight.get(key);
+ const p=make().finally(()=>{if(inflight.get(key)===p)inflight.delete(key);});
+ inflight.set(key,p);return p;}
+function _timed(url,init,ms){
+ const c=new AbortController(),t=setTimeout(()=>c.abort(),ms);
+ return fetch(url,{...init,signal:c.signal,cache:'no-store'}).then(async r=>{
+  if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).finally(()=>clearTimeout(t));}
+function getJSON(url,ms=10000){return _shared('GET '+url,()=>_timed(url,{},ms));}
+function gqlRead(q,v={},ms=10000){
+ return _shared('GQL '+q+JSON.stringify(v),()=>_timed('/graphql',{method:'POST',
+  headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,variables:v})},ms)
+  .then(j=>j.data));}
+/* One request in flight per resource. Timer, reconnect and manual refreshes
+   coalesce into at most one follow-up run; the next timer is armed only
+   after completion, and nothing polls while the page is hidden. */
+const resources=[];
+function resource(name,fn,every=0,when=()=>true){
+ const r={name,busy:false,again:false,seq:0,timer:null,
+  async run(){
+   if(session.lost)return;
+   if(document.hidden){r.again=false;return;}    // visibility return runs it
+   if(r.busy){r.again=true;return;}
+   r.busy=true;const my=++r.seq,epoch=session.epoch;
+   try{await fn(()=>my===r.seq&&epoch===session.epoch&&!session.lost);}catch(e){}
+   finally{r.busy=false;
+    if(r.again&&!document.hidden){r.again=false;r.run();}else r.schedule();}},
+  schedule(){clearTimeout(r.timer);
+   if(every&&!document.hidden&&!session.lost)
+    r.timer=setTimeout(()=>when()?r.run():r.schedule(),every);},
+  now(){clearTimeout(r.timer);return r.run();}};
+ resources.push(r);return r;}
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden){resources.forEach(r=>clearTimeout(r.timer));return;}
+ resources.forEach(r=>{if(r.name==='enrichment')return;  // follows overview
+  (r.when?r.when():true)?r.now():r.schedule();});
+ wsConnect();});
+function ago(s){if(s==null)return '—';s=Math.max(0,Math.round(s));
+ return s<90?s+'s':s<5400?Math.round(s/60)+'m':s<172800?Math.round(s/3600)+'h':Math.round(s/86400)+'d';}
+function px4(v){return v==null||v===''||!+v?'—':(+v).toFixed(4);}  // 0 is not a price
+
 /* ── navigation ── */
 function show(v){document.querySelectorAll('.navitem').forEach(e=>
   e.classList.toggle('active',e.dataset.v===v));
@@ -652,7 +753,7 @@ function show(v){document.querySelectorAll('.navitem').forEach(e=>
    $('#v-'+x).classList.toggle('hidden',x!==v));
  if(v==='system')loadLogs(); if(v==='trades')loadTrades();
  if(v==='luffy'){initLuffyAvatar();} if(v==='os'){loadDecisions();loadBrainFeed();}
- if(v==='company'){loadCompany();}}
+ if(v==='company'){companyRes.now();}}
 const OS_EXPLAIN={
  dec:'<b>Decisions</b> — every scored orchestrator call (executed AND skipped) with the full agent-vote chain behind it. Pure HOLD scans are hidden here.',
  disc:'<b>Discovery</b> — the pipeline that FINDS new strategies: internet harvesters &amp; proposals → walk-forward + TradingView gauntlet → paper probation. The current book lives in Strategy Book.',
@@ -665,7 +766,7 @@ function osTab(name,el){document.querySelectorAll('#v-os .subtabs .tab')
     $('#os-'+x).classList.toggle('hidden',x!==name));
   $('#os-explainer').innerHTML=OS_EXPLAIN[name]||'';
   if(name==='dec')loadDecisions(); if(name==='disc')loadDiscovery();
-  if(name==='lab')loadLab(); if(name==='agents')loadDeck();
+  if(name==='lab')loadLab(); if(name==='agents')deckRes.now();
   if(name==='brain')loadBrainDefault();}
 const BRAIN_EXPLAIN={
  doctrine:'<b>Doctrine</b> — Luffy\u2019s operating beliefs about markets, written and revised by its own autopsies. Every strategy decision respects these.',
@@ -703,117 +804,248 @@ async function closeTrade(id,sym){
  refresh();}
 
 /* ── refresh ── */
-let prevEq=null;
-async function refresh(){
- const d=await gql(`{status{control_state market_type heartbeat_age_s equity drawdown_pct daily_pnl_pct open_trades strategies_active}}`);
- const s=d.status;
- $('#state').textContent=s.control_state;$('#state').className='pill '+s.control_state;
- $('#sb-state').innerHTML=`<span class="sdot${s.control_state==='ACTIVE'?'':' off'}"></span><b>${s.control_state}</b>`;
- $('#hb').textContent='heartbeat '+s.heartbeat_age_s+'s ago';
- $('#modechip').textContent=s.market_type.toUpperCase()+' · '+s.strategies_active+' strategies';
- $('#sb-mode').textContent=s.market_type.toUpperCase();
- const dp=+s.daily_pnl_pct,ddp=+s.drawdown_pct;
- $('#sb-day').textContent=(dp>=0?'+':'')+dp.toFixed(2)+'%';
- $('#sb-day').style.color=dp>=0?'var(--green)':'var(--red)';
- $('#sb-dd').textContent=ddp.toFixed(2)+'%';
+/* Overview renders from /api/overview (local journal/files, no venue call).
+   Wallet, prices and marks come from /api/enrichment afterwards and never
+   hold up or erase the local data. Ages are recomputed locally from the
+   sources' own timestamps (server clock offset applied), so a retained
+   copy keeps ageing and turns stale by itself. */
+let prevEq=null,lastOvAt='',OV=null,EN=null,OV_FAIL=null,EN_FAIL=null;
+const ENK={account:null,tickers:null};
+function refresh(){return ovRes.now();}
+function skewOf(genAt){const t=Date.parse(genAt||'');return isNaN(t)?0:t-Date.now();}
+// signed age in s (negative = a time ahead of the server clock); null if unknown
+function ageAt(ts,skew){if(!ts)return null;const t=Date.parse(ts);
+ return isNaN(t)?null:(Date.now()+(skew||0)-t)/1000;}
+/* a shared endpoint may answer with an older cached snapshot: label it */
+const noteOkAt={};   // client time of each panel's last successful load
+function _noteEl(sel){const host=$(sel);if(!host)return null;let n=host.previousElementSibling;
+ if(!n||!n.classList.contains('cache-note')){n=document.createElement('div');
+  n.className='cache-note warnlbl mono';n.style.fontSize='11px';host.before(n);}
+ return n;}
+function cacheNote(sel,d){const n=_noteEl(sel);if(!n)return;
+ const c=(d&&d.cache)||{};noteOkAt[sel]=Date.now()-((c.age_s||0)*1000);
+ n.textContent=c.stale?`showing a snapshot ${ago(c.age_s)} old — server ${c.reason==='saturated'?'busy':'slow'}`:'';}
+/* a failed refresh keeps the previous display but labels it; the age runs
+   from that display's own observation time, not from the failure */
+function failNote(sel){const n=_noteEl(sel);if(!n)return;
+ const at=noteOkAt[sel];
+ n.textContent='refresh failed — '+(at?`showing data ${ago((Date.now()-at)/1000)} old`:'no data loaded');}
+// a time materially ahead of the server clock is invalid, never fresh
+function freshBy(age,limit){return age==null?'unavailable':age<-FUTURE_TOLERANCE_S?'stale':(limit==null||age<=limit)?'fresh':'stale';}
+const FUTURE_TOLERANCE_S=5;
+const STALE='<span class="warnlbl">STALE</span>';
+const ovRes=resource('overview',async current=>{
+ let ov;
+ try{ov=await getJSON('/api/overview'+location.search);}
+ catch(e){if(!session.lost){OV_FAIL=Date.now();if(OV)renderOverview(OV);else{
+   const el=$('#datastat');el.textContent='local data unavailable';el.className='chip warnlbl';}}
+  throw e;}
+ if(!current()||ov.generated_at<lastOvAt)return;   // never let older data win
+ if(ov.status==='busy'){OV_FAIL=Date.now();if(OV)renderOverview(OV);return;}
+ // clock offset from THIS response's server time (served_at), never from a
+ // cached snapshot's generated_at, so a stale fallback is aged correctly
+ ov._skew=skewOf((ov.cache||{}).served_at||ov.generated_at);OV_FAIL=null;
+ lastOvAt=ov.generated_at;OV=ov;renderOverview(ov);
+ enRes.now();},8000);
+/* accept an enrichment section only if it is not older than the retained
+   one: a new server instance supersedes; within an instance a lower
+   generation is rejected, a higher one wins, and within one generation the
+   later retrieval wins — an out-of-order older response is ignored */
+function acceptSection(key,sec,skew){
+ const old=ENK[key];sec={...sec,_skew:skew};
+ if(!old||sec.instance!==old.instance){ENK[key]=sec;return;}
+ if(sec.generation<old.generation)return;
+ if(sec.generation>old.generation){ENK[key]=sec;return;}
+ const tn=Date.parse(sec.retrieved_at||''),to=Date.parse(old.retrieved_at||'');
+ if(isNaN(to)||(!isNaN(tn)&&tn>=to))ENK[key]=sec;}
+const enRes=resource('enrichment',async current=>{
+ try{const ev=await getJSON('/api/enrichment'+location.search,8000);
+  if(!current())return;
+  const skew=skewOf(ev.generated_at);
+  acceptSection('account',ev.account,skew);acceptSection('tickers',ev.tickers,skew);
+  EN=ev;EN_FAIL=null;}
+ catch(e){if(session.lost)return;EN_FAIL=Date.now();}
+ renderEnrichment();});
+/* re-render ages from retained data every 5 s; local only, no request */
+setInterval(()=>{if(canRead()&&OV){renderOverview(OV);renderEnrichment();}},5000);
+
+function renderOverview(ov){
+ const sk=ov._skew||0;
+ const c=ov.control||{},hb=ov.heartbeat||{},st=c.control_state;
+ const state=st||'UNKNOWN';
+ $('#state').textContent=state;$('#state').className='pill '+(st||'');
+ $('#state').title='journal-recorded control intent'+(c.observed_at?' (last change '+c.observed_at+')':'')+'; not a fresh verification';
+ $('#sb-state').innerHTML=`<span class="sdot${st==='ACTIVE'?'':' off'}"></span><b>${state}</b>`;
+ const hbAge=ageAt(hb.observed_at,sk),hbF=freshBy(hbAge,hb.stale_after_s);
+ $('#hb').textContent=hbF==='unavailable'?'heartbeat unavailable':
+  'heartbeat '+ago(hbAge)+' ago'+(hbF==='stale'?' · STALE':'');
+ $('#hb').className='chip num'+(hbF==='fresh'?'':' warnlbl');
+ const mt=c.market_type?c.market_type.toUpperCase():'MARKET ?';
+ const ns=(ov.strategies||{}).paper_or_active;
+ $('#modechip').textContent=mt+' · '+(ns==null?'?':ns)+' strategies';
+ $('#sb-mode').textContent=mt;
+ // no daily %/drawdown source exists; show that instead of a fabricated 0
+ $('#sb-day').textContent='—';$('#sb-day').title='daily % not computed';
+ $('#sb-dd').textContent='—';$('#sb-dd').title='drawdown not computed';
  ['active','frozen','halted'].forEach(x=>
-   $('#b-'+x).classList.toggle('on',x===s.control_state.toLowerCase()));
- const sum=await (await fetch('/api/summary'+location.search)).json();
- const eq=+sum.equity||0;
- const el=$('#equity');el.textContent='$'+eq.toLocaleString(undefined,{maximumFractionDigits:0});
- if(prevEq!==null&&eq!==prevEq){el.classList.remove('flash-up','flash-down');
-  void el.offsetWidth;el.classList.add(eq>prevEq?'flash-up':'flash-down');}
- prevEq=eq;
- if(sum.assets&&sum.assets_total){
-  const parts=Object.entries(sum.assets).map(([k,v])=>k+' '+
-   (typeof v==='number'?'$'+v.toLocaleString():v)).join(' · ');
-  $('#assets').innerHTML='wallet ≈ <b style="color:var(--dim)">$'+sum.assets_total.toLocaleString()+'</b><br>'+parts;}
- const pnl=sum.today.realized_pnl_today;
- $('#pnl').textContent=(pnl>=0?'+':'')+pnl.toFixed(2)+' USDT';
- $('#pnl').className='val num '+(pnl>=0?'up':'down');
- $('#today2').textContent=sum.today.taken+' taken / '+sum.today.skipped+' skipped / '
-  +sum.today.holds+' holds';
- $('#pos-empty').classList.toggle('hidden',sum.open_positions.length>0);
- {const live=new Set(sum.open_positions.map(p=>p.id));
-  for(const id of [...closePending]) if(!live.has(id)) closePending.delete(id);}
+   $('#b-'+x).classList.toggle('on',!!st&&x===st.toLowerCase()));
+ const ds=$('#datastat'),snapAge=ageAt(ov.generated_at,sk);
+ const cache=ov.cache||{};
+ const oldSnap=OV_FAIL||cache.stale||snapAge>20;
+ ds.className='chip'+(oldSnap?' warnlbl':'');
+ ds.textContent='local data '+ago(snapAge)+' old'+(OV_FAIL?' · refresh failed':'')+(cache.stale?' · server busy':'');
 
- // ── live position cards ──
- $('#pos-cards').innerHTML=sum.open_positions.map(p=>{
-  const up=p.upnl!==undefined&&p.upnl!==null;
-  const sl=+p.stop_loss,tp=+p.take_profit,mark=+p.mark,entry=+p.entry_price;
-  let pct=50;
-  if(sl&&tp&&mark>Math.min(sl,tp)&&mark<Math.max(sl,tp))
-   pct=(mark-Math.min(sl,tp))/Math.abs(tp-sl)*100;
-  return `<div class="pos-card" style="margin-bottom:10px">
-   <div class="top"><span class="sym">${p.symbol}</span>
-    <span class="sidebadge ${p.side}">${p.side}</span>
-    <span class="mono" style="color:var(--dim);font-size:10.5px">
-      entry ${entry.toFixed(4)} → mark ${(+p.mark||entry).toFixed(4)}</span>
-    <div class="upnl"><div class="n num ${up?(p.upnl>=0?'up':'down'):''}">
-      ${up?(p.upnl>=0?'+':'')+p.upnl.toFixed(2):'—'}</div>
-     <div class="p">${up?(p.upnl_pct>=0?'+':'')+p.upnl_pct+'% on position':''}</div></div>
-    <button class="closebtn" data-tid="${p.id}" data-sym="${p.symbol}"
-      ${closePending.has(p.id)?'disabled':''}
-      onclick="closeTrade('${p.id}','${p.symbol}')">${
-      closePending.has(p.id)?'closing…':'Close'}</button></div>
-   <div class="meta"><span>SL ${sl.toFixed(4)}</span>
-    <span>TP ${tp.toFixed(4)}</span><span>lev ×${p.leverage||1}</span>
-    <span style="margin-left:auto;color:var(--dimmer)">${p.strategy_name||''}</span></div>
-   <div class="rail"><div class="fill"></div><div class="cur" style="left:${pct}%"></div></div>
-   <div class="lbls"><span>◄ stop</span><span>price rail</span><span>target ►</span></div>
-  </div>`;}).join('');
+ const e=ov.equity||{},el=$('#equity');
+ if(e.equity==null){el.textContent='—';el.classList.remove('stale');
+  $('#eq-src').textContent='journal equity unavailable'+(e.reason?' ('+e.reason+')':'');}
+ else{const eq=+e.equity,eAge=ageAt(e.observed_at,sk),eF=freshBy(eAge,e.stale_after_s);
+  el.textContent='$'+eq.toLocaleString(undefined,{maximumFractionDigits:0});
+  el.classList.toggle('stale',eF!=='fresh');
+  if(prevEq!==null&&eq!==prevEq){el.classList.remove('flash-up','flash-down');
+   void el.offsetWidth;el.classList.add(eq>prevEq?'flash-up':'flash-down');}
+  prevEq=eq;
+  $('#eq-src').innerHTML='recorded '+ago(eAge)+' ago'+(eF==='stale'?' · '+STALE:'')+' · not venue-confirmed';}
 
- // ── uPnL / exposure / winrate KPIs ──
- const u=sum.total_upnl||0;
- const uel=$('#upnl');uel.textContent=(u>=0?'+':'')+u.toFixed(2)+' USDT';
- uel.className='val num '+(u>=0?'up':'down');
- $('#upnl-sub').textContent=`across ${sum.open_positions.length} position(s)`;
- const L=sum.long_exposure||0,R=sum.short_exposure||0,tot=L+R||1;
- $('#expo').textContent='$'+(L/1000).toFixed(1)+'k / $'+(R/1000).toFixed(1)+'k';
- $('#netexp').textContent='$'+((L-R)/1000).toFixed(1)+'k '+(L>=R?'long':'short');
- const expobar=$('#expobar');
- expobar.style.width=(L/tot*100)+'%';
- expobar.style.background=`linear-gradient(90deg,var(--green) 0%,var(--green) ${L/tot*100}%,var(--red) ${L/tot*100}%)`;
- $('#winrate').textContent=sum.winrate!=null?sum.winrate+'%':'—';
- $('#closedsub').textContent=(sum.closed_trades||0)+' closed trades';
+ const t=ov.today||{};
+ if(t.freshness==='unavailable'){$('#pnl').textContent='—';$('#pnl').className='val num';
+  $('#today2').textContent='journal unavailable';}
+ else{const pnl=t.realized_pnl_today;
+  if(pnl==null){$('#pnl').textContent='—';$('#pnl').className='val num';}
+  else{$('#pnl').textContent=(pnl>=0?'+':'')+pnl.toFixed(2)+' USDT';
+   $('#pnl').className='val num '+(pnl>=0?'up':'down');}
+  $('#today2').innerHTML=t.taken+' taken / '+t.skipped+' skipped / '+t.holds+' holds · '+t.closed_today+' closed'+
+   (t.realized_pnl_missing?`<br><span class="warnlbl">${t.realized_pnl_missing} close(s) missing P&L</span> · known sum ${t.realized_pnl_known_sum.toFixed(2)}`:'');}
+ renderPositions();
 
- // ── strategy pnl bars ──
- const sp=sum.strategy_pnl||[];
- const mx=Math.max(...sp.map(x=>Math.abs(x.pnl)),1);
+ const pos=ov.positions||{},en=pos.entry_notional,expobar=$('#expobar');
+ if(!en){$('#expo').textContent='—';$('#netexp').textContent='unavailable';}
+ else if(!en.complete){
+  $('#expo').textContent='—';
+  $('#netexp').innerHTML=`<span class="warnlbl">partial</span>: ${en.rows_missing_notional} row(s) missing notional · known $${(en.known_long/1000).toFixed(1)}k / $${(en.known_short/1000).toFixed(1)}k`;
+  expobar.style.width='0%';}
+ else{const L=en.long,R=en.short,tot=L+R||1;
+  $('#expo').textContent='$'+(L/1000).toFixed(1)+'k / $'+(R/1000).toFixed(1)+'k';
+  $('#netexp').textContent='$'+((L-R)/1000).toFixed(1)+'k '+(L>=R?'long':'short')+
+   ' · entry notional · all '+pos.open_total+' open';
+  expobar.style.width=(L/tot*100)+'%';
+  expobar.style.background=`linear-gradient(90deg,var(--green) 0%,var(--green) ${L/tot*100}%,var(--red) ${L/tot*100}%)`;}
+ const pf=ov.performance||{};
+ $('#winrate').textContent=pf.winrate!=null?pf.winrate+'%':'—';
+ $('#closedsub').innerHTML=pf.closed_trades==null?'journal unavailable':pf.closed_trades+' closed trades'+
+  (pf.pnl_missing?` · <span class="warnlbl">${pf.pnl_missing} missing P&L</span>; rate over ${pf.winrate_basis_trades}`:'');
+
+ const sp=pf.strategy_pnl||[];
+ const mx=Math.max(...sp.map(x=>Math.abs(x.pnl||0)),1);
  $('#strat-pnl').innerHTML=sp.map(x=>`<div style="margin:7px 0">
    <div style="display:flex;justify-content:space-between;font-size:11px">
     <span class="sans" style="color:var(--dim)">${x.sname}</span>
-    <span class="num ${x.pnl>=0?'up':'down'}">${x.pnl>=0?'+':''}${x.pnl}</span></div>
-   <div class="pbar"><div style="width:${Math.abs(x.pnl)/mx*100}%;
+    <span class="num ${x.pnl>=0?'up':'down'}">${x.pnl==null?'—':(x.pnl>=0?'+':'')+x.pnl}${x.missing?` <span class="warnlbl">(${x.missing} missing)</span>`:''}</span></div>
+   <div class="pbar"><div style="width:${Math.abs(x.pnl||0)/mx*100}%;
     background:${x.pnl>=0?'var(--green)':'var(--red)'}"></div></div></div>`).join('')
-  ||'<span class="mono" style="color:var(--dimmer)">no closed trades yet</span>';
+  ||`<span class="mono" style="color:var(--dimmer)">${pf.freshness==='unavailable'?'journal unavailable':'no closed trades yet'}</span>`;
 
- // ── agent activity ──
- const an=sum.agents_now||[];
+ const ag=ov.agents||{},an=ag.rows||[];
  $('#agents-now').innerHTML=an.map(a=>`<div class="actrow">
    <span class="ag">${a.agent}</span>
    <span class="tag ${a.conviction>=0?'BUY':'SELL'}">${a.conviction>=0?'+':''}${(+a.conviction).toFixed(2)}</span>
    <span class="mono" style="color:var(--dimmer);font-size:10px">${a.regime||''}</span>
-   <span class="tm">${(a.ts||'').slice(11,19)}</span></div>`).join('')
-  ||'<span class="mono" style="color:var(--dimmer)">agents quiet</span>';
-
- // ── price strip + brain mini ──
- const pr=sum.prices||{};
- const keys=Object.keys(pr);
- if(keys.length)$('#tickstrip').innerHTML=keys.map(k=>
-  `<span class="ti"><b>${k.split('/')[0]}</b>
-   <span class="num">${pr[k].toLocaleString(undefined,{maximumFractionDigits:pr[k]<10?4:2})}</span></span>`).join('');
- fetch('/api/doctrine').then(r=>r.json()).then(dd=>{
-  const el=$('#mini-doctrine');if(el)el.textContent='v'+dd.version;}).catch(()=>{});
- fetch('/api/review_status').then(r=>r.json()).then(rr=>{
-  const el=$('#mini-review');if(el)el.textContent=rr.trades_until_review+' trades';}).catch(()=>{});
- drawSpark('spark-eq');
+   <span class="tm">${(a.ts||'').slice(11,19)}</span></div>`).join('')+
+   (ag.agents_in_window>an.length?`<div class="mono" style="color:var(--dimmer);font-size:10px">showing ${an.length} of ${ag.agents_in_window} agents</div>`:'')
+  ||`<span class="mono" style="color:var(--dimmer)">${ag.freshness==='unavailable'?'votes unavailable':'agents quiet'}</span>`;
 }
+
+/* marks from the ACCEPTED ticker version, so a stale or out-of-order
+   response can never mix into the positions */
+/* fresh needs a recent retrieval AND a valid, recent exchange observation;
+   a missing or future ticker time is not evidence of freshness */
+function symbolState(p,tk){
+ const ra=ageAt(p.retrieved_at,tk._skew),sa=ageAt(p.source_time,tk._skew),lim=tk.max_age_s;
+ const valid=sa!=null&&sa>=-FUTURE_TOLERANCE_S;
+ const fresh=valid&&ra!=null&&ra>=-FUTURE_TOLERANCE_S&&ra<=lim&&sa<=lim&&!p.last_error&&!EN_FAIL;
+ return {fresh,ra,sa,valid};}
+function currentMarks(rows){
+ const tk=ENK.tickers,out={};
+ const prices=(tk&&tk.value&&tk.value.prices)||{};
+ for(const p of rows||[]){const q=prices[p.symbol];if(!q||!p.entry_price||p.amount==null)continue;
+  const dir=p.side==='long'?1:-1,st=symbolState(q,tk);
+  out[p.id]={mark:q.price,fresh:st.fresh,upnl:(q.price-p.entry_price)*dir*p.amount,
+   pct:(q.price-p.entry_price)/p.entry_price*100*dir};}
+ return out;}
+function renderPositions(){
+ const pos=(OV&&OV.positions)||{},rows=pos.rows,marks=currentMarks(rows);
+ if(!rows){$('#pos-empty').classList.add('hidden');
+  $('#pos-cards').innerHTML='<div class="empty">positions unavailable — journal unreadable</div>';}
+ else{
+ $('#pos-empty').classList.toggle('hidden',rows.length>0);
+ {const live=new Set(rows.map(p=>p.id));
+  for(const id of [...closePending]) if(!live.has(id)) closePending.delete(id);}
+ $('#pos-cards').innerHTML=(pos.truncated?`<div class="warnlbl mono" style="font-size:11px;margin-bottom:8px">showing ${pos.shown} of ${pos.open_total} open positions</div>`:'')+
+  rows.map(p=>{
+  const m=marks[p.id],prot=p.protection||{};
+  const up=!!m,sl=prot.stop_loss,tp=prot.take_profit,entry=+p.entry_price;
+  let pct=50;
+  if(m&&sl&&tp&&m.mark>Math.min(sl,tp)&&m.mark<Math.max(sl,tp))
+   pct=(m.mark-Math.min(sl,tp))/Math.abs(tp-sl)*100;
+  return `<div class="pos-card" style="margin-bottom:10px">
+   <div class="top"><span class="sym">${p.symbol}</span>
+    <span class="sidebadge ${p.side}">${p.side}</span>
+    <span class="mono" style="color:var(--dim);font-size:10.5px">
+      entry ${entry.toFixed(4)} → mark ${m?m.mark.toFixed(4)+(m.fresh?'':' (stale)'):'unavailable'}</span>
+    <div class="upnl"><div class="n num ${up?(m.upnl>=0?'up':'down'):''}${up&&!m.fresh?' stale':''}">
+      ${up?(m.upnl>=0?'+':'')+m.upnl.toFixed(2):'—'}</div>
+     <div class="p">${up?(m.pct>=0?'+':'')+m.pct.toFixed(2)+'% est.':''}</div></div>
+    <button class="closebtn" data-tid="${p.id}" data-sym="${p.symbol}"
+      ${closePending.has(p.id)?'disabled':''}
+      onclick="closeTrade('${p.id}','${p.symbol}')">${
+      closePending.has(p.id)?'closing…':'Close'}</button></div>
+   <div class="meta"><span title="journal record; venue stop not verified here">SL ${px4(sl)}</span>
+    <span>TP ${px4(tp)}</span><span>lev ×${p.leverage||1}</span>
+    <span style="margin-left:auto;color:var(--dimmer)">${p.strategy_name||''}</span></div>
+   <div class="rail"><div class="fill"></div><div class="cur" style="left:${pct}%"></div></div>
+   <div class="lbls"><span>◄ stop</span><span>price rail</span><span>target ►</span></div>
+  </div>`;}).join('');}
+
+ const uel=$('#upnl'),n=rows?pos.open_total:0,got=rows?rows.filter(p=>marks[p.id]).length:0;
+ const stale=rows&&rows.some(p=>marks[p.id]&&!marks[p.id].fresh);
+ if(!rows||n!==got){uel.textContent='—';uel.className='val num';
+  $('#upnl-sub').textContent=!rows?'positions unavailable':`${got} of ${n} position(s) marked · total needs all`;}
+ else{const u=rows.reduce((a,p)=>a+marks[p.id].upnl,0);
+  uel.textContent=(u>=0?'+':'')+u.toFixed(2)+' USDT';
+  uel.className='val num '+(u>=0?'up':'down')+(stale?' stale':'');
+  $('#upnl-sub').innerHTML=n?`all ${n} position(s) marked · estimate`+(stale?' · '+STALE:''):'no open positions (journal)';}
+}
+
+function renderEnrichment(){
+ renderPositions();
+ const a=ENK.account,tk=ENK.tickers;
+ const failed=x=>(x&&x.last_refresh_failed)||EN_FAIL;
+ const note=x=>(x&&x.refreshing?' · refreshing':'')+(failed(x)?' · <span class="warnlbl">last refresh failed</span>':'');
+ const v=a&&a.value;
+ if(!v)$('#assets').innerHTML='wallet unavailable'+note(a);
+ else{
+  const age=ageAt(a.retrieved_at,a._skew),stale=freshBy(age,a.max_age_s)!=='fresh'||failed(a);
+  const parts=[...Object.entries(v.assets_usd||{}).map(([k,x])=>k+' $'+x.toLocaleString()),
+   ...Object.entries(v.assets_unconverted||{}).map(([k,x])=>k+' '+x+' (not converted)')].join(' · ');
+  $('#assets').innerHTML=(v.assets_usd_total!=null?'wallet ≈ <b style="color:var(--dim)">$'+v.assets_usd_total.toLocaleString()+'</b>'+(v.assets_usd_total_complete?'':' (converted assets only)'):'wallet')+
+   ' · retrieved '+ago(age)+' ago'+(stale?' · '+STALE:'')+note(a)+'<br>'+parts;}
+ const pr=(tk&&tk.value&&tk.value.prices)||{},keys=Object.keys(pr);
+ if(!keys.length)$('#tickstrip').innerHTML='<span class="ti" style="color:var(--dimmer)">prices unavailable'+note(tk)+'</span>';
+ else{let nStale=0;
+  const cells=keys.map(k=>{const q=pr[k],s=symbolState(q,tk);if(!s.fresh)nStale++;
+   return `<span class="ti${s.fresh?'':' stale'}" title="ticker ${s.valid?ago(s.sa)+' old':'observation time missing/invalid'}, retrieved ${ago(s.ra)} ago${q.last_error?' · last refresh failed':''}"><b>${k.split('/')[0]}</b>
+   <span class="num">${q.price.toLocaleString(undefined,{maximumFractionDigits:q.price<10?4:2})}</span></span>`;}).join('');
+  $('#tickstrip').innerHTML=cells+`<span class="ti" style="color:var(--dimmer)">${nStale?nStale+' of '+keys.length+' prices '+STALE:'prices fresh'}${note(tk)}</span>`;}
+}
+
+const miniRes=resource('mini',async()=>{
+ await Promise.all([
+  getJSON('/api/doctrine').then(dd=>{const el=$('#mini-doctrine');if(el)el.textContent='v'+dd.version;}).catch(()=>{}),
+  getJSON('/api/review_status').then(rr=>{const el=$('#mini-review');if(el)el.textContent=rr.trades_until_review+' trades';}).catch(()=>{})]);},60000);
 
 /* sparkline from equity history */
 async function drawSpark(id){
  const el=document.getElementById(id);if(!el)return;
- const d=await gql(`{equity_curve(limit:80){equity}}`);
+ const d=await gqlRead(`{equity_curve(limit:80){equity}}`);
  if(!d||!d.equity_curve.length<2)return;
  const vals=d.equity_curve.map(p=>+p.equity);
  const c=el.getContext('2d'),w=el.width,h=el.height;
@@ -828,7 +1060,9 @@ async function drawSpark(id){
 
 /* ── equity curve ── */
 let eqChart=null,eqSeries=null;
-function initEqChart(){
+async function initEqChart(){
+ if(eqChart)return;
+ await loadLib('lwc');
  if(eqChart)return;
  eqChart=LightweightCharts.createChart($('#eqchart'),
   {layout:{background:{color:'transparent'},textColor:'#525d6e',fontSize:10},
@@ -839,8 +1073,9 @@ function initEqChart(){
    bottomColor:'rgba(0,209,160,0)',lineWidth:2});
  window.addEventListener('resize',()=>eqChart.applyOptions({width:$('#eqchart').clientWidth}));}
 async function loadEqCurve(){
- initEqChart();
- const d=await gql(`{equity_curve(limit:600){ts equity}}`);
+ try{await initEqChart();}
+ catch(e){$('#eq-range').textContent='chart library unavailable';return;}
+ const d=await gqlRead(`{equity_curve(limit:600){ts equity}}`);
  if(!d||!d.equity_curve||d.equity_curve.length<2)return;
  eqSeries.setData(d.equity_curve.map(p=>({
   time:Math.floor(new Date(p.ts).getTime()/1000),value:+p.equity})));
@@ -872,9 +1107,9 @@ function pager(el,page,total,psize,goto){
   <span class="info">${from}–${to} of ${total}</span>`;}
 function tradesGo(p){tradesPage=Math.max(0,p);loadTrades();}
 async function loadTrades(){
- const d=await gql(`{trades(limit:${PAGE},offset:${tradesPage*PAGE}){
+ const d=await gqlRead(`{trades(limit:${PAGE},offset:${tradesPage*PAGE}){
   opened_at symbol side entry_price exit_price realized_pnl close_reason status}}`);
- const t=await gql(`{trades_total}`);
+ const t=await gqlRead(`{trades_total}`);
  tradesTotal=t.trades_total;
  $('#trades tbody').innerHTML=d.trades.map(t=>`<tr>
   <td>${(t.opened_at||'').slice(5,16)}</td>
@@ -888,18 +1123,18 @@ async function loadTrades(){
  ).join('')||'<tr><td colspan=8 class="empty" style="border:none">no trades yet</td></tr>';
  pager('#trades-pager',tradesPage,tradesTotal,PAGE,'tradesGo');}
 function decGo(p){decPage=Math.max(0,p);loadDecisions();}
-async function loadLogs(){const r=await fetch('/api/logs?lines=90');
- const j=await r.json();$('#logs').textContent=(j.tail||[]).join('\n')||'(empty)';}
+async function loadLogs(){
+ const j=await getJSON('/api/logs?lines=90');$('#logs').textContent=(j.tail||[]).join('\n')||'(empty)';}
 
 /* ── OS: decisions ── */
 async function loadBrainFeed(){
  try{
-  const t=await gql(`{tv_health{state runs_today budget budget_enabled}}`);
+  const t=await gqlRead(`{tv_health{state runs_today budget budget_enabled}}`);
   if(t&&t.tv_health){const h=t.tv_health;
    const e={'healthy':'var(--green)','degraded':'#ff9f43','down':'var(--red)'}[h.state]||'#888';
    const runs=h.budget_enabled?`${h.runs_today}/${h.budget}`:'dev · unlimited';
    $('#tv-health').innerHTML=`<span style="color:${e}">●</span> TV ${h.state} · ${runs}`;}
-  const d=await gql(`{brain_events(kinds:"brain_judgement,pine_forged",limit:8)}`);
+  const d=await gqlRead(`{brain_events(kinds:"brain_judgement,pine_forged",limit:8)}`);
   $('#brain-feed').innerHTML=(d.brain_events||[]).map(ev=>{
    let line='';
    if(ev.kind==='brain_judgement'){try{const j=JSON.parse(ev.detail);
@@ -918,9 +1153,19 @@ async function loadBrainFeed(){
 let discBookPage=0;
 function discBookGo(p){discBookPage=Math.max(0,p);renderDiscBook();}
 function renderDiscBook(){
- const r=window.__pipe||{};
- const book=(r.population||{}).book||[];
+ const r=window.__pipe||{},popn=r.population||{};
+ // dedupe by id; completeness is claimed only for one version, all pages
+ const seen=new Set(),book=[];
+ for(const s of (popn.book||[]).concat(window.__bookRest||[]))
+  if(!seen.has(s.id)){seen.add(s.id);book.push(s);}
  pager('#disc-book-pager',discBookPage,book.length,PAGE,'discBookGo');
+ // a capped or changed book is labelled as such, never as the population
+ if(window.__bookChanged)
+  $('#disc-book-pager').insertAdjacentHTML('beforeend',`<span class="info warnlbl">population changed while listing — showing ${book.length} rows, not complete
+   <button onclick="loadDiscovery()">reload</button></span>`);
+ else if(popn.book_truncated&&book.length<popn.book_total)
+  $('#disc-book-pager').insertAdjacentHTML('beforeend',`<span class="info warnlbl">listed ${book.length} of ${popn.book_total} strategies
+   <button onclick="loadBookRest()">load remaining</button></span>`);
  const slice=book.slice(discBookPage*PAGE,(discBookPage+1)*PAGE);
  $('#disc-book tbody').innerHTML=slice.map(s=>`<tr>
   <td class="sans" style="font-weight:600">${s.name}</td>
@@ -929,9 +1174,25 @@ function renderDiscBook(){
   <td style="color:var(--dimmer)">${s.origin}</td>
   <td style="color:var(--red);opacity:.65;font-size:10.5px">${s.retire_reason||''}</td></tr>`).join('')
  ||'<tr><td colspan=5 class="empty" style="border:none">population empty</td></tr>';}
+/* pages belong to the Discovery snapshot that requested them: a completion
+   (or error) arriving after a newer loadDiscovery() is discarded */
+let bookEpoch=0;
+async function loadBookRest(){
+ const epoch=bookEpoch,popn=(window.__pipe||{}).population||{};
+ let rest=window.__bookRest||[],next=popn.book_rest,changed=false;
+ try{
+  while(next){const pg=await getJSON(next);if(epoch!==bookEpoch)return;
+   if(pg.version!==popn.book_version){changed=true;break;}
+   rest=rest.concat(pg.rows);
+   next=pg.more?`/api/pipeline/book?offset=${pg.offset+pg.rows.length}&version=${popn.book_version}`:null;}
+ }catch(e){if(epoch!==bookEpoch)return;
+  changed=String(e.message).includes('409');if(!changed)throw e;}
+ if(epoch!==bookEpoch)return;
+ window.__bookRest=rest;window.__bookChanged=window.__bookChanged||changed;renderDiscBook();}
 async function loadDiscovery(){
- const r=await(await fetch('/api/pipeline')).json();
- window.__pipe=r;
+ const r=await getJSON('/api/pipeline');
+ bookEpoch++;                       // supersedes any in-flight page loads
+ window.__pipe=r;window.__bookRest=[];window.__bookChanged=false;cacheNote('#disc-kpis',r);
  const f=r.funnel||{},lc=f.last_cycle||{};
  const kpi=(lbl,val,sub)=>`<div class="card"><div class="lbl">${lbl}</div>
   <div class="val num" style="font-size:21px">${val}</div>
@@ -967,10 +1228,10 @@ async function loadDiscovery(){
    <div style="color:var(--dim)">${prm}</div></div>`;}).join('')
   ||'<span class="mono" style="color:var(--dimmer)">none yet</span>';}
 async function loadDecisions(){
- const d=await gql(`{decisions(directional_only:true,limit:${PAGE},offset:${decPage*PAGE}){
+ const d=await gqlRead(`{decisions(directional_only:true,limit:${PAGE},offset:${decPage*PAGE}){
   id ts symbol action score threshold confidence
   executed skip_reason votes{agent side conviction confidence rationale raw_conviction calibrated htf news_blackout}}}`);
- const t=await gql(`{decisions_total(directional_only:true)}`);
+ const t=await gqlRead(`{decisions_total(directional_only:true)}`);
  decTotal=t.decisions_total;
  const rows=d.decisions;
  $('#dec-feed').innerHTML=rows.map(x=>{
@@ -998,7 +1259,7 @@ async function loadDecisions(){
 
 async function loadNewsBanner(){
  try{
-  const d=await gql(`{news_guard{active why checked_at}}`);
+  const d=await gqlRead(`{news_guard{active why checked_at}}`);
   const b=document.getElementById('news-banner');
   if(d&&d.news_guard&&d.news_guard.active){
    b.classList.add('on');
@@ -1006,7 +1267,7 @@ async function loadNewsBanner(){
   }else b.classList.remove('on');
  }catch(e){}}
 async function loadLab(){
- const d=await gql(`{strategy_full{id name kind state origin hypothesis params generation retire_reason trades wins pnl_usdt profit_factor winrate}}`);
+ const d=await gqlRead(`{strategy_full{id name kind state origin hypothesis params generation retire_reason trades wins pnl_usdt profit_factor winrate}}`);
  const ORDER={active:0,paper:1,demoted:2,retired:3};
  const list=[...d.strategy_full].sort((a,b)=>
   (ORDER[a.state]-ORDER[b.state])||a.name.localeCompare(b.name));
@@ -1106,7 +1367,7 @@ function dkSelect(n,quiet){
  if(quiet){pb.classList.add('in');}
  else{pb.classList.remove('in');requestAnimationFrame(()=>pb.classList.add('in'));}}
 async function dkOpenNote(path){
- try{const f=await (await fetch('/api/vault/file?path='+encodeURIComponent(path))).json();
+ try{const f=await getJSON('/api/vault/file?path='+encodeURIComponent(path));
   $('#dk-note').textContent=f.content||f.error||'not found';}
  catch(e){$('#dk-note').textContent='could not load note';}}
 function dkWires(){
@@ -1146,8 +1407,8 @@ function dkPatch(n){const m=_dkEls[n.name];if(!m)return;
  const cg=m.querySelector('.dk-coregrid');if(cg&&n.core)cg.innerHTML=dkCore(n);}
 async function loadDeck(soft){
  let d;
- try{d=await (await fetch('/api/org'+location.search)).json();}
- catch(e){if(!soft)$('#dk-app').innerHTML='<div style="padding:24px;color:var(--dim)">agents data unavailable</div>';return;}
+ try{d=await getJSON('/api/org'+location.search);cacheNote('#dk-app',d);}
+ catch(e){if(!soft)$('#dk-app').innerHTML='<div style="padding:24px;color:var(--dim)">agents data unavailable</div>';else failNote('#dk-app');return;}
  const emps=d.employees||[];
  if(!emps.length){if(!soft)$('#dk-app').innerHTML='<div style="padding:24px;color:var(--dim)">no agents yet</div>';return;}
  _dkBY={};emps.forEach(e=>_dkBY[e.name]=e);
@@ -1206,7 +1467,7 @@ function loadBrainDefault(){loadDoctrine();}
 
 /* ── brain ── */
 async function loadDoctrine(){
- const d=await(await fetch('/api/doctrine')).json();
+ const d=await getJSON('/api/doctrine');
  const bs=d.beliefs||[];
  const head=`<div class="mono" style="font-size:11px;color:var(--dim);
    margin-bottom:10px;line-height:1.6">What Luffy currently believes — revised by its own autopsies.
@@ -1230,10 +1491,11 @@ async function loadVaultGraph(){
  const host=$('#brain-graph');
  if(_vaultBuilt){return;}
  let g;
- try{ g=await (await fetch('/api/vault/graph')).json(); }
+ try{ g=await getJSON('/api/vault/graph');cacheNote('#brain-graph',g); }
  catch(e){ host.innerHTML='<div style="padding:20px;color:var(--dim)">memory graph unavailable</div>'; return; }
  if(!g.nodes||!g.nodes.length){ host.innerHTML='<div style="padding:20px;color:var(--dim)">memory vault is empty</div>'; return; }
  _vaultBuilt=true;
+ await loadLib('motion',4000).catch(()=>null);   // optional animation only
  buildLivingMemory(host,g);
 }
 
@@ -1371,7 +1633,7 @@ function buildLivingMemory(host,g){
 
  // ── sparks (calm) ──
  function spark(){
-  if(document.getElementById('v-os').classList.contains('hidden'))return;
+  if(document.hidden||document.getElementById('v-os').classList.contains('hidden'))return;
   const n=nodes[Math.floor(Math.random()*nodes.length)];
   if(Mo){Mo.animate(n.pulse,{scale:[1,1.6,1]},{duration:.9,ease:'easeOut'});
    Mo.animate(n.glow,{opacity:[0.14,0.45,0.14]},{duration:.9,ease:'easeOut'});}
@@ -1388,7 +1650,7 @@ function buildLivingMemory(host,g){
   if(W&&H){vb.h=vb.w*(H/W);setVB();}});
 }
 async function openNote(path){
- const f=await (await fetch('/api/vault/file?path='+encodeURIComponent(path))).json();
+ const f=await getJSON('/api/vault/file?path='+encodeURIComponent(path));
  $('#vault-file').textContent=f.content||f.error;}
 
 /* ── company cockpit ── */
@@ -1403,8 +1665,8 @@ function _coDot(s){const c=(CO_COLORS[s]||CO_COLORS.offline).border;
  return `<span style="color:${c}">●</span>`;}
 async function loadCompany(soft){
  let d;
- try{ d=await (await fetch('/api/org'+location.search)).json(); }
- catch(e){ if(!soft)$('#company-graph').innerHTML='<div style="padding:20px;color:var(--dim)">company data unavailable</div>'; return; }
+ try{ d=await getJSON('/api/org'+location.search);cacheNote('#company-graph',d); }
+ catch(e){ if(!soft)$('#company-graph').innerHTML='<div style="padding:20px;color:var(--dim)">company data unavailable</div>'; else failNote('#company-graph'); return; }
  const emps=d.employees||[];
  _coEmp={}; emps.forEach(e=>_coEmp[e.name]=e);
  if(soft&&_coNet){ // update colours/labels in place, keep layout
@@ -1413,6 +1675,8 @@ async function loadCompany(soft){
   if(_coSel&&_coEmp[_coSel])renderCoDetail(_coEmp[_coSel]);
   return;
  }
+ await loadLib('vis').catch(()=>null);
+ if(soft&&_coNet)return;
  if(typeof vis==='undefined'){$('#company-graph').innerHTML='<div style="padding:20px;color:var(--dim)">graph library unavailable</div>';return;}
  const nodes=emps.map(e=>({id:e.name,label:e.name+'\n'+(e.metric||''),
   level:e.reports_to?1:0,shape:'box',margin:8,widthConstraint:{maximum:150},
@@ -1465,12 +1729,12 @@ function renderCoDetail(e){
    </div>`;
 }
 async function openCoNote(path){
- try{ const f=await (await fetch('/api/vault/file?path='+encodeURIComponent(path))).json();
+ try{ const f=await getJSON('/api/vault/file?path='+encodeURIComponent(path));
   $('#co-note').textContent=f.content||f.error||'not found'; }
  catch(e){ $('#co-note').textContent='could not load note'; }
 }
 async function loadReview(){
- const r=await(await fetch('/api/review_status')).json();
+ const r=await getJSON('/api/review_status');
  $('#review-view').innerHTML=
   `<div class="mono" style="font-size:11px;color:var(--dim);margin-bottom:10px;line-height:1.6">
     Brain-Judge re-judges the whole strategy book every
@@ -1486,7 +1750,7 @@ async function loadReview(){
      r.last_brain_event.kind:'—'}</div>
     <div class="sub">${r.last_brain_event?r.last_brain_event.ts.slice(0,16):''}</div></div></div>`;}
 async function loadAutopsy(){
- const r=await(await fetch('/api/brain/last_autopsy')).json();
+ const r=await getJSON('/api/brain/last_autopsy');
  if(!r||!r.ts){
   $('#autopsy-status').textContent='never run';
   $('#autopsy-view').textContent='No autopsy yet — runs every ~6h once trades close, or on demand.';
@@ -1523,7 +1787,7 @@ function initChatChart(){
  window.addEventListener('resize',()=>chatChart.applyOptions({width:$('#chart2').clientWidth}));}
 async function loadChatCandles(){
  if(!chatChart)return;
- const r=await (await fetch(`/api/klines?symbol=${encodeURIComponent(cSym2)}&tf=${cTf2}&limit=300`)).json();
+ const r=await getJSON(`/api/klines?symbol=${encodeURIComponent(cSym2)}&tf=${cTf2}&limit=300`);
  if(r.candles){chatSeries.setData(r.candles);chatChart.timeScale().fitContent();}}
 const chatHistory=[];
 
@@ -1639,40 +1903,55 @@ async function sendChat(){const t=$('#chat-in').value.trim();if(!t)return;
   chatHistory.push({who:'You',text:t},{who:'Luffy',text:r.reply||''});
   setLuffyState('idle'); speak(r.reply||'');
   setTimeout(refresh,1500);}
- catch(e){pending.querySelector('.txt').textContent='brain unreachable — ops still work';
+ catch(e){pending.querySelector('.txt').textContent="Brain unreachable. Chat can discuss operational actions but cannot execute them. Use the dashboard's explicit controls and confirm when prompted.";
   setLuffyState('idle');}}
 function quick(q){$('#chat-in').value=q;sendChat();}
 
 /* ── boot ── */
 function fillSymSelect(sel){
- fetch('/api/summary').then(r=>r.json()).then(s=>{
+ getJSON('/api/overview').then(s=>{
   const syms=[...new Set(['BTC/USDT','ETH/USDT','SOL/USDT',
-   ...s.open_positions.map(p=>p.symbol)])];
+   ...(((s.positions||{}).rows)||[]).map(p=>p.symbol)])];
   const el=document.querySelector(sel);if(!el)return;
   el.innerHTML=syms.map(x=>`<option${x===cSym2?' selected':''}>${x}</option>`).join('');});}
-window.addEventListener('DOMContentLoaded',()=>{
- loadEqCurve();
- loadNewsBanner();
- setInterval(loadEqCurve,60000);
- setInterval(loadNewsBanner,30000);});
+const eqRes=resource('equity-curve',async()=>{await loadEqCurve();await drawSpark('spark-eq');},60000);
+const newsRes=resource('news',loadNewsBanner,30000);
 
-/* ws live ticker */
-let wsUp=false;
-function setWs(up){wsUp=up;$('#sb-ws').innerHTML=
- `<span class="sdot${up?'':' off'}"></span>${up?'live':'down'}`;}
-const ws=new WebSocket(`ws://${location.host}/ws/live`);
-ws.onopen=()=>setWs(true);
-ws.onclose=()=>{setWs(false);setTimeout(()=>location.reload(),8000);};
-ws.onmessage=e=>{const p=JSON.parse(e.data);
- $('#ticker').innerHTML=(p.recent_decisions||[]).map(d=>`<div class="decision">
+/* ws live ticker — bounded reconnect with backoff, never a page reload */
+let wsUp=false,ws=null,wsTry=0,wsTimer=null,wsLast=0,wsDropped=false;
+function setWs(state,why){wsUp=state==='live';$('#sb-ws').innerHTML=
+ `<span class="sdot${wsUp?'':' off'}"></span>${why||state}`;}
+function wsConnect(){
+ if(authLost||document.hidden||(ws&&ws.readyState<=1))return;
+ clearTimeout(wsTimer);
+ const sock=new WebSocket(`${location.protocol==='https:'?'wss':'ws'}://${location.host}/ws/live`);
+ ws=sock;
+ sock.onopen=()=>{if(ws!==sock)return;wsTry=0;wsLast=Date.now();setWs('live');
+  if(wsDropped){wsDropped=false;refresh();}};   // coalesced with the timer
+ sock.onmessage=e=>{if(ws!==sock)return;wsLast=Date.now();setWs('live');
+  const p=JSON.parse(e.data);if(!p.recent_decisions)return;
+  $('#ticker').innerHTML=p.recent_decisions.map(d=>`<div class="decision">
   <div class="r1" style="width:100%"><span class="sym">${d.symbol}</span>
    <span class="tag ${d.action}">${d.action}</span>
    <span class="num ${d.score>=0?'up':'down'}">${(+d.score).toFixed(3)}</span>
    <span class="tag ${d.executed?'exec':'skip'}">${d.executed?'EXECUTED':(d.skip_reason||'skipped')}</span>
    <span class="mono" style="margin-left:auto">${(d.ts||'').slice(11,19)}</span></div></div>`).join('');};
-setInterval(refresh,8000);refresh();
-setInterval(()=>{if(!$('#v-company').classList.contains('hidden'))loadCompany(true);},8000);
+ sock.onclose=e=>{if(ws!==sock)return;ws=null;wsDropped=true;
+  if(e.code===4401){setWs('down','signed out');sessionExpired();return;}
+  if(e.code===4403){setWs('down','refused');return;}
+  if(document.hidden){setWs('down','paused');return;}
+  const d=Math.round(Math.min(30000,1000*2**wsTry++)*(0.5+Math.random()/2));
+  setWs('down','reconnecting in '+Math.ceil(d/1000)+'s');
+  wsTimer=setTimeout(wsConnect,d);};}
+setInterval(()=>{if(ws&&ws.readyState===1&&Date.now()-wsLast>10000)setWs('stale','stale '+ago((Date.now()-wsLast)/1000));},5000);
+const companyRes=resource('company',()=>loadCompany(!!_coNet),8000,
+ ()=>!$('#v-company').classList.contains('hidden'));
 const dkVisible=()=>!$('#v-os').classList.contains('hidden')&&!$('#os-agents').classList.contains('hidden');
-setInterval(()=>{if(dkVisible())loadDeck(true);},8000);
+const deckRes=resource('deck',()=>loadDeck(_dkBuilt),8000,dkVisible);
+companyRes.when=()=>!$('#v-company').classList.contains('hidden');deckRes.when=dkVisible;
 addEventListener('resize',()=>{if(_dkBuilt&&dkVisible())requestAnimationFrame(dkWires);});
+/* local data first; the chart, news and mini panels follow it */
+ovRes.now().finally(()=>{eqRes.now();newsRes.now();miniRes.now();});
+companyRes.schedule();deckRes.schedule();
+wsConnect();
 </script><script src="/attention.js"></script><script src="/investigation.js"></script></body></html>

@@ -6,6 +6,7 @@ Read-only against the journal except control mutations, which only write
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -14,13 +15,26 @@ from typing import Optional
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse
+from starlette.concurrency import run_in_threadpool
 
 from ..core.config import ROOT, load_config
 from ..core.journal import Journal
 from ..api.graphql_schema import make_graphql_router
+from .enrichment import Enrichment
+from .local_view import (Busy, ReadOnlyStore, SharedTTL, StoreUnavailable,
+                         live_payload, overview as local_overview, tail_lines)
 
 log = logging.getLogger("dashboard")
+
+
+def _now_iso() -> str:
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat()
 WEB = Path(__file__).parent / "web"
+#: how long /api/enrichment waits for a running venue refresh before
+#: answering with the cached (possibly stale/unavailable) view
+ENRICH_WAIT_S = 1.5
+PIPELINE_BOOK_ROWS = 500
 
 
 def create_app(cfg: dict | None = None) -> FastAPI:
@@ -35,9 +49,42 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         return response
 
     app.include_router(make_graphql_router(journal))
+    # Owner read paths use a read-only connection: no schema/migration work
+    # and no write capability on a request, unlike Journal.__init__.
+    store = ReadOnlyStore(ROOT / "data" / "luffy.db")
+    shared = SharedTTL()
+    # per app, never process-global: cached venue values stay bound to this
+    # app's configured account/routing (see enrichment.Enrichment)
+    enrichment = Enrichment()
+    app.state.enrichment = enrichment
+
+    async def _shared(key, ttl, fn):
+        """Shared value plus cache metadata; waiting holds no worker token."""
+        try:
+            value, meta = await shared.get(key, ttl, fn)
+        except Busy as e:
+            return None, {"stale": True, "reason": str(e)}
+        return value, meta
+
+    def _json(value, meta):
+        # served_at is this response's server time; a cached snapshot keeps
+        # its own generated_at, so clients can age a stale fallback correctly
+        meta = {**meta, "served_at": _now_iso()}
+        if value is None:            # saturated, nothing computed yet
+            r = JSONResponse({"status": "busy", "cache": meta}, status_code=503,
+                             headers={"Retry-After": "2"})
+        else:
+            if isinstance(value, dict):
+                value = {**value, "cache": meta}
+            r = JSONResponse(value)
+        return _nocache(r)
+
+    async def _overview():
+        return await _shared("overview", 2.0,
+                             lambda: local_overview(store, ROOT))
 
     @app.get("/", response_class=HTMLResponse)
-    async def index():
+    def index():
         from fastapi import Response
         html = (WEB / "index.html").read_text()
         return _nocache(Response(html, media_type="text/html"))
@@ -93,87 +140,138 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             result["execution_recovery"] = {"reason": "recovery_ledger_unreadable"}
         return _nocache(JSONResponse(result))
 
-    @app.get("/api/summary", dependencies=[])
-    async def summary():
-        eq = journal.query(
-            "SELECT * FROM equity ORDER BY ts DESC LIMIT 2")
-        opens = journal.open_trades()
-        hb_age = None
+    @app.get("/api/overview")
+    async def overview():
+        """First useful Overview data: local journal/files only, no venue."""
+        return _json(*await _overview())
+
+    @app.get("/api/enrichment")
+    async def enrichment_view():
+        """Optional wallet/ticker enrichment, separate from local data.
+
+        Joins (never duplicates) a running refresh for up to ENRICH_WAIT_S;
+        a caller that stops waiting leaves the job running to completion."""
+        ov, _ = await _overview()
+        positions = ((ov or {}).get("positions") or {}).get("rows") or []
+        jobs = await run_in_threadpool(
+            enrichment.refresh, [p["symbol"] for p in positions])
+        if jobs:
+            await asyncio.wait([asyncio.wrap_future(j) for j in jobs],
+                               timeout=ENRICH_WAIT_S)
+        return _nocache(JSONResponse(enrichment.view(positions)))
+
+    def _summary_trades():
+        # the full open book with every journal column, as the legacy
+        # summary returned it (not the Overview's capped display rows)
         try:
-            hb_path = ROOT / "data" / "heartbeat_luffy.json"
-            import time as t
-            hb_age = round(t.time() - json.loads(hb_path.read_text())["timestamp"])
-        except Exception:
-            pass
-        snap = _account_snapshot()
-        assets = snap.get("assets", {})
-        assets_total = snap.get("assets_total", 0)
+            return store.query("SELECT * FROM trades WHERE status='open'")
+        except StoreUnavailable:
+            return None
 
-        # ── live position marks + unrealized P&L ──
-        marks = _position_marks(journal)
-        total_upnl = sum(m["upnl"] for m in marks.values()
-                         if isinstance(m.get("upnl"), (int, float)))
-        long_exp = sum(m["notional"] for m in marks.values() if m["side"] == "long")
-        short_exp = sum(m["notional"] for m in marks.values() if m["side"] == "short")
-        for p in opens:
-            m = marks.get(p["symbol"])
+    @app.get("/api/summary", dependencies=[])
+    def summary_v1_retired():
+        """v1 is retired rather than silently changed: its fabricated zeros /
+        ACTIVE defaults cannot be served honestly (see /api/v2/summary)."""
+        return _nocache(JSONResponse({
+            "error": "gone", "retired": "/api/summary (v1)",
+            "use": "/api/v2/summary",
+            "migration": ("v2 keeps the v1 keys, but a missing or incomplete "
+                          "value is null instead of 0/'ACTIVE'/'futures'; "
+                          "exposure is entry notional; assets_total is null "
+                          "unless every asset converted (see "
+                          "assets_known_usd_subtotal); per-source ages are in "
+                          "'freshness'.")}, status_code=410))
+
+    @app.get("/api/v2/summary")
+    async def summary():
+        """summary v2 — the v1 keys composed from local data plus already-
+        cached enrichment. Never waits on the venue. A value that is missing
+        or incomplete is null (equity, control_state, market_type, exposure,
+        total_upnl, assets_total); exposure is entry notional. See
+        `freshness` for the age and completeness of each source."""
+        ov, meta = await _overview()
+        if ov is None:
+            return _json(None, meta)
+        rows = await run_in_threadpool(_summary_trades)
+        positions = [dict(p) for p in rows or []]
+        await run_in_threadpool(enrichment.refresh,
+                                [p["symbol"] for p in positions])
+        ev = enrichment.view(positions)
+        marks = ev["marks"]["rows"]
+        for p in positions:
+            entry, sl, tp = p.get("entry_price"), p.get("stop_loss"), p.get("take_profit")
+            p["sl_dist"] = abs(entry - sl) / entry * 100 if entry and sl else None
+            p["tp_dist"] = abs(tp - entry) / entry * 100 if entry and tp else None
+            m = marks.get(p["id"])
             if m:
-                p["mark"] = m["mark"]
-                p["upnl"] = round(m["upnl"], 2)
-                p["upnl_pct"] = m["upnl_pct"]
-                p["sl_dist"] = m["sl_dist"]
-                p["tp_dist"] = m["tp_dist"]
-
-        # ── strategy P&L + winrate + agent activity ──
-        strat_pnl = journal.query(
-            "SELECT COALESCE(NULLIF(strategy_name,''),'orchestrator') sname,"
-            " ROUND(SUM(realized_pnl),2) pnl, COUNT(*) n "
-            "FROM trades WHERE status='closed' GROUP BY sname "
-            "HAVING COUNT(*)>0 ORDER BY pnl")
-        closed = journal.query(
-            "SELECT COUNT(*) n, SUM(realized_pnl>0) wins FROM trades "
-            "WHERE status='closed'")[0]
-        agents_now = journal.query("""
-            SELECT v.agent, v.side, v.conviction, v.confidence, v.ts,
-                   c.regime FROM votes v JOIN cycles c ON c.id=v.cycle_id
-            WHERE v.ts > datetime('now','-15 minutes')
-              AND v.rowid IN (SELECT MAX(rowid) FROM votes
-                              GROUP BY agent) ORDER BY v.ts DESC LIMIT 6""")
-        prices = _universe_prices()
-        return {
-            "control_state": journal.kv_get("control_state", "ACTIVE"),
-            "market_type": journal.kv_get("market_type", "futures"),
-            "heartbeat_age_s": hb_age,
-            "equity": eq[0]["equity"] if eq else 0,
-            "equity_prev": eq[1]["equity"] if len(eq) > 1 else None,
-            "open_positions": opens,
-            "assets": assets, "assets_total": assets_total,
-            "total_upnl": round(total_upnl, 2),
-            "long_exposure": round(long_exp, 0),
-            "short_exposure": round(short_exp, 0),
-            "strategy_pnl": strat_pnl,
-            "winrate": (round(closed["wins"] / closed["n"] * 100, 1)
-                        if closed["n"] else None),
-            "closed_trades": closed["n"],
-            "agents_now": agents_now,
-            "prices": prices,
-            "today": _today_stats(journal),
-        }
+                p.update(mark=m["mark"], upnl=m["upnl_estimate"],
+                         upnl_pct=m["upnl_pct"], mark_freshness=m["freshness"])
+        eq, hb = ov.get("equity") or {}, ov.get("heartbeat") or {}
+        acct = ev["account"].get("value") or {}
+        perf, ctl = ov.get("performance") or {}, ov.get("control") or {}
+        prices = ((ev["tickers"].get("value") or {}).get("prices") or {})
+        exposure = (ov.get("positions") or {}).get("entry_notional") or {}
+        all_marked = rows is not None and all(p["id"] in marks for p in positions)
+        return _nocache(JSONResponse({
+            "schema": "luffy.summary.v2",
+            "control_state": ctl.get("control_state"),
+            "market_type": ctl.get("market_type"),
+            "heartbeat_age_s": hb.get("age_s"),
+            "equity": eq.get("equity"), "equity_prev": eq.get("equity_prev"),
+            # None, not [], when the journal could not be read
+            "open_positions": positions if rows is not None else None,
+            # converted USD values plus unconverted asset strings, as in v1
+            "assets": ({**acct.get("assets_usd", {}), **acct.get("assets_unconverted", {})}
+                       if acct else {}),
+            # null unless every asset was converted; the known part is labelled
+            "assets_total": (acct.get("assets_usd_total")
+                             if acct.get("assets_usd_total_complete") else None),
+            "assets_known_usd_subtotal": acct.get("assets_usd_total"),
+            "assets_total_complete": (bool(acct.get("assets_usd_total_complete"))
+                                      if acct else None),
+            "total_upnl": (round(sum(m["upnl_estimate"] for m in marks.values()), 2)
+                           if all_marked else None),
+            "long_exposure": exposure.get("long"),
+            "short_exposure": exposure.get("short"),
+            "strategy_pnl": perf.get("strategy_pnl"),
+            "winrate": perf.get("winrate"),
+            "closed_trades": perf.get("closed_trades"),
+            "agents_now": (ov.get("agents") or {}).get("rows"),
+            "prices": {k: v["price"] for k, v in prices.items()},
+            "today": ov.get("today"),
+            "freshness": {
+                "local_cache": meta,
+                "heartbeat": {k: hb.get(k) for k in ("freshness", "age_s")},
+                "equity": {k: eq.get(k) for k in ("freshness", "age_s", "source")},
+                "account": {k: ev["account"].get(k) for k in (
+                    "freshness", "age_s", "retrieved_at", "refreshing",
+                    "last_refresh_failed")},
+                "tickers": {k: ev["tickers"].get(k) for k in (
+                    "freshness", "age_s", "retrieved_at", "refreshing",
+                    "last_refresh_failed")},
+                "exposure_complete": exposure.get("complete"),
+                "assets_total_complete": (bool(acct.get("assets_usd_total_complete"))
+                                          if acct else None),
+                "total_upnl_complete": all_marked,
+            },
+        }))
 
     @app.websocket("/ws/live")
     async def ws_live(ws: WebSocket):
         await ws.accept()
+
+        def _frame():
+            try:
+                return json.dumps(live_payload(store), default=str)
+            except StoreUnavailable:
+                return json.dumps({"error": "journal_unavailable"})
         try:
             while True:
-                payload = {
-                    "equity": journal.query(
-                        "SELECT equity FROM equity ORDER BY ts DESC LIMIT 1"),
-                    "open_trades": journal.open_trades(),
-                    "recent_decisions": journal.query(
-                        "SELECT ts,symbol,action,score,executed,skip_reason "
-                        "FROM decisions ORDER BY ts DESC LIMIT 12"),
-                }
-                await ws.send_text(json.dumps(payload, default=str))
+                # one query set + serialization per interval, shared by every
+                # connection, computed off the event loop
+                payload, _ = await _shared("live", 2.5, _frame)
+                if payload is not None:
+                    await ws.send_text(payload)
                 await asyncio.sleep(3)
         except WebSocketDisconnect:
             pass
@@ -183,7 +281,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
     _feed_cache: list = []
 
     @app.get("/api/klines")
-    async def klines(symbol: str = "BTC/USDT", tf: str = "15m", limit: int = 300):
+    def klines(symbol: str = "BTC/USDT", tf: str = "15m", limit: int = 300):
         from ..data.feed import DataFeed
         try:
             if not _feed_cache:
@@ -204,7 +302,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             return JSONResponse({"error": str(e)}, status_code=502)
 
     @app.get("/api/vault/tree")
-    async def vault_tree():
+    def vault_tree():
         from ..knowledge.vault import VAULT
         items = []
         for p in sorted(VAULT.rglob("*.md")):
@@ -215,7 +313,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         return {"root": "knowledge", "files": items}
 
     @app.get("/api/vault/file")
-    async def vault_file(path: str):
+    def vault_file(path: str):
         from ..knowledge.vault import VAULT
         target = (VAULT / path).resolve()
         if not str(target).startswith(str(VAULT.resolve())) or                 target.suffix != ".md" or not target.exists():
@@ -225,7 +323,11 @@ def create_app(cfg: dict | None = None) -> FastAPI:
     @app.get("/api/vault/graph")
     async def vault_graph():
         """Nodes = notes, edges = wikilinks (+ family→theory synapses).
-        This is the shape of Luffy's memory."""
+        This is the shape of Luffy's memory. Shared across clients for 30 s:
+        it reads every note."""
+        return _json(*await _shared("vault_graph", 30.0, _vault_graph))
+
+    def _vault_graph():
         import re
         from ..knowledge.vault import (VAULT, THEORY_NOTES,
                                        FAMILY_THEORY)
@@ -288,7 +390,42 @@ def create_app(cfg: dict | None = None) -> FastAPI:
     @app.get("/api/pipeline")
     async def pipeline():
         """Discovery→validation pipeline truth: funnel stats, recent
-        gauntlet verdicts, population snapshot, harness state."""
+        gauntlet verdicts, population snapshot, harness state. The book is
+        the first PIPELINE_BOOK_ROWS; /api/pipeline/book pages the rest."""
+        return _json(*await _shared("pipeline", 5.0, _pipeline))
+
+    @app.get("/api/pipeline/book")
+    def pipeline_book(offset: int = 0, limit: int = PIPELINE_BOOK_ROWS,
+                      version: str = ""):
+        """The population book past the pipeline snapshot's cap, paged.
+
+        Pages are bound to a book version (hash of the ordered book, read in
+        the same statement as the page). If the book changed since `version`
+        the request is refused with 409, so concatenated pages can never be
+        presented as one complete population."""
+        offset, limit = max(0, int(offset)), max(1, min(int(limit), PIPELINE_BOOK_ROWS))
+        book, current = _book()
+        if version and version != current:
+            return _nocache(JSONResponse({"status": "changed", "version": current,
+                                          "total": len(book)}, status_code=409))
+        return _nocache(JSONResponse({
+            "offset": offset, "total": len(book), "version": current,
+            "more": offset + limit < len(book), "rows": book[offset:offset + limit]}))
+
+    def _book():
+        """(ordered book, version) from ONE statement: a consistent snapshot."""
+        rows = [{"id": r["id"], "name": r["name"], "kind": r["kind"],
+                 "state": r["state"], "origin": r["origin"],
+                 "retire_reason": (r.get("retire_reason") or "")[:110]}
+                for r in journal.query(
+                    "SELECT id, name, kind, state, origin, retire_reason "
+                    "FROM strategies ORDER BY CASE state "
+                    "WHEN 'active' THEN 0 WHEN 'paper' THEN 1 "
+                    "WHEN 'demoted' THEN 2 ELSE 3 END, created_at DESC, id")]
+        version = hashlib.sha256(json.dumps(rows, sort_keys=True).encode()).hexdigest()[:16]
+        return rows, version
+
+    def _pipeline():
         from ..brain.tv_harness import TVHarness
 
         def _detail(rows):
@@ -338,15 +475,13 @@ def create_app(cfg: dict | None = None) -> FastAPI:
                          "ORDER BY CASE state WHEN 'active' THEN 0 "
                          "WHEN 'paper' THEN 1 WHEN 'demoted' THEN 2 "
                          "ELSE 3 END, created_at DESC LIMIT 12")]
-        # full population book for the discovery table (active on top)
-        book = [{"id": r["id"], "name": r["name"], "kind": r["kind"],
-                 "state": r["state"], "origin": r["origin"],
-                 "retire_reason": (r.get("retire_reason") or "")[:110]}
-                for r in journal.query(
-                    "SELECT id, name, kind, state, origin, retire_reason "
-                    "FROM strategies ORDER BY CASE state "
-                    "WHEN 'active' THEN 0 WHEN 'paper' THEN 1 "
-                    "WHEN 'demoted' THEN 2 ELSE 3 END, created_at DESC")]
+        # population book for the discovery table (active on top): the first
+        # PIPELINE_BOOK_ROWS of one consistent read, with its version; the
+        # rest is paged from /api/pipeline/book bound to that version
+        full_book, book_version = _book()
+        book = full_book
+        book_truncated = len(book) > PIPELINE_BOOK_ROWS
+        book = book[:PIPELINE_BOOK_ROWS]
         try:
             h = TVHarness(journal, {"tv_harness":
                                     cfg.get("tv_harness", {})})
@@ -360,14 +495,17 @@ def create_app(cfg: dict | None = None) -> FastAPI:
                        "tv_ok_all_time": tv},
             "verdicts": verdicts,
             "population": {"by_state": pop, "harvested": harvested,
-                           "book": book},
+                           "book": book, "book_truncated": book_truncated,
+                           "book_total": len(full_book),
+                           "book_version": book_version,
+                           "book_rest": ("/api/pipeline/book?offset=%d&version=%s"
+                                         % (len(book), book_version))
+                           if book_truncated else None},
             "tv_health": {**health,
                           "budget_enabled": bool(
                               cfg.get("tv_harness", {})
                               .get("budget_enabled", True))},
         }
-
-    _org_cache = {"at": 0.0, "data": None}
 
     @app.get("/api/org")
     async def org():
@@ -375,16 +513,13 @@ def create_app(cfg: dict | None = None) -> FastAPI:
 
         build_company runs a ~30-day accuracy scan over the votes table, so it
         is briefly cached: both the Company tab and the Agents deck poll this
-        every 8s, and a short TTL keeps those polls from stacking the query."""
-        import time as _t
-        now = _t.time()
-        if _org_cache["data"] is None or now - _org_cache["at"] > 12:
-            _org_cache["data"] = build_company(journal, cfg)
-            _org_cache["at"] = now
-        return _org_cache["data"]
+        every 8s, and a shared TTL keeps those polls — including concurrent
+        ones from several clients — from stacking the query."""
+        return _json(*await _shared("org", 12.0,
+                                    lambda: build_company(journal, cfg)))
 
     @app.get("/api/doctrine")
-    async def doctrine():
+    def doctrine():
         from ..core.config import ROOT
         p = ROOT / "data" / "doctrine.json"
         if not p.exists():
@@ -402,7 +537,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         history = body.get("history") or []
 
         def _run():
-            return ChatEngine(journal, cfg).handle(msg, history)
+            return ChatEngine(journal, cfg).handle(msg, history, do_ops=False)
         import asyncio
         reply = await asyncio.get_event_loop().run_in_executor(None, _run)
         return {"reply": reply}
@@ -429,7 +564,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             _autopsy_lock["busy"] = False
 
     @app.get("/api/brain/last_autopsy")
-    async def last_autopsy():
+    def last_autopsy():
         rows = journal.query(
             "SELECT ts,detail FROM brain_events WHERE kind='autopsy' "
             "ORDER BY id DESC LIMIT 1")
@@ -442,7 +577,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         return {"ts": rows[0]["ts"], **detail}
 
     @app.get("/api/review_status")
-    async def review_status():
+    def review_status():
         closed = journal.query(
             "SELECT COUNT(*) n FROM trades WHERE status='closed'")[0]["n"]
         last_brain = journal.query(
@@ -455,153 +590,11 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         }
 
     @app.get("/api/logs")
-    async def logs(lines: int = 60):
-        p = ROOT / "logs" / "luffy.log"
-        if not p.exists():
-            return {"tail": []}
-        content = p.read_text(errors="replace").splitlines()[-lines:]
-        return {"tail": content}
+    def logs(lines: int = 60):
+        # bounded tail read: never loads the whole log file
+        return {"tail": tail_lines(ROOT / "logs" / "luffy.log", lines)}
 
     return app
-
-
-_MARKS_CACHE = {"ts": 0.0, "data": {}}
-
-
-def _position_marks(journal) -> dict:
-    """symbol → {mark, upnl, upnl_pct, notional, side, sl_dist, tp_dist} (20s cache)."""
-    import time as _t
-    now = _t.time()
-    if now - _MARKS_CACHE["ts"] < 20:
-        return _MARKS_CACHE["data"]
-    out = {}
-    try:
-        from ..data.feed import DataFeed, make_exchange
-        global _marks_feed
-        try:
-            _marks_feed
-        except NameError:
-            _marks_feed = DataFeed(make_exchange("futures"))
-        for t in journal.open_trades():
-            sym = t["symbol"]
-            px = _marks_feed.price(sym)
-            if not px:
-                continue
-            direction = 1.0 if t["side"] == "long" else -1.0
-            entry = float(t["entry_price"])
-            amt = float(t["amount"])
-            lev = int(t.get("leverage") or 1)
-            upnl = (px - entry) * direction * amt
-            notional = amt * entry
-            sl, tp = float(t.get("stop_loss") or 0), float(t.get("take_profit") or 0)
-            out[sym] = {
-                "mark": round(px, 6), "upnl": upnl,
-                "upnl_pct": round((px - entry) / entry * 100 * direction, 2),
-                "notional": notional, "side": t["side"],
-                "sl_dist": (abs(entry - sl) / entry * 100) if sl else None,
-                "tp_dist": (abs(tp - entry) / entry * 100) if tp else None,
-            }
-    except Exception as e:
-        log.debug(f"position marks failed: {e}")
-    _MARKS_CACHE.update(ts=now, data=out)
-    return out
-
-
-_PRICE_CACHE = {"ts": 0.0, "data": {}}
-
-
-def _universe_prices() -> dict:
-    import time as _t
-    now = _t.time()
-    if now - _PRICE_CACHE["ts"] < 15:
-        return _PRICE_CACHE["data"]
-    out = {}
-    try:
-        from ..data.feed import DataFeed, make_exchange
-        global _price_feed
-        try:
-            _price_feed
-        except NameError:
-            _price_feed = DataFeed(make_exchange("futures"))
-        for sym in ("BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT",
-                    "XRP/USDT", "ZEC/USDT", "AAVE/USDT", "SUI/USDT",
-                    "HYPE/USDT", "NEAR/USDT"):
-            px = _price_feed.price(sym)
-            if px:
-                out[sym] = px
-    except Exception as e:
-        log.debug(f"prices failed: {e}")
-    _PRICE_CACHE.update(ts=now, data=out)
-    return out
-
-
-_ASSET_CACHE = {"ts": 0.0, "data": {}}
-
-
-def _account_snapshot() -> dict:
-    """Cross-asset wallet view (display truth). Cached 60s."""
-    import hashlib
-    import hmac as _hmac
-    import time as _t
-
-    import requests
-    now = _t.time()
-    if now - _ASSET_CACHE["ts"] < 60:
-        return _ASSET_CACHE["data"]
-    out = {}
-    try:
-        from ..core.config import Env
-        key, secret = Env.binance_keys()
-        q = f"timestamp={int(now*1000)}&recvWindow=10000"
-        sig = _hmac.new(secret.encode(), q.encode(), hashlib.sha256).hexdigest()
-        r = requests.get("https://demo-fapi.binance.com/fapi/v3/account",
-                         params=q + f"&signature={sig}",
-                         headers={"X-MBX-APIKEY": key}, timeout=8).json()
-        assets = {x["asset"]: float(x["walletBalance"])
-                  for x in r.get("assets", [])
-                  if abs(float(x.get("walletBalance") or 0)) > 1e-9}
-        px_btc = 0.0
-        try:
-            px_btc = float(requests.get(
-                "https://fapi.binance.com/fapi/v1/ticker/price?symbol=BTCUSDT",
-                timeout=6).json()["price"])
-        except Exception:
-            pass
-        usd = {}
-        for k, v in assets.items():
-            if k in ("USDT", "USDC"):
-                usd[k] = round(v, 2)
-            elif k == "BTC" and px_btc:
-                usd[k] = round(v * px_btc, 2)
-            else:
-                usd[k] = f"{v:.6f}"
-        out = {"margin_equity": round(float(r.get("totalMarginBalance") or 0), 2),
-               "assets": usd,
-               "assets_total": round(sum(v for v in usd.values()
-                                         if isinstance(v, (int, float))), 2)}
-    except Exception as e:
-        log.debug(f"account snapshot failed: {e}")
-    _ASSET_CACHE.update(ts=now, data=out)
-    return out
-
-
-def _today_stats(journal: Journal) -> dict:
-    from datetime import datetime, timezone
-    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    taken = journal.query(
-        "SELECT COUNT(*) n FROM decisions WHERE executed=1 AND ts LIKE ?",
-        (f"{day}%",))[0]["n"]
-    skipped = journal.query(
-        "SELECT COUNT(*) n FROM decisions WHERE executed=0 AND action!='HOLD' "
-        "AND ts LIKE ?", (f"{day}%",))[0]["n"]
-    pnl_rows = journal.query(
-        "SELECT COALESCE(SUM(realized_pnl),0) s FROM trades WHERE closed_at LIKE ?",
-        (f"{day}%",))
-    holds = journal.query(
-        "SELECT COUNT(*) n FROM decisions WHERE action='HOLD' AND ts LIKE ?",
-        (f"{day}%",))[0]["n"]
-    return {"taken": taken, "skipped": skipped, "holds": holds,
-            "realized_pnl_today": round(pnl_rows[0]["s"], 2)}
 
 
 def _age_min(ts: str | None) -> float | None:
