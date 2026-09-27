@@ -3988,10 +3988,88 @@ completed_research_shadow_harness_v1:
     - separate owner authorization
   future_shadow_authorization_trading_authority: NONE
 
+completed_dashboard_performance_v1:
+  id: LUFFY-DASHBOARD-PERFORMANCE-V1
+  state: TESTED
+  implementation_commit: bcf245a
+  branch: dashboard-performance-v1
+  worktree: /home/sarmad/trader-dashboard-performance
+  baseline_commit: 1eb00e1
+  report: docs/superpowers/reports/2026-09-27-dashboard-performance-v1.md
+  measurement_artifacts: docs/superpowers/reports/dashboard-performance-v1-20260927/
+  evidence:
+    - trader/dashboard/local_view.py
+    - trader/dashboard/enrichment.py
+    - trader/dashboard/server.py
+    - trader/dashboard/web/index.html
+    - trader/dashboard/web/attention.js
+    - trader/dashboard/web/investigation.js
+    - tests/test_dashboard_performance.py
+    - tests/test_dashboard_client_browser.py
+    - tests/test_attention_view.py
+  validation:
+    independent_review: Astra revision-4 PASS
+    focused_and_regression_tests: 177 passed / 1 unchanged baseline HARNESS_IMPORTS failure (test_harness_modules_satisfy_the_cognition_import_contract, identical on clean 1eb00e1)
+    additional_browser_checks: four passed
+    negative_controls: five cases caught the intended revision-3 regressions
+    git_diff_check: clean
+  proven_facts:
+    - Local-first Overview no longer waits for optional venue enrichment.
+    - Enrichment concurrency, route identity and cache freshness are controlled.
+    - Polling/reconnect handling avoids overlapping or stale updates.
+    - Blocking work is moved off the event loop where implemented.
+    - Version-bound pagination rejects late/wrong-version responses.
+    - Agents/Company preserve their displays with truthful failure labels and ages.
+    - GET /api/v2/summary and an explicit v1 GET /api/summary HTTP 410 migration response are accepted.
+    - External consumers of v1 /api/summary still require migration.
+  measurements:
+    source: final revision-4 report (docs/superpowers/reports/2026-09-27-dashboard-performance-v1.md); tables measured on revision-3 code, not re-measured for revision 4 because revision 4 changes no measured path
+    environment: isolated synthetic fixture (100k votes, 100k decisions, 10k closed trades, 0 open positions, 11 MB log), simulated external calls, stubbed CDN libraries, headless Chromium on loopback, noisy VM
+    browser_scenarios_median_ms_before_to_after:
+      note: three fresh-server runs per mode; synthetic, not production latency
+      cold_80ms_calls: navigation 497 -> 681; first useful local data 1428 -> 879
+      warm_guarded_context: navigation 499 -> 336; first useful local data 579 -> 512
+      motion_script_delayed_8s: navigation 8318 -> 418; first useful local data 9351 -> 568
+      external_call_5_05s: navigation 283 -> 442; first useful local data 60961 -> 620
+      disclosed_miss: one of three stall runs measured 1082 ms for the extra interaction beyond the target metric
+    browser_condition_results:
+      note: "Single synthetic samples each; behaviour checks on final code, separate from the revision-3 measurements above. Each measurement retains its reported sampling conditions."
+      hidden_tab_20s: 0 requests while hidden; 9 on return
+      websocket_drop: same document, exactly one replacement socket
+      ten_manual_refreshes: 2 overview requests
+      out_of_order_overview: older overview ignored
+      enrichment_failure: local equity shown at 637.5 ms; wallet labelled unavailable / last refresh failed
+      session_expiry: body replaced; 0 requests in next 17 s; socket closed
+    api_p95_ms_cold_warm:
+      note: 30 requests per endpoint; 80 ms external-call model; synthetic
+      api_overview_after: 135 / 4.4
+      api_enrichment_after: 811 / 6.3
+      summary_v1_before_to_v2_after: 1069 / 106 -> 7.0 / 5.6
+      api_org: 87 / 9.7 -> 722 / 5.6 (single cold outlier)
+      api_logs_90_lines: 84 / 92 -> 8.4 / 7.7
+      graphql_25_trade_list: 11.6 / 19.6 -> 17.6 / 26.1 (resolvers unchanged; within VM noise)
+      root_during_5_05s_stall: 60218 -> 10.5
+    resource_probe: synthetic 100 ms SQLite writer, not the trading core; does not establish trading-core isolation
+  limitations:
+    - Remaining full scans where no index exists (decisions-today, WS decision ordering, org vote/history); no schema or index change.
+    - GraphQL resolvers remain synchronous.
+    - Journal migrations still run once at dashboard startup; several read paths use the write-capable Journal.
+    - Real chart/graph/animation/font/GPU (real-library) rendering costs are unmeasured.
+    - External v1 /api/summary clients must migrate to /api/v2/summary.
+    - A separate chat-safety integration regression is still required.
+    - No production latency or trading-core isolation claim is established.
+  integration:
+    status: PENDING
+    chat_safety: separate branch chat-control-separation-v1 at 9aea9c6; integration NOT complete; combined regression required
+    frontend_corrections: separate ongoing task; integration NOT complete
+  runtime_deployment:
+    status: NOT_DEPLOYED
+    note: The running dashboard remains unchanged; commit bcf245a grants no deployment, service change or trading authority.
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1 is TESTED at 9f7edfb and NOT_DEPLOYED. Bounded isolated automatic research invocation, two-family internal dispatch and an offline read-only context_only owner report are TESTED in the shadow harness only. Recurring operation and production-scale timing evidence remain MISSING; no cadence or production bounds are chosen. No trading/control authority or live Risk/Execution path is established. A one-shot production-scale timing run is only a separate owner-decision candidate; no next implementation package is selected or queued. All parked boundaries remain unchanged.
+  note: LUFFY-DASHBOARD-PERFORMANCE-V1 is TESTED at bcf245a on dashboard-performance-v1 (Astra revision-4 PASS), integration PENDING and NOT_DEPLOYED; the running dashboard is unchanged. Chat safety (chat-control-separation-v1 at 9aea9c6) and frontend corrections remain separate, and neither integration is complete. SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1 is TESTED at 9f7edfb and NOT_DEPLOYED. Bounded isolated automatic research invocation, two-family internal dispatch and an offline read-only context_only owner report are TESTED in the shadow harness only. Recurring operation and production-scale timing evidence remain MISSING; no cadence or production bounds are chosen. No trading/control authority or live Risk/Execution path is established. A one-shot production-scale timing run is only a separate owner-decision candidate; no next implementation package is selected or queued. All parked boundaries remain unchanged.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1

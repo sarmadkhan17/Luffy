@@ -5,6 +5,19 @@ work_package:
   id: null
   status: NO_ACTIVE_PACKAGE
   last_completed:
+    id: LUFFY-DASHBOARD-PERFORMANCE-V1
+    state: TESTED
+    implementation_commit: bcf245a
+    branch: dashboard-performance-v1
+    evidence:
+      - trader/dashboard/local_view.py; trader/dashboard/enrichment.py; trader/dashboard/server.py; trader/dashboard/web/index.html; trader/dashboard/web/attention.js; trader/dashboard/web/investigation.js
+      - tests/test_dashboard_performance.py; tests/test_dashboard_client_browser.py; tests/test_attention_view.py
+      - Astra revision-4 PASS; 177 passed / 1 unchanged baseline HARNESS_IMPORTS failure; four additional browser checks passed; five negative-control cases caught the intended revision-3 regressions; git diff --check clean
+      - measurements per final revision-4 report docs/superpowers/reports/2026-09-27-dashboard-performance-v1.md (synthetic only; browser condition results are single synthetic samples; API p95 used 30 requests per endpoint)
+    integration: PENDING
+    runtime_deployment: NOT_DEPLOYED; the running dashboard remains unchanged
+    record: STATE.yaml completed_dashboard_performance_v1
+  previously_completed:
     id: SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1
     state: TESTED
     implementation_commit: 9f7edfb
@@ -33,6 +46,8 @@ work_package:
       - separate owner authorization
     trading_authority: NONE
   established_boundary:
+    - LUFFY-DASHBOARD-PERFORMANCE-V1 is TESTED at bcf245a on dashboard-performance-v1, integration PENDING and NOT_DEPLOYED. It establishes no production latency and no trading-core isolation. Remaining full scans, synchronous GraphQL, startup migrations, unmeasured real-library rendering costs and external v1 /api/summary client migration remain open; a separate chat-safety integration regression is still required.
+    - Chat safety remains on chat-control-separation-v1 at 9aea9c6 and frontend corrections remain a separate ongoing task; neither integration is complete.
     - INVESTIGATION_ASSESSED_MEMORY_CONTEXT_NOT_AUTHORITY, ASSESSED_RESULT_VOCABULARY_NOT_VALUE_LABEL and KNOWN_BEFORE_REGISTRATION_REQUIRED hold; assessed memory is context_only, is not an investigation-value.v1 label, and is not deployed.
     - Measured-memory malformed-source hardening is TESTED at 71204ca and not deployed; valid measured, assessed and not_testable memory behavior is unchanged.
     - Unassessable-memory malformed-source hardening is TESTED at 995fa9c and not deployed; valid unassessable, measured and assessed memory behavior is unchanged.
@@ -138,8 +153,9 @@ parked_usefulness_feedback:
   reopen_when: A concrete investigation-value.v1 protocol for an active family, with frozen routine-evidence comparator and deterministic ESTABLISHED/NOT_ESTABLISHED closure predicates, is frozen and producing closure receipts, or the owner explicitly prioritizes designing one.
 
 after_completion:
+  - LUFFY-DASHBOARD-PERFORMANCE-V1 is closed on dashboard-performance-v1 as TESTED at bcf245a (Astra revision-4 PASS); integration PENDING, NOT_DEPLOYED, running dashboard unchanged. Integration with chat safety (chat-control-separation-v1 at 9aea9c6) and frontend corrections is not complete; the combined chat-safety regression is still required. External v1 /api/summary consumers still require migration to /api/v2/summary (v1 answers HTTP 410). No new work is selected by this closure.
   - SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1 is TESTED at 9f7edfb and NOT_DEPLOYED. It establishes bounded isolated shadow invocation, internal dispatch for exactly strategy_decay and strategy_health_unreadable, and an offline read-only context_only owner report. No Kernel scheduling, persistent service, recurring cadence, Risk/Execution path or trading authority is established.
   - One-shot production-scale timing is a separate owner-decision candidate only. Authorization must specify the source DB path, shadow DB path, max_sources, wall_clock_deadline_s, invocation_key / recorded_at_ms, observation/timing goal, stop conditions and acceptable WAL/checkpoint/resource impact. Recurring cadence requires one-shot evidence, review of that evidence and separate owner authorization. Neither authorization grants trading authority.
   - max_sources bounds source selection only. Full-history derivation/verification, repeated Bank filing, WAL/checkpoint effects and storage growth remain unbounded; batch-independent results and production timing are not established. Source identity is not a full database fingerprint. Total research cost remains NOT_ESTABLISHED; budget manager authority is MISSING.
   - External Source Router/retrieval, registered falsifier predicates, a truthful WorldModel/regime source and failed-research suppression/no-repeat policy remain MISSING. Do not infer authority from context_only recall or reports. No next implementation package is selected or queued.
-  - Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged.
+  - "Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged."
