@@ -295,6 +295,7 @@ class Kernel:
         signal.signal(signal.SIGINT, self._graceful)
         threading.Thread(target=self._telegram_listener, daemon=True,
                          name="tg-listener").start()
+        self._start_owner_interface()
         threading.Thread(target=self._derivatives_recorder, daemon=True,
                          name="derivs-recorder").start()
         if (self.cfg.get("references", {}) or {}).get("enabled", True):
@@ -346,6 +347,9 @@ class Kernel:
         self._attention_call("close")
         log.warning(f"signal {signum} — shutting down")
         self._stop = True
+        server = getattr(self, "_owner_ipc", None)
+        if server is not None:
+            server.stop()
 
     def _derivatives_recorder(self) -> None:
         """Record funding / open interest / taker ratio / long-short every N
@@ -835,12 +839,8 @@ class Kernel:
 
         stats["manual_closed"] = self._drain_close_requests()
 
-        panic_requested = self.journal.kv_get("panic_requested") == "1"
-        if panic_requested:
-            n = flatten_all(self.exchange, self.journal, self.notifier)
-            self.journal.kv_set("panic_requested", "0")
-            self.state_machine.set(ControlState.FROZEN, "operator",
-                                   f"panic flattened {n}")
+        n = self._drain_panic()
+        if n is not None:
             stats["panic_closed"] = n
 
         self._macro_step(self.macro_guard.check())
@@ -1227,6 +1227,50 @@ class Kernel:
                 log.warning(f"orphan position {sym}: {e}")
         return n
 
+    def _drain_panic(self) -> int | None:
+        """Consume one accepted panic: flatten, then keep it contained.
+
+        `panic_requested` = JSON {request_id, intent_event_id}: the panic's
+        identity is the owner hold its acceptance recorded (OwnerService
+        contains at acceptance and advances the control-intent fence, so any
+        older recovery's activation already fails). Legacy "1": accepted now.
+
+        After the flatten, only *owner* intent recorded after that hold is
+        "newer owner intent" (an owner resume/halt/freeze/panic). Completion of
+        older work — a Supervisor or other system transition — never is. So:
+        - newer owner intent exists → keep the current state (normal rules);
+        - otherwise → contained: HALTED stays HALTED, anything else → FROZEN.
+        Only the pending value consumed here is cleared (compare-and-clear), so
+        a panic accepted meanwhile stays pending for the next cycle.
+        """
+        from .engine.control_fence import latest_intent_event_id
+        from .engine.state import OWNER_ACTORS
+        raw = self.journal.kv_get("panic_requested")
+        if raw in (None, "", "0"):
+            return None
+        try:
+            accepted = int(json.loads(raw)["intent_event_id"])
+        except (ValueError, TypeError, KeyError):
+            accepted = latest_intent_event_id(self.journal)     # legacy flag
+        n = flatten_all(self.exchange, self.journal, self.notifier)
+        with self.journal._tx() as c:              # compare-and-clear this value only
+            c.execute("UPDATE state_kv SET value='0' WHERE key='panic_requested' AND value=?",
+                      (raw,))
+        marks = ",".join("?" * len(OWNER_ACTORS))
+        with self.state_machine.fenced() as f:
+            newer_owner = self.journal.query(
+                "SELECT COUNT(*) AS n FROM control_events WHERE id>? AND "
+                f"event IN ('state_change','state_hold') AND actor IN ({marks})",
+                (accepted, *OWNER_ACTORS))[0]["n"]
+            if newer_owner:
+                log.warning("panic flattened %s; newer owner intent kept (%s)",
+                            n, f.state.value if f.state else None)
+            elif f.state == ControlState.HALTED:
+                log.warning("panic flattened %s; HALTED kept (more restrictive)", n)
+            else:
+                f.apply(ControlState.FROZEN, "operator", f"panic flattened {n}")
+        return n
+
     def _drain_close_requests(self) -> int:
         """Market-close whatever the operator asked for from the dashboard.
 
@@ -1237,10 +1281,14 @@ class Kernel:
         requeued: an id retrying forever against a standing rejection is
         worse than one loud error the operator can act on.
         """
-        raw = self.journal.kv_get("close_requests", "[]")
-        if raw in (None, "", "[]"):
-            return 0
-        self.journal.kv_set("close_requests", "[]")     # drained on read
+        # read-and-clear in one transaction: the Owner Interface appends from
+        # another thread, and an append between a read and a clear is lost
+        with self.journal._tx() as c:
+            row = c.execute("SELECT value FROM state_kv WHERE key='close_requests'").fetchone()
+            raw = row[0] if row else "[]"
+            if raw in (None, "", "[]"):
+                return 0
+            c.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES ('close_requests','[]')")
         try:
             ids = json.loads(raw)
             if not isinstance(ids, list):
@@ -1569,16 +1617,18 @@ class Kernel:
             self.notifier.send(f"🔒 MacroGuard: event cleared — held in {r.control_state}: "
                                f"{', '.join(r.reasons)}")
 
-    def owner_resume(self, ctx: OwnerContext, *, allow_unhalt: bool = False):
+    def owner_resume(self, ctx: OwnerContext, *, allow_unhalt: bool = False,
+                     expected_intent_event_id: int | None = None):
         """The transport-neutral owner resume/unhalt: every channel calls this.
 
         Futures run the full Supervisor recovery (venue + protection + Risk);
         markets without futures venue recovery use the Risk-gated release.
         Neither ever sets ACTIVE except by the Supervisor's guarded CAS.
         """
+        bound = {"expected_intent_event_id": expected_intent_event_id}
         if self.market_type == MarketType.FUTURES:
-            return self.supervisor.request_owner_recovery(ctx, allow_unhalt=allow_unhalt)
-        return self.supervisor.request_owner_release(ctx, allow_unhalt=allow_unhalt)
+            return self.supervisor.request_owner_recovery(ctx, allow_unhalt=allow_unhalt, **bound)
+        return self.supervisor.request_owner_release(ctx, allow_unhalt=allow_unhalt, **bound)
 
     def _fetch_balance_fresh(self) -> float | None:
         """Equity read from the venue now, or None. Never a stored value."""
@@ -1627,7 +1677,135 @@ class Kernel:
             "SELECT equity FROM equity ORDER BY ts DESC LIMIT 1")
         return float(rows[0]["equity"]) if rows else 0.0
 
-    # ── telegram minimal control (/panic, /status, /freeze, /resume) ─────
+    # ── Owner Interface: the one kernel-owned executor of owner operations ─
+    def _owner(self):
+        """This kernel's OwnerService (lazy: test kernels skip __init__)."""
+        service = getattr(self, "_owner_service", None)
+        if service is None:
+            from .owner.authz import Authorizer
+            from .owner.service import OwnerService
+            section = (getattr(self, "cfg", None) or {}).get("owner_interface") or {}
+            service = OwnerService(
+                self.journal, self.state_machine, resume=self.owner_resume,
+                snapshot=self._owner_snapshot, authorizer=Authorizer.from_config(self.cfg),
+                max_age_s=float(section.get("max_request_age_s", 300)),
+                busy_wait_s=float(section.get("busy_wait_s", 10)))
+            self._owner_service = service
+        self._bind_telegram_owner(service.authorizer)
+        return service
+
+    def _bind_telegram_owner(self, authorizer) -> None:
+        """Default Telegram owner identity: the configured chat id when it is a
+        private chat (a positive id is the owner's own user id). Explicit
+        `owner_interface.identities.telegram` replaces this default."""
+        if authorizer.identities.get("telegram"):
+            return
+        chat_id = str(getattr(getattr(self, "notifier", None), "chat_id", "") or "")
+        if chat_id.isdigit():
+            section = (getattr(self, "cfg", None) or {}).get("owner_interface") or {}
+            authorizer.bind("telegram", chat_id, section.get("telegram_principal", "owner"))
+
+    def _owner_snapshot(self) -> dict:
+        """Read-only status for the Owner Interface. No venue calls."""
+        hb = getattr(self, "heartbeat", None)
+        age = hb.age_seconds() if hasattr(hb, "age_seconds") else None
+        return {"market": getattr(getattr(self, "market_type", None), "value", None),
+                "open_trades": len(self.journal.open_trades()),
+                "heartbeat_age_s": age,
+                "last_cycle_s": round(getattr(self, "_last_cycle_s", 0.0) or 0.0, 3)}
+
+    def _start_owner_interface(self) -> None:
+        section = self.cfg.get("owner_interface") or {}
+        if section.get("enabled") is not True:          # explicit opt-in only
+            log.info("owner interface IPC not enabled")
+            return
+        from .owner.ipc import OwnerIPCServer, resolve_ipc_dir
+        ipc_dir = resolve_ipc_dir(section.get("ipc_dir"))
+        if ipc_dir is None:
+            log.error("owner interface unavailable: no ipc_dir and no /run/user runtime dir")
+            return
+        if not ipc_dir.is_absolute():
+            ipc_dir = ROOT / ipc_dir
+        try:
+            self._owner_ipc = OwnerIPCServer(self._owner(), ipc_dir).start()
+        except Exception as e:           # controls fail closed; trading continues
+            log.error(f"owner interface unavailable: {e}")
+
+    def _tg_worker(self, name: str):
+        from concurrent.futures import ThreadPoolExecutor
+        workers = self.__dict__.setdefault("_tg_workers", {})
+        if name not in workers:
+            workers[name] = ThreadPoolExecutor(max_workers=1,
+                                               thread_name_prefix=f"tg-{name}")
+        return workers[name]
+
+    def _tg_send(self, base: str, text: str) -> None:
+        try:
+            __import__("requests").post(
+                f"{base}/sendMessage",
+                json={"chat_id": int(self.notifier.chat_id), "text": text}, timeout=8)
+        except Exception:
+            pass
+
+    def _tg_dispatch(self, msg: str, base: str, update: dict) -> None:
+        """Telegram never makes containment wait, and never queues recovery.
+
+        Every owner control command is RESERVED here, in the listener thread,
+        before it is queued: a redelivered update finds the reservation
+        (IN_PROGRESS) or the recorded result, never a definitive refusal while
+        the original may still execute. Recovery reservations also bind the
+        control-intent watermark at admission.
+        - containment (/freeze /halt /panic): its own ordered worker;
+        - recovery (/resume /unhalt): at most one admitted; a second one wins
+          its own reservation and is refused *and recorded* at once;
+        - reads and informational commands: their own worker;
+        - every reply: an outbound worker.
+        """
+        from .owner.adapters import telegram as owner_tg
+        from .owner.contract import CONTROL_OPERATIONS, RECOVERY_OPERATIONS, OwnerResult
+        op = owner_tg.command_of(msg)
+
+        def reply(text):
+            self._tg_worker("reply").submit(self._tg_send, base, text)
+        if op not in CONTROL_OPERATIONS:
+            self._tg_worker("read").submit(
+                lambda: self._handle_tg_command(msg, base, update=update, reply=reply))
+            return
+        try:
+            req = owner_tg.to_request(msg, update, chat_id=str(self.notifier.chat_id))
+        except owner_tg.NotOwnerCommand as e:
+            if str(e) != "foreign_or_missing_chat":
+                reply(f"🔒 not executed — {e}.")
+            return
+        service = self._owner()
+        reserved = service.reserve(req)
+        if isinstance(reserved, OwnerResult):
+            reply(owner_tg.reply_text(reserved))
+            return
+
+        def run():
+            reply(owner_tg.reply_text(service.execute(req, reservation=reserved)))
+        if op in RECOVERY_OPERATIONS:
+            lock = self.__dict__.setdefault("_tg_admission", threading.Lock())
+            with lock:
+                busy = self.__dict__.get("_tg_recovery_admitted", False)
+                if not busy:
+                    self._tg_recovery_admitted = True
+            if busy:
+                reply(owner_tg.reply_text(
+                    service.settle_refusal(req, reserved, "recovery_in_progress")))
+                return
+
+            def recover():
+                try:
+                    run()
+                finally:
+                    self._tg_recovery_admitted = False
+            self._tg_worker("recovery").submit(recover)
+        else:
+            self._tg_worker("control").submit(run)
+
+    # ── telegram: owner ops (incl. /panic) via the gateway; the rest informational ─
     def _telegram_listener(self) -> None:
         if not self.notifier.configured:
             log.info("telegram unconfigured — listener off")
@@ -1646,58 +1824,32 @@ class Kernel:
                     chat = (u.get("message") or {}).get("chat", {}).get("id")
                     if chat != int(self.notifier.chat_id):
                         continue
-                    self._handle_tg_command(msg, base, update=u)
+                    self._tg_dispatch(msg, base, u)
             except Exception as e:
                 log.debug(f"tg poll error: {e}")
 
-    def _handle_tg_command(self, msg: str, base: str, update: dict | None = None) -> None:
-        def reply(text):
+    def _handle_tg_command(self, msg: str, base: str, update: dict | None = None,
+                           reply=None) -> None:
+        if reply is None:                      # direct call: reply synchronously
+            reply = lambda text: self._tg_send(base, text)
+        from .owner.adapters import telegram as owner_tg
+        if owner_tg.command_of(msg) is not None:
+            # Adapter only: the listener authenticated the chat; the adapter
+            # maps the update (sender, date, update id) to a typed request;
+            # the kernel's single OwnerService authorizes and executes it.
+            chat_id = getattr(self.notifier, "chat_id", None)
+            if not chat_id:
+                return
+            service = self._owner()
             try:
-                __import__("requests").post(
-                    f"{base}/sendMessage",
-                    json={"chat_id": int(self.notifier.chat_id), "text": text},
-                    timeout=8)
-            except Exception:
-                pass
-        if msg.startswith("/panic"):
-            self.journal.kv_set("panic_requested", "1")
-            reply("🚨 PANIC queued — flattening on next cycle.")
-        elif msg.startswith("/freeze"):
-            self.state_machine.set(ControlState.FROZEN, "operator", "telegram")
-            reply("🥶 FROZEN — no new entries; managing existing to close.")
-        elif msg.startswith(("/resume", "/unhalt")):
-            unhalt = msg.startswith("/unhalt")
-            # Channel adapter only: authenticate (chat-ID check in the
-            # listener), map this update to the transport-neutral owner
-            # context, call the typed operation, render its result. All
-            # release semantics (futures and spot) live behind owner_resume.
-            message = (update or {}).get("message") or {}
-            sender = (message.get("from") or {}).get("id")
-            ctx = OwnerContext(
-                actor="operator", channel="telegram",
-                principal=None if sender is None else str(sender),
-                request_ref=f"{(update or {}).get('update_id')}:{message.get('message_id')}",
-                meta={"command": "/unhalt" if unhalt else "/resume"})
-            r = self.owner_resume(ctx, allow_unhalt=unhalt)
-            if r.status == "ACTIVATED":
-                reply("🙂 ACTIVE — fresh recovery check proved safe.")
-            elif r.status == "ALREADY_ACTIVE":
-                reply("ℹ️ already ACTIVE — nothing changed.")
-            elif "halted_requires_explicit_unhalt" in r.reasons:
-                reply("😴 still HALTED — /resume does not release a halt; "
-                      "send /unhalt to request a contained recheck.")
-            else:
-                why = ", ".join(r.reasons) or "unproven"
-                reply(f"🔒 still {r.control_state}: {r.status} {r.outcome or ''} — {why}")
-        elif msg.startswith("/halt"):
-            self.state_machine.set(ControlState.HALTED, "operator", "telegram")
-            reply("😴 HALTED.")
-        elif msg.startswith("/status"):
-            hb_age = self.heartbeat.age_seconds()
-            reply(f"state={self.state_machine.state.value} "
-                  f"open={len(self.journal.open_trades())} "
-                  f"heartbeat={hb_age and f'{hb_age:.0f}s'}")
-        elif msg.startswith("/news"):
+                req = owner_tg.to_request(msg, update, chat_id=str(chat_id))
+            except owner_tg.NotOwnerCommand as e:
+                if str(e) != "foreign_or_missing_chat":
+                    reply(f"🔒 not executed — {e}.")
+                return
+            reply(owner_tg.reply_text(service.execute(req)))
+            return
+        if msg.startswith("/news"):
             st = self.news_guard.check()
             emoji = "📰🚨" if st.get("active") else "📰✅"
             reply(f"{emoji} news guard: "
@@ -1792,6 +1944,13 @@ def main() -> None:
     args = ap.parse_args()
     cfg = load_config(args.config)
     setup_logging(cfg)
+    if args.panic:
+        # Through the running kernel's Owner Interface (cli channel, audited).
+        # No local fallback: a kernel that is down queues nothing.
+        from .owner.cli import call
+        r = call("panic", cfg)
+        print(json.dumps(r.to_wire(), indent=2, default=str))
+        sys.exit(0 if r.status in ("ACCEPTED", "ALREADY_SET") else 1)
     k = Kernel(cfg)
     if args.status:
         print(json.dumps({
@@ -1801,10 +1960,6 @@ def main() -> None:
             "open_trades": len(k.journal.open_trades()),
             "strategies": len(k.population),
         }, indent=2))
-        return
-    if args.panic:
-        k.journal.kv_set("panic_requested", "1")
-        print("panic requested — running kernel will flatten and FROZEN")
         return
     k.run()
 

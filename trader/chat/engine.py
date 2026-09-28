@@ -1,9 +1,10 @@
 """Chat brain — conversational access to everything Luffy knows.
 
 Safety model (non-negotiable):
-- OPS COMMANDS (freeze/halt/resume/close-all/panic) are matched by
-  deterministic patterns and executed directly. The LLM is NEVER allowed
-  to trigger them.
+- Chat is conversation only. No text — "freeze entries", "what would make
+  you halt?", "should I unhalt?" — ever changes control state or queues a
+  panic. Owner controls go through explicit command/UI paths into the
+  kernel's Owner Interface (trader/owner/), never through chat.
 - The LLM only ever ANSWERS questions, grounded in a situation brief built
   from the journal. It may not invent numbers; every claim should cite
   what's in the brief or say it doesn't know.
@@ -12,28 +13,12 @@ from __future__ import annotations
 
 import json
 import logging
-import re
 
 from ..core.journal import Journal
 from ..brain.llm import BrainLLM
-from .agent import AnalystAgent
+from .agent import FALLBACK, AnalystAgent
 
 log = logging.getLogger(__name__)
-
-OPS_PATTERNS = [
-    (r"\b(panic|flatten|close\s*all|close\s*everything)\b", "panic"),
-    (r"\bfreeze\b|\bno new trades\b|stop.{0,12}(entries|trading)", "frozen"),
-    (r"\bhalt\b|(everything|all)\s+stop", "halted"),
-    (r"\b(resume|activate|full autonomy|go live)\b", "active"),
-]
-
-
-def detect_ops(message: str) -> str | None:
-    m = message.lower()
-    for pat, action in OPS_PATTERNS:
-        if re.search(pat, m):
-            return action
-    return None
 
 
 class ChatEngine:
@@ -102,35 +87,13 @@ class ChatEngine:
 
         answer = self.llm.chat(prompt, deep=False, purpose="chat")
         if not answer:
-            return ("Brain offline (no budget or API error). "
-                    "Ops still work: try 'freeze', 'close all', 'briefing'.")
+            return FALLBACK
         return answer.strip()
 
     # ── entrypoint ──────────────────────────────────────────────────────
-    def handle(self, message: str, history: list[dict] | None = None,
-               do_ops: bool = True) -> str:
-        ops = detect_ops(message) if do_ops else None
-        if ops == "panic":
-            self.journal.kv_set("panic_requested", "1")
-            return ("🚨 Panic queued. I flatten every position next cycle "
-                    "(~60s) and go FROZEN.")
-        if ops == "frozen":
-            self._set_state("FROZEN", "chat")
-            return ("🥶 FROZEN — no new entries. Open positions keep being "
-                    "managed to their natural close.")
-        if ops == "halted":
-            self._set_state("HALTED", "chat")
-            return "😴 HALTED. Exchange-native stops stay armed."
-        if ops == "active":
-            self._set_state("ACTIVE", "chat")
-            return "🙂 ACTIVE — full autonomy restored."
+    def handle(self, message: str, history: list[dict] | None = None) -> str:
+        """Answer a message. Conversation only: never an owner-control request."""
         return self.agent.run(message, history)
-
-    def _set_state(self, state: str, actor: str) -> None:
-        from ..engine.state import ControlStateMachine
-        from ..core.types import ControlState
-        sm = ControlStateMachine(self.journal)
-        sm.set(ControlState(state), actor)
 
 
 def datetime_today() -> str:

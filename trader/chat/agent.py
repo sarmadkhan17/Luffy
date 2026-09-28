@@ -17,8 +17,9 @@ SYSTEM = (
     "answer it, say so. You are read-only: you cannot place, freeze, or close "
     "trades. Be direct, a little witty, no generic financial advice.")
 
-FALLBACK = ("Brain offline (no budget or API error). Ops still work: try "
-            "'freeze', 'close all', or ask again later.")
+FALLBACK = ("Brain offline (no budget or API error). Chat never changes "
+            "control state: use the dashboard controls or Telegram /freeze "
+            "/halt /resume /unhalt, or ask again later.")
 
 
 class AnalystAgent:

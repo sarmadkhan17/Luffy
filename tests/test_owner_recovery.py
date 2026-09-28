@@ -375,29 +375,39 @@ def test_entry_blocked_when_recovery_refused(world, monkeypatch):
 
 # ── Telegram ────────────────────────────────────────────────────────────────
 def _tg(k, monkeypatch, update=None):
+    from tests.test_owner_recovery_risk_guard import tg_update
     replies = []
     k.notifier.chat_id = "1"
     monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
-    k._handle_tg_command("/resume", "https://api.telegram.org/botSECRET-TOKEN", update=update)
+    k._handle_tg_command("/resume", "https://api.telegram.org/botSECRET-TOKEN",
+                         update=update or tg_update())
     return replies
 
 
 def tg_resume(k):
-    return k._handle_tg_command("/resume", "https://api.telegram.org/botSECRET-TOKEN")
+    from tests.test_owner_recovery_risk_guard import tg_update
+    k.notifier.chat_id = "1"
+    return k._handle_tg_command("/resume", "https://api.telegram.org/botSECRET-TOKEN",
+                                update=tg_update())
 
 
 def test_telegram_resume_is_guarded_and_audited(world, monkeypatch):
     journal, venue = world
     k = _contained(journal, venue, monkeypatch, fault=loosen)
-    update = {"update_id": 77, "message": {"message_id": 5, "from": {"id": 42},
-                                           "chat": {"id": 1}, "text": "/resume"}}
+    update = {"update_id": 77, "message": {"message_id": 5, "from": {"id": 1},
+                                           "chat": {"id": 1}, "text": "/resume",
+                                           "date": int(__import__("time").time())}}
     replies = _tg(k, monkeypatch, update)
     assert journal.kv_get("control_state") == "RECOVERY"
     assert replies == ["🔒 still RECOVERY: CONTAINED NEEDS_OWNER — "
                        "position_unprotected:BTC/USDT"]
     req = json.loads(_events(journal, "owner_recovery_requested")[-1]["detail"])
-    assert (req["channel"], req["principal"], req["request_ref"]) == ("telegram", "42", "77:5")
-    assert req["meta"] == {"command": "/resume"}
+    # principal: resolved by the kernel from the authenticated Telegram sender
+    # (owner-interface-gateway-v1); the sender id and gateway request id stay
+    # in the Supervisor audit as metadata
+    assert (req["channel"], req["principal"], req["request_ref"]) == ("telegram", "owner", "77:5")
+    assert req["meta"]["command"] == "/resume" and req["meta"]["identity"] == "1"
+    assert req["meta"]["request_id"].startswith("telegram-")
     assert not any("SECRET-TOKEN" in (r["detail"] or "") for r in journal.query(
         "SELECT detail FROM control_events"))
     heal(venue)
@@ -419,9 +429,9 @@ def test_telegram_listener_keeps_chat_id_authorization(world, monkeypatch):
     monkeypatch.setattr("requests.get", lambda *a, **kw: R())
     monkeypatch.setattr("trader.kernel.time.sleep", lambda _s: None)
     seen = []
-    monkeypatch.setattr(k, "_handle_tg_command",
-                        lambda msg, base, update=None: (seen.append(update["update_id"]),
-                                                        setattr(k, "_stop", True)))
+    monkeypatch.setattr(k, "_tg_dispatch",
+                        lambda msg, base, update: (seen.append(update["update_id"]),
+                                                   setattr(k, "_stop", True)))
     k._stop = False
     k._telegram_listener()
     assert seen == [2]                    # the foreign chat never reaches a handler

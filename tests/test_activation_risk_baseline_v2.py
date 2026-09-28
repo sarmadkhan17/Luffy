@@ -726,7 +726,8 @@ def test_repair_keeps_system_contained_until_guarded_recovery(world, monkeypatch
 
 
 # ═══ 5. AST inventory of ACTIVE setters ═════════════════════════════════════
-KERNEL_SIDE = ["trader/kernel.py", "trader/engine", "trader/agents", "trader/core"]
+KERNEL_SIDE = ["trader/kernel.py", "trader/engine", "trader/agents", "trader/core",
+               "trader/owner"]
 ALLOWED_SITES = {
     ("trader/engine/supervisor.py", "Supervisor._pass_once", "set_if_current"),
     ("trader/engine/supervisor.py", "Supervisor._guarded_activate", "apply"),
@@ -739,12 +740,11 @@ ALLOWED_WRAPPERS = {
     ("trader/engine/state.py", "ControlStateMachine.set_if_current"),
     ("trader/engine/state.py", "FencedControl.apply"),
 }
-#: outside the kernel: still direct setters, still BLOCKED (owner gateway work)
-KNOWN_OUT_OF_SCOPE_SITES = {("trader/chat/engine.py", "ChatEngine.handle", "_set_state")}
-KNOWN_OUT_OF_SCOPE_WRAPPERS = {
-    ("trader/api/graphql_schema.py", "build_mutation.Mutation.set_control_state"),
-    ("trader/chat/engine.py", "ChatEngine._set_state"),
-}
+#: outside the kernel: none. The dashboard GraphQL setter and the chat
+#: _set_state path were removed by owner-interface-gateway-v1; owner controls
+#: now reach the kernel only through trader/owner (OwnerService).
+KNOWN_OUT_OF_SCOPE_SITES: set = set()
+KNOWN_OUT_OF_SCOPE_WRAPPERS: set = set()
 
 
 def assert_inventory(overrides=None):

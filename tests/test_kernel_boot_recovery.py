@@ -325,7 +325,8 @@ def test_g_repeated_boot_after_persisted_recovery_then_owner_resume(world, monke
     replies = []
     k2.notifier.chat_id = "1"
     monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
-    k2._handle_tg_command("/resume", "https://telegram.invalid")
+    from tests.test_owner_recovery_risk_guard import tg_update
+    k2._handle_tg_command("/resume", "https://telegram.invalid", update=tg_update())
     assert journal.kv_get("control_state") == "ACTIVE"
     assert _transitions(journal, mark)[-1] == ("RECOVERY", "ACTIVE", "supervisor")
     assert replies == ["🙂 ACTIVE — fresh recovery check proved safe."]

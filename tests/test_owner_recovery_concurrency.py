@@ -14,6 +14,8 @@ from contextlib import contextmanager
 
 import pytest
 
+from tests.test_owner_recovery_risk_guard import tg_update
+
 from trader.core.journal import Journal
 from trader.core.types import ControlState
 from trader.engine.control_fence import (control_fence, latest_intent_event_id,
@@ -551,10 +553,10 @@ def test_telegram_resume_keeps_halt_and_unhalt_is_explicit(world, monkeypatch):
     replies = []
     k.notifier.chat_id = "1"
     monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
-    k._handle_tg_command("/resume", "https://api.telegram.org/botX")
+    k._handle_tg_command("/resume", "https://api.telegram.org/botX", update=tg_update())
     assert journal.kv_get("control_state") == "HALTED"
     assert replies[-1].startswith("😴 still HALTED")
-    k._handle_tg_command("/unhalt", "https://api.telegram.org/botX")
+    k._handle_tg_command("/unhalt", "https://api.telegram.org/botX", update=tg_update())
     assert journal.kv_get("control_state") == "ACTIVE"
     assert replies[-1] == "🙂 ACTIVE — fresh recovery check proved safe."
     ops = [json.loads(e["detail"])["meta"]["command"]

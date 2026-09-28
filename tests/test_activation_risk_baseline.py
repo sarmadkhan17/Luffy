@@ -310,12 +310,20 @@ def test_spot_unhalt_newer_owner_halt_wins(world, monkeypatch):
 
 
 def test_spot_adapter_holds_no_safety_logic():
+    """Telegram is an Owner Interface adapter: it builds a typed request and
+    renders the typed result; futures/spot semantics live behind owner_resume."""
     import inspect
     from trader.kernel import Kernel
+    from trader.owner import service
+    from trader.owner.adapters import telegram
     src = inspect.getsource(Kernel._handle_tg_command)
-    block = src[src.index('"/resume", "/unhalt"'):src.index('msg.startswith("/halt")')]
-    assert "self.owner_resume(ctx, allow_unhalt=unhalt)" in block
-    assert "state_machine" not in block and "MarketType" not in block
+    assert "service.execute(" in src and "service = self._owner()" in src
+    for forbidden in ("state_machine", "MarketType", "owner_resume", "ControlState"):
+        assert forbidden not in src, forbidden
+    adapter = inspect.getsource(telegram)
+    assert "state_machine" not in adapter and "MarketType" not in adapter
+    assert "self._resume(ctx, allow_unhalt=allow_unhalt," in inspect.getsource(service)
+    assert "MarketType" not in inspect.getsource(service)
 
 
 # ── 4–7: corrupt baseline vs first initialization ───────────────────────────
@@ -659,12 +667,12 @@ def mutant_macro_unbound(k, monkeypatch):
 def mutant_spot_direct_active(k, monkeypatch):
     real = k.owner_resume
 
-    def resume(ctx, *, allow_unhalt=False):
+    def resume(ctx, *, allow_unhalt=False, **bound):   # accepts the rev-4 admission binding
         if k.market_type != MarketType.FUTURES:
             k.state_machine.set(ControlState.ACTIVE, "operator", "telegram")
-            return type("R", (), {"status": "ACTIVATED", "reasons": (),
+            return type("R", (), {"status": "ACTIVATED", "reasons": (), "request_event_id": None,
                                   "control_state": "ACTIVE", "outcome": None})()
-        return real(ctx, allow_unhalt=allow_unhalt)
+        return real(ctx, allow_unhalt=allow_unhalt, **bound)
     monkeypatch.setattr(k, "owner_resume", resume)
 
 

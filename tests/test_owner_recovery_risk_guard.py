@@ -55,14 +55,25 @@ def risk_halted(journal, venue, monkeypatch, mutate=None):
     return k
 
 
+_UPDATE_IDS = __import__("itertools").count(9)
+
+
 def tg(k, monkeypatch, command):
+    """One distinct Telegram update per call (a reused update id is a
+    redelivery, which the Owner Interface answers from its record)."""
     replies = []
     k.notifier.chat_id = "1"
     monkeypatch.setattr("requests.post", lambda *a, **kw: replies.append(kw["json"]["text"]))
-    k._handle_tg_command(command, "https://api.telegram.org/botX",
-                         update={"update_id": 9, "message": {"message_id": 3,
-                                                             "from": {"id": 42}}})
+    k._handle_tg_command(command, "https://api.telegram.org/botX", update=tg_update())
     return replies
+
+
+def tg_update(sender=1, chat=1, age_s=0.0):
+    """A well-formed update from the owner's private chat (chat id 1)."""
+    uid = next(_UPDATE_IDS)
+    return {"update_id": uid, "message": {"message_id": uid, "chat": {"id": chat},
+                                          "from": {"id": sender},
+                                          "date": int(__import__("time").time() - age_s)}}
 
 
 def _activations(journal, after=0):

@@ -12,7 +12,7 @@ def server(tmp_path, monkeypatch):
     from trader.dashboard import server
     from fastapi import APIRouter
     monkeypatch.setattr(server,'ROOT',tmp_path)
-    monkeypatch.setattr(server,'make_graphql_router',lambda _:APIRouter())
+    monkeypatch.setattr(server,'make_graphql_router',lambda *_a:APIRouter())
     monkeypatch.setenv('DASH_TOKEN','fixture-token')
     monkeypatch.setattr(server,'_account_snapshot',lambda:pytest.fail('venue lookup'))
     return server

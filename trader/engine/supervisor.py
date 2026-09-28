@@ -515,8 +515,9 @@ class Supervisor:
         finally:
             self._request_lock.release()
 
-    def request_owner_recovery(self, ctx: OwnerContext, *,
-                               allow_unhalt: bool = False) -> OwnerRecoveryResult:
+    def request_owner_recovery(self, ctx: OwnerContext, *, allow_unhalt: bool = False,
+                               expected_intent_event_id: int | None = None
+                               ) -> OwnerRecoveryResult:
         """Owner asks to leave containment. ACTIVE only on a fresh SAFE proof.
 
         Intake (state + intent watermark read, request journalled, owner hold
@@ -530,6 +531,11 @@ class Supervisor:
         HALTED with no reconciliation. ``allow_unhalt`` must only be passed by
         an owner-authorized caller (actor is enforced to be an owner actor).
         Transport-neutral: every owner channel calls exactly this.
+
+        ``expected_intent_event_id``: the intent watermark when the owner's
+        request was admitted. If any intent event (a newer FROZEN/HALTED/…)
+        landed since, the request is superseded and refused inside this intake
+        fence — an admitted-but-not-started recovery never outlives a newer hold.
         """
         operation = "owner_unhalt" if allow_unhalt else "owner_recovery"
         events = ("owner_recovery_requested", "owner_recovery_result")
@@ -547,6 +553,10 @@ class Supervisor:
                 if state is None:
                     early = OwnerRecoveryResult("REFUSED", None,
                                                 reasons=("control_state_unreadable",))
+                elif (expected_intent_event_id is not None
+                      and watermark != expected_intent_event_id):
+                    early = OwnerRecoveryResult("REFUSED", state.value,
+                                                reasons=("superseded_by_newer_intent",))
                 elif state == ControlState.ACTIVE:
                     early = OwnerRecoveryResult("ALREADY_ACTIVE", state.value)
                 elif state == ControlState.HALTED and not allow_unhalt:
@@ -614,8 +624,9 @@ class Supervisor:
                 return "REFUSED", (refusal,), None
             return "ACTIVATED", (), f.apply(ControlState.ACTIVE, actor, detail, conn=conn)
 
-    def request_owner_release(self, ctx: OwnerContext, *,
-                              allow_unhalt: bool = False) -> OwnerRecoveryResult:
+    def request_owner_release(self, ctx: OwnerContext, *, allow_unhalt: bool = False,
+                              expected_intent_event_id: int | None = None
+                              ) -> OwnerRecoveryResult:
         """Owner release where no futures venue recovery applies (spot).
 
         Same authority as request_owner_recovery minus the venue pass: a fresh
@@ -629,6 +640,12 @@ class Supervisor:
             with self.state_machine.fenced() as f:
                 state, watermark = f.state, f.watermark
                 rid = self._audit_request(events[0], ctx, operation, state, watermark)
+            if expected_intent_event_id is not None and watermark != expected_intent_event_id:
+                # admitted before a newer intent: superseded (see request_owner_recovery)
+                return self._finish(events[1], ctx, operation, rid, watermark,
+                                    OwnerRecoveryResult("REFUSED", state.value if state else None,
+                                                        reasons=("superseded_by_newer_intent",),
+                                                        request_event_id=rid))
             allowed = (ControlState.FROZEN, ControlState.RECOVERY) + (
                 (ControlState.HALTED,) if allow_unhalt else ())
             risk = self._risk_now() if state in allowed else None     # a venue read

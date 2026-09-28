@@ -1,8 +1,7 @@
 """GraphQL schema — the API contract serving dashboard AND Luffy's assistant.
 
-Queries read the journal; mutations write control intents (state_kv /
-control_events) that the running kernel picks up next cycle. Single writer
-(kernel) discipline preserved; dashboard/assistant only leave intent.
+Queries read the journal. Mutations are typed Owner Interface requests the
+kernel executes (trader/owner); the dashboard writes no control state.
 """
 from __future__ import annotations
 
@@ -385,65 +384,101 @@ def build_query(journal: Journal):
 
 
 # ── mutations ────────────────────────────────────────────────────────────
-def build_mutation(journal: Journal):
+@strawberry.type
+class OwnerControlResult:
+    """The kernel Owner Interface's typed answer (trader.owner.contract.OwnerResult)."""
+    request_id: Optional[str]
+    operation: Optional[str]
+    status: str
+    control_state_before: Optional[str]
+    control_state_after: Optional[str]
+    reasons: list[str]
+    supervisor_outcome: Optional[str]
+    audit_event_ids: list[int]
+    replayed: bool
+    message: str
+    disposition: str = "COMPLETED"   # COMPLETED | REFUSED | IN_PROGRESS | OUTCOME_UNKNOWN | UNAVAILABLE
+
+
+def _owner_control_result(result) -> OwnerControlResult:
+    from ..owner.adapters.render import render
+    return OwnerControlResult(
+        request_id=result.request_id, operation=result.operation, status=result.status,
+        control_state_before=result.control_state_before,
+        control_state_after=result.control_state_after,
+        reasons=[str(r) for r in result.reasons],
+        supervisor_outcome=result.supervisor_outcome,
+        audit_event_ids=[int(i) for i in result.audit_event_ids],
+        replayed=bool(result.replayed), message=render(result),
+        disposition=result.disposition)
+
+
+def build_mutation(journal: Journal, owner_gateway=None):
+    """Every owner mutation is a typed Owner Interface request executed by the
+    kernel. The dashboard writes no control state or intent itself, and no
+    mutation accepts a caller-chosen actor: the kernel derives it."""
+
+    async def submit(info: Info, operation: str, request_id, issued_at_ms,
+                     args: dict | None = None) -> OwnerControlResult:
+        import asyncio
+        from ..owner.contract import Status, refused
+        if owner_gateway is None:
+            return _owner_control_result(
+                refused(None, "owner_interface_not_configured", Status.UNAVAILABLE))
+        request = (info.context or {}).get("request")
+        result = await asyncio.to_thread(owner_gateway, operation, request_id,
+                                         issued_at_ms, request, args or {})
+        return _owner_control_result(result)
 
     @strawberry.type
     class Mutation:
         @strawberry.mutation
-        def set_control_state(self, state: str, actor: str = "dashboard") -> bool:
-            from ..core.types import ControlState
-            from ..engine.state import ControlStateMachine
-            sm = ControlStateMachine(journal)
-            sm.set(ControlState(state.upper()), actor)
-            return True
+        async def owner_control(self, info: Info, operation: str, request_id: str,
+                                issued_at_ms: float) -> OwnerControlResult:
+            """freeze | halt | resume | unhalt | panic, executed by the kernel only.
+
+            `request_id` and `issued_at_ms` are created once per intended action
+            in the browser and reused on every retry. Unreachable kernel →
+            UNAVAILABLE; lost answer → ERROR outcome unknown; never a local
+            fallback or a queue.
+            """
+            from ..owner.contract import (CONTAINMENT_OPERATIONS, RECOVERY_OPERATIONS,
+                                          refused)
+            op = (operation or "").strip().lower()
+            if op not in CONTAINMENT_OPERATIONS + RECOVERY_OPERATIONS:
+                return _owner_control_result(refused(None, "unsupported_operation"))
+            return await submit(info, op, request_id, issued_at_ms)
 
         @strawberry.mutation
-        def panic(self, actor: str = "dashboard") -> bool:
-            journal.kv_set("panic_requested", "1")
-            journal.log_control_event("panic", actor, detail="via graphql")
-            return True
+        async def panic(self, info: Info, request_id: str,
+                        issued_at_ms: float) -> OwnerControlResult:
+            """Flatten everything and freeze — queued in the kernel via the gateway."""
+            return await submit(info, "panic", request_id, issued_at_ms)
 
         @strawberry.mutation
-        def close_trade(self, trade_id: str, actor: str = "dashboard") -> bool:
+        async def close_trade(self, info: Info, trade_id: str, request_id: str,
+                              issued_at_ms: float) -> OwnerControlResult:
             """Queue one open position for the kernel to market-close.
 
             /panic flattens the whole book and freezes it, which is far too
-            blunt for a single trade. Intent only — the browser places no
-            orders. A list, not a scalar key: two positions closed in the
-            same cycle must not overwrite each other.
+            blunt for a single trade. The kernel validates the trade is open
+            and appends it to its close queue; the browser places no orders.
             """
-            rows = journal.query(
-                "SELECT id FROM trades WHERE id=? AND status='open'",
-                (trade_id,))
-            if not rows:
-                return False
-            try:
-                pending = json.loads(journal.kv_get("close_requests", "[]"))
-                if not isinstance(pending, list):
-                    pending = []
-            except Exception:
-                pending = []
-            if trade_id not in pending:
-                pending.append(trade_id)
-                journal.kv_set("close_requests", json.dumps(pending))
-            journal.log_control_event("manual_close", actor, detail=trade_id)
-            return True
+            return await submit(info, "close_trade", request_id, issued_at_ms,
+                                {"trade_id": trade_id})
 
         @strawberry.mutation
-        def set_market_type(self, market: str, actor: str = "dashboard") -> bool:
-            if market.lower() not in ("spot", "futures"):
-                return False
-            journal.kv_set("market_type", market.lower())
-            journal.log_control_event("mode_switch", actor,
-                                      detail=f"new entries → {market}")
-            return True
+        async def set_market_type(self, info: Info, market: str, request_id: str,
+                                  issued_at_ms: float) -> OwnerControlResult:
+            return await submit(info, "set_market_type", request_id, issued_at_ms,
+                                {"market": (market or "").lower()})
 
     return Mutation
 
 
-def make_graphql_router(journal: Journal) -> GraphQLRouter:
+def make_graphql_router(journal: Journal, owner_gateway=None) -> GraphQLRouter:
     Query = build_query(journal)
-    Mutation = build_mutation(journal)
+    Mutation = build_mutation(journal, owner_gateway)
     schema = strawberry.Schema(
         query=Query, mutation=Mutation,
         config=StrawberryConfig(auto_camel_case=False))

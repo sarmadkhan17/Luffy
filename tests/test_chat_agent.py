@@ -167,12 +167,15 @@ def test_agent_fallback_when_llm_unavailable(tmp_path):
 from trader.chat.engine import ChatEngine         # noqa: E402
 
 
-def test_ops_intercept_before_agent(tmp_path):
+def test_chat_is_never_operational(tmp_path, monkeypatch):
+    """owner-interface-gateway-v1: chat has no ops path at all."""
     j = _journal(tmp_path)
     eng = ChatEngine(j, _cfg())
-    reply = eng.handle("please freeze entries", do_ops=True)
-    assert "FROZEN" in reply
-    assert j.kv_get("control_state") == "FROZEN"
+    monkeypatch.setattr("trader.chat.agent.AnalystAgent.run",
+                        lambda self, m, h=None: "AGENT_ANSWER")
+    assert eng.handle("please freeze entries") == "AGENT_ANSWER"
+    assert j.kv_get("control_state") is None
+    assert j.query("SELECT COUNT(*) n FROM control_events")[0]["n"] == 0
 
 
 def test_question_routes_to_agent(tmp_path, monkeypatch):
@@ -180,4 +183,4 @@ def test_question_routes_to_agent(tmp_path, monkeypatch):
     eng = ChatEngine(j, _cfg())
     monkeypatch.setattr("trader.chat.agent.AnalystAgent.run",
                         lambda self, m, h=None: "AGENT_ANSWER")
-    assert eng.handle("how is pnl?", do_ops=True) == "AGENT_ANSWER"
+    assert eng.handle("how is pnl?") == "AGENT_ANSWER"

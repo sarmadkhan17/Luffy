@@ -398,9 +398,10 @@ pre{background:var(--panel);border:1px solid var(--line);padding:12px;border-rad
   <span class="chip num" id="hb">heartbeat —</span>
   <span class="chip" id="modechip">—</span>
   <div class="controls">
-   <button class="btn" id="b-active" onclick="setState('ACTIVE')">ACTIVE</button>
-   <button class="btn" id="b-frozen" onclick="setState('FROZEN')">FROZEN</button>
-   <button class="btn" id="b-halted" onclick="setState('HALTED')">HALTED</button>
+   <button class="btn owner-op" onclick="ownerControl('freeze')">FREEZE</button>
+   <button class="btn owner-op" onclick="ownerControl('halt')">HALT</button>
+   <button class="btn owner-op owner-rec" onclick="ownerControl('resume')">RESUME</button>
+   <button class="btn owner-op owner-rec" onclick="ownerControl('unhalt')">UNHALT</button>
    <button class="btn danger" onclick="panic()">⬤ PANIC FLATTEN</button>
   </div>
  </div>
@@ -686,26 +687,99 @@ async function gql(q,v={}){const r=await fetch('/graphql',{method:'POST',
  return (await r.json()).data;}
 
 /* ── controls ── */
-async function setState(s){if(s!=='ACTIVE'&&!confirm('Set control state to '+s+'?'))return;
- await gql(`mutation($s:String!){set_control_state(state:$s)}`,{s});
- toast('Control state → '+s);refresh();}
-async function panic(){if(!confirm('FLATTEN ALL POSITIONS AND FREEZE?'))return;
- await gql(`mutation{panic}`);toast('Panic queued — flattening next cycle');refresh();}
-/* one position, by hand. The browser places nothing: this leaves an intent
-   the kernel acts on next cycle, same channel as panic. */
+/* Owner controls: typed requests executed by the kernel's Owner Interface.
+   The dashboard sets no state. Each intended action gets one request id and
+   one issue time, kept (localStorage) until the kernel gives a definitive
+   answer: a double-submit, retry, reconnect or reload re-sends the SAME id,
+   which the kernel answers from its record — never a second execution.
+   Containment (freeze/halt/panic) is never disabled; only a second recovery
+   waits for the first. */
+const OWNER_ASK={freeze:'Freeze: block new entries, keep managing exits?',
+ halt:'Halt: stop entries and exit management (venue stops stay)?',
+ resume:'Resume: request a guarded recovery check (ACTIVE only if proven safe)?',
+ unhalt:'Unhalt: request a guarded, Risk-checked recovery out of HALTED?',
+ panic:'FLATTEN ALL POSITIONS AND FREEZE?'};
+const OWNER_DEFINITIVE=['ACCEPTED','ACTIVATED','CONTAINED','ALREADY_SET','REFUSED'];
+const OWNER_PREFIX='luffy.owner.req.';
+let recoveryInFlight=false;
+/* Cross-tab-safe pending ids: ONE storage key per request
+   ("luffy.owner.req.<id>" → {action,id,t}). Creating writes only its own new
+   key; completing removes only its own key; lookups scan fresh every time.
+   There is no whole-map read-modify-write, so no tab — stale or concurrent —
+   can overwrite or erase another tab's unresolved request, and two tabs
+   creating the same action at once both keep their ids (the oldest is reused
+   first). localStorage is not assumed to be locked. OWNER_MEM holds only
+   entries whose storage write failed (reused until this page reloads; the
+   owner is warned once). */
+const OWNER_MEM={};let ownerStorageWarned=false;
+function ownerWarn(){if(!ownerStorageWarned){ownerStorageWarned=true;
+ toast('Browser storage unavailable: unresolved owner requests are kept only until this page reloads',true);}}
+function ownerEntries(){const out=[];
+ try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);
+  if(!k||k.indexOf(OWNER_PREFIX)!==0)continue;
+  try{const e=JSON.parse(localStorage.getItem(k));
+   if(e&&e.id&&e.action&&k===OWNER_PREFIX+e.id)out.push(e);}catch(_){}}}catch(_){}
+ for(const id in OWNER_MEM)if(!out.some(e=>e.id===id))out.push(OWNER_MEM[id]);
+ return out;}
+/* the oldest unresolved request for this action, from any tab */
+function ownerGet(action){const es=ownerEntries().filter(e=>e.action===action)
+ .sort((a,b)=>(a.t-b.t)||(a.id<b.id?-1:a.id>b.id?1:0));return es[0]||null;}
+function ownerPut(e){try{localStorage.setItem(OWNER_PREFIX+e.id,JSON.stringify(e));
+ delete OWNER_MEM[e.id];return;}catch(_){}OWNER_MEM[e.id]=e;ownerWarn();}
+/* completion removes exactly this request's key — never a sibling's */
+function ownerDone(id){delete OWNER_MEM[id];try{localStorage.removeItem(OWNER_PREFIX+id);}catch(_){}}
+function ownerId(){return (crypto.randomUUID?crypto.randomUUID():
+ Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,'0')).join(''));}
+const OWNER_Q={
+ control:`mutation($o:String!,$r:String!,$t:Float!){res:owner_control(operation:$o,request_id:$r,issued_at_ms:$t){status control_state_after reasons message replayed}}`,
+ panic:`mutation($r:String!,$t:Float!){res:panic(request_id:$r,issued_at_ms:$t){status control_state_after reasons message replayed}}`,
+ close_trade:`mutation($x:String!,$r:String!,$t:Float!){res:close_trade(trade_id:$x,request_id:$r,issued_at_ms:$t){status control_state_after reasons message replayed}}`};
+/* action = op + its target. An unresolved earlier attempt (any tab) is reused. */
+async function ownerSubmit(op,target){
+ const action=op+(target?':'+target:'');
+ let p=ownerGet(action);
+ if(!p){p={action,id:ownerId(),t:Date.now()};ownerPut(p);}
+ const q=op==='panic'?OWNER_Q.panic:op==='close_trade'?OWNER_Q.close_trade:OWNER_Q.control;
+ const v={r:p.id,t:p.t,o:op,x:target};
+ let r=null;
+ for(let attempt=0;attempt<2&&!r;attempt++){
+  try{const d=await gql(q,v);r=d&&d.res;}catch(_){r=null;}}
+ /* clear only THIS request's entry: a late answer to an older attempt must
+    never delete a newer unresolved request stored under the same action */
+ if(r&&OWNER_DEFINITIVE.includes(r.status))ownerDone(p.id);
+ return r;}
+async function ownerControl(op){
+ const recovery=(op==='resume'||op==='unhalt');
+ if(recovery&&recoveryInFlight){toast('A recovery check is already running',true);return;}
+ const pending=ownerGet(op);
+ if(!pending&&!confirm(OWNER_ASK[op]))return;       // a retry of an unresolved action needs no new consent
+ if(recovery){recoveryInFlight=true;document.querySelectorAll('.owner-rec').forEach(b=>b.disabled=true);}
+ try{const r=await ownerSubmit(op);
+  if(!r)toast(op+': no answer — outcome unknown. Press '+op.toUpperCase()+' again to retry the same request.',true);
+  else toast(r.message+(r.replayed?' (recorded result)':''),
+   !['ACCEPTED','ACTIVATED','ALREADY_SET'].includes(r.status));
+ }finally{if(recovery){recoveryInFlight=false;
+  document.querySelectorAll('.owner-rec').forEach(b=>b.disabled=false);}refresh();}}
+async function panic(){await ownerControl('panic');}
+/* one position, by hand. The browser places nothing: the kernel validates
+   the trade and queues its close for the next cycle. */
 const closePending=new Set();
 async function closeTrade(id,sym){
- if(!confirm('Market-close '+sym+' now?'))return;
- const d=await gql(`mutation($t:String!){close_trade(trade_id:$t)}`,{t:id});
- if(d&&d.close_trade){closePending.add(id);
+ if(!ownerGet('close_trade:'+id)&&!confirm('Market-close '+sym+' now?'))return;
+ const r=await ownerSubmit('close_trade',id);
+ if(!r)toast(sym+': no answer — outcome unknown; press close again to retry',true);
+ else if(r.status==='ACCEPTED'||r.status==='ALREADY_SET'){closePending.add(id);
   toast(sym+' close queued — next cycle');}
- else toast(sym+' is no longer open',true);
+ else toast(sym+': '+r.message,true);
  refresh();}
 
 /* ── refresh ── */
-let prevEq=null;
+let prevEq=null,refreshSeq=0,refreshShown=0;
 async function refresh(){
+ const seq=++refreshSeq;             // an older, slower response never overwrites a newer one
  const d=await gql(`{status{control_state market_type heartbeat_age_s equity drawdown_pct daily_pnl_pct open_trades strategies_active}}`);
+ if(seq<refreshShown||!d)return;
+ refreshShown=seq;
  const s=d.status;
  $('#state').textContent=s.control_state;$('#state').className='pill '+s.control_state;
  $('#sb-state').innerHTML=`<span class="sdot${s.control_state==='ACTIVE'?'':' off'}"></span><b>${s.control_state}</b>`;
@@ -716,9 +790,8 @@ async function refresh(){
  $('#sb-day').textContent=(dp>=0?'+':'')+dp.toFixed(2)+'%';
  $('#sb-day').style.color=dp>=0?'var(--green)':'var(--red)';
  $('#sb-dd').textContent=ddp.toFixed(2)+'%';
- ['active','frozen','halted'].forEach(x=>
-   $('#b-'+x).classList.toggle('on',x===s.control_state.toLowerCase()));
  const sum=await (await fetch('/api/summary'+location.search)).json();
+ if(seq<refreshShown)return;
  const eq=+sum.equity||0;
  const el=$('#equity');el.textContent='$'+eq.toLocaleString(undefined,{maximumFractionDigits:0});
  if(prevEq!==null&&eq!==prevEq){el.classList.remove('flash-up','flash-down');

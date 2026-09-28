@@ -432,6 +432,29 @@ dashboard:
   host: 192.168.126.131
   port: 8080
 
+# Owner Interface: the one kernel-owned executor of owner controls. Telegram
+# runs in the kernel; dashboard, OpenClaw/WhatsApp and the local CLI reach it
+# over an authenticated local socket (one key per channel, see trader/owner/
+# ipc.py). Identities map an authenticated channel identity to a principal —
+# never a credential. Telegram: the owner's sender id(s); if none are listed,
+# a private TELEGRAM_CHAT_ID (positive id = the owner's own user id) is used.
+owner_interface:
+  enabled: true                  # kernel serves the socket below
+  ipc_dir: /home/sarmad/.luffy/run   # owner decision 2026-09-28: persistent,
+                                 # private (dir 0700, socket/keys 0600); no linger.
+                                 # Must be private with no group/other-writable
+                                 # ancestor (data/ at 0775 is refused). Missing or
+                                 # insecure → owner controls fail closed.
+                                 # "auto" = /run/user/<uid>/luffy-owner.
+  max_request_age_s: 300         # older control requests (replays) are refused
+  busy_wait_s: 10                # containment waits at most this for another containment
+  client_timeout_s: 120          # dashboard wait for a control result
+  telegram_principal: owner
+  identities:
+    telegram: {}                 # e.g. "123456789": owner  (sender user ids)
+    whatsapp: {}                 # NOT_CONFIGURED — e.g. "+15550000000": owner
+    openclaw: {}                 # NOT_CONFIGURED
+
 notify:
   telegram: true
   alert_on_trade: true           # NOT IMPLEMENTED — trade alerts are

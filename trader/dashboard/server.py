@@ -1,7 +1,8 @@
 """Luffy dashboard — FastAPI + GraphQL + WS push. Run: python -m trader.dashboard.server
 
-Read-only against the journal except control mutations, which only write
-*intent* (kv flags) — the kernel remains the single writer of truth.
+Read-only against the journal. Every owner control (freeze, halt, resume,
+unhalt, panic, close one trade, market type) is a typed request to the
+kernel's Owner Interface over authenticated local IPC.
 """
 from __future__ import annotations
 
@@ -23,18 +24,48 @@ log = logging.getLogger("dashboard")
 WEB = Path(__file__).parent / "web"
 
 
+def _owner_gateway(cfg: dict, auth):
+    """Dashboard → kernel Owner Interface. The dashboard never sets control state."""
+    from ..owner.adapters import dashboard as owner_dashboard
+    from ..owner.contract import MalformedRequest, Status, refused
+    from ..owner.ipc import OwnerClient, resolve_ipc_dir
+    section = (cfg or {}).get("owner_interface") or {}
+    ipc_dir = resolve_ipc_dir(section.get("ipc_dir"))
+    if ipc_dir is not None and not ipc_dir.is_absolute():
+        ipc_dir = ROOT / ipc_dir
+    client = (OwnerClient(ipc_dir, "dashboard",
+                          control_timeout_s=float(section.get("client_timeout_s", 120)))
+              if ipc_dir is not None else None)
+
+    def gateway(operation, request_id, issued_at_ms, request, args):
+        scope = getattr(request, "scope", None) or {}
+        try:
+            req = owner_dashboard.to_request(
+                operation, request_id, issued_at_ms,
+                authenticated=auth.authenticated(scope), args=args)
+        except MalformedRequest:
+            return refused(None, "malformed_request")
+        if req is None:
+            return refused(None, "not_authenticated")
+        if client is None:
+            return refused(req, "owner_interface_not_configured", Status.UNAVAILABLE)
+        return client.call(req)
+    return gateway
+
+
 def create_app(cfg: dict | None = None) -> FastAPI:
     cfg = cfg or load_config()
     journal = Journal(str(ROOT / "data" / "luffy.db"))
     app = FastAPI(title="Luffy")
     from .auth import DashboardAuth
-    DashboardAuth(os.environ.get("DASH_TOKEN")).install(app)
+    auth = DashboardAuth(os.environ.get("DASH_TOKEN"))
+    auth.install(app)
 
     def _nocache(response):
         response.headers["Cache-Control"] = "no-store, max-age=0"
         return response
 
-    app.include_router(make_graphql_router(journal))
+    app.include_router(make_graphql_router(journal, _owner_gateway(cfg, auth)))
 
     @app.get("/", response_class=HTMLResponse)
     async def index():
@@ -402,7 +433,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         history = body.get("history") or []
 
         def _run():
-            return ChatEngine(journal, cfg).handle(msg, history)
+            return ChatEngine(journal, cfg).handle(msg, history)   # never operational
         import asyncio
         reply = await asyncio.get_event_loop().run_in_executor(None, _run)
         return {"reply": reply}
