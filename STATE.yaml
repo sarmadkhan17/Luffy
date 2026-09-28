@@ -1,6 +1,6 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-09-23'
+updated_at: '2026-09-28'
 status: EVIDENCE_BASED
 
 progress_method:
@@ -208,6 +208,78 @@ capabilities:
       - deterministic Supervisor recovery orchestration is TESTED at 5d586f4
     gaps:
       - production recovery behavior beyond deterministic tests is not established here
+
+  owner_interface_gateway:
+    package: LUFFY-OWNER-INTERFACE-GATEWAY-V1
+    branch: owner-interface-gateway-v1
+    implementation_commit: de916ac
+    state: TESTED
+    independent_reviewer: Opus
+    package_verdict: PASS
+    integration: PENDING_DEPLOYMENT
+    deployment: NOT_DEPLOYED
+    production_changed: false
+    evidence:
+      - docs/superpowers/reports/2026-09-28-owner-interface-gateway-v1.md
+      - trader/owner/service.py
+      - trader/owner/contract.py
+      - trader/owner/authz.py
+      - trader/owner/ipc.py
+      - trader/owner/adapters/
+      - trader/kernel.py
+      - tests/test_owner_interface.py
+      - tests/test_owner_interface_boundary.py
+      - tests/test_owner_interface_r6.py
+      - scripts/bench_owner_interface.py
+    architecture:
+      - kernel is the single owner-control executor
+      - OwnerService is transport-neutral
+      - dashboard, Telegram, OpenClaw and WhatsApp are adapters only
+      - no adapter receives direct Risk/Execution/Binance authority
+      - free-text chat has no operational authority
+      - controls use typed requests and an authenticated OwnerContext
+      - duplicate/replayed requests are idempotent
+      - unresolved results remain IN_PROGRESS / OUTCOME_UNKNOWN rather than false REFUSED
+      - panic supersedes older recovery
+      - dashboard direct ACTIVE setter removed
+      - cross-tab request persistence hardened
+      - Unix socket IPC is local/private and peer-credential checked
+    owner_decisions:
+      - persistent IPC directory under /home/sarmad/.luffy/run
+      - IPC directory mode 0700
+      - IPC socket mode 0600
+      - do not enable loginctl linger solely for LUFFY
+      - trusted same-UID architecture accepted for V1
+      - kernel dependency for panic, close-trade and market-type accepted
+      - panic immediately contains, then the kernel performs flatten/drain
+    proven_facts:
+      - Revision 6 independent review PASS
+      - 808 focused tests PASS
+      - full-suite comparison introduced no new baseline failures/errors
+      - crash/idempotency matrix PASS
+      - reservation-write race PASS
+      - panic ordering PASS
+      - cross-tab persistence PASS
+      - audit-buffer cap PASS
+      - chat-safety PASS
+      - socket security PASS
+      - authorization PASS
+      - confirmation safety PASS
+      - OpenClaw/WhatsApp fixture boundaries PASS
+      - performance showed no material regression
+    deployment_constraints:
+      - kernel and dashboard must deploy atomically
+      - persistent IPC directory must exist with reviewed permissions
+      - dashboard and kernel are currently expected to run as the same UID
+      - OpenClaw live provider NOT_CONFIGURED
+      - WhatsApp live provider NOT_CONFIGURED
+      - deployment requires a separate reviewed prep package
+      - no deployment is selected as active work
+    kept_separate:
+      - LUFFY-ENTRY-FENCE-SIDE-EFFECT-V1
+      - investigation-consumer DB failure
+      - health candidate
+      - frontend LIVE-data binding work unrelated to owner controls
 
 current_active_work:
   id: M3.2-SCHEME-D-V4

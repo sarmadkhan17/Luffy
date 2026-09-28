@@ -30,6 +30,7 @@ work_package:
     - pilot verdict GO with reason p6_encouraging_effect; P6/C4 positive in 20/20 worlds, median signed target lift 0.20497145020781576
     - PILOT_VERDICT.json SHA256 38c5010ed353f1cccb71f337d9b86672091ff709d87a13ba5f19f003594e3cc4
     - pilot evidence scripts/m32_scheme_d_pilot_v4_20260923/PILOT_VERDICT.json is non-final only; it does not satisfy full Scheme-D validation, Gate 2, search, referee, handoff or live trading
+    - LUFFY-OWNER-INTERFACE-GATEWAY-V1 TESTED at de916ac on branch owner-interface-gateway-v1; independent reviewer Opus; package verdict PASS; integration PENDING_DEPLOYMENT; deployment NOT_DEPLOYED; production unchanged
 
   next_steps:
     - step: 1
@@ -53,6 +54,30 @@ work_package:
     - Do not mint or fabricate owner authorization.
     - Do not modify frozen v4/v3/v2/v1 bundles, the v3 shard layer, or the frozen truth package.
     - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
+    - Do not merge, cherry-pick, deploy or restart for LUFFY-OWNER-INTERFACE-GATEWAY-V1, and do not change the watchdog, without a separate reviewed deployment prep package.
+
+pending_integration:
+  - id: LUFFY-OWNER-INTERFACE-GATEWAY-V1
+    implementation_commit: de916ac
+    state: TESTED
+    package_verdict: PASS
+    integration: PENDING_DEPLOYMENT
+    deployment: NOT_DEPLOYED
+    selected_as_active_work: false
+    deployment_constraints:
+      - kernel and dashboard must deploy atomically
+      - persistent IPC directory /home/sarmad/.luffy/run must exist with mode 0700; socket mode 0600
+      - dashboard and kernel are currently expected to run as the same UID
+      - OpenClaw live provider NOT_CONFIGURED
+      - WhatsApp live provider NOT_CONFIGURED
+      - deployment requires a separate reviewed prep package
+
+kept_separate:
+  - LUFFY-ENTRY-FENCE-SIDE-EFFECT-V1
+  - investigation-consumer DB failure
+  - health candidate
+  - frontend LIVE-data binding work unrelated to owner controls
 
 after_completion:
   - Await the separate owner decision on future full-validation capacity and authorization.
+  - LUFFY-OWNER-INTERFACE-GATEWAY-V1 remains TESTED and NOT_DEPLOYED until a separate reviewed deployment prep package is authorized.
