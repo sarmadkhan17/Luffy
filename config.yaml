@@ -451,7 +451,8 @@ owner_interface:
   client_timeout_s: 120          # dashboard wait for a control result
   telegram_principal: owner
   identities:
-    telegram: {}                 # e.g. "123456789": owner  (sender user ids)
+    telegram:                    # sender user ids; the chat must also be TELEGRAM_CHAT_ID
+      "1807747201": owner        # owner decision 2026-09-28 (group chat: sender id binds)
     whatsapp: {}                 # NOT_CONFIGURED — e.g. "+15550000000": owner
     openclaw: {}                 # NOT_CONFIGURED
 
