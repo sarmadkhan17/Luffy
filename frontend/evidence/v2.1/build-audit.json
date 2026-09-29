@@ -1,0 +1,67 @@
+{
+  "assets": [
+    {
+      "file": "Activity-DsbhBcUQ.js",
+      "bytes": 8554,
+      "gzip_bytes": 3082
+    },
+    {
+      "file": "Avatar-B5rAMasB.js",
+      "bytes": 126935,
+      "gzip_bytes": 40738
+    },
+    {
+      "file": "EquityChart-D72dR2jH.js",
+      "bytes": 166540,
+      "gzip_bytes": 53369
+    },
+    {
+      "file": "GraphView-2xb-kVib.js",
+      "bytes": 195662,
+      "gzip_bytes": 62880
+    },
+    {
+      "file": "GraphView-DLioOiRN.css",
+      "bytes": 15413,
+      "gzip_bytes": 2536
+    },
+    {
+      "file": "HealthStatus-DZ0nQHhJ.js",
+      "bytes": 2313,
+      "gzip_bytes": 1175
+    },
+    {
+      "file": "Luffy-C7MkmGKu.js",
+      "bytes": 7324,
+      "gzip_bytes": 2962
+    },
+    {
+      "file": "Operations-BVTm3hGj.js",
+      "bytes": 8546,
+      "gzip_bytes": 3529
+    },
+    {
+      "file": "Routes-BMEC3I-N.js",
+      "bytes": 9606,
+      "gzip_bytes": 3415
+    },
+    {
+      "file": "index-DeF2ySAk.js",
+      "bytes": 320998,
+      "gzip_bytes": 99026
+    },
+    {
+      "file": "index-l1ZLhsWy.css",
+      "bytes": 29955,
+      "gzip_bytes": 7086
+    },
+    {
+      "file": "jsx-runtime-Dk72oS4N.js",
+      "bytes": 8774,
+      "gzip_bytes": 3346
+    }
+  ],
+  "sourcemaps": [],
+  "forbidden_label_hits": [],
+  "venue_identifier_retained": true
+}

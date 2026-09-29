@@ -104,6 +104,9 @@ CREATE TABLE IF NOT EXISTS trades (
 );
 CREATE INDEX IF NOT EXISTS idx_trades_strategy ON trades(strategy_id);
 CREATE INDEX IF NOT EXISTS idx_trades_status ON trades(status);
+-- keyset trade history (owner frontend): newest first by immutable identity
+CREATE INDEX IF NOT EXISTS idx_trades_opened ON trades(opened_at, id);
+CREATE INDEX IF NOT EXISTS idx_trades_status_opened ON trades(status, opened_at, id);
 
 CREATE TABLE IF NOT EXISTS equity (
     ts TEXT PRIMARY KEY,

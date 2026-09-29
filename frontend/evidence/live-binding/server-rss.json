@@ -1,0 +1,19 @@
+{
+  "unit": "MiB VmRSS",
+  "python": "3.12.3",
+  "note": "Fresh process per stage; temporary fixture ROOT; no network. Not comparable 1:1 with the production dashboard, whose journal, vault and legacy polling differ.",
+  "stages": {
+    "app": {
+      "create_app": 54.7
+    },
+    "reads": {
+      "create_app": 54.7,
+      "after_200_owner_reads": 60.3
+    },
+    "feed": {
+      "create_app": 54.6,
+      "after_200_owner_reads": 60.1,
+      "after_import_data_feed": 102.8
+    }
+  }
+}

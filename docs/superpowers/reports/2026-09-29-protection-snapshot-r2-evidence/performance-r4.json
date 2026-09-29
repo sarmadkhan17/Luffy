@@ -1,0 +1,120 @@
+{
+  "generated_at": "2026-09-29T02:38:02.964546+00:00",
+  "positions": 8,
+  "note": "offline simulated reads + temporary journal; not production; weights are Binance documented values, not measured",
+  "per_check": [
+    {
+      "positions": 0,
+      "requests": 4,
+      "weight": 90,
+      "names": [
+        "positions",
+        "algo_orders",
+        "positions",
+        "algo_orders"
+      ]
+    },
+    {
+      "positions": 1,
+      "requests": 5,
+      "weight": 91,
+      "names": [
+        "positions",
+        "algo_orders",
+        "positions",
+        "algo_orders",
+        "open_orders"
+      ]
+    },
+    {
+      "positions": 5,
+      "requests": 9,
+      "weight": 95,
+      "names": [
+        "positions",
+        "algo_orders",
+        "positions",
+        "algo_orders",
+        "open_orders",
+        "open_orders",
+        "open_orders",
+        "open_orders",
+        "open_orders"
+      ]
+    },
+    {
+      "positions": 8,
+      "requests": 12,
+      "weight": 98,
+      "names": [
+        "positions",
+        "algo_orders",
+        "positions",
+        "algo_orders",
+        "open_orders",
+        "open_orders",
+        "open_orders",
+        "open_orders",
+        "open_orders",
+        "open_orders",
+        "open_orders",
+        "open_orders"
+      ]
+    }
+  ],
+  "cpu_only_duration_ms": {
+    "median": 2.074,
+    "p95": 2.219,
+    "max": 6.266
+  },
+  "latency_60ms_duration_ms": {
+    "median": 730.1,
+    "max": 734.5
+  },
+  "memory_growth_bytes_over_1000_checks": 126724,
+  "stored_rows": 1,
+  "stored_bytes": 6497,
+  "journal_write_latency": [
+    {
+      "baseline": {
+        "median_ms": 0.19,
+        "p99_ms": 0.353,
+        "max_ms": 0.571
+      }
+    },
+    {
+      "monitor_publishing_continuously": {
+        "median_ms": 0.19,
+        "p99_ms": 0.733,
+        "max_ms": 1.021
+      }
+    }
+  ],
+  "loop_baseline": {
+    "median_ms": 2.185,
+    "p99_ms": 2.902,
+    "iterations": 1300,
+    "monitor_runs": 0
+  },
+  "loop_with_monitor_continuous": {
+    "median_ms": 2.244,
+    "p99_ms": 4.233,
+    "iterations": 1239,
+    "monitor_runs": 6
+  },
+  "loop_with_hung_venue": {
+    "median_ms": 2.75,
+    "p99_ms": 4.093,
+    "iterations": 1107,
+    "monitor_runs": 1
+  },
+  "hung_venue_requests_total": 1,
+  "hung_run_once_s": 2.003,
+  "hung_status": [
+    "UNREADABLE",
+    [
+      "venue_timeout"
+    ]
+  ],
+  "hung_late_discarded": 1
+}

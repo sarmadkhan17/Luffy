@@ -1,0 +1,46 @@
+{
+  "scope": "Isolated worktree vault, read-only; loopback endpoint transport excluded. Before is original rebuild plus identical encoding; after checks file stat signature on every call.",
+  "nodes": 171,
+  "bytes": 278932,
+  "uncached_ms": [
+    467.173,
+    349.47,
+    336.836,
+    341.261,
+    350.568
+  ],
+  "cache_cold_ms": [
+    382.696,
+    452.317,
+    383.061,
+    396.147,
+    409.394
+  ],
+  "cache_warm_ms": [
+    15.754,
+    15.781,
+    14.536,
+    15.191,
+    17.197,
+    17.238,
+    17.593,
+    16.923,
+    15.999,
+    15.326,
+    16.598,
+    16.507,
+    16.059,
+    12.16,
+    14.248,
+    13.082,
+    15.358,
+    13.212,
+    11.561,
+    12.434
+  ],
+  "median_ms": {
+    "before": 349.47,
+    "cold": 396.147,
+    "warm": 15.556000000000001
+  }
+}

@@ -1,0 +1,17 @@
+
+> luffy-owner-frontend-preview@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.2 /home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend
+
+
+ Test Files  7 passed (7)
+      Tests  35 passed (35)
+   Start at  02:57:23
+   Duration  8.55s (environment 53%, tests 28%, import 7%, setup 7%, transform 5%)
+
+Environment  jsdom was created 7 times · 11.34s total, 53% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+

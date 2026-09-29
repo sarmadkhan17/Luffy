@@ -1,0 +1,255 @@
+{
+ "repeats": 40,
+ "page_size": 50,
+ "max_limit": 200,
+ "sqlite": "3.45.1",
+ "cases": [
+  {
+   "trades": 10000,
+   "status": "all",
+   "depth": 0,
+   "rows": 50,
+   "median_ms": 3.099,
+   "p95_ms": 4.009,
+   "max_ms": 5.007,
+   "peak_mem_kib": 89.0,
+   "response_bytes": 30091,
+   "preceding": 0
+  },
+  {
+   "trades": 10000,
+   "status": "all",
+   "depth": 5000,
+   "rows": 50,
+   "median_ms": 20.676,
+   "p95_ms": 23.661,
+   "max_ms": 25.114,
+   "peak_mem_kib": 90.2,
+   "response_bytes": 30306,
+   "preceding": 5000
+  },
+  {
+   "trades": 10000,
+   "status": "all",
+   "depth": 9950,
+   "rows": 50,
+   "median_ms": 37.968,
+   "p95_ms": 45.526,
+   "max_ms": 51.615,
+   "peak_mem_kib": 88.7,
+   "response_bytes": 29945,
+   "preceding": 9950
+  },
+  {
+   "trades": 10000,
+   "status": "open",
+   "depth": 0,
+   "rows": 50,
+   "median_ms": 2.671,
+   "p95_ms": 3.392,
+   "max_ms": 4.951,
+   "peak_mem_kib": 82.2,
+   "response_bytes": 28576,
+   "preceding": 0
+  },
+  {
+   "trades": 10000,
+   "status": "open",
+   "depth": 90,
+   "rows": 10,
+   "median_ms": 1.559,
+   "p95_ms": 1.739,
+   "max_ms": 1.951,
+   "peak_mem_kib": 19.3,
+   "response_bytes": 6346,
+   "preceding": 90
+  },
+  {
+   "trades": 10000,
+   "status": "closed",
+   "depth": 0,
+   "rows": 50,
+   "median_ms": 3.776,
+   "p95_ms": 4.371,
+   "max_ms": 4.469,
+   "peak_mem_kib": 89.1,
+   "response_bytes": 30097,
+   "preceding": 0
+  },
+  {
+   "trades": 10000,
+   "status": "closed",
+   "depth": 9850,
+   "rows": 50,
+   "median_ms": 37.884,
+   "p95_ms": 46.152,
+   "max_ms": 47.072,
+   "peak_mem_kib": 89.0,
+   "response_bytes": 29983,
+   "preceding": 9850
+  },
+  {
+   "trades": 100000,
+   "status": "all",
+   "depth": 0,
+   "rows": 50,
+   "median_ms": 6.152,
+   "p95_ms": 7.962,
+   "max_ms": 8.649,
+   "peak_mem_kib": 89.1,
+   "response_bytes": 30142,
+   "preceding": 0
+  },
+  {
+   "trades": 100000,
+   "status": "all",
+   "depth": 50000,
+   "rows": 50,
+   "median_ms": 139.241,
+   "p95_ms": 156.337,
+   "max_ms": 161.941,
+   "peak_mem_kib": 90.3,
+   "response_bytes": 30358,
+   "preceding": 50000
+  },
+  {
+   "trades": 100000,
+   "status": "all",
+   "depth": 99950,
+   "rows": 50,
+   "median_ms": 250.204,
+   "p95_ms": 283.449,
+   "max_ms": 307.202,
+   "peak_mem_kib": 88.6,
+   "response_bytes": 29947,
+   "preceding": 99950
+  },
+  {
+   "trades": 100000,
+   "status": "open",
+   "depth": 0,
+   "rows": 50,
+   "median_ms": 2.27,
+   "p95_ms": 2.565,
+   "max_ms": 2.591,
+   "peak_mem_kib": 82.3,
+   "response_bytes": 28627,
+   "preceding": 0
+  },
+  {
+   "trades": 100000,
+   "status": "open",
+   "depth": 990,
+   "rows": 10,
+   "median_ms": 3.384,
+   "p95_ms": 4.315,
+   "max_ms": 4.358,
+   "peak_mem_kib": 19.5,
+   "response_bytes": 6348,
+   "preceding": 990
+  },
+  {
+   "trades": 100000,
+   "status": "closed",
+   "depth": 0,
+   "rows": 50,
+   "median_ms": 10.998,
+   "p95_ms": 13.065,
+   "max_ms": 15.09,
+   "peak_mem_kib": 89.2,
+   "response_bytes": 30148,
+   "preceding": 0
+  },
+  {
+   "trades": 100000,
+   "status": "closed",
+   "depth": 98950,
+   "rows": 50,
+   "median_ms": 257.972,
+   "p95_ms": 286.421,
+   "max_ms": 296.934,
+   "peak_mem_kib": 89.1,
+   "response_bytes": 29985,
+   "preceding": 98950
+  }
+ ],
+ "contrast": [
+  {
+   "trades": 10000,
+   "legacy_offset_deep_page": {
+    "median_ms": 2.592,
+    "p95_ms": 3.232,
+    "max_ms": 3.563,
+    "peak_mem_kib": 111.7
+   },
+   "full_history_serialization": {
+    "median_ms": 312.803,
+    "p95_ms": 447.997,
+    "max_ms": 472.116,
+    "peak_mem_kib": 27349.0
+   },
+   "full_history_bytes": 8083390
+  },
+  {
+   "trades": 100000,
+   "legacy_offset_deep_page": {
+    "median_ms": 10.446,
+    "p95_ms": 12.178,
+    "max_ms": 12.457,
+    "peak_mem_kib": 111.7
+   },
+   "full_history_serialization": {
+    "median_ms": 3271.45,
+    "p95_ms": 3606.458,
+    "max_ms": 3700.943,
+    "peak_mem_kib": 286584.8
+   },
+   "full_history_bytes": 80933890
+  }
+ ],
+ "plans": {
+  "10000": {
+   "page_all": [
+    "SEARCH trades USING COVERING INDEX idx_trades_opened ((opened_at,id)<(?,?))"
+   ],
+   "page_status": [
+    "SEARCH trades USING COVERING INDEX idx_trades_status_opened (status=? AND (opened_at,id)<(?,?))"
+   ],
+   "preceding_status": [
+    "SEARCH trades USING COVERING INDEX idx_trades_status_opened (status=? AND (opened_at,id)>(?,?))"
+   ],
+   "total_all": [
+    "SCAN trades USING COVERING INDEX idx_trades_status"
+   ],
+   "membership_status": [
+    "SEARCH trades USING COVERING INDEX idx_trades_status_opened (status=? AND (opened_at,id)>(?,?) AND (opened_at,id)<(?,?))"
+   ]
+  },
+  "100000": {
+   "page_all": [
+    "SEARCH trades USING COVERING INDEX idx_trades_opened ((opened_at,id)<(?,?))"
+   ],
+   "page_status": [
+    "SEARCH trades USING COVERING INDEX idx_trades_status_opened (status=? AND (opened_at,id)<(?,?))"
+   ],
+   "preceding_status": [
+    "SEARCH trades USING COVERING INDEX idx_trades_status_opened (status=? AND (opened_at,id)>(?,?))"
+   ],
+   "total_all": [
+    "SCAN trades USING COVERING INDEX idx_trades_status"
+   ],
+   "membership_status": [
+    "SEARCH trades USING COVERING INDEX idx_trades_status_opened (status=? AND (opened_at,id)>(?,?) AND (opened_at,id)<(?,?))"
+   ]
+  }
+ },
+ "traversals": [
+  {
+   "trades": 10000,
+   "status": "all",
+   "limit": 50,
+   "pages": 200,
+   "seconds": 3.11
+  }
+ ]
+}

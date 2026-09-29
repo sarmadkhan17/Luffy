@@ -19,7 +19,7 @@ LOGIN = '''<!doctype html><html><meta name="viewport" content="width=device-widt
 document.querySelector('form').onsubmit=async e=>{e.preventDefault();
 const p=document.getElementById('password');
 try {const r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:p.value})});
-p.value=''; if(r.ok) location.replace('/'); else document.getElementById('status').textContent='Sign-in refused';}
+p.value=''; if(r.ok) {history.replaceState(null,'',location.pathname + location.hash); location.reload();} else document.getElementById('status').textContent='Sign-in refused';}
 catch(_){p.value='';document.getElementById('status').textContent='Connection unavailable';}};
 </script></body></html>'''
 
@@ -57,6 +57,20 @@ class DashboardAuth:
                     hmac.compare_digest(sig, self.signature(value)))
         except (KeyError, ValueError, TypeError):
             return False
+
+    def session_info(self, scope):
+        """(method, cookie expiry epoch s | None) for an authenticated request."""
+        headers = dict(scope.get('headers', []))
+        if self.valid_token(headers.get(b'x-luffy-token', b'').decode('latin1')):
+            return 'header', None
+        try:
+            cookies = SimpleCookie(); cookies.load(headers.get(b'cookie', b'').decode('latin1'))
+            value, sig = cookies[COOKIE].value.rsplit('.', 1)
+            if self.token and hmac.compare_digest(sig, self.signature(value)):
+                return 'cookie', int(value.split('.')[0])
+        except (KeyError, ValueError, TypeError):
+            pass
+        return 'query', None
 
     @staticmethod
     def same_origin(scope):
@@ -115,7 +129,7 @@ class DashboardAuth:
                 if not allowed and not login:
                     if ws:
                         return await send({'type': 'websocket.close', 'code': 4401})
-                    response = (HTMLResponse(LOGIN, status_code=401) if scope['path'] == '/' else
+                    response = (HTMLResponse(LOGIN, status_code=401) if (scope['path'] == '/' or scope['path'] == '/owner-preview' or scope['path'].startswith('/owner-preview/')) and not scope['path'].startswith('/owner-preview/assets/') else
                                 JSONResponse({'error': 'authentication required'}, status_code=401))
                     response.headers['Cache-Control'] = 'no-store'
                     response.headers['Referrer-Policy'] = 'no-referrer'

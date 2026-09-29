@@ -1,0 +1,13 @@
+:root {
+  --bg: #0b121b;
+  --panel: #101b27;
+  --raised: #182a38;
+  --border: #263645;
+  --border-strong: #465e70;
+  --text: #e1eaf1;
+  --muted: #a2b3c3;
+  --mint: #83dfcb;
+  --gold: #d6bb83;
+  --rose: #ffb3aa;
+  color-scheme: dark;
+}

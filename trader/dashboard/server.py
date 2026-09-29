@@ -65,7 +65,11 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         response.headers["Cache-Control"] = "no-store, max-age=0"
         return response
 
-    app.include_router(make_graphql_router(journal, _owner_gateway(cfg, auth)))
+    gateway = _owner_gateway(cfg, auth)
+    app.include_router(make_graphql_router(journal, gateway))
+    from . import owner_api
+    owner_api.install(app, journal=journal, cfg=cfg, root=ROOT, auth=auth, gateway=gateway,
+                      marks=_position_marks)
 
     @app.get("/", response_class=HTMLResponse)
     async def index():

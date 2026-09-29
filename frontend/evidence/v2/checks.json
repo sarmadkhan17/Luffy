@@ -1,0 +1,38 @@
+{
+  "typecheck": "PASS",
+  "production_build": "PASS",
+  "component_adapter_tests": 29,
+  "backend_auth_tests": 15,
+  "browser_tests": {
+    "startTime": "2026-09-28T22:09:32.162Z",
+    "duration": 192061.802,
+    "expected": 42,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "accessibility": {
+    "desktop-overview": [],
+    "desktop-trades": [],
+    "desktop-research": [],
+    "desktop-strategies": [],
+    "desktop-luffy": [],
+    "desktop-operations": [],
+    "desktop-live-system": [],
+    "desktop-knowledge": [],
+    "desktop-diagnostics": [],
+    "mobile-overview": [],
+    "mobile-trades": [],
+    "mobile-research": [],
+    "mobile-strategies": [],
+    "mobile-luffy": [],
+    "mobile-operations": [],
+    "mobile-live-system": [],
+    "mobile-knowledge": [],
+    "mobile-diagnostics": []
+  },
+  "screenshot_count": 19,
+  "backend_preservation": "PASS",
+  "independent_review": "PENDING_OPUS",
+  "ready_for_route_switch": false
+}

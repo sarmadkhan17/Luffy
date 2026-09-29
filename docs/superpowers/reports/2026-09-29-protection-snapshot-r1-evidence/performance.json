@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-09-29T00:55:30.989278+00:00",
+  "positions": 8,
+  "note": "offline simulated venue + temporary journal; not production",
+  "cpu_only_duration_ms": {
+    "median": 0.5,
+    "p95": 2.5,
+    "max": 6.1
+  },
+  "venue_requests_per_snapshot": 10,
+  "venue_request_names": [
+    "fetch_positions",
+    "fapiPrivateGetOpenAlgoOrders",
+    "fetch_open_orders",
+    "fetch_open_orders",
+    "fetch_open_orders",
+    "fetch_open_orders",
+    "fetch_open_orders",
+    "fetch_open_orders",
+    "fetch_open_orders",
+    "fetch_open_orders"
+  ],
+  "latency_60ms_duration_ms": {
+    "median": 607.35,
+    "max": 613.9
+  },
+  "memory_growth_bytes_over_1000_snapshots": 51746,
+  "stored_snapshot_bytes": 5384,
+  "stored_rows": 1,
+  "loop_baseline": {
+    "median_ms": 2.656,
+    "p99_ms": 4.214,
+    "max_ms": 7.592,
+    "iterations": 1144,
+    "monitor_runs": 0
+  },
+  "loop_with_monitor_continuous": {
+    "median_ms": 2.516,
+    "p99_ms": 4.819,
+    "max_ms": 7.491,
+    "iterations": 1172,
+    "monitor_runs": 8
+  },
+  "loop_with_hung_venue": {
+    "median_ms": 2.578,
+    "p99_ms": 5.659,
+    "max_ms": 8.71,
+    "iterations": 1128,
+    "monitor_runs": 1
+  },
+  "hung_venue_requests_total": 1,
+  "hung_run_once_s": 2.004,
+  "hung_status": [
+    "UNREADABLE",
+    [
+      "venue_timeout"
+    ]
+  ]
+}

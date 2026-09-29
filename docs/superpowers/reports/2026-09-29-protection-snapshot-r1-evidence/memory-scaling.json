@@ -1,0 +1,1 @@
+{"note":"tracemalloc net growth vs baseline after N monitor.run_once() snapshots (offline sim venue, temp journal)","growth_bytes":{"1000":90574,"2000":108344,"3000":115258}}
