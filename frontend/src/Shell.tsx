@@ -3,12 +3,16 @@ import { lazyChunk, ChunkLoadError, retryFailedChunks } from "./lazyChunk";
 import { Suspense, useEffect, useState } from "react";
 import { ArrowUpRight, Anchor, LogOut } from "lucide-react";
 import { usePreview } from "./context";
+import { parseHash } from "./links";
 import { Mark, Badge, VisualBoundary } from "./components/ui";
 import Overview from "./views/Overview";
 const Luffy = lazyChunk(() => import("./views/Luffy"));
 const GraphView = lazyChunk(() => import("./views/GraphView"));
 const Operations = lazyChunk(() => import("./views/Operations"));
 const Routes = lazyChunk(() => import("./views/Routes"));
+const SystemObserved = lazyChunk(() =>
+  import("./views/Evidence").then((m) => ({ default: m.SystemObserved })),
+);
 export const routes = [
   "Overview",
   "Trades",
@@ -29,9 +33,7 @@ const LIVE_ROUTES = new Set([
   "diagnostics",
 ]);
 export default function Shell() {
-  const [route, setRoute] = useState(
-    location.hash.replace(/^#\/?/, "") || "overview",
-  );
+  const [route, setRoute] = useState(() => parseHash(location.hash).route);
   const { adapter, scenario, setScenario, session, signOut } = usePreview();
   const live = import.meta.env.MODE === "production" || adapter.mode === "LIVE";
   useEffect(() => {
@@ -39,7 +41,7 @@ export default function Shell() {
       // after a chunk failed, navigating reloads the new URL so the next
       // route is not left on a poisoned module import
       if (retryFailedChunks()) return;
-      setRoute(location.hash.replace(/^#\/?/, "") || "overview");
+      setRoute(parseHash(location.hash).route);
     };
     window.addEventListener("hashchange", update);
     return () => window.removeEventListener("hashchange", update);
@@ -199,10 +201,13 @@ export default function Shell() {
             ) : route === "luffy" ? (
               <Luffy />
             ) : route === "knowledge" || route === "live-system" ? (
-              <GraphView
-                key={route}
-                surface={route === "knowledge" ? "knowledge" : "system"}
-              />
+              <>
+                <GraphView
+                  key={route}
+                  surface={route === "knowledge" ? "knowledge" : "system"}
+                />
+                {live && route === "live-system" && <SystemObserved />}
+              </>
             ) : live && route === "operations" ? (
               <Operations />
             ) : live && LIVE_ROUTES.has(route) ? (

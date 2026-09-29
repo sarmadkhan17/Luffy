@@ -18,6 +18,9 @@ import {
   ResearchLive,
   DiagnosticsDetail,
 } from "./LiveReads";
+import { LinkedPanel, ResearchItem } from "./Evidence";
+import { useRouteParam } from "../links";
+import { RecordLink } from "../components/records";
 
 export const TRADE_PAGE_SIZE = 50;
 /** A position in one newest-first traversal: the page's cursor and how many
@@ -223,8 +226,23 @@ function TradeBook() {
 }
 
 function Trades() {
+  const trade = useRouteParam("trade");
   return (
     <div className="workspace-stack">
+      {trade && (
+        <LinkedPanel
+          title={`Trade story · ${trade}`}
+          back="#trades"
+          testid="trade-story"
+        >
+          <p className="quiet">
+            Opportunity → decision → signals → strategy → execution → accounting
+            → outcome, from the ids the journal recorded. Steps the stores do
+            not record are marked UNAVAILABLE.
+          </p>
+          <TradeLineage key={trade} id={trade} story />
+        </LinkedPanel>
+      )}
       <TradeBook />
       <Decisions />
       <div className="workspace-grid">
@@ -250,6 +268,8 @@ function Trades() {
 
 function Strategies() {
   const { adapter } = usePreview();
+  const sid = useRouteParam("id");
+  const family = useRouteParam("family");
   const q = useQuery({
     queryKey: ["table", "strategies"],
     queryFn: ({ signal }) => adapter.table!("strategies", signal),
@@ -258,6 +278,19 @@ function Strategies() {
   });
   return (
     <div className="workspace-stack">
+      {sid && (
+        <LinkedPanel
+          title={`Strategy workspace · ${sid}`}
+          back={
+            family
+              ? `#strategies?family=${encodeURIComponent(family)}`
+              : "#strategies"
+          }
+          testid="strategy-workspace"
+        >
+          <StrategyDetail key={sid} id={sid} />
+        </LinkedPanel>
+      )}
       <Panel
         title="Strategy registry"
         aside={<Badge tone="amber">Journal records · partial</Badge>}
@@ -274,9 +307,15 @@ function Strategies() {
               at={q.data.generatedAt}
               note="Up to 200 strategies; registry state does not establish admission."
             />
+            <Families rows={q.data.rows} active={family} />
             <RecordTable
+              key={family ?? "all"}
               title="Strategies"
-              rows={q.data.rows}
+              rows={
+                family
+                  ? q.data.rows.filter((r) => r.kind === family)
+                  : q.data.rows
+              }
               filterKey="state"
               columns={[
                 ["name", "Identity"],
@@ -310,6 +349,13 @@ function Strategies() {
                     Registry identity is not a versioned approval.
                   </p>
                   <SourceStrip source={q.data.source} at={q.data.generatedAt} />
+                  {typeof r.id === "string" && (
+                    <p>
+                      <RecordLink kind="strategy" id={r.id}>
+                        Open the strategy workspace ↗
+                      </RecordLink>
+                    </p>
+                  )}
                   {typeof r.id === "string" && <StrategyDetail id={r.id} />}
                 </>
               )}
@@ -323,18 +369,63 @@ function Strategies() {
           stored. A registry state of active does not establish current health.
           Journal economics per strategy are in each strategy's record.
         </Unavailable>
-        <Unavailable title="Research & authority">
-          Approvals, parent/child relationships and research linkage are not
-          exposed. TESTED does not mean deployed; this surface grants no
-          strategy authority.
+        <Unavailable title="Approvals & authority">
+          No approval record is exposed. Family, parent/child, source idea and
+          the research a strategy seeded are shown in each strategy workspace
+          from recorded ids. TESTED does not mean deployed; this surface grants
+          no strategy authority.
         </Unavailable>
       </div>
     </div>
   );
 }
+/** family (registry kind) → strategies, by state; a filter, not an authority */
+function Families({
+  rows,
+  active,
+}: {
+  rows: Record<string, unknown>[];
+  active: string | null;
+}) {
+  const by = new Map<string, Record<string, number>>();
+  for (const r of rows) {
+    const k = typeof r.kind === "string" ? r.kind : "Unavailable";
+    const states = by.get(k) ?? {};
+    const st = String(r.state ?? "unknown");
+    states[st] = (states[st] ?? 0) + 1;
+    by.set(k, states);
+  }
+  return (
+    <nav className="family-filter" aria-label="Strategy families">
+      <a href="#strategies" aria-current={active ? undefined : "true"}>
+        All families ({rows.length})
+      </a>
+      {[...by.entries()].sort().map(([k, states]) => (
+        <a
+          key={k}
+          href={`#strategies?family=${encodeURIComponent(k)}`}
+          aria-current={active === k ? "true" : undefined}
+        >
+          {k} ·{" "}
+          {Object.entries(states)
+            .map(([s, n]) => `${n} ${s}`)
+            .join(", ")}
+        </a>
+      ))}
+      {active && !by.has(active) && (
+        <span className="quiet">
+          No registry strategy has family “{active}”.
+        </span>
+      )}
+    </nav>
+  );
+}
+
 function Research() {
+  const combo = useRouteParam("combo");
   return (
     <div className="workspace-stack">
+      {combo && <ResearchItem key={combo} hash={combo} />}
       <ResearchLive />
       <Panel title="Interpretation boundaries">
         <p>

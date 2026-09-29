@@ -151,15 +151,19 @@ def seed(root: Path, journal, scenario: str = "normal") -> None:
     data = root / "data"
     data.mkdir(parents=True, exist_ok=True)
     with journal._tx() as c:
-        for t in ("trade_accounting_bookings", "votes", "equity", "trades", "control_events",
+        for t in ("outcomes", "trade_accounting_bookings", "votes", "equity", "trades",
+                  "control_events",
                   "state_kv", "decisions", "cycles", "brain_events", "strategies"):
             c.execute(f"DELETE FROM {t}")
         c.execute("DROP TABLE IF EXISTS protection_evidence")
     from trader.research.ledger import Ledger
     Ledger(journal).ensure()
     with journal._tx() as c:
-        for t in ("research_combos", "research_batches"):
+        for t in ("research_combos", "research_batches", "research_candidates",
+                  "research_tests"):
             c.execute(f"DELETE FROM {t}")
+    for rel in M2_NOTES:                # seed_m2's notes do not outlive a reset
+        (root / "knowledge" / rel).unlink(missing_ok=True)
     hb = data / "heartbeat_luffy.json"
     if scenario == "missing":
         hb.unlink(missing_ok=True)
@@ -250,6 +254,144 @@ def seed(root: Path, journal, scenario: str = "normal") -> None:
     (root / "logs" / "luffy.log").write_bytes(b"line one\n\x00line two\n")
 
 
+M2_NOTES = {
+    "30 Postmortems/Fixture Autopsy.md": """---
+type: postmortem
+day: 2026-09-20
+---
+
+# Fixture Autopsy
+
+spec_fixture_trend opened pos_fixture01 from dec_fixture01; the search seeded
+a1b2c3d4e5f60718. spec_nonexistent is not a registry id.
+""",
+    "20 Strategies/Fixture_Child.md": """---
+type: strategy
+family: ema_trend
+state: paper
+---
+
+# Fixture Child
+
+Named only by its title; no registry id is written here.
+""",
+}
+
+
+def seed_m2(root: Path, journal) -> None:
+    """M2 linked records on top of seed(): a strategy family, an executed and a
+    skipped decision with votes, a closed trade, brain_events lifecycle and
+    idea provenance, seeded research combos, cooldown events and state_kv.
+    Includes traps: a vote of another cycle inside the vote window, a
+    lifecycle event for a strategy not in the registry, and malformed JSON."""
+    now = datetime.now(timezone.utc)
+    at = lambda **kw: _iso(now - timedelta(**kw))        # noqa: E731
+    spec = json.dumps({"timeframe": "1h", "direction": "long",
+                       "provenance": {"source_kind": "harvested", "idea_id": "tv_fixture_1",
+                                      "author": "Researcher"}})
+    with journal._tx() as c:
+        for t, col, ids in (
+                ("strategies", "id", ("spec_fixture_trend", "strat_parent_fx",
+                                      "strat_child_fx")),
+                ("decisions", "id", ("dec_fixture01", "dec_fixture02")),
+                ("cycles", "id", ("cyc_fixture01", "cyc_fixture02", "cyc_other01")),
+                ("outcomes", "decision_id", ("dec_fixture01",)),
+                ("trades", "id", ("pos_fixture01",)),
+                ("research_combos", "hash", ("a1b2c3d4e5f60718", "b1b2c3d4e5f60718")),
+                ("research_candidates", "hash", ("a1b2c3d4e5f60718",)),
+                ("research_tests", "hash", ("a1b2c3d4e5f60718",))):
+            c.execute(f"DELETE FROM {t} WHERE {col} IN ({','.join('?' * len(ids))})", ids)
+        c.execute("DELETE FROM votes WHERE cycle_id IN ('cyc_fixture01','cyc_other01')")
+        c.execute("INSERT INTO strategies(id,name,kind,params,state,origin,generation,parent_id,"
+                  "created_at,state_changed_at,spec_json) VALUES('spec_fixture_trend',"
+                  "'Fixture Trend Pullback','spec','{}','paper','harvested',0,'',?,?,?)",
+                  (at(days=9), at(days=8), spec))
+        c.execute("INSERT INTO strategies(id,name,kind,params,state,origin,generation,parent_id,"
+                  "created_at) VALUES('strat_parent_fx','EMA Fixture Parent','ema_trend','{}',"
+                  "'retired','seed',0,'',?)", (at(days=30),))
+        c.execute("INSERT INTO strategies(id,name,kind,params,state,origin,generation,parent_id,"
+                  "created_at) VALUES('strat_child_fx','EMA Fixture Child','ema_trend',"
+                  "'{\"fast\": 20}','paper','mutation',1,'strat_parent_fx',?)", (at(days=20),))
+        for cid, sym, mins in (("cyc_fixture01", "SOL/USDT", 300), ("cyc_fixture02", "ETH/USDT", 90),
+                               ("cyc_other01", "SOL/USDT", 301)):
+            c.execute("INSERT INTO cycles(id,ts,symbol,price,regime,adx,btc_trend,market_type,"
+                      "mode) VALUES(?,?,?,150.0,'TRENDING_UP',31.5,'UP','futures','live')",
+                      (cid, at(minutes=mins), sym))
+        sig = json.dumps([{"strategy_id": "spec_fixture_trend", "strategy_name":
+                           "Fixture Trend Pullback", "symbol": "SOL/USDT", "action": "BUY",
+                           "confidence": 0.6, "rationale": "close > donchian_hi(100)",
+                           "params": {"signal_bar_age_min": 4.2}}])
+        c.execute("INSERT INTO decisions(id,cycle_id,ts,symbol,action,score,threshold,confidence,"
+                  "executed,strategy_ids,signals_json,scan_id) VALUES('dec_fixture01',"
+                  "'cyc_fixture01',?,'SOL/USDT','BUY',0.61,0.5,0.6,1,'spec_fixture_trend',?,"
+                  "'scan_fixture01')", (at(minutes=299), sig))
+        c.execute("INSERT INTO decisions(id,cycle_id,ts,symbol,action,score,threshold,confidence,"
+                  "executed,skip_reason,strategy_ids,signals_json) VALUES('dec_fixture02',"
+                  "'cyc_fixture02',?,'ETH/USDT','SELL',0.55,0.5,0.5,0,"
+                  "'risk: max positions (3/3)','spec_ghost','not json')", (at(minutes=89),))
+        for cid, agent, side in (("cyc_fixture01", "trend", "long"),
+                                 ("cyc_fixture01", "flow", "flat"),
+                                 ("cyc_other01", "trend", "short")):
+            c.execute("INSERT INTO votes(cycle_id,ts,symbol,agent,side,conviction,confidence,"
+                      "rationale,meta) VALUES(?,?,'SOL/USDT',?,?,0.3,0.5,'fixture','{}')",
+                      (cid, at(minutes=300), agent, side))
+        c.execute("INSERT INTO outcomes(decision_id,cycle_id,symbol,ts,action,entry_price,"
+                  "resolved_at,fwd_ret_1h,fwd_ret_4h) VALUES('dec_fixture01','cyc_fixture01',"
+                  "'SOL/USDT',?,'BUY',150.0,?,0.004,0.012)", (at(minutes=299), at(minutes=59)))
+        c.execute("INSERT INTO trades(id,decision_id,symbol,side,amount,entry_price,exit_price,"
+                  "notional_usdt,strategy_id,strategy_name,exec_mode,opened_at,closed_at,"
+                  "realized_pnl,close_reason,status,mfe_r,mae_r,initial_risk) VALUES("
+                  "'pos_fixture01','dec_fixture01','SOL/USDT','long',2,150,156.25,300,"
+                  "'spec_fixture_trend','spec:spec_fixture_trend','live',?,?,12.5,'trail',"
+                  "'closed',1.8,-0.4,6.0)", (at(minutes=298), at(minutes=30)))
+        brain = [
+            (at(days=10), "harvest_idea", "tv_fixture_1",
+             {"title": "Fixture pullback idea", "source": "tradingview",
+              "url": "https://example.invalid/idea"}),
+            (at(days=9), "idea_consumed", "tv_fixture_1",
+             {"outcome": "admitted", "spec": "spec_fixture_trend", "stream": "strategy"}),
+            (at(days=9), "spec_admitted", "spec_fixture_trend", {"name": "Fixture Trend"}),
+            (at(days=2), "spec_rejected", "spec_ghost", {"name": "Ghost"}),
+            (at(days=1), "postmortem", "book",
+             {"verdicts": {"spec_fixture_trend": "CONSISTENT"},
+              "book": [{"id": "spec_fixture_trend", "live_trades": 1,
+                        "health": {"verdict": "CONSISTENT", "trades": 1}}]}),
+        ]
+        for ts, kind, subject, detail in brain:
+            c.execute("INSERT INTO brain_events(ts,kind,subject,detail) VALUES(?,?,?,?)",
+                      (ts, kind, subject, json.dumps(detail)))
+        c.execute("INSERT INTO brain_events(ts,kind,subject,detail) VALUES(?,'keep_verdict',"
+                  "'spec_fixture_trend','{broken')", (at(hours=12),))
+        for h, parent, trig, verdict in (("a1b2c3d4e5f60718", "", "seed:spec_fixture_trend",
+                                          "grow"),
+                                         ("b1b2c3d4e5f60718", "a1b2c3d4e5f60718", "", "prune")):
+            c.execute("INSERT INTO research_combos(hash,tf,geo,k,round,parent,trigger,parts,"
+                      "label,status,verdict,reason,median_pf,trades,ablation,result,created_at)"
+                      " VALUES(?,'4h','trail',1,'seeded',?,?,'[\"donchian_hi(100)\"]',"
+                      "'donchian seed','scored',?,'fixture',1.12,41,'{\"trail\": -0.1}',"
+                      "'{\"verdict\": \"grow\"}',?)", (h, parent, trig, verdict, at(minutes=20)))
+        c.execute("INSERT INTO research_candidates(hash,tf,geo,state,rank,reason,updated_at) "
+                  "VALUES('a1b2c3d4e5f60718','4h','trail','queued',1.0,'fixture',?)",
+                  (at(minutes=19),))
+        c.execute("INSERT INTO research_tests(hash,tf,geo,gate,p,alpha_t,rejected,braked,at) "
+                  "VALUES('a1b2c3d4e5f60718','4h','trail','gate1',0.2,0.01,0,0,?)",
+                  (at(minutes=18),))
+        for i in range(3):
+            c.execute("INSERT INTO control_events(ts,event,actor,detail) VALUES(?,"
+                      "'signal_cooldown','luffy','{}')", (at(minutes=10 - i),))
+        c.execute("INSERT INTO control_events(ts,event,actor,detail) VALUES(?,'reconcile',"
+                  "'luffy','{\"position_count\": 2}')", (at(minutes=15),))
+        c.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES('risk_state',?)",
+                  (json.dumps({"peak_equity": 5200.0, "day_start_equity": 5150.0,
+                               "day_key": now.strftime("%Y-%m-%d")}),))
+        c.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES('rent_state','{bad')")
+    vault = root / "knowledge"
+    for rel, text in M2_NOTES.items():
+        p = vault / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(text)
+
+
 class FakeGateway:
     """Stands in for the kernel Owner Interface behind the dashboard gateway.
 
@@ -315,10 +457,20 @@ class FakeGateway:
 
 class FakeChat:
     calls: list[str] = []
-    mode = "ok"                     # ok | fail | fallback | slow
+    mode = "ok"                     # ok | fail | fallback | slow | mentions | echo
+
+    def __init__(self):
+        self.consulted: list[dict] = []
 
     def handle(self, message, history):
         FakeChat.calls.append(message)
+        if FakeChat.mode == "echo":                 # the reply is the message
+            return message
+        if FakeChat.mode == "mentions":
+            self.consulted = [{"tool": "get_trades", "arguments": '{"limit": 5}',
+                               "error": None, "rows": 1}]
+            return ("Fixture Trend Pullback opened pos_fixture01; spec_nonexistent and "
+                    "tv_fixture_1 are not records here.")
         if FakeChat.mode == "fail":
             raise RuntimeError("llm transport")
         if FakeChat.mode == "fallback":

@@ -52,6 +52,7 @@ EQUITY_WINDOW_H = 168
 CHAT_MAX_CHARS = 2000
 CHAT_MAX_HISTORY = 20
 CHAT_CONCURRENCY = 2
+CHAT_LINK_TIMEOUT_S = 5.0
 KNOWLEDGE_MAX_NODES = 500
 _RELATION = re.compile(r"^[a-z][a-z_]{0,40}$")
 
@@ -829,8 +830,33 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
         if not isinstance(reply, str) or not reply.strip() or reply == FALLBACK:
             return _json({"error": "llm_unavailable", "request_id": rid,
                           "detail": reply if isinstance(reply, str) else None}, 503)
+        consulted = getattr(engine, "consulted", None)
+        consulted = ([c for c in consulted if isinstance(c, dict)][:20]
+                     if isinstance(consulted, list) else None)
+        # a failed or slow lookup is reported as unavailable, never as "none"
+        mentions, links_error = None, None
+        try:
+            mentions = await asyncio.wait_for(
+                asyncio.to_thread(owner_reads.resolve_mentions, journal, reply),
+                timeout=CHAT_LINK_TIMEOUT_S)
+        except asyncio.TimeoutError:
+            links_error = "lookup_timeout"
+        except Exception as e:                              # noqa: BLE001
+            links_error = f"lookup_failed:{type(e).__name__}"
         return _json({"request_id": rid, "reply": reply, "evidence": [],
                       "evidence_note": "The chat backend supplies no evidence identifiers",
+                      "links": mentions["links"] if mentions else None,
+                      "links_error": links_error,
+                      "unresolved": mentions["unresolved"] if mentions else None,
+                      **{k: mentions[k] if mentions else None for k in (
+                          "resolved_count", "truncated_count", "unresolved_count",
+                          "unexamined_tokens")},
+                      "links_basis": "Records whose exact stored id appears in the reply text. "
+                                     "They are what the reply mentions, not the sources the "
+                                     "reply was derived from. Names are never linked.",
+                      "consulted": consulted,
+                      "consulted_note": None if consulted is not None else
+                      "This chat engine does not report which reads it consulted",
                       "elapsed_s": round(time.time() - started, 2),
                       "operational": False})
 

@@ -19,6 +19,7 @@ import {
   RecordDrawer,
   value,
 } from "../components/workspace";
+import { RecordLink } from "../components/records";
 export function Decisions({ compact = false }: { compact?: boolean }) {
   const { adapter } = usePreview();
   const [offset, setOffset] = useState(0);
@@ -90,16 +91,16 @@ export function Decisions({ compact = false }: { compact?: boolean }) {
                   ]
             }
             detail={(r) => (
-              <Timeline
-                events={[
-                  {
-                    label: "Decision recorded",
-                    at: r.ts,
-                    detail:
-                      "No join to a trade or fill is supplied by this contract.",
-                  },
-                ]}
-              />
+              <>
+                <Timeline events={[{ label: "Decision recorded", at: r.ts }]} />
+                {typeof r.id === "string" && adapter.ownerRead && (
+                  <p>
+                    <RecordLink kind="decision" id={r.id}>
+                      Open the decision record (cycle, votes, trades, outcome) ↗
+                    </RecordLink>
+                  </p>
+                )}
+              </>
             )}
           />
         </>

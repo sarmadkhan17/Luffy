@@ -6,6 +6,8 @@ import { timestamp as utc } from "../time";
  * gives a definitive answer. */
 import { Decisions, RuntimeStatus, Investigations } from "./Activity";
 import { OperationsActivity } from "./LiveReads";
+import { DecisionDetail } from "./Evidence";
+import { useRouteParam } from "../links";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -72,6 +74,7 @@ type Outcome =
 
 export default function Operations() {
   const { adapter } = usePreview();
+  const decision = useRouteParam("decision");
   const qc = useQueryClient();
   const health = useQuery({
     queryKey: ["owner-interface"],
@@ -141,6 +144,7 @@ export default function Operations() {
     );
   return (
     <div className="workspace-stack">
+      {decision && <DecisionDetail key={decision} id={decision} />}
       <div className="operations">
         <Panel
           title="Owner Interface"
@@ -299,8 +303,8 @@ export default function Operations() {
           </p>
         </Panel>
       </div>
-      <RuntimeStatus compact />
       <OperationsActivity />
+      <RuntimeStatus compact />
       <Decisions compact />
       <Investigations />
       <Dialog.Root

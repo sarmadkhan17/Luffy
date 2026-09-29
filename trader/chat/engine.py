@@ -90,6 +90,11 @@ class ChatEngine:
             return FALLBACK
         return answer.strip()
 
+    @property
+    def consulted(self) -> list[dict]:
+        """Tools the last handle() consulted (read-only journal reads)."""
+        return list(self.agent.consulted)
+
     # ── entrypoint ──────────────────────────────────────────────────────
     def handle(self, message: str, history: list[dict] | None = None) -> str:
         """Answer a message. Conversation only: never an owner-control request."""

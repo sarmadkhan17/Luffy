@@ -2,6 +2,7 @@ import { timestamp } from "../time";
 import { useOwnerTelemetry } from "../useOwnerTelemetry";
 import PathTrace from "../components/PathTrace";
 import { NoteDetail } from "./LiveReads";
+import { useRouteParam } from "../links";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -138,6 +139,16 @@ export default function GraphView({
   useEffect(() => {
     if (!visible) setEventId(null);
   }, [visible]);
+  // #knowledge?note=<id>: select the linked note once the graph holds it
+  const linkedNote = useRouteParam("note");
+  const linkedInGraph =
+    !system && !!linkedNote && d.nodes.some((n) => n.id === linkedNote);
+  useEffect(() => {
+    if (linkedInGraph) {
+      setNeighbours(false);
+      setSelected(linkedNote);
+    }
+  }, [linkedInGraph, linkedNote]);
   useEffect(() => {
     if (!eventId) return;
     const timer = setTimeout(() => setEventId(null), 2000);
@@ -289,6 +300,25 @@ export default function GraphView({
         loading={q.isPending}
         retry={() => void q.refetch()}
       />
+      {live && !system && linkedNote && q.data && !linkedInGraph && (
+        <section
+          className="panel linked-record"
+          data-testid="linked-note"
+          aria-label="Linked note"
+        >
+          <div className="panel-heading">
+            <h2>Linked note · {linkedNote}</h2>
+            <a className="text-link" href="#knowledge">
+              Close
+            </a>
+          </div>
+          <p className="quiet">
+            Not among the notes loaded in this graph view; shown from the note
+            read directly.
+          </p>
+          <NoteDetail key={linkedNote} id={linkedNote} />
+        </section>
+      )}
       {q.data && (
         <>
           <div className="graph-toolbar">

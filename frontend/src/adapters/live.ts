@@ -16,10 +16,14 @@ import type {
   Protection,
   ProtectionStatus,
   Provenance,
+  MentionCounts,
+  RecordMention,
+  Reply,
   TableData,
   TradePage,
   Freshness,
 } from "./contracts";
+import { readContractIssue } from "./readContracts";
 
 export class SessionExpired extends Error {}
 export class BackendUnavailable extends Error {}
@@ -441,6 +445,117 @@ const FIELDS =
 export const CONTROL_MUTATION = `mutation($o:String!,$r:String!,$t:Float!){res:owner_control(operation:$o,request_id:$r,issued_at_ms:$t){${FIELDS}}}`;
 export const PANIC_MUTATION = `mutation($r:String!,$t:Float!){res:panic(request_id:$r,issued_at_ms:$t){${FIELDS}}}`;
 
+const MENTION_KINDS = ["strategy", "trade", "decision", "research"];
+const count = (v: unknown): v is number =>
+  typeof v === "number" && Number.isInteger(v) && v >= 0;
+/** Display-capped mention lists checked against their complete-lookup counts:
+ * shown + truncated = resolved, and shown unresolved <= unresolved. */
+export function mentionCounts(
+  shown: number | null,
+  resolved: unknown,
+  truncated: unknown,
+  shownUnresolved: number | null,
+  unresolvedTotal: unknown,
+): MentionCounts | null {
+  if (
+    shown === null ||
+    shownUnresolved === null ||
+    !count(resolved) ||
+    !count(truncated) ||
+    !count(unresolvedTotal) ||
+    shown + truncated !== resolved ||
+    shownUnresolved > unresolvedTotal
+  )
+    return null;
+  return { resolved, truncated, unresolved: unresolvedTotal };
+}
+/** Record mentions and consulted tools from a chat reply. Three states are
+ * kept apart: a lookup that found ids, a lookup that found none, and a lookup
+ * that failed or returned a malformed list (links null, with the reason). A
+ * failure is never shown as "no records mentioned". */
+export function mapMentions(
+  r: Json,
+): Pick<
+  Reply,
+  | "links"
+  | "linksNote"
+  | "unresolved"
+  | "counts"
+  | "consulted"
+  | "consultedNote"
+> {
+  const lookupError =
+    typeof r.links_error === "string" && r.links_error !== ""
+      ? r.links_error
+      : r.links_error === undefined || r.links_error === null
+        ? null
+        : "malformed error field";
+  const wellFormed =
+    Array.isArray(r.links) &&
+    r.links.every(
+      (x: unknown) =>
+        obj(x) &&
+        MENTION_KINDS.includes(x.kind) &&
+        typeof x.id === "string" &&
+        x.id !== "" &&
+        typeof x.label === "string" &&
+        x.basis === "exact_id",
+    );
+  const unresolvedOk =
+    Array.isArray(r.unresolved) &&
+    r.unresolved.every(
+      (x: unknown) => obj(x) && typeof x.token === "string" && x.token !== "",
+    );
+  // existence counts come from the complete lookup; the lists are display-
+  // capped. They must agree, or none of it is shown as evidence.
+  const counts = mentionCounts(
+    wellFormed ? r.links.length : null,
+    r.resolved_count,
+    r.truncated_count,
+    unresolvedOk ? r.unresolved.length : null,
+    r.unresolved_count,
+  );
+  const links =
+    lookupError === null && wellFormed && unresolvedOk && counts
+      ? (r.links as RecordMention[])
+      : null;
+  const unresolved =
+    links !== null
+      ? (r.unresolved as Json[]).map((x) => String(x.token))
+      : null;
+  const consulted = Array.isArray(r.consulted)
+    ? r.consulted.every((x: unknown) => obj(x) && typeof x.tool === "string")
+      ? (r.consulted as Json[]).map((x) => ({
+          tool: String(x.tool),
+          arguments: typeof x.arguments === "string" ? x.arguments : "",
+          rows: typeof x.rows === "number" ? x.rows : null,
+          error: typeof x.error === "string" ? x.error : null,
+        }))
+      : null
+    : null;
+  return {
+    links,
+    linksNote:
+      links !== null
+        ? String(r.links_basis ?? "")
+        : lookupError !== null
+          ? `Stored-record lookup unavailable (${lookupError}).`
+          : r.links === undefined
+            ? "Stored-record lookup unavailable (this backend reports no lookup)."
+            : "Stored-record lookup unavailable (malformed response).",
+    unresolved,
+    counts: links !== null ? counts : null,
+    consulted,
+    consultedNote:
+      consulted !== null
+        ? undefined
+        : String(
+            r.consulted_note ??
+              "Consulted reads unavailable (not reported or malformed).",
+          ),
+  };
+}
+
 export function createLiveAdapter(onUnauthorized: () => void): OwnerAdapter {
   const api = createTransport(onUnauthorized);
   return {
@@ -462,7 +577,12 @@ export function createLiveAdapter(onUnauthorized: () => void): OwnerAdapter {
       });
       need(typeof r.reply === "string" && r.operational === false, "chat");
       onChunk(r.reply);
-      return { text: r.reply, evidence: [], requestId: r.request_id };
+      return {
+        text: r.reply,
+        evidence: [],
+        requestId: r.request_id,
+        ...mapMentions(r),
+      };
     },
     async marks(signal): Promise<Marks> {
       const m = await api<Json>(`${API}/enrichment/marks`, { signal });
@@ -609,6 +729,12 @@ export function createLiveAdapter(onUnauthorized: () => void): OwnerAdapter {
             )),
         `${what} unavailable-list`,
       );
+      // malformed evidence is rejected, never shown as empty or complete
+      const issue = readContractIssue(path, d);
+      if (issue)
+        throw new ContractViolation(
+          `MALFORMED evidence: the ${what} response ${issue}. No substitute data was loaded.`,
+        );
       return d;
     },
     async attention(signal) {

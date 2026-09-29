@@ -27,8 +27,12 @@ class AnalystAgent:
         self.journal = journal
         self.llm = llm
         self.max_steps = max_steps
+        #: the read-only tools the last run consulted, with their arguments
+        #: and result size (evidence of what a reply drew on)
+        self.consulted: list[dict] = []
 
     def run(self, message: str, history: list[dict] | None = None) -> str:
+        self.consulted = []
         messages = [{"role": "system", "content": SYSTEM}]
         for h in (history or [])[-6:]:
             role = "assistant" if h.get("who") == "Luffy" else "user"
@@ -52,6 +56,10 @@ class AnalystAgent:
                     for c in calls]})
             for c in calls:
                 result = self._exec(c.function.name, c.function.arguments)
+                self.consulted.append({
+                    "tool": c.function.name, "arguments": (c.function.arguments or "")[:300],
+                    "error": result.get("error") if isinstance(result, dict) else None,
+                    "rows": len(result) if isinstance(result, list) else None})
                 messages.append({"role": "tool", "tool_call_id": c.id,
                                  "content": json.dumps(result, default=str)})
 

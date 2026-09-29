@@ -13,139 +13,40 @@ import {
   timestamp,
   value,
 } from "../components/workspace";
-import type { OwnerRecord } from "../adapters/contracts";
 import { Investigations } from "./Activity";
-
-type R = Record<string, unknown>;
-const rec = (v: unknown): R | null =>
-  typeof v === "object" && v !== null && !Array.isArray(v) ? (v as R) : null;
-const rows = (v: unknown): R[] =>
-  Array.isArray(v) ? (v.filter((x) => rec(x)) as R[]) : [];
-const short = (v: unknown) =>
-  typeof v === "string" && v.length > 16 ? `${v.slice(0, 12)}…` : value(v);
-const bytes = (v: unknown) =>
-  typeof v === "number"
-    ? v >= 1e9
-      ? `${(v / 1e9).toFixed(2)} GB`
-      : v >= 1e6
-        ? `${(v / 1e6).toFixed(1)} MB`
-        : `${(v / 1e3).toFixed(1)} kB`
-    : "Unavailable";
-
-function useRead(path: string | null, poll?: number) {
-  const { adapter } = usePreview();
-  return useQuery({
-    queryKey: ["owner-read", path],
-    queryFn: ({ signal }) => adapter.ownerRead!(path!, signal),
-    enabled: !!adapter.ownerRead && !!path,
-    refetchInterval: poll,
-  });
-}
-
-function Loaded({
-  q,
-  children,
-}: {
-  q: ReturnType<typeof useRead>;
-  children: (d: OwnerRecord) => ReactNode;
-}) {
-  return (
-    <>
-      <QueryState
-        error={q.error}
-        loading={q.isPending}
-        retry={() => void q.refetch()}
-      />
-      {q.data && !q.error && children(q.data)}
-    </>
-  );
-}
-
-const label = (field: string) => {
-  const t = field.replaceAll("_", " ");
-  return t.charAt(0).toUpperCase() + t.slice(1);
-};
-export function UnavailableFields({ items }: { items: unknown }) {
-  const list = rows(items);
-  if (!list.length) return null;
-  return (
-    <ul className="unavailable-list" data-testid="unavailable-fields">
-      {list.map((u) => (
-        <li key={String(u.field)}>
-          <Badge tone="amber">UNAVAILABLE</Badge>{" "}
-          <strong>{label(String(u.field))}</strong> — {String(u.reason)}
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function Fields({ row, keys }: { row: R | null; keys: [string, string][] }) {
-  if (!row) return <p className="quiet">Not recorded.</p>;
-  return (
-    <dl className="record-fields">
-      {keys.map(([k, label]) => (
-        <div key={k}>
-          <dt>{label}</dt>
-          <dd>
-            {/(_at$|^ts$|^at$|^started$|^finished$)/.test(k)
-              ? timestamp(row[k])
-              : value(row[k])}
-          </dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-function SmallTable({
-  data,
-  columns,
-  caption,
-}: {
-  data: R[];
-  columns: [string, string, ((v: unknown, r: R) => ReactNode)?][];
-  caption: string;
-}) {
-  if (!data.length) return <p className="quiet">No records returned.</p>;
-  return (
-    <div
-      className="table-scroll"
-      tabIndex={0}
-      role="region"
-      aria-label={caption}
-    >
-      <table>
-        <caption>{caption}</caption>
-        <thead>
-          <tr>
-            {columns.map(([, h], c) => (
-              <th key={c}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((r, i) => (
-            <tr key={i}>
-              {columns.map(([k, h, fmt], c) => (
-                <td key={c} data-label={h}>
-                  {fmt
-                    ? fmt(r[k], r)
-                    : /(_at$|^ts$|^at$)/.test(k)
-                      ? timestamp(r[k])
-                      : value(r[k])}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
+import {
+  Fields,
+  Loaded,
+  RecordLink,
+  SmallTable,
+  StrategyRef,
+  UnavailableFields,
+  bytes,
+  rec,
+  rows,
+  short,
+  useRead,
+} from "../components/records";
+import {
+  ControlEventsPager,
+  DiagnosticsProbes,
+  NoteRecords,
+  OperationsTimeline,
+  StrategyEvidence,
+  TradeContext,
+} from "./Evidence";
+import { PagingBar } from "../components/workspace";
+export { UnavailableFields };
 
 // ── Trades ──────────────────────────────────────────────────────────────────
-export function TradeLineage({ id }: { id: string }) {
+export function TradeLineage({
+  id,
+  story = false,
+}: {
+  id: string;
+  /** Rendered as the route's trade story (not inside a drawer). */
+  story?: boolean;
+}) {
   const q = useRead(`trades/${encodeURIComponent(id)}/lineage`);
   return (
     <section className="lineage" aria-label="Trade lineage">
@@ -160,11 +61,51 @@ export function TradeLineage({ id }: { id: string }) {
           return (
             <>
               <SourceStrip source={String(d.source)} at={d.generated_at} />
+              {!story && (
+                <p>
+                  <RecordLink kind="trade" id={id}>
+                    Open the full trade story ↗
+                  </RecordLink>
+                </p>
+              )}
+              <TradeContext d={d} />
+              <h4>Trade record (journal)</h4>
+              <Fields
+                row={trade}
+                keys={[
+                  ["id", "Trade id"],
+                  ["symbol", "Instrument"],
+                  ["side", "Side"],
+                  ["amount", "Quantity"],
+                  ["entry_price", "Entry price"],
+                  ["exit_price", "Exit price"],
+                  ["notional_usdt", "Entry notional (USDT)"],
+                  ["leverage", "Leverage"],
+                  ["opened_at", "Opened"],
+                  ["closed_at", "Closed"],
+                  ["close_reason", "Close reason"],
+                  ["realized_pnl", "Realized P&L (USDT, journal-booked)"],
+                  [
+                    "exec_mode",
+                    "Exec mode (live = orders sent to the demo venue)",
+                  ],
+                  ["stop_loss", "Journal stop"],
+                ]}
+              />
               <h4>Decision</h4>
               <Fields
                 row={decision}
                 keys={[
-                  ["id", "Decision id"],
+                  [
+                    "id",
+                    "Decision id",
+                    (v) =>
+                      typeof v === "string" ? (
+                        <RecordLink kind="decision" id={v} />
+                      ) : (
+                        "Unavailable"
+                      ),
+                  ],
                   ["ts", "Recorded at"],
                   ["action", "Action"],
                   ["score", "Score"],
@@ -190,7 +131,16 @@ export function TradeLineage({ id }: { id: string }) {
               <Fields
                 row={strategy}
                 keys={[
-                  ["id", "Strategy id"],
+                  [
+                    "id",
+                    "Strategy id",
+                    (v) =>
+                      typeof v === "string" ? (
+                        <RecordLink kind="strategy" id={v} />
+                      ) : (
+                        "Unavailable"
+                      ),
+                  ],
                   ["name", "Name"],
                   ["state", "State now"],
                   ["generation", "Generation"],
@@ -313,19 +263,46 @@ export function StrategyDetail({ id }: { id: string }) {
               <p className="quiet">
                 Registry stats (strategy row): {value(d.registry_stats)}
               </p>
+              {(d.hypothesis || d.invalidation) && (
+                <Fields
+                  row={d}
+                  keys={[
+                    ["hypothesis", "Hypothesis (as recorded)"],
+                    ["invalidation", "Invalidation (as recorded)"],
+                  ]}
+                />
+              )}
+              {rec(d.spec_full) && (
+                <details>
+                  <summary>Full declared spec (current registry row)</summary>
+                  <pre className="note-body" tabIndex={0}>
+                    {JSON.stringify(d.spec_full, null, 2)}
+                  </pre>
+                </details>
+              )}
               <h4>Lifecycle</h4>
               <Timeline
-                events={rows(d.lifecycle).map((e) => ({
-                  label: String(e.event),
-                  at: e.at,
-                  detail: `${e.source}${e.detail ? ` · ${value(e.detail)}` : ""}`,
-                }))}
+                events={rows(d.lifecycle).map((e) => {
+                  const detail = e.detail ? value(e.detail) : "";
+                  return {
+                    label: String(e.event),
+                    at: e.at,
+                    detail: `${e.source}${detail ? ` · ${detail.length > 240 ? `${detail.slice(0, 240)}…` : detail}` : ""}`,
+                  };
+                })}
               />
+              <StrategyEvidence d={d} />
               <h4>Recent trades</h4>
               <SmallTable
                 caption="Journal trades for this strategy id (20 newest)"
                 data={rows(d.recent_trades)}
+                empty="No journal trade records this strategy id."
                 columns={[
+                  [
+                    "id",
+                    "Trade",
+                    (v) => <RecordLink kind="trade" id={String(v)} />,
+                  ],
                   ["symbol", "Instrument"],
                   ["side", "Side"],
                   ["status", "Status"],
@@ -343,6 +320,15 @@ export function StrategyDetail({ id }: { id: string }) {
 }
 
 // ── Research ────────────────────────────────────────────────────────────────
+const hashLink = (v: unknown) =>
+  typeof v === "string" && v ? (
+    <RecordLink kind="research" id={v}>
+      {short(v)}
+    </RecordLink>
+  ) : (
+    "Unavailable"
+  );
+
 type Section = {
   title: string;
   note: string;
@@ -351,8 +337,13 @@ type Section = {
   render?: () => ReactNode;
 };
 export function ResearchLive() {
-  const q = useRead("research", 60000);
+  const [offset, setOffset] = useState(0);
+  const q = useRead(
+    offset ? `research?limit=50&offset=${offset}` : "research",
+    60000,
+  );
   const [pick, setPick] = useState(0);
+  const page = rec(q.data?.results_page);
   const d = q.data;
   const missing = new Map(
     rows(d?.unavailable).map((u) => [String(u.field), String(u.reason)]),
@@ -408,20 +399,42 @@ export function ResearchLive() {
       note: "Every combination the search scored, newest first. A ranking, not admission.",
       count: rows(d?.results).length,
       render: () => (
-        <RecordTable
-          title="Research results"
-          rows={rows(d?.results).map((r) => ({ id: r.hash, ...r }))}
-          filterKey="verdict"
-          columns={[
-            ["label", "Combination"],
-            ["verdict", "Verdict"],
-            ["status", "Status"],
-            ["reason", "Reason"],
-            ["median_pf", "Median PF"],
-            ["trades", "Trades"],
-            ["created_at", "Recorded"],
-          ]}
-        />
+        <>
+          <PagingBar
+            count={rows(d?.results).length}
+            limit={typeof page?.limit === "number" ? page.limit : 50}
+            offset={offset}
+            hasMore={page?.has_more === true}
+            onPage={page ? setOffset : undefined}
+            busy={q.isFetching}
+          />
+          <SmallTable
+            caption="research_combos · newest first · open a result for its evidence"
+            data={rows(d?.results)}
+            columns={[
+              [
+                "hash",
+                "Result",
+                (v, r) => (
+                  <RecordLink kind="research" id={String(v)}>
+                    {String(r.label ?? v)}
+                  </RecordLink>
+                ),
+              ],
+              ["verdict", "Verdict"],
+              ["status", "Status"],
+              ["reason", "Reason"],
+              ["median_pf", "Median PF"],
+              ["trades", "Trades"],
+              [
+                "seed_strategy",
+                "Seeded by",
+                (v) => (rec(v) ? <StrategyRef s={v} /> : "—"),
+              ],
+              ["created_at", "Recorded"],
+            ]}
+          />
+        </>
       ),
     },
     {
@@ -471,12 +484,36 @@ export function ResearchLive() {
             caption="research_candidates"
             data={rows(d?.candidates)}
             columns={[
-              ["hash", "Hash", short],
+              ["hash", "Hash", hashLink],
               ["state", "State"],
               ["gate1", "Gate 1"],
               ["gate3", "Gate 3"],
               ["reason", "Reason"],
               ["updated_at", "Updated"],
+            ]}
+          />
+          <SmallTable
+            caption="Assessed ideas: harvested ideas the strategy writer consumed, with its recorded outcome"
+            data={rows(d?.ideas)}
+            empty="No idea_consumed record in the brain event window."
+            columns={[
+              ["ts", "At"],
+              ["idea_id", "Idea"],
+              ["name", "Name"],
+              ["outcome", "Outcome"],
+              ["stream", "Stream"],
+              [
+                "spec",
+                "Spec",
+                (v, r) =>
+                  typeof v !== "string" ? (
+                    "none recorded"
+                  ) : (
+                    <StrategyRef
+                      s={{ id: v, in_registry: r.spec_in_registry }}
+                    />
+                  ),
+              ],
             ]}
           />
         </>
@@ -497,7 +534,7 @@ export function ResearchLive() {
           data={rows(d?.registrations)}
           columns={[
             ["seq", "Seq"],
-            ["hash", "Hash", short],
+            ["hash", "Hash", hashLink],
             ["gate", "Gate"],
             ["p", "p"],
             ["alpha_t", "Alpha"],
@@ -668,6 +705,7 @@ export function OperationsActivity() {
   const q = useRead("operations/activity", 30000);
   return (
     <div className="workspace-stack" data-testid="operations-activity">
+      {q.data && !q.error && <OperationsTimeline d={q.data} />}
       <Panel title="Current activity" aside={<Badge>Journal records</Badge>}>
         <Loaded q={q}>
           {(d) => {
@@ -733,6 +771,15 @@ export function OperationsActivity() {
                   ["skip_reason", "Skip / block"],
                   ["ts", "Recorded at"],
                 ]}
+                detail={(r) =>
+                  typeof r.decision_id === "string" ? (
+                    <p>
+                      <RecordLink kind="decision" id={r.decision_id}>
+                        Open decision {r.decision_id} ↗
+                      </RecordLink>
+                    </p>
+                  ) : null
+                }
               />
             )}
           </Panel>
@@ -741,6 +788,11 @@ export function OperationsActivity() {
               caption="20 newest journal trades; venue orders are not read here"
               data={rows(q.data.orders)}
               columns={[
+                [
+                  "id",
+                  "Trade",
+                  (v) => <RecordLink kind="trade" id={String(v)} />,
+                ],
                 ["symbol", "Instrument"],
                 ["side", "Side"],
                 ["status", "Status"],
@@ -756,7 +808,7 @@ export function OperationsActivity() {
           </Panel>
           <Panel title="Control events">
             <SmallTable
-              caption="30 newest control events"
+              caption="30 newest control events (signal cooldowns counted, not listed)"
               data={rows(q.data.control_events)}
               columns={[
                 ["ts", "At"],
@@ -789,6 +841,7 @@ export function NoteDetail({ id }: { id: string }) {
                 {String(d.body ?? "")}
               </pre>
             </details>
+            <NoteRecords d={d} />
             <h4>Evidence and code links</h4>
             {rows(d.sources).length ? (
               <ul className="connections">
@@ -956,6 +1009,8 @@ export function DiagnosticsDetail() {
                 ]}
               />
             </Panel>
+            <DiagnosticsProbes d={d} />
+            <ControlEventsPager />
             <Panel title="Known visibility limitations">
               <UnavailableFields items={d.unavailable} />
             </Panel>

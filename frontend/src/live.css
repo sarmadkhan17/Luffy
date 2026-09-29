@@ -564,3 +564,87 @@ table caption {
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+
+/* ── M2 connected evidence ───────────────────────────────────────────────── */
+.record-link {
+  color: var(--mint);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+}
+.linked-wrap,
+.linked-record {
+  min-width: 0;
+  max-width: 100%;
+}
+.linked-record {
+  border-color: var(--border-strong);
+  scroll-margin-top: 12px;
+}
+.linked-record h4,
+[data-testid="overview-evidence"] h4,
+[data-testid="system-observed"] h4 {
+  margin: 14px 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.trade-chain,
+.ops-timeline {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0 0 0 16px;
+  border-left: 1px solid var(--border-strong);
+  display: grid;
+  gap: 10px;
+}
+.trade-chain li,
+.ops-timeline li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  overflow-wrap: anywhere;
+}
+.trade-chain time,
+.ops-timeline time {
+  color: var(--muted);
+  font-size: 12px;
+}
+.ops-timeline {
+  max-height: 520px;
+  overflow-y: auto;
+}
+.family-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.family-filter a {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: var(--text);
+  font-size: 13px;
+}
+.family-filter a[aria-current="true"] {
+  border-color: var(--mint);
+  color: var(--mint);
+}
+.reply-evidence {
+  margin-top: 8px;
+  font-size: 13px;
+}
+.reply-evidence ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.clip {
+  display: inline-block;
+  max-width: 48ch;
+  max-height: 4.5em;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}

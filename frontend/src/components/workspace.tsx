@@ -1,5 +1,5 @@
 import { timestamp } from "../time";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { X, Search } from "lucide-react";
 import { Badge, Panel } from "./ui";
@@ -70,8 +70,16 @@ export function RecordDrawer({
   title: string;
   children?: ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
+  // a record link inside the drawer navigates: close so the target is visible
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    window.addEventListener("hashchange", close);
+    return () => window.removeEventListener("hashchange", close);
+  }, [open]);
   return (
-    <Dialog.Root>
+    <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger className="button secondary">
         Inspect {title}
       </Dialog.Trigger>

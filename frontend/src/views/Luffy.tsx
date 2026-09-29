@@ -1,7 +1,8 @@
 import { lazyChunk } from "../lazyChunk";
 import { Suspense, useEffect, useRef, useState, useCallback } from "react";
 import { Send, MicOff, Square, ArrowUpRight } from "lucide-react";
-import { usePreview } from "../context";
+import { recordHref, type RecordKind } from "../links";
+import { usePreview, type Message } from "../context";
 import {
   Badge,
   EvidenceButton,
@@ -120,6 +121,17 @@ export default function Luffy() {
           text: reply.text,
           evidence: reply.evidence,
           requestId: reply.requestId,
+          mentions:
+            reply.links === undefined && reply.consulted === undefined
+              ? undefined
+              : {
+                  links: reply.links,
+                  linksNote: reply.linksNote,
+                  unresolved: reply.unresolved,
+                  counts: reply.counts,
+                  consulted: reply.consulted,
+                  consultedNote: reply.consultedNote,
+                },
         },
       ]);
       setPartial("");
@@ -198,6 +210,7 @@ export default function Luffy() {
               {m.evidence.map((e) => (
                 <EvidenceButton key={e.id} value={e} />
               ))}
+              {m.mentions && <ReplyEvidence m={m.mentions} />}
             </article>
           ))}
           {busy && (
@@ -310,7 +323,7 @@ export default function Luffy() {
           <h2>Keep the source in view.</h2>
           <p>
             {live
-              ? "Live replies do not carry evidence links yet. Check claims against Overview and Knowledge before acting."
+              ? "Replies list the stored records they mention by exact id, and the read-only tools consulted. Names are not linked. A mention is not the reply's source; check claims in the linked record before acting."
               : "Responses link to their supporting records. Inspect freshness and limitations before interpreting a claim."}
           </p>
           <a className="text-link" href="#knowledge">
@@ -321,7 +334,7 @@ export default function Luffy() {
           <h3>{live ? "Owner controls" : "Isolated conversation"}</h3>
           <p>
             {live
-              ? "Replies come from Luffy's read-only chat backend. It cannot freeze, halt, resume or trade — owner controls are on Operations. The backend supplies no evidence identifiers yet, so replies carry none. Voice is not connected."
+              ? "Replies come from Luffy's read-only chat backend. It cannot freeze, halt, resume or trade — owner controls are on Operations. The backend supplies no evidence identifiers for its claims; record links are only exact mentions. Voice is not connected."
               : "Deterministic fixture replies. No LLM, microphone, approvals or trading commands are connected."}
           </p>
           {live && (
@@ -331,6 +344,71 @@ export default function Luffy() {
           )}
         </div>
       </aside>
+    </div>
+  );
+}
+
+const MENTION_KIND: Record<string, RecordKind> = {
+  strategy: "strategy",
+  trade: "trade",
+  decision: "decision",
+  research: "research",
+};
+/** Record mentions and consulted reads of one LIVE reply. */
+export function ReplyEvidence({ m }: { m: NonNullable<Message["mentions"]> }) {
+  return (
+    <div className="reply-evidence" data-testid="reply-evidence">
+      {m.links === null || m.links === undefined ? (
+        <p className="quiet" data-testid="lookup-unavailable">
+          <Badge tone="amber">UNAVAILABLE</Badge> {m.linksNote}
+        </p>
+      ) : m.links.length > 0 ? (
+        <ul aria-label="Records mentioned in this reply">
+          {m.links.map((l) => (
+            <li key={`${l.kind}:${l.id}`}>
+              <a
+                className="record-link"
+                href={recordHref(MENTION_KIND[l.kind], l.id)}
+                data-record={`${l.kind}:${l.id}`}
+              >
+                {l.kind} · {l.label}
+              </a>{" "}
+              <small>exact id</small>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="quiet">No stored record was mentioned by id.</p>
+      )}
+      {m.counts && m.counts.truncated > 0 && (
+        <p className="quiet" data-testid="links-truncated">
+          {m.counts.resolved - m.counts.truncated} of {m.counts.resolved}{" "}
+          matched stored records shown.
+        </p>
+      )}
+      {m.unresolved && m.unresolved.length > 0 && (
+        <p className="quiet" data-testid="unresolved-ids">
+          Not found in the stores (unresolved ids): {m.unresolved.join(", ")}
+          {m.counts && m.counts.unresolved > m.unresolved.length
+            ? ` (${m.unresolved.length} of ${m.counts.unresolved} shown)`
+            : ""}
+        </p>
+      )}
+      {m.consulted ? (
+        m.consulted.length > 0 && (
+          <p className="quiet">
+            Reads consulted:{" "}
+            {m.consulted
+              .map(
+                (c) =>
+                  `${c.tool}(${c.arguments || ""})${c.error ? ` failed: ${c.error}` : c.rows !== null ? ` → ${c.rows} rows` : ""}`,
+              )
+              .join(" · ")}
+          </p>
+        )
+      ) : (
+        <p className="quiet">{m.consultedNote}</p>
+      )}
     </div>
   );
 }

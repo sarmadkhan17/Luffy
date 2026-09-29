@@ -106,7 +106,12 @@ describe("live adapter", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
     const reply = await adapter.chat("freeze now", "normal", new AbortController().signal, () => {});
-    expect(reply).toEqual({ text: "ok", evidence: [], requestId: "r1" });
+    expect(reply).toMatchObject({ text: "ok", evidence: [], requestId: "r1" });
+    // a backend without mention fields reports no lookup: unavailable, not "none"
+    expect(reply.links).toBeNull();
+    expect(reply.linksNote).toBe(
+      "Stored-record lookup unavailable (this backend reports no lookup).",
+    );
     expect(fetchMock.mock.calls.map((c) => (c as unknown as [string])[0])).toEqual([
       "/owner-api/v1/chat",
     ]);

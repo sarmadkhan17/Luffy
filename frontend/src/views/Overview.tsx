@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { applyProtectionExpiry } from "../protectionExpiry";
 import { ArrowUpRight, Shield, Radio, Wallet } from "lucide-react";
 import { usePreview } from "../context";
+import { recordHref } from "../links";
 import {
   Badge,
   Panel,
@@ -16,6 +17,9 @@ import {
 import type { Position, ProtectionStatus } from "../adapters/contracts";
 const RecentActivity = lazyChunk(() => import("./Activity"));
 const EquityChart = lazyChunk(() => import("../components/EquityChart"));
+const OverviewEvidence = lazyChunk(() =>
+  import("./Evidence").then((m) => ({ default: m.OverviewEvidence })),
+);
 const money = (n: number | null) =>
   n === null
     ? "UNAVAILABLE"
@@ -327,11 +331,12 @@ export default function Overview() {
           {live && (
             <div className="owner-status-strip">
               <span>
-                Risk state: <strong>Unavailable</strong>
+                Risk state: <strong>recorded values below</strong> (no live risk
+                check)
               </span>
               <span>
                 News guard: unavailable · Approval objects:{" "}
-                <strong>Unavailable</strong>
+                <strong>Unavailable</strong> (no approval store)
               </span>
               <a href="#operations">Owner controls ↗</a>
             </div>
@@ -376,7 +381,17 @@ export default function Overview() {
                         return (
                           <tr key={p.id ?? p.symbol}>
                             <td data-label="Instrument" className="strong">
-                              {p.symbol}
+                              {live && p.id ? (
+                                <a
+                                  className="record-link"
+                                  href={recordHref("trade", p.id)}
+                                  data-record={`trade:${p.id}`}
+                                >
+                                  {p.symbol}
+                                </a>
+                              ) : (
+                                p.symbol
+                              )}
                             </td>
                             <td data-label="Side">{p.side}</td>
                             <td data-label="Entry notional">
@@ -478,6 +493,24 @@ export default function Overview() {
                 fallback={<div role="status">Loading recent activity…</div>}
               >
                 <RecentActivity compact />
+              </Suspense>
+            </VisualBoundary>
+          )}
+          {live && (
+            <VisualBoundary
+              fallback={(error, reset) => (
+                <div role="alert" className="empty">
+                  Owner activity summary unavailable: {error.message}{" "}
+                  <button type="button" onClick={reset}>
+                    Retry
+                  </button>
+                </div>
+              )}
+            >
+              <Suspense
+                fallback={<div role="status">Loading owner activity…</div>}
+              >
+                <OverviewEvidence />
               </Suspense>
             </VisualBoundary>
           )}

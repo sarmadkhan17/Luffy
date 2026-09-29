@@ -1,5 +1,10 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
-import type { OwnerAdapter, Scenario, Provenance } from "./adapters/contracts";
+import type {
+  OwnerAdapter,
+  Scenario,
+  Provenance,
+  Reply,
+} from "./adapters/contracts";
 import type { Bootstrap } from "./adapters/live";
 export interface Message {
   id: number;
@@ -9,6 +14,16 @@ export interface Message {
   outcome?: "pending" | "answered" | "cancelled" | "failed";
   cancellationReason?: string;
   requestId?: string;
+  /** LIVE replies: record mentions and consulted reads (see Reply) */
+  mentions?: Pick<
+    Reply,
+    | "links"
+    | "linksNote"
+    | "unresolved"
+    | "counts"
+    | "consulted"
+    | "consultedNote"
+  >;
 }
 const Context = createContext<{
   adapter: OwnerAdapter;

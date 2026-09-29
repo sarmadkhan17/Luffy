@@ -120,10 +120,42 @@ export interface GraphData {
   total?: number;
   truncated?: boolean;
 }
+/** A stored record whose exact id the reply text mentions. Mentioned, not
+ * the source the reply was derived from. Names are never linked. */
+export interface RecordMention {
+  kind: "strategy" | "trade" | "decision" | "research";
+  id: string;
+  label: string;
+  basis: "exact_id";
+}
+/** Existence is decided on the complete exact-id lookup; the lists shown are
+ * capped for display. `truncated` valid matches are omitted from display, not
+ * missing from the stores. */
+export interface MentionCounts {
+  resolved: number;
+  truncated: number;
+  unresolved: number;
+}
+/** A read-only tool the chat agent consulted for this reply. */
+export interface Consulted {
+  tool: string;
+  arguments: string;
+  rows: number | null;
+  error: string | null;
+}
 export interface Reply {
   text: string;
   evidence: Provenance[];
   requestId?: string;
+  /** null: the backend supplied none or a malformed list (see note) */
+  links?: RecordMention[] | null;
+  linksNote?: string;
+  /** id-shaped tokens in the reply that match no stored record */
+  unresolved?: string[] | null;
+  /** complete-lookup counts behind the display-capped lists */
+  counts?: MentionCounts | null;
+  consulted?: Consulted[] | null;
+  consultedNote?: string;
 }
 export interface ChatTurn {
   who: "owner" | "Luffy";

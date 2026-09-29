@@ -1,0 +1,189 @@
+{
+ "trade_lineage": {
+  "ms": 6.3,
+  "bytes": 7411,
+  "votes": 7,
+  "chain": [
+   [
+    "opportunity",
+    "recorded"
+   ],
+   [
+    "market_context",
+    "recorded"
+   ],
+   [
+    "decision",
+    "recorded"
+   ],
+   [
+    "signals",
+    "recorded"
+   ],
+   [
+    "strategy",
+    "recorded"
+   ],
+   [
+    "execution",
+    "recorded"
+   ],
+   [
+    "accounting",
+    "recorded"
+   ],
+   [
+    "outcome",
+    "recorded"
+   ]
+  ]
+ },
+ "decision_detail": {
+  "ms": 0.8,
+  "bytes": 3287,
+  "strategies": [
+   {
+    "id": "auth_donchian_breakout_trail",
+    "in_registry": true,
+    "name": "Donchian Breakout Trail",
+    "kind": "spec",
+    "state": "paper"
+   }
+  ]
+ },
+ "research": {
+  "ms": 352.9,
+  "bytes": 67624,
+  "has_more": true,
+  "seeded_links": 40
+ },
+ "research_item": {
+  "ms": 8.0,
+  "bytes": 3807,
+  "children": 0,
+  "seed": null
+ },
+ "strategy_detail": {
+  "ms": 18.1,
+  "bytes": 24696,
+  "brain_events": 4,
+  "postmortem": "CONSISTENT",
+  "seeded": 20,
+  "source_idea": {
+   "idea_id": null,
+   "provenance": {
+    "source_kind": "measured",
+    "note": "Found by testing what every earlier sweep could not express. Prior geometry sweeps used trail kind none with a fixed RR target and a short hold cap, which amputates the fat right tail this style lives on. With no target, a 4 ATR trailing stop and a long hold, median PF is 1.22 across five sequential yearly windows (4/5 profitable), while always-long and always-short controls on identical geometry fail in 0/5. Long alone wins 2/5 and short alone 3/5: the directions are anti-correlated across regimes and only the pair works."
+   },
+   "consumed": null,
+   "harvested": null,
+   "basis": "spec provenance idea_id and brain_events idea_consumed.spec (exact ids)"
+  },
+  "lifecycle": 6
+ },
+ "operations": {
+  "ms": 20.9,
+  "bytes": 65071,
+  "timeline": 80,
+  "timeline_kinds": [
+   "control_event",
+   "strategy_lifecycle",
+   "trade_closed",
+   "trade_opened"
+  ]
+ },
+ "overview_activity": {
+  "ms": 5.9,
+  "bytes": 5964,
+  "unavailable": [
+   "approvals",
+   "news_guard"
+  ]
+ },
+ "observed_flows": {
+  "ms": 6.3,
+  "bytes": 4112,
+  "flows": [
+   [
+    "market-data",
+    "orchestrator",
+    285,
+    "observed"
+   ],
+   [
+    "orchestrator",
+    "journal",
+    285,
+    "observed"
+   ],
+   [
+    "risk",
+    "execution",
+    0,
+    "none_in_window"
+   ],
+   [
+    "execution",
+    "journal",
+    3,
+    "observed"
+   ],
+   [
+    "kernel",
+    "journal",
+    15,
+    "observed"
+   ],
+   [
+    "owner-interface",
+    "journal",
+    3,
+    "observed"
+   ],
+   [
+    "research",
+    "journal",
+    1000,
+    "observed"
+   ],
+   [
+    "research",
+    "journal",
+    42,
+    "observed"
+   ],
+   [
+    "supervisor",
+    "journal",
+    2,
+    "observed"
+   ]
+  ]
+ },
+ "knowledge_note_records": [
+  {
+   "kind": "strategy",
+   "id": "anl_rsi_reclaim_01",
+   "label": "RSI Exhaustion Reclaim (retired)",
+   "basis": "exact_id"
+  },
+  {
+   "kind": "strategy",
+   "id": "sweeprev_g_25a8",
+   "label": "Liquidity Sweep Reversal (retired)",
+   "basis": "exact_id"
+  }
+ ],
+ "recognize_text": {
+  "ms": 3.7,
+  "bytes": 224
+ },
+ "control_events_page": {
+  "ms": 2.4,
+  "bytes": 32159
+ },
+ "probes": {
+  "ms": 0.4,
+  "bytes": 365
+ }
+}

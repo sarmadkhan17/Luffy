@@ -1,0 +1,64 @@
+{
+  "slow_decisions_s": 2,
+  "fast": [
+    {
+      "path": "strategies/spec_fixture_trend",
+      "ok": true,
+      "ms": 21
+    },
+    {
+      "path": "research/combos/a1b2c3d4e5f60718",
+      "ok": true,
+      "ms": 23
+    },
+    {
+      "path": "diagnostics/events?limit=50",
+      "ok": true,
+      "ms": 23
+    },
+    {
+      "path": "trades?limit=50",
+      "ok": true,
+      "ms": 9
+    },
+    {
+      "path": "bootstrap",
+      "ok": true,
+      "ms": 4
+    }
+  ],
+  "decisions_touching": [
+    {
+      "path": "decisions/dec_fixture01",
+      "ok": true,
+      "ms": 2016
+    },
+    {
+      "path": "trades/pos_fixture01/lineage",
+      "ok": true,
+      "ms": 2025
+    },
+    {
+      "path": "overview/activity",
+      "ok": true,
+      "ms": 2026
+    },
+    {
+      "path": "operations/activity",
+      "ok": true,
+      "ms": 2018
+    },
+    {
+      "path": "system/observed",
+      "ok": true,
+      "ms": 2025
+    },
+    {
+      "path": "knowledge/note?id=MOC.md",
+      "ok": true,
+      "ms": 2037
+    }
+  ],
+  "strategy_workspace_render_ms": 554,
+  "all_done_ms": 2043
+}

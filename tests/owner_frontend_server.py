@@ -22,7 +22,8 @@ from fastapi import Request  # noqa: E402
 from fastapi.responses import JSONResponse  # noqa: E402
 
 from tests.owner_frontend_fixture import (FakeChat, add_history, close_trade,  # noqa: E402
-                                          insert_trade, make_app, reopen_trade, seed)
+                                          insert_trade, make_app, reopen_trade, seed,
+                                          seed_m2)
 from trader.dashboard import auth as auth_mod  # noqa: E402
 
 
@@ -54,6 +55,8 @@ def build():
         body = await request.json()
         if "scenario" in body:
             seed(root, journal, body["scenario"])
+        if body.get("m2"):
+            seed_m2(root, journal)
         if "history" in body:
             add_history(journal, int(body["history"]))
         if "insert_trade" in body:
