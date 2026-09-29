@@ -39,7 +39,6 @@ from . import trade_history
 log = logging.getLogger("dashboard.owner_api")
 
 PREFIX = "/owner-api/v1"
-PREVIEW = "/owner-preview"
 HEARTBEAT_STALE_S = 240.0          # engine.watchdog.start_stall_monitor default
 EQUITY_STALE_S = 300.0             # equity is logged every kernel cycle
 PROTECTION_STALE_S = 180.0         # 3 × Supervisor interval (60 s)
@@ -694,7 +693,7 @@ def _safe_rows(journal, sql):
 # ── HTTP ──────────────────────────────────────────────────────────────────────
 def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path | None = None,
             dist: Path | None = None, chat_factory=None, marks=None) -> None:
-    """Mount /owner-api/v1 and the /owner-preview React build (both behind the
+    """Mount /owner-api/v1 and the React owner frontend at / (both behind the
     dashboard's auth Guard, installed by the caller)."""
     from ..owner.authz import Authorizer
     version = backend_version(root)
@@ -888,26 +887,26 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
         return _json({"tail": tail[-lines:], "observed_at": _iso(mtime),
                       "source": "logs/luffy.log (last lines)"})
 
-    # ── the React build, isolated at /owner-preview/ ──
-    @app.get(PREVIEW)
-    def preview_redirect():
-        from fastapi.responses import RedirectResponse
-        return RedirectResponse(PREVIEW + "/", status_code=307)
-
-    @app.get(PREVIEW + "/{path:path}")
-    def preview(path: str):
+    # ── the React owner frontend, served at / (hash-routed: one index) ──
+    def _frontend(path: str):
         base = dist.resolve()
         index = base / "index.html"
         if not index.exists():
             return _json({"error": "frontend_build_missing"}, 503)
         target = (base / path).resolve() if path else index
         if path and (not str(target).startswith(str(base) + "/") or not target.is_file()):
-            if "." in Path(path).name:
-                return _json({"error": "not found"}, 404)
-            target = index                               # client routes → the app
+            return _json({"error": "not found"}, 404)
         resp = FileResponse(target)
         if target == index:
             _nocache(resp)
         elif target.parent.name == "assets":
             resp.headers["Cache-Control"] = "private, max-age=31536000, immutable"
         return resp
+
+    @app.get("/")
+    def frontend_index():
+        return _frontend("")
+
+    @app.get("/assets/{path:path}")
+    def frontend_asset(path: str):
+        return _frontend("assets/" + path)

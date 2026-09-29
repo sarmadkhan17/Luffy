@@ -8,6 +8,7 @@ single flight and bounded shutdown. Every evidence case proves zero venue
 mutations and zero journal/control changes outside the evidence tables.
 """
 import functools
+import pathlib
 import json
 import sqlite3
 import threading
@@ -1169,35 +1170,12 @@ def test_captured_2026_09_28_state_is_compatible_but_not_live_status(tmp_path):
     assert s["venue_requests"] == 4 + 8
 
 
-def test_kernel_wiring_builds_a_dedicated_read_only_observer(tmp_path, monkeypatch):
-    """Kernel._start_protection_monitor: dedicated GET-only client, read-only
-    journal, the pass lock's ``locked`` — never the kernel's exchange. The loop
-    is stubbed so no request (let alone a live one) is made."""
-    from tests.test_venue_reads import Env, Kernel as KernelExchange
+def test_kernel_does_not_activate_the_protection_monitor():
+    """Runtime activation of the snapshot monitor is not authorized: the
+    kernel (production base 7840965) neither defines nor starts it."""
     from trader import kernel as kmod
-    from trader.core import config
-    from trader.core.types import MarketType
-    from trader.engine.venue_reads import VenueReads
-    monkeypatch.setattr(config, "Env", Env(read_key=True))
-    started = []
-    monkeypatch.setattr(ps.ProtectionMonitor, "loop", lambda self, **kw: started.append(kw))
-    journal = Journal(tmp_path / "j.db")
-    exchange = KernelExchange()
-    lock = threading.Lock()
-    k = SimpleNamespace(market_type=MarketType.FUTURES, cfg={}, exchange=exchange,
-                        journal=journal, supervisor=SimpleNamespace(_pass_lock=lock),
-                        _stop=False)
-    kmod.Kernel._start_protection_monitor(k)
-    time.sleep(0.05)
-    m = k.protection_monitor
-    assert isinstance(m.observer.reads, VenueReads) and m.observer.reads._client is not exchange
-    assert m.observer.supervisor_busy.__self__ is lock
-    assert (m.interval_s, m.timeout_s) == (60.0, 20.0) and started
-    assert violations(m.observer) == [] and exchange.mutations == []
-    off = SimpleNamespace(market_type=MarketType.FUTURES,
-                          cfg={"protection_snapshot": {"enabled": False}})
-    kmod.Kernel._start_protection_monitor(off)
-    assert not hasattr(off, "protection_monitor")
+    assert not hasattr(kmod.Kernel, "_start_protection_monitor")
+    assert "protection_snapshot" not in pathlib.Path(kmod.__file__).read_text()
 
 
 def test_without_read_only_key_the_monitor_publishes_unreadable(tmp_path, monkeypatch):

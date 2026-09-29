@@ -295,7 +295,6 @@ export default function Operations() {
           )}
           <p className="quiet space-top">
             Close one trade awaits the separate Owner Interface binding package.
-            <a href="/legacy/"> Open legacy dashboard ↗</a>
           </p>
         </Panel>
       </div>

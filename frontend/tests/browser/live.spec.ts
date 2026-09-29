@@ -1,6 +1,6 @@
 /** LIVE binding against the real FastAPI app (tests/owner_frontend_server.py):
  * auth Guard, /owner-api/v1, GraphQL owner mutations, the LIVE build served at
- * /owner-preview/. Kernel Owner Interface and chat LLM are fakes. */
+ * /. Kernel Owner Interface and chat LLM are fakes. */
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
@@ -86,13 +86,13 @@ test("LIVE backend failure cannot fall back to DEMO fixtures", async ({
     "Backend error 500 (injected_failure)",
   );
   await expect(page.locator(".stat-value")).toHaveCount(0);
-  await page.goto(LIVE + "/owner-preview/#knowledge");
+  await page.goto(LIVE + "/#knowledge");
   await expect(page.getByRole("alert")).toContainText("No substitute data");
   await expect(page.locator(".react-flow__node")).toHaveCount(0);
   await expect(page.locator("body")).not.toContainText(FIXTURE_TEXT);
   // the served LIVE bundle carries no fixture module at all
   const html = await (
-    await request.get(LIVE + "/owner-preview/", { headers: H })
+    await request.get(LIVE + "/", { headers: H })
   ).text();
   const scripts = [...html.matchAll(/src="([^"]+\.js)"/g)].map((m) => m[1]);
   for (const s of scripts) {
@@ -106,7 +106,7 @@ test("unreachable backend shows no data, then reconnects", async ({ page }) => {
   await page.route("**/owner-api/v1/bootstrap", (r) =>
     r.abort("connectionrefused"),
   );
-  await page.goto(LIVE + "/owner-preview/");
+  await page.goto(LIVE + "/");
   await page.getByLabel("Dashboard password").fill("fixture-token");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByTestId("unreachable")).toContainText(
@@ -135,7 +135,7 @@ test("guarded Resume goes through the Owner Interface", async ({
     }
   });
   await login(page);
-  await page.goto(LIVE + "/owner-preview/#operations");
+  await page.goto(LIVE + "/#operations");
   await expect(page.getByTestId("owner-interface-status")).toContainText(
     "control state FROZEN",
   );
@@ -167,7 +167,7 @@ test("Owner Interface unavailable: controls fail closed", async ({
 }) => {
   await state(request, { gateway: "down" });
   await login(page);
-  await page.goto(LIVE + "/owner-preview/#operations");
+  await page.goto(LIVE + "/#operations");
   await expect(page.getByTestId("owner-interface-status")).toContainText(
     "kernel_unavailable",
   );
@@ -185,7 +185,7 @@ test("unknown outcome keeps the id; retry re-sends the same request", async ({
   request,
 }) => {
   await login(page);
-  await page.goto(LIVE + "/owner-preview/#operations");
+  await page.goto(LIVE + "/#operations");
   await expect(page.getByTestId("owner-interface-status")).toContainText(
     "control state",
   );
@@ -222,7 +222,7 @@ test("chat cannot mutate controls", async ({ page, request }) => {
     }
   });
   await login(page);
-  await page.goto(LIVE + "/owner-preview/#luffy");
+  await page.goto(LIVE + "/#luffy");
   for (const text of [
     "freeze everything now",
     "/panic",
@@ -253,7 +253,7 @@ test("chat cancellation and failure keep the transcript honest", async ({
   request,
 }) => {
   await login(page);
-  await page.goto(LIVE + "/owner-preview/#luffy");
+  await page.goto(LIVE + "/#luffy");
   await state(request, { chat: "slow" });
   await page.getByLabel("Message LUFFY").fill("slow question");
   await page.getByRole("button", { name: "Send" }).click();
@@ -275,7 +275,7 @@ test("session expiry and logout clear private data", async ({
   context,
 }) => {
   await login(page);
-  await page.goto(LIVE + "/owner-preview/#luffy");
+  await page.goto(LIVE + "/#luffy");
   await page.getByLabel("Message LUFFY").fill("private question");
   await page.getByRole("button", { name: "Send" }).click();
   await expect(
@@ -288,7 +288,7 @@ test("session expiry and logout clear private data", async ({
   await expect(page.locator("body")).not.toContainText("private question");
   // in-app expiry (401 on a data call while the app is open)
   await login(page);
-  await page.goto(LIVE + "/owner-preview/#luffy");
+  await page.goto(LIVE + "/#luffy");
   await page.getByLabel("Message LUFFY").fill("second private question");
   await page.getByRole("button", { name: "Send" }).click();
   await expect(
@@ -334,7 +334,7 @@ test("Knowledge binds vault relations and lists what it cannot draw", async ({
   page,
 }) => {
   await login(page);
-  await page.goto(LIVE + "/owner-preview/#knowledge");
+  await page.goto(LIVE + "/#knowledge");
   await expect(page.locator(".react-flow__node")).toHaveCount(4);
   await expect(page.getByRole("button", { name: /^Evidence/ })).toBeDisabled();
   await expect(page.getByRole("button", { name: /^Code/ })).toBeDisabled();
@@ -362,7 +362,7 @@ test("Live System separates architecture, telemetry, stale and missing", async (
   request,
 }) => {
   await login(page);
-  await page.goto(LIVE + "/owner-preview/#live-system");
+  await page.goto(LIVE + "/#live-system");
   await expect(page.locator(".react-flow__node")).toHaveCount(11);
   const node = (name: string) =>
     page.locator(".react-flow__node", { hasText: name });
@@ -393,14 +393,14 @@ test("other routes: real contracts or explicit unavailability", async ({
   page,
 }) => {
   await login(page);
-  await page.goto(LIVE + "/owner-preview/#trades");
+  await page.goto(LIVE + "/#trades");
   await expect(page.locator("table").first()).toContainText("SOL/USDT");
   await expect(page.getByText("Journal records · partial")).toBeVisible();
-  await page.goto(LIVE + "/owner-preview/#strategies");
+  await page.goto(LIVE + "/#strategies");
   await expect(page.locator("table")).toContainText("Donchian");
-  await page.goto(LIVE + "/owner-preview/#diagnostics");
+  await page.goto(LIVE + "/#diagnostics");
   await expect(page.locator(".log-tail")).toContainText("line two");
-  await page.goto(LIVE + "/owner-preview/#research");
+  await page.goto(LIVE + "/#research");
   await expect(
     page.getByText("Partial · Stage-3 endpoints unavailable"),
   ).toBeVisible();
@@ -417,7 +417,7 @@ test("LIVE accessibility: axe on primary LIVE surfaces", async ({ page }) => {
     "live-system",
     "trades",
   ]) {
-    await page.goto(LIVE + `/owner-preview/#${route}`);
+    await page.goto(LIVE + `/#${route}`);
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(300);
     const r = await new AxeBuilder({ page })

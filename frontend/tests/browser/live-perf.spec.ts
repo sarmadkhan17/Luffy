@@ -58,7 +58,7 @@ test("cold load, cached routes and lazy surfaces", async ({
     const cdp = await ctx.newCDPSession(page);
     await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
     const t0 = Date.now();
-    await page.goto(LIVE + "/owner-preview/#overview");
+    await page.goto(LIVE + "/#overview");
     await expect(
       page.getByRole("navigation", { name: "Main navigation" }),
     ).toBeVisible();

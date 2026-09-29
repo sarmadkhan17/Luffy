@@ -10,18 +10,16 @@ import asyncio
 import json
 import logging
 import os
-from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import JSONResponse
 
 from ..core.config import ROOT, load_config
 from ..core.journal import Journal
 from ..api.graphql_schema import make_graphql_router
 
 log = logging.getLogger("dashboard")
-WEB = Path(__file__).parent / "web"
 
 
 def _owner_gateway(cfg: dict, auth):
@@ -70,22 +68,6 @@ def create_app(cfg: dict | None = None) -> FastAPI:
     from . import owner_api
     owner_api.install(app, journal=journal, cfg=cfg, root=ROOT, auth=auth, gateway=gateway,
                       marks=_position_marks)
-
-    @app.get("/", response_class=HTMLResponse)
-    async def index():
-        from fastapi import Response
-        html = (WEB / "index.html").read_text()
-        return _nocache(Response(html, media_type="text/html"))
-
-    @app.get("/attention.js")
-    async def attention_script():
-        from fastapi.responses import FileResponse
-        return _nocache(FileResponse(WEB / "attention.js", media_type="application/javascript"))
-
-    @app.get("/investigation.js")
-    async def investigation_script():
-        from fastapi.responses import FileResponse
-        return _nocache(FileResponse(WEB / "investigation.js", media_type="application/javascript"))
 
     @app.get("/api/investigations/latest")
     def investigations_latest():

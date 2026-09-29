@@ -11,7 +11,7 @@ export async function calls(request: APIRequestContext) {
   return (await request.get(LIVE + "/__test__/calls", { headers: H })).json();
 }
 export async function login(page: Page) {
-  await page.goto(LIVE + "/owner-preview/");
+  await page.goto(LIVE + "/");
   await page.getByLabel("Dashboard password").fill("fixture-token");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByTestId("mode-banner")).toContainText("LIVE");

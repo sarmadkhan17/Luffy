@@ -48,7 +48,7 @@ export default defineConfig({
       // LIVE build + the real FastAPI app over a temporary fixture ROOT
       // (tests/owner_frontend_server.py). Fake kernel Owner Interface and chat.
       command: `npx vite build && cd .. && ${process.env.LUFFY_PYTHON ?? "./venv/bin/python"} -m tests.owner_frontend_server 4176`,
-      url: "http://127.0.0.1:4176/owner-preview/",
+      url: "http://127.0.0.1:4176/",
       reuseExistingServer: false,
       timeout: 120000,
     },

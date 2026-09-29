@@ -1,7 +1,7 @@
 """Live-contract test server for the owner frontend browser tests.
 
 The real dashboard app (auth Guard, GraphQL owner mutations, /owner-api/v1,
-/owner-preview/ serving the LIVE build) over a temporary ROOT, with the kernel
+/ serving the LIVE build) over a temporary ROOT, with the kernel
 Owner Interface and the chat LLM replaced by fakes. Test-only /__test__ routes
 switch scenarios. Never touches production data, IPC or the venue.
 

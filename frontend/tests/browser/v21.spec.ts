@@ -90,7 +90,7 @@ test("V2.1 topology uses real Owner Interface health and distinguishes absent te
   ).toContainText("UNAVAILABLE");
 });
 
-test("V2.1 knowledge shows modification age without asserting freshness; legacy fallback is explicit", async ({
+test("V2.1 knowledge shows modification age without asserting freshness; no legacy fallback", async ({
   page,
 }) => {
   await login(page);
@@ -108,7 +108,7 @@ test("V2.1 knowledge shows modification age without asserting freshness; legacy 
     "+00:00",
   );
   await page.getByRole("link", { name: "Research", exact: true }).click();
-  await expect(page.locator('a[href="/legacy/"]')).toBeVisible();
+  await expect(page.locator('a[href^="/legacy"]')).toHaveCount(0);
   await expect(page.locator(".research-directory button")).toHaveCount(10);
   await page.locator(".research-directory button").last().click();
   await expect(page.locator(".research-workspace")).toContainText(
@@ -157,7 +157,7 @@ for (const [amount, cls] of [
   });
 
 test("V2.1 login preserves requested slash hash safely", async ({ page }) => {
-  await page.goto(LIVE + "/owner-preview/#/knowledge");
+  await page.goto(LIVE + "/#/knowledge");
   await page.getByLabel("Dashboard password").fill("fixture-token");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(
@@ -297,14 +297,12 @@ test("V2.1 Owner Interface telemetry cannot turn stale or invalid observation ti
   await expect(node).toContainText("UNAVAILABLE");
 });
 
-test("V2.1 reauthentication retains the current route and Operations uses legacy path", async ({
+test("V2.1 reauthentication retains the current route and Operations has no legacy link", async ({
   page,
 }) => {
   await login(page);
   await page.getByRole("link", { name: "Operations", exact: true }).click();
-  await expect(
-    page.getByRole("link", { name: "Open legacy dashboard ↗" }),
-  ).toHaveAttribute("href", "/legacy/");
+  await expect(page.locator('a[href^="/legacy"]')).toHaveCount(0);
   await page.getByRole("link", { name: "Knowledge", exact: true }).click();
   await page.getByRole("button", { name: "Sign out" }).click();
   await page.getByRole("button", { name: "Sign in", exact: true }).click();

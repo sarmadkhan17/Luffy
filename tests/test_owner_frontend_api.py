@@ -31,8 +31,8 @@ def test_every_owner_route_requires_auth(live):
         r = c.get(f"/owner-api/v1/{path}")
         assert r.status_code == 401 and r.json() == {"error": "authentication required"}
     assert c.post("/owner-api/v1/chat", json={"message": "hi"}, headers=ORIGIN).status_code == 401
-    # the preview shell answers with the login page, never the app or data
-    r = c.get("/owner-preview/")
+    # the app shell at / answers with the login page, never the app or data
+    r = c.get("/")
     assert r.status_code == 401 and "Luffy owner login" in r.text
     assert "history.replaceState(null,'',location.pathname + location.hash)" in r.text
 
@@ -292,20 +292,19 @@ def test_other_routes_and_marks_enrichment(live):
     assert m["marks"]["BTC/USDT"]["mark"] == 61000.0 and m["observed_at"]
 
 
-def test_preview_serving_is_isolated(live, tmp_path):
+def test_frontend_served_at_root(live, tmp_path):
     c, *_ = live
     signed_in(c)
-    r = c.get("/owner-preview/", follow_redirects=False)
-    # the legacy dashboard still owns /
-    assert "attention" in c.get("/").text or c.get("/").status_code == 200
+    r = c.get("/", follow_redirects=False)
     if r.status_code == 503:
         assert r.json()["error"] == "frontend_build_missing"
     else:
         assert r.status_code == 200 and r.headers["cache-control"].startswith("no-store")
         assert '<div id="root">' in r.text
-    assert c.get("/owner-preview/../config.yaml").status_code in (404, 200) and \
-        "owner_interface" not in c.get("/owner-preview/../config.yaml").text
-    assert c.get("/owner-preview/assets/nope.js").status_code in (404, 503)
+    assert c.get("/assets/../config.yaml").status_code in (404, 503)
+    assert c.get("/assets/nope.js").status_code in (404, 503)
+    for gone in ("/owner-preview/", "/legacy/", "/attention.js", "/investigation.js"):
+        assert c.get(gone).status_code == 404
 
 
 def test_knowledge_endpoint_cache_errors_do_not_serve_previous_snapshot(live, monkeypatch):

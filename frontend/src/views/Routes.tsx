@@ -409,7 +409,6 @@ function Research() {
           deployment gates. No results, run progress, cost totals or approval
           actions are fabricated.
         </p>
-        <a href="/legacy/">Open existing legacy research pipeline ↗</a>
       </Panel>
     </div>
   );

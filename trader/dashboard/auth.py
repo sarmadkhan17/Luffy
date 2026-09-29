@@ -129,7 +129,7 @@ class DashboardAuth:
                 if not allowed and not login:
                     if ws:
                         return await send({'type': 'websocket.close', 'code': 4401})
-                    response = (HTMLResponse(LOGIN, status_code=401) if (scope['path'] == '/' or scope['path'] == '/owner-preview' or scope['path'].startswith('/owner-preview/')) and not scope['path'].startswith('/owner-preview/assets/') else
+                    response = (HTMLResponse(LOGIN, status_code=401) if scope['path'] == '/' else
                                 JSONResponse({'error': 'authentication required'}, status_code=401))
                     response.headers['Cache-Control'] = 'no-store'
                     response.headers['Referrer-Policy'] = 'no-referrer'

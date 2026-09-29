@@ -296,7 +296,6 @@ class Kernel:
         threading.Thread(target=self._telegram_listener, daemon=True,
                          name="tg-listener").start()
         self._start_owner_interface()
-        self._start_protection_monitor()
         threading.Thread(target=self._derivatives_recorder, daemon=True,
                          name="derivs-recorder").start()
         if (self.cfg.get("references", {}) or {}).get("enabled", True):
@@ -351,38 +350,6 @@ class Kernel:
         server = getattr(self, "_owner_ipc", None)
         if server is not None:
             server.stop()
-        monitor = getattr(self, "protection_monitor", None)
-        if monitor is not None:
-            monitor.stop()
-
-    def _start_protection_monitor(self) -> None:
-        """Read-only venue protection evidence in every control state.
-
-        Futures only (spot has no venue stops to verify). Own thread, own
-        dedicated GET-only venue client and read-only journal connection: the
-        trade loop never waits on it, it never takes the Supervisor's pass
-        lock (it only reads ``locked()``), and no object it holds can place,
-        cancel or re-arm a stop — see protection_snapshot / venue_reads.
-        """
-        if self.market_type != MarketType.FUTURES:
-            return
-        from .engine.protection_snapshot import make_monitor
-        pcfg = self.cfg.get("protection_snapshot", {}) or {}
-        if not pcfg.get("enabled", True):
-            log.info("protection snapshot disabled")
-            return
-        try:
-            self.protection_monitor = make_monitor(
-                self.exchange, self.journal.db_path,
-                supervisor_busy=self.supervisor._pass_lock.locked,
-                interval_s=float(pcfg.get("interval_seconds", 60)),
-                timeout_s=float(pcfg.get("timeout_seconds", 20)))
-        except Exception as e:     # evidence is optional; boot is not
-            log.warning(f"protection snapshot unavailable: {e}")
-            return
-        threading.Thread(target=self.protection_monitor.loop,
-                         kwargs={"stopped": lambda: self._stop}, daemon=True,
-                         name="protection-snapshot").start()
 
     def _derivatives_recorder(self) -> None:
         """Record funding / open interest / taker ratio / long-short every N

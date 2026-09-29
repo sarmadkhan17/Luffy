@@ -1,10 +1,10 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
-/** production → LIVE build served by FastAPI at /owner-preview/ (no fixtures);
+/** production → LIVE build served by FastAPI at / (no fixtures);
  * demo → fixture build for isolated development and the reviewed browser tests;
  * test-fixtures → the regression harness. */
 export default defineConfig(({ mode }) => ({
-  base: mode === "production" ? "/owner-preview/" : "/",
+  base: "/",
   plugins: [react()],
   test: {
     environment: "jsdom",

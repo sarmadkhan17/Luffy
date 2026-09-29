@@ -25,9 +25,7 @@ def test_browser_session_all_routes_csrf_logout(server):
     assert r.status_code == 200
     assert 'HttpOnly' in r.headers['set-cookie'] and 'SameSite=strict' in r.headers['set-cookie']
     assert 'fixture-token' not in r.headers['set-cookie']
-    assert c.get('/').status_code == 200
     assert c.get('/api/investigations/latest').status_code == 200
-    assert c.get('/investigation.js').status_code == 200
     assert c.post('/graphql', json={}, headers={'origin':'http://evil'}).status_code == 403
     with c.websocket_connect('/ws/live', headers=origin) as ws:
         assert 'open_trades' in ws.receive_json()
