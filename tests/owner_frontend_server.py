@@ -12,6 +12,7 @@ from __future__ import annotations
 import os
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,6 +30,18 @@ def build():
     root = Path(tempfile.mkdtemp(prefix="owner-frontend-e2e-"))
     app, journal, gateway = make_app(root)
     fail: set[str] = set()
+    # a blocking journal read of the decisions table, as slow as the production
+    # journal's full scan; it must never stall the server's other requests
+    # (class-level: the app reads through its own Journal instance)
+    from trader.core.journal import Journal
+    slow = {"decisions": 0.0}
+    real_query = Journal.query
+
+    def query(self, sql, params=()):
+        if slow["decisions"] and "FROM decisions" in sql:
+            time.sleep(slow["decisions"])
+        return real_query(self, sql, params)
+    Journal.query = query
 
     @app.middleware("http")
     async def inject_failure(request: Request, call_next):
@@ -55,6 +68,8 @@ def build():
             gateway.mode = body["gateway"]
         if "chat" in body:
             FakeChat.mode = body["chat"]
+        if "slow_decisions" in body:
+            slow["decisions"] = float(body["slow_decisions"])
         if "fail" in body:
             fail.clear()
             fail.update(body["fail"])

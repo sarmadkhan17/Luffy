@@ -594,6 +594,28 @@ export function createLiveAdapter(onUnauthorized: () => void): OwnerAdapter {
         generatedAt: new Date().toISOString(),
       };
     },
+    async ownerRead(path, signal) {
+      const d = await api<Json>(`${API}/${path}`, { signal });
+      const what = path.split("?")[0];
+      need(obj(d) && typeof d.generated_at === "string", what);
+      need(
+        d.unavailable === undefined ||
+          (Array.isArray(d.unavailable) &&
+            d.unavailable.every(
+              (u: unknown) =>
+                obj(u) &&
+                typeof u.field === "string" &&
+                typeof u.reason === "string",
+            )),
+        `${what} unavailable-list`,
+      );
+      return d;
+    },
+    async attention(signal) {
+      const d = await api<Json>("/api/attention/latest", { signal });
+      need(obj(d) && typeof d.status === "string", "attention");
+      return d;
+    },
     async logs(signal): Promise<LogTail> {
       const l = await api<Json>(`${API}/logs?lines=120`, { signal });
       return {

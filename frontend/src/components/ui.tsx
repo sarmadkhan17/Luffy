@@ -4,6 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { X, Compass } from "lucide-react";
 import type { Provenance } from "../adapters/contracts";
 import { useModeSafe } from "../context";
+import { retryFailedChunks } from "../lazyChunk";
 export function Mark() {
   return (
     <div className="brand-mark" aria-hidden="true">
@@ -165,21 +166,32 @@ export function useVisible() {
   return visible;
 }
 export class VisualBoundary extends Component<
-  { children: ReactNode; fallback?: ReactNode },
-  { failed: boolean }
+  {
+    children: ReactNode;
+    fallback?: ReactNode | ((error: Error, reset: () => void) => ReactNode);
+  },
+  { error: Error | null }
 > {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
+  state: { error: Error | null } = { error: null };
+  static getDerivedStateFromError(error: unknown) {
+    return { error: error instanceof Error ? error : new Error(String(error)) };
   }
+  reset = () => {
+    // a failed chunk can only be fetched again by a fresh document
+    if (!retryFailedChunks()) this.setState({ error: null });
+  };
   render() {
-    return this.state.failed
-      ? (this.props.fallback ?? (
-          <div role="alert" className="empty">
-            Visualization unavailable. Use the details below.
-          </div>
-        ))
-      : this.props.children;
+    const { error } = this.state;
+    if (!error) return this.props.children;
+    const { fallback } = this.props;
+    if (typeof fallback === "function") return fallback(error, this.reset);
+    return (
+      fallback ?? (
+        <div role="alert" className="empty">
+          Visualization unavailable. Use the details below.
+        </div>
+      )
+    );
   }
 }
 

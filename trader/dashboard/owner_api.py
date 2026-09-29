@@ -34,7 +34,7 @@ from pathlib import Path
 from fastapi import Request
 from fastapi.responses import FileResponse, JSONResponse, Response
 
-from . import trade_history
+from . import owner_reads, trade_history
 
 log = logging.getLogger("dashboard.owner_api")
 
@@ -637,7 +637,11 @@ def system(journal, root: Path, cfg: dict) -> dict:
             f"Last pass outcome {sup.get('outcome')}; stage {sup.get('stage')}; "
             f"reasons {', '.join(sup['reasons'][:4]) or 'none'}", sup["source"],
             PROTECTION_STALE_S)
-    rows = _safe_rows(journal, "SELECT ts FROM decisions ORDER BY ts DESC LIMIT 1")
+    # newest by insertion order: decisions has no ts index, and a full sort of
+    # the table for one row cost ~1.5 s per read on the production journal
+    rows = _safe_rows(journal, "SELECT MAX(ts) ts FROM (SELECT ts FROM decisions "
+                               "ORDER BY rowid DESC LIMIT 50)")
+    rows = [r for r in rows if r["ts"]]
     if rows:
         put("orchestrator", _parse(rows[0]["ts"]), "unknown",
             "Latest journal decision record (activity, not health)", "journal decisions")
@@ -864,12 +868,12 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
 
     @app.get(PREFIX + "/strategies")
     def owner_strategies():
-        rows = journal.query("SELECT id, name, kind, state, origin, created_at, retire_reason "
-                             "FROM strategies ORDER BY CASE state WHEN 'active' THEN 0 "
-                             "WHEN 'paper' THEN 1 ELSE 2 END, created_at DESC LIMIT 200")
-        return _json({"generated_at": _iso(_now()), "strategies": rows,
-                      "source": "journal strategies (registry state only; no performance "
-                                "evidence)"})
+        return _json({"generated_at": _iso(_now()), "strategies": owner_reads.strategies(journal),
+                      "source": "journal strategies (current registry row: identity, spec "
+                                "hash, registry stats) and journal-booked trades per strategy "
+                                "id; not venue-verified, not health"})
+
+    owner_reads.install(app, journal=journal, root=root, vault=Path(vault))
 
     @app.get(PREFIX + "/logs")
     def owner_logs(lines: int = 80):

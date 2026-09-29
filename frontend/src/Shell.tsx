@@ -1,5 +1,5 @@
 import { timestamp as utc } from "./time";
-import { lazyChunk } from "./lazyChunk";
+import { lazyChunk, ChunkLoadError, retryFailedChunks } from "./lazyChunk";
 import { Suspense, useEffect, useState } from "react";
 import { ArrowUpRight, Anchor, LogOut } from "lucide-react";
 import { usePreview } from "./context";
@@ -35,8 +35,12 @@ export default function Shell() {
   const { adapter, scenario, setScenario, session, signOut } = usePreview();
   const live = import.meta.env.MODE === "production" || adapter.mode === "LIVE";
   useEffect(() => {
-    const update = () =>
+    const update = () => {
+      // after a chunk failed, navigating reloads the new URL so the next
+      // route is not left on a poisoned module import
+      if (retryFailedChunks()) return;
       setRoute(location.hash.replace(/^#\/?/, "") || "overview");
+    };
     window.addEventListener("hashchange", update);
     return () => window.removeEventListener("hashchange", update);
   }, []);
@@ -160,10 +164,32 @@ export default function Shell() {
             </label>
           )}
         </div>
-        <VisualBoundary key={route}>
+        <VisualBoundary
+          key={route}
+          fallback={(error, reset) => (
+            <section
+              className="panel empty"
+              role="alert"
+              data-testid="route-failed"
+            >
+              <h2>
+                {error instanceof ChunkLoadError
+                  ? "This view could not be loaded."
+                  : "This view failed while rendering."}
+              </h2>
+              <p>
+                {error.message} No data was substituted. Navigation remains
+                available.
+              </p>
+              <button type="button" onClick={reset}>
+                Retry
+              </button>
+            </section>
+          )}
+        >
           <Suspense
             fallback={
-              <div className="empty" role="status">
+              <div className="empty" role="status" data-testid="route-loading">
                 Loading view… Navigation remains available.
               </div>
             }

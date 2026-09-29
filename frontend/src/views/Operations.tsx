@@ -5,6 +5,7 @@ import { timestamp as utc } from "../time";
  * Each intended action has one request id + issue time, reused until the kernel
  * gives a definitive answer. */
 import { Decisions, RuntimeStatus, Investigations } from "./Activity";
+import { OperationsActivity } from "./LiveReads";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -299,6 +300,7 @@ export default function Operations() {
         </Panel>
       </div>
       <RuntimeStatus compact />
+      <OperationsActivity />
       <Decisions compact />
       <Investigations />
       <Dialog.Root

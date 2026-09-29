@@ -5,11 +5,14 @@ kernel executes (trader/owner); the dashboard writes no control state.
 """
 from __future__ import annotations
 
+import asyncio
+import functools
 import json
 from typing import Optional
 from datetime import datetime, timezone
 
 import strawberry
+from strawberry.dataloader import DataLoader
 from strawberry.fastapi import GraphQLRouter
 from strawberry.types import Info
 from strawberry.schema.config import StrawberryConfig
@@ -19,6 +22,53 @@ from ..core.journal import Journal
 
 def _rows(j: Journal, sql: str, params: tuple = ()) -> list:
     return j.query(sql, params)
+
+
+#: Upper bound on any list a query returns. Callers asking for more get this.
+MAX_ROWS = 1000
+#: SQLite bound-parameter budget per votes batch.
+_VOTE_BATCH = 500
+
+
+def _bound(n: int, cap: int = MAX_ROWS) -> int:
+    return max(0, min(int(n), cap))
+
+
+def _offloop(fn):
+    """Run a synchronous journal-reading resolver in a worker thread.
+
+    Strawberry calls a sync resolver inline on the ASGI event loop, so one slow
+    SQLite read (or a 30 s busy-wait on a write lock) stalled every other
+    request the dashboard serves — static JS chunks included. Journal
+    connections are thread-local, so a worker thread reads on its own
+    connection."""
+    @functools.wraps(fn)
+    async def run(*args, **kwargs):
+        return await asyncio.to_thread(fn, *args, **kwargs)
+    return run
+
+
+def votes_for_cycles(j: Journal, cycle_ids) -> dict:
+    """{cycle_id: [vote rows]} in one pass per batch of cycle ids.
+
+    votes has no cycle_id index, so each statement is one scan of the table;
+    batching makes that one scan per request instead of one per decision."""
+    ids = list(dict.fromkeys(c for c in cycle_ids if c))
+    out: dict = {c: [] for c in ids}
+    for i in range(0, len(ids), _VOTE_BATCH):
+        chunk = ids[i:i + _VOTE_BATCH]
+        marks = ",".join("?" for _ in chunk)
+        for v in _rows(j, f"SELECT * FROM votes WHERE cycle_id IN ({marks}) "
+                          f"ORDER BY rowid", tuple(chunk)):
+            out[v["cycle_id"]].append(v)
+    return out
+
+
+def _votes_loader(journal: Journal) -> DataLoader:
+    async def load(keys):
+        found = await asyncio.to_thread(votes_for_cycles, journal, keys)
+        return [[_vote_from_row(v) for v in found.get(k, [])] for k in keys]
+    return DataLoader(load_fn=load)
 
 
 # ── types ────────────────────────────────────────────────────────────────
@@ -107,7 +157,23 @@ class DecisionType:
     confidence: float
     executed: bool
     skip_reason: str
-    votes: list[VoteType]
+    cycle_id: strawberry.Private[Optional[str]] = None
+
+    @strawberry.field
+    async def votes(self, info: Info) -> list[VoteType]:
+        """The cycle's analyst votes. Read only when selected, and batched
+        across every decision in the response (one votes read per request)."""
+        if not self.cycle_id:
+            return []
+        return await info.context["votes_loader"].load(self.cycle_id)
+
+
+def _decision(r) -> "DecisionType":
+    return DecisionType(
+        id=r["id"], ts=r["ts"], symbol=r["symbol"], action=r["action"],
+        score=r["score"], threshold=r["threshold"], confidence=r["confidence"],
+        executed=bool(r["executed"]), skip_reason=r["skip_reason"] or "",
+        cycle_id=r["cycle_id"])
 
 
 @strawberry.type
@@ -176,6 +242,7 @@ def build_query(journal: Journal):
     @strawberry.type
     class Query:
         @strawberry.field
+        @_offloop
         def status(self) -> StatusType:
             kv = journal.kv_get
             hb = _rows(journal, "SELECT ts FROM equity ORDER BY ts DESC LIMIT 1")
@@ -199,20 +266,23 @@ def build_query(journal: Journal):
                     journal.list_strategies(["paper", "active"])))
 
         @strawberry.field
+        @_offloop
         def equity_curve(self, limit: int = 500) -> list[EquityPoint]:
             rows = _rows(journal,
                          "SELECT * FROM equity ORDER BY ts DESC LIMIT ?",
-                         (limit,))
+                         (_bound(limit, 5000),))
             return [EquityPoint(ts=r["ts"], equity=r["equity"],
                                 open_positions=r["open_positions"])
                     for r in reversed(rows)]
 
         @strawberry.field
+        @_offloop
         def trades_total(self) -> int:
             return journal.query(
                 "SELECT COUNT(*) n FROM trades")[0]["n"]
 
         @strawberry.field
+        @_offloop
         def decisions_total(self, symbol: Optional[str] = None,
                             directional_only: bool = False) -> int:
             if symbol:
@@ -226,6 +296,7 @@ def build_query(journal: Journal):
             return journal.query("SELECT COUNT(*) n FROM decisions")[0]["n"]
 
         @strawberry.field
+        @_offloop
         def decisions(self, executed_only: bool = False,
                       symbol: Optional[str] = None,
                       directional_only: bool = False,
@@ -244,21 +315,11 @@ def build_query(journal: Journal):
             rows = _rows(journal,
                          f"SELECT * FROM decisions {where} "
                          f"ORDER BY ts DESC LIMIT ? OFFSET ?",
-                         tuple(params) + (limit, offset))
-            out = []
-            for r in rows:
-                vrows = _rows(journal,
-                              "SELECT * FROM votes WHERE cycle_id=?",
-                              (r["cycle_id"],))
-                out.append(DecisionType(
-                    id=r["id"], ts=r["ts"], symbol=r["symbol"],
-                    action=r["action"], score=r["score"],
-                    threshold=r["threshold"], confidence=r["confidence"],
-                    executed=bool(r["executed"]), skip_reason=r["skip_reason"] or "",
-                    votes=[_vote_from_row(v) for v in vrows]))
-            return out
+                         tuple(params) + (_bound(limit), max(0, int(offset))))
+            return [_decision(r) for r in rows]
 
         @strawberry.field
+        @_offloop
         def news_guard(self) -> NewsGuardType:
             raw = journal.kv_get("news_guard_state", "")
             try:
@@ -271,6 +332,7 @@ def build_query(journal: Journal):
                                      checked_at="")
 
         @strawberry.field
+        @_offloop
         def rent(self) -> RentType:
             from ..engine.rent_keeper import snapshot
             snap = snapshot(journal)
@@ -287,18 +349,15 @@ def build_query(journal: Journal):
                          for h in snap["history"]])
 
         @strawberry.field
+        @_offloop
         def recent_vetoes(self, limit: int = 10) -> list[DecisionType]:
             rows = _rows(journal,
                          "SELECT * FROM decisions WHERE skip_reason "
-                         "LIKE '%veto%' ORDER BY ts DESC LIMIT ?", (limit,))
-            return [DecisionType(
-                id=r["id"], ts=r["ts"], symbol=r["symbol"],
-                action=r["action"], score=r["score"],
-                threshold=r["threshold"], confidence=r["confidence"],
-                executed=bool(r["executed"]),
-                skip_reason=r["skip_reason"] or "", votes=[]) for r in rows]
+                         "LIKE '%veto%' ORDER BY ts DESC LIMIT ?", (_bound(limit),))
+            return [_decision(r) for r in rows]
 
         @strawberry.field
+        @_offloop
         def brain_events(self, kinds: str = "brain_judgement,pine_forged",
                          limit: int = 20) -> list[BrainEventType]:
             kind_list = [k.strip() for k in kinds.split(",") if k.strip()]
@@ -307,13 +366,14 @@ def build_query(journal: Journal):
                          f"SELECT ts, kind, subject, detail FROM brain_events "
                          f"WHERE kind IN ({placeholders}) "
                          f"ORDER BY ts DESC LIMIT ?",
-                         tuple(kind_list) + (limit,))
+                         tuple(kind_list) + (_bound(limit),))
             return [BrainEventType(ts=r["ts"], kind=r["kind"],
                                    subject=r["subject"],
                                    detail=(r["detail"] or "")[:900])
                     for r in rows]
 
         @strawberry.field
+        @_offloop
         def tv_health(self) -> TvHealthType:
             from ..core.config import load_config as _lc
             from ..brain.tv_harness import TVHarness
@@ -325,13 +385,14 @@ def build_query(journal: Journal):
                                 budget_enabled=h.budget_enabled)
 
         @strawberry.field
+        @_offloop
         def trades(self, open_only: bool = False,
                   limit: int = 200, offset: int = 0) -> list[TradeType]:
             where = "WHERE status='open'" if open_only else ""
             rows = _rows(journal,
                          f"SELECT * FROM trades {where} "
                          f"ORDER BY opened_at DESC LIMIT ? OFFSET ?",
-                         (limit, offset))
+                         (_bound(limit), max(0, int(offset))))
             return [TradeType(
                 id=r["id"], symbol=r["symbol"], side=r["side"],
                 amount=r["amount"], entry_price=r["entry_price"],
@@ -344,12 +405,14 @@ def build_query(journal: Journal):
                 for r in rows]
 
         @strawberry.field
+        @_offloop
         def agents_accuracy(self, since_hours: int = 336) -> list[AgentStatType]:
             rows = journal.agent_accuracy(since_hours=float(since_hours))
             return [AgentStatType(r["agent"], r["n"],
                                   f"{(r['accuracy'] or 0):.2f}") for r in rows]
 
         @strawberry.field
+        @_offloop
         def strategy_full(self) -> list[StrategyFullType]:
             out = []
             for r in journal.list_strategies():
@@ -375,6 +438,7 @@ def build_query(journal: Journal):
             return out
 
         @strawberry.field
+        @_offloop
         def strategies(self) -> list[StrategyType]:
             return [StrategyType(r["id"], r["name"], r["kind"], r["state"],
                                  r["origin"], r["hypothesis"] or "")
@@ -482,4 +546,8 @@ def make_graphql_router(journal: Journal, owner_gateway=None) -> GraphQLRouter:
     schema = strawberry.Schema(
         query=Query, mutation=Mutation,
         config=StrawberryConfig(auto_camel_case=False))
-    return GraphQLRouter(schema, path="/graphql")
+
+    async def context():
+        # merged with strawberry's default {request, response, background_tasks}
+        return {"votes_loader": _votes_loader(journal)}
+    return GraphQLRouter(schema, path="/graphql", context_getter=context)

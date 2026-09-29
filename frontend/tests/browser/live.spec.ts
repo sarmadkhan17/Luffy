@@ -401,9 +401,11 @@ test("other routes: real contracts or explicit unavailability", async ({
   await page.goto(LIVE + "/#diagnostics");
   await expect(page.locator(".log-tail")).toContainText("line two");
   await page.goto(LIVE + "/#research");
-  await expect(
-    page.getByText("Partial · Stage-3 endpoints unavailable"),
-  ).toBeVisible();
+  await expect(page.getByTestId("research-unavailable")).toContainText(
+    "no persisted research-question store",
+  );
+  await page.getByRole("button", { name: /^Results/ }).click();
+  await expect(page.getByText("donchian_hi(100)")).toBeVisible();
 });
 
 test("LIVE accessibility: axe on primary LIVE surfaces", async ({ page }) => {

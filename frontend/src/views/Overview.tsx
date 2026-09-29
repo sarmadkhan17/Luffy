@@ -423,7 +423,8 @@ export default function Overview() {
               {live && (
                 <p className="quiet">
                   Protection is the kernel's last read-only venue protection
-                  check; a journal stop is not venue verification. Unrealized values are
+                  check; a journal stop is not venue verification. Unrealized
+                  values are
                   {marks.data?.observedAt
                     ? ` venue-price estimates at ${utc(marks.data.observedAt)}.`
                     : " unavailable until a venue price is read."}
@@ -444,7 +445,9 @@ export default function Overview() {
                       <EvidenceButton value={L.protection.evidence} />
                     </div>
                   ) : (
-                    <Badge tone="amber">NOT VERIFIED · no protection check</Badge>
+                    <Badge tone="amber">
+                      NOT VERIFIED · no protection check
+                    </Badge>
                   )}
                 </>
               ) : (
@@ -461,11 +464,22 @@ export default function Overview() {
             </Panel>
           </div>
           {live && (
-            <Suspense
-              fallback={<div role="status">Loading recent activity…</div>}
+            <VisualBoundary
+              fallback={(error, reset) => (
+                <div role="alert" className="empty">
+                  Recent activity unavailable: {error.message}{" "}
+                  <button type="button" onClick={reset}>
+                    Retry
+                  </button>
+                </div>
+              )}
             >
-              <RecentActivity compact />
-            </Suspense>
+              <Suspense
+                fallback={<div role="status">Loading recent activity…</div>}
+              >
+                <RecentActivity compact />
+              </Suspense>
+            </VisualBoundary>
           )}
         </>
       )}

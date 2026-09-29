@@ -531,3 +531,36 @@ table caption {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+/* LIVE read contracts (views/LiveReads.tsx) */
+.note-body {
+  max-height: 360px;
+  overflow: auto;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 10px;
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.unavailable-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.lineage {
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.lineage h4,
+.note-detail h4 {
+  margin: 14px 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}

@@ -1,6 +1,7 @@
 import { timestamp } from "../time";
 import { useOwnerTelemetry } from "../useOwnerTelemetry";
 import PathTrace from "../components/PathTrace";
+import { NoteDetail } from "./LiveReads";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -523,6 +524,9 @@ export default function GraphView({
                   <EvidenceDetails value={node.evidence} />
                   {!system && (
                     <PathTrace key={node.id} data={d} source={node.id} />
+                  )}
+                  {!system && adapter.ownerRead && (
+                    <NoteDetail key={`note:${node.id}`} id={node.id} />
                   )}
                   <h3 className="space-top">Connections</h3>
                   <ul className="connections">

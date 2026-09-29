@@ -151,10 +151,15 @@ def seed(root: Path, journal, scenario: str = "normal") -> None:
     data = root / "data"
     data.mkdir(parents=True, exist_ok=True)
     with journal._tx() as c:
-        for t in ("equity", "trades", "control_events", "state_kv", "decisions", "cycles",
-                  "brain_events", "strategies"):
+        for t in ("trade_accounting_bookings", "votes", "equity", "trades", "control_events",
+                  "state_kv", "decisions", "cycles", "brain_events", "strategies"):
             c.execute(f"DELETE FROM {t}")
         c.execute("DROP TABLE IF EXISTS protection_evidence")
+    from trader.research.ledger import Ledger
+    Ledger(journal).ensure()
+    with journal._tx() as c:
+        for t in ("research_combos", "research_batches"):
+            c.execute(f"DELETE FROM {t}")
     hb = data / "heartbeat_luffy.json"
     if scenario == "missing":
         hb.unlink(missing_ok=True)
@@ -222,6 +227,20 @@ def seed(root: Path, journal, scenario: str = "normal") -> None:
                   " VALUES('d1','c1',?,'BTC/USDT','HOLD',0,0.5,0,0)", (_iso(now - timedelta(minutes=2)),))
         c.execute("INSERT INTO strategies(id,name,kind,params,state,origin,created_at) "
                   "VALUES('s1','Donchian','spec','{}','active','analyst',?)", (_iso(now),))
+        c.execute("INSERT INTO votes(cycle_id,ts,symbol,agent,side,conviction,confidence,"
+                  "rationale,meta) VALUES('c1',?,'BTC/USDT','trend','long',0.4,0.6,"
+                  "'fixture vote','{}')", (_iso(now - timedelta(minutes=2)),))
+        # recorded lineage for t-btc: decision, strategy and one booking receipt
+        c.execute("UPDATE trades SET decision_id='d1', strategy_id='s1' WHERE id='t-btc'")
+        from trader.engine import booking
+        booking.persist(c, "t-btc", "entry", None)
+        c.execute("INSERT INTO research_combos(hash,tf,geo,k,round,label,status,verdict,reason,"
+                  "median_pf,trades,created_at) VALUES('h-fixture','4h','trail',1,'singles',"
+                  "'donchian_hi(100)','scored','prune','fixture: below its window control',"
+                  "1.04,37,?)", (_iso(now - timedelta(hours=1)),))
+        c.execute("INSERT INTO research_batches(started,finished,tf,geo,round,n,ok,elapsed_s,"
+                  "error) VALUES(?,?,'4h','trail','singles',5,1,8.4,'')",
+                  (_iso(now - timedelta(hours=1)), _iso(now - timedelta(minutes=59))))
     vault = root / "knowledge"
     for rel, text in NOTES.items():
         p = vault / rel

@@ -12,6 +12,12 @@ import {
 } from "../components/workspace";
 import type { TradeStatusFilter } from "../adapters/contracts";
 import { Decisions, RuntimeStatus, Investigations } from "./Activity";
+import {
+  TradeLineage,
+  StrategyDetail,
+  ResearchLive,
+  DiagnosticsDetail,
+} from "./LiveReads";
 
 export const TRADE_PAGE_SIZE = 50;
 /** A position in one newest-first traversal: the page's cursor and how many
@@ -27,9 +33,7 @@ function TradeBook() {
   // other traversal's, and once a page reports that history changed (or cannot
   // be verified) the notice stays until the owner restarts from Newest.
   const [traversal, setTraversal] = useState(0);
-  const [notice, setNotice] = useState<"changed" | "unverifiable" | null>(
-    null,
-  );
+  const [notice, setNotice] = useState<"changed" | "unverifiable" | null>(null);
   const [search, setSearch] = useState("");
   const step = steps[steps.length - 1];
   const q = useQuery({
@@ -151,7 +155,11 @@ function TradeBook() {
         </button>
       )}
       {warning && (
-        <p className="history-warning" role="status" data-testid="history-changed">
+        <p
+          className="history-warning"
+          role="status"
+          data-testid="history-changed"
+        >
           {warning === "changed"
             ? "Trade history changed while you were paging. Restart from Newest for a complete current view."
             : "This traversal began before history-change checking, so changes to earlier pages cannot be ruled out. Restart from Newest for a complete current view."}
@@ -201,10 +209,10 @@ function TradeBook() {
                 />
                 <p className="quiet">
                   Entry and exit are journal records. The journal stop id is a
-                  journal record, not venue verification. Venue fills,
-                  commissions and per-trade autopsy links are unavailable.
+                  journal record, not venue verification.
                 </p>
                 <SourceStrip source={d.source} at={d.generatedAt} />
+                {typeof r.id === "string" && <TradeLineage id={r.id} />}
               </>
             )}
           />
@@ -220,10 +228,14 @@ function Trades() {
       <TradeBook />
       <Decisions />
       <div className="workspace-grid">
-        <Unavailable title="Execution lineage & autopsy">
-          No per-trade fill, commission or autopsy identifiers are exposed.
-          Decision records below are independent; no inferred joins.
-        </Unavailable>
+        <Panel title="Execution lineage">
+          <p>
+            Inspect a trade for its recorded decision, strategy, accounting
+            receipts and outcome. Links are the ids the journal stored; nothing
+            is joined by inference, and what was not recorded is marked
+            UNAVAILABLE.
+          </p>
+        </Panel>
         <Panel title="Open position protection">
           <p>
             Overview binds journal-open positions to the Supervisor’s
@@ -271,6 +283,7 @@ function Strategies() {
                 ["state", "Lifecycle"],
                 ["kind", "Kind"],
                 ["origin", "Origin"],
+                ["generation", "Generation"],
                 ["retire_reason", "Retirement evidence"],
               ]}
               detail={(r) => (
@@ -294,11 +307,10 @@ function Strategies() {
                     events={[{ label: "Registry creation", at: r.created_at }]}
                   />
                   <p className="quiet">
-                    Registry identity is not a versioned approval. Health,
-                    admission, parent/child and research evidence are
-                    unavailable in this contract.
+                    Registry identity is not a versioned approval.
                   </p>
                   <SourceStrip source={q.data.source} at={q.data.generatedAt} />
+                  {typeof r.id === "string" && <StrategyDetail id={r.id} />}
                 </>
               )}
             />
@@ -306,10 +318,10 @@ function Strategies() {
         )}
       </Panel>
       <div className="workspace-grid">
-        <Unavailable title="Health & performance">
-          Versioned observations, rolling health and survival evidence have no
-          reviewed endpoint. A registry state of active does not establish
-          current health.
+        <Unavailable title="Health, capacity & allocation">
+          No rolling health, capacity or per-strategy allocation record is
+          stored. A registry state of active does not establish current health.
+          Journal economics per strategy are in each strategy's record.
         </Unavailable>
         <Unavailable title="Research & authority">
           Approvals, parent/child relationships and research linkage are not
@@ -320,85 +332,10 @@ function Strategies() {
     </div>
   );
 }
-const researchSections = [
-  ["Questions", "Versioned research questions and their source context."],
-  ["Plans", "Frozen protocols, hypotheses and cutoffs."],
-  ["Evidence", "Point-in-time observations and assessment classifications."],
-  [
-    "Results",
-    "Outcomes including INCONCLUSIVE, NOT_ASSESSED and NOT_ESTABLISHED.",
-  ],
-  ["Runs", "Execution records and replay provenance."],
-  ["Research Bank", "Filed records and receipt cutoffs."],
-  ["Prior recall", "Prior evidence retrieved as context_only."],
-  ["Registrations", "Prespecified registrations and version identities."],
-  ["Costs", "Attributed cost records; missing costs are not zero."],
-  [
-    "Shadow reports",
-    "Shadow observations; TESTED does not establish deployed maturity.",
-  ],
-];
 function Research() {
-  const [section, setSection] = useState(0);
   return (
     <div className="workspace-stack">
-      <Panel
-        title="Research workspace"
-        aside={
-          <Badge tone="amber">Partial · Stage-3 endpoints unavailable</Badge>
-        }
-      >
-        <p>
-          The Stage-3 chain keeps questions, plans, evidence and results
-          distinct. These records have no reviewed owner-facing live endpoint in
-          this foundation. No research activity or approvals are inferred from
-          pipeline counts.
-        </p>
-        <div className="research-chain" aria-label="Research evidence chain">
-          {["Question", "Plan", "Evidence", "Result"].map((s, i) => (
-            <span key={s}>
-              <small>0{i + 1}</small>
-              {s}
-            </span>
-          ))}
-        </div>
-        <a href="#knowledge">Explore available knowledge sources ↗</a>
-      </Panel>
-      <div className="research-workspace">
-        <div
-          className="research-directory"
-          role="group"
-          aria-label="Research sections"
-        >
-          {researchSections.map(([title], i) => (
-            <button
-              key={title}
-              aria-pressed={section === i}
-              onClick={() => setSection(i)}
-            >
-              {title}
-              <span>Unavailable</span>
-            </button>
-          ))}
-        </div>
-        <Panel
-          title={researchSections[section][0]}
-          aside={<Badge tone="amber">Live records unavailable</Badge>}
-        >
-          <p>{researchSections[section][1]}</p>
-          <div className="empty">
-            <h3>No connected record source</h3>
-            <p>
-              This list and detail workspace awaits a reviewed live endpoint. No
-              research records, progress or costs are inferred.
-            </p>
-          </div>
-          <p className="quiet">
-            Selection will preserve identity, provenance, source time and
-            assessment state when this capability is available.
-          </p>
-        </Panel>
-      </div>
+      <ResearchLive />
       <Panel title="Interpretation boundaries">
         <p>
           <Badge>INCONCLUSIVE</Badge> <Badge>NOT_ASSESSED</Badge>{" "}
@@ -406,8 +343,9 @@ function Research() {
         </p>
         <p>
           These are distinct evidence states, not failed or successful
-          deployment gates. No results, run progress, cost totals or approval
-          actions are fabricated.
+          deployment gates. Discovery ranks candidates; it does not grant
+          admission. No results, run progress, cost totals or approval actions
+          are fabricated.
         </p>
       </Panel>
     </div>
@@ -518,17 +456,7 @@ function Diagnostics() {
           Refresh logs
         </button>
       </Panel>
-      <div className="workspace-grid">
-        <Unavailable title="Historical incidents">
-          No structured incident ledger is exposed. Log lines are supporting
-          evidence, not an incident verdict.
-        </Unavailable>
-        <Unavailable title="Known visibility limitations">
-          Resource use, database/storage and candle-store warnings, watchdog
-          status and authoritative Risk state have no reviewed health contract
-          here. Their status remains unknown.
-        </Unavailable>
-      </div>
+      <DiagnosticsDetail />
     </div>
   );
 }

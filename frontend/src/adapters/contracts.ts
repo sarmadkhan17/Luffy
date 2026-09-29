@@ -233,4 +233,11 @@ export interface OwnerAdapter {
     signal: AbortSignal,
   ): Promise<TradePage>;
   logs?(signal: AbortSignal): Promise<LogTail>;
+  /** LIVE read contracts (/owner-api/v1/<path>): research, operations/activity,
+   * diagnostics, trades/<id>/lineage, strategies/<id>, knowledge/note?id=…
+   * Fields a store does not record arrive listed under `unavailable`. */
+  ownerRead?(path: string, signal: AbortSignal): Promise<OwnerRecord>;
+  /** The attention collector's latest scan (/api/attention/latest). */
+  attention?(signal: AbortSignal): Promise<OwnerRecord>;
 }
+export type OwnerRecord = Record<string, unknown> & { generated_at?: string };
