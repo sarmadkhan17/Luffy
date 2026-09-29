@@ -5,8 +5,9 @@
 import { test, expect, type Page, type CDPSession } from "@playwright/test";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { LIVE, state, calls, login } from "./liveHelpers";
+import { ev } from "./evidencePath";
 
-const evidence = process.env.OWNER_EVIDENCE_DIR ?? "evidence/live-binding";
+const evidence = process.env.OWNER_EVIDENCE_DIR ?? ev("evidence/live-binding");
 const report: Record<string, unknown> = {};
 const rss = (pid: number) => {
   const m = readFileSync(`/proc/${pid}/status`, "utf8").match(

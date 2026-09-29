@@ -12,6 +12,7 @@ import type {
 import GraphView from "../../src/views/GraphView";
 import Luffy from "../../src/views/Luffy";
 import "../../src/styles.css";
+import "../../src/product.css";
 const params = new URLSearchParams(location.search),
   scale = params.has("scale"),
   dangling = params.has("dangling");

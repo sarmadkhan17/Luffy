@@ -1,6 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { writeFileSync } from "node:fs";
 import { cpus, totalmem, platform, release } from "node:os";
+import { ev } from "./evidencePath";
 async function settle(page: Page) {
   await page.evaluate(
     () =>
@@ -199,6 +200,6 @@ test("record fixture rendering performance and browser resources", async ({
     interaction: { graphSearchMs, composerInputMs },
     resources,
   };
-  writeFileSync("evidence/performance.json", JSON.stringify(report, null, 2));
+  writeFileSync(ev("evidence/performance.json"), JSON.stringify(report, null, 2));
   await context.close();
 });

@@ -126,50 +126,37 @@ export default function Overview() {
               . Nothing was substituted.
             </div>
           )}
-          <div className="stats">
-            <Panel title="Account equity" aside={<Wallet size={17} />}>
-              <div className="stat-value">
-                {live ? usdt(d.equity) : money(d.equity)}
+          <section
+            className="panel tier-primary attention-band"
+            aria-label="Owner attention"
+          >
+            <div className="attention-needs">
+              <div className="eyebrow">
+                <Shield size={12} aria-hidden="true" /> NEEDS YOU ·{" "}
+                {live ? "SUPERVISOR" : "PREVIEW"}
               </div>
+              <h2>
+                {d.needsYou ??
+                  (live
+                    ? "Owner-attention evidence unavailable"
+                    : "Approval feed not connected")}
+              </h2>
               <p>
                 {live
-                  ? L?.account
-                    ? `Journal record ${utc(L.account.observedAt)} · ${L.account.freshness.toUpperCase()}`
-                    : "No equity record"
-                  : "Fixture account · No venue connection"}
+                  ? L?.needsYou
+                    ? L.needsYou.provenance.freshness === "fresh"
+                      ? `From the Supervisor pass at ${utc(L.needsYou.provenance.observedAt)}.`
+                      : `STALE — last reported ${utc(L.needsYou.provenance.observedAt)}; current need is unknown.`
+                    : "No Supervisor record is readable. This does not establish that no owner action is needed."
+                  : "No approval records are supplied. This does not establish that no owner action is needed."}
               </p>
-            </Panel>
-            <Panel
-              title={live ? "Realized today" : "Period P&L"}
-              aside={<ArrowUpRight size={17} />}
-            >
-              <div
-                data-testid="realized-today"
-                className={`stat-value ${d.pnl === null ? "quiet" : d.pnl > 0 ? "mint" : d.pnl < 0 ? "rose" : "neutral"}`}
-              >
-                {live ? usdt(d.pnl) : money(d.pnl)}
-              </div>
-              <p>
-                {live
-                  ? L?.realizedClosedTrades !== null &&
-                    L?.realizedClosedTrades !== undefined
-                    ? `${L.realizedClosedTrades} closed trade(s) today (UTC) · journal-booked`
-                    : "Realized P&L unavailable"
-                  : "Sample period · 29 Aug–27 Sep 2026"}
-              </p>
-            </Panel>
-            <Panel title="Gross exposure" aside={<Radio size={17} />}>
-              <Freshness value={d.provenance} />
-              <div className="stat-value">
-                {d.exposure === null ? "UNAVAILABLE" : `${d.exposure}%`}
-              </div>
-              <p>
-                {live
-                  ? "Entry notional ÷ equity · not a risk limit"
-                  : "Illustrative allocation · Not a risk limit"}
-              </p>
-            </Panel>
-            <Panel title="Control state" aside={<Shield size={17} />}>
+              <a className="text-link" href={live ? "#operations" : "#luffy"}>
+                {live ? "Open Operations" : "Open LUFFY"}{" "}
+                <ArrowUpRight size={14} />
+              </a>
+            </div>
+            <div className="attention-control">
+              <span className="figure-label">Control state</span>
               <div className="stat-control" data-testid="control-state">
                 {d.control}
               </div>
@@ -182,154 +169,64 @@ export default function Overview() {
                   "Trading controls are unavailable"
                 )}
               </p>
-            </Panel>
-          </div>
-          <div className="overview-grid">
-            <Panel
-              title="Account trajectory"
-              aside={
-                <Badge>
-                  {live
-                    ? `${d.points.length} hourly points`
-                    : "30 fixture points"}
-                </Badge>
-              }
-            >
-              <div className="chart-summary">
-                <strong>{live ? usdt(d.equity) : money(d.equity)}</strong>
-                <span className="quiet">
-                  {live
-                    ? (L?.seriesNote ?? "Equity history unavailable")
-                    : "Synthetic series · USD equivalent"}
-                </span>
-              </div>
-              {d.points.length ? (
-                <VisualBoundary>
-                  <Suspense
-                    fallback={
-                      <div className="chart loading">Loading chart…</div>
-                    }
-                  >
-                    <EquityChart
-                      points={d.points}
-                      label={
-                        live
-                          ? "Journal account equity chart; values available in accessible chart data"
-                          : undefined
-                      }
-                    />
-                  </Suspense>
-                </VisualBoundary>
-              ) : (
-                <div className="empty chart">Equity history unavailable</div>
-              )}
-              <details className="chart-data">
-                <summary>Accessible chart data</summary>
-                <div
-                  className="table-scroll"
-                  tabIndex={0}
-                  role="region"
-                  aria-label="Scrollable account table"
+            </div>
+            <div className="attention-status">
+              <div className="status-row">
+                <span>Protection verification</span>
+                <Badge
+                  tone={
+                    live && L?.protection
+                      ? protectionTone(L.protection.status)
+                      : "amber"
+                  }
                 >
-                  <table>
-                    <caption>
-                      {live
-                        ? "Journal equity (USDT), last record per hour"
-                        : "Synthetic daily equity"}
-                    </caption>
-                    <thead>
-                      <tr>
-                        <th>{live ? "Time" : "Date"}</th>
-                        <th>{live ? "USDT" : "USD equivalent"}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {d.points.map((p) => (
-                        <tr key={String(p.time)}>
-                          <td>{pointLabel(p.time)}</td>
-                          <td>{live ? usdt(p.value) : money(p.value)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </details>
-            </Panel>
-            <div className="overview-side">
-              <Panel
-                title="Needs You"
-                aside={<Badge>{live ? "Supervisor" : "Preview"}</Badge>}
-              >
-                <div className="callout-symbol">
-                  <Shield size={23} />
-                </div>
-                <h3>
-                  {d.needsYou ??
-                    (live
-                      ? "Owner-attention evidence unavailable"
-                      : "Approval feed not connected")}
-                </h3>
-                <p>
                   {live
-                    ? L?.needsYou
-                      ? L.needsYou.provenance.freshness === "fresh"
-                        ? `From the Supervisor pass at ${utc(L.needsYou.provenance.observedAt)}.`
-                        : `STALE — last reported ${utc(L.needsYou.provenance.observedAt)}; current need is unknown.`
-                      : "No Supervisor record is readable. This does not establish that no owner action is needed."
-                    : "No approval records are supplied. This does not establish that no owner action is needed."}
-                </p>
-                <a className="text-link" href={live ? "#operations" : "#luffy"}>
-                  {live ? "Open Operations" : "Open LUFFY"}{" "}
-                  <ArrowUpRight size={15} />
-                </a>
-              </Panel>
-              <Panel title="System visibility">
+                    ? (L?.protection?.status ?? "UNAVAILABLE")
+                    : "Unavailable"}
+                </Badge>
+              </div>
+              {live && (
                 <div className="status-row">
-                  <span>Data source</span>
-                  <Badge>{live ? "Luffy backend · LIVE" : "Synthetic"}</Badge>
-                </div>
-                {live && (
-                  <div className="status-row">
-                    <span>Kernel heartbeat</span>
-                    <Badge
-                      tone={
-                        L?.heartbeat?.freshness === "fresh" ? "mint" : "amber"
-                      }
-                    >
-                      {L?.heartbeat
-                        ? L.heartbeat.freshness.toUpperCase()
-                        : "UNAVAILABLE"}
-                    </Badge>
-                  </div>
-                )}
-                <div className="status-row">
-                  <span>Protection verification</span>
+                  <span>Kernel heartbeat</span>
                   <Badge
                     tone={
-                      live && L?.protection
-                        ? protectionTone(L.protection.status)
-                        : "amber"
+                      L?.heartbeat?.freshness === "fresh" ? "mint" : "amber"
                     }
                   >
-                    {live
-                      ? (L?.protection?.status ?? "UNAVAILABLE")
-                      : "Unavailable"}
+                    {L?.heartbeat
+                      ? L.heartbeat.freshness.toUpperCase()
+                      : "UNAVAILABLE"}
                   </Badge>
                 </div>
-                {!live && (
+              )}
+              <div className="status-row">
+                <span>Data source</span>
+                <Badge>{live ? "Luffy backend · LIVE" : "Synthetic"}</Badge>
+              </div>
+              {live ? (
+                <>
                   <div className="status-row">
-                    <span>Production health</span>
-                    <Badge>Unknown</Badge>
+                    <span>News Guard</span>
+                    <Badge tone="amber">UNAVAILABLE</Badge>
                   </div>
-                )}
-                <a className="text-link" href="#live-system">
-                  Inspect topology <ArrowUpRight size={15} />
-                </a>
-              </Panel>
+                  <div className="status-row">
+                    <span>Approval objects</span>
+                    <Badge tone="amber">UNAVAILABLE</Badge>
+                  </div>
+                </>
+              ) : (
+                <div className="status-row">
+                  <span>Production health</span>
+                  <Badge>Unknown</Badge>
+                </div>
+              )}
+              <a className="text-link" href="#live-system">
+                Inspect topology <ArrowUpRight size={14} />
+              </a>
             </div>
-          </div>
+          </section>
           {live && (
-            <div className="owner-status-strip">
+            <p className="owner-status-strip">
               <span>
                 Risk state: <strong>recorded values below</strong> (no live risk
                 check)
@@ -338,9 +235,133 @@ export default function Overview() {
                 News guard: unavailable · Approval objects:{" "}
                 <strong>Unavailable</strong> (no approval store)
               </span>
-              <a href="#operations">Owner controls ↗</a>
-            </div>
+            </p>
           )}
+          <div className="panel capital-panel" role="group" aria-label="Capital">
+            <div className="panel-heading">
+              <h2>Capital</h2>
+              <Badge>
+                {live
+                  ? `${d.points.length} hourly points`
+                  : "30 fixture points"}
+              </Badge>
+            </div>
+            <div className="capital-body">
+              <div className="capital-figures">
+                <section className="capital-figure">
+                  <h3 className="figure-label">
+                    <Wallet size={12} aria-hidden="true" /> Account equity
+                  </h3>
+                  <div className="stat-value">
+                    {live ? usdt(d.equity) : money(d.equity)}
+                  </div>
+                  <p>
+                    {live
+                      ? L?.account
+                        ? `Journal record ${utc(L.account.observedAt)} · ${L.account.freshness.toUpperCase()}`
+                        : "No equity record"
+                      : "Fixture account · No venue connection"}
+                  </p>
+                </section>
+                <section className="capital-figure">
+                  <h3 className="figure-label">
+                    <ArrowUpRight size={12} aria-hidden="true" />{" "}
+                    {live ? "Realized today" : "Period P&L"}
+                  </h3>
+                  <div
+                    data-testid="realized-today"
+                    className={`stat-value ${d.pnl === null ? "quiet" : d.pnl > 0 ? "mint" : d.pnl < 0 ? "rose" : "neutral"}`}
+                  >
+                    {live ? usdt(d.pnl) : money(d.pnl)}
+                  </div>
+                  <p>
+                    {live
+                      ? L?.realizedClosedTrades !== null &&
+                        L?.realizedClosedTrades !== undefined
+                        ? `${L.realizedClosedTrades} closed trade(s) today (UTC) · journal-booked`
+                        : "Realized P&L unavailable"
+                      : "Sample period · 29 Aug–27 Sep 2026"}
+                  </p>
+                </section>
+                <section className="capital-figure">
+                  <h3 className="figure-label">
+                    <Radio size={12} aria-hidden="true" /> Gross exposure
+                  </h3>
+                  <div className="stat-value">
+                    {d.exposure === null ? "UNAVAILABLE" : `${d.exposure}%`}
+                  </div>
+                  <p>
+                    {live
+                      ? "Entry notional ÷ equity · not a risk limit"
+                      : "Illustrative allocation · Not a risk limit"}
+                    {" · "}
+                    <Freshness value={d.provenance} />
+                  </p>
+                </section>
+              </div>
+              <div className="capital-chart">
+                <div className="chart-summary">
+                  <span className="figure-label">Account trajectory</span>
+                  <span className="quiet">
+                    {live
+                      ? (L?.seriesNote ?? "Equity history unavailable")
+                      : "Synthetic series · USD equivalent"}
+                  </span>
+                </div>
+                {d.points.length ? (
+                  <VisualBoundary>
+                    <Suspense
+                      fallback={
+                        <div className="chart loading">Loading chart…</div>
+                      }
+                    >
+                      <EquityChart
+                        points={d.points}
+                        label={
+                          live
+                            ? "Journal account equity chart; values available in accessible chart data"
+                            : undefined
+                        }
+                      />
+                    </Suspense>
+                  </VisualBoundary>
+                ) : (
+                  <div className="empty chart">Equity history unavailable</div>
+                )}
+                <details className="chart-data">
+                  <summary>Accessible chart data</summary>
+                  <div
+                    className="table-scroll"
+                    tabIndex={0}
+                    role="region"
+                    aria-label="Scrollable account table"
+                  >
+                    <table>
+                      <caption>
+                        {live
+                          ? "Journal equity (USDT), last record per hour"
+                          : "Synthetic daily equity"}
+                      </caption>
+                      <thead>
+                        <tr>
+                          <th>{live ? "Time" : "Date"}</th>
+                          <th>{live ? "USDT" : "USD equivalent"}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {d.points.map((p) => (
+                          <tr key={String(p.time)}>
+                            <td>{pointLabel(p.time)}</td>
+                            <td>{live ? usdt(p.value) : money(p.value)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </details>
+              </div>
+            </div>
+          </div>
           <div className="bottom-grid">
             <Panel
               title="Positions"
@@ -482,24 +503,6 @@ export default function Overview() {
             <VisualBoundary
               fallback={(error, reset) => (
                 <div role="alert" className="empty">
-                  Recent activity unavailable: {error.message}{" "}
-                  <button type="button" onClick={reset}>
-                    Retry
-                  </button>
-                </div>
-              )}
-            >
-              <Suspense
-                fallback={<div role="status">Loading recent activity…</div>}
-              >
-                <RecentActivity compact />
-              </Suspense>
-            </VisualBoundary>
-          )}
-          {live && (
-            <VisualBoundary
-              fallback={(error, reset) => (
-                <div role="alert" className="empty">
                   Owner activity summary unavailable: {error.message}{" "}
                   <button type="button" onClick={reset}>
                     Retry
@@ -511,6 +514,24 @@ export default function Overview() {
                 fallback={<div role="status">Loading owner activity…</div>}
               >
                 <OverviewEvidence />
+              </Suspense>
+            </VisualBoundary>
+          )}
+          {live && (
+            <VisualBoundary
+              fallback={(error, reset) => (
+                <div role="alert" className="empty">
+                  Recent activity unavailable: {error.message}{" "}
+                  <button type="button" onClick={reset}>
+                    Retry
+                  </button>
+                </div>
+              )}
+            >
+              <Suspense
+                fallback={<div role="status">Loading recent activity…</div>}
+              >
+                <RecentActivity compact />
               </Suspense>
             </VisualBoundary>
           )}

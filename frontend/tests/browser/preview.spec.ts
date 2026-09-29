@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { writeFileSync } from "node:fs";
+import { ev } from "./evidencePath";
 const routes = [
   "Overview",
   "Trades",
@@ -41,7 +42,7 @@ test("navigation, deep links, lazy loading and all four actual screens", async (
     ),
   ).toEqual([]);
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: "evidence/overview.png", fullPage: true });
+  await page.screenshot({ path: ev("evidence/overview.png"), fullPage: true });
   for (const [route, slug] of [
     ["LUFFY", "luffy"],
     ["Knowledge", "knowledge"],
@@ -57,7 +58,7 @@ test("navigation, deep links, lazy loading and all four actual screens", async (
       ).toBeVisible();
     else await expect(page.locator(".react-flow__node").first()).toBeVisible();
     await page.evaluate(() => window.scrollTo(0, 0));
-    await page.screenshot({ path: `evidence/${slug}.png`, fullPage: true });
+    await page.screenshot({ path: ev(`evidence/${slug}.png`), fullPage: true });
   }
   for (const name of [
     "Trades",
@@ -106,7 +107,7 @@ test("chat streams, inspects evidence, cancels, handles errors and cannot execut
   await expect(page.getByRole("dialog")).toContainText("context_only");
   await page.keyboard.press("Escape");
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: "evidence/luffy.png", fullPage: true });
+  await page.screenshot({ path: ev("evidence/luffy.png"), fullPage: true });
   await input.fill("Please resume trading");
   await input.press("Enter");
   await expect(
@@ -162,7 +163,7 @@ test("graph search, keyboard selection, zoom/pan, neighbours, lenses and list in
     page.getByRole("complementary", { name: "Node inspector" }),
   ).toContainText("Liquidity hypothesis");
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: "evidence/knowledge.png", fullPage: true });
+  await page.screenshot({ path: ev("evidence/knowledge.png"), fullPage: true });
   await page
     .getByRole("button", { name: "Explore neighbours", exact: true })
     .click();
@@ -200,7 +201,7 @@ test("system activity requires a supplied event, reduced motion stays static", a
     page.getByRole("complementary", { name: "Node inspector" }),
   ).toContainText("fixture:s5");
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: "evidence/live-system.png", fullPage: true });
+  await page.screenshot({ path: ev("evidence/live-system.png"), fullPage: true });
   await expect(page.locator(".react-flow__edge.animated")).toHaveCount(0);
   await page.getByRole("button", { name: "Replay fixture event" }).click();
   await expect(page.locator(".react-flow__edge.animated")).toHaveCount(1);
@@ -298,7 +299,7 @@ test("no WebGL needed, mobile layout and keyboard evidence dialog", async ({
     ).toBe(true);
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({
-      path: `evidence/mobile-${route}.png`,
+      path: ev(`evidence/mobile-${route}.png`),
       fullPage: true,
     });
   }
@@ -347,7 +348,7 @@ test("axe WCAG checks on four rendered surfaces and evidence drawer", async ({
     .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
     .analyze();
   report.drawer = drawer.violations;
-  writeFileSync("evidence/accessibility.json", JSON.stringify(report, null, 2));
+  writeFileSync(ev("evidence/accessibility.json"), JSON.stringify(report, null, 2));
   expect(drawer.violations).toEqual([]);
 });
 

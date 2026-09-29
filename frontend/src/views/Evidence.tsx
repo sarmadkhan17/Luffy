@@ -23,6 +23,7 @@ import {
   type R,
 } from "../components/records";
 import { unprovenEdges } from "../adapters/readContracts";
+import { LineageStrip, truthClass } from "../components/product";
 
 const enc = encodeURIComponent;
 const num = (v: unknown, digits = 2) =>
@@ -83,64 +84,127 @@ export function LinkedPanel({
 }
 
 // ── Trades ──────────────────────────────────────────────────────────────────
-/** The ordered chain opportunity → … → outcome, with market context and the
- * analyst votes of the decision's cycle. `d` is the lineage response. */
-export function TradeContext({ d }: { d: R }) {
+/** The ordered chain opportunity → … → outcome as a stage rail. Each stage
+ * shows the status the backend recorded for it, never an inferred one. */
+export const STAGE_ORDER = [
+  "opportunity",
+  "market_context",
+  "decision",
+  "signals",
+  "strategy",
+  "execution",
+  "accounting",
+  "outcome",
+];
+export const stageNum = (step: string) => {
+  const i = STAGE_ORDER.indexOf(step);
+  return i < 0 ? "··" : String(i + 1).padStart(2, "0");
+};
+export function TradeChain({ d }: { d: R }) {
   const chain = rows(d.chain);
+  if (!chain.length) return null;
+  return (
+    <ol
+      className="trade-chain stage-rail"
+      data-testid="trade-chain"
+      aria-label="Trade stages"
+      style={{ ["--stages" as string]: chain.length }}
+    >
+      {chain.map((s) => (
+        <li
+          key={String(s.step)}
+          data-step={String(s.step)}
+          className={truthClass(s.status)}
+        >
+          <span className="stage-num">{stageNum(String(s.step))}</span>
+          <strong>{STEP_LABEL[String(s.step)] ?? String(s.step)}</strong>
+          <Badge tone={stepTone(s.status)}>
+            {String(s.status).toUpperCase()}
+          </Badge>
+          {s.at ? <time>{timestamp(s.at)}</time> : null}
+          <span className="stage-summary">
+            {typeof s.summary === "string" ? s.summary : ""}
+          </span>
+          {s.ref ? <RefLink r={s.ref} /> : null}
+        </li>
+      ))}
+    </ol>
+  );
+}
+export function CycleFields({ d }: { d: R }) {
   const cycle = rec(d.cycle);
+  if (!cycle) return null;
+  return (
+    <Fields
+      row={cycle}
+      keys={[
+        ["id", "Cycle id"],
+        ["ts", "Cycle at"],
+        ["regime", "Regime"],
+        ["adx", "ADX"],
+        ["btc_trend", "BTC trend"],
+        ["price", "Price"],
+        ["mode", "Mode"],
+      ]}
+    />
+  );
+}
+export function CycleVotes({ d }: { d: R }) {
   const basis = rec(d.votes_basis);
+  if (!basis) return null;
+  return (
+    <SmallTable
+      caption={`Analyst votes · votes · ${String(basis.join)} · ±${String(basis.window_s)} s window`}
+      data={rows(d.votes)}
+      empty={`No vote of this cycle within the read window (${String(basis.status)}).`}
+      columns={[
+        ["agent", "Analyst"],
+        ["side", "Side"],
+        ["conviction", "Conviction"],
+        ["confidence", "Confidence"],
+        ["rationale", "Rationale"],
+      ]}
+    />
+  );
+}
+/** Chain, market context and the analyst votes of the decision's cycle. */
+export function TradeContext({ d }: { d: R }) {
   return (
     <>
-      {chain.length > 0 && (
-        <ol className="trade-chain" data-testid="trade-chain">
-          {chain.map((s) => (
-            <li key={String(s.step)} data-step={String(s.step)}>
-              <Badge tone={stepTone(s.status)}>
-                {String(s.status).toUpperCase()}
-              </Badge>
-              <strong>{STEP_LABEL[String(s.step)] ?? String(s.step)}</strong>
-              {s.at ? <time>{timestamp(s.at)}</time> : null}
-              <span>{typeof s.summary === "string" ? s.summary : ""}</span>
-              {s.ref ? <RefLink r={s.ref} /> : null}
-            </li>
-          ))}
-        </ol>
-      )}
-      {cycle && (
+      <TradeChain d={d} />
+      {rec(d.cycle) && (
         <>
           <h4>Market context (decision cycle)</h4>
-          <Fields
-            row={cycle}
-            keys={[
-              ["id", "Cycle id"],
-              ["ts", "Cycle at"],
-              ["regime", "Regime"],
-              ["adx", "ADX"],
-              ["btc_trend", "BTC trend"],
-              ["price", "Price"],
-              ["mode", "Mode"],
-            ]}
-          />
+          <CycleFields d={d} />
         </>
       )}
-      {basis && (
+      {rec(d.votes_basis) && (
         <>
           <h4>Analyst votes (decision cycle)</h4>
-          <SmallTable
-            caption={`votes · ${String(basis.join)} · ±${String(basis.window_s)} s window`}
-            data={rows(d.votes)}
-            empty={`No vote of this cycle within the read window (${String(basis.status)}).`}
-            columns={[
-              ["agent", "Analyst"],
-              ["side", "Side"],
-              ["conviction", "Conviction"],
-              ["confidence", "Confidence"],
-              ["rationale", "Rationale"],
-            ]}
-          />
+          <CycleVotes d={d} />
         </>
       )}
     </>
+  );
+}
+
+/** A record section numbered to its forensic stage. */
+export function StageSection({
+  step,
+  title,
+  children,
+}: {
+  step: string;
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="stage-section" data-stage={step}>
+      <h4>
+        <span className="stage-num">{stageNum(step)}</span> {title}
+      </h4>
+      {children}
+    </section>
   );
 }
 
@@ -272,39 +336,50 @@ export function ResearchItem({ hash }: { hash: string }) {
                   ["created_at", "Recorded"],
                 ]}
               />
+              <h4>Parent and descendants</h4>
+              <LineageStrip
+                testid="research-lineage"
+                parent={
+                  rec(d.parent) ? (
+                    <div className="lineage-node">
+                      <RecordLink
+                        kind="research"
+                        id={String(rec(d.parent)!.hash)}
+                      >
+                        {String(rec(d.parent)!.hash)} ·{" "}
+                        {value(rec(d.parent)!.verdict)}
+                      </RecordLink>
+                    </div>
+                  ) : item?.parent ? (
+                    <div className="lineage-node none">
+                      {String(item.parent)} · not in the ledger
+                    </div>
+                  ) : null
+                }
+                current={
+                  <>
+                    <span className="mono">{hash}</span>
+                    <small>
+                      {value(item?.label)} · {value(item?.verdict)} ·{" "}
+                      {value(item?.status)}
+                    </small>
+                  </>
+                }
+                childCaption="Descendants"
+                items={rows(d.children).map((c) => (
+                  <div className="lineage-node" key={String(c.hash)}>
+                    <RecordLink kind="research" id={String(c.hash)}>
+                      {String(c.hash)} · {value(c.label)} · {value(c.verdict)}
+                    </RecordLink>
+                  </div>
+                ))}
+              />
               <h4>Seeding strategy</h4>
               {seed ? (
                 <StrategyRef s={seed} />
               ) : (
                 <p className="quiet">No seeding strategy recorded.</p>
               )}
-              <h4>Parent and descendants</h4>
-              <ul className="connections">
-                <li>
-                  Parent:{" "}
-                  {rec(d.parent) ? (
-                    <RecordLink
-                      kind="research"
-                      id={String(rec(d.parent)!.hash)}
-                    >
-                      {String(rec(d.parent)!.hash)} ·{" "}
-                      {value(rec(d.parent)!.verdict)}
-                    </RecordLink>
-                  ) : item?.parent ? (
-                    `${String(item.parent)} · not in the ledger`
-                  ) : (
-                    "none recorded"
-                  )}
-                </li>
-                {rows(d.children).map((c) => (
-                  <li key={String(c.hash)}>
-                    Child:{" "}
-                    <RecordLink kind="research" id={String(c.hash)}>
-                      {String(c.hash)} · {value(c.label)} · {value(c.verdict)}
-                    </RecordLink>
-                  </li>
-                ))}
-              </ul>
               <h4>Candidate bank and registrations</h4>
               <Fields
                 row={rec(d.candidate)}
@@ -370,89 +445,99 @@ export function StrategyEvidence({ d }: { d: R }) {
   return (
     <>
       <h4>Family and generation</h4>
-      <ul className="connections" data-testid="strategy-family">
-        <li>
-          Family (registry kind):{" "}
-          {fam?.kind ? (
-            <RecordLink kind="family" id={String(fam.kind)}>
-              {String(fam.kind)}
-            </RecordLink>
-          ) : (
-            "Unavailable"
-          )}{" "}
-          · generation {value(fam?.generation)}
-        </li>
-        <li>
-          Parent:{" "}
-          {parent ? (
-            <StrategyRef s={parent} />
-          ) : (
-            <span className="quiet">none recorded</span>
-          )}
-        </li>
-        {rows(fam?.children).map((c) => (
-          <li key={String(c.id)}>
-            Child: <StrategyRef s={{ ...c, in_registry: true }} /> ·{" "}
-            {value(c.state)}
-          </li>
-        ))}
-      </ul>
-      {rows(fam?.siblings).length > 0 && (
-        <p className="quiet">
-          Same family:{" "}
-          {rows(fam?.siblings).map((s, i) => (
-            <span key={String(s.id)}>
-              {i ? ", " : ""}
-              <RecordLink kind="strategy" id={String(s.id)}>
-                {String(s.name ?? s.id)}
-              </RecordLink>{" "}
-              ({value(s.state)})
-            </span>
+      <div data-testid="strategy-family">
+        <LineageStrip
+          parent={
+            parent ? (
+              <div className="lineage-node">
+                <StrategyRef s={parent} />
+              </div>
+            ) : null
+          }
+          current={
+            <>
+              Family (registry kind):{" "}
+              {fam?.kind ? (
+                <RecordLink kind="family" id={String(fam.kind)}>
+                  {String(fam.kind)}
+                </RecordLink>
+              ) : (
+                "Unavailable"
+              )}
+              <small>generation {value(fam?.generation)}</small>
+            </>
+          }
+          items={rows(fam?.children).map((c) => (
+            <div className="lineage-node" key={String(c.id)}>
+              <StrategyRef s={{ ...c, in_registry: true }} />
+              <small>{value(c.state)}</small>
+            </div>
           ))}
-        </p>
-      )}
-      <h4>Recorded postmortem verdict</h4>
-      {pm ? (
-        <p data-testid="strategy-postmortem">
-          <Badge tone={pm.verdict === "CONSISTENT" ? "mint" : "amber"}>
-            {value(pm.verdict)}
-          </Badge>{" "}
-          newest postmortem at {timestamp(pm.at)} (brain event{" "}
-          {value(pm.event_id)}) — a verdict at that time, not current health.
-          {rec(rec(pm.book_entry)?.health)?.summary
-            ? ` ${String(rec(rec(pm.book_entry)?.health)?.summary)}`
-            : ""}
-        </p>
-      ) : (
-        <p className="quiet">
-          The newest postmortem records no verdict for this strategy id.
-        </p>
-      )}
-      <h4>Source idea</h4>
-      {idea ? (
-        <Fields
-          row={{
-            idea_id: idea.idea_id,
-            consumed: rec(idea.consumed)
-              ? `${value(rec(idea.consumed)!.outcome)} at ${timestamp(rec(idea.consumed)!.at)}`
-              : null,
-            harvested: rec(idea.harvested)
-              ? `${value(rec(idea.harvested)!.title)} · ${value(rec(idea.harvested)!.source)}`
-              : null,
-            url: rec(idea.harvested)?.url,
-            provenance: idea.provenance,
-          }}
-          keys={[
-            ["idea_id", "Idea id"],
-            ["consumed", "Writer outcome"],
-            ["harvested", "Harvested as"],
-            ["url", "Source URL (as recorded)"],
-            ["provenance", "Spec provenance"],
-          ]}
         />
-      ) : (
-        <p className="quiet">No source idea or provenance recorded.</p>
-      )}
+        {rows(fam?.siblings).length > 0 && (
+          <p className="quiet">
+            Same family:{" "}
+            {rows(fam?.siblings).map((s, i) => (
+              <span key={String(s.id)}>
+                {i ? ", " : ""}
+                <RecordLink kind="strategy" id={String(s.id)}>
+                  {String(s.name ?? s.id)}
+                </RecordLink>{" "}
+                ({value(s.state)})
+              </span>
+            ))}
+          </p>
+        )}
+      </div>
+      <div className="split even">
+        <div>
+          <h4>Source idea (provenance)</h4>
+          {idea ? (
+            <Fields
+              row={{
+                idea_id: idea.idea_id,
+                consumed: rec(idea.consumed)
+                  ? `${value(rec(idea.consumed)!.outcome)} at ${timestamp(rec(idea.consumed)!.at)}`
+                  : null,
+                harvested: rec(idea.harvested)
+                  ? `${value(rec(idea.harvested)!.title)} · ${value(rec(idea.harvested)!.source)}`
+                  : null,
+                url: rec(idea.harvested)?.url,
+                provenance: idea.provenance,
+              }}
+              keys={[
+                ["idea_id", "Idea id"],
+                ["consumed", "Writer outcome"],
+                ["harvested", "Harvested as"],
+                ["url", "Source URL (as recorded)"],
+                ["provenance", "Spec provenance"],
+              ]}
+            />
+          ) : (
+            <p className="quiet">No source idea or provenance recorded.</p>
+          )}
+        </div>
+        <div>
+          <h4>Recorded postmortem verdict · historical</h4>
+          {pm ? (
+            <div className="postmortem" data-testid="strategy-postmortem">
+              <Badge tone={pm.verdict === "CONSISTENT" ? "mint" : "amber"}>
+                {value(pm.verdict)}
+              </Badge>{" "}
+              newest postmortem at {timestamp(pm.at)} (brain event{" "}
+              {value(pm.event_id)}) — a verdict at that time, not current
+              health.
+              {rec(rec(pm.book_entry)?.health)?.summary
+                ? ` ${String(rec(rec(pm.book_entry)?.health)?.summary)}`
+                : ""}
+            </div>
+          ) : (
+            <p className="quiet">
+              The newest postmortem records no verdict for this strategy id.
+            </p>
+          )}
+        </div>
+      </div>
       <h4>Research seeded by this strategy</h4>
       <SmallTable
         caption="research_combos with trigger seed:<this id> (20 newest)"
@@ -501,81 +586,110 @@ const TIMELINE_LABEL: Record<string, string> = {
   control_event: "Control event",
   strategy_lifecycle: "Strategy lifecycle",
 };
+const dayOf = (at: unknown) =>
+  typeof at === "string" && /^\d{4}-\d{2}-\d{2}/.test(at)
+    ? at.slice(0, 10)
+    : "Undated";
 export function OperationsTimeline({ d }: { d: R }) {
   const [kind, setKind] = useState("all");
   const all = rows(d.timeline);
   const items = all.filter((i) => kind === "all" || i.kind === kind);
   const cool = rec(d.signal_cooldowns);
+  const counts = new Map<string, number>();
+  for (const i of all)
+    counts.set(String(i.kind), (counts.get(String(i.kind)) ?? 0) + 1);
   return (
-    <Panel
-      title="What Luffy recorded doing"
-      aside={<Badge>Chronological · journal</Badge>}
-    >
-      <div className="workspace-toolbar">
-        <label>
-          Record type
-          <select
-            aria-label="Filter timeline"
-            value={kind}
-            onChange={(e) => setKind(e.target.value)}
-          >
-            <option value="all">All</option>
+    <div data-testid="ops-timeline-panel">
+      <Panel
+        title="What Luffy recorded doing"
+        className="tier-primary"
+        aside={<Badge>Chronological · journal</Badge>}
+      >
+        <div className="workspace-toolbar">
+          <label>
+            Record type
+            <select
+              aria-label="Filter timeline"
+              value={kind}
+              onChange={(e) => setKind(e.target.value)}
+            >
+              <option value="all">All</option>
+              {Object.entries(TIMELINE_LABEL).map(([k, l]) => (
+                <option key={k} value={k}>
+                  {l}
+                </option>
+              ))}
+            </select>
+          </label>
+          <span className="ops-counts" aria-label="Records per type">
             {Object.entries(TIMELINE_LABEL).map(([k, l]) => (
-              <option key={k} value={k}>
-                {l}
-              </option>
-            ))}
-          </select>
-        </label>
-        <span className="quiet" role="status">
-          {items.length} of {all.length} records · signal cooldowns counted
-          separately: {value(cool?.in_newest_500_control_events)} in the newest
-          500 control events
-        </span>
-      </div>
-      {items.length === 0 ? (
-        <p className="empty">
-          {all.length
-            ? "No records of this type in the window."
-            : "No directional decision, trade, control or lifecycle record in the window."}
-        </p>
-      ) : (
-        <ol className="ops-timeline" data-testid="ops-timeline">
-          {items.map((i, n) => (
-            <li key={n} data-kind={String(i.kind)}>
-              <time>{timestamp(i.at)}</time>
-              <Badge
-                tone={
-                  i.status === "executed" || i.kind === "trade_opened"
-                    ? "mint"
-                    : i.status === "skipped"
-                      ? "amber"
-                      : "neutral"
-                }
-              >
-                {TIMELINE_LABEL[String(i.kind)] ?? String(i.kind)}
-              </Badge>
-              <span>
-                {i.ref ? (
-                  <RefLink r={i.ref} label={String(i.title)} />
-                ) : (
-                  String(i.title)
-                )}
-                {i.detail ? ` · ${String(i.detail)}` : ""}
+              <span key={k} className={`ops-kind k-${k}`}>
+                <i aria-hidden="true" /> {l} {counts.get(k) ?? 0}
               </span>
-              {rows(i.strategies).length > 0 &&
-                i.kind !== "strategy_lifecycle" && (
-                  <span className="quiet">
-                    {rows(i.strategies).map((s) => (
-                      <StrategyRef key={String(s.id)} s={s} />
-                    ))}
+            ))}
+          </span>
+          <span className="quiet" role="status">
+            {items.length} of {all.length} records · signal cooldowns counted
+            separately: {value(cool?.in_newest_500_control_events)} in the
+            newest 500 control events
+          </span>
+        </div>
+        {items.length === 0 ? (
+          <p className="empty">
+            {all.length
+              ? "No records of this type in the window."
+              : "No directional decision, trade, control or lifecycle record in the window."}
+          </p>
+        ) : (
+          <ol className="ops-timeline" data-testid="ops-timeline">
+            {items.map((i, n) => {
+              const day = dayOf(i.at);
+              const newDay = n === 0 || dayOf(items[n - 1].at) !== day;
+              return (
+                <li
+                  key={n}
+                  data-kind={String(i.kind)}
+                  className={`k-${String(i.kind)}${newDay ? " new-day" : ""}`}
+                  data-day={newDay ? day : undefined}
+                >
+                  <time>{timestamp(i.at)}</time>
+                  <span className="ops-mark" aria-hidden="true" />
+                  <Badge
+                    tone={
+                      i.status === "executed" || i.kind === "trade_opened"
+                        ? "mint"
+                        : i.status === "skipped"
+                          ? "amber"
+                          : "neutral"
+                    }
+                  >
+                    {TIMELINE_LABEL[String(i.kind)] ?? String(i.kind)}
+                  </Badge>
+                  <span className="ops-body">
+                    {i.ref ? (
+                      <RefLink r={i.ref} label={String(i.title)} />
+                    ) : (
+                      <span className="ops-title">{String(i.title)}</span>
+                    )}
+                    {i.detail ? (
+                      <span className="quiet"> · {String(i.detail)}</span>
+                    ) : null}
+                    {rows(i.strategies).length > 0 &&
+                      i.kind !== "strategy_lifecycle" && (
+                        <span className="ops-strategies">
+                          {rows(i.strategies).map((s) => (
+                            <StrategyRef key={String(s.id)} s={s} />
+                          ))}
+                        </span>
+                      )}
                   </span>
-                )}
-            </li>
-          ))}
-        </ol>
-      )}
-    </Panel>
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </Panel>
+    </div>
   );
 }
 
@@ -594,9 +708,13 @@ export function OverviewEvidence() {
           const reqs = rows(d.unresolved_owner_requests);
           return (
             <>
-              <SourceStrip source={String(d.source)} at={d.generated_at} />
+              <div className="section-rule">
+                <h2>Recent recorded actions</h2>
+                <SourceStrip source={String(d.source)} at={d.generated_at} />
+              </div>
               <div className="workspace-grid">
                 <Panel
+                  className="tier-primary"
                   title="Recent decisions"
                   aside={<a href="#operations">Operations ↗</a>}
                 >
@@ -789,11 +907,20 @@ export function OverviewEvidence() {
 }
 
 // ── Live System ─────────────────────────────────────────────────────────────
+const windowLabel = (v: unknown) =>
+  typeof v === "number"
+    ? v >= 3600
+      ? `${v / 3600} h`
+      : `${v / 60} min`
+    : "Unavailable";
+/** Movement lanes: one per recorded flow. The line style is the evidence
+ * class — observed records, none in the window, or an unavailable read. */
 export function SystemObserved() {
   const q = useRead("system/observed", 30000);
   return (
     <Panel
       title="Observed data movement"
+      className="tier-primary"
       aside={<Badge>OBSERVED · records written</Badge>}
     >
       <Loaded q={q}>
@@ -804,51 +931,71 @@ export function SystemObserved() {
               at={d.generated_at}
               note={String(d.note)}
             />
-            <SmallTable
-              caption="Records one component wrote for another, within the stated window"
-              data={rows(d.flows)}
-              columns={[
-                [
-                  "source",
-                  "From → to",
-                  (v, r) => `${String(v)} → ${String(r.target)}`,
-                ],
-                ["record", "Evidence record"],
-                [
-                  "count",
-                  "Records",
-                  (v, r) =>
-                    v === null
-                      ? `Unavailable (${value(r.error)})`
-                      : `${r.saturated ? "≥" : ""}${String(v)}`,
-                ],
-                [
-                  "window_s",
-                  "Window",
-                  (v) =>
-                    typeof v === "number"
-                      ? v >= 3600
-                        ? `${v / 3600} h`
-                        : `${v / 60} min`
-                      : "Unavailable",
-                ],
-                ["newest_at", "Newest"],
-                [
-                  "status",
-                  "Status",
-                  (v) => (
-                    <Badge tone={v === "observed" ? "mint" : "amber"}>
-                      {String(v).toUpperCase()}
-                    </Badge>
-                  ),
-                ],
-                [
-                  "declared_edge",
-                  "Declared edge",
-                  (v) => (v ? "DECLARED" : "not in the declared map"),
-                ],
-              ]}
-            />
+            <div className="truth-legend" aria-label="Evidence classes">
+              <span>
+                <i className="swatch" /> records observed in window
+              </span>
+              <span>
+                <i className="swatch none" /> no record in window
+              </span>
+              <span>
+                <i className="swatch unavailable" /> read unavailable
+              </span>
+              <span>
+                <i className="swatch declared" /> declared, no proving record
+              </span>
+              <span className="quiet">
+                Static: nothing here is animated or implies throughput.
+              </span>
+            </div>
+            <h4>
+              Records one component wrote for another, within the stated window
+            </h4>
+            {rows(d.flows).length === 0 ? (
+              <p className="quiet">No flow records returned.</p>
+            ) : (
+              <ol className="flow-lanes" aria-label="Observed flows">
+                {rows(d.flows).map((r, i) => {
+                  const cls =
+                    r.count === null
+                      ? "unavailable"
+                      : r.status === "observed"
+                        ? "observed"
+                        : "none";
+                  return (
+                    <li key={i} className={`flow-lane lane-${cls}`}>
+                      <span className="lane-end">{String(r.source)}</span>
+                      <span className="lane-track">
+                        <span className="lane-record">{value(r.record)}</span>
+                        <span className="lane-line" aria-hidden="true" />
+                      </span>
+                      <span className="lane-end">{String(r.target)}</span>
+                      <span className="lane-count">
+                        {r.count === null
+                          ? `Unavailable (${value(r.error)})`
+                          : `${r.saturated ? "≥" : ""}${String(r.count)}`}
+                      </span>
+                      <span className="lane-window">
+                        {windowLabel(r.window_s)}
+                      </span>
+                      <span className="lane-newest">
+                        {timestamp(r.newest_at)}
+                      </span>
+                      <span>
+                        <Badge
+                          tone={r.status === "observed" ? "mint" : "amber"}
+                        >
+                          {String(r.status).toUpperCase()}
+                        </Badge>
+                      </span>
+                      <span className="lane-declared">
+                        {r.declared_edge ? "DECLARED" : "not in the declared map"}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
             <h4>Declared connections without observed records</h4>
             <DeclaredEdges d={d} />
           </div>
@@ -893,15 +1040,22 @@ function DeclaredEdges({ d }: { d: R }) {
       </p>
     );
   return (
-    <SmallTable
-      caption="DECLARED architecture edges no record proves"
-      data={reported}
-      columns={[
-        ["source", "From"],
-        ["target", "To"],
-        ["reason", "Why unobserved"],
-      ]}
-    />
+    <ol
+      className="flow-lanes"
+      aria-label="DECLARED architecture edges no record proves"
+    >
+      {reported.map((e, i) => (
+        <li key={i} className="flow-lane lane-declared-only">
+          <span className="lane-end">{String(e.source)}</span>
+          <span className="lane-track">
+            <span className="lane-record">no proving record</span>
+            <span className="lane-line" aria-hidden="true" />
+          </span>
+          <span className="lane-end">{String(e.target)}</span>
+          <span className="lane-reason">{value(e.reason)}</span>
+        </li>
+      ))}
+    </ol>
   );
 }
 

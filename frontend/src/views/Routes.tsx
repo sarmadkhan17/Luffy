@@ -187,6 +187,13 @@ function TradeBook() {
             search={search}
             onSearch={setSearch}
             searchNote="Search this loaded page…"
+            open={(r) =>
+              typeof r.id === "string" ? (
+                <RecordLink kind="trade" id={r.id}>
+                  Story
+                </RecordLink>
+              ) : null
+            }
             columns={[
               ["symbol", "Instrument"],
               ["side", "Side"],
@@ -317,6 +324,13 @@ function Strategies() {
                   : q.data.rows
               }
               filterKey="state"
+              open={(r) =>
+                typeof r.id === "string" ? (
+                  <RecordLink kind="strategy" id={r.id}>
+                    Workspace
+                  </RecordLink>
+                ) : null
+              }
               columns={[
                 ["name", "Identity"],
                 ["state", "Lifecycle"],
@@ -458,8 +472,7 @@ function Diagnostics() {
   });
   return (
     <div className="workspace-stack">
-      <RuntimeStatus />
-      <Investigations />
+      <DiagnosticsDetail />
       <div className="workspace-grid">
         <Panel title="Dashboard & session">
           <Badge>Authenticated browser session</Badge>
@@ -547,7 +560,8 @@ function Diagnostics() {
           Refresh logs
         </button>
       </Panel>
-      <DiagnosticsDetail />
+      <RuntimeStatus />
+      <Investigations />
     </div>
   );
 }

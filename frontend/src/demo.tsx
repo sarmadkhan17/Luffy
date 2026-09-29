@@ -8,6 +8,7 @@ import { fixtureAdapter } from "./adapters/fixture";
 import Shell from "./Shell";
 import "./styles.css";
 import "./live.css";
+import "./product.css";
 const client = new QueryClient({
   defaultOptions: {
     queries: {

@@ -5,6 +5,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { writeFileSync } from "node:fs";
 import { LIVE, H, state, login } from "./liveHelpers";
+import { ev } from "./evidencePath";
 
 const SLOW_S = 2;
 const ROUTES: [string, (p: Page) => Promise<void>][] = [
@@ -117,7 +118,7 @@ test("all nine routes render while decisions reads are slow", async ({
     await expect(page.locator("main")).not.toContainText(FIXTURE);
     report[route] = { ready_ms: Date.now() - t };
   }
-  writeFileSync("evidence/m1-routes.json", JSON.stringify(report, null, 2));
+  writeFileSync(ev("evidence/m1-routes.json"), JSON.stringify(report, null, 2));
 });
 
 test("chunks and other reads stay responsive during slow decisions and paging", async ({
@@ -198,7 +199,7 @@ test("chunks and other reads stay responsive during slow decisions and paging", 
   });
   expect((await again).ok()).toBeTruthy();
   writeFileSync(
-    "evidence/m1-concurrency.json",
+    ev("evidence/m1-concurrency.json"),
     JSON.stringify(
       { slow_decisions_s: SLOW_S, fast_ms: timings, fastDone, slowDone },
       null,

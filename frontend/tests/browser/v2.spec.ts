@@ -2,7 +2,8 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { login, state } from "./liveHelpers";
-const evidence = process.env.OWNER_EVIDENCE_DIR ?? "evidence/v2";
+import { ev } from "./evidencePath";
+const evidence = process.env.OWNER_EVIDENCE_DIR ?? ev("evidence/v2");
 const routes = [
   "Overview",
   "Trades",

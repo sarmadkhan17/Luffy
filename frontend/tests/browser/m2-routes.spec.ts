@@ -4,6 +4,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import { writeFileSync } from "node:fs";
 import { LIVE, H, state, login } from "./liveHelpers";
+import { ev } from "./evidencePath";
 
 const rec = (p: Page, r: string) => p.locator(`a[data-record="${r}"]`).first();
 const FIXTURE =
@@ -116,7 +117,7 @@ test("all nine routes render their M2 evidence", async ({ page }) => {
     await expect(page.getByTestId("route-failed")).toHaveCount(0);
     await expect(page.locator("main")).not.toContainText(FIXTURE);
     report[route] = { ready_ms: Date.now() - t };
-    await page.screenshot({ path: `evidence/m2/${route}.png`, fullPage: true });
+    await page.screenshot({ path: ev(`evidence/m2/${route}.png`), fullPage: true });
   }
   for (const [name, url, testid] of [
     ["trade-story", "/#trades?trade=pos_fixture01", "trade-story"],
@@ -134,9 +135,9 @@ test("all nine routes render their M2 evidence", async ({ page }) => {
     });
     await page
       .getByTestId(testid)
-      .screenshot({ path: `evidence/m2/${name}.png` });
+      .screenshot({ path: ev(`evidence/m2/${name}.png`) });
   }
-  writeFileSync("evidence/m2-routes.json", JSON.stringify(report, null, 2));
+  writeFileSync(ev("evidence/m2-routes.json"), JSON.stringify(report, null, 2));
 });
 
 test("connected workflow: overview → decision → trade → strategy → research → knowledge", async ({
@@ -231,7 +232,7 @@ test("connected workflow: overview → decision → trade → strategy → resea
   await expect(page.locator("table").first()).not.toContainText(
     "Fixture Trend Pullback",
   );
-  writeFileSync("evidence/m2-workflow.json", JSON.stringify({ hops }, null, 2));
+  writeFileSync(ev("evidence/m2-workflow.json"), JSON.stringify({ hops }, null, 2));
 });
 
 test("drawer links close the drawer and open the record", async ({ page }) => {
@@ -380,7 +381,7 @@ test("record reads stay responsive while decisions reads are slow", async ({
   // six decisions-touching reads ran side by side, not one after another
   expect(allMs).toBeLessThan(SLOW_S * 1000 * 3);
   writeFileSync(
-    "evidence/m2-concurrency.json",
+    ev("evidence/m2-concurrency.json"),
     JSON.stringify(
       {
         slow_decisions_s: SLOW_S,
@@ -411,5 +412,5 @@ test("trade story fits a phone viewport", async ({ page }) => {
       ),
   }));
   expect(overflow.px, overflow.offenders.join(" | ")).toBeLessThanOrEqual(1);
-  await page.screenshot({ path: "evidence/m2/mobile-trade-story.png" });
+  await page.screenshot({ path: ev("evidence/m2/mobile-trade-story.png") });
 });

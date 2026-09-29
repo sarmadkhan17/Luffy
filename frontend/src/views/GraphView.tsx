@@ -3,16 +3,19 @@ import { useOwnerTelemetry } from "../useOwnerTelemetry";
 import PathTrace from "../components/PathTrace";
 import { NoteDetail } from "./LiveReads";
 import { useRouteParam } from "../links";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   ReactFlow,
   ReactFlowProvider,
   Background,
   BaseEdge,
+  Handle,
+  ViewportPortal,
   useReactFlow,
   useNodesInitialized,
   type EdgeProps,
+  type NodeProps,
   Position,
   MarkerType,
   type Node,
@@ -37,6 +40,9 @@ import {
   systemPositions,
   gridPositions,
   routeEdges,
+  clusterLayout,
+  KNODE_W,
+  KNODE_H,
   NODE_WIDTH,
   NODE_HEIGHT,
 } from "./graphGeometry";
@@ -53,18 +59,65 @@ function RoutedEdge(props: EdgeProps) {
   ) : null;
 }
 const edgeTypes = { routed: RoutedEdge };
-function ViewportTools({ scopeKey }: { scopeKey: string }) {
+/** A knowledge note in the constellation: kind mark, title and one line of
+ * recorded metadata. Handles sit at the centre so relations meet the mark. */
+function KnowledgeNode({ data }: NodeProps) {
+  const d = data as { label: string; kind: string; meta: string };
+  return (
+    <div className="kn">
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="kn-handle"
+        isConnectable={false}
+      />
+      <span className="kn-dot" aria-hidden="true" />
+      <span className="kn-text">
+        <strong>{d.label}</strong>
+        <small>
+          {d.kind} · {d.meta}
+        </small>
+      </span>
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="kn-handle"
+        isConnectable={false}
+      />
+    </div>
+  );
+}
+const nodeTypes = { kn: KnowledgeNode };
+function ViewportTools({
+  scopeKey,
+  padding,
+  bounds,
+}: {
+  scopeKey: string;
+  padding: number;
+  /** Fit these flow-space bounds (the constellation's cluster rings). */
+  bounds?: { x: number; y: number; width: number; height: number } | null;
+}) {
   const flow = useReactFlow();
   const initialized = useNodesInitialized();
-  useEffect(() => {
-    if (initialized)
+  const fit = useCallback(() => {
+    if (bounds) void flow.fitBounds(bounds, { padding, duration: 0 });
+    else
       void flow.fitView({
-        padding: 0.22,
+        padding,
         minZoom: 0.05,
         maxZoom: 1,
         duration: 0,
       });
-  }, [scopeKey, initialized, flow]);
+  }, [flow, padding, bounds]);
+  useEffect(() => {
+    if (!initialized) return;
+    fit();
+    // the renderer's own initial fit and pane measurement settle a frame
+    // later; fit the constellation bounds again once they have
+    const id = requestAnimationFrame(() => fit());
+    return () => cancelAnimationFrame(id);
+  }, [scopeKey, initialized, fit]);
   return (
     <div className="graph-controls" role="group" aria-label="Graph viewport">
       <button
@@ -79,18 +132,7 @@ function ViewportTools({ scopeKey }: { scopeKey: string }) {
       >
         −
       </button>
-      <button
-        onClick={() =>
-          void flow.fitView({
-            padding: 0.22,
-            minZoom: 0.05,
-            maxZoom: 1,
-            duration: 0,
-          })
-        }
-      >
-        Fit View
-      </button>
+      <button onClick={fit}>Fit View</button>
       <span>Fit shows the scope; zoom or use the list to read details.</span>
     </div>
   );
@@ -125,6 +167,7 @@ export default function GraphView({
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [neighbours, setNeighbours] = useState(false);
+  const [hiddenKinds, setHiddenKinds] = useState<Set<string>>(new Set());
   const [list, setList] = useState(
     () => window.matchMedia("(max-width: 759px)").matches,
   );
@@ -135,6 +178,7 @@ export default function GraphView({
     setEventId(null);
     setSelected(null);
     setNeighbours(false);
+    setHiddenKinds(new Set());
   }, [scenario, surface]);
   useEffect(() => {
     if (!visible) setEventId(null);
@@ -154,15 +198,65 @@ export default function GraphView({
     const timer = setTimeout(() => setEventId(null), 2000);
     return () => clearTimeout(timer);
   }, [eventId]);
-  const scope = useMemo(
-    () => graphScope(d, lens, search, selected, neighbours, system),
-    [d, lens, search, selected, neighbours, system],
+  // Kind filter: exact recorded kinds only; a hidden kind is removed from
+  // the scope, never relabelled.
+  const kindCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const n of d.nodes)
+      if (system || n.lenses.includes(lens))
+        m.set(n.kind, (m.get(n.kind) ?? 0) + 1);
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  }, [d.nodes, lens, system]);
+  const filtered = useMemo(
+    () =>
+      system || !hiddenKinds.size
+        ? d
+        : { ...d, nodes: d.nodes.filter((n) => !hiddenKinds.has(n.kind)) },
+    [d, hiddenKinds, system],
   );
+  const scope = useMemo(
+    () => graphScope(filtered, lens, search, selected, neighbours, system),
+    [filtered, lens, search, selected, neighbours, system],
+  );
+  // Selected-node focus: the node, its direct neighbours and their relations.
+  const focus = useMemo(() => {
+    if (system || !selected) return null;
+    const ids = new Set([selected]);
+    for (const e of d.edges) {
+      if (e.source === selected) ids.add(e.target);
+      if (e.target === selected) ids.add(e.source);
+    }
+    return ids;
+  }, [d.edges, selected, system]);
   const node = d.nodes.find((n) => n.id === selected);
   const event = d.events.find((e) => e.id === eventId);
+  const constellation = useMemo(
+    () => (system ? null : clusterLayout(scope.nodes, scope.edges)),
+    [scope.nodes, scope.edges, system],
+  );
+  const clusterBounds = useMemo(() => {
+    const cs = constellation?.clusters;
+    if (!cs?.length) return null;
+    const x0 = Math.min(...cs.map((c) => c.x - c.rx));
+    const y0 = Math.min(...cs.map((c) => c.y - c.ry - 30));
+    const x1 = Math.max(...cs.map((c) => c.x + c.rx));
+    const y1 = Math.max(...cs.map((c) => c.y + c.ry));
+    // never zoom a small constellation past readable scale
+    const w = Math.max(x1 - x0, 760),
+      h = Math.max(y1 - y0, 480);
+    return {
+      x: (x0 + x1) / 2 - w / 2,
+      y: (y0 + y1) / 2 - h / 2,
+      width: w,
+      height: h,
+    };
+  }, [constellation]);
   const positions = useMemo(
-    () => (system ? systemPositions(d.nodes) : gridPositions(scope.nodes)),
-    [d.nodes, scope.nodes, system],
+    () =>
+      system
+        ? systemPositions(d.nodes)
+        : (constellation?.positions ?? gridPositions(scope.nodes)),
+    [d.nodes, scope.nodes, system, constellation],
   );
   const paths = useMemo(
     () =>
@@ -173,41 +267,51 @@ export default function GraphView({
   );
   const nodes: Node[] = useMemo(
     () =>
-      scope.nodes.map((n) => ({
-        id: n.id,
-        position: positions.get(n.id)!,
-        sourcePosition: Position.Right,
-        targetPosition: Position.Left,
-        selected: n.id === selected,
-        ariaLabel: `Inspect ${n.label}`,
-        ariaRole: "button",
-        data: {
-          label: (
-            <div className="graph-node-content">
-              <span className="node-kind">{system ? "COMPONENT" : n.kind}</span>
-              <strong>{n.label}</strong>
-              {system ? (
-                <HealthStatus node={n} />
-              ) : (
-                <span>
-                  {n.evidence.timeBasis === "file_modified"
-                    ? "Modified time · unassessed"
-                    : n.evidence.freshness === "fresh"
-                      ? live
-                        ? n.kind
-                        : "Fixture snapshot"
-                      : n.evidence.freshness}
-                </span>
-              )}
-            </div>
-          ),
-        },
-        style: { width: NODE_WIDTH, height: NODE_HEIGHT },
-        className: system
-          ? `system-node status-${healthPresentation(n).tone}`
-          : `knowledge-node kind-${n.kind.toLowerCase()}`,
-      })),
-    [scope.nodes, positions, selected, system],
+      scope.nodes.map((n) => {
+        const meta =
+          n.evidence.timeBasis === "file_modified"
+            ? "Modified time · unassessed"
+            : n.evidence.freshness === "fresh"
+              ? live
+                ? "recorded"
+                : "Fixture snapshot"
+              : n.evidence.freshness;
+        return system
+          ? {
+              id: n.id,
+              position: positions.get(n.id)!,
+              sourcePosition: Position.Right,
+              targetPosition: Position.Left,
+              selected: n.id === selected,
+              ariaLabel: `Inspect ${n.label}`,
+              ariaRole: "button",
+              data: {
+                label: (
+                  <div className="graph-node-content">
+                    <span className="node-kind">COMPONENT</span>
+                    <strong>{n.label}</strong>
+                    <HealthStatus node={n} />
+                  </div>
+                ),
+              },
+              style: { width: NODE_WIDTH, height: NODE_HEIGHT },
+              className: `system-node status-${healthPresentation(n).tone}`,
+            }
+          : {
+              id: n.id,
+              type: "kn",
+              position: positions.get(n.id)!,
+              selected: n.id === selected,
+              ariaLabel: `Inspect ${n.label}`,
+              ariaRole: "button",
+              data: { label: n.label, kind: n.kind, meta },
+              style: { width: KNODE_W, height: KNODE_H },
+              className: `knowledge-node kind-${n.kind.toLowerCase()}${
+                focus ? (focus.has(n.id) ? " in-focus" : " out-focus") : ""
+              }`,
+            };
+      }),
+    [scope.nodes, positions, selected, system, focus, live],
   );
   const edges: Edge[] = useMemo(
     () =>
@@ -217,8 +321,18 @@ export default function GraphView({
           id: e.id,
           source: e.source,
           target: e.target,
-          label: system || e.kind === "link" ? undefined : e.relation,
-          type: system ? "routed" : "default",
+          label:
+            system ||
+            e.kind === "link" ||
+            (focus && !(e.source === selected || e.target === selected))
+              ? undefined
+              : e.relation,
+          type: system ? "routed" : "straight",
+          className: focus
+            ? e.source === selected || e.target === selected
+              ? "in-focus"
+              : "out-focus"
+            : undefined,
           data: { path: paths.get(e.id) },
           animated:
             visible &&
@@ -233,7 +347,16 @@ export default function GraphView({
                   ? "#d9b779"
                   : "#9aafc1",
             strokeDasharray: e.kind === "typed" ? undefined : "6 5",
-            strokeWidth: event?.edgeId === e.id ? 3 : 1.8,
+            strokeWidth:
+              event?.edgeId === e.id
+                ? 3
+                : !system && focus
+                  ? e.source === selected || e.target === selected
+                    ? 2.2
+                    : 1
+                  : system
+                    ? 1.8
+                    : 1.3,
           },
           labelStyle: { fill: "#c4d5e3", fontSize: 11 },
           labelBgStyle: { fill: "#101b27" },
@@ -242,8 +365,8 @@ export default function GraphView({
               ? {
                   type: MarkerType.ArrowClosed,
                   color: system ? "#c4d5e3" : "#77cbbb",
-                  width: 18,
-                  height: 18,
+                  width: system ? 18 : 14,
+                  height: system ? 18 : 14,
                 }
               : undefined,
         })),
@@ -255,6 +378,8 @@ export default function GraphView({
       reduced,
       event,
       d.provenance.freshness,
+      focus,
+      selected,
     ],
   );
   /** Every connection touching the visible scope that is not drawn, with why.
@@ -395,6 +520,40 @@ export default function GraphView({
                   : ""}
               </p>
             )}
+          {!system && kindCounts.length > 1 && (
+            <div
+              className="kind-filter"
+              role="group"
+              aria-label="Filter by recorded kind"
+            >
+              <span className="quiet">Clusters · recorded kind</span>
+              {kindCounts.map(([k, n]) => (
+                <button
+                  key={k}
+                  type="button"
+                  aria-pressed={!hiddenKinds.has(k)}
+                  className={`kind-chip kind-${k.toLowerCase()}`}
+                  onClick={() => {
+                    const next = new Set(hiddenKinds);
+                    if (next.has(k)) next.delete(k);
+                    else next.add(k);
+                    setHiddenKinds(next);
+                  }}
+                >
+                  <i aria-hidden="true" /> {k} · {n}
+                </button>
+              ))}
+              {hiddenKinds.size > 0 && (
+                <button
+                  type="button"
+                  className="kind-reset"
+                  onClick={() => setHiddenKinds(new Set())}
+                >
+                  Show all kinds
+                </button>
+              )}
+            </div>
+          )}
           <div className="graph-layout">
             <section
               className="panel graph-panel"
@@ -403,14 +562,17 @@ export default function GraphView({
               <div className="graph-legend">
                 {system ? (
                   <>
-                    <span className="legend-dash" /> Directed architectural
-                    connection → · no throughput implied
+                    <span className="legend-dash" /> DECLARED architectural
+                    connection → (repository map) · no throughput implied ·
+                    node status is each component's own telemetry; observed
+                    records are listed below
                   </>
                 ) : (
                   <>
                     <span className="legend-line" /> Typed relation →{" "}
                     <span className="legend-dash gold" /> Ordinary reference
-                    link
+                    link <span className="legend-ring" /> Cluster = the note's
+                    recorded kind · layout position carries no meaning
                   </>
                 )}
               </div>
@@ -464,6 +626,7 @@ export default function GraphView({
                       <div className="graph-renderer">
                         <ReactFlow
                           edgeTypes={edgeTypes}
+                          nodeTypes={nodeTypes}
                           nodes={nodes}
                           edges={edges}
                           fitView
@@ -492,11 +655,36 @@ export default function GraphView({
                           }}
                           colorMode="dark"
                         >
-                          <Background color="#29404e" gap={24} />
+                          <Background
+                            color={system ? "#29404e" : "#1a2733"}
+                            gap={system ? 24 : 32}
+                          />
+                          {constellation && (
+                            <ViewportPortal>
+                              {constellation.clusters.map((c) => (
+                                <div
+                                  key={c.kind}
+                                  className={`k-cluster kind-${c.kind.toLowerCase()}`}
+                                  aria-hidden="true"
+                                  style={{
+                                    transform: `translate(${c.x - c.rx}px, ${c.y - c.ry}px)`,
+                                    width: c.rx * 2,
+                                    height: c.ry * 2,
+                                  }}
+                                >
+                                  <span>
+                                    {c.kind} · {c.n}
+                                  </span>
+                                </div>
+                              ))}
+                            </ViewportPortal>
+                          )}
                         </ReactFlow>
                       </div>
                       <ViewportTools
                         scopeKey={scope.nodes.map((n) => n.id).join("|")}
+                        padding={system ? 0.22 : 0.1}
+                        bounds={clusterBounds}
                       />
                     </ReactFlowProvider>
                   </div>
@@ -527,6 +715,16 @@ export default function GraphView({
                 </span>
                 <span>Read only</span>
               </div>
+              {!system && node && adapter.ownerRead && (
+                <div className="note-record-panel">
+                  <div className="note-record-head">
+                    <span className="eyebrow">Stored record</span>
+                    <strong>{node.label}</strong>
+                    <span className="quiet mono">{node.id}</span>
+                  </div>
+                  <NoteDetail key={`note:${node.id}`} id={node.id} />
+                </div>
+              )}
             </section>
             <aside className="panel inspector" aria-label="Node inspector">
               <div className="panel-heading">
@@ -551,14 +749,14 @@ export default function GraphView({
                   >
                     {neighbours ? "Show full lens" : "Explore neighbours"}
                   </button>
-                  <EvidenceDetails value={node.evidence} />
-                  {!system && (
-                    <PathTrace key={node.id} data={d} source={node.id} />
-                  )}
-                  {!system && adapter.ownerRead && (
-                    <NoteDetail key={`note:${node.id}`} id={node.id} />
-                  )}
-                  <h3 className="space-top">Connections</h3>
+                  <h3 className="space-top">
+                    Connections ·{" "}
+                    {
+                      d.edges.filter(
+                        (e) => e.source === node.id || e.target === node.id,
+                      ).length
+                    }
+                  </h3>
                   <ul className="connections">
                     {d.edges
                       .filter(
@@ -598,6 +796,10 @@ export default function GraphView({
                         );
                       })}
                   </ul>
+                  <EvidenceDetails value={node.evidence} />
+                  {!system && (
+                    <PathTrace key={node.id} data={d} source={node.id} />
+                  )}
                 </>
               ) : (
                 <div className="inspector-empty">

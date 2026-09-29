@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import { writeFileSync } from "node:fs";
+import { ev } from "./evidencePath";
 const harness = "http://127.0.0.1:4175/tests/harness/index.html";
 async function topology(page: Page) {
   return page.evaluate(() => {
@@ -296,12 +297,12 @@ test("F1 spacing, unrelated ports, exact directions, filtering and 40-node fan-i
   await detail.goto("http://127.0.0.1:4174/#live-system");
   await expect(detail.locator(".react-flow__edge")).toHaveCount(9);
   await detail.screenshot({
-    path: "evidence/live-system-2x.png",
+    path: ev("evidence/live-system-2x.png"),
     fullPage: true,
   });
   await detail.close();
   writeFileSync(
-    "evidence/topology-regression.json",
+    ev("evidence/topology-regression.json"),
     JSON.stringify(
       { default: result, filtered, maximum: max, searched, branched, knownBad },
       null,
@@ -335,7 +336,7 @@ test("F2 stale primary status is consistent on nodes, inspector and list; unknow
   await expect(page.locator(".graph-list .health-status>strong")).toHaveText(
     Array(9).fill("STALE"),
   );
-  await page.screenshot({ path: "evidence/system-stale.png", fullPage: true });
+  await page.screenshot({ path: ev("evidence/system-stale.png"), fullPage: true });
 });
 test("cancel markers survive button, scenario, route exit and subsequent messages", async ({
   page,
@@ -529,7 +530,7 @@ test("record 500-input / 40-visible real graph performance", async ({
     ),
   };
   writeFileSync(
-    "evidence/scale-performance.json",
+    ev("evidence/scale-performance.json"),
     JSON.stringify(report, null, 2),
   );
 });

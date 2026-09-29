@@ -252,3 +252,88 @@ export function gridPositions(nodes: GraphNode[], columns = 6) {
     ]),
   );
 }
+
+/** Knowledge constellation: one cluster per recorded node kind (the kind is
+ * the note's own field, never inferred). Within a cluster the best-connected
+ * node sits at the hub and the rest fill concentric rings; clusters sit on a
+ * ring around the centre. Positions are node top-left corners. */
+export const KNODE_W = 168,
+  KNODE_H = 44;
+export type Cluster = {
+  kind: string;
+  x: number;
+  y: number;
+  rx: number;
+  ry: number;
+  n: number;
+};
+export function clusterLayout(nodes: GraphNode[], edges: GraphEdge[]) {
+  const degree = new Map<string, number>();
+  for (const e of edges) {
+    degree.set(e.source, (degree.get(e.source) ?? 0) + 1);
+    degree.set(e.target, (degree.get(e.target) ?? 0) + 1);
+  }
+  const groups = new Map<string, GraphNode[]>();
+  for (const n of nodes) {
+    const g = groups.get(n.kind) ?? [];
+    g.push(n);
+    groups.set(n.kind, g);
+  }
+  const RING = 96;
+  const local = [...groups.entries()]
+    .sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
+    .map(([kind, members]) => {
+      const sorted = [...members].sort(
+        (a, b) =>
+          (degree.get(b.id) ?? 0) - (degree.get(a.id) ?? 0) ||
+          a.label.localeCompare(b.label),
+      );
+      const pts: Point[] = [{ x: 0, y: 0 }];
+      let ring = 1,
+        placed = 1;
+      while (placed < sorted.length) {
+        const r = ring * RING;
+        const cap = Math.max(4, Math.floor((2 * Math.PI * r) / (KNODE_W + 14)));
+        const take = Math.min(cap, sorted.length - placed);
+        for (let i = 0; i < take; i++) {
+          const a = -Math.PI / 2 + (i / take) * 2 * Math.PI + ring * 0.35;
+          pts.push({ x: r * Math.cos(a) * 1.25, y: r * Math.sin(a) });
+        }
+        placed += take;
+        ring += 1;
+      }
+      const radius = (ring - 1) * RING * 1.25 + KNODE_W * 0.62;
+      const ry = (ring - 1) * RING + KNODE_H * 1.4;
+      return { kind, members: sorted, pts, radius, ry };
+    });
+  const clusters: Cluster[] = [];
+  const positions = new Map<string, Point>();
+  if (!local.length) return { positions, clusters };
+  // clusters around a centre, arc length proportional to their diameter
+  const total = local.reduce((s, c) => s + 2 * c.radius + 50, 0);
+  const R =
+    local.length === 1 ? 0 : Math.max(total / (2 * Math.PI), local[0].radius + 80);
+  let acc = 0;
+  for (const c of local) {
+    const share = (2 * c.radius + 50) / total;
+    const a = -Math.PI / 2 + (acc + share / 2) * 2 * Math.PI;
+    acc += share;
+    const cx = R * Math.cos(a) * 1.3,
+      cy = R * Math.sin(a);
+    clusters.push({
+      kind: c.kind,
+      x: cx,
+      y: cy,
+      rx: c.radius,
+      ry: c.ry,
+      n: c.members.length,
+    });
+    c.members.forEach((m, i) =>
+      positions.set(m.id, {
+        x: cx + c.pts[i].x - KNODE_W / 2,
+        y: cy + c.pts[i].y - KNODE_H / 2,
+      }),
+    );
+  }
+  return { positions, clusters };
+}

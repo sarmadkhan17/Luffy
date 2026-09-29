@@ -26,14 +26,19 @@ import {
   rows,
   short,
   useRead,
+  type R,
 } from "../components/records";
+import { Distribution, Figure } from "../components/product";
 import {
   ControlEventsPager,
   DiagnosticsProbes,
   NoteRecords,
   OperationsTimeline,
   StrategyEvidence,
-  TradeContext,
+  TradeChain,
+  CycleFields,
+  CycleVotes,
+  StageSection,
 } from "./Evidence";
 import { PagingBar } from "../components/workspace";
 export { UnavailableFields };
@@ -68,144 +73,166 @@ export function TradeLineage({
                   </RecordLink>
                 </p>
               )}
-              <TradeContext d={d} />
-              <h4>Trade record (journal)</h4>
-              <Fields
-                row={trade}
-                keys={[
-                  ["id", "Trade id"],
-                  ["symbol", "Instrument"],
-                  ["side", "Side"],
-                  ["amount", "Quantity"],
-                  ["entry_price", "Entry price"],
-                  ["exit_price", "Exit price"],
-                  ["notional_usdt", "Entry notional (USDT)"],
-                  ["leverage", "Leverage"],
-                  ["opened_at", "Opened"],
-                  ["closed_at", "Closed"],
-                  ["close_reason", "Close reason"],
-                  ["realized_pnl", "Realized P&L (USDT, journal-booked)"],
-                  [
-                    "exec_mode",
-                    "Exec mode (live = orders sent to the demo venue)",
-                  ],
-                  ["stop_loss", "Journal stop"],
-                ]}
-              />
-              <h4>Decision</h4>
-              <Fields
-                row={decision}
-                keys={[
-                  [
-                    "id",
-                    "Decision id",
-                    (v) =>
-                      typeof v === "string" ? (
-                        <RecordLink kind="decision" id={v} />
-                      ) : (
-                        "Unavailable"
-                      ),
-                  ],
-                  ["ts", "Recorded at"],
-                  ["action", "Action"],
-                  ["score", "Score"],
-                  ["threshold", "Threshold"],
-                  ["scan_id", "Attention scan (opportunity ref)"],
-                  ["strategy_ids", "Strategy ids"],
-                  ["meta_p", "Meta-label p"],
-                ]}
-              />
-              {rows(decision?.signals).length > 0 && (
+              <TradeChain d={d} />
+              <div className="stage-columns">
+                <StageSection step="market_context" title="Market context">
+                  {rec(d.cycle) ? (
+                    <CycleFields d={d} />
+                  ) : (
+                    <p className="quiet">No decision cycle recorded.</p>
+                  )}
+                </StageSection>
+                <StageSection step="decision" title="Decision">
+                  <Fields
+                    row={decision}
+                    keys={[
+                      [
+                        "id",
+                        "Decision id",
+                        (v) =>
+                          typeof v === "string" ? (
+                            <RecordLink kind="decision" id={v} />
+                          ) : (
+                            "Unavailable"
+                          ),
+                      ],
+                      ["ts", "Recorded at"],
+                      ["action", "Action"],
+                      ["score", "Score"],
+                      ["threshold", "Threshold"],
+                      ["scan_id", "Attention scan (opportunity ref)"],
+                      ["strategy_ids", "Strategy ids"],
+                      ["meta_p", "Meta-label p"],
+                    ]}
+                  />
+                </StageSection>
+              </div>
+              <StageSection step="signals" title="Signals & votes">
+                {rows(decision?.signals).length > 0 && (
+                  <SmallTable
+                    caption="Strategy signals recorded with the decision"
+                    data={rows(decision?.signals)}
+                    columns={[
+                      ["strategy_id", "Strategy"],
+                      ["action", "Action"],
+                      ["confidence", "Confidence"],
+                      ["rationale", "Rationale"],
+                    ]}
+                  />
+                )}
+                <CycleVotes d={d} />
+              </StageSection>
+              <div className="stage-columns">
+                <StageSection
+                  step="strategy"
+                  title="Strategy (current registry row)"
+                >
+                  <Fields
+                    row={strategy}
+                    keys={[
+                      [
+                        "id",
+                        "Strategy id",
+                        (v) =>
+                          typeof v === "string" ? (
+                            <RecordLink kind="strategy" id={v} />
+                          ) : (
+                            "Unavailable"
+                          ),
+                      ],
+                      ["name", "Name"],
+                      ["state", "State now"],
+                      ["generation", "Generation"],
+                      ["parent_id", "Parent"],
+                      ["spec_sha256", "Spec sha256"],
+                      ["spec_sha256_basis", "Hash basis"],
+                    ]}
+                  />
+                </StageSection>
+                <StageSection step="execution" title="Trade record (journal)">
+                  <Fields
+                    row={trade}
+                    keys={[
+                      ["id", "Trade id"],
+                      ["symbol", "Instrument"],
+                      ["side", "Side"],
+                      ["amount", "Quantity"],
+                      ["entry_price", "Entry price"],
+                      ["exit_price", "Exit price"],
+                      ["notional_usdt", "Entry notional (USDT)"],
+                      ["leverage", "Leverage"],
+                      ["opened_at", "Opened"],
+                      ["closed_at", "Closed"],
+                      ["close_reason", "Close reason"],
+                      ["realized_pnl", "Realized P&L (USDT, journal-booked)"],
+                      [
+                        "exec_mode",
+                        "Exec mode (live = orders sent to the demo venue)",
+                      ],
+                      ["stop_loss", "Journal stop"],
+                    ]}
+                  />
+                </StageSection>
+              </div>
+              <StageSection step="accounting" title="Accounting receipts">
                 <SmallTable
-                  caption="Strategy signals recorded with the decision"
-                  data={rows(decision?.signals)}
+                  caption="trade_accounting_bookings · integrity is the receipt's own sha256 replay"
+                  data={rows(acct?.receipts)}
                   columns={[
-                    ["strategy_id", "Strategy"],
-                    ["action", "Action"],
-                    ["confidence", "Confidence"],
-                    ["rationale", "Rationale"],
+                    ["receipt_id", "Receipt"],
+                    ["kind", "Kind"],
+                    [
+                      "observed_ms",
+                      "Booked at",
+                      (v) =>
+                        typeof v === "number"
+                          ? timestamp(new Date(v).toISOString())
+                          : "Unavailable",
+                    ],
+                    ["integrity", "Receipt integrity"],
+                    [
+                      "assessment",
+                      "Fill assessment",
+                      (v) => value(rec(v)?.status),
+                    ],
+                    [
+                      "assessment",
+                      "Reasons",
+                      (v) =>
+                        Array.isArray(rec(v)?.reasons)
+                          ? (rec(v)!.reasons as unknown[]).join(", ")
+                          : "Unavailable",
+                    ],
                   ]}
                 />
-              )}
-              <h4>Strategy (current registry row)</h4>
-              <Fields
-                row={strategy}
-                keys={[
-                  [
-                    "id",
-                    "Strategy id",
-                    (v) =>
-                      typeof v === "string" ? (
-                        <RecordLink kind="strategy" id={v} />
-                      ) : (
-                        "Unavailable"
-                      ),
-                  ],
-                  ["name", "Name"],
-                  ["state", "State now"],
-                  ["generation", "Generation"],
-                  ["parent_id", "Parent"],
-                  ["spec_sha256", "Spec sha256"],
-                  ["spec_sha256_basis", "Hash basis"],
-                ]}
-              />
-              <h4>Accounting receipts</h4>
-              <SmallTable
-                caption="trade_accounting_bookings · integrity is the receipt's own sha256 replay"
-                data={rows(acct?.receipts)}
-                columns={[
-                  ["receipt_id", "Receipt"],
-                  ["kind", "Kind"],
-                  [
-                    "observed_ms",
-                    "Booked at",
-                    (v) =>
-                      typeof v === "number"
-                        ? timestamp(new Date(v).toISOString())
-                        : "Unavailable",
-                  ],
-                  ["integrity", "Receipt integrity"],
-                  [
-                    "assessment",
-                    "Fill assessment",
-                    (v) => value(rec(v)?.status),
-                  ],
-                  [
-                    "assessment",
-                    "Reasons",
-                    (v) =>
-                      Array.isArray(rec(v)?.reasons)
-                        ? (rec(v)!.reasons as unknown[]).join(", ")
-                        : "Unavailable",
-                  ],
-                ]}
-              />
-              {typeof acct?.replay === "string" && (
-                <p className="quiet">Replay: {acct.replay}</p>
-              )}
-              <h4>Outcome and excursion</h4>
-              <Fields
-                row={rec(d.outcome)}
-                keys={[
-                  ["fwd_ret_1h", "Forward return 1h"],
-                  ["fwd_ret_4h", "Forward return 4h"],
-                  ["fwd_ret_24h", "Forward return 24h"],
-                  ["resolved_at", "Resolved at"],
-                ]}
-              />
-              <Fields
-                row={trade}
-                keys={[
-                  ["mfe_r", "MFE (R)"],
-                  ["mae_r", "MAE (R)"],
-                  ["initial_risk", "Initial risk"],
-                ]}
-              />
-              {excursion && (
-                <p className="quiet">
-                  Excursion provenance: {value(excursion)}
-                </p>
-              )}
+                {typeof acct?.replay === "string" && (
+                  <p className="quiet">Replay: {acct.replay}</p>
+                )}
+              </StageSection>
+              <StageSection step="outcome" title="Outcome and excursion">
+                <Fields
+                  row={rec(d.outcome)}
+                  keys={[
+                    ["fwd_ret_1h", "Forward return 1h"],
+                    ["fwd_ret_4h", "Forward return 4h"],
+                    ["fwd_ret_24h", "Forward return 24h"],
+                    ["resolved_at", "Resolved at"],
+                  ]}
+                />
+                <Fields
+                  row={trade}
+                  keys={[
+                    ["mfe_r", "MFE (R)"],
+                    ["mae_r", "MAE (R)"],
+                    ["initial_risk", "Initial risk"],
+                  ]}
+                />
+                {excursion && (
+                  <p className="quiet">
+                    Excursion provenance: {value(excursion)}
+                  </p>
+                )}
+              </StageSection>
               <UnavailableFields items={d.unavailable} />
             </>
           );
@@ -224,73 +251,103 @@ export function StrategyDetail({ id }: { id: string }) {
       <Loaded q={q}>
         {(d) => {
           const spec = rec(d.spec);
+          const econ = rec(d.journal_economics);
           return (
             <>
+              {typeof d.name === "string" && (
+                <div className="identity-head">
+                  <strong>{d.name}</strong>
+                  {typeof d.state === "string" && (
+                    <Badge tone="steel">registry state: {d.state}</Badge>
+                  )}
+                  <span className="quiet mono">{id}</span>
+                </div>
+              )}
               <SourceStrip source={String(d.source)} at={d.generated_at} />
-              <Fields
-                row={d}
-                keys={[
-                  ["id", "Registry id"],
-                  ["kind", "Family / kind"],
-                  ["generation", "Generation"],
-                  ["parent_id", "Parent"],
-                  ["spec_sha256", "Spec sha256 (current row)"],
-                  ["params_sha256", "Params sha256"],
-                ]}
-              />
-              <h4>Declared specification</h4>
-              <Fields
-                row={spec}
-                keys={[
-                  ["timeframe", "Timeframe"],
-                  ["direction", "Direction"],
-                  ["universe", "Universe"],
-                  ["regime_filter", "Regime filter"],
-                  ["exit", "Exit geometry"],
-                ]}
-              />
-              <h4>Economics</h4>
-              <Fields
-                row={rec(d.journal_economics)}
-                keys={[
-                  ["trades", "Journal trades"],
-                  ["open", "Open"],
-                  ["closed", "Closed"],
-                  ["wins", "Winning closes"],
-                  ["realized_pnl", "Realized P&L (USDT, journal-booked)"],
-                ]}
-              />
+              <div className="figure-row" aria-label="Journal economics">
+                {econ ? (
+                  <>
+                    <Figure label="Journal trades" value={value(econ.trades)} />
+                    <Figure label="Open" value={value(econ.open)} />
+                    <Figure label="Closed" value={value(econ.closed)} />
+                    <Figure
+                      label="Winning closes"
+                      value={value(econ.wins)}
+                    />
+                    <Figure
+                      label="Realized P&L"
+                      value={
+                        typeof econ.realized_pnl === "number"
+                          ? `${econ.realized_pnl.toFixed(2)} USDT`
+                          : "Unavailable"
+                      }
+                      note="journal-booked, not venue-verified"
+                    />
+                  </>
+                ) : (
+                  <p className="quiet">No journal economics recorded.</p>
+                )}
+              </div>
               <p className="quiet">
                 Registry stats (strategy row): {value(d.registry_stats)}
               </p>
-              {(d.hypothesis || d.invalidation) && (
-                <Fields
-                  row={d}
-                  keys={[
-                    ["hypothesis", "Hypothesis (as recorded)"],
-                    ["invalidation", "Invalidation (as recorded)"],
-                  ]}
-                />
-              )}
-              {rec(d.spec_full) && (
-                <details>
-                  <summary>Full declared spec (current registry row)</summary>
-                  <pre className="note-body" tabIndex={0}>
-                    {JSON.stringify(d.spec_full, null, 2)}
-                  </pre>
-                </details>
-              )}
-              <h4>Lifecycle</h4>
-              <Timeline
-                events={rows(d.lifecycle).map((e) => {
-                  const detail = e.detail ? value(e.detail) : "";
-                  return {
-                    label: String(e.event),
-                    at: e.at,
-                    detail: `${e.source}${detail ? ` · ${detail.length > 240 ? `${detail.slice(0, 240)}…` : detail}` : ""}`,
-                  };
-                })}
-              />
+              <div className="split">
+                <div>
+                  <h4>Identity</h4>
+                  <Fields
+                    row={d}
+                    keys={[
+                      ["id", "Registry id"],
+                      ["kind", "Family / kind"],
+                      ["generation", "Generation"],
+                      ["parent_id", "Parent"],
+                      ["spec_sha256", "Spec sha256 (current row)"],
+                      ["params_sha256", "Params sha256"],
+                    ]}
+                  />
+                  <h4>Declared specification</h4>
+                  <Fields
+                    row={spec}
+                    keys={[
+                      ["timeframe", "Timeframe"],
+                      ["direction", "Direction"],
+                      ["universe", "Universe"],
+                      ["regime_filter", "Regime filter"],
+                      ["exit", "Exit geometry"],
+                    ]}
+                  />
+                  {!!(d.hypothesis || d.invalidation) && (
+                    <Fields
+                      row={d}
+                      keys={[
+                        ["hypothesis", "Hypothesis (as recorded)"],
+                        ["invalidation", "Invalidation (as recorded)"],
+                      ]}
+                    />
+                  )}
+                  {rec(d.spec_full) && (
+                    <details>
+                      <summary>Full declared spec (current registry row)</summary>
+                      <pre className="note-body" tabIndex={0}>
+                        {JSON.stringify(d.spec_full, null, 2)}
+                      </pre>
+                    </details>
+                  )}
+                </div>
+                <div>
+                  <h4>Lifecycle</h4>
+                  <Timeline
+                    events={rows(d.lifecycle).map((e) => {
+                      const detail = e.detail ? value(e.detail) : "";
+                      return {
+                        label: String(e.event),
+                        at: e.at,
+                        detail: `${e.source}${detail ? ` · ${detail.length > 240 ? `${detail.slice(0, 240)}…` : detail}` : ""}`,
+                      };
+                    })}
+                  />
+                </div>
+              </div>
               <StrategyEvidence d={d} />
               <h4>Recent trades</h4>
               <SmallTable
@@ -328,6 +385,77 @@ const hashLink = (v: unknown) =>
   ) : (
     "Unavailable"
   );
+
+/** How the lab's records relate, with what this read loaded for each. A
+ * station without a record store is shown UNAVAILABLE, not empty. */
+function LabMap({ d, missing }: { d: R; missing: Map<string, string> }) {
+  const results = rows(d.results);
+  const seeded = results.filter((r) => rec(r.seed_strategy)).length;
+  const station = (
+    key: string,
+    title: string,
+    n: number | null,
+    note: string,
+  ) => (
+    <li
+      key={key}
+      className={`lab-station ${n === null ? "unavailable" : ""}`}
+      data-station={key}
+    >
+      <span className="lab-count">{n === null ? "—" : n}</span>
+      <strong>{title}</strong>
+      <small>
+        {n === null ? `UNAVAILABLE · ${missing.get(key) ?? note}` : note}
+      </small>
+    </li>
+  );
+  return (
+    <div className="lab-map">
+      <h4>Lab relationships · loaded in this read</h4>
+      <ol aria-label="Research record relationships">
+        {station(
+          "questions",
+          "Questions & plans",
+          null,
+          "no question or plan store is listed by the backend",
+        )}
+        {station(
+          "ideas",
+          "Assessed ideas",
+          rows(d.ideas).length,
+          "harvested ideas the writer consumed",
+        )}
+        {station(
+          "results",
+          "Results",
+          results.length,
+          "scored combinations on this page (parent → children)",
+        )}
+        {station(
+          "candidates",
+          "Candidate bank",
+          rows(d.candidates).length,
+          "carried between gates",
+        )}
+        {station(
+          "registrations",
+          "Registrations",
+          rows(d.registrations).length,
+          "registered gate looks",
+        )}
+        {station(
+          "seeded",
+          "Seeded by a strategy",
+          seeded,
+          "results on this page with trigger seed:<id>",
+        )}
+      </ol>
+      <p className="quiet">
+        Counts are rows returned by this read, not totals or admission.
+      </p>
+    </div>
+  );
+}
 
 type Section = {
   title: string;
@@ -561,6 +689,7 @@ export function ResearchLive() {
     <div className="workspace-stack">
       <Panel
         title="Research ledger"
+        className="tier-primary"
         aside={
           <Badge tone={d?.available ? "mint" : "amber"}>
             {q.error
@@ -575,28 +704,37 @@ export function ResearchLive() {
       >
         <Loaded q={q}>
           {(d) => (
-            <>
+            <div data-testid="research-ledger">
               <SourceStrip source={String(d.source)} at={d.generated_at} />
               {d.available === false ? (
                 <p>{value(d.reason)}</p>
               ) : (
-                <SmallTable
-                  caption="Recorded results by verdict"
-                  data={rows(counts?.results_by_verdict)}
-                  columns={[
-                    ["verdict", "Verdict"],
-                    ["status", "Status"],
-                    ["n", "Combinations"],
-                  ]}
-                />
+                <div className="split">
+                  <div>
+                    <h4>Recorded results by verdict · status</h4>
+                    {rows(counts?.results_by_verdict).length ? (
+                      <Distribution
+                        label="Recorded results by verdict"
+                        rows={rows(counts?.results_by_verdict).map((r, i) => ({
+                          key: String(i),
+                          label: `${value(r.verdict)} · ${value(r.status)}`,
+                          n: typeof r.n === "number" ? r.n : 0,
+                        }))}
+                      />
+                    ) : (
+                      <p className="quiet">No result is recorded.</p>
+                    )}
+                  </div>
+                  <LabMap d={d} missing={missing} />
+                </div>
               )}
-              <p className="quiet">
+              <p className="quiet space-top">
                 Runs recorded: {value(rec(counts?.runs)?.n)} (failed:{" "}
                 {value(rec(counts?.runs)?.failed)}) · registered tests:{" "}
                 {value(counts?.registered_tests)}.{" "}
                 {Array.isArray(d.notes) && (d.notes as string[]).join(". ")}
               </p>
-            </>
+            </div>
           )}
         </Loaded>
       </Panel>
@@ -878,6 +1016,79 @@ export function NoteDetail({ id }: { id: string }) {
 }
 
 // ── Diagnostics ─────────────────────────────────────────────────────────────
+/** Owner summary of the diagnostics read: each cell restates a returned
+ * value (probe results, collector statuses, watchdog flag, disk, memory,
+ * recovery ledger). Nothing is scored or inferred. */
+function DiagnosticsBoard({ d }: { d: R }) {
+  const probes = rows(d.probes);
+  const failed = probes.filter((p) => !p.ok).length;
+  const collectors = new Map<string, number>();
+  for (const c of rows(d.collectors)) {
+    const k = value(c.status);
+    collectors.set(k, (collectors.get(k) ?? 0) + 1);
+  }
+  const disk = rec(rec(d.storage)?.disk);
+  const host = rec(rec(d.resources)?.host);
+  const wd = rec(d.watchdog);
+  return (
+    <section
+      className="panel tier-primary diag-board"
+      aria-label="Diagnostics summary"
+      data-testid="diagnostics-board"
+    >
+      <Figure
+        label="Store probes · this read"
+        value={
+          probes.length
+            ? `${probes.length - failed} of ${probes.length} OK`
+            : "Unavailable"
+        }
+        tone={probes.length ? (failed ? "rose" : "mint") : undefined}
+        note={failed ? `${failed} FAILED` : "measured now, no history"}
+      />
+      <Figure
+        label="Collectors"
+        small
+        value={
+          collectors.size
+            ? [...collectors.entries()].map(([k, n]) => `${n} ${k}`).join(" · ")
+            : "Unavailable"
+        }
+        note="status as each health file records it"
+      />
+      <Figure
+        label="Watchdog"
+        small
+        value={
+          wd ? (wd.disabled_flag ? "Disable flag set" : "No disable flag") : "Unavailable"
+        }
+        tone={wd?.disabled_flag ? "amber" : undefined}
+        note={`log modified ${timestamp(wd?.log_modified_at)}`}
+      />
+      <Figure
+        label="Disk free"
+        small
+        value={disk ? `${bytes(disk.free)} of ${bytes(disk.total)}` : "Unavailable"}
+      />
+      <Figure
+        label="Host memory available"
+        small
+        value={
+          host
+            ? `${bytes(host.mem_available)} of ${bytes(host.mem_total)}`
+            : "Unavailable"
+        }
+        note={`load ${value(host?.loadavg)}`}
+      />
+      <Figure
+        label="Execution recovery ledger"
+        small
+        value={value(d.execution_recovery)}
+      />
+    </section>
+  );
+}
+
 export function DiagnosticsDetail() {
   const q = useRead("diagnostics", 30000);
   return (
@@ -891,7 +1102,9 @@ export function DiagnosticsDetail() {
         const wd = rec(d.watchdog);
         return (
           <div className="workspace-stack" data-testid="diagnostics-detail">
+            <DiagnosticsBoard d={d} />
             <SourceStrip source={String(d.source)} at={d.generated_at} />
+            <DiagnosticsProbes d={d} />
             <div className="workspace-grid">
               <Panel title="Storage">
                 <SmallTable
@@ -1009,7 +1222,6 @@ export function DiagnosticsDetail() {
                 ]}
               />
             </Panel>
-            <DiagnosticsProbes d={d} />
             <ControlEventsPager />
             <Panel title="Known visibility limitations">
               <UnavailableFields items={d.unavailable} />

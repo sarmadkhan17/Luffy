@@ -86,7 +86,12 @@ export function Fields({
   return (
     <dl className="record-fields">
       {keys.map(([k, label, fmt]) => (
-        <div key={k + label}>
+        <div
+          key={k + label}
+          className={
+            !fmt && value(row[k]).length > 64 ? "wide-field" : undefined
+          }
+        >
           <dt>{label}</dt>
           <dd>
             {fmt

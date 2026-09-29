@@ -99,7 +99,12 @@ export function RecordDrawer({
           {children}
           <dl className="record-fields">
             {Object.entries(row).map(([k, v]) => (
-              <div key={k}>
+              <div
+                key={k}
+                className={
+                  fieldValue(k, v).length > 40 ? "wide-field" : undefined
+                }
+              >
                 <dt>
                   {k === "realized_pnl" && row.status === "open"
                     ? "Realized so far (USDT)"
@@ -123,6 +128,7 @@ export function RecordTable({
   search: controlledSearch,
   onSearch,
   searchNote,
+  open,
 }: {
   rows: Record<string, unknown>[];
   columns: [string, string][];
@@ -134,6 +140,8 @@ export function RecordTable({
   onSearch?: (search: string) => void;
   /** Placeholder describing what the search covers. */
   searchNote?: string;
+  /** A direct link to the row's own record (its recorded id), if any. */
+  open?: (row: Record<string, unknown>) => ReactNode;
 }) {
   const [localSearch, setLocalSearch] = useState(""),
     [filter, setFilter] = useState("all");
@@ -225,7 +233,8 @@ export function RecordTable({
                       {fieldValue(k, r[k])}
                     </td>
                   ))}
-                  <td>
+                  <td className="evidence-cell">
+                    {open?.(r)}
                     <RecordDrawer
                       row={r}
                       title={value(r.symbol ?? r.name ?? r.id)}

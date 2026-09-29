@@ -23,6 +23,7 @@ import {
 } from "./adapters/live";
 import "./styles.css";
 import "./live.css";
+import "./product.css";
 
 type State =
   | { kind: "loading" }

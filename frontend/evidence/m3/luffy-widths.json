@@ -1,0 +1,42 @@
+{
+  "390": {
+    "mainWidth": 390,
+    "conversationWidth": 362,
+    "transcriptHeight": 371,
+    "composerWidth": 324,
+    "replyEvidenceWidth": 290,
+    "horizontalOverflowPx": 0
+  },
+  "759": {
+    "mainWidth": 759,
+    "conversationWidth": 731,
+    "transcriptHeight": 371,
+    "composerWidth": 693,
+    "replyEvidenceWidth": 659,
+    "horizontalOverflowPx": 0
+  },
+  "768": {
+    "mainWidth": 572,
+    "conversationWidth": 516,
+    "transcriptHeight": 384,
+    "composerWidth": 478,
+    "replyEvidenceWidth": 361,
+    "horizontalOverflowPx": 0
+  },
+  "1024": {
+    "mainWidth": 828,
+    "conversationWidth": 772,
+    "transcriptHeight": 384,
+    "composerWidth": 734,
+    "replyEvidenceWidth": 571,
+    "horizontalOverflowPx": 0
+  },
+  "1440": {
+    "mainWidth": 1216,
+    "conversationWidth": 712,
+    "transcriptHeight": 444,
+    "composerWidth": 674,
+    "replyEvidenceWidth": 522,
+    "horizontalOverflowPx": 0
+  }
+}

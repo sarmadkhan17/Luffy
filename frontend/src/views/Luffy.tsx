@@ -176,6 +176,7 @@ export default function Luffy() {
           className="transcript"
           role="log"
           aria-label="Message transcript"
+          tabIndex={0}
           ref={transcript}
           onScroll={() => {
             const el = transcript.current;
@@ -358,6 +359,9 @@ const MENTION_KIND: Record<string, RecordKind> = {
 export function ReplyEvidence({ m }: { m: NonNullable<Message["mentions"]> }) {
   return (
     <div className="reply-evidence" data-testid="reply-evidence">
+      <span className="reply-evidence-label">
+        Records mentioned by exact id · context, not the reply's source
+      </span>
       {m.links === null || m.links === undefined ? (
         <p className="quiet" data-testid="lookup-unavailable">
           <Badge tone="amber">UNAVAILABLE</Badge> {m.linksNote}
@@ -396,14 +400,13 @@ export function ReplyEvidence({ m }: { m: NonNullable<Message["mentions"]> }) {
       )}
       {m.consulted ? (
         m.consulted.length > 0 && (
-          <p className="quiet">
-            Reads consulted:{" "}
-            {m.consulted
-              .map(
-                (c) =>
-                  `${c.tool}(${c.arguments || ""})${c.error ? ` failed: ${c.error}` : c.rows !== null ? ` → ${c.rows} rows` : ""}`,
-              )
-              .join(" · ")}
+          <p className="quiet consulted">
+            Reads consulted (read-only):{" "}
+            {m.consulted.map((c, i) => (
+              <code key={i}>
+                {`${c.tool}(${c.arguments || ""})${c.error ? ` failed: ${c.error}` : c.rows !== null ? ` → ${c.rows} rows` : ""}`}
+              </code>
+            ))}
           </p>
         )
       ) : (
