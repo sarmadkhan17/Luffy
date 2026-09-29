@@ -22,11 +22,30 @@
 >
 > **Frontend idempotency defects.** Astra found two in this package's
 > frontend. Per the owner decision they are **not corrected**, because the
-> feature is deferred. They must be fixed before this UI is revived. Their
-> specific descriptions were not included in the park instruction given to
-> this session. **TODO:** copy them here verbatim from Astra's review
-> before the package resumes. They are not reconstructed here, to avoid
-> recording guessed findings.
+> feature is deferred. They must be fixed before this UI is revived. As
+> recorded in Astra's review (supplied 2026-09-29). The bold sentences are
+> Astra's findings. The explanation after each is the implementer's reading
+> of the preserved patch, not Astra's wording.
+>
+> 1. **A persistence failure can allow an unresolved attempt to be retried
+>    with a new request ID after refresh.** When browser storage cannot hold
+>    the pending entry, the request id lives only in memory. After a refresh
+>    that id is gone, and a new Close Trade creates a new id for the same
+>    intended close. Relevant code in the preserved patch:
+>    `pending.create` falls back to memory, and `useCloseTrades.submit` then
+>    shows only a warning.
+> 2. **A stale preflight that survives navigation/remount can emit a second
+>    distinct request ID for the same trade.** The in-flight guard
+>    (`busy` ref) and the per-trade state live in the Trade book. After
+>    navigating away and back, or a remount, a preflight that was still
+>    running can finish and create a request id while a new mount has already
+>    started its own close for the same trade. The result is two distinct
+>    request ids for one intended close.
+>
+> For both, the kernel's existing de-duplication (`ALREADY_SET` while a close
+> is queued, `trade_not_open` once closed) limits the effect at execution. It
+> does not satisfy the package's requirement of one request id per intended
+> close.
 >
 > **What was parked:**
 > - The React Close Trade feature was removed from the active frontend candidate. The candidate's frontend source, fixtures and tests match base `4fbefa2` again.
