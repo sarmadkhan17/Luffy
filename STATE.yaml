@@ -4061,8 +4061,16 @@ completed_investigation_research_family_r1:
   runtime_deployment: NOT_DEPLOYED (research pass is opt-in via --research-max-cases; attention.world_model false)
 
 current_active_work:
-  id: null
-  status: NO_ACTIVE_PACKAGE
+  id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
+  status: SHADOW_RUNNING
+  started: '2026-09-30T23:00 local; runner PID 2949543; 15-minute cycles; stops after 72 h, 400 cycles or <shadow-dir>/STOP'
+  shadow_dir: /mnt/luffy-data/luffy/shadow/intelligence-spine-r1-20260930
+  runner: scripts/intelligence_spine_shadow.py at 49951d6 (branch intelligence-spine-r1)
+  boundary: reads production data/attention.db (scan universe) and data/candles.db (closed 4h bars) read-only; writes only the shadow dir; production Kernel (main) untouched; no orders, Risk, allocation, strategy, control state, network or LLM
+  first_evidence:
+    - cycle 0 real scan of the Kernel's 16-symbol universe; WorldModel receipt ok with 16 VALID volume_anomaly observations (~44 KB record); capture to persist about 0.5-1.0 s
+    - cycle 1 registered 3 real cases (relative_return_divergence, correlation_change, volatility_transition), each with intelligence-trace.v1 stages source_observation through registration AVAILABLE and research UNAVAILABLE (no family for those)
+    - no real volume_anomaly case registered yet; research-leg evidence on real data is PENDING
   note: LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 PASS (TESTED, NOT_DEPLOYED) completes the shadow spine source -> WorldModel -> Attention -> investigation(volume_anomaly) -> Q/P/E/R -> Research Bank in tests; NEXT.yaml names LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1 awaiting owner authorization. SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1 is TESTED at 9f7edfb and NOT_DEPLOYED. Bounded isolated automatic research invocation, two-family internal dispatch and an offline read-only context_only owner report are TESTED in the shadow harness only. Recurring operation and production-scale timing evidence remain MISSING; no cadence or production bounds are chosen. No trading/control authority or live Risk/Execution path is established. A one-shot production-scale timing run is only a separate owner-decision candidate. All parked boundaries remain unchanged.
 
 parked_usefulness_feedback:

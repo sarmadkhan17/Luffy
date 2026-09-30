@@ -5,7 +5,7 @@ work_package:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
   type: SHADOW_OPERATION
   priority: HIGH
-  status: AUTHORIZED_BY_OWNER_2026-09-30
+  status: IN_PROGRESS_SHADOW_RUNNING (authorized by owner 2026-09-30; see STATE.yaml current_active_work)
   objective: >
     Observe the TESTED intelligence spine on real data in shadow/read-only
     mode: enable attention.world_model and one bounded investigation consumer
