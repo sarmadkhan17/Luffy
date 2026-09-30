@@ -2,36 +2,42 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: null
-  status: NO_ACTIVE_PACKAGE
+  id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
+  type: SHADOW_OPERATION
+  priority: HIGH
+  status: AUTHORIZED_BY_OWNER_2026-09-30
+  objective: >
+    Observe the TESTED intelligence spine on real data in shadow/read-only
+    mode: enable attention.world_model and one bounded investigation consumer
+    invocation with --research-max-cases, and record production evidence of
+    runtime, storage growth and every stage's stored ids for real
+    volume_anomaly cases through Q/P/E/R and the Research Bank.
+  why: >
+    LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 passed in deterministic tests only.
+    The spine has never run on production data; runtime, storage growth
+    (about 42 KB WorldModel record per scan, frozen evidence per research
+    run) and real-case behaviour are unmeasured.
+  owner_decision_required:
+    - authorization to enable attention.world_model and to invoke the investigation consumer with --research-max-cases (values, duration, stop conditions)
+  acceptance:
+    - at least one real volume_anomaly case traced source -> Research Bank with actual stored ids, or an exact recorded reason why none occurred
+    - measured per-scan runtime and storage growth against the Attention and investigation ledger budgets
+    - TRADING_BEHAVIOR_CHANGED = NO; no orders, Risk, allocation, strategy or control-state change
+  execution_constraints:
+    - shadow/read-only; research.referee=false and research.handoff=false unchanged
+    - no paid sources, no network acquisition for participant cause, no LLM
+    - SUPPORTED results establish no predictive edge and grant no trading permission
   last_completed:
-    id: SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1
+    id: LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
+    verdict: PASS
     state: TESTED
-    implementation_commit: 9f7edfb
+    branch: intelligence-spine-r1
     evidence:
-      - trader/cognition/research_families.py; trader/cognition/research_shadow_store.py; trader/cognition/research_shadow_contract.py; trader/cognition/research_shadow.py; trader/cognition/_research_shadow_child.py; trader/cognition/research_shadow_report.py
-      - tests/test_research_family_dispatch.py; tests/test_research_shadow_isolation.py; tests/test_research_shadow_invocation.py; tests/test_research_shadow_report.py; tests/research_shadow_fixtures.py
-      - Astra final PASS; 190 harness tests passed; four updated caller guards passed; prior milestone regression 1888 passed / 1 baseline failure; fresh import comparison 54 baseline violations / 54 current / zero new; git diff --check clean
+      - trader/observability/investigation_research.py; trader/observability/intelligence_trace.py; trader/observability/investigation.py
+      - tests/test_investigation_research_family.py (15 passed); tests/test_intelligence_spine.py (26 passed)
+      - docs/superpowers/reports/2026-09-30-investigation-research-family-r1.md
     runtime_deployment: NOT_DEPLOYED
-    record: STATE.yaml completed_research_shadow_harness_v1
-  selection: No next implementation package is selected or queued. The next milestone candidate is a separate owner decision for one-shot RESEARCH_SHADOW production-scale timing evidence, not another feature package; the candidate is not authorized.
-  one_shot_research_shadow_timing_candidate:
-    status: NOT_AUTHORIZED
-    purpose: Observe production-scale timing and resource effects on the approximately 1.6 GB production database.
-    authorization_must_specify:
-      - source DB path
-      - shadow DB path
-      - max_sources
-      - wall_clock_deadline_s
-      - invocation_key / recorded_at_ms
-      - observation/timing goal
-      - stop conditions
-      - acceptable WAL/checkpoint/resource impact
-    recurring_cadence_requires:
-      - one-shot production-scale timing evidence
-      - review of that evidence
-      - separate owner authorization
-    trading_authority: NONE
+    record: STATE.yaml completed_investigation_research_family_r1
   established_boundary:
     - INVESTIGATION_ASSESSED_MEMORY_CONTEXT_NOT_AUTHORITY, ASSESSED_RESULT_VOCABULARY_NOT_VALUE_LABEL and KNOWN_BEFORE_REGISTRATION_REQUIRED hold; assessed memory is context_only, is not an investigation-value.v1 label, and is not deployed.
     - Measured-memory malformed-source hardening is TESTED at 71204ca and not deployed; valid measured, assessed and not_testable memory behavior is unchanged.
@@ -73,6 +79,26 @@ work_package:
     - Portfolio magnitude remains blocked by NO_JUSTIFIED_PORTFOLIO_MAGNITUDE_YET; portfolio salience remains BLOCKED_UPSTREAM.
     - failed_research_memory is PARTIAL (strategy-decay and strategy-health-unreadable prior-research context recall TESTED; suppression/cooldown/no-repeat policy MISSING and not established by recall); CORRELATION_UNASSESSABLE_EFFECTIVELY_UNREACHABLE and MEMORY_CONTEXT_NOT_AUTHORITY hold.
     - Attention overall remains IMPLEMENTED; no maturity upgrade or activation.
+    - investigation_volume_anomaly research family (RESEARCH-FAMILY-R1) is TESTED and NOT_DEPLOYED; its SUPPORTED means only a frozen registered observable path was supported by its exact forward measurement, not a predictive edge or trading permission; other investigation families have no research family.
+    - The shadow WorldModel -> Attention -> investigation spine (INTELLIGENCE-SPINE-R1) is TESTED and NOT_DEPLOYED; its WorldModel volume_anomaly reproduces the existing Attention component and adds provenance only; enabling attention.world_model in production requires separate authorization.
+
+parked_research_shadow_timing_candidate:
+  status: NOT_AUTHORIZED
+  purpose: Observe production-scale timing and resource effects on the approximately 1.6 GB production database.
+  authorization_must_specify:
+    - source DB path
+    - shadow DB path
+    - max_sources
+    - wall_clock_deadline_s
+    - invocation_key / recorded_at_ms
+    - observation/timing goal
+    - stop conditions
+    - acceptable WAL/checkpoint/resource impact
+  recurring_cadence_requires:
+    - one-shot production-scale timing evidence
+    - review of that evidence
+    - separate owner authorization
+  trading_authority: NONE
 
 parked_scheme_d_work_package:
   id: M3.2-SCHEME-D-V4-POST-PILOT
@@ -141,5 +167,6 @@ after_completion:
   - SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1 is TESTED at 9f7edfb and NOT_DEPLOYED. It establishes bounded isolated shadow invocation, internal dispatch for exactly strategy_decay and strategy_health_unreadable, and an offline read-only context_only owner report. No Kernel scheduling, persistent service, recurring cadence, Risk/Execution path or trading authority is established.
   - One-shot production-scale timing is a separate owner-decision candidate only. Authorization must specify the source DB path, shadow DB path, max_sources, wall_clock_deadline_s, invocation_key / recorded_at_ms, observation/timing goal, stop conditions and acceptable WAL/checkpoint/resource impact. Recurring cadence requires one-shot evidence, review of that evidence and separate owner authorization. Neither authorization grants trading authority.
   - max_sources bounds source selection only. Full-history derivation/verification, repeated Bank filing, WAL/checkpoint effects and storage growth remain unbounded; batch-independent results and production timing are not established. Source identity is not a full database fingerprint. Total research cost remains NOT_ESTABLISHED; budget manager authority is MISSING.
-  - External Source Router/retrieval, registered falsifier predicates, a truthful WorldModel/regime source and failed-research suppression/no-repeat policy remain MISSING. Do not infer authority from context_only recall or reports. No next implementation package is selected or queued.
+  - External Source Router/retrieval, registered falsifier predicates, a truthful WorldModel/regime source and failed-research suppression/no-repeat policy remain MISSING. Do not infer authority from context_only recall or reports.
+  - LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1 (BLOCKED) was unblocked by LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 (PASS, TESTED, NOT_DEPLOYED). The single next package is LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1, awaiting owner authorization.
   - Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged.

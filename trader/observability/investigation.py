@@ -31,6 +31,8 @@ from . import outcomes as outcome_store
 from trader.cognition import outcomes as outcome_core
 from trader.cognition import forecast_protocol
 from trader.cognition import opportunity_context as oc
+from . import world_producer
+from . import intelligence_trace as trace_store
 
 MAX_ACTIVE, MAX_UPDATES, MAX_CASES = 32, 32, 256
 MAX_BYTES, RETENTION_MS, FRESH_MS = 32 * 1024**2, 30 * 86_400_000, 300_000
@@ -202,6 +204,8 @@ class Snapshot:
     bars: tuple[I.InputBar, ...]
     observed_ms: int
     dataset: object = field(default=None, repr=False, compare=False)
+    #: the exact WorldModel the scan was evaluated with (None when it had none)
+    world_model: object = field(default=None, repr=False, compare=False)
 
     def state(self, symbol, family=None):
         return I.make_state(self.scan, self.result, symbol, self.bars, self.observed_ms, family)
@@ -266,7 +270,11 @@ def adapt(source, observed_ms):
         if c is None:
             raise ValueError("future_or_unavailable_bar")
         bars.append(I.InputBar(vid, c))
-    result = evaluate(ds, scan["as_of_ms"], cfg, scan["scan_id"], {})
+    try:
+        world = world_producer.replay(scan, ds)
+    except world_producer.ReplayRefused as exc:
+        raise ValueError(exc.reason) from None
+    result = evaluate(ds, scan["as_of_ms"], cfg, scan["scan_id"], {}, world)
     if (result["universe"] != scan["rows"] or result["market"] != scan["market"]
             or [asdict(o) for o in result["observations"]] != scan["observations"]):
         raise ValueError("source_evaluator_mismatch")
@@ -279,7 +287,7 @@ def adapt(source, observed_ms):
                        ("cognition/forecast_protocol.py", Path(forecast_protocol.__file__)),
                        ("observability/outcomes.py", Path(outcome_store.__file__))):
         manifest[name] = hashlib.sha256(path.read_bytes()).hexdigest()
-    return Snapshot(dict(scan, code_manifest=manifest), result, tuple(bars), observed_ms, ds)
+    return Snapshot(dict(scan, code_manifest=manifest), result, tuple(bars), observed_ms, ds, world)
 
 
 def ledger(path):
@@ -314,6 +322,8 @@ def ledger(path):
     """)
     memory_store.schema(db)
     outcome_store.schema(db)
+    trace_store.schema(db)
+    trace_store.IR.schema(db)
     return db
 
 
@@ -368,7 +378,8 @@ def allocate(snapshot, state, scan_sha256, cut_ms, mode=ALLOCATION_POLICY, refus
     if mode == ALLOCATION_POLICY:
         if snapshot.dataset is None:
             raise LedgerRefused("allocation_dataset_missing")
-        ctx = evaluate(snapshot.dataset, scan["as_of_ms"], cfg, scan["scan_id"], open_episodes)
+        ctx = evaluate(snapshot.dataset, scan["as_of_ms"], cfg, scan["scan_id"], open_episodes,
+                       snapshot.world_model)
         strip = lambda rows: {s: {k: v for k, v in r.items() if k not in _CONTEXT_KEYS}
                               for s, r in rows.items()}
         if ctx["ranked"] != legacy["ranked"] or strip(ctx["rows"]) != strip(legacy["rows"]):
@@ -455,12 +466,14 @@ def registration_context(scan, allocation, inv, initial):
     """opportunity-context.v1 for one registration, from evidence already in hand.
 
     The cut is the case's registration time. Only the persisted Attention scan,
-    the frozen allocation decision, the case and its initial update are bound;
-    signals, registry selection, instrument and world model stay UNKNOWN.
+    the frozen allocation decision, the case, its initial update and the exact
+    WorldModelRecord the scan was evaluated with (when it had one) are bound;
+    signals, registry selection and instrument stay UNKNOWN.
     """
     return oc.build(as_of_ms=inv.registered_ms, symbol=inv.state.symbol, attention_scan=scan,
                     allocation={k: v for k, v in allocation.items() if k != "reused"},
-                    investigation=inv, investigation_update=initial)
+                    investigation=inv, investigation_update=initial,
+                    world_model=world_producer.record_of(scan))
 
 
 def _retain(db, value):
@@ -519,7 +532,7 @@ def persist_context(db, investigation_id, ctx, scan, allocation):
     return True
 
 
-def _record_context(db, scan, allocation, inv, initial, counts):
+def _record_context(db, scan, allocation, inv, initial, counts, traces=None):
     """Best effort inside a savepoint: a refusal or recoverable write failure
     rolls back only the context rows and is reported by reason code.
 
@@ -529,9 +542,8 @@ def _record_context(db, scan, allocation, inv, initial, counts):
     """
     db.execute("SAVEPOINT opportunity_context")
     try:
-        written = persist_context(db, inv.investigation_id,
-                                  registration_context(scan, allocation, inv, initial),
-                                  scan, allocation)
+        ctx = registration_context(scan, allocation, inv, initial)
+        written = persist_context(db, inv.investigation_id, ctx, scan, allocation)
     except (oc.OpportunityContextRefused, ContextConflict, sqlite3.Error) as exc:
         if not db.in_transaction:
             raise ContextTransactionLost("opportunity_context_transaction_lost") from exc
@@ -545,6 +557,30 @@ def _record_context(db, scan, allocation, inv, initial, counts):
         counts["refused"][reason] = counts["refused"].get(reason, 0) + 1
         return
     db.execute("RELEASE opportunity_context")
+    counts["written" if written else "duplicate"] += 1
+    if traces is not None:
+        _record_trace(db, scan, allocation, inv, initial, ctx, traces)
+
+
+def _record_trace(db, scan, allocation, inv, initial, ctx, counts):
+    """intelligence-trace.v1 beside its persisted context, in its own
+    savepoint: a refused trace is reported by reason and never undoes the
+    registration or its context."""
+    db.execute("SAVEPOINT intelligence_trace")
+    try:
+        written = trace_store.persist(db, trace_store.build(scan, allocation, inv, initial, ctx))
+    except (trace_store.TraceRefused, sqlite3.Error, KeyError, TypeError, ValueError) as exc:
+        if not db.in_transaction:
+            raise ContextTransactionLost("intelligence_trace_transaction_lost") from exc
+        try:
+            db.execute("ROLLBACK TO intelligence_trace")
+            db.execute("RELEASE intelligence_trace")
+        except sqlite3.Error as lost:
+            raise ContextTransactionLost("intelligence_trace_transaction_lost") from lost
+        reason = getattr(exc, "reason", None) or "intelligence_trace_" + type(exc).__name__
+        counts["refused"][reason] = counts["refused"].get(reason, 0) + 1
+        return
+    db.execute("RELEASE intelligence_trace")
     counts["written" if written else "duplicate"] += 1
 
 
@@ -705,6 +741,7 @@ def _step(source_path, dest_path, now_ms, population_config, contexts_enabled):
         db.execute("DELETE FROM case_inputs WHERE case_id NOT IN (SELECT id FROM cases)")
         db.execute("DELETE FROM resource_receipts WHERE case_id NOT IN (SELECT id FROM cases)")
         db.execute("DELETE FROM opportunity_contexts WHERE investigation_id NOT IN (SELECT id FROM cases)")
+        db.execute("DELETE FROM intelligence_traces WHERE investigation_id NOT IN (SELECT id FROM cases)")
         db.execute("DELETE FROM context_evidence WHERE sha256 NOT IN (SELECT scan_sha256 FROM opportunity_contexts "
                    "UNION SELECT allocation_sha256 FROM opportunity_contexts)")
         db.execute("DELETE FROM inputs WHERE id NOT IN (SELECT input_id FROM case_inputs)")
@@ -781,6 +818,7 @@ def _step(source_path, dest_path, now_ms, population_config, contexts_enabled):
                 charge(meter, inv, "assessment", "no_state_change", prior, None)
         if snapshot:
             contexts = detail["opportunity_context"] = {"written": 0, "duplicate": 0, "refused": {}}
+            traces = detail["intelligence_trace"] = {"written": 0, "duplicate": 0, "refused": {}}
             if not contexts_enabled:
                 contexts["disabled"] = "opportunity_context_transaction_lost"
             decisions = [dict(row, registration_reason='not_selected_for_investigation')
@@ -847,7 +885,7 @@ def _step(source_path, dest_path, now_ms, population_config, contexts_enabled):
                 charge(meter, inv, "registration", "registered", None, initial.event_id)
                 # After the receipt, so case-local measurements are unchanged.
                 if contexts_enabled:
-                    _record_context(db, source[0], allocation, inv, initial, contexts)
+                    _record_context(db, source[0], allocation, inv, initial, contexts, traces)
             if pop:
                 pop.scan(dict(snapshot.scan,collector_evidence=detail.get("collector_evidence")), decisions)
         if pop and snapshot is None and pop.declaration['start_ms'] <= now < pop.declaration['discovery_cut_ms']:
@@ -957,6 +995,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--enable", action="store_true")
+    # Opt-in bounded shadow research pass (investigation_research.py); 0 = off.
+    parser.add_argument("--research-max-cases", type=int, default=0)
     args = parser.parse_args()
     if not args.once or not args.enable:
         print(I.encode({"status": "disabled"})); return 0
@@ -980,7 +1020,18 @@ def main():
                   "reason": str(exc)[:100] if isinstance(exc, ValueError) and str(exc).startswith("population_") else "consumer_failed"}
     finally:
         signal.setitimer(signal.ITIMER_REAL, 0)
-        signal.signal(signal.SIGALRM, old_handler)
+    if args.research_max_cases > 0 and result.get("status") != "error":
+        from . import investigation_research as research
+        signal.setitimer(signal.ITIMER_REAL, I.MAX_RUNTIME_MS / 1000)
+        try:
+            result["research"] = research.research_pass(
+                data / "investigation.db", recorded_at_ms=int(time.time() * 1000),
+                max_cases=args.research_max_cases)
+        except Exception as exc:
+            result["research"] = {"status": "error", "error_type": type(exc).__name__}
+        finally:
+            signal.setitimer(signal.ITIMER_REAL, 0)
+    signal.signal(signal.SIGALRM, old_handler)
     result["consumer_code_hash"] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     dest = data / "investigation_health.json"
     try:

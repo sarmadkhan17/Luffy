@@ -1,6 +1,6 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-09-27'
+updated_at: '2026-09-30'
 status: EVIDENCE_BASED
 
 progress_method:
@@ -64,13 +64,19 @@ capabilities:
       - trader/research/evaluate.py
       - trader/research/growth.py
       - trader/research/ledger.py
+      - trader/observability/investigation_research.py
+      - tests/test_investigation_research_family.py
     proven_facts:
       - discovery and held-out evaluation paths exist
+      - one investigation-sourced research family (investigation_volume_anomaly) runs Q -> P -> E -> R -> run -> Research Bank from a verified persisted investigation.v2 volume_anomaly case with registered falsifier predicates for that family only; TESTED, NOT_DEPLOYED (LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1)
+      - its SUPPORTED means only that the frozen registered observable path was supported by its exact forward measurement; no predictive edge, cause, profitability or trading permission; unresolved and not_testable are INCONCLUSIVE with every path NOT_ASSESSED, never REFUTED
       - held-out gate1 and book-level gate3 exist
       - candidate state referee_passed exists
     gaps:
       - research-to-live approval/handoff is not yet the finalized SDD v3.2 path
       - bounded M3.2 Scheme-D v4 pilot is non-final; full validation remains unauthorized (see parked_scheme_d_work)
+      - strategy_decay and strategy_health_unreadable still have no registered falsifier predicates and remain INCONCLUSIVE; registered predicates exist only for investigation_volume_anomaly
+      - investigation_volume_anomaly persists in its own append-only table (investigation_research_records) rather than the decay tables, because decay verifiers read those unfiltered and key questions by integer journal event id; it reuses the record roles, bank field layout and insert/duplicate/conflict semantics
 
   strategy_decay_and_lifecycle:
     state: TESTED
@@ -233,6 +239,9 @@ capabilities:
       - tests/test_portfolio_observation.py
       - e61fb82 Add correlation change attention intelligence
       - tests/test_cognition_attention_correlation.py
+      - trader/observability/world_producer.py
+      - trader/observability/store.py
+      - tests/test_intelligence_spine.py
     proven_facts:
       - current GitHub repository contains cognition attention code
       - attention produces structured observations and selection reasons
@@ -299,7 +308,8 @@ capabilities:
       - SDD-STAGE-3-ATTENTION-PORTFOLIO-OBSERVATION-PREREQUISITE is TESTED at 285b0ce as capture-only evidence; it is not consumed by Attention
       - SDD-STAGE-3-ATTENTION-CORRELATION-CHANGE-V1 is TESTED at e61fb82 (correlation_change component vs the captured leave-one-out peer basket); a deterministic heuristic feature, not a significance test; predictive usefulness NOT_ESTABLISHED; not deployed
     gaps:
-      - live Kernel does not currently supply a WorldModel to Attention; the tested evaluator input is a seam, not live production input
+      - live shadow WorldModel input is TESTED through the Kernel's Attention collector worker child (LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1) but NOT_DEPLOYED; attention.world_model is false in config
+      - the live WorldModel volume_anomaly reproduces Attention's own candle volume_anomaly exactly; it adds provenance, not new ranking evidence, and no other WorldModel kind is consumed by Attention
       - venue-active instruments with account_eligibility=UNKNOWN may be observed by Attention without implying trade permission; registry, Attention, trading, Risk and Execution authority remain separate (trader/core/instrument_registry.py; trader/observability/attention.py)
       - the 2-second timeout is an implementation choice, not an SDD constant
       - pathological OS uninterruptible-process states cannot guarantee both finite cleanup and confirmed reaping
@@ -339,11 +349,15 @@ capabilities:
       - terminal assessed descriptive positioning_extreme/correlation_change results are retained as investigation-assessed-memory.v1 with exact original result vocabulary and recalled at registration as context_only at 8904fef (SDD-STAGE-3-INVESTIGATION-ASSESSED-MEMORY-V1); no effect on salience, rank or allocation; not usefulness/value labels
       - malformed measured-memory (investigation.v2) sources fail closed and are dispositioned once instead of crashing ingest() at 71204ca (SDD-STAGE-3-MEASURED-MEMORY-MALFORMED-SOURCE-HARDENING-V1); valid measured/assessed/not_testable behavior unchanged
       - malformed not_testable/UNASSESSABLE memory sources fail closed and are dispositioned once; future-observed sources are deferred before processing limits and cannot starve ready valid closures at 995fa9c (SDD-STAGE-3-UNASSESSABLE-MEMORY-MALFORMED-SOURCE-HARDENING-V1); valid investigation-unassessable-memory.v1, measured and assessed behavior unchanged
+      - investigation adapt()/allocate() replay the exact persisted WorldModel a scan was evaluated with, re-deriving it from the replayed candles and refusing tampered, corrupt or fabricated records (LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1, TESTED, NOT_DEPLOYED)
+      - volume_anomaly cases are verified (identity recomputed, every update replayed from retained inputs, registration context replayed) and researched by investigation_volume_anomaly; tampered cases, updates or target versions are refused (LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1, TESTED, NOT_DEPLOYED)
+      - each registration persists intelligence-trace.v1 beside its opportunity context, linking stored source-observation, WorldModel, Attention, allocation and investigation ids; research stages are recorded UNAVAILABLE/NOT_RUN, never fabricated
       - eligible measured/unassessable memory candidates are filtered in SQL before the 256-row LIMIT, so unrelated terminal/no-update rows cannot crowd the bounded window, at 17f2ab6 (SDD-STAGE-3-INVESTIGATION-MEMORY-CANDIDATE-ISOLATION-V1); (created_ms,id) ordering, 256 candidate bound and 32-per-path cap preserved; assessed ingestion unchanged
     gaps:
       - investigation-value.v1 usefulness labels do not exist; no protocol-defined label source (USEFULNESS_LABEL_SOURCE_MISSING, 2026-09-25)
       - resource bounds are undeclared; rolled-back/failed attempt cost is UNKNOWN and total research cost is not established (a measured research-cost ledger is TESTED at e4b3deb; it keeps the total NOT_ESTABLISHED)
       - separate lightweight trading Opportunity registry from SDD v3.2 is not yet implemented
+      - only volume_anomaly investigations have a research family; volatility_transition, relative_return_divergence, positioning_extreme and correlation_change cases have none (trace UNAVAILABLE)
 
   operator_api_and_auth:
     state: IMPLEMENTED
@@ -419,6 +433,8 @@ capabilities:
       - tests/test_world_claim.py
       - tests/test_world_replay.py
       - tests/test_research_evaluate.py
+      - trader/observability/world_producer.py
+      - tests/test_intelligence_spine.py
     proven_facts:
       - immutable point-in-time Observation contract is tested
       - immutable WorldState is tested
@@ -430,8 +446,12 @@ capabilities:
       - current strategy accepts an optional ordinary WorldModel and historical research resolves WorldHistory.get_exact(Bundle.cut); both query the same typed WorldModel API and equivalent contexts yield equivalent typed claims
       - legacy strategy and research behavior is preserved when WorldModel is absent
       - final Stage 2 integration verification passed 127 tests
+      - a bounded shadow producer (world-model-live-receipt.v1, attention-scan-world-producer.v1) builds a WorldModel at each Attention scan's exact cut from the scan's own closed bars inside the timeout-bounded collector worker child; TESTED, NOT_DEPLOYED
+      - producer output is closed_bar_volume_window plus a perception-derived INTRADAY volume_anomaly z-score; missing, stale, malformed and undefined inputs are explicit MISSING/STALE/INVALID observations with value None
+      - the exact WorldModelRecord is persisted with the scan and replayed/re-derived by the investigation consumer; producer failure or a cut mismatch degrades to the legacy Attention output with an explicit receipt status
     gaps:
-      - production/shadow operation and actual correlation/beta computation are not established by Stage 2 tests
+      - shadow operation is TESTED but not deployed or observed in production (attention.world_model false); actual correlation/beta computation is not established
+      - the live producer carries only volume-window evidence already used by Attention; no regime, cross-market, relationship or claim content is produced live
       - full analyst integration and full strategy migration are not established
 
   opportunity_context:
@@ -3988,10 +4008,62 @@ completed_research_shadow_harness_v1:
     - separate owner authorization
   future_shadow_authorization_trading_authority: NONE
 
+completed_intelligence_spine_r1:
+  id: LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1
+  verdict: BLOCKED
+  state: TESTED
+  branch: intelligence-spine-r1
+  report: docs/superpowers/reports/2026-09-30-intelligence-spine-live-integration-r1.md
+  evidence:
+    - trader/observability/world_producer.py
+    - trader/observability/intelligence_trace.py
+    - trader/observability/store.py
+    - trader/observability/attention.py
+    - trader/observability/investigation.py
+    - tests/test_intelligence_spine.py
+  stage_results:
+    world_model_live: TESTED - shadow producer in the Attention worker child; NOT_DEPLOYED
+    attention_integration: TESTED - existing seam; exact cut; ranking unchanged by construction
+    investigation_trigger: TESTED - existing families only; exact model replay; idempotent
+    research_chain: BLOCKED - no registered research family accepts an investigation source
+    referee: NOT_RUN for this spine - existing evidence predicates untouched
+    end_to_end_trace: TESTED - intelligence-trace.v1; research stages UNAVAILABLE/NOT_RUN
+    shadow_runtime: TESTED through Kernel collector path; NOT_DEPLOYED
+  trading_behavior_changed: NO
+  blocker: research_families.FAMILIES derive only from strategy-health-observation.v1; the package forbids a new trigger family or parallel research objects; no falsifier predicates are registered
+  runtime_deployment: NOT_DEPLOYED
+
+completed_investigation_research_family_r1:
+  id: LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
+  verdict: PASS
+  state: TESTED
+  branch: intelligence-spine-r1
+  report: docs/superpowers/reports/2026-09-30-investigation-research-family-r1.md
+  owner_authorization: one new research family sourced from persisted investigation.v2 volume_anomaly cases (2026-09-30)
+  evidence:
+    - trader/observability/investigation_research.py
+    - trader/observability/intelligence_trace.py
+    - trader/observability/investigation.py
+    - tests/test_investigation_research_family.py
+    - tests/test_intelligence_spine.py
+  stage_results:
+    question: TESTED - case question verbatim, bound to investigation/state/catalog/registration context/WorldModel/Attention/trace ids
+    plan: TESTED - routes only the verified update chain, terminal OutcomeEvidence and exact target inputs; participant cause UNAVAILABLE
+    evidence: TESTED - identities recomputed, every update replayed, exact target inputs frozen; fail closed
+    falsifier: TESTED - registered predicates for this family only, derived from the frozen catalog threshold and required to agree with the stored terminal assessment
+    result: TESTED - SUPPORTED/REFUTED per path when measured; INCONCLUSIVE/NOT_ASSESSED when unresolved or not_testable
+    research_bank: TESTED - research-bank-object.v1 field layout, exact ids and sha256 of Q/P/E/R/run, trace_id; recall context_only
+    end_to_end_trace: TESTED - all 11 intelligence-trace.v1 stages AVAILABLE with actual stored ids
+  deviation: persisted in family-scoped schemas and table investigation_research_records instead of the decay research tables (decay verifiers read those unfiltered; research_questions keys by integer journal event id)
+  deviation_status: ACCEPTED by owner 2026-09-30
+  predictive_edge_established: NO
+  trading_behavior_changed: NO
+  runtime_deployment: NOT_DEPLOYED (research pass is opt-in via --research-max-cases; attention.world_model false)
+
 current_active_work:
   id: null
   status: NO_ACTIVE_PACKAGE
-  note: SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1 is TESTED at 9f7edfb and NOT_DEPLOYED. Bounded isolated automatic research invocation, two-family internal dispatch and an offline read-only context_only owner report are TESTED in the shadow harness only. Recurring operation and production-scale timing evidence remain MISSING; no cadence or production bounds are chosen. No trading/control authority or live Risk/Execution path is established. A one-shot production-scale timing run is only a separate owner-decision candidate; no next implementation package is selected or queued. All parked boundaries remain unchanged.
+  note: LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 PASS (TESTED, NOT_DEPLOYED) completes the shadow spine source -> WorldModel -> Attention -> investigation(volume_anomaly) -> Q/P/E/R -> Research Bank in tests; NEXT.yaml names LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1 awaiting owner authorization. SDD-STAGE-3-RESEARCH-SHADOW-HARNESS-V1 is TESTED at 9f7edfb and NOT_DEPLOYED. Bounded isolated automatic research invocation, two-family internal dispatch and an offline read-only context_only owner report are TESTED in the shadow harness only. Recurring operation and production-scale timing evidence remain MISSING; no cadence or production bounds are chosen. No trading/control authority or live Risk/Execution path is established. A one-shot production-scale timing run is only a separate owner-decision candidate. All parked boundaries remain unchanged.
 
 parked_usefulness_feedback:
   id: SDD-STAGE-3-ATTENTION-INVESTIGATION-VALUE-FEEDBACK-V1
@@ -4042,6 +4114,28 @@ parked_scheme_d_work:
     - the one authorized bounded v4 pilot is complete; do not run another pilot, full validation or any additional RNG benchmark without separate explicit owner authorization
     - do not spend cloud money
     - leave v1/v2/v3, frozen v4 and frozen truth package untouched
+
+delivery_progress:
+  authority: NON_AUTHORITATIVE
+  rule: progress_method.scoring_rule governs; these figures are formula-derived conveniences, not acceptance evidence
+  integrated_delivery_percent: 100
+  integrated_delivery_formula: intelligence spine stages AVAILABLE with actual stored ids in one tested shadow trace / 11 stages (intelligence_trace.STAGES, registration now its own stage); SPINE-R1 5/10, RESEARCH-FAMILY-R1 11/11; tested linkage only, not deployed or production-observed
+  capability_coverage_percent: 53
+  capability_coverage_formula: capabilities at TESTED or better / 17 capabilities in STATE.capabilities (9/17); unchanged by R1
+  current_milestone: Stage 3 intelligence spine (WorldModel -> Attention -> Investigation -> Research) in shadow
+  last_completed: LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 (PASS; TESTED; NOT_DEPLOYED)
+  stages:
+    source_observation: LINKED
+    world_model: LINKED
+    attention: LINKED
+    allocation: LINKED
+    investigation: LINKED
+    registration: LINKED
+    research_question: LINKED
+    research_plan: LINKED
+    research_evidence: LINKED
+    research_result: LINKED
+    research_bank_object: LINKED
 
 known_stale_docs:
   - REQUIREMENTS.md contains older frozen decisions and is not the current architecture authority.
