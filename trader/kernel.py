@@ -716,8 +716,14 @@ class Kernel:
                         "uncommitted transaction was still open")
         return rep
 
-    def _install_spec(self, spec, ev: dict, analyst, extra: dict) -> None:
-        """Everything that follows an Analyst admission, whoever proposed."""
+    def _install_spec(self, spec, ev: dict, analyst, extra: dict,
+                      version_id: str | None = None) -> bool:
+        """Everything that follows an Analyst admission, whoever proposed.
+
+        With `version_id` the spec is a frozen StrategyVersion and is
+        installed exactly (`_install_version`); True when it was installed."""
+        if version_id is not None:
+            return self._install_version(spec, ev, analyst, extra, version_id)
         # regime_filter as written is a guess; measure it before the
         # orchestrator starts gating live signals on it
         spec.timeframe = ev.get("chosen_timeframe", spec.timeframe)
@@ -740,21 +746,97 @@ class Kernel:
                 f"({spec.timeframe}, {'/'.join(spec.regime_filter)})\n"
                 f"recent PF {ev['recent']['pooled_pf']} over "
                 f"{ev['recent']['trades']} trades \u2192 paper")
+        return True
+
+    def _install_version(self, spec, ev: dict, analyst, extra: dict,
+                         version_id: str) -> bool:
+        """Paper-install the EXACT frozen StrategyVersion (owner decision
+        2026-09-30: the frozen version is authority).
+
+        Nothing contributing to spec_hash is rewritten. If admission chose
+        another timeframe the version is refused, not refitted; measured
+        regimes are recorded as advisory, never applied (applying them would
+        also rewrite provenance). A materially different install is a new
+        derived version with its own validation, probation and approval."""
+        import copy
+        from .strategy import factory_handoff as fh
+
+        def refuse(code: str, detail: str = "") -> bool:
+            self.journal.log_brain_event(
+                "spec_install_refused", spec.id,
+                {"name": spec.name, "version_id": version_id,
+                 "reason_code": code, "detail": detail, "evidence": ev,
+                 **extra})
+            log.warning(f"exact version {version_id[:12]} of {spec.id} "
+                        f"not installed: {code} {detail}")
+            return False
+
+        chosen = ev.get("chosen_timeframe", spec.timeframe)
+        if chosen != spec.timeframe:
+            return refuse("timeframe_differs_from_version",
+                          f"admission chose {chosen}; version is frozen at "
+                          f"{spec.timeframe}")
+        try:
+            v = fh.load_version(self.journal, version_id)
+            fh.verify_validation(self.journal, v)
+        except fh.HandoffRefused as e:
+            return refuse(e.code)
+        if fh.state_of(self.journal, version_id) != fh.VALIDATED:
+            return refuse("version_not_validated",
+                          str(fh.state_of(self.journal, version_id)))
+        if spec.to_dict() != v["spec"]:
+            return refuse(fh.P_INSTALLED_DIFFERS, "spec is not the frozen one")
+        try:
+            rf = analyst.set_measured_regimes(copy.deepcopy(spec))
+        except Exception as e:                          # noqa: BLE001
+            rf = {"error": str(e)}
+        if (self.cfg.get("tv_harness", {}) or {}).get("enabled", False):
+            try:
+                ev["tv"] = analyst.confirm_on_tv(copy.deepcopy(spec))
+            except Exception as e:
+                log.debug(f"tv confirmation skipped: {e}")
+        self.journal.upsert_spec(spec, state="paper")
+        try:
+            inst = fh.record_exact_install(self.journal, version_id,
+                                           mode="paper",
+                                           at_ms=int(time.time() * 1000))
+        except fh.HandoffRefused as e:
+            # the row must not trade outside a bound probation
+            with self.journal._tx() as c:
+                c.execute("UPDATE strategies SET state='retired', "
+                          "retire_reason=?, state_changed_at=? WHERE id=?",
+                          (f"exact install refused: {e.code}",
+                           dt.datetime.now(dt.timezone.utc).isoformat(),
+                           spec.id))
+            return refuse(e.code, "installed row retired")
+        self.journal.log_brain_event(
+            "spec_admitted", spec.id,
+            {"name": spec.name, "evidence": ev, "version_id": version_id,
+             "spec_hash": v["spec_hash"], "install_id": inst["install_id"],
+             "regimes_advisory_not_applied": rf, **extra})
+        if self.notifier:
+            self.notifier.send(
+                f"\U0001f9ec New strategy version: {spec.name} "
+                f"({spec.timeframe}) {version_id[:12]} \u2192 paper probation")
+        return True
 
     def _research_handoff(self, analyst, book):
         """One `reason_passed` search candidate through `analyst.admit`.
 
         The search never writes `strategies`; this is its only way in, and
-        it is the same gate every other proposer faces. Returns the admitted
-        spec, or None.
+        it is the same gate every other proposer faces. The candidate is
+        first frozen as an immutable StrategyVersion bound to its registered
+        gate evidence; what is admitted and installed is exactly that
+        version. Returns the admitted spec, or None.
         """
         rcfg = self.cfg.get("research") or {}
         if not rcfg.get("handoff", False):
             return None
         try:
+            import copy
             from .research.ledger import Ledger
-            from .research.runner import ResearchRunner
-            from .research.universe import DISCOVERY, HELDOUT
+            from .strategy import factory_handoff as fh
+            from .strategy.spec import StrategySpec
             led = Ledger(self.journal)
             led.ensure()
             rows = led.candidates(state="reason_passed")
@@ -762,22 +844,19 @@ class Kernel:
                 return None
             cand = rows[0]
             h, tf, geo = cand["hash"], cand["tf"], cand["geo"]
-            combo_rows = self.journal.query(
-                "SELECT * FROM research_combos WHERE hash=?", (h,))
-            runner = ResearchRunner(self.journal, self.cfg,
-                                    run=lambda *a, **k: None)
-            c = runner._combo(combo_rows[0], tf, geo) if combo_rows else None
-            if c is None:
+            try:
+                ver = fh.create_version(
+                    self.journal, self.cfg,
+                    {"kind": "research_candidate", "hash": h},
+                    at_ms=int(time.time() * 1000))
+            except fh.HandoffRefused as e:
                 led.set_candidate(h, tf, geo, "refused",
-                                  reason="cannot be rebuilt at handoff")
+                                  reason=f"no immutable version: {e.code}")
                 return None
-            spec = c.to_spec()
-            # it was examined on discovery + held-out; that is what it has
-            # evidence for, so that is the universe it declares
-            spec.universe = {"include": list(DISCOVERY) + list(HELDOUT),
-                             "exclude": []}
-            spec.provenance = {**(spec.provenance or {}), "research_hash": h}
-            ok, ev = analyst.admit(spec, book)
+            vid = ver["version_id"]
+            spec = StrategySpec.from_dict(
+                fh.load_version(self.journal, vid)["spec"])
+            ok, ev = analyst.admit(copy.deepcopy(spec), book)
         except Exception as e:                          # noqa: BLE001
             log.warning(f"research handoff failed: {e}")
             return None
@@ -786,10 +865,16 @@ class Kernel:
                               reason=str(ev.get("reason", ""))[:400])
             self.journal.log_brain_event(
                 "spec_rejected", spec.id,
-                {"name": spec.name, "evidence": ev, "research_hash": h})
+                {"name": spec.name, "evidence": ev, "research_hash": h,
+                 "version_id": vid})
             return None
-        self._install_spec(spec, ev, analyst, {"research_hash": h})
-        led.set_candidate(h, tf, geo, "admitted", reason="analyst admitted")
+        if not self._install_spec(spec, ev, analyst,
+                                  {"research_hash": h}, version_id=vid):
+            led.set_candidate(h, tf, geo, "refused",
+                              reason=f"exact version {vid[:16]} not installed")
+            return None
+        led.set_candidate(h, tf, geo, "admitted",
+                          reason=f"analyst admitted; version {vid[:16]}")
         return spec
 
     def _strategist_knowledge(self) -> dict:

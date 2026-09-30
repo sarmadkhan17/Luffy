@@ -48,10 +48,20 @@ work_package:
       - docs/superpowers/reports/2026-09-30-strategy-factory-handoff-r1.md
     runtime_deployment: NOT_DEPLOYED
     record: STATE.yaml completed_strategy_factory_handoff_r1
+    followed_by:
+      id: LUFFY-EXACT-VERSION-PAPER-PROBATION-R1
+      verdict: PASS
+      state: TESTED
+      evidence:
+        - trader/strategy/factory_handoff.py; trader/kernel.py; tests/test_strategy_factory_handoff.py; tests/test_single_creation_path.py
+        - docs/superpowers/reports/2026-09-30-exact-version-paper-probation-r1.md
+      runtime_deployment: NOT_DEPLOYED
+      record: STATE.yaml completed_exact_version_paper_probation_r1
     next_stage5_gaps:  # owner decision to prioritize; none started
-      - capacity estimate is UNAVAILABLE; do not invent one
-      - exact-version paper install - kernel._install_spec may rewrite timeframe/regime_filter so the paper spec differs from the referee-bound version
+      - integrate Trade Provenance (trade-provenance-r1) so paper trades carry trade-entry-identity.v1; until then real probation is TRADE_IDENTITY_UNAVAILABLE
+      - capacity estimate is UNAVAILABLE; do not invent one (next Stage-5 capability gap after probation identity)
       - wire version degradation/retirement to analyst.review_deployed
+      - no real probation has run (0 research candidates; research.referee/handoff false - recorded stop)
   established_boundary:
     - INVESTIGATION_ASSESSED_MEMORY_CONTEXT_NOT_AUTHORITY, ASSESSED_RESULT_VOCABULARY_NOT_VALUE_LABEL and KNOWN_BEFORE_REGISTRATION_REQUIRED hold; assessed memory is context_only, is not an investigation-value.v1 label, and is not deployed.
     - Measured-memory malformed-source hardening is TESTED at 71204ca and not deployed; valid measured, assessed and not_testable memory behavior is unchanged.

@@ -14,10 +14,14 @@ records that were missing:
   state + gate JSON, and the error budget's `research_tests` row);
 - the spec: the same `Combination.to_spec()` + declared universe that
   `kernel._research_handoff` builds, compiled by `compile_spec`;
+- the paper install: `Journal.upsert_spec`, called by the Kernel's
+  exact-version handoff with the frozen spec unchanged; the factory reads the
+  installed row back and binds it (`strategy_version_installs`);
 - the probation policy: `strategies.paper_probation_trades`,
   `paper_min_winrate`, `paper_min_profit_factor` in config.yaml ("trades a
   new strategy must pass in paper before live eligibility"), scored with
-  `promotion.stats_of` over the version's own closed journal trades;
+  `promotion.stats_of` over closed trades whose Trade Provenance entry
+  identity names this exact version;
 - owner identity: `engine.state.OWNER_ACTORS`, the only owner actor
   vocabulary the control plane has.
 
@@ -87,6 +91,18 @@ P_NOT_INSTALLED = "NOT_INSTALLED"
 P_INSTALLED_DIFFERS = "INSTALLED_SPEC_DIFFERS"
 P_INSUFFICIENT = "INSUFFICIENT_TRADES"
 P_NOT_SATISFIED = "NOT_SATISFIED"
+P_IDENTITY_UNAVAILABLE = "TRADE_IDENTITY_UNAVAILABLE"   # no per-trade identity
+P_INCOMPLETE = "INCOMPLETE_TRADE_IDENTITY"   # a trade's version is unproven
+
+# Per-trade version identity is Trade Provenance's (branch
+# trade-provenance-r1, engine/trade_provenance.py): `trades.entry_identity_json`,
+# schema trade-entry-identity.v1, whose `spec_sha256` hashes the compiled spec
+# the evaluator ran with the same canonical JSON as `spec_hash`. Read only;
+# where the column is absent no trade is attributable and probation says so.
+IDENTITY_COLUMN = "entry_identity_json"
+IDENTITY_SCHEMA = "trade-entry-identity.v1"
+INSTALL_SCHEMA = "strategy-version-install.v1"
+INSTALL_MODES = ("paper",)
 POLICY_KEYS = ("paper_probation_trades", "paper_min_winrate",
                "paper_min_profit_factor")
 
@@ -94,7 +110,7 @@ CAPACITY = {"status": "UNAVAILABLE",
             "reason": "no_truthful_capacity_estimator"}
 
 _TABLES = ("strategy_versions", "strategy_validation_receipts",
-           "strategy_probation_receipts", "strategy_approval_requests",
+           "strategy_version_installs", "strategy_probation_receipts", "strategy_approval_requests",
            "strategy_approval_decisions", "strategy_version_events")
 
 SCHEMA = """
@@ -112,6 +128,16 @@ CREATE TABLE IF NOT EXISTS strategy_versions (
 CREATE TABLE IF NOT EXISTS strategy_validation_receipts (
     receipt_id TEXT PRIMARY KEY,
     version_id TEXT NOT NULL UNIQUE REFERENCES strategy_versions(version_id),
+    canonical_sha256 TEXT NOT NULL,
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS strategy_version_installs (
+    install_id TEXT PRIMARY KEY,
+    version_id TEXT NOT NULL UNIQUE REFERENCES strategy_versions(version_id),
+    strategy_id TEXT NOT NULL,
+    spec_hash TEXT NOT NULL,
+    mode TEXT NOT NULL,
     canonical_sha256 TEXT NOT NULL,
     canonical_json TEXT NOT NULL,
     recorded_at_ms INTEGER NOT NULL
@@ -486,18 +512,100 @@ def verify_validation(journal, version: dict) -> dict:
     return rec
 
 
-# ── 2. probation ─────────────────────────────────────────────────────────
-def start_probation(journal, version_id: str, *, at_ms: int) -> dict:
-    """VALIDATED -> SHADOW. Records the probation start only: the version
-    reaches paper through the existing handoff, which this does not open."""
+# ── 2. exact paper install -> probation ──────────────────────────────────
+def _installed(journal, strategy_id: str):
+    """(spec dict, spec_hash) of the spec the running population loads for
+    this id (kind='spec', paper/active), or None when nothing is installed."""
+    row = _one(journal, "SELECT spec_json FROM strategies WHERE id=? AND "
+               "kind='spec' AND state IN ('paper','active')", (strategy_id,))
+    if row is None or not row["spec_json"]:
+        return None
+    try:
+        return _frozen_spec(StrategySpec.from_json(row["spec_json"]))
+    except (HandoffRefused, TypeError, ValueError):
+        return {}, "uncompilable"
+
+
+def _install_record(journal, version_id: str) -> dict | None:
+    row = _one(journal, "SELECT * FROM strategy_version_installs WHERE "
+               "version_id=?", (version_id,))
+    return _load(row) if row else None
+
+
+def record_exact_install(journal, version_id: str, *, mode: str = "paper",
+                         at_ms: int) -> dict:
+    """Bind the paper install of a VALIDATED version and start its probation
+    (VALIDATED -> SHADOW, probation_started_at = at_ms).
+
+    The installed row is read back from `strategies`, exactly as the running
+    population loads it; its compiled spec must be byte-identical to the
+    frozen spec, or the install is refused (INSTALLED_SPEC_DIFFERS) and
+    probation does not start. This never writes `strategies`: the Kernel's
+    exact-version handoff does, through the existing paper install."""
     ensure(journal)
+    if mode not in INSTALL_MODES:
+        _refuse("unknown_install_mode")
     v = load_version(journal, version_id)
-    r = verify_validation(journal, v)
+    val = verify_validation(journal, v)
+    old = _install_record(journal, version_id)
+    if old is not None:
+        return {"status": "duplicate", "install_id": old["install_id"],
+                "version_id": version_id}
+    cur = state_of(journal, version_id)
+    if cur != VALIDATED:
+        _refuse(f"not_validated:{cur}")
+    inst = _installed(journal, v["strategy_id"])
+    if inst is None:
+        _refuse(P_NOT_INSTALLED)
+    spec_d, spec_hash = inst
+    if spec_hash != v["spec_hash"] or canonical(spec_d) != canonical(
+            v["spec"]):
+        _refuse(P_INSTALLED_DIFFERS)
+    ident = {"schema": INSTALL_SCHEMA, "version_id": version_id,
+             "strategy_id": v["strategy_id"], "spec_hash": v["spec_hash"],
+             "validation_receipt_id": val["receipt_id"], "mode": mode}
+    rec = {**ident, "install_id": _jsha(ident), "installed_at_ms": int(at_ms),
+           "installed_spec": spec_d, "installed_spec_hash": spec_hash}
+    text = canonical(rec)
     with journal._tx() as c:
         _begin(c)
-        out = _transition(c, version_id, SHADOW, "probation_started",
-                          r["receipt_id"], "factory", at_ms)
-    return {"status": out, "version_id": version_id}
+        out, _ = _insert(c, "strategy_version_installs", "install_id",
+                         {"install_id": rec["install_id"],
+                          "version_id": version_id,
+                          "strategy_id": v["strategy_id"],
+                          "spec_hash": v["spec_hash"], "mode": mode,
+                          "canonical_sha256": _sha(text),
+                          "canonical_json": text,
+                          "recorded_at_ms": int(at_ms)})
+        if out == "conflict":
+            _refuse("install_conflict")
+        _transition(c, version_id, SHADOW, "exact_version_installed",
+                    rec["install_id"], "factory", at_ms)
+    return {"status": out, "install_id": rec["install_id"],
+            "version_id": version_id}
+
+
+def verify_install(journal, version: dict, *, current: bool = True) -> dict:
+    """The version's install record, re-verified; with `current` the spec
+    installed now must still be the exact version."""
+    rec = _install_record(journal, version["version_id"])
+    if rec is None:
+        _refuse("install_missing")
+    ident = {k: rec[k] for k in ("schema", "version_id", "strategy_id",
+                                 "spec_hash", "validation_receipt_id",
+                                 "mode")}
+    if _jsha(ident) != rec["install_id"] or (
+            rec["version_id"], rec["spec_hash"], rec["installed_spec_hash"]
+    ) != (version["version_id"], version["spec_hash"],
+          version["spec_hash"]):
+        _refuse("install_wrong_version")
+    if current:
+        inst = _installed(journal, version["strategy_id"])
+        if inst is None:
+            _refuse("installed_version_missing")
+        if inst[1] != version["spec_hash"]:
+            _refuse("installed_version_differs")
+    return rec
 
 
 def _ms(iso: str | None) -> int | None:
@@ -523,50 +631,69 @@ _TRADE_KEYS = ("id", "strategy_id", "symbol", "side", "exec_mode", "status",
                "opened_at", "closed_at", "realized_pnl")
 
 
-def _probation_trades(journal, strategy_id: str, since_ms: int,
-                      until_ms: int) -> list:
-    out = []
+def trade_identity_available(journal) -> bool:
+    """Whether trades carry Trade Provenance's per-trade entry identity."""
+    return any(r["name"] == IDENTITY_COLUMN for r in
+               journal.query("PRAGMA table_info(trades)"))
+
+
+def _classify(t: dict, v: dict) -> str:
+    """counted | other_version | unattributed, from the trade's own
+    Trade Provenance entry identity (never from the registry)."""
+    try:
+        idn = json.loads(t.get(IDENTITY_COLUMN) or "null")
+    except (TypeError, ValueError):
+        return "unattributed"
+    if not isinstance(idn, dict) or idn.get("schema_version") != \
+            IDENTITY_SCHEMA or idn.get("status") != "VERIFIED" \
+            or idn.get("kind") != "spec" or not idn.get("spec_sha256"):
+        return "unattributed"
+    if idn.get("strategy_id") != v["strategy_id"]:
+        return "unattributed"
+    return "counted" if idn["spec_sha256"] == v["spec_hash"] \
+        else "other_version"
+
+
+def _probation_trades(journal, v: dict, since_ms: int, until_ms: int):
+    counted, excluded = [], []
     for t in journal.query("SELECT * FROM trades WHERE strategy_id=? AND "
                            "status='closed' ORDER BY opened_at, id",
-                           (strategy_id,)):
+                           (v["strategy_id"],)):
         o, cl = _ms(t["opened_at"]), _ms(t["closed_at"])
-        if o is not None and cl is not None and o >= since_ms \
-                and cl <= until_ms:
-            out.append({k: t[k] for k in _TRADE_KEYS})
-    return out
+        if o is None or cl is None or o < since_ms or cl > until_ms:
+            continue
+        kind = _classify(t, v)
+        row = {k: t[k] for k in _TRADE_KEYS}
+        if kind == "counted":
+            counted.append({**row, "entry_identity_sha256":
+                            _sha(t[IDENTITY_COLUMN])})
+        else:
+            excluded.append({"id": t["id"], "reason": kind})
+    return counted, excluded
 
 
-def _installed_hash(journal, strategy_id: str) -> str | None:
-    row = _one(journal, "SELECT spec_json FROM strategies WHERE id=? AND "
-               "kind='spec' AND state IN ('paper','active')", (strategy_id,))
-    if row is None or not row["spec_json"]:
-        return None
-    try:
-        return _frozen_spec(StrategySpec.from_json(row["spec_json"]))[1]
-    except HandoffRefused:
-        return "uncompilable"
-
-
-def _shadow_start(journal, version_id: str) -> int:
-    for e in events(journal, version_id):
-        if e["to_state"] == SHADOW:
-            return int(e["at_ms"])
-    _refuse("probation_not_started")
-
-
-def _assess(journal, cfg, v: dict, since_ms: int, at_ms: int) -> dict:
+def _assess(journal, cfg, v: dict, since_ms: int, at_ms: int, *,
+            check_install: bool = True) -> dict:
     policy = _policy(cfg)
-    base = {"policy": policy, "installed_spec_hash": None, "trades": [],
-            "trades_sha256": _jsha([]), "stats": None}
+    base = {"policy": policy, "trades": [], "trades_sha256": _jsha([]),
+            "excluded_trades": [], "stats": None,
+            "trade_identity": "trade-provenance " + IDENTITY_SCHEMA}
     if policy is None:
         return {**base, "status": P_NO_POLICY}
-    inst = _installed_hash(journal, v["strategy_id"])
-    base["installed_spec_hash"] = inst
-    if inst is None:
-        return {**base, "status": P_NOT_INSTALLED}
-    if inst != v["spec_hash"]:
-        return {**base, "status": P_INSTALLED_DIFFERS}
-    trades = _probation_trades(journal, v["strategy_id"], since_ms, at_ms)
+    if check_install:
+        inst = _installed(journal, v["strategy_id"])
+        if inst is None:
+            return {**base, "status": P_NOT_INSTALLED}
+        if inst[1] != v["spec_hash"]:
+            return {**base, "status": P_INSTALLED_DIFFERS}
+    if not trade_identity_available(journal):
+        return {**base, "status": P_IDENTITY_UNAVAILABLE}
+    trades, excluded = _probation_trades(journal, v, since_ms, at_ms)
+    base.update(excluded_trades=excluded)
+    if any(e["reason"] == "unattributed" for e in excluded):
+        # a closed trade of this strategy id whose version cannot be proven
+        # may be this version's: counting around it would bias the record
+        return {**base, "status": P_INCOMPLETE}
     st = stats_of(trades)
     stats = {"trades": st["trades"], "wins": st["wins"],
              "winrate": st["winrate"], "profit_factor": st["pf"],
@@ -585,9 +712,11 @@ def _assess(journal, cfg, v: dict, since_ms: int, at_ms: int) -> dict:
 def evaluate_probation(journal, cfg: dict, version_id: str, *,
                        at_ms: int) -> dict:
     """Record one probation receipt for a SHADOW version under the existing
-    config policy. SATISFIED moves it to APPROVAL_REQUIRED and files the
-    first-live approval request in the same transaction; any other status
-    leaves it in SHADOW. No threshold is invented: a missing policy key is
+    config policy, counting only closed trades whose Trade Provenance entry
+    identity names this exact version, opened after its exact install.
+    SATISFIED moves it to APPROVAL_REQUIRED and files the first-live
+    approval request in the same transaction; any other status leaves it in
+    SHADOW. No threshold is invented: a missing policy key is
     NO_REGISTERED_POLICY."""
     ensure(journal)
     v = load_version(journal, version_id)
@@ -600,11 +729,13 @@ def evaluate_probation(journal, cfg: dict, version_id: str, *,
                     "probation_receipt_id": req["probation_receipt_id"],
                     "request_id": req["request_id"]}
         _refuse(f"not_in_probation:{cur}")
-    since = _shadow_start(journal, version_id)
+    inst = verify_install(journal, v, current=False)
+    since = inst["installed_at_ms"]
     a = _assess(journal, cfg, v, since, at_ms)
     ident = {"schema": PROBATION_SCHEMA, "version_id": version_id,
              "spec_hash": v["spec_hash"],
              "validation_receipt_id": val["receipt_id"],
+             "install_id": inst["install_id"],
              "since_ms": since, "evaluated_at_ms": int(at_ms)}
     rec = {**ident, "receipt_id": _jsha(ident), **a}
     text = canonical(rec)
@@ -647,21 +778,28 @@ def evaluate_probation(journal, cfg: dict, version_id: str, *,
 
 
 def _verify_probation(journal, cfg, version: dict, receipt_id: str) -> dict:
+    """The receipt, re-verified: exact version, exact install, and the same
+    counted trades under the same policy. Whether the version is STILL the
+    installed one is the eligibility check's concern, not the receipt's."""
     row = _one(journal, "SELECT * FROM strategy_probation_receipts WHERE "
                "receipt_id=?", (receipt_id,))
     if row is None:
         _refuse("probation_receipt_missing")
     rec = _load(row)
     ident = {k: rec[k] for k in ("schema", "version_id", "spec_hash",
-                                 "validation_receipt_id", "since_ms",
-                                 "evaluated_at_ms")}
+                                 "validation_receipt_id", "install_id",
+                                 "since_ms", "evaluated_at_ms")}
     if _jsha(ident) != receipt_id or rec["version_id"] != \
             version["version_id"] or rec["spec_hash"] != version["spec_hash"]:
         _refuse("probation_receipt_wrong_version")
+    inst = verify_install(journal, version, current=False)
+    if (rec["install_id"], rec["since_ms"]) != (inst["install_id"],
+                                                inst["installed_at_ms"]):
+        _refuse("probation_receipt_wrong_install")
     if rec["status"] != P_SATISFIED:
         _refuse(f"probation_not_satisfied:{rec['status']}")
     again = _assess(journal, cfg, version, rec["since_ms"],
-                    rec["evaluated_at_ms"])
+                    rec["evaluated_at_ms"], check_install=False)
     if again["policy"] != rec["policy"]:
         _refuse("probation_policy_changed")
     if again["status"] != P_SATISFIED \
@@ -761,8 +899,8 @@ class FirstLiveEligibility:
 def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
                             available_inputs=None) -> FirstLiveEligibility:
     """True only when the immutable version, its validation evidence, its
-    probation receipt and an exact-version owner approval all re-verify
-    now, it is not degraded/retired/rejected, and every input the compiled
+    exact paper install (still the installed spec), its probation receipt
+    and an exact-version owner approval all re-verify now, it is not degraded/retired/rejected, and every input the compiled
     spec requires is in `available_inputs` (None = not asserted = refused).
     Read-only; grants eligibility only."""
     reasons: list[str] = []
@@ -792,6 +930,7 @@ def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
     if cur != APPROVED_FIRST_LIVE:
         reasons.append(f"state_not_approved:{cur}")
     val = check(verify_validation, journal, v)
+    check(verify_install, journal, v)          # the paper version IS this one
     req = check(lambda: approval_request(journal, version_id)
                 or _refuse("approval_request_missing"))
     if req is not None:

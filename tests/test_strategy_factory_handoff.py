@@ -15,7 +15,7 @@ import pytest
 from trader.core.config import load_config
 from trader.core.journal import Journal
 from trader.strategy import factory_handoff as F
-from trader.strategy.spec import StrategySpec
+from trader.strategy.spec import ExitSpec, StrategySpec
 from tests.test_investigation_state_feedback import paths  # noqa: F401
 
 T0 = 1_790_000_000_000             # probation start (ms)
@@ -63,29 +63,70 @@ def _candidate(j, state="referee_passed", p=0.001, alpha=0.0025,
     return c.hash
 
 
-def _journal(tmp_path, **kw):
+def _with_provenance(j):
+    """The per-trade identity column Trade Provenance adds
+    (trade-provenance-r1, trade_provenance.migrate). It is NOT on this
+    branch; tests that exercise attribution add it the same way."""
+    with j._tx() as c:
+        c.execute("ALTER TABLE trades ADD COLUMN entry_identity_json "
+                  "TEXT DEFAULT NULL")
+
+
+def _journal(tmp_path, provenance=True, **kw):
     j = Journal(tmp_path / "j.db")
+    if provenance:
+        _with_provenance(j)
     return j, _candidate(j, **kw)
 
 
-def _install(j, version_id):
-    """What kernel._install_spec does on the existing paper path."""
-    rec = F.load_version(j, version_id)
-    j.upsert_spec(StrategySpec.from_dict(rec["spec"]), state="paper",
+def _upsert(j, spec_d):
+    """The existing paper install primitive (Journal.upsert_spec)."""
+    j.upsert_spec(StrategySpec.from_dict(spec_d), state="paper",
                   origin="research")
+
+
+def _install(j, version_id, at_ms=T0):
+    """What the Kernel's exact-version handoff does: install the frozen
+    spec unchanged, then bind the install (starts probation)."""
+    rec = F.load_version(j, version_id)
+    _upsert(j, rec["spec"])
+    F.record_exact_install(j, version_id, at_ms=at_ms)
     return rec
 
 
-def _trades(j, strategy_id, pnls, start_ms, prefix="t"):
+def _identity(strategy_id, spec_hash, status="VERIFIED"):
+    """A trade-entry-identity.v1 body as trade_provenance.entry_identity
+    writes it for a spec strategy (fields probation reads)."""
+    return json.dumps({"schema_version": "trade-entry-identity.v1",
+                       "status": status, "strategy_id": strategy_id,
+                       "kind": "spec", "spec_sha256": spec_hash,
+                       "reason": "signal_spec_hash_matches_loaded_spec"},
+                      sort_keys=True)
+
+
+_EXACT = object()
+
+
+def _trades(j, strategy_id, pnls, start_ms, prefix="t", spec_hash=None,
+            identity=_EXACT):
+    """Closed trades; with the provenance column, each carries the entry
+    identity of `spec_hash` (or `identity` verbatim, None = NULL)."""
+    has = F.trade_identity_available(j)
     with j._tx() as c:
         for i, pnl in enumerate(pnls):
             o = start_ms + (i + 1) * 3_600_000
-            c.execute(
-                "INSERT INTO trades (id, symbol, side, amount, entry_price, "
-                "strategy_id, exec_mode, opened_at, closed_at, realized_pnl, "
-                "status) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                (f"{prefix}{i}", "BTC/USDT", "buy", 1.0, 100.0, strategy_id,
-                 "paper", _iso(o), _iso(o + 1_800_000), pnl, "closed"))
+            idn = _identity(strategy_id, spec_hash) if identity is _EXACT \
+                else identity
+            cols = ("id, symbol, side, amount, entry_price, strategy_id, "
+                    "exec_mode, opened_at, closed_at, realized_pnl, status")
+            vals = [f"{prefix}{i}", "BTC/USDT", "buy", 1.0, 100.0,
+                    strategy_id, "paper", _iso(o), _iso(o + 1_800_000), pnl,
+                    "closed"]
+            if has:
+                cols += ", entry_identity_json"
+                vals.append(idn)
+            c.execute(f"INSERT INTO trades ({cols}) VALUES "
+                      f"({','.join('?' * len(vals))})", vals)
 
 
 PASSING = [10.0] * 9 + [-5.0] * 6          # 15 trades, WR 0.6, PF 3.0
@@ -95,9 +136,8 @@ def _to_approval(j, cfg, h=None):
     h = h or j.query("SELECT hash FROM research_candidates")[0]["hash"]
     v = F.create_version(j, cfg, {"kind": "research_candidate", "hash": h},
                          at_ms=T0 - DAY)
-    F.start_probation(j, v["version_id"], at_ms=T0)
     rec = _install(j, v["version_id"])
-    _trades(j, rec["strategy_id"], PASSING, T0)
+    _trades(j, rec["strategy_id"], PASSING, T0, spec_hash=v["spec_hash"])
     p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=T0 + 30 * DAY)
     assert p["status"] == F.P_SATISFIED
     return v, p
@@ -152,18 +192,25 @@ def test_end_to_end_trace_uses_exact_stored_ids(tmp_path, cfg):
     assert rrec["gate3"]["passed"] is True
     assert F.state_of(j, v["version_id"]) == F.VALIDATED
 
-    # -> probation
-    F.start_probation(j, v["version_id"], at_ms=T0)
-    assert F.state_of(j, v["version_id"]) == F.SHADOW
+    # -> exact paper install -> probation
     _install(j, v["version_id"])
-    _trades(j, vrec["strategy_id"], PASSING, T0)
+    assert F.state_of(j, v["version_id"]) == F.SHADOW
+    irow = _row(j, "SELECT * FROM strategy_version_installs "
+                   "WHERE version_id=?", v["version_id"])
+    irec = json.loads(irow["canonical_json"])
+    assert (irec["strategy_id"], irec["spec_hash"], irec["installed_spec_hash"],
+            irec["mode"], irec["installed_at_ms"]) == (
+        vrec["strategy_id"], v["spec_hash"], v["spec_hash"], "paper", T0)
+    assert irec["installed_spec"] == vrec["spec"]
+    _trades(j, vrec["strategy_id"], PASSING, T0, spec_hash=v["spec_hash"])
     p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=T0 + 30 * DAY)
     prow = _row(j, "SELECT * FROM strategy_probation_receipts "
                    "WHERE receipt_id=?", p["probation_receipt_id"])
     prec = json.loads(prow["canonical_json"])
     assert prec["status"] == F.P_SATISFIED
     assert prec["validation_receipt_id"] == rrow["receipt_id"]
-    assert prec["installed_spec_hash"] == v["spec_hash"]
+    assert (prec["install_id"], prec["since_ms"]) == (irow["install_id"], T0)
+    assert prec["excluded_trades"] == []
     assert [t["id"] for t in prec["trades"]] == [f"t{i}" for i in range(15)]
     assert prec["policy"] == {"source": "config.yaml strategies.*",
                               "min_trades": 15, "min_winrate": 0.4,
@@ -206,14 +253,14 @@ def test_end_to_end_trace_uses_exact_stored_ids(tmp_path, cfg):
     ev = F.events(j, v["version_id"])
     assert [(x["from_state"], x["to_state"], x["ref_id"]) for x in ev] == [
         (None, F.VALIDATED, rrow["receipt_id"]),
-        (F.VALIDATED, F.SHADOW, rrow["receipt_id"]),
+        (F.VALIDATED, F.SHADOW, irow["install_id"]),
         (F.SHADOW, F.APPROVAL_REQUIRED, qrow["request_id"]),
         (F.APPROVAL_REQUIRED, F.APPROVED_FIRST_LIVE, drow["decision_id"])]
 
 
-def test_spec_is_the_one_the_kernel_handoff_builds(tmp_path, cfg):
-    """No parallel spec construction: the frozen spec is the one
-    kernel._research_handoff passes to analyst.admit, compiled."""
+def test_kernel_handoff_admits_exactly_the_frozen_version(tmp_path, cfg):
+    """One spec construction (factory.candidate_spec); the Kernel freezes
+    the version first and hands analyst.admit exactly that spec."""
     from trader.kernel import Kernel
     j, h = _journal(tmp_path, state="reason_passed")
     seen = []
@@ -228,15 +275,13 @@ def test_spec_is_the_one_the_kernel_handoff_builds(tmp_path, cfg):
     k = Kernel.__new__(Kernel)
     k.journal, k.cfg, k.notifier = j, {"research": {"handoff": True}}, None
     assert k._research_handoff(_Analyst(), []) is None
-    assert built == seen[0]
-    (tmp_path / "b").mkdir()
-    j2 = Journal(tmp_path / "b" / "j.db")
-    assert _candidate(j2, state="reason_passed") == h
-    v = F.create_version(j2, cfg, {"kind": "research_candidate", "hash": h},
-                         at_ms=T0)
-    frozen = F.load_version(j2, v["version_id"])["spec"]
+    vrow = _row(j, "SELECT * FROM strategy_versions")
+    frozen = F.load_version(j, vrow["version_id"])["spec"]
+    assert seen == [frozen]
     assert {k: v2 for k, v2 in frozen.items() if k != "data_requires"} == {
         k: v2 for k, v2 in built.items() if k != "data_requires"}
+    assert frozen["universe"]["include"] and \
+        frozen["provenance"]["research_hash"] == h
 
 
 # ── refusals ─────────────────────────────────────────────────────────────
@@ -378,8 +423,9 @@ def test_edit_creates_new_version_that_needs_its_own_approval(tmp_path, cfg):
     # A's approval is unchanged and still covers A only
     assert F.eligible_for_first_live(j, a["version_id"], cfg=cfg,
                                      available_inputs=INPUTS).eligible
-    with pytest.raises(F.HandoffRefused):
-        F.start_probation(j, b["version_id"], at_ms=T0 + 33 * DAY)
+    with pytest.raises(F.HandoffRefused) as e:
+        F.record_exact_install(j, b["version_id"], at_ms=T0 + 33 * DAY)
+    assert e.value.code == "validation_receipt_missing"
     unchanged = StrategySpec.from_dict(brec["spec"])
     with pytest.raises(F.HandoffRefused) as e:
         F.derive_version(j, b["version_id"], unchanged, at_ms=T0)
@@ -474,12 +520,153 @@ def test_candidate_evidence_withdrawn_after_approval(tmp_path, cfg):
     assert "candidate_not_referee_passed:refused" in e.reasons
 
 
-# ── probation ────────────────────────────────────────────────────────────
+# ── exact paper install ──────────────────────────────────────────────────
+def _validated(j, cfg, h):
+    return F.create_version(j, cfg, {"kind": "research_candidate", "hash": h},
+                            at_ms=T0 - DAY)
+
+
+def test_exact_spec_installs_byte_and_hash_identically(tmp_path, cfg):
+    j, h = _journal(tmp_path)
+    v = _validated(j, cfg, h)
+    rec = _install(j, v["version_id"])
+    row = _row(j, "SELECT * FROM strategies WHERE id=?", rec["strategy_id"])
+    assert (row["kind"], row["state"]) == ("spec", "paper")
+    installed = StrategySpec.from_json(row["spec_json"]).to_dict()
+    assert F.canonical(installed) == F.canonical(rec["spec"])
+    assert hashlib.sha256(F.canonical(installed).encode()).hexdigest() == \
+        v["spec_hash"]
+    irec = F.verify_install(j, rec)
+    assert irec["installed_spec_hash"] == v["spec_hash"]
+    again = F.record_exact_install(j, v["version_id"], at_ms=T0 + DAY)
+    assert again["status"] == "duplicate"           # probation start is fixed
+    assert F.verify_install(j, rec)["installed_at_ms"] == T0
+
+
+@pytest.mark.parametrize("field,value", [
+    ("timeframe", "1h"), ("regime_filter", ["TRENDING_UP"]),
+    ("entry_long", "close > 0"),
+    ("provenance", {"source_kind": "research", "regime_evidence": {}})])
+def test_modified_install_is_refused(tmp_path, cfg, field, value):
+    j, h = _journal(tmp_path)
+    v = _validated(j, cfg, h)
+    spec = dict(F.load_version(j, v["version_id"])["spec"])
+    spec[field] = value
+    _upsert(j, spec)
+    with pytest.raises(F.HandoffRefused) as e:
+        F.record_exact_install(j, v["version_id"], at_ms=T0)
+    assert e.value.code == F.P_INSTALLED_DIFFERS
+    assert F.state_of(j, v["version_id"]) == F.VALIDATED   # no probation
+    assert j.query("SELECT * FROM strategy_version_installs") == []
+
+
+def test_nothing_installed_is_refused(tmp_path, cfg):
+    j, h = _journal(tmp_path)
+    v = _validated(j, cfg, h)
+    with pytest.raises(F.HandoffRefused) as e:
+        F.record_exact_install(j, v["version_id"], at_ms=T0)
+    assert e.value.code == F.P_NOT_INSTALLED
+    assert F.state_of(j, v["version_id"]) == F.VALIDATED
+
+
+class _Admitting:
+    """analyst.admit + set_measured_regimes as the Kernel calls them. The
+    regime measurement mutates what it is given, as the real one does."""
+
+    def __init__(self, tf="4h"):
+        self.tf, self.admitted, self.measured = tf, [], []
+
+    def admit(self, spec, book):
+        self.admitted.append(spec.to_dict())
+        return True, {"reason": "test", "chosen_timeframe": self.tf,
+                      "recent": {"pooled_pf": 1.3, "trades": 30}}
+
+    def set_measured_regimes(self, spec):
+        spec.regime_filter = ["TRENDING_UP"]
+        spec.provenance = {**spec.provenance, "regime_evidence": {"x": 1}}
+        self.measured.append(spec)
+        return {"fit": ["TRENDING_UP"], "changed": True}
+
+
+def _kernel(j):
+    from trader.kernel import Kernel
+    k = Kernel.__new__(Kernel)
+    k.journal, k.cfg, k.notifier = j, {"research": {"handoff": True}}, None
+    return k
+
+
+def test_kernel_installs_the_exact_version_and_starts_probation(tmp_path):
+    j, h = _journal(tmp_path, state="reason_passed")
+    an = _Admitting()
+    spec = _kernel(j)._research_handoff(an, [])
+    assert spec is not None and an.measured    # regimes measured on a copy
+    vrow = _row(j, "SELECT * FROM strategy_versions")
+    v = F.load_version(j, vrow["version_id"])
+    row = _row(j, "SELECT * FROM strategies WHERE id=?", v["strategy_id"])
+    installed = StrategySpec.from_json(row["spec_json"]).to_dict()
+    assert installed == v["spec"]              # regime_filter NOT replaced
+    assert installed["regime_filter"] == [] and \
+        "regime_evidence" not in installed["provenance"]
+    assert F.state_of(j, v["version_id"]) == F.SHADOW
+    F.verify_install(j, v)
+    ev = [json.loads(r["detail"]) for r in j.query(
+        "SELECT detail FROM brain_events WHERE kind='spec_admitted'")]
+    assert ev[0]["version_id"] == v["version_id"]
+    assert ev[0]["regimes_advisory_not_applied"]["fit"] == ["TRENDING_UP"]
+    assert _row(j, "SELECT state FROM research_candidates")["state"] == \
+        "admitted"
+
+
+def test_kernel_refuses_a_timeframe_other_than_the_version(tmp_path):
+    j, h = _journal(tmp_path, state="reason_passed")
+    assert _kernel(j)._research_handoff(_Admitting(tf="1h"), []) is None
+    vrow = _row(j, "SELECT * FROM strategy_versions")
+    assert F.state_of(j, vrow["version_id"]) == F.VALIDATED
+    assert j.query("SELECT * FROM strategies") == []      # nothing installed
+    assert F.load_version(j, vrow["version_id"])["spec"]["timeframe"] == "4h"
+    ev = json.loads(_row(j, "SELECT detail FROM brain_events WHERE "
+                            "kind='spec_install_refused'")["detail"])
+    assert ev["reason_code"] == "timeframe_differs_from_version"
+    cand = _row(j, "SELECT * FROM research_candidates")
+    assert cand["state"] == "refused" and "not installed" in cand["reason"]
+
+
+def test_kernel_refuses_a_spec_that_is_not_the_frozen_one(tmp_path, cfg):
+    j, h = _journal(tmp_path)
+    v = _validated(j, cfg, h)
+    spec = StrategySpec.from_dict(F.load_version(j, v["version_id"])["spec"])
+    spec.exit.stop = {"kind": "atr", "mult": 3.0}
+    ok = _kernel(j)._install_spec(
+        spec, {"chosen_timeframe": spec.timeframe}, _Admitting(), {},
+        version_id=v["version_id"])
+    assert ok is False and j.query("SELECT * FROM strategies") == []
+    assert F.state_of(j, v["version_id"]) == F.VALIDATED
+
+
+def test_unversioned_install_keeps_its_existing_behavior(tmp_path):
+    """Strategist-admitted specs have no frozen version; their admission
+    path is unchanged by this package."""
+    j = Journal(tmp_path / "j.db")
+    spec = StrategySpec(
+        id="s1", name="Plain spec", thesis="t" * 90, invalidation="i" * 40,
+        provenance={}, universe={}, timeframe="4h", direction="long",
+        entry_long="close > 0", entry_short="", filters=[], exit=ExitSpec(),
+        regime_filter=[], markets=["futures"])
+    ok = _kernel(j)._install_spec(
+        spec, {"chosen_timeframe": "1h", "recent": {"pooled_pf": 1.2,
+                                                    "trades": 20}},
+        _Admitting(), {})
+    assert ok is True
+    stored = StrategySpec.from_json(_row(j, "SELECT spec_json FROM "
+                                            "strategies")["spec_json"])
+    assert stored.timeframe == "1h" and stored.regime_filter == ["TRENDING_UP"]
+
+
+# ── probation bound to the exact version ─────────────────────────────────
 def test_probation_without_registered_policy_stays_shadow(tmp_path, cfg):
     j, h = _journal(tmp_path)
-    v = F.create_version(j, cfg, {"kind": "research_candidate", "hash": h},
-                         at_ms=T0)
-    F.start_probation(j, v["version_id"], at_ms=T0)
+    v = _validated(j, cfg, h)
+    _install(j, v["version_id"])
     no_policy = {**cfg, "strategies": {k: x for k, x in
                                        cfg["strategies"].items()
                                        if k != "paper_probation_trades"}}
@@ -488,48 +675,144 @@ def test_probation_without_registered_policy_stays_shadow(tmp_path, cfg):
     assert F.state_of(j, v["version_id"]) == F.SHADOW
 
 
-def test_probation_needs_the_exact_version_installed(tmp_path, cfg):
+def test_probation_cannot_start_without_exact_install(tmp_path, cfg):
     j, h = _journal(tmp_path)
-    v = F.create_version(j, cfg, {"kind": "research_candidate", "hash": h},
-                         at_ms=T0)
-    F.start_probation(j, v["version_id"], at_ms=T0)
-    p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=T0 + DAY)
-    assert p["status"] == F.P_NOT_INSTALLED
-    rec = F.load_version(j, v["version_id"])
-    spec = StrategySpec.from_dict(rec["spec"])
-    spec.regime_filter = ["TRENDING_UP"]      # what admission may measure
-    j.upsert_spec(spec, state="paper")
-    _trades(j, rec["strategy_id"], PASSING, T0)
-    p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=T0 + 2 * DAY)
-    assert p["status"] == F.P_INSTALLED_DIFFERS
+    v = _validated(j, cfg, h)
+    with pytest.raises(F.HandoffRefused) as e:
+        F.evaluate_probation(j, cfg, v["version_id"], at_ms=T0 + DAY)
+    assert e.value.code == "not_in_probation:VALIDATED"
+
+
+def test_probation_stops_advancing_if_install_is_replaced(tmp_path, cfg):
+    j, h = _journal(tmp_path)
+    v = _validated(j, cfg, h)
+    rec = _install(j, v["version_id"])
+    _trades(j, rec["strategy_id"], PASSING, T0, spec_hash=v["spec_hash"])
+    spec = dict(rec["spec"])
+    spec["timeframe"] = "1h"
+    _upsert(j, spec)
+    p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=T0 + 30 * DAY)
+    assert p["status"] == F.P_INSTALLED_DIFFERS and p["request_id"] is None
     assert F.state_of(j, v["version_id"]) == F.SHADOW
 
 
-def test_probation_counts_only_trades_since_it_started(tmp_path, cfg):
+def test_exact_version_trades_count_and_others_do_not(tmp_path, cfg):
     j, h = _journal(tmp_path)
-    v = F.create_version(j, cfg, {"kind": "research_candidate", "hash": h},
-                         at_ms=T0)
-    F.start_probation(j, v["version_id"], at_ms=T0)
+    v = _validated(j, cfg, h)
     rec = _install(j, v["version_id"])
-    _trades(j, rec["strategy_id"], PASSING, T0 - 30 * DAY, prefix="old")
-    _trades(j, rec["strategy_id"], PASSING[:14], T0)
+    sid = rec["strategy_id"]
+    _trades(j, sid, PASSING, T0 - 30 * DAY, prefix="old",
+            spec_hash=v["spec_hash"])                  # before install
+    _trades(j, sid, [10.0] * 14, T0, spec_hash=v["spec_hash"])
+    _trades(j, sid, [-50.0] * 20, T0, prefix="other",
+            spec_hash="b" * 64)                        # same id, other hash
+    _trades(j, "someone_else", [-50.0] * 5, T0, prefix="x",
+            spec_hash=v["spec_hash"])                  # other strategy id
     p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=T0 + 30 * DAY)
-    assert p["status"] == F.P_INSUFFICIENT
-    _trades(j, rec["strategy_id"], [-5.0], T0 + 20 * DAY, prefix="n")
+    prec = F._load(_row(j, "SELECT * FROM strategy_probation_receipts "
+                           "WHERE receipt_id=?", p["probation_receipt_id"]))
+    assert p["status"] == F.P_INSUFFICIENT             # 14 exact trades
+    assert [t["id"] for t in prec["trades"]] == [f"t{i}" for i in range(14)]
+    assert {e["id"]: e["reason"] for e in prec["excluded_trades"]} == {
+        f"other{i}": "other_version" for i in range(20)}
+    _trades(j, sid, [-5.0], T0 + 20 * DAY, prefix="n",
+            spec_hash=v["spec_hash"])
     p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=T0 + 31 * DAY)
-    assert p["status"] == F.P_SATISFIED        # 9 W / 6 L, PF 90/30
+    assert p["status"] == F.P_SATISFIED
+
+
+@pytest.mark.parametrize("identity", [
+    None, "not json", _identity("x", "a" * 64, status="AMBIGUOUS"),
+    json.dumps({"schema_version": "trade-entry-identity.v1",
+                "status": "UNKNOWN", "reason": "signal_carries_no_spec_hash"}),
+])
+def test_unattributed_trade_makes_probation_incomplete(tmp_path, cfg,
+                                                       identity):
+    j, h = _journal(tmp_path)
+    v = _validated(j, cfg, h)
+    rec = _install(j, v["version_id"])
+    _trades(j, rec["strategy_id"], PASSING, T0, spec_hash=v["spec_hash"])
+    _trades(j, rec["strategy_id"], [-5.0], T0, prefix="u", identity=identity)
+    p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=T0 + 30 * DAY)
+    assert p["status"] == F.P_INCOMPLETE and p["request_id"] is None
+    assert F.state_of(j, v["version_id"]) == F.SHADOW
+
+
+def test_missing_trade_version_identity_fails_closed(tmp_path, cfg):
+    """This branch has no Trade Provenance column: nothing is attributable."""
+    j, h = _journal(tmp_path, provenance=False)
+    assert not F.trade_identity_available(j)
+    v = _validated(j, cfg, h)
+    rec = _install(j, v["version_id"])
+    _trades(j, rec["strategy_id"], PASSING, T0)
+    p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=T0 + 30 * DAY)
+    assert p["status"] == F.P_IDENTITY_UNAVAILABLE
+    assert F.state_of(j, v["version_id"]) == F.SHADOW
 
 
 def test_probation_below_policy_is_not_satisfied(tmp_path, cfg):
     j, h = _journal(tmp_path)
-    v = F.create_version(j, cfg, {"kind": "research_candidate", "hash": h},
-                         at_ms=T0)
-    F.start_probation(j, v["version_id"], at_ms=T0)
+    v = _validated(j, cfg, h)
     rec = _install(j, v["version_id"])
-    _trades(j, rec["strategy_id"], [10.0] * 5 + [-5.0] * 10, T0)
+    _trades(j, rec["strategy_id"], [10.0] * 5 + [-5.0] * 10, T0,
+            spec_hash=v["spec_hash"])
     p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=T0 + 30 * DAY)
     assert p["status"] == F.P_NOT_SATISFIED
     assert F.state_of(j, v["version_id"]) == F.SHADOW
+
+
+def test_derived_version_inherits_no_probation(tmp_path, cfg):
+    j, h = _journal(tmp_path)
+    a = _validated(j, cfg, h)
+    rec = _install(j, a["version_id"])
+    _trades(j, rec["strategy_id"], PASSING, T0, spec_hash=a["spec_hash"])
+    spec = StrategySpec.from_dict(rec["spec"])
+    spec.exit.stop = {"kind": "atr", "mult": 3.0}
+    b = F.derive_version(j, a["version_id"], spec, at_ms=T0 + DAY)
+    bv = F.load_version(j, b["version_id"])
+    # B has no install, no probation, no receipts
+    for t in ("strategy_version_installs", "strategy_probation_receipts",
+              "strategy_approval_requests"):
+        assert j.query(f"SELECT * FROM {t} WHERE version_id=?",
+                       (b["version_id"],)) == []
+    with pytest.raises(F.HandoffRefused):
+        F.evaluate_probation(j, cfg, b["version_id"], at_ms=T0 + 30 * DAY)
+    # installing B's spec in paper does not give B probation either
+    _upsert(j, bv["spec"])
+    with pytest.raises(F.HandoffRefused):
+        F.record_exact_install(j, b["version_id"], at_ms=T0 + 2 * DAY)
+    # and A's probation stays A's: B's trades never count for A
+    _trades(j, rec["strategy_id"], [-50.0] * 5, T0 + 2 * DAY, prefix="b",
+            spec_hash=b["spec_hash"])
+    _upsert(j, rec["spec"])                        # A back in paper
+    p = F.evaluate_probation(j, cfg, a["version_id"], at_ms=T0 + 30 * DAY)
+    prec = F._load(_row(j, "SELECT * FROM strategy_probation_receipts "
+                           "WHERE receipt_id=?", p["probation_receipt_id"]))
+    assert p["status"] == F.P_SATISFIED
+    assert all(t["id"].startswith("t") for t in prec["trades"])
+    assert {e["reason"] for e in prec["excluded_trades"]} == {"other_version"}
+
+
+def test_eligibility_requires_the_version_still_installed(tmp_path, cfg):
+    j, _h = _journal(tmp_path)
+    a, p, _d = _approved(j, cfg)
+    spec = StrategySpec.from_dict(F.load_version(j, a["version_id"])["spec"])
+    spec.exit.stop = {"kind": "atr", "mult": 3.0}
+    b = F.derive_version(j, a["version_id"], spec, at_ms=T0 + 32 * DAY)
+    _upsert(j, F.load_version(j, b["version_id"])["spec"])   # B now in paper
+    e = F.eligible_for_first_live(j, a["version_id"], cfg=cfg,
+                                  available_inputs=INPUTS)
+    assert not e.eligible and e.reasons == ("installed_version_differs",)
+    # A's probation receipt itself is still A's and still verifies
+    F._verify_probation(j, cfg, F.load_version(j, a["version_id"]),
+                        p["probation_receipt_id"])
+    assert not F.eligible_for_first_live(j, b["version_id"], cfg=cfg,
+                                         available_inputs=INPUTS).eligible
+    with j._tx() as c:
+        c.execute("DELETE FROM strategies")
+    e = F.eligible_for_first_live(j, a["version_id"], cfg=cfg,
+                                  available_inputs=INPUTS)
+    assert e.reasons == ("installed_version_missing",)
 
 
 def test_changed_probation_evidence_or_policy_revokes(tmp_path, cfg):
@@ -599,8 +882,19 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
                 "create_order", "executor", "orchestrator", "notifier"):
         assert bad not in code, bad
     for f in pathlib.Path("trader").rglob("*.py"):
-        if f.name != "factory_handoff.py":
+        if f.name not in ("factory_handoff.py", "kernel.py"):
             assert "factory_handoff" not in f.read_text(), f
+    # the Kernel reaches the factory only from the research handoff, which
+    # research.handoff=false keeps closed, and its exact-version install
+    import ast
+    tree = ast.parse(pathlib.Path("trader/kernel.py").read_text())
+    users = {fn.name for fn in ast.walk(tree)
+             if isinstance(fn, ast.FunctionDef)
+             and "factory_handoff" in ast.unparse(fn)
+             and not any("factory_handoff" in ast.unparse(g) for g in
+                         ast.walk(fn) if g is not fn
+                         and isinstance(g, ast.FunctionDef))}
+    assert users == {"_research_handoff", "_install_version"}, users
     cfg = load_config()
     assert cfg["research"]["referee"] is False
     assert cfg["research"]["handoff"] is False

@@ -4082,12 +4082,40 @@ completed_strategy_factory_handoff_r1:
   production_candidates: 0 research_candidates, 0 research_tests; no real version created
   open_gaps:
     - capacity estimate UNAVAILABLE
-    - kernel._install_spec may rewrite timeframe/regime_filter so the paper spec can differ from the referee-bound version (probation then INSTALLED_SPEC_DIFFERS)
+    - kernel._install_spec may rewrite timeframe/regime_filter so the paper spec can differ from the referee-bound version (probation then INSTALLED_SPEC_DIFFERS) - CLOSED for versioned installs by LUFFY-EXACT-VERSION-PAPER-PROBATION-R1
     - trades carry no spec hash; owner identity is role-level only; input availability is caller-asserted
     - version degradation/retirement not wired to analyst.review_deployed
   stage_5_complete: NO
   trading_behavior_changed: NO
-  runtime_deployment: NOT_DEPLOYED (no caller in Kernel/engine; tables created only on first factory use)
+  runtime_deployment: NOT_DEPLOYED (no caller in Kernel/engine; tables created only on first factory use) - superseded by EXACT-VERSION-PAPER-PROBATION-R1, which makes the closed Kernel research handoff its caller
+
+completed_exact_version_paper_probation_r1:
+  id: LUFFY-EXACT-VERSION-PAPER-PROBATION-R1
+  verdict: PASS
+  state: TESTED
+  branch: strategy-factory-r1 (base bc16c9b)
+  owner_decision: the frozen StrategyVersion is authority (2026-09-30)
+  report: docs/superpowers/reports/2026-09-30-exact-version-paper-probation-r1.md
+  evidence:
+    - trader/strategy/factory_handoff.py
+    - trader/kernel.py (_research_handoff, _install_spec, _install_version)
+    - tests/test_strategy_factory_handoff.py
+    - tests/test_single_creation_path.py
+  stage_results:
+    exact_install: TESTED - the Kernel research handoff freezes the version first, admits a copy of the frozen spec, and paper-installs that exact spec via Journal.upsert_spec; strategy_version_installs binds strategy_id, version_id, spec_hash, exact installed spec, installed_at_ms, mode=paper; the installed row read back must be byte-identical (canonical) to the frozen spec or INSTALLED_SPEC_DIFFERS and probation does not start
+    timeframe_mutation: REMOVED for versioned installs - admission choosing another timeframe refuses the version (spec_install_refused timeframe_differs_from_version), never refits it
+    regime_filter_mutation: REMOVED for versioned installs - set_measured_regimes runs on a copy; result recorded as regimes_advisory_not_applied
+    probation_binding: TESTED - probation starts only at the exact install (VALIDATED -> SHADOW ref install_id); receipts bind version_id, spec_hash, install_id and since_ms = installed_at_ms; a replaced install stops advancement (INSTALLED_SPEC_DIFFERS)
+    trade_version_identity: CONSUMES Trade Provenance trades.entry_identity_json (trade-entry-identity.v1, VERIFIED, kind spec, spec_sha256 == spec_hash); other-version trades excluded; any unattributable trade of the strategy id in the window -> INCOMPLETE_TRADE_IDENTITY; column absent -> TRADE_IDENTITY_UNAVAILABLE
+    version_derivation: TESTED - derived version B has no install, probation, request or approval; cannot be installed without its own validation; B's trades never count for A; A's receipt still verifies after B replaces it in paper, but A is then not eligible (installed_version_differs)
+    live_eligibility: TESTED - additionally requires the exact install record and that the currently installed spec is still that version
+  integration_gap: Trade Provenance (trade-provenance-r1, 54aefc5) is NOT on this branch; here no trade carries entry identity, so any real probation reports TRADE_IDENTITY_UNAVAILABLE until that branch is integrated; tests add its column shape
+  unversioned_installs: strategist-admitted specs (no StrategyVersion) keep the existing timeframe/regime install behavior
+  capacity: UNAVAILABLE
+  real_probation_run: NO (0 production research candidates; research.referee/handoff false)
+  stage_5_complete: NO
+  trading_behavior_changed: NO (changed Kernel code is reachable only through the research handoff, closed by research.handoff=false)
+  runtime_deployment: NOT_DEPLOYED
 
 current_active_work:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
@@ -4160,8 +4188,8 @@ delivery_progress:
   capability_coverage_percent: 53
   capability_coverage_formula: capabilities at TESTED or better / 17 capabilities in STATE.capabilities (9/17); unchanged by RESEARCH-FAMILY-R1 and STRATEGY-FACTORY-HANDOFF-R1 (both affected capabilities were already TESTED)
   current_milestone: Stage 3 intelligence spine (WorldModel -> Attention -> Investigation -> Research) in shadow
-  last_completed: LUFFY-STRATEGY-FACTORY-HANDOFF-R1 (PASS; TESTED; NOT_DEPLOYED); previously LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
-  stage_5_handoff_edges: 7/7 TESTED on a fixture candidate (candidate, referee pass, version, receipt, probation, approval, eligibility); capacity UNAVAILABLE; Stage 5 not complete
+  last_completed: LUFFY-EXACT-VERSION-PAPER-PROBATION-R1 (PASS; TESTED; NOT_DEPLOYED); previously LUFFY-STRATEGY-FACTORY-HANDOFF-R1 and LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
+  stage_5_handoff_edges: 7/7 TESTED on a fixture candidate (candidate, referee pass, version, receipt, probation, approval, eligibility); exact-version paper install and per-trade-identity probation TESTED (identity via Trade Provenance, not integrated on this branch); capacity UNAVAILABLE; no real probation has run; Stage 5 not complete
   stages:
     source_observation: LINKED
     world_model: LINKED

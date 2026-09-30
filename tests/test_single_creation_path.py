@@ -117,7 +117,7 @@ def test_no_research_module_writes_the_strategies_table():
         assert not pat.search(f.read_text()), f"{f} writes strategies"
 
 
-def _handoff_kernel(tmp_path, handoff, admit_ok=True):
+def _handoff_kernel(tmp_path, handoff, admit_ok=True, gates=True):
     from trader.core.child import ChildResult  # noqa: F401
     from trader.kernel import Kernel
     from trader.research import vocab
@@ -138,7 +138,14 @@ def _handoff_kernel(tmp_path, handoff, admit_ok=True):
                        "portfolio": {"total_pct": 40.0, "max_dd_pct": 20.0},
                        "testable": True, "verdict": "scored"},
                       "survivor", "r", {})
-    led.set_candidate(c.hash, "4h", "trail", "reason_passed", rank=40.0)
+    if gates:
+        # the registered referee evidence a handed-off candidate must carry:
+        # one gate1 look that rejected at its alpha, and a passing gate3
+        led.record_test(c.hash, "4h", "trail", "gate1", 0.001, 0.0025, False,
+                        {"t": 1})
+    led.set_candidate(c.hash, "4h", "trail", "reason_passed", rank=40.0,
+                      gate1={"p": 0.001, "alpha": 0.0025, "t": 1},
+                      gate3={"passed": True, "reason": "fixture"})
 
     seen = []
 
@@ -173,6 +180,16 @@ def test_an_open_handoff_goes_through_admit_and_nothing_else(tmp_path):
     assert len(seen[0].universe["include"]) == 36
     assert led.candidate(c.hash)["state"] == "admitted"
     assert _states(k.journal)[spec.id] == "paper"
+
+
+def test_a_candidate_without_registered_gate_evidence_is_refused(tmp_path):
+    k, analyst, seen, c, led = _handoff_kernel(tmp_path, handoff=True,
+                                               gates=False)
+    assert k._research_handoff(analyst, []) is None
+    assert seen == []
+    cand = led.candidate(c.hash)
+    assert cand["state"] == "refused" and "gate1_look_missing" in cand["reason"]
+    assert _states(k.journal) == {}
 
 
 def test_a_refused_candidate_is_recorded_and_not_installed(tmp_path):
