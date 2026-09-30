@@ -1,6 +1,7 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-09-30'
+updated_at: '2026-10-01'
+code_baseline: luffy-integrated-core-r1 (strategy-factory-r1 a883313 + trade-provenance-r1 54aefc5, LUFFY-CORE-LINEAGE-INTEGRATION-R1)
 status: EVIDENCE_BASED
 
 progress_method:
@@ -54,7 +55,7 @@ capabilities:
       - equivalence harness exists for backtest/live-engine semantics
       - derivative-backed live/vector signal parity has explicit tests
     gaps:
-      - immutable version/spec_hash approval binding is TESTED (not deployed) by LUFFY-STRATEGY-FACTORY-HANDOFF-R1 (trader/strategy/factory_handoff.py, tests/test_strategy_factory_handoff.py); the existing paper install (kernel._install_spec) may rewrite timeframe/regime_filter, so the installed spec is not yet guaranteed to be the exact approved version
+      - immutable version/spec_hash approval binding is TESTED (not deployed) by LUFFY-STRATEGY-FACTORY-HANDOFF-R1; exact-version paper install is TESTED by LUFFY-EXACT-VERSION-PAPER-PROBATION-R1; signals stamp both spec_fingerprint (signal occurrence) and spec_sha256 (trade provenance) after LUFFY-CORE-LINEAGE-INTEGRATION-R1
 
   research_and_referee:
     state: TESTED
@@ -371,8 +372,8 @@ capabilities:
       - same-origin checks exist
       - control mutations exist
     gaps:
-      - Needs You approval objects are not yet implemented
-      - authenticated narrow remote-gateway API is not yet implemented
+      - Needs You approval surface is not yet implemented (the strategy first-live approval object exists in trader/strategy/factory_handoff.py with no UI or gateway operation)
+      - a kernel-owned owner interface gateway and Telegram sender binding exist (trader/owner/*; de916ac, 7840965; tests/test_owner_interface.py, tests/test_owner_interface_boundary.py, tests/test_owner_telegram_binding.py pass); tests/test_owner_interface_r3..r6.py fail collection because they read the removed legacy trader/dashboard/web/index.html (identical at 54aefc5)
       - actor identity is still partly caller-supplied in mutations
 
   luffy_chat:
@@ -392,15 +393,25 @@ capabilities:
       - no finalized Needs You integration
 
   accounting_and_truth:
-    state: IMPLEMENTED
+    state: TESTED
     evidence:
       - trader/engine/accounting.py
       - trader/engine/trade_accounting.py
       - trader/engine/reconcile.py
+      - 87b9e4b Establish truthful current runtime contracts (docs/superpowers/reports/2026-09-30-current-truth-contract-r1.md)
+      - trader/core/truth.py; trader/dashboard/current_truth.py; trader/dashboard/valuation.py
+      - tests/test_current_truth_contract.py; tests/test_current_truth_corrections.py; tests/test_current_truth_integration.py; tests/test_current_truth_completion_clock.py
+      - 54aefc5 Establish durable trade provenance (docs/superpowers/reports/2026-09-30-trade-provenance-r1.md)
+      - trader/engine/trade_provenance.py; tests/test_trade_provenance.py
     proven_facts:
       - venue reconciliation paths exist
+      - account observation (FRESH / VENUE_FALLBACK / JOURNAL_FALLBACK / UNAVAILABLE), equity_provenance per equity row, Risk assessment and News Guard truth are recorded with conservative freshness; missing inputs are never a fabricated 0 (TESTED)
+      - owner reads use exact latest records and the shared valuation estimate; unknown is shown as unknown (TESTED)
+      - trades.entry_identity_json (trade-entry-identity.v1) is frozen at insert and immutable (trigger); trade_legs / trade_fills with market_type namespacing, terminal-close provenance and EXACT_LUFFY_ORDER_LINK exit attribution (TESTED)
+      - historical backfill dry run never opens the source DB (file snapshot copy only)
     gaps:
-      - exact SDD v3.2 exchange-authoritative accounting contract is not yet proven across all monetary fields
+      - exact SDD v3.2 exchange-authoritative accounting is not proven across all monetary fields; funding is UNAVAILABLE per trade; native protective-stop fills are not bound (algo -> order bridge not called live); entry fills stay UNAVAILABLE until a later read; Close Trade is NOT truth-ready
+      - the kernel truth/provenance producers write only after a kernel running this code restarts; production runtime state is not verified by this record
 
   memory_and_knowledge:
     state: IMPLEMENTED
@@ -4109,12 +4120,34 @@ completed_exact_version_paper_probation_r1:
     trade_version_identity: CONSUMES Trade Provenance trades.entry_identity_json (trade-entry-identity.v1, VERIFIED, kind spec, spec_sha256 == spec_hash); other-version trades excluded; any unattributable trade of the strategy id in the window -> INCOMPLETE_TRADE_IDENTITY; column absent -> TRADE_IDENTITY_UNAVAILABLE
     version_derivation: TESTED - derived version B has no install, probation, request or approval; cannot be installed without its own validation; B's trades never count for A; A's receipt still verifies after B replaces it in paper, but A is then not eligible (installed_version_differs)
     live_eligibility: TESTED - additionally requires the exact install record and that the currently installed spec is still that version
-  integration_gap: Trade Provenance (trade-provenance-r1, 54aefc5) is NOT on this branch; here no trade carries entry identity, so any real probation reports TRADE_IDENTITY_UNAVAILABLE until that branch is integrated; tests add its column shape
+  integration_gap: CLOSED by LUFFY-CORE-LINEAGE-INTEGRATION-R1 - trades.entry_identity_json now exists on the integrated baseline and the real Kernel identity path binds to the exact version in tests
   unversioned_installs: strategist-admitted specs (no StrategyVersion) keep the existing timeframe/regime install behavior
   capacity: UNAVAILABLE
   real_probation_run: NO (0 production research candidates; research.referee/handoff false)
   stage_5_complete: NO
   trading_behavior_changed: NO (changed Kernel code is reachable only through the research handoff, closed by research.handoff=false)
+  runtime_deployment: NOT_DEPLOYED
+
+completed_core_lineage_integration_r1:
+  id: LUFFY-CORE-LINEAGE-INTEGRATION-R1
+  verdict: PASS
+  state: TESTED
+  branch: luffy-integrated-core-r1 (strategy-factory-r1 a883313 merged with trade-provenance-r1 54aefc5, --no-ff)
+  report: docs/superpowers/reports/2026-10-01-core-lineage-integration-r1.md
+  conflicts_resolved_semantically:
+    - trader/core/journal.py - both additive ALTERs kept (decisions.reason_codes/_version and trades.entry_identity_json)
+    - trader/strategy/compile.py - CompiledStrategy keeps fingerprint and spec_sha256; signals stamp spec_fingerprint, signal-occurrence fields and spec_sha256
+    - trader/kernel.py - imports math and re; _flush_health and news_status_line both kept; entry gate keeps reason codes and adds the current-truth risk_state gate, None-safe daily breaker and _record_risk_assessment
+  schema_union: fresh DB and DBs built by both parents (a883313, 54aefc5) reach identical objects/columns after upgrade; equity_provenance, trade_legs, trade_fills, trades.entry_identity_json + immutability trigger, research, investigation and strategy factory tables all present; legacy trades keep NULL identity and backfill is refused
+  trade_version_bridge: TESTED - Kernel exact install -> _load_population -> _entry_provenance -> Journal.add_trade/close_trade -> entry_identity_json.spec_sha256 == StrategyVersion.spec_hash -> probation SATISFIED with the exact trades; another evaluator hash is AMBIGUOUS and missing identity is unattributed -> INCOMPLETE_TRADE_IDENTITY; derived versions inherit nothing
+  test_fixture_updates: tests/test_attention_supplemental.py and tests/test_decision_rejection_reason_codes.py fake kernels adopt the current-truth Risk contract (_fetch_balance_fresh; update_equity(authoritative=) -> risk_state ok); no production code change for them
+  known_non_regressions:
+    - tests/test_decision_rejection_reason_codes.py::test_every_code_referenced_exists_and_every_code_is_used fails at a883313 too (scanner reads research_bank_view's rc alias)
+    - tests/test_owner_interface_r3..r6.py collection errors are identical at 54aefc5 (legacy index.html removed)
+    - tests/test_current_truth_corrections.py news icon st4 is timing-sensitive (future timestamp fixed at collection); passes on rerun
+    - tests/test_trade_booking.py CLI test needs ./venv in the checkout; passes with it
+  new_gap: the current-truth risk_state entry gate has no dedicated decision-rejection-reason.v1 code; it records entries_not_allowed with blocked text risk_state=<value>
+  trading_behavior_changed: NO (union of two reviewed lineages; research.referee/handoff false; no config change; nothing activated)
   runtime_deployment: NOT_DEPLOYED
 
 current_active_work:
@@ -4185,11 +4218,12 @@ delivery_progress:
   rule: progress_method.scoring_rule governs; these figures are formula-derived conveniences, not acceptance evidence
   integrated_delivery_percent: 100
   integrated_delivery_formula: intelligence spine stages AVAILABLE with actual stored ids in one tested shadow trace / 11 stages (intelligence_trace.STAGES, registration now its own stage); SPINE-R1 5/10, RESEARCH-FAMILY-R1 11/11; tested linkage only, not deployed or production-observed
-  capability_coverage_percent: 53
-  capability_coverage_formula: capabilities at TESTED or better / 17 capabilities in STATE.capabilities (9/17); unchanged by RESEARCH-FAMILY-R1 and STRATEGY-FACTORY-HANDOFF-R1 (both affected capabilities were already TESTED)
+  capability_coverage_percent: 59
+  capability_coverage_formula: capabilities at TESTED or better / 17 capabilities in STATE.capabilities (10/17); accounting_and_truth IMPLEMENTED -> TESTED on the integrated baseline (current-truth + trade-provenance tests); previously 9/17
   current_milestone: Stage 3 intelligence spine (WorldModel -> Attention -> Investigation -> Research) in shadow
-  last_completed: LUFFY-EXACT-VERSION-PAPER-PROBATION-R1 (PASS; TESTED; NOT_DEPLOYED); previously LUFFY-STRATEGY-FACTORY-HANDOFF-R1 and LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
-  stage_5_handoff_edges: 7/7 TESTED on a fixture candidate (candidate, referee pass, version, receipt, probation, approval, eligibility); exact-version paper install and per-trade-identity probation TESTED (identity via Trade Provenance, not integrated on this branch); capacity UNAVAILABLE; no real probation has run; Stage 5 not complete
+  code_baseline: luffy-integrated-core-r1
+  last_completed: LUFFY-CORE-LINEAGE-INTEGRATION-R1 (PASS; TESTED; NOT_DEPLOYED); previously LUFFY-EXACT-VERSION-PAPER-PROBATION-R1, LUFFY-STRATEGY-FACTORY-HANDOFF-R1, LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
+  stage_5_handoff_edges: 7/7 TESTED on a fixture candidate (candidate, referee pass, version, receipt, probation, approval, eligibility); exact-version paper install and per-trade-identity probation TESTED through the real Trade Provenance identity path on the integrated baseline; capacity UNAVAILABLE; no real probation has run; Stage 5 not complete
   stages:
     source_observation: LINKED
     world_model: LINKED

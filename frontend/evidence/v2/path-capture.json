@@ -1,0 +1,122 @@
+{
+  "config": {
+    "argv": [
+      "/home/sarmad/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+      "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/node_modules/.bin/playwright",
+      "test",
+      "tests/browser/v2.spec.ts",
+      "-g",
+      "Knowledge traces"
+    ],
+    "configFile": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/playwright.config.ts",
+    "rootDir": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/tests/browser",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/tests/browser",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "evidence/v2/path-capture.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "v2.spec.ts",
+      "file": "v2.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "Knowledge traces real directed paths and preserves missing-path uncertainty",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2935,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-28T22:13:48.710Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f5cea1cd63f4d778102-189304bd1f786f5b8712",
+          "file": "v2.spec.ts",
+          "line": 143,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-28T22:13:39.309Z",
+    "duration": 12755.285,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

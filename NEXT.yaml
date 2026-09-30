@@ -57,8 +57,18 @@ work_package:
         - docs/superpowers/reports/2026-09-30-exact-version-paper-probation-r1.md
       runtime_deployment: NOT_DEPLOYED
       record: STATE.yaml completed_exact_version_paper_probation_r1
+    integrated:
+      id: LUFFY-CORE-LINEAGE-INTEGRATION-R1
+      verdict: PASS
+      state: TESTED
+      branch: luffy-integrated-core-r1 (now the code baseline for STATE.delivery_progress)
+      evidence:
+        - docs/superpowers/reports/2026-10-01-core-lineage-integration-r1.md
+        - tests/test_strategy_factory_handoff.py (real Kernel identity bridge)
+      runtime_deployment: NOT_DEPLOYED
+      record: STATE.yaml completed_core_lineage_integration_r1
+      owner_decision_required: whether and when the integrated baseline replaces main for deployment (not requested here)
     next_stage5_gaps:  # owner decision to prioritize; none started
-      - integrate Trade Provenance (trade-provenance-r1) so paper trades carry trade-entry-identity.v1; until then real probation is TRADE_IDENTITY_UNAVAILABLE
       - capacity estimate is UNAVAILABLE; do not invent one (next Stage-5 capability gap after probation identity)
       - wire version degradation/retirement to analyst.review_deployed
       - no real probation has run (0 research candidates; research.referee/handoff false - recorded stop)

@@ -1,0 +1,399 @@
+{
+  "scope": "Synthetic local frontend only; no production/backend/core/database inference",
+  "conditions": {
+    "browser": "151.0.7922.34",
+    "platform": "linux",
+    "release": "7.0.0-31-generic",
+    "cpu": "AMD Ryzen 5 5600H with Radeon Graphics",
+    "logicalCpus": 4,
+    "hostRamGiB": 7.704547882080078,
+    "viewport": "1440x1080",
+    "headless": true,
+    "network": "loopback; no throttling",
+    "coldTrials": 3,
+    "resources": "CDP renderer task time, JS heap after forced GC; not whole-browser RSS/GPU or core isolation proof",
+    "fixtures": {
+      "equityPoints": 30,
+      "positions": 2,
+      "knowledgeNodes": 12,
+      "knowledgeDefaultVisible": 11,
+      "knowledgeEdges": 11,
+      "systemNodes": 9,
+      "systemEdges": 9,
+      "events": 1,
+      "graphCap": 40,
+      "chatLimit": 100
+    },
+    "adapterDelayMs": 100
+  },
+  "cold": [
+    {
+      "navigationMs": 220.95467200000712,
+      "usefulOverviewMs": 422.1328070000018,
+      "chartRenderedMs": 734.0650989999995,
+      "navigation": {
+        "name": "http://127.0.0.1:4174/",
+        "entryType": "navigation",
+        "startTime": 0,
+        "duration": 97.5,
+        "navigationId": 788,
+        "initiatorType": "navigation",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "text/html",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 1,
+        "domainLookupStart": 1,
+        "domainLookupEnd": 1,
+        "connectStart": 1,
+        "secureConnectionStart": 0,
+        "connectEnd": 1,
+        "requestStart": 3.299999952316284,
+        "responseStart": 5.5,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 5.5,
+        "responseEnd": 7.8999998569488525,
+        "transferSize": 1104,
+        "encodedBodySize": 804,
+        "decodedBodySize": 804,
+        "responseStatus": 200,
+        "serverTiming": [],
+        "unloadEventStart": 0,
+        "unloadEventEnd": 0,
+        "domInteractive": 27.899999856948853,
+        "domContentLoadedEventStart": 97.20000004768372,
+        "domContentLoadedEventEnd": 97.39999985694885,
+        "domComplete": 97.5,
+        "loadEventStart": 97.5,
+        "loadEventEnd": 97.5,
+        "type": "navigate",
+        "redirectCount": 0,
+        "activationStart": 0,
+        "criticalCHRestart": 0,
+        "notRestoredReasons": null,
+        "confidence": {
+          "randomizedTriggerRate": 0.4994798,
+          "value": "high"
+        }
+      },
+      "longTasks": [],
+      "transferBytes": 163419
+    },
+    {
+      "navigationMs": 214.6100720000104,
+      "usefulOverviewMs": 373.8900830000057,
+      "chartRenderedMs": 751.5230949999968,
+      "navigation": {
+        "name": "http://127.0.0.1:4174/",
+        "entryType": "navigation",
+        "startTime": 0,
+        "duration": 104.90000009536743,
+        "navigationId": 8730,
+        "initiatorType": "navigation",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "text/html",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 0.5,
+        "domainLookupStart": 0.5,
+        "domainLookupEnd": 0.5,
+        "connectStart": 0.5,
+        "secureConnectionStart": 0,
+        "connectEnd": 0.5,
+        "requestStart": 2.6000001430511475,
+        "responseStart": 8.400000095367432,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 8.400000095367432,
+        "responseEnd": 11.5,
+        "transferSize": 1104,
+        "encodedBodySize": 804,
+        "decodedBodySize": 804,
+        "responseStatus": 200,
+        "serverTiming": [],
+        "unloadEventStart": 0,
+        "unloadEventEnd": 0,
+        "domInteractive": 30.799999952316284,
+        "domContentLoadedEventStart": 104.70000004768372,
+        "domContentLoadedEventEnd": 104.90000009536743,
+        "domComplete": 104.90000009536743,
+        "loadEventStart": 104.90000009536743,
+        "loadEventEnd": 104.90000009536743,
+        "type": "navigate",
+        "redirectCount": 0,
+        "activationStart": 0,
+        "criticalCHRestart": 0,
+        "notRestoredReasons": null,
+        "confidence": {
+          "randomizedTriggerRate": 0.4994798,
+          "value": "low"
+        }
+      },
+      "longTasks": [],
+      "transferBytes": 163419
+    },
+    {
+      "navigationMs": 209.05490400000417,
+      "usefulOverviewMs": 320.74578199999814,
+      "chartRenderedMs": 748.9115779999993,
+      "navigation": {
+        "name": "http://127.0.0.1:4174/",
+        "entryType": "navigation",
+        "startTime": 0,
+        "duration": 95.19999980926514,
+        "navigationId": 4286,
+        "initiatorType": "navigation",
+        "deliveryType": "",
+        "nextHopProtocol": "http/1.1",
+        "renderBlockingStatus": "non-blocking",
+        "contentType": "text/html",
+        "contentEncoding": "",
+        "workerStart": 0,
+        "workerRouterEvaluationStart": 0,
+        "workerCacheLookupStart": 0,
+        "workerMatchedSourceType": "",
+        "workerFinalSourceType": "",
+        "redirectStart": 0,
+        "redirectEnd": 0,
+        "fetchStart": 0.5,
+        "domainLookupStart": 0.5,
+        "domainLookupEnd": 0.5,
+        "connectStart": 0.5,
+        "secureConnectionStart": 0,
+        "connectEnd": 0.5,
+        "requestStart": 2.6999998092651367,
+        "responseStart": 4.3999998569488525,
+        "firstInterimResponseStart": 0,
+        "finalResponseHeadersStart": 4.3999998569488525,
+        "responseEnd": 5.8999998569488525,
+        "transferSize": 1104,
+        "encodedBodySize": 804,
+        "decodedBodySize": 804,
+        "responseStatus": 200,
+        "serverTiming": [],
+        "unloadEventStart": 0,
+        "unloadEventEnd": 0,
+        "domInteractive": 27,
+        "domContentLoadedEventStart": 94.89999985694885,
+        "domContentLoadedEventEnd": 95,
+        "domComplete": 95.09999990463257,
+        "loadEventStart": 95.19999980926514,
+        "loadEventEnd": 95.19999980926514,
+        "type": "navigate",
+        "redirectCount": 0,
+        "activationStart": 0,
+        "criticalCHRestart": 0,
+        "notRestoredReasons": null,
+        "confidence": {
+          "randomizedTriggerRate": 0.4994798,
+          "value": "high"
+        }
+      },
+      "longTasks": [],
+      "transferBytes": 163419
+    }
+  ],
+  "navigation": [
+    {
+      "round": "first visit",
+      "surface": "LUFFY",
+      "elapsedMs": 412.6174619999947
+    },
+    {
+      "round": "first visit",
+      "surface": "Knowledge",
+      "elapsedMs": 931.755932
+    },
+    {
+      "round": "first visit",
+      "surface": "Live System",
+      "elapsedMs": 104.39522999999463
+    },
+    {
+      "round": "first visit",
+      "surface": "Overview",
+      "elapsedMs": 158.90942299999006
+    },
+    {
+      "round": "cached visit",
+      "surface": "LUFFY",
+      "elapsedMs": 130.86190299999726
+    },
+    {
+      "round": "cached visit",
+      "surface": "Knowledge",
+      "elapsedMs": 139.8721280000027
+    },
+    {
+      "round": "cached visit",
+      "surface": "Live System",
+      "elapsedMs": 100.8850070000044
+    },
+    {
+      "round": "cached visit",
+      "surface": "Overview",
+      "elapsedMs": 152.56848499999614
+    }
+  ],
+  "interaction": {
+    "graphSearchMs": 109.86796900001355,
+    "composerInputMs": 100.18819200000144
+  },
+  "resources": [
+    {
+      "surface": "Overview / chart rendered",
+      "sampleMs": 1231.5118000000075,
+      "rendererTaskCpuMs": 6.249000000000004,
+      "jsHeapUsedMiB": 4.343940734863281,
+      "domNodes": 821,
+      "domCounters": {
+        "documents": 1,
+        "nodes": 821,
+        "jsEventListeners": 199
+      },
+      "layouts": 0,
+      "scriptMs": 0
+    },
+    {
+      "surface": "LUFFY",
+      "sampleMs": 1211.0805430000037,
+      "rendererTaskCpuMs": 4.380999999999968,
+      "jsHeapUsedMiB": 4.856201171875,
+      "domNodes": 868,
+      "domCounters": {
+        "documents": 1,
+        "nodes": 868,
+        "jsEventListeners": 174
+      },
+      "layouts": 0,
+      "scriptMs": 0
+    },
+    {
+      "surface": "Knowledge",
+      "sampleMs": 1210.949701999998,
+      "rendererTaskCpuMs": 4.5079999999999565,
+      "jsHeapUsedMiB": 6.241828918457031,
+      "domNodes": 1333,
+      "domCounters": {
+        "documents": 1,
+        "nodes": 1333,
+        "jsEventListeners": 260
+      },
+      "layouts": 0,
+      "scriptMs": 0
+    },
+    {
+      "surface": "Live System",
+      "sampleMs": 1215.0907710000029,
+      "rendererTaskCpuMs": 36.20200000000007,
+      "jsHeapUsedMiB": 6.400390625,
+      "domNodes": 1109,
+      "domCounters": {
+        "documents": 1,
+        "nodes": 1109,
+        "jsEventListeners": 266
+      },
+      "layouts": 4,
+      "scriptMs": 19.11100000000002
+    },
+    {
+      "surface": "Overview",
+      "sampleMs": 1211.221469000011,
+      "rendererTaskCpuMs": 5.286000000000013,
+      "jsHeapUsedMiB": 6.430912017822266,
+      "domNodes": 850,
+      "domCounters": {
+        "documents": 1,
+        "nodes": 850,
+        "jsEventListeners": 203
+      },
+      "layouts": 0,
+      "scriptMs": 0
+    },
+    {
+      "surface": "LUFFY / actual fixture reply with Motion",
+      "sampleMs": 1211.51642,
+      "rendererTaskCpuMs": 53.04199999999981,
+      "jsHeapUsedMiB": 7.321125030517578,
+      "domNodes": 944,
+      "domCounters": {
+        "documents": 1,
+        "nodes": 944,
+        "jsEventListeners": 198
+      },
+      "layouts": 20,
+      "scriptMs": 13.093999999999994
+    },
+    {
+      "surface": "Live System / supplied event animation",
+      "sampleMs": 1213.4682590000011,
+      "rendererTaskCpuMs": 78.74000000000004,
+      "jsHeapUsedMiB": 7.434761047363281,
+      "domNodes": 1106,
+      "domCounters": {
+        "documents": 1,
+        "nodes": 1106,
+        "jsEventListeners": 247
+      },
+      "layouts": 0,
+      "scriptMs": 0.5660000000000109
+    },
+    {
+      "surface": "Before 206 route changes / LUFFY",
+      "sampleMs": 1210.4176630000002,
+      "rendererTaskCpuMs": 4.418999999999951,
+      "jsHeapUsedMiB": 7.076873779296875,
+      "domNodes": 913,
+      "domCounters": {
+        "documents": 1,
+        "nodes": 913,
+        "jsEventListeners": 177
+      },
+      "layouts": 0,
+      "scriptMs": 0
+    },
+    {
+      "surface": "After 206 route changes",
+      "sampleMs": 1212.5603330000013,
+      "rendererTaskCpuMs": 4.3439999999996814,
+      "jsHeapUsedMiB": 8.375053405761719,
+      "domNodes": 913,
+      "domCounters": {
+        "documents": 1,
+        "nodes": 913,
+        "jsEventListeners": 177
+      },
+      "layouts": 0,
+      "scriptMs": 0
+    },
+    {
+      "surface": "Preview closed / blank page",
+      "sampleMs": 1207.5153129999962,
+      "rendererTaskCpuMs": 5.691999999999996,
+      "jsHeapUsedMiB": 1.5802078247070312,
+      "domNodes": 6,
+      "domCounters": {
+        "documents": 1,
+        "nodes": 6,
+        "jsEventListeners": 3
+      },
+      "layouts": 0,
+      "scriptMs": 0
+    }
+  ]
+}

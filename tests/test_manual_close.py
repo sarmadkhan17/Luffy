@@ -2,9 +2,9 @@
 
 /panic flattens everything and freezes the book — far too blunt when a
 single trade needs to come off. This is the same channel at single-trade
-granularity: the dashboard leaves an intent in `state_kv`, the kernel (the
-only writer of truth) acts on it next cycle. Nothing is placed from the
-browser.
+granularity: the dashboard sends a typed close_trade request to the
+kernel's Owner Interface, which validates the trade and queues it in
+`state_kv`; the kernel cycle acts on it. Nothing is placed from the browser.
 
 Two properties carry most of the weight:
 
@@ -24,8 +24,12 @@ import json
 
 import pytest
 
-from trader.api.graphql_schema import build_mutation
+import time
+
 from trader.core.journal import Journal
+from trader.engine.state import ControlStateMachine
+from trader.owner.contract import OwnerRequest, new_request_id
+from trader.owner.service import OwnerService
 from trader.core.types import Position, Side
 from trader.kernel import Kernel
 
@@ -43,8 +47,21 @@ def journal(tmp_path):
     return j
 
 
+class _DashboardClose:
+    """The dashboard's close_trade, as the kernel's Owner Interface executes it."""
+
+    def __init__(self, j):
+        self.service = OwnerService(j, ControlStateMachine(j), resume=None)
+
+    def close_trade(self, trade_id):
+        r = self.service.execute(OwnerRequest(
+            new_request_id("dashboard"), "close_trade", "dashboard", "session",
+            issued_at=time.time(), args={"trade_id": trade_id}))
+        return r.status in ("ACCEPTED", "ALREADY_SET")
+
+
 def _mutation(j):
-    return build_mutation(j)()
+    return _DashboardClose(j)
 
 
 def _queued(j):
@@ -83,7 +100,7 @@ def test_an_already_closed_trade_is_refused(journal):
 
 
 def test_the_request_is_journalled_as_a_control_event(journal):
-    _mutation(journal).close_trade("pos_0", actor="dashboard")
+    _mutation(journal).close_trade("pos_0")      # actor derived from the channel
     rows = journal.query("SELECT * FROM control_events WHERE event='manual_close'")
     assert len(rows) == 1 and rows[0]["actor"] == "dashboard"
 

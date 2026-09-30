@@ -1,0 +1,1186 @@
+diff --git a/frontend/src/adapters/contracts.ts b/frontend/src/adapters/contracts.ts
+index 5b0eab4..3cf9f61 100644
+--- a/frontend/src/adapters/contracts.ts
++++ b/frontend/src/adapters/contracts.ts
+@@ -40,8 +40,39 @@ export interface Position {
+   journalStop?: { price: number | null; orderRefRecorded: boolean };
+   openedAt?: string | null;
+ }
++/** The kernel's published NewsGuard result (state_kv.news_guard_state), as
++ * classified by the owner API. Only ARMED and CLEAR are evaluated results;
++ * FAIL_OPEN / DISABLED / UNRECOGNIZED are not CLEAR. */
++export type NewsGuardStatus =
++  | "ARMED"
++  | "CLEAR"
++  | "DISABLED"
++  | "FAIL_OPEN"
++  | "UNRECOGNIZED";
++export interface NewsGuard {
++  status: NewsGuardStatus;
++  why: string;
++  /** When the kernel published it (not when the feed was read). */
++  publishedAt: string;
++  freshness: "fresh" | "stale" | "invalid";
++  staleAfterS: number;
++  /** Browser-clock ms after which this reading is STALE (server offset
++   * applied); enforced locally so a failed poll never keeps it current. */
++  expiresAt: number | null;
++  /** The guard's last recorded arm/clear event, only when it agrees. */
++  transition: {
++    event: "news_blackout" | "news_clear";
++    at: string | null;
++    headlines: string[] | null;
++  } | null;
++  effect: string;
++  source: string;
++}
+ export interface LiveOverview {
+   generatedAt: string;
++  newsGuard: NewsGuard | null;
++  /** Why newsGuard is null (backend error code or contract violation). */
++  newsGuardError: string | null;
+   control: {
+     state: string;
+     observedAt: string;
+diff --git a/frontend/src/adapters/live.ts b/frontend/src/adapters/live.ts
+index 9f8428c..59dac20 100644
+--- a/frontend/src/adapters/live.ts
++++ b/frontend/src/adapters/live.ts
+@@ -8,6 +8,7 @@ import type {
+   Lens,
+   LogTail,
+   Marks,
++  NewsGuard,
+   OverviewData,
+   OwnerAdapter,
+   OwnerInterfaceStatus,
+@@ -136,6 +137,59 @@ function protection(p: Json | undefined): Protection {
+   };
+ }
+ 
++const NEWS_STATUSES = ["ARMED", "CLEAR", "DISABLED", "FAIL_OPEN", "UNRECOGNIZED"];
++/** The overview's news_guard section, strictly: anything off-contract is
++ * reported as unavailable, never read as CLEAR. `offset` = server − browser ms. */
++export function mapNewsGuard(
++  g: unknown,
++  offset: number,
++): { value: NewsGuard | null; error: string | null } {
++  if (g === null || g === undefined) return { value: null, error: null };
++  const t = obj(g) && obj(g.transition) ? g.transition : null;
++  const ok =
++    obj(g) &&
++    NEWS_STATUSES.includes(g.status) &&
++    typeof g.active === "boolean" &&
++    g.active === (g.status === "ARMED") &&
++    typeof g.why === "string" &&
++    typeof g.published_at === "string" &&
++    Number.isFinite(Date.parse(g.published_at)) &&
++    ["fresh", "stale", "invalid"].includes(g.freshness) &&
++    typeof g.stale_after_s === "number" &&
++    typeof g.effect === "string" &&
++    typeof g.source === "string" &&
++    (g.transition === null ||
++      (!!t &&
++        (t.event === "news_blackout" || t.event === "news_clear") &&
++        (t.event === "news_blackout") === g.active &&
++        (t.headlines === null || Array.isArray(t.headlines))));
++  if (!ok) return { value: null, error: "news_guard_contract_violation" };
++  const expiresAt =
++    Date.parse(g.published_at) + g.stale_after_s * 1000 - offset;
++  return {
++    value: {
++      status: g.status,
++      why: g.why,
++      publishedAt: g.published_at,
++      freshness: g.freshness,
++      staleAfterS: g.stale_after_s,
++      expiresAt,
++      transition: t
++        ? {
++            event: t.event,
++            at: typeof t.at === "string" ? t.at : null,
++            headlines: Array.isArray(t.headlines)
++              ? t.headlines.map(String)
++              : null,
++          }
++        : null,
++      effect: g.effect,
++      source: g.source,
++    },
++    error: null,
++  };
++}
++
+ export function mapOverview(o: Json): OverviewData {
+   need(obj(o) && o.mode === "LIVE" && obj(o.errors), "overview");
+   const errors = o.errors as Record<string, string>;
+@@ -225,6 +279,7 @@ export function mapOverview(o: Json): OverviewData {
+       )
+     : [];
+   const needs = obj(o.needs_you) ? o.needs_you : null;
++  const news = mapNewsGuard(o.news_guard, offset);
+   const heartbeat = obj(o.heartbeat) ? o.heartbeat : null;
+   return {
+     provenance: account ?? {
+@@ -255,6 +310,14 @@ export function mapOverview(o: Json): OverviewData {
+       : null,
+     live: {
+       generatedAt: String(o.generated_at),
++      newsGuard: news.value,
++      newsGuardError:
++        news.error ??
++        (news.value
++          ? null
++          : typeof errors.news_guard === "string"
++            ? errors.news_guard
++            : "news_guard_not_reported"),
+       control: obj(o.control)
+         ? {
+             state: String(o.control.state),
+diff --git a/frontend/src/live.css b/frontend/src/live.css
+index 05c6bac..d5aee20 100644
+--- a/frontend/src/live.css
++++ b/frontend/src/live.css
+@@ -238,6 +238,18 @@ button.danger {
+   font-size: 13px;
+   color: var(--muted);
+ }
++/* read-only News Guard indicator: a full-width first row of the strip */
++.news-guard {
++  flex: 1 1 100%;
++  display: grid;
++  gap: 4px;
++  color: var(--text);
++  overflow-wrap: anywhere;
++}
++.news-guard summary {
++  color: var(--muted);
++  cursor: pointer;
++}
+ .conversation-layout {
+   grid-template-columns: minmax(0, 1.6fr) minmax(310px, 1fr);
+ }
+diff --git a/frontend/src/views/Overview.tsx b/frontend/src/views/Overview.tsx
+index f219e74..bb67af0 100644
+--- a/frontend/src/views/Overview.tsx
++++ b/frontend/src/views/Overview.tsx
+@@ -14,6 +14,7 @@ import {
+   VisualBoundary,
+ } from "../components/ui";
+ import type { Position, ProtectionStatus } from "../adapters/contracts";
++import NewsGuardIndicator from "../components/NewsGuard";
+ const RecentActivity = lazyChunk(() => import("./Activity"));
+ const EquityChart = lazyChunk(() => import("../components/EquityChart"));
+ const money = (n: number | null) =>
+@@ -326,12 +327,18 @@ export default function Overview() {
+           </div>
+           {live && (
+             <div className="owner-status-strip">
++              <NewsGuardIndicator
++                guard={L?.newsGuard ?? null}
++                error={L ? L.newsGuardError : "overview_unavailable"}
++                now={now}
++                refreshError={q.isError}
++                readAt={L?.generatedAt ?? null}
++              />
+               <span>
+                 Risk state: <strong>Unavailable</strong>
+               </span>
+               <span>
+-                News guard: unavailable · Approval objects:{" "}
+-                <strong>Unavailable</strong>
++                Approval objects: <strong>Unavailable</strong>
+               </span>
+               <a href="#operations">Owner controls ↗</a>
+             </div>
+diff --git a/frontend/tests/browser/v21.spec.ts b/frontend/tests/browser/v21.spec.ts
+index 5c5a5f9..071b128 100644
+--- a/frontend/tests/browser/v21.spec.ts
++++ b/frontend/tests/browser/v21.spec.ts
+@@ -153,7 +153,8 @@ for (const [amount, cls] of [
+     await expect(page.getByTestId("realized-today")).toHaveClass(
+       new RegExp(cls),
+     );
+-    await expect(page.getByText(/News guard: unavailable/)).toBeVisible();
++    // the placeholder is replaced by the kernel's published News Guard state
++    await expect(page.getByTestId("news-guard-status")).toHaveText("CLEAR");
+   });
+ 
+ test("V2.1 login preserves requested slash hash safely", async ({ page }) => {
+diff --git a/tests/owner_frontend_fixture.py b/tests/owner_frontend_fixture.py
+index 21fbca6..3206d16 100644
+--- a/tests/owner_frontend_fixture.py
++++ b/tests/owner_frontend_fixture.py
+@@ -145,6 +145,35 @@ def close_trade(journal, trade_id: str) -> None:
+                   (_iso(datetime.now(timezone.utc)), trade_id))
+ 
+ 
++def set_news_guard(c, active, why, at=None, *, raw: str | None = None) -> None:
++    """Write state_kv.news_guard_state exactly as Kernel.cycle does, or `raw`."""
++    value = raw if raw is not None else json.dumps(
++        {"active": active, "why": why,
++         "ts": (at or datetime.now(timezone.utc)).isoformat()})
++    c.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES('news_guard_state',?)",
++              (value,))
++
++
++def news_guard_state(journal, spec) -> None:
++    """Test hook. spec: None → delete; {"raw": str}; or {"active", "why",
++    "age_s"?, "event"?: news_blackout|news_clear, "hits"?: [...]}."""
++    with journal._tx() as c:
++        if spec is None:
++            c.execute("DELETE FROM state_kv WHERE key='news_guard_state'")
++            return
++        if "raw" in spec:
++            set_news_guard(c, None, None, raw=spec["raw"])
++            return
++        now = datetime.now(timezone.utc)
++        set_news_guard(c, spec["active"], spec["why"],
++                       now - timedelta(seconds=float(spec.get("age_s", 5))))
++        if spec.get("event"):
++            c.execute("INSERT INTO control_events(ts,event,from_state,to_state,actor,detail) "
++                      "VALUES(?,?,'','','news_guard',?)",
++                      (_iso(now - timedelta(minutes=12)), spec["event"],
++                       json.dumps({"hits": spec.get("hits", [])})))
++
++
+ def seed(root: Path, journal, scenario: str = "normal") -> None:
+     """Rewrite the fixture state for one scenario."""
+     now = datetime.now(timezone.utc)
+@@ -188,6 +217,9 @@ def seed(root: Path, journal, scenario: str = "normal") -> None:
+                   "leverage,strategy_name,opened_at,closed_at,realized_pnl,close_reason,status)"
+                   " VALUES('t-old','SOL/USDT','long',1,150,152,150,2,'spec:donchian',?,?,2.0,"
+                   "'trail','closed')", (_iso(now - timedelta(days=2)), _iso(closed)))
++        # the kernel publishes its NewsGuard result every cycle
++        ng_age = {"normal": 20, "stale": 900}.get(scenario, 20)
++        set_news_guard(c, False, "feed quiet", now - timedelta(seconds=ng_age))
+         sup_age = {"normal": 30, "stale": 7200}.get(scenario, 30)
+         c.execute("INSERT INTO state_kv(key,value) VALUES('supervisor_status',?)", (json.dumps({
+             "control_state_observed": "FROZEN", "outcome": "SAFE", "stage": "COMPLETE",
+diff --git a/tests/owner_frontend_server.py b/tests/owner_frontend_server.py
+index c09ed0e..2c0c242 100644
+--- a/tests/owner_frontend_server.py
++++ b/tests/owner_frontend_server.py
+@@ -21,7 +21,8 @@ from fastapi import Request  # noqa: E402
+ from fastapi.responses import JSONResponse  # noqa: E402
+ 
+ from tests.owner_frontend_fixture import (FakeChat, add_history, close_trade,  # noqa: E402
+-                                          insert_trade, make_app, reopen_trade, seed)
++                                          insert_trade, make_app, news_guard_state,
++                                          reopen_trade, seed)
+ from trader.dashboard import auth as auth_mod  # noqa: E402
+ 
+ 
+@@ -51,6 +52,8 @@ def build():
+             close_trade(journal, body["close_trade"])
+         if "reopen_trade" in body:
+             reopen_trade(journal, body["reopen_trade"])
++        if "news_guard" in body:
++            news_guard_state(journal, body["news_guard"])
+         if "gateway" in body:
+             gateway.mode = body["gateway"]
+         if "chat" in body:
+diff --git a/trader/dashboard/owner_api.py b/trader/dashboard/owner_api.py
+index 4f34c46..99284d2 100644
+--- a/trader/dashboard/owner_api.py
++++ b/trader/dashboard/owner_api.py
+@@ -49,6 +49,8 @@ PROTECTION_STALE_S = 180.0         # 3 × Supervisor interval (60 s)
+ SNAPSHOT_STALE_S = 120.0
+ CLOCK_SKEW_S = 5.0                 # a source time further in the future is invalid
+ ACTIVITY_STALE_S = 900.0
++NEWS_GUARD_STALE_S = 300.0         # the kernel republishes it every cycle, like equity
++NEWS_GUARD_EVENT_WINDOW = 2000     # recent control events searched for its last transition
+ EQUITY_WINDOW_H = 168
+ CHAT_MAX_CHARS = 2000
+ CHAT_MAX_HISTORY = 20
+@@ -373,6 +375,84 @@ def read_positions(journal, snap):
+     return out, None
+ 
+ 
++_NEWS_CLEAR_WHY = re.compile(r"(feed quiet|\d+ impact headlines \(\d+ severe\))")
++
++
++def read_news_guard(journal, now):
++    """The kernel's published News Guard result, read-only, never inferred.
++
++    Source: ``state_kv.news_guard_state``, written by ``Kernel.cycle`` every
++    cycle as ``{"active": bool, "why": str, "ts": iso}`` from
++    ``NewsGuard.check()``. ``ts`` is when the kernel published it; NewsGuard
++    re-reads its feed at most once per refresh window, so the evaluation may be
++    older than ``ts``. ``status`` maps only the exact ``why`` values
++    ``agents/news_guard.py`` produces. NewsGuard fails open (a feed error
++    publishes ``active: false``), so ``active: false`` is CLEAR only for its
++    two evaluated-quiet reasons:
++
++      ARMED         active: true. Orchestrator raises the entry threshold and
++                    dampens conviction; it does not block entries.
++      CLEAR         active: false after a successful evaluation.
++      DISABLED      active: false because the guard is disabled in config.
++      FAIL_OPEN     active: false because the feed check failed.
++      UNRECOGNIZED  active: false with any other reason — never CLEAR.
++
++    Missing → ``news_guard_state_missing``; anything but exactly those three
++    typed keys with a parseable time → ``news_guard_state_malformed``.
++    """
++    raw = journal.kv_get("news_guard_state")
++    if raw is None or raw == "":
++        return None, "news_guard_state_missing"
++    try:
++        d = json.loads(raw)
++    except (TypeError, ValueError):
++        return None, "news_guard_state_malformed"
++    if (not isinstance(d, dict) or set(d) != {"active", "why", "ts"}
++            or not isinstance(d["active"], bool) or not isinstance(d["why"], str)):
++        return None, "news_guard_state_malformed"
++    at = _parse(d["ts"])
++    if at is None:
++        return None, "news_guard_state_malformed"
++    why = d["why"]
++    age = _age(at, now)
++    freshness = ("invalid" if age < -CLOCK_SKEW_S
++                 else _freshness(max(age, 0.0), NEWS_GUARD_STALE_S))
++    if d["active"]:
++        status = "ARMED"
++    elif why == "disabled":
++        status = "DISABLED"
++    elif why.startswith("fetch error"):
++        status = "FAIL_OPEN"
++    elif _NEWS_CLEAR_WHY.fullmatch(why):
++        status = "CLEAR"
++    else:
++        status = "UNRECOGNIZED"
++    # NewsGuard journals a control event only when its armed state flips.
++    # Report it only when it agrees with the published state.
++    transition = None
++    rows = journal.query(
++        "SELECT id, ts, event, detail FROM (SELECT id, ts, event, detail FROM control_events "
++        "ORDER BY id DESC LIMIT ?) WHERE event IN ('news_blackout','news_clear') "
++        "ORDER BY id DESC LIMIT 1", (NEWS_GUARD_EVENT_WINDOW,))
++    if rows and (rows[0]["event"] == "news_blackout") == d["active"]:
++        hits = None
++        try:
++            det = json.loads(rows[0]["detail"] or "{}")
++            if isinstance(det, dict) and isinstance(det.get("hits"), list):
++                hits = [str(h)[:120] for h in det["hits"][:5]]
++        except (TypeError, ValueError):
++            pass
++        transition = {"event": rows[0]["event"], "at": _iso(_parse(rows[0]["ts"])),
++                      "control_event_id": rows[0]["id"], "headlines": hits}
++    return {"status": status, "active": d["active"], "why": why[:200],
++            "published_at": _iso(at), "age_s": age, "freshness": freshness,
++            "stale_after_s": NEWS_GUARD_STALE_S, "transition": transition,
++            "effect": "while armed: entry threshold +0.08 and conviction x0.75 "
++                      "(engine/orchestrator.py); entries are not blocked",
++            "source": "journal state_kv.news_guard_state (kernel cycle publication "
++                      "of NewsGuard.check())"}, None
++
++
+ def overview(journal, root: Path) -> dict:
+     now = _now()
+     errors: dict[str, str] = {}
+@@ -395,6 +475,7 @@ def overview(journal, root: Path) -> dict:
+     sup = section("supervisor", read_supervisor, journal, now)
+     snap = section("protection_snapshot", read_protection_snapshot, journal, now)
+     positions = section("positions", read_positions, journal, snap)
++    news_guard = section("news_guard", read_news_guard, journal, now)
+     exposure = None
+     if positions is not None and account and account.get("equity"):
+         notionals = [p["notional_usdt"] for p in positions]
+@@ -421,7 +502,8 @@ def overview(journal, root: Path) -> dict:
+     return {"mode": "LIVE", "generated_at": _iso(now), "control": control,
+             "heartbeat": heartbeat, "account": account, "equity_series": series,
+             "realized_today": realized, "exposure": exposure, "positions": positions,
+-            "protection": protection, "needs_you": needs, "errors": errors}
++            "protection": protection, "needs_you": needs, "news_guard": news_guard,
++            "errors": errors}
+ 
+ 
+ # ── knowledge (vault) ─────────────────────────────────────────────────────────
+diff --git a/frontend/src/components/NewsGuard.tsx b/frontend/src/components/NewsGuard.tsx
+new file mode 100644
+index 0000000..b758658
+--- /dev/null
++++ b/frontend/src/components/NewsGuard.tsx
+@@ -0,0 +1,179 @@
++/** Read-only News Guard indicator. Shows the kernel's published NewsGuard
++ * result exactly as the owner API classified it; nothing here can change it.
++ * Only a fresh, unexpired CLEAR reads as clear. Missing, unreadable,
++ * off-contract, stale, fail-open and unrecognized readings never do. */
++import { timestamp as utc } from "../time";
++import { Badge } from "./ui";
++import type { NewsGuard } from "../adapters/contracts";
++
++type Tone = "mint" | "amber" | "rose";
++export interface NewsGuardView {
++  label: string;
++  tone: Tone;
++  /** One-line answer: is it armed, and is that current? */
++  summary: string;
++  /** false: this is not a current, authoritative reading. */
++  current: boolean;
++}
++
++export function newsGuardPresentation(
++  g: NewsGuard | null,
++  error: string | null,
++  now: number,
++): NewsGuardView {
++  if (!g)
++    return {
++      label: "UNAVAILABLE",
++      tone: "amber",
++      summary: `No readable News Guard state (${error ?? "not reported"}). Whether it is armed is unknown.`,
++      current: false,
++    };
++  if (g.freshness === "invalid")
++    return {
++      label: "UNKNOWN",
++      tone: "amber",
++      summary: `Published time ${utc(g.publishedAt)} is in the future; the reading is not trusted.`,
++      current: false,
++    };
++  if (
++    g.freshness !== "fresh" ||
++    g.expiresAt === null ||
++    !Number.isFinite(g.expiresAt) ||
++    now > g.expiresAt
++  )
++    return {
++      label: "STALE",
++      tone: "amber",
++      summary: `Last reported ${g.status} at ${utc(g.publishedAt)}; the kernel has not republished within ${g.staleAfterS}s, so the current state is unknown.`,
++      current: false,
++    };
++  switch (g.status) {
++    case "ARMED":
++      return {
++        label: "ARMED",
++        tone: "rose",
++        summary: `Armed: ${g.why}. Entries are dampened, not blocked.`,
++        current: true,
++      };
++    case "CLEAR":
++      return {
++        label: "CLEAR",
++        tone: "mint",
++        summary: `Not armed: ${g.why}.`,
++        current: true,
++      };
++    case "DISABLED":
++      return {
++        label: "DISABLED",
++        tone: "amber",
++        summary: "Disabled in config: no news protection is applied.",
++        current: true,
++      };
++    case "FAIL_OPEN":
++      return {
++        label: "FAIL-OPEN",
++        tone: "amber",
++        summary: `The feed check failed (${g.why}); the guard fails open and is not armed. News risk is unknown.`,
++        current: true,
++      };
++    default:
++      return {
++        label: "UNKNOWN",
++        tone: "amber",
++        summary: `Unrecognized reason "${g.why}": not treated as clear.`,
++        current: false,
++      };
++  }
++}
++
++export default function NewsGuardIndicator({
++  guard,
++  error,
++  now,
++  refreshError,
++  readAt,
++}: {
++  guard: NewsGuard | null;
++  error: string | null;
++  now: number;
++  /** The latest overview refresh failed; the reading shown is older. */
++  refreshError: boolean;
++  readAt: string | null;
++}) {
++  const v = newsGuardPresentation(guard, error, now);
++  return (
++    <div
++      className="news-guard"
++      data-testid="news-guard"
++      role="group"
++      aria-label="News Guard"
++    >
++      <span className="news-guard-head">
++        News Guard{" "}
++        <Badge tone={v.tone}>
++          <span data-testid="news-guard-status">{v.label}</span>
++        </Badge>{" "}
++        <span className="quiet">read-only</span>
++      </span>
++      <span data-testid="news-guard-summary">{v.summary}</span>
++      {refreshError && (
++        <span role="status" data-testid="news-guard-refresh-failed">
++          Latest refresh failed; this is the reading from {utc(readAt)}.
++        </span>
++      )}
++      {guard && (
++        <details>
++          <summary>News Guard evidence</summary>
++          <dl className="record-fields">
++            <div>
++              <dt>Published by kernel</dt>
++              <dd>
++                {utc(guard.publishedAt)} · {guard.freshness.toUpperCase()} ·
++                stale after {guard.staleAfterS}s
++              </dd>
++            </div>
++            <div>
++              <dt>Reason (kernel)</dt>
++              <dd>{guard.why || "—"}</dd>
++            </div>
++            <div>
++              <dt>Last recorded arm/clear event</dt>
++              <dd>
++                {guard.transition
++                  ? `${guard.transition.event} recorded ${utc(guard.transition.at)}`
++                  : "Not recorded in the recent control events"}
++              </dd>
++            </div>
++            {guard.transition?.headlines?.length ? (
++              <div>
++                <dt>Headlines recorded at that transition</dt>
++                <dd>
++                  <ul>
++                    {guard.transition.headlines.map((h, i) => (
++                      <li key={i}>{h}</li>
++                    ))}
++                  </ul>
++                </dd>
++              </div>
++            ) : null}
++            <div>
++              <dt>Until</dt>
++              <dd>
++                No expiry is recorded; the kernel re-evaluates on its refresh
++                interval.
++              </dd>
++            </div>
++            <div>
++              <dt>Effect while armed</dt>
++              <dd>{guard.effect}</dd>
++            </div>
++            <div>
++              <dt>Source</dt>
++              <dd>{guard.source}</dd>
++            </div>
++          </dl>
++        </details>
++      )}
++    </div>
++  );
++}
+diff --git a/frontend/tests/newsGuard.test.tsx b/frontend/tests/newsGuard.test.tsx
+new file mode 100644
+index 0000000..f627b8c
+--- /dev/null
++++ b/frontend/tests/newsGuard.test.tsx
+@@ -0,0 +1,269 @@
++import { describe, it, expect, vi } from "vitest";
++import { readFileSync } from "node:fs";
++import { join } from "node:path";
++import { render, screen, waitFor, act, within } from "@testing-library/react";
++import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
++import {
++  mapOverview,
++  mapNewsGuard,
++  BackendUnavailable,
++  SessionExpired,
++} from "../src/adapters/live";
++import { newsGuardPresentation } from "../src/components/NewsGuard";
++import { PreviewProvider } from "../src/context";
++import Overview from "../src/views/Overview";
++import type { OverviewData, OwnerAdapter } from "../src/adapters/contracts";
++
++/** LUFFY-NEWS-GUARD-INDICATOR-R1: the kernel's published NewsGuard result,
++ * read-only. Only a fresh, unexpired CLEAR ever reads CLEAR. */
++const iso = (ms: number) => new Date(ms).toISOString();
++const guard = (over: Record<string, unknown> = {}, at = Date.now()) => ({
++  status: "CLEAR",
++  active: false,
++  why: "feed quiet",
++  published_at: iso(at),
++  age_s: 3,
++  freshness: "fresh",
++  stale_after_s: 300,
++  transition: null,
++  effect:
++    "while armed: entry threshold +0.08 and conviction x0.75 (engine/orchestrator.py); entries are not blocked",
++  source:
++    "journal state_kv.news_guard_state (kernel cycle publication of NewsGuard.check())",
++  ...over,
++});
++const ARMED = {
++  status: "ARMED",
++  active: true,
++  why: "3 impact headlines (1 severe)",
++  transition: {
++    event: "news_blackout",
++    at: iso(Date.now() - 600_000),
++    control_event_id: 7,
++    headlines: ["[severe] Exchange hacked for $40m"],
++  },
++};
++const wire = (
++  news_guard: unknown,
++  errors: Record<string, string> = {},
++  generated = Date.now(),
++) => ({
++  mode: "LIVE",
++  generated_at: iso(generated),
++  errors,
++  control: { state: "FROZEN", observed_at: iso(generated), last_event: null },
++  positions: [],
++  protection: null,
++  news_guard,
++});
++const view = (g: unknown, errors = {}, now = Date.now()) => {
++  const d = mapOverview(wire(g, errors));
++  return newsGuardPresentation(d.live!.newsGuard, d.live!.newsGuardError, now);
++};
++
++describe("news guard contract mapping", () => {
++  it("maps an ARMED reading with its recorded transition", () => {
++    const d = mapOverview(wire(guard(ARMED)));
++    expect(d.live!.newsGuard).toMatchObject({
++      status: "ARMED",
++      why: "3 impact headlines (1 severe)",
++      transition: {
++        event: "news_blackout",
++        headlines: ["[severe] Exchange hacked for $40m"],
++      },
++    });
++    expect(d.live!.newsGuardError).toBeNull();
++  });
++  it("a missing section carries the backend's reason, never a value", () => {
++    const d = mapOverview(
++      wire(null, { news_guard: "news_guard_state_missing" }),
++    );
++    expect(d.live!.newsGuard).toBeNull();
++    expect(d.live!.newsGuardError).toBe("news_guard_state_missing");
++    const absent = mapOverview({ ...wire(null), news_guard: undefined });
++    expect(absent.live!.newsGuardError).toBe("news_guard_not_reported");
++  });
++  it.each([
++    ["unknown status", { status: "OK" }],
++    ["active/status disagree", { status: "CLEAR", active: true }],
++    ["ARMED without active", { status: "ARMED", active: false }],
++    ["why not a string", { why: 3 }],
++    ["unparseable time", { published_at: "yesterday" }],
++    ["unknown freshness", { freshness: "maybe" }],
++    ["no stale bound", { stale_after_s: "300" }],
++    [
++      "transition disagrees",
++      { transition: { event: "news_blackout", at: null, headlines: null } },
++    ],
++  ])("%s → unavailable, not CLEAR", (_n, over) => {
++    const { value, error } = mapNewsGuard(guard(over), 0);
++    expect(value).toBeNull();
++    expect(error).toBe("news_guard_contract_violation");
++    const v = view(guard(over));
++    expect(v.label).toBe("UNAVAILABLE");
++    expect(v.current).toBe(false);
++  });
++});
++
++describe("news guard presentation: no false CLEAR", () => {
++  it("fresh CLEAR is the only CLEAR", () => {
++    expect(view(guard())).toMatchObject({ label: "CLEAR", current: true });
++  });
++  it("ARMED says dampened, not blocked", () => {
++    const v = view(guard(ARMED));
++    expect(v).toMatchObject({ label: "ARMED", tone: "rose", current: true });
++    expect(v.summary).toContain("dampened, not blocked");
++  });
++  it.each([
++    [
++      "fail-open",
++      { status: "FAIL_OPEN", why: "fetch error: timeout" },
++      "FAIL-OPEN",
++    ],
++    ["disabled", { status: "DISABLED", why: "disabled" }, "DISABLED"],
++    ["unrecognized", { status: "UNRECOGNIZED", why: "new text" }, "UNKNOWN"],
++    ["backend stale", { freshness: "stale" }, "STALE"],
++    ["future time", { freshness: "invalid" }, "UNKNOWN"],
++  ])("%s → %s", (_n, over, label) => {
++    const v = view(guard(over));
++    expect(v.label).toBe(label);
++    expect(v.label).not.toBe("CLEAR");
++  });
++  it("expires on the browser clock even if no poll ever succeeds again", () => {
++    const at = Date.now() - 299_000;
++    const g = guard({}, at);
++    expect(view(g).label).toBe("CLEAR");
++    expect(view(g, {}, Date.now() + 5_000).label).toBe("STALE");
++    expect(view(g, {}, Date.now() + 5_000).summary).toContain(
++      "Last reported CLEAR",
++    );
++  });
++  it("missing / unreadable → UNAVAILABLE with the reason", () => {
++    for (const code of [
++      "news_guard_state_missing",
++      "news_guard_state_malformed",
++    ]) {
++      const v = view(null, { news_guard: code });
++      expect(v.label).toBe("UNAVAILABLE");
++      expect(v.summary).toContain(code);
++    }
++  });
++});
++
++function renderOverview(overview: OwnerAdapter["overview"]) {
++  const adapter = {
++    mode: "LIVE",
++    overview,
++    graph: vi.fn(),
++    chat: vi.fn(),
++  } as unknown as OwnerAdapter;
++  const client = new QueryClient({
++    defaultOptions: { queries: { retry: false } },
++  });
++  render(
++    <QueryClientProvider client={client}>
++      <PreviewProvider adapter={adapter}>
++        <Overview />
++      </PreviewProvider>
++    </QueryClientProvider>,
++  );
++  return client;
++}
++const status = () => screen.getByTestId("news-guard-status").textContent;
++
++describe("news guard on Overview", () => {
++  it("renders ARMED with evidence and no control of any kind", async () => {
++    renderOverview(async () => mapOverview(wire(guard(ARMED))));
++    await waitFor(() => expect(status()).toBe("ARMED"));
++    const box = screen.getByTestId("news-guard");
++    expect(box).toHaveTextContent("read-only");
++    expect(box).toHaveTextContent("Entries are dampened, not blocked");
++    expect(box).toHaveTextContent("[severe] Exchange hacked for $40m");
++    expect(box).toHaveTextContent("threshold +0.08");
++    expect(within(box).queryAllByRole("button")).toEqual([]);
++    expect(within(box).queryAllByRole("checkbox")).toEqual([]);
++    expect(box.querySelectorAll("input, select, textarea, form")).toHaveLength(
++      0,
++    );
++  });
++  it("renders missing state as UNAVAILABLE, never CLEAR", async () => {
++    renderOverview(async () =>
++      mapOverview(wire(null, { news_guard: "news_guard_state_missing" })),
++    );
++    await waitFor(() => expect(status()).toBe("UNAVAILABLE"));
++    expect(screen.getByTestId("news-guard-summary")).toHaveTextContent(
++      "news_guard_state_missing",
++    );
++  });
++  it("a failed refresh keeps the old reading labelled, then it goes STALE", async () => {
++    let calls = 0;
++    const client = renderOverview(async () => {
++      calls += 1;
++      if (calls > 1) throw new BackendUnavailable("down");
++      // expires 1.5 s from now on the browser clock
++      return mapOverview(wire(guard({}, Date.now() - 298_500)));
++    });
++    await waitFor(() => expect(status()).toBe("CLEAR"));
++    await act(async () => {
++      await client.refetchQueries({ queryKey: ["overview"] });
++    });
++    await waitFor(() =>
++      expect(screen.getByTestId("news-guard-refresh-failed")).toBeVisible(),
++    );
++    await waitFor(() => expect(status()).toBe("STALE"), { timeout: 4000 });
++  });
++  it("session expiry shows no guard state at all", async () => {
++    renderOverview(async () => {
++      throw new SessionExpired("Session ended.");
++    });
++    await waitFor(() =>
++      expect(screen.getByText(/Session ended/)).toBeInTheDocument(),
++    );
++    expect(screen.queryByTestId("news-guard")).not.toBeInTheDocument();
++  });
++  it("a late answer to a superseded request never replaces the newer one", async () => {
++    const pending: ((d: OverviewData) => void)[] = [];
++    const client = renderOverview(
++      () => new Promise<OverviewData>((resolve) => pending.push(resolve)),
++    );
++    await waitFor(() => expect(pending).toHaveLength(1));
++    await act(async () => {
++      pending[0](mapOverview(wire(guard())));
++    });
++    await waitFor(() => expect(status()).toBe("CLEAR"));
++    // a refresh (#2) is superseded by another (#3) before it answers
++    await act(async () => {
++      void client.refetchQueries({ queryKey: ["overview"] });
++    });
++    await waitFor(() => expect(pending).toHaveLength(2));
++    await act(async () => {
++      void client.refetchQueries({ queryKey: ["overview"] });
++    });
++    await waitFor(() => expect(pending).toHaveLength(3));
++    await act(async () => {
++      pending[2](mapOverview(wire(guard(ARMED))));
++    });
++    await waitFor(() => expect(status()).toBe("ARMED"));
++    // #2's answer arrives last and is older: it must not replace ARMED
++    await act(async () => {
++      pending[1](mapOverview(wire(guard())));
++      await new Promise((r) => setTimeout(r, 30));
++    });
++    expect(status()).toBe("ARMED");
++  });
++});
++
++describe("no fixture fallback or control path", () => {
++  const src = (p: string) => readFileSync(join(__dirname, "../src", p), "utf8");
++  it("live adapter and indicator import no fixtures and send no mutation", () => {
++    for (const f of ["adapters/live.ts", "components/NewsGuard.tsx"]) {
++      expect(src(f), f).not.toMatch(/from\s+["'][^"']*fixture/);
++    }
++    expect(src("components/NewsGuard.tsx")).not.toMatch(
++      /fetch\(|mutation|onClick|<button|<form/,
++    );
++    expect(src("adapters/live.ts")).not.toMatch(
++      /news_guard\s*\(|mutation[^`]*news/i,
++    );
++  });
++});
+diff --git a/frontend/tests/browser/news-guard.spec.ts b/frontend/tests/browser/news-guard.spec.ts
+new file mode 100644
+index 0000000..290f24d
+--- /dev/null
++++ b/frontend/tests/browser/news-guard.spec.ts
+@@ -0,0 +1,172 @@
++import { test, expect, type Page } from "@playwright/test";
++import { LIVE, login, state } from "./liveHelpers";
++
++// LUFFY-NEWS-GUARD-INDICATOR-R1 — LIVE build over the real FastAPI app and a
++// temporary fixture journal. The fixture writes state_kv.news_guard_state the
++// way Kernel.cycle publishes NewsGuard.check(); "normal" publishes CLEAR.
++
++const status = (page: Page) => page.getByTestId("news-guard-status");
++const summary = (page: Page) => page.getByTestId("news-guard-summary");
++const box = (page: Page) => page.getByTestId("news-guard");
++
++test.beforeEach(async ({ request }) => {
++  await state(request, { scenario: "normal", fail: [], ttl: 43200 });
++});
++test.afterAll(async ({ request }) => {
++  await state(request, { scenario: "normal", fail: [], ttl: 43200 });
++});
++
++test("CLEAR renders from the kernel's publication, read-only", async ({
++  page,
++}) => {
++  const offOrigin: string[] = [];
++  const mutations: string[] = [];
++  page.on("request", (r) => {
++    if (new URL(r.url()).origin !== LIVE) offOrigin.push(r.url());
++    if (r.method() !== "GET" && r.url().endsWith("/graphql"))
++      mutations.push(r.postData() ?? "");
++  });
++  await login(page);
++  await expect(status(page)).toHaveText("CLEAR");
++  await expect(summary(page)).toHaveText("Not armed: feed quiet.");
++  await expect(box(page)).toContainText("read-only");
++  // nothing in the indicator can act: no button, input or form
++  await expect(
++    box(page).locator("button, input, select, textarea, form"),
++  ).toHaveCount(0);
++  await box(page).getByText("News Guard evidence").click();
++  await expect(box(page)).toContainText("journal state_kv.news_guard_state");
++  await expect(box(page)).toContainText("FRESH");
++  expect(mutations.filter((m) => m.includes("mutation"))).toEqual([]);
++  expect(offOrigin).toEqual([]);
++});
++
++test("ARMED shows why, the recorded transition and that entries are dampened, not blocked", async ({
++  page,
++  request,
++}) => {
++  await state(request, {
++    news_guard: {
++      active: true,
++      why: "3 impact headlines (1 severe)",
++      event: "news_blackout",
++      hits: ["[severe] Exchange hacked for $40m", "[impact] Fed holds rates"],
++    },
++  });
++  await login(page);
++  await expect(status(page)).toHaveText("ARMED");
++  await expect(summary(page)).toContainText(
++    "Armed: 3 impact headlines (1 severe). Entries are dampened, not blocked.",
++  );
++  await box(page).getByText("News Guard evidence").click();
++  await expect(box(page)).toContainText("news_blackout recorded");
++  await expect(box(page)).toContainText("[severe] Exchange hacked for $40m");
++  await expect(box(page)).toContainText("threshold +0.08");
++  await expect(box(page)).toContainText("No expiry is recorded");
++});
++
++for (const [name, spec, label, text] of [
++  ["missing", null, "UNAVAILABLE", "news_guard_state_missing"],
++  [
++    "malformed",
++    { raw: "{not json" },
++    "UNAVAILABLE",
++    "news_guard_state_malformed",
++  ],
++  [
++    "fail-open",
++    { active: false, why: "fetch error: timed out" },
++    "FAIL-OPEN",
++    "fails open and is not armed",
++  ],
++  [
++    "stale",
++    { active: false, why: "feed quiet", age_s: 900 },
++    "STALE",
++    "Last reported CLEAR",
++  ],
++  [
++    "unrecognized",
++    { active: false, why: "a new reason" },
++    "UNKNOWN",
++    "not treated as clear",
++  ],
++] as const)
++  test(`${name} state is ${label}, never CLEAR`, async ({ page, request }) => {
++    await state(request, { news_guard: spec });
++    await login(page);
++    await expect(status(page)).toHaveText(label);
++    await expect(summary(page)).toContainText(text);
++    await expect(status(page)).not.toHaveText("CLEAR");
++  });
++
++test("backend unavailable shows no guard reading at all", async ({
++  page,
++  request,
++}) => {
++  await state(request, { fail: ["/owner-api/v1/overview"] });
++  await login(page);
++  await expect(page.getByText(/Backend error 500/)).toBeVisible();
++  await expect(box(page)).toHaveCount(0);
++  await expect(page.getByText("CLEAR", { exact: true })).toHaveCount(0);
++});
++
++test("a failed refresh labels the older reading instead of passing it off as current", async ({
++  page,
++}) => {
++  await login(page);
++  await expect(status(page)).toHaveText("CLEAR");
++  await page.route("**/owner-api/v1/overview", (r) =>
++    r.fulfill({ status: 500, json: { error: "injected" } }),
++  );
++  // past the Overview's 10 s staleTime, returning to it refetches
++  await page.getByRole("link", { name: "Trades", exact: true }).click();
++  await page.waitForTimeout(10_500);
++  await page.getByRole("link", { name: "Overview", exact: true }).click();
++  await expect(page.getByTestId("news-guard-refresh-failed")).toBeVisible();
++  await expect(status(page)).toHaveText("CLEAR"); // labelled as older, expires locally
++});
++
++test("reload reads the kernel's current state; nothing is cached locally", async ({
++  page,
++  request,
++}) => {
++  await state(request, {
++    news_guard: { active: true, why: "1 impact headlines (1 severe)" },
++  });
++  await login(page);
++  await expect(status(page)).toHaveText("ARMED");
++  await state(request, { news_guard: { active: false, why: "feed quiet" } });
++  await page.reload();
++  await expect(status(page)).toHaveText("CLEAR");
++  await state(request, { news_guard: null });
++  await page.reload();
++  await expect(status(page)).toHaveText("UNAVAILABLE");
++});
++
++test("session expiry clears the guard reading", async ({ page, request }) => {
++  await state(request, { ttl: 6 });
++  await login(page);
++  await expect(status(page)).toHaveText("CLEAR");
++  await expect(page.getByTestId("signed-out")).toContainText(
++    "session expired",
++    {
++      timeout: 12000,
++    },
++  );
++  await expect(box(page)).toHaveCount(0);
++});
++
++test("the LIVE bundle carries no fixture fallback", async ({ page }) => {
++  const scripts: string[] = [];
++  page.on("response", async (r) => {
++    if (r.url().endsWith(".js")) scripts.push(await r.text());
++  });
++  await login(page);
++  await expect(status(page)).toHaveText("CLEAR");
++  expect(scripts.length).toBeGreaterThan(0);
++  for (const s of scripts) {
++    expect(s).not.toContain("Synthetic preview /");
++    expect(s).not.toContain("research receipt 001");
++  }
++});
+diff --git a/tests/test_owner_news_guard.py b/tests/test_owner_news_guard.py
+new file mode 100644
+index 0000000..2674d70
+--- /dev/null
++++ b/tests/test_owner_news_guard.py
+@@ -0,0 +1,144 @@
++"""News Guard indicator: /owner-api/v1/overview `news_guard` read contract.
++
++Observability only. The section reports the kernel's published NewsGuard
++result (state_kv.news_guard_state) and never infers or writes guard state.
++Unknown, missing, malformed, fail-open and stale are never CLEAR.
++"""
++import json
++from datetime import datetime, timedelta, timezone
++from pathlib import Path
++
++import pytest
++from fastapi.testclient import TestClient
++
++from tests.owner_frontend_fixture import FakeChat, TOKEN, make_app
++from trader.dashboard import owner_api
++
++H = {"x-luffy-token": TOKEN}
++
++
++@pytest.fixture
++def live(tmp_path, monkeypatch):
++    FakeChat.calls, FakeChat.mode = [], "ok"
++    app, journal, gateway = make_app(tmp_path, monkeypatch)
++    return TestClient(app), journal
++
++
++def _overview(c):
++    return c.get("/owner-api/v1/overview", headers=H).json()
++
++
++def _publish(journal, news, age_s=5.0):
++    """Exactly Kernel.cycle's publication of NewsGuard.check()."""
++    ts = datetime.now(timezone.utc) - timedelta(seconds=age_s)
++    journal.kv_set("news_guard_state", json.dumps(
++        {"active": bool(news.get("active")), "why": news.get("why", ""),
++         "ts": ts.isoformat()}))
++
++
++def _real_guard(monkeypatch, items=None, fail=False, enabled=True):
++    from trader.agents import news_guard as ng
++
++    def feed(url):
++        if fail:
++            raise OSError("feed timeout")
++        return items or []
++    monkeypatch.setattr(ng, "scrape_feed", feed)
++    return ng.NewsGuard({"scouts": {"news_guard": {"enabled": enabled}}}).check()
++
++
++HIT = {"title": "Fed holds interest rate", "text": "", "age_h": 0.5}
++SEVERE = {"title": "Exchange hacked for $40m", "text": "", "age_h": 0.2}
++
++
++@pytest.mark.parametrize("case, expect", [
++    ("armed_severe", "ARMED"), ("armed_two", "ARMED"), ("quiet", "CLEAR"),
++    ("one_impact", "CLEAR"), ("fetch_error", "FAIL_OPEN"), ("disabled", "DISABLED")])
++def test_status_maps_every_real_newsguard_output(live, monkeypatch, case, expect):
++    c, journal = live
++    news = {"armed_severe": lambda: _real_guard(monkeypatch, [SEVERE]),
++            "armed_two": lambda: _real_guard(monkeypatch, [HIT, dict(HIT, title="CPI day")]),
++            "quiet": lambda: _real_guard(monkeypatch, []),
++            "one_impact": lambda: _real_guard(monkeypatch, [HIT]),
++            "fetch_error": lambda: _real_guard(monkeypatch, fail=True),
++            "disabled": lambda: _real_guard(monkeypatch, enabled=False)}[case]()
++    _publish(journal, news)
++    o = _overview(c)
++    g = o["news_guard"]
++    assert g["status"] == expect and g["active"] is (expect == "ARMED")
++    assert g["freshness"] == "fresh" and g["why"] == news["why"]
++    assert g["source"].startswith("journal state_kv.news_guard_state")
++    assert "news_guard" not in o["errors"]
++
++
++def test_fixture_normal_scenario_publishes_clear(live):
++    o = _overview(live[0])
++    assert o["news_guard"]["status"] == "CLEAR" and o["errors"] == {}
++
++
++def test_missing_malformed_stale_invalid_are_never_clear(live):
++    c, journal = live
++    journal.kv_set("news_guard_state", "")
++    o = _overview(c)
++    assert o["news_guard"] is None and o["errors"]["news_guard"] == "news_guard_state_missing"
++    with journal._tx() as tx:
++        tx.execute("DELETE FROM state_kv WHERE key='news_guard_state'")
++    assert _overview(c)["errors"]["news_guard"] == "news_guard_state_missing"
++    now = datetime.now(timezone.utc).isoformat()
++    for bad in ("not json", "[]", "null",
++                json.dumps({"active": "false", "why": "", "ts": now}),
++                json.dumps({"active": 0, "why": "feed quiet", "ts": now}),
++                json.dumps({"active": False, "why": "feed quiet"}),
++                json.dumps({"active": False, "why": "feed quiet", "ts": "yesterday"}),
++                json.dumps({"active": False, "why": 3, "ts": now}),
++                json.dumps({"active": False, "why": "feed quiet", "ts": now, "x": 1})):
++        journal.kv_set("news_guard_state", bad)
++        o = _overview(c)
++        assert o["news_guard"] is None, bad
++        assert o["errors"]["news_guard"] == "news_guard_state_malformed", bad
++    _publish(journal, {"active": False, "why": "feed quiet"}, age_s=301)
++    g = _overview(c)["news_guard"]
++    assert (g["status"], g["freshness"], g["stale_after_s"]) == ("CLEAR", "stale", 300)
++    _publish(journal, {"active": False, "why": "feed quiet"}, age_s=-600)
++    assert _overview(c)["news_guard"]["freshness"] == "invalid"
++    _publish(journal, {"active": False, "why": "something new"})
++    assert _overview(c)["news_guard"]["status"] == "UNRECOGNIZED"
++
++
++def test_transition_reported_only_when_it_agrees(live):
++    c, journal = live
++    journal.log_control_event("news_blackout", "news_guard",
++                              detail={"hits": ["[severe] Exchange hacked"]})
++    _publish(journal, {"active": True, "why": "1 impact headlines (1 severe)"})
++    t = _overview(c)["news_guard"]["transition"]
++    assert t["event"] == "news_blackout" and t["headlines"] == ["[severe] Exchange hacked"]
++    assert t["at"] and isinstance(t["control_event_id"], int)
++    # CLEAR after the last recorded transition was an arm: "since" is unknown
++    _publish(journal, {"active": False, "why": "feed quiet"})
++    assert _overview(c)["news_guard"]["transition"] is None
++
++
++def test_read_only_no_control_path(live):
++    c, journal = live
++    before = journal.kv_get("news_guard_state")
++    events = journal.query("SELECT COUNT(*) n FROM control_events")[0]["n"]
++    _overview(c)
++    assert journal.kv_get("news_guard_state") == before
++    assert journal.query("SELECT COUNT(*) n FROM control_events")[0]["n"] == events
++    for r in c.app.routes:
++        if "news" in getattr(r, "path", "").lower():
++            assert set(getattr(r, "methods", None) or {"GET"}) <= {"GET", "HEAD"}, r.path
++    schema = c.post("/graphql", headers=H, json={
++        "query": "{__schema{mutationType{fields{name}}}}"}).json()
++    names = [f["name"] for f in schema["data"]["__schema"]["mutationType"]["fields"]]
++    assert names and not [n for n in names if "news" in n.lower()]
++
++
++def test_effect_text_matches_orchestrator(live):
++    """The reported effect is the orchestrator's; a change there fails here."""
++    src = (Path(owner_api.__file__).parents[1] / "engine" / "orchestrator.py").read_text()
++    assert ('if news.get("active"):\n            threshold += 0.08\n'
++            '            net *= 0.75') in src
++    effect = _overview(live[0])["news_guard"]["effect"]
++    assert "threshold +0.08" in effect and "conviction x0.75" in effect
++    assert "not blocked" in effect

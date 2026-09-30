@@ -1,0 +1,18 @@
+{
+  "previous_evidence_restored_byte_for_byte": [
+    "frontend/evidence/mobile-overview.png",
+    "frontend/evidence/performance.json",
+    "frontend/evidence/mobile-knowledge.png",
+    "frontend/evidence/mobile-luffy.png",
+    "frontend/evidence/knowledge.png",
+    "frontend/evidence/overview.png",
+    "frontend/evidence/live-system-2x.png",
+    "frontend/evidence/scale-performance.json",
+    "frontend/evidence/mobile-live-system.png",
+    "frontend/evidence/live-system.png",
+    "frontend/evidence/system-stale.png",
+    "frontend/evidence/luffy.png"
+  ],
+  "new_outputs_copied_under": "prior-suite-output",
+  "note": "Old suites write historic evidence paths. Saved their new outputs separately and restored pre-pass contents."
+}

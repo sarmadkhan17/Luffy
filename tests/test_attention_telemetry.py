@@ -244,8 +244,9 @@ def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name,
     k.cfg={'timeframes':{'execution':'15m'}}
     k.population=[]
     k.state_machine=NS(refresh=lambda:state)
-    k._fetch_balance=lambda:1000
-    k.risk=NS(update_equity=lambda _: {'equity':1000,'drawdown_pct':0},daily_loss_block=.05)
+    k._fetch_balance_fresh=lambda:1000
+    k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+              daily_loss_block=.05)
     k._drain_close_requests=lambda:0
     k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
                  query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),

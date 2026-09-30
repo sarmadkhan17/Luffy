@@ -1,0 +1,66 @@
+{
+  "cold_usefulOverview_median": {
+    "baseline": 319,
+    "m3": 321
+  },
+  "cold_chart_median": {
+    "baseline": 349,
+    "m3": 375
+  },
+  "cold_nav_median": {
+    "baseline": 211,
+    "m3": 205
+  },
+  "firstVisit_knowledge": {
+    "baseline": 480,
+    "m3": 493
+  },
+  "firstVisit_liveSystem": {
+    "baseline": 895,
+    "m3": 855
+  },
+  "firstVisit_operations": {
+    "baseline": 351,
+    "m3": 360
+  },
+  "firstVisit_luffy": {
+    "baseline": 392,
+    "m3": 408
+  },
+  "cached_median": {
+    "baseline": 53,
+    "m3": 74
+  },
+  "cached_max": {
+    "baseline": 117,
+    "m3": 129
+  },
+  "whileGraph_navigateAwayMs": {
+    "baseline": 361,
+    "m3": 358
+  },
+  "whileGraph_typeFiveCharsMs": {
+    "baseline": 64,
+    "m3": 71
+  },
+  "whileGraph_chatReplyMs": {
+    "baseline": 106,
+    "m3": 108
+  },
+  "heap_afterChurn": {
+    "baseline": 8.47,
+    "m3": 8.76
+  },
+  "heap_knowledge": {
+    "baseline": 8.25,
+    "m3": 8.53
+  },
+  "dom_liveSystem": {
+    "baseline": 1545,
+    "m3": 1969
+  },
+  "serverRss_after": {
+    "baseline": 114.6,
+    "m3": 110.7
+  }
+}

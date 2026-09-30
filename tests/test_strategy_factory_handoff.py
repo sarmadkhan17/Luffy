@@ -63,19 +63,8 @@ def _candidate(j, state="referee_passed", p=0.001, alpha=0.0025,
     return c.hash
 
 
-def _with_provenance(j):
-    """The per-trade identity column Trade Provenance adds
-    (trade-provenance-r1, trade_provenance.migrate). It is NOT on this
-    branch; tests that exercise attribution add it the same way."""
-    with j._tx() as c:
-        c.execute("ALTER TABLE trades ADD COLUMN entry_identity_json "
-                  "TEXT DEFAULT NULL")
-
-
-def _journal(tmp_path, provenance=True, **kw):
-    j = Journal(tmp_path / "j.db")
-    if provenance:
-        _with_provenance(j)
+def _journal(tmp_path, **kw):
+    j = Journal(tmp_path / "j.db")     # carries trades.entry_identity_json
     return j, _candidate(j, **kw)
 
 
@@ -738,10 +727,12 @@ def test_unattributed_trade_makes_probation_incomplete(tmp_path, cfg,
     assert F.state_of(j, v["version_id"]) == F.SHADOW
 
 
-def test_missing_trade_version_identity_fails_closed(tmp_path, cfg):
-    """This branch has no Trade Provenance column: nothing is attributable."""
-    j, h = _journal(tmp_path, provenance=False)
-    assert not F.trade_identity_available(j)
+def test_missing_trade_version_identity_fails_closed(tmp_path, cfg,
+                                                     monkeypatch):
+    """A journal without Trade Provenance's column: nothing attributable."""
+    j, h = _journal(tmp_path)
+    assert F.trade_identity_available(j)
+    monkeypatch.setattr(F, "trade_identity_available", lambda _j: False)
     v = _validated(j, cfg, h)
     rec = _install(j, v["version_id"])
     _trades(j, rec["strategy_id"], PASSING, T0)
@@ -898,3 +889,113 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
     cfg = load_config()
     assert cfg["research"]["referee"] is False
     assert cfg["research"]["handoff"] is False
+
+
+# ── the real identity bridge (Trade Provenance x exact version) ──────────
+def test_real_paper_trade_identity_binds_to_the_exact_version(tmp_path, cfg):
+    """Nothing hand-built: the Kernel installs the exact version, loads its
+    population, stamps the entry identity the way it does before an order,
+    the journal books the trade, and probation recognises it."""
+    from types import SimpleNamespace
+    import pandas as pd
+    from tests.test_trade_provenance import decision
+    from trader.core.types import Position, Side
+    j, h = _journal(tmp_path, state="reason_passed")
+    k = _kernel(j)
+    assert k._research_handoff(_Admitting(), []) is not None
+    v = F.load_version(j, _row(j, "SELECT * FROM strategy_versions")
+                       ["version_id"])
+    sid = v["strategy_id"]
+    install = F.verify_install(j, v)
+    k._load_population()
+    loaded = k._entry_identities[sid]
+    assert loaded["spec_sha256"] == v["spec_hash"]      # population = version
+    snap = SimpleNamespace(price=100.0, ts=_iso(T0),
+                           df=lambda tf: pd.DataFrame({"ts": [_iso(T0)],
+                                                       "close": [100.0]}))
+
+    def book(i, stamped, pnl):
+        d = decision(j, did=f"d{i}")
+        d.strategy_signals = [{"strategy_id": sid, "action": "BUY",
+                               "params": {"spec_id": sid,
+                                          "spec_sha256": stamped}}]
+        identity, _ref = k._entry_provenance(d, snap, sid, "15m")
+        o = install["installed_at_ms"] + (i + 1) * 3_600_000
+        j.add_trade(Position(id=f"p{i}", symbol="BTC/USDT", side=Side.LONG,
+                             amount=1.0, entry_price=100.0,
+                             notional_usdt=100.0, strategy_id=sid,
+                             decision_id=d.id, exec_mode="paper",
+                             opened_at=_iso(o), entry_identity=identity))
+        j.close_trade(f"p{i}", 100.0 + pnl, pnl, "test",
+                      closed_at=_iso(o + 1_800_000))
+        return identity
+
+    first = book(0, v["spec_hash"], 10.0)
+    assert (first["status"], first["spec_sha256"]) == ("VERIFIED",
+                                                        v["spec_hash"])
+    stored = json.loads(_row(j, "SELECT entry_identity_json FROM trades "
+                                "WHERE id='p0'")["entry_identity_json"])
+    assert stored["spec_sha256"] == v["spec_hash"]
+    for i, pnl in enumerate(PASSING[1:], start=1):
+        book(i, v["spec_hash"], pnl)
+    at = install["installed_at_ms"] + 30 * DAY
+    p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=at)
+    assert p["status"] == F.P_SATISFIED
+    prec = F._load(_row(j, "SELECT * FROM strategy_probation_receipts "
+                           "WHERE receipt_id=?", p["probation_receipt_id"]))
+    assert len(prec["trades"]) == 15 and prec["install_id"] == \
+        install["install_id"]
+
+
+def test_real_identity_other_version_and_missing_identity(tmp_path, cfg):
+    from types import SimpleNamespace
+    import pandas as pd
+    from tests.test_trade_provenance import decision
+    from trader.core.types import Position, Side
+    j, h = _journal(tmp_path, state="reason_passed")
+    k = _kernel(j)
+    k._research_handoff(_Admitting(), [])
+    v = F.load_version(j, _row(j, "SELECT * FROM strategy_versions")
+                       ["version_id"])
+    sid, t0 = v["strategy_id"], F.verify_install(j, v)["installed_at_ms"]
+    k._load_population()
+    snap = SimpleNamespace(price=100.0, ts=_iso(T0), df=lambda tf: None)
+
+    def book(i, stamped, pnl, identity=True):
+        d = decision(j, did=f"d{i}")
+        d.strategy_signals = [{"strategy_id": sid, "action": "BUY",
+                               "params": {"spec_id": sid,
+                                          "spec_sha256": stamped}}]
+        idn = k._entry_provenance(d, snap, sid, "15m")[0] if identity \
+            else None
+        o = t0 + (i + 1) * 3_600_000
+        j.add_trade(Position(id=f"p{i}", symbol="BTC/USDT", side=Side.LONG,
+                             amount=1.0, entry_price=100.0,
+                             notional_usdt=100.0, strategy_id=sid,
+                             decision_id=d.id, exec_mode="paper",
+                             opened_at=_iso(o), entry_identity=idn))
+        j.close_trade(f"p{i}", 100.0 + pnl, pnl, "test",
+                      closed_at=_iso(o + 1_800_000))
+
+    for i, pnl in enumerate(PASSING):
+        book(i, v["spec_hash"], pnl)
+    # a signal from another evaluator version: provenance marks it AMBIGUOUS
+    # against the loaded population, so it is unattributable, never counted
+    book(100, "c" * 64, -50.0)
+    p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=t0 + 30 * DAY)
+    assert p["status"] == F.P_INCOMPLETE
+    # adopted/legacy entries carry no identity at all: also fail closed
+    (tmp_path / "x").mkdir()
+    j2, _ = _journal(tmp_path / "x", state="reason_passed")
+    k2 = _kernel(j2)
+    k2._research_handoff(_Admitting(), [])
+    v2 = F.load_version(j2, _row(j2, "SELECT * FROM strategy_versions")
+                        ["version_id"])
+    assert v2["version_id"] == v["version_id"]
+    j, k = j2, k2
+    k._load_population()
+    t0 = F.verify_install(j, v2)["installed_at_ms"]
+    for i, pnl in enumerate(PASSING):
+        book(i, v["spec_hash"], pnl, identity=(i != 3))
+    p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=t0 + 30 * DAY)
+    assert p["status"] == F.P_INCOMPLETE

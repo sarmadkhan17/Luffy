@@ -1,0 +1,6 @@
+{
+  "production_fixture_sources": [],
+  "production_fixture_isolation": "PASS",
+  "dist_index_sha256": "605a22657b087a20b079ba83721c47087e7478ae6abcd2219ecb0738452cfdf8",
+  "note": "LIVE build source maps contain no fixture adapter or DEMO entry module. Shared mode-dependent UI copy may remain in common modules."
+}

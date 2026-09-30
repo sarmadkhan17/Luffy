@@ -1,0 +1,16 @@
+dist/index.html                        0.80 kB │ gzip:   0.44 kB
+dist/assets/GraphView-DLioOiRN.css    15.41 kB │ gzip:   2.56 kB
+dist/assets/index-lTX1P6Fq.css        66.74 kB │ gzip:  14.38 kB
+dist/assets/Activity-CZMt0KzD.js       6.48 kB │ gzip:   2.54 kB
+dist/assets/records-Bn_JBJ1l.js        7.96 kB │ gzip:   3.04 kB
+dist/assets/Operations-DN27UZ4e.js     8.58 kB │ gzip:   3.56 kB
+dist/assets/jsx-runtime-D3jfb0Ew.js    8.90 kB │ gzip:   3.38 kB
+dist/assets/Luffy-Brp1A2oY.js          9.48 kB │ gzip:   3.67 kB
+dist/assets/Routes-CaPucq7c.js        12.50 kB │ gzip:   4.37 kB
+dist/assets/LiveReads-CrdmqK-3.js     23.10 kB │ gzip:   7.22 kB
+dist/assets/Evidence-C8OXwOSD.js      26.35 kB │ gzip:   7.81 kB
+dist/assets/Avatar-CjZ4Zlnt.js       126.93 kB │ gzip:  41.31 kB
+dist/assets/EquityChart-BMYB1iVu.js  166.54 kB │ gzip:  54.35 kB
+dist/assets/GraphView-B_G6avYW.js    200.72 kB │ gzip:  65.40 kB
+dist/assets/index-nfTUU7wd.js        337.68 kB │ gzip: 105.65 kB
+✓ built in 1.16s

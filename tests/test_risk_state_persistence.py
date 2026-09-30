@@ -70,10 +70,15 @@ def test_absent_state_starts_clean():
     assert st["drawdown_pct"] == 0.0 and st["halt_breached"] is False
 
 
-def test_corrupt_state_does_not_crash_the_risk_manager():
+def test_corrupt_state_does_not_crash_and_is_never_reseeded():
+    """Corrupt is not "absent": re-seeding the peak at current equity would
+    forget the drawdown (LUFFY-ACTIVATION-AND-RISK-BASELINE-HARDENING-V1)."""
     j = _Journal()
     j.kv["risk_state"] = "{not json"
-    assert RiskManager(CFG, j).update_equity(10000.0)["drawdown_pct"] == 0.0
+    st = RiskManager(CFG, j).update_equity(10000.0)
+    assert st["risk_state"] == "corrupt" and st["drawdown_pct"] is None
+    assert st["halt_breached"] is False
+    assert j.kv["risk_state"] == "{not json", "corrupt evidence must not be overwritten"
 
 
 def test_a_journal_without_kv_is_tolerated():

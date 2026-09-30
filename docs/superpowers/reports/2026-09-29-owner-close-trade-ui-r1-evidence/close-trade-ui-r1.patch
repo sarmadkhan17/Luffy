@@ -1,0 +1,1616 @@
+diff --git a/frontend/src/adapters/contracts.ts b/frontend/src/adapters/contracts.ts
+index 5b0eab4..96c0900 100644
+--- a/frontend/src/adapters/contracts.ts
++++ b/frontend/src/adapters/contracts.ts
+@@ -218,6 +218,12 @@ export interface OwnerAdapter {
+     op: ControlOperation,
+     pending: PendingRequest,
+   ): Promise<ControlResult | null>;
++  /** The kernel's typed close_trade intent for one journal trade id. Resolves
++   * null when no definitive answer arrived (keep the same request id). */
++  closeTrade?(
++    tradeId: string,
++    pending: PendingRequest,
++  ): Promise<ControlResult | null>;
+   table?(
+     kind: "trades" | "strategies",
+     signal: AbortSignal,
+diff --git a/frontend/src/adapters/live.ts b/frontend/src/adapters/live.ts
+index 9f8428c..b88d89d 100644
+--- a/frontend/src/adapters/live.ts
++++ b/frontend/src/adapters/live.ts
+@@ -440,6 +440,10 @@ const FIELDS =
+   "request_id operation status disposition control_state_before control_state_after reasons supervisor_outcome audit_event_ids replayed message";
+ export const CONTROL_MUTATION = `mutation($o:String!,$r:String!,$t:Float!){res:owner_control(operation:$o,request_id:$r,issued_at_ms:$t){${FIELDS}}}`;
+ export const PANIC_MUTATION = `mutation($r:String!,$t:Float!){res:panic(request_id:$r,issued_at_ms:$t){${FIELDS}}}`;
++export const CLOSE_TRADE_MUTATION = `mutation($x:String!,$r:String!,$t:Float!){res:close_trade(trade_id:$x,request_id:$r,issued_at_ms:$t){${FIELDS}}}`;
++/** Longer than the dashboard's kernel control timeout (120 s): the server
++ * answers OUTCOME_UNKNOWN first; this only bounds a lost connection. */
++export const CLOSE_TRADE_TIMEOUT_MS = 150_000;
+ 
+ export function createLiveAdapter(onUnauthorized: () => void): OwnerAdapter {
+   const api = createTransport(onUnauthorized);
+@@ -508,6 +512,31 @@ export function createLiveAdapter(onUnauthorized: () => void): OwnerAdapter {
+         return null;
+       }
+     },
++    /** One journal trade, by its immutable id, through the kernel's typed
++     * close_trade intent. The browser places no order and writes nothing. */
++    async closeTrade(tradeId: string, pending: PendingRequest) {
++      const abort = new AbortController();
++      const timer = setTimeout(() => abort.abort(), CLOSE_TRADE_TIMEOUT_MS);
++      try {
++        const d = await api<Json>("/graphql", {
++          method: "POST",
++          signal: abort.signal,
++          headers: { "Content-Type": "application/json" },
++          body: JSON.stringify({
++            query: CLOSE_TRADE_MUTATION,
++            variables: { x: tradeId, r: pending.id, t: pending.t },
++          }),
++        });
++        const result = mapControl(d?.data?.res);
++        // an answer for another operation is not an answer for this request
++        return result && result.operation === "close_trade" ? result : null;
++      } catch (e) {
++        if (e instanceof SessionExpired) throw e;
++        return null; // timeout / transport loss: outcome unknown, keep the id
++      } finally {
++        clearTimeout(timer);
++      }
++    },
+     async table(kind, signal): Promise<TableData> {
+       const t = await api<Json>(`${API}/${kind}`, { signal });
+       const rows = t[kind];
+diff --git a/frontend/src/live.css b/frontend/src/live.css
+index 05c6bac..0dfb5b6 100644
+--- a/frontend/src/live.css
++++ b/frontend/src/live.css
+@@ -81,6 +81,16 @@ button.danger {
+   font-size: 12px;
+   overflow-wrap: anywhere;
+ }
++/* one-trade owner close inside the trade record drawer */
++.close-trade {
++  margin-top: 18px;
++  padding-top: 14px;
++  border-top: 1px solid var(--border-strong);
++}
++.close-trade h3 {
++  margin: 0 0 8px;
++  font-size: 14px;
++}
+ .log-tail {
+   max-height: 420px;
+   overflow: auto;
+diff --git a/frontend/src/views/Operations.tsx b/frontend/src/views/Operations.tsx
+index 3d23b1a..58737f7 100644
+--- a/frontend/src/views/Operations.tsx
++++ b/frontend/src/views/Operations.tsx
+@@ -294,7 +294,8 @@ export default function Operations() {
+             </details>
+           )}
+           <p className="quiet space-top">
+-            Close one trade awaits the separate Owner Interface binding package.
++            Close one trade from its record: Trades → Inspect → Close Trade
++            (same Owner Interface, one trade id, explicit confirmation).
+             <a href="/legacy/"> Open legacy dashboard ↗</a>
+           </p>
+         </Panel>
+diff --git a/frontend/src/views/Routes.tsx b/frontend/src/views/Routes.tsx
+index 5825f59..3fe6868 100644
+--- a/frontend/src/views/Routes.tsx
++++ b/frontend/src/views/Routes.tsx
+@@ -12,6 +12,7 @@ import {
+ } from "../components/workspace";
+ import type { TradeStatusFilter } from "../adapters/contracts";
+ import { Decisions, RuntimeStatus, Investigations } from "./Activity";
++import { CloseTradePanel, useCloseTrades } from "./CloseTrade";
+ 
+ export const TRADE_PAGE_SIZE = 50;
+ /** A position in one newest-first traversal: the page's cursor and how many
+@@ -31,6 +32,8 @@ function TradeBook() {
+     null,
+   );
+   const [search, setSearch] = useState("");
++  // close state lives here, above the record drawer that unmounts on close
++  const closes = useCloseTrades();
+   const step = steps[steps.length - 1];
+   const q = useQuery({
+     queryKey: ["trades", status, step.cursor, traversal],
+@@ -205,6 +208,7 @@ function TradeBook() {
+                   commissions and per-trade autopsy links are unavailable.
+                 </p>
+                 <SourceStrip source={d.source} at={d.generatedAt} />
++                <CloseTradePanel row={r} closes={closes} />
+               </>
+             )}
+           />
+diff --git a/tests/owner_frontend_fixture.py b/tests/owner_frontend_fixture.py
+index 21fbca6..e0f44b3 100644
+--- a/tests/owner_frontend_fixture.py
++++ b/tests/owner_frontend_fixture.py
+@@ -243,14 +243,16 @@ class FakeGateway:
+         self.journal = journal
+         self.calls: list[dict] = []
+         self.records: dict[str, OwnerResult] = {}
+-        self.mode = "up"            # up | down | unknown_once | slow
++        # up | down | unknown_once | slow | refuse (close_trade not permitted)
++        # | race_close (the trade closes just before the kernel checks it)
++        self.mode = "up"
+         self.lock = threading.Lock()
+ 
+     def __call__(self, operation, request_id, issued_at_ms, request, args):
+         from trader.owner.adapters import dashboard as owner_dashboard
+         from trader.owner.contract import MalformedRequest
+         self.calls.append({"operation": operation, "request_id": request_id,
+-                           "issued_at_ms": issued_at_ms})
++                           "issued_at_ms": issued_at_ms, "args": dict(args or {})})
+         try:
+             req = owner_dashboard.to_request(operation, request_id, issued_at_ms,
+                                              authenticated=True, args=args)
+@@ -274,6 +276,10 @@ class FakeGateway:
+             if self.mode == "unknown_once":
+                 self.mode = "up"
+                 return refused(req, "kernel_timeout_outcome_unknown", Status.OUTCOME_UNKNOWN)
++            if operation == "close_trade":
++                result = self._close_trade(req)
++                self.records[req.request_id] = result
++                return result
+             after = {"freeze": "FROZEN", "halt": "HALTED", "panic": "FROZEN"}.get(operation)
+             if after:
+                 status = Status.ALREADY_SET if after == state and operation != "panic" \
+@@ -294,6 +300,33 @@ class FakeGateway:
+             return result
+ 
+ 
++    def _close_trade(self, req) -> OwnerResult:
++        """OwnerService._close_trade's contract: the exact journal id must be
++        open; it is appended once to the kernel's close queue."""
++        trade_id = req.args["trade_id"]
++        if self.mode == "refuse":
++            return refused(req, "operation_not_permitted")
++        if self.mode == "race_close":
++            self.mode = "up"
++            close_trade(self.journal, trade_id)
++        with self.journal._tx() as c:
++            if not c.execute("SELECT 1 FROM trades WHERE id=? AND status='open'",
++                             (trade_id,)).fetchone():
++                return refused(req, "trade_not_open")
++            row = c.execute("SELECT value FROM state_kv WHERE key='close_requests'").fetchone()
++            queued = json.loads(row[0]) if row else []
++            already = trade_id in queued
++            if not already:
++                queued.append(trade_id)
++                c.execute("INSERT OR REPLACE INTO state_kv(key,value) "
++                          "VALUES ('close_requests',?)", (json.dumps(queued),))
++        return OwnerResult(req.request_id, req.operation,
++                           Status.ALREADY_SET if already else Status.ACCEPTED,
++                           principal="owner", channel="dashboard",
++                           reasons=("close_queued_next_cycle",),
++                           audit_event_ids=(len(self.calls),))
++
++
+ class FakeChat:
+     calls: list[str] = []
+     mode = "ok"                     # ok | fail | fallback | slow
+diff --git a/tests/owner_frontend_server.py b/tests/owner_frontend_server.py
+index c09ed0e..ded7437 100644
+--- a/tests/owner_frontend_server.py
++++ b/tests/owner_frontend_server.py
+@@ -69,6 +69,7 @@ def build():
+     @app.get("/__test__/calls")
+     def calls():
+         return {"gateway": gateway.calls, "chat": FakeChat.calls,
++                "close_requests": journal.kv_get("close_requests"),
+                 "control_state": journal.kv_get("control_state"), "pid": os.getpid()}
+ 
+     return app
+diff --git a/tests/test_owner_interface.py b/tests/test_owner_interface.py
+index edf2f3a..c5b9e2b 100644
+--- a/tests/test_owner_interface.py
++++ b/tests/test_owner_interface.py
+@@ -853,6 +853,50 @@ def test_w5_dashboard_legacy_mutations_use_the_gateway(tmp_path, ipc_dir):
+         server.stop()
+ 
+ 
++def test_close_trade_ui_binding_exact_id_and_replay(tmp_path, ipc_dir):
++    """The React Close Trade binding: real dashboard route → IPC → OwnerService.
++
++    One journal id is queued, never its same-symbol sibling; an exact replay of
++    the browser's request id returns the recorded result without a second
++    queue entry; the same id with another trade is refused as a conflict."""
++    from trader.core.types import Position, Side
++    j, s = _plain_service(tmp_path, SlowResume(0))
++    for tid in ("pos_a", "pos_b"):             # two trades sharing one symbol
++        j.add_trade(Position(id=tid, symbol="UNI/USDT", side=Side.LONG, amount=1.0,
++                             entry_price=5.0, notional_usdt=5.0, stop_loss=4.5,
++                             market_type="futures", exec_mode="live",
++                             strategy_id="s", strategy_name="x"))
++    server = OwnerIPCServer(s, ipc_dir).start()
++    try:
++        client = _dashboard_app(tmp_path / "ipc.db", ipc_dir)
++        C = ("mutation($x:String!,$r:String!,$t:Float!){res:close_trade(trade_id:$x,"
++             "request_id:$r,issued_at_ms:$t)" + FIELDS + "}")
++        rid, t = str(uuid.uuid4()), time.time() * 1000      # browser randomUUID form
++        first = _gql(client, C, x="pos_a", r=rid, t=t)
++        assert first["status"] == "ACCEPTED" and first["replayed"] is False
++        assert first["reasons"] == ["close_queued_next_cycle"]
++        again = _gql(client, C, x="pos_a", r=rid, t=t)
++        assert again["status"] == "ACCEPTED" and again["replayed"] is True
++        assert again["audit_event_ids"] == first["audit_event_ids"]
++        assert json.loads(j.kv_get("close_requests")) == ["pos_a"]
++        assert len(j.query("SELECT id FROM control_events WHERE event='manual_close'")) == 1
++        # the same request id can never be reused for another trade
++        other = _gql(client, C, x="pos_b", r=rid, t=t)
++        assert other["status"] == "REFUSED" and other["reasons"] == ["request_id_conflict"]
++        assert json.loads(j.kv_get("close_requests")) == ["pos_a"]
++        # a fresh request for an already-queued trade queues nothing new
++        dup = _gql(client, C, x="pos_a", r=str(uuid.uuid4()), t=t)
++        assert dup["status"] == "ALREADY_SET"
++        assert json.loads(j.kv_get("close_requests")) == ["pos_a"]
++        # a trade that is no longer open is refused by the kernel, not queued
++        j.close_trade("pos_b", 5.5, 0.5, "sl_fill")
++        gone = _gql(client, C, x="pos_b", r=str(uuid.uuid4()), t=t)
++        assert gone["status"] == "REFUSED" and gone["reasons"] == ["trade_not_open"]
++        assert json.loads(j.kv_get("close_requests")) == ["pos_a"]
++    finally:
++        server.stop()
++
++
+ def test_p2_dashboard_unauthenticated_and_kernel_down(tmp_path, ipc_dir):
+     j, s = _plain_service(tmp_path, SlowResume(0))
+     t = time.time() * 1000
+diff --git a/frontend/src/views/CloseTrade.tsx b/frontend/src/views/CloseTrade.tsx
+new file mode 100644
+index 0000000..d736893
+--- /dev/null
++++ b/frontend/src/views/CloseTrade.tsx
+@@ -0,0 +1,435 @@
++/** Close ONE open trade through the kernel's typed Owner Interface intent
++ * (GraphQL close_trade → dashboard gateway → OwnerService._close_trade → the
++ * kernel's close queue → Executor.close on its next cycle).
++ *
++ * The browser never places an order and never writes the journal. It names the
++ * trade by its immutable journal id; the kernel checks the id is still open.
++ * Before a NEW request is sent, the displayed trade is re-read from the open
++ * trade book and must still be the same open trade (symbol, side, quantity);
++ * any difference sends nothing and refreshes. Each intended close has one
++ * request id + issue time (shared "luffy.owner.req." protocol, action
++ * "close_trade:<id>"), reused until the kernel gives a definitive answer. */
++import { useRef, useState } from "react";
++import { useQuery, useQueryClient } from "@tanstack/react-query";
++import * as Dialog from "@radix-ui/react-dialog";
++import { X } from "lucide-react";
++import { usePreview } from "../context";
++import * as pending from "../adapters/pending";
++import { SessionExpired } from "../adapters/live";
++import type { ControlResult, PendingRequest } from "../adapters/contracts";
++import { value } from "../components/workspace";
++import { timestamp as utc } from "../time";
++
++/** The trade exactly as the owner saw it when confirming. */
++export interface ShownTrade {
++  id: string;
++  symbol: string;
++  side: string;
++  amount: unknown;
++}
++export type CloseOutcome =
++  | { kind: "answer"; result: ControlResult; request: PendingRequest }
++  | { kind: "unknown"; request: PendingRequest }
++  /** request null: the session ended before anything was sent. */
++  | { kind: "session"; request: PendingRequest | null }
++  | {
++      kind: "stale";
++      reason: "not_open" | "changed" | "unverifiable" | "read_failed";
++      detail?: string;
++    };
++export const closeAction = (tradeId: string) => `close_trade:${tradeId}`;
++/** Largest page the trades endpoint serves; open trades are far fewer. */
++const OPEN_READ_LIMIT = 200;
++const same = (a: unknown, b: unknown) => value(a) === value(b);
++
++/** Per-trade close state, owned above the (unmounting) record drawer so a
++ * late answer lands on its own trade and never on the one now on screen. */
++export function useCloseTrades() {
++  const { adapter } = usePreview();
++  const qc = useQueryClient();
++  const busy = useRef(new Set<string>());
++  const [inFlight, setInFlight] = useState<
++    Record<string, "verifying" | "sending">
++  >({});
++  const [outcomes, setOutcomes] = useState<Record<string, CloseOutcome>>({});
++  const [storageWarning, setStorageWarning] = useState(false);
++  const mark = (id: string, phase: "verifying" | "sending" | null) =>
++    setInFlight((m) => {
++      const n = { ...m };
++      if (phase) n[id] = phase;
++      else delete n[id];
++      return n;
++    });
++  const settle = (id: string, o: CloseOutcome) =>
++    setOutcomes((m) => ({ ...m, [id]: o }));
++  const refresh = () => {
++    void qc.invalidateQueries({ queryKey: ["trades"] });
++    void qc.invalidateQueries({ queryKey: ["overview"] });
++    void qc.invalidateQueries({ queryKey: ["owner-interface"] });
++  };
++
++  /** Re-read the open book: is the shown trade still that same open trade? */
++  async function verify(shown: ShownTrade): Promise<CloseOutcome | null> {
++    let page;
++    try {
++      page = await adapter.tradePage!(
++        { status: "open", cursor: null, limit: OPEN_READ_LIMIT },
++        new AbortController().signal,
++      );
++    } catch (e) {
++      if (e instanceof SessionExpired) throw e;
++      return {
++        kind: "stale",
++        reason: "read_failed",
++        detail: (e as Error).message,
++      };
++    }
++    const now = page.rows.find((r) => String(r.id) === shown.id);
++    if (!now)
++      return page.hasMore
++        ? { kind: "stale", reason: "unverifiable" }
++        : { kind: "stale", reason: "not_open" };
++    if (
++      now.status !== "open" ||
++      !same(now.symbol, shown.symbol) ||
++      !same(now.side, shown.side) ||
++      !same(now.amount, shown.amount)
++    )
++      return {
++        kind: "stale",
++        reason: "changed",
++        detail: `now ${value(now.symbol)} ${value(now.side)} ${value(now.amount)}`,
++      };
++    return null;
++  }
++
++  async function send(tradeId: string, request: PendingRequest) {
++    mark(tradeId, "sending");
++    try {
++      const result = await adapter.closeTrade!(tradeId, request);
++      if (result && pending.DEFINITIVE.includes(result.status))
++        pending.done(request.id);
++      settle(
++        tradeId,
++        result
++          ? { kind: "answer", result, request }
++          : { kind: "unknown", request },
++      );
++    } catch (e) {
++      // the id is kept either way: nothing here can establish the outcome
++      settle(
++        tradeId,
++        e instanceof SessionExpired
++          ? { kind: "session", request }
++          : { kind: "unknown", request },
++      );
++    }
++  }
++
++  /** A NEW close: verify freshness, then create one request id and send. */
++  async function submit(shown: ShownTrade) {
++    if (busy.current.has(shown.id)) return; // double click / double submit
++    busy.current.add(shown.id);
++    try {
++      const existing = pending.find(closeAction(shown.id));
++      if (existing) return await send(shown.id, existing);
++      mark(shown.id, "verifying");
++      let stale: CloseOutcome | null;
++      try {
++        stale = await verify(shown);
++      } catch {
++        // verify maps every other failure itself; only SessionExpired escapes
++        return settle(shown.id, { kind: "session", request: null });
++      }
++      if (stale) return settle(shown.id, stale); // nothing sent
++      const { entry, durable } = pending.create(closeAction(shown.id));
++      if (!durable) setStorageWarning(true);
++      await send(shown.id, entry);
++    } finally {
++      busy.current.delete(shown.id);
++      mark(shown.id, null);
++      refresh();
++    }
++  }
++
++  /** Re-send an unresolved request: same id and issue time, no new action. */
++  async function retry(tradeId: string) {
++    const existing = pending.find(closeAction(tradeId));
++    if (!existing || busy.current.has(tradeId)) return;
++    busy.current.add(tradeId);
++    try {
++      await send(tradeId, existing);
++    } finally {
++      busy.current.delete(tradeId);
++      mark(tradeId, null);
++      refresh();
++    }
++  }
++  return { inFlight, outcomes, storageWarning, submit, retry };
++}
++export type CloseTrades = ReturnType<typeof useCloseTrades>;
++
++const STALE_TEXT: Record<string, string> = {
++  not_open:
++    "This trade is no longer open in the journal. Nothing was sent; the trade book was refreshed.",
++  changed:
++    "This trade changed since it was displayed. Nothing was sent; the trade book was refreshed — review it and confirm again.",
++  unverifiable:
++    "The open trade book is larger than one read, so this trade could not be re-verified. Nothing was sent.",
++  read_failed:
++    "The current trade state could not be read. Nothing was sent; retry when the backend answers.",
++};
++
++function answerText(r: ControlResult): string {
++  if (r.status === "ACCEPTED")
++    return "The kernel accepted and queued this close. It is NOT closed yet: the kernel market-closes it on its next cycle, and the trade book shows it closed only after the kernel books the exit.";
++  if (r.status === "ALREADY_SET")
++    return "A close for this trade was already queued in the kernel. Nothing new was queued; it is not closed until the kernel books the exit.";
++  if (r.status === "REFUSED")
++    return r.reasons.includes("trade_not_open")
++      ? "Refused by the kernel: this trade is not open (already closed). Nothing was sent to the venue."
++      : "Refused by the kernel. It was not executed and will not execute.";
++  if (r.status === "UNAVAILABLE")
++    return "Not delivered — the kernel Owner Interface is unavailable. Nothing changed. Retry sends the same request id.";
++  if (r.status === "IN_PROGRESS")
++    return "The kernel is still processing this request. Retry sends the same request id to read its outcome.";
++  return "Outcome UNKNOWN: the close may or may not have been queued. Do not assume either. Retry sends the same request id to resolve it without a second close.";
++}
++
++export function CloseTradePanel({
++  row,
++  closes,
++}: {
++  row: Record<string, unknown>;
++  closes: CloseTrades;
++}) {
++  const { adapter } = usePreview();
++  const health = useQuery({
++    queryKey: ["owner-interface"],
++    queryFn: ({ signal }) => adapter.ownerInterface!(signal),
++    enabled: !!adapter.ownerInterface,
++    staleTime: 0,
++  });
++  const [confirming, setConfirming] = useState<ShownTrade | null>(null);
++  if (!adapter.closeTrade || !adapter.tradePage) return null;
++  const id = String(row.id);
++  const open = row.status === "open";
++  const phase = closes.inFlight[id];
++  const outcome = closes.outcomes[id];
++  const unresolved = pending.find(closeAction(id));
++  // A closed trade offers no close. It still shows this session's answer and
++  // an unresolved request, whose outcome only a same-id retry can establish.
++  if (!open && !phase && !outcome && !unresolved) return null;
++  const available =
++    !!adapter.ownerInterface &&
++    health.data?.availability === "AVAILABLE" &&
++    !health.isFetching;
++  const controlState = health.data?.controlState ?? null;
++  return (
++    <section
++      className="close-trade"
++      aria-label="Close this trade"
++      data-testid="close-trade"
++    >
++      <h3>Owner control</h3>
++      {unresolved ? (
++        <>
++          <button
++            type="button"
++            className="danger"
++            disabled={!!phase || !available}
++            onClick={() => void closes.retry(id)}
++          >
++            {phase ? "Close pending…" : "Retry close (same request)"}
++          </button>
++          <p className="quiet" data-testid="close-unresolved">
++            Unresolved close request {unresolved.id} issued{" "}
++            {utc(new Date(unresolved.t).toISOString())}. Retry re-sends that
++            same request id; it can never queue a second close.
++          </p>
++        </>
++      ) : !open ? (
++        <p className="quiet" data-testid="close-trade-closed">
++          This trade is {String(row.status ?? "not open")} in the journal as of
++          this read; it offers no close.
++        </p>
++      ) : (
++        <button
++          type="button"
++          className="danger"
++          disabled={!!phase || !available}
++          onClick={() =>
++            setConfirming({
++              id,
++              symbol: String(row.symbol ?? ""),
++              side: String(row.side ?? ""),
++              amount: row.amount,
++            })
++          }
++        >
++          {phase === "verifying"
++            ? "Checking trade…"
++            : phase === "sending"
++              ? "Close pending…"
++              : "Close Trade"}
++        </button>
++      )}
++      {phase && (
++        <p role="status" data-testid="close-pending">
++          {phase === "verifying"
++            ? "Re-reading this trade before sending…"
++            : "Close request sent to the kernel Owner Interface — waiting for its answer."}
++        </p>
++      )}
++      {!available && !phase && (open || unresolved) && (
++        <p role="status" data-testid="close-unavailable">
++          {health.isPending || health.isFetching
++            ? "Checking the kernel Owner Interface…"
++            : health.error
++              ? `Owner Interface health read failed: ${(health.error as Error).message} Close is disabled.`
++              : `Kernel Owner Interface unavailable (${health.data?.reasons.join(", ") || "no reason"}). Close is disabled — nothing is sent while the kernel cannot receive it.`}
++        </p>
++      )}
++      {closes.storageWarning && (
++        <p role="alert">
++          Browser storage unavailable: an unresolved close request is kept only
++          until this page reloads.
++        </p>
++      )}
++      {outcome && <Outcome outcome={outcome} />}
++      <Dialog.Root
++        open={!!confirming}
++        onOpenChange={(o) => !o && setConfirming(null)}
++      >
++        <Dialog.Portal>
++          <Dialog.Overlay className="dialog-overlay" />
++          <Dialog.Content className="evidence-drawer confirm-dialog">
++            <div className="panel-heading">
++              <Dialog.Title>Confirm close trade</Dialog.Title>
++              <Dialog.Close className="icon-button" aria-label="Cancel close">
++                <X size={20} />
++              </Dialog.Close>
++            </div>
++            <Dialog.Description>
++              This sends a real owner control to LUFFY. The kernel checks the
++              trade is still open and market-closes this one trade with a
++              reduce-only order on its next cycle.
++            </Dialog.Description>
++            <dl className="record-fields" data-testid="close-confirm-fields">
++              <div>
++                <dt>Symbol</dt>
++                <dd>{confirming?.symbol}</dd>
++              </div>
++              <div>
++                <dt>Side</dt>
++                <dd>{confirming?.side}</dd>
++              </div>
++              <div>
++                <dt>Open quantity (journal)</dt>
++                <dd>{value(confirming?.amount)}</dd>
++              </div>
++              <div>
++                <dt>Trade ID</dt>
++                <dd>{confirming?.id}</dd>
++              </div>
++              <div>
++                <dt>Control state</dt>
++                <dd>{controlState ?? "unknown"}</dd>
++              </div>
++            </dl>
++            <p className="quiet">
++              The kernel queues an owner close in any control state (ACTIVE,
++              FROZEN or HALTED). Before sending, this trade is re-read; if it
++              changed or is no longer open, nothing is sent.
++            </p>
++            <div className="composer-actions space-top">
++              <Dialog.Close className="button secondary">Cancel</Dialog.Close>
++              <button
++                type="button"
++                className="danger"
++                disabled={!available || !!phase}
++                onClick={() => {
++                  const shown = confirming;
++                  setConfirming(null);
++                  if (shown) void closes.submit(shown);
++                }}
++              >
++                Send close to LUFFY
++              </button>
++            </div>
++          </Dialog.Content>
++        </Dialog.Portal>
++      </Dialog.Root>
++    </section>
++  );
++}
++
++function Outcome({ outcome }: { outcome: CloseOutcome }) {
++  if (outcome.kind === "stale")
++    return (
++      <div
++        className="control-outcome refused"
++        role="alert"
++        data-testid="close-outcome"
++      >
++        <p>
++          <strong>Not sent: trade state changed.</strong>{" "}
++          {STALE_TEXT[outcome.reason]}
++          {outcome.detail ? ` (${outcome.detail})` : ""}
++        </p>
++      </div>
++    );
++  if (outcome.kind === "session")
++    return (
++      <div
++        className="control-outcome unknown"
++        role="alert"
++        data-testid="close-outcome"
++      >
++        <p>
++          <strong>Session ended.</strong>{" "}
++          {outcome.request
++            ? `Sign in again. The close request ${outcome.request.id} is kept; its outcome is unknown until retried with the same id.`
++            : "Sign in again. Nothing was sent."}
++        </p>
++      </div>
++    );
++  if (outcome.kind === "unknown")
++    return (
++      <div
++        className="control-outcome unknown"
++        role="status"
++        data-testid="close-outcome"
++      >
++        <p>
++          <strong>No answer — outcome unknown.</strong> The close may or may not
++          have been queued. The same request id ({outcome.request.id}) is kept;
++          retry resolves it without a second close.
++        </p>
++      </div>
++    );
++  const r = outcome.result;
++  return (
++    <div
++      className={`control-outcome ${r.disposition.toLowerCase()}`}
++      role="status"
++      data-testid="close-outcome"
++    >
++      <p>
++        <strong>close_trade: {r.status}</strong> · {r.disposition}
++        {r.replayed ? " · recorded result (replay)" : ""}
++      </p>
++      <p>{answerText(r)}</p>
++      <dl>
++        <dt>Kernel message</dt>
++        <dd>{r.message}</dd>
++        <dt>Reasons</dt>
++        <dd>{r.reasons.join(", ") || "—"}</dd>
++        <dt>Request</dt>
++        <dd>{r.requestId ?? outcome.request.id}</dd>
++        <dt>Audit events</dt>
++        <dd>{r.auditEventIds.join(", ") || "—"}</dd>
++      </dl>
++    </div>
++  );
++}
+diff --git a/frontend/tests/closeTrade.test.tsx b/frontend/tests/closeTrade.test.tsx
+new file mode 100644
+index 0000000..dc190c2
+--- /dev/null
++++ b/frontend/tests/closeTrade.test.tsx
+@@ -0,0 +1,563 @@
++import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
++import { readdirSync, readFileSync, statSync } from "node:fs";
++import { join } from "node:path";
++import { render, screen, waitFor, act, within } from "@testing-library/react";
++import userEvent from "@testing-library/user-event";
++import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
++import {
++  createLiveAdapter,
++  CLOSE_TRADE_MUTATION,
++  SessionExpired,
++} from "../src/adapters/live";
++import { PreviewProvider } from "../src/context";
++import Routes from "../src/views/Routes";
++import * as pending from "../src/adapters/pending";
++import type {
++  ControlResult,
++  OwnerAdapter,
++  OwnerInterfaceStatus,
++  PendingRequest,
++  TradePage,
++} from "../src/adapters/contracts";
++
++const BTC = {
++  id: "t-btc",
++  symbol: "BTC/USDT",
++  side: "long",
++  amount: 0.01,
++  status: "open",
++  opened_at: "2026-09-29T00:00:00+00:00",
++};
++const ETH = {
++  id: "t-eth",
++  symbol: "ETH/USDT",
++  side: "short",
++  amount: 0.5,
++  status: "open",
++  opened_at: "2026-09-28T23:00:00+00:00",
++};
++const SOL = {
++  id: "t-old",
++  symbol: "SOL/USDT",
++  side: "long",
++  amount: 1,
++  status: "closed",
++  opened_at: "2026-09-27T00:00:00+00:00",
++};
++function page(
++  status: TradePage["status"],
++  rows: Record<string, unknown>[],
++  hasMore = false,
++): TradePage {
++  return {
++    generatedAt: "2026-09-29T00:00:00+00:00",
++    source: "journal trades",
++    status,
++    limit: status === "open" ? 200 : 50,
++    rows,
++    cursor: null,
++    nextCursor: hasMore ? "c1" : null,
++    hasMore,
++    preceding: 0,
++    total: rows.length,
++    first: null,
++    last: null,
++    history: { changed: false, reason: null },
++  };
++}
++const result = (over: Partial<ControlResult> = {}): ControlResult => ({
++  requestId: "dashboard-x",
++  operation: "close_trade",
++  status: "ACCEPTED",
++  disposition: "COMPLETED",
++  controlStateBefore: null,
++  controlStateAfter: null,
++  reasons: ["close_queued_next_cycle"],
++  supervisorOutcome: null,
++  auditEventIds: [11, 12],
++  replayed: false,
++  message: "Close queued — next cycle.",
++  ...over,
++});
++const healthy: OwnerInterfaceStatus = {
++  availability: "AVAILABLE",
++  status: "ACCEPTED",
++  reasons: [],
++  observedAt: "2026-09-29T00:00:00+00:00",
++  controlState: "FROZEN",
++  recoveryInProgress: false,
++};
++
++type Held = {
++  tradeId: string;
++  req: PendingRequest;
++  resolve: (r: ControlResult | null) => void;
++  reject: (e: unknown) => void;
++};
++function harness(
++  opts: {
++    health?: OwnerInterfaceStatus;
++    book?: Record<string, unknown>[];
++    openRead?: () => Promise<TradePage>;
++  } = {},
++) {
++  const closes: Held[] = [];
++  const reads: string[] = [];
++  const book = opts.book ?? [BTC, ETH, SOL];
++  const adapter = {
++    mode: "LIVE",
++    overview: vi.fn(),
++    graph: vi.fn(),
++    chat: vi.fn(),
++    ownerInterface: vi.fn(async () => opts.health ?? healthy),
++    tradePage: vi.fn(async (q: { status: TradePage["status"] }) => {
++      reads.push(q.status);
++      if (q.status === "open" && opts.openRead) return opts.openRead();
++      return page(
++        q.status,
++        q.status === "open" ? book.filter((r) => r.status === "open") : book,
++      );
++    }),
++    closeTrade: vi.fn(
++      (tradeId: string, req: PendingRequest) =>
++        new Promise<ControlResult | null>((resolve, reject) =>
++          closes.push({ tradeId, req, resolve, reject }),
++        ),
++    ),
++  } as unknown as OwnerAdapter;
++  const client = new QueryClient({
++    defaultOptions: { queries: { retry: false } },
++  });
++  render(
++    <QueryClientProvider client={client}>
++      <PreviewProvider adapter={adapter}>
++        <Routes route="trades" />
++      </PreviewProvider>
++    </QueryClientProvider>,
++  );
++  return { adapter, closes, reads };
++}
++const settle = (fn: () => void = () => {}) =>
++  act(async () => {
++    fn();
++    await new Promise((r) => setTimeout(r, 20));
++  });
++async function inspect(u: ReturnType<typeof userEvent.setup>, symbol: string) {
++  await u.click(
++    await screen.findByRole("button", { name: `Inspect ${symbol}` }),
++  );
++  return screen.getByRole("dialog", { name: symbol });
++}
++async function closeButton() {
++  const b = await screen.findByRole("button", { name: "Close Trade" });
++  await waitFor(() => expect(b).toBeEnabled());
++  return b;
++}
++async function confirmClose(
++  u: ReturnType<typeof userEvent.setup>,
++  symbol = "BTC/USDT",
++) {
++  await inspect(u, symbol);
++  await u.click(await closeButton());
++  await u.click(screen.getByRole("button", { name: "Send close to LUFFY" }));
++}
++const unresolved = () => pending.entries();
++
++beforeEach(() => localStorage.clear());
++afterEach(() => vi.unstubAllGlobals());
++
++describe("Close Trade — UI binding", () => {
++  it("an open trade shows Close Trade; a closed trade does not", async () => {
++    const u = userEvent.setup();
++    harness();
++    await inspect(u, "BTC/USDT");
++    expect(await closeButton()).toBeInTheDocument();
++    await u.click(screen.getByRole("button", { name: "Close record" }));
++    const sol = await inspect(u, "SOL/USDT");
++    expect(
++      within(sol).queryByRole("button", { name: "Close Trade" }),
++    ).not.toBeInTheDocument();
++    expect(within(sol).queryByTestId("close-trade")).not.toBeInTheDocument();
++    // no close control on any table row: only inside the record drawer
++    await u.click(screen.getByRole("button", { name: "Close record" }));
++    const table = screen.getAllByRole("table")[0];
++    expect(
++      within(table).queryAllByRole("button", { name: /close/i }),
++    ).toEqual([]);
++  });
++
++  it("requires confirmation showing symbol, side, quantity and trade id", async () => {
++    const u = userEvent.setup();
++    const h = harness();
++    await inspect(u, "BTC/USDT");
++    await u.click(await closeButton());
++    const dialog = screen.getByRole("dialog", { name: "Confirm close trade" });
++    expect(dialog).toHaveTextContent(
++      "This sends a real owner control to LUFFY",
++    );
++    const fields = within(dialog).getByTestId("close-confirm-fields");
++    expect(fields).toHaveTextContent("SymbolBTC/USDT");
++    expect(fields).toHaveTextContent("Sidelong");
++    expect(fields).toHaveTextContent("Open quantity (journal)0.01");
++    expect(fields).toHaveTextContent("Trade IDt-btc");
++    expect(fields).toHaveTextContent("Control stateFROZEN");
++    expect(h.adapter.closeTrade).not.toHaveBeenCalled();
++  });
++
++  it("cancelling the confirmation sends and records nothing", async () => {
++    const u = userEvent.setup();
++    const h = harness();
++    await inspect(u, "BTC/USDT");
++    await u.click(await closeButton());
++    const readsBefore = h.reads.length;
++    await u.click(screen.getByRole("button", { name: "Cancel" }));
++    expect(
++      screen.queryByRole("dialog", { name: "Confirm close trade" }),
++    ).not.toBeInTheDocument();
++    await settle();
++    expect(h.adapter.closeTrade).not.toHaveBeenCalled();
++    expect(h.reads.slice(readsBefore)).not.toContain("open");
++    expect(unresolved()).toEqual([]);
++    expect(screen.queryByTestId("close-outcome")).not.toBeInTheDocument();
++  });
++
++  it("submits the exact trade id once; a double click cannot send twice", async () => {
++    const u = userEvent.setup();
++    const h = harness();
++    await confirmClose(u);
++    await waitFor(() => expect(h.closes).toHaveLength(1));
++    const [c] = h.closes;
++    expect(c.tradeId).toBe("t-btc");
++    expect(c.req.action).toBe("close_trade:t-btc");
++    expect(unresolved().map((e) => e.id)).toEqual([c.req.id]);
++    // pending: disabled, labelled, and further clicks do nothing
++    const busy = screen.getByRole("button", { name: "Close pending…" });
++    expect(busy).toBeDisabled();
++    await u.click(busy);
++    await u.dblClick(busy);
++    expect(screen.getByTestId("close-pending")).toHaveTextContent(
++      "waiting for its answer",
++    );
++    expect(h.adapter.closeTrade).toHaveBeenCalledTimes(1);
++  });
++
++  it("shows the kernel's authoritative result, never an optimistic close", async () => {
++    const u = userEvent.setup();
++    const h = harness();
++    await confirmClose(u);
++    await waitFor(() => expect(h.closes).toHaveLength(1));
++    const readsBefore = h.reads.length;
++    await settle(() => h.closes[0].resolve(result()));
++    const out = screen.getByTestId("close-outcome");
++    expect(out).toHaveTextContent("close_trade: ACCEPTED · COMPLETED");
++    expect(out).toHaveTextContent("It is NOT closed yet");
++    expect(out).toHaveTextContent("Audit events11, 12");
++    expect(unresolved()).toEqual([]); // definitive: the id is released
++    // the trade book is re-read; the row stays open until the journal says so
++    await waitFor(() => expect(h.reads.length).toBeGreaterThan(readsBefore));
++    const row = screen
++      .getAllByRole("table", { hidden: true })[0]
++      .querySelector("tbody tr");
++    expect(row).toHaveTextContent("BTC/USDTlongopen");
++  });
++
++  it("a kernel refusal is shown as not executed and releases the id", async () => {
++    const u = userEvent.setup();
++    const h = harness();
++    await confirmClose(u);
++    await waitFor(() => expect(h.closes).toHaveLength(1));
++    await settle(() =>
++      h.closes[0].resolve(
++        result({
++          status: "REFUSED",
++          disposition: "REFUSED",
++          reasons: ["operation_not_permitted"],
++          message: "🔒 close_trade refused — operation_not_permitted.",
++        }),
++      ),
++    );
++    expect(screen.getByTestId("close-outcome")).toHaveTextContent(
++      "Refused by the kernel. It was not executed and will not execute.",
++    );
++    expect(unresolved()).toEqual([]);
++  });
++
++  it("kernel already closed the trade: trade_not_open is reported as closed", async () => {
++    const u = userEvent.setup();
++    const h = harness();
++    await confirmClose(u);
++    await waitFor(() => expect(h.closes).toHaveLength(1));
++    await settle(() =>
++      h.closes[0].resolve(
++        result({
++          status: "REFUSED",
++          disposition: "REFUSED",
++          reasons: ["trade_not_open"],
++        }),
++      ),
++    );
++    expect(screen.getByTestId("close-outcome")).toHaveTextContent(
++      "this trade is not open (already closed)",
++    );
++  });
++
++  it("an unavailable Owner Interface disables Close Trade", async () => {
++    const u = userEvent.setup();
++    harness({
++      health: {
++        ...healthy,
++        availability: "UNAVAILABLE",
++        reasons: ["kernel_unavailable"],
++        controlState: null,
++      },
++    });
++    await inspect(u, "BTC/USDT");
++    expect(
++      await screen.findByText(
++        /Kernel Owner Interface unavailable \(kernel_unavailable\)/,
++      ),
++    ).toBeInTheDocument();
++    expect(screen.getByRole("button", { name: "Close Trade" })).toBeDisabled();
++  });
++
++  it("kernel unavailable on send: nothing changed, the same id is retried", async () => {
++    const u = userEvent.setup();
++    const h = harness();
++    await confirmClose(u);
++    await waitFor(() => expect(h.closes).toHaveLength(1));
++    const first = h.closes[0].req;
++    await settle(() =>
++      h.closes[0].resolve(
++        result({
++          status: "UNAVAILABLE",
++          disposition: "UNAVAILABLE",
++          reasons: ["kernel_unavailable"],
++        }),
++      ),
++    );
++    expect(screen.getByTestId("close-outcome")).toHaveTextContent(
++      "Not delivered — the kernel Owner Interface is unavailable",
++    );
++    expect(unresolved().map((e) => e.id)).toEqual([first.id]);
++    await u.click(
++      screen.getByRole("button", { name: "Retry close (same request)" }),
++    );
++    await waitFor(() => expect(h.closes).toHaveLength(2));
++    expect(h.closes[1].req).toEqual(first); // same id AND original issue time
++    expect(h.closes[1].tradeId).toBe("t-btc");
++  });
++
++  it("a trade no longer open when re-read is not sent", async () => {
++    const u = userEvent.setup();
++    const h = harness({ openRead: async () => page("open", [ETH]) });
++    await confirmClose(u);
++    expect(await screen.findByTestId("close-outcome")).toHaveTextContent(
++      "This trade is no longer open in the journal. Nothing was sent",
++    );
++    expect(h.adapter.closeTrade).not.toHaveBeenCalled();
++    expect(unresolved()).toEqual([]);
++  });
++
++  it("a trade that changed since display is not sent", async () => {
++    const u = userEvent.setup();
++    const h = harness({
++      openRead: async () => page("open", [{ ...BTC, amount: 0.004 }, ETH]),
++    });
++    await confirmClose(u);
++    expect(await screen.findByTestId("close-outcome")).toHaveTextContent(
++      "This trade changed since it was displayed. Nothing was sent",
++    );
++    expect(screen.getByTestId("close-outcome")).toHaveTextContent(
++      "now BTC/USDT long 0.004",
++    );
++    expect(h.adapter.closeTrade).not.toHaveBeenCalled();
++  });
++
++  it("an unreadable or unverifiable open book fails closed", async () => {
++    const u = userEvent.setup();
++    const h = harness({
++      openRead: async () => page("open", [ETH], true),
++    });
++    await confirmClose(u);
++    expect(await screen.findByTestId("close-outcome")).toHaveTextContent(
++      "could not be re-verified. Nothing was sent",
++    );
++    expect(h.adapter.closeTrade).not.toHaveBeenCalled();
++  });
++
++  it("no answer: outcome unknown, the same id is kept and a replay resolves it", async () => {
++    const u = userEvent.setup();
++    const h = harness();
++    await confirmClose(u);
++    await waitFor(() => expect(h.closes).toHaveLength(1));
++    const first = h.closes[0].req;
++    await settle(() => h.closes[0].resolve(null));
++    expect(screen.getByTestId("close-outcome")).toHaveTextContent(
++      "No answer — outcome unknown",
++    );
++    expect(screen.getByTestId("close-outcome")).not.toHaveTextContent(
++      /ACCEPTED|REFUSED/,
++    );
++    expect(unresolved().map((e) => e.id)).toEqual([first.id]);
++    // OUTCOME_UNKNOWN from the kernel is not reinterpreted either
++    await u.click(
++      screen.getByRole("button", { name: "Retry close (same request)" }),
++    );
++    await waitFor(() => expect(h.closes).toHaveLength(2));
++    await settle(() =>
++      h.closes[1].resolve(
++        result({
++          status: "OUTCOME_UNKNOWN",
++          disposition: "OUTCOME_UNKNOWN",
++          reasons: ["kernel_timeout_outcome_unknown"],
++        }),
++      ),
++    );
++    expect(screen.getByTestId("close-outcome")).toHaveTextContent(
++      "Outcome UNKNOWN: the close may or may not have been queued",
++    );
++    expect(unresolved().map((e) => e.id)).toEqual([first.id]);
++    await u.click(
++      screen.getByRole("button", { name: "Retry close (same request)" }),
++    );
++    await waitFor(() => expect(h.closes).toHaveLength(3));
++    expect(h.closes[2].req).toEqual(first);
++    await settle(() => h.closes[2].resolve(result({ replayed: true })));
++    expect(screen.getByTestId("close-outcome")).toHaveTextContent(
++      "recorded result (replay)",
++    );
++    expect(unresolved()).toEqual([]);
++  });
++
++  it("session expiry keeps the request id and claims no outcome", async () => {
++    const u = userEvent.setup();
++    const h = harness();
++    await confirmClose(u);
++    await waitFor(() => expect(h.closes).toHaveLength(1));
++    const first = h.closes[0].req;
++    await settle(() =>
++      h.closes[0].reject(new SessionExpired("Session ended.")),
++    );
++    expect(screen.getByTestId("close-outcome")).toHaveTextContent(
++      `Session ended. Sign in again. The close request ${first.id} is kept`,
++    );
++    expect(unresolved().map((e) => e.id)).toEqual([first.id]);
++  });
++
++  it("a late answer lands on its own trade, never on the one now selected", async () => {
++    const u = userEvent.setup();
++    const h = harness();
++    await confirmClose(u, "BTC/USDT");
++    await waitFor(() => expect(h.closes).toHaveLength(1));
++    await u.click(screen.getByRole("button", { name: "Close record" }));
++    const eth = await inspect(u, "ETH/USDT");
++    await settle(() => h.closes[0].resolve(result()));
++    expect(within(eth).queryByTestId("close-outcome")).not.toBeInTheDocument();
++    expect(
++      within(eth).getByRole("button", { name: "Close Trade" }),
++    ).toBeEnabled();
++    await u.click(screen.getByRole("button", { name: "Close record" }));
++    const btc = await inspect(u, "BTC/USDT");
++    expect(within(btc).getByTestId("close-outcome")).toHaveTextContent(
++      "close_trade: ACCEPTED",
++    );
++  });
++});
++
++describe("Close Trade — live adapter", () => {
++  const req = {
++    action: "close_trade:t-btc",
++    id: "0f0e0d0c-0b0a-4000-8000-000000000001",
++    t: 1_790_000_000_000,
++  };
++  it("posts only the typed close_trade mutation to the same-origin /graphql", async () => {
++    const fetch = vi.fn().mockResolvedValue({
++      ok: true,
++      status: 200,
++      json: async () => ({
++        data: {
++          res: {
++            request_id: "dashboard-" + req.id,
++            operation: "close_trade",
++            status: "ACCEPTED",
++            disposition: "COMPLETED",
++            reasons: ["close_queued_next_cycle"],
++            audit_event_ids: [1, 2],
++            replayed: false,
++            message: "Close queued — next cycle.",
++          },
++        },
++      }),
++    });
++    vi.stubGlobal("fetch", fetch);
++    const r = await createLiveAdapter(() => {}).closeTrade!("t-btc", req);
++    expect(r).toMatchObject({ status: "ACCEPTED", operation: "close_trade" });
++    expect(fetch).toHaveBeenCalledTimes(1);
++    const [url, init] = fetch.mock.calls[0];
++    expect(url).toBe("/graphql");
++    expect(init.method).toBe("POST");
++    expect(init.credentials).toBe("same-origin");
++    expect(JSON.parse(init.body)).toEqual({
++      query: CLOSE_TRADE_MUTATION,
++      variables: { x: "t-btc", r: req.id, t: req.t },
++    });
++  });
++  it.each([
++    ["transport failure", () => Promise.reject(new TypeError("net"))],
++    [
++      "GraphQL error without a result",
++      () =>
++        Promise.resolve({
++          ok: true,
++          status: 200,
++          json: async () => ({ errors: [{ message: "x" }], data: null }),
++        }),
++    ],
++    [
++      "an answer for another operation",
++      () =>
++        Promise.resolve({
++          ok: true,
++          status: 200,
++          json: async () => ({
++            data: { res: { operation: "panic", status: "ACCEPTED" } },
++          }),
++        }),
++    ],
++  ])("%s → null (outcome unknown), never success or failure", async (_n, f) => {
++    vi.stubGlobal("fetch", vi.fn(f));
++    expect(
++      await createLiveAdapter(() => {}).closeTrade!("t-btc", req),
++    ).toBeNull();
++  });
++  it("a 401 is session expiry, not an outcome", async () => {
++    const onUnauthorized = vi.fn();
++    vi.stubGlobal(
++      "fetch",
++      vi
++        .fn()
++        .mockResolvedValue({ ok: false, status: 401, json: async () => ({}) }),
++    );
++    await expect(
++      createLiveAdapter(onUnauthorized).closeTrade!("t-btc", req),
++    ).rejects.toBeInstanceOf(SessionExpired);
++    expect(onUnauthorized).toHaveBeenCalled();
++  });
++  it("frontend source contains no venue endpoint or exchange client", () => {
++    const files: string[] = [];
++    const walk = (d: string) => {
++      for (const f of readdirSync(d)) {
++        const p = join(d, f);
++        if (statSync(p).isDirectory()) walk(p);
++        else if (/\.(ts|tsx)$/.test(f)) files.push(p);
++      }
++    };
++    walk(join(__dirname, "../src"));
++    for (const f of files) {
++      const text = readFileSync(f, "utf8");
++      expect(text, f).not.toMatch(
++        /binance\.com|binancefuture|fapi\.|ccxt|create_order|createOrder/i,
++      );
++    }
++  });
++});
+diff --git a/frontend/tests/browser/close-trade.spec.ts b/frontend/tests/browser/close-trade.spec.ts
+new file mode 100644
+index 0000000..bad361f
+--- /dev/null
++++ b/frontend/tests/browser/close-trade.spec.ts
+@@ -0,0 +1,337 @@
++import { test, expect, type Page, type Request } from "@playwright/test";
++import { LIVE, H, login, state, calls } from "./liveHelpers";
++
++// LIVE build over the real FastAPI app (auth Guard, GraphQL close_trade
++// mutation, dashboard gateway adapter) and a fake kernel Owner Interface that
++// honors OwnerService._close_trade: the exact journal id must be open and is
++// queued once. Fixture book: t-btc (BTC long 0.01), t-eth (ETH short 0.5) open;
++// t-old (SOL) closed. Control state FROZEN.
++
++type Call = {
++  operation: string;
++  request_id: string;
++  args: { trade_id?: string };
++};
++const closeCalls = async (request: Parameters<typeof calls>[0]) =>
++  ((await calls(request)).gateway as Call[]).filter(
++    (c) => c.operation === "close_trade",
++  );
++const queued = async (request: Parameters<typeof calls>[0]) =>
++  JSON.parse((await calls(request)).close_requests ?? "[]");
++
++const book = (page: Page) =>
++  page.locator("section").filter({
++    has: page.getByRole("heading", { name: "Trade book", exact: true }),
++  });
++async function openTrades(page: Page) {
++  await login(page);
++  await page.getByRole("link", { name: "Trades", exact: true }).click();
++  await expect(page.getByTestId("trade-range")).toContainText("Records 1–");
++}
++async function inspect(page: Page, symbol: string) {
++  await book(page)
++    .getByRole("button", { name: `Inspect ${symbol}` })
++    .click();
++  const d = page.getByRole("dialog", { name: symbol });
++  await expect(d).toBeVisible();
++  return d;
++}
++async function closeRecord(page: Page) {
++  await page.getByRole("button", { name: "Close record" }).click();
++}
++async function confirmClose(page: Page, symbol = "BTC/USDT") {
++  const d = await inspect(page, symbol);
++  await expect(d.getByRole("button", { name: "Close Trade" })).toBeEnabled();
++  await d.getByRole("button", { name: "Close Trade" }).click();
++  await page.getByRole("button", { name: "Send close to LUFFY" }).click();
++}
++const outcome = (page: Page) => page.getByTestId("close-outcome");
++const isCloseMutation = (r: Request) =>
++  r.url().endsWith("/graphql") && (r.postData() ?? "").includes("close_trade(");
++
++test.beforeEach(async ({ request, page }) => {
++  await state(request, {
++    scenario: "normal",
++    gateway: "up",
++    chat: "ok",
++    fail: [],
++    ttl: 43200,
++    reset_calls: true,
++  });
++  await page.addInitScript(() => {
++    if (!sessionStorage.getItem("close-spec")) {
++      localStorage.clear(); // no unresolved request from an earlier test
++      sessionStorage.setItem("close-spec", "1");
++    }
++  });
++});
++test.afterAll(async ({ request }) => {
++  await state(request, { scenario: "normal", gateway: "up", fail: [] });
++});
++
++test("open trade offers Close Trade behind a confirmation; closed does not; cancel sends nothing", async ({
++  page,
++  request,
++}) => {
++  await openTrades(page);
++  // never on a table row
++  await expect(
++    book(page).locator("table").getByRole("button", { name: /close/i }),
++  ).toHaveCount(0);
++  const sol = await inspect(page, "SOL/USDT");
++  await expect(sol.getByRole("button", { name: "Close Trade" })).toHaveCount(0);
++  await closeRecord(page);
++  const btc = await inspect(page, "BTC/USDT");
++  await btc.getByRole("button", { name: "Close Trade" }).click();
++  const confirm = page.getByRole("dialog", { name: "Confirm close trade" });
++  await expect(confirm).toContainText(
++    "This sends a real owner control to LUFFY",
++  );
++  const fields = confirm.getByTestId("close-confirm-fields");
++  await expect(fields).toContainText("SymbolBTC/USDT");
++  await expect(fields).toContainText("Sidelong");
++  await expect(fields).toContainText("Open quantity (journal)0.01");
++  await expect(fields).toContainText("Trade IDt-btc");
++  await expect(fields).toContainText("Control stateFROZEN");
++  await confirm.getByRole("button", { name: "Cancel", exact: true }).click();
++  await expect(confirm).toHaveCount(0);
++  await expect(outcome(page)).toHaveCount(0);
++  expect(await closeCalls(request)).toEqual([]);
++  expect(await queued(request)).toEqual([]);
++});
++
++test("sends the exact trade id once and shows the kernel's answer, not a closed trade", async ({
++  page,
++  request,
++}) => {
++  const offOrigin: string[] = [];
++  page.on("request", (r) => {
++    if (new URL(r.url()).origin !== LIVE) offOrigin.push(r.url());
++  });
++  await state(request, { gateway: "slow" }); // 1.5 s kernel answer
++  await openTrades(page);
++  await confirmClose(page);
++  const busy = page.getByRole("button", {
++    name: /Close pending|Checking trade/,
++  });
++  await expect(busy).toBeDisabled();
++  await expect(page.getByTestId("close-pending")).toBeVisible();
++  await busy.click({ force: true }); // disabled: no second submission
++  await busy.dblclick({ force: true });
++  await expect(outcome(page)).toContainText(
++    "close_trade: ACCEPTED · COMPLETED",
++  );
++  await expect(outcome(page)).toContainText("It is NOT closed yet");
++  const sent = await closeCalls(request);
++  expect(sent).toHaveLength(1);
++  expect(sent[0].args).toEqual({ trade_id: "t-btc" });
++  expect(await queued(request)).toEqual(["t-btc"]); // never its neighbour
++  // the journal still says open; the page does not pretend otherwise
++  await closeRecord(page);
++  await expect(
++    book(page).locator("tbody tr").filter({ hasText: "BTC/USDT" }),
++  ).toContainText("open");
++  expect(offOrigin).toEqual([]); // no venue or third-party call
++});
++
++test("under HALTED the existing contract still queues an owner close", async ({
++  page,
++  request,
++}) => {
++  const r = await request.post(LIVE + "/graphql", {
++    headers: H,
++    data: {
++      query:
++        'mutation($r:String!,$t:Float!){owner_control(operation:"halt",request_id:$r,issued_at_ms:$t){status}}',
++      variables: { r: "halt-for-close-spec-0001", t: Date.now() },
++    },
++  });
++  expect((await r.json()).data.owner_control.status).toBe("ACCEPTED");
++  await openTrades(page);
++  const d = await inspect(page, "ETH/USDT");
++  await d.getByRole("button", { name: "Close Trade" }).click();
++  await expect(page.getByTestId("close-confirm-fields")).toContainText(
++    "Control stateHALTED",
++  );
++  await page.getByRole("button", { name: "Send close to LUFFY" }).click();
++  await expect(outcome(page)).toContainText("close_trade: ACCEPTED");
++  expect(await queued(request)).toEqual(["t-eth"]);
++});
++
++test("a refusal is shown as not executed", async ({ page, request }) => {
++  await state(request, { gateway: "refuse" });
++  await openTrades(page);
++  await confirmClose(page);
++  await expect(outcome(page)).toContainText("close_trade: REFUSED · REFUSED");
++  await expect(outcome(page)).toContainText("operation_not_permitted");
++  await expect(outcome(page)).toContainText("will not execute");
++  expect(await queued(request)).toEqual([]);
++});
++
++test("kernel unavailable: disabled when known, UNAVAILABLE on send, same id on retry", async ({
++  page,
++  request,
++}) => {
++  await state(request, { gateway: "down" });
++  await openTrades(page);
++  let d = await inspect(page, "BTC/USDT");
++  await expect(d.getByTestId("close-unavailable")).toContainText(
++    "Kernel Owner Interface unavailable (kernel_unavailable)",
++  );
++  await expect(d.getByRole("button", { name: "Close Trade" })).toBeDisabled();
++  await closeRecord(page);
++  // up when shown, down when sent
++  await state(request, { gateway: "up" });
++  d = await inspect(page, "BTC/USDT");
++  await expect(d.getByRole("button", { name: "Close Trade" })).toBeEnabled();
++  await d.getByRole("button", { name: "Close Trade" }).click();
++  await state(request, { gateway: "down" });
++  await page.getByRole("button", { name: "Send close to LUFFY" }).click();
++  await expect(outcome(page)).toContainText("close_trade: UNAVAILABLE");
++  await expect(outcome(page)).toContainText("Nothing changed");
++  expect(await queued(request)).toEqual([]);
++  await state(request, { gateway: "up" });
++  await closeRecord(page);
++  d = await inspect(page, "BTC/USDT");
++  await d.getByRole("button", { name: "Retry close (same request)" }).click();
++  await expect(outcome(page)).toContainText("close_trade: ACCEPTED");
++  const sent = await closeCalls(request);
++  expect(sent).toHaveLength(2);
++  expect(sent[1].request_id).toBe(sent[0].request_id);
++  expect(await queued(request)).toEqual(["t-btc"]);
++});
++
++test("a trade closed since display is not sent and the book refreshes", async ({
++  page,
++  request,
++}) => {
++  await openTrades(page);
++  const d = await inspect(page, "BTC/USDT");
++  await d.getByRole("button", { name: "Close Trade" }).click();
++  await state(request, { close_trade: "t-btc" }); // closed by the kernel meanwhile
++  await page.getByRole("button", { name: "Send close to LUFFY" }).click();
++  await expect(outcome(page)).toContainText(
++    "This trade is no longer open in the journal. Nothing was sent",
++  );
++  // the refreshed record is closed: its answer stays, the close control goes
++  await expect(page.getByTestId("close-trade-closed")).toContainText(
++    "This trade is closed in the journal",
++  );
++  await expect(page.getByRole("button", { name: "Close Trade" })).toHaveCount(0);
++  expect(await closeCalls(request)).toEqual([]);
++  await closeRecord(page);
++  await expect(
++    book(page).locator("tbody tr").filter({ hasText: "BTC/USDT" }),
++  ).toContainText("closed");
++});
++
++test("a trade the kernel finds closed is refused as trade_not_open", async ({
++  page,
++  request,
++}) => {
++  await state(request, { gateway: "race_close" });
++  await openTrades(page);
++  await confirmClose(page);
++  await expect(outcome(page)).toContainText("close_trade: REFUSED");
++  await expect(outcome(page)).toContainText(
++    "this trade is not open (already closed)",
++  );
++  expect(await queued(request)).toEqual([]);
++});
++
++test("outcome unknown keeps the id; an exact replay returns the recorded result", async ({
++  page,
++  request,
++}) => {
++  // 1) kernel reports OUTCOME_UNKNOWN
++  await state(request, { gateway: "unknown_once" });
++  await openTrades(page);
++  await confirmClose(page);
++  await expect(outcome(page)).toContainText("close_trade: OUTCOME_UNKNOWN");
++  await expect(outcome(page)).toContainText("Do not assume either");
++  // 2) the answer to the retry is lost in transit AFTER the kernel ran it
++  let lost = false;
++  await page.route("**/graphql", async (route) => {
++    if (!isCloseMutation(route.request()) || lost) return route.continue();
++    lost = true;
++    await route.fetch(); // reaches the server and executes
++    await route.abort("timedout");
++  });
++  await page
++    .getByRole("button", { name: "Retry close (same request)" })
++    .click();
++  await expect(outcome(page)).toContainText("No answer — outcome unknown");
++  expect(await queued(request)).toEqual(["t-btc"]);
++  // 3) the same id again: the recorded result, no second close
++  await page
++    .getByRole("button", { name: "Retry close (same request)" })
++    .click();
++  await expect(outcome(page)).toContainText("close_trade: ACCEPTED");
++  await expect(outcome(page)).toContainText("recorded result (replay)");
++  const sent = await closeCalls(request);
++  expect(sent).toHaveLength(3);
++  expect(new Set(sent.map((c) => c.request_id)).size).toBe(1);
++  expect(await queued(request)).toEqual(["t-btc"]);
++  await expect(
++    page.getByRole("button", { name: "Retry close (same request)" }),
++  ).toHaveCount(0);
++});
++
++test("session expiry during send keeps the request for the next sign-in", async ({
++  page,
++  request,
++}) => {
++  await page.route("**/graphql", async (route) => {
++    if (!isCloseMutation(route.request())) return route.continue();
++    // the session is gone when the mutation arrives: the real server's
++    // answer to this same mutation without the session cookie
++    const response = await request.post(LIVE + "/graphql", {
++      headers: { origin: LIVE },
++      data: route.request().postDataJSON(),
++    });
++    await route.fulfill({ response });
++  });
++  await openTrades(page);
++  await confirmClose(page);
++  await expect(page.getByTestId("signed-out")).toBeVisible();
++  expect(await closeCalls(request)).toEqual([]); // refused at the Guard
++  await page.unroute("**/graphql");
++  await page.context().clearCookies(); // the expired session, as the server saw it
++  await openTrades(page);
++  const d = await inspect(page, "BTC/USDT");
++  await expect(d.getByTestId("close-unresolved")).toContainText(
++    "Unresolved close request",
++  );
++  await d.getByRole("button", { name: "Retry close (same request)" }).click();
++  await expect(outcome(page)).toContainText("close_trade: ACCEPTED");
++  expect(await closeCalls(request)).toHaveLength(1);
++});
++
++test("a late answer never lands on the trade now selected", async ({
++  page,
++  request,
++}) => {
++  let release!: () => void;
++  const held = new Promise<void>((r) => (release = r));
++  await page.route("**/graphql", async (route) => {
++    if (!isCloseMutation(route.request())) return route.continue();
++    await held;
++    await route.continue();
++  });
++  await openTrades(page);
++  await confirmClose(page, "BTC/USDT");
++  await expect(page.getByTestId("close-pending")).toBeVisible();
++  await closeRecord(page);
++  const eth = await inspect(page, "ETH/USDT");
++  release();
++  await expect.poll(async () => (await closeCalls(request)).length).toBe(1);
++  await page.waitForTimeout(300);
++  await expect(eth.getByTestId("close-outcome")).toHaveCount(0);
++  await expect(eth.getByRole("button", { name: "Close Trade" })).toBeEnabled();
++  await closeRecord(page);
++  const btc = await inspect(page, "BTC/USDT");
++  await expect(btc.getByTestId("close-outcome")).toContainText(
++    "close_trade: ACCEPTED",
++  );
++  expect(await queued(request)).toEqual(["t-btc"]);
++});

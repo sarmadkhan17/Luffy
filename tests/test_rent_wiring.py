@@ -24,8 +24,10 @@ def test_graphql_rent_reads_the_keeper_state(tmp_path):
     from trader.api.graphql_schema import make_graphql_router
     j = Journal(tmp_path / "j.db")
     _seed(j)
-    res = make_graphql_router(j).schema.execute_sync(
-        "{ rent { week_start net bar status history { week_start verdict net } } }")
+    import asyncio
+    # query resolvers read the journal off the event loop, so execute async
+    res = asyncio.run(make_graphql_router(j).schema.execute(
+        "{ rent { week_start net bar status history { week_start verdict net } } }"))
     assert res.errors is None, res.errors
     r = res.data["rent"]
     assert r["week_start"] == "2026-09-14" and r["net"] == 12.5 and r["bar"] == 50.0

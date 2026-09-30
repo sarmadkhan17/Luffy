@@ -277,9 +277,12 @@ def _cycle_kernel(state="ACTIVE", symbols=("S0/USDT",), recovery=False,
     k.population = []
     k.journal = j
     k.state_machine = ControlStateMachine(j)
-    k._fetch_balance = lambda: 1000
-    k.risk = NS(update_equity=lambda _: {"equity": 1000, "drawdown_pct": 0,
-                                         "daily_pnl_pct": daily_pnl},
+    k._fetch_balance = k._fetch_balance_fresh = lambda: 1000
+    # RiskManager.update_equity's contract (current-truth): a fresh read is
+    # authoritative and an intact baseline reports risk_state "ok"
+    k.risk = NS(update_equity=lambda _b, authoritative=True: {
+                    "equity": 1000, "drawdown_pct": 0,
+                    "daily_pnl_pct": daily_pnl, "risk_state": "ok"},
                 daily_loss_block=.03)
     k._drain_close_requests = lambda: 0
     k.macro_guard = NS(check=lambda: {"active": False})

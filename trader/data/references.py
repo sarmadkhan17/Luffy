@@ -32,6 +32,7 @@ import pandas as pd
 
 from ..core.config import ROOT
 from ..core.types import TF_MS, closed_bars
+from .sqlite_tx import BUSY_TIMEOUT_S, close_quietly, write_tx
 
 HOUR = 3_600_000
 DAY = 86_400_000
@@ -83,6 +84,9 @@ def _num(v):
 class RefStore:
     """Closed reference bars, one row per (key, ts)."""
 
+    #: seconds a statement waits on a lock before "database is locked"
+    BUSY_TIMEOUT_S = BUSY_TIMEOUT_S
+
     def __init__(self, db_path=None):
         self._db_path = str(db_path) if db_path else \
             str(ROOT / "data" / "candles.db")
@@ -92,12 +96,16 @@ class RefStore:
     def db(self):
         conn = getattr(self._local, "conn", None)
         if conn is None:
-            conn = sqlite3.connect(self._db_path)
-            conn.execute(
-                "CREATE TABLE IF NOT EXISTS refs (key TEXT NOT NULL, "
-                "ts INTEGER NOT NULL, open REAL, high REAL, low REAL, "
-                "close REAL, volume REAL, PRIMARY KEY (key, ts))")
-            conn.commit()
+            conn = sqlite3.connect(self._db_path, timeout=self.BUSY_TIMEOUT_S)
+            try:
+                conn.execute(
+                    "CREATE TABLE IF NOT EXISTS refs (key TEXT NOT NULL, "
+                    "ts INTEGER NOT NULL, open REAL, high REAL, low REAL, "
+                    "close REAL, volume REAL, PRIMARY KEY (key, ts))")
+                conn.commit()
+            except BaseException:
+                close_quietly(conn, "init")  # setup error wins; not cached
+                raise
             self._local.conn = conn
         return conn
 
@@ -121,9 +129,11 @@ class RefStore:
                     col("close"), col("volume"))]
         rows = [r for r in rows if r[5] is not None]  # no close, no bar
         if rows:
-            self.db.executemany(
-                "INSERT OR REPLACE INTO refs VALUES (?,?,?,?,?,?,?)", rows)
-            self.db.commit()
+            # a failure raises to the caller with nothing left open or
+            # half-committed on this thread's connection — see sqlite_tx
+            with write_tx(self._local, self.db, f"ref {key}") as conn:
+                conn.executemany(
+                    "INSERT OR REPLACE INTO refs VALUES (?,?,?,?,?,?,?)", rows)
         return len(rows)
 
     def load(self, key: str, since_ms: int = 0):

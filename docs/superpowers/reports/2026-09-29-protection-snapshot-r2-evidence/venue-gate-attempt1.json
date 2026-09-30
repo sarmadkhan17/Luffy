@@ -1,0 +1,462 @@
+{
+ "demo_flag_env": "true",
+ "ccxt": "4.5.75",
+ "kernel_standin_fapiPrivate": "https://demo-fapi.binance.com/fapi/v1",
+ "reader": {
+  "class": "VenueReads",
+  "credential_scope": "read_only_key",
+  "fapiPrivate": "https://demo-fapi.binance.com/fapi/v1",
+  "session_class": "GetOnlySession",
+  "adapter_classes": [
+   "GetOnlyAdapter"
+  ],
+  "uses_read_key": true,
+  "uses_trading_key": false,
+  "same_venue_as_kernel_standin": true,
+  "allowlist": [
+   "/fapi/v1/leverageBracket",
+   "/fapi/v1/openAlgoOrders",
+   "/fapi/v1/openOrders",
+   "/fapi/v2/positionRisk",
+   "/fapi/v3/positionRisk"
+  ]
+ },
+ "B": {
+  "snap": {
+   "schema": 2,
+   "generation": {
+    "boot": 0,
+    "seq": 1
+   },
+   "source": "kernel protection monitor (read-only venue snapshot)",
+   "checked_at": "2026-09-29T03:03:35.996406+00:00",
+   "completed_at": "2026-09-29T03:03:37.201140+00:00",
+   "stale_after_s": 120.0,
+   "status": "UNREADABLE",
+   "checks": {
+    "venue_positions": false,
+    "observation_consistent": false,
+    "reconciliation": false,
+    "venue_protection": false,
+    "precision_known": false
+   },
+   "complete_listing": false,
+   "listing_reason": "AuthenticationError",
+   "observation": {
+    "positions_stable": null,
+    "stops_stable": null,
+    "position_continuity": null,
+    "journal_stable": null,
+    "supervisor_pass_overlap": null,
+    "window_ms": 1200.6
+   },
+   "control_state_observed": "FROZEN",
+   "position_count": null,
+   "symbols": [],
+   "cleanliness": {
+    "status": "UNKNOWN",
+    "coverage": "position_symbols",
+    "items": [],
+    "items_truncated": false,
+    "unread_symbols": []
+   },
+   "reasons": [
+    "venue_state_unreadable"
+   ],
+   "venue_requests": 1,
+   "venue_request_names": [
+    "positions"
+   ],
+   "rate": {
+    "used_weight_1m": 93,
+    "max_used_weight": 1200,
+    "refused": 0,
+    "refusals": 0
+   },
+   "duration_ms": null,
+   "mutations": 0,
+   "pid": 2597282
+  },
+  "obs_requests": [
+   "positions"
+  ],
+  "venue_error_type": "AuthenticationError",
+  "ordinary_error": null,
+  "journal": {
+   "trades": [
+    {
+     "id": "pos_051412e2d6",
+     "symbol": "SOL/USDT",
+     "side": "long",
+     "amount": 5.77,
+     "stop_loss": 115.658571,
+     "sl_order_id": "1000000220387828",
+     "market_type": "futures",
+     "opened_at": "2026-09-18T16:00:56.712166+00:00"
+    },
+    {
+     "id": "pos_0770e44a5e",
+     "symbol": "AVAX/USDT",
+     "side": "long",
+     "amount": 77.0,
+     "stop_loss": 9.805571,
+     "sl_order_id": "1000000220393748",
+     "market_type": "futures",
+     "opened_at": "2026-09-18T20:00:45.574165+00:00"
+    },
+    {
+     "id": "pos_ad0e15789a",
+     "symbol": "LINK/USDT",
+     "side": "long",
+     "amount": 32.77,
+     "stop_loss": 13.997429,
+     "sl_order_id": "1000000222239776",
+     "market_type": "futures",
+     "opened_at": "2026-09-25T12:00:33.085723+00:00"
+    }
+   ],
+   "kv": {
+    "control_state": "FROZEN",
+    "execution_recovery": "null",
+    "reconcile_rearm_submitted": "{}",
+    "supervisor_status": "{\"control_state_observed\": \"FROZEN\", \"outcome\": \"DEGRADED\", \"stage\": \"VERIFY\", \"safe_to_activate\": false, \"needs_owner\": false, \"containment_owned\": false, \"containment_started_at\": null, \"containment_from\": null, \"containment_event_id\": null, \"needs_owner_since_control_event_id\": null, \"reasons\": [\"control_state_not_supervisor_owned\"], \"checks\": {\"venue_positions\": true, \"reconciliation\": true, \"entry_intent_resolved\": true, \"venue_protection\": true, \"entries_safe\": true}, \"actions\": {\"reconcile\": {\"adopted\": 0, \"ghosts\": 0, \"aligned\": 0, \"stops_swept\": 0, \"stops_stuck\": 0, \"positions_readable\": true, \"position_count\": 6, \"safety_issues\": [], \"naked\": 0, \"rearmed\": 0, \"unarmable\": 0}}, \"started_at\": \"2026-09-28T12:05:15.491548+00:00\", \"updated_at\": \"2026-09-28T14:35:56.257381+00:00\"}"
+   },
+   "control_event_id": 11732
+  },
+  "algo_raw": null,
+  "positions_raw_plain": null,
+  "http": [
+   {
+    "t_s": 3.951,
+    "client": "reader",
+    "method": "GET",
+    "path": "/fapi/v1/leverageBracket",
+    "host": "demo-fapi.binance.com",
+    "status": 401,
+    "used_weight_1m": "93",
+    "weight_headers": {
+     "x-mbx-used-weight-1m": "93"
+    },
+    "elapsed_ms": 1198.1
+   }
+  ],
+  "duration_ms": 1204.8
+ },
+ "D": [
+  {
+   "t_s": 3.953,
+   "wall_ms": 1790651017201,
+   "error": "AuthenticationError: binanceusdm {\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action\"}"
+  },
+  {
+   "t_s": 24.208,
+   "wall_ms": 1790651037456,
+   "error": "AuthenticationError: binanceusdm {\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action\"}"
+  },
+  {
+   "t_s": 44.522,
+   "wall_ms": 1790651057770,
+   "error": "AuthenticationError: binanceusdm {\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action\"}"
+  },
+  {
+   "t_s": 64.859,
+   "wall_ms": 1790651078107,
+   "error": "AuthenticationError: binanceusdm {\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action\"}"
+  },
+  {
+   "t_s": 85.237,
+   "wall_ms": 1790651098485,
+   "error": "AuthenticationError: binanceusdm {\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action\"}"
+  },
+  {
+   "t_s": 105.617,
+   "wall_ms": 1790651118865,
+   "error": "AuthenticationError: binanceusdm {\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action\"}"
+  },
+  {
+   "t_s": 125.992,
+   "wall_ms": 1790651139241,
+   "error": "AuthenticationError: binanceusdm {\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action\"}"
+  },
+  {
+   "t_s": 146.368,
+   "wall_ms": 1790651159616,
+   "error": "AuthenticationError: binanceusdm {\"code\":-2015,\"msg\":\"Invalid API-key, IP, or permissions for action\"}"
+  }
+ ],
+ "E": {
+  "snap": {
+   "schema": 2,
+   "generation": {
+    "boot": 0,
+    "seq": 2
+   },
+   "source": "kernel protection monitor (read-only venue snapshot)",
+   "checked_at": "2026-09-29T03:05:59.997087+00:00",
+   "completed_at": "2026-09-29T03:06:00.305681+00:00",
+   "stale_after_s": 120.0,
+   "status": "UNREADABLE",
+   "checks": {
+    "venue_positions": false,
+    "observation_consistent": false,
+    "reconciliation": false,
+    "venue_protection": false,
+    "precision_known": false
+   },
+   "complete_listing": false,
+   "listing_reason": "AuthenticationError",
+   "observation": {
+    "positions_stable": null,
+    "stops_stable": null,
+    "position_continuity": null,
+    "journal_stable": null,
+    "supervisor_pass_overlap": null,
+    "window_ms": 306.0
+   },
+   "control_state_observed": "FROZEN",
+   "position_count": null,
+   "symbols": [],
+   "cleanliness": {
+    "status": "UNKNOWN",
+    "coverage": "position_symbols",
+    "items": [],
+    "items_truncated": false,
+    "unread_symbols": []
+   },
+   "reasons": [
+    "venue_state_unreadable"
+   ],
+   "venue_requests": 1,
+   "venue_request_names": [
+    "positions"
+   ],
+   "rate": {
+    "used_weight_1m": 1,
+    "max_used_weight": 1200,
+    "refused": 0,
+    "refusals": 0
+   },
+   "duration_ms": null,
+   "mutations": 0,
+   "pid": 2597282
+  },
+  "obs_requests": [
+   "positions"
+  ],
+  "venue_error_type": "AuthenticationError",
+  "ordinary_error": null,
+  "journal": {
+   "trades": [
+    {
+     "id": "pos_051412e2d6",
+     "symbol": "SOL/USDT",
+     "side": "long",
+     "amount": 5.77,
+     "stop_loss": 115.658571,
+     "sl_order_id": "1000000220387828",
+     "market_type": "futures",
+     "opened_at": "2026-09-18T16:00:56.712166+00:00"
+    },
+    {
+     "id": "pos_0770e44a5e",
+     "symbol": "AVAX/USDT",
+     "side": "long",
+     "amount": 77.0,
+     "stop_loss": 9.805571,
+     "sl_order_id": "1000000220393748",
+     "market_type": "futures",
+     "opened_at": "2026-09-18T20:00:45.574165+00:00"
+    },
+    {
+     "id": "pos_ad0e15789a",
+     "symbol": "LINK/USDT",
+     "side": "long",
+     "amount": 32.77,
+     "stop_loss": 13.997429,
+     "sl_order_id": "1000000222239776",
+     "market_type": "futures",
+     "opened_at": "2026-09-25T12:00:33.085723+00:00"
+    }
+   ],
+   "kv": {
+    "control_state": "FROZEN",
+    "execution_recovery": "null",
+    "reconcile_rearm_submitted": "{}",
+    "supervisor_status": "{\"control_state_observed\": \"FROZEN\", \"outcome\": \"DEGRADED\", \"stage\": \"VERIFY\", \"safe_to_activate\": false, \"needs_owner\": false, \"containment_owned\": false, \"containment_started_at\": null, \"containment_from\": null, \"containment_event_id\": null, \"needs_owner_since_control_event_id\": null, \"reasons\": [\"control_state_not_supervisor_owned\"], \"checks\": {\"venue_positions\": true, \"reconciliation\": true, \"entry_intent_resolved\": true, \"venue_protection\": true, \"entries_safe\": true}, \"actions\": {\"reconcile\": {\"adopted\": 0, \"ghosts\": 0, \"aligned\": 0, \"stops_swept\": 0, \"stops_stuck\": 0, \"positions_readable\": true, \"position_count\": 6, \"safety_issues\": [], \"naked\": 0, \"rearmed\": 0, \"unarmable\": 0}}, \"started_at\": \"2026-09-28T12:05:15.491548+00:00\", \"updated_at\": \"2026-09-28T14:35:56.257381+00:00\"}"
+   },
+   "control_event_id": 11732
+  },
+  "algo_raw": null,
+  "positions_raw_plain": null,
+  "http": [
+   {
+    "t_s": 147.056,
+    "client": "reader",
+    "method": "GET",
+    "path": "/fapi/v1/leverageBracket",
+    "host": "demo-fapi.binance.com",
+    "status": 401,
+    "used_weight_1m": "1",
+    "weight_headers": {
+     "x-mbx-used-weight-1m": "1"
+    },
+    "elapsed_ms": 304.8
+   }
+  ],
+  "duration_ms": 308.6
+ },
+ "precision_meta": {},
+ "http_all": [
+  {
+   "t_s": 1.851,
+   "client": "public_markets",
+   "method": "GET",
+   "path": "/fapi/v1/exchangeInfo",
+   "host": "demo-fapi.binance.com",
+   "status": 200,
+   "used_weight_1m": "92",
+   "weight_headers": {
+    "x-mbx-used-weight-1m": "92"
+   },
+   "elapsed_ms": 1832.8
+  },
+  {
+   "t_s": 3.951,
+   "client": "reader",
+   "method": "GET",
+   "path": "/fapi/v1/leverageBracket",
+   "host": "demo-fapi.binance.com",
+   "status": 401,
+   "used_weight_1m": "93",
+   "weight_headers": {
+    "x-mbx-used-weight-1m": "93"
+   },
+   "elapsed_ms": 1198.1
+  },
+  {
+   "t_s": 4.206,
+   "client": "reader",
+   "method": "GET",
+   "path": "/fapi/v1/leverageBracket",
+   "host": "demo-fapi.binance.com",
+   "status": 401,
+   "used_weight_1m": "94",
+   "weight_headers": {
+    "x-mbx-used-weight-1m": "94"
+   },
+   "elapsed_ms": 252.8
+  },
+  {
+   "t_s": 24.52,
+   "client": "reader",
+   "method": "GET",
+   "path": "/fapi/v1/leverageBracket",
+   "host": "demo-fapi.binance.com",
+   "status": 401,
+   "used_weight_1m": "217",
+   "weight_headers": {
+    "x-mbx-used-weight-1m": "217"
+   },
+   "elapsed_ms": 310.3
+  },
+  {
+   "t_s": 44.857,
+   "client": "reader",
+   "method": "GET",
+   "path": "/fapi/v1/leverageBracket",
+   "host": "demo-fapi.binance.com",
+   "status": 401,
+   "used_weight_1m": "13",
+   "weight_headers": {
+    "x-mbx-used-weight-1m": "13"
+   },
+   "elapsed_ms": 334.1
+  },
+  {
+   "t_s": 65.236,
+   "client": "reader",
+   "method": "GET",
+   "path": "/fapi/v1/leverageBracket",
+   "host": "demo-fapi.binance.com",
+   "status": 401,
+   "used_weight_1m": "14",
+   "weight_headers": {
+    "x-mbx-used-weight-1m": "14"
+   },
+   "elapsed_ms": 375.8
+  },
+  {
+   "t_s": 85.616,
+   "client": "reader",
+   "method": "GET",
+   "path": "/fapi/v1/leverageBracket",
+   "host": "demo-fapi.binance.com",
+   "status": 401,
+   "used_weight_1m": "116",
+   "weight_headers": {
+    "x-mbx-used-weight-1m": "116"
+   },
+   "elapsed_ms": 378.8
+  },
+  {
+   "t_s": 105.992,
+   "client": "reader",
+   "method": "GET",
+   "path": "/fapi/v1/leverageBracket",
+   "host": "demo-fapi.binance.com",
+   "status": 401,
+   "used_weight_1m": "43",
+   "weight_headers": {
+    "x-mbx-used-weight-1m": "43"
+   },
+   "elapsed_ms": 373.2
+  },
+  {
+   "t_s": 126.368,
+   "client": "reader",
+   "method": "GET",
+   "path": "/fapi/v1/leverageBracket",
+   "host": "demo-fapi.binance.com",
+   "status": 401,
+   "used_weight_1m": "44",
+   "weight_headers": {
+    "x-mbx-used-weight-1m": "44"
+   },
+   "elapsed_ms": 374.0
+  },
+  {
+   "t_s": 146.748,
+   "client": "reader",
+   "method": "GET",
+   "path": "/fapi/v1/leverageBracket",
+   "host": "demo-fapi.binance.com",
+   "status": 401,
+   "used_weight_1m": "125",
+   "weight_headers": {
+    "x-mbx-used-weight-1m": "125"
+   },
+   "elapsed_ms": 377.3
+  },
+  {
+   "t_s": 147.056,
+   "client": "reader",
+   "method": "GET",
+   "path": "/fapi/v1/leverageBracket",
+   "host": "demo-fapi.binance.com",
+   "status": 401,
+   "used_weight_1m": "1",
+   "weight_headers": {
+    "x-mbx-used-weight-1m": "1"
+   },
+   "elapsed_ms": 304.8
+  }
+ ],
+ "refusals": [],
+ "rate_state": {
+  "used_weight_1m": 1,
+  "max_used_weight": 1200,
+  "refused": 0,
+  "refusals": 0
+ },
+ "duration_s": 147.06
+}

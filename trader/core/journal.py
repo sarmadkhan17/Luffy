@@ -67,6 +67,14 @@ CREATE TABLE IF NOT EXISTS decisions (
 );
 CREATE INDEX IF NOT EXISTS idx_decisions_symbol ON decisions(symbol, ts);
 CREATE INDEX IF NOT EXISTS idx_decisions_exec ON decisions(executed);
+-- exact latest-match reads (owner surfaces): partial indexes, newest by ts
+CREATE INDEX IF NOT EXISTS idx_decisions_executed_ts ON decisions(ts) WHERE executed=1;
+CREATE INDEX IF NOT EXISTS idx_decisions_directional_ts ON decisions(ts)
+    WHERE action!='HOLD';
+CREATE INDEX IF NOT EXISTS idx_decisions_skipped_ts ON decisions(ts)
+    WHERE action!='HOLD' AND executed=0;
+CREATE INDEX IF NOT EXISTS idx_decisions_rejected_ts ON decisions(ts)
+    WHERE action!='HOLD' AND executed=0 AND skip_reason IS NOT NULL AND skip_reason!='';
 
 -- Outcome resolution: what actually happened after a non-HOLD decision.
 CREATE TABLE IF NOT EXISTS outcomes (
@@ -106,12 +114,24 @@ CREATE TABLE IF NOT EXISTS trades (
 );
 CREATE INDEX IF NOT EXISTS idx_trades_strategy ON trades(strategy_id);
 CREATE INDEX IF NOT EXISTS idx_trades_status ON trades(status);
+-- keyset trade history (owner frontend): newest first by immutable identity
+CREATE INDEX IF NOT EXISTS idx_trades_opened ON trades(opened_at, id);
+CREATE INDEX IF NOT EXISTS idx_trades_status_opened ON trades(status, opened_at, id);
 
 CREATE TABLE IF NOT EXISTS equity (
     ts TEXT PRIMARY KEY,
     equity REAL NOT NULL,
     balance REAL NOT NULL,
     open_positions INTEGER
+);
+-- Where each equity row's value came from (kernel account observation):
+-- written in the same transaction as the row, keyed by the row's ts. The
+-- row's ts is its WRITE time; provenance.observed_at is the venue read that
+-- produced the value (a reused fallback keeps the original read time). A
+-- row without provenance has unknown origin (legacy / other writers).
+CREATE TABLE IF NOT EXISTS equity_provenance (
+    ts TEXT PRIMARY KEY,
+    provenance TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS brain_events (
@@ -518,6 +538,19 @@ BEGIN SELECT RAISE(ABORT, 'research_registrations is immutable'); END;
 """
 
 
+def _identity_json(p) -> str | None:
+    """The position's entry identity as stored JSON; None when absent. An
+    unserializable identity is recorded as such rather than failing the
+    booking of a position the venue already holds."""
+    identity = getattr(p, "entry_identity", None)
+    if not identity:
+        return None
+    try:
+        return json.dumps(identity, sort_keys=True, allow_nan=False)
+    except (TypeError, ValueError):
+        return json.dumps({"status": "UNKNOWN", "reason": "identity_not_serializable"})
+
+
 class Journal:
     def __init__(self, db_path: str | Path):
         self.db_path = Path(db_path)
@@ -564,11 +597,17 @@ class Journal:
                 # also carry '[]'. Read `executed` for the outcome.
                 "ALTER TABLE decisions ADD COLUMN reason_codes TEXT DEFAULT NULL",
                 "ALTER TABLE decisions ADD COLUMN reason_codes_version TEXT DEFAULT NULL",
+                # the exact strategy version an entry was taken on, frozen at
+                # insert (engine/trade_provenance.py). NULL means UNKNOWN —
+                # the trigger below refuses to fill it in later.
+                "ALTER TABLE trades ADD COLUMN entry_identity_json TEXT DEFAULT NULL",
             ):
                 try:
                     c.execute(stmt)
                 except Exception:
                     pass
+            from ..engine import trade_provenance
+            trade_provenance.migrate(c)
             # backfill: existing rows get their birth time so the demotion
             # clock starts now rather than firing retroactively
             try:
@@ -666,11 +705,12 @@ class Journal:
                 "INSERT INTO trades (id,decision_id,symbol,side,amount,"
                 "entry_price,notional_usdt,leverage,stop_loss,take_profit,"
                 "sl_order_id,strategy_id,strategy_name,market_type,exec_mode,"
-                "opened_at,realized_pnl,status,tp1_done,initial_risk) "
+                "opened_at,realized_pnl,status,tp1_done,initial_risk,"
+                "entry_identity_json) "
                 "VALUES (:id,:decision_id,:symbol,:side,:amount,:entry_price,"
                 ":notional_usdt,:leverage,:stop_loss,:take_profit,:sl_order_id,"
                 ":strategy_id,:strategy_name,:market_type,:exec_mode,"
-                ":opened_at,0,'open',0,:initial_risk)",
+                ":opened_at,0,'open',0,:initial_risk,:entry_identity_json)",
                 {"id": p.id, "decision_id": p.decision_id or "",
                  "symbol": p.symbol, "side": p.side.value, "amount": p.amount,
                  "entry_price": p.entry_price,
@@ -683,7 +723,8 @@ class Journal:
                  "strategy_id": p.strategy_id,
                  "strategy_name": p.strategy_name,
                  "market_type": p.market_type, "exec_mode": p.exec_mode,
-                 "opened_at": p.opened_at})
+                 "opened_at": p.opened_at,
+                 "entry_identity_json": _identity_json(p)})
             from ..engine.booking import persist
             persist(c, p.id, "entry", None, accounting)
 
@@ -763,11 +804,20 @@ class Journal:
             c.execute("UPDATE trades SET stop_loss=?, take_profit=? WHERE id=?",
                       (sl, tp, trade_id))
 
-    def log_equity(self, equity: float, balance: float, n_open: int) -> None:
+    def log_equity(self, equity: float, balance: float, n_open: int,
+                   provenance: dict | None = None) -> None:
+        """One equity row; `provenance` (the value's source) is written
+        atomically beside it. Without provenance any stale provenance for this
+        ts is removed, so a row never inherits another value's origin."""
         ts = now_utc().isoformat(timespec="seconds")
         with self._tx() as c:
             c.execute("INSERT OR REPLACE INTO equity VALUES (?,?,?,?)",
                       (ts, equity, balance, n_open))
+            if provenance is None:
+                c.execute("DELETE FROM equity_provenance WHERE ts=?", (ts,))
+            else:
+                c.execute("INSERT OR REPLACE INTO equity_provenance(ts, provenance) "
+                          "VALUES (?,?)", (ts, json.dumps(provenance, allow_nan=False)))
 
     def log_brain_event(self, kind: str, subject: str, detail: Any) -> None:
         with self._tx() as c:

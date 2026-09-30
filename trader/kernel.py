@@ -13,6 +13,7 @@ import argparse
 import datetime as dt
 import json
 import logging
+import math
 import re
 import signal
 import sys
@@ -39,7 +40,7 @@ from .engine.outcomes import resolve_pending
 from .engine.reconcile import flatten_all, reconcile_futures
 from .engine.risk import RiskManager
 from .engine.state import ControlStateMachine
-from .engine.supervisor import Supervisor
+from .engine.supervisor import OwnerContext, Supervisor
 from .engine.watchdog import Heartbeat, start_stall_monitor
 from .notify.telegram import Telegram
 from .observability.portfolio_observation import PortfolioObservation, observe_positions, trading_source
@@ -78,6 +79,37 @@ def _flush_health(analyst) -> bool:
         return False
 
 
+def news_status_line(st: dict, stale_after_s: float,
+                     now: float | None = None) -> tuple[str, str]:
+    """(icon, label) for /news. Only a current QUIET check is shown as clear;
+    ARMED is an alert, and uncertain/stale/failed/disabled/unknown are never
+    rendered as healthy. Display only: dampening is the orchestrator's."""
+    truth = str(st.get("truth") or "UNKNOWN")
+    try:
+        age = (now if now is not None else time.time()) - dt.datetime.fromisoformat(
+            str(st.get("assessed_at"))).timestamp()
+    except (TypeError, ValueError):
+        age = None
+    if truth != "DISABLED" and (age is None or age < 0 or age > stale_after_s):
+        return "📰⏳", (f"STALE — last check {truth} is not current "
+                       f"(news risk unknown, not clear)")
+    if truth == "ARMED":
+        return "📰🚨", "ARMED — entries dampened (threshold +0.08, score ×0.75)"
+    if truth == "QUIET":
+        return "📰✅", "CONFIRMED QUIET — every feed read, dated items in window, no blackout"
+    if truth == "UNCERTAIN":
+        return "📰⚠️", ("UNCERTAIN — " + ("entries dampened on undated/future items"
+                                          if st.get("active") else
+                                          "undated/future items; not clear"))
+    if truth in ("FEED_STALE", "EMPTY_FEED"):
+        return "📰⏳", f"{truth} — no current headlines (news risk unknown, not clear)"
+    if truth in ("FETCH_FAILED", "PARSE_FAILED", "ASSESSMENT_FAILED"):
+        return "📰❌", f"{truth} — news risk unknown (fail-open, not clear)"
+    if truth == "DISABLED":
+        return "📰⛔", "DISABLED — no news protection"
+    return "📰❓", f"{truth} — news risk unknown (not clear)"
+
+
 class Kernel:
     def __init__(self, cfg: dict):
         self.cfg = cfg
@@ -109,7 +141,8 @@ class Kernel:
         self.executor = Executor(self.exchange, self.journal, cfg,
                                  self.market_type)
         self.supervisor = Supervisor(self.journal, self.state_machine,
-                                     self.executor, self.exchange)
+                                     self.executor, self.exchange,
+                                     risk_release=self._risk_release)
         from .engine.exits import ExitEngine
 
         self.population = self._load_population()
@@ -287,7 +320,10 @@ class Kernel:
 
     # ── boot ─────────────────────────────────────────────────────────────
     def _load_population(self) -> list[tuple]:
+        from .engine import trade_provenance
         pop = []
+        identities: dict = {}
+        loaded_at = dt.datetime.now(dt.timezone.utc).isoformat()
         for row in self.journal.list_strategies(["paper", "active", "demoted"]):
             if row.get("kind") == "spec":
                 # Specs enter through the compiled path below. Treating the
@@ -306,7 +342,16 @@ class Kernel:
                        generation=row["generation"] or 0)
             st.is_trade_eligible = row["state"] in ("paper", "active")
             pop.append((st, g))
+            identities[row["id"]] = trade_provenance.population_identity(
+                row["id"], kind=row["kind"], family=row["kind"], name=row["name"],
+                state=row["state"], generation=row["generation"] or 0,
+                parent_id=row.get("parent_id"), loaded_at=loaded_at,
+                params=st.params, created_at=row.get("created_at"))
+        self._spec_identities, self._identities_loaded_at = {}, loaded_at
         pop.extend(self._load_spec_population())
+        identities.update(self._spec_identities)
+        # swapped whole, with the population it describes (provenance only)
+        self._entry_identities = identities
         return pop
 
     def _load_spec_population(self) -> list[tuple]:
@@ -325,6 +370,8 @@ class Kernel:
         spec_exits: dict = {}
         self._spec_exits = spec_exits
         self._spec_rows = []
+        if not isinstance(getattr(self, "_spec_identities", None), dict):
+            self._spec_identities = {}
         try:
             rows = self.journal.list_specs(["paper", "active"])
         except Exception as e:
@@ -345,6 +392,14 @@ class Kernel:
             from .engine.exits import SpecExit
             spec_exits[spec.id] = SpecExit.from_spec(spec)
             register_evaluator(family, compiled.to_evaluator())
+            # the exact compiled version, for entry provenance (observation only)
+            from .engine.trade_provenance import population_identity
+            self._spec_identities[spec.id] = population_identity(
+                spec.id, kind="spec", family=family, name=spec.name,
+                state=row["state"], generation=spec.generation,
+                parent_id=spec.parent_id,
+                loaded_at=getattr(self, "_identities_loaded_at", None),
+                spec=spec, created_at=row.get("created_at"))
             st = type("S", (), {})()
             st.id, st.name, st.state = spec.id, spec.name, row["state"]
             st.params = {}
@@ -428,7 +483,7 @@ class Kernel:
         if any(report.get(k) for k in ("adopted", "ghosts")):
             self.notifier.send(f"🔧 boot reconciliation: {report}")
         if recovery is not None and recovery.reasons:
-            self.notifier.send(f"🔒 recovery {recovery.status}: {', '.join(recovery.reasons)}")
+            self.notifier.send(f"🔒 recovery {recovery.outcome}: {', '.join(recovery.reasons)}")
         start_stall_monitor(
             self.heartbeat,
             stale_after=float(self.cfg["timeframes"]["scan_interval_seconds"]) * 4)
@@ -436,6 +491,7 @@ class Kernel:
         signal.signal(signal.SIGINT, self._graceful)
         threading.Thread(target=self._telegram_listener, daemon=True,
                          name="tg-listener").start()
+        self._start_owner_interface()
         threading.Thread(target=self._derivatives_recorder, daemon=True,
                          name="derivs-recorder").start()
         if (self.cfg.get("references", {}) or {}).get("enabled", True):
@@ -492,6 +548,9 @@ class Kernel:
             self._attention_refresher.close()
         log.warning(f"signal {signum} — shutting down")
         self._stop = True
+        server = getattr(self, "_owner_ipc", None)
+        if server is not None:
+            server.stop()
 
     def _derivatives_recorder(self) -> None:
         """Record funding / open interest / taker ratio / long-short every N
@@ -1068,47 +1127,15 @@ class Kernel:
         stats = {"scanned": 0, "decisions": 0, "entries": 0,
                  "skips": 0, "exits_detected": 0}
         self.state_machine.refresh()
-        balance = self._fetch_balance()
-        status = self.risk.update_equity(balance)
-        if status.get("halt_breached"):
-            self.state_machine.set(ControlState.HALTED, "risk_engine",
-                                   f"drawdown {status['drawdown_pct']}%")
+        balance, status = self._risk_step()
 
         stats["manual_closed"] = self._drain_close_requests()
 
-        panic_requested = self.journal.kv_get("panic_requested") == "1"
-        if panic_requested:
-            n = flatten_all(self.exchange, self.journal, self.notifier)
-            self.journal.kv_set("panic_requested", "0")
-            self.state_machine.set(ControlState.FROZEN, "operator",
-                                   f"panic flattened {n}")
+        n = self._drain_panic()
+        if n is not None:
             stats["panic_closed"] = n
 
-        # MacroGuard: hard-freeze during scheduled high-impact US events.
-        # Only auto-resumes if MacroGuard owns the current freeze, not operator.
-        macro = self.macro_guard.check()
-        macro_owns_freeze = self.journal.kv_get("macro_guard_froze", "0") == "1"
-        operator_hold = self.journal.kv_get(
-            "macro_guard_operator_hold", "0") == "1"
-        _cur = self.state_machine.refresh()
-        if macro.get("active") and _cur == ControlState.ACTIVE:
-            self.state_machine.set(ControlState.FROZEN, "macro_guard",
-                                   macro.get("event", "macro event"))
-            self.journal.kv_set("macro_guard_froze", "1")
-            self.notifier.send(
-                f"🔒 MacroGuard FREEZE: {macro.get('event', 'macro event')} "
-                f"until {macro.get('until', '?')}")
-        elif (not macro.get("active") and macro_owns_freeze
-              and not operator_hold and _cur == ControlState.FROZEN):
-            self.state_machine.set(ControlState.ACTIVE, "macro_guard",
-                                   "macro event cleared")
-            self.journal.kv_set("macro_guard_froze", "0")
-            self.notifier.send("✅ MacroGuard: event cleared — resuming ACTIVE")
-        self.journal.kv_set("macro_guard_state", json.dumps({
-            "active": bool(macro.get("active")),
-            "event": macro.get("event", ""),
-            "until": macro.get("until"),
-            "ts": dt.datetime.now(dt.timezone.utc).isoformat()}))
+        self._macro_step(self.macro_guard.check())
 
         state = self.state_machine.refresh()
         supervisor = getattr(self, "supervisor", None)
@@ -1125,19 +1152,24 @@ class Kernel:
             entry_allowed = False
             blocked = "execution_recovery_pending"
             blocked_code = rc.EXECUTION_RECOVERY_PENDING
-        if entry_allowed and status.get("daily_pnl_pct", 0) <= \
+        if entry_allowed and status.get("risk_state") != "ok":
+            entry_allowed = False
+            blocked = f"risk_state={status.get('risk_state')}"
+            # no dedicated code in decision-rejection-reason.v1 yet: the
+            # orchestrator records entries_not_allowed with this text
+            blocked_code = ""
+        if entry_allowed and (status.get("daily_pnl_pct") or 0) <= \
                 -self.risk.daily_loss_block * 100:
             entry_allowed = False
             blocked = f"daily breaker {status['daily_pnl_pct']:.1f}%"
             blocked_code = rc.DAILY_LOSS_BREAKER
+        self._record_risk_assessment(state, status, entry_allowed, blocked)
 
         funding = self._funding_map() if self.market_type == MarketType.FUTURES else {}
         oi = self._oi_map() if self.market_type == MarketType.FUTURES else {}
         self._refresh_btc_context()
         news = self.news_guard.check()
-        self.journal.kv_set("news_guard_state", json.dumps(
-            {"active": bool(news.get("active")), "why": news.get("why", ""),
-             "ts": dt.datetime.now(dt.timezone.utc).isoformat()}))
+        self._publish_news_guard(news)
         if news.get("active"):
             log.info(f"news guard: {news['why']} — thresholds raised")
         closed_count = int(self.journal.query(
@@ -1258,9 +1290,26 @@ class Kernel:
         self.heartbeat.beat({"equity": round(balance, 2),
                              "state": state.value, **stats})
         self.journal.log_equity(status["equity"], balance,
-                                len(self.journal.open_trades()))
+                                len(self.journal.open_trades()),
+                                provenance=self._equity_provenance(status["equity"]))
         return {**stats, "equity": status["equity"],
                 "dd_pct": status["drawdown_pct"]}
+
+    def _publish_news_guard(self, news: dict) -> None:
+        """Publish NewsGuard's own record. `published_at` is this publication;
+        the check's attempt/assessment/success times are NewsGuard's and are
+        never replaced by it (`ts` mirrors assessed_at for legacy readers)."""
+        rec = dict(news) if isinstance(news, dict) else {}
+        rec["active"] = bool(rec.get("active"))
+        rec.setdefault("why", "")
+        rec["ts"] = rec.get("assessed_at")
+        rec["published_at"] = dt.datetime.now(dt.timezone.utc).isoformat()
+        try:
+            payload = json.dumps(rec, allow_nan=False, default=str)
+        except (TypeError, ValueError):
+            payload = json.dumps({"active": rec["active"], "why": str(rec["why"]),
+                                  "ts": None, "published_at": rec["published_at"]})
+        self.journal.kv_set("news_guard_state", payload)
 
     def _top_strategy(self, d) -> str:
         """The strategy this trade belongs to: highest confidence AMONG the
@@ -1327,14 +1376,49 @@ class Kernel:
                 return False
             log.info(f"meta size {d.symbol}: {m:.2f}× "
                      f"(p={getattr(d, 'meta_p', 0):.2f})")
+        identity, reference = self._entry_provenance(d, snap, top_strategy, exec_tf)
         pos = self.executor.open(
             d, sizing.amount, a, sl, tp,
             strategy_id=top_strategy or "orchestrator",
             strategy_name=top_strategy and next(
                 (s.get("strategy_name", "") for s in d.strategy_signals
                  if s.get("strategy_id") == top_strategy), "consensus"),
-            exec_mode="live")
+            exec_mode="live", entry_identity=identity, reference=reference)
         return pos is not None
+
+    def _entry_provenance(self, d, snap, top_strategy: str, exec_tf: str):
+        """(entry identity, slippage reference) for one entry. Observation
+        only: any failure yields an UNKNOWN identity and never blocks the entry."""
+        from .engine import trade_provenance
+        now = dt.datetime.now(dt.timezone.utc).isoformat()
+        try:
+            signal = next((s for s in (d.strategy_signals or [])
+                           if s.get("strategy_id") == top_strategy
+                           and s.get("action") == d.action.value), None) if top_strategy else None
+            loaded = (getattr(self, "_entry_identities", None) or {}).get(top_strategy)
+            identity = trade_provenance.entry_identity(
+                top_strategy, loaded, d, trade_provenance.clean(signal), now)
+        except Exception as e:                            # noqa: BLE001
+            identity = {"schema_version": trade_provenance.IDENTITY_VERSION,
+                        "status": "UNKNOWN", "reason": "identity_capture_failed:"
+                        + type(e).__name__, "strategy_id": top_strategy or None,
+                        "captured_at": now}
+        reference = {"price": None, "basis": "unavailable"}
+        try:
+            bar_ts = None
+            frame = snap.df(exec_tf)
+            if frame is not None and "ts" in frame:
+                bar_ts = str(frame["ts"].iloc[-1])
+            px = float(snap.price)
+            reference = {"price": px if px > 0 else None,
+                         "basis": "decision_snapshot_price",
+                         "definition": f"last {exec_tf} close in the decision snapshot; "
+                                       "the price the entry was sized and stopped on",
+                         "snapshot_at": snap.ts, "bar_ts": bar_ts}
+        except Exception as e:                            # noqa: BLE001
+            reference = {"price": None, "basis": "unavailable",
+                         "reason": "reference_capture_failed:" + type(e).__name__}
+        return identity, reference
 
     def _protection_for(self, se, price: float, atr: float,
                         side: str) -> tuple[float, float]:
@@ -1513,6 +1597,50 @@ class Kernel:
                 log.warning(f"orphan position {sym}: {e}")
         return n
 
+    def _drain_panic(self) -> int | None:
+        """Consume one accepted panic: flatten, then keep it contained.
+
+        `panic_requested` = JSON {request_id, intent_event_id}: the panic's
+        identity is the owner hold its acceptance recorded (OwnerService
+        contains at acceptance and advances the control-intent fence, so any
+        older recovery's activation already fails). Legacy "1": accepted now.
+
+        After the flatten, only *owner* intent recorded after that hold is
+        "newer owner intent" (an owner resume/halt/freeze/panic). Completion of
+        older work — a Supervisor or other system transition — never is. So:
+        - newer owner intent exists → keep the current state (normal rules);
+        - otherwise → contained: HALTED stays HALTED, anything else → FROZEN.
+        Only the pending value consumed here is cleared (compare-and-clear), so
+        a panic accepted meanwhile stays pending for the next cycle.
+        """
+        from .engine.control_fence import latest_intent_event_id
+        from .engine.state import OWNER_ACTORS
+        raw = self.journal.kv_get("panic_requested")
+        if raw in (None, "", "0"):
+            return None
+        try:
+            accepted = int(json.loads(raw)["intent_event_id"])
+        except (ValueError, TypeError, KeyError):
+            accepted = latest_intent_event_id(self.journal)     # legacy flag
+        n = flatten_all(self.exchange, self.journal, self.notifier)
+        with self.journal._tx() as c:              # compare-and-clear this value only
+            c.execute("UPDATE state_kv SET value='0' WHERE key='panic_requested' AND value=?",
+                      (raw,))
+        marks = ",".join("?" * len(OWNER_ACTORS))
+        with self.state_machine.fenced() as f:
+            newer_owner = self.journal.query(
+                "SELECT COUNT(*) AS n FROM control_events WHERE id>? AND "
+                f"event IN ('state_change','state_hold') AND actor IN ({marks})",
+                (accepted, *OWNER_ACTORS))[0]["n"]
+            if newer_owner:
+                log.warning("panic flattened %s; newer owner intent kept (%s)",
+                            n, f.state.value if f.state else None)
+            elif f.state == ControlState.HALTED:
+                log.warning("panic flattened %s; HALTED kept (more restrictive)", n)
+            else:
+                f.apply(ControlState.FROZEN, "operator", f"panic flattened {n}")
+        return n
+
     def _drain_close_requests(self) -> int:
         """Market-close whatever the operator asked for from the dashboard.
 
@@ -1523,10 +1651,14 @@ class Kernel:
         requeued: an id retrying forever against a standing rejection is
         worse than one loud error the operator can act on.
         """
-        raw = self.journal.kv_get("close_requests", "[]")
-        if raw in (None, "", "[]"):
-            return 0
-        self.journal.kv_set("close_requests", "[]")     # drained on read
+        # read-and-clear in one transaction: the Owner Interface appends from
+        # another thread, and an append between a read and a clear is lost
+        with self.journal._tx() as c:
+            row = c.execute("SELECT value FROM state_kv WHERE key='close_requests'").fetchone()
+            raw = row[0] if row else "[]"
+            if raw in (None, "", "[]"):
+                return 0
+            c.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES ('close_requests','[]')")
         try:
             ids = json.loads(raw)
             if not isinstance(ids, list):
@@ -1609,13 +1741,20 @@ class Kernel:
             fees = self.executor.taker_fee * (sold * entry + sold * px)
             pnl = gross - fees
             reason = "tp_fill" if tp and abs(px - tp) <= abs(px - sl) else "sl_fill"
+            # provenance only: the venue's executing order/fill ids for a native
+            # stop are not read here, so none are claimed
+            observed = {"basis": "exchange_exit_detected_by_size", "purpose": "native_exit",
+                        "protective_algo_id": t.get("sl_order_id") or None,
+                        "booked_pnl_basis": "estimated", "mark_price": px,
+                        "journal_amount": amount, "venue_amount": held}
             if held <= 0:
-                self.journal.close_trade(t["id"], px, round(pnl, 8), reason)
+                self.journal.close_trade(t["id"], px, round(pnl, 8), reason,
+                                         accounting=observed)
                 log.info(f"EXCHANGE EXIT {symbol}: {reason} @{px} pnl={pnl:+.2f}")
             else:
                 # part of the line filled; what remains is a real position
                 self.journal.align_trade_amount(
-                    t["id"], held, held * entry, pnl_delta=pnl)
+                    t["id"], held, held * entry, pnl_delta=pnl, accounting=observed)
                 log.info(f"EXCHANGE PARTIAL {symbol}: {reason} @{px} "
                          f"-{sold:g} pnl={pnl:+.2f} remaining={held:g}")
             self.notifier.send(
@@ -1753,6 +1892,145 @@ class Kernel:
 
     def _fetch_balance(self) -> float:
         """Collateral margin equity — the number risk sizing is allowed to use."""
+        fresh = self._fetch_balance_fresh()
+        return fresh if fresh is not None else self._last_equity_fallback()
+
+    def _risk_release(self):
+        """Risk's fresh answer to "may we be ACTIVE now?" — venue equity only,
+        never the journal fallback; None equity makes Risk fail closed."""
+        return self.risk.release_check(self._fetch_balance_fresh())
+
+    def _risk_step(self) -> tuple[float, dict]:
+        """The cycle's Risk step: track equity, HALT on the drawdown breach.
+
+        Only a fresh venue read may establish a first baseline (the journal
+        fallback is for sizing). A corrupt baseline is never re-seeded: an
+        ACTIVE state is contained (FROZEN, exits still managed) and stays
+        contained until RiskManager.repair_baseline(); release fails closed.
+        """
+        self._balance_read = None
+        self._fallback_row = None       # the exact row a fallback reuses (one read)
+        attempted = dt.datetime.now(dt.timezone.utc)
+        self._risk_attempt_at = attempted.isoformat()   # binds this cycle's observation
+        raw = self._fetch_balance_fresh()
+        fresh = raw
+        if not (isinstance(fresh, (int, float)) and not isinstance(fresh, bool)
+                and math.isfinite(fresh) and fresh > 0):
+            fresh = None                # a malformed read is no read
+        balance = fresh if fresh is not None else self._last_equity_fallback()
+        self._record_account_observation(attempted, raw, fresh, balance)
+        status = self.risk.update_equity(balance, authoritative=fresh is not None)
+        if status.get("halt_breached"):
+            self.state_machine.set(ControlState.HALTED, "risk_engine",
+                                   f"drawdown {status['drawdown_pct']}%")
+        elif status.get("risk_state") in ("corrupt", "unreadable"):
+            why = f"risk_state_{status['risk_state']}"
+            if self.state_machine.set_if_current(ControlState.ACTIVE, ControlState.FROZEN,
+                                                 "risk_engine", why):
+                self.notifier.send(f"🔒 {why} — FROZEN; activation blocked until "
+                                   "the Risk baseline is readable/repaired.")
+        return balance, status
+
+    # ── MacroGuard: freeze on scheduled events, release only through Risk ──
+    def _macro_freeze_event_id(self) -> int | None:
+        """The exact FROZEN event MacroGuard owns, or None if not provable."""
+        raw = self.journal.kv_get("macro_guard_freeze_event_id")
+        if raw:
+            try:
+                return int(raw)
+            except ValueError:
+                return None
+        # A freeze recorded before the event id was stored: own it only if it
+        # is still the latest intent event and it is MacroGuard's own FROZEN.
+        rows = self.journal.query(
+            "SELECT id, event, to_state, actor FROM control_events "
+            "WHERE event IN ('state_change','state_hold') ORDER BY id DESC LIMIT 1")
+        if rows and rows[0]["event"] == "state_change" and \
+                rows[0]["to_state"] == "FROZEN" and rows[0]["actor"] == "macro_guard":
+            return int(rows[0]["id"])
+        return None
+
+    def _macro_disown(self) -> None:
+        self.journal.kv_set("macro_guard_froze", "0")
+        self.journal.kv_set("macro_guard_freeze_event_id", "")
+        self.journal.kv_set("macro_guard_release_refused", "")
+
+    def _macro_step(self, macro: dict) -> None:
+        """Freeze an ACTIVE state for a macro event; on clearance *request*
+        release. MacroGuard never sets ACTIVE: the Supervisor's guarded release
+        needs a fresh Risk release (and, for futures, fresh venue/protection
+        proof) and loses to any newer HALTED/FROZEN."""
+        macro_owns_freeze = self.journal.kv_get("macro_guard_froze", "0") == "1"
+        operator_hold = self.journal.kv_get(
+            "macro_guard_operator_hold", "0") == "1"
+        _cur = self.state_machine.refresh()
+        if macro.get("active") and _cur == ControlState.ACTIVE:
+            t = self.state_machine.set_if_current(
+                ControlState.ACTIVE, ControlState.FROZEN, "macro_guard",
+                macro.get("event", "macro event"))
+            if t:
+                self.journal.kv_set("macro_guard_froze", "1")
+                self.journal.kv_set("macro_guard_freeze_event_id", str(t.event_id))
+                self.notifier.send(
+                    f"🔒 MacroGuard FREEZE: {macro.get('event', 'macro event')} "
+                    f"until {macro.get('until', '?')}")
+        elif (not macro.get("active") and macro_owns_freeze
+              and not operator_hold and _cur == ControlState.FROZEN):
+            self._macro_release()
+        self.journal.kv_set("macro_guard_state", json.dumps({
+            "active": bool(macro.get("active")),
+            "event": macro.get("event", ""),
+            "until": macro.get("until"),
+            "ts": dt.datetime.now(dt.timezone.utc).isoformat()}))
+
+    def _macro_release(self) -> None:
+        eid = self._macro_freeze_event_id()
+        if eid is None:
+            self._macro_disown()
+            self.journal.log_control_event("macro_release_refused", "macro_guard",
+                                           detail={"reasons": ["macro_freeze_not_owned"]})
+            return
+        r = self.supervisor.request_macro_release(
+            eid, venue_recovery=self.market_type == MarketType.FUTURES)
+        if r.status == "BUSY":
+            return                      # an owner request holds the pass; retry next cycle
+        if r.status == "REFUSED" and "macro_freeze_not_owned" not in r.reasons:
+            # Still MacroGuard's freeze, Risk said no: keep it and retry next
+            # cycle, but audit only when the reason changes (no per-cycle noise).
+            why = ",".join(r.reasons)
+            if self.journal.kv_get("macro_guard_release_refused", "") != why:
+                self.journal.kv_set("macro_guard_release_refused", why)
+                self.journal.log_control_event("macro_release_refused", "macro_guard",
+                                               detail={"freeze_event_id": eid,
+                                                       "reasons": list(r.reasons)})
+            return
+        self._macro_disown()            # released, handed to Supervisor, or superseded
+        self.journal.log_control_event("macro_release_result", "macro_guard",
+                                       to_state=r.control_state or "",
+                                       detail={"freeze_event_id": eid, "status": r.status,
+                                               "reasons": list(r.reasons)})
+        if r.status == "ACTIVATED":
+            self.notifier.send("✅ MacroGuard: event cleared — ACTIVE after fresh "
+                               "Risk and recovery proof")
+        elif r.status == "CONTAINED":
+            self.notifier.send(f"🔒 MacroGuard: event cleared — held in {r.control_state}: "
+                               f"{', '.join(r.reasons)}")
+
+    def owner_resume(self, ctx: OwnerContext, *, allow_unhalt: bool = False,
+                     expected_intent_event_id: int | None = None):
+        """The transport-neutral owner resume/unhalt: every channel calls this.
+
+        Futures run the full Supervisor recovery (venue + protection + Risk);
+        markets without futures venue recovery use the Risk-gated release.
+        Neither ever sets ACTIVE except by the Supervisor's guarded CAS.
+        """
+        bound = {"expected_intent_event_id": expected_intent_event_id}
+        if self.market_type == MarketType.FUTURES:
+            return self.supervisor.request_owner_recovery(ctx, allow_unhalt=allow_unhalt, **bound)
+        return self.supervisor.request_owner_release(ctx, allow_unhalt=allow_unhalt, **bound)
+
+    def _fetch_balance_fresh(self) -> float | None:
+        """Equity read from the venue now, or None. Never a stored value."""
         try:
             import hashlib, hmac as _hmac
             import requests
@@ -1769,8 +2047,12 @@ class Kernel:
                 headers={"X-MBX-APIKEY": key}, timeout=10)
             tmb = float(r.json().get("totalMarginBalance") or 0)
             if tmb > 0:
+                self._balance_read = {"basis": "venue_total_margin_balance",
+                                      "errors": [], "completed_at": time.time()}
                 return tmb
+            v3_error = "venue_account_nonpositive"
         except Exception as e:
+            v3_error = f"venue_account_failed:{type(e).__name__}"
             log.debug(f"v3 account fetch failed ({e}); falling back")
         try:
             total = 0.0
@@ -1788,17 +2070,452 @@ class Kernel:
                         raise
                     log.debug(f"balance retry after: {inner}")
                     time.sleep(3)
-            return total if total > 0 else self._last_equity_fallback()
+            if total > 0:
+                self._balance_read = {"basis": "venue_wallet_usdt_total",
+                                      "errors": [v3_error], "completed_at": time.time()}
+                return total
+            self._balance_read = {"basis": None,
+                                  "errors": [v3_error, "venue_balance_nonpositive"]}
+            return None
         except Exception as e:
             log.warning(f"balance fetch failed: {e}")
-            return self._last_equity_fallback()
+            self._balance_read = {"basis": None, "errors": [
+                v3_error, f"venue_balance_failed:{type(e).__name__}"]}
+            return None
 
     def _last_equity_fallback(self) -> float:
-        rows = self.journal.query(
-            "SELECT equity FROM equity ORDER BY ts DESC LIMIT 1")
+        """The latest journal equity (unchanged value semantics). The exact row
+        — ts, value and its provenance record — is captured in the SAME read
+        (`_fallback_row`), so the observation describes the row actually
+        reused, never a row written after it."""
+        try:
+            rows = self.journal.query(
+                "SELECT e.ts ts, e.equity equity, p.provenance provenance FROM equity e "
+                "LEFT JOIN equity_provenance p ON p.ts = e.ts ORDER BY e.ts DESC LIMIT 1")
+        except Exception as e:           # a journal without the provenance table
+            if "equity_provenance" not in str(e):
+                raise
+            rows = [dict(r, provenance=None) for r in self.journal.query(
+                "SELECT ts, equity FROM equity ORDER BY ts DESC LIMIT 1")]
+        self._fallback_row = dict(rows[0]) if rows else None
         return float(rows[0]["equity"]) if rows else 0.0
 
-    # ── telegram minimal control (/panic, /status, /freeze, /resume) ─────
+    # ── current-truth publication (observation only; never gates anything) ─
+    ACCOUNT_OBS_KEY = "account_observation"
+    RISK_ASSESSMENT_KEY = "risk_assessment"
+
+    def _prior_account_obs(self) -> dict:
+        prior = getattr(self, "_account_obs", None)
+        if prior is None:
+            try:
+                prior = json.loads(self.journal.kv_get(self.ACCOUNT_OBS_KEY) or "null")
+            except (TypeError, ValueError):
+                prior = None
+        return prior if isinstance(prior, dict) else {}
+
+    def _record_account_observation(self, attempted, raw, fresh, balance) -> None:
+        """Persist what the cycle's equity actually is.
+
+        A fresh venue read is timed at the read's completion. A journal
+        fallback carries the source time only from the exact equity row it
+        reused (that row's own provenance record); a row without provenance —
+        or whose provenance does not describe that row's value — has unknown
+        origin, whatever earlier reads returned. Equal numbers are never
+        treated as provenance. A failure here is logged and ignored."""
+        prior = {}
+        try:
+            prior = self._prior_account_obs()
+        except Exception:
+            pass
+        # this cycle's observation starts empty: a failure below must never
+        # leave the previous cycle's record to be matched to this cycle's row
+        self._account_obs = None
+        try:
+            read = getattr(self, "_balance_read", None) or {}
+            recorded = dt.datetime.now(dt.timezone.utc)
+            obs = {"schema": 2, "currency": "USDT", "attempted_at": attempted.isoformat(),
+                   "recorded_at": recorded.isoformat(), "risk_input": balance,
+                   "authoritative": fresh is not None,
+                   "attempt_errors": [e for e in read.get("errors", []) if e],
+                   "source": "kernel _risk_step (Risk's equity input this cycle)"}
+            if fresh is not None:
+                basis = read.get("basis") or "venue_read_unlabelled"
+                # The source time is the read's own recorded completion, kept
+                # exactly as reported — even when it is impossible (after this
+                # record, or before the attempt): that is an invalid clock for
+                # the reader, never repaired to the record time. Missing or
+                # malformed completion metadata leaves the source time unknown.
+                # Value and authority for Risk are unchanged either way.
+                done = read.get("completed_at")
+                iso, relation = None, "completion_missing"
+                if done is not None:
+                    relation = "completion_malformed"
+                    if isinstance(done, (int, float)) and not isinstance(done, bool) \
+                            and math.isfinite(done):
+                        try:
+                            t = dt.datetime.fromtimestamp(done, dt.timezone.utc)
+                        except (OverflowError, OSError, ValueError):
+                            t = None
+                        if t is not None:
+                            iso = t.isoformat()
+                            relation = ("completion_before_attempt" if t < attempted else
+                                        "completion_after_record" if t > recorded else "ok")
+                primary = basis == "venue_total_margin_balance"
+                obs.update(status="FRESH" if primary else "VENUE_FALLBACK",
+                           value=float(fresh), basis=basis, observed_at=iso,
+                           successful_read_at=iso, successful_value=float(fresh),
+                           successful_basis=basis, fallback=None, consecutive_failures=0,
+                           completion_relation=relation,
+                           reason=";".join(x for x in (
+                               None if primary else "primary_account_read_failed",
+                               None if relation == "ok" else relation) if x) or None)
+            else:
+                reason = "venue_read_malformed" if raw is not None else "venue_read_failed"
+                base = {"successful_read_at": prior.get("successful_read_at"),
+                        "successful_value": prior.get("successful_value"),
+                        "successful_basis": prior.get("successful_basis"),
+                        "consecutive_failures": int(prior.get("consecutive_failures")
+                                                    or 0) + 1}
+                row = getattr(self, "_fallback_row", None)   # captured with the value
+                if row:
+                    try:
+                        prov = json.loads(row["provenance"]) if row.get("provenance") else None
+                    except (TypeError, ValueError):
+                        prov = None
+                    origin = origin_basis = None
+                    if float(row["equity"]) != float(balance):
+                        why = "fallback_row_not_the_value_used"
+                    elif not isinstance(prov, dict):
+                        why = "fallback_row_provenance_unknown"
+                    elif prov.get("value") != row["equity"] or not prov.get("observed_at"):
+                        why = "fallback_row_provenance_unknown"
+                    elif prov.get("row_kind") == "venue_observation" and \
+                            prov.get("completion_relation") != "ok":
+                        why = "fallback_row_source_time_invalid"   # never carried forward
+                    else:
+                        origin, origin_basis, why = prov["observed_at"], prov.get("basis"), None
+                    obs.update(base, status="JOURNAL_FALLBACK", value=float(balance),
+                               basis="journal_equity_row", observed_at=origin,
+                               reason=";".join(x for x in (reason, why) if x),
+                               fallback={"source": "journal equity table, latest row",
+                                         "row_written_at": row["ts"],
+                                         "row_provenance": "recorded" if prov else "none",
+                                         "value_origin_read_at": origin,
+                                         "value_origin_basis": origin_basis})
+                else:
+                    obs.update(base, status="UNAVAILABLE", value=None, basis=None,
+                               observed_at=None, reason=f"{reason};no_journal_equity",
+                               fallback=None)
+            self._account_obs = obs
+            self.journal.kv_set(self.ACCOUNT_OBS_KEY, json.dumps(obs, allow_nan=False))
+        except Exception as e:                       # observation must never gate
+            log.debug(f"account observation not recorded: {e}")
+
+    def _equity_provenance(self, value) -> dict | None:
+        """Provenance for the equity row this cycle writes: the account
+        observation that produced `value`, or None (unknown) if it did not."""
+        obs = getattr(self, "_account_obs", None)
+        # bound to THIS cycle's attempt: an older observation with an equal
+        # value is not this row's source
+        if (not isinstance(obs, dict) or obs.get("risk_input") != value
+                or obs.get("attempted_at") is None
+                or obs.get("attempted_at") != getattr(self, "_risk_attempt_at", None)):
+            return None
+        kind = ("venue_observation" if obs.get("authoritative") else
+                "fallback_reuse" if obs.get("observed_at") else
+                "no_value" if obs.get("status") == "UNAVAILABLE" else "unknown_origin_reuse")
+        return {"value": value, "status": obs.get("status"), "basis": obs.get("basis"),
+                "observed_at": obs.get("observed_at"), "attempted_at": obs.get("attempted_at"),
+                "completion_relation": obs.get("completion_relation"),
+                "row_kind": kind}
+
+    #: every constraint a risk_assessment must carry, exactly once
+    RISK_CONSTRAINTS = ("risk_baseline", "halt_drawdown", "daily_loss_breaker",
+                        "max_open_positions", "portfolio_heat", "total_margin",
+                        "per_symbol_risk_cap", "per_position_margin")
+    #: equity older than this at assessment time cannot support PASS
+    RISK_INPUT_STALE_S = 300.0
+
+    def _record_risk_assessment(self, state, status, entry_allowed, blocked) -> None:
+        """Persist the cycle's Risk observation from the checks this cycle
+        already ran (update_equity + the kernel's entry gate) and the limits
+        RiskManager enforces at entry, evaluated on the journal book with
+        RiskManager's own formulas. Observation only; nothing reads it back.
+        A missing or malformed input is not_evaluated — never a fabricated 0 —
+        and only fresh, authoritative inputs with every constraint evaluated
+        can PASS."""
+        try:
+            risk = self.risk
+            now = dt.datetime.now(dt.timezone.utc)
+            obs = getattr(self, "_account_obs", None) or {}
+            opens = self.journal.open_trades()
+            equity = status.get("equity")
+            eq_ok = (isinstance(equity, (int, float)) and not isinstance(equity, bool)
+                     and math.isfinite(equity) and equity > 0)
+            constraints, reasons = [], []
+
+            def c(name, limit, observed, result, unit, basis):
+                constraints.append({"name": name, "limit": limit, "observed": observed,
+                                    "result": result, "unit": unit, "basis": basis})
+                if result == "block":
+                    reasons.append(f"{name}_block")
+                elif result == "not_evaluated":
+                    reasons.append(f"{name}_not_evaluated")
+
+            def num(v, *, positive=False, allow_empty=False):
+                if allow_empty and v in (None, ""):
+                    return 0.0
+                if isinstance(v, bool) or v is None:
+                    return None
+                try:
+                    f = float(v)
+                except (TypeError, ValueError):
+                    return None
+                if not math.isfinite(f) or f < 0 or (positive and f <= 0):
+                    return None
+                return f
+            rs = status.get("risk_state")
+            c("risk_baseline", "ok", rs, "pass" if rs == "ok" else
+              "block" if rs == "corrupt" else "not_evaluated", "state",
+              "RiskManager.update_equity baseline classification")
+            dd, halt = status.get("drawdown_pct"), risk.halt_dd * 100
+            c("halt_drawdown", halt, dd,
+              "not_evaluated" if dd is None else
+              "block" if status.get("halt_breached") else "pass", "pct",
+              "drawdown from the durable high-water mark")
+            day, lim = status.get("daily_pnl_pct"), -risk.daily_loss_block * 100
+            c("daily_loss_breaker", lim, day,
+              "not_evaluated" if day is None else "block" if day <= lim else "pass",
+              "pct", "equity vs the UTC day's first equity")
+            c("max_open_positions", risk.max_positions, len(opens),
+              "block" if len(opens) >= risk.max_positions else "pass", "count",
+              "journal open trades (check_entry refuses at the limit)")
+            from types import SimpleNamespace as _NS
+            book, malformed = [], []
+            for t in opens:
+                entry = num(t.get("entry_price"), positive=True)
+                notional = num(t.get("notional_usdt"), positive=True)
+                stop = num(t.get("stop_loss"), allow_empty=True)   # 0/None: unprotected
+                for field, v in (("entry_price", entry), ("notional_usdt", notional),
+                                 ("stop_loss", stop)):
+                    if v is None:
+                        malformed.append(f"{t.get('id')}:{field}")
+                if entry is not None and notional is not None and stop is not None:
+                    book.append(_NS(stop_loss=stop, entry_price=entry, notional_usdt=notional))
+            basis_heat = "RiskManager._position_risk over journal open trades / equity"
+            basis_margin = "journal entry notional / leverage / equity"
+            if eq_ok and not malformed:
+                heat = sum(risk._position_risk(p, 0.0) for p in book)
+                margin = sum(p.notional_usdt for p in book) / risk.leverage
+                c("portfolio_heat", risk.heat_cap * 100, heat / equity * 100,
+                  "block" if equity * risk.heat_cap - heat <= 0 else "pass", "pct",
+                  basis_heat)
+                c("total_margin", risk.max_total_margin * 100, margin / equity * 100,
+                  "block" if equity * risk.max_total_margin - margin <= 0 else "pass",
+                  "pct", basis_margin)
+            else:
+                why = "book_malformed" if malformed else "equity_unusable"
+                c("portfolio_heat", risk.heat_cap * 100, None, "not_evaluated", "pct",
+                  f"{basis_heat} ({why})")
+                c("total_margin", risk.max_total_margin * 100, None, "not_evaluated",
+                  "pct", f"{basis_margin} ({why})")
+                reasons += [f"book_malformed:{m}" for m in malformed[:10]]
+            for name, lim in (("per_symbol_risk_cap", risk.symbol_cap),
+                              ("per_position_margin", risk.max_pos_margin)):
+                constraints.append({"name": name, "limit": lim * 100,
+                                    "observed": None, "result": "applies_at_entry",
+                                    "unit": "pct", "basis": "evaluated per entry by "
+                                    "RiskManager.check_entry"})
+            # the equity input's own freshness at assessment time
+            src_age = None
+            try:
+                t = dt.datetime.fromisoformat(obs["observed_at"]) \
+                    if obs.get("observed_at") else None
+                src_age = (now - t).total_seconds() if t else None
+            except (TypeError, ValueError):
+                src_age = None
+            input_fresh = (obs.get("authoritative") is True
+                           and obs.get("status") in ("FRESH", "VENUE_FALLBACK")
+                           and obs.get("completion_relation") == "ok"
+                           and obs.get("risk_input") == equity
+                           and src_age is not None and 0 <= src_age <= self.RISK_INPUT_STALE_S)
+            if rs in ("unreadable", "uninitialized", "equity_unusable") or not eq_ok:
+                verdict = "UNAVAILABLE"
+                reasons.insert(0, f"risk_state_{rs}" if rs != "ok" else "equity_unusable")
+            elif any(x["result"] == "block" for x in constraints):
+                verdict = "BLOCK"
+            elif not input_fresh or any(x["result"] == "not_evaluated" for x in constraints):
+                verdict = "DEGRADED"
+                if not input_fresh:
+                    reasons.append("equity_input_not_fresh_authoritative")
+            else:
+                verdict = "PASS"
+            ctl = getattr(state, "value", str(state))
+            policy = risk.policy()
+            rec = {"schema": 2, "assessed_at": now.isoformat(),
+                   "status": verdict, "reasons": reasons, "constraints": constraints,
+                   "risk_state": rs, "drawdown_pct": dd, "daily_pnl_pct": day,
+                   "halt_breached": bool(status.get("halt_breached")),
+                   "baseline": {"peak_equity": getattr(risk, "_peak_equity", None),
+                                "day_start_equity": getattr(risk, "_day_start_equity", None),
+                                "day_key": getattr(risk, "_day_key", None)},
+                   "equity": {"value": equity if eq_ok else None,
+                              "status": obs.get("status"), "basis": obs.get("basis"),
+                              "observed_at": obs.get("observed_at"),
+                              "age_at_assessment_s": src_age,
+                              "fresh_at_assessment": input_fresh,
+                              "authoritative": bool(obs.get("authoritative"))},
+                   "book": {"source": "journal open trades", "read_at": now.isoformat(),
+                            "positions": len(opens), "malformed": malformed[:10]},
+                   "policy": {"digest": policy["digest"],
+                              "risk_manager_identity": policy["risk_manager_identity"],
+                              "effective": policy["effective"],
+                              "limits": policy["limits"]},
+                   "control": {"state": ctl,
+                               "entries_permitted_by_control": ctl == "ACTIVE",
+                               "applicability": (
+                                   "entries: Risk status governs new entries"
+                                   if ctl == "ACTIVE" else
+                                   f"{ctl}: entries are blocked by control state "
+                                   "regardless of this Risk status; "
+                                   + ("exits still managed" if ctl in ("FROZEN", "RECOVERY")
+                                      else "no management"))},
+                   "entry_gate": {"allowed": bool(entry_allowed),
+                                  "blocked_reason": blocked or None,
+                                  "basis": "kernel cycle gate before the scan"},
+                   "source": "kernel cycle: RiskManager.update_equity + entry gate"}
+            self.journal.kv_set(self.RISK_ASSESSMENT_KEY, json.dumps(rec, allow_nan=False))
+        except Exception as e:                       # observation must never gate
+            log.debug(f"risk assessment not recorded: {e}")
+
+    def _owner(self):
+        """This kernel's OwnerService (lazy: test kernels skip __init__)."""
+        service = getattr(self, "_owner_service", None)
+        if service is None:
+            from .owner.authz import Authorizer
+            from .owner.service import OwnerService
+            section = (getattr(self, "cfg", None) or {}).get("owner_interface") or {}
+            service = OwnerService(
+                self.journal, self.state_machine, resume=self.owner_resume,
+                snapshot=self._owner_snapshot, authorizer=Authorizer.from_config(self.cfg),
+                max_age_s=float(section.get("max_request_age_s", 300)),
+                busy_wait_s=float(section.get("busy_wait_s", 10)))
+            self._owner_service = service
+        self._bind_telegram_owner(service.authorizer)
+        return service
+
+    def _bind_telegram_owner(self, authorizer) -> None:
+        """Default Telegram owner identity: the configured chat id when it is a
+        private chat (a positive id is the owner's own user id). Explicit
+        `owner_interface.identities.telegram` replaces this default."""
+        if authorizer.identities.get("telegram"):
+            return
+        chat_id = str(getattr(getattr(self, "notifier", None), "chat_id", "") or "")
+        if chat_id.isdigit():
+            section = (getattr(self, "cfg", None) or {}).get("owner_interface") or {}
+            authorizer.bind("telegram", chat_id, section.get("telegram_principal", "owner"))
+
+    def _owner_snapshot(self) -> dict:
+        """Read-only status for the Owner Interface. No venue calls."""
+        hb = getattr(self, "heartbeat", None)
+        age = hb.age_seconds() if hasattr(hb, "age_seconds") else None
+        return {"market": getattr(getattr(self, "market_type", None), "value", None),
+                "open_trades": len(self.journal.open_trades()),
+                "heartbeat_age_s": age,
+                "last_cycle_s": round(getattr(self, "_last_cycle_s", 0.0) or 0.0, 3)}
+
+    def _start_owner_interface(self) -> None:
+        section = self.cfg.get("owner_interface") or {}
+        if section.get("enabled") is not True:          # explicit opt-in only
+            log.info("owner interface IPC not enabled")
+            return
+        from .owner.ipc import OwnerIPCServer, resolve_ipc_dir
+        ipc_dir = resolve_ipc_dir(section.get("ipc_dir"))
+        if ipc_dir is None:
+            log.error("owner interface unavailable: no ipc_dir and no /run/user runtime dir")
+            return
+        if not ipc_dir.is_absolute():
+            ipc_dir = ROOT / ipc_dir
+        try:
+            self._owner_ipc = OwnerIPCServer(self._owner(), ipc_dir).start()
+        except Exception as e:           # controls fail closed; trading continues
+            log.error(f"owner interface unavailable: {e}")
+
+    def _tg_worker(self, name: str):
+        from concurrent.futures import ThreadPoolExecutor
+        workers = self.__dict__.setdefault("_tg_workers", {})
+        if name not in workers:
+            workers[name] = ThreadPoolExecutor(max_workers=1,
+                                               thread_name_prefix=f"tg-{name}")
+        return workers[name]
+
+    def _tg_send(self, base: str, text: str) -> None:
+        try:
+            __import__("requests").post(
+                f"{base}/sendMessage",
+                json={"chat_id": int(self.notifier.chat_id), "text": text}, timeout=8)
+        except Exception:
+            pass
+
+    def _tg_dispatch(self, msg: str, base: str, update: dict) -> None:
+        """Telegram never makes containment wait, and never queues recovery.
+
+        Every owner control command is RESERVED here, in the listener thread,
+        before it is queued: a redelivered update finds the reservation
+        (IN_PROGRESS) or the recorded result, never a definitive refusal while
+        the original may still execute. Recovery reservations also bind the
+        control-intent watermark at admission.
+        - containment (/freeze /halt /panic): its own ordered worker;
+        - recovery (/resume /unhalt): at most one admitted; a second one wins
+          its own reservation and is refused *and recorded* at once;
+        - reads and informational commands: their own worker;
+        - every reply: an outbound worker.
+        """
+        from .owner.adapters import telegram as owner_tg
+        from .owner.contract import CONTROL_OPERATIONS, RECOVERY_OPERATIONS, OwnerResult
+        op = owner_tg.command_of(msg)
+
+        def reply(text):
+            self._tg_worker("reply").submit(self._tg_send, base, text)
+        if op not in CONTROL_OPERATIONS:
+            self._tg_worker("read").submit(
+                lambda: self._handle_tg_command(msg, base, update=update, reply=reply))
+            return
+        try:
+            req = owner_tg.to_request(msg, update, chat_id=str(self.notifier.chat_id))
+        except owner_tg.NotOwnerCommand as e:
+            if str(e) != "foreign_or_missing_chat":
+                reply(f"🔒 not executed — {e}.")
+            return
+        service = self._owner()
+        reserved = service.reserve(req)
+        if isinstance(reserved, OwnerResult):
+            reply(owner_tg.reply_text(reserved))
+            return
+
+        def run():
+            reply(owner_tg.reply_text(service.execute(req, reservation=reserved)))
+        if op in RECOVERY_OPERATIONS:
+            lock = self.__dict__.setdefault("_tg_admission", threading.Lock())
+            with lock:
+                busy = self.__dict__.get("_tg_recovery_admitted", False)
+                if not busy:
+                    self._tg_recovery_admitted = True
+            if busy:
+                reply(owner_tg.reply_text(
+                    service.settle_refusal(req, reserved, "recovery_in_progress")))
+                return
+
+            def recover():
+                try:
+                    run()
+                finally:
+                    self._tg_recovery_admitted = False
+            self._tg_worker("recovery").submit(recover)
+        else:
+            self._tg_worker("control").submit(run)
+
+    # ── telegram: owner ops (incl. /panic) via the gateway; the rest informational ─
     def _telegram_listener(self) -> None:
         if not self.notifier.configured:
             log.info("telegram unconfigured — listener off")
@@ -1817,41 +2534,36 @@ class Kernel:
                     chat = (u.get("message") or {}).get("chat", {}).get("id")
                     if chat != int(self.notifier.chat_id):
                         continue
-                    self._handle_tg_command(msg, base)
+                    self._tg_dispatch(msg, base, u)
             except Exception as e:
                 log.debug(f"tg poll error: {e}")
 
-    def _handle_tg_command(self, msg: str, base: str) -> None:
-        def reply(text):
+    def _handle_tg_command(self, msg: str, base: str, update: dict | None = None,
+                           reply=None) -> None:
+        if reply is None:                      # direct call: reply synchronously
+            reply = lambda text: self._tg_send(base, text)
+        from .owner.adapters import telegram as owner_tg
+        if owner_tg.command_of(msg) is not None:
+            # Adapter only: the listener authenticated the chat; the adapter
+            # maps the update (sender, date, update id) to a typed request;
+            # the kernel's single OwnerService authorizes and executes it.
+            chat_id = getattr(self.notifier, "chat_id", None)
+            if not chat_id:
+                return
+            service = self._owner()
             try:
-                __import__("requests").post(
-                    f"{base}/sendMessage",
-                    json={"chat_id": int(self.notifier.chat_id), "text": text},
-                    timeout=8)
-            except Exception:
-                pass
-        if msg.startswith("/panic"):
-            self.journal.kv_set("panic_requested", "1")
-            reply("🚨 PANIC queued — flattening on next cycle.")
-        elif msg.startswith("/freeze"):
-            self.state_machine.set(ControlState.FROZEN, "operator", "telegram")
-            reply("🥶 FROZEN — no new entries; managing existing to close.")
-        elif msg.startswith("/resume"):
-            self.state_machine.set(ControlState.ACTIVE, "operator", "telegram")
-            reply("🙂 ACTIVE — full autonomy restored.")
-        elif msg.startswith("/halt"):
-            self.state_machine.set(ControlState.HALTED, "operator", "telegram")
-            reply("😴 HALTED.")
-        elif msg.startswith("/status"):
-            hb_age = self.heartbeat.age_seconds()
-            reply(f"state={self.state_machine.state.value} "
-                  f"open={len(self.journal.open_trades())} "
-                  f"heartbeat={hb_age and f'{hb_age:.0f}s'}")
-        elif msg.startswith("/news"):
+                req = owner_tg.to_request(msg, update, chat_id=str(chat_id))
+            except owner_tg.NotOwnerCommand as e:
+                if str(e) != "foreign_or_missing_chat":
+                    reply(f"🔒 not executed — {e}.")
+                return
+            reply(owner_tg.reply_text(service.execute(req)))
+            return
+        if msg.startswith("/news"):
             st = self.news_guard.check()
-            emoji = "📰🚨" if st.get("active") else "📰✅"
-            reply(f"{emoji} news guard: "
-                  f"{'ARMED — entering suppressed' if st.get('active') else 'quiet — trading normal'}"
+            emoji, label = news_status_line(st, self.news_guard.stale_after_s)
+            reply(f"{emoji} news guard: {label}"
+                  f"\nchecked {st.get('assessed_at') or 'unknown'}"
                   f"\n{st.get('why', '')}")
         elif msg.startswith("/rent"):
             from .engine.rent_keeper import status_text
@@ -1942,6 +2654,13 @@ def main() -> None:
     args = ap.parse_args()
     cfg = load_config(args.config)
     setup_logging(cfg)
+    if args.panic:
+        # Through the running kernel's Owner Interface (cli channel, audited).
+        # No local fallback: a kernel that is down queues nothing.
+        from .owner.cli import call
+        r = call("panic", cfg)
+        print(json.dumps(r.to_wire(), indent=2, default=str))
+        sys.exit(0 if r.status in ("ACCEPTED", "ALREADY_SET") else 1)
     k = Kernel(cfg)
     if args.status:
         print(json.dumps({
@@ -1951,10 +2670,6 @@ def main() -> None:
             "open_trades": len(k.journal.open_trades()),
             "strategies": len(k.population),
         }, indent=2))
-        return
-    if args.panic:
-        k.journal.kv_set("panic_requested", "1")
-        print("panic requested — running kernel will flatten and FROZEN")
         return
     k.run()
 

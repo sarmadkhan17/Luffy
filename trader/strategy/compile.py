@@ -36,6 +36,9 @@ class CompiledStrategy:
     data_requires: tuple = ("ohlcv",)
     #: spec_fingerprint of the content these trees were parsed from
     fingerprint: str = ""
+    #: sha256 of the exact compiled spec this evaluator runs; stamped on every
+    #: signal so a trade can name the version that proposed it (provenance only)
+    spec_sha256: str | None = None
 
     # ── vectorized path (Analyst) ────────────────────────────────────────
     def entries(self, frames: dict, btc: dict | None = None,
@@ -168,6 +171,7 @@ class CompiledStrategy:
                 else:
                     close_ms = int(open_ms + TF_MS[tf])
             params = {"spec_id": self.spec.id,
+                      "spec_sha256": self.spec_sha256,
                       "signal_bar_age_min": bar_age_min,
                       "spec_fingerprint": (getattr(self, "fingerprint", "")
                                            or spec_fingerprint(self.spec)),
@@ -248,6 +252,8 @@ def compile_spec(spec: StrategySpec) -> CompiledStrategy:
     trees = [t for t in (long_t, short_t, exit_t, *filters) if t is not None]
     req = dsl.data_requires(*trees)
     spec.data_requires = list(req)
+    from ..engine.trade_provenance import spec_version
     return CompiledStrategy(spec=spec, _long=long_t, _short=short_t,
                             _filters=filters, _exit=exit_t, data_requires=req,
-                            fingerprint=spec_fingerprint(spec))
+                            fingerprint=spec_fingerprint(spec),
+                            spec_sha256=spec_version(spec)["spec_sha256"])

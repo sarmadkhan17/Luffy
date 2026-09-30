@@ -1,0 +1,2 @@
+all page_rows_deep 0.672 total 4.78 preceding_deep 21.74 membership_deep 269.557
+closed page_rows_deep 0.409 total 8.489 preceding_deep 19.354 membership_deep 230.422

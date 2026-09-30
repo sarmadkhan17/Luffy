@@ -1,0 +1,2516 @@
+--- a/frontend/src/Shell.tsx
++++ b/frontend/src/Shell.tsx
+@@ -1,3 +1,4 @@
++import { timestamp as utc } from "./time";
+ import { lazyChunk } from "./lazyChunk";
+ import { Suspense, useEffect, useState } from "react";
+ import { ArrowUpRight, Anchor, LogOut } from "lucide-react";
+@@ -20,10 +21,7 @@
+   "Diagnostics",
+ ];
+ const slug = (s: string) => s.toLowerCase().replaceAll(" ", "-");
+-const utc = (iso: string | null | undefined) =>
+-  iso
+-    ? new Date(iso).toISOString().slice(0, 19).replace("T", " ") + " UTC"
+-    : "—";
++
+ const LIVE_ROUTES = new Set([
+   "trades",
+   "research",
+@@ -31,11 +29,14 @@
+   "diagnostics",
+ ]);
+ export default function Shell() {
+-  const [route, setRoute] = useState(location.hash.slice(1) || "overview");
++  const [route, setRoute] = useState(
++    location.hash.replace(/^#\/?/, "") || "overview",
++  );
+   const { adapter, scenario, setScenario, session, signOut } = usePreview();
+-  const live = adapter.mode === "LIVE";
++  const live = import.meta.env.MODE === "production" || adapter.mode === "LIVE";
+   useEffect(() => {
+-    const update = () => setRoute(location.hash.slice(1) || "overview");
++    const update = () =>
++      setRoute(location.hash.replace(/^#\/?/, "") || "overview");
+     window.addEventListener("hashchange", update);
+     return () => window.removeEventListener("hashchange", update);
+   }, []);
+@@ -71,7 +72,7 @@
+         </a>
+         <div className="topbar-right">
+           <span className="quiet desktop-only">
+-            {live ? "OWNER WORKSPACE / V2" : "FRONTEND PREVIEW / V1"}
++            {live ? "OWNER WORKSPACE / V2.1" : "FRONTEND PREVIEW / V1"}
+           </span>
+           <Badge tone={live ? "mint" : "amber"}>
+             {live ? "Live" : "Isolated"}
+@@ -108,6 +109,11 @@
+             aria-current={title === r ? "page" : undefined}
+           >
+             {r}
++            {r === "Operations" && (
++              <small aria-hidden="true" className="mobile-nav-hint">
++                Controls · Panic
++              </small>
++            )}
+           </a>
+         ))}
+       </nav>
+@@ -193,7 +199,7 @@
+       <footer>
+         <span>
+           {live
+-            ? `LUFFY / OWNER-FRONTEND-V2 · backend ${session?.backend.commit?.slice(0, 7) ?? "unknown"}`
++            ? `LUFFY / OWNER-FRONTEND-V2.1 · backend ${session?.backend.commit?.slice(0, 7) ?? "unknown"}`
+             : "LUFFY / OWNER-FRONTEND-V1"}
+         </span>
+         <span>
+--- a/frontend/src/adapters/contracts.ts
++++ b/frontend/src/adapters/contracts.ts
+@@ -2,7 +2,7 @@
+  * (/owner-api/v1, GraphQL owner mutations); the DEMO adapter is fixtures only. */
+ export type Mode = "LIVE" | "DEMO";
+ export type Scenario = "normal" | "stale" | "missing" | "error";
+-export type Freshness = "fresh" | "stale" | "unavailable";
++export type Freshness = "fresh" | "stale" | "unavailable" | "not_assessed";
+ export type Lens = "Knowledge" | "Evidence" | "Timeline" | "Code";
+ export interface Provenance {
+   id: string;
+@@ -15,6 +15,7 @@
+   timeBasis?: string;
+ }
+ export type ProtectionStatus =
++  | "PARTIAL"
+   | "VERIFIED"
+   | "STALE"
+   | "UNVERIFIED"
+@@ -74,6 +75,8 @@
+   live?: LiveOverview;
+ }
+ export interface GraphNode {
++  hasTelemetry?: boolean;
++  statusLabel?: string;
+   id: string;
+   label: string;
+   kind: string;
+@@ -156,6 +159,7 @@
+   source?: string;
+ }
+ export interface TableData {
++  paging?: { offset: number; limit: number; hasMore: boolean };
+   generatedAt: string;
+   source: string;
+   rows: Record<string, unknown>[];
+@@ -192,13 +196,11 @@
+     kind: "trades" | "strategies",
+     signal: AbortSignal,
+   ): Promise<TableData>;
+-  investigations?(
+-    signal: AbortSignal,
+-  ): Promise<{
++  investigations?(signal: AbortSignal): Promise<{
+     status: string;
+     health: Record<string, unknown>;
+     cases: Record<string, unknown>[];
+   }>;
+-  decisions?(signal: AbortSignal): Promise<TableData>;
++  decisions?(signal: AbortSignal, offset?: number): Promise<TableData>;
+   logs?(signal: AbortSignal): Promise<LogTail>;
+ }
+--- a/frontend/src/adapters/live.ts
++++ b/frontend/src/adapters/live.ts
+@@ -119,6 +119,7 @@
+   const status = p?.status;
+   const known = [
+     "VERIFIED",
++    "PARTIAL",
+     "STALE",
+     "UNVERIFIED",
+     "UNPROTECTED",
+@@ -158,6 +159,18 @@
+   const positions: Position[] | null = Array.isArray(o.positions)
+     ? o.positions.map((p: Json) => {
+         const detail = protection(p.protection);
++        if (
++          detail.status === "VERIFIED" &&
++          !(
++            sup?.freshness === "fresh" &&
++            sup.venue_positions === true &&
++            sup.reconciliation === true &&
++            sup.venue_protection === true
++          )
++        ) {
++          detail.status = sup?.freshness === "stale" ? "STALE" : "PARTIAL";
++          detail.reasons.push("complete_verification_evidence_missing");
++        }
+         return {
+           id: String(p.id),
+           symbol: String(p.symbol),
+@@ -233,7 +246,18 @@
+       account,
+       protection: obj(o.protection)
+         ? {
+-            status: o.protection.status,
++            status:
++              o.protection.status === "VERIFIED" &&
++              !(
++                sup?.freshness === "fresh" &&
++                sup.venue_positions === true &&
++                sup.reconciliation === true &&
++                sup.venue_protection === true
++              )
++                ? sup?.freshness === "stale"
++                  ? "STALE"
++                  : "PARTIAL"
++                : o.protection.status,
+             supervisor,
+             reasons: Array.isArray(sup?.reasons) ? sup!.reasons : [],
+           }
+@@ -280,7 +304,7 @@
+       id: String(n.provenance?.id ?? n.id),
+       source: String(n.provenance?.source ?? n.id),
+       observedAt: n.provenance?.observed_at ?? null,
+-      freshness: n.provenance?.observed_at ? "fresh" : "unavailable",
++      freshness: "not_assessed",
+       summary: n.provenance?.summary ?? "No claim recorded in this note.",
+       classification: String(n.provenance?.classification ?? "context_only"),
+       timeBasis: n.provenance?.time_basis,
+@@ -301,7 +325,8 @@
+       id: "owner-api:knowledge@" + k.generated_at,
+       source: String(k.source),
+       observedAt: k.generated_at ?? null,
+-      freshness: "fresh",
++      freshness: "not_assessed",
++      timeBasis: "read_time",
+       summary: `${k.returned_nodes} of ${k.total_nodes} notes returned; ${k.unresolved_edges} relations point at notes that do not exist.`,
+       classification: "context_only",
+     },
+@@ -330,6 +355,7 @@
+         id: String(n.id),
+         label: String(n.label),
+         kind: "Component",
++        hasTelemetry: typeof t.source === "string" && t.source.length > 0,
+         lenses: ["Knowledge"] as Lens[],
+         layout:
+           typeof n.x === "number" && typeof n.y === "number"
+@@ -359,7 +385,8 @@
+       id: "owner-api:system@" + s.generated_at,
+       source: String(s.architecture_source),
+       observedAt: s.generated_at ?? null,
+-      freshness: "fresh",
++      freshness: "not_assessed",
++      timeBasis: "read_time",
+       summary: String(s.architecture_source),
+       classification: "declared architecture + observed telemetry",
+     },
+@@ -470,21 +497,23 @@
+       );
+       return { status: d.status, health: d.health, cases: d.cases };
+     },
+-    async decisions(signal): Promise<TableData> {
++    async decisions(signal, offset = 0): Promise<TableData> {
+       const d = await api<Json>("/graphql", {
+         method: "POST",
+         signal,
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+           query:
+-            "{decisions(limit:100){id ts symbol action score threshold confidence executed skip_reason}}",
++            "query($offset:Int!){decisions(limit:101,offset:$offset){id ts symbol action score threshold confidence executed skip_reason}}",
++          variables: { offset },
+         }),
+       });
+       need(!d.errors && Array.isArray(d.data?.decisions), "decisions");
+       return {
+-        rows: d.data.decisions,
++        rows: d.data.decisions.slice(0, 100),
++        paging: { offset, limit: 100, hasMore: d.data.decisions.length > 100 },
+         source:
+-          "journal decisions via GraphQL · latest 100 · not trade lineage",
++          "journal decisions via GraphQL · offset window · not trade lineage",
+         generatedAt: new Date().toISOString(),
+       };
+     },
+--- a/frontend/src/components/HealthStatus.tsx
++++ b/frontend/src/components/HealthStatus.tsx
+@@ -1,15 +1,23 @@
+ import type { GraphNode } from "../adapters/contracts";
+ export function healthPresentation(node: GraphNode) {
++  if (node.hasTelemetry === false)
++    return { primary: "NO TELEMETRY", tone: "unknown", previous: null };
++  if (node.statusLabel === "CHECKING")
++    return { primary: "CHECKING", tone: "unknown", previous: null };
+   if (node.evidence.freshness === "stale")
+     return {
+       primary: "STALE",
+       tone: "stale",
+-      previous: node.health?.toUpperCase() ?? "UNKNOWN",
++      previous: node.statusLabel ?? node.health?.toUpperCase() ?? "UNKNOWN",
+     };
+   if (node.evidence.freshness === "unavailable" || !node.evidence.observedAt)
+     return { primary: "UNAVAILABLE", tone: "unknown", previous: null };
+   const health = node.health ?? "unknown";
+-  return { primary: health.toUpperCase(), tone: health, previous: null };
++  return {
++    primary: node.statusLabel ?? health.toUpperCase(),
++    tone: health,
++    previous: null,
++  };
+ }
+ export default function HealthStatus({ node }: { node: GraphNode }) {
+   const s = healthPresentation(node);
+--- a/frontend/src/components/ui.tsx
++++ b/frontend/src/components/ui.tsx
+@@ -1,3 +1,4 @@
++import { timestamp, modifiedAge } from "../time";
+ import { Component, useEffect, useState, type ReactNode } from "react";
+ import * as Dialog from "@radix-ui/react-dialog";
+ import { X, Compass } from "lucide-react";
+@@ -41,31 +42,44 @@
+   );
+ }
+ export function Freshness({ value }: { value: Provenance }) {
+-  const live = useModeSafe() === "LIVE";
+-  return (
+-    <span className={`freshness ${value.freshness}`}>
+-      {value.freshness === "fresh"
+-        ? live
+-          ? value.timeBasis === "file_modified"
+-            ? "File modified"
+-            : "Fresh"
+-          : "Fixed fixture snapshot"
+-        : value.freshness.toUpperCase()}{" "}
+-      ·{" "}
+-      {value.observedAt
+-        ? new Date(value.observedAt)
+-            .toISOString()
+-            .replace("T", " ")
+-            .replace(".000Z", " UTC")
+-        : "Source time unavailable"}
++  const mode = useModeSafe();
++  const live = import.meta.env.MODE === "production" || mode === "LIVE";
++  if (value.classification === "architecture only")
++    return (
++      <span className="freshness not_assessed">
++        No telemetry source · no observation time
++      </span>
++    );
++  const modified = value.timeBasis === "file_modified";
++  const label = modified
++    ? "File modified"
++    : value.timeBasis === "read_time"
++      ? "Read"
++      : value.freshness === "not_assessed"
++        ? "Freshness not assessed"
++        : value.freshness === "fresh"
++          ? live
++            ? "Fresh"
++            : "Fixed fixture snapshot"
++          : value.freshness.toUpperCase();
++  return (
++    <span
++      className={`freshness ${modified ? "not_assessed" : value.freshness}`}
++    >
++      {label} · {timestamp(value.observedAt)}
++      {modified &&
++        ` · ${modifiedAge(value.observedAt)} · freshness not assessed`}
+     </span>
+   );
+ }
+ export function EvidenceDetails({ value }: { value: Provenance }) {
+-  const live = useModeSafe() === "LIVE";
++  const mode = useModeSafe();
++  const live = import.meta.env.MODE === "production" || mode === "LIVE";
+   return (
+     <div className="evidence-details">
+-      <Badge tone="amber">{live ? "Recorded source" : "Synthetic evidence"}</Badge>
++      <Badge tone="amber">
++        {live ? "Recorded source" : "Synthetic evidence"}
++      </Badge>
+       <h3>{value.source}</h3>
+       <p>{value.summary}</p>
+       <dl>
+@@ -121,7 +135,8 @@
+   loading: boolean;
+   retry: () => void;
+ }) {
+-  const live = useModeSafe() === "LIVE";
++  const mode = useModeSafe();
++  const live = import.meta.env.MODE === "production" || mode === "LIVE";
+   if (error)
+     return (
+       <div className="empty error" role="alert">
+--- a/frontend/src/components/workspace.tsx
++++ b/frontend/src/components/workspace.tsx
+@@ -1,3 +1,4 @@
++import { timestamp } from "../time";
+ import { useState, type ReactNode } from "react";
+ import * as Dialog from "@radix-ui/react-dialog";
+ import { X, Search } from "lucide-react";
+@@ -9,10 +10,9 @@
+     : typeof v === "object"
+       ? JSON.stringify(v)
+       : String(v);
+-export const timestamp = (v: unknown) =>
+-  typeof v === "string" && Number.isFinite(Date.parse(v))
+-    ? new Date(v).toISOString().replace("T", " ").replace(".000Z", " UTC")
+-    : "Source time unavailable";
++export { timestamp } from "../time";
++const fieldValue = (key: string, v: unknown) =>
++  /(_at$|^ts$)/.test(key) ? timestamp(v) : value(v);
+ export function Unavailable({
+   title,
+   children,
+@@ -92,8 +92,12 @@
+           <dl className="record-fields">
+             {Object.entries(row).map(([k, v]) => (
+               <div key={k}>
+-                <dt>{k.replaceAll("_", " ")}</dt>
+-                <dd>{value(v)}</dd>
++                <dt>
++                  {k === "realized_pnl" && row.status === "open"
++                    ? "Realized so far (USDT)"
++                    : k.replaceAll("_", " ")}
++                </dt>
++                <dd>{fieldValue(k, v)}</dd>
+               </div>
+             ))}
+           </dl>
+@@ -181,8 +185,20 @@
+               {filtered.map((r, i) => (
+                 <tr key={value(r.id) + i}>
+                   {columns.map(([k, h]) => (
+-                    <td key={k} data-label={h}>
+-                      {value(r[k])}
++                    <td
++                      key={k}
++                      data-label={
++                        k === "realized_pnl" && r.status === "open"
++                          ? "Realized so far"
++                          : h
++                      }
++                    >
++                      {k === "realized_pnl" && r.status === "open" && (
++                        <small className="realized-label">
++                          Realized so far ·{" "}
++                        </small>
++                      )}
++                      {fieldValue(k, r[k])}
+                     </td>
+                   ))}
+                   <td>
+@@ -202,3 +218,52 @@
+     </>
+   );
+ }
++
++/** Passive shell when the active endpoint has no paging contract. */
++export function PagingBar({
++  count,
++  limit,
++  offset = 0,
++  hasMore,
++  onPage,
++  busy = false,
++}: {
++  count: number;
++  limit: number;
++  offset?: number;
++  hasMore?: boolean;
++  onPage?: (offset: number) => void;
++  busy?: boolean;
++}) {
++  return (
++    <div className="paging-bar" aria-label="Result paging">
++      <span>
++        {offset === 0
++          ? `Showing latest ${count}`
++          : count
++            ? `Showing records ${offset + 1}–${offset + count}`
++            : `No records at offset ${offset}`}{" "}
++        · up to {limit} per request.{" "}
++        {onPage
++          ? "Offset pages are live journal reads, not a frozen history snapshot."
++          : "Paging unavailable from this endpoint; this is not complete history."}
++      </span>
++      <div>
++        <button
++          type="button"
++          disabled={!onPage || offset === 0 || busy}
++          onClick={() => onPage?.(Math.max(0, offset - limit))}
++        >
++          Previous page
++        </button>
++        <button
++          type="button"
++          disabled={!onPage || !hasMore || busy}
++          onClick={() => onPage?.(offset + limit)}
++        >
++          Next page
++        </button>
++      </div>
++    </div>
++  );
++}
+--- a/frontend/src/context.tsx
++++ b/frontend/src/context.tsx
+@@ -69,5 +69,8 @@
+ }
+ /** For shared components that may render outside a provider (unit tests). */
+ export function useModeSafe() {
+-  return useContext(Context)?.adapter.mode ?? "DEMO";
++  return (
++    useContext(Context)?.adapter.mode ??
++    (import.meta.env.MODE === "production" ? "LIVE" : "DEMO")
++  );
+ }
+--- a/frontend/src/live.css
++++ b/frontend/src/live.css
+@@ -394,3 +394,140 @@
+ .path-trace small {
+   color: var(--muted);
+ }
++/* V2.1 focused readability and navigation corrections. */
++.page-heading::after {
++  content: none;
++}
++.mobile-nav-hint {
++  display: none;
++}
++.workspace-stack td,
++.workspace-panel td {
++  padding-block: 10px;
++}
++.realized-label {
++  display: block;
++  color: var(--muted);
++  font-size: 11px;
++}
++.conversation {
++  height: max(720px, calc(100dvh - 360px));
++  min-height: 720px;
++  align-self: start;
++}
++.transcript {
++  min-height: 280px;
++  flex: 1;
++}
++@media (max-width: 759px) {
++  nav[aria-label="Main navigation"] {
++    display: grid;
++    grid-template-columns: repeat(3, minmax(0, 1fr));
++    overflow: visible;
++    white-space: normal;
++    padding: 8px 12px;
++    gap: 4px;
++  }
++  nav[aria-label="Main navigation"] a {
++    padding: 9px 4px;
++    text-align: center;
++    min-height: 44px;
++    display: flex;
++    flex-direction: column;
++    justify-content: center;
++    gap: 3px;
++    font-size: 12px;
++  }
++  .mobile-nav-hint {
++    display: block;
++    color: var(--muted);
++    font-size: 11px;
++  }
++  .conversation {
++    height: 650px;
++    min-height: 0;
++  }
++  .mobile-core,
++  .mobile-core .mechanical-avatar {
++    width: 88px;
++    height: 88px;
++  }
++  .conversation-header {
++    min-height: 110px;
++  }
++}
++.paging-bar {
++  display: flex;
++  flex-wrap: wrap;
++  align-items: center;
++  justify-content: space-between;
++  gap: 12px;
++  margin: 14px 0;
++  color: var(--muted);
++  font-size: 12px;
++}
++.paging-bar > div {
++  display: flex;
++  gap: 8px;
++}
++.research-workspace {
++  display: grid;
++  grid-template-columns: 260px minmax(0, 1fr);
++  gap: 20px;
++}
++.research-directory {
++  display: grid;
++  gap: 6px;
++}
++.research-directory button {
++  justify-content: space-between;
++  text-align: left;
++  padding: 12px;
++}
++.research-directory button span {
++  font-size: 11px;
++  color: var(--muted);
++}
++.research-directory button[aria-pressed="true"] {
++  border-color: var(--mint);
++  background: #18332f;
++}
++.strategy-detail {
++  padding: 18px 0;
++}
++.strategy-detail dl {
++  display: grid;
++  grid-template-columns: 1fr 2fr;
++  gap: 10px;
++  overflow-wrap: anywhere;
++}
++@media (max-width: 759px) {
++  .research-workspace {
++    grid-template-columns: minmax(0, 1fr);
++  }
++  .research-directory {
++    grid-template-columns: repeat(2, minmax(0, 1fr));
++  }
++  .research-directory button {
++    display: grid;
++    gap: 4px;
++  }
++}
++
++@media (max-width: 759px) {
++  .knowledge-footnote {
++    display: block;
++  }
++  .knowledge-footnote p {
++    margin: 12px 0;
++  }
++  .knowledge-footnote ul {
++    padding-left: 20px;
++  }
++}
++/* Inline navigation remains distinguishable without color. */
++.space-top a,
++.paging-bar a {
++  text-decoration: underline;
++  text-underline-offset: 3px;
++}
+--- a/frontend/src/liveRoot.tsx
++++ b/frontend/src/liveRoot.tsx
+@@ -1,7 +1,13 @@
+ /** LIVE root: bootstrap the signed-in session, then render the shell bound to
+  * the live adapter. Every failure is shown as a failure: this module has no
+  * route to fixtures, and a session that ends clears everything it loaded. */
+-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
++import React, {
++  useCallback,
++  useEffect,
++  useMemo,
++  useRef,
++  useState,
++} from "react";
+ import ReactDOM from "react-dom/client";
+ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+ import { PreviewProvider } from "./context";
+@@ -37,7 +43,13 @@
+   },
+ });
+ 
+-function Gate({ title, children }: { title: string; children: React.ReactNode }) {
++function Gate({
++  title,
++  children,
++}: {
++  title: string;
++  children: React.ReactNode;
++}) {
+   return (
+     <main id="content" className="gate" tabIndex={-1}>
+       <section className="panel empty" role="alert">
+@@ -61,7 +73,8 @@
+     [client],
+   );
+   const adapter = useMemo(
+-    () => createLiveAdapter(() => expire("Your session ended or was signed out.")),
++    () =>
++      createLiveAdapter(() => expire("Your session ended or was signed out.")),
+     [expire],
+   );
+   const load = useCallback(async () => {
+@@ -88,7 +101,10 @@
+   // Reconnect: back off while unreachable; retry immediately when online.
+   useEffect(() => {
+     if (state.kind !== "unreachable") return;
+-    const timer = setTimeout(() => setGeneration((g) => g + 1), state.retryIn * 1000);
++    const timer = setTimeout(
++      () => setGeneration((g) => g + 1),
++      state.retryIn * 1000,
++    );
+     const online = () => setGeneration((g) => g + 1);
+     window.addEventListener("online", online);
+     return () => {
+@@ -111,7 +127,8 @@
+   useEffect(() => {
+     const check = () =>
+       void fetchBootstrap(() => undefined).catch((e) => {
+-        if (e instanceof SessionExpired) expire("Your session ended or was signed out.");
++        if (e instanceof SessionExpired)
++          expire("Your session ended or was signed out.");
+       });
+     window.addEventListener(CHUNK_ERROR, check);
+     return () => window.removeEventListener(CHUNK_ERROR, check);
+@@ -132,7 +149,13 @@
+         <p data-testid="signed-out">
+           {state.reason} Nothing from the previous session is kept on this page.
+         </p>
+-        <button className="primary" onClick={() => location.replace(location.pathname)}>
++        <button
++          className="primary"
++          onClick={() => {
++            history.replaceState(null, "", location.pathname + location.hash);
++            location.reload();
++          }}
++        >
+           Sign in
+         </button>
+       </Gate>
+--- a/frontend/src/styles.css
++++ b/frontend/src/styles.css
+@@ -136,7 +136,7 @@
+ .brand small {
+   display: block;
+   color: var(--muted);
+-  font-size: 9px;
++  font-size: 11px;
+   letter-spacing: 2.4px;
+   font-weight: 500;
+   margin-top: -3px;
+@@ -170,7 +170,7 @@
+   background: #192d35;
+   color: #b5d2d5;
+   padding: 3px 8px;
+-  font-size: 10px;
++  font-size: 11px;
+   letter-spacing: 0.3px;
+   border-radius: 4px;
+   max-width: 100%;
+@@ -226,7 +226,7 @@
+   margin-top: 6px;
+ }
+ .eyebrow {
+-  font-size: 10px;
++  font-size: 11px;
+   letter-spacing: 1.6px;
+   color: var(--gold);
+   display: flex;
+@@ -235,7 +235,7 @@
+   margin-bottom: 8px;
+ }
+ .scenario {
+-  font-size: 10px;
++  font-size: 11px;
+   letter-spacing: 0.5px;
+   color: var(--muted);
+   display: grid;
+@@ -316,7 +316,7 @@
+   flex-wrap: wrap;
+   gap: 12px;
+   justify-content: space-between;
+-  font-size: 10px;
++  font-size: 11px;
+   color: var(--muted);
+ }
+ .freshness {
+@@ -420,7 +420,7 @@
+   white-space: nowrap;
+ }
+ th {
+-  font-size: 10px;
++  font-size: 11px;
+   font-weight: 500;
+   color: var(--muted);
+   padding: 13px 20px;
+@@ -495,13 +495,13 @@
+   overflow-wrap: anywhere;
+ }
+ .message-role {
+-  font-size: 10px;
++  font-size: 11px;
+   letter-spacing: 1.2px;
+   color: var(--mint);
+   margin-bottom: 10px;
+ }
+ .message-role span {
+-  font-size: 9px;
++  font-size: 11px;
+   color: var(--muted);
+   margin-left: 8px;
+ }
+@@ -557,7 +557,7 @@
+   display: flex;
+   gap: 6px;
+   align-items: center;
+-  font-size: 10px;
++  font-size: 11px;
+ }
+ .mechanical-avatar {
+   max-width: 240px;
+@@ -570,7 +570,7 @@
+ .core-caption {
+   display: block;
+   text-align: center;
+-  font-size: 9px;
++  font-size: 11px;
+   letter-spacing: 2px;
+   color: var(--gold);
+   margin-top: 12px;
+@@ -644,7 +644,7 @@
+   margin-top: 20px;
+ }
+ .evidence-details dt {
+-  font-size: 10px;
++  font-size: 11px;
+   text-transform: uppercase;
+   letter-spacing: 1px;
+   color: var(--muted);
+@@ -723,7 +723,7 @@
+   align-items: center;
+   gap: 8px;
+   flex-wrap: wrap;
+-  font-size: 10px;
++  font-size: 11px;
+   color: var(--muted);
+   padding: 14px 18px;
+   border-bottom: 1px solid var(--border);
+@@ -747,7 +747,7 @@
+   justify-content: space-between;
+   padding: 12px 18px;
+   border-top: 1px solid var(--border);
+-  font-size: 10px;
++  font-size: 11px;
+   color: var(--muted);
+ }
+ .inspector {
+@@ -797,7 +797,7 @@
+   border-bottom: 1px solid var(--border);
+ }
+ .connections span {
+-  font-size: 10px;
++  font-size: 11px;
+   color: var(--muted);
+ }
+ .connections button {
+@@ -835,10 +835,10 @@
+ }
+ .graph-node-content > span:last-child {
+   color: #a9c0cd;
+-  font-size: 10px;
++  font-size: 11px;
+ }
+ .node-kind {
+-  font-size: 9px;
++  font-size: 11px;
+   text-transform: uppercase;
+   letter-spacing: 1.3px;
+   color: var(--gold);
+@@ -965,7 +965,7 @@
+   display: flex;
+   justify-content: space-between;
+   color: #9aafbf;
+-  font-size: 10px;
++  font-size: 11px;
+   letter-spacing: 0.5px;
+ }
+ .loading {
+@@ -1086,7 +1086,7 @@
+     font-size: 13px;
+   }
+   .snapshot-line {
+-    font-size: 9px;
++    font-size: 11px;
+   }
+   .graph-tools {
+     width: 100%;
+@@ -1124,7 +1124,7 @@
+     padding: 16px;
+   }
+   .composer-actions .quiet {
+-    font-size: 9px;
++    font-size: 11px;
+   }
+   .message {
+     max-width: 100%;
+@@ -1158,7 +1158,7 @@
+     font-size: 21px;
+   }
+   .stats p {
+-    font-size: 10px;
++    font-size: 11px;
+   }
+   .graph-tools button {
+     padding: 9px;
+@@ -1173,7 +1173,7 @@
+     max-width: 135px;
+   }
+   .badge {
+-    font-size: 9px;
++    font-size: 11px;
+   }
+ }
+ @media (prefers-reduced-motion: reduce) {
+@@ -1301,7 +1301,7 @@
+   padding: 4px 12px;
+ }
+ .graph-controls span {
+-  font-size: 10px;
++  font-size: 11px;
+   color: var(--muted);
+ }
+ .graph-canvas .react-flow__node:focus-visible {
+@@ -1370,7 +1370,7 @@
+   display: flex;
+   flex-direction: column;
+   gap: 3px;
+-  font-size: 10px;
++  font-size: 11px;
+   color: #c3d3df;
+ }
+ .health-status strong {
+@@ -1383,7 +1383,7 @@
+   color: #b8bdc4;
+ }
+ .health-status > span {
+-  font-size: 10px;
++  font-size: 11px;
+   font-weight: 400;
+   text-transform: none;
+   letter-spacing: 0;
+--- /dev/null
++++ b/frontend/src/time.ts
+@@ -0,0 +1,17 @@
++/** One owner-facing convention: UTC, second precision. Never format invalid input as now. */
++export const timestamp = (v: unknown): string =>
++  typeof v === "string" && Number.isFinite(Date.parse(v))
++    ? new Date(v).toISOString().slice(0, 19).replace("T", " ") + " UTC"
++    : "Source time unavailable";
++export function modifiedAge(v: string | null) {
++  if (!v || !Number.isFinite(Date.parse(v))) return "age unavailable";
++  const seconds = Math.floor((Date.now() - Date.parse(v)) / 1000);
++  if (seconds < 0) return "source clock ahead";
++  return seconds < 60
++    ? `${seconds}s ago`
++    : seconds < 3600
++      ? `${Math.floor(seconds / 60)}m ago`
++      : seconds < 86400
++        ? `${Math.floor(seconds / 3600)}h ago`
++        : `${Math.floor(seconds / 86400)}d ago`;
++}
+--- /dev/null
++++ b/frontend/src/useOwnerTelemetry.ts
+@@ -0,0 +1,64 @@
++import { useMemo } from "react";
++import { useQuery } from "@tanstack/react-query";
++import { usePreview } from "./context";
++import type { GraphData } from "./adapters/contracts";
++/** One shared health query. The architecture node never implies IPC health. */
++export function useOwnerTelemetry(
++  data: GraphData,
++  enabled: boolean,
++): GraphData {
++  const { adapter } = usePreview();
++  const health = useQuery({
++    queryKey: ["owner-interface"],
++    queryFn: ({ signal }) => adapter.ownerInterface!(signal),
++    enabled: enabled && !!adapter.ownerInterface,
++    staleTime: 0,
++    refetchInterval: 30000,
++    refetchIntervalInBackground: false,
++  });
++  return useMemo(() => {
++    if (!enabled || adapter.mode !== "LIVE") return data;
++    const h = health.error ? undefined : health.data;
++    const age = h?.observedAt ? Date.now() - Date.parse(h.observedAt) : NaN;
++    const stale = Number.isFinite(age) && (age < 0 || age > 60000);
++    return {
++      ...data,
++      nodes: data.nodes.map((n) =>
++        n.id !== "owner-interface"
++          ? n
++          : {
++              ...n,
++              hasTelemetry: true,
++              statusLabel:
++                h?.availability ??
++                (health.isPending ? "CHECKING" : "UNAVAILABLE"),
++              health: h?.availability === "AVAILABLE" ? "active" : "unknown",
++              evidence: {
++                id: "owner-interface:health",
++                source: "kernel Owner Interface health read (IPC)",
++                observedAt: h?.observedAt ?? null,
++                freshness: stale
++                  ? "stale"
++                  : Number.isFinite(age)
++                    ? "fresh"
++                    : "unavailable",
++                classification: "observed health response",
++                summary: health.error
++                  ? `Health read failed: ${health.error.message}`
++                  : h
++                    ? `${h.availability}; control ${h.controlState ?? "unknown"}; recovery ${h.recoveryInProgress === null ? "unknown" : h.recoveryInProgress ? "in progress" : "not in progress"}. ${h.reasons.join(", ")}. Polled every 30s; displayed stale after 60s.`
++                    : "Health read pending; topology alone provides no availability evidence.",
++              },
++            },
++      ),
++    };
++  }, [
++    data,
++    enabled,
++    adapter.mode,
++    health.data,
++    health.error,
++    health.isPending,
++    health.dataUpdatedAt,
++  ]);
++}
+--- a/frontend/src/views/Activity.tsx
++++ b/frontend/src/views/Activity.tsx
+@@ -1,3 +1,6 @@
++import { useOwnerTelemetry } from "../useOwnerTelemetry";
++import HealthStatus from "../components/HealthStatus";
++import { useState } from "react";
+ import { useQuery } from "@tanstack/react-query";
+ import { usePreview } from "../context";
+ import {
+@@ -9,6 +12,7 @@
+ } from "../components/ui";
+ import {
+   RecordTable,
++  PagingBar,
+   SourceStrip,
+   Unavailable,
+   Timeline,
+@@ -17,9 +21,10 @@
+ } from "../components/workspace";
+ export function Decisions({ compact = false }: { compact?: boolean }) {
+   const { adapter } = usePreview();
++  const [offset, setOffset] = useState(0);
+   const q = useQuery({
+-    queryKey: ["decisions"],
+-    queryFn: ({ signal }) => adapter.decisions!(signal),
++    queryKey: ["decisions", offset],
++    queryFn: ({ signal }) => adapter.decisions!(signal, offset),
+     enabled: !!adapter.decisions,
+     refetchInterval: 30000,
+   });
+@@ -47,7 +52,24 @@
+             at={q.data.generatedAt}
+             note="Read time is not event freshness. Rejected decisions retain their recorded reason."
+           />
++          {compact ? (
++            <p className="paging-bar">
++              Showing latest {Math.min(q.data.rows.length, 5)} decisions from
++              the returned window.{" "}
++              <a href="#trades">Browse decision history ↗</a>
++            </p>
++          ) : (
++            <PagingBar
++              count={Math.min(q.data.rows.length, 100)}
++              limit={100}
++              offset={offset}
++              hasMore={q.data.paging?.hasMore}
++              onPage={q.data.paging ? setOffset : undefined}
++              busy={q.isFetching}
++            />
++          )}
+           <RecordTable
++            key={offset}
+             title="Decisions"
+             rows={q.data.rows.slice(0, compact ? 5 : 100)}
+             filterKey="executed"
+@@ -92,7 +114,23 @@
+     queryFn: ({ signal }) => adapter.graph("system", scenario, signal),
+     refetchInterval: 30000,
+   });
+-  const nodes = q.data?.nodes.filter(
++  const runtime = useOwnerTelemetry(
++    q.data ?? {
++      nodes: [],
++      edges: [],
++      events: [],
++      provenance: {
++        id: "missing",
++        source: "system",
++        observedAt: null,
++        freshness: "unavailable",
++        summary: "",
++        classification: "unavailable",
++      },
++    },
++    true,
++  );
++  const nodes = runtime.nodes.filter(
+     (n) =>
+       !compact ||
+       ["kernel", "risk", "supervisor", "research", "orchestrator"].includes(
+@@ -122,17 +160,7 @@
+               <article key={n.id}>
+                 <div className="panel-heading">
+                   <h3>{n.label}</h3>
+-                  <Badge
+-                    tone={
+-                      n.evidence.freshness !== "fresh" || n.health === "unknown"
+-                        ? "amber"
+-                        : "neutral"
+-                    }
+-                  >
+-                    {n.evidence.freshness === "fresh"
+-                      ? (n.health ?? "unknown")
+-                      : n.evidence.freshness.toUpperCase()}
+-                  </Badge>
++                  <HealthStatus node={n} />
+                 </div>
+                 <p>{n.evidence.summary}</p>
+                 <Freshness value={n.evidence} />
+--- a/frontend/src/views/GraphView.tsx
++++ b/frontend/src/views/GraphView.tsx
+@@ -1,3 +1,5 @@
++import { timestamp } from "../time";
++import { useOwnerTelemetry } from "../useOwnerTelemetry";
+ import PathTrace from "../components/PathTrace";
+ import { useEffect, useMemo, useState } from "react";
+ import { useQuery } from "@tanstack/react-query";
+@@ -111,12 +113,12 @@
+ }) {
+   const system = surface === "system";
+   const { adapter, scenario } = usePreview();
+-  const live = adapter.mode === "LIVE";
++  const live = import.meta.env.MODE === "production" || adapter.mode === "LIVE";
+   const q = useQuery({
+     queryKey: ["graph", surface, scenario],
+     queryFn: ({ signal }) => adapter.graph(surface, scenario, signal),
+   });
+-  const d = q.data ?? empty;
++  const d = useOwnerTelemetry(q.data ?? empty, system);
+   const [lens, setLens] = useState<Lens>("Knowledge");
+   const [search, setSearch] = useState("");
+   const [selected, setSelected] = useState<string | null>(null);
+@@ -176,11 +178,13 @@
+                 <HealthStatus node={n} />
+               ) : (
+                 <span>
+-                  {n.evidence.freshness === "fresh"
+-                    ? live
+-                      ? n.kind
+-                      : "Fixture snapshot"
+-                    : n.evidence.freshness}
++                  {n.evidence.timeBasis === "file_modified"
++                    ? "Modified time · unassessed"
++                    : n.evidence.freshness === "fresh"
++                      ? live
++                        ? n.kind
++                        : "Fixture snapshot"
++                      : n.evidence.freshness}
+                 </span>
+               )}
+             </div>
+@@ -201,7 +205,7 @@
+           id: e.id,
+           source: e.source,
+           target: e.target,
+-          label: system ? undefined : e.relation,
++          label: system || e.kind === "link" ? undefined : e.relation,
+           type: system ? "routed" : "default",
+           data: { path: paths.get(e.id) },
+           animated:
+@@ -399,13 +403,16 @@
+                           <HealthStatus node={n} />
+                         ) : (
+                           <>
+-                            {n.kind} · {n.evidence.freshness}
++                            {n.kind} ·{" "}
++                            {n.evidence.timeBasis === "file_modified"
++                              ? "Modified time"
++                              : n.evidence.freshness}
+                           </>
+                         )}
+                         {lens === "Timeline" && (
+                           <time dateTime={n.evidence.observedAt ?? undefined}>
+                             {" "}
+-                            · {n.evidence.observedAt ?? "Time unavailable"}
++                            · {timestamp(n.evidence.observedAt)}
+                           </time>
+                         )}
+                       </span>
+--- a/frontend/src/views/Luffy.tsx
++++ b/frontend/src/views/Luffy.tsx
+@@ -12,7 +12,7 @@
+ const Avatar = lazyChunk(() => import("../components/Avatar"));
+ export default function Luffy() {
+   const { adapter, scenario, messages, setMessages } = usePreview();
+-  const live = adapter.mode === "LIVE";
++  const live = import.meta.env.MODE === "production" || adapter.mode === "LIVE";
+   const [input, setInput] = useState("");
+   const [state, setState] = useState<RequestState>("idle");
+   const [partial, setPartial] = useState("");
+@@ -267,11 +267,20 @@
+               <MicOff size={14} /> Voice unavailable · Enter to send
+             </span>
+             {busy ? (
+-              <button type="button" onClick={cancel}>
++              <button
++                key="cancel"
++                type="button"
++                onClick={(e) => {
++                  e.preventDefault();
++                  e.stopPropagation();
++                  cancel();
++                }}
++              >
+                 <Square size={15} /> Cancel request
+               </button>
+             ) : (
+               <button
++                key="send"
+                 className="primary"
+                 disabled={!input.trim() || messages.length >= 100}
+                 type="submit"
+--- a/frontend/src/views/Operations.tsx
++++ b/frontend/src/views/Operations.tsx
+@@ -1,3 +1,4 @@
++import { timestamp as utc } from "../time";
+ /** Owner controls. Every action is a typed request to the kernel's Owner
+  * Interface (GraphQL owner_control / panic). The browser sets no state, has no
+  * fallback path, and sends nothing while the Owner Interface is not available.
+@@ -58,10 +59,6 @@
+     danger: true,
+   },
+ ];
+-const utc = (iso: string | null | undefined) =>
+-  iso
+-    ? new Date(iso).toISOString().slice(0, 19).replace("T", " ") + " UTC"
+-    : "—";
+ 
+ type Outcome =
+   | {
+@@ -136,7 +133,9 @@
+     return (
+       <section className="panel empty">
+         <h2>Owner controls unavailable in this mode.</h2>
+-        <p>DEMO mode never grants control permission.</p>
++        <p>
++          This adapter does not expose the reviewed Owner Interface controls.
++        </p>
+       </section>
+     );
+   return (
+@@ -295,8 +294,8 @@
+             </details>
+           )}
+           <p className="quiet space-top">
+-            Not bound here yet: close one trade and market-type switch (legacy
+-            dashboard at /).
++            Close one trade awaits the separate Owner Interface binding package.
++            <a href="/legacy/"> Open legacy dashboard ↗</a>
+           </p>
+         </Panel>
+       </div>
+--- a/frontend/src/views/Overview.tsx
++++ b/frontend/src/views/Overview.tsx
+@@ -1,3 +1,4 @@
++import { timestamp as utc } from "../time";
+ import { lazyChunk } from "../lazyChunk";
+ import { Suspense } from "react";
+ import { useQuery } from "@tanstack/react-query";
+@@ -25,10 +26,7 @@
+   n === null || n === undefined
+     ? "UNAVAILABLE"
+     : `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n)} USDT`;
+-const utc = (iso: string | null | undefined) =>
+-  iso
+-    ? new Date(iso).toISOString().slice(0, 19).replace("T", " ") + " UTC"
+-    : "time unavailable";
++
+ const pointLabel = (t: string | number) =>
+   typeof t === "number" ? utc(new Date(t * 1000).toISOString()) : t;
+ /** Only a fresh VERIFIED reads as healthy; everything else is a warning. */
+@@ -56,7 +54,7 @@
+ }
+ export default function Overview() {
+   const { adapter, scenario } = usePreview();
+-  const live = adapter.mode === "LIVE";
++  const live = import.meta.env.MODE === "production" || adapter.mode === "LIVE";
+   const q = useQuery({
+     queryKey: ["overview", scenario],
+     queryFn: ({ signal }) => adapter.overview(scenario, signal),
+@@ -129,7 +127,10 @@
+               title={live ? "Realized today" : "Period P&L"}
+               aside={<ArrowUpRight size={17} />}
+             >
+-              <div className="stat-value mint">
++              <div
++                data-testid="realized-today"
++                className={`stat-value ${d.pnl === null ? "quiet" : d.pnl > 0 ? "mint" : d.pnl < 0 ? "rose" : "neutral"}`}
++              >
+                 {live ? usdt(d.pnl) : money(d.pnl)}
+               </div>
+               <p>
+@@ -142,6 +143,7 @@
+               </p>
+             </Panel>
+             <Panel title="Gross exposure" aside={<Radio size={17} />}>
++              <Freshness value={d.provenance} />
+               <div className="stat-value">
+                 {d.exposure === null ? "UNAVAILABLE" : `${d.exposure}%`}
+               </div>
+@@ -316,7 +318,8 @@
+                 Risk state: <strong>Unavailable</strong>
+               </span>
+               <span>
+-                Approval objects: <strong>Unavailable</strong>
++                News guard: unavailable · Approval objects:{" "}
++                <strong>Unavailable</strong>
+               </span>
+               <a href="#operations">Owner controls ↗</a>
+             </div>
+--- a/frontend/src/views/Routes.tsx
++++ b/frontend/src/views/Routes.tsx
+@@ -1,8 +1,12 @@
++import { useState } from "react";
+ import { useQuery } from "@tanstack/react-query";
+ import { usePreview } from "../context";
+ import { Badge, Panel, QueryState } from "../components/ui";
+ import {
+   RecordTable,
++  PagingBar,
++  value,
++  timestamp,
+   SourceStrip,
+   Timeline,
+   Unavailable,
+@@ -40,6 +44,7 @@
+                   : "Up to 200 strategies; registry state does not establish admission."
+               }
+             />
++            {trades && <PagingBar count={q.data.rows.length} limit={50} />}
+             <RecordTable
+               key={kind}
+               title={trades ? "Trades" : "Strategies"}
+@@ -65,6 +70,23 @@
+               }
+               detail={(r) => (
+                 <>
++                  {!trades && (
++                    <div className="strategy-detail">
++                      <h3>{value(r.name)}</h3>
++                      <Badge>{value(r.state)}</Badge>
++                      <dl>
++                        <dt>Registry ID</dt>
++                        <dd>{value(r.id)}</dd>
++                        <dt>Kind / origin</dt>
++                        <dd>
++                          {value(r.kind)} / {value(r.origin)}
++                        </dd>
++                        <dt>Retirement reason</dt>
++                        <dd>{value(r.retire_reason)}</dd>
++                      </dl>
++                      <h3>Recorded lifecycle</h3>
++                    </div>
++                  )}
+                   <Timeline
+                     events={
+                       trades
+@@ -147,6 +169,7 @@
+   ],
+ ];
+ function Research() {
++  const [section, setSection] = useState(0);
+   return (
+     <div className="workspace-stack">
+       <Panel
+@@ -171,12 +194,40 @@
+         </div>
+         <a href="#knowledge">Explore available knowledge sources ↗</a>
+       </Panel>
+-      <div className="workspace-grid">
+-        {researchSections.map(([title, note]) => (
+-          <Unavailable key={title} title={title}>
+-            {note} Live records unavailable.
+-          </Unavailable>
+-        ))}
++      <div className="research-workspace">
++        <div
++          className="research-directory"
++          role="group"
++          aria-label="Research sections"
++        >
++          {researchSections.map(([title], i) => (
++            <button
++              key={title}
++              aria-pressed={section === i}
++              onClick={() => setSection(i)}
++            >
++              {title}
++              <span>Unavailable</span>
++            </button>
++          ))}
++        </div>
++        <Panel
++          title={researchSections[section][0]}
++          aside={<Badge tone="amber">Live records unavailable</Badge>}
++        >
++          <p>{researchSections[section][1]}</p>
++          <div className="empty">
++            <h3>No connected record source</h3>
++            <p>
++              This list and detail workspace awaits a reviewed live endpoint. No
++              research records, progress or costs are inferred.
++            </p>
++          </div>
++          <p className="quiet">
++            Selection will preserve identity, provenance, source time and
++            assessment state when this capability is available.
++          </p>
++        </Panel>
+       </div>
+       <Panel title="Interpretation boundaries">
+         <p>
+@@ -188,7 +239,7 @@
+           deployment gates. No results, run progress, cost totals or approval
+           actions are fabricated.
+         </p>
+-        <a href="/">Open existing legacy research pipeline ↗</a>
++        <a href="/legacy/">Open existing legacy research pipeline ↗</a>
+       </Panel>
+     </div>
+   );
+@@ -225,7 +276,7 @@
+             </div>
+             <div>
+               <dt>Session expiry</dt>
+-              <dd>{session?.session.expires_at ?? "Unavailable"}</dd>
++              <dd>{timestamp(session?.session.expires_at)}</dd>
+             </div>
+           </dl>
+           <p className="quiet">
+@@ -241,7 +292,11 @@
+           />
+           {oi.data && !oi.error && (
+             <>
+-              <Badge tone="amber">{oi.data.availability}</Badge>
++              <Badge
++                tone={oi.data.availability === "AVAILABLE" ? "mint" : "amber"}
++              >
++                {oi.data.availability}
++              </Badge>
+               <SourceStrip
+                 source="Owner Interface health response"
+                 at={oi.data.observedAt}
+@@ -276,7 +331,7 @@
+           <>
+             <SourceStrip
+               source={q.data.source}
+-              note={`File modification: ${q.data.observedAt ?? "unavailable"}`}
++              note={`File modification: ${timestamp(q.data.observedAt)}`}
+             />
+             {q.data.lines === null ? (
+               <p>Log unavailable ({q.data.error}).</p>
+--- a/frontend/tests/browser/corrections.spec.ts
++++ b/frontend/tests/browser/corrections.spec.ts
+@@ -443,7 +443,7 @@
+   const core = page.getByRole("img", { name: /mechanical core/ });
+   await expect(core).toBeVisible();
+   const box = (await core.boundingBox())!;
+-  expect(box.width).toBe(72);
++  expect(box.width).toBe(88);
+   expect(box.y + box.height).toBeLessThan(844);
+   await page.goto("/#knowledge");
+   await expect(page.locator(".graph-list button")).toHaveCount(11);
+--- a/frontend/tests/browser/live-perf.spec.ts
++++ b/frontend/tests/browser/live-perf.spec.ts
+@@ -6,9 +6,12 @@
+ import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+ import { LIVE, state, calls, login } from "./liveHelpers";
+ 
++const evidence = process.env.OWNER_EVIDENCE_DIR ?? "evidence/live-binding";
+ const report: Record<string, unknown> = {};
+ const rss = (pid: number) => {
+-  const m = readFileSync(`/proc/${pid}/status`, "utf8").match(/VmRSS:\s+(\d+) kB/);
++  const m = readFileSync(`/proc/${pid}/status`, "utf8").match(
++    /VmRSS:\s+(\d+) kB/,
++  );
+   return m ? Math.round((Number(m[1]) / 1024) * 10) / 10 : null;
+ };
+ async function metrics(cdp: CDPSession) {
+@@ -21,7 +24,11 @@
+     listeners: get("JSEventListeners"),
+   };
+ }
+-async function timeTo(page: Page, action: () => Promise<unknown>, until: () => Promise<unknown>) {
++async function timeTo(
++  page: Page,
++  action: () => Promise<unknown>,
++  until: () => Promise<unknown>,
++) {
+   const t0 = Date.now();
+   await action();
+   await until();
+@@ -31,8 +38,17 @@
+ test.describe.configure({ mode: "serial" });
+ test.setTimeout(180000);
+ 
+-test("cold load, cached routes and lazy surfaces", async ({ browser, request }) => {
+-  await state(request, { scenario: "normal", gateway: "up", chat: "ok", fail: [], ttl: 43200 });
++test("cold load, cached routes and lazy surfaces", async ({
++  browser,
++  request,
++}) => {
++  await state(request, {
++    scenario: "normal",
++    gateway: "up",
++    chat: "ok",
++    fail: [],
++    ttl: 43200,
++  });
+   const cold: Record<string, number>[] = [];
+   for (let i = 0; i < 3; i++) {
+     const ctx = await browser.newContext();
+@@ -43,13 +59,19 @@
+     await cdp.send("Network.setCacheDisabled", { cacheDisabled: true });
+     const t0 = Date.now();
+     await page.goto(LIVE + "/owner-preview/#overview");
+-    await expect(page.getByRole("navigation", { name: "Main navigation" })).toBeVisible();
++    await expect(
++      page.getByRole("navigation", { name: "Main navigation" }),
++    ).toBeVisible();
+     const nav = Date.now() - t0;
+     await expect(page.getByText("5,164.50 USDT").first()).toBeVisible();
+     const useful = Date.now() - t0;
+     await expect(page.locator(".chart canvas").first()).toBeVisible();
+     const chart = Date.now() - t0;
+-    cold.push({ usableNavigationMs: nav, usefulOverviewMs: useful, chartMs: chart });
++    cold.push({
++      usableNavigationMs: nav,
++      usefulOverviewMs: useful,
++      chartMs: chart,
++    });
+     await ctx.close();
+   }
+   report.cold = cold;
+@@ -72,7 +94,10 @@
+   first.operations = await timeTo(
+     page,
+     () => page.evaluate(() => (location.hash = "#operations")),
+-    () => expect(page.getByTestId("owner-interface-status")).toContainText("control state"),
++    () =>
++      expect(page.getByTestId("owner-interface-status")).toContainText(
++        "control state",
++      ),
+   );
+   first.luffy = await timeTo(
+     page,
+@@ -83,18 +108,34 @@
+   const cached: number[] = [];
+   for (let i = 0; i < 5; i++)
+     for (const [route, ready] of [
+-      ["overview", () => expect(page.getByText("5,164.50 USDT").first()).toBeVisible()],
+-      ["knowledge", () => expect(page.locator(".react-flow__node").first()).toBeVisible()],
++      [
++        "overview",
++        () => expect(page.getByText("5,164.50 USDT").first()).toBeVisible(),
++      ],
++      [
++        "knowledge",
++        () => expect(page.locator(".react-flow__node").first()).toBeVisible(),
++      ],
+       ["luffy", () => expect(page.getByLabel("Message LUFFY")).toBeVisible()],
+     ] as const)
+       cached.push(
+-        await timeTo(page, () => page.evaluate((r) => (location.hash = "#" + r), route), ready),
++        await timeTo(
++          page,
++          () => page.evaluate((r) => (location.hash = "#" + r), route),
++          ready,
++        ),
+       );
+-  report.cachedRouteMs = { min: Math.min(...cached), max: Math.max(...cached), samples: cached };
++  report.cachedRouteMs = {
++    min: Math.min(...cached),
++    max: Math.max(...cached),
++    samples: cached,
++  };
+   await ctx.close();
+ });
+ 
+-test("chat and navigation stay responsive while a heavy graph loads", async ({ page }) => {
++test("chat and navigation stay responsive while a heavy graph loads", async ({
++  page,
++}) => {
+   await login(page);
+   await page.route("**/owner-api/v1/knowledge", async (r) => {
+     await new Promise((res) => setTimeout(res, 2500));
+@@ -116,12 +157,20 @@
+   const replyMs = await timeTo(
+     page,
+     () => page.getByRole("button", { name: "Send" }).click(),
+-    () => expect(page.getByText("Fixture backend reply to: hello")).toBeVisible(),
+-  );
+-  report.whileGraphLoading = { navigateAwayMs: navMs, typeFiveCharsMs: typeMs, chatReplyMs: replyMs };
++    () =>
++      expect(page.getByText("Fixture backend reply to: hello")).toBeVisible(),
++  );
++  report.whileGraphLoading = {
++    navigateAwayMs: navMs,
++    typeFiveCharsMs: typeMs,
++    chatReplyMs: replyMs,
++  };
+ });
+ 
+-test("route churn, graph pages, websocket use and server RSS", async ({ page, request }) => {
++test("route churn, graph pages, websocket use and server RSS", async ({
++  page,
++  request,
++}) => {
+   const sockets: string[] = [];
+   page.on("websocket", (w) => sockets.push(w.url()));
+   const pid = (await calls(request)).pid as number;
+@@ -132,8 +181,15 @@
+   await expect(page.getByText("5,164.50 USDT").first()).toBeVisible();
+   const before = await metrics(cdp);
+   const routes = [
+-    "overview", "trades", "research", "strategies", "luffy",
+-    "operations", "live-system", "knowledge", "diagnostics",
++    "overview",
++    "trades",
++    "research",
++    "strategies",
++    "luffy",
++    "operations",
++    "live-system",
++    "knowledge",
++    "diagnostics",
+   ];
+   let changes = 0;
+   for (let round = 0; round < 12; round++)
+@@ -160,14 +216,23 @@
+       });
+   const serverAfter = rss(pid);
+   report.memory = {
+-    browser: { overviewBefore: before, overviewAfterChurn: after, knowledge, liveSystem: system, routeChanges: changes },
+-    serverRssMiB: { afterBoot: serverBefore, after400ApiReadsAndChurn: serverAfter },
++    browser: {
++      overviewBefore: before,
++      overviewAfterChurn: after,
++      knowledge,
++      liveSystem: system,
++      routeChanges: changes,
++    },
++    serverRssMiB: {
++      afterBoot: serverBefore,
++      after400ApiReadsAndChurn: serverAfter,
++    },
+     websockets: sockets,
+   };
+   expect(sockets).toEqual([]); // the owner frontend opens no websocket
+-  mkdirSync("evidence/live-binding", { recursive: true });
++  mkdirSync(evidence, { recursive: true });
+   writeFileSync(
+-    "evidence/live-binding/performance-live.json",
++    `${evidence}/performance-live.json`,
+     JSON.stringify(
+       {
+         environment: {
+--- a/frontend/tests/browser/live.spec.ts
++++ b/frontend/tests/browser/live.spec.ts
+@@ -128,7 +128,7 @@
+       const path = new URL(r.url()).pathname;
+       if (
+         path === "/graphql" &&
+-        r.postDataJSON()?.query?.startsWith("{decisions(")
++        r.postDataJSON()?.query?.includes("decisions(")
+       )
+         return;
+       posts.push(path);
+@@ -215,7 +215,7 @@
+       const path = new URL(r.url()).pathname;
+       if (
+         path === "/graphql" &&
+-        r.postDataJSON()?.query?.startsWith("{decisions(")
++        r.postDataJSON()?.query?.includes("decisions(")
+       )
+         return;
+       posts.push(path);
+@@ -367,7 +367,7 @@
+   const node = (name: string) =>
+     page.locator(".react-flow__node", { hasText: name });
+   await expect(node("Kernel cycle")).toContainText("ACTIVE");
+-  await expect(node("Risk")).toContainText("UNAVAILABLE");
++  await expect(node("Risk")).toContainText("NO TELEMETRY");
+   await expect(node("Orchestrator")).toContainText("UNKNOWN");
+   await expect(page.locator(".react-flow__edge.animated")).toHaveCount(0);
+   await expect(
+@@ -386,7 +386,7 @@
+   await expect(node("Kernel cycle")).toContainText("STALE");
+   await expect(node("Kernel cycle")).toContainText("Last reported: ACTIVE");
+   await expect(node("Supervisor")).toContainText("STALE");
+-  await expect(page.locator(".system-node.status-active")).toHaveCount(1); // dashboard only
++  await expect(page.locator(".system-node.status-active")).toHaveCount(2); // dashboard and the independently polled Owner Interface
+ });
+ 
+ test("other routes: real contracts or explicit unavailability", async ({
+--- a/frontend/tests/browser/preview.spec.ts
++++ b/frontend/tests/browser/preview.spec.ts
+@@ -30,6 +30,7 @@
+   await expect(page.locator("canvas").first()).toBeVisible();
+   await expect(page.getByRole("navigation").getByRole("link")).toHaveText(
+     routes,
++    { useInnerText: true },
+   );
+   expect(
+     await page.evaluate(() =>
+@@ -277,9 +278,12 @@
+       await expect(page.getByText("$102,480.50").first()).toBeVisible();
+       await expect(page.locator("canvas").first()).toBeVisible();
+       await expect(page.getByText("Loading chart…")).toHaveCount(0);
+-      await page.evaluate(() => new Promise<void>((resolve) =>
+-        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+-      ));
++      await page.evaluate(
++        () =>
++          new Promise<void>((resolve) =>
++            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
++          ),
++      );
+     }
+     if (route === "luffy")
+       await expect(
+@@ -318,9 +322,12 @@
+       await expect(page.getByText("$102,480.50").first()).toBeVisible();
+       await expect(page.locator("canvas").first()).toBeVisible();
+       await expect(page.getByText("Loading chart…")).toHaveCount(0);
+-      await page.evaluate(() => new Promise<void>((resolve) =>
+-        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+-      ));
++      await page.evaluate(
++        () =>
++          new Promise<void>((resolve) =>
++            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
++          ),
++      );
+     }
+     if (route === "luffy")
+       await expect(
+--- a/frontend/tests/browser/v2.spec.ts
++++ b/frontend/tests/browser/v2.spec.ts
+@@ -2,6 +2,7 @@
+ import AxeBuilder from "@axe-core/playwright";
+ import { mkdirSync, writeFileSync } from "node:fs";
+ import { login, state } from "./liveHelpers";
++const evidence = process.env.OWNER_EVIDENCE_DIR ?? "evidence/v2";
+ const routes = [
+   "Overview",
+   "Trades",
+@@ -28,7 +29,7 @@
+   page,
+ }) => {
+   test.setTimeout(180000);
+-  mkdirSync("evidence/v2", { recursive: true });
++  mkdirSync(evidence, { recursive: true });
+   const report: Record<string, unknown> = {};
+   await login(page);
+   for (const mobile of [false, true]) {
+@@ -58,13 +59,13 @@
+       );
+       expect(a.violations, `${r} accessibility`).toEqual([]);
+       await page.screenshot({
+-        path: `evidence/v2/${mobile ? "mobile-" : ""}${slug(r)}.png`,
++        path: `${evidence}/${mobile ? "mobile-" : ""}${slug(r)}.png`,
+         fullPage: true,
+       });
+     }
+   }
+   writeFileSync(
+-    "evidence/v2/accessibility.json",
++    `${evidence}/accessibility.json`,
+     JSON.stringify(report, null, 2),
+   );
+ });
+@@ -171,7 +172,7 @@
+     window.scrollTo(0, 0);
+   });
+   await page.screenshot({
+-    path: "evidence/v2/mobile-path-trace.png",
++    path: `${evidence}/mobile-path-trace.png`,
+     fullPage: true,
+   });
+ });
+--- /dev/null
++++ b/frontend/tests/browser/v21.spec.ts
+@@ -0,0 +1,335 @@
++import { readFileSync, readdirSync } from "node:fs";
++import { test, expect } from "@playwright/test";
++import { login, state, LIVE } from "./liveHelpers";
++
++test.beforeEach(async ({ request }) =>
++  state(request, {
++    scenario: "normal",
++    gateway: "up",
++    chat: "ok",
++    fail: [],
++    ttl: 43200,
++    reset_calls: true,
++  }),
++);
++for (const activation of ["click", "Enter", "Space"])
++  test(`V2.1 cancel with draft never submits via ${activation}`, async ({
++    page,
++  }) => {
++    let submissions = 0;
++    await page.route("**/owner-api/v1/chat", async (route) => {
++      submissions++;
++      // Keep response pending deterministically, independent of LLM/server timing.
++      await new Promise<void>((resolve) => page.once("close", () => resolve()));
++      await route.abort().catch(() => {});
++    });
++    await login(page);
++    await page.getByRole("link", { name: "LUFFY", exact: true }).click();
++    const composer = page.getByLabel("Message LUFFY");
++    await composer.fill("first request");
++    await page.getByRole("button", { name: "Send", exact: true }).click();
++    await expect.poll(() => submissions).toBe(1);
++    await composer.fill("unsent draft must remain");
++    const cancel = page.getByRole("button", { name: "Cancel request" });
++    if (activation === "click") await cancel.click();
++    else {
++      await cancel.focus();
++      await cancel.press(activation);
++    }
++    await expect(
++      page.getByText(/Cancelled — no reply · Cancelled by owner/),
++    ).toBeVisible();
++    await expect(composer).toHaveValue("unsent draft must remain");
++    await expect(
++      page.getByRole("button", { name: "Send", exact: true }),
++    ).toBeVisible();
++    expect(submissions).toBe(1);
++    await expect(page.locator(".transcript")).not.toContainText(
++      "unsent draft must remain",
++    );
++  });
++
++test("V2.1 all mobile routes are visible without horizontal scrolling and keyboard reachable", async ({
++  page,
++}) => {
++  await page.setViewportSize({ width: 390, height: 844 });
++  await login(page);
++  const nav = page.getByRole("navigation");
++  await expect(nav.getByRole("link")).toHaveCount(9);
++  for (const link of await nav.getByRole("link").all()) {
++    const box = await link.boundingBox();
++    expect(
++      box &&
++        box.x >= 0 &&
++        box.x + box.width <= 390 &&
++        box.y + box.height <= 844,
++    ).toBeTruthy();
++    await link.focus();
++    await link.press("Enter");
++    await expect(link).toHaveAttribute("aria-current", "page");
++  }
++  await expect(nav.getByText("Controls · Panic")).toBeVisible();
++});
++
++test("V2.1 topology uses real Owner Interface health and distinguishes absent telemetry", async ({
++  page,
++  request,
++}) => {
++  await login(page);
++  await page.getByRole("link", { name: "Live System", exact: true }).click();
++  const risk = page.getByRole("button", { name: "Inspect Risk", exact: true });
++  await expect(risk).toContainText("NO TELEMETRY");
++  await expect(risk).not.toContainText("UNAVAILABLE");
++  await expect(
++    page.getByRole("button", { name: "Inspect Owner Interface", exact: true }),
++  ).toContainText("AVAILABLE");
++  await state(request, { gateway: "down" });
++  await page.reload();
++  await expect(
++    page.getByRole("button", { name: "Inspect Owner Interface", exact: true }),
++  ).toContainText("UNAVAILABLE");
++});
++
++test("V2.1 knowledge shows modification age without asserting freshness; legacy fallback is explicit", async ({
++  page,
++}) => {
++  await login(page);
++  await page.getByRole("link", { name: "Knowledge", exact: true }).click();
++  await page
++    .getByRole("button", { name: "Inspect Aggressor Flow", exact: true })
++    .click();
++  await expect(page.getByText(/freshness not assessed/).first()).toBeVisible();
++  await expect(
++    page.locator(".react-flow__edge-text").filter({ hasText: "wikilink" }),
++  ).toHaveCount(0);
++  await page.getByRole("button", { name: "Timeline", exact: true }).click();
++  await expect(page.locator(".graph-list time").first()).toContainText(" UTC");
++  await expect(page.locator(".graph-list time").first()).not.toContainText(
++    "+00:00",
++  );
++  await page.getByRole("link", { name: "Research", exact: true }).click();
++  await expect(page.locator('a[href="/legacy/"]')).toBeVisible();
++  await expect(page.locator(".research-directory button")).toHaveCount(10);
++  await page.locator(".research-directory button").last().click();
++  await expect(page.locator(".research-workspace")).toContainText(
++    "Unavailable",
++  );
++});
++
++test("V2.1 open trade truth, bounded trade history and UTC presentation", async ({
++  page,
++}) => {
++  await login(page);
++  await page.getByRole("link", { name: "Trades", exact: true }).click();
++  await expect(page.getByText("Realized so far ·").first()).toBeVisible();
++  await expect(
++    page.getByText("Showing latest 3", { exact: false }).first(),
++  ).toBeVisible();
++  await expect(page.locator("table").first()).toContainText(" UTC");
++  await expect(page.locator("table").first()).not.toContainText("+00:00");
++  await page
++    .locator("table")
++    .first()
++    .getByRole("button", { name: "Inspect BTC/USDT", exact: true })
++    .click();
++  await expect(page.getByRole("dialog")).toContainText("Realized so far");
++});
++
++for (const [amount, cls] of [
++  [-25, "rose"],
++  [0, "neutral"],
++  [25, "mint"],
++] as const)
++  test(`V2.1 realized today ${amount} has sign-aware styling`, async ({
++    page,
++  }) => {
++    await page.route("**/owner-api/v1/overview", async (route) => {
++      const response = await route.fetch();
++      const body = await response.json();
++      body.realized_today.value = amount;
++      await route.fulfill({ response, json: body });
++    });
++    await login(page);
++    await expect(page.getByTestId("realized-today")).toHaveClass(
++      new RegExp(cls),
++    );
++    await expect(page.getByText(/News guard: unavailable/)).toBeVisible();
++  });
++
++test("V2.1 login preserves requested slash hash safely", async ({ page }) => {
++  await page.goto(LIVE + "/owner-preview/#/knowledge");
++  await page.getByLabel("Dashboard password").fill("fixture-token");
++  await page.getByRole("button", { name: "Sign in" }).click();
++  await expect(
++    page.getByRole("heading", { name: "Knowledge", level: 1, exact: true }),
++  ).toBeVisible();
++  expect(new URL(page.url()).hash).toBe("#/knowledge");
++  await expect(page.getByTestId("mode-banner")).toContainText("LIVE");
++  await expect(page.getByTestId("mode-banner")).not.toContainText(
++    "DEMO — synthetic",
++  );
++});
++
++test("V2.1 Decisions binds offset paging with lookahead and never claims a frozen complete history", async ({
++  page,
++}) => {
++  const offsets: number[] = [];
++  await page.route("**/graphql", async (route) => {
++    const body = route.request().postDataJSON();
++    if (!body.query?.includes("decisions(")) return route.continue();
++    const offset = body.variables.offset;
++    offsets.push(offset);
++    await route.fulfill({
++      json: {
++        data: {
++          decisions: Array.from({ length: offset ? 1 : 101 }, (_, i) => ({
++            id: String(offset + i),
++            symbol: `PAIR${offset + i}`,
++            ts: "2026-09-29T00:00:00Z",
++            action: "HOLD",
++            executed: false,
++            skip_reason: "recorded",
++          })),
++        },
++      },
++    });
++  });
++  await login(page);
++  await page.getByRole("link", { name: "Trades", exact: true }).click();
++  const panel = page.locator("section").filter({
++    has: page.getByRole("heading", { name: "Decision journal", exact: true }),
++  });
++  await panel.getByRole("button", { name: "Next" }).click();
++  await expect(panel).toContainText("PAIR100");
++  await expect(panel.getByRole("button", { name: "Next" })).toBeDisabled();
++  expect(offsets).toContain(100);
++  await panel.getByRole("button", { name: "Previous" }).click();
++  await expect(panel).toContainText("PAIR0");
++});
++
++test("V2.1 stale exposure, partial protection and LIVE failures remain truthful", async ({
++  page,
++  request,
++}) => {
++  await page.route("**/owner-api/v1/overview", async (route) => {
++    const response = await route.fetch();
++    const body = await response.json();
++    body.protection.status = "VERIFIED";
++    body.protection.supervisor.venue_positions = false;
++    for (const p of body.positions) p.protection.status = "VERIFIED";
++    await route.fulfill({ response, json: body });
++  });
++  await login(page);
++  await expect(
++    page.locator(".status-row").filter({ hasText: "Protection verification" }),
++  ).toContainText("PARTIAL");
++  await page.unroute("**/owner-api/v1/overview");
++  await state(request, { scenario: "stale" });
++  await page.reload();
++  const exposure = page.locator("section").filter({
++    has: page.getByRole("heading", { name: "Gross exposure", exact: true }),
++  });
++  await expect(exposure).toContainText("STALE");
++  await state(request, { fail: ["/owner-api/v1/overview"] });
++  await page.reload();
++  await expect(page.getByText("Data unavailable")).toBeVisible();
++  await expect(page.getByTestId("mode-banner")).toContainText("LIVE");
++  await expect(page.locator("body")).not.toContainText("synthetic data");
++});
++
++test("V2.1 visual corrections and diagnostic availability match the health contract", async ({
++  page,
++}) => {
++  await login(page);
++  expect(
++    await page
++      .locator(".page-heading")
++      .evaluate((el) => getComputedStyle(el, "::after").content),
++  ).toBe("none");
++  await page.getByRole("link", { name: "Diagnostics", exact: true }).click();
++  const panel = page.locator("section").filter({
++    has: page.getByRole("heading", { name: "Owner Interface", exact: true }),
++  });
++  await expect(
++    panel.locator(".badge").filter({ hasText: /^AVAILABLE$/ }),
++  ).toHaveClass(/mint/);
++  await page.getByRole("link", { name: "Strategies", exact: true }).click();
++  await page
++    .getByRole("button", { name: "Inspect Donchian", exact: true })
++    .click();
++  await expect(page.getByRole("dialog")).toContainText("Registry ID");
++  await expect(page.getByRole("dialog")).toContainText("Recorded lifecycle");
++  await page.getByLabel("Close record").click();
++  await page.getByRole("link", { name: "LUFFY", exact: true }).click();
++  const desktop = await page.locator(".conversation").boundingBox();
++  expect(desktop!.height).toBeGreaterThanOrEqual(720);
++  await page.setViewportSize({ width: 390, height: 844 });
++  const core = await page.locator(".mobile-core").boundingBox();
++  expect(core!.width).toBeGreaterThanOrEqual(80);
++  for (const badge of await page
++    .locator(".badge:visible,.eyebrow:visible")
++    .all())
++    expect(
++      await badge.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)),
++    ).toBeGreaterThanOrEqual(11);
++});
++
++test("V2.1 Owner Interface telemetry cannot turn stale or invalid observation times into healthy state", async ({
++  page,
++}) => {
++  let observed = "2000-01-01T00:00:00Z";
++  await page.route("**/owner-api/v1/owner-interface", async (route) => {
++    const response = await route.fetch();
++    const body = await response.json();
++    body.observed_at = observed;
++    await route.fulfill({ response, json: body });
++  });
++  await login(page);
++  await page.getByRole("link", { name: "Live System", exact: true }).click();
++  const node = page.getByRole("button", {
++    name: "Inspect Owner Interface",
++    exact: true,
++  });
++  await expect(node).toContainText("STALE");
++  await expect(node).toContainText("Last reported: AVAILABLE");
++  observed = "invalid";
++  await page.reload();
++  await expect(node).toContainText("UNAVAILABLE");
++});
++
++test("V2.1 reauthentication retains the current route and Operations uses legacy path", async ({
++  page,
++}) => {
++  await login(page);
++  await page.getByRole("link", { name: "Operations", exact: true }).click();
++  await expect(
++    page.getByRole("link", { name: "Open legacy dashboard ↗" }),
++  ).toHaveAttribute("href", "/legacy/");
++  await page.getByRole("link", { name: "Knowledge", exact: true }).click();
++  await page.getByRole("button", { name: "Sign out" }).click();
++  await page.getByRole("button", { name: "Sign in", exact: true }).click();
++  await page.getByLabel("Dashboard password").fill("fixture-token");
++  await page.getByRole("button", { name: "Sign in", exact: true }).click();
++  await expect(
++    page.getByRole("heading", { name: "Knowledge", level: 1, exact: true }),
++  ).toBeVisible();
++});
++
++test("V2.1 LIVE build excludes fixtures, dead preview labels and sourcemaps", () => {
++  const files = readdirSync("dist/assets");
++  expect(files.filter((f) => f.endsWith(".map"))).toEqual([]);
++  const code = files
++    .filter((f) => f.endsWith(".js"))
++    .map((f) => readFileSync(`dist/assets/${f}`, "utf8"))
++    .join("\n");
++  for (const forbidden of [
++    "DEMO — synthetic",
++    "DEMO mode",
++    "Fixed fixture snapshot",
++    "Synthetic evidence",
++    "Market observation",
++    "Liquidity hypothesis",
++    "Strategy version",
++  ])
++    expect(code).not.toContain(forbidden);
++});
+--- /dev/null
++++ b/frontend/tests/v21.test.tsx
+@@ -0,0 +1,104 @@
++import { describe, it, expect, vi, afterEach } from "vitest";
++import {
++  mapOverview,
++  mapKnowledge,
++  createLiveAdapter,
++} from "../src/adapters/live";
++import { healthPresentation } from "../src/components/HealthStatus";
++import { timestamp, modifiedAge } from "../src/time";
++import type { GraphNode } from "../src/adapters/contracts";
++
++afterEach(() => vi.unstubAllGlobals());
++describe("V2.1 truthful presentation and contracts", () => {
++  it("does not equate missing telemetry with unavailable runtime", () => {
++    const node = {
++      hasTelemetry: false,
++      health: undefined,
++      evidence: { freshness: "unavailable", observedAt: null },
++    } as GraphNode;
++    expect(healthPresentation(node).primary).toBe("NO TELEMETRY");
++    node.hasTelemetry = true;
++    expect(healthPresentation(node).primary).toBe("UNAVAILABLE");
++    node.evidence.freshness = "stale";
++    node.health = "active";
++    expect(healthPresentation(node).primary).toBe("STALE");
++  });
++  it("file modification is age, never a freshness contract", () => {
++    const d = mapKnowledge({
++      nodes: [
++        {
++          id: "a",
++          label: "A",
++          kind: "note",
++          provenance: {
++            observed_at: "2000-01-01T00:00:00Z",
++            time_basis: "file_modified",
++          },
++        },
++      ],
++      edges: [],
++      generated_at: "2026-09-29T00:00:00Z",
++    });
++    expect(d.nodes[0].evidence.freshness).toBe("not_assessed");
++    expect(d.nodes[0].evidence.timeBasis).toBe("file_modified");
++    expect(modifiedAge("2000-01-01T00:00:00Z")).toMatch(/d ago/);
++    expect(modifiedAge(null)).toBe("age unavailable");
++    expect(timestamp("2026-09-29T03:00:00+03:00")).toBe(
++      "2026-09-29 00:00:00 UTC",
++    );
++    expect(timestamp(null)).toBe("Source time unavailable");
++  });
++  it.each(["venue_positions", "reconciliation", "venue_protection"])(
++    "VERIFIED requires %s evidence",
++    (field) => {
++      const now = new Date().toISOString();
++      const supervisor = {
++        observed_at: now,
++        freshness: "fresh",
++        venue_positions: true,
++        reconciliation: true,
++        venue_protection: true,
++        [field]: false,
++      };
++      const d = mapOverview({
++        mode: "LIVE",
++        errors: {},
++        protection: { status: "VERIFIED", supervisor },
++        positions: [
++          {
++            id: "a",
++            symbol: "BTC",
++            protection: { status: "VERIFIED", observed_at: now },
++          },
++        ],
++      });
++      expect(d.positions![0].protection).toBe("PARTIAL");
++      expect(d.live!.protection!.status).toBe("PARTIAL");
++    },
++  );
++  it("binds offset and lookahead without including lookahead row", async () => {
++    const fetcher = vi
++      .fn()
++      .mockResolvedValue(
++        new Response(
++          JSON.stringify({
++            data: {
++              decisions: Array.from({ length: 101 }, (_, i) => ({
++                id: String(i),
++              })),
++            },
++          }),
++        ),
++      );
++    vi.stubGlobal("fetch", fetcher);
++    const d = await createLiveAdapter(() => {}).decisions!(
++      new AbortController().signal,
++      100,
++    );
++    expect(d.rows).toHaveLength(100);
++    expect(d.paging).toEqual({ offset: 100, limit: 100, hasMore: true });
++    const body = JSON.parse(fetcher.mock.calls[0][1].body);
++    expect(body.variables.offset).toBe(100);
++    expect(body.query).toContain("limit:101,offset:$offset");
++  });
++});
+--- a/frontend/vite.config.ts
++++ b/frontend/vite.config.ts
+@@ -12,7 +12,7 @@
+     include: ["tests/**/*.test.tsx", "tests/**/*.test.ts"],
+   },
+   build: {
+-    sourcemap: true,
++    sourcemap: mode !== "production",
+     ...(mode === "test-fixtures"
+       ? { rollupOptions: { input: "tests/harness/index.html" } }
+       : {}),
+--- a/tests/test_owner_frontend_api.py
++++ b/tests/test_owner_frontend_api.py
+@@ -34,7 +34,7 @@
+     # the preview shell answers with the login page, never the app or data
+     r = c.get("/owner-preview/")
+     assert r.status_code == 401 and "Luffy owner login" in r.text
+-    assert "location.replace(location.pathname)" in r.text
++    assert "history.replaceState(null,'',location.pathname + location.hash)" in r.text
+ 
+ 
+ def test_bootstrap_contract(live):
+@@ -98,7 +98,7 @@
+     sup = {"reasons": ["position_unprotected:ETH/USDT:USDT"], "venue_protection": False,
+            "observed_at": datetime.now(timezone.utc).isoformat(), "freshness": "fresh"}
+     assert owner_api.protection_for({"symbol": "ETH/USDT"}, sup)["status"] == "UNPROTECTED"
+-    assert owner_api.protection_for({"symbol": "BTC/USDT"}, sup)["status"] == "UNVERIFIED"
++    assert owner_api.protection_for({"symbol": "BTC/USDT"}, sup)["status"] == "PARTIAL"
+     later = (datetime.now(timezone.utc) + timedelta(minutes=1)).isoformat()
+     ok = {**sup, "reasons": [], "venue_protection": True}
+     p = owner_api.protection_for({"symbol": "BTC/USDT", "opened_at": later}, ok)
+@@ -250,3 +250,28 @@
+     assert c.get("/owner-preview/../config.yaml").status_code in (404, 200) and \
+         "owner_interface" not in c.get("/owner-preview/../config.yaml").text
+     assert c.get("/owner-preview/assets/nope.js").status_code in (404, 503)
++
++
++def test_knowledge_endpoint_cache_errors_do_not_serve_previous_snapshot(live, monkeypatch):
++    c, _, _, root = live
++    first = c.get('/owner-api/v1/knowledge', headers=H)
++    second = c.get('/owner-api/v1/knowledge', headers=H)
++    assert first.content == second.content
++    assert second.headers['cache-control'] == 'no-store'
++    def fail(self):
++        raise OSError('source disappeared')
++    monkeypatch.setattr(owner_api.KnowledgeReadCache, 'fingerprint', fail)
++    failed = c.get('/owner-api/v1/knowledge', headers=H)
++    assert failed.status_code == 503
++    assert failed.json()['error'] == 'knowledge_source_unavailable'
++    assert 'nodes' not in failed.json()
++
++
++def test_decision_offset_contract_is_available(live):
++    c, *_ = live
++    query = 'query($offset:Int!){decisions(limit:101,offset:$offset){id ts symbol action}}'
++    first = c.post('/graphql', headers=H, json={'query': query, 'variables': {'offset': 0}}).json()
++    after = c.post('/graphql', headers=H, json={'query': query, 'variables': {'offset': 1}}).json()
++    assert 'errors' not in first and 'errors' not in after
++    assert len(first['data']['decisions']) == 1
++    assert after['data']['decisions'] == []
+--- /dev/null
++++ b/tests/test_owner_read_cache.py
+@@ -0,0 +1,96 @@
++import json
++import os
++from concurrent.futures import ThreadPoolExecutor
++from datetime import datetime, timedelta, timezone
++
++import pytest
++from trader.dashboard import owner_api as api
++
++
++def test_cache_reuses_snapshot_and_invalidates_all_source_changes(tmp_path, monkeypatch):
++    p = tmp_path / 'a.md'
++    p.write_text('# A\n')
++    cache = api.KnowledgeReadCache(tmp_path)
++    original = api.knowledge
++    reads = []
++    def read(*a, **kw):
++        reads.append(1)
++        return original(*a, **kw)
++    monkeypatch.setattr(api, 'knowledge', read)
++    first = cache.read()
++    assert cache.read() is first and len(reads) == 1
++    assert json.loads(first)['generated_at'] == json.loads(cache.read())['generated_at']
++    st = p.stat()
++    p.write_text('# B\n')
++    os.utime(p, ns=(st.st_atime_ns, st.st_mtime_ns))
++    assert cache.read() != first and len(reads) == 2  # same mtime/size, ctime changed
++    p.rename(tmp_path / 'b.md')
++    cache.read()
++    p.write_text('# C\n')
++    assert json.loads(cache.read())['total_nodes'] == 2
++    p.unlink()
++    assert json.loads(cache.read())['total_nodes'] == 1
++    assert len(reads) == 5
++
++
++def test_cache_failure_never_falls_back_and_memory_is_bounded(tmp_path, monkeypatch):
++    p = tmp_path / 'a.md'
++    p.write_text('# A')
++    cache = api.KnowledgeReadCache(tmp_path)
++    cache.read()
++    p.write_text('# changed')
++    def fail(*a, **kw):
++        raise OSError('unreadable')
++    with monkeypatch.context() as m:
++        m.setattr(api, 'knowledge', fail)
++        with pytest.raises(OSError):
++            cache.read()
++        assert cache.encoded is None and cache.key is None
++    cache.MAX_BYTES = 1
++    assert cache.read() and cache.encoded is None
++    cache.MAX_BYTES = 200000
++    cache.MAX_FILES = 0
++    assert cache.read() and cache.encoded is None
++
++
++def test_cache_rejects_continuously_moving_source(tmp_path, monkeypatch):
++    p = tmp_path / 'a.md'
++    p.write_text('# A')
++    cache = api.KnowledgeReadCache(tmp_path)
++    original = api.knowledge
++    def moving(*a, **kw):
++        result = original(*a, **kw)
++        p.write_text(p.read_text() + '\nchanged')
++        return result
++    monkeypatch.setattr(api, 'knowledge', moving)
++    with pytest.raises(OSError, match='changed_during_read'):
++        cache.read()
++    assert cache.encoded is None
++
++
++def test_cache_serializes_concurrent_builds(tmp_path, monkeypatch):
++    (tmp_path / 'a.md').write_text('# A')
++    original = api.knowledge
++    reads = []
++    def read(*a, **kw):
++        reads.append(1)
++        return original(*a, **kw)
++    monkeypatch.setattr(api, 'knowledge', read)
++    cache = api.KnowledgeReadCache(tmp_path)
++    with ThreadPoolExecutor(max_workers=8) as executor:
++        results = list(executor.map(lambda _: cache.read(), range(16)))
++    assert len(reads) == 1 and all(r == results[0] for r in results)
++
++
++@pytest.mark.parametrize('missing', ['venue_positions', 'reconciliation', 'venue_protection'])
++def test_verified_requires_each_available_check(missing):
++    now = datetime.now(timezone.utc)
++    trade = {'symbol': 'BTC/USDT', 'opened_at': (now-timedelta(minutes=1)).isoformat()}
++    sup = dict(reasons=[], observed_at=now.isoformat(), freshness='fresh',
++               venue_positions=True, reconciliation=True, venue_protection=True)
++    assert api.protection_for(trade, sup)['status'] == 'VERIFIED'
++    for value in (False, None):
++        sup[missing] = value
++        assert api.protection_for(trade, sup)['status'] == 'PARTIAL'
++    sup['freshness'] = 'stale'
++    assert api.protection_for(trade, sup)['status'] == 'STALE'
+--- a/trader/dashboard/auth.py
++++ b/trader/dashboard/auth.py
+@@ -19,7 +19,7 @@
+ document.querySelector('form').onsubmit=async e=>{e.preventDefault();
+ const p=document.getElementById('password');
+ try {const r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:p.value})});
+-p.value=''; if(r.ok) location.replace(location.pathname); else document.getElementById('status').textContent='Sign-in refused';}
++p.value=''; if(r.ok) {history.replaceState(null,'',location.pathname + location.hash); location.reload();} else document.getElementById('status').textContent='Sign-in refused';}
+ catch(_){p.value='';document.getElementById('status').textContent='Connection unavailable';}};
+ </script></body></html>'''
+ 
+--- a/trader/dashboard/owner_api.py
++++ b/trader/dashboard/owner_api.py
+@@ -21,6 +21,8 @@
+ import hashlib
+ import json
+ import logging
++import os
++import threading
+ import re
+ import secrets
+ import subprocess
+@@ -212,6 +214,7 @@
+     STALE       the last pass is older than stale_after_s (last result kept as
+                 ``last_reported``, never shown as current)
+     UNPROTECTED the last pass named this position unprotected
++    PARTIAL     incomplete venue position, reconciliation or protection evidence
+     UNVERIFIED  no pass covered this position, or the pass could not verify
+     UNAVAILABLE no readable Supervisor evidence at all
+     """
+@@ -227,11 +230,11 @@
+         reported = "UNPROTECTED"
+     elif at is not None and opened is not None and opened > at:
+         reported, mine = "UNVERIFIED", mine + ["opened_after_last_verification"]
+-    elif sup["venue_protection"]:
++    elif sup["venue_protection"] and sup.get("venue_positions") is True and sup.get("reconciliation") is True and opened is not None and at is not None:
+         reported = "VERIFIED"
+     else:
+-        reported = "UNVERIFIED"
+-        mine = mine or ["venue_protection_not_verified"]
++        reported = "PARTIAL"
++        mine = mine or ["complete_verification_evidence_missing"]
+     if sup["freshness"] != "fresh":
+         return {"status": "STALE", "observed_at": sup["observed_at"],
+                 "last_reported": reported, "reasons": mine + ["verification_stale"]}
+@@ -299,7 +302,7 @@
+     elif not positions:
+         protection = {"status": "NO_POSITIONS", "supervisor": sup}
+     else:
+-        order = ["UNAVAILABLE", "UNPROTECTED", "STALE", "UNVERIFIED", "VERIFIED"]
++        order = ["UNAVAILABLE", "UNPROTECTED", "STALE", "PARTIAL", "UNVERIFIED", "VERIFIED"]
+         worst = min((p["protection"]["status"] for p in positions), key=order.index)
+         protection = {"status": worst, "supervisor": sup}
+     needs = None
+@@ -329,7 +332,7 @@
+     return (data if isinstance(data, dict) else {}), parts[2]
+ 
+ 
+-def knowledge(vault: Path, *, limit: int = KNOWLEDGE_MAX_NODES) -> dict:
++def knowledge(vault: Path, *, limit: int = KNOWLEDGE_MAX_NODES, strict: bool = False) -> dict:
+     now = _now()
+     files = sorted(vault.rglob("*.md")) if vault.exists() else []
+     notes = []
+@@ -338,6 +341,8 @@
+             text = p.read_text(errors="replace")
+             mtime = datetime.fromtimestamp(p.stat().st_mtime, timezone.utc)
+         except OSError:
++            if strict:
++                raise
+             continue
+         fm, body = _frontmatter(text)
+         title = next((ln[2:].strip() for ln in body.splitlines() if ln.startswith("# ")), None)
+@@ -425,6 +430,60 @@
+                        "Source time is file modification time"]}
+ 
+ 
++class KnowledgeReadCache:
++    """One bounded encoded read snapshot per app; no TTL or stale-error fallback.
++
++    Stat fingerprint includes additions/deletions, renames, nanosecond mtime,
++    ctime, inode and size. Recheck after parsing to reject a moving source.
++    Original generated_at and note mtimes remain the snapshot's timestamps.
++    """
++    MAX_BYTES = 2 * 1024 * 1024
++    MAX_FILES = 20000
++
++    def __init__(self, vault: Path):
++        self.vault = vault
++        self.lock = threading.Lock()
++        self.key = None
++        self.encoded = None
++
++    def fingerprint(self):
++        if not self.vault.is_dir():
++            raise FileNotFoundError("knowledge_vault_unavailable")
++        def fail(error):
++            raise error
++        files = []
++        for directory, _, names in os.walk(self.vault, onerror=fail, followlinks=False):
++            for name in names:
++                if name.endswith(".md"):
++                    p = Path(directory) / name
++                    st = p.stat()
++                    files.append((str(p.relative_to(self.vault)), st.st_dev, st.st_ino,
++                                  st.st_size, st.st_mtime_ns, st.st_ctime_ns))
++        return tuple(sorted(files))
++
++    def read(self) -> bytes:
++        with self.lock:
++            try:
++                key = self.fingerprint()
++                if key == self.key and self.encoded is not None:
++                    return self.encoded
++                self.key = self.encoded = None
++                for _ in range(2):
++                    payload = knowledge(self.vault, strict=True)
++                    after = self.fingerprint()
++                    if key == after:
++                        encoded = json.dumps(payload, ensure_ascii=False, allow_nan=False,
++                                             separators=(",", ":")).encode()
++                        if len(encoded) <= self.MAX_BYTES and len(key) <= self.MAX_FILES:
++                            self.key, self.encoded = key, encoded
++                        return encoded
++                    key = after
++                raise OSError("knowledge_source_changed_during_read")
++            except Exception:
++                self.key = self.encoded = None
++                raise
++
++
+ # ── system topology ───────────────────────────────────────────────────────────
+ #: declared architecture (repository source map). Not observed traffic.
+ SYSTEM_COMPONENTS = (
+@@ -534,6 +593,7 @@
+     version = backend_version(root)
+     vault = vault or (root / "knowledge")          # knowledge.vault.VAULT for the real ROOT
+     dist = dist or (root / "frontend" / "dist")
++    knowledge_cache = KnowledgeReadCache(Path(vault))
+     chat_slots = asyncio.Semaphore(CHAT_CONCURRENCY)
+     section = (cfg or {}).get("owner_interface") or {}
+     try:
+@@ -658,7 +718,12 @@
+ 
+     @app.get(PREFIX + "/knowledge")
+     def owner_knowledge():
+-        return _json(knowledge(Path(vault)))
++        try:
++            return Response(knowledge_cache.read(), media_type="application/json",
++                            headers={"Cache-Control": "no-store"})
++        except (OSError, ValueError):
++            return _json({"error": "knowledge_source_unavailable",
++                          "detail": "No cached snapshot substituted; retry after the source is readable and stable."}, 503)
+ 
+     @app.get(PREFIX + "/system")
+     def owner_system():

@@ -212,6 +212,9 @@ class Position:
     opened_at: str = field(default_factory=lambda: now_utc().isoformat())
     confidence: float = 0.0
     sl_order_id: str = ""       # exchange-native stop order to cancel on close
+    #: the exact strategy version the entry was taken on (trade_provenance);
+    #: None for adopted/legacy positions, which stay UNKNOWN
+    entry_identity: dict | None = None
 
     def unrealized_pnl(self, mark: float) -> float:
         # linear perps: P&L = price delta × base-asset size. Leverage scales

@@ -1,0 +1,25 @@
+{
+  "fixture": "test-only built harness; eager graph import; real React Flow, no stubs",
+  "inputKnowledgeNodes": 500,
+  "visibleCap": 40,
+  "systemNodes": 40,
+  "systemEdges": 39,
+  "systemLoadMs": 397.5994759999994,
+  "knowledgeNavMs": 339.4650550000006,
+  "cachedKnowledgeMs": [
+    154.4184150000001,
+    142.10647000000063,
+    149.64465599999858
+  ],
+  "searchKeystrokes": 15,
+  "searchWallMs": 688.3372920000002,
+  "searchRendererMs": 451.1200000000002,
+  "jsHeapMiB": 6.361225128173828,
+  "documents": 1,
+  "nodes": 3247,
+  "jsEventListeners": 401,
+  "longTasks": [
+    85,
+    53
+  ]
+}

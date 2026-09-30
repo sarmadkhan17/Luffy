@@ -1,0 +1,464 @@
+{
+  "config": {
+    "argv": [
+      "/home/sarmad/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+      "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/node_modules/.bin/playwright",
+      "test",
+      "tests/browser/v2.spec.ts",
+      "tests/browser/v2-controls.spec.ts",
+      "tests/browser/live-perf.spec.ts"
+    ],
+    "configFile": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/playwright.config.ts",
+    "rootDir": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/tests/browser",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/tests/browser",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "evidence/v2/final-visual-controls.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "live-perf.spec.ts",
+      "file": "live-perf.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "cold load, cached routes and lazy surfaces",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/tests/browser/live-perf.spec.ts",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5991,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-28T22:05:40.693Z",
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/tests/browser/live-perf.spec.ts",
+                        "line": 0,
+                        "column": 0
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "168a4be1984304aec943-9e122a40836b4c9f22ca",
+          "file": "live-perf.spec.ts",
+          "line": 34,
+          "column": 1
+        },
+        {
+          "title": "chat and navigation stay responsive while a heavy graph loads",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/tests/browser/live-perf.spec.ts",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1491,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-28T22:05:46.947Z",
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/tests/browser/live-perf.spec.ts",
+                        "line": 0,
+                        "column": 0
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "168a4be1984304aec943-c744f3a2e42886bf664a",
+          "file": "live-perf.spec.ts",
+          "line": 97,
+          "column": 1
+        },
+        {
+          "title": "route churn, graph pages, websocket use and server RSS",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [
+                {
+                  "type": "serial",
+                  "location": {
+                    "file": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/tests/browser/live-perf.spec.ts",
+                    "line": 0,
+                    "column": 0
+                  }
+                }
+              ],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 11291,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-28T22:05:48.459Z",
+                  "annotations": [
+                    {
+                      "type": "serial",
+                      "location": {
+                        "file": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding/frontend/tests/browser/live-perf.spec.ts",
+                        "line": 0,
+                        "column": 0
+                      }
+                    }
+                  ],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "168a4be1984304aec943-b8e0ad2aae853b8769b8",
+          "file": "live-perf.spec.ts",
+          "line": 124,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "v2-controls.spec.ts",
+      "file": "v2-controls.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "all five controls use confirmations and the Owner Interface",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2335,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-28T22:05:59.794Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "475cac30c07908804693-1401820bf23aba8ef6a3",
+          "file": "v2-controls.spec.ts",
+          "line": 13,
+          "column": 1
+        },
+        {
+          "title": "IN_PROGRESS retains the same id and time across route exit and retry",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1725,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-28T22:06:02.151Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "475cac30c07908804693-6cc163c0513520e295de",
+          "file": "v2-controls.spec.ts",
+          "line": 38,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "v2.spec.ts",
+      "file": "v2.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "V2 all nine desktop and mobile surfaces, accessibility and screenshots",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 18619,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-28T22:06:03.987Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f5cea1cd63f4d778102-1dfe34a9cc079e3bad67",
+          "file": "v2.spec.ts",
+          "line": 27,
+          "column": 1
+        },
+        {
+          "title": "V2 trade search, filters, drawer, mobile details and empty results",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1805,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-28T22:06:22.630Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f5cea1cd63f4d778102-2d20bdbaf3be40632318",
+          "file": "v2.spec.ts",
+          "line": 71,
+          "column": 1
+        },
+        {
+          "title": "V2 unavailable and error sources never become successful activity",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1988,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-28T22:06:24.460Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f5cea1cd63f4d778102-3f22ef2225087ff03d0c",
+          "file": "v2.spec.ts",
+          "line": 96,
+          "column": 1
+        },
+        {
+          "title": "V2 reduced motion and mobile core remain responsive",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3503,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-28T22:06:26.471Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f5cea1cd63f4d778102-9ca5e739156fd64016de",
+          "file": "v2.spec.ts",
+          "line": 116,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-28T22:05:31.308Z",
+    "duration": 58939.553,
+    "expected": 9,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

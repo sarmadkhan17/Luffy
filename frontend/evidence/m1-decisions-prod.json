@@ -1,0 +1,23 @@
+{
+  "measured_at": "2026-09-29T16:27:23Z",
+  "source": "production data/luffy.db opened read-only (mode=ro)",
+  "results": [
+    {
+      "label": "before (inline, N+1 votes; sampled)",
+      "wall_s": 5.84,
+      "max_event_loop_lag_s": 5.83,
+      "rows": 101,
+      "votes_reads_measured": 5,
+      "votes_read_s_each": 0.87,
+      "projected_votes_s_for_101": 88.2
+    },
+    {
+      "label": "after (off-loop, votes not selected)",
+      "wall_s": 1.5,
+      "max_event_loop_lag_s": 0.0,
+      "errors": null,
+      "rows": 101,
+      "votes_reads": 0
+    }
+  ]
+}

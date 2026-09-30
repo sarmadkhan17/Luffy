@@ -257,8 +257,11 @@ def kernel(tmp_path, extra, feed):
     k.cfg = {'timeframes': {'execution': '15m'}}
     k.population = []
     k.state_machine = NS(refresh=lambda: ControlState.ACTIVE)
-    k._fetch_balance = lambda: 1000
-    k.risk = NS(update_equity=lambda _: {'equity': 1000, 'drawdown_pct': 0}, daily_loss_block=.05)
+    k._fetch_balance = k._fetch_balance_fresh = lambda: 1000
+    # RiskManager.update_equity's contract (current-truth): a fresh read is
+    # authoritative and an intact baseline reports risk_state "ok"
+    k.risk = NS(update_equity=lambda _b, authoritative=True: {
+        'equity': 1000, 'drawdown_pct': 0, 'risk_state': 'ok'}, daily_loss_block=.05)
     k._drain_close_requests = lambda: 0
     k.journal = NS(kv_get=lambda key, default=None: default, kv_set=lambda *a: None,
                    query=lambda *a: [{'n': 0}], update_decision_outcome=Mock(),
