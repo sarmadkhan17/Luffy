@@ -41,6 +41,13 @@ def settings(raw=None):
         if isinstance(value, bool) or not isinstance(value, int) or not lo <= value <= hi:
             raise ValueError(f"invalid attention {name}")
         out[name] = value
+    # Shadow WorldModel input to Attention (observability/world_producer.py).
+    # Recorded in capture settings only when on, so legacy settings ids hold.
+    world = raw.get("world_model", False)
+    if type(world) is not bool:
+        raise ValueError("invalid attention world_model")
+    if world:
+        out["world_model"] = True
     return out
 
 
@@ -230,7 +237,7 @@ def code_manifest():
              "observability/collector.py", "observability/worker.py",
              "observability/declared.py",
              "cognition/attention.py", "cognition/contracts.py",
-             "observability/positioning.py",
+             "observability/positioning.py", "observability/world_producer.py",
              "observability/diagnostics.py", "strategy/library.py", "strategy/compile.py",
              "engine/orchestrator.py", "kernel.py")
     return {name: hashlib.sha256((base / name).read_bytes()).hexdigest() for name in names}

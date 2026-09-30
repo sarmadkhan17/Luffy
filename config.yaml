@@ -471,6 +471,11 @@ attention:
   registry_refresh_seconds: 14400
   registry_retry_seconds: 300
   registry_max_snapshot_age_ms: 28800000
+  # Shadow WorldModel input (observability/world_producer.py): each scan's
+  # worker child builds a point-in-time WorldModel from the scan's own closed
+  # bars and Attention consumes it; the receipt is persisted with the scan.
+  # Observational only, no trading authority. Off until separately deployed.
+  world_model: false
   max_symbols: 16              # subset cap, not venue-wide coverage
   max_causes: 64                # evaluator receipts per symbol
   queue_size: 16

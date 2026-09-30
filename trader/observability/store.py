@@ -13,6 +13,7 @@ import time
 from uuid import uuid4
 
 from .attention import SCHEMA, code_manifest, digest, evaluate_snapshot
+from . import world_producer
 
 
 IDENTITY_SCHEMA = "attention-scan-identity.v1"
@@ -303,7 +304,10 @@ class Store:
                     self.db.execute("INSERT OR IGNORE INTO scan_versions VALUES (?,?)", (scan_id, vid))
                     refs.append({"version_id": vid, "first_seen_ms": first_seen,
                                  "symbol": candle["symbol"], "open_ms": candle["open_ms"]})
-                payload = evaluate_snapshot(event)
+                if event.get("capture_settings", {}).get("world_model") is True:
+                    payload = world_producer.evaluate(event)
+                else:
+                    payload = evaluate_snapshot(event)
                 if ident: payload['collector_identity']=ident
                 payload.update(input_versions=refs, code_manifest=code_manifest(),
                                input_hash=digest(event["input"]),
