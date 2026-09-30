@@ -177,7 +177,10 @@ class Kernel:
 
     # ── boot ─────────────────────────────────────────────────────────────
     def _load_population(self) -> list[tuple]:
+        from .engine import trade_provenance
         pop = []
+        identities: dict = {}
+        loaded_at = dt.datetime.now(dt.timezone.utc).isoformat()
         for row in self.journal.list_strategies(["paper", "active", "demoted"]):
             if row.get("kind") == "spec":
                 # Specs enter through the compiled path below. Treating the
@@ -196,7 +199,16 @@ class Kernel:
                        generation=row["generation"] or 0)
             st.is_trade_eligible = row["state"] in ("paper", "active")
             pop.append((st, g))
+            identities[row["id"]] = trade_provenance.population_identity(
+                row["id"], kind=row["kind"], family=row["kind"], name=row["name"],
+                state=row["state"], generation=row["generation"] or 0,
+                parent_id=row.get("parent_id"), loaded_at=loaded_at,
+                params=st.params, created_at=row.get("created_at"))
+        self._spec_identities, self._identities_loaded_at = {}, loaded_at
         pop.extend(self._load_spec_population())
+        identities.update(self._spec_identities)
+        # swapped whole, with the population it describes (provenance only)
+        self._entry_identities = identities
         return pop
 
     def _load_spec_population(self) -> list[tuple]:
@@ -215,6 +227,8 @@ class Kernel:
         spec_exits: dict = {}
         self._spec_exits = spec_exits
         self._spec_rows = []
+        if not isinstance(getattr(self, "_spec_identities", None), dict):
+            self._spec_identities = {}
         try:
             rows = self.journal.list_specs(["paper", "active"])
         except Exception as e:
@@ -235,6 +249,14 @@ class Kernel:
             from .engine.exits import SpecExit
             spec_exits[spec.id] = SpecExit.from_spec(spec)
             register_evaluator(family, compiled.to_evaluator())
+            # the exact compiled version, for entry provenance (observation only)
+            from .engine.trade_provenance import population_identity
+            self._spec_identities[spec.id] = population_identity(
+                spec.id, kind="spec", family=family, name=spec.name,
+                state=row["state"], generation=spec.generation,
+                parent_id=spec.parent_id,
+                loaded_at=getattr(self, "_identities_loaded_at", None),
+                spec=spec, created_at=row.get("created_at"))
             st = type("S", (), {})()
             st.id, st.name, st.state = spec.id, spec.name, row["state"]
             st.params = {}
@@ -1088,14 +1110,49 @@ class Kernel:
                 return False
             log.info(f"meta size {d.symbol}: {m:.2f}× "
                      f"(p={getattr(d, 'meta_p', 0):.2f})")
+        identity, reference = self._entry_provenance(d, snap, top_strategy, exec_tf)
         pos = self.executor.open(
             d, sizing.amount, a, sl, tp,
             strategy_id=top_strategy or "orchestrator",
             strategy_name=top_strategy and next(
                 (s.get("strategy_name", "") for s in d.strategy_signals
                  if s.get("strategy_id") == top_strategy), "consensus"),
-            exec_mode="live")
+            exec_mode="live", entry_identity=identity, reference=reference)
         return pos is not None
+
+    def _entry_provenance(self, d, snap, top_strategy: str, exec_tf: str):
+        """(entry identity, slippage reference) for one entry. Observation
+        only: any failure yields an UNKNOWN identity and never blocks the entry."""
+        from .engine import trade_provenance
+        now = dt.datetime.now(dt.timezone.utc).isoformat()
+        try:
+            signal = next((s for s in (d.strategy_signals or [])
+                           if s.get("strategy_id") == top_strategy
+                           and s.get("action") == d.action.value), None) if top_strategy else None
+            loaded = (getattr(self, "_entry_identities", None) or {}).get(top_strategy)
+            identity = trade_provenance.entry_identity(
+                top_strategy, loaded, d, trade_provenance.clean(signal), now)
+        except Exception as e:                            # noqa: BLE001
+            identity = {"schema_version": trade_provenance.IDENTITY_VERSION,
+                        "status": "UNKNOWN", "reason": "identity_capture_failed:"
+                        + type(e).__name__, "strategy_id": top_strategy or None,
+                        "captured_at": now}
+        reference = {"price": None, "basis": "unavailable"}
+        try:
+            bar_ts = None
+            frame = snap.df(exec_tf)
+            if frame is not None and "ts" in frame:
+                bar_ts = str(frame["ts"].iloc[-1])
+            px = float(snap.price)
+            reference = {"price": px if px > 0 else None,
+                         "basis": "decision_snapshot_price",
+                         "definition": f"last {exec_tf} close in the decision snapshot; "
+                                       "the price the entry was sized and stopped on",
+                         "snapshot_at": snap.ts, "bar_ts": bar_ts}
+        except Exception as e:                            # noqa: BLE001
+            reference = {"price": None, "basis": "unavailable",
+                         "reason": "reference_capture_failed:" + type(e).__name__}
+        return identity, reference
 
     def _protection_for(self, se, price: float, atr: float,
                         side: str) -> tuple[float, float]:
@@ -1402,13 +1459,20 @@ class Kernel:
             fees = self.executor.taker_fee * (sold * entry + sold * px)
             pnl = gross - fees
             reason = "tp_fill" if tp and abs(px - tp) <= abs(px - sl) else "sl_fill"
+            # provenance only: the venue's executing order/fill ids for a native
+            # stop are not read here, so none are claimed
+            observed = {"basis": "exchange_exit_detected_by_size", "purpose": "native_exit",
+                        "protective_algo_id": t.get("sl_order_id") or None,
+                        "booked_pnl_basis": "estimated", "mark_price": px,
+                        "journal_amount": amount, "venue_amount": held}
             if held <= 0:
-                self.journal.close_trade(t["id"], px, round(pnl, 8), reason)
+                self.journal.close_trade(t["id"], px, round(pnl, 8), reason,
+                                         accounting=observed)
                 log.info(f"EXCHANGE EXIT {symbol}: {reason} @{px} pnl={pnl:+.2f}")
             else:
                 # part of the line filled; what remains is a real position
                 self.journal.align_trade_amount(
-                    t["id"], held, held * entry, pnl_delta=pnl)
+                    t["id"], held, held * entry, pnl_delta=pnl, accounting=observed)
                 log.info(f"EXCHANGE PARTIAL {symbol}: {reason} @{px} "
                          f"-{sold:g} pnl={pnl:+.2f} remaining={held:g}")
             self.notifier.send(

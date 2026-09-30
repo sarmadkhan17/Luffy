@@ -30,6 +30,9 @@ class CompiledStrategy:
     _filters: list = field(default_factory=list)
     _exit: object | None = None
     data_requires: tuple = ("ohlcv",)
+    #: sha256 of the exact compiled spec this evaluator runs; stamped on every
+    #: signal so a trade can name the version that proposed it (provenance only)
+    spec_sha256: str | None = None
 
     # ── vectorized path (Analyst) ────────────────────────────────────────
     def entries(self, frames: dict, btc: dict | None = None,
@@ -144,6 +147,7 @@ class CompiledStrategy:
                 confidence=0.6,
                 rationale=f"{self.spec.name}: {why}",
                 params={"spec_id": self.spec.id,
+                        "spec_sha256": self.spec_sha256,
                         "signal_bar_age_min": bar_age_min})
         _evaluate._diagnostic_capable = True
         return _evaluate
@@ -212,5 +216,7 @@ def compile_spec(spec: StrategySpec) -> CompiledStrategy:
     trees = [t for t in (long_t, short_t, exit_t, *filters) if t is not None]
     req = dsl.data_requires(*trees)
     spec.data_requires = list(req)
+    from ..engine.trade_provenance import spec_version
     return CompiledStrategy(spec=spec, _long=long_t, _short=short_t,
-                            _filters=filters, _exit=exit_t, data_requires=req)
+                            _filters=filters, _exit=exit_t, data_requires=req,
+                            spec_sha256=spec_version(spec)["spec_sha256"])

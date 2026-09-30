@@ -153,7 +153,9 @@ def reconcile_futures(exchange, journal: Journal, exclude_symbols=(), *, verify=
                 market_type="futures", exec_mode="live",
                 strategy_id="adopted", strategy_name="pre-existing position",
                 decision_id="")
-            journal.add_trade(pos)
+            journal.add_trade(pos, accounting={
+                "basis": "reconcile_adoption", "purpose": "adopted",
+                "venue_entry_price": entry, "venue_contracts": contracts})
             log.warning(f"ADOPTED orphaned exchange position {sym} "
                         f"{side_raw} {contracts} @ {entry}")
             adopted += 1
@@ -449,7 +451,11 @@ def flatten_all(exchange, journal: Journal, notifier=None) -> int:
             direction = 1.0 if t["side"] == "long" else -1.0
             pnl = ((fill - float(t["entry_price"])) * direction
                    * float(t["amount"]))
-            journal.close_trade(t["id"], fill, round(pnl, 8), "panic")
+            journal.close_trade(t["id"], fill, round(pnl, 8), "panic", accounting={
+                "basis": "panic_order_unconfirmed", "purpose": "panic_exit",
+                "order_id": str(order.get("id") or ""), "side": side_close,
+                "requested_quantity": float(t["amount"]),
+                "protective_algo_id": t.get("sl_order_id") or None})
             closed += 1
             log.warning(f"PANIC close {sym}: {t['amount']} @ ~{fill} "
                         f"(pnl {pnl:+.2f})")

@@ -95,8 +95,12 @@ def persist(db, trade_id, kind, before, evidence=None):
                'before': before, 'after': after, 'evidence': evidence,
                'assessment': assess(evidence)}
     receipt['sha256'] = digest(receipt)
-    db.execute('INSERT INTO trade_accounting_bookings(trade_id,payload) VALUES (?,?)',
-               (trade_id, json.dumps(receipt, sort_keys=True, allow_nan=False)))
+    cur = db.execute('INSERT INTO trade_accounting_bookings(trade_id,payload) VALUES (?,?)',
+                     (trade_id, json.dumps(receipt, sort_keys=True, allow_nan=False)))
+    # order/fill provenance for this receipt; contained, never fails the booking
+    from .trade_provenance import record_safely
+    record_safely(db, trade_id, kind, before, after, evidence, cur.lastrowid,
+                  recorded_ms=receipt['observed_ms'])
 
 
 def replay(receipt):
