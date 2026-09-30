@@ -477,6 +477,41 @@ class DataFeed:
             log.warning(f"price {symbol}: {e}")
             return None
 
+    def ticker_quote(self, symbol: str) -> dict:
+        """The same ticker valuation as price() (last, else close), with its
+        identity and times. Not an exchange mark price.
+
+        {symbol, price, field: "last"|"close"|None, source_ms (the ticker's own
+        timestamp, None if the venue sent none), attempt_started_at (epoch s,
+        taken immediately before the request), received_at (epoch s, taken
+        immediately after a successful return; None when nothing was received),
+        error}. A receipt earlier than its attempt (local clock stepped back)
+        is impossible: the quote fails closed with no price."""
+        attempt = time.time()
+        try:
+            t = self.ex.fetch_ticker(symbol)
+        except Exception as e:
+            log.warning(f"ticker {symbol}: {e}")
+            return {"symbol": symbol, "price": None, "field": None, "source_ms": None,
+                    "attempt_started_at": attempt, "received_at": None,
+                    "error": f"ticker_fetch_failed:{type(e).__name__}"}
+        received = time.time()
+        t = t if isinstance(t, dict) else {}
+        field = "last" if t.get("last") else "close" if t.get("close") else None
+        try:
+            px = float(t[field]) if field else None
+        except (TypeError, ValueError):
+            px = None
+        ts = t.get("timestamp")
+        error = None if px else "ticker_price_missing"
+        if received < attempt:
+            px, error = None, "quote_receipt_before_attempt"
+        return {"symbol": symbol, "price": px, "field": field,
+                "source_ms": ts if isinstance(ts, (int, float))
+                and not isinstance(ts, bool) else None,
+                "attempt_started_at": attempt, "received_at": received,
+                "error": error}
+
 
 #: symbols proven untradeable at runtime; shared process-wide so a rejection
 #: in the executor immediately removes the symbol from the next scan.

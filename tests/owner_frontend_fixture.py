@@ -145,6 +145,100 @@ def close_trade(journal, trade_id: str) -> None:
                   (_iso(datetime.now(timezone.utc)), trade_id))
 
 
+def account_observation(at, value=5164.5, **over) -> dict:
+    """A kernel _risk_step account_observation record (fresh venue read at `at`)."""
+    t = at.isoformat()
+    return {"schema": 2, "currency": "USDT", "attempted_at": t, "recorded_at": t,
+            "risk_input": value, "authoritative": True, "attempt_errors": [],
+            "source": "fixture", "status": "FRESH", "value": value,
+            "basis": "venue_total_margin_balance", "observed_at": t,
+            "successful_read_at": t, "successful_value": value,
+            "successful_basis": "venue_total_margin_balance", "fallback": None,
+            "consecutive_failures": 0, "completion_relation": "ok", "reason": None,
+            **over}
+
+
+def news_guard_state(at, truth="QUIET", **over) -> dict:
+    """A NewsGuard record as the kernel publishes it (QUIET or ARMED)."""
+    t = at.isoformat()
+    armed = truth == "ARMED"
+    rec = {"active": armed, "why": "2 impact headlines (1 severe)" if armed else "feed quiet",
+           "truth": truth, "attempted_at": t, "fetched_at": t, "assessed_at": t,
+           "succeeded_at": t, "newest_publication_at": t, "oldest_publication_at": t,
+           "hits": 2 if armed else 0, "severe": 1 if armed else 0,
+           "dated_hits": 2 if armed else 0, "dated_severe": 1 if armed else 0,
+           "headlines": ["[severe] Exchange hacked"] if armed else [],
+           "items_total": 5, "items_considered": 5, "dated_in_window": 5,
+           "undated_items": 0, "malformed_dates": 0, "future_dated_items": 0,
+           "failure_codes": [], "failures": [], "min_headlines": 2, "window_hours": 3.0,
+           "refresh_s": 600.0, "stale_after_s": 1260.0,
+           "dampening": {"applied": armed, "threshold_add": 0.08, "score_mult": 0.75,
+                         "enforcement": "dampen_only"},
+           "ts": t, "published_at": t}
+    rec.update(over)
+    return rec
+
+
+def risk_assessment(at, status="PASS", control="FROZEN", **over) -> dict:
+    """A kernel cycle risk_assessment record (RISK_FIXTURE_CFG limits)."""
+    from trader.engine.risk import policy_from_config
+    pol = policy_from_config(RISK_FIXTURE_CFG)
+    blocks = status == "BLOCK"
+    eq, peak, day = 5164.5, (6886.0 if blocks else 5227.2), 5185.2
+    dd = round(max(0.0, (peak - eq) / peak) * 100, 2)
+    dp = round((eq - day) / day * 100, 2)
+
+    def con(name, limit, observed, result="pass", unit="pct"):
+        return {"name": name, "limit": limit, "observed": observed, "result": result,
+                "unit": unit, "basis": "fixture"}
+    rec = {"schema": 2, "assessed_at": at.isoformat(), "status": status,
+           "reasons": ["halt_drawdown_block"] if blocks else [],
+           "constraints": [
+               con("risk_baseline", "ok", "ok", unit="state"),
+               con("halt_drawdown", 20.0, dd, "block" if blocks else "pass"),
+               con("daily_loss_breaker", -6.0, dp),
+               con("max_open_positions", 8, 2, unit="count"),
+               con("portfolio_heat", 15.0, 1.5), con("total_margin", 70.0, 9.0),
+               con("per_symbol_risk_cap", 8.0, None, "applies_at_entry"),
+               con("per_position_margin", 20.0, None, "applies_at_entry")],
+           "risk_state": "ok", "drawdown_pct": dd, "daily_pnl_pct": dp,
+           "halt_breached": blocks,
+           "baseline": {"peak_equity": peak, "day_start_equity": day, "day_key": "d"},
+           "equity": {"value": eq, "status": "FRESH", "basis": "venue_total_margin_balance",
+                      "observed_at": at.isoformat(), "age_at_assessment_s": 0.0,
+                      "fresh_at_assessment": True, "authoritative": True},
+           "book": {"source": "journal open trades", "read_at": at.isoformat(),
+                    "positions": 2, "malformed": []},
+           "policy": {"digest": pol["digest"], "risk_manager_identity": "fixture",
+                      "effective": pol["effective"], "limits": pol["limits"]},
+           "control": {"state": control, "entries_permitted_by_control": control == "ACTIVE",
+                       "applicability": "fixture"},
+           "entry_gate": {"allowed": control == "ACTIVE", "blocked_reason":
+                          None if control == "ACTIVE" else f"state={control}",
+                          "basis": "fixture"},
+           "source": "fixture"}
+    rec.update(over)
+    return rec
+
+
+RISK_FIXTURE_CFG = {"risk": {"risk_per_trade_pct": 1.0, "portfolio_heat_cap_pct": 15,
+                             "per_symbol_risk_cap_pct": 8, "max_open_positions": 8,
+                             "max_daily_loss_pct": 6, "halt_drawdown_pct": 20,
+                             "leverage": 5, "stop_loss_atr_mult": 2.0,
+                             "min_notional_usdt": 5}}
+
+
+def seed_truth(c, now, scenario: str = "normal") -> None:
+    """The kernel's current-truth records: account observation, News Guard
+    and Risk assessment (stale in the stale scenario)."""
+    age = timedelta(hours=1) if scenario == "stale" else timedelta(seconds=20)
+    for key, rec in (("account_observation", account_observation(now - age)),
+                     ("news_guard_state", news_guard_state(now - age)),
+                     ("risk_assessment", risk_assessment(now - age))):
+        c.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES(?,?)",
+                  (key, json.dumps(rec)))
+
+
 def seed(root: Path, journal, scenario: str = "normal") -> None:
     """Rewrite the fixture state for one scenario."""
     now = datetime.now(timezone.utc)
@@ -185,6 +279,7 @@ def seed(root: Path, journal, scenario: str = "normal") -> None:
         if scenario == "stale":
             c.execute("UPDATE equity SET ts=? WHERE ts=(SELECT MAX(ts) FROM equity)",
                       (_iso(now - timedelta(hours=1)),))
+        seed_truth(c, now, scenario)
         for tid, sym, side, amt, px, opened in (
                 ("t-btc", "BTC/USDT", "long", 0.01, 60000.0, now - timedelta(hours=6)),
                 ("t-eth", "ETH/USDT", "short", 0.5, 3000.0, now - timedelta(hours=5))):
@@ -501,6 +596,9 @@ def make_app(root: Path, monkeypatch=None, scenario: str = "normal"):
     setattr_(server, "_owner_gateway", lambda cfg, auth: gateway)
     setattr_(server, "_position_marks",
              lambda j: {"BTC/USDT": {"mark": 61000.0, "upnl": 10.0}})
+    setattr_(server, "_position_quotes", lambda j: (j.open_trades(), {
+        "BTC/USDT": {"symbol": "BTC/USDT", "price": 61000.0, "field": "last",
+                     "source_ms": None, "received_at": time.time(), "error": None}}))
     setattr_(server, "_account_snapshot", lambda: (_ for _ in ()).throw(AssertionError("venue")))
     real_install = owner_api.install
 

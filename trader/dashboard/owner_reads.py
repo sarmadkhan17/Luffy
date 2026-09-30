@@ -829,6 +829,7 @@ def operations(journal) -> dict:
                                "WHERE event='signal_cooldown'")[0]
     recovery = _load(journal.kv_get("execution_recovery", None))
     return {"generated_at": _iso(_now()), "window": window,
+            "latest": latest_activity(journal),
             "timeline": _timeline(journal, rows, orders, events),
             "risk_blocks": sorted(({"reason": k, "n": n} for k, n in blocks.items()),
                                   key=lambda b: -b["n"]),
@@ -1080,6 +1081,116 @@ def probes(journal, root: Path, vault: Path) -> list[dict]:
     return out
 
 
+_DEC_COLS = ("id, cycle_id, ts, symbol, action, score, threshold, executed, skip_reason, "
+             "size_usdt, entry_price, strategy_ids")
+#: exact latest-match predicates; each matches a Journal partial index on ts
+#: (idx_decisions_executed_ts / _directional_ts / _skipped_ts / _rejected_ts)
+EXECUTED = "executed=1"
+DIRECTIONAL = "action!='HOLD'"
+SKIPPED = "action!='HOLD' AND executed=0"
+REJECTED = ("action!='HOLD' AND executed=0 AND skip_reason IS NOT NULL AND "
+            "skip_reason!=''")
+#: each predicate is pinned to its partial index (INDEXED BY fails loudly
+#: rather than silently falling back to a sort/scan)
+_INDEX_FOR = {EXECUTED: "idx_decisions_executed_ts", DIRECTIONAL: "idx_decisions_directional_ts",
+              SKIPPED: "idx_decisions_skipped_ts", REJECTED: "idx_decisions_rejected_ts"}
+
+
+class ExactIndexMissing(LookupError):
+    """The partial index an exact latest read needs does not exist (a journal
+    not yet migrated by normal Journal initialization). Exact reads refuse
+    instead of scanning; callers report UNAVAILABLE."""
+
+
+def _require_index(journal, where: str) -> str:
+    name = _INDEX_FOR[where]
+    if not _rows(journal, "SELECT 1 FROM sqlite_master WHERE type='index' AND name=?",
+                 (name,)):
+        raise ExactIndexMissing(name)
+    return name
+
+
+def latest_decisions(journal, where: str, limit: int = 1,
+                     cols: str = _DEC_COLS) -> list[dict]:
+    """Newest decisions matching one of the indexed predicates: exact, over
+    the whole table (no lookback window), newest by ts then insertion.
+    Raises ExactIndexMissing on an unmigrated journal."""
+    return _rows(journal, f"SELECT {cols} FROM decisions INDEXED BY "
+                          f"{_require_index(journal, where)} WHERE {where} "
+                          "ORDER BY ts DESC, rowid DESC LIMIT ?", (int(limit),))
+
+
+def latest_activity(journal) -> dict:
+    """Exact latest records, not a newest-500 window.
+
+    - latest_decision: newest decision row (insertion order).
+    - latest_requested: newest directional (non-HOLD) decision — an entry was
+      proposed; not that an order was sent.
+    - latest_executed: newest decision the executor reported as entered
+      (decisions.executed=1).
+    - latest_rejection: newest directional, not executed decision with a
+      recorded skip_reason.
+    - latest_journal_execution: newest journal trade with exec_mode='live'
+      (an order was sent to the demo venue) — a journal booking, with its
+      fill evidence status.
+    - latest_proven_fill: that trade only when a booking receipt verifies its
+      exact venue fills; otherwise UNKNOWN (a newer unverified execution means
+      the latest fill cannot be established from receipts).
+
+    All filtered reads use partial indexes: exact, no lookback bound."""
+    def one(rows):
+        return {"found": bool(rows), "record": rows[0] if rows else None,
+                "ref": _ref("decision", rows[0]["id"]) if rows else None}
+
+    def exact(where):
+        try:
+            return one(latest_decisions(journal, where))
+        except ExactIndexMissing as e:     # unknown, never "none found"
+            return {"found": None, "record": None, "ref": None, "status": "UNAVAILABLE",
+                    "reason": f"exact_index_missing:{e}"}
+    out = {
+        "latest_decision": one(_rows(journal, f"SELECT {_DEC_COLS} FROM decisions "
+                                              "ORDER BY rowid DESC LIMIT 1")),
+        "latest_requested": exact(DIRECTIONAL),
+        "latest_executed": exact(EXECUTED),
+        "latest_rejection": exact(REJECTED),
+    }
+    trade = _rows(journal, "SELECT id, decision_id, symbol, side, status, exec_mode, opened_at, "
+                           "amount, entry_price FROM trades WHERE exec_mode='live' "
+                           "ORDER BY opened_at DESC, id DESC LIMIT 1")
+    execution = {"found": bool(trade), "record": trade[0] if trade else None,
+                 "ref": _ref("trade", trade[0]["id"]) if trade else None,
+                 "fill_evidence": None}
+    proven = {"status": "UNKNOWN", "record": None, "ref": None,
+              "reason": "no_journal_execution"}
+    if trade:
+        verified, receipts = False, 0
+        if _table_exists(journal, "trade_accounting_bookings"):
+            for r in _rows(journal, "SELECT id, trade_id, payload FROM "
+                                    "trade_accounting_bookings WHERE trade_id=? ORDER BY id "
+                                    "LIMIT 50", (trade[0]["id"],)):
+                receipts += 1
+                a = _receipt(r, trade[0]["id"])["assessment"]
+                verified = verified or (isinstance(a, dict)
+                                        and a.get("status") == FILLS_VERIFIED)
+        execution["fill_evidence"] = ("VENUE_FILL_VERIFIED" if verified else
+                                      "JOURNAL_BOOKED_UNVERIFIED")
+        execution["receipts"] = receipts
+        proven = ({"status": "PROVEN", "record": trade[0], "ref": execution["ref"],
+                   "reason": None} if verified else
+                  {"status": "UNKNOWN", "record": None, "ref": None,
+                   "reason": "latest_journal_execution_not_verified"})
+    out["latest_journal_execution"] = execution
+    out["latest_proven_fill"] = proven
+    return {"generated_at": _iso(_now()), **out,
+            "semantics": {"requested": "directional decision recorded",
+                          "executed": "executor reported the entry (decisions.executed=1)",
+                          "journal_execution": "journal trade with exec_mode=live (order "
+                                               "sent); not proof of a venue fill",
+                          "proven_fill": "a booking receipt verifies exact venue fills"},
+            "source": "journal decisions and trades; exact latest matches via indexes"}
+
+
 def overview_activity(journal) -> dict:
     """Owner summary of recorded activity. Every item carries its recorded id."""
     missing: list[dict] = []
@@ -1090,8 +1201,16 @@ def overview_activity(journal) -> dict:
         if r["skip_reason"]:
             k = _reason_class(r["skip_reason"])
             blocks[k] = blocks.get(k, 0) + 1
-    executed = [r for r in rows if r["executed"]][:5]
-    skipped = [r for r in rows if r["action"] != "HOLD" and not r["executed"]][:5]
+    # exact newest executed/skipped over the whole journal (indexed), not the
+    # newest-500 window; the window still feeds the block counts only
+    cols = "id, ts, symbol, action, executed, skip_reason, strategy_ids"
+    try:
+        executed = latest_decisions(journal, EXECUTED, 5, cols)
+        skipped = latest_decisions(journal, SKIPPED, 5, cols)
+    except ExactIndexMissing as e:        # unmigrated journal: unknown, not empty
+        executed = skipped = None
+        missing.append(_unavailable("decisions.executed/skipped",
+                                    f"exact_index_missing:{e}"))
     strategies = _rows(journal, "SELECT id, name, kind, state, state_changed_at FROM strategies "
                                 "WHERE state IN ('active', 'paper') ORDER BY state, name "
                                 "LIMIT 50")
@@ -1142,11 +1261,17 @@ def overview_activity(journal) -> dict:
         _unavailable("news_guard", "News Guard is not shown until its source state is "
                                    "trustworthy")]
     return {"generated_at": _iso(_now()),
+            "decisions_basis": {"executed_skipped": "exact newest over all decisions",
+                                "risk_blocks": f"newest {ACTIVITY_WINDOW} decisions"},
             "decisions": {"window": len(rows), "executed": executed, "skipped": skipped,
                           "risk_blocks": sorted(({"reason": k, "n": n} for k, n in
                                                  blocks.items()), key=lambda b: -b["n"])[:6]},
             "strategies": strategies, "lifecycle": lifecycle, "research": research_out,
-            "risk_state": kv("risk_state"), "rent_state": kv("rent_state"),
+            "risk_state": kv("risk_state"),
+            "risk_state_note": "Risk baseline (high-water mark/day start), not a current "
+                               "assessment; see /owner-api/v1/risk",
+            "rent_state": kv("rent_state"),
+            "latest": latest_activity(journal),
             "unresolved_owner_requests": requests, "unavailable": missing,
             "source": f"journal: newest {ACTIVITY_WINDOW} decisions, strategies (active/paper) "
                       "with journal-booked economics, brain_events, research ledger, "
@@ -1334,6 +1459,10 @@ def install(app, *, journal, root: Path, vault: Path) -> None:
     @app.get(PREFIX + "/operations/activity")
     def owner_operations():
         return _json(operations(journal))
+
+    @app.get(PREFIX + "/activity/latest")
+    def owner_latest_activity():
+        return _json(latest_activity(journal))
 
     @app.get(PREFIX + "/overview/activity")
     def owner_overview_activity():

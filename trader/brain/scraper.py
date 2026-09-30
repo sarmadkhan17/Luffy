@@ -108,16 +108,71 @@ def idea_score(item: dict) -> int:
 
 def scrape_feed(feed_url: str, timeout: int = 15) -> list[dict]:
     """Fetch + parse an RSS *or Atom* feed → [{source, idea_id, title,
-    text, age_h}]. Tolerant of CDATA, whitespace, embedded HTML and XML
-    entities; shared by the Scraper and the NewsGuard."""
+    text, link, age_h, published_ts}]. Tolerant of CDATA, whitespace,
+    embedded HTML and XML entities; shared by the Scraper and the crawler.
+
+    Any failure is an empty list (the idea harvesters degrade silently).
+    Callers that must tell a quiet feed from a failed one (NewsGuard) use
+    fetch_feed(), which reports the failure explicitly."""
+    return fetch_feed(feed_url, timeout)["items"]
+
+
+#: fetch_feed failure codes (a failure is never a quiet feed)
+FEED_FAILURES = ("fetch_timeout", "fetch_connection", "fetch_error", "http_status",
+                 "empty_body", "parse_unrecognized_document", "parse_no_usable_items",
+                 "parse_error")
+_FEED_ROOT = re.compile(r"<(rss|feed|rdf:RDF|channel)[\s>]", re.I)
+
+
+def fetch_feed(feed_url: str, timeout: int = 15) -> dict:
+    """One feed read with explicit truth.
+
+    {url, ok, error_code, error, http_status, attempted_at, completed_at (epoch s),
+     blocks, items}. ok=True only for a 2xx response whose body is a recognised
+    RSS/Atom document and, when it has entries, at least one usable entry. A
+    well-formed feed with no entries is ok with items=[] (genuinely quiet)."""
+    out = {"url": feed_url, "ok": False, "error_code": None, "error": None,
+           "http_status": None, "attempted_at": time.time(), "completed_at": None,
+           "blocks": 0, "items": []}
+
+    def fail(code, err=""):
+        out.update(ok=False, error_code=code, error=str(err)[:200],
+                   completed_at=time.time(), items=[])
+        log.warning(f"rss {code} {feed_url}: {str(err)[:120]}")
+        return out
     try:
         r = requests.get(feed_url, headers=UA, timeout=timeout)
+    except requests.Timeout as e:
+        return fail("fetch_timeout", e)
+    except requests.ConnectionError as e:
+        return fail("fetch_connection", e)
     except Exception as e:
-        log.warning(f"rss fetch failed {feed_url}: {e}")
-        return []
+        return fail("fetch_error", e)
+    status = getattr(r, "status_code", None)
+    out["http_status"] = status if isinstance(status, int) else None
+    if isinstance(status, int) and not 200 <= status < 300:
+        return fail("http_status", f"HTTP {status}")
+    text = getattr(r, "text", None)
+    if not isinstance(text, str) or not text.strip():
+        return fail("empty_body", "empty response body")
+    try:
+        items, blocks = _parse_feed(feed_url, text)
+    except Exception as e:
+        return fail("parse_error", e)
+    out["blocks"] = blocks
+    if blocks == 0 and not _FEED_ROOT.search(text[:4000]):
+        return fail("parse_unrecognized_document", "no RSS/Atom root or entries")
+    if blocks > 0 and not items:
+        return fail("parse_no_usable_items", f"0 of {blocks} entries parsed")
+    out.update(ok=True, items=items, completed_at=time.time())
+    return out
+
+
+def _parse_feed(feed_url: str, text: str) -> tuple[list[dict], int]:
+    """(deduplicated usable items, number of <item>/<entry> blocks seen)."""
     items = []
-    blocks = re.findall(r"<item>[\s\S]*?</item>", r.text) + \
-        re.findall(r"<entry>[\s\S]*?</entry>", r.text)
+    blocks = re.findall(r"<item>[\s\S]*?</item>", text) + \
+        re.findall(r"<entry>[\s\S]*?</entry>", text)
     for block in blocks:
         tm = re.search(r"<title>(?:<!\[CDATA\[)?([\s\S]+?)(?:\]\]>)?</title>",
                        block)
@@ -144,6 +199,8 @@ def scrape_feed(feed_url: str, timeout: int = 15) -> list[dict]:
         if len(desc) < 40:
             continue
         age_h = None
+        pub_ts = None
+        pub_status = "missing"
         if pm:
             raw_date = next((g for g in pm.groups() if g), None)
             if raw_date:
@@ -159,7 +216,10 @@ def scrape_feed(feed_url: str, timeout: int = 15) -> list[dict]:
                             raw_date.replace("Z", "+00:00")).timestamp()
                     except Exception:
                         pass
+                pub_status = "malformed"
                 if ts:
+                    pub_ts = ts
+                    pub_status = "ok"
                     age_h = max(0.0, (time.time() - ts) / 3600)
         title = re.sub(r"\s+", " ", _html.unescape(tm.group(1))).strip()
         link = ""
@@ -173,14 +233,15 @@ def scrape_feed(feed_url: str, timeout: int = 15) -> list[dict]:
                       "title": title,
                       "text": desc[:600],
                       "link": link,
-                      "age_h": round(age_h, 2) if age_h is not None else None})
+                      "age_h": round(age_h, 2) if age_h is not None else None,
+                      "published_ts": pub_ts, "published_status": pub_status})
     seen, out = set(), []
     for it in items:
         if it["idea_id"] in seen:
             continue
         seen.add(it["idea_id"])
         out.append(it)
-    return out
+    return out, len(blocks)
 
 
 def repair_params(family: str, raw: dict) -> dict:

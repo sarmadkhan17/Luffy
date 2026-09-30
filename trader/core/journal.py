@@ -65,6 +65,14 @@ CREATE TABLE IF NOT EXISTS decisions (
 );
 CREATE INDEX IF NOT EXISTS idx_decisions_symbol ON decisions(symbol, ts);
 CREATE INDEX IF NOT EXISTS idx_decisions_exec ON decisions(executed);
+-- exact latest-match reads (owner surfaces): partial indexes, newest by ts
+CREATE INDEX IF NOT EXISTS idx_decisions_executed_ts ON decisions(ts) WHERE executed=1;
+CREATE INDEX IF NOT EXISTS idx_decisions_directional_ts ON decisions(ts)
+    WHERE action!='HOLD';
+CREATE INDEX IF NOT EXISTS idx_decisions_skipped_ts ON decisions(ts)
+    WHERE action!='HOLD' AND executed=0;
+CREATE INDEX IF NOT EXISTS idx_decisions_rejected_ts ON decisions(ts)
+    WHERE action!='HOLD' AND executed=0 AND skip_reason IS NOT NULL AND skip_reason!='';
 
 -- Outcome resolution: what actually happened after a non-HOLD decision.
 CREATE TABLE IF NOT EXISTS outcomes (
@@ -113,6 +121,15 @@ CREATE TABLE IF NOT EXISTS equity (
     equity REAL NOT NULL,
     balance REAL NOT NULL,
     open_positions INTEGER
+);
+-- Where each equity row's value came from (kernel account observation):
+-- written in the same transaction as the row, keyed by the row's ts. The
+-- row's ts is its WRITE time; provenance.observed_at is the venue read that
+-- produced the value (a reused fallback keeps the original read time). A
+-- row without provenance has unknown origin (legacy / other writers).
+CREATE TABLE IF NOT EXISTS equity_provenance (
+    ts TEXT PRIMARY KEY,
+    provenance TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS brain_events (
@@ -392,11 +409,20 @@ class Journal:
             c.execute("UPDATE trades SET stop_loss=?, take_profit=? WHERE id=?",
                       (sl, tp, trade_id))
 
-    def log_equity(self, equity: float, balance: float, n_open: int) -> None:
+    def log_equity(self, equity: float, balance: float, n_open: int,
+                   provenance: dict | None = None) -> None:
+        """One equity row; `provenance` (the value's source) is written
+        atomically beside it. Without provenance any stale provenance for this
+        ts is removed, so a row never inherits another value's origin."""
         ts = now_utc().isoformat(timespec="seconds")
         with self._tx() as c:
             c.execute("INSERT OR REPLACE INTO equity VALUES (?,?,?,?)",
                       (ts, equity, balance, n_open))
+            if provenance is None:
+                c.execute("DELETE FROM equity_provenance WHERE ts=?", (ts,))
+            else:
+                c.execute("INSERT OR REPLACE INTO equity_provenance(ts, provenance) "
+                          "VALUES (?,?)", (ts, json.dumps(provenance, allow_nan=False)))
 
     def log_brain_event(self, kind: str, subject: str, detail: Any) -> None:
         with self._tx() as c:

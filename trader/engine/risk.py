@@ -91,6 +91,75 @@ def _is_number(v) -> bool:
     return isinstance(v, (int, float)) and not isinstance(v, bool)
 
 
+def _policy(risk_pct, heat_cap, symbol_cap, max_positions, daily_loss_block, derisk_steps,
+            halt_dd, leverage, sl_atr_mult, min_notional, max_pos_margin, max_total_margin,
+            proving_trades, proving_mult, taker_fee) -> dict:
+    """{effective, limits, digest}. `effective` is exactly what RiskManager
+    enforces (its own fractions, unrounded); the digest covers `effective`
+    only, so two policies that differ anywhere never share an identity.
+    `limits` is a rounded percentage view for people. Non-finite values are
+    refused (ValueError): an identity is only issued for a usable policy."""
+    effective = {
+        "risk_pct": risk_pct, "heat_cap": heat_cap, "symbol_cap": symbol_cap,
+        "max_positions": max_positions, "daily_loss_block": daily_loss_block,
+        "derisk_steps": [[d, m] for d, m in derisk_steps], "halt_dd": halt_dd,
+        "leverage": leverage, "sl_atr_mult": sl_atr_mult, "min_notional": min_notional,
+        "max_pos_margin": max_pos_margin, "max_total_margin": max_total_margin,
+        "proving_trades": proving_trades, "proving_mult": proving_mult,
+        "taker_fee": taker_fee,
+    }
+    flat = [v for k, v in effective.items() if k != "derisk_steps"] + \
+        [x for step in effective["derisk_steps"] for x in step]
+    if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v)
+           for v in flat):
+        raise ValueError("risk policy has a non-finite or non-numeric value")
+    blob = json.dumps(effective, sort_keys=True, separators=(",", ":"), allow_nan=False)
+    limits = {
+        "risk_per_trade_pct": round(risk_pct * 100, 6),
+        "portfolio_heat_cap_pct": round(heat_cap * 100, 6),
+        "per_symbol_risk_cap_pct": round(symbol_cap * 100, 6),
+        "max_open_positions": max_positions,
+        "max_daily_loss_pct": round(daily_loss_block * 100, 6),
+        "drawdown_derisk_steps": [{"dd_pct": d, "size_mult": m} for d, m in derisk_steps],
+        "halt_drawdown_pct": round(halt_dd * 100, 6),
+        "leverage": leverage,
+        "stop_loss_atr_mult": sl_atr_mult,
+        "min_notional_usdt": min_notional,
+        "max_position_margin_pct": round(max_pos_margin * 100, 6),
+        "max_total_margin_pct": round(max_total_margin * 100, 6),
+        "proving_period_trades": proving_trades,
+        "proving_size_mult": proving_mult,
+        "taker_fee_pct": round(taker_fee * 100, 6),
+    }
+    return {"effective": effective, "limits": limits,
+            "limits_note": "rounded display view; identity is the digest of `effective`",
+            "digest": hashlib.sha256(blob.encode()).hexdigest()}
+
+
+def policy_from_config(cfg: dict) -> dict:
+    """The limits RiskManager(cfg) would enforce, parsed exactly as __init__
+    parses them, with a digest identifying that effective policy. Read-only:
+    a configured policy, not proof of what a running kernel enforces."""
+    r = cfg["risk"]
+    return _policy(
+        float(r["risk_per_trade_pct"]) / 100.0,
+        float(r["portfolio_heat_cap_pct"]) / 100.0,
+        float(r["per_symbol_risk_cap_pct"]) / 100.0,
+        int(r["max_open_positions"]),
+        float(r["max_daily_loss_pct"]) / 100.0,
+        sorted((float(s["dd_pct"]), float(s["size_mult"]))
+               for s in r.get("drawdown_derisk_steps", [])),
+        float(r["halt_drawdown_pct"]) / 100.0,
+        int(r["leverage"]),
+        float(r["stop_loss_atr_mult"]),
+        float(r["min_notional_usdt"]),
+        float(r.get("max_position_margin_pct", 20.0)) / 100.0,
+        float(r.get("max_total_margin_pct", 70.0)) / 100.0,
+        int(r.get("proving_period_trades", 30)),
+        float(r.get("proving_size_mult", 0.5)),
+        float(r.get("taker_fee_pct", 0.05)) / 100.0)
+
+
 class RiskManager:
     def __init__(self, cfg: dict, journal):
         r = cfg["risk"]
@@ -606,6 +675,15 @@ class RiskManager:
         if dd >= self.halt_dd:
             return "risk_halt_active"
         return None
+
+    def policy(self) -> dict:
+        """The limits this instance enforces (its own attributes) + digest."""
+        return {**_policy(self.risk_pct, self.heat_cap, self.symbol_cap, self.max_positions,
+                          self.daily_loss_block, self.derisk_steps, self.halt_dd,
+                          self.leverage, self.sl_atr_mult, self.min_notional,
+                          self.max_pos_margin, self.max_total_margin, self.proving_trades,
+                          self.proving_mult, self.taker_fee),
+                "risk_manager_identity": self._identity}
 
     def derisk_multiplier(self, dd_pct: float) -> float:
         m = 1.0

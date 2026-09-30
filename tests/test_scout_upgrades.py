@@ -158,12 +158,18 @@ def test_depth_no_book():
 
 
 # ── 4. news guard ─────────────────────────────────────────────────────────
+def _feed(items):
+    """A successful fetch_feed result carrying `items`."""
+    return lambda url, *a, **k: {"url": url, "ok": True, "items": items,
+                                 "error_code": None, "http_status": 200, "blocks": len(items)}
+
+
 def test_news_guard_arms_on_severe(monkeypatch):
     from trader.agents import news_guard as ng
     g = ng.NewsGuard({"scouts": {"news_guard": {"enabled": True}}})
-    monkeypatch.setattr(ng, "scrape_feed", lambda url: [
+    monkeypatch.setattr(ng, "fetch_feed", _feed([
         {"title": "DeFi protocol hacked, $50M drained", "text": "x" * 60,
-         "age_h": 0.5}])
+         "age_h": 0.5}]))
     st = g.check()
     assert st["active"]
 
@@ -171,17 +177,17 @@ def test_news_guard_arms_on_severe(monkeypatch):
 def test_news_guard_needs_two_impact(monkeypatch):
     from trader.agents import news_guard as ng
     g = ng.NewsGuard({"scouts": {"news_guard": {"enabled": True}}})
-    monkeypatch.setattr(ng, "scrape_feed", lambda url: [
+    monkeypatch.setattr(ng, "fetch_feed", _feed([
         {"title": "Fed minutes hint at rate decision debate", "text": "y" * 60,
-         "age_h": 1.0}])
+         "age_h": 1.0}]))
     assert not g.check()["active"]
 
 
 def test_news_guard_ignores_old_headlines(monkeypatch):
     from trader.agents import news_guard as ng
     g = ng.NewsGuard({"scouts": {"news_guard": {"enabled": True}}})
-    monkeypatch.setattr(ng, "scrape_feed", lambda url: [
-        {"title": "Exchange hacked", "text": "z" * 60, "age_h": 48}])
+    monkeypatch.setattr(ng, "fetch_feed", _feed([
+        {"title": "Exchange hacked", "text": "z" * 60, "age_h": 48}]))
     assert not g.check()["active"]
 
 

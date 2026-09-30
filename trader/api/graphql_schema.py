@@ -24,6 +24,10 @@ def _rows(j: Journal, sql: str, params: tuple = ()) -> list:
     return j.query(sql, params)
 
 
+#: kernel heartbeat file read by `status` (a module constant so tests can
+#: point it at a temp file)
+HEARTBEAT_PATH = str(__import__("pathlib").Path(__file__).resolve().parents[2]
+                     / "data" / "heartbeat_luffy.json")
 #: Upper bound on any list a query returns. Callers asking for more get this.
 MAX_ROWS = 1000
 #: SQLite bound-parameter budget per votes batch.
@@ -74,9 +78,16 @@ def _votes_loader(journal: Journal) -> DataLoader:
 # ── types ────────────────────────────────────────────────────────────────
 @strawberry.type
 class EquityPoint:
+    """`ts` is the row's write time. The value's source is `row_kind`
+    (venue_observation | fallback_reuse | unknown_origin_reuse | no_value |
+    unknown) with `source_observed_at` — a reused fallback keeps the original
+    read time, and a row without provenance is `unknown`."""
     ts: str
     equity: float
     open_positions: int
+    row_kind: str = "unknown"
+    basis: Optional[str] = None
+    source_observed_at: Optional[str] = None
 
 
 @strawberry.type
@@ -107,9 +118,16 @@ def _vote_from_row(v) -> VoteType:
 
 @strawberry.type
 class NewsGuardType:
-    active: bool
+    """current_truth.read_news_guard. `active` is None when no trustworthy
+    current record exists; `status` QUIET (the only clear state) requires a
+    fresh successful read."""
+    active: Optional[bool]
     why: str
     checked_at: str
+    status: str = "UNAVAILABLE"
+    clear: bool = False
+    freshness: str = "unavailable"
+    reasons: list[str] = strawberry.field(default_factory=list)
 
 
 @strawberry.type
@@ -226,14 +244,18 @@ class StrategyFullType(StrategyType):
 
 @strawberry.type
 class StatusType:
-    control_state: str
+    """Missing is None, never a default: no control record is not ACTIVE, and
+    drawdown/daily P&L come only from a fresh kernel Risk assessment."""
+    control_state: Optional[str]
     market_type: str
     heartbeat_age_s: str
-    equity: str
-    drawdown_pct: str
-    daily_pnl_pct: str
+    equity: Optional[str]
+    drawdown_pct: Optional[str]
+    daily_pnl_pct: Optional[str]
     open_trades: int
     strategies_active: int
+    equity_freshness: str = "unavailable"
+    risk_status: str = "UNAVAILABLE"
 
 
 # ── queries ──────────────────────────────────────────────────────────────
@@ -245,22 +267,37 @@ def build_query(journal: Journal):
         @_offloop
         def status(self) -> StatusType:
             kv = journal.kv_get
-            hb = _rows(journal, "SELECT ts FROM equity ORDER BY ts DESC LIMIT 1")
-            eq = _rows(journal, "SELECT * FROM equity ORDER BY ts DESC LIMIT 1")
+            from ..dashboard import current_truth
+            now = datetime.now(timezone.utc)
+            acc, _ = current_truth.read_account(journal, now)
+            risk, _ = current_truth.read_risk(journal, now)
+            cur = (risk or {}).get("current") or {}
+            fresh_risk = cur.get("freshness") == "fresh"
+
+            def num(v):
+                return None if v is None or not fresh_risk else str(v)
             import time as _t
             hb_age = "never"
             try:
                 from pathlib import Path
-                p = Path(__file__).resolve().parents[2] / "data" / "heartbeat_luffy.json"
-                hb_age = f"{_t.time() - json.loads(p.read_text())['timestamp']:.0f}s"
-            except Exception:
+                from ..core.truth import parse_time
+                stamp = json.loads(Path(HEARTBEAT_PATH).read_text())["timestamp"]
+                at = parse_time(stamp)[0]
+                age = (now - at).total_seconds() if at else None
+                # a future or malformed heartbeat is an invalid clock, not an age
+                hb_age = "invalid" if age is None or age < 0 else f"{age:.0f}s"
+            except (OSError, ValueError, KeyError, TypeError):
                 pass
             return StatusType(
-                control_state=kv("control_state", "ACTIVE"),
+                control_state=kv("control_state"),
                 market_type=kv("market_type", "futures"),
                 heartbeat_age_s=hb_age,
-                equity=str(eq[0]["equity"]) if eq else "0",
-                drawdown_pct="0", daily_pnl_pct="0",
+                equity=(str(acc["equity"]) if acc and acc.get("equity") is not None
+                        else None),
+                equity_freshness=(acc or {}).get("freshness") or "unavailable",
+                drawdown_pct=num(cur.get("drawdown_pct")),
+                daily_pnl_pct=num(cur.get("daily_pnl_pct")),
+                risk_status=str(cur.get("status") or "UNAVAILABLE"),
                 open_trades=len(journal.open_trades()),
                 strategies_active=len(
                     journal.list_strategies(["paper", "active"])))
@@ -268,12 +305,18 @@ def build_query(journal: Journal):
         @strawberry.field
         @_offloop
         def equity_curve(self, limit: int = 500) -> list[EquityPoint]:
-            rows = _rows(journal,
-                         "SELECT * FROM equity ORDER BY ts DESC LIMIT ?",
+            from ..dashboard.current_truth import (equity_rows_sql, has_provenance_table,
+                                                   row_provenance)
+            rows = _rows(journal, equity_rows_sql(provenance=has_provenance_table(journal)),
                          (_bound(limit, 5000),))
-            return [EquityPoint(ts=r["ts"], equity=r["equity"],
-                                open_positions=r["open_positions"])
-                    for r in reversed(rows)]
+            out = []
+            for r in reversed(rows):
+                prov = row_provenance(r["provenance"], r["equity"])
+                out.append(EquityPoint(ts=r["ts"], equity=r["equity"],
+                                       open_positions=r["open_positions"],
+                                       row_kind=prov["row_kind"], basis=prov["basis"],
+                                       source_observed_at=prov["source_observed_at"]))
+            return out
 
         @strawberry.field
         @_offloop
@@ -321,15 +364,15 @@ def build_query(journal: Journal):
         @strawberry.field
         @_offloop
         def news_guard(self) -> NewsGuardType:
-            raw = journal.kv_get("news_guard_state", "")
-            try:
-                d = json.loads(raw)
-                return NewsGuardType(active=bool(d.get("active")),
-                                     why=d.get("why", ""),
-                                     checked_at=str(d.get("ts", "")))
-            except Exception:
-                return NewsGuardType(active=False, why="no data yet",
-                                     checked_at="")
+            from ..dashboard.current_truth import read_news_guard
+            d, _ = read_news_guard(journal, datetime.now(timezone.utc))
+            current = d.get("status") not in ("UNAVAILABLE", "STALE")
+            return NewsGuardType(
+                active=d.get("active") if current else None,
+                why=str(d.get("why") or ""), checked_at=str(d.get("assessed_at") or ""),
+                status=str(d["status"]), clear=bool(d.get("clear")),
+                freshness=str(d.get("freshness") or "unavailable"),
+                reasons=[str(r) for r in d.get("reasons") or []])
 
         @strawberry.field
         @_offloop

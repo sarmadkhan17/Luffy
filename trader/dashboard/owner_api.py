@@ -34,7 +34,8 @@ from pathlib import Path
 from fastapi import Request
 from fastapi.responses import FileResponse, JSONResponse, Response
 
-from . import owner_reads, trade_history
+from . import current_truth, owner_reads, trade_history, valuation
+from ..core import truth
 
 log = logging.getLogger("dashboard.owner_api")
 
@@ -46,7 +47,7 @@ PROTECTION_STALE_S = 180.0         # 3 × Supervisor interval (60 s)
 # publication therefore leaves the previous result looking current for at most
 # this long after its own checked_at. Mirrors protection_snapshot.STALE_AFTER_S.
 SNAPSHOT_STALE_S = 120.0
-CLOCK_SKEW_S = 5.0                 # a source time further in the future is invalid
+# Any source time later than the reader's clock is invalid (core.truth): no skew.
 ACTIVITY_STALE_S = 900.0
 EQUITY_WINDOW_H = 168
 CHAT_MAX_CHARS = 2000
@@ -66,25 +67,19 @@ def _iso(dt: datetime | None) -> str | None:
 
 
 def _parse(ts) -> datetime | None:
-    if ts is None or ts == "":
-        return None
-    try:
-        if isinstance(ts, (int, float)):
-            return datetime.fromtimestamp(float(ts), timezone.utc)
-        t = datetime.fromisoformat(str(ts).replace("Z", "+00:00"))
-        return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
-    except (TypeError, ValueError, OverflowError):
-        return None
+    """A source time, or None when missing or malformed (bool, NaN/inf,
+    pre-2020, unparseable) — see core.truth.parse_time."""
+    return truth.parse_time(ts)[0]
 
 
 def _age(dt: datetime | None, now: datetime) -> float | None:
-    return round((now - dt).total_seconds(), 1) if dt else None
+    # a future age stays unrounded: +0.01 s must not round to a fresh 0.0
+    return truth.display_age((now - dt).total_seconds()) if dt else None
 
 
 def _freshness(age: float | None, stale_after: float) -> str:
-    if age is None:
-        return "unavailable"
-    return "fresh" if age <= stale_after else "stale"
+    """fresh | stale | unavailable (no time) | invalid (source time in the future)."""
+    return truth.classify_age(age, stale_after)
 
 
 def _num(v) -> float | None:
@@ -135,45 +130,44 @@ def read_control(journal, now):
 def read_heartbeat(root: Path, now):
     try:
         data = json.loads((root / "data" / "heartbeat_luffy.json").read_text())
-        at = _parse(float(data["timestamp"]))
+        stamp = data["timestamp"]
     except (OSError, ValueError, KeyError, TypeError):
         return None, "heartbeat_unreadable"
+    at = _parse(stamp)
     age = _age(at, now)
     return {"observed_at": _iso(at), "age_s": age,
-            "freshness": _freshness(age, HEARTBEAT_STALE_S),
+            # a present but malformed time is an invalid clock, not "no data"
+            "freshness": _freshness(age, HEARTBEAT_STALE_S) if at else "invalid",
             "stale_after_s": HEARTBEAT_STALE_S,
             "reported_state": data.get("state"),
             "source": "data/heartbeat_luffy.json (kernel cycle heartbeat)"}, None
 
 
 def read_account(journal, now):
-    rows = journal.query("SELECT ts, equity, balance, open_positions FROM equity "
-                         "ORDER BY ts DESC LIMIT 1")
-    if not rows:
-        return None, "no_equity_records"
-    r = rows[0]
-    at = _parse(r["ts"])
-    age = _age(at, now)
-    return {"equity": _num(r["equity"]), "balance": _num(r["balance"]),
-            "currency": "USDT", "observed_at": _iso(at), "age_s": age,
-            "freshness": _freshness(age, EQUITY_STALE_S), "stale_after_s": EQUITY_STALE_S,
-            "source": "journal equity table (kernel-recorded; BINANCE_DEMO account)"}, None
+    """Equity with its provenance (current_truth.read_account): the age is the
+    venue read that produced the value, never the cycle that reused it."""
+    return current_truth.read_account(journal, now)
 
 
 def read_equity_series(journal, now):
     since = (now.timestamp() - EQUITY_WINDOW_H * 3600)
     since_iso = datetime.fromtimestamp(since, timezone.utc).isoformat(timespec="seconds")
-    rows = journal.query("SELECT ts, equity FROM equity WHERE ts >= ? ORDER BY ts", (since_iso,))
-    buckets: dict[int, tuple[int, float]] = {}
+    rows = journal.query(current_truth.equity_rows_sql(
+        "WHERE e.ts >= ?", "e.ts", limit=False,
+        provenance=current_truth.has_provenance_table(journal)), (since_iso,))
+    buckets: dict[int, dict] = {}
     for r in rows:
         at, eq = _parse(r["ts"]), _num(r["equity"])
         if at is None or eq is None:
             continue
         hour = int(at.timestamp()) // 3600 * 3600
-        buckets[hour] = (int(at.timestamp()), eq)       # last value in the hour
-    points = [{"time": t, "value": v} for t, v in sorted(buckets.values())]
+        # last value in the hour; `time` is the row WRITE time, the value's
+        # own source time is source_observed_at (a reused fallback keeps it)
+        buckets[hour] = {"time": int(at.timestamp()), "value": eq,
+                         **current_truth.row_provenance(r["provenance"], r["equity"])}
+    points = [buckets[h] for h in sorted(buckets)]
     return {"points": points, "window_hours": EQUITY_WINDOW_H,
-            "bucket": "last journal equity record per UTC hour",
+            "bucket": "last journal equity record per UTC hour (time = row write time)",
             "raw_records": len(rows),
             "source": "journal equity table"}, None
 
@@ -200,14 +194,24 @@ def read_supervisor(journal, now):
         return None, "supervisor_status_unreadable"
     at = _parse(s.get("updated_at"))
     age = _age(at, now)
+    freshness = _freshness(age, PROTECTION_STALE_S)
+    if at is None and s.get("updated_at") not in (None, ""):
+        freshness = "invalid"
+    reported = {k: checks.get(k) is True
+                for k in ("venue_positions", "reconciliation", "venue_protection")}
+    current = freshness == "fresh"
     return {"observed_at": _iso(at), "age_s": age,
-            "freshness": _freshness(age, PROTECTION_STALE_S),
+            "freshness": freshness,
             "stale_after_s": PROTECTION_STALE_S,
             "outcome": s.get("outcome"), "stage": s.get("stage"),
             "control_state_observed": s.get("control_state_observed"),
-            "venue_positions": checks.get("venue_positions") is True,
-            "reconciliation": checks.get("reconciliation") is True,
-            "venue_protection": checks.get("venue_protection") is True,
+            # a check result is current only while the pass itself is fresh;
+            # an old pass's True is last_reported, never a current proof
+            "venue_positions": reported["venue_positions"] if current else None,
+            "reconciliation": reported["reconciliation"] if current else None,
+            "venue_protection": reported["venue_protection"] if current else None,
+            "checks_are_current": current,
+            "last_reported_checks": reported,
             "needs_owner": bool(s.get("needs_owner")),
             "needs_owner_since_control_event_id": s.get("needs_owner_since_control_event_id"),
             "reasons": reasons,
@@ -253,10 +257,10 @@ def read_protection_snapshot(journal, now):
         return None, "protection_snapshot_unreadable"
     at = _parse(s.get("checked_at"))
     age = _age(at, now)
-    if at is None or age is None or age < -CLOCK_SKEW_S:
+    if at is None or age is None or age < 0:
         freshness = "invalid"
     else:
-        freshness = _freshness(max(age, 0.0), SNAPSHOT_STALE_S)
+        freshness = _freshness(age, SNAPSHOT_STALE_S)
     items = [x for x in (cleanliness.get("items") or []) if isinstance(x, dict)]
     return {"observed_at": _iso(at), "age_s": age, "freshness": freshness,
             "stale_after_s": SNAPSHOT_STALE_S, "status": status,
@@ -373,7 +377,27 @@ def read_positions(journal, snap):
     return out, None
 
 
-def overview(journal, root: Path) -> dict:
+def naked_exposure(snap: dict | None) -> dict:
+    """Venue positions without a stop, from a fresh complete snapshot only.
+    No snapshot, a stale/invalid one or an incomplete listing is UNAVAILABLE
+    (value None) — an old zero is never a current zero."""
+    if snap is None:
+        return {"value": None, "status": "UNAVAILABLE", "reasons": ["no_protection_snapshot"],
+                "observed_at": None}
+    if snap["freshness"] != "fresh":
+        return {"value": None, "status": "STALE" if snap["freshness"] == "stale"
+                else "UNAVAILABLE", "reasons": ["verification_" + snap["freshness"]],
+                "observed_at": snap["observed_at"]}
+    if (snap["status"] == "UNREADABLE" or snap["venue_positions"] is not True
+            or snap["complete_listing"] is not True):
+        return {"value": None, "status": "UNAVAILABLE",
+                "reasons": ["venue_listing_incomplete"], "observed_at": snap["observed_at"]}
+    naked = sum(1 for r in snap["symbols"] if r.get("stop_present") is not True)
+    return {"value": naked, "status": "OBSERVED", "reasons": [],
+            "observed_at": snap["observed_at"], "source": SNAPSHOT_SOURCE}
+
+
+def overview(journal, root: Path, cfg: dict | None = None) -> dict:
     now = _now()
     errors: dict[str, str] = {}
 
@@ -395,6 +419,8 @@ def overview(journal, root: Path) -> dict:
     sup = section("supervisor", read_supervisor, journal, now)
     snap = section("protection_snapshot", read_protection_snapshot, journal, now)
     positions = section("positions", read_positions, journal, snap)
+    news = section("news_guard", current_truth.read_news_guard, journal, now)
+    risk = section("risk", current_truth.read_risk, journal, now, cfg, root)
     exposure = None
     if positions is not None and account and account.get("equity"):
         notionals = [p["notional_usdt"] for p in positions]
@@ -411,7 +437,7 @@ def overview(journal, root: Path) -> dict:
         protection = None
     else:
         protection = {"status": book_protection(snap, positions), "snapshot": snap,
-                      "supervisor": sup}
+                      "supervisor": sup, "naked_exposure": naked_exposure(snap)}
     needs = None
     if sup is not None:
         needs = {"needs_owner": sup["needs_owner"], "reasons": sup["reasons"],
@@ -421,7 +447,8 @@ def overview(journal, root: Path) -> dict:
     return {"mode": "LIVE", "generated_at": _iso(now), "control": control,
             "heartbeat": heartbeat, "account": account, "equity_series": series,
             "realized_today": realized, "exposure": exposure, "positions": positions,
-            "protection": protection, "needs_you": needs, "errors": errors}
+            "protection": protection, "needs_you": needs, "news_guard": news,
+            "risk": risk, "errors": errors}
 
 
 # ── knowledge (vault) ─────────────────────────────────────────────────────────
@@ -697,7 +724,8 @@ def _safe_rows(journal, sql):
 
 # ── HTTP ──────────────────────────────────────────────────────────────────────
 def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path | None = None,
-            dist: Path | None = None, chat_factory=None, marks=None) -> None:
+            dist: Path | None = None, chat_factory=None, marks=None,
+            quotes=None) -> None:
     """Mount /owner-api/v1 and the React owner frontend at / (both behind the
     dashboard's auth Guard, installed by the caller)."""
     from ..owner.authz import Authorizer
@@ -742,7 +770,37 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
 
     @app.get(PREFIX + "/overview")
     def owner_overview():
-        return _json(overview(journal, root))
+        return _json(overview(journal, root, cfg))
+
+    @app.get(PREFIX + "/risk")
+    def owner_risk():
+        # configured limits vs the kernel's latest recorded assessment; a
+        # journal/config read only, never Risk itself
+        now = _now()
+        data, err = _safe(current_truth.read_risk, journal, now, cfg, root)
+        return _json({"generated_at": _iso(now), "risk": data, "error": err})
+
+    @app.get(PREFIX + "/news-guard")
+    def owner_news_guard():
+        now = _now()
+        data, err = _safe(current_truth.read_news_guard, journal, now)
+        return _json({"generated_at": _iso(now), "news_guard": data, "error": err})
+
+    @app.get(PREFIX + "/valuation")
+    async def owner_valuation():
+        """Unrealized P&L estimate (network enrichment; never on /overview)."""
+        now = _now()
+        if quotes is None:
+            return _json({"generated_at": _iso(now), "valuation": None,
+                          "error": "not_configured"})
+        try:
+            trades, q = await asyncio.wait_for(asyncio.to_thread(quotes, journal),
+                                               timeout=10)
+            data = valuation.estimate(trades, q, _now())
+        except Exception as e:
+            return _json({"generated_at": _iso(now), "valuation": None,
+                          "error": f"valuation_unavailable:{type(e).__name__}"})
+        return _json({"generated_at": _iso(now), "valuation": data, "error": None})
 
     @app.get(PREFIX + "/protection")
     def owner_protection():
@@ -755,6 +813,51 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
     @app.get(PREFIX + "/enrichment/marks")
     async def owner_marks():
         now = _now()
+        if quotes is not None:
+            try:
+                trades, q = await asyncio.wait_for(asyncio.to_thread(quotes, journal),
+                                                   timeout=10)
+                est = valuation.estimate(trades, q, _now())
+            except Exception as e:
+                return _json({"observed_at": None, "marks": {},
+                              "error": f"marks_unavailable:{type(e).__name__}"})
+            # Positions are per journal trade: `by_trade` is the per-position
+            # truth. `marks`/`unvalued` stay keyed by symbol for existing
+            # consumers; a symbol held by several trades publishes its shared
+            # quote but no per-symbol upnl (one trade must not overwrite another).
+            by_trade, by_sym = {}, {}
+            for p in est["positions"]:
+                qv = p["quote"] or {}
+                ok = p["status"] == "OK"           # never a mark without a valid quote
+                by_trade[p["trade_id"]] = {
+                    "symbol": p["symbol"], "status": p["status"],
+                    "mark": qv.get("price") if ok else None,
+                    "upnl": p["upnl_estimate"] if ok else None,
+                    "quote_basis": qv.get("basis") if ok else None,
+                    "quote_observed_at": (qv.get("source_time") or qv.get("received_at"))
+                    if ok else None,
+                    "quote_age_s": qv.get("age_s") if ok else None,
+                    "reasons": p["reasons"]}
+                by_sym.setdefault(p["symbol"], []).append(p["trade_id"])
+            out, unvalued = {}, {}
+            for sym, ids in by_sym.items():
+                rows = [by_trade[i] for i in ids]
+                bad = [r["reasons"] for r in rows if r["status"] != "OK"]
+                if bad:
+                    unvalued[sym] = list(dict.fromkeys(x for b in bad for x in b))
+                    continue
+                r0 = rows[0]
+                out[sym] = {k: r0[k] for k in ("mark", "upnl", "quote_basis",
+                                               "quote_observed_at", "quote_age_s")}
+                if len(rows) > 1:
+                    out[sym].update(upnl=None, trade_ids=ids,
+                                    upnl_scope="per_trade_only:multiple_positions")
+            oldest = [m["quote_observed_at"] for m in out.values() if m["quote_observed_at"]]
+            return _json({"observed_at": min(oldest) if oldest else None, "marks": out,
+                          "by_trade": by_trade, "unvalued": unvalued,
+                          "valuation_status": est["status"],
+                          "total_upnl": est["total_upnl"],
+                          "source": valuation.BASIS + "; " + valuation.EXCLUSIONS})
         if marks is None:
             return _json({"observed_at": None, "marks": {}, "error": "not_configured"})
         try:
@@ -762,11 +865,14 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
         except Exception as e:
             return _json({"observed_at": None, "marks": {},
                           "error": f"marks_unavailable:{type(e).__name__}"})
-        out = {sym: {"mark": _num(m.get("mark")), "upnl": _num(m.get("upnl"))}
-               for sym, m in (data or {}).items()}
-        return _json({"observed_at": _iso(now), "marks": out,
-                      "source": "venue ticker via DataFeed (futures; follows BINANCE_DEMO); "
-                                "cached ≤20 s; estimate from journal entry/amount"})
+        # this provider records no quote time: its prices have no provenance, so
+        # nothing is published as a current valuation (never the request time)
+        unproven = sorted(str(sym) for sym in (data or {}))
+        return _json({"observed_at": None, "marks": {}, "valuation_status": "UNAVAILABLE",
+                      "total_upnl": None,
+                      "unvalued": {sym: ["quote_time_unrecorded"] for sym in unproven},
+                      "error": "marks_provenance_unavailable",
+                      "source": "legacy mark provider without quote times; not published"})
 
     @app.get(PREFIX + "/owner-interface")
     async def owner_interface(request: Request):

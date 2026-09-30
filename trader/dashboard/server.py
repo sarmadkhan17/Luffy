@@ -67,7 +67,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
     app.include_router(make_graphql_router(journal, gateway))
     from . import owner_api
     owner_api.install(app, journal=journal, cfg=cfg, root=ROOT, auth=auth, gateway=gateway,
-                      marks=_position_marks)
+                      marks=_position_marks, quotes=_position_quotes)
 
     @app.get("/api/investigations/latest")
     def investigations_latest():
@@ -112,8 +112,15 @@ def create_app(cfg: dict | None = None) -> FastAPI:
 
     @app.get("/api/summary", dependencies=[])
     async def summary():
-        eq = journal.query(
-            "SELECT * FROM equity ORDER BY ts DESC LIMIT 2")
+        from datetime import datetime as _dtm, timezone as _tz
+        from . import current_truth
+        now = _dtm.now(_tz.utc)
+        # equity is the kernel's account observation (value + source time +
+        # basis), never the latest row's write time; history rows carry their
+        # own provenance (unknown when unrecorded)
+        acc, acc_err = current_truth.read_account(journal, now)
+        eq = journal.query(current_truth.equity_rows_sql(
+            provenance=current_truth.has_provenance_table(journal)), (2,))
         opens = journal.open_trades()
         hb_age = None
         try:
@@ -124,22 +131,18 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             pass
         snap = _account_snapshot()
         assets = snap.get("assets", {})
-        assets_total = snap.get("assets_total", 0)
+        # no snapshot, or any asset without a USD value, is not a total
+        assets_total = (snap.get("assets_total")
+                        if snap and assets and all(isinstance(v, (int, float))
+                                                   and not isinstance(v, bool)
+                                                   for v in assets.values())
+                        else None)
 
-        # ── live position marks + unrealized P&L ──
-        marks = _position_marks(journal)
-        total_upnl = sum(m["upnl"] for m in marks.values()
-                         if isinstance(m.get("upnl"), (int, float)))
-        long_exp = sum(m["notional"] for m in marks.values() if m["side"] == "long")
-        short_exp = sum(m["notional"] for m in marks.values() if m["side"] == "short")
-        for p in opens:
-            m = marks.get(p["symbol"])
-            if m:
-                p["mark"] = m["mark"]
-                p["upnl"] = round(m["upnl"], 2)
-                p["upnl_pct"] = m["upnl_pct"]
-                p["sl_dist"] = m["sl_dist"]
-                p["tp_dist"] = m["tp_dist"]
+        # ── unrealized P&L: shared valuation, complete coverage or nothing ──
+        val = _summary_valuation(journal, opens)
+        total_upnl = (round(val["total_upnl"], 2)
+                      if val.get("status") in ("COMPLETE", "NO_POSITIONS") else None)
+        long_exp, short_exp = _entry_exposure(opens)
 
         # ── strategy P&L + winrate + agent activity ──
         strat_pnl = journal.query(
@@ -158,16 +161,24 @@ def create_app(cfg: dict | None = None) -> FastAPI:
                               GROUP BY agent) ORDER BY v.ts DESC LIMIT 6""")
         prices = _universe_prices()
         return {
-            "control_state": journal.kv_get("control_state", "ACTIVE"),
+            # missing control state is unknown, never ACTIVE; no equity is None
+            "control_state": journal.kv_get("control_state") or "UNKNOWN",
             "market_type": journal.kv_get("market_type", "futures"),
             "heartbeat_age_s": hb_age,
-            "equity": eq[0]["equity"] if eq else 0,
+            "equity": acc["equity"] if acc else None,
+            "account": acc if acc else {"status": "UNAVAILABLE", "error": acc_err},
             "equity_prev": eq[1]["equity"] if len(eq) > 1 else None,
+            "equity_prev_provenance": (current_truth.row_provenance(
+                eq[1]["provenance"], eq[1]["equity"]) if len(eq) > 1 else None),
             "open_positions": opens,
             "assets": assets, "assets_total": assets_total,
-            "total_upnl": round(total_upnl, 2),
-            "long_exposure": round(long_exp, 0),
-            "short_exposure": round(short_exp, 0),
+            "total_upnl": total_upnl,
+            "valuation": {k: val.get(k) for k in ("status", "reasons", "coverage", "basis",
+                                                  "exclusions", "fees_funding",
+                                                  "oldest_quote_at")},
+            "long_exposure": round(long_exp, 0) if long_exp is not None else None,
+            "short_exposure": round(short_exp, 0) if short_exp is not None else None,
+            "exposure_basis": "journal entry notional (not venue mark exposure)",
             "strategy_pnl": strat_pnl,
             "winrate": (round(closed["wins"] / closed["n"] * 100, 1)
                         if closed["n"] else None),
@@ -182,9 +193,17 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         await ws.accept()
         try:
             while True:
+                from datetime import datetime as _dtm, timezone as _tz
+                from .current_truth import read_account
+                acc, acc_err = read_account(journal, _dtm.now(_tz.utc))
                 payload = {
-                    "equity": journal.query(
-                        "SELECT equity FROM equity ORDER BY ts DESC LIMIT 1"),
+                    # same list shape as before; the value now carries its
+                    # source time/basis/freshness, and is absent when unknown
+                    "equity": ([{"equity": acc["equity"], "status": acc["status"],
+                                 "basis": acc["basis"], "observed_at": acc["observed_at"],
+                                 "freshness": acc["freshness"]}]
+                               if acc and acc.get("equity") is not None else []),
+                    "account_error": acc_err,
                     "open_trades": journal.open_trades(),
                     "recent_decisions": journal.query(
                         "SELECT ts,symbol,action,score,executed,skip_reason "
@@ -524,6 +543,89 @@ def _position_marks(journal) -> dict:
     return out
 
 
+def _summary_valuation(journal, opens: list[dict]) -> dict:
+    """Shared valuation for the legacy summary. Annotates each open position
+    with its own valuation status/time; mark/upnl only for OK positions. The
+    total is COMPLETE only if the valued set is exactly the open set."""
+    from . import valuation
+    try:
+        trades, quotes = _position_quotes(journal)
+        est = valuation.estimate(trades, quotes)
+    except Exception as e:
+        est = {"status": "UNAVAILABLE", "total_upnl": None, "positions": [],
+               "reasons": [f"valuation_unavailable:{type(e).__name__}"]}
+    by_id = {p["trade_id"]: p for p in est.get("positions", [])}
+    if set(by_id) != {str(p["id"]) for p in opens} and est.get("status") == "COMPLETE":
+        est = {**est, "status": "UNAVAILABLE", "total_upnl": None,
+               "reasons": list(est.get("reasons") or []) + ["position_set_changed"]}
+    for p in opens:
+        v = by_id.get(str(p["id"]))
+        p["valuation_status"] = v["status"] if v else "UNAVAILABLE"
+        p["valuation_reasons"] = v["reasons"] if v else ["not_valued"]
+        q = (v or {}).get("quote") or {}
+        p["quote_observed_at"] = q.get("source_time") or q.get("received_at")
+        if v and v["status"] == "OK":
+            entry, px = float(p["entry_price"]), q["price"]
+            direction = 1.0 if p["side"] == "long" else -1.0
+            sl, tp = float(p.get("stop_loss") or 0), float(p.get("take_profit") or 0)
+            p["mark"] = px
+            p["upnl"] = round(v["upnl_estimate"], 2)
+            p["upnl_pct"] = round((px - entry) / entry * 100 * direction, 2)
+            p["sl_dist"] = (abs(entry - sl) / entry * 100) if sl else None
+            p["tp_dist"] = (abs(tp - entry) / entry * 100) if tp else None
+    return est
+
+
+def _entry_exposure(opens: list[dict]) -> tuple[float | None, float | None]:
+    """(long, short) journal entry notional; None if any notional is unusable."""
+    import math as _m
+    long_, short = 0.0, 0.0
+    for t in opens:
+        try:
+            n = float(t.get("notional_usdt"))
+        except (TypeError, ValueError):
+            return None, None
+        if not _m.isfinite(n) or n < 0:
+            return None, None
+        if t.get("side") == "long":
+            long_ += n
+        elif t.get("side") == "short":
+            short += n
+        else:
+            return None, None
+    return long_, short
+
+
+_QUOTE_CACHE: dict = {}
+_QUOTE_TTL_S = 20.0
+
+
+def _position_quotes(journal) -> tuple[list[dict], dict]:
+    """(open journal trades, symbol → DataFeed.ticker_quote). A cached quote
+    keeps its own received_at/source time: reuse never re-times it."""
+    import time as _t
+    from ..data.feed import DataFeed, make_exchange
+    global _quotes_feed
+    try:
+        _quotes_feed
+    except NameError:
+        # public ticker reads need no credentials: a keyless instance that still
+        # follows BINANCE_DEMO (same venue as before, least authority)
+        _quotes_feed = DataFeed(make_exchange("futures", with_keys=False))
+    trades = journal.open_trades()
+    out = {}
+    for sym in dict.fromkeys(t["symbol"] for t in trades):
+        hit = _QUOTE_CACHE.get(sym)
+        if hit and _t.time() - hit["received_at"] < _QUOTE_TTL_S and hit.get("price"):
+            out[sym] = hit
+            continue
+        q = _quotes_feed.ticker_quote(sym)
+        if q.get("price"):
+            _QUOTE_CACHE[sym] = q
+        out[sym] = q
+    return trades, out
+
+
 _PRICE_CACHE = {"ts": 0.0, "data": {}}
 
 
@@ -612,13 +714,16 @@ def _today_stats(journal: Journal) -> dict:
         "SELECT COUNT(*) n FROM decisions WHERE executed=0 AND action!='HOLD' "
         "AND ts LIKE ?", (f"{day}%",))[0]["n"]
     pnl_rows = journal.query(
-        "SELECT COALESCE(SUM(realized_pnl),0) s FROM trades WHERE closed_at LIKE ?",
-        (f"{day}%",))
+        "SELECT COUNT(*) n, COUNT(realized_pnl) k, SUM(realized_pnl) s FROM trades "
+        "WHERE closed_at LIKE ?", (f"{day}%",))
     holds = journal.query(
         "SELECT COUNT(*) n FROM decisions WHERE action='HOLD' AND ts LIKE ?",
         (f"{day}%",))[0]["n"]
     return {"taken": taken, "skipped": skipped, "holds": holds,
-            "realized_pnl_today": round(pnl_rows[0]["s"], 2)}
+            # no closes today is a real 0; a close with no booked P&L is unknown
+            "realized_pnl_today": (0.0 if not pnl_rows[0]["n"] else
+                                   round(pnl_rows[0]["s"], 2)
+                                   if pnl_rows[0]["k"] == pnl_rows[0]["n"] else None)}
 
 
 def _age_min(ts: str | None) -> float | None:
@@ -673,11 +778,18 @@ def build_company(journal, cfg: dict) -> dict:
         "SELECT agent, side, conviction, ts FROM votes "
         "WHERE rowid IN (SELECT MAX(rowid) FROM votes GROUP BY agent)")}
     opens = journal.open_trades()
-    control = journal.kv_get("control_state", "ACTIVE")
+    control = journal.kv_get("control_state") or "UNKNOWN"   # missing is not ACTIVE
 
     # ── shared portfolio math (equity / exposure / heat), computed once ──
-    eqr = journal.query("SELECT equity FROM equity ORDER BY ts DESC LIMIT 1")
-    equity_now = float(eqr[0]["equity"]) if eqr else 0.0
+    from datetime import datetime as _dtm, timezone as _tz
+    from .current_truth import read_account, read_risk
+    _now = _dtm.now(_tz.utc)
+    account, _ = read_account(journal, _now)     # not `acc`: that is agent accuracy
+    # the kernel's account observation; None (not 0) when unknown
+    equity_now = (account["equity"] if account and account.get("equity") is not None
+                  else None)
+    risk_now = ((read_risk(journal, _now, cfg)[0] or {}).get("current") or {}).get(
+        "status") or "UNAVAILABLE"
     heat_cap_pct = float(cfg.get("risk", {}).get("portfolio_heat_cap_pct", 15.0))
 
     def _pos_risk(t):
@@ -825,42 +937,68 @@ def build_company(journal, cfg: dict) -> dict:
                  "text": f"{r['symbol']} {float(r.get('realized_pnl') or 0):+.2f}"}
                 for r in last]
         state = "active" if opens else _state_from_age(_age_min(l0.get("ts")))
-        pnl = journal.query("SELECT COALESCE(SUM(realized_pnl),0) p FROM trades "
-                            "WHERE closed_at >= date('now')")
-        day = float(pnl[0].get("p") or 0) if pnl else 0.0
+        pnl = journal.query("SELECT COUNT(*) n, COUNT(realized_pnl) k, SUM(realized_pnl) p "
+                            "FROM trades WHERE closed_at >= date('now')")
+        r0 = pnl[0] if pnl else {}
+        n, k = r0.get("n"), r0.get("k")
+        # no close today is a real 0; a close without booked P&L (or an
+        # unreadable count) is unknown
+        day = (0.0 if n == 0 else
+               float(r0["p"]) if isinstance(n, int) and n > 0 and k == n else None)
         return {"metric": f"{len(opens)} open", "out": out,
                 "ts": l0.get("ts"), "state": state, "feed": feed,
                 "stats": [["Open", str(len(opens))],
                           ["Exposure",
                            f"{exposure:.1f}x" if exposure is not None else "—"],
-                          ["Day P&L", f"{day:+.2f}"]],
+                          ["Day P&L", f"{day:+.2f}" if day is not None else "—"]],
                 "bar": min(100, int((exposure or 0) / 2.5 * 100)),  # exposure gauge
                 "signal": _spark("trades", "opened_at")}
 
     def risk(e):
-        ng_raw = str(journal.kv_get("news_guard_state", "") or "")
-        guard, ng_active = "clear", False
-        if ng_raw:
-            try:  # news_guard_state is a JSON blob {active, why, ts}
-                g = json.loads(ng_raw)
-                ng_active = bool(g.get("active"))
-                guard = (g.get("why") or "armed") if ng_active else "clear"
-            except Exception:
-                guard, ng_active = ng_raw, "arm" in ng_raw.lower()
+        # News Guard through the truth reader: only a fresh successful quiet
+        # read is "clear"; missing/failed/stale is never shown as clear
+        from .current_truth import read_news_guard
+        from datetime import datetime as _dtm, timezone as _tz
+        ng, _ = read_news_guard(journal, _dtm.now(_tz.utc))
+        ng_status = str(ng.get("status") or "UNAVAILABLE")
+        ng_active = ng_status == "ARMED"
+        # UNCERTAIN may still be dampening entries (the rule met only via
+        # undated/future items): never nominal. A stale/unreadable record
+        # cannot prove whether dampening is on.
+        ng_damp = ng_status == "UNCERTAIN" and ng.get("active") is True
+        # only a fresh confirmed QUIET may read nominal; every other news
+        # status names itself (uncertain, stale, failed, unavailable, disabled)
+        ng_quiet = ng_status == "QUIET" and ng.get("clear") is True
+        ng_label = {"UNCERTAIN": "uncertain", "FEED_STALE": "feed stale",
+                    "EMPTY_FEED": "feed empty", "STALE": "stale",
+                    "FETCH_FAILED": "failed", "PARSE_FAILED": "failed",
+                    "ASSESSMENT_FAILED": "failed", "UNAVAILABLE": "unavailable",
+                    "DISABLED": "disabled"}.get(ng_status, "unknown")
+        guard = ("clear" if ng_quiet else
+                 (ng.get("why") or "armed") if ng_active else
+                 "uncertain · dampening" if ng_damp else ng_status.lower())
         armed = control in ("HALTED", "FROZEN", "RECOVERY") or ng_active
+        breaker = ("armed" if armed else "dampening" if ng_damp else
+                   "nominal" if ng_quiet else ng_label)
         metric = f"{len(opens)} pos"
+        book = (f"exposure {exposure:.1f}x equity" if exposure is not None
+                else f"{len(opens)} positions")
         out = ("guard armed / frozen" if armed else
-               (f"exposure {exposure:.1f}x equity" if exposure is not None
-                else f"{len(opens)} positions · limits nominal"))
-        state = "alert" if armed else ("active" if opens else "idle")
+               "guard uncertain · entries dampened" if ng_damp else
+               (book if exposure is not None else f"{book} · limits nominal")
+               if ng_quiet else f"news {ng_label} · not confirmed quiet · {book}")
+        state = "alert" if armed or ng_damp else ("active" if opens else "idle")
         heat_str = f"{heat_pct:.1f}%" if heat_pct is not None else "—"
         bar = (min(100, int(heat_pct / heat_cap_pct * 100))
                if heat_pct is not None and heat_cap_pct else 0)  # exact: heat vs cap
         return {"metric": metric, "out": out, "ts": None, "state": state,
                 "feed": [],
                 "stats": [["Heat", heat_str],
-                          ["Breaker", "armed" if armed else "nominal"],
-                          ["Guard", guard]],
+                          ["Breaker", breaker],
+                          ["Guard", guard],
+                          # the kernel's current Risk assessment (heat above is
+                          # the configured cap vs the journal book)
+                          ["Risk", risk_now]],
                 "bar": bar,
                 "signal": _spark("control_events", "ts")}
 
