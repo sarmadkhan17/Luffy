@@ -74,7 +74,7 @@ capabilities:
       - held-out gate1 and book-level gate3 exist
       - candidate state referee_passed exists
     gaps:
-      - research-to-first-live-eligibility handoff is TESTED on a fixture candidate only (LUFFY-STRATEGY-FACTORY-HANDOFF-R1); production holds 0 research_candidates and research.referee/handoff remain false (recorded stop); capacity estimate UNAVAILABLE; no activation path
+      - research-to-first-live-eligibility handoff is TESTED on a fixture candidate only (LUFFY-STRATEGY-FACTORY-HANDOFF-R1); production holds 0 research_candidates and research.referee/handoff remain false (recorded stop); capacity contract (strategy-capacity-receipt.v1) TESTED by LUFFY-STRATEGY-CAPACITY-R1 but effective capacity UNAVAILABLE (no registered liquidity/impact model, no available-margin record, venue maxima/leverage brackets not captured), so first-live eligibility now fails closed on capacity; no activation path
       - bounded M3.2 Scheme-D v4 pilot is non-final; full validation remains unauthorized (see parked_scheme_d_work)
       - strategy_decay and strategy_health_unreadable still have no registered falsifier predicates and remain INCONCLUSIVE; registered predicates exist only for investigation_volume_anomaly
       - investigation_volume_anomaly persists in its own append-only table (investigation_research_records) rather than the decay tables, because decay verifiers read those unfiltered and key questions by integer journal event id; it reuses the record roles, bank field layout and insert/duplicate/conflict semantics
@@ -4150,6 +4150,41 @@ completed_core_lineage_integration_r1:
   trading_behavior_changed: NO (union of two reviewed lineages; research.referee/handoff false; no config change; nothing activated)
   runtime_deployment: NOT_DEPLOYED
 
+completed_strategy_capacity_r1:
+  id: LUFFY-STRATEGY-CAPACITY-R1
+  verdict: PASS
+  state: TESTED
+  branch: luffy-strategy-capacity-r1 (base luffy-integrated-core-r1 548ebb7; uncommitted)
+  report: docs/superpowers/reports/2026-10-01-strategy-capacity-r1.md
+  evidence:
+    - trader/strategy/capacity.py (new)
+    - trader/strategy/factory_handoff.py (CAPACITY reference, evaluate_capacity, eligibility capacity requirement)
+    - tests/test_strategy_capacity.py (21 passed)
+    - tests/test_strategy_factory_handoff.py (53 passed; eligibility assertions now expect capacity_receipt_not_asserted as the sole remaining reason)
+    - full suite - failure/error node-ID sets identical to base 548ebb7 (72 failed, 16 errors, all pre-existing); +21 passed
+  contract: strategy-capacity-receipt.v1 - one immutable append-only receipt (strategy_capacity_receipts, UPDATE/DELETE abort) per exact strategy_id / version_id / spec_hash / instrument_id / market_type / as_of_ms; receipt_id = sha256(identity + inputs_sha256); status ESTABLISHED | PARTIAL | UNAVAILABLE; inputs hold every observed value (raw account_observation, risk_assessment, risk_state records, Risk book, closed-trade count, venue position observation, registry record + snapshot_id, closed spec-timeframe bars, supplied liquidity evidence, staleness bounds) and result = compute(inputs), re-run on every load (replay)
+  bounds:
+    risk: TESTED - RiskManager.check_entry itself on a database-less RiskManager whose effective policy digest must equal both the configured policy and the running policy recorded in risk_assessment (current_truth.read_risk); drawdown/daily figures from the current assessment; BLOCK -> 0 with blocking constraints; parity with a real RiskManager asserted bit-for-bit
+    account: equity TESTED from account_observation via current_truth.read_account (FRESH / VENUE_FALLBACK, authoritative, within ACCOUNT_STALE_S); funding UNAVAILABLE (NO_RECORDED_AVAILABLE_MARGIN_OBSERVATION)
+    portfolio: TESTED - journal open-trade book (Risk's book) used only when a complete portfolio.observation.v1 within protection_snapshot.STALE_AFTER_S confirms every instrument, side and size (reconcile 1% rule); otherwise UNAVAILABLE; current exposure reduces the risk bound through Risk's own heat/margin caps
+    strategy: TESTED - the version's own stop (SpecExit.from_spec - ATR multiple on the declared timeframe via indicators.atr over the latest closed bars, or percent) with the Kernel 0.4% floor; no declared stop -> UNAVAILABLE (config fallback is not the version's geometry); price basis = last closed spec-bar close, labelled not a live fill
+    venue: status and minimums (min qty, step, min notional) TESTED from the instrument registry; maximums UNAVAILABLE (VENUE_MAXIMUM_NOT_CAPTURED), leverage UNAVAILABLE (VENUE_LEVERAGE_BRACKET_NOT_CAPTURED), account per-symbol eligibility UNAVAILABLE (ACCOUNT_SYMBOL_ELIGIBILITY_UNKNOWN); venue max never promoted into capacity
+    liquidity: UNAVAILABLE - NO_REGISTERED_LIQUIDITY_CAPACITY_MODEL; supplied volume/slippage evidence recorded and ignored; slippage_atr_frac, trade provenance slippage reference and DepthScout are recorded as non-model evidence
+    effective: UNAVAILABLE with every missing dimension listed and no number; the ESTABLISHED rule (min of all bounds, venue step floor, 0 below venue minimum) is TESTED only with hypothetical injected dimensions
+  factory_integration: StrategyVersion and approval-request records carry CAPACITY = contract reference {status EVALUATED_AT_USE}, never a number (version_id identity unchanged); eligible_for_first_live requires capacity_receipt_id for the exact version, current at now_ms (same configured/running policy, unsuperseded state_kv records and trades, fresh account/Risk/venue-position evidence, no newer closed spec bar) and effective ESTABLISHED; otherwise fails closed with capacity_* reasons; read-only (no DB mutation asserted)
+  live_eligibility_effect: no version can be first-live eligible until effective capacity can be ESTABLISHED
+  missing_capacity_evidence:
+    - registered liquidity / market-impact capacity model (SDD 16.3) with its own authority and validation
+    - persisted current order-book depth observations with source time
+    - measured slippage vs order size per instrument as a queryable artifact (2026-09-02 figures exist only as a config.yaml comment)
+    - recorded available-margin (funding) observation
+    - venue maximum quantity / notional (MARKET_LOT_SIZE maxQty etc.) and leverage brackets in the instrument registry
+    - authoritative per-symbol account eligibility
+    - persisted venue position observation (the Kernel keeps portfolio.observation.v1 in memory only; receipts need a caller-supplied observation)
+  stage_5_complete: NO (not PROVEN/ACTIVE)
+  trading_behavior_changed: NO (no Kernel/engine import of capacity; no order, Risk limit, leverage, control-state or config change)
+  runtime_deployment: NOT_DEPLOYED
+
 current_active_work:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
   status: SHADOW_RUNNING
@@ -4222,8 +4257,8 @@ delivery_progress:
   capability_coverage_formula: capabilities at TESTED or better / 17 capabilities in STATE.capabilities (10/17); accounting_and_truth IMPLEMENTED -> TESTED on the integrated baseline (current-truth + trade-provenance tests); previously 9/17
   current_milestone: Stage 3 intelligence spine (WorldModel -> Attention -> Investigation -> Research) in shadow
   code_baseline: luffy-integrated-core-r1
-  last_completed: LUFFY-CORE-LINEAGE-INTEGRATION-R1 (PASS; TESTED; NOT_DEPLOYED); previously LUFFY-EXACT-VERSION-PAPER-PROBATION-R1, LUFFY-STRATEGY-FACTORY-HANDOFF-R1, LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
-  stage_5_handoff_edges: 7/7 TESTED on a fixture candidate (candidate, referee pass, version, receipt, probation, approval, eligibility); exact-version paper install and per-trade-identity probation TESTED through the real Trade Provenance identity path on the integrated baseline; capacity UNAVAILABLE; no real probation has run; Stage 5 not complete
+  last_completed: LUFFY-STRATEGY-CAPACITY-R1 (PASS; TESTED; NOT_DEPLOYED; branch luffy-strategy-capacity-r1, uncommitted); previously LUFFY-CORE-LINEAGE-INTEGRATION-R1 (PASS; TESTED; NOT_DEPLOYED), LUFFY-EXACT-VERSION-PAPER-PROBATION-R1, LUFFY-STRATEGY-FACTORY-HANDOFF-R1, LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
+  stage_5_handoff_edges: 7/7 TESTED on a fixture candidate (candidate, referee pass, version, receipt, probation, approval, eligibility); exact-version paper install and per-trade-identity probation TESTED through the real Trade Provenance identity path on the integrated baseline; capacity contract TESTED (strategy-capacity-receipt.v1, required by first-live eligibility) with effective capacity UNAVAILABLE; no real probation has run; degradation/retirement not wired to analyst.review_deployed; Stage 5 not PROVEN/ACTIVE
   stages:
     source_observation: LINKED
     world_model: LINKED

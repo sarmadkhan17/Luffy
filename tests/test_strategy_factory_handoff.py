@@ -139,6 +139,20 @@ def _approved(j, cfg):
     return v, p, d
 
 
+NOCAP = "capacity_receipt_not_asserted"
+
+
+def _r(e):
+    """Reasons other than the unasserted capacity receipt."""
+    return tuple(r for r in e.reasons if r != NOCAP)
+
+
+def _ok(e):
+    """Everything but capacity holds: the only refusal is that no current
+    capacity receipt was asserted (capacity is required for first live)."""
+    return not e.eligible and e.reasons == (NOCAP,)
+
+
 def _row(j, sql, *a):
     rows = j.query(sql, a)
     assert len(rows) == 1
@@ -166,8 +180,8 @@ def test_end_to_end_trace_uses_exact_stored_ids(tmp_path, cfg):
         F.canonical(vrec["spec"]).encode()).hexdigest()
     assert vrec["spec"]["provenance"]["research_hash"] == h
     assert vrec["evidence_ids"]["gate1_test_seq"] == look["seq"]
-    assert vrec["capacity"] == {"status": "UNAVAILABLE",
-                                "reason": "no_truthful_capacity_estimator"}
+    assert vrec["capacity"] == F.CAPACITY
+    assert vrec["capacity"]["status"] == "EVALUATED_AT_USE"   # never a number
 
     # -> validation receipt
     rrow = _row(j, "SELECT * FROM strategy_validation_receipts "
@@ -234,9 +248,9 @@ def test_end_to_end_trace_uses_exact_stored_ids(tmp_path, cfg):
     # -> first-live eligibility
     e = F.eligible_for_first_live(j, v["version_id"], cfg=cfg,
                                   available_inputs=INPUTS)
-    assert e.eligible and e.reasons == () and e.decision_id == d[
+    assert _ok(e) and e.decision_id == d[
         "decision_id"]
-    assert e.capacity["status"] == "UNAVAILABLE"
+    assert e.capacity["receipt_id"] is None and not e.capacity["current"]
 
     # the lifecycle log links each edge by its stored id
     ev = F.events(j, v["version_id"])
@@ -390,7 +404,7 @@ def test_changed_spec_hash_breaks_eligibility(tmp_path, cfg):
             text, hashlib.sha256(text.encode()).hexdigest(), v["version_id"])
     e = F.eligible_for_first_live(j, v["version_id"], cfg=cfg,
                                   available_inputs=INPUTS)
-    assert not e.eligible and e.reasons == ("spec_hash_mismatch",)
+    assert not e.eligible and _r(e) == ("spec_hash_mismatch",)
 
 
 def test_edit_creates_new_version_that_needs_its_own_approval(tmp_path, cfg):
@@ -410,8 +424,8 @@ def test_edit_creates_new_version_that_needs_its_own_approval(tmp_path, cfg):
     assert {"validation_receipt_missing", "approval_request_missing",
             "state_not_approved:PROPOSED"} <= set(eb.reasons)
     # A's approval is unchanged and still covers A only
-    assert F.eligible_for_first_live(j, a["version_id"], cfg=cfg,
-                                     available_inputs=INPUTS).eligible
+    assert _ok(F.eligible_for_first_live(j, a["version_id"], cfg=cfg,
+                                         available_inputs=INPUTS))
     with pytest.raises(F.HandoffRefused) as e:
         F.record_exact_install(j, b["version_id"], at_ms=T0 + 33 * DAY)
     assert e.value.code == "validation_receipt_missing"
@@ -448,7 +462,7 @@ def test_approval_bound_to_another_version_is_refused(tmp_path, cfg):
                    "operator", T0))
     e = F.eligible_for_first_live(j, a["version_id"], cfg=cfg,
                                   available_inputs=INPUTS)
-    assert not e.eligible and e.reasons == ("owner_approval_wrong_version",)
+    assert not e.eligible and _r(e) == ("owner_approval_wrong_version",)
 
 
 def test_rejected_approval_is_never_eligible(tmp_path, cfg):
@@ -793,7 +807,7 @@ def test_eligibility_requires_the_version_still_installed(tmp_path, cfg):
     _upsert(j, F.load_version(j, b["version_id"])["spec"])   # B now in paper
     e = F.eligible_for_first_live(j, a["version_id"], cfg=cfg,
                                   available_inputs=INPUTS)
-    assert not e.eligible and e.reasons == ("installed_version_differs",)
+    assert not e.eligible and _r(e) == ("installed_version_differs",)
     # A's probation receipt itself is still A's and still verifies
     F._verify_probation(j, cfg, F.load_version(j, a["version_id"]),
                         p["probation_receipt_id"])
@@ -803,7 +817,7 @@ def test_eligibility_requires_the_version_still_installed(tmp_path, cfg):
         c.execute("DELETE FROM strategies")
     e = F.eligible_for_first_live(j, a["version_id"], cfg=cfg,
                                   available_inputs=INPUTS)
-    assert e.reasons == ("installed_version_missing",)
+    assert _r(e) == ("installed_version_missing",)
 
 
 def test_changed_probation_evidence_or_policy_revokes(tmp_path, cfg):
@@ -827,12 +841,12 @@ def test_inputs_must_be_asserted_available(tmp_path, cfg):
     need = F.load_version(j, v["version_id"])["spec"]["data_requires"]
     assert need
     e = F.eligible_for_first_live(j, v["version_id"], cfg=cfg)
-    assert not e.eligible and e.reasons == ("inputs_not_asserted",)
+    assert not e.eligible and _r(e) == ("inputs_not_asserted",)
     e = F.eligible_for_first_live(j, v["version_id"], cfg=cfg,
                                   available_inputs=set())
-    assert e.reasons == ("inputs_unavailable:" + ",".join(sorted(need)),)
-    assert F.eligible_for_first_live(j, v["version_id"], cfg=cfg,
-                                     available_inputs=set(need)).eligible
+    assert _r(e) == ("inputs_unavailable:" + ",".join(sorted(need)),)
+    assert _ok(F.eligible_for_first_live(j, v["version_id"], cfg=cfg,
+                                         available_inputs=set(need)))
 
 
 def test_eligibility_fails_closed_on_empty_or_unknown(tmp_path, cfg):
@@ -857,8 +871,8 @@ def test_eligibility_is_read_only(tmp_path, cfg):
     v, _p, _d = _approved(j, cfg)
     before = _dump(tmp_path / "j.db")
     for _ in range(3):
-        assert F.eligible_for_first_live(j, v["version_id"], cfg=cfg,
-                                         available_inputs=INPUTS).eligible
+        assert _ok(F.eligible_for_first_live(j, v["version_id"], cfg=cfg,
+                                             available_inputs=INPUTS))
     assert _dump(tmp_path / "j.db") == before
 
 

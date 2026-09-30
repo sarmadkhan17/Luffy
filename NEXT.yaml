@@ -68,8 +68,20 @@ work_package:
       runtime_deployment: NOT_DEPLOYED
       record: STATE.yaml completed_core_lineage_integration_r1
       owner_decision_required: whether and when the integrated baseline replaces main for deployment (not requested here)
+    capacity:
+      id: LUFFY-STRATEGY-CAPACITY-R1
+      verdict: PASS
+      state: TESTED
+      branch: luffy-strategy-capacity-r1 (base luffy-integrated-core-r1 548ebb7; uncommitted)
+      evidence:
+        - trader/strategy/capacity.py; trader/strategy/factory_handoff.py
+        - tests/test_strategy_capacity.py (21 passed); tests/test_strategy_factory_handoff.py (53 passed)
+        - docs/superpowers/reports/2026-10-01-strategy-capacity-r1.md
+      runtime_deployment: NOT_DEPLOYED
+      record: STATE.yaml completed_strategy_capacity_r1
+      result: capacity contract TESTED; risk/account-equity/portfolio/strategy-stop/venue-minimum bounds computed from existing sources; LIQUIDITY_CAPACITY UNAVAILABLE (NO_REGISTERED_LIQUIDITY_CAPACITY_MODEL) so EFFECTIVE_CAPACITY UNAVAILABLE; first-live eligibility now requires a current ESTABLISHED receipt, so no version can be eligible today
     next_stage5_gaps:  # owner decision to prioritize; none started
-      - capacity estimate is UNAVAILABLE; do not invent one (next Stage-5 capability gap after probation identity)
+      - effective capacity is UNAVAILABLE; do not invent a number. Missing, each needing its own authority - a registered liquidity/market-impact capacity model (SDD 16.3), a recorded available-margin (funding) observation, venue maximum quantity/notional and leverage-bracket capture in the instrument registry, per-symbol account eligibility evidence
       - wire version degradation/retirement to analyst.review_deployed
       - no real probation has run (0 research candidates; research.referee/handoff false - recorded stop)
   established_boundary:

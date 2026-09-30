@@ -33,8 +33,12 @@ decision per request, and a lifecycle event log.
 Boundaries. Nothing here writes `strategies`, `trades`, control state or any
 Kernel input, and nothing here is imported by the Kernel or the engine.
 `eligible_for_first_live` is a read-only predicate: it grants ELIGIBILITY
-only — no activation, allocation, order or control-state change. Capacity has
-no truthful estimator yet and is recorded as UNAVAILABLE, never invented.
+only — no activation, allocation, order or control-state change. Capacity is
+never frozen into a version or an approval: both carry a reference to the
+strategy-capacity-receipt.v1 contract (`capacity.py`), and eligibility requires
+a CURRENT receipt for the exact version whose effective capacity is
+ESTABLISHED (SDD §14.1 lists a capacity estimate among a strategy's minimum
+fields; Stage 5 requires it). Stale or unestablished capacity fails closed.
 An investigation research result (e.g. investigation_volume_anomaly, whose
 `predictive_edge_established` is always False) is never a source.
 """
@@ -48,6 +52,7 @@ from datetime import datetime, timezone
 
 from ..cognition.research_question import canonical
 from ..engine.state import OWNER_ACTORS
+from . import capacity as cap
 from .compile import compile_spec
 from .promotion import stats_of
 from .spec import StrategySpec
@@ -106,8 +111,9 @@ INSTALL_MODES = ("paper",)
 POLICY_KEYS = ("paper_probation_trades", "paper_min_winrate",
                "paper_min_profit_factor")
 
-CAPACITY = {"status": "UNAVAILABLE",
-            "reason": "no_truthful_capacity_estimator"}
+# what a version / approval request records about capacity: a reference to
+# the re-evaluated receipt contract, never a number
+CAPACITY = cap.CONTRACT_REF
 
 _TABLES = ("strategy_versions", "strategy_validation_receipts",
            "strategy_version_installs", "strategy_probation_receipts", "strategy_approval_requests",
@@ -886,7 +892,29 @@ def retire_version(journal, version_id: str, to_state: str, *,
     return {"status": out, "version_id": version_id}
 
 
-# ── 4. the eligibility predicate ─────────────────────────────────────────
+# ── 4. capacity: one receipt for the exact version, re-evaluated ─────────
+def evaluate_capacity(journal, cfg: dict, version_id: str, *,
+                      instrument_id: str, market_type: str, as_of_ms: int,
+                      registry=None, positions=None, market=None,
+                      liquidity_evidence=(), at_ms: int) -> dict:
+    """Evaluate and record one strategy-capacity-receipt.v1 for this exact,
+    re-verified version. Writes only the receipt; grants nothing."""
+    v = load_version(journal, version_id)
+    try:
+        inputs = cap.gather(journal, cfg, v, instrument_id=instrument_id,
+                            market_type=market_type, as_of_ms=as_of_ms,
+                            registry=registry, positions=positions,
+                            market=market,
+                            liquidity_evidence=liquidity_evidence)
+        receipt = cap.build(inputs)
+        out = cap.record(journal, receipt, at_ms=at_ms)
+    except cap.CapacityRefused as e:
+        _refuse(e.code)
+    return {**out, "version_id": version_id, "status_capacity":
+            receipt["status"], "effective": receipt["result"]["effective"]}
+
+
+# ── 5. the eligibility predicate ─────────────────────────────────────────
 @dataclass(frozen=True)
 class FirstLiveEligibility:
     version_id: str
@@ -897,11 +925,15 @@ class FirstLiveEligibility:
 
 
 def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
-                            available_inputs=None) -> FirstLiveEligibility:
+                            available_inputs=None, capacity_receipt_id=None,
+                            now_ms: int | None = None) -> FirstLiveEligibility:
     """True only when the immutable version, its validation evidence, its
     exact paper install (still the installed spec), its probation receipt
     and an exact-version owner approval all re-verify now, it is not degraded/retired/rejected, and every input the compiled
-    spec requires is in `available_inputs` (None = not asserted = refused).
+    spec requires is in `available_inputs` (None = not asserted = refused),
+    and `capacity_receipt_id` names a strategy-capacity-receipt.v1 for this
+    exact version that is current at `now_ms` with ESTABLISHED effective
+    capacity (None = not asserted = refused).
     Read-only; grants eligibility only."""
     reasons: list[str] = []
     decision_id = None
@@ -970,6 +1002,16 @@ def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
     elif not need <= set(available_inputs):
         reasons.append("inputs_unavailable:" + ",".join(
             sorted(need - set(available_inputs))))
+    capacity = {**CAPACITY, "receipt_id": None, "current": False}
+    if capacity_receipt_id is None:
+        reasons.append("capacity_receipt_not_asserted")
+    else:
+        import time
+        now = int(time.time() * 1000) if now_ms is None else int(now_ms)
+        c = cap.check_current(journal, cfg, v, capacity_receipt_id,
+                              now_ms=now)
+        capacity = {**CAPACITY, **c}
+        reasons.extend(c["reasons"])
     reasons = list(dict.fromkeys(reasons))
     return FirstLiveEligibility(version_id, not reasons, tuple(reasons),
-                                CAPACITY, decision_id)
+                                capacity, decision_id)
