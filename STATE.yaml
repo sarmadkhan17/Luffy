@@ -54,7 +54,7 @@ capabilities:
       - equivalence harness exists for backtest/live-engine semantics
       - derivative-backed live/vector signal parity has explicit tests
     gaps:
-      - immutable family/version/spec_hash approval binding from SDD v3.2 is not yet established end-to-end
+      - immutable version/spec_hash approval binding is TESTED (not deployed) by LUFFY-STRATEGY-FACTORY-HANDOFF-R1 (trader/strategy/factory_handoff.py, tests/test_strategy_factory_handoff.py); the existing paper install (kernel._install_spec) may rewrite timeframe/regime_filter, so the installed spec is not yet guaranteed to be the exact approved version
 
   research_and_referee:
     state: TESTED
@@ -73,7 +73,7 @@ capabilities:
       - held-out gate1 and book-level gate3 exist
       - candidate state referee_passed exists
     gaps:
-      - research-to-live approval/handoff is not yet the finalized SDD v3.2 path
+      - research-to-first-live-eligibility handoff is TESTED on a fixture candidate only (LUFFY-STRATEGY-FACTORY-HANDOFF-R1); production holds 0 research_candidates and research.referee/handoff remain false (recorded stop); capacity estimate UNAVAILABLE; no activation path
       - bounded M3.2 Scheme-D v4 pilot is non-final; full validation remains unauthorized (see parked_scheme_d_work)
       - strategy_decay and strategy_health_unreadable still have no registered falsifier predicates and remain INCONCLUSIVE; registered predicates exist only for investigation_volume_anomaly
       - investigation_volume_anomaly persists in its own append-only table (investigation_research_records) rather than the decay tables, because decay verifiers read those unfiltered and key questions by integer journal event id; it reuses the record roles, bank field layout and insert/duplicate/conflict semantics
@@ -4060,6 +4060,35 @@ completed_investigation_research_family_r1:
   trading_behavior_changed: NO
   runtime_deployment: NOT_DEPLOYED (research pass is opt-in via --research-max-cases; attention.world_model false)
 
+completed_strategy_factory_handoff_r1:
+  id: LUFFY-STRATEGY-FACTORY-HANDOFF-R1
+  verdict: PASS
+  state: TESTED
+  branch: strategy-factory-r1 (base intelligence-spine-r1 a2d44dc)
+  report: docs/superpowers/reports/2026-09-30-strategy-factory-handoff-r1.md
+  evidence:
+    - trader/strategy/factory_handoff.py
+    - trader/strategy/promotion.py (stats_of extracted; behavior unchanged)
+    - tests/test_strategy_factory_handoff.py (33 passed)
+  stage_results:
+    candidate_source: TESTED - research_candidates in referee_passed/reason_passed/admitted with exactly one rejected gate1 look in research_tests matching candidate gate1, gate3 passed, combo rebuilt to the same hash; any other source refused; investigation research result refused (predictive_edge_not_established)
+    immutable_version: TESTED - strategy_versions append-only (UPDATE/DELETE abort); version_id = sha256(strategy_id, spec_hash, parent, source); spec = kernel handoff spec compiled; edits create a derived version with parent lineage and nothing inherited
+    validation_receipt: TESTED - one per version; binds gate1 look seq + sha256, candidate gate sha256, combo sha256; re-verified against the ledger on every use
+    probation: TESTED - SHADOW; config strategies.paper_probation_trades/paper_min_winrate/paper_min_profit_factor over closed journal trades of the exact installed spec hash since probation start; missing policy -> NO_REGISTERED_POLICY and stays SHADOW
+    owner_approval: TESTED - request binds version_id, spec_hash, validation and probation receipts; one decision per request by actor in engine.state.OWNER_ACTORS; no UI
+    live_eligibility: TESTED - eligible_for_first_live read-only; fails closed on any drift, missing/rejected/wrong-version approval, degraded/retired/rejected state, changed probation evidence/policy, or unasserted inputs; grants eligibility only
+    end_to_end_trace: TESTED - fixture candidate -> referee pass -> version -> receipt -> SHADOW -> APPROVAL_REQUIRED -> APPROVED_FIRST_LIVE -> eligible, every edge by stored id/hash
+  capacity: UNAVAILABLE (no truthful estimator; next Stage-5 gap)
+  production_candidates: 0 research_candidates, 0 research_tests; no real version created
+  open_gaps:
+    - capacity estimate UNAVAILABLE
+    - kernel._install_spec may rewrite timeframe/regime_filter so the paper spec can differ from the referee-bound version (probation then INSTALLED_SPEC_DIFFERS)
+    - trades carry no spec hash; owner identity is role-level only; input availability is caller-asserted
+    - version degradation/retirement not wired to analyst.review_deployed
+  stage_5_complete: NO
+  trading_behavior_changed: NO
+  runtime_deployment: NOT_DEPLOYED (no caller in Kernel/engine; tables created only on first factory use)
+
 current_active_work:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
   status: SHADOW_RUNNING
@@ -4129,9 +4158,10 @@ delivery_progress:
   integrated_delivery_percent: 100
   integrated_delivery_formula: intelligence spine stages AVAILABLE with actual stored ids in one tested shadow trace / 11 stages (intelligence_trace.STAGES, registration now its own stage); SPINE-R1 5/10, RESEARCH-FAMILY-R1 11/11; tested linkage only, not deployed or production-observed
   capability_coverage_percent: 53
-  capability_coverage_formula: capabilities at TESTED or better / 17 capabilities in STATE.capabilities (9/17); unchanged by R1
+  capability_coverage_formula: capabilities at TESTED or better / 17 capabilities in STATE.capabilities (9/17); unchanged by RESEARCH-FAMILY-R1 and STRATEGY-FACTORY-HANDOFF-R1 (both affected capabilities were already TESTED)
   current_milestone: Stage 3 intelligence spine (WorldModel -> Attention -> Investigation -> Research) in shadow
-  last_completed: LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 (PASS; TESTED; NOT_DEPLOYED)
+  last_completed: LUFFY-STRATEGY-FACTORY-HANDOFF-R1 (PASS; TESTED; NOT_DEPLOYED); previously LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
+  stage_5_handoff_edges: 7/7 TESTED on a fixture candidate (candidate, referee pass, version, receipt, probation, approval, eligibility); capacity UNAVAILABLE; Stage 5 not complete
   stages:
     source_observation: LINKED
     world_model: LINKED

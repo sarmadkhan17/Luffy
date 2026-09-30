@@ -28,7 +28,11 @@ RETIRE_DEMOTED_DAYS = 14
 
 def _stats_for(journal: Journal, strategy_id: str) -> dict:
     trades = journal.trades_for_strategy(strategy_id)
-    closed = [t for t in trades if t["status"] == "closed"]
+    return stats_of([t for t in trades if t["status"] == "closed"])
+
+
+def stats_of(closed: list) -> dict:
+    """Probation arithmetic over closed trade rows, in journal order."""
     wins = [t for t in closed if float(t.get("realized_pnl") or 0) > 0]
     losses = [t for t in closed if float(t.get("realized_pnl") or 0) <= 0]
     gross_win = sum(float(t["realized_pnl"]) for t in wins)
