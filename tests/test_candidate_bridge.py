@@ -95,7 +95,8 @@ def test_existing_feasibility_and_replay(exact):
     ai = Inputs(T0+100, (c,), portfolio, known, known, 'ACTIVE', sources)
     proposal = allocate(ai)
     row = json.loads(proposal.result_json)['candidates'][0]
-    assert row['feasibility'] == 'INCOMPLETE'
+    assert row['feasibility'] == 'BLOCKED'
+    assert 'PORTFOLIO_EXPOSURE_AUTHORITY_UNAVAILABLE' in row['refusal_reasons']
     assert 'EXPECTED_ECONOMICS_UNAVAILABLE' in row['refusal_reasons']
     assert 'CAPACITY_UNAVAILABLE' in row['refusal_reasons']
     assert 'EXPECTED_ECONOMICS_RECEIPT_REFUSED' not in row['refusal_reasons']

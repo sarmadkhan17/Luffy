@@ -529,6 +529,32 @@ capabilities:
       - actual commission authority, account eligibility, leverage brackets and registered liquidity capacity remain unavailable
       - no allocation activation, real economic readiness, portfolio optimizer calibration or production behavior claim
 
+  portfolio_common_factor_context:
+    state: TESTED
+    package: LUFFY-STAGE6-PORTFOLIO-COMMON-FACTOR-CONCENTRATION-AUTHORITY-R1
+    exact_redundancy_authority: TESTED
+    concentration_boundary: TESTED
+    evidence:
+      - trader/portfolio/common_factor.py
+      - trader/portfolio/allocator.py
+      - trader/portfolio/candidate_bridge.py
+      - scripts/common_factor_shadow.py
+      - tests/test_portfolio_common_factor.py
+      - tests/test_portfolio_common_factor_shadow.py
+      - docs/superpowers/reports/2026-10-01-stage6-common-factor-concentration-r1.md
+    proven_facts:
+      - Complete current venue-position snapshots are reverified and projected immutably; journal positions are not substituted.
+      - Exact instrument/direction redundancy and immutable Factory parent lineage are deterministic; names and text are not similarity authority.
+      - Sibling versions contribute one evidence group; unknown lineage cannot vote and distinct roots do not prove independence.
+      - WorldModel and Attention correlation observations retain exact source, window, horizon and clock evidence descriptively.
+      - Existing configured position-count limits are enforced; stale, changed or unavailable exposure authority refuses modern bridge allocation.
+      - Same frozen sources and policy replay identically across processes; no correlation penalty, diversification bonus or confidence aggregation exists.
+    gaps:
+      - Current marked notional, venue-bound stop-risk heat, margin usage and StrategyVersion attribution remain unavailable in current retained venue evidence.
+      - Actual relationship measurements were absent from the current scan; no shared statistical factor was inferred from three LONG holdings.
+      - Independent evidence count remains null; calibrated factor models are NOT_JUSTIFIED.
+      - NOT_DEPLOYED; Stage 6, real allocation readiness and calibrated portfolio optimization are not complete.
+
   expected_net_economics:
     state: TESTED
     package: LUFFY-EXPECTED-NET-ECONOMICS-R1
@@ -4751,3 +4777,26 @@ stage6_candidate_bridge:
     - Real forward economics, costs, account eligibility and liquidity/capacity maturity remain unestablished.
   remaining_implementation_gap: portfolio_common_factor_concentration_authority
   next_package: LUFFY-STAGE6-PORTFOLIO-COMMON-FACTOR-CONCENTRATION-AUTHORITY-R1
+
+PORTFOLIO_COMMON_FACTOR_CONTEXT: TESTED
+EXACT_REDUNDANCY_AUTHORITY: TESTED
+CONCENTRATION_BOUNDARY: TESTED
+
+stage6_portfolio_common_factor_concentration_r1:
+  package: LUFFY-STAGE6-PORTFOLIO-COMMON-FACTOR-CONCENTRATION-AUTHORITY-R1
+  state: TESTED
+  base_commit: 6bb99e541e9d9ce583cc4a283f7db685f9235b96
+  worktree: /mnt/luffy-data/luffy/workspaces/stage6-common-factor-concentration-r1
+  committed: false
+  runtime_deployment: NOT_DEPLOYED
+  trading_behavior_changed: false
+  stage6_complete: false
+  calibrated_portfolio_optimization_complete: false
+  real_shadow: PASS
+  real_shadow_candidate_count: 0
+  real_shadow_context_count: 4
+  real_shadow_holdings: [AVAXUSDT, LINKUSDT, SOLUSDT]
+  real_concentration_status: UNAVAILABLE
+  real_position_count_boundary: WITHIN_EXISTING_LIMITS
+  factor_model: NOT_JUSTIFIED
+  next_recommended_package: STAGE6_IMPLEMENTATION_CLOSURE_R1

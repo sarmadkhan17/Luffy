@@ -3,53 +3,46 @@ sdd_version: '3.2'
 updated_at: '2026-10-01'
 
 work_package:
-  id: LUFFY-STAGE6-PORTFOLIO-COMMON-FACTOR-CONCENTRATION-AUTHORITY-R1
-  type: STAGE6_COMMON_FACTOR_CONCENTRATION_AUTHORITY
+  id: STAGE6_IMPLEMENTATION_CLOSURE_R1
+  type: STAGE6_CONSOLIDATED_IMPLEMENTATION_AUDIT
   status: RECOMMENDED_NOT_AUTHORIZED_FOR_TRADING
   objective: >
-    Implement the missing portfolio common-factor/concentration authority using
-    actual registered WorldModel relationship evidence and the existing whole
-    book allocator contract. Existing relationships are descriptive context;
-    no calibrated common-factor allocation/concentration authority is established.
-    Do not create another feasibility engine. Stage 6 closure is subsequent,
-    not granted by the comparison bridge or an empty real candidate inventory.
+    Close the consolidated Stage-6 implementation inventory against SDD sections
+    15 and 16, tracing opportunity context, economics, candidate feasibility,
+    whole-book exposure, cash and proposal replay. This package is an audit
+    recommendation, not a claim that Stage 6 or calibrated portfolio optimization
+    is complete. Distinguish implemented refusal paths from real evidence maturity.
   completed_prerequisites:
-    - STAGE6_CANDIDATE_BRIDGE is TESTED; 280 focused tests passed with current-source and restart replay checks.
-    - ELIGIBLE_FOR_PORTFOLIO_COMPARISON verifies exact Factory versions without weakening first-live authority.
-    - Real bridge shadow observed zero frozen StrategyVersions and zero candidates, four contexts, three venue holdings and CASH / NO_ALLOCATION with FROZEN control.
-    - Existing opportunity-context.v1 remains unchanged and compatible.
-    - LUFFY-OPPORTUNITY-CONTEXT-LIVE-INTEGRATION-R1 is TESTED_LIVE_INTEGRATION.
-    - Lightweight reference-only exact-identity Opportunity registry is TESTED.
-    - Frozen context to economics to candidate to proposal binding is TESTED.
-    - Bounded real current-evidence shadow produced four observable contexts, zero strategy candidates and CASH / NO_ALLOCATION.
-    - Portfolio Allocator remains TESTED; REAL_EXPECTED_ECONOMICS remains INSUFFICIENT_EVIDENCE.
+    - PORTFOLIO_COMMON_FACTOR_CONTEXT is TESTED.
+    - EXACT_REDUNDANCY_AUTHORITY is TESTED; shared Factory parent chains contribute one evidence group.
+    - CONCENTRATION_BOUNDARY is TESTED using configured owner limits only.
+    - Existing candidate bridge requires whole-book exposure authority; missing or refused authority blocks proposals.
+    - Current real shadow observed three LONG venue holdings, four opportunity contexts, zero StrategyVersions/candidates and CASH / NO_ALLOCATION.
+    - WorldModel relationships and existing Attention basket correlations are descriptive only; no statistical threshold or penalty exists.
+    - Expected economics, Opportunity Context/registry and detached Portfolio Allocator retain prior TESTED contracts.
   evidence:
-    - docs/superpowers/reports/2026-10-01-stage6-candidate-bridge-r1.md
-    - docs/superpowers/evidence/stage6-candidate-bridge-r1/
+    - docs/superpowers/reports/2026-10-01-stage6-common-factor-concentration-r1.md
+    - docs/superpowers/evidence/stage6-common-factor-concentration-r1/
+    - trader/portfolio/common_factor.py
+    - trader/portfolio/allocator.py
     - trader/portfolio/candidate_bridge.py
     - SDD.md
-    - trader/world/relationship.py
-    - trader/portfolio/allocator.py
-    - docs/superpowers/reports/2026-10-01-opportunity-context-live-integration-r1.md
-    - docs/superpowers/evidence/opportunity-context-live-integration-r1/
-    - trader/portfolio/opportunity_live.py
-    - trader/portfolio/opportunity_registry.py
-    - scripts/opportunity_context_shadow.py
   next_steps:
     - step: 1
       action: >
-        Establish an independently registered, point-in-time whole-book
-        common-factor/concentration authority and bind it to the existing
-        allocator. Reuse relationship evidence, preserve UNKNOWN where
-        evidence is absent, and retain existing Risk and execution authorities.
+        Audit each Stage-6 BUILD item and source-authority bridge against actual
+        implementation and focused evidence before claiming implementation closure.
+        Identify any concrete remaining BUILD gap found by that audit. Do not
+        manufacture another model or threshold to bypass unavailable evidence.
   economic_evidence_requirements:
-    - Exact-version conditional forward gross model with independently measured calibration, economic units, horizon and cost baseline.
-    - Calibrated economic reserve and forward cost-scope bridge; current production registries remain empty.
+    - Exact-version forward gross calibration, calibrated reserve and forward cost applicability remain unavailable.
+    - Current marked exposure, venue-bound stop risk/heat, margin usage and position StrategyVersion attribution remain unavailable in the retained source contract.
+    - Distinct strategy lineage does not establish statistical independence; independent_evidence_count stays null.
+    - Factor models are NOT_JUSTIFIED; no calibrated portfolio optimization completion is claimed.
   execution_constraints:
-    - No orders, recurring activation, deployment, restart, Risk/control changes, frontend or knowledge edits.
-    - No further economics formula or micro-package while calibration evidence is missing.
-    - No fabricated StrategyVersions, opportunities, costs, sizes, returns or source availability.
-    - Stage 6 remains incomplete; missing independent authorities are not waived by context or replay.
+    - No commit, orders, resizing, activation, deployment, restart or Risk/control-limit change.
+    - Real evidence maturity and live allocation readiness are not granted by zero candidates or archive replay.
+    - Preserve all parked owner-authorization and research boundaries.
   preserved_authority:
     PAPER_COST_PROTOCOL: TESTED
     EXECUTION_COST_CALIBRATION: INSUFFICIENT_EVIDENCE

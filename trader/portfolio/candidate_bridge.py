@@ -177,3 +177,48 @@ def verify_current(c, receipt, er, reader, config, available_inputs, now_ms, *, 
             factory.load_version(reader, c.version_id), result['capacity']['receipt_id'], now_ms=now_ms)['current']:
         return False
     return authority in inputs.context and verify_candidate(c, receipt, er) and economics.verify(er, inputs, now_ms)
+
+
+def _lineage(reader, version_id):
+    chain, seen = [], set()
+    current = version_id
+    while current:
+        if current in seen or len(chain) >= 64:
+            raise ValueError('LINEAGE_CYCLE_OR_READ_BOUND')
+        seen.add(current)
+        v = factory.load_version(reader, current)
+        chain.append(v)
+        current = v['parent_version_id']
+    if len({v['strategy_id'] for v in chain}) != 1:
+        raise ValueError('LINEAGE_STRATEGY_ID_DIFFERS')
+    return dict(version_id=version_id, strategy_id=chain[0]['strategy_id'],
+                spec_hash=chain[0]['spec_hash'], root_version_id=chain[-1]['version_id'],
+                chain=[v['version_id'] for v in chain])
+
+
+def freeze_lineage(reader, version_id, *, as_of_ms, valid_until_ms):
+    if type(as_of_ms) is not int or type(valid_until_ms) is not int or not 0 <= as_of_ms <= valid_until_ms:
+        raise ValueError('LINEAGE_FRESHNESS_INVALID')
+    recorded = ReadEvidence(reader)
+    result = _lineage(recorded, version_id)
+    # Every version must already exist at this cut.
+    for rows in recorded.answers.values():
+        if any(r.get('recorded_at_ms', as_of_ms + 1) > as_of_ms for r in rows):
+            raise ValueError('FUTURE_LINEAGE_EVIDENCE')
+    body = dict(schema='strategy-lineage-context.v1', as_of_ms=as_of_ms,
+                valid_until_ms=valid_until_ms, result=result, answers=recorded.answers)
+    return Source.freeze('strategy-lineage:' + digest(body), body)
+
+
+def replay_lineage(source, now_ms):
+    Source(**asdict(source))
+    body = json.loads(source.payload_json)
+    if (body['schema'] != 'strategy-lineage-context.v1'
+            or source.source_id != 'strategy-lineage:' + digest(body)
+            or not body['as_of_ms'] <= now_ms <= body['valid_until_ms']):
+        raise ValueError('LINEAGE_SOURCE_STALE_OR_INVALID')
+    result = _lineage(ReadEvidence(answers=body['answers']), body['result']['version_id'])
+    if result != body['result'] or any(r.get('recorded_at_ms', body['as_of_ms']+1) > body['as_of_ms']
+                                      for rows in body['answers'].values() for r in rows):
+        raise ValueError('LINEAGE_REPLAY_DIFFERS')
+    return result

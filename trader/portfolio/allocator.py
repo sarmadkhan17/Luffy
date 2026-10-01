@@ -236,6 +236,7 @@ class Inputs:
     risk_policy: Evidence
     control_state: str
     sources: tuple[Source, ...]
+    exposure_source_id: str | None = None
 
     def __post_init__(self):
         object.__setattr__(self, 'candidates', tuple(self.candidates))
@@ -383,6 +384,23 @@ def allocate(inputs: Inputs) -> Proposal:
     portfolio_ok = (portfolio.evidence.status == Status.ESTABLISHED
                     and portfolio.valid_until_ms is not None
                     and portfolio.as_of_ms <= now <= portfolio.valid_until_ms)
+    exposure, exposure_blockers = None, []
+    if inputs.exposure_source_id is None and any(
+            any(ref.startswith('candidate-bridge:') for ref in c.source_ids) for c in inputs.candidates):
+        exposure_blockers.append('PORTFOLIO_EXPOSURE_AUTHORITY_UNAVAILABLE')
+    if inputs.exposure_source_id is not None:
+        from .common_factor import from_allocator
+        try:
+            exposure = from_allocator(inputs)
+        except (ValueError, TypeError, KeyError, AttributeError, StopIteration):
+            exposure_blockers.append('PORTFOLIO_EXPOSURE_AUTHORITY_REFUSED')
+        else:
+            if exposure['concentration']['status'] == 'EXCEEDS_EXISTING_LIMIT':
+                exposure_blockers.append('EXISTING_CONCENTRATION_LIMIT_EXCEEDED')
+            elif exposure['concentration']['status'] == 'UNAVAILABLE':
+                exposure_blockers.append('CONCENTRATION_AUTHORITY_UNAVAILABLE')
+            if not exposure['constraints']['new_position_count_permitted']:
+                exposure_blockers.append('EXISTING_OPEN_POSITION_LIMIT_NO_HEADROOM')
     book = {(p.instrument, p.market_type): p for p in portfolio.positions}
     directions = {}
     for c in inputs.candidates:
@@ -397,7 +415,7 @@ def allocate(inputs: Inputs) -> Proposal:
         held = book.get((c.instrument, c.market_type))
         interaction = ('NO_ACTION' if c.direction == 'FLAT' else 'NEW_POSITION' if not held
                        else 'SUPPORTS_EXISTING' if c.direction == held.direction else 'CONFLICTS_EXISTING')
-        blocked, missing, conflict = [], [], []
+        blocked, missing, conflict = list(exposure_blockers), [], []
         if not portfolio_ok:
             blocked.append('PORTFOLIO_EVIDENCE_STALE_OR_UNAVAILABLE')
         if inputs.risk_policy.status != Status.ESTABLISHED:
@@ -461,11 +479,20 @@ def allocate(inputs: Inputs) -> Proposal:
         if number(size) > 0:
             contributors = [x.identity for x, _, _ in ordered if
                             (x.instrument, x.market_type, x.direction) == (c.instrument, c.market_type, c.direction)]
+            confidence_context = None
+            if exposure is not None:
+                from .common_factor import evidence_groups, _lineages
+                source = next(s for s in inputs.sources if s.source_id == inputs.exposure_source_id)
+                authority = json.loads(source.payload_json)['inputs']
+                ls = tuple(Source(**s) for s in authority['lineage_sources'])
+                same_expression = [x for x, _, _ in ordered if x.identity in contributors]
+                confidence_context = evidence_groups(same_expression, _lineages(ls, now))
+                contributors = [tuple(x) for x in confidence_context['representatives']]
             row.update(accepted=True, expression=c.direction, proposed_size=size)
             selected.append(dict(instrument=c.instrument, market_type=c.market_type, expression=c.direction,
                                  primary_candidate=list(c.identity), context_id=c.context_id, evidence_contributors=contributors,
                                  proposed_size=size, size_unit=c.bounds[0].unit,
-                                 risk_final_gate_required=True))
+                                 duplicate_confidence=confidence_context, risk_final_gate_required=True))
             reason = 'POSITIVE_COMPARABLE_ECONOMIC_PRIORITY'
     for c, row, _ in comparable:
         if not row['accepted']:
@@ -481,7 +508,7 @@ def allocate(inputs: Inputs) -> Proposal:
                 observations.append(dict(candidate=list(c.identity), holding=held.instrument,
                                          status='BETTER_OPPORTUNITY_OBSERVED',
                                          switching='SWITCH_ECONOMICS_UNAVAILABLE', action='KEEP_EXISTING'))
-    global_blockers = []
+    global_blockers = list(exposure_blockers)
     if not portfolio_ok:
         global_blockers.append('PORTFOLIO_EVIDENCE_STALE_OR_UNAVAILABLE')
     if inputs.risk_policy.status != Status.ESTABLISHED:
@@ -496,6 +523,7 @@ def allocate(inputs: Inputs) -> Proposal:
                   economic_order=[list(c.identity) for c, _, _ in ordered],
                   conflicts=[list(k) for k in conflicts],
                   common_exposure_context=asdict(inputs.relationships),
+                  portfolio_exposure_context=exposure,
                   relationship_policy='DESCRIPTIVE_ONLY_NO_CALIBRATED_PENALTY',
                   opportunity_cost=observations,
                   risk_final_authority=True, side_effects='NONE')
@@ -561,4 +589,4 @@ def inputs_from_payload(body: dict) -> Inputs:
                           evidence(p['evidence']), positions, tuple(p['source_ids']))
     return Inputs(body['as_of_ms'], tuple(candidates), portfolio,
                   evidence(body['relationships']), evidence(body['risk_policy']),
-                  body['control_state'], tuple(Source(**s) for s in body['sources']))
+                  body['control_state'], tuple(Source(**s) for s in body['sources']), body.get('exposure_source_id'))

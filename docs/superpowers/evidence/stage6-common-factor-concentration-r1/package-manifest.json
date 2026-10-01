@@ -1,0 +1,21 @@
+{
+  "package": "LUFFY-STAGE6-PORTFOLIO-COMMON-FACTOR-CONCENTRATION-AUTHORITY-R1",
+  "base_commit": "6bb99e541e9d9ce583cc4a283f7db685f9235b96",
+  "files": {
+    "trader/portfolio/common_factor.py": "b903ff06f2f5e78e7e46698513e42b05af49d818ac07d62c5308b2b4a6d06d31",
+    "trader/portfolio/allocator.py": "0413cf3c36ff9adbb4a4a0263ff41b276556802e1525d09f15c0030a8403005b",
+    "trader/portfolio/candidate_bridge.py": "a4c742d0e3c71f85606e46c34e93df56835b79ade2cd9d5ac289cf256836860a",
+    "scripts/common_factor_shadow.py": "0cf961139b7bdd0d9941c40b5b166d03883921912869405e24b69334b15f8842",
+    "tests/test_portfolio_common_factor.py": "3e73711ffa4331344cc37769f1d5aaa2790db082a4cbd6025dfe648be98eb5a1",
+    "tests/test_portfolio_common_factor_shadow.py": "f77cb5a00cbb6a4ef65102f3628596a07fbf7737f1960d863706a4fdf19c3599",
+    "tests/test_candidate_bridge.py": "37bbea2ad253d743259b42e18b300ff1107dcc3937a36671ea24a8b638213f6b",
+    "STATE.yaml": "c95a51d67e2d97d977fba5cc5488d85e0df196a3c2b76caf5c340ee6a8016b73",
+    "NEXT.yaml": "ebbe420fe91872dbc46fd8670b7214f4aa1ab4c277e1e3d3df101ea9d3b59fca",
+    "docs/superpowers/reports/2026-10-01-stage6-common-factor-concentration-r1.md": "c16b8cfa4e647eac31683701f9f2c492c3414ad49d0bb1c46e0536221d216993"
+  },
+  "tests": "207 passed",
+  "graphify": "AST_ONLY_NO_CLUSTER_NO_API_COST",
+  "committed": false,
+  "deployed": false,
+  "trading_behavior_changed": false
+}
