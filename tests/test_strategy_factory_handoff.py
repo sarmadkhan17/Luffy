@@ -938,7 +938,7 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
         assert bad not in code, bad
     # the executor reads only the paper/live fence predicate
     for f in pathlib.Path("trader").rglob("*.py"):
-        if f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py"):
+        if f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py"):
             assert "factory_handoff" not in f.read_text(), f
     ex_src = pathlib.Path("trader/engine/executor.py").read_text()
     assert set(re.findall(r"\bfh\.(\w+)", ex_src)) == {"live_entry_block"}

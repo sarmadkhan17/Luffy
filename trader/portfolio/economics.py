@@ -40,15 +40,18 @@ class Binding:
     cost_treatment: str
     uncertainty_treatment: str
     freshness_semantics: str
+    context_required: bool = False
 
     def __post_init__(self):
         _immutable(self)
-        if not all(isinstance(v, str) and v for k, v in asdict(self).items() if k != 'as_of_ms'):
+        if not all(isinstance(v, str) and v for k, v in asdict(self).items() if k not in ('as_of_ms', 'context_required')):
             raise ValueError('EXACT_ECONOMIC_BINDING_REQUIRED')
         if not is_canonical_instrument_id(self.instrument) or self.instrument.split(':')[1] != self.market_type:
             raise ValueError('CANONICAL_INSTRUMENT_REQUIRED')
         if self.direction not in ('LONG', 'SHORT') or type(self.as_of_ms) is not int or self.as_of_ms < 0:
             raise ValueError('ECONOMIC_BINDING_INVALID')
+        if type(self.context_required) is not bool:
+            raise ValueError('CONTEXT_REQUIREMENT_INVALID')
         if not isinstance(json.loads(self.context_json), dict):
             raise ValueError('CONTEXT_OBJECT_REQUIRED')
 
@@ -181,10 +184,48 @@ def _costs(binding, source):
     return components
 
 
+def _context_binding(inputs):
+    """Reuse v1; current-context methods cannot substitute descriptive fields."""
+    b = inputs.binding
+    raw = json.loads(b.context_json)
+    required = b.context_required or raw.get('schema_version') == 'opportunity-context.v1'
+    for s, registry in ((inputs.gross, GROSS_MODELS), (inputs.costs, COST_SCOPE_MODELS),
+                        (inputs.uncertainty, RESERVE_MODELS)):
+        if s:
+            model = json.loads(s.payload_json)
+            validator = registry.get((model.get('method'), model.get('version')))
+            required = required or getattr(validator, 'requires_opportunity_context', False)
+    if not required:
+        return None, None, None
+    try:
+        from trader.cognition.opportunity_context import OpportunityContext
+        from .opportunity_live import receipt_from_source, economic_binding
+        ctx = OpportunityContext.from_json(b.context_json)
+        d = ctx.to_dict()
+        if d['as_of_ms'] != b.as_of_ms or d['instrument']['canonical_id'] != b.instrument:
+            raise ValueError('CONTEXT_CUT_OR_INSTRUMENT_DIFFERS')
+        sources = [s for s in inputs.context if s.source_id.startswith('live-context:')]
+        if len(sources) != 1:
+            raise ValueError('EXACT_LIVE_CONTEXT_SOURCE_REQUIRED')
+        live = receipt_from_source(sources[0])
+        dims = {k: getattr(b, k) for k in ('units', 'quantity_basis', 'capital_basis',
+                'horizon_interpretation', 'cost_treatment', 'uncertainty_treatment', 'freshness_semantics')}
+        if live.context != ctx or b != economic_binding(live, **dims):
+            raise ValueError('EXACT_ECONOMIC_CONTEXT_DIFFERS')
+        p = json.loads(live.payload_json)
+        expiry = min((json.loads(s['payload_json'])['valid_until_ms'] for s in p['sources']
+                      if s['source_id'] in p['required_roles'] and
+                      json.loads(s['payload_json'])['valid_until_ms'] is not None), default=None)
+        return ctx.context_id, expiry, None
+    except (ValueError, TypeError, KeyError, AttributeError) as exc:
+        return None, None, 'REQUIRED_OPPORTUNITY_CONTEXT_REFUSED:' + str(exc)
+
+
 def build(inputs: Inputs) -> Receipt:
     # Reconstruct to refuse forged/mutated frozen source objects.
     inputs = from_inputs(asdict(inputs))
     b = inputs.binding
+    context_id, context_expiry, context_reason = _context_binding(inputs)
     components = {}
     for name, source, registry, missing in (
         ('EXPECTED_GROSS_VALUE', inputs.gross, GROSS_MODELS, 'EXACT_VERSION_FORWARD_CONDITIONAL_DISTRIBUTION_AND_CALIBRATION_MISSING'),
@@ -206,6 +247,9 @@ def build(inputs: Inputs) -> Receipt:
                 status, reason = 'UNAVAILABLE', 'RESERVE_GROSS_AND_COST_BINDING_MISSING'
         components[name] = _component(b, source, reason, value if status == 'ESTABLISHED' else None, status, raw)
     components.update(_costs(b, inputs.costs))
+    if context_reason:
+        for item in components.values():
+            item.update(status='UNAVAILABLE', value=None, reason=context_reason)
     states = {v['status'] for v in components.values()}
     complete = states.issubset({'ESTABLISHED', 'NOT_APPLICABLE'})
     net = None
@@ -226,6 +270,8 @@ def build(inputs: Inputs) -> Receipt:
               'POSITIVE' if number(net) > 0 else 'NON_POSITIVE')
     expiry = min((v['valid_until_ms'] for v in components.values()
                   if type(v['valid_until_ms']) is int), default=None)
+    if context_expiry is not None:
+        expiry = min(expiry, context_expiry) if expiry is not None else context_expiry
     components['EXPECTED_NET_VALUE'] = dict(status='ESTABLISHED' if complete else 'UNAVAILABLE',
         value=net, units=b.units, provenance='GROSS_MINUS_COSTS_MINUS_CALIBRATED_RESERVE',
         source_ids=[s.source_id for s in (inputs.gross, inputs.costs, inputs.uncertainty) if s],
@@ -235,7 +281,8 @@ def build(inputs: Inputs) -> Receipt:
         limitations=[v['reason'] for v in components.values() if v['status'] not in ('ESTABLISHED', 'NOT_APPLICABLE')])
     result = dict(economic_status=status, components=components, valid_until_ms=expiry,
                   economic_model_status='READY' if complete else 'INSUFFICIENT_EVIDENCE',
-                  context_sources=[asdict(s) for s in inputs.context], side_effects='NONE')
+                  context_sources=[asdict(s) for s in inputs.context], context_id=context_id,
+                  context_reason=context_reason, side_effects='NONE')
     frozen = asdict(inputs)
     return Receipt(digest(dict(schema=VERSION, inputs=frozen, result=result)), canonical(frozen), canonical(result))
 
@@ -246,6 +293,8 @@ def verify(receipt: Receipt, current_inputs: Inputs, now_ms: int) -> bool:
         if receipt != build(current_inputs) or type(now_ms) is not int or now_ms < current_inputs.binding.as_of_ms:
             return False
         result = json.loads(receipt.result_json)
+        if result.get('context_reason'):
+            return False
         if result['economic_status'] in ('STALE', 'INCOMPATIBLE_CONTEXT'):
             return False
         expiry = result['valid_until_ms']

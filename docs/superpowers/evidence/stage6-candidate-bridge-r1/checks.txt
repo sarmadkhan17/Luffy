@@ -1,0 +1,5 @@
+STATE/NEXT YAML: PASS
+Whitespace: PASS
+Real shadow archive replay against final allocator: PASS
+Final lifecycle validity checks: 3 passed
+No commit/deploy/restart/activation; production read only.

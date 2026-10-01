@@ -467,6 +467,8 @@ capabilities:
 
   opportunity_context:
     state: TESTED
+    integration: TESTED_LIVE_INTEGRATION
+    package: LUFFY-OPPORTUNITY-CONTEXT-LIVE-INTEGRATION-R1
     evidence:
       - SDD.md
       - trader/cognition/opportunity_context.py
@@ -474,14 +476,33 @@ capabilities:
       - tests/test_attention_selection_persistence.py
       - trader/observability/investigation.py
       - tests/test_opportunity_context_persistence.py
+      - trader/portfolio/opportunity_live.py
+      - scripts/opportunity_context_shadow.py
+      - tests/test_opportunity_live_integration.py
+      - docs/superpowers/reports/2026-10-01-opportunity-context-live-integration-r1.md
     proven_facts:
       - contract TESTED - immutable versioned opportunity-context.v1 object is implemented and tested (6874830, follow-up b28a2c8)
       - persistence/replay TESTED - opportunity-context.v1 is persisted with investigation registration in the existing registration transaction and replayed from persisted source evidence, failing closed when evidence is unavailable (eb3a10c)
+      - bounded read-only current-evidence producer reuses unchanged v1; exact frozen context binds economics, candidate and proposal
+      - future, stale required, mismatched cut/instrument, mutated or missing sources refuse reuse; restart replay is TESTED
+      - current venue snapshot is descriptive support/conflict/no-action evidence only; no automatic resize or close
     gaps:
-      - live producer is NOT established
-      - not deployed (NOT_DEPLOYED); no Kernel, Risk, Execution, LLM, network or venue wiring
+      - NOT_DEPLOYED; no recurring service or Kernel/Risk/Execution authority; current-evidence shadow only
       - no salience, score, probability, EV, usefulness or direction is produced
       - no backfill of pre-existing investigations
+
+
+  opportunity_registry:
+    state: TESTED
+    evidence:
+      - trader/portfolio/opportunity_registry.py
+      - tests/test_opportunity_live_integration.py
+    proven_facts:
+      - references existing cycle/candidate/context/investigation lineage; no parallel evidence trace
+      - only exact repeated signal occurrence plus frozen version identity groups cycles; new bar, horizon, direction or version is separate
+      - unproven identity creates separate cycle/candidate records; explicit evidence-referenced terminal resolutions are immutable
+    gaps:
+      - no recurring live operation or automatic resolution source wiring
 
   portfolio_allocation:
     state: TESTED
@@ -504,7 +525,7 @@ capabilities:
       - shadow returned CASH / NO_ALLOCATION / INSUFFICIENT_COMPARABLE_ECONOMICS with production FROZEN
     gaps:
       - EXPECTED_ECONOMICS is UNAVAILABLE; no validated comparable forward net-value quantity exists in inspected Stage-5 evidence
-      - exact-version current opportunity adapter refuses nonempty version inventory until authoritative opportunity evidence exists
+      - exact frozen Factory comparison bridge is TESTED; missing current costs, account evidence and size authorities remain unavailable
       - actual commission authority, account eligibility, leverage brackets and registered liquidity capacity remain unavailable
       - no allocation activation, real economic readiness, portfolio optimizer calibration or production behavior claim
 
@@ -534,7 +555,7 @@ capabilities:
       - exact-version forward conditional gross outcome distribution and validated calibration are missing
       - calibrated economic uncertainty reserve and measured coverage/error are missing
       - authoritative expected costs and a calibrated forward scope bridge are missing
-      - event-driven current opportunity registry and frozen Opportunity Context remain unimplemented
+      - current-evidence Opportunity Context and exact-identity registry are TESTED in detached live integration; recurring production operation remains NOT_DEPLOYED
       - Stage 6 remains incomplete; no economics readiness, orders, activation, deployment or production behavior change
 
 
@@ -4686,3 +4707,47 @@ PORTFOLIO_ALLOCATOR: TESTED
 EXPECTED_NET_ECONOMICS: TESTED_CONTRACT
 REAL_ECONOMIC_VALUE: INSUFFICIENT_EVIDENCE
 ECONOMIC_MODEL_STATUS: INSUFFICIENT_EVIDENCE
+
+OPPORTUNITY_CONTEXT: TESTED_LIVE_INTEGRATION
+OPPORTUNITY_REGISTRY: TESTED
+REAL_EXPECTED_ECONOMICS: INSUFFICIENT_EVIDENCE
+
+opportunity_context_live_integration_r1:
+  package: LUFFY-OPPORTUNITY-CONTEXT-LIVE-INTEGRATION-R1
+  base_branch: luffy-expected-net-economics-r1
+  base_commit: b471b9e2170c8c5d1da3f3b5e06bc25e58613a65
+  worktree: /mnt/luffy-data/luffy/workspaces/opportunity-context-live-integration-r1
+  report: docs/superpowers/reports/2026-10-01-opportunity-context-live-integration-r1.md
+  runtime_deployment: NOT_DEPLOYED
+  committed: true
+  stage6_complete: false
+  trading_behavior_changed: false
+  real_economics: INSUFFICIENT_EVIDENCE
+  next_recommended_package: LUFFY-STAGE6-CANDIDATE-FEASIBILITY-BRIDGE-R1
+
+STAGE6_CANDIDATE_BRIDGE: TESTED
+stage6_candidate_bridge:
+  package: LUFFY-STAGE6-CANDIDATE-FEASIBILITY-BRIDGE-R1
+  state: TESTED
+  stage6_complete: false
+  comparison_status: ELIGIBLE_FOR_PORTFOLIO_COMPARISON
+  evidence:
+    - trader/portfolio/candidate_bridge.py
+    - scripts/candidate_bridge_shadow.py
+    - tests/test_candidate_bridge.py
+    - docs/superpowers/reports/2026-10-01-stage6-candidate-bridge-r1.md
+    - docs/superpowers/evidence/stage6-candidate-bridge-r1/tests.txt
+    - docs/superpowers/evidence/stage6-candidate-bridge-r1/real-shadow/shadow-1790874217158.json
+  proven_facts:
+    - Existing Factory verification binds exact immutable versions, validation, lifecycle, probation, approval inventory, capacity, exits and required inputs.
+    - Comparison eligibility is separate from unchanged first-live authority; missing context or required evidence refuses candidate construction.
+    - Existing economics receipt and allocator gate retain all economic, feasibility, sizing and proposal decisions.
+    - Deterministic candidate identity includes opportunity, context, strategy, version, spec hash, economics receipt and as_of.
+    - 280 focused regression tests passed; restart replay and SQL write denial are exercised.
+    - Bounded real shadow observed zero frozen versions, four current contexts, three real positions and zero candidates; CASH / NO_ALLOCATION, FROZEN, replay PASS.
+    - No Risk, execution, control, lifecycle, activation, production behavior, frontend/M4, deployment or restart changes.
+  evidence_requirements:
+    - Real current strategy input availability assertions are required when frozen versions exist; missing assertions refuse candidates.
+    - Real forward economics, costs, account eligibility and liquidity/capacity maturity remain unestablished.
+  remaining_implementation_gap: portfolio_common_factor_concentration_authority
+  next_package: LUFFY-STAGE6-PORTFOLIO-COMMON-FACTOR-CONCENTRATION-AUTHORITY-R1

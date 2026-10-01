@@ -162,6 +162,14 @@ class Candidate:
     valid_until_ms: int | None
     bounds: tuple[Bound, ...]
     source_ids: tuple[str, ...]
+    opportunity_context_json: str | None = None
+
+    @property
+    def context_id(self):
+        if self.opportunity_context_json is None:
+            return None
+        from trader.cognition.opportunity_context import OpportunityContext
+        return OpportunityContext.from_json(self.opportunity_context_json).context_id
 
     def __post_init__(self):
         object.__setattr__(self, 'bounds', tuple(self.bounds))
@@ -176,6 +184,14 @@ class Candidate:
             raise ValueError('DIRECTION_UNSUPPORTED')
         if type(self.as_of_ms) is not int or self.as_of_ms < 0:
             raise ValueError('AS_OF_INVALID')
+
+    @property
+    def candidate_id(self):
+        receipt = json.loads(self.economics.receipt_json) if self.economics.receipt_json else {}
+        return 'candidate:' + digest(dict(opportunity_id=self.opportunity_id,
+            context_id=self.context_id, strategy_id=self.strategy_id,
+            version_id=self.version_id, spec_hash=self.spec_hash,
+            economics_receipt_id=receipt.get('receipt_id'), as_of_ms=self.as_of_ms))
 
     @property
     def identity(self):
@@ -312,9 +328,15 @@ def _economic_reasons(c, inputs):
                     b.instrument, b.market_type, b.direction, b.horizon, b.as_of_ms) !=
                    (c.opportunity_id, c.strategy_id, c.version_id, c.spec_hash,
                     c.instrument, c.market_type, c.direction, c.horizon, c.as_of_ms)
-                or b.context_json != canonical({k: asdict(getattr(c, k)) for k in
-                    ('validation', 'probation', 'evidence_quality', 'regime_world')})):
+                or b.context_json != (c.opportunity_context_json if c.opportunity_context_json is not None else
+                    canonical({k: asdict(getattr(c, k)) for k in
+                    ('validation', 'probation', 'evidence_quality', 'regime_world')}))):
             raise ValueError('RECEIPT_OR_CONTEXT_DIFFERS')
+        if c.opportunity_context_json is not None:
+            from .opportunity_live import receipt_from_source, verify_candidate
+            live_sources = [s for s in frozen.context if s.source_id.startswith('live-context:')]
+            if len(live_sources) != 1 or not verify_candidate(c, receipt_from_source(live_sources[0]), receipt):
+                raise ValueError('FROZEN_CONTEXT_CANDIDATE_DIFFERS')
     except (ValueError, TypeError, KeyError, AttributeError):
         reasons.append('EXPECTED_ECONOMICS_RECEIPT_REFUSED')
     return reasons
@@ -405,7 +427,13 @@ def allocate(inputs: Inputs) -> Proposal:
         state = (Feasibility.BLOCKED if blocked else Feasibility.CONFLICTED if conflict
                  else Feasibility.INCOMPLETE if missing else Feasibility.COMPARABLE)
         reasons = blocked + conflict + missing
-        row = dict(identity=list(c.identity), instrument=c.instrument, market_type=c.market_type,
+        try:
+            context_id = c.context_id
+            candidate_id = c.candidate_id
+        except (ValueError, TypeError, KeyError, AttributeError):
+            context_id = None
+            candidate_id = None
+        row = dict(identity=list(c.identity), candidate_id=candidate_id, context_id=context_id, instrument=c.instrument, market_type=c.market_type,
                    direction=c.direction, feasibility=state.value, refusal_reasons=reasons,
                    interaction=interaction, expression='KEEP_EXISTING' if held else 'FLAT',
                    proposed_size=UNAVAILABLE, size_bounds=[asdict(b) for b in c.bounds],
@@ -435,7 +463,7 @@ def allocate(inputs: Inputs) -> Proposal:
                             (x.instrument, x.market_type, x.direction) == (c.instrument, c.market_type, c.direction)]
             row.update(accepted=True, expression=c.direction, proposed_size=size)
             selected.append(dict(instrument=c.instrument, market_type=c.market_type, expression=c.direction,
-                                 primary_candidate=list(c.identity), evidence_contributors=contributors,
+                                 primary_candidate=list(c.identity), context_id=c.context_id, evidence_contributors=contributors,
                                  proposed_size=size, size_unit=c.bounds[0].unit,
                                  risk_final_gate_required=True))
             reason = 'POSITIVE_COMPARABLE_ECONOMIC_PRIORITY'
