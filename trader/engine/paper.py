@@ -18,6 +18,7 @@ from ..strategy.spec import StrategySpec
 from ..strategy import exit_policy as E
 from .versioned_exits import entry_contract, observations
 from . import paper_exit_evidence as X
+from . import paper_cost_evidence as C
 from .risk import RiskManager
 from .trade_provenance import entry_identity, clean
 
@@ -95,6 +96,9 @@ class PaperExecutor:
             if "exit_semantics_id" not in columns:
                 c.execute("ALTER TABLE versioned_paper_trades ADD COLUMN exit_semantics_id TEXT")
             X.ensure(c)
+            C.ensure(c)
+            if "market_type" not in columns:
+                c.execute("ALTER TABLE versioned_paper_trades ADD COLUMN market_type TEXT")
         self.store = PaperRiskStore(journal)
         self.risk = RiskManager(cfg, self.store)
 
@@ -195,7 +199,7 @@ class PaperExecutor:
                         exit_semantics_id=inst['exit_semantics_id'], exit_state=E.encode(policy,exit_state))
         row = dict(id=ident, strategy_id=strategy_id, version_id=v['version_id'], spec_hash=v['spec_hash'],
                    install_id=inst['install_id'], exec_mode='paper', decision_id=decision.id,
-                   cycle_id=getattr(decision,'cycle_id',None), symbol=snap.symbol, side=side,
+                   cycle_id=getattr(decision,'cycle_id',None), symbol=snap.symbol, side=side, market_type=snap.market_type,
                    amount=amount, entry_price=price, stop_loss=sl, take_profit=tp,
                    notional_usdt=amount*price, leverage=self.risk.leverage, opened_at=iso(at),
                    status='open', entry_identity_json=json.dumps(identity,sort_keys=True),
@@ -260,6 +264,8 @@ class PaperExecutor:
                                   (px,(px-p['entry_price'])*sign*result.quantity,
                                    iso(state.last_bar_ms+policy.step_ms),result.reason,
                                    'recorded_canonical_observation',px,p['id']))
+                        completed = dict(c.execute(f'SELECT * FROM {TABLE} WHERE id=?', (p['id'],)).fetchone())
+                        C.finalize(c, completed, v, inst)
                         closed.append(p['id'])
                         break
         return closed

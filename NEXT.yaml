@@ -2,37 +2,30 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: NO_ACTIVE_PACKAGE
-  status: NO_ACTIVE_PACKAGE
-  selected_stage_5_blocker: NONE
-  objective: Preserve the closed exit semantics package; await selection of further work.
-  deferred_next_package: LUFFY-VERSIONED-PAPER-COST-EVIDENCE-PROTOCOL-R1
-  rationale: 'Versioned research, paper and live exit intent/state semantics now share tested contract factory-exit.closed-bars.v1. Production economic probation remains INCOMPLETE_COST_EVIDENCE: unknown costs and missing/ambiguous identity cannot create approval requests. This is the earlier Stage-5 truth gap; liquidity/capacity calibration remains independently UNAVAILABLE and should follow only after cost truth.'
-  preconditions_recorded:
-    - LUFFY-VERSIONED-PAPER-PROBATION-TRUTH-FIX-R1 TESTED, NOT_DEPLOYED; fixes the two independent-review P1 defects over uncommitted PAPER-EXECUTION-R1 on e60e045
-    - Production economic probation INCOMPLETE_COST_EVIDENCE; unknown costs and missing/ambiguous identity cannot create approval requests
-    - Stage 5 remains TESTED, not PROVEN or ACTIVE; production probation remains unrun
-    - capacity contract TESTED but effective capacity/liquidity-impact model UNAVAILABLE, leverage brackets UNAVAILABLE, account eligibility UNKNOWN
-    - F1 remains unchanged at Kernel/Executor; no first-live activation or venue authority added
-    - research.referee=false and research.handoff=false; no Risk limits or probation thresholds changed
+  id: LUFFY-PAPER-EXECUTION-COST-EVIDENCE-CALIBRATION-R1
+  status: SELECTED_NOT_STARTED
+  selected_stage_5_blocker: VALIDATED_EXECUTION_COST_EVIDENCE_UNAVAILABLE
+  objective: Establish a defensible registered executable-price cost evidence method covering both entry and exit paper quantities.
+  rationale: Paper fills remain reference-price simulations; depth snapshots alone do not establish costs, and no validated execution-cost adapter exists. This independently blocks economic probation.
   last_completed:
-    id: LUFFY-ADMITTED-EXIT-SEMANTIC-PARITY-R1
+    id: LUFFY-VERSIONED-PAPER-COST-EVIDENCE-PROTOCOL-R1
     verdict: PASS
-    review_fix: LUFFY-ADMITTED-EXIT-SEMANTIC-PARITY-REVIEW-FIX-R1
-    review_correction: independent final P1 recheck PASS; canonical replay and approval re-verification bind per-trade exit evidence without progress increase
-    safe_to_commit: YES
     state: TESTED
-    branch: luffy-admitted-exit-semantic-parity-r1
-    base_commit: d4de42adcef0a9a7d905febe90712113fd68253f
-    report: docs/superpowers/reports/2026-10-01-admitted-exit-semantic-parity-r1.md
-    record: STATE.yaml versioned_exit_semantics
-    exit_semantics_id: factory-exit.closed-bars.v1:51758284b0b961695203b5cbc1569dfb1d5805a68506d594a40a5d5df30d3fcc
+    branch: luffy-versioned-paper-cost-evidence-protocol-r1
+    base_commit: 1ab0da0cb9cb3a3c290488d7c75edf09788b6462
+    report: docs/superpowers/reports/2026-10-01-versioned-paper-cost-evidence-protocol-r1.md
     runtime_deployment: NOT_DEPLOYED
+  remaining_independent_gaps:
+    - Exact applicable commission-rate receipts and known maker/taker or classification-independent treatment for both legs.
+    - Complete historical funding events, venue timing semantics and applicable position/notional basis for futures.
+    - Effective requested-size capacity proof remains UNAVAILABLE and first-live remains BLOCKED.
   execution_constraints:
-    - no orders, deployment, production restart, research activation or frontend/M4 work
-    - no first-live eligibility weakening, owner/capacity bypass, Risk-limit changes or probation-threshold changes
-    - preserve the exit_semantics_id binding through exact version install and probation
-    - capacity remains an independent blocker: EFFECTIVE = UNAVAILABLE; calibrate after paper cost truth
+    - No invented rates, bps, freshness, haircut or participation constants.
+    - Depth observations require defensible source/time, requested-size coverage and an already validated registered method before completing costs.
+    - No deployment, restart, authenticated requests, Risk change, capacity weakening, first-live activation or frontend/M4 work.
+    - Preserve 15 trades, 40 percent win rate and 1.15 net profit factor thresholds; preserve existing net win-rate policy.
+    - Keep finalized unknown receipts immutable; no historical cost backfill.
+
 
 intelligence_spine_shadow_package:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1

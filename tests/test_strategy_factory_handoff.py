@@ -108,6 +108,12 @@ def _trades(j, strategy_id, pnls, start_ms, prefix="t", spec_hash=None,
     installs = j.query("SELECT * FROM strategy_version_installs WHERE strategy_id=?", (strategy_id,))
     install = dict(installs[0]) if len(installs) == 1 else None
     with j._tx() as c:
+        # Explicit TEST-ONLY reference-price simulation provenance for fixtures.
+        columns = {r[1] for r in c.execute('PRAGMA table_info(trades)')}
+        for name, typ in (('reference_price','REAL'),('exit_reference_price','REAL'),
+                          ('fill_basis','TEXT'),('exit_fill_basis','TEXT')):
+            if name not in columns:
+                c.execute(f'ALTER TABLE trades ADD COLUMN {name} {typ}')
         for i, pnl in enumerate(pnls):
             evidence = None
             geometry = None
@@ -149,6 +155,8 @@ def _trades(j, strategy_id, pnls, start_ms, prefix="t", spec_hash=None,
                 vals[8] = _iso(cl)
                 cols += ',stop_loss,take_profit,exit_price,initial_risk,close_reason'
                 vals += [sl,tp,px,risk,reason]
+                cols += ',market_type,reference_price,exit_reference_price,fill_basis,exit_fill_basis'
+                vals += ['futures',100,px,'TEST-ONLY reference simulation','TEST-ONLY reference simulation']
             c.execute(f"INSERT INTO trades ({cols}) VALUES "
                       f"({','.join('?' * len(vals))})", vals)
             if evidence:
@@ -258,7 +266,8 @@ def test_end_to_end_trace_uses_exact_stored_ids(tmp_path, cfg):
     assert [t["id"] for t in prec["trades"]] == [f"t{i}" for i in range(15)]
     assert prec["policy"] == {"source": "config.yaml strategies.*",
                               "min_trades": 15, "min_winrate": 0.4,
-                              "min_profit_factor": 1.15}
+                              "min_profit_factor": 1.15,
+                              "winrate_policy": __import__("trader.engine.paper_cost_evidence", fromlist=["WIN_RATE_POLICY"]).WIN_RATE_POLICY}
 
     # -> approval request
     qrow = _row(j, "SELECT * FROM strategy_approval_requests "

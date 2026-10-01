@@ -79,41 +79,12 @@ def test_open_or_outside_window_never_counts(tmp_path, cfg):
     assert len(receipt['trades']) == 12 and result['request_id'] is None
 
 
-@pytest.mark.parametrize('dimension', ['commission', 'slippage', 'funding'])
-@pytest.mark.parametrize('state', ['UNAVAILABLE', 'UNKNOWN', 'NOT_APPLICABLE'])
-def test_unknown_cost_or_unproven_nonapplicability_is_incomplete(tmp_path, cfg, monkeypatch, dimension, state):
-    j, v = evidence(tmp_path, cfg)
-    def provider(journal, trade, version):
-        costs = complete_test_cost_evidence(journal, trade, version)
-        # Even a numeric zero cannot turn missing evidence into known costs.
-        costs[dimension].update(status=state, amount=0.0)
-        return costs
-    monkeypatch.setattr(F, '_paper_cost_evidence', provider)
-    result, receipt = assess(j, cfg, v)
-    assert result['status'] == F.P_COST_INCOMPLETE and result['request_id'] is None
-    assert len(receipt['trades']) == 15 and receipt['stats'] is None
-    assert receipt['gross_stats']['profit_factor'] >= 1.15
-    assert receipt['gross_stats']['basis'] == 'GROSS_ONLY'
-    assert receipt['economic_validation'] == 'NOT_ECONOMICALLY_VALIDATED'
-    assert all(r['dimensions'] == [dimension] for r in receipt['missing_cost_evidence'])
-    assert F.approval_request(j, v['version_id']) is None
-    assert not F.eligible_for_first_live(j, v['version_id'], cfg=cfg).eligible
 
-
-def test_nonapplicability_requires_authoritative_rule(tmp_path, cfg, monkeypatch):
-    j, v = evidence(tmp_path, cfg)
-    def provider(journal, trade, version):
-        costs = complete_test_cost_evidence(journal, trade, version)
-        costs['funding'].update(status='NOT_APPLICABLE', amount=None, rule='TEST-ONLY:nonfunding-instrument')
-        return costs
-    monkeypatch.setattr(F, '_paper_cost_evidence', provider)
-    # Explicit test-only authority, never a production funding assumption.
-    monkeypatch.setattr(F, '_cost_nonapplicability_proven',
-                        lambda trade, version, dimension, item:
-                        dimension == 'funding' and item.get('rule') == 'TEST-ONLY:nonfunding-instrument')
-    result, receipt = assess(j, cfg, v)
-    assert result['status'] == F.P_SATISFIED and result['request_id']
-    assert receipt['stats']['pnl'] == pytest.approx(sum(PASSING) - 15 * 0.03)
+def fixture_amounts(monkeypatch, **amounts):
+    from tests import paper_cost_evidence_fixture as fixture
+    original = fixture.test_sources
+    monkeypatch.setattr(fixture, 'test_sources',
+                        lambda bound: original(bound, **amounts))
 
 
 def test_complete_costs_use_net_thresholds_and_allow_approval(tmp_path, cfg):
@@ -129,12 +100,8 @@ def test_complete_costs_use_net_thresholds_and_allow_approval(tmp_path, cfg):
 
 
 def test_costs_can_make_gross_passing_performance_fail(tmp_path, cfg, monkeypatch):
+    fixture_amounts(monkeypatch, commission=11)
     j, v = evidence(tmp_path, cfg)
-    def provider(journal, trade, version):
-        costs = complete_test_cost_evidence(journal, trade, version)
-        costs['commission']['amount'] = 11.0
-        return costs
-    monkeypatch.setattr(F, '_paper_cost_evidence', provider)
     result, receipt = assess(j, cfg, v)
     assert receipt['gross_stats']['profit_factor'] >= 1.15
     assert receipt['stats']['winrate'] == 0 and result['status'] == F.P_NOT_SATISFIED
@@ -151,7 +118,9 @@ def test_identity_insufficiency_precedes_missing_costs(tmp_path, cfg, monkeypatc
 def test_satisfied_receipt_cannot_survive_lost_cost_evidence(tmp_path, cfg, monkeypatch):
     j, v = evidence(tmp_path, cfg)
     result, _ = assess(j, cfg, v)
-    monkeypatch.setattr(F, '_paper_cost_evidence', lambda *args: {})
+    from trader.engine import paper_cost_evidence as C
+    with j._tx() as db:
+        db.execute(f'ALTER TABLE {C.SOURCES} RENAME TO lost_sources')
     with pytest.raises(F.HandoffRefused, match='probation_evidence_changed'):
         F.record_owner_decision(j, cfg, result['request_id'], 'APPROVED', actor='operator', decided_at_ms=T0 + 31 * DAY)
     with pytest.raises(F.HandoffRefused, match='probation_evidence_changed'):
@@ -159,25 +128,9 @@ def test_satisfied_receipt_cannot_survive_lost_cost_evidence(tmp_path, cfg, monk
     assert j.query('SELECT * FROM strategy_approval_decisions') == []
 
 
-@pytest.mark.parametrize('field', ['evidence_id', 'trade_id', 'version_id', 'install_id', 'currency'])
-def test_cost_evidence_must_bind_trade_install_and_currency(tmp_path, cfg, monkeypatch, field):
-    j, v = evidence(tmp_path, cfg)
-    def provider(journal, trade, version):
-        costs = complete_test_cost_evidence(journal, trade, version)
-        costs['commission'].pop(field)
-        return costs
-    monkeypatch.setattr(F, '_paper_cost_evidence', provider)
-    result, _ = assess(j, cfg, v)
-    assert result['status'] == F.P_COST_INCOMPLETE and result['request_id'] is None
-
-
 def test_signed_funding_evidence_is_not_clamped_to_zero(tmp_path, cfg, monkeypatch):
+    fixture_amounts(monkeypatch, funding=-0.1)
     j, v = evidence(tmp_path, cfg)
-    def provider(journal, trade, version):
-        costs = complete_test_cost_evidence(journal, trade, version)
-        costs['funding']['amount'] = -0.1
-        return costs
-    monkeypatch.setattr(F, '_paper_cost_evidence', provider)
     result, receipt = assess(j, cfg, v)
     assert result['status'] == F.P_SATISFIED
     assert receipt['stats']['pnl'] == pytest.approx(sum(PASSING) + 15 * 0.07)

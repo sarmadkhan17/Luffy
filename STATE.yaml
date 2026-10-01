@@ -4478,3 +4478,51 @@ versioned_exit_semantics:
       - prospective paper exits retain exact semantics identity and canonical observations for replay; no historical backfill
       - probation and approval re-verification require matching frozen semantics, canonical transition replay and final state; conflicting or missing evidence is INCOMPLETE_EXIT_SEMANTICS_EVIDENCE
       - complete exit evidence still requires complete cost evidence; unknown production costs remain INCOMPLETE_COST_EVIDENCE
+
+versioned_paper_cost_protocol:
+  package: LUFFY-VERSIONED-PAPER-COST-EVIDENCE-PROTOCOL-R1
+  base_commit: 1ab0da0cb9cb3a3c290488d7c75edf09788b6462
+  branch: luffy-versioned-paper-cost-evidence-protocol-r1
+  state: TESTED
+  PAPER_EXECUTION: TESTED
+  EXIT_SEMANTIC_PARITY: TESTED
+  PAPER_COST_PROTOCOL: TESTED
+  PRODUCTION_COST_EVIDENCE: UNAVAILABLE
+  PRODUCTION_ECONOMIC_PROBATION: INCOMPLETE
+  CAPACITY: UNAVAILABLE
+  FIRST_LIVE: BLOCKED
+  runtime_deployment: NOT_DEPLOYED
+  trading_behavior_changed: false
+  cost_schema: versioned-paper-cost-receipt.v1
+  receipt_storage: versioned_paper_cost_receipts
+  source_storage: versioned_paper_cost_sources
+  winrate_policy:
+    basis: NET
+    authority: Existing versioned probation _assess at base 1ab0da0 and prior probation truth-fix report; no reinterpretation.
+    ambiguity_behavior: AMBIGUOUS_WIN_RATE_POLICY blocks satisfaction.
+  evidence:
+    - trader/engine/paper_cost_evidence.py
+    - trader/engine/paper.py
+    - trader/strategy/factory_handoff.py
+    - tests/test_paper_cost_protocol.py
+    - tests/test_versioned_paper_probation_truth.py
+    - tests/test_versioned_paper_execution.py
+    - tests/test_exit_semantics_probation_binding.py
+    - tests/test_cross_stage_authority.py
+    - tests/test_strategy_capacity.py
+    - tests/test_entry_control_fence.py
+    - docs/superpowers/reports/2026-10-01-versioned-paper-cost-evidence-protocol-r1.md
+  missing_production_evidence:
+    - Exact account/venue commission-rate receipts applicable to both paper fill timestamps, with proven maker/taker or classification-independent applicability.
+    - Registered validated executable-price cost method covering entry and exit requested quantity, source-time relationship and justified existing freshness rule.
+    - For futures, complete actual funding-event interval/timing evidence, historical rates and exact position/notional basis.
+    - Production versioned paper trade and cost receipts; read-only production schema inspection found neither table on 2026-10-01.
+  guarantees:
+    - No unknown cost becomes zero; incomplete known_costs and net_pnl are null with explicit status.
+    - Every prospective paper close atomically freezes one exact identity/market/entry/exit receipt.
+    - Finalized sources and receipts refuse UPDATE, DELETE and replacement INSERT.
+    - Probation and approval replay frozen source calculations, per-trade identity and exit evidence.
+    - Legacy costs are not backfilled; current rates and config comments are not historical evidence.
+    - Registered authoritative adapters are code-owned and currently absent in production; TEST-ONLY fixture authorities are not production adapters.
+    - No additional mandatory cost dimension is defined by the existing isolated paper ledger beyond commission, execution cost and funding.
+    - No Risk, capacity, thresholds, F1, first-live activation, frontend/M4, production write, deployment or restart.

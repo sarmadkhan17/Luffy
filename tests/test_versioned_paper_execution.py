@@ -107,6 +107,13 @@ def test_end_to_end_15_actual_signal_entries_and_closes(tmp_path, monkeypatch, c
             df=append(df,float(df.close.iloc[-1])*0.99)
     trades=j.query(f'SELECT * FROM {TABLE}')
     assert len(trades)==15 and all(t['status']=='closed' for t in trades)
+    from trader.engine import paper_cost_evidence as C
+    assert len(j.query(f'SELECT * FROM {C.TABLE}')) == 15
+    install = F.verify_install(j, v, current=False)
+    for trade in trades:
+        cost = C.verify(j, trade, v, install)
+        assert cost['net_pnl_status'] == ('ESTABLISHED' if complete_costs else 'UNAVAILABLE')
+        assert cost['binding']['market_type'] == 'futures'
     assert venue.sent==[]
     for t in trades:
         ident=json.loads(t['entry_identity_json'])

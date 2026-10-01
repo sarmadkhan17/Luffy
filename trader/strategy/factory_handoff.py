@@ -770,13 +770,15 @@ def _ms(iso: str | None) -> int | None:
 
 
 def _policy(cfg: dict) -> dict | None:
+    from ..engine.paper_cost_evidence import WIN_RATE_POLICY
     s = (cfg or {}).get("strategies") or {}
     if any(s.get(k) is None for k in POLICY_KEYS):
         return None
     return {"source": "config.yaml strategies.*",
             "min_trades": int(s["paper_probation_trades"]),
             "min_winrate": float(s["paper_min_winrate"]),
-            "min_profit_factor": float(s["paper_min_profit_factor"])}
+            "min_profit_factor": float(s["paper_min_profit_factor"]),
+            "winrate_policy": dict(WIN_RATE_POLICY)}
 
 
 _TRADE_KEYS = ("id", "strategy_id", "symbol", "side", "exec_mode", "status",
@@ -807,47 +809,21 @@ def _classify(t: dict, v: dict) -> str:
 
 
 def _paper_cost_evidence(journal, trade: dict, version: dict) -> dict:
-    """No authoritative paper-cost source exists yet.
-
-    Venue fills/account funding cannot establish isolated paper costs. A
-    recorded reference or numeric zero is not execution-cost evidence. This
-    reader deliberately has no config/provider registration hook. Tests may
-    monkeypatch it with a deterministic TEST-ONLY evidence source.
-    """
-    return {dimension: {"status": "UNAVAILABLE", "amount": None,
-                        "reason": "authoritative_paper_cost_source_unavailable"}
-            for dimension in ("commission", "slippage", "funding")}
-
-
-def _cost_nonapplicability_proven(trade: dict, version: dict,
-                                 dimension: str, evidence: dict) -> bool:
-    # No existing authoritative rule proves non-applicability for these
-    # versioned paper trades. In particular, unknown funding is not zero.
-    return False
+    from ..engine import paper_cost_evidence as C
+    try:
+        return C.verify(journal, trade, version,
+                        verify_install(journal, version, current=False))
+    except (ValueError, TypeError, KeyError, OverflowError, AttributeError):
+        return {"net_pnl_status": "UNAVAILABLE", "reason": "COST_RECEIPT_MISSING_OR_INVALID"}
 
 
 def _economic_costs(trade: dict, version: dict, evidence: dict):
-    """Validate costs in the paper ledger P&L currency; funding is signed."""
-    missing, total = [], 0.0
-    for dimension in ("commission", "slippage", "funding"):
-        item = evidence.get(dimension, {}) if isinstance(evidence, dict) else {}
-        if not isinstance(item, dict):
-            item = {}
-        bound = (bool(item.get("evidence_id"))
-                 and item.get("trade_id") == trade["id"]
-                 and item.get("version_id") == version["version_id"]
-                 and item.get("install_id") == trade["install_id"])
-        if (bound and item.get("status") == "NOT_APPLICABLE"
-                and _cost_nonapplicability_proven(trade, version, dimension, item)):
-            continue
-        amount = item.get("amount")
-        if (not bound or item.get("status") != "KNOWN" or item.get("currency") != "USDT"
-                or isinstance(amount, bool) or not isinstance(amount, (int, float))
-                or not math.isfinite(amount)):
-            missing.append(dimension)
-        else:
-            total += amount
-    return missing, total
+    if evidence.get('net_pnl_status') != 'ESTABLISHED' or not evidence.get('receipt_sha256'):
+        dimensions = evidence.get('dimensions', {})
+        missing = [k for k in ('commission','slippage','funding')
+                   if dimensions.get(k, {}).get('status') not in ('ESTABLISHED','NOT_APPLICABLE')]
+        return missing or ['invalid_cost_receipt'], None
+    return [], evidence['known_costs']
 
 
 def _probation_trades(journal, v: dict, since_ms: int, until_ms: int):
@@ -952,14 +928,17 @@ def _assess(journal, cfg, v: dict, since_ms: int, at_ms: int, *,
                 "trades_sha256": _jsha(trades), "stats": None,
                 "gross_stats": gross_stats, "missing_cost_evidence": missing,
                 "economic_validation": "NOT_ECONOMICALLY_VALIDATED"}
+    if policy["winrate_policy"].get("basis") not in ("NET", "GROSS"):
+        return {**base, "status": "AMBIGUOUS_WIN_RATE_POLICY", "gross_stats": gross_stats}
     st = stats_of(net_trades)
+    win_stats = st if policy["winrate_policy"]["basis"] == "NET" else gross
     stats = {"trades": st["trades"], "wins": st["wins"],
-             "winrate": st["winrate"], "profit_factor": st["pf"],
+             "winrate": win_stats["winrate"], "winrate_basis": policy["winrate_policy"]["basis"], "profit_factor": st["pf"],
              "pnl": st["pnl"], "pnl_source": "gross paper P&L less evidenced costs",
              "paper_cost_basis": "NET_WITH_COMPLETE_COST_EVIDENCE"}
     if st["trades"] < policy["min_trades"]:
         status = P_INSUFFICIENT
-    elif st["winrate"] >= policy["min_winrate"] \
+    elif win_stats["winrate"] >= policy["min_winrate"] \
             and st["pf"] >= policy["min_profit_factor"]:
         status = P_SATISFIED
     else:
