@@ -226,14 +226,17 @@ def test_stale_candidate_invalid_and_missing_bounds():
 
 def test_opportunity_cost_no_turnover():
     r = result(inputs(candidate('b', 'venue:futures:ETHUSDT', value='4'), positions=(holding(value='1'),)))
-    assert r['opportunity_cost'][0]['status'] == 'BETTER_OPPORTUNITY_OBSERVED'
+    assert r['opportunity_cost'][0]['observation'] == 'BETTER_OPPORTUNITY_OBSERVED'
+    assert r['opportunity_cost'][0]['status'] == 'SWITCH_ECONOMICS_UNAVAILABLE'
     assert r['opportunity_cost'][0]['switching'] == 'SWITCH_ECONOMICS_UNAVAILABLE'
     assert r['opportunity_cost'][0]['action'] == 'KEEP_EXISTING'
 
 
 def test_unknown_switch_economics_no_claim():
     r = result(inputs(candidate('b', 'venue:futures:ETHUSDT'), positions=(holding(),)))
-    assert not r['opportunity_cost']
+    assert r['opportunity_cost'][0]['status'] == 'SWITCH_ECONOMICS_UNAVAILABLE'
+    assert r['opportunity_cost'][0]['incremental_net_benefit'] is None
+    assert r['opportunity_cost'][0]['recommendation'] == 'NO_ACTION'
 
 
 def test_identity_and_provenance_integrity():

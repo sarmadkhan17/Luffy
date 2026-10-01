@@ -8,10 +8,61 @@ import json
 
 from trader.strategy import factory_handoff as factory, capacity
 from . import opportunity_live as live, economics
-from .allocator import Source, Evidence, Status, canonical, digest
+from .allocator import Source, Evidence, Status, Bound, canonical, digest, number
 
 SCHEMA = 'portfolio-candidate-bridge.v1'
 ELIGIBLE = 'ELIGIBLE_FOR_PORTFOLIO_COMPARISON'
+# No current calibrated account/capacity/size authority exists. Adapters must
+# verify each existing authority independently; raw ESTABLISHED claims do not
+# constitute permission. This is a projection interface, not another sizer.
+ALLOCATION_AUTHORITY_ADAPTERS = {}
+ALLOCATION_SCHEMA = 'portfolio-allocation-authority.v1'
+
+
+def allocation_binding(receipt, authority):
+    p = json.loads(receipt.payload_json)
+    portfolio = next((s for s in p['sources'] if s['source_id'] == 'portfolio'), None)
+    return dict(live_receipt_id=receipt.receipt_id, bridge_source_id=authority.source_id,
+                as_of_ms=p['as_of_ms'], portfolio_source_sha256=portfolio['sha256'] if portfolio else None)
+
+
+def _allocation_projection(c, receipt, authority, context):
+    matching = []
+    for source in context:
+        raw = json.loads(source.payload_json)
+        if isinstance(raw, dict) and raw.get('schema') == ALLOCATION_SCHEMA:
+            matching.append((source, raw))
+    if not matching:
+        return c
+    if len(matching) != 1:
+        raise ValueError('ALLOCATION_AUTHORITY_DUPLICATE')
+    source, raw = matching[0]
+    adapter = ALLOCATION_AUTHORITY_ADAPTERS.get((raw.get('method'), raw.get('version')))
+    if adapter is None:
+        return c  # An unregistered claim cannot supply allocation maturity.
+    Source(**asdict(source))
+    bound = allocation_binding(receipt, authority)
+    captured, expiry = raw.get('captured_ms'), raw.get('valid_until_ms')
+    if (raw.get('binding') != bound or not bound['portfolio_source_sha256']
+            or type(captured) is not int or type(expiry) is not int
+            or not 0 <= captured <= c.as_of_ms <= expiry or not raw.get('provenance')
+            or adapter(raw, c, receipt, authority) is not True):
+        raise ValueError('ALLOCATION_AUTHORITY_REFUSED')
+    # Every numeric bound comes from the adapter's verified source. No value
+    # conversion, size formula, Risk invocation or fallback occurs here.
+    evidence = Evidence(Status.ESTABLISHED, (source.source_id,))
+    bounds = tuple(Bound(v['authority'], evidence, v['maximum'], v['unit']) for v in raw['bounds'])
+    required = {'strategy_requested', 'risk_permitted', 'account_funding', 'capacity', 'portfolio_constraints'}
+    if (len({v.authority for v in bounds}) != len(bounds) or not required <= {v.authority for v in bounds}
+            or any(number(v.maximum) is None or number(v.maximum) < 0 or not v.unit for v in bounds)):
+        raise ValueError('ALLOCATION_BOUND_AUTHORITY_INCOMPLETE')
+    established = set(raw['established_dimensions'])
+    supported = {'probation', 'capacity', 'account_instrument', 'risk_compatibility', 'evidence_quality'}
+    if not established <= supported:
+        raise ValueError('ALLOCATION_DIMENSION_UNSUPPORTED')
+    return replace(c, **{name: evidence for name in established}, bounds=bounds,
+                   valid_until_ms=min(c.valid_until_ms, expiry) if c.valid_until_ms is not None else None,
+                   source_ids=tuple(sorted(set((*c.source_ids, source.source_id)))))
 
 
 class ReadEvidence:
@@ -146,15 +197,16 @@ def candidate(receipt, economic_receipt, authority):
                 capacity=known if result['capacity'].get('current') else Evidence(Status.UNKNOWN if result['capacity']['status'] == 'UNKNOWN' else Status.UNAVAILABLE, (authority.source_id,), canonical(result['capacity'])),
                 freshness=known if fresh else unknown, valid_until_ms=min(expiries) if fresh else None,
                 source_ids=tuple(sorted(set((*c.source_ids, authority.source_id)))))
+    c = _allocation_projection(c, receipt, authority, inputs.context)
     return c, tuple({s.source_id: s for s in (*sources, authority)}.values())
 
 
-def build(reader, receipt, config, *, available_inputs=None, dimensions=None):
+def build(reader, receipt, config, *, available_inputs=None, dimensions=None, allocation_sources=()):
     if receipt is None:
         return None
     authority = freeze_authority(reader, receipt, config, available_inputs)
     binding = live.economic_binding(receipt, **dimensions)
-    er = economics.build(economics.Inputs(binding, context=(receipt.as_source(), authority)))
+    er = economics.build(economics.Inputs(binding, context=(receipt.as_source(), authority, *allocation_sources)))
     c, sources = candidate(receipt, er, authority)
     return c, er, sources
 

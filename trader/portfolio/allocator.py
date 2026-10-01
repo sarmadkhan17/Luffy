@@ -19,7 +19,7 @@ from pathlib import Path
 
 from ..core.instrument_registry import is_canonical_instrument_id
 
-VERSION = 'LUFFY-PORTFOLIO-ALLOCATOR-R1'
+VERSION = 'LUFFY-PORTFOLIO-ALLOCATOR-R2'
 UNAVAILABLE = 'UNAVAILABLE'
 
 
@@ -375,6 +375,34 @@ def _holding_economics_current(e, inputs):
         return False
 
 
+def _portfolio_context_reasons(c, inputs):
+    """A live candidate cannot carry a different book into allocation."""
+    if c.opportunity_context_json is None:
+        return []  # Legacy detached contracts remain replayable.
+    from .opportunity_live import receipt_from_source
+    try:
+        sources = [s for s in inputs.sources if s.source_id.startswith('live-context:')]
+        receipts = [receipt_from_source(s) for s in sources]
+        matching = [r for r in receipts if r.context.context_id == c.context_id]
+        if len(matching) != 1:
+            raise ValueError('CONTEXT_SOURCE_MISSING')
+        body = json.loads(matching[0].payload_json)
+        raw = next(json.loads(s['payload_json']) for s in body['sources'] if s['source_id'] == 'portfolio')
+        book = raw['data']
+        p = inputs.portfolio
+        expected = sorted((v['instrument_id'], book['market_type'], v['side'].upper(), number(str(v['quantity'])))
+                          for v in book['positions'])
+        actual = sorted((v.instrument, v.market_type, v.direction, number(v.quantity)) for v in p.positions)
+        if (body['portfolio_status'] != 'AVAILABLE' or raw['valid_until_ms'] is None
+                or not raw['known_at_ms'] <= inputs.as_of_ms <= raw['valid_until_ms']
+                or (book['snapshot_id'], book['observed_at_ms']) != (p.snapshot_id, p.as_of_ms)
+                or expected != actual):
+            raise ValueError('CONTEXT_BOOK_DIFFERS_OR_STALE')
+    except (ValueError, TypeError, KeyError, StopIteration, AttributeError):
+        return ['OPPORTUNITY_PORTFOLIO_CUT_UNAVAILABLE_OR_DIFFERS']
+    return []
+
+
 def allocate(inputs: Inputs) -> Proposal:
     _references(inputs)
     frozen = _ordered(inputs)
@@ -416,6 +444,7 @@ def allocate(inputs: Inputs) -> Proposal:
         interaction = ('NO_ACTION' if c.direction == 'FLAT' else 'NEW_POSITION' if not held
                        else 'SUPPORTS_EXISTING' if c.direction == held.direction else 'CONFLICTS_EXISTING')
         blocked, missing, conflict = list(exposure_blockers), [], []
+        blocked.extend(_portfolio_context_reasons(c, inputs))
         if not portfolio_ok:
             blocked.append('PORTFOLIO_EVIDENCE_STALE_OR_UNAVAILABLE')
         if inputs.risk_policy.status != Status.ESTABLISHED:
@@ -498,16 +527,10 @@ def allocate(inputs: Inputs) -> Proposal:
         if not row['accepted']:
             row['refusal_reasons'].append('ECONOMICS_INCOMPARABLE' if len(keys) > 1
                                          else 'CAPITAL_PRIORITY_NOT_SELECTED')
-    observations = []
-    for c, _, _ in ordered:
-        for held in portfolio.positions:
-            e = held.economics
-            if (e and _holding_economics_current(e, inputs) and e.key() == c.economics.key()
-                    and number(e.expected_net_value) is not None
-                    and number(c.economics.expected_net_value) > number(e.expected_net_value)):
-                observations.append(dict(candidate=list(c.identity), holding=held.instrument,
-                                         status='BETTER_OPPORTUNITY_OBSERVED',
-                                         switching='SWITCH_ECONOMICS_UNAVAILABLE', action='KEEP_EXISTING'))
+    from .opportunity_cost import compare
+    observations = [compare(inputs, c, held, row) for c, row in zip(
+        sorted(inputs.candidates, key=lambda c: c.identity), rows)
+        for held in sorted(portfolio.positions, key=lambda p: (p.instrument, p.market_type))]
     global_blockers = list(exposure_blockers)
     if not portfolio_ok:
         global_blockers.append('PORTFOLIO_EVIDENCE_STALE_OR_UNAVAILABLE')

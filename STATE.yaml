@@ -4800,3 +4800,61 @@ stage6_portfolio_common_factor_concentration_r1:
   real_position_count_boundary: WITHIN_EXISTING_LIMITS
   factor_model: NOT_JUSTIFIED
   next_recommended_package: STAGE6_IMPLEMENTATION_CLOSURE_R1
+
+STAGE6_BUILD_COMPLETE: true
+STAGE6_REAL_WORLD_MATURE: false
+stage6_implementation_closure_r1:
+  package: LUFFY-STAGE6-IMPLEMENTATION-CLOSURE-R1
+  state: TESTED
+  base_commit: 8ebc7113c0d3566facf64b47786c6efcc6339726
+  worktree: /mnt/luffy-data/luffy/workspaces/stage6-implementation-closure-r1
+  committed: false
+  runtime_deployment: NOT_DEPLOYED
+  trading_behavior_changed: false
+  stage6_build_complete: true
+  stage6_real_world_mature: false
+  calibrated_portfolio_optimization_complete: false
+  requirements:
+    A_whole_book_portfolio_allocator: TESTED
+    B_comparable_expected_net_economics_contract: TESTED
+    C_common_factor_shared_bet_awareness: TESTED
+    D_capacity_boundary: TESTED
+    E_opportunity_cost_replacement_reasoning: TESTED
+    F_cash_no_trade_allocation: TESTED
+    G_event_driven_reoptimization: TESTED
+    H_one_asset_one_real_position: TESTED
+    I_existing_position_interaction: TESTED
+    J_deterministic_allocation_authority: TESTED
+    K_risk_final_authority: TESTED
+    L_typed_trade_intent_boundary: TESTED
+    M_replay_provenance: TESTED
+  missing_implementation: []
+  real_evidence_blocked:
+  - Exact-version forward gross calibration and calibrated uncertainty reserve.
+  - Actual forward commission/slippage/funding/borrow applicability and calibrated cost-scope bridge.
+  - Registered size-to-impact/liquidity capacity, account eligibility, funding-to-quantity/leverage and authoritative
+    size bounds.
+  - Actual current frozen StrategyVersions/candidates; real shadow has zero of each.
+  - Current marked exposure, venue-bound stop risk/heat, margin usage and holding StrategyVersion attribution.
+  - Calibrated switching-cost/portfolio-impact authority and incumbent forward economics.
+  - Calibrated materiality for reliability, world-state, relationship/factor and capital changes.
+  - Proven statistical independence or calibrated factor optimization authority; measurements remain context-only.
+  allocator_revision: LUFFY-PORTFOLIO-ALLOCATOR-R2
+  opportunity_cost: TESTED; SWITCH_ECONOMICS_UNAVAILABLE without independently registered authority
+  reoptimization: TESTED; pure caller-delivered event gate, no polling or runtime activation
+  trade_intent: TESTED; OPEN/KEEP/NO_ACTION, complete/refused/incomplete, no Risk/Execution routing
+  allocation_readiness: TESTED projection interface; production adapter registry empty; no sizing formula
+  whole_book: TESTED; exact live-context snapshot identity/projection/freshness before allocation
+  risk_boundary: UNCHANGED; final independent approval remains required
+  tests: '315 focused regression tests; 79 final allocator/closure checks; 46 new closure contract tests'
+  real_shadow: PASS; 0 candidates, 3 holdings, 4 contexts, FROZEN, CASH / NO_ALLOCATION
+  replay: PASS; fresh-process artifact equality
+  evidence:
+  - docs/superpowers/reports/2026-10-01-stage6-implementation-closure-r1.md
+  - docs/superpowers/evidence/stage6-implementation-closure-r1/requirements.json
+  - docs/superpowers/evidence/stage6-implementation-closure-r1/final-tests.txt
+  - docs/superpowers/evidence/stage6-implementation-closure-r1/final-shadow-result.json
+  - docs/superpowers/evidence/stage6-implementation-closure-r1/restart-replay.json
+  next_recommended_package: LUFFY-STAGE7-LEARNING-CLOSED-LOOP-FOUNDATION-R1
+  scope: Software BUILD closure only; earlier package stage6_complete=false remains historical, real maturity is
+    not granted.

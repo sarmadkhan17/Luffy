@@ -1,0 +1,94 @@
+{
+  "base_commit": "8ebc7113c0d3566facf64b47786c6efcc6339726",
+  "missing_implementation": [],
+  "next_recommended_package": "LUFFY-STAGE7-LEARNING-CLOSED-LOOP-FOUNDATION-R1",
+  "package": "LUFFY-STAGE6-IMPLEMENTATION-CLOSURE-R1",
+  "real_evidence_blocked": [
+    "Exact-version forward gross calibration and calibrated uncertainty reserve.",
+    "Actual forward commission/slippage/funding/borrow applicability and calibrated cost-scope bridge.",
+    "Registered size-to-impact/liquidity capacity, account eligibility, funding-to-quantity/leverage and authoritative size bounds.",
+    "Actual current frozen StrategyVersions/candidates; real shadow has zero of each.",
+    "Current marked exposure, venue-bound stop risk/heat, margin usage and holding StrategyVersion attribution.",
+    "Calibrated switching-cost/portfolio-impact authority and incumbent forward economics.",
+    "Calibrated materiality for reliability, world-state, relationship/factor and capital changes.",
+    "Proven statistical independence or calibrated factor optimization authority; measurements remain context-only."
+  ],
+  "requirements": {
+    "A_whole_book_portfolio_allocator": {
+      "evidence": "trader/portfolio/allocator.py; tests/test_portfolio_allocator.py",
+      "sdd": "SDD 16, 16.7, 35.5",
+      "status": "TESTED"
+    },
+    "B_comparable_expected_net_economics_contract": {
+      "evidence": "trader/portfolio/economics.py; tests/test_expected_net_economics.py",
+      "sdd": "SDD 15.6, 16.1",
+      "status": "TESTED"
+    },
+    "C_common_factor_shared_bet_awareness": {
+      "evidence": "trader/portfolio/common_factor.py; tests/test_portfolio_common_factor.py",
+      "sdd": "SDD 16.2",
+      "status": "TESTED"
+    },
+    "D_capacity_boundary": {
+      "evidence": "trader/strategy/capacity.py; trader/portfolio/allocator.py:_size; tests/test_strategy_capacity.py",
+      "sdd": "SDD 16.3",
+      "status": "TESTED"
+    },
+    "E_opportunity_cost_replacement_reasoning": {
+      "evidence": "trader/portfolio/opportunity_cost.py; tests/test_stage6_closure.py",
+      "sdd": "SDD 16.4",
+      "status": "TESTED"
+    },
+    "F_cash_no_trade_allocation": {
+      "evidence": "trader/portfolio/allocator.py; tests/test_portfolio_allocator.py",
+      "sdd": "SDD 16.5",
+      "status": "TESTED"
+    },
+    "G_event_driven_reoptimization": {
+      "evidence": "trader/portfolio/reoptimization.py; tests/test_stage6_closure.py",
+      "sdd": "SDD 16.6",
+      "status": "TESTED"
+    },
+    "H_one_asset_one_real_position": {
+      "evidence": "trader/portfolio/allocator.py:_ordered; tests/test_portfolio_allocator.py",
+      "sdd": "SDD 15.8",
+      "status": "TESTED"
+    },
+    "I_existing_position_interaction": {
+      "evidence": "trader/portfolio/opportunity_live.py; trader/portfolio/allocator.py; tests/test_opportunity_live_integration.py",
+      "sdd": "SDD 15.6, 16.4, 35.8",
+      "status": "TESTED"
+    },
+    "J_deterministic_allocation_authority": {
+      "evidence": "trader/portfolio/allocator.py; trader/portfolio/reoptimization.py; tests/test_stage6_closure.py",
+      "sdd": "SDD 16.7, 35.5",
+      "status": "TESTED"
+    },
+    "K_risk_final_authority": {
+      "evidence": "trader/portfolio/trade_intent.py; tests/test_stage6_closure.py",
+      "sdd": "SDD 17, 35.6",
+      "status": "TESTED"
+    },
+    "L_typed_trade_intent_boundary": {
+      "evidence": "trader/portfolio/trade_intent.py; tests/test_stage6_closure.py",
+      "sdd": "SDD 16.7, 35.5-35.7",
+      "status": "TESTED"
+    },
+    "M_replay_provenance": {
+      "evidence": "trader/portfolio/allocator.py; trader/portfolio/trade_intent.py; trader/portfolio/reoptimization.py; scripts/stage6_shadow.py; tests/test_stage6_closure.py",
+      "sdd": "SDD 15.7, 16.7",
+      "status": "TESTED"
+    }
+  },
+  "risk_execution_wiring": "SEPARATE_NOT_AUTHORIZED",
+  "sdd_additional_build_items": {
+    "capital_efficiency_liquidity_comparison_contract": "TESTED",
+    "confidence_decomposition": "TESTED",
+    "event_driven_opportunity_set": "TESTED",
+    "real_numerical_estimates": "REAL_EVIDENCE_BLOCKED"
+  },
+  "software_scope": "DETACHED_IMPLEMENTED_TESTED_CONTRACTS_NOT_RUNTIME_ACTIVATION",
+  "stage6_build_complete": true,
+  "stage6_real_world_mature": false,
+  "trading_behavior_changed": false
+}

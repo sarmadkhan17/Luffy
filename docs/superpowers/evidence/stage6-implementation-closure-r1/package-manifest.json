@@ -1,0 +1,27 @@
+{
+  "base_commit": "8ebc7113c0d3566facf64b47786c6efcc6339726",
+  "committed": false,
+  "deployed": false,
+  "evidence_directory": "docs/superpowers/evidence/stage6-implementation-closure-r1",
+  "files": {
+    "NEXT.yaml": "71d80d38d0e493dc966041d61dad70e8e12fbc25f6be0d885145143b4ba9d894",
+    "STATE.yaml": "efe9bede9b60c8dd2853b28930c4e3d75b2411e3949a503afdccdfe41b9e4a89",
+    "docs/superpowers/reports/2026-10-01-stage6-implementation-closure-r1.md": "0a9030a7f9e4ae9f58ed3fb83b87512d2c56c9dd6d14eb092cc3db5993604580",
+    "scripts/stage6_shadow.py": "f11207678f256eff6035cbbf186b10186cd77c4dc006708dfe6c154c4ae6cc8f",
+    "tests/test_portfolio_allocator.py": "86530befd318a8e6909f9dd87543582954ad1115d70bcf2b4f0e185a4bc649e9",
+    "tests/test_stage6_closure.py": "234363d9a8be725cb98c4b0465c37b49fa2a70145b40af9f9f9b5b3a51506d04",
+    "trader/portfolio/allocator.py": "9c5efef360ac44ae67088a54e6920f97d3aedada6bac23b2d9b27cfa4bec112f",
+    "trader/portfolio/candidate_bridge.py": "7efc029838ed64611911dfc41dcfae39717afbbe7490f99d90b959ad57489eb8",
+    "trader/portfolio/opportunity_cost.py": "b6a1b2b84c98a2ed5d4efb6726a47a8778cb295b80bad8f81525b2df6ebf3687",
+    "trader/portfolio/reoptimization.py": "802154273b432885eadee0e0bd95704a23ca8d448fe0efa299373a184995c0fe",
+    "trader/portfolio/trade_intent.py": "b80234ad1d54d590fd861cd7b10e19c068f4375320cfbf83b46e33a23c3829d0"
+  },
+  "graphify_output_excluded": true,
+  "package": "LUFFY-STAGE6-IMPLEMENTATION-CLOSURE-R1",
+  "tests": {
+    "final_allocator_closure": 79,
+    "final_regression": 315,
+    "new_closure_contract": 46
+  },
+  "trading_behavior_changed": false
+}

@@ -3,46 +3,42 @@ sdd_version: '3.2'
 updated_at: '2026-10-01'
 
 work_package:
-  id: STAGE6_IMPLEMENTATION_CLOSURE_R1
-  type: STAGE6_CONSOLIDATED_IMPLEMENTATION_AUDIT
-  status: RECOMMENDED_NOT_AUTHORIZED_FOR_TRADING
+  id: NO_ACTIVE_PACKAGE
+  type: NONE
+  status: NO_ACTIVE_PACKAGE
+  last_completed_package: LUFFY-STAGE6-IMPLEMENTATION-CLOSURE-R1
   objective: >
-    Close the consolidated Stage-6 implementation inventory against SDD sections
-    15 and 16, tracing opportunity context, economics, candidate feasibility,
-    whole-book exposure, cash and proposal replay. This package is an audit
-    recommendation, not a claim that Stage 6 or calibrated portfolio optimization
-    is complete. Distinguish implemented refusal paths from real evidence maturity.
+    Stage 6 SOFTWARE BUILD is IMPLEMENTED/TESTED. The A-M closure checklist has
+    no missing implementation. Real allocation maturity remains evidence-blocked.
+    No package is active and no runtime activation or trading is authorized.
   completed_prerequisites:
-    - PORTFOLIO_COMMON_FACTOR_CONTEXT is TESTED.
-    - EXACT_REDUNDANCY_AUTHORITY is TESTED; shared Factory parent chains contribute one evidence group.
-    - CONCENTRATION_BOUNDARY is TESTED using configured owner limits only.
-    - Existing candidate bridge requires whole-book exposure authority; missing or refused authority blocks proposals.
-    - Current real shadow observed three LONG venue holdings, four opportunity contexts, zero StrategyVersions/candidates and CASH / NO_ALLOCATION.
-    - WorldModel relationships and existing Attention basket correlations are descriptive only; no statistical threshold or penalty exists.
-    - Expected economics, Opportunity Context/registry and detached Portfolio Allocator retain prior TESTED contracts.
+    - Whole-book allocator, comparable economics, common-factor context, capacity refusal and cash are TESTED.
+    - Opportunity-cost comparison, event-driven re-optimization gate and typed TradeIntent are TESTED.
+    - Live candidate contexts must match the same frozen venue book; current replay refuses changed authority.
+    - Final read-only shadow returned 0 candidates, 3 holdings, 4 contexts and CASH / NO_ALLOCATION under FROZEN control.
+    - Fresh-process replay preserves the proposal, event receipt and typed intent artifact exactly.
   evidence:
-    - docs/superpowers/reports/2026-10-01-stage6-common-factor-concentration-r1.md
-    - docs/superpowers/evidence/stage6-common-factor-concentration-r1/
-    - trader/portfolio/common_factor.py
-    - trader/portfolio/allocator.py
-    - trader/portfolio/candidate_bridge.py
-    - SDD.md
+    - docs/superpowers/reports/2026-10-01-stage6-implementation-closure-r1.md
+    - docs/superpowers/evidence/stage6-implementation-closure-r1/requirements.json
+    - docs/superpowers/evidence/stage6-implementation-closure-r1/final-tests.txt
+    - docs/superpowers/evidence/stage6-implementation-closure-r1/final-shadow-result.json
+    - docs/superpowers/evidence/stage6-implementation-closure-r1/restart-replay.json
   next_steps:
     - step: 1
       action: >
-        Audit each Stage-6 BUILD item and source-authority bridge against actual
-        implementation and focused evidence before claiming implementation closure.
-        Identify any concrete remaining BUILD gap found by that audit. Do not
-        manufacture another model or threshold to bypass unavailable evidence.
+        Await owner authorization for LUFFY-STAGE7-LEARNING-CLOSED-LOOP-FOUNDATION-R1.
+        Begin with an inventory of existing typed outcomes, rejections, missed
+        opportunities, execution quality and attribution. No Stage-7 work starts here.
   economic_evidence_requirements:
-    - Exact-version forward gross calibration, calibrated reserve and forward cost applicability remain unavailable.
-    - Current marked exposure, venue-bound stop risk/heat, margin usage and position StrategyVersion attribution remain unavailable in the retained source contract.
-    - Distinct strategy lineage does not establish statistical independence; independent_evidence_count stays null.
-    - Factor models are NOT_JUSTIFIED; no calibrated portfolio optimization completion is claimed.
+    - Exact-version forward gross calibration, uncertainty reserve and forward actual-cost applicability remain unavailable.
+    - Capacity/liquidity, account/funding/leverage/size authority and actual strategy candidates remain unavailable.
+    - Marked exposure, venue-bound stop-risk heat, margin usage and holding StrategyVersion attribution remain unavailable.
+    - Switching costs/portfolio impact, materiality calibration and statistical independence remain unavailable.
+    - No further Stage-6 software micro-package solely to substitute for absent real evidence.
   execution_constraints:
     - No commit, orders, resizing, activation, deployment, restart or Risk/control-limit change.
-    - Real evidence maturity and live allocation readiness are not granted by zero candidates or archive replay.
-    - Preserve all parked owner-authorization and research boundaries.
+    - TradeIntent contracts are detached; Risk/execution wiring and approval remain separate.
+    - Preserve all parked owner-authorization, cost-calibration and research boundaries.
   preserved_authority:
     PAPER_COST_PROTOCOL: TESTED
     EXECUTION_COST_CALIBRATION: INSUFFICIENT_EVIDENCE
@@ -301,3 +297,8 @@ after_completion:
   - External Source Router/retrieval, registered falsifier predicates, a truthful WorldModel/regime source and failed-research suppression/no-repeat policy remain MISSING. Do not infer authority from context_only recall or reports.
   - LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1 (BLOCKED) was unblocked by LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 (PASS, TESTED, NOT_DEPLOYED). The independent intelligence shadow package remains LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1, awaiting owner authorization; LUFFY-PORTFOLIO-ALLOCATOR-R1 is now TESTED; LUFFY-EXPECTED-NET-ECONOMICS-R1 is TESTED_CONTRACT with INSUFFICIENT_EVIDENCE for real economics; LUFFY-OPPORTUNITY-CONTEXT-LIVE-INTEGRATION-R1 reuses v1 and is TESTED_LIVE_INTEGRATION; LUFFY-STAGE6-CANDIDATE-FEASIBILITY-BRIDGE-R1 is recommended without trading authority.
   - Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged.
+
+next_recommended_package: LUFFY-STAGE7-LEARNING-CLOSED-LOOP-FOUNDATION-R1
+next_recommended_package_status: RECOMMENDED_NOT_AUTHORIZED
+stage6_build_complete: true
+stage6_real_world_mature: false
