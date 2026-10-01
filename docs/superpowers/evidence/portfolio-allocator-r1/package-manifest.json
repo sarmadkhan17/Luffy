@@ -1,0 +1,38 @@
+{
+  "package": "LUFFY-PORTFOLIO-ALLOCATOR-R1",
+  "infrastructure": "PASS",
+  "tests": 46,
+  "expected_economics": "UNAVAILABLE",
+  "real_shadow": "PASS",
+  "result": "NO_ALLOCATION / CASH / INSUFFICIENT_COMPARABLE_ECONOMICS",
+  "production_behavior_changed": false,
+  "files": {
+    "trader/portfolio/__init__.py": "4916d03cc3deaf2bd0740a5b483a8f3c94b02155ced60d9d9dc637e58fe5f661",
+    "trader/portfolio/allocator.py": "99a93a39d770028cd0df12d1205233edb88496c7340eb1664230051e151f55b6",
+    "scripts/portfolio_allocator_shadow.py": "bbef243dd8c79c49b8d249c9c4925a6b8238fda4a0c54ad509a94c2b72e552f9",
+    "tests/test_portfolio_allocator.py": "34045878d25ceb5f472990a9d18b2ed0b8801073ebfbc7f2d8b249363b599baa",
+    "tests/test_portfolio_allocator_shadow.py": "40f6777ed138b9d722bd360df6584108bc6d582c589200e9aed39ee1f79c63af",
+    "STATE.yaml": "fb4a11c7555533b1791b2af7750d0bc778229c4882f228ad4c30abad1b5a4f0e",
+    "NEXT.yaml": "31bfd9e9586c31c37cb1ecff95ebac7725cbb41295dad3aac9b2b8700592165d",
+    "docs/superpowers/reports/2026-10-01-portfolio-allocator-r1.md": "1d5710d9f8744828f544ea9819f954bb60170f53d164ed6e84b45a6cb8ee8b51",
+    "docs/superpowers/evidence/portfolio-allocator-r1/tests.txt": "f1f10761b73ab45ff988f89c49f422c844c09d335ca0350fc851609616a51d13"
+  },
+  "reviewed_source_files": {
+    "trader/portfolio/__init__.py": "4916d03cc3deaf2bd0740a5b483a8f3c94b02155ced60d9d9dc637e58fe5f661",
+    "trader/portfolio/allocator.py": "99a93a39d770028cd0df12d1205233edb88496c7340eb1664230051e151f55b6",
+    "scripts/portfolio_allocator_shadow.py": "bbef243dd8c79c49b8d249c9c4925a6b8238fda4a0c54ad509a94c2b72e552f9",
+    "tests/test_portfolio_allocator.py": "34045878d25ceb5f472990a9d18b2ed0b8801073ebfbc7f2d8b249363b599baa",
+    "tests/test_portfolio_allocator_shadow.py": "40f6777ed138b9d722bd360df6584108bc6d582c589200e9aed39ee1f79c63af",
+    "STATE.yaml": "35b552907af8a44685f2fb1ed72e3a98e1f161251041b154ff857a666ec5a5d4",
+    "NEXT.yaml": "e5f100333c5102b8aaefb3d57cfab0531c6623a581f3d0b3cbf339bdaed5370f",
+    "docs/superpowers/reports/2026-10-01-portfolio-allocator-r1.md": "4ef2374b704993f05e899b12759f4b113b836105b726024f3003c4cc2401b703",
+    "docs/superpowers/evidence/portfolio-allocator-r1/tests.txt": "f1f10761b73ab45ff988f89c49f422c844c09d335ca0350fc851609616a51d13"
+  },
+  "recovery": {
+    "base": "0b23ab3f645efe4301ceabf9399405ab60d38e56",
+    "branch": "luffy-portfolio-allocator-r1",
+    "allocator_shadow_tests": 38,
+    "unreviewed_dependencies": [],
+    "control_files": "Allocator changes transplanted; unrelated authoritative-base records preserved"
+  }
+}

@@ -484,13 +484,29 @@ capabilities:
       - no backfill of pre-existing investigations
 
   portfolio_allocation:
-    state: DEFINED
+    state: TESTED
+    package: LUFFY-PORTFOLIO-ALLOCATOR-R1
     evidence:
-      - SDD.md
-      - existing risk/orchestrator code provides partial inputs
+      - trader/portfolio/allocator.py
+      - scripts/portfolio_allocator_shadow.py
+      - tests/test_portfolio_allocator.py
+      - tests/test_portfolio_allocator_shadow.py
+      - docs/superpowers/reports/2026-10-01-portfolio-allocator-r1.md
+      - docs/superpowers/evidence/portfolio-allocator-r1/tests.txt
+      - docs/superpowers/evidence/portfolio-allocator-r1/final/shadow-1790868385193.json
+    proven_facts:
+      - detached immutable proposal contract and deterministic frozen-input replay are TESTED
+      - feasibility precedes exact economic comparison; cash is always available
+      - one instrument and direction yields at most one proposed position; opposing directions conflict
+      - existing positions retain their approved plan without automatic resizing or switching
+      - numeric proposals require every authoritative size bound; Risk remains the final independent gate
+      - bounded read-only shadow observed three venue positions and zero frozen strategy versions or capacity receipts
+      - shadow returned CASH / NO_ALLOCATION / INSUFFICIENT_COMPARABLE_ECONOMICS with production FROZEN
     gaps:
-      - final lightweight Portfolio Allocator authority from SDD v3.2 is not yet implemented/proven
-      - one-asset-one-real-position rule is not yet proven end-to-end
+      - EXPECTED_ECONOMICS is UNAVAILABLE; no validated comparable forward net-value quantity exists in inspected Stage-5 evidence
+      - exact-version current opportunity adapter refuses nonempty version inventory until authoritative opportunity evidence exists
+      - actual commission authority, account eligibility, leverage brackets and registered liquidity capacity remain unavailable
+      - no allocation activation, real economic readiness, portfolio optimizer calibration or production behavior claim
 
   process_isolation_and_secrets:
     state: DEFINED
@@ -4634,3 +4650,5 @@ stage5_closure_and_evidence_flow_r1:
   safe_to_leave_stage5_build: true
   next_recommended_package: LUFFY-PORTFOLIO-ALLOCATOR-R1
   committed: false
+
+PORTFOLIO_ALLOCATOR: TESTED

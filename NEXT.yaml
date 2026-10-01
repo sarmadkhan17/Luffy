@@ -2,21 +2,39 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: LUFFY-PORTFOLIO-ALLOCATOR-R1
-  stage: 6
-  type: PORTFOLIO_INTELLIGENCE
-  status: SELECTED_NOT_STARTED
-  objective: Build Stage 6 Portfolio Intelligence under existing deterministic Risk and trading authority fences.
-  rationale: Stage-5 BUILD contracts are tested and every time-dependent evidence dependency has a ready producer or explicit
-    external/owner blocker. Stage-5 economic maturity remains incomplete.
-  last_completed:
-    id: LUFFY-STAGE5-CLOSURE-AND-EVIDENCE-FLOW-R1
-    verdict: PASS
-    state: TESTED
-    stage5_build_complete: true
-    stage5_real_maturity: EVIDENCE_BLOCKED
-    report: docs/superpowers/reports/2026-10-01-stage5-closure-and-evidence-flow-r1.md
-    runtime_deployment: NOT_DEPLOYED
+  id: LUFFY-EXPECTED-NET-ECONOMICS-R1
+  type: STAGE6_EVIDENCE_CONTRACT
+  status: RECOMMENDED_NOT_AUTHORIZED_FOR_TRADING
+  objective: >
+    Close the next observed Stage-6 gap: validated comparable expected net
+    economic value for exact-version current opportunities, with explicit
+    horizon, capital basis, costs, provenance and uncertainty. Preserve
+    UNAVAILABLE wherever the current evidence cannot establish the quantity.
+  completed_prerequisites:
+    - LUFFY-PORTFOLIO-ALLOCATOR-R1 is TESTED as a detached proposal-only layer.
+    - Stage-5 evidence activation lineage is retained; production remains FROZEN.
+    - Bounded read-only shadow observed three holdings and zero frozen strategy versions or capacity receipts.
+    - Shadow returned CASH / NO_ALLOCATION / INSUFFICIENT_COMPARABLE_ECONOMICS.
+  evidence:
+    - docs/superpowers/reports/2026-10-01-portfolio-allocator-r1.md
+    - docs/superpowers/evidence/portfolio-allocator-r1/final/shadow-1790868385193.json
+    - docs/superpowers/reports/2026-10-01-stage5-evidence-activation-r1.md
+  next_steps:
+    - step: 1
+      action: >
+        Define and test one source-grounded expected-net-value contract and
+        exact-version current opportunity binding. Establish comparability
+        from validated evidence; historical win rate, profit factor, realized
+        net P&L, confidence and Attention are not substitutes. Identify actual
+        cost/capacity dependencies and refuse unavailable authorities.
+  execution_constraints:
+    - Proposals and evidence only; no orders, activation, deployment, restart, Risk change or frontend/M4 changes.
+    - Do not invent returns, costs, liquidity, correlation thresholds, Kelly sizing or weighted allocator scores.
+    - The remaining commission, account eligibility, leverage and liquidity capacity gaps are not waived by this recommendation.
+    - Stage-6 exit criteria and real allocation readiness are not satisfied by infrastructure tests.
+    - No invented costs or capacity, weaker probation, first-live activation, Risk change, deployment or restart.
+    - Preserve exact version/install and exit-semantics binding and 15 trades / 40 percent win rate / 1.15 profit factor.
+    - Stage-5 BUILD closure grants no collection deployment, research activation, execution or cost-model authority.
   preserved_authority:
     PAPER_COST_PROTOCOL: TESTED
     EXECUTION_COST_CALIBRATION: INSUFFICIENT_EVIDENCE
@@ -32,10 +50,14 @@ work_package:
     status: PARKED_UNTIL_NEW_REAL_EVIDENCE
     no_more_stage_5_cost_micro_packages: true
     requirements: docs/superpowers/reports/2026-10-01-paper-execution-cost-calibration-r1.md
-  execution_constraints:
-  - No invented costs or capacity, weaker probation, first-live activation, Risk change, deployment or restart.
-  - Preserve exact version/install and exit-semantics binding and 15 trades / 40 percent win rate / 1.15 profit factor.
-  - Stage-5 BUILD closure grants no collection deployment, research activation, execution or cost-model authority.
+  stage5_closure_prerequisite:
+    id: LUFFY-STAGE5-CLOSURE-AND-EVIDENCE-FLOW-R1
+    verdict: PASS
+    state: TESTED
+    stage5_build_complete: true
+    stage5_real_maturity: EVIDENCE_BLOCKED
+    report: docs/superpowers/reports/2026-10-01-stage5-closure-and-evidence-flow-r1.md
+    runtime_deployment: NOT_DEPLOYED
 
 intelligence_spine_shadow_package:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
@@ -268,5 +290,5 @@ after_completion:
   - One-shot production-scale timing is a separate owner-decision candidate only. Authorization must specify the source DB path, shadow DB path, max_sources, wall_clock_deadline_s, invocation_key / recorded_at_ms, observation/timing goal, stop conditions and acceptable WAL/checkpoint/resource impact. Recurring cadence requires one-shot evidence, review of that evidence and separate owner authorization. Neither authorization grants trading authority.
   - max_sources bounds source selection only. Full-history derivation/verification, repeated Bank filing, WAL/checkpoint effects and storage growth remain unbounded; batch-independent results and production timing are not established. Source identity is not a full database fingerprint. Total research cost remains NOT_ESTABLISHED; budget manager authority is MISSING.
   - External Source Router/retrieval, registered falsifier predicates, a truthful WorldModel/regime source and failed-research suppression/no-repeat policy remain MISSING. Do not infer authority from context_only recall or reports.
-  - LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1 (BLOCKED) was unblocked by LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 (PASS, TESTED, NOT_DEPLOYED). The independent intelligence shadow package remains LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1, awaiting owner authorization; the main selected package is LUFFY-PORTFOLIO-ALLOCATOR-R1.
+  - LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1 (BLOCKED) was unblocked by LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 (PASS, TESTED, NOT_DEPLOYED). The independent intelligence shadow package remains LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1, awaiting owner authorization; LUFFY-PORTFOLIO-ALLOCATOR-R1 is now TESTED; LUFFY-EXPECTED-NET-ECONOMICS-R1 is recommended without trading authority.
   - Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged.
