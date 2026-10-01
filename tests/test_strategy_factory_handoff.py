@@ -30,7 +30,11 @@ def _iso(ms):
 
 
 @pytest.fixture
-def cfg():
+def cfg(monkeypatch):
+    # Lifecycle fixtures explicitly register synthetic cost observations.
+    # Production/unknown-cost acceptance uses load_config directly.
+    from tests.paper_cost_evidence_fixture import register_test_cost_evidence
+    register_test_cost_evidence(monkeypatch)
     return load_config()
 
 
@@ -101,11 +105,17 @@ def _trades(j, strategy_id, pnls, start_ms, prefix="t", spec_hash=None,
     """Closed trades; with the provenance column, each carries the entry
     identity of `spec_hash` (or `identity` verbatim, None = NULL)."""
     has = F.trade_identity_available(j)
+    installs = j.query("SELECT * FROM strategy_version_installs WHERE strategy_id=?", (strategy_id,))
+    install = dict(installs[0]) if len(installs) == 1 else None
     with j._tx() as c:
         for i, pnl in enumerate(pnls):
             o = start_ms + (i + 1) * 3_600_000
             idn = _identity(strategy_id, spec_hash) if identity is _EXACT \
                 else identity
+            if identity is _EXACT and install and spec_hash:
+                body = json.loads(idn)
+                body.update(version_id=install['version_id'], install_id=install['install_id'], exec_mode='paper')
+                idn = json.dumps(body, sort_keys=True)
             cols = ("id, symbol, side, amount, entry_price, strategy_id, "
                     "exec_mode, opened_at, closed_at, realized_pnl, status")
             vals = [f"{prefix}{i}", "BTC/USDT", "buy", 1.0, 100.0,
@@ -717,14 +727,14 @@ def test_exact_version_trades_count_and_others_do_not(tmp_path, cfg):
     p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=T0 + 30 * DAY)
     prec = F._load(_row(j, "SELECT * FROM strategy_probation_receipts "
                            "WHERE receipt_id=?", p["probation_receipt_id"]))
-    assert p["status"] == F.P_INSUFFICIENT             # 14 exact trades
+    assert p["status"] == F.P_INCOMPLETE and p["request_id"] is None  # mixed version evidence
     assert [t["id"] for t in prec["trades"]] == [f"t{i}" for i in range(14)]
     assert {e["id"]: e["reason"] for e in prec["excluded_trades"]} == {
         f"other{i}": "other_version" for i in range(20)}
     _trades(j, sid, [-5.0], T0 + 20 * DAY, prefix="n",
             spec_hash=v["spec_hash"])
     p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=T0 + 31 * DAY)
-    assert p["status"] == F.P_SATISFIED
+    assert p["status"] == F.P_INCOMPLETE and p["request_id"] is None
 
 
 @pytest.mark.parametrize("identity", [
@@ -796,7 +806,7 @@ def test_derived_version_inherits_no_probation(tmp_path, cfg):
     p = F.evaluate_probation(j, cfg, a["version_id"], at_ms=T0 + 30 * DAY)
     prec = F._load(_row(j, "SELECT * FROM strategy_probation_receipts "
                            "WHERE receipt_id=?", p["probation_receipt_id"]))
-    assert p["status"] == F.P_SATISFIED
+    assert p["status"] == F.P_INCOMPLETE and p["request_id"] is None
     assert all(t["id"].startswith("t") for t in prec["trades"])
     assert {e["reason"] for e in prec["excluded_trades"]} == {"other_version"}
 
@@ -891,7 +901,7 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
         assert bad not in code, bad
     # the executor reads only the paper/live fence predicate
     for f in pathlib.Path("trader").rglob("*.py"):
-        if f.name not in ("factory_handoff.py", "kernel.py", "executor.py"):
+        if f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py"):
             assert "factory_handoff" not in f.read_text(), f
     ex_src = pathlib.Path("trader/engine/executor.py").read_text()
     assert set(re.findall(r"\bfh\.(\w+)", ex_src)) == {"live_entry_block"}
@@ -920,10 +930,11 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
 
 
 # ── the real identity bridge (Trade Provenance x exact version) ──────────
-def test_real_paper_trade_identity_binds_to_the_exact_version(tmp_path, cfg):
+def test_legacy_compiler_provenance_without_factory_identity_is_incomplete(tmp_path, cfg):
     """Nothing hand-built: the Kernel installs the exact version, loads its
     population, stamps the entry identity the way it does before an order,
-    the journal books the trade, and probation recognises it."""
+    the journal books the trade; missing factory version/install binding
+    now makes probation incomplete despite verified compiler provenance."""
     from types import SimpleNamespace
     import pandas as pd
     from tests.test_trade_provenance import decision
@@ -968,10 +979,10 @@ def test_real_paper_trade_identity_binds_to_the_exact_version(tmp_path, cfg):
         book(i, v["spec_hash"], pnl)
     at = install["installed_at_ms"] + 30 * DAY
     p = F.evaluate_probation(j, cfg, v["version_id"], at_ms=at)
-    assert p["status"] == F.P_SATISFIED
+    assert p["status"] == F.P_INCOMPLETE and p["request_id"] is None
     prec = F._load(_row(j, "SELECT * FROM strategy_probation_receipts "
                            "WHERE receipt_id=?", p["probation_receipt_id"]))
-    assert len(prec["trades"]) == 15 and prec["install_id"] == \
+    assert len(prec["trades"]) == 0 and prec["install_id"] == \
         install["install_id"]
 
 

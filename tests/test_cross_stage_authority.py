@@ -33,7 +33,7 @@ from tests.test_trade_provenance import Venue
 
 
 # ── fixtures ─────────────────────────────────────────────────────────────
-def _candidate(j, geo, state="reason_passed"):
+def _candidate(j, geo, state="reason_passed", p10=-1.0):
     """A referee-passed candidate stored exactly as the runner stores one,
     its gate1 look recording the evaluated rule."""
     from trader.research import vocab
@@ -41,7 +41,7 @@ def _candidate(j, geo, state="reason_passed"):
     from trader.research.ledger import Ledger
     led = Ledger(j)
     led.ensure()
-    _gauges(led, p10=-1.0)
+    _gauges(led, p10=p10)
     part = vocab.parts_for("4h", led.gauges("4h"))[0]
     c = Combination((part,), "4h", geo)
     led.record_result({"hash": c.hash, "tf": "4h", "geo": geo, "k": 1,
@@ -276,7 +276,7 @@ def test_f2_mixed_counts_only_explicit_paper(tmp_path, cfg):
     assert p["status"] == F.P_SATISFIED
     assert {t["id"] for t in rec["trades"]} == {f"t{i}" for i in range(15)}
     assert all(t["exec_mode"] == "paper" for t in rec["trades"])
-    assert rec["stats"]["pnl"] == pytest.approx(sum(PASSING))
+    assert rec["stats"]["pnl"] == pytest.approx(sum(PASSING) - len(PASSING) * 0.06)
 
 
 def test_f2_open_pre_probation_and_wrong_version_do_not_count(tmp_path, cfg):
@@ -293,7 +293,8 @@ def test_f2_open_pre_probation_and_wrong_version_do_not_count(tmp_path, cfg):
             spec_hash="f" * 64)
     p = _probation(j, cfg, v)
     rec = F._load(_row(j, "SELECT * FROM strategy_probation_receipts"))
-    assert p["status"] == F.P_INSUFFICIENT and rec["stats"]["trades"] == 14
+    assert p["status"] == F.P_INCOMPLETE and p["request_id"] is None
+    assert len(rec["trades"]) == 14
     ids = {t["id"] for t in rec["trades"]}
     assert not ids & {"open0", "pre0", "wrong0"}
 

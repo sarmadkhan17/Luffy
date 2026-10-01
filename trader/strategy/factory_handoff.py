@@ -50,6 +50,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import math
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
@@ -100,7 +101,9 @@ P_INSTALLED_DIFFERS = "INSTALLED_SPEC_DIFFERS"
 P_INSUFFICIENT = "INSUFFICIENT_TRADES"
 P_NOT_SATISFIED = "NOT_SATISFIED"
 P_IDENTITY_UNAVAILABLE = "TRADE_IDENTITY_UNAVAILABLE"   # no per-trade identity
-P_INCOMPLETE = "INCOMPLETE_TRADE_IDENTITY"   # a trade's version is unproven
+P_INCOMPLETE = "INCOMPLETE_IDENTITY"   # a trade's version is unproven
+
+P_COST_INCOMPLETE = "INCOMPLETE_COST_EVIDENCE"
 
 # Per-trade version identity is Trade Provenance's (branch
 # trade-provenance-r1, engine/trade_provenance.py): `trades.entry_identity_json`,
@@ -646,6 +649,10 @@ def record_exact_install(journal, version_id: str, *, mode: str = "paper",
     bad = SpecExit.frozen_unsupported(StrategySpec.from_dict(v["spec"]))
     if bad:
         _refuse(f"unsupported_exit_geometry:{bad}")
+    from ..engine.paper import unsupported
+    bad = unsupported(StrategySpec.from_dict(v["spec"]))
+    if bad:
+        _refuse(f"unsupported_paper_exit:{bad}")
     inst = _installed(journal, v["strategy_id"])
     if inst is None:
         _refuse(P_NOT_INSTALLED)
@@ -746,23 +753,89 @@ def _classify(t: dict, v: dict) -> str:
         else "other_version"
 
 
+def _paper_cost_evidence(journal, trade: dict, version: dict) -> dict:
+    """No authoritative paper-cost source exists yet.
+
+    Venue fills/account funding cannot establish isolated paper costs. A
+    recorded reference or numeric zero is not execution-cost evidence. This
+    reader deliberately has no config/provider registration hook. Tests may
+    monkeypatch it with a deterministic TEST-ONLY evidence source.
+    """
+    return {dimension: {"status": "UNAVAILABLE", "amount": None,
+                        "reason": "authoritative_paper_cost_source_unavailable"}
+            for dimension in ("commission", "slippage", "funding")}
+
+
+def _cost_nonapplicability_proven(trade: dict, version: dict,
+                                 dimension: str, evidence: dict) -> bool:
+    # No existing authoritative rule proves non-applicability for these
+    # versioned paper trades. In particular, unknown funding is not zero.
+    return False
+
+
+def _economic_costs(trade: dict, version: dict, evidence: dict):
+    """Validate costs in the paper ledger P&L currency; funding is signed."""
+    missing, total = [], 0.0
+    for dimension in ("commission", "slippage", "funding"):
+        item = evidence.get(dimension, {}) if isinstance(evidence, dict) else {}
+        if not isinstance(item, dict):
+            item = {}
+        bound = (bool(item.get("evidence_id"))
+                 and item.get("trade_id") == trade["id"]
+                 and item.get("version_id") == version["version_id"]
+                 and item.get("install_id") == trade["install_id"])
+        if (bound and item.get("status") == "NOT_APPLICABLE"
+                and _cost_nonapplicability_proven(trade, version, dimension, item)):
+            continue
+        amount = item.get("amount")
+        if (not bound or item.get("status") != "KNOWN" or item.get("currency") != "USDT"
+                or isinstance(amount, bool) or not isinstance(amount, (int, float))
+                or not math.isfinite(amount)):
+            missing.append(dimension)
+        else:
+            total += amount
+    return missing, total
+
+
 def _probation_trades(journal, v: dict, since_ms: int, until_ms: int):
     counted, excluded = [], []
-    for t in journal.query("SELECT * FROM trades WHERE strategy_id=? AND "
-                           "status='closed' ORDER BY opened_at, id",
-                           (v["strategy_id"],)):
-        o, cl = _ms(t["opened_at"]), _ms(t["closed_at"])
-        if o is None or cl is None or o < since_ms or cl > until_ms:
+    inst = verify_install(journal, v, current=False)
+    rows = journal.query("SELECT * FROM trades WHERE strategy_id=? AND "
+                         "status='closed' ORDER BY opened_at, id", (v["strategy_id"],))
+    if journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='versioned_paper_trades'"):
+        rows += journal.query("SELECT * FROM versioned_paper_trades WHERE strategy_id=? AND status='closed' ORDER BY opened_at,id", (v["strategy_id"],))
+    for t in rows:
+        try:
+            o, cl = _ms(t["opened_at"]), _ms(t["closed_at"])
+        except (TypeError, ValueError):
+            o = cl = None
+        if o is not None and cl is not None and (o < since_ms or cl > until_ms):
             continue
         kind = _classify(t, v)
-        if kind == "counted" and t["exec_mode"] not in PAPER_EXEC_MODES:
-            # this version's trade, but not proven paper execution
-            kind = "not_paper_execution" if t["exec_mode"] == "live" \
-                else "execution_mode_unproven"
+        if t["exec_mode"] == "live":
+            kind = "not_paper_execution"
+        elif t["exec_mode"] != "paper":
+            kind = "execution_mode_unproven"
+        elif o is None or cl is None or cl < o:
+            kind = "unattributed"
+        elif kind == "counted":
+            identity = json.loads(t[IDENTITY_COLUMN])
+            # Legacy provenance must prove these fields itself; registry or
+            # timestamps never supply missing per-trade identity.
+            exact = {"strategy_id": v["strategy_id"], "version_id": v["version_id"],
+                     "install_id": inst["install_id"], "exec_mode": "paper"}
+            if any(identity.get(k) != value for k, value in exact.items()):
+                kind = "unattributed"
+            elif any(k in t and t[k] != value for k, value in exact.items()):
+                kind = "unattributed"
+            elif "spec_hash" in t and t["spec_hash"] != v["spec_hash"]:
+                kind = "unattributed"
         row = {k: t[k] for k in _TRADE_KEYS}
         if kind == "counted":
-            counted.append({**row, "entry_identity_sha256":
-                            _sha(t[IDENTITY_COLUMN])})
+            counted.append({**row, "version_id": v["version_id"],
+                            "install_id": inst["install_id"], "spec_hash": v["spec_hash"],
+                            "entry_identity_sha256": _sha(t[IDENTITY_COLUMN]),
+                            "cost_evidence": _paper_cost_evidence(journal, t, v)})
         else:
             excluded.append({"id": t["id"], "reason": kind})
     return counted, excluded
@@ -770,10 +843,14 @@ def _probation_trades(journal, v: dict, since_ms: int, until_ms: int):
 
 def _assess(journal, cfg, v: dict, since_ms: int, at_ms: int, *,
             check_install: bool = True) -> dict:
+    from ..engine.paper import unsupported
+    bad = unsupported(StrategySpec.from_dict(v["spec"]))
     policy = _policy(cfg)
     base = {"policy": policy, "trades": [], "trades_sha256": _jsha([]),
             "excluded_trades": [], "stats": None,
             "trade_identity": "trade-provenance " + IDENTITY_SCHEMA}
+    if bad:
+        return {**base, "status": "UNSUPPORTED_PAPER_EXIT", "reason": bad}
     if policy is None:
         return {**base, "status": P_NO_POLICY}
     if check_install:
@@ -785,17 +862,37 @@ def _assess(journal, cfg, v: dict, since_ms: int, at_ms: int, *,
     if not trade_identity_available(journal):
         return {**base, "status": P_IDENTITY_UNAVAILABLE}
     trades, excluded = _probation_trades(journal, v, since_ms, at_ms)
-    base.update(excluded_trades=excluded)
-    if any(e["reason"] in ("unattributed", "execution_mode_unproven")
+    base.update(excluded_trades=excluded, trades=trades, trades_sha256=_jsha(trades))
+    # Identity insufficiency takes precedence over unavailable economics.
+    if any(e["reason"] in ("unattributed", "other_version", "execution_mode_unproven")
            for e in excluded):
-        # a closed trade of this strategy id whose version or execution mode
-        # cannot be proven may be this version's paper trade: counting
-        # around it would bias the record
         return {**base, "status": P_INCOMPLETE}
-    st = stats_of(trades)
+    gross = stats_of([t for t in trades if isinstance(t['realized_pnl'], (int, float))
+                      and not isinstance(t['realized_pnl'], bool) and math.isfinite(t['realized_pnl'])])
+    missing, net_trades = [], []
+    for trade in trades:
+        dimensions, costs = _economic_costs(trade, v, trade["cost_evidence"])
+        pnl = trade["realized_pnl"]
+        if isinstance(pnl, bool) or not isinstance(pnl, (int, float)) or not math.isfinite(pnl):
+            dimensions.append("gross_pnl")
+        if dimensions:
+            missing.append({"trade_id": trade["id"], "dimensions": dimensions})
+        else:
+            net_trades.append({**trade, "realized_pnl": pnl - costs})
+    gross_stats = {"trades": gross["trades"], "wins": gross["wins"],
+                   "winrate": gross["winrate"], "profit_factor": gross["pf"],
+                   "pnl": gross["pnl"], "basis": "GROSS_ONLY",
+                   "economic_validation": "NOT_ECONOMICALLY_VALIDATED"}
+    if missing:
+        return {**base, "status": P_COST_INCOMPLETE, "trades": trades,
+                "trades_sha256": _jsha(trades), "stats": None,
+                "gross_stats": gross_stats, "missing_cost_evidence": missing,
+                "economic_validation": "NOT_ECONOMICALLY_VALIDATED"}
+    st = stats_of(net_trades)
     stats = {"trades": st["trades"], "wins": st["wins"],
              "winrate": st["winrate"], "profit_factor": st["pf"],
-             "pnl": st["pnl"], "pnl_source": "journal trades.realized_pnl"}
+             "pnl": st["pnl"], "pnl_source": "gross paper P&L less evidenced costs",
+             "paper_cost_basis": "NET_WITH_COMPLETE_COST_EVIDENCE"}
     if st["trades"] < policy["min_trades"]:
         status = P_INSUFFICIENT
     elif st["winrate"] >= policy["min_winrate"] \
@@ -804,14 +901,17 @@ def _assess(journal, cfg, v: dict, since_ms: int, at_ms: int, *,
     else:
         status = P_NOT_SATISFIED
     return {**base, "status": status, "trades": trades,
-            "trades_sha256": _jsha(trades), "stats": stats}
+            "trades_sha256": _jsha(trades), "stats": stats,
+            "gross_stats": gross_stats, "missing_cost_evidence": []}
 
 
 def evaluate_probation(journal, cfg: dict, version_id: str, *,
                        at_ms: int) -> dict:
     """Record one probation receipt for a SHADOW version under the existing
     config policy, counting only closed trades whose Trade Provenance entry
-    identity names this exact version, opened after its exact install.
+    identity names this exact version/install, opened after its exact install.
+    Qualifying WR/PF use net P&L only with complete cost evidence; gross
+    diagnostics never satisfy the profitability gate.
     SATISFIED moves it to APPROVAL_REQUIRED and files the first-live
     approval request in the same transaction; any other status leaves it in
     SHADOW. No threshold is invented: a missing policy key is
@@ -823,6 +923,7 @@ def evaluate_probation(journal, cfg: dict, version_id: str, *,
     if cur != SHADOW:
         req = approval_request(journal, version_id)
         if cur == APPROVAL_REQUIRED and req is not None:   # a retry
+            _verify_probation(journal, cfg, v, req["probation_receipt_id"])
             return {"status": P_SATISFIED, "result": "duplicate",
                     "probation_receipt_id": req["probation_receipt_id"],
                     "request_id": req["request_id"]}

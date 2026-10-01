@@ -4331,8 +4331,8 @@ delivery_progress:
   capability_coverage_formula: capabilities at TESTED or better / 17 capabilities in STATE.capabilities (10/17); accounting_and_truth IMPLEMENTED -> TESTED on the integrated baseline (current-truth + trade-provenance tests); previously 9/17
   current_milestone: Stage 3 intelligence spine (WorldModel -> Attention -> Investigation -> Research) in shadow
   code_baseline: luffy-integrated-core-r1
-  last_completed: LUFFY-CAPACITY-EVIDENCE-INTEGRATION-R1 (TESTED; NOT_DEPLOYED; uncommitted on luffy-capacity-evidence-integration-r1 over 6b7f0f7); previously LUFFY-CAPACITY-EVIDENCE-CAPTURE-R1 (PASS; TESTED; NOT_DEPLOYED), LUFFY-CROSS-STAGE-AUTHORITY-FIX-R1 (PASS F1-F4; TESTED; NOT_DEPLOYED; committed 6b7f0f7), LUFFY-STRATEGY-CAPACITY-R1 (PASS; TESTED; NOT_DEPLOYED; committed b35a4bc); previously LUFFY-CORE-LINEAGE-INTEGRATION-R1 (PASS; TESTED; NOT_DEPLOYED), LUFFY-EXACT-VERSION-PAPER-PROBATION-R1, LUFFY-STRATEGY-FACTORY-HANDOFF-R1, LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
-  stage_5_handoff_edges: 7/7 TESTED on a fixture candidate (candidate, referee pass, version, receipt, probation, approval, eligibility); exact-version paper install and per-trade-identity probation TESTED through the real Trade Provenance identity path on the integrated baseline; capacity contract TESTED (strategy-capacity-receipt.v1, required by first-live eligibility) with effective capacity UNAVAILABLE; capacity evidence capture TESTED (margin, venue filters, position snapshots, depth, slippage read model) with liquidity model and leverage brackets UNAVAILABLE and account eligibility UNKNOWN; versions fenced from live (F1) and no paper execution path exists (VERSIONED_PAPER_EXECUTION_MISSING), so no probation can accrue trades; no real probation has run; degradation/retirement not wired to analyst.review_deployed; Stage 5 incomplete, not PROVEN/ACTIVE
+  last_completed: LUFFY-VERSIONED-PAPER-PROBATION-TRUTH-FIX-R1 (TESTED; NOT_DEPLOYED; uncommitted, no progress increase); previously LUFFY-VERSIONED-PAPER-EXECUTION-R1 (TESTED; NOT_DEPLOYED; uncommitted on luffy-versioned-paper-execution-r1 over e60e045); previously LUFFY-CAPACITY-EVIDENCE-INTEGRATION-R1 (TESTED; NOT_DEPLOYED; uncommitted on luffy-capacity-evidence-integration-r1 over 6b7f0f7); previously LUFFY-CAPACITY-EVIDENCE-CAPTURE-R1 (PASS; TESTED; NOT_DEPLOYED), LUFFY-CROSS-STAGE-AUTHORITY-FIX-R1 (PASS F1-F4; TESTED; NOT_DEPLOYED; committed 6b7f0f7), LUFFY-STRATEGY-CAPACITY-R1 (PASS; TESTED; NOT_DEPLOYED; committed b35a4bc); previously LUFFY-CORE-LINEAGE-INTEGRATION-R1 (PASS; TESTED; NOT_DEPLOYED), LUFFY-EXACT-VERSION-PAPER-PROBATION-R1, LUFFY-STRATEGY-FACTORY-HANDOFF-R1, LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
+  stage_5_handoff_edges: 7/7 TESTED on a fixture candidate (candidate, referee pass, version, receipt, probation, approval, eligibility); exact-version paper install and per-trade-identity probation TESTED through the real Trade Provenance identity path on the integrated baseline; capacity contract TESTED (strategy-capacity-receipt.v1, required by first-live eligibility) with effective capacity UNAVAILABLE; capacity evidence capture TESTED (margin, venue filters, position snapshots, depth, slippage read model) with liquidity model and leverage brackets UNAVAILABLE and account eligibility UNKNOWN; versions remain fenced from live (F1); isolated versioned paper execution now TESTED by LUFFY-VERSIONED-PAPER-EXECUTION-R1 with 15 actual compiler-signal paper entries/closes in a deterministic fixture; corrected truth gates keep unknown-cost probation INCOMPLETE_COST_EVIDENCE, and SATISFIED is tested only with explicit TEST-ONLY cost evidence; production probation remains unrun; degradation/retirement not wired to analyst.review_deployed; Stage 5 incomplete, not PROVEN/ACTIVE
   stages:
     source_observation: LINKED
     world_model: LINKED
@@ -4355,3 +4355,75 @@ authority:
   target: SDD.md
   current_state: STATE.yaml
   immediate_work: NEXT.yaml
+
+
+completed_versioned_paper_execution_r1:
+  id: LUFFY-VERSIONED-PAPER-EXECUTION-R1
+  verdict: PASS
+  independent_review: FIX_REQUIRED - unknown costs qualified probation and legacy identity could count
+  corrected_by: LUFFY-VERSIONED-PAPER-PROBATION-TRUTH-FIX-R1
+  state: TESTED
+  base_commit: e60e045
+  branch: luffy-versioned-paper-execution-r1
+  worktree: /mnt/luffy-data/luffy/workspaces/versioned-paper-execution-r1
+  report: docs/superpowers/reports/2026-10-01-versioned-paper-execution-r1.md
+  evidence:
+    - trader/engine/paper.py
+    - trader/kernel.py
+    - trader/strategy/factory_handoff.py
+    - tests/test_versioned_paper_execution.py
+    - tests/test_cross_stage_authority.py
+  focused_tests: 290 passed across authority, factory/exact probation, kernel entry geometry, exits, provenance, Risk/control entry, paper execution and capacity; no full suite
+  checks: git diff --check PASS; Graphify AST update completed
+  stage_5:
+    immutable_handoff: TESTED
+    exact_paper_install: TESTED
+    real_paper_execution_path: TESTED
+    probation_path: TESTED - 15 CLOSED actual production-path paper trades; unknown-cost economics INCOMPLETE_COST_EVIDENCE after truth fix; SATISFIED only with TEST-ONLY evidence
+    owner_approval: TESTED
+    capacity_contract: TESTED
+    effective_capacity: UNAVAILABLE
+    first_live_eligibility: FALSE_EXPECTED
+    complete: false
+    maturity: TESTED (not PROVEN or ACTIVE)
+  supersedes: VERSIONED_PAPER_EXECUTION_MISSING in historical integration/authority records; historical test receipts remain unchanged
+  paper_ledger: versioned_paper_trades; OPEN/CLOSED positions isolated from real trades, account/equity, bookings and reconciliation
+  paper_identity: exact immutable version_id/spec_hash/install_id/validation receipt and Trade Provenance entry identity with decision/cycle identity
+  fill_cost_basis: recorded reference prices; commissions, slippage and funding UNAVAILABLE; gross P&L explicitly labeled, no realism or full parity claim
+  exit_support: frozen stop/target/trail and unconditional max_bars paper semantics; signal_exit refuses exact install/probation with signal_exit:runtime_parity_unavailable
+  live_exit_parity: UNPROVEN - existing live TP1 partial/flip/time/signal behavior remains different; next selected blocker B
+  next_recommended_package: LUFFY-VERSIONED-RUNTIME-EXIT-PARITY-R1
+  trading_behavior_changed: NO_REAL_EXECUTION_AUTHORITY_ADDED
+  runtime_deployment: NOT_DEPLOYED
+  operations: no venue orders, protective writes, cancellation, process restart, research activation, frontend changes, commit or deployment
+
+
+completed_versioned_paper_probation_truth_fix_r1:
+  id: LUFFY-VERSIONED-PAPER-PROBATION-TRUTH-FIX-R1
+  verdict: PASS
+  state: TESTED
+  base: current uncommitted LUFFY-VERSIONED-PAPER-EXECUTION-R1 over e60e045
+  branch: luffy-versioned-paper-execution-r1
+  report: docs/superpowers/reports/2026-10-01-versioned-paper-probation-truth-fix-r1.md
+  scope: F1 cost evidence gate and F2 exact per-trade version/install identity only
+  evidence:
+    - trader/strategy/factory_handoff.py
+    - tests/test_versioned_paper_probation_truth.py
+    - tests/paper_cost_evidence_fixture.py
+    - tests/test_versioned_paper_execution.py
+  focused_tests: 460 passed across truth gates, actual paper path, authority, factory, capacity/evidence, entry geometry/control, exits, provenance and Risk
+  checks: YAML parse PASS; git diff --check PASS; Graphify code-only AST update PASS (22591 nodes; no semantic extraction)
+  paper_execution_path: TESTED
+  mechanical_15_trade_path: TESTED - actual compiler signals, paper entries and closes; no inserted closed trade rows
+  production_economic_probation: INCOMPLETE_COST_EVIDENCE - no authoritative paper-cost source or non-applicability rule exists
+  gross_diagnostics: GROSS_ONLY / NOT_ECONOMICALLY_VALIDATED; cannot satisfy profitability or create approval request
+  exact_trade_identity: explicit strategy_id/version_id/spec hash/install_id/exec_mode paper required; missing or conflicting identity makes probation INCOMPLETE_IDENTITY
+  legacy_rows: missing explicit version/install binding refused; no backfill
+  complete_evidence_acceptance: SATISFIED only through pytest-injected TEST-ONLY cost evidence; no normal runtime registration path
+  approval_boundary: corrected SATISFIED receipt reverified at owner approval, eligibility and probation retry
+  effective_capacity: UNAVAILABLE
+  first_live_eligibility: FALSE_EXPECTED
+  live_runtime_exit_parity: UNRESOLVED
+  progress_increase: false
+  runtime_deployment: NOT_DEPLOYED
+  operations: no commit, deployment, venue submission, process restart, Risk/capacity or Intelligence Spine changes

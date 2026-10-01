@@ -1224,6 +1224,10 @@ class Kernel:
                                              "reason": "missing_snapshot"})
                 continue
             stats["scanned"] += 1
+            try:
+                self._manage_paper(snap)
+            except Exception as e:
+                log.warning("paper exits refused %s: %s", symbol, e)
             self.positioning_agent.set_context(symbol, funding.get(symbol),
                                                oi.get(symbol))
             self.depth_agent.set_context(symbol, self._order_book(symbol))
@@ -1285,6 +1289,15 @@ class Kernel:
         # Both calls above live inside the scan loop, so before this pass a
         # rotated-out symbol got no trail, no time exit and no fill detection.
         stats["orphans_managed"] = self._manage_orphan_positions(scanned)
+        if hasattr(self, "_paper"):
+            for symbol in {p["symbol"] for p in self._paper.open_positions()} - scanned:
+                snap = self._snapshot_for(symbol, universe=universe_frames)
+                if snap is not None:
+                    try:
+                        self._manage_paper(snap)
+                    except Exception as e:
+                        log.warning("paper orphan exits refused %s: %s", symbol, e)
+
 
         self._maybe_resolve_outcomes()
         self._record_excursions()
@@ -1347,6 +1360,14 @@ class Kernel:
         from .strategy import factory_handoff as fh
         blocked = fh.live_entry_block(self.journal, top_strategy)
         if blocked:
+            # A separate capability with no venue handle. The live fence and
+            # return value stay unchanged: a paper entry is never a live fill.
+            try:
+                self._paper_executor().enter(
+                    d, snap, top_strategy, reference_equity=equity,
+                    state=self.state_machine.state)
+            except Exception as e:  # paper fails closed without changing control
+                log.info("PAPER REFUSE %s %s: %s", d.symbol, top_strategy, e)
             d.skip_reason = f"version fence: {blocked}"
             d.reason_codes = [rc.VERSION_NOT_LIVE_AUTHORIZED]
             log.info(f"VERSION FENCE {d.symbol} {top_strategy}: {blocked}")
@@ -1405,6 +1426,19 @@ class Kernel:
                  if s.get("strategy_id") == top_strategy), "consensus"),
             exec_mode="live", entry_identity=identity, reference=reference)
         return pos is not None
+
+    def _paper_executor(self):
+        from .engine.paper import PaperExecutor
+        if not hasattr(self, "_paper"):
+            self._paper = PaperExecutor(self.journal, self.cfg)
+        return self._paper
+
+    def _manage_paper(self, snap):
+        if not self._manages_exits():
+            return []
+        # No account, reconciliation, control, protective-order or venue
+        # capability is available to this runner.
+        return self._paper_executor().manage(snap)
 
     def _entry_provenance(self, d, snap, top_strategy: str, exec_tf: str):
         """(entry identity, slippage reference) for one entry. Observation
