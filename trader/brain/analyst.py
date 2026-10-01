@@ -148,7 +148,7 @@ class Analyst:
                 results[tf] = {"untested": True, "reason": f"missing: {gaps}"}
                 continue
             try:
-                compiled = compile_spec(probe)
+                compiled = compile_spec(probe, exit_semantics_id=getattr(spec.exit, "_exit_semantics_id", None))
             except Exception as e:
                 results[tf] = {"error": str(e)}
                 continue
@@ -189,7 +189,7 @@ class Analyst:
         probe = StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf})
         frames, btc, derivs_for, risk = self._ctx(tf, probe)
         try:
-            compiled = compile_spec(probe)
+            compiled = compile_spec(probe, exit_semantics_id=getattr(spec.exit, "_exit_semantics_id", None))
         except Exception as e:
             return {"error": str(e)}
         st = rolling.rolling_windows(
@@ -234,7 +234,7 @@ class Analyst:
         probe = StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf})
         frames, btc, derivs_for, risk = self._ctx(tf, probe)
         try:
-            compiled = compile_spec(probe)
+            compiled = compile_spec(probe, exit_semantics_id=getattr(spec.exit, "_exit_semantics_id", None))
         except Exception as e:
             return {"error": str(e), "fit": [], "declared": spec.regime_filter}
         s = self._scfg()
@@ -294,7 +294,8 @@ class Analyst:
                     if frames[s] is not None}
         try:
             cand = compile_spec(
-                StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf}))
+                StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf}),
+                exit_semantics_id=getattr(spec.exit, "_exit_semantics_id", None))
             a_lo, a_sh = cand.entries({tf: frames[sym]}, btc=btc,
                                       derivs=derivs_for(sym),
                                       universe=universe,
@@ -309,7 +310,8 @@ class Analyst:
             try:
                 oc = compile_spec(
                     StrategySpec.from_dict({**other.to_dict(),
-                                            "timeframe": tf}))
+                                            "timeframe": tf}),
+                    exit_semantics_id=getattr(other.exit, "_exit_semantics_id", None))
                 b_lo, b_sh = oc.entries(
                     {tf: frames[sym]}, btc=btc,
                     derivs=spec_evidence.load_derivs(sym, other.data_requires),
@@ -389,7 +391,7 @@ class Analyst:
         out: dict = {}
         try:
             probe = StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf})
-            compiled = compile_spec(probe)
+            compiled = compile_spec(probe, exit_semantics_id=getattr(spec.exit, "_exit_semantics_id", None))
             frames, btc, derivs_for, risk = self._ctx(tf, probe)
             # a cross-sectional feature needs the rest of the book; without
             # `universe` xs_rank/breadth/dispersion evaluate to NaN and the

@@ -104,6 +104,7 @@ P_IDENTITY_UNAVAILABLE = "TRADE_IDENTITY_UNAVAILABLE"   # no per-trade identity
 P_INCOMPLETE = "INCOMPLETE_IDENTITY"   # a trade's version is unproven
 
 P_COST_INCOMPLETE = "INCOMPLETE_COST_EVIDENCE"
+P_EXIT_INCOMPLETE = "INCOMPLETE_EXIT_SEMANTICS_EVIDENCE"
 
 # Per-trade version identity is Trade Provenance's (branch
 # trade-provenance-r1, engine/trade_provenance.py): `trades.entry_identity_json`,
@@ -405,13 +406,23 @@ def _evaluated(look: dict, h: str, tf: str, geo: str) -> dict:
             or (c.long, c.short) != (rec.get("entry_long"),
                                      rec.get("entry_short")):
         _refuse("referee_evaluated_candidate_mismatch")
+    from dataclasses import asdict
+    from .exit_policy import EXIT_SEMANTICS_ID, unsupported
+    bad = unsupported(c.to_spec().exit)
+    if bad:
+        _refuse('unsupported_versioned_exit:' + bad)
+    if rec.get('exit_semantics_id') != EXIT_SEMANTICS_ID:
+        _refuse('referee_exit_semantics_mismatch')
+    if rec.get('exit_spec') != asdict(c.to_spec().exit):
+        _refuse('referee_exit_spec_mismatch')
     return rec
 
 
 def _receipt_evidence(ev: dict) -> dict:
     """What a receipt binds: every id/hash, the candidate state excluded
     (referee_passed -> reason_passed -> admitted keeps the evidence)."""
-    return {"candidate_hash": ev["candidate"]["hash"],
+    return {"exit_semantics_id": ev["evaluated"]["exit_semantics_id"],
+            "candidate_hash": ev["candidate"]["hash"],
             "tf": ev["candidate"]["tf"], "geo": ev["candidate"]["geo"],
             "gate1_test_seq": ev["gate1_look"]["seq"],
             "gate1_look_sha256": ev["gate1_look_sha256"],
@@ -577,8 +588,34 @@ def load_version(journal, version_id: str) -> dict:
     return rec
 
 
-def verify_validation(journal, version: dict) -> dict:
-    """The version's receipt, re-verified against the ledger as it is now."""
+def bind_installed_spec(journal, spec):
+    """Opt in an exact installed Factory version for research consumers.
+
+    No provenance heuristic and no serialized StrategySpec/identity change.
+    Non-versioned specs retain their legacy simulator, including research
+    specs created before Factory version receipts existed.
+    """
+    if not versioned(journal, spec.id):
+        return spec
+    rows = journal.query('SELECT version_id FROM strategy_version_installs WHERE strategy_id=?', (spec.id,))
+    if len(rows) != 1:
+        _refuse('install_missing_or_ambiguous')
+    v = load_version(journal, rows[0]['version_id'])
+    verify_exit_binding(journal, v)
+    verify_install(journal, v, current=False)
+    _, h = _frozen_spec(spec)
+    if h != v['spec_hash']:
+        _refuse('installed_version_differs')
+    from .exit_policy import bind_research, EXIT_SEMANTICS_ID
+    bind_research(spec)
+    spec.exit._exit_binding = {'exit_semantics_id': EXIT_SEMANTICS_ID,
+        'version_id': v['version_id'], 'spec_hash': v['spec_hash'],
+        'install_id': _install_record(journal, v['version_id'])['install_id']}
+    return spec
+
+
+def verify_exit_binding(journal, version: dict) -> dict:
+    """Immutable validation binding for managing an already-open position."""
     row = _one(journal, "SELECT * FROM strategy_validation_receipts "
                "WHERE version_id=?", (version["version_id"],))
     if row is None:
@@ -592,6 +629,17 @@ def verify_validation(journal, version: dict) -> dict:
     if (rec["version_id"], rec["spec_hash"]) != (version["version_id"],
                                                  version["spec_hash"]):
         _refuse("validation_receipt_wrong_version")
+    from .exit_policy import EXIT_SEMANTICS_ID
+    if rec.get('evidence', {}).get('exit_semantics_id') != EXIT_SEMANTICS_ID:
+        _refuse('validation_exit_semantics_mismatch')
+    if rec['evidence'] != version['evidence_ids']:
+        _refuse('validation_evidence_changed')
+    return rec
+
+
+def verify_validation(journal, version: dict) -> dict:
+    """Admission/approval also revalidate the current research ledger."""
+    rec = verify_exit_binding(journal, version)
     now = gate_evidence(journal, version["source"]["id"])
     if _receipt_evidence(now) != rec["evidence"] \
             or rec["evidence"] != version["evidence_ids"]:
@@ -640,6 +688,7 @@ def record_exact_install(journal, version_id: str, *, mode: str = "paper",
     val = verify_validation(journal, v)
     old = _install_record(journal, version_id)
     if old is not None:
+        verify_install(journal, v)
         return {"status": "duplicate", "install_id": old["install_id"],
                 "version_id": version_id}
     cur = state_of(journal, version_id)
@@ -662,7 +711,8 @@ def record_exact_install(journal, version_id: str, *, mode: str = "paper",
         _refuse(P_INSTALLED_DIFFERS)
     ident = {"schema": INSTALL_SCHEMA, "version_id": version_id,
              "strategy_id": v["strategy_id"], "spec_hash": v["spec_hash"],
-             "validation_receipt_id": val["receipt_id"], "mode": mode}
+             "validation_receipt_id": val["receipt_id"], "mode": mode,
+             "exit_semantics_id": val["evidence"]["exit_semantics_id"]}
     rec = {**ident, "install_id": _jsha(ident), "installed_at_ms": int(at_ms),
            "installed_spec": spec_d, "installed_spec_hash": spec_hash}
     text = canonical(rec)
@@ -687,12 +737,15 @@ def record_exact_install(journal, version_id: str, *, mode: str = "paper",
 def verify_install(journal, version: dict, *, current: bool = True) -> dict:
     """The version's install record, re-verified; with `current` the spec
     installed now must still be the exact version."""
+    from .exit_policy import EXIT_SEMANTICS_ID
     rec = _install_record(journal, version["version_id"])
     if rec is None:
         _refuse("install_missing")
+    if rec.get("exit_semantics_id") != EXIT_SEMANTICS_ID:
+        _refuse("install_exit_semantics_mismatch")
     ident = {k: rec[k] for k in ("schema", "version_id", "strategy_id",
                                  "spec_hash", "validation_receipt_id",
-                                 "mode")}
+                                 "mode", "exit_semantics_id")}
     if _jsha(ident) != rec["install_id"] or (
             rec["version_id"], rec["spec_hash"], rec["installed_spec_hash"]
     ) != (version["version_id"], version["spec_hash"],
@@ -805,6 +858,7 @@ def _probation_trades(journal, v: dict, since_ms: int, until_ms: int):
     if journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='versioned_paper_trades'"):
         rows += journal.query("SELECT * FROM versioned_paper_trades WHERE strategy_id=? AND status='closed' ORDER BY opened_at,id", (v["strategy_id"],))
     for t in rows:
+        exit_digest = None
         try:
             o, cl = _ms(t["opened_at"]), _ms(t["closed_at"])
         except (TypeError, ValueError):
@@ -830,11 +884,19 @@ def _probation_trades(journal, v: dict, since_ms: int, until_ms: int):
                 kind = "unattributed"
             elif "spec_hash" in t and t["spec_hash"] != v["spec_hash"]:
                 kind = "unattributed"
+            if kind == 'counted':
+                from ..engine.paper_exit_evidence import verify
+                try:
+                    exit_digest = verify(journal, t, v, inst)
+                except (ValueError, TypeError, KeyError, OverflowError, AttributeError):
+                    kind = 'exit_semantics_evidence_unproven'
         row = {k: t[k] for k in _TRADE_KEYS}
         if kind == "counted":
             counted.append({**row, "version_id": v["version_id"],
                             "install_id": inst["install_id"], "spec_hash": v["spec_hash"],
                             "entry_identity_sha256": _sha(t[IDENTITY_COLUMN]),
+                            "exit_semantics_id": inst['exit_semantics_id'],
+                            "canonical_exit_evidence_sha256": exit_digest,
                             "cost_evidence": _paper_cost_evidence(journal, t, v)})
         else:
             excluded.append({"id": t["id"], "reason": kind})
@@ -863,6 +925,8 @@ def _assess(journal, cfg, v: dict, since_ms: int, at_ms: int, *,
         return {**base, "status": P_IDENTITY_UNAVAILABLE}
     trades, excluded = _probation_trades(journal, v, since_ms, at_ms)
     base.update(excluded_trades=excluded, trades=trades, trades_sha256=_jsha(trades))
+    if any(e['reason'] == 'exit_semantics_evidence_unproven' for e in excluded):
+        return {**base, 'status': P_EXIT_INCOMPLETE}
     # Identity insufficiency takes precedence over unavailable economics.
     if any(e["reason"] in ("unattributed", "other_version", "execution_mode_unproven")
            for e in excluded):
@@ -935,7 +999,8 @@ def evaluate_probation(journal, cfg: dict, version_id: str, *,
              "spec_hash": v["spec_hash"],
              "validation_receipt_id": val["receipt_id"],
              "install_id": inst["install_id"],
-             "since_ms": since, "evaluated_at_ms": int(at_ms)}
+             "since_ms": since, "evaluated_at_ms": int(at_ms),
+             "exit_semantics_id": inst["exit_semantics_id"]}
     rec = {**ident, "receipt_id": _jsha(ident), **a}
     text = canonical(rec)
     out = {"status": a["status"], "probation_receipt_id": rec["receipt_id"],
@@ -985,9 +1050,12 @@ def _verify_probation(journal, cfg, version: dict, receipt_id: str) -> dict:
     if row is None:
         _refuse("probation_receipt_missing")
     rec = _load(row)
+    from .exit_policy import EXIT_SEMANTICS_ID
+    if rec.get("exit_semantics_id") != EXIT_SEMANTICS_ID:
+        _refuse("probation_exit_semantics_mismatch")
     ident = {k: rec[k] for k in ("schema", "version_id", "spec_hash",
                                  "validation_receipt_id", "install_id",
-                                 "since_ms", "evaluated_at_ms")}
+                                 "since_ms", "evaluated_at_ms", "exit_semantics_id")}
     if _jsha(ident) != receipt_id or rec["version_id"] != \
             version["version_id"] or rec["spec_hash"] != version["spec_hash"]:
         _refuse("probation_receipt_wrong_version")

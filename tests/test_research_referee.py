@@ -161,15 +161,16 @@ def test_entries_round_trip():
     assert rf.decode_entries(rf.encode_entries(ent)) == ent
 
 
-def test_examine_runs_end_to_end_on_a_real_store(store):
+@pytest.mark.parametrize('geo,bar_minutes', [('trail',240),('fixed',15)])
+def test_examine_runs_end_to_end_on_a_real_store(store,geo,bar_minutes):
     """No mocks: load both held-out slices, both gates, and the book."""
     from trader.research.combo import Combination
     from trader.research.vocab import Part
     donch = Part("ev:donch20", "event", "ev:donch20",
                  "close > donchian_hi(20)", "close < donchian_lo(20)")
-    c = Combination((donch,), "4h", "trail")
+    c = Combination((donch,), "4h", geo)
     out = rf.examine(c, {
-        "cfg": {**CFG, "research": {"equity": 2000.0}},
+        "cfg": {**CFG, "risk": {**CFG["risk"], "bar_minutes":bar_minutes}, "research": {"equity": 2000.0}},
         "paths": {"candles": store}, "cut_ms": CUT_BAR * TF_MS,
         "discovery_symbols": ["D1/USDT"],
         "heldout_symbols": ["A1/USDT", "A2/USDT", "LATE/USDT"],

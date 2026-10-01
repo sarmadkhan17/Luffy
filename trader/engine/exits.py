@@ -89,15 +89,10 @@ class SpecExit:
         """(stop, target) from the frozen spec by the vector backtest's own
         distance functions (same 0.4% stop floor, same R basis), measured
         from the decision price. 0.0 target = the spec declared none."""
-        from ..strategy.vector_backtest import _stop_distance, _target_distance
-        bad = self._unsupported(self.exit_spec)
-        if bad:
-            raise ValueError(f"unsupported_exit_geometry:{bad}")
-        sign = 1.0 if side == "long" else -1.0
-        sl_dist = _stop_distance(self.exit_spec, price, atr, None, 0, side)
-        tp_dist = _target_distance(self.exit_spec, price, atr, sl_dist)
-        return (price - sign * sl_dist,
-                0.0 if tp_dist is None else price + sign * tp_dist)
+        from ..strategy.exit_policy import initialize
+        from ..core.types import TF_MS
+        policy, _ = initialize(self.exit_spec, price, atr, side, 0, TF_MS[self.timeframe])
+        return policy.stop, policy.target
 
     @classmethod
     def from_spec(cls, spec, versioned: bool = False) -> "SpecExit":
@@ -154,7 +149,7 @@ class ExitEngine:
 
     # ── main entry, called once per cycle per open trade ────────────────
     def manage(self, trade: dict, mark: float, atr: float,
-               current_score: float | None) -> str | None:
+               current_score: float | None, *, snapshot=None) -> str | None:
         """Returns reason string if a closing action fired, else None."""
         # journal is the source of truth — the caller's dict may be stale
         fresh = self.journal.query(
@@ -162,6 +157,23 @@ class ExitEngine:
         if not fresh or fresh[0]["status"] != "open":
             return None
         trade.update(fresh[0])
+        import json
+        try:
+            identity = json.loads(trade.get('entry_identity_json') or '{}')
+        except (ValueError,TypeError):
+            identity = {}
+        if not isinstance(identity,dict):
+            identity = {}
+        se = self.spec_exits.get(trade.get('strategy_id'))
+        from ..strategy import factory_handoff as F
+        if identity.get('version_id') or (se and se.versioned) or F.versioned(self.journal, trade.get('strategy_id') or ''):
+            if snapshot is None:
+                raise ValueError('versioned_exit_closed_snapshot_required')
+            from .versioned_exits import LiveExitAdapter
+            if not hasattr(self, '_versioned_adapter'):
+                self._versioned_adapter = LiveExitAdapter(self.journal, self.executor)
+            return self._versioned_adapter.manage(trade, snapshot)
+
         entry = float(trade["entry_price"])
         side = trade["side"]
         direction = 1.0 if side == "long" else -1.0

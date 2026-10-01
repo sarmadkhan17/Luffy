@@ -122,7 +122,7 @@ def _live_kernel(j, monkeypatch):
     return k, venue
 
 
-def _shadow(tmp_path, geo="trail"):
+def _shadow(tmp_path, geo="fixed"):
     from trader.core.journal import Journal
     j = Journal(tmp_path / "j.db")
     _candidate(j, geo)
@@ -331,7 +331,7 @@ def test_f3_gauge_mutation_after_referee_refuses_validation(tmp_path, cfg):
     from trader.research import vocab
     from trader.research.ledger import Ledger
     j = Journal(tmp_path / "j.db")
-    c = _candidate(j, "trail", state="referee_passed")
+    c = _candidate(j, "fixed", state="referee_passed")
     evaluated = c.long
     assert "-1" in evaluated and "-10" not in evaluated
     led = Ledger(j)
@@ -350,7 +350,7 @@ def test_f3_gauge_mutation_after_referee_refuses_validation(tmp_path, cfg):
 def test_f3_unchanged_frozen_reconstruction_succeeds(tmp_path, cfg):
     from trader.core.journal import Journal
     j = Journal(tmp_path / "j.db")
-    c = _candidate(j, "trail", state="referee_passed")
+    c = _candidate(j, "fixed", state="referee_passed")
     out = F.create_version(j, cfg, {"kind": "research_candidate",
                                     "hash": c.hash}, at_ms=T0)
     v = F.load_version(j, out["version_id"])
@@ -368,7 +368,7 @@ def test_f3_a_look_that_did_not_record_the_evaluated_rule_is_refused(
     """Legacy evidence names parts by rank only: it cannot bind numbers."""
     from trader.core.journal import Journal
     j = Journal(tmp_path / "j.db")
-    c = _candidate(j, "trail", state="referee_passed")
+    c = _candidate(j, "fixed", state="referee_passed")
     with j._tx() as db:
         db.execute("UPDATE research_tests SET detail=? WHERE hash=?",
                    (json.dumps({"t": 1}), c.hash))
@@ -414,7 +414,7 @@ def test_f4_frozen_levels_are_the_backtests_own_geometry(tmp_path, cfg):
     spec = StrategySpec.from_dict(F.load_version(j, ver["version_id"])["spec"])
     spec.exit = GEOS["fixed"]
     se = SpecExit.from_spec(spec, versioned=True)
-    for px, atr in ((100.0, 1.0), (100.0, 0.01), (2.5, 0.3)):
+    for px, atr in ((100.0, 1.0), (100.0, 0.01), (2.5, 0.2)):
         for side, sign in (("long", 1.0), ("short", -1.0)):
             sl_d = _stop_distance(spec.exit, px, atr, None, 0, side)
             tp_d = _target_distance(spec.exit, px, atr, sl_d)

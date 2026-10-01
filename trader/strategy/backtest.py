@@ -34,6 +34,10 @@ class BacktestResult:
     gross_loss: float = 0.0
     max_dd_pct: float = 0.0
     errors: list = field(default_factory=list)
+    exit_semantics_id: str | None = None
+    exit_reasons: dict = field(default_factory=dict)
+    ambiguous_exit_count: int = 0
+    censored_position_count: int = 0
 
     @property
     def profit_factor(self) -> float:

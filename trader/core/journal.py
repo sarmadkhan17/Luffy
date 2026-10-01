@@ -717,7 +717,9 @@ class Journal:
                  "notional_usdt": p.notional_usdt, "leverage": p.leverage,
                  "stop_loss": p.stop_loss, "take_profit": p.take_profit,
                  # frozen at entry: the risk the position was sized on
-                 "initial_risk": round(abs(p.entry_price - p.stop_loss), 10)
+                 "initial_risk": (((getattr(p, 'entry_identity', None) or {}).get('initial_risk')
+                                   if (getattr(p, 'entry_identity', None) or {}).get('version_id') else None)
+                                  or round(abs(p.entry_price - p.stop_loss), 10))
                  if p.stop_loss else None,
                  "sl_order_id": getattr(p, "sl_order_id", ""),
                  "strategy_id": p.strategy_id,
@@ -1715,7 +1717,9 @@ class Journal:
         out = []
         for r in self.query(q, args):
             try:
-                out.append((r, StrategySpec.from_json(r["spec_json"])))
+                from ..strategy.factory_handoff import bind_installed_spec
+                spec = bind_installed_spec(self, StrategySpec.from_json(r['spec_json']))
+                out.append((r, spec))
             except Exception:
                 continue
         return out

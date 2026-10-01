@@ -454,9 +454,13 @@ class ResearchRunner:
             return {**out, "ok": True, "state": "deferred", "alpha": alpha}
 
         disc, held = self._symbols(tf)
-        book = [spec.to_dict() for _r, spec in
-                self.journal.list_specs(["paper", "active"])] \
-            if hasattr(self.journal, "list_specs") else []
+        book_specs = [spec for _r, spec in self.journal.list_specs(['paper','active'])] \
+            if hasattr(self.journal, 'list_specs') else []
+        book = [spec.to_dict() for spec in book_specs]
+        # Separate immutable receipt refs survive worker serialization;
+        # StrategySpec and legacy book rows remain unchanged.
+        book_exit_bindings = {spec.id: spec.exit._exit_binding for spec in book_specs
+                              if getattr(spec.exit, '_exit_binding', None)}
         rnd = f"referee:{h}"
         # the look binds the rule it evaluated, rendered thresholds included
         from .combo import evaluated_record
@@ -469,7 +473,7 @@ class ResearchRunner:
             "discovery_symbols": list(disc or DISCOVERY),
             "heldout_symbols": list(held or HELDOUT),
             "draws": int(draws), "seed": int(self._r("seed")),
-            "book": book},
+            "book": book, "book_exit_bindings": book_exit_bindings},
             timeout_s=float(self._r("batch_seconds")),
             nice=int(self._r("nice")))
         v = res.value or {}

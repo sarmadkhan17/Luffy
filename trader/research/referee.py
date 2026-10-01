@@ -399,12 +399,16 @@ def book_fills(specs, cut: int, grid_tf: str, t0: int, cfg: dict,
                              paths=paths)
             legs = pn.legs_for(compile_spec(spec), b)
             if not legs:
+                if getattr(spec.exit, '_exit_semantics_id', None):
+                    raise ValueError('versioned_book_observation_unavailable')
                 notes[spec.id] = f"no {spec.timeframe} history before the cut"
                 continue
             f, n = pn.fills_for(legs, spec.exit, risk, grid_tf, t0=t0)
             fills.extend(f)
             notes[spec.id] = f"{n} trades on {len(legs)} symbols"
         except Exception as e:                          # noqa: BLE001
+            if getattr(spec.exit, '_exit_semantics_id', None):
+                raise ValueError('versioned_book_parity_unavailable') from e
             notes[spec.id] = f"error: {e}"[:200]
     return fills, notes
 
@@ -432,6 +436,30 @@ def current_cut(tf: str, discovery_symbols, paths: dict | None,
     return max(int(recorded), int(now))
 
 
+def bound_book(payload):
+    """Restore only separately asserted exact-version semantic bindings."""
+    from ..strategy.compile import compile_spec
+    from ..strategy.spec import StrategySpec
+    from ..strategy.exit_policy import EXIT_SEMANTICS_ID
+    bindings = payload.get('book_exit_bindings') or {}
+    specs = []
+    for d in payload.get('book') or []:
+        spec = StrategySpec.from_dict(d)
+        binding = bindings.get(spec.id)
+        if binding:
+            if (binding.get('exit_semantics_id') != EXIT_SEMANTICS_ID
+                    or not binding.get('version_id') or not binding.get('install_id')):
+                raise ValueError('book_exit_semantics_unbound')
+            compiled = compile_spec(spec, exit_semantics_id=EXIT_SEMANTICS_ID)
+            if compiled.spec_sha256 != binding.get('spec_hash'):
+                raise ValueError('book_exit_version_differs')
+            spec.exit._exit_binding = binding
+        specs.append(spec)
+    if set(bindings) - {spec.id for spec in specs}:
+        raise ValueError('book_exit_binding_without_spec')
+    return specs
+
+
 def examine(c, payload: dict) -> dict:
     """Gate 1 and gate 3 for one candidate. `looked` flips to True the
     moment a held-out price has been read; from then on the look counts."""
@@ -443,6 +471,8 @@ def examine(c, payload: dict) -> dict:
     out = {"hash": c.hash, "looked": False}
     compiled = compile_spec(c.to_spec())
     risk = cfg.get("risk") or {}
+    if getattr(compiled.spec.exit, "_exit_semantics_id", None):
+        risk = spec_evidence.risk_for(risk, tf)
 
     a_b = load_heldout(tf, "a", payload["heldout_symbols"], cut, cfg,
                        requires=c.requires, paths=paths)
@@ -469,11 +499,12 @@ def examine(c, payload: dict) -> dict:
     if legs_b:
         t0 = min(int(pn._clock(l.df)[0]) for l in legs_b)
         cand, _ = pn.fills_for(legs_b, compiled.spec.exit, risk, tf, t0=t0)
-        specs = [StrategySpec.from_dict(d) for d in payload.get("book") or []]
+        specs = bound_book(payload)
         book, notes = book_fills(specs, cut, tf, t0, cfg, paths,
                                  payload["discovery_symbols"])
         out["gate3"] = {**gate3(cand, book, b_b.equity, b_b.risk_pct,
-                                b_b.max_open), "book": notes}
+                                b_b.max_open), "book": notes,
+                        "book_exit_bindings": payload.get("book_exit_bindings") or {}}
     else:
         out["gate3"] = {"passed": False, "reason": "no B legs", "book": {}}
     return out

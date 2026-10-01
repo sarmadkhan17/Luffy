@@ -1,0 +1,130 @@
+{
+  "exit_semantics_id": "factory-exit.closed-bars.v1:51758284b0b961695203b5cbc1569dfb1d5805a68506d594a40a5d5df30d3fcc",
+  "observation_contract": {
+    "version": "factory-exit.closed-bars.v1",
+    "reference": "signal_bar_close",
+    "atr": "rolling_mean_true_range_14_through_signal_closed_bar",
+    "stop_floor": 0.004,
+    "initial_r": "reference_to_frozen_stop",
+    "observations": "consecutive_completed_spec_bars_after_signal_bar",
+    "ordering": "open_gap_then_stop_then_target_then_unconditional_max_bars",
+    "ambiguity": "both_range_hits_stop_first_explicit",
+    "quantity": "full_remaining",
+    "trail": "none_only",
+    "signal_exit": "refused"
+  },
+  "rows": [
+    {
+      "behavior": "ATR stop",
+      "research": "SUPPORTED",
+      "paper": "SUPPORTED",
+      "live": "SUPPORTED",
+      "parity": "PASS",
+      "status": "SUPPORTED"
+    },
+    {
+      "behavior": "% stop",
+      "research": "SUPPORTED",
+      "paper": "SUPPORTED",
+      "live": "SUPPORTED",
+      "parity": "PASS",
+      "status": "SUPPORTED"
+    },
+    {
+      "behavior": "RR target",
+      "research": "SUPPORTED",
+      "paper": "SUPPORTED",
+      "live": "SUPPORTED",
+      "parity": "PASS",
+      "status": "SUPPORTED"
+    },
+    {
+      "behavior": "ATR target",
+      "research": "SUPPORTED",
+      "paper": "SUPPORTED",
+      "live": "SUPPORTED",
+      "parity": "PASS",
+      "status": "SUPPORTED"
+    },
+    {
+      "behavior": "% target",
+      "research": "SUPPORTED",
+      "paper": "SUPPORTED",
+      "live": "SUPPORTED",
+      "parity": "PASS",
+      "status": "SUPPORTED"
+    },
+    {
+      "behavior": "target none",
+      "research": "SUPPORTED",
+      "paper": "SUPPORTED",
+      "live": "SUPPORTED",
+      "parity": "PASS",
+      "status": "SUPPORTED"
+    },
+    {
+      "behavior": "trail none",
+      "research": "SUPPORTED",
+      "paper": "SUPPORTED",
+      "live": "SUPPORTED",
+      "parity": "PASS",
+      "status": "SUPPORTED"
+    },
+    {
+      "behavior": "max_bars",
+      "research": "SUPPORTED",
+      "paper": "SUPPORTED",
+      "live": "SUPPORTED",
+      "parity": "PASS",
+      "status": "SUPPORTED"
+    },
+    {
+      "behavior": "ATR trailing",
+      "research": "REFUSED_ADMISSION",
+      "paper": "REFUSED",
+      "live": "REFUSED",
+      "parity": "REFUSED",
+      "status": "REFUSED"
+    },
+    {
+      "behavior": "signal_exit",
+      "research": "REFUSED_ADMISSION",
+      "paper": "REFUSED",
+      "live": "REFUSED",
+      "parity": "REFUSED",
+      "status": "REFUSED"
+    },
+    {
+      "behavior": "swing stop",
+      "research": "REFUSED_ADMISSION",
+      "paper": "REFUSED",
+      "live": "REFUSED",
+      "parity": "REFUSED",
+      "status": "REFUSED"
+    },
+    {
+      "behavior": "partial exit",
+      "research": "REFUSED_ADMISSION",
+      "paper": "REFUSED",
+      "live": "REFUSED",
+      "parity": "REFUSED",
+      "status": "REFUSED"
+    },
+    {
+      "behavior": "flip exit",
+      "research": "REFUSED_ADMISSION",
+      "paper": "REFUSED",
+      "live": "REFUSED",
+      "parity": "REFUSED",
+      "status": "REFUSED"
+    },
+    {
+      "behavior": "regime exit",
+      "research": "REFUSED_ADMISSION",
+      "paper": "REFUSED",
+      "live": "REFUSED",
+      "parity": "REFUSED",
+      "status": "REFUSED"
+    }
+  ]
+}

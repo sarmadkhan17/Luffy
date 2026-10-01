@@ -236,9 +236,14 @@ class CompiledStrategy:
         return "\n".join(lines)
 
 
-def compile_spec(spec: StrategySpec) -> CompiledStrategy:
+def compile_spec(spec: StrategySpec, *, exit_semantics_id=None) -> CompiledStrategy:
     """Parse every expression up front. A spec that cannot compile must never
     reach the gauntlet, let alone the book."""
+    if exit_semantics_id is not None:
+        from .exit_policy import EXIT_SEMANTICS_ID, bind_research, unsupported
+        if exit_semantics_id != EXIT_SEMANTICS_ID or unsupported(spec.exit):
+            raise ValueError('exit_semantics_unavailable')
+        bind_research(spec)
     errs = StrategySpec.validate(spec)
     if errs:
         raise dsl.SpecError(f"invalid spec '{spec.id}': {errs}")

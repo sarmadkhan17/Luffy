@@ -50,17 +50,17 @@ def _candidate(j, state="referee_passed", p=0.001, alpha=0.0025,
                                  "usable": True}
                              for e in vocab.expressions("4h")})
     part = vocab.parts_for("4h", led.gauges("4h"))[0]
-    c = Combination((part,), "4h", "trail")
-    led.record_result({"hash": c.hash, "tf": "4h", "geo": "trail", "k": 1,
+    c = Combination((part,), "4h", "fixed")
+    led.record_result({"hash": c.hash, "tf": "4h", "geo": "fixed", "k": 1,
                        "parts": list(c.keys), "trades": 300,
                        "portfolio": {"total_pct": 40.0, "max_dd_pct": 20.0},
                        "testable": True, "verdict": "scored"},
                       "survivor", "r", {})
     if look:
-        led.record_test(c.hash, "4h", "trail", "gate1", p, alpha, False,
+        led.record_test(c.hash, "4h", "fixed", "gate1", p, alpha, False,
                         {"t": 1, "evaluated": evaluated_record(c)})
     led.set_candidate(
-        c.hash, "4h", "trail", state, rank=40.0,
+        c.hash, "4h", "fixed", state, rank=40.0,
         gate1={"p": p if g1_p is None else g1_p, "alpha": alpha, "t": 1,
                "reason": "fixture"},
         gate3={"passed": gate3, "reason": "fixture book"})
@@ -109,23 +109,51 @@ def _trades(j, strategy_id, pnls, start_ms, prefix="t", spec_hash=None,
     install = dict(installs[0]) if len(installs) == 1 else None
     with j._tx() as c:
         for i, pnl in enumerate(pnls):
+            evidence = None
+            geometry = None
             o = start_ms + (i + 1) * 3_600_000
             idn = _identity(strategy_id, spec_hash) if identity is _EXACT \
                 else identity
             if identity is _EXACT and install and spec_hash:
                 body = json.loads(idn)
                 body.update(version_id=install['version_id'], install_id=install['install_id'], exec_mode='paper')
+                version = F.load_version(j, install['version_id'])
+                if spec_hash == version['spec_hash']:
+                    from trader.strategy import exit_policy as E
+                    from trader.engine import paper_exit_evidence as X
+                    from trader.core.types import TF_MS
+                    spec = StrategySpec.from_dict(version['spec'])
+                    step = TF_MS[spec.timeframe]
+                    policy, initial = E.initialize(spec.exit, 100, 1, 'long', o-step, step)
+                    body.update(exit_semantics_id=policy.semantics_id, exit_state=E.encode(policy, initial))
+                    # Explicit TEST-ONLY observations replay the real contract.
+                    px = policy.target+1 if pnl > 0 else policy.stop-1
+                    amount = pnl/(px-100)
+                    observation = E.Observation(o, px, px, px, px)
+                    result = E.advance(policy, initial, observation, amount)
+                    evidence = X.start(f'{prefix}{i}', body, policy, initial, amount)
+                    X.observe(evidence, policy, result, observation)
+                    geometry = (amount, policy.stop, policy.target, px, policy.initial_r, result.reason, o+step)
                 idn = json.dumps(body, sort_keys=True)
             cols = ("id, symbol, side, amount, entry_price, strategy_id, "
                     "exec_mode, opened_at, closed_at, realized_pnl, status")
-            vals = [f"{prefix}{i}", "BTC/USDT", "buy", 1.0, 100.0,
+            vals = [f"{prefix}{i}", "BTC/USDT", "long", 1.0, 100.0,
                     strategy_id, "paper", _iso(o), _iso(o + 1_800_000), pnl,
                     "closed"]
             if has:
                 cols += ", entry_identity_json"
                 vals.append(idn)
+            if geometry:
+                amount, sl, tp, px, risk, reason, cl = geometry
+                vals[3] = amount
+                vals[8] = _iso(cl)
+                cols += ',stop_loss,take_profit,exit_price,initial_risk,close_reason'
+                vals += [sl,tp,px,risk,reason]
             c.execute(f"INSERT INTO trades ({cols}) VALUES "
                       f"({','.join('?' * len(vals))})", vals)
+            if evidence:
+                X.ensure(c)
+                X.record(c, evidence)
 
 
 PASSING = [10.0] * 9 + [-5.0] * 6          # 15 trades, WR 0.6, PF 3.0
@@ -410,7 +438,7 @@ def test_changed_spec_hash_breaks_eligibility(tmp_path, cfg):
     row = _row(j, "SELECT * FROM strategy_versions WHERE version_id=?",
                v["version_id"])
     rec = json.loads(row["canonical_json"])
-    rec["spec"]["exit"]["stop"]["mult"] = 3.0      # an edit in place
+    rec["spec"]["exit"]["stop"]["mult"] = 4.0      # an edit in place
     text = F.canonical(rec)
     _tamper(j, "UPDATE strategy_versions SET canonical_json=?, "
                "canonical_sha256=? WHERE version_id=?",
@@ -424,7 +452,7 @@ def test_edit_creates_new_version_that_needs_its_own_approval(tmp_path, cfg):
     j, _h = _journal(tmp_path)
     a, _p, _d = _approved(j, cfg)
     spec = StrategySpec.from_dict(F.load_version(j, a["version_id"])["spec"])
-    spec.exit.stop = {"kind": "atr", "mult": 3.0}
+    spec.exit.stop = {"kind": "atr", "mult": 4.0}
     b = F.derive_version(j, a["version_id"], spec, at_ms=T0 + 32 * DAY)
     assert b["version_id"] != a["version_id"]
     assert b["spec_hash"] != a["spec_hash"]
@@ -529,7 +557,7 @@ def test_candidate_evidence_withdrawn_after_approval(tmp_path, cfg):
     j, h = _journal(tmp_path)
     v, _p, _d = _approved(j, cfg)
     from trader.research.ledger import Ledger
-    Ledger(j).set_candidate(h, "4h", "trail", "refused", reason="later")
+    Ledger(j).set_candidate(h, "4h", "fixed", "refused", reason="later")
     e = F.eligible_for_first_live(j, v["version_id"], cfg=cfg,
                                   available_inputs=INPUTS)
     assert not e.eligible
@@ -651,7 +679,7 @@ def test_kernel_refuses_a_spec_that_is_not_the_frozen_one(tmp_path, cfg):
     j, h = _journal(tmp_path)
     v = _validated(j, cfg, h)
     spec = StrategySpec.from_dict(F.load_version(j, v["version_id"])["spec"])
-    spec.exit.stop = {"kind": "atr", "mult": 3.0}
+    spec.exit.stop = {"kind": "atr", "mult": 4.0}
     ok = _kernel(j)._install_spec(
         spec, {"chosen_timeframe": spec.timeframe}, _Admitting(), {},
         version_id=v["version_id"])
@@ -785,7 +813,7 @@ def test_derived_version_inherits_no_probation(tmp_path, cfg):
     rec = _install(j, a["version_id"])
     _trades(j, rec["strategy_id"], PASSING, T0, spec_hash=a["spec_hash"])
     spec = StrategySpec.from_dict(rec["spec"])
-    spec.exit.stop = {"kind": "atr", "mult": 3.0}
+    spec.exit.stop = {"kind": "atr", "mult": 4.0}
     b = F.derive_version(j, a["version_id"], spec, at_ms=T0 + DAY)
     bv = F.load_version(j, b["version_id"])
     # B has no install, no probation, no receipts
@@ -815,7 +843,7 @@ def test_eligibility_requires_the_version_still_installed(tmp_path, cfg):
     j, _h = _journal(tmp_path)
     a, p, _d = _approved(j, cfg)
     spec = StrategySpec.from_dict(F.load_version(j, a["version_id"])["spec"])
-    spec.exit.stop = {"kind": "atr", "mult": 3.0}
+    spec.exit.stop = {"kind": "atr", "mult": 4.0}
     b = F.derive_version(j, a["version_id"], spec, at_ms=T0 + 32 * DAY)
     _upsert(j, F.load_version(j, b["version_id"])["spec"])   # B now in paper
     e = F.eligible_for_first_live(j, a["version_id"], cfg=cfg,
@@ -901,7 +929,7 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
         assert bad not in code, bad
     # the executor reads only the paper/live fence predicate
     for f in pathlib.Path("trader").rglob("*.py"):
-        if f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py"):
+        if f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py"):
             assert "factory_handoff" not in f.read_text(), f
     ex_src = pathlib.Path("trader/engine/executor.py").read_text()
     assert set(re.findall(r"\bfh\.(\w+)", ex_src)) == {"live_entry_block"}
@@ -918,12 +946,12 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
                          ast.walk(fn) if g is not fn
                          and isinstance(g, ast.FunctionDef))}
     assert users == {"_research_handoff", "_install_version",
-                     "_load_spec_population", "_try_enter"}, users
+                     "_load_spec_population", "_try_enter", "_manage_one"}, users
     for name in ("_load_spec_population", "_try_enter"):
         fn = next(f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)
                   and f.name == name)
         assert set(re.findall(r"\bfh\.(\w+)", ast.unparse(fn))) <= {
-            "versioned", "live_entry_block"}, name
+            "versioned", "live_entry_block", "load_version", "verify_validation", "verify_install"}, name
     cfg = load_config()
     assert cfg["research"]["referee"] is False
     assert cfg["research"]["handoff"] is False

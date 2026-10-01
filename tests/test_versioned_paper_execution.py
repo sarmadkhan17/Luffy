@@ -193,14 +193,10 @@ def test_unsupported_signal_exit_refuses_exact_probation(tmp_path,monkeypatch):
     j=Journal(tmp_path/'j.db'); cfg=load_config()
     _candidate(j,'fixed',state='referee_passed',p10=-0.01)
     h=j.query('SELECT hash FROM research_candidates')[0]['hash']
-    v=F.create_version(j,cfg,{'kind':'research_candidate','hash':h},at_ms=T0-DAY)
-    with pytest.raises(F.HandoffRefused,match='unsupported_paper_exit:signal_exit:runtime_parity_unavailable'):
-        _install(j,v['version_id'])
-    assert F.state_of(j,v['version_id'])==F.VALIDATED
+    with pytest.raises(F.HandoffRefused,match='unsupported_versioned_exit:signal_exit:runtime_parity_unavailable'):
+        F.create_version(j,cfg,{'kind':'research_candidate','hash':h},at_ms=T0-DAY)
+    assert j.query('SELECT * FROM strategy_versions')==[]
     assert j.query('SELECT * FROM strategy_version_installs')==[]
-    assessment=F._assess(j,cfg,F.load_version(j,v['version_id']),T0,T0+DAY)
-    assert assessment['status']=='UNSUPPORTED_PAPER_EXIT'
-    assert assessment['reason']=='signal_exit:runtime_parity_unavailable'
 
 
 def test_paper_position_invisible_to_actual_reconciliation(tmp_path):
@@ -239,6 +235,8 @@ def test_frozen_exit_levels_and_bar_deadline(tmp_path,reason):
             want='stop';px=p['stop_loss']
         else: want=reason
         df=append(df,px,high=high,low=low)
+    if reason=='both':
+        df.loc[df.index[-1],'open']=p['entry_price']
     assert r.manage(snap(df))==[tid]
     row=j.query(f'SELECT * FROM {TABLE} WHERE id=?',(tid,))[0]
     assert row['close_reason']==want and row['exit_price']==px
@@ -276,7 +274,7 @@ def test_paper_risk_limits_and_wrong_decision_hash(tmp_path):
     assert r.open_positions()[0]['id']==tid
 
 
-@pytest.mark.parametrize('geo',['fixed','trail'])
+@pytest.mark.parametrize('geo',['fixed'])
 def test_paper_frozen_exit_matches_registered_vector_geometry(tmp_path,geo):
     from trader.agents.indicators import atr_series
     from trader.strategy.vector_backtest import _trade

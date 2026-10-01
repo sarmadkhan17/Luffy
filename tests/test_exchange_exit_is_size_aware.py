@@ -27,10 +27,10 @@ class _Journal:
         self.closed: list[tuple] = []
     def open_trades(self):
         return [dict(t) for t in self._t.values() if t.get("status", "open") == "open"]
-    def close_trade(self, tid, px, pnl, reason):
+    def close_trade(self, tid, px, pnl, reason, *, accounting=None):
         self._t[tid]["status"] = "closed"
         self.closed.append((tid, px, round(pnl, 2), reason))
-    def align_trade_amount(self, tid, amount, notional, pnl_delta=0.0):
+    def align_trade_amount(self, tid, amount, notional, pnl_delta=0.0, *, accounting=None):
         t = self._t[tid]                       # rounds as the real journal does
         t["amount"], t["notional_usdt"] = round(amount, 8), round(notional, 2)
         t["realized_pnl"] = float(t.get("realized_pnl") or 0) + pnl_delta

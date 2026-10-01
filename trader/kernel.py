@@ -925,6 +925,8 @@ class Kernel:
             vid = ver["version_id"]
             spec = StrategySpec.from_dict(
                 fh.load_version(self.journal, vid)["spec"])
+            from .strategy.exit_policy import bind_research
+            bind_research(spec)
             ok, ev = analyst.admit(copy.deepcopy(spec), book)
         except Exception as e:                          # noqa: BLE001
             log.warning(f"research handoff failed: {e}")
@@ -1389,7 +1391,34 @@ class Kernel:
                 log.info(f"ENTRY DENY {d.symbol}: {d.skip_reason}")
                 return False
             a = _atr(snap.df(exec_tf))
-        sl, tp = self._protection_for(se, snap.price, a, side)
+        versioned_binding = None
+        if se is not None and se.versioned:
+            from .engine.versioned_exits import entry_contract
+            from .strategy import exit_policy as E
+            from .core.types import TF_MS
+            try:
+                installs = self.journal.query('SELECT version_id FROM strategy_version_installs WHERE strategy_id=?', (top_strategy,))
+                if len(installs) != 1:
+                    raise ValueError('versioned_entry_install_ambiguous')
+                version = fh.load_version(self.journal, installs[0]['version_id'])
+                fh.verify_validation(self.journal, version)
+                install = fh.verify_install(self.journal, version)
+                from .strategy.spec import StrategySpec
+                frozen = StrategySpec.from_dict(version['spec'])
+                sig = next(s for s in d.strategy_signals if s.get('strategy_id') == top_strategy and s.get('action') == d.action.value)
+                if sig.get('params', {}).get('spec_sha256') != version['spec_hash']:
+                    raise ValueError('versioned_entry_signal_differs')
+                ref, a, entry_bar = entry_contract(frozen, snap, sig.get('params', {}).get('signal_bar_close_ms'))
+                policy, state = E.initialize(frozen.exit, ref, a, side, entry_bar, TF_MS[frozen.timeframe])
+                sl, tp = policy.stop, policy.target
+                versioned_binding = dict(version_id=version['version_id'], install_id=install['install_id'],
+                    exit_semantics_id=E.EXIT_SEMANTICS_ID, exit_state=E.encode(policy,state),
+                    initial_risk=policy.initial_r, reference_price=ref)
+            except Exception as e:
+                d.skip_reason = 'versioned entry evidence: ' + str(e)
+                return False
+        else:
+            sl, tp = self._protection_for(se, snap.price, a, side)
         stop_frac = abs(snap.price - sl) / snap.price
         sizing = self.risk.check_entry(
             self.state_machine.state, d.symbol, snap.price, a, stop_frac,
@@ -1418,6 +1447,11 @@ class Kernel:
             log.info(f"meta size {d.symbol}: {m:.2f}× "
                      f"(p={getattr(d, 'meta_p', 0):.2f})")
         identity, reference = self._entry_provenance(d, snap, top_strategy, exec_tf)
+        if versioned_binding:
+            if identity.get('status') != 'VERIFIED':
+                d.skip_reason = 'versioned entry identity unverified'
+                return False
+            identity.update(versioned_binding)
         pos = self.executor.open(
             d, sizing.amount, a, sl, tp,
             strategy_id=top_strategy or "orchestrator",
@@ -1569,6 +1603,18 @@ class Kernel:
 
     def _manage_one(self, t: dict, snap, score) -> str | None:
         """Run the exit engine over one open trade. Returns an exit reason."""
+        from .strategy import factory_handoff as F
+        # A terminal intent needs only the current execution price, even if
+        # candle data is unavailable or the strategy has since retired.
+        if F.versioned(self.journal, t.get('strategy_id') or ''):
+            try:
+                reason = self.exits.manage(t, snap.price, 0, score, snapshot=snap)
+            except Exception as e:
+                log.warning(f"versioned exit manage {t['symbol']}: {e}")
+                return None
+            if reason:
+                self.notifier.send(f"↪ {t['symbol']} exit: {reason} @ {snap.price:.4g}")
+            return reason
         from .agents.indicators import atr as _atr
         exec_tf = self.cfg["timeframes"]["execution"]
         # trail on the spec's own frame, for the same reason the stop is set
@@ -1579,11 +1625,12 @@ class Kernel:
             log.warning(f"exit manage {t['symbol']}: no {tf} bars, "
                         f"holding the stop where it is")
             return None
+        se = self.exits.spec_exits.get(t.get('strategy_id'))
         a = _atr(df) if df is not None else 0
-        if a <= 0:
+        if a <= 0 and not (se and se.versioned):
             return None
         try:
-            reason = self.exits.manage(t, snap.price, a, score)
+            reason = self.exits.manage(t, snap.price, a, score, snapshot=snap)
         except Exception as e:
             log.warning(f"exit manage {t['symbol']}: {e}")
             return None

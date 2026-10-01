@@ -191,12 +191,12 @@ def test_risk_bound_is_the_existing_check_entry_rule(world, cfg, tmp_path):
             rb["size_mult"]) == (s.amount, s.size_usdt, s.risk_usdt, s.size_mult)
     assert s.size_mult == 0.25          # derisk 0.5 x proving 0.5 (15 closed < 30)
 
-    # the stop is the version's own: 2.0 x ATR(14) on its declared 4h bars
+    # the stop is the admitted fixed version's own: 3.0 x ATR(14) on its declared 4h bars
     from trader.agents.indicators import atr
     full = C._bars_frame(_market()["bars"])
-    assert st["geometry"] == {"timeframe": "4h", "stop_atr_mult": 2.0, "stop_pct": 0.0}
+    assert st["geometry"] == {"timeframe": "4h", "stop_atr_mult": 3.0, "stop_pct": 0.0}
     assert math.isclose(st["atr"], atr(full)) and st["stop_distance"] == max(
-        2.0 * st["atr"], st["price"] * 0.004)
+        3.0 * st["atr"], st["price"] * 0.004)
 
 
 def test_current_exposure_reduces_available_capacity(world, cfg):
@@ -410,7 +410,7 @@ def test_wrong_strategy_version_is_refused(world, cfg):
     out = _receipt(j, cfg, v)
     from trader.strategy.spec import StrategySpec
     spec = StrategySpec.from_dict(copy.deepcopy(v["spec"]))
-    spec.exit.stop = {"kind": "atr", "mult": 3.0}
+    spec.exit.stop = {"kind": "atr", "mult": 4.0}
     b = F.derive_version(j, v["version_id"], spec, at_ms=NOW)
     vb = F.load_version(j, b["version_id"])
     c = C.check_current(j, cfg, vb, out["receipt_id"], now_ms=NOW + 2)

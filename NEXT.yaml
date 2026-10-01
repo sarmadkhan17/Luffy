@@ -2,11 +2,12 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: LUFFY-VERSIONED-RUNTIME-EXIT-PARITY-R1
-  status: SELECTED_NOT_STARTED
-  selected_stage_5_blocker: B
-  objective: Establish exact frozen runtime/backtest exit parity required for admitted versions before first-live authority; preserve F1, Risk, owner approval and capacity fences.
-  rationale: The 15-trade mechanical paper path is TESTED through actual production code. Corrected identity/cost gates keep production economic probation INCOMPLETE_COST_EVIDENCE; SATISFIED exists only in explicit TEST-ONLY cost-evidence fixtures. Paper stop/target/trail/time semantics are tested, but live TP1 partial, flip, time-stop and signal_exit parity remains unproven; unsupported signal_exit refuses paper install/probation. Resolve the frozen runtime exit contract before first live. Do not claim full parity from deterministic paper fills.
+  id: NO_ACTIVE_PACKAGE
+  status: NO_ACTIVE_PACKAGE
+  selected_stage_5_blocker: NONE
+  objective: Preserve the closed exit semantics package; await selection of further work.
+  deferred_next_package: LUFFY-VERSIONED-PAPER-COST-EVIDENCE-PROTOCOL-R1
+  rationale: 'Versioned research, paper and live exit intent/state semantics now share tested contract factory-exit.closed-bars.v1. Production economic probation remains INCOMPLETE_COST_EVIDENCE: unknown costs and missing/ambiguous identity cannot create approval requests. This is the earlier Stage-5 truth gap; liquidity/capacity calibration remains independently UNAVAILABLE and should follow only after cost truth.'
   preconditions_recorded:
     - LUFFY-VERSIONED-PAPER-PROBATION-TRUTH-FIX-R1 TESTED, NOT_DEPLOYED; fixes the two independent-review P1 defects over uncommitted PAPER-EXECUTION-R1 on e60e045
     - Production economic probation INCOMPLETE_COST_EVIDENCE; unknown costs and missing/ambiguous identity cannot create approval requests
@@ -15,19 +16,23 @@ work_package:
     - F1 remains unchanged at Kernel/Executor; no first-live activation or venue authority added
     - research.referee=false and research.handoff=false; no Risk limits or probation thresholds changed
   last_completed:
-    id: LUFFY-VERSIONED-PAPER-PROBATION-TRUTH-FIX-R1
+    id: LUFFY-ADMITTED-EXIT-SEMANTIC-PARITY-R1
     verdict: PASS
+    review_fix: LUFFY-ADMITTED-EXIT-SEMANTIC-PARITY-REVIEW-FIX-R1
+    review_correction: independent final P1 recheck PASS; canonical replay and approval re-verification bind per-trade exit evidence without progress increase
+    safe_to_commit: YES
     state: TESTED
-    branch: luffy-versioned-paper-execution-r1
-    base_commit: e60e045
-    report: docs/superpowers/reports/2026-10-01-versioned-paper-probation-truth-fix-r1.md
-    record: STATE.yaml completed_versioned_paper_probation_truth_fix_r1
+    branch: luffy-admitted-exit-semantic-parity-r1
+    base_commit: d4de42adcef0a9a7d905febe90712113fd68253f
+    report: docs/superpowers/reports/2026-10-01-admitted-exit-semantic-parity-r1.md
+    record: STATE.yaml versioned_exit_semantics
+    exit_semantics_id: factory-exit.closed-bars.v1:51758284b0b961695203b5cbc1569dfb1d5805a68506d594a40a5d5df30d3fcc
     runtime_deployment: NOT_DEPLOYED
   execution_constraints:
     - no orders, deployment, production restart, research activation or frontend/M4 work
     - no first-live eligibility weakening, owner/capacity bypass, Risk-limit changes or probation-threshold changes
-    - no full runtime/backtest parity claim until exact frozen exits are evidenced
-  deferred_blocker: Liquidity/market-impact capacity validation remains UNAVAILABLE; it is not selected as the next package.
+    - preserve the exit_semantics_id binding through exact version install and probation
+    - capacity remains an independent blocker: EFFECTIVE = UNAVAILABLE; calibrate after paper cost truth
 
 intelligence_spine_shadow_package:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1

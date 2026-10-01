@@ -15,7 +15,9 @@ from ..core.types import Action, ControlState, Position, Side, TF_MS, closed_bar
 from ..strategy import factory_handoff as F
 from ..strategy.compile import compile_spec
 from ..strategy.spec import StrategySpec
-from .exits import SpecExit
+from ..strategy import exit_policy as E
+from .versioned_exits import entry_contract, observations
+from . import paper_exit_evidence as X
 from .risk import RiskManager
 from .trade_provenance import entry_identity, clean
 
@@ -56,16 +58,8 @@ def bar_ms(ts):
 
 
 def unsupported(spec):
-    bad = SpecExit.frozen_unsupported(spec)
-    if bad:
-        return bad
-    if spec.exit.signal_exit:
-        return 'signal_exit:runtime_parity_unavailable'
-    if (spec.exit.trail or {}).get('kind', 'none') not in ('none', 'atr'):
-        return 'trail:runtime_parity_unavailable'
-    if not 1 <= int((spec.exit.time or {}).get('max_bars', 32)) <= 500:
-        return 'time:max_bars_unsupported'
-    return None
+    from ..strategy.exit_policy import unsupported as check
+    return check(spec.exit)
 
 
 class PaperRiskStore:
@@ -95,6 +89,12 @@ class PaperExecutor:
         self.journal, self.cfg = journal, cfg
         with journal._tx() as c:
             c.executescript(SCHEMA)
+            columns = {r[1] for r in c.execute("PRAGMA table_info(versioned_paper_trades)")}
+            if "exit_state_json" not in columns:
+                c.execute("ALTER TABLE versioned_paper_trades ADD COLUMN exit_state_json TEXT")
+            if "exit_semantics_id" not in columns:
+                c.execute("ALTER TABLE versioned_paper_trades ADD COLUMN exit_semantics_id TEXT")
+            X.ensure(c)
         self.store = PaperRiskStore(journal)
         self.risk = RiskManager(cfg, self.store)
 
@@ -157,11 +157,13 @@ class PaperExecutor:
                 f"SELECT id FROM {TABLE} WHERE version_id=? AND symbol=? AND status='closed' AND last_bar_ms>=? LIMIT 1",
                 (v['version_id'],snap.symbol,entry_bar)):
             raise ValueError('paper_exit_bar_reentry_refused')
-        price, a = float(snap.price), float(atr(frame))
+        price = float(snap.price)
+        ref, a, entry_bar = entry_contract(spec, snap, params.get('signal_bar_close_ms'))
         if not all(math.isfinite(x) and x > 0 for x in (price, a, reference_equity)):
             raise ValueError('paper_reference_unavailable')
         side = 'long' if decision.action == Action.BUY else 'short'
-        sl, tp = SpecExit.from_spec(spec, versioned=True).frozen_levels(price, a, side)
+        policy, exit_state = E.initialize(spec.exit, ref, a, side, entry_bar, TF_MS[spec.timeframe])
+        sl, tp = policy.stop, policy.target
         positions = self.open_positions()
         seed = self.store.kv_get('seed_equity')
         if seed is None:
@@ -189,7 +191,8 @@ class PaperExecutor:
         if identity['status'] != 'VERIFIED':
             raise ValueError('paper_identity_unverified')
         identity.update(version_id=v['version_id'], install_id=inst['install_id'],
-                        validation_receipt_id=inst['validation_receipt_id'], exec_mode='paper')
+                        validation_receipt_id=inst['validation_receipt_id'], exec_mode='paper',
+                        exit_semantics_id=inst['exit_semantics_id'], exit_state=E.encode(policy,exit_state))
         row = dict(id=ident, strategy_id=strategy_id, version_id=v['version_id'], spec_hash=v['spec_hash'],
                    install_id=inst['install_id'], exec_mode='paper', decision_id=decision.id,
                    cycle_id=getattr(decision,'cycle_id',None), symbol=snap.symbol, side=side,
@@ -199,7 +202,8 @@ class PaperExecutor:
                    fill_basis='decision_snapshot_price', reference_price=price, fill_timestamp=iso(at),
                    commission_basis='UNAVAILABLE', slippage_basis='UNAVAILABLE', funding_basis='UNAVAILABLE',
                    pnl_basis='GROSS_BEFORE_UNAVAILABLE_COSTS', entry_bar_ms=entry_bar,
-                   last_bar_ms=entry_bar, initial_risk=abs(price-sl), best=price)
+                   last_bar_ms=entry_bar, initial_risk=policy.initial_r, best=ref,
+                   exit_state_json=E.encode(policy,exit_state), exit_semantics_id=inst['exit_semantics_id'])
         with self.journal._tx() as c:
             c.execute('BEGIN IMMEDIATE')
             if c.execute(f'SELECT id FROM {TABLE} WHERE id=?', (ident,)).fetchone():
@@ -207,63 +211,55 @@ class PaperExecutor:
             if c.execute(f"SELECT id FROM {TABLE} WHERE status='open' AND symbol=?", (snap.symbol,)).fetchone():
                 raise ValueError('paper_symbol_already_open')
             c.execute(f"INSERT INTO {TABLE} ({','.join(row)}) VALUES ({','.join('?' for _ in row)})", tuple(row.values()))
+            X.record(c, X.start(ident, identity, policy, exit_state, amount))
         return ident
 
     def manage(self, snap):
-        """Replay all unseen CLOSED spec bars, atomically and in order.
-
-        Stop first on a both-hit bar; no entry-bar exits, no TP1/flip overlays.
-        Frozen time exits close at max_bars regardless of profit. Trail ratchet
-        uses the same high/low + ATR ordering as vector_backtest._trade.
-        Costs are unavailable; fills use recorded levels/close, not venue ids.
-        """
-        from ..agents.indicators import atr
-        at = int(datetime.fromisoformat(snap.ts).timestamp()*1000)
+        """Consume the shared completed-bar transitions; book isolated fills."""
         closed = []
-        for p in self.open_positions():
-            if p['symbol'] != snap.symbol:
+        for original in self.open_positions():
+            if original['symbol'] != snap.symbol:
                 continue
-            v = F.load_version(self.journal, p['version_id'])
+            v = F.load_version(self.journal, original['version_id'])
+            F.verify_exit_binding(self.journal, v)
+            inst = F.verify_install(self.journal, v, current=False)
+            if (original['spec_hash'], original['install_id']) != (v['spec_hash'], inst['install_id']):
+                raise ValueError('paper_exit_identity_differs')
             spec = StrategySpec.from_dict(v['spec'])
-            frame = closed_bars(snap.df(spec.timeframe), spec.timeframe, at)
-            if frame is None or not len(frame):
-                continue
-            sign = 1 if p['side']=='long' else -1
             with self.journal._tx() as c:
                 c.execute('BEGIN IMMEDIATE')
-                fresh = c.execute(f'SELECT * FROM {TABLE} WHERE id=?', (p['id'],)).fetchone()
-                if fresh['status'] != 'open':
+                p = dict(c.execute(f'SELECT * FROM {TABLE} WHERE id=?', (original['id'],)).fetchone())
+                if p['status'] != 'open':
                     continue
-                p = dict(fresh)
-                for i, bar in frame.iterrows():
-                    ms = bar_ms(bar['ts'])
-                    if ms <= p['last_bar_ms']:
-                        continue
-                    if ms != p['last_bar_ms'] + TF_MS[spec.timeframe]:
-                        # Never silently skip missing bars on restart.
+                if not p['exit_state_json']:
+                    raise ValueError('paper_exit_state_missing')
+                policy, state = E.decode(p['exit_state_json'])
+                expected, _ = E.decode(json.loads(p['entry_identity_json'])['exit_state'])
+                if policy != expected:
+                    raise ValueError('paper_exit_policy_differs')
+                evidence_row = c.execute(f'SELECT * FROM {X.TABLE} WHERE trade_id=?', (p['id'],)).fetchone()
+                if not evidence_row or X.digest(evidence_row['canonical_json']) != evidence_row['canonical_sha256']:
+                    raise ValueError('paper_exit_evidence_missing_or_conflicting')
+                evidence = json.loads(evidence_row['canonical_json'])
+                if evidence['final'] != p['exit_state_json']:
+                    raise ValueError('paper_exit_evidence_state_differs')
+                for observation in observations(spec, snap, state):
+                    # Missing causal history cannot be silently replaced.
+                    if observation.bar_ms != state.last_bar_ms + policy.step_ms:
                         break
-                    high, low, close = map(float,(bar['high'],bar['low'],bar['close']))
-                    a = float(atr(frame.loc[:i]))
-                    if not all(math.isfinite(x) and x>0 for x in (high,low,close,a)):
-                        break
-                    p['bars_held'] += 1
-                    trail = spec.exit.trail or {}
-                    if trail.get('kind') == 'atr':
-                        p['best'] = max(p['best'],high) if sign==1 else min(p['best'],low)
-                        risk = p['initial_risk']
-                        if abs(p['best']-p['entry_price']) >= float(trail.get('arm_at_r',1.0))*risk:
-                            level = p['best']-sign*float(trail['mult'])*a
-                            p['stop_loss'] = max(p['stop_loss'],level) if sign==1 else min(p['stop_loss'],level)
-                    stop = low<=p['stop_loss'] if sign==1 else high>=p['stop_loss']
-                    target = bool(p['take_profit']) and (high>=p['take_profit'] if sign==1 else low<=p['take_profit'])
-                    reason = 'stop' if stop else 'target' if target else 'time' if p['bars_held']>=int(spec.exit.time.get('max_bars',32)) else None
-                    p['last_bar_ms']=ms
-                    if reason:
-                        px = p['stop_loss'] if stop else p['take_profit'] if target else close
-                        c.execute(f"UPDATE {TABLE} SET status='closed', exit_price=?,realized_pnl=?,closed_at=?,close_reason=?,last_bar_ms=?,bars_held=?,stop_loss=?,best=?,exit_fill_basis=?,exit_reference_price=? WHERE id=? AND status='open'",
-                                  (px,(px-p['entry_price'])*sign*p['amount'],iso(ms+TF_MS[spec.timeframe]),reason,ms,p['bars_held'],p['stop_loss'],p['best'],'recorded_frozen_level' if reason!='time' else 'recorded_spec_bar_close',px,p['id']))
+                    result = E.advance(policy, state, observation, p['amount'])
+                    state = result.state
+                    X.observe(evidence, policy, result, observation)
+                    X.record(c, evidence)
+                    c.execute(f'UPDATE {TABLE} SET exit_state_json=?,last_bar_ms=?,bars_held=? WHERE id=?',
+                              (E.encode(policy,state),state.last_bar_ms,state.bars_held,p['id']))
+                    if result.due:
+                        px = state.reference_exit
+                        sign = 1 if p['side']=='long' else -1
+                        c.execute(f"UPDATE {TABLE} SET status='closed', exit_price=?,realized_pnl=?,closed_at=?,close_reason=?,exit_fill_basis=?,exit_reference_price=? WHERE id=? AND status='open'",
+                                  (px,(px-p['entry_price'])*sign*result.quantity,
+                                   iso(state.last_bar_ms+policy.step_ms),result.reason,
+                                   'recorded_canonical_observation',px,p['id']))
                         closed.append(p['id'])
                         break
-                    c.execute(f'UPDATE {TABLE} SET last_bar_ms=?,bars_held=?,stop_loss=?,best=? WHERE id=?',
-                              (ms,p['bars_held'],p['stop_loss'],p['best'],p['id']))
         return closed

@@ -4427,3 +4427,54 @@ completed_versioned_paper_probation_truth_fix_r1:
   progress_increase: false
   runtime_deployment: NOT_DEPLOYED
   operations: no commit, deployment, venue submission, process restart, Risk/capacity or Intelligence Spine changes
+
+versioned_exit_semantics:
+  state: TESTED
+  package: LUFFY-ADMITTED-EXIT-SEMANTIC-PARITY-R1
+  semantics_id: factory-exit.closed-bars.v1:51758284b0b961695203b5cbc1569dfb1d5805a68506d594a40a5d5df30d3fcc
+  evidence:
+    - trader/strategy/exit_policy.py
+    - trader/engine/versioned_exits.py
+    - trader/engine/paper.py
+    - trader/engine/exits.py
+    - trader/strategy/vector_backtest.py
+    - trader/strategy/factory_handoff.py
+    - trader/research/runner.py
+    - trader/research/referee.py
+    - docs/superpowers/reports/2026-10-01-admitted-exit-semantic-parity-r1-matrix.json
+    - tests/test_admitted_exit_semantic_parity.py
+    - tests/test_research_referee.py
+  contract:
+    observations: consecutive closed bars on frozen spec timeframe after signal bar
+    reference: signal bar close with rolling mean True Range(14) through that bar
+    stop_floor: 0.004
+    same_bar: open gap then stop then target then unconditional max_bars; both range hits choose stop and expose ambiguity
+    trailing: refused until causal parity exists
+    signal_exit: refused
+    final_target: full remaining quantity, reason target
+    semantics_receipts: referee evidence, validation, exact install, paper trade identity, and probation bind exit_semantics_id
+  supported: [atr_stop, percent_stop, rr_target, atr_target, percent_target, target_none, trail_none, max_bars]
+  refused: [atr_trailing, signal_exit, swing_stop, undeclared_partial, undeclared_flip, regime_exit, unknown_exit_fields]
+  parity: RESEARCH_TESTED_PAPER_TESTED_LIVE_ADAPTER_TESTED
+  strategy_factory: TESTED_NOT_PROVEN
+  first_live: BLOCKED_BY_EXISTING_CAPACITY_AND_APPROVAL_FENCES
+  effective_capacity: UNAVAILABLE
+  paper_economic_probation: INCOMPLETE_COST_EVIDENCE
+  runtime_deployment: NOT_DEPLOYED
+  trading_behavior_changed: NO_NEW_REAL_AUTHORITY
+  operations: package committed and branch pushed by owner authorization; no orders, process restart, production write, research activation, Risk limit change, owner approval change, frontend/M4 or deployment
+  review_correction:
+    package: LUFFY-ADMITTED-EXIT-SEMANTIC-PARITY-REVIEW-FIX-R1
+    prior_review: FIX_REQUIRED_P1_TRADE_EXIT_SEMANTICS_EVIDENCE
+    status: PASS
+    final_recheck: EXIT_SEMANTICS_FINAL_RECHECK_PASS
+    safe_to_commit: YES
+    validation: 26 focused tests passed plus independent temporary-journal mismatch, receipt-reuse and rehashed-tampering probes
+    progress_increase: false
+    evidence:
+      - trader/engine/paper_exit_evidence.py
+      - tests/test_exit_semantics_probation_binding.py
+    facts:
+      - prospective paper exits retain exact semantics identity and canonical observations for replay; no historical backfill
+      - probation and approval re-verification require matching frozen semantics, canonical transition replay and final state; conflicting or missing evidence is INCOMPLETE_EXIT_SEMANTICS_EVIDENCE
+      - complete exit evidence still requires complete cost evidence; unknown production costs remain INCOMPLETE_COST_EVIDENCE

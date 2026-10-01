@@ -133,7 +133,8 @@ class Combination:
         nothing has measured yet.
         """
         h = self.hash
-        return StrategySpec(
+        from ..strategy.exit_policy import bind_research
+        return bind_research(StrategySpec(
             id=f"research_{h}", name=f"search {h} {self.tf} {self.geo}",
             thesis=_THESIS, invalidation=_INVALIDATION,
             provenance={"source_kind": "research", "round": self.round,
@@ -143,7 +144,7 @@ class Combination:
             timeframe=self.tf, direction="both",
             entry_long=self.long, entry_short=self.short, filters=[],
             exit=GEOS[self.geo], regime_filter=[], markets=["futures"],
-            data_requires=list(self.requires))
+            data_requires=list(self.requires)))
 
     # ── transport ────────────────────────────────────────────────────────
     def as_dict(self) -> dict:
@@ -169,7 +170,11 @@ def evaluated_record(c: Combination) -> dict:
     it alone cannot say which numbers were tested; this record can, and a
     version built later is reconstructed from it, never from the gauges as
     they are measured then."""
-    return {"schema": EVALUATED_SCHEMA, "hash": c.hash, "combo": c.as_dict(),
+    from dataclasses import asdict
+    from ..strategy.exit_policy import EXIT_SEMANTICS_ID, unsupported
+    ex = c.to_spec().exit
+    return {"exit_semantics_id": EXIT_SEMANTICS_ID if not unsupported(ex) else None,
+            "exit_spec": asdict(ex), "schema": EVALUATED_SCHEMA, "hash": c.hash, "combo": c.as_dict(),
             "entry_long": c.long, "entry_short": c.short,
             "requires": list(c.requires)}
 
