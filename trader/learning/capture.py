@@ -10,7 +10,7 @@ import sqlite3
 from . import foundation as L
 
 SCHEMA = 'learning-replay-manifest.v1'
-TABLES = ('learning_source_blobs', 'learning_registrations', 'learning_outcome_captures', 'learning_actions', 'learning_decision_source_manifests')
+TABLES = ('learning_source_blobs', 'learning_registrations', 'learning_outcome_captures', 'learning_actions', 'learning_decision_source_manifests', 'learning_produced_chains')
 DURABLE = {'strategy_versions': ('version_id', 'canonical_json'),
            'research_bank_objects': ('bank_object_id', 'canonical_json'),
            'research_questions': ('question_id', 'canonical_json'),
@@ -23,14 +23,15 @@ ROLES = ('cycle', 'decision', 'data', 'world', 'context', 'strategy', 'exit_sema
          'portfolio', 'risk_config', 'proposal', 'intent', 'reasons', 'action',
          'control', 'economics', 'risk_decision', 'execution', 'trade', 'cost', 'funding', 'derivative_identity',
          'execution_reference', 'position_basis', 'question', 'plan', 'research_evidence',
-         'falsifier_result', 'bank', 'outcome', 'prediction', 'research_run')
+         'falsifier_result', 'bank', 'outcome', 'prediction', 'research_run', 'opportunity')
 TRADING = {'cycle', 'decision', 'data', 'world', 'context', 'portfolio', 'risk_config', 'control', 'reasons', 'action', 'outcome'}
 RESEARCH = {'question', 'plan', 'research_evidence', 'falsifier_result', 'bank', 'outcome', 'research_run'}
-POST = {'action', 'risk_decision', 'execution', 'trade', 'cost', 'funding', 'execution_reference', 'position_basis', 'falsifier_result', 'bank', 'outcome', 'prediction', 'research_run'}
+POST = {'action', 'risk_decision', 'execution', 'trade', 'cost', 'funding', 'execution_reference', 'position_basis', 'falsifier_result', 'bank', 'outcome', 'prediction', 'research_run', 'opportunity'}
 
 
 def ensure(db):
-    definitions = {'learning_decision_source_manifests': 'manifest_id TEXT PRIMARY KEY,event_key TEXT UNIQUE NOT NULL,payload TEXT NOT NULL',
+    definitions = {'learning_produced_chains': 'outcome_id TEXT PRIMARY KEY,payload TEXT NOT NULL',
+        'learning_decision_source_manifests': 'manifest_id TEXT PRIMARY KEY,event_key TEXT UNIQUE NOT NULL,payload TEXT NOT NULL',
         'learning_source_blobs': 'sha256 TEXT PRIMARY KEY,payload TEXT NOT NULL',
         'learning_registrations': 'event_key TEXT PRIMARY KEY,registration_id TEXT UNIQUE NOT NULL,payload TEXT NOT NULL',
         'learning_outcome_captures': 'outcome_key TEXT PRIMARY KEY,outcome_id TEXT UNIQUE NOT NULL,payload TEXT NOT NULL',
@@ -128,6 +129,10 @@ def required(kind, lineage, *, profile='TRADING'):
     if kind == L.Kind.EXECUTED.value:
         roles |= {'strategy', 'exit_semantics', 'execution', 'trade', 'cost', 'funding',
                   'derivative_identity', 'execution_reference', 'position_basis', 'risk_decision'}
+    if kind == L.Kind.EXECUTION.value:
+        roles |= {'execution', 'trade'}
+    if kind == L.Kind.MISSED.value:
+        roles.add('opportunity')
     if kind == L.Kind.RISK_BLOCKED.value:
         roles.add('risk_decision')
     return roles
@@ -237,6 +242,9 @@ def attach(db, event_key, outcome_key, kind, boundary, observation, observed_ms,
         body['decision_source_manifest'] = D.load(db, reg['decision_source_manifest_id'])
     oid = L.digest(body)
     insert(db, 'learning_outcome_captures', 'outcome_key', outcome_key, (outcome_key, oid, L.canonical(body)))
+    from .producers import materialize
+    if boundary != L.Boundary.UNRESOLVED:
+        materialize(db, oid)
     return oid
 
 
@@ -534,6 +542,8 @@ def validate_chain(body,sources,blobs):
             from trader.engine.trade_accounting import replay as accounting_replay
             accounting=accounting_replay(whole)['accounting']
             trade=whole['bookings']['trade']
+            from .producers import verify_trade_binding
+            verify_trade_binding(body['registration'], sources.get('trade_identity', out.get('trade_identity')), trade)
             if trade['decision_id']!=body['lineage']['decision_id'] or trade['strategy_id']!=body['lineage'].get('strategy_id'):
                 raise ValueError('realized_decision_strategy_binding_differs')
             for role in ('cost','funding'):
@@ -551,7 +561,11 @@ def validate_chain(body,sources,blobs):
                           or basis['timestamp_ms']!=whole['observed_ms'] or basis['trade_id']!=trade_id):
                 raise ValueError('realized_position_basis_differs')
             identity=sources.get('derivative_identity')
-            if identity and (identity['environment']!=whole['environment'] or identity['venue']!=whole['venue']):
+            # Explicit provider spelling for the same Binance USD-M venue.
+            # No symbol/time join or cross-environment substitution.
+            aliases={'binance_usdm':'binanceusdm','binanceusdm':'binanceusdm'}
+            if identity and (identity['environment']!=whole['environment'] or
+                    aliases.get(identity['venue'],identity['venue'])!=aliases.get(whole['venue'],whole['venue'])):
                 raise ValueError('realized_derivative_environment_differs')
     if 'risk_decision' in sources and 'risk_config' in sources:
         if sources['risk_decision'].get('config_risk_sha256')!=L.digest(sources['risk_config']['risk']):
@@ -569,6 +583,8 @@ def validate_chain(body,sources,blobs):
                 P.freeze_source(db,raw)
             if P.build(db,cost['binding'],cost['source_ids'])!=cost:
                 raise ValueError('paper_cost_replay_differs')
+    from .producers import validate
+    validate(body, sources)
     if out.get('protocol')=='existing-forward-outcome.v1':
         import pandas as pd
         from trader.cognition.outcomes import timestamp

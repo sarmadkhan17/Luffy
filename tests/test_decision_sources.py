@@ -99,8 +99,13 @@ def test_direct_prospective_producers_to_manifest_outcome_learning(producer):
 def test_nontrade_replay_needs_no_executed_trade(producer,kind):
     j=producer[0];oid=resolve(producer,kind)
     o,s,r,e=chain(j,oid)
-    assert r.status=='COMPLETE',r.faults
-    assert e.quality=='VERIFIED_REPLAY' and o.boundary==F.Boundary.COUNTERFACTUAL
+    if kind==F.Kind.MISSED:
+        assert r.status=='INCOMPLETE' and 'missing:opportunity' in r.faults
+        assert e.quality=='NON_AUTHORITATIVE'
+    else:
+        assert r.status=='COMPLETE',r.faults
+        assert e.quality=='VERIFIED_REPLAY'
+    assert o.boundary==F.Boundary.COUNTERFACTUAL
     assert j.query('SELECT * FROM trades')==[]
 
 

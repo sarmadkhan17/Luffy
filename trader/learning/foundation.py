@@ -29,6 +29,8 @@ class Kind(str, Enum):
     CASH = 'SKIPPED_CASH'
     RESEARCH = 'RESEARCH_RESULT'
     INCIDENT = 'EXECUTION_DATA_INCIDENT'
+    EXECUTION = 'EXECUTION_QUALITY'
+    DATA = 'DATA_QUALITY_INCIDENT'
 
 
 class Boundary(str, Enum):
@@ -158,12 +160,13 @@ class Attribution:
 def attribute(outcome):
     # Lineage establishes identities only. It does not identify causes.
     l = outcome.lineage
+    operational = outcome.kind in (Kind.EXECUTION, Kind.DATA, Kind.INCIDENT)
     present = dict(hypothesis_research=outcome.kind == Kind.RESEARCH,
         strategy_version=bool(l.version_id), regime_world=bool(l.world_id),
         portfolio_interaction=bool(l.proposal_id), sizing=bool(l.intent_id),
         execution_quality=bool(l.execution_ids), costs=bool(l.execution_ids),
         risk_intervention=bool(l.risk_decision_id), data_quality=bool(outcome.sources))
-    return Attribution(outcome.outcome_id, tuple((d, Support.DESCRIPTIVE if present[d]
+    return Attribution(outcome.outcome_id, tuple((d, Support.NA if operational and d in ('hypothesis_research', 'strategy_version', 'regime_world') else Support.DESCRIPTIVE if present[d]
         else Support.NA if d in ('execution_quality', 'costs') and outcome.kind != Kind.EXECUTED
         else Support.UNKNOWN, 'identity/observation only; causal effect unknown') for d in DIMENSIONS))
 

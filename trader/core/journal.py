@@ -838,11 +838,12 @@ class Journal:
             cursor = c.execute("INSERT INTO brain_events(ts,kind,subject,detail) VALUES (?,?,?,?)",
                       (now_utc().isoformat(), kind, subject,
                        detail if isinstance(detail, str) else json.dumps(detail)))
-            if kind in ('execution_incident', 'data_quality_incident', 'execution_error', 'data_error'):
+            if kind in ('execution_incident', 'data_quality_incident', 'execution_error', 'data_error', 'stale_data',
+                        'malformed_evidence', 'required_input_unavailable', 'source_failure'):
                 from ..learning import capture as lc, capture_runtime as lr
                 from ..cognition.outcomes import timestamp
                 lc.safely(c, 'incident:'+str(cursor.lastrowid), lr.incident, cursor.lastrowid,
-                          timestamp(now_utc().isoformat()), subject, detail)
+                          timestamp(now_utc().isoformat()), subject, detail, incident_kind=kind)
 
     # -- control state ----------------------------------------------------
     def kv_get(self, key: str, default: str | None = None) -> str | None:

@@ -187,6 +187,10 @@ def test_automatic_research_bank_chain_capture(tmp_path):
     assert m['sources']['bank']['result_status']=='INCONCLUSIVE'
     assert m['sources']['question']['question_id']==m['sources']['bank']['question']['question_id']
     assert chain(j,rows[0]['outcome_id'])[3].quality=='VERIFIED_REPLAY'
+    from trader.learning.producers import materialize
+    captured=materialize(j._conn(),rows[0]['outcome_id'])
+    assert captured['authoritative'] and captured['proposal']['proposed_json'] is None
+    assert json.loads(captured['outcome']['observation_json'])['result_status']=='INCONCLUSIVE'
 
 
 def test_missing_original_registration_no_legacy_backfill(tmp_path):
@@ -263,6 +267,10 @@ def test_realized_exact_accounting_cost_funding_and_risk_path(prospective,monkey
         C.register(db,'decision:d',L.Kind.REJECTED.value,reg['lineage'],CUT,deps)
         C.record_action(db,'decision:d',{'action':'EXECUTED'},CUT+1000)
         C.record_action(db,'decision:d',{'ok':True,'config_risk_sha256':L.digest({'limit':.01})},CUT+10,risk=True)
+        identity=dict(status='VERIFIED',version_id=version['version_id'],spec_sha256=version['spec_hash'],
+            strategy_id=version['strategy_id'],decision=dict(decision_id='d',cycle_id=reg['lineage']['cycle_id']))
+        db.execute('INSERT INTO trades(id,decision_id,strategy_id,status,exec_mode,entry_identity_json,symbol,side,amount,entry_price,opened_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+            ('trade','d',version['strategy_id'],'closed','live',json.dumps(identity),'BTC/USDT','long',1,100,'2026-01-01T00:00:01+00:00'))
         oid=R.verified_trade(db,receipt)
         assert R.verified_trade(db,receipt)==oid
         assert R.verified_trade(db,A.verified_outcome(whole,CUT+7000))==oid
@@ -302,7 +310,10 @@ def test_automatic_forward_resolver_keeps_closed_postdecision_bars(prospective,m
     import pandas as pd
     from trader.engine.outcomes import resolve_pending
     import trader.core.journal as JM
-    j,d,_=prospective
+    j,old,inputs=prospective
+    from dataclasses import replace
+    d=replace(old,id='rejected-forward',action=Action.BUY)
+    j.log_decision(d,capture_inputs=inputs)
     monkeypatch.setattr(JM,'now_utc',lambda:datetime.fromtimestamp(CUT/1000,timezone.utc))
     j.schedule_outcome(d.id,d.cycle_id,d.symbol,d.ts,'BUY',100)
     class Feed:

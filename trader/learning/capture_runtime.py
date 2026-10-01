@@ -192,10 +192,13 @@ def booking(db, trade_id, receipt):
     dep=freeze(db,'execution',receipt,at_ms,'existing trade-booking.v1')
     action=C.record_action(db,event,dict(action='EXECUTED',trade_id=trade_id,exec_mode=trade['exec_mode']),at_ms)
     closed=trade['status']=='closed'
-    observation={'reason':'booking_not_complete_realized_accounting' if closed else 'awaiting_trade_outcome'}
+    observation={'reason':'booking_not_complete_realized_accounting' if closed else 'awaiting_trade_outcome',
+                 'monetary_status':'UNAVAILABLE','gross_pnl':None,'net_pnl':None,'fees':None,'funding':None}
     deps=[dep,action,freeze(db,'trade',trade,at_ms,'exact journal booking state; money unverified'),
           freeze(db,'outcome',dict(observation=observation,booking=receipt),at_ms,'original booking event')]
     order_id=receipt['evidence'].get('order_id')
+    from .producers import execution_quality
+    execution_quality(db,trade,receipt)
     return C.attach(db,event,'booking:'+receipt['sha256'],L.Kind.EXECUTED.value,
         L.Boundary.UNASSESSABLE.value if closed else L.Boundary.UNRESOLVED.value,
         observation,at_ms,deps,
@@ -206,14 +209,12 @@ def forward(db, original, updates, targets, now_ms):
     event='decision:'+original['decision_id']
     _,reg=C.registration(db,event)
     # Registered reasons and initial action are frozen; no text-based Risk inference.
-    latest=db.execute('SELECT * FROM decisions WHERE id=?',(original['decision_id'],)).fetchone()
-    if latest and latest['executed']:
-        # A price path is still unrealized; it cannot replace the trade's monetary result.
-        kind=L.Kind.EXECUTED.value
-    else:
-        kind=reg['kind']
+    kind=reg['kind']
+    if kind in (L.Kind.CASH.value,L.Kind.MISSED.value):
+        from .producers import opportunity
+        opportunity(reg,{d['role']:C.resolve(db,d) for d in reg['dependencies'] if d['status']=='AVAILABLE'})
     action_rows=db.execute('SELECT payload FROM learning_actions WHERE event_key=?',(event,)).fetchall()
-    actions=sorted([json.loads(r[0])['dependency'] for r in action_rows],
+    actions=sorted([json.loads(r[0])['dependency'] for r in action_rows if json.loads(r[0])['dependency']['available_ms']<=now_ms],
                    key=lambda d:(d['available_ms'],d['sha256']))
     risk=[d for d in actions if d['role']=='risk_decision']
     if risk and C.resolve(db,risk[-1]).get('ok') is False:
@@ -222,7 +223,8 @@ def forward(db, original, updates, targets, now_ms):
     action_dep=next((d for d in reversed(actions) if d['role']=='action' and 'prediction' not in C.resolve(db,d)),None)
     if action_dep: deps.append(action_dep)
     if risk: deps.append(risk[-1])
-    observation=dict(measurement='counterfactual_price_return_not_money', returns=updates)
+    observation=dict(measurement='counterfactual_price_return_not_money', returns=updates,
+        original_rejection=reg['kind'], original_reasons=next((C.resolve(db,d) for d in reg['dependencies'] if d['role']=='reasons' and d['status']=='AVAILABLE'),None))
     prediction_rows=[d for d in actions if d['role']=='action' and 'prediction' in C.resolve(db,d)]
     declaration=C.resolve(db,prediction_rows[0])['prediction'] if prediction_rows else {k:original[k] for k in ('decision_id','cycle_id','symbol','ts','action','entry_price')}
     if prediction_rows:
@@ -277,13 +279,15 @@ def investigation_research(db,chain,bank,recorded_ms):
     return C.attach(db,key,key,L.Kind.RESEARCH.value,L.Boundary.REALIZED.value,observation,recorded_ms,deps)
 
 
-def incident(db,event,at_ms,subject,detail):
+def incident(db,event,at_ms,subject,detail,*,incident_kind='data_quality_incident'):
     key='incident:'+str(event)
     lineage=asdict(L.Lineage(None,None,None))
     deps=[freeze(db,'data',dict(subject=subject,detail=detail),at_ms,'original incident producer')]
-    C.register(db,key,L.Kind.INCIDENT.value,lineage,at_ms,deps,profile='INCIDENT')
-    return C.attach(db,key,key,L.Kind.INCIDENT.value,L.Boundary.UNASSESSABLE.value,
-                    dict(subject=subject,detail=detail,reason='incident causal linkage unavailable'),at_ms)
+    kind=L.Kind.INCIDENT if incident_kind in ('execution_incident','execution_error') else L.Kind.DATA
+    C.register(db,key,kind.value,lineage,at_ms,deps,profile='INCIDENT')
+    observation=dict(subject=subject,detail=detail,reason='incident causal linkage unavailable',market_conclusion='NOT_APPLICABLE')
+    out=freeze(db,'outcome',dict(protocol='data-quality.v1' if kind==L.Kind.DATA else 'operational-incident.v1',observation=observation),at_ms,'existing operational incident')
+    return C.attach(db,key,key,kind.value,L.Boundary.UNASSESSABLE.value,observation,at_ms,[out])
 
 
 def runtime_inputs(journal, snap, config, *, cut_ms, additional_original_inputs=None, control_state=None):
@@ -306,11 +310,12 @@ def missed_snapshot(db,scan_id,symbol,at_ms):
     lineage=asdict(L.Lineage(scan_id,None,None))
     deps=[C.unavailable('data','SNAPSHOT_PRODUCER_RETURNED_NONE'),
           freeze(db,'reasons',{'symbol':symbol,'reason':'missing_snapshot'},at_ms,'Kernel scan skip')]
-    C.register(db,key,L.Kind.MISSED.value,lineage,at_ms,deps)
+    C.register(db,key,L.Kind.DATA.value,lineage,at_ms,deps)
     action=C.record_action(db,key,{'action':'SKIPPED','symbol':symbol},at_ms)
-    out=freeze(db,'outcome',{'observation':{'reason':'no_original_snapshot_or_registered_future_measurement'}},at_ms,'observed scan skip')
-    return C.attach(db,key,key,L.Kind.MISSED.value,L.Boundary.UNASSESSABLE.value,
-        {'reason':'no_original_snapshot_or_registered_future_measurement'},at_ms,[action,out])
+    observation={'reason':'no_original_snapshot_or_registered_future_measurement','market_conclusion':'NOT_APPLICABLE'}
+    out=freeze(db,'outcome',{'protocol':'data-quality.v1','observation':observation},at_ms,'observed snapshot source failure')
+    return C.attach(db,key,key,L.Kind.DATA.value,L.Boundary.UNASSESSABLE.value,
+        observation,at_ms,[action,out])
 
 
 def bind_signal_version(db, inputs, row):
@@ -372,14 +377,24 @@ def verified_trade(db, receipt):
     accounting=accounting_replay(whole)['accounting']
     trade=whole['bookings']['trade']
     event='decision:'+trade['decision_id']
-    C.registration(db,event)
+    _,reg=C.registration(db,event)
+    identity_row=db.execute('SELECT entry_identity_json FROM trades WHERE id=?',(trade['id'],)).fetchone()
+    identity=json.loads(identity_row[0]) if identity_row and identity_row[0] else None
+    from .producers import verify_trade_binding
+    verify_trade_binding(reg,identity,trade)
     key='verified-trade:'+whole['sha256']
     previous=C.existing_outcome(db,key)
     if previous: return previous
-    cut=receipt['imported_ms']
-    observation=dict(net_pnl=receipt['actual_execution']['net_pnl'],
+    cut=receipt['available_ms']
+    fills=accounting['fills']
+    observation=dict(gross_pnl=sum(f['realized_pnl'] for f in fills),fees=sum(f['commission'] for f in fills),
+                     funding=accounting['funding_net'], monetary_status='VERIFIED',
+                     holding_duration_ms=max(f['event_ms'] for f in fills)-min(f['event_ms'] for f in fills),
+                     exit_reason=whole['bookings']['receipts'][-1]['kind'],
+                     intervention=whole['bookings']['receipts'][-1]['evidence'].get('exit_authority','UNAVAILABLE'),
+                     slippage='UNAVAILABLE', net_pnl=receipt['actual_execution']['net_pnl'],
                      currency=receipt['actual_execution']['currency'],environment=whole['environment'])
-    deps=[freeze(db,'outcome',dict(observation=observation,typed_receipt=receipt),cut,'verified whole-trade outcome'),
+    deps=[freeze(db,'outcome',dict(observation=observation,typed_receipt=receipt,trade_identity=identity),cut,'verified whole-trade outcome'),
           freeze(db,'execution',whole,cut,'existing whole-trade-accounting.v1'),
           freeze(db,'trade',trade,cut,'verified whole-trade booking export'),
           freeze(db,'cost',accounting,cut,'exact fill/commission accounting'),
@@ -481,4 +496,17 @@ def journalize_allocation(journal, snap, decision, config, receipt, proposal, al
     inputs.update(carried)
     journal.log_cycle(snap, decision.cycle_id, 'prospective-allocation-capture')
     journal.log_decision(decision, capture_inputs=inputs)
+    from trader.portfolio.opportunity_registry import Registry
+    registry=Registry(journal.db_path,learning_journal=journal)
+    try:
+        cached=registry.db.execute('SELECT payload FROM opportunities WHERE opportunity_id=?',(c.opportunity_id,)).fetchone()
+        registered=json.loads(cached[0]) if cached else registry.observe(receipt.context,decision.cycle_id,p['candidate_id'],c.version_id)
+        if receipt.context.canonical_json not in registered.get('context_jsons',[]):
+            raise ValueError('allocator_registry_context_differs')
+        if registered['opportunity_id']!=c.opportunity_id:
+            raise ValueError('allocator_registry_identity_differs')
+        if proposal.payload()['result']['decision'] in ('CASH','NO_ALLOCATION'):
+            registry.resolve(c.opportunity_id,'SKIPPED',proposal.proposal_id,allocation_inputs.as_of_ms)
+    finally:
+        registry.close()
     return intents[0]

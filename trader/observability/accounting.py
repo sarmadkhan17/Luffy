@@ -1,4 +1,4 @@
-"""Off-path demo accounting queue. No order writes or automatic memory import.
+"""Off-path demo accounting queue. No order writes or live learning application.
 
 One process owns the queue lock. Attempts are reserved durably before capture;
 crash recovery replays any complete file before deciding to retry. Evidence is
@@ -139,12 +139,38 @@ def step(journal, directory, exchange_factory, *, now_ms=None, max_trades=2):
                                (json.dumps(['capture_failed:' + type(exc).__name__]), aid))
             finish(db, (aid, tid, str(path)), int(time.time()*1000) if now_ms is None else now)
             attempted += 1
+        learning = deliver_completed(db, journal)
         counts = dict(db.execute('SELECT status,count(*) FROM jobs GROUP BY status'))
         return dict(schema_version='accounting-worker-health.v1', updated_ms=int(time.time()*1000),
                     status='capacity_retry' if capacity_blocked or storage_blocked else 'ok',
                     scanned_receipts=scanned, attempted=attempted, jobs=counts,
                     capacity_blocked=capacity_blocked, storage_blocked=storage_blocked,
-                    automatic_memory_import=False)
+                    automatic_memory_import=False, learning_delivery=learning)
+
+
+def deliver_completed(db, journal):
+    from trader.learning import producers
+    db.execute('CREATE TABLE IF NOT EXISTS learning_deliveries(attempt_id TEXT PRIMARY KEY,outcome_id TEXT NOT NULL)')
+    report=dict(delivered=0,retry=0,unbound=0)
+    rows=db.execute("SELECT id,path FROM attempts WHERE status='complete' AND id NOT IN (SELECT attempt_id FROM learning_deliveries) ORDER BY started_ms,id LIMIT 2").fetchall()
+    for aid,path in rows:
+        try:
+            oid=producers.deliver_accounting(journal,json.loads(Path(path).read_text()))
+            if oid is None:
+                report['retry']+=1
+                continue
+            with db:
+                db.execute('INSERT INTO learning_deliveries VALUES (?,?)',(aid,oid))
+            report['delivered']+=1
+        except ValueError as exc:
+            # Missing historical identity is terminal, not a retry that can
+            # starve prospective receipts. Never create a historical registration.
+            with db:
+                db.execute('INSERT INTO learning_deliveries VALUES (?,?)',(aid,'UNBOUND:'+str(exc)))
+            report['unbound']+=1
+        except Exception:
+            report['retry']+=1
+    return report
 
 
 class Deadline(BaseException):

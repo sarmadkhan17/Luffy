@@ -5038,3 +5038,72 @@ completed_stage7_decision_replay_source_integration_r1:
   - docs/superpowers/evidence/stage7-decision-replay-source-integration-r1/real-shadow.json
   - docs/superpowers/evidence/stage7-decision-replay-source-integration-r1/baseline-mock-failure.txt
   next_recommended_package: LUFFY-STAGE7-VERIFIED-OUTCOME-PRODUCER-INTEGRATION-R1
+
+
+completed_stage7_verified_outcome_producer_integration_r1:
+  package: LUFFY-STAGE7-VERIFIED-OUTCOME-PRODUCER-INTEGRATION-R1
+  status: PASS
+  capability_state: TESTED_NOT_DEPLOYED
+  branch: luffy-stage7-verified-outcome-producer-integration-r1
+  worktree: /mnt/luffy-data/luffy/workspaces/stage7-verified-outcome-producer-integration-r1
+  base_commit: 1c77fdb
+  committed: true
+  VERIFIED_OUTCOME_PRODUCERS: TESTED
+  PROSPECTIVE_OUTCOME_PIPELINE: TESTED
+  stage7_complete: false
+  realized_trade_binding: EXACT_ORIGINAL_DECISION_VERSION_SPEC_AND_VERIFIED_ENTRY_IDENTITY
+  rejected_outcome_boundary: COUNTERFACTUAL_UNREALIZED_ORIGINAL_REJECTION_FROZEN
+  cash_outcome_boundary: EXACT_REGISTERED_OPPORTUNITY_REQUIRED_NO_MISSED_PROFIT
+  missed_outcome_boundary: EXACT_REGISTERED_RESOLUTION_STATUS_NO_PRICE_MISTAKE_OR_CAUSAL_CLAIM
+  research_outcome_boundary: EXACT_VERIFIED_BANK_CHAIN_NOT_PREDICTIVE_EDGE
+  execution_quality: SEPARATE_OUTCOME_KIND_EXACT_BOOKING_FILL_VERIFICATION
+  data_quality: OPERATIONAL_EVIDENCE_NO_MARKET_CONCLUSION
+  attribution: DESCRIPTIVE_UNKNOWN_OR_NOT_APPLICABLE_NO_INFERRED_CAUSALITY
+  replay_gate: ORIGINAL_VERIFIED_MANIFEST_AND_VERIFIED_OUTCOME_SOURCES_AND_COMPLETE_REQUIRED_DEPENDENCIES
+  registered_rules:
+  - existing-recent-decay.v1
+  live_learning_applications: 0
+  prospective_auto_capture:
+    accounting: EXISTING_OFF_PATH_WORKER_COMPLETED_RECEIPT_DELIVERY_AND_RESTART_RECOVERY
+    finalized_capture: IMMUTABLE_OUTCOME_ATTRIBUTION_REPLAY_EVIDENCE_PROPOSAL
+    opportunity_status: REGISTERED_ALLOCATOR_CANDIDATE_AND_REGISTRY_RESOLUTION_HOOK
+    forward_rejections_and_cash: EXISTING_RESOLVER_EXACT_REGISTRATION
+    research: EXISTING_RESEARCH_BANK_PRODUCER_HOOKS
+    execution: EXISTING_BOOKING_HOOK
+    data_incidents: EXISTING_JOURNAL_AND_MISSING_SNAPSHOT_HOOKS
+  real_shadow:
+    status: PASS
+    realized: 0
+    rejected: 0
+    risk_blocked: 0
+    cash: 0
+    missed: 0
+    research: 0
+    execution_quality: 0
+    data_quality: 0
+    replay_complete: 0
+    replay_incomplete: 705084
+    learning_evidence_created: 0
+    applicable_updates: 0
+    unregistered_retained_decisions: 705084
+    production_mutations: 0
+    venue_calls: 0
+    historical_backfill: NONE
+    scope: Exact retained journal outcomes only; unregistered decisions are incomplete inventory faults, never fabricated outcomes.
+  validation:
+    focused_tests: 212 passed
+    final_followup_checks: 4 passed
+    git_diff_check: PASS
+    graphify_update: AST_ONLY_NO_SEMANTIC_API_USE
+  trading_behavior_changed: false
+  risk_execution_control_mutation: NONE
+  production_deploy_or_restart: NONE
+  live_boundary: Tested paths are not deployed; existing accounting.enabled guard is preserved and normal Kernel missing WorldModel/context sources remain UNAVAILABLE.
+  evidence:
+  - docs/superpowers/reports/2026-10-02-stage7-verified-outcome-producer-integration-r1.md
+  - docs/superpowers/evidence/stage7-verified-outcome-producer-integration-r1/final-tests.txt
+  - docs/superpowers/evidence/stage7-verified-outcome-producer-integration-r1/final-followup-tests.txt
+  - docs/superpowers/evidence/stage7-verified-outcome-producer-integration-r1/snapshot-test.txt
+  - docs/superpowers/evidence/stage7-verified-outcome-producer-integration-r1/real-shadow.json
+  - docs/superpowers/evidence/stage7-verified-outcome-producer-integration-r1/final-graphify-update.txt
+  next_recommended_package: LUFFY-STAGE7-LEARNING-APPLICATION-INTEGRATION-R1

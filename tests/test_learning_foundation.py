@@ -282,8 +282,8 @@ def test_detached_learning_has_no_runtime_caller_or_order_control_mutation():
             for node in ast.walk(tree):
                 if isinstance(node, ast.ImportFrom):
                     if (node.module or '').startswith('trader.learning'):
-                        assert node.module in ('trader.learning', 'trader.learning.capture_runtime'), path
-                        assert {a.name for a in node.names} <= {'capture','capture_runtime','runtime_inputs'}, path
+                        assert node.module in ('trader.learning', 'trader.learning.capture_runtime', 'trader.learning.producers'), path
+                        assert {a.name for a in node.names} <= {'capture','capture_runtime','runtime_inputs','producers'}, path
                 if isinstance(node, ast.Import):
                     assert all(not alias.name.startswith('trader.learning') for alias in node.names), path
     tree = ast.parse(Path('trader/learning/foundation.py').read_text())
