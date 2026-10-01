@@ -129,7 +129,7 @@ CAPACITY = cap.CONTRACT_REF
 
 _TABLES = ("strategy_versions", "strategy_validation_receipts",
            "strategy_version_installs", "strategy_probation_receipts", "strategy_approval_requests",
-           "strategy_approval_decisions", "strategy_version_events")
+           "strategy_approval_decisions", "strategy_version_events", "strategy_governor_events")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS strategy_versions (
@@ -196,6 +196,9 @@ CREATE TABLE IF NOT EXISTS strategy_version_events (
     at_ms INTEGER NOT NULL,
     UNIQUE (version_id, to_state)
 );
+CREATE TABLE IF NOT EXISTS strategy_governor_events(
+ seq INTEGER PRIMARY KEY AUTOINCREMENT, version_id TEXT NOT NULL,
+ to_state TEXT NOT NULL, canonical_json TEXT NOT NULL, canonical_sha256 TEXT NOT NULL);
 """ + "".join(
     f"""CREATE TRIGGER IF NOT EXISTS {t}_no_update BEFORE UPDATE ON {t}
 BEGIN SELECT RAISE(ABORT, '{t} is immutable'); END;
@@ -267,6 +270,13 @@ def events(journal, version_id: str) -> list:
 
 
 def state_of(journal, version_id: str) -> str | None:
+    if journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_governor_events'"):
+        rows = journal.query("SELECT to_state FROM strategy_governor_events WHERE version_id=? ORDER BY seq DESC LIMIT 1", (version_id,))
+        if rows:
+            ev = governor_events(journal,version_id)
+            if rows[0]['to_state'] != ev[-1]['to_state']:
+                _refuse('governor_index_differs')
+            return ev[-1]['to_state']
     ev = events(journal, version_id)
     return ev[-1]["to_state"] if ev else None
 
@@ -1125,6 +1135,10 @@ def retire_version(journal, version_id: str, to_state: str, *,
     if to_state not in (DEGRADED, RETIRED):
         _refuse("not_a_retirement_state")
     load_version(journal, version_id)
+    if state_of(journal, version_id) in (APPROVED_FIRST_LIVE, "ACTIVE", "PAUSED", "REACTIVATED") or journal.query(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_governor_events'") and journal.query(
+            "SELECT 1 FROM strategy_governor_events WHERE version_id=?", (version_id,)):
+        return govern_version(journal, {}, version_id, to_state, reason_code=reason_code, actor=actor, at_ms=at_ms)
     with journal._tx() as c:
         _begin(c)
         out = _transition(c, version_id, to_state, reason_code, None, actor,
@@ -1166,7 +1180,8 @@ class FirstLiveEligibility:
 
 def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
                             available_inputs=None, capacity_receipt_id=None,
-                            now_ms: int | None = None) -> FirstLiveEligibility:
+                            now_ms: int | None = None,
+                            _governor_resume=False) -> FirstLiveEligibility:
     """True only when the immutable version, its validation evidence, its
     exact paper install (still the installed spec), its probation receipt
     and an exact-version owner approval all re-verify now, it is not degraded/retired/rejected, and every input the compiled
@@ -1199,6 +1214,11 @@ def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
         if bad in reached:
             reasons.append(f"version_{bad.lower()}")
     cur = reached[-1] if reached else None
+    governed = state_of(journal, version_id)
+    if governed != cur and not _governor_resume:
+        reasons.append(f"governor_state:{governed}")
+    if governed == RETIRED or (governed == DEGRADED and not _governor_resume):
+        reasons.append('version_' + governed.lower())
     if cur != APPROVED_FIRST_LIVE:
         reasons.append(f"state_not_approved:{cur}")
     val = check(verify_validation, journal, v)
@@ -1307,3 +1327,91 @@ def live_entry_block(journal, strategy_id: str) -> str | None:
         return "version_first_live_activation_absent"
     except Exception as e:                              # noqa: BLE001
         return f"version_authority_unreadable:{type(e).__name__}"
+
+
+# One post-validation lifecycle authority. These receipts govern lifecycle and
+# allocation only; they do NOT change the separate live execution fence.
+GOVERNOR_SCHEMA = "strategy-governor-event.v1"
+GOVERNOR_ALLOWED = {
+    APPROVED_FIRST_LIVE: {"ACTIVE", "PAUSED", DEGRADED, RETIRED},
+    "ACTIVE": {"ACTIVE", "PAUSED", DEGRADED, RETIRED},
+    "REACTIVATED": {"ACTIVE", "PAUSED", DEGRADED, RETIRED},
+    "PAUSED": {"REACTIVATED", DEGRADED, RETIRED},
+    DEGRADED: {"PAUSED", "REACTIVATED", RETIRED},
+    RETIRED: set(),
+}
+
+
+def governor_events(journal, version_id):
+    if not journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_governor_events'"):
+        return []
+    rows = journal.query("SELECT canonical_json,canonical_sha256 FROM strategy_governor_events WHERE version_id=? ORDER BY seq", (version_id,))
+    result, previous = [], None
+    for row in rows:
+        event = json.loads(row['canonical_json'])
+        if (event['version_id'] != version_id or event['spec_hash'] != load_version(journal,version_id)['spec_hash']
+                or _sha(row['canonical_json']) != row['canonical_sha256']
+                or canonical(event) != row['canonical_json']
+                or event['previous_sha256'] != previous):
+            _refuse('governor_replay_differs')
+        previous = row['canonical_sha256']
+        result.append(event)
+    return result
+
+
+def govern_version(journal, cfg, version_id, to_state, *, actor, reason_code,
+                   at_ms, allocation=None, available_inputs=None,
+                   capacity_receipt_id=None):
+    """Owner establishes an allocation ceiling for this approved exact version.
+    Governor may subsequently reduce, stop or restore inside that ceiling.
+    Resume always rechecks approval, costs, installation, capacity and Risk
+    configuration. A changed spec is a different version with no such grant.
+    No network, activation, orders, or changes to global control/Risk.
+    """
+    ensure(journal)
+    v = load_version(journal, version_id)
+    if actor not in OWNER_ACTORS and actor != 'strategy_governor' and not (actor == 'factory' and to_state in (DEGRADED,RETIRED)):
+        _refuse('governor_actor_invalid')
+    if not reason_code or type(at_ms) is not int:
+        _refuse('governor_reason_or_clock_missing')
+    history = governor_events(journal, version_id)
+    cur = state_of(journal, version_id)
+    if to_state not in GOVERNOR_ALLOWED.get(cur, set()):
+        _refuse('governor_transition_not_allowed')
+    if history and at_ms < history[-1]['at_ms']:
+        _refuse('governor_clock_regressed')
+    ceiling = history[-1]['allocation_ceiling'] if history else None
+    risk_sha = history[-1]['risk_sha256'] if history else None
+    owner_decision_id = history[-1].get('owner_decision_id') if history else None
+    if to_state in ('ACTIVE', 'REACTIVATED'):
+        if ceiling is None and actor not in OWNER_ACTORS:
+            _refuse('governor_owner_boundaries_required')
+        if isinstance(allocation, bool) or not isinstance(allocation, (int,float)) or not math.isfinite(allocation) or not 0 < allocation <= 1:
+            _refuse('governor_allocation_invalid')
+        if ceiling is None:
+            ceiling, risk_sha = allocation, _jsha(cfg['risk'])
+        if allocation > ceiling or _jsha(cfg['risk']) != risk_sha:
+            _refuse('governor_owner_boundaries_changed')
+        eligibility = eligible_for_first_live(journal, version_id, cfg=cfg,
+            available_inputs=available_inputs, capacity_receipt_id=capacity_receipt_id, now_ms=at_ms,
+            _governor_resume=True)
+        if not eligibility.eligible:
+            _refuse('governor_evidence_unavailable:' + ','.join(eligibility.reasons))
+        owner_decision_id = eligibility.decision_id
+    else:
+        allocation = 0
+    body = dict(schema=GOVERNOR_SCHEMA, version_id=version_id,
+        spec_hash=v['spec_hash'], from_state=cur, to_state=to_state, actor=actor,
+        reason_code=reason_code, at_ms=at_ms, allocation=allocation,
+        allocation_ceiling=ceiling, risk_sha256=risk_sha,
+        capacity_receipt_id=capacity_receipt_id, owner_decision_id=owner_decision_id,
+        previous_sha256=_sha(canonical(history[-1])) if history else None,
+        grants='LIFECYCLE_ALLOCATION_ONLY; LIVE_EXECUTION_FENCE_PRESERVED')
+    text = canonical(body)
+    with journal._tx() as c:
+        _begin(c)
+        if state_of(journal, version_id) != cur or len(governor_events(journal, version_id)) != len(history):
+            _refuse('governor_state_changed')
+        c.execute('INSERT INTO strategy_governor_events(version_id,to_state,canonical_json,canonical_sha256) VALUES(?,?,?,?)',
+                  (version_id,to_state,text,_sha(text)))
+    return dict(status='inserted', version_id=version_id, event=body)

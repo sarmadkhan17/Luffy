@@ -86,8 +86,11 @@ class PaperRiskStore:
 
 
 class PaperExecutor:
-    def __init__(self, journal, cfg):
+    def __init__(self, journal, cfg, *, venue_environment=None):
         self.journal, self.cfg = journal, cfg
+        self.venue_environment = venue_environment
+        from ..observability.prospective_execution import for_journal
+        self.capture = for_journal(journal)
         with journal._tx() as c:
             c.executescript(SCHEMA)
             columns = {r[1] for r in c.execute("PRAGMA table_info(versioned_paper_trades)")}
@@ -97,6 +100,11 @@ class PaperExecutor:
                 c.execute("ALTER TABLE versioned_paper_trades ADD COLUMN exit_semantics_id TEXT")
             X.ensure(c)
             C.ensure(c)
+            if "venue_environment" not in columns:
+                c.execute("ALTER TABLE versioned_paper_trades ADD COLUMN venue_environment TEXT")
+            c.execute("""CREATE TRIGGER IF NOT EXISTS paper_environment_immutable BEFORE UPDATE ON versioned_paper_trades
+                WHEN NEW.venue_environment IS NOT OLD.venue_environment
+                BEGIN SELECT RAISE(ABORT,'paper environment immutable'); END;""")
             if "market_type" not in columns:
                 c.execute("ALTER TABLE versioned_paper_trades ADD COLUMN market_type TEXT")
         self.store = PaperRiskStore(journal)
@@ -196,10 +204,13 @@ class PaperExecutor:
             raise ValueError('paper_identity_unverified')
         identity.update(version_id=v['version_id'], install_id=inst['install_id'],
                         validation_receipt_id=inst['validation_receipt_id'], exec_mode='paper',
-                        exit_semantics_id=inst['exit_semantics_id'], exit_state=E.encode(policy,exit_state))
+                        exit_semantics_id=inst['exit_semantics_id'], exit_state=E.encode(policy,exit_state),
+                        paper_exposure=dict(environment=self.venue_environment, instrument=snap.symbol,
+                            market_type=snap.market_type, quantity=amount, side=side, opened_ms=at,
+                            basis='IMMUTABLE_ISOLATED_PAPER_POSITION'))
         row = dict(id=ident, strategy_id=strategy_id, version_id=v['version_id'], spec_hash=v['spec_hash'],
                    install_id=inst['install_id'], exec_mode='paper', decision_id=decision.id,
-                   cycle_id=getattr(decision,'cycle_id',None), symbol=snap.symbol, side=side, market_type=snap.market_type,
+                   cycle_id=getattr(decision,'cycle_id',None), symbol=snap.symbol, side=side, market_type=snap.market_type, venue_environment=self.venue_environment,
                    amount=amount, entry_price=price, stop_loss=sl, take_profit=tp,
                    notional_usdt=amount*price, leverage=self.risk.leverage, opened_at=iso(at),
                    status='open', entry_identity_json=json.dumps(identity,sort_keys=True),
@@ -216,11 +227,18 @@ class PaperExecutor:
                 raise ValueError('paper_symbol_already_open')
             c.execute(f"INSERT INTO {TABLE} ({','.join(row)}) VALUES ({','.join('?' for _ in row)})", tuple(row.values()))
             X.record(c, X.start(ident, identity, policy, exit_state, amount))
+        if self.capture:
+            self.capture.book(dict(decision_id=decision.id,intent_id=ident,symbol=snap.symbol.split(':')[0].replace('/',''),
+                side='buy' if side=='long' else 'sell',requested_quantity=amount,phase='pre_paper_execution',
+                event_ms=at,environment=self.venue_environment,trade_id=ident,
+                strategy_id=strategy_id,version_id=v['version_id'],spec_hash=v['spec_hash'],
+                reference=dict(price=price,observed_at=at,basis='decision_snapshot_price')))
         return ident
 
     def manage(self, snap):
         """Consume the shared completed-bar transitions; book isolated fills."""
         closed = []
+        funding_work = []
         for original in self.open_positions():
             if original['symbol'] != snap.symbol:
                 continue
@@ -230,6 +248,7 @@ class PaperExecutor:
             if (original['spec_hash'], original['install_id']) != (v['spec_hash'], inst['install_id']):
                 raise ValueError('paper_exit_identity_differs')
             spec = StrategySpec.from_dict(v['spec'])
+            funding_work.append(original)
             with self.journal._tx() as c:
                 c.execute('BEGIN IMMEDIATE')
                 p = dict(c.execute(f'SELECT * FROM {TABLE} WHERE id=?', (original['id'],)).fetchone())
@@ -268,4 +287,12 @@ class PaperExecutor:
                         C.finalize(c, completed, v, inst)
                         closed.append(p['id'])
                         break
+        if self.capture:
+            from .paper_cost_evidence import ms
+            for original in funding_work:
+                rows = self.journal.query(f'SELECT * FROM {TABLE} WHERE id=?',(original['id'],))
+                current=rows[0]
+                end=ms(current['closed_at']) if current['closed_at'] else ms(snap.ts)
+                if current['market_type']=='futures' and end >= ms(current['opened_at']):
+                    self.capture.funding(current,end)
         return closed

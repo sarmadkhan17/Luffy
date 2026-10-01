@@ -57,6 +57,7 @@ class LiveExitAdapter:
                       'exit_semantics_id TEXT NOT NULL, state_json TEXT NOT NULL)')
 
     def manage(self, trade, snap):
+        trade['_execution_reference'] = dict(price=snap.price,observed_at=snap.ts,basis='exit_decision_snapshot_price')
         from ..strategy import factory_handoff as F
         from ..strategy.spec import StrategySpec
         identity = json.loads(trade.get('entry_identity_json') or '{}')

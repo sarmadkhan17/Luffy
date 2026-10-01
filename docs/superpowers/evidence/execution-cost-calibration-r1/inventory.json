@@ -1,0 +1,1200 @@
+{
+  "source_path": "/mnt/luffy-data/luffy/production/data/luffy.db",
+  "persisted": {
+    "tables": [
+      "brain_events",
+      "control_events",
+      "cycles",
+      "decisions",
+      "equity",
+      "equity_provenance",
+      "execution_accounting",
+      "outcomes",
+      "owner_audit",
+      "owner_requests",
+      "research_archive",
+      "research_batches",
+      "research_candidates",
+      "research_combos",
+      "research_controls",
+      "research_gauges",
+      "research_slices",
+      "research_tests",
+      "sqlite_sequence",
+      "state_kv",
+      "strategies",
+      "trade_accounting_bookings",
+      "trade_fills",
+      "trade_legs",
+      "trades",
+      "votes"
+    ],
+    "total_legs": 0,
+    "total_fill_rows": 0,
+    "by_instrument": {},
+    "calibration": {
+      "schema": "exact-execution-calibration.v1",
+      "observations": [],
+      "orders": [],
+      "matched_orders": 0,
+      "instruments": [],
+      "sides": [],
+      "slippage_model": "NOT_VALIDATED",
+      "reason": "NO_VALIDATED_EXECUTION_COST_METHOD; no minimum N grants authority"
+    }
+  },
+  "booking_receipt_replay": {
+    "authority": "EXISTING_RECEIPTS_REPLAYED_IN_MEMORY_ONLY",
+    "receipts": [
+      {
+        "booking_id": 1,
+        "sha256": "4e803f7a86f616dcf142cdedcebceb2a045b241a0b17c7b204ea7fac70d4206f",
+        "payload_sha256": "c2d47f23d2d73ffd37c1f8632cf63a2fc3082916b608b369e53c92b9fc8daef9",
+        "symbol": "SOL/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 2,
+        "sha256": "2cb113d5ab0fba42f25a22591231f5ce82b54205e34234aafb50bd3e96f7cb1d",
+        "payload_sha256": "88ac955ab3e7be3c25d0540ac56c3280bd93085575e7a72d9b101da15f715ee5",
+        "symbol": "SOL/USDT",
+        "direct_fill_rows": 3,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 3,
+        "sha256": "a6c9dfe110dd9bf360b25150bc8d5baec0702c195cbd4f5df976fbe019c2130f",
+        "payload_sha256": "de8f263ab849edb92c63f32244d531e5f5fac668949126c6d3f913c13fc4d392",
+        "symbol": "NEAR/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 4,
+        "sha256": "ab62f024ab68110d5de1f0cd685ffe203e5f431f4433acb159384fe37b00044a",
+        "payload_sha256": "b55d7e6386a62d0d159190a147e0d1eca18f3c01f31541c577e9135950d342be",
+        "symbol": "LINK/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 5,
+        "sha256": "903891297f2960c835c227b966a1ad427016e28df7a6ec32601b4afea83aa279",
+        "payload_sha256": "c1e98146a98151ca2b1e6e46075b6c883be5d43af5f460320f7c37d84e28f5d0",
+        "symbol": "AAVE/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 6,
+        "sha256": "b108ce77963fa1a7f51450d8f1a936027f2e61dc3dae1409375da75801c13f46",
+        "payload_sha256": "8a974ac324fdb68909040297b74a4af95f85f19b21f42ee4d6b112558f58d7ea",
+        "symbol": "ZEC/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 7,
+        "sha256": "72e3301a1c48d6e94c3a8ea31410f1181671a25f0b9d9faaf0e4f70c37691e83",
+        "payload_sha256": "7737023146a4c8e540bd8ce00a1baf84739249a6b19b5d200c15f9500fdae0a9",
+        "symbol": "UNI/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 8,
+        "sha256": "488882b183c4f3f948a63bc7df70dfca0bd5da6387c06e4dc0a6b519ca255030",
+        "payload_sha256": "7caaf061e8e140a52b77e62bd999ac1abe589bb69f7559a6ef0a2e165b546cdb",
+        "symbol": "HYPE/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 9,
+        "sha256": "feac96c4164df0d88060a15c5339df4f2b9bf84a3350c1bbed69a04c6986aaef",
+        "payload_sha256": "0889832ffcf769ba2fe9df0168e523ec2dc14d30a043e9c53eadc8f41060507e",
+        "symbol": "XRP/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 10,
+        "sha256": "52d914f8ea9f10a640d6fbbfd987122d212465451c93827121c1a4ce779146c4",
+        "payload_sha256": "cf5643eb4411a1f59bf1032bc842bd8e5ebf07776ddec6d0b28f73a448794140",
+        "symbol": "SOL/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 11,
+        "sha256": "baebdb1af81c22cc050d71dbf83f996987e2ca77427bbeddffbc2a1710774234",
+        "payload_sha256": "d8bd8c116b6bf39846f1f83fb571847e369a9b69936e49650ae2ffce745aaaee",
+        "symbol": "AVAX/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 12,
+        "sha256": "0dfdf40534c2985294b1617ede1451e91b299c63811539cf8b9045146473aedc",
+        "payload_sha256": "796e9815ed2eb9dd1b7c05f35e7bf2ce6a95b47e8c03a69d708517d930090ab8",
+        "symbol": "AAVE/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 13,
+        "sha256": "10d47445e853c3e98228efac39f6cb17db82099e669a112735cb2be35ed5e6b4",
+        "payload_sha256": "efa1dc99ee3a661ff2ba6d28e310d614a7faa3ded0a638ab2578cb8da01443be",
+        "symbol": "SUI/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 14,
+        "sha256": "2e1d555a348d25304c9ae69606957548c5374662e5b4fa2912589a05cf7e8579",
+        "payload_sha256": "6fb9a04b6d5f7dad93af451acbc637c3a01f6f74bcdca0e2ef50aed76b77cca3",
+        "symbol": "SUI/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 15,
+        "sha256": "d882e19aacf09f2ec2b24a4cbae6f43403d3003529623c36eb2bb851abef4333",
+        "payload_sha256": "7ea75edc22d5b23dd033c72b386c3c564a602b5b0a28241a6548c2e8487f8fad",
+        "symbol": "AAVE/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 16,
+        "sha256": "4bf3e06b6b61fff9fb597b899c5b96ae331ac1c7f15d08f980a8cde85ef2bcc3",
+        "payload_sha256": "62cfa26619788a8ffe2b3277ab0222297a5031c904598b6448a89ed90589959b",
+        "symbol": "HYPE/USDT",
+        "direct_fill_rows": 1,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 17,
+        "sha256": "50101e1acbabff3c5834853e2811f5aa1645c5b1cc52e7ad6f16c5e4ea33c340",
+        "payload_sha256": "c60c79c1aee229aabeb9887b331c30a475f9a8200f61e21fccd5f45d6e732bba",
+        "symbol": "LINK/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 18,
+        "sha256": "9f8bb0ea56e24da36d5050d3a0176bc9de494d0df778e4716363e6bbf516293b",
+        "payload_sha256": "6bab9810e28742cefbef91436758aaaa2b1a14a4fbbeff5f05c57c90dd9e3a6f",
+        "symbol": "SUI/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 19,
+        "sha256": "95e45ae3da2e8a97e373e38d11f3409a9fdc5dfa8e9d6ef528de842d7b76f52b",
+        "payload_sha256": "32ac8764b966ae6527baff32313e22a563d4cfc57623527251f52d4b557ecdbe",
+        "symbol": "TAO/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 20,
+        "sha256": "c19e02105243b23ec9e512255efeee1e6449fe007efc6a41d65f4310df950100",
+        "payload_sha256": "7737485a7b7b1b9742a449c647384da0e430792629cad5e7228405889bbb0ca8",
+        "symbol": "TAO/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 21,
+        "sha256": "2368897337776d5e67f077a93aa8c44fc65877717fb55b3b7bf1a5c54f04c191",
+        "payload_sha256": "b5a00a11a8e985631d60b3626885c67f929ca9e8d7fb27137985155811217c39",
+        "symbol": "UNI/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 22,
+        "sha256": "8439c4eb2ea3bcaf621249285b4617b44053c91d853b0901333a0afd067789a8",
+        "payload_sha256": "1f050bdbc0c812bf9ef6340a73587a81ebfe43528d02e928fae8032678f8e6e4",
+        "symbol": "ZEC/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 23,
+        "sha256": "fd2faf77ec1048ac29558d8b2aeb13d1b1f5ff9d1bed5f4547e163e902d61101",
+        "payload_sha256": "6ac4e1aaa903395b4a8a103b19f341c7a7644c00af6e3366d0eda1b3372f8a14",
+        "symbol": "NEAR/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      },
+      {
+        "booking_id": 24,
+        "sha256": "b7a1cc22dc30d1ecce65ce7ea0f88ece7aeeb8a03ef8e7acd617fa8b81d8a4f5",
+        "payload_sha256": "e6eac3d8444c216ad39edbd631714a1f14c5620f7dd751433d97a93c680084ce",
+        "symbol": "SUI/USDT",
+        "direct_fill_rows": 0,
+        "requested_quantity_present": false,
+        "reference_present": false
+      }
+    ],
+    "rejected": [],
+    "inventory": {
+      "tables": [
+        "sqlite_sequence",
+        "trade_fills",
+        "trade_legs",
+        "trades"
+      ],
+      "total_legs": 24,
+      "total_fill_rows": 6,
+      "by_instrument": {
+        "AAVE/USDT": {
+          "order_legs": 3,
+          "real_fill_rows": 0,
+          "attributed_fill_rows": 0,
+          "requested_quantity": 0,
+          "reference_prices": 0,
+          "decision_timestamps": 0,
+          "submission_timestamps": 0,
+          "complete_fill_orders": 0,
+          "commissions": 0,
+          "partial_fill_orders": 0,
+          "matched_orders": 0,
+          "event_linked_books": 0,
+          "spread": "UNAVAILABLE",
+          "cancellations": "UNAVAILABLE",
+          "rejections": "UNAVAILABLE"
+        },
+        "AVAX/USDT": {
+          "order_legs": 1,
+          "real_fill_rows": 0,
+          "attributed_fill_rows": 0,
+          "requested_quantity": 0,
+          "reference_prices": 0,
+          "decision_timestamps": 0,
+          "submission_timestamps": 0,
+          "complete_fill_orders": 0,
+          "commissions": 0,
+          "partial_fill_orders": 0,
+          "matched_orders": 0,
+          "event_linked_books": 0,
+          "spread": "UNAVAILABLE",
+          "cancellations": "UNAVAILABLE",
+          "rejections": "UNAVAILABLE"
+        },
+        "HYPE/USDT": {
+          "order_legs": 2,
+          "real_fill_rows": 2,
+          "attributed_fill_rows": 2,
+          "requested_quantity": 0,
+          "reference_prices": 0,
+          "decision_timestamps": 0,
+          "submission_timestamps": 0,
+          "complete_fill_orders": 2,
+          "commissions": 2,
+          "partial_fill_orders": 0,
+          "matched_orders": 0,
+          "event_linked_books": 0,
+          "spread": "UNAVAILABLE",
+          "cancellations": "UNAVAILABLE",
+          "rejections": "UNAVAILABLE"
+        },
+        "LINK/USDT": {
+          "order_legs": 2,
+          "real_fill_rows": 0,
+          "attributed_fill_rows": 0,
+          "requested_quantity": 0,
+          "reference_prices": 0,
+          "decision_timestamps": 0,
+          "submission_timestamps": 0,
+          "complete_fill_orders": 0,
+          "commissions": 0,
+          "partial_fill_orders": 0,
+          "matched_orders": 0,
+          "event_linked_books": 0,
+          "spread": "UNAVAILABLE",
+          "cancellations": "UNAVAILABLE",
+          "rejections": "UNAVAILABLE"
+        },
+        "NEAR/USDT": {
+          "order_legs": 2,
+          "real_fill_rows": 0,
+          "attributed_fill_rows": 0,
+          "requested_quantity": 0,
+          "reference_prices": 0,
+          "decision_timestamps": 0,
+          "submission_timestamps": 0,
+          "complete_fill_orders": 0,
+          "commissions": 0,
+          "partial_fill_orders": 0,
+          "matched_orders": 0,
+          "event_linked_books": 0,
+          "spread": "UNAVAILABLE",
+          "cancellations": "UNAVAILABLE",
+          "rejections": "UNAVAILABLE"
+        },
+        "SOL/USDT": {
+          "order_legs": 3,
+          "real_fill_rows": 4,
+          "attributed_fill_rows": 4,
+          "requested_quantity": 0,
+          "reference_prices": 0,
+          "decision_timestamps": 0,
+          "submission_timestamps": 0,
+          "complete_fill_orders": 2,
+          "commissions": 2,
+          "partial_fill_orders": 0,
+          "matched_orders": 0,
+          "event_linked_books": 0,
+          "spread": "UNAVAILABLE",
+          "cancellations": "UNAVAILABLE",
+          "rejections": "UNAVAILABLE"
+        },
+        "SUI/USDT": {
+          "order_legs": 4,
+          "real_fill_rows": 0,
+          "attributed_fill_rows": 0,
+          "requested_quantity": 0,
+          "reference_prices": 0,
+          "decision_timestamps": 0,
+          "submission_timestamps": 0,
+          "complete_fill_orders": 0,
+          "commissions": 0,
+          "partial_fill_orders": 0,
+          "matched_orders": 0,
+          "event_linked_books": 0,
+          "spread": "UNAVAILABLE",
+          "cancellations": "UNAVAILABLE",
+          "rejections": "UNAVAILABLE"
+        },
+        "TAO/USDT": {
+          "order_legs": 2,
+          "real_fill_rows": 0,
+          "attributed_fill_rows": 0,
+          "requested_quantity": 0,
+          "reference_prices": 0,
+          "decision_timestamps": 0,
+          "submission_timestamps": 0,
+          "complete_fill_orders": 0,
+          "commissions": 0,
+          "partial_fill_orders": 0,
+          "matched_orders": 0,
+          "event_linked_books": 0,
+          "spread": "UNAVAILABLE",
+          "cancellations": "UNAVAILABLE",
+          "rejections": "UNAVAILABLE"
+        },
+        "UNI/USDT": {
+          "order_legs": 2,
+          "real_fill_rows": 0,
+          "attributed_fill_rows": 0,
+          "requested_quantity": 0,
+          "reference_prices": 0,
+          "decision_timestamps": 0,
+          "submission_timestamps": 0,
+          "complete_fill_orders": 0,
+          "commissions": 0,
+          "partial_fill_orders": 0,
+          "matched_orders": 0,
+          "event_linked_books": 0,
+          "spread": "UNAVAILABLE",
+          "cancellations": "UNAVAILABLE",
+          "rejections": "UNAVAILABLE"
+        },
+        "XRP/USDT": {
+          "order_legs": 1,
+          "real_fill_rows": 0,
+          "attributed_fill_rows": 0,
+          "requested_quantity": 0,
+          "reference_prices": 0,
+          "decision_timestamps": 0,
+          "submission_timestamps": 0,
+          "complete_fill_orders": 0,
+          "commissions": 0,
+          "partial_fill_orders": 0,
+          "matched_orders": 0,
+          "event_linked_books": 0,
+          "spread": "UNAVAILABLE",
+          "cancellations": "UNAVAILABLE",
+          "rejections": "UNAVAILABLE"
+        },
+        "ZEC/USDT": {
+          "order_legs": 2,
+          "real_fill_rows": 0,
+          "attributed_fill_rows": 0,
+          "requested_quantity": 0,
+          "reference_prices": 0,
+          "decision_timestamps": 0,
+          "submission_timestamps": 0,
+          "complete_fill_orders": 0,
+          "commissions": 0,
+          "partial_fill_orders": 0,
+          "matched_orders": 0,
+          "event_linked_books": 0,
+          "spread": "UNAVAILABLE",
+          "cancellations": "UNAVAILABLE",
+          "rejections": "UNAVAILABLE"
+        }
+      },
+      "calibration": {
+        "schema": "exact-execution-calibration.v1",
+        "observations": [
+          {
+            "schema": "execution-evidence.v1",
+            "trade_id": "pos_05a5e8f981",
+            "leg_id": 1,
+            "purpose": "entry",
+            "market_type": "futures",
+            "symbol": "SOL/USDT",
+            "instrument_id": "binance_usdm:futures:SOLUSDT",
+            "venue_order_id": "4205684574",
+            "side": "buy",
+            "requested_qty": null,
+            "booked_qty": 0.51,
+            "strategy": {
+              "status": "UNKNOWN",
+              "strategy_id": "diagnostic:owner-demo-probe",
+              "reason": "no strategy version was recorded when this trade opened"
+            },
+            "reference": {
+              "status": "UNAVAILABLE",
+              "price": null,
+              "reason": "no pre-submission reference recorded"
+            },
+            "fills": [
+              {
+                "venue_fill_id": "92812087",
+                "qty": 0.51,
+                "price": 98.93,
+                "commission": "0.02018172",
+                "commission_asset": "USDT",
+                "venue_ts_ms": 1789611653040
+              }
+            ],
+            "fill_qty": 0.51,
+            "fill_coverage": "COMPLETE",
+            "vwap": 98.93,
+            "commissions_by_asset": {
+              "USDT": "0.02018172"
+            },
+            "commission_status": "VERIFIED",
+            "slippage": {
+              "status": "UNAVAILABLE",
+              "reason": "NO_REFERENCE_PRICE"
+            },
+            "first_fill_ms": 1789611653040,
+            "last_fill_ms": 1789611653040,
+            "submitted_ms": null,
+            "recorded_ms": 1789611654662,
+            "measurement_id": "89dcee25a9489484a471c5030721f49815ef30e0fc6363e2bdded6c3bc2d03f4"
+          },
+          {
+            "schema": "execution-evidence.v1",
+            "trade_id": "pos_05a5e8f981",
+            "leg_id": 2,
+            "purpose": "final_exit",
+            "market_type": "futures",
+            "symbol": "SOL/USDT",
+            "instrument_id": "binance_usdm:futures:SOLUSDT",
+            "venue_order_id": "4205684620",
+            "side": "sell",
+            "requested_qty": null,
+            "booked_qty": 0.51,
+            "strategy": {
+              "status": "UNKNOWN",
+              "strategy_id": "diagnostic:owner-demo-probe",
+              "reason": "no strategy version was recorded when this trade opened"
+            },
+            "reference": {
+              "status": "UNAVAILABLE",
+              "price": null,
+              "reason": "no pre-submission reference recorded"
+            },
+            "fills": [
+              {
+                "venue_fill_id": "92812100",
+                "qty": 0.15,
+                "price": 98.88,
+                "commission": "0.00593280",
+                "commission_asset": "USDT",
+                "venue_ts_ms": 1789611657217
+              },
+              {
+                "venue_fill_id": "92812101",
+                "qty": 0.11,
+                "price": 98.88,
+                "commission": "0.00435072",
+                "commission_asset": "USDT",
+                "venue_ts_ms": 1789611657217
+              },
+              {
+                "venue_fill_id": "92812102",
+                "qty": 0.25,
+                "price": 98.88,
+                "commission": "0.00988799",
+                "commission_asset": "USDT",
+                "venue_ts_ms": 1789611657217
+              }
+            ],
+            "fill_qty": 0.51,
+            "fill_coverage": "COMPLETE",
+            "vwap": 98.88,
+            "commissions_by_asset": {
+              "USDT": "0.02017151"
+            },
+            "commission_status": "VERIFIED",
+            "slippage": {
+              "status": "UNAVAILABLE",
+              "reason": "NO_REFERENCE_PRICE"
+            },
+            "first_fill_ms": 1789611657217,
+            "last_fill_ms": 1789611657217,
+            "submitted_ms": null,
+            "recorded_ms": 1789611658293,
+            "measurement_id": "e905067b39873cec6c4ece460a1b81e5ddbcd7676e0862cf57ac0ba2bcb86dc7"
+          },
+          {
+            "schema": "execution-evidence.v1",
+            "trade_id": "pos_f8ff76b0e1",
+            "leg_id": 3,
+            "purpose": "entry",
+            "market_type": "futures",
+            "symbol": "NEAR/USDT",
+            "instrument_id": "binance_usdm:futures:NEARUSDT",
+            "venue_order_id": "631036803",
+            "side": "buy",
+            "requested_qty": null,
+            "booked_qty": 116.0,
+            "strategy": {
+              "status": "UNKNOWN",
+              "strategy_id": "auth_donchian_breakout_trail",
+              "reason": "no strategy version was recorded when this trade opened"
+            },
+            "reference": {
+              "status": "UNAVAILABLE",
+              "price": null,
+              "reason": "no pre-submission reference recorded"
+            },
+            "fills": [],
+            "fill_qty": null,
+            "fill_coverage": "UNAVAILABLE",
+            "vwap": null,
+            "commissions_by_asset": {},
+            "commission_status": "UNAVAILABLE",
+            "slippage": {
+              "status": "UNAVAILABLE",
+              "reason": "NO_REFERENCE_PRICE"
+            },
+            "first_fill_ms": null,
+            "last_fill_ms": null,
+            "submitted_ms": null,
+            "recorded_ms": 1789646438696,
+            "measurement_id": "211d7c32f01a9a7e812c661e2bc0f62157924af46bb918fd4fffeaac7cc1ae9c"
+          },
+          {
+            "schema": "execution-evidence.v1",
+            "trade_id": "pos_be9ea9069e",
+            "leg_id": 6,
+            "purpose": "entry",
+            "market_type": "futures",
+            "symbol": "ZEC/USDT",
+            "instrument_id": "binance_usdm:futures:ZECUSDT",
+            "venue_order_id": "2969286104",
+            "side": "buy",
+            "requested_qty": null,
+            "booked_qty": 0.183,
+            "strategy": {
+              "status": "UNKNOWN",
+              "strategy_id": "auth_donchian_breakout_trail",
+              "reason": "no strategy version was recorded when this trade opened"
+            },
+            "reference": {
+              "status": "UNAVAILABLE",
+              "price": null,
+              "reason": "no pre-submission reference recorded"
+            },
+            "fills": [],
+            "fill_qty": null,
+            "fill_coverage": "UNAVAILABLE",
+            "vwap": null,
+            "commissions_by_asset": {},
+            "commission_status": "UNAVAILABLE",
+            "slippage": {
+              "status": "UNAVAILABLE",
+              "reason": "NO_REFERENCE_PRICE"
+            },
+            "first_fill_ms": null,
+            "last_fill_ms": null,
+            "submitted_ms": null,
+            "recorded_ms": 1789660823765,
+            "measurement_id": "3f5903e7fd1ca9e8c8e0e6def4560154ecd74cc2e34d11c047cbb8a871a9f971"
+          },
+          {
+            "schema": "execution-evidence.v1",
+            "trade_id": "pos_bfc25f8c23",
+            "leg_id": 7,
+            "purpose": "entry",
+            "market_type": "futures",
+            "symbol": "UNI/USDT",
+            "instrument_id": "binance_usdm:futures:UNIUSDT",
+            "venue_order_id": "470687472",
+            "side": "buy",
+            "requested_qty": null,
+            "booked_qty": 8.0,
+            "strategy": {
+              "status": "UNKNOWN",
+              "strategy_id": "auth_donchian_breakout_trail",
+              "reason": "no strategy version was recorded when this trade opened"
+            },
+            "reference": {
+              "status": "UNAVAILABLE",
+              "price": null,
+              "reason": "no pre-submission reference recorded"
+            },
+            "fills": [],
+            "fill_qty": null,
+            "fill_coverage": "UNAVAILABLE",
+            "vwap": null,
+            "commissions_by_asset": {},
+            "commission_status": "UNAVAILABLE",
+            "slippage": {
+              "status": "UNAVAILABLE",
+              "reason": "NO_REFERENCE_PRICE"
+            },
+            "first_fill_ms": null,
+            "last_fill_ms": null,
+            "submitted_ms": null,
+            "recorded_ms": 1789675236641,
+            "measurement_id": "96c99988c23d8f1fba30f1fff693f94a5656ccd683158eb52f09bc9d39294838"
+          },
+          {
+            "schema": "execution-evidence.v1",
+            "trade_id": "pos_931b048bb5",
+            "leg_id": 8,
+            "purpose": "entry",
+            "market_type": "futures",
+            "symbol": "HYPE/USDT",
+            "instrument_id": "binance_usdm:futures:HYPEUSDT",
+            "venue_order_id": "868708075",
+            "side": "buy",
+            "requested_qty": null,
+            "booked_qty": 5.56,
+            "strategy": {
+              "status": "UNKNOWN",
+              "strategy_id": "auth_donchian_breakout_trail",
+              "reason": "no strategy version was recorded when this trade opened"
+            },
+            "reference": {
+              "status": "UNAVAILABLE",
+              "price": null,
+              "reason": "no pre-submission reference recorded"
+            },
+            "fills": [
+              {
+                "venue_fill_id": "64278589",
+                "qty": 5.56,
+                "price": 91.479,
+                "commission": "0.25431162",
+                "commission_asset": "USDT",
+                "venue_ts_ms": 1789735513837
+              }
+            ],
+            "fill_qty": 5.56,
+            "fill_coverage": "COMPLETE",
+            "vwap": 91.479,
+            "commissions_by_asset": {
+              "USDT": "0.25431162"
+            },
+            "commission_status": "VERIFIED",
+            "slippage": {
+              "status": "UNAVAILABLE",
+              "reason": "NO_REFERENCE_PRICE"
+            },
+            "first_fill_ms": 1789735513837,
+            "last_fill_ms": 1789735513837,
+            "submitted_ms": null,
+            "recorded_ms": 1789735515520,
+            "measurement_id": "63c31e9f69ad03c7d1ab3f7a2248102310e5483bf0e54e7ca7134bd10504ee4f"
+          },
+          {
+            "schema": "execution-evidence.v1",
+            "trade_id": "pos_051412e2d6",
+            "leg_id": 10,
+            "purpose": "entry",
+            "market_type": "futures",
+            "symbol": "SOL/USDT",
+            "instrument_id": "binance_usdm:futures:SOLUSDT",
+            "venue_order_id": "4206687988",
+            "side": "buy",
+            "requested_qty": null,
+            "booked_qty": 5.77,
+            "strategy": {
+              "status": "UNKNOWN",
+              "strategy_id": "auth_donchian_breakout_trail",
+              "reason": "no strategy version was recorded when this trade opened"
+            },
+            "reference": {
+              "status": "UNAVAILABLE",
+              "price": null,
+              "reason": "no pre-submission reference recorded"
+            },
+            "fills": [],
+            "fill_qty": null,
+            "fill_coverage": "UNAVAILABLE",
+            "vwap": null,
+            "commissions_by_asset": {},
+            "commission_status": "UNAVAILABLE",
+            "slippage": {
+              "status": "UNAVAILABLE",
+              "reason": "NO_REFERENCE_PRICE"
+            },
+            "first_fill_ms": null,
+            "last_fill_ms": null,
+            "submitted_ms": null,
+            "recorded_ms": 1789747256712,
+            "measurement_id": "c79ffab2598cef05649e66804e262050060302bd09df300b72ba81903a60ceaa"
+          },
+          {
+            "schema": "execution-evidence.v1",
+            "trade_id": "pos_0770e44a5e",
+            "leg_id": 11,
+            "purpose": "entry",
+            "market_type": "futures",
+            "symbol": "AVAX/USDT",
+            "instrument_id": "binance_usdm:futures:AVAXUSDT",
+            "venue_order_id": "532122972",
+            "side": "buy",
+            "requested_qty": null,
+            "booked_qty": 77.0,
+            "strategy": {
+              "status": "UNKNOWN",
+              "strategy_id": "auth_donchian_breakout_trail",
+              "reason": "no strategy version was recorded when this trade opened"
+            },
+            "reference": {
+              "status": "UNAVAILABLE",
+              "price": null,
+              "reason": "no pre-submission reference recorded"
+            },
+            "fills": [],
+            "fill_qty": null,
+            "fill_coverage": "UNAVAILABLE",
+            "vwap": null,
+            "commissions_by_asset": {},
+            "commission_status": "UNAVAILABLE",
+            "slippage": {
+              "status": "UNAVAILABLE",
+              "reason": "NO_REFERENCE_PRICE"
+            },
+            "first_fill_ms": null,
+            "last_fill_ms": null,
+            "submitted_ms": null,
+            "recorded_ms": 1789761645574,
+            "measurement_id": "229a831ae016490e3e48cbd4358a243283ffa72eadc1fe80c2ac52e7da9a6458"
+          },
+          {
+            "schema": "execution-evidence.v1",
+            "trade_id": "pos_c1efa163a1",
+            "leg_id": 12,
+            "purpose": "entry",
+            "market_type": "futures",
+            "symbol": "AAVE/USDT",
+            "instrument_id": "binance_usdm:futures:AAVEUSDT",
+            "venue_order_id": "420668610",
+            "side": "buy",
+            "requested_qty": null,
+            "booked_qty": 3.0,
+            "strategy": {
+              "status": "UNKNOWN",
+              "strategy_id": "auth_donchian_breakout_trail",
+              "reason": "no strategy version was recorded when this trade opened"
+            },
+            "reference": {
+              "status": "UNAVAILABLE",
+              "price": null,
+              "reason": "no pre-submission reference recorded"
+            },
+            "fills": [],
+            "fill_qty": null,
+            "fill_coverage": "UNAVAILABLE",
+            "vwap": null,
+            "commissions_by_asset": {},
+            "commission_status": "UNAVAILABLE",
+            "slippage": {
+              "status": "UNAVAILABLE",
+              "reason": "NO_REFERENCE_PRICE"
+            },
+            "first_fill_ms": null,
+            "last_fill_ms": null,
+            "submitted_ms": null,
+            "recorded_ms": 1789790449128,
+            "measurement_id": "c59ac122682aad107d1746f2d982d2fb7077abf314a1354c8b29bd9c8ea9902a"
+          },
+          {
+            "schema": "execution-evidence.v1",
+            "trade_id": "pos_3995fe6869",
+            "leg_id": 13,
+            "purpose": "entry",
+            "market_type": "futures",
+            "symbol": "SUI/USDT",
+            "instrument_id": "binance_usdm:futures:SUIUSDT",
+            "venue_order_id": "1074423451",
+            "side": "buy",
+            "requested_qty": null,
+            "booked_qty": 533.6,
+            "strategy": {
+              "status": "UNKNOWN",
+              "strategy_id": "auth_donchian_breakout_trail",
+              "reason": "no strategy version was recorded when this trade opened"
+            },
+            "reference": {
+              "status": "UNAVAILABLE",
+              "price": null,
+              "reason": "no pre-submission reference recorded"
+            },
+            "fills": [],
+            "fill_qty": null,
+            "fill_coverage": "UNAVAILABLE",
+            "vwap": null,
+            "commissions_by_asset": {},
+            "commission_status": "UNAVAILABLE",
+            "slippage": {
+              "status": "UNAVAILABLE",
+              "reason": "NO_REFERENCE_PRICE"
+            },
+            "first_fill_ms": null,
+            "last_fill_ms": null,
+            "submitted_ms": null,
+            "recorded_ms": 1789819228084,
+            "measurement_id": "e44be3a031fec85509058056591e007c93cc0f58d17322ebcdeb3a9b2f7d13d8"
+          },
+          {
+            "schema": "execution-evidence.v1",
+            "trade_id": "pos_931b048bb5",
+            "leg_id": 16,
+            "purpose": "final_exit",
+            "market_type": "futures",
+            "symbol": "HYPE/USDT",
+            "instrument_id": "binance_usdm:futures:HYPEUSDT",
+            "venue_order_id": "870956224",
+            "side": "sell",
+            "requested_qty": null,
+            "booked_qty": 5.56,
+            "strategy": {
+              "status": "UNKNOWN",
+              "strategy_id": "auth_donchian_breakout_trail",
+              "reason": "no strategy version was recorded when this trade opened"
+            },
+            "reference": {
+              "status": "UNAVAILABLE",
+              "price": null,
+              "reason": "no pre-submission reference recorded"
+            },
+            "fills": [
+              {
+                "venue_fill_id": "65122608",
+                "qty": 5.56,
+                "price": 94.23,
+                "commission": "0.26195940",
+                "commission_asset": "USDT",
+                "venue_ts_ms": 1790175244189
+              }
+            ],
+            "fill_qty": 5.56,
+            "fill_coverage": "COMPLETE",
+            "vwap": 94.23000000000002,
+            "commissions_by_asset": {
+              "USDT": "0.26195940"
+            },
+            "commission_status": "VERIFIED",
+            "slippage": {
+              "status": "UNAVAILABLE",
+              "reason": "NO_REFERENCE_PRICE"
+            },
+            "first_fill_ms": 1790175244189,
+            "last_fill_ms": 1790175244189,
+            "submitted_ms": null,
+            "recorded_ms": 1790175245549,
+            "measurement_id": "9ec8bda86abc245db867f989a2b0d7634bbad3f7c16a04026392787bab138fef"
+          },
+          {
+            "schema": "execution-evidence.v1",
+            "trade_id": "pos_ad0e15789a",
+            "leg_id": 17,
+            "purpose": "entry",
+            "market_type": "futures",
+            "symbol": "LINK/USDT",
+            "instrument_id": "binance_usdm:futures:LINKUSDT",
+            "venue_order_id": "1048469968",
+            "side": "buy",
+            "requested_qty": null,
+            "booked_qty": 32.77,
+            "strategy": {
+              "status": "UNKNOWN",
+              "strategy_id": "auth_donchian_breakout_trail",
+              "reason": "no strategy version was recorded when this trade opened"
+            },
+            "reference": {
+              "status": "UNAVAILABLE",
+              "price": null,
+              "reason": "no pre-submission reference recorded"
+            },
+            "fills": [],
+            "fill_qty": null,
+            "fill_coverage": "UNAVAILABLE",
+            "vwap": null,
+            "commissions_by_asset": {},
+            "commission_status": "UNAVAILABLE",
+            "slippage": {
+              "status": "UNAVAILABLE",
+              "reason": "NO_REFERENCE_PRICE"
+            },
+            "first_fill_ms": null,
+            "last_fill_ms": null,
+            "submitted_ms": null,
+            "recorded_ms": 1790337633086,
+            "measurement_id": "d614457759c73145b237f208fc7186d56bfce90249776c1a25a764a89c38920a"
+          },
+          {
+            "schema": "execution-evidence.v1",
+            "trade_id": "pos_4d0385e79d",
+            "leg_id": 18,
+            "purpose": "entry",
+            "market_type": "futures",
+            "symbol": "SUI/USDT",
+            "instrument_id": "binance_usdm:futures:SUIUSDT",
+            "venue_order_id": "1077151947",
+            "side": "buy",
+            "requested_qty": null,
+            "booked_qty": 293.6,
+            "strategy": {
+              "status": "UNKNOWN",
+              "strategy_id": "auth_donchian_breakout_trail",
+              "reason": "no strategy version was recorded when this trade opened"
+            },
+            "reference": {
+              "status": "UNAVAILABLE",
+              "price": null,
+              "reason": "no pre-submission reference recorded"
+            },
+            "fills": [],
+            "fill_qty": null,
+            "fill_coverage": "UNAVAILABLE",
+            "vwap": null,
+            "commissions_by_asset": {},
+            "commission_status": "UNAVAILABLE",
+            "slippage": {
+              "status": "UNAVAILABLE",
+              "reason": "NO_REFERENCE_PRICE"
+            },
+            "first_fill_ms": null,
+            "last_fill_ms": null,
+            "submitted_ms": null,
+            "recorded_ms": 1790337641883,
+            "measurement_id": "d4ae8c61bd504c1e774f701934023368b02f136bd7309ad481f276d735b96a75"
+          },
+          {
+            "schema": "execution-evidence.v1",
+            "trade_id": "pos_5abf9b16df",
+            "leg_id": 19,
+            "purpose": "entry",
+            "market_type": "futures",
+            "symbol": "TAO/USDT",
+            "instrument_id": "binance_usdm:futures:TAOUSDT",
+            "venue_order_id": "674895701",
+            "side": "buy",
+            "requested_qty": null,
+            "booked_qty": 1.137,
+            "strategy": {
+              "status": "UNKNOWN",
+              "strategy_id": "auth_donchian_breakout_trail",
+              "reason": "no strategy version was recorded when this trade opened"
+            },
+            "reference": {
+              "status": "UNAVAILABLE",
+              "price": null,
+              "reason": "no pre-submission reference recorded"
+            },
+            "fills": [],
+            "fill_qty": null,
+            "fill_coverage": "UNAVAILABLE",
+            "vwap": null,
+            "commissions_by_asset": {},
+            "commission_status": "UNAVAILABLE",
+            "slippage": {
+              "status": "UNAVAILABLE",
+              "reason": "NO_REFERENCE_PRICE"
+            },
+            "first_fill_ms": null,
+            "last_fill_ms": null,
+            "submitted_ms": null,
+            "recorded_ms": 1790424637254,
+            "measurement_id": "1c7e914dfd1bf9dd70342851dce34898f645dcb52823aefc116f86f223db8f79"
+          }
+        ],
+        "orders": [],
+        "matched_orders": 0,
+        "instruments": [],
+        "sides": [],
+        "slippage_model": "NOT_VALIDATED",
+        "reason": "NO_VALIDATED_EXECUTION_COST_METHOD; no minimum N grants authority"
+      }
+    }
+  },
+  "journal_only_trades_used_as_fill_evidence": false,
+  "depth": {
+    "path": "/mnt/luffy-data/luffy/shadow/capacity-evidence-r1-20261001/depth.db",
+    "by_instrument": [
+      {
+        "symbol": "AAVEUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811026795,
+        "last_ms": 1790811686986
+      },
+      {
+        "symbol": "AVAXUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811027876,
+        "last_ms": 1790811688234
+      },
+      {
+        "symbol": "BNBUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811029007,
+        "last_ms": 1790811689392
+      },
+      {
+        "symbol": "BTCUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811030052,
+        "last_ms": 1790811690461
+      },
+      {
+        "symbol": "BZUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811031368,
+        "last_ms": 1790811691605
+      },
+      {
+        "symbol": "DOGEUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811032417,
+        "last_ms": 1790811692942
+      },
+      {
+        "symbol": "ETHUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811033515,
+        "last_ms": 1790811694010
+      },
+      {
+        "symbol": "FILUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811034585,
+        "last_ms": 1790811695087
+      },
+      {
+        "symbol": "HYPEUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811035774,
+        "last_ms": 1790811696270
+      },
+      {
+        "symbol": "KORUUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811036874,
+        "last_ms": 1790811697419
+      },
+      {
+        "symbol": "LINKUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811038182,
+        "last_ms": 1790811698519
+      },
+      {
+        "symbol": "LITUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811039337,
+        "last_ms": 1790811699640
+      },
+      {
+        "symbol": "MOVRUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811040415,
+        "last_ms": 1790811700679
+      },
+      {
+        "symbol": "NEARUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811041456,
+        "last_ms": 1790811701860
+      },
+      {
+        "symbol": "QNTUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811042607,
+        "last_ms": 1790811702916
+      },
+      {
+        "symbol": "SKHYNIXUSDT",
+        "environment": "production",
+        "snapshots": 12,
+        "first_ms": 1790811043679,
+        "last_ms": 1790811703989
+      }
+    ],
+    "event_linked_snapshots": 0,
+    "reason": "No decision/intent/order IDs in depth schema; no time-window joins"
+  },
+  "slippage_model": "NOT_VALIDATED",
+  "commission": {
+    "status": "UNAVAILABLE",
+    "reason": "AUTHORIZED_SOURCE_MISSING",
+    "collector_found": "scripts/read_prod_fee.py; not invoked",
+    "missing": "Applicable connected-account rate receipt, time scope and paper execution classification"
+  },
+  "first_live": false,
+  "production_economic_probation": "INCOMPLETE",
+  "inventory_sha256": "b024c5a5d30183132e6b5698af2398df67202d434201c16eeb11d713fa4a2026"
+}

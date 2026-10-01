@@ -4526,3 +4526,111 @@ versioned_paper_cost_protocol:
     - Registered authoritative adapters are code-owned and currently absent in production; TEST-ONLY fixture authorities are not production adapters.
     - No additional mandatory cost dimension is defined by the existing isolated paper ledger beyond commission, execution cost and funding.
     - No Risk, capacity, thresholds, F1, first-live activation, frontend/M4, production write, deployment or restart.
+
+
+paper_execution_cost_evidence_calibration_r1:
+  package: LUFFY-PAPER-EXECUTION-COST-EVIDENCE-CALIBRATION-R1
+  verdict: PASS
+  outcome: INSUFFICIENT_EVIDENCE
+  base_commit: be2bf1860b0c66957d7d3af8c32d6a0e2a55d209
+  branch: luffy-paper-execution-cost-evidence-calibration-r1
+  worktree: /mnt/luffy-data/luffy/workspaces/paper-execution-cost-calibration-r1
+  PAPER_COST_PROTOCOL: TESTED
+  EXECUTION_COST_CALIBRATION: INSUFFICIENT_EVIDENCE
+  PRODUCTION_ECONOMIC_PROBATION: INCOMPLETE
+  CAPACITY: UNAVAILABLE
+  FIRST_LIVE: BLOCKED
+  commission: UNAVAILABLE - AUTHORIZED_SOURCE_MISSING
+  funding: UNAVAILABLE - no applicable frozen paper environment and event-time position/notional basis; public exact lookup TESTED with three actual endpoint-observation events
+  no_funding_crossing: TESTED - restricted adapter requires frozen production environment and complete empty inclusive interval proof; no current production paper receipt established
+  static_book_quote: TESTED - NOT_REALIZED_SLIPPAGE and NOT_MARKET_IMPACT_PROOF; cannot satisfy slippage gate
+  slippage_model: NOT_VALIDATED
+  matched_real_executions: 0
+  source_inventory:
+    production_persisted_trade_legs: 0
+    production_persisted_trade_fills: 0
+    replayed_existing_booking_receipts: 24
+    replayed_unique_exact_attributed_fills: 6
+    replayed_exact_orders_with_complete_booked_fills_and_fees: 4
+    instruments_with_fills: [SOL/USDT, HYPE/USDT]
+    matched_instruments: []
+    matched_sides: []
+    requested_quantity_coverage: UNAVAILABLE
+    decision_reference_coverage: UNAVAILABLE
+    latency_coverage: UNAVAILABLE
+    size_depth_coverage: UNAVAILABLE
+    spread_volatility_regime_coverage: UNAVAILABLE
+    partial_fill_cancellation_rejection_coverage: UNAVAILABLE
+    existing_public_depth_snapshots: 192
+    event_linked_depth_snapshots: 0
+    receipt_replay_storage: disposable in-memory only; production DB read-only
+  future_capture: TESTED_NOT_DEPLOYED - one public event-linked GET; actual timing delay recorded; no Kernel/order/Risk hook or runtime caller
+  calibration_status: PARKED_UNTIL_NEW_REAL_EVIDENCE
+  no_more_stage_5_cost_micro_packages: true
+  next: LUFFY-PORTFOLIO-ALLOCATOR-R1
+  stage_5_economic_completion: INCOMPLETE
+  trading_behavior_changed: false
+  runtime_deployment: NOT_DEPLOYED
+  committed: false
+  evidence:
+    - trader/observability/funding_events.py
+    - trader/observability/execution_calibration.py
+    - trader/observability/execution_shadow.py
+    - trader/engine/paper_cost_evidence.py
+    - scripts/execution_cost_inventory.py
+    - tests/test_execution_cost_calibration.py
+    - docs/superpowers/evidence/execution-cost-calibration-r1/inventory.json
+    - docs/superpowers/evidence/execution-cost-calibration-r1/funding-public-observation.json
+    - docs/superpowers/reports/2026-10-01-paper-execution-cost-calibration-r1.md
+  blockers:
+    - Applicable connected-account commission rate/classification and time-scope receipt missing; authenticated acquisition not called.
+    - Funding event-time paper notional and applicable frozen environment missing; boundary events refused.
+    - No exact requested-size/reference/decision/submission-linked execution dataset; no validated slippage method.
+    - Independent capacity and first-live authorities remain unavailable/blocked.
+  focused_tests: 205 passed across eight focused authority files; final 80 passed across calibration and cost protocol after duplicate-scoped-order hardening (overlapping checks, no full suite)
+  diff_check: PASS
+  control_yaml_parse: PASS
+  actual_public_funding_receipt_replay: PASS
+  graph_update: code-only graphify update .; AST extraction only, no LLM/API cost; aggregate community view above 5000 nodes
+
+
+stage5_closure_and_evidence_flow_r1:
+  package: LUFFY-STAGE5-CLOSURE-AND-EVIDENCE-FLOW-R1
+  verdict: PASS
+  stage5_build_complete: true
+  stage5_real_maturity: EVIDENCE_BLOCKED
+  missing_implementation: []
+  strategy_governor: IMPLEMENTED_NOW
+  lifecycle_authority: trader/strategy/factory_handoff.py; the existing independent live-entry fence is preserved
+  evidence_flow: docs/superpowers/evidence/stage5-closure-evidence-flow-r1/evidence-flow.json
+  report: docs/superpowers/reports/2026-10-01-stage5-closure-and-evidence-flow-r1.md
+  worktree: /mnt/luffy-data/luffy/workspaces/stage5-closure-evidence-flow-r1
+  branch: luffy-stage5-closure-evidence-flow-r1
+  base_commit: be2bf1860b0c66957d7d3af8c32d6a0e2a55d209
+  prerequisite: Reviewed uncommitted cost calibration files copied into isolated worktree
+  production_access: READ_ONLY
+  runtime_deployment: NOT_DEPLOYED
+  collectors_started: []
+  collector_fixes:
+  - Prospective exact order/reference/status/fill/fee/cancellation/rejection observation of existing authorized calls
+  - Bounded event-linked public depth worker; late books explicitly labeled; old blind collector STOP preserved
+  - Immutable paper environment/exposure and independent public open-paper funding producer plus close interval capture
+  owner_dependencies:
+  - Reviewed deployment/restart
+  - Separate research activation and valid registered candidate; referee/handoff remain false
+  external_blockers:
+  - Applicable connected-account commission authority
+  - Account-specific symbol eligibility and leverage brackets
+  - Funding boundary timing/demo obligation authority and missing event mark when absent
+  - Validated execution-cost/liquidity capacity method and matched real dataset
+  PRODUCTION_ECONOMIC_PROBATION: INCOMPLETE
+  EXECUTION_COST_CALIBRATION: INSUFFICIENT_EVIDENCE
+  CAPACITY: UNAVAILABLE
+  FIRST_LIVE: BLOCKED
+  focused_tests: Final 100 passed for changed lifecycle/capture/control/recovery; earlier 478 contract checks passed and one
+    observer regression corrected; focused partial-close/fill checks passed. Counts overlap; no full suite.
+  graph_update: Code-only AST graphify update .; no LLM/API cost; aggregated view for >5000 nodes
+  diff_check: PASS
+  safe_to_leave_stage5_build: true
+  next_recommended_package: LUFFY-PORTFOLIO-ALLOCATOR-R1
+  committed: false

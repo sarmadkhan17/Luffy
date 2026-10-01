@@ -955,7 +955,7 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
                          ast.walk(fn) if g is not fn
                          and isinstance(g, ast.FunctionDef))}
     assert users == {"_research_handoff", "_install_version",
-                     "_load_spec_population", "_try_enter", "_manage_one"}, users
+                     "_load_spec_population", "_try_enter", "_manage_one", "_mechanism_once"}, users
     for name in ("_load_spec_population", "_try_enter"):
         fn = next(f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)
                   and f.name == name)

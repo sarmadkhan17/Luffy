@@ -1,0 +1,207 @@
+{
+  "package": "LUFFY-STAGE5-CLOSURE-AND-EVIDENCE-FLOW-R1",
+  "observed_at": "2026-10-01T12:49:47.032979+00:00",
+  "production_access": "READ_ONLY; no account request, restart, deployment or trading action",
+  "streams": [
+    {
+      "evidence": "production versioned paper trades",
+      "producer": "Kernel._try_enter -> PaperExecutor.enter/manage",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/luffy.db versioned_paper_trades, paper_exit_evidence, versioned_paper_cost_receipts",
+      "last_observation": "NONE; production version/install/paper tables absent",
+      "rate": "Per authorized installed-version signal and completed-bar transition; currently zero",
+      "retention": "Persistent SQLite records; exact identities/environment immutable; finalized cost receipts immutable",
+      "blocker": "OWNER/ACTIVATION_DEPENDENCY: reviewed code not deployed, research.referee=false and research.handoff=false; existing registered research stop and real valid candidate still required. Flags were not enabled."
+    },
+    {
+      "evidence": "commission authority",
+      "producer": "No applicable connected-account authority is currently saved; existing exact-order fee response capture is not an account-rate producer",
+      "status": "EXTERNAL_BLOCKED",
+      "destination": "No authoritative account-rate destination exists until authorized applicable receipt is supplied",
+      "last_observation": "NONE",
+      "rate": "No authorized acquisition",
+      "retention": "Any eventual exact receipt must retain account/environment/classification/time scope",
+      "blocker": "EXTERNAL_AUTHORITY_REQUIRED: no applicable account-specific rate/classification/time-scope receipt. scripts/read_prod_fee.py was not called; no credential expansion."
+    },
+    {
+      "evidence": "funding events",
+      "producer": "Kernel._paper_funding_recorder/_paper_funding_once + PaperExecutor.manage -> Capture.funding -> funding_events.lookup",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/execution-evidence.db observations (created only after authorized deployment)",
+      "last_observation": "Public BTCUSDT observation: latest event 2026-09-30T16:00:00.002Z; receipt 2026-10-01T11:49:44.125Z; no production paper exposure",
+      "rate": "60 s for existing open paper futures (max 32 positions); final closed interval from paper close; no position means no request",
+      "retention": "Append-only; 256 MiB storage ceiling and 512 KiB record ceiling; no automatic deletion. Exhaustion/STOP/queue saturation is an explicit persisted/logged blocker.",
+      "blocker": "Owner deployment and authorized versioned paper position. Production public endpoint cannot prove demo funding obligations; boundary events remain unresolved."
+    },
+    {
+      "evidence": "funding position/notional basis",
+      "producer": "Immutable paper_exposure at entry + public event markPrice in Capture.funding",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/execution-evidence.db observations (created only after authorized deployment)",
+      "last_observation": "NONE",
+      "rate": "At each returned exact funding event, from frozen constant paper quantity and event mark; never entry-price substitution",
+      "retention": "Append-only; 256 MiB storage ceiling and 512 KiB record ceiling; no automatic deletion. Exhaustion/STOP/queue saturation is an explicit persisted/logged blocker.",
+      "blocker": "Deployment/activation and exact public event mark; environment must be frozen production; changed quantity or missing mark is unavailable. Exact venue boundary obligation remains externally unproven."
+    },
+    {
+      "evidence": "decision reference price/time",
+      "producer": "Kernel._entry_provenance; ExitEngine.manage/LiveExitAdapter snapshot reference; ObservedExchange context",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/execution-evidence.db observations (created only after authorized deployment); existing monetary bookings remain in production/data/luffy.db",
+      "last_observation": "NONE for historical calibration; six receipt-replayed fills lack exact references",
+      "rate": "Per authorized entry/exit observation",
+      "retention": "Append-only; 256 MiB storage ceiling and 512 KiB record ceiling; no automatic deletion. Exhaustion/STOP/queue saturation is an explicit persisted/logged blocker.",
+      "blocker": "Owner-reviewed deployment/restart is not authorized or performed; then an existing authorized execution event is required. No fuzzy symbol/time linkage or manufactured timestamps."
+    },
+    {
+      "evidence": "requested quantity",
+      "producer": "ObservedExchange.create_order pre-submission intent; existing booking provenance",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/execution-evidence.db observations (created only after authorized deployment); existing monetary bookings remain in production/data/luffy.db",
+      "last_observation": "NONE in saved historical calibration receipts",
+      "rate": "Per exact existing order submission",
+      "retention": "Append-only; 256 MiB storage ceiling and 512 KiB record ceiling; no automatic deletion. Exhaustion/STOP/queue saturation is an explicit persisted/logged blocker.",
+      "blocker": "Owner-reviewed deployment/restart is not authorized or performed; then an existing authorized execution event is required. No fuzzy symbol/time linkage or manufactured timestamps."
+    },
+    {
+      "evidence": "submission timestamp",
+      "producer": "ObservedExchange.create_order immediate pre-delegate timestamp; Executor booking reference uses same timestamp",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/execution-evidence.db observations (created only after authorized deployment); existing monetary bookings remain in production/data/luffy.db",
+      "last_observation": "NONE in saved historical calibration receipts",
+      "rate": "Per exact existing order submission",
+      "retention": "Append-only; 256 MiB storage ceiling and 512 KiB record ceiling; no automatic deletion. Exhaustion/STOP/queue saturation is an explicit persisted/logged blocker.",
+      "blocker": "Owner-reviewed deployment/restart is not authorized or performed; then an existing authorized execution event is required. No fuzzy symbol/time linkage or manufactured timestamps."
+    },
+    {
+      "evidence": "fill quantity/price",
+      "producer": "ObservedExchange order/status responses and exact fill-history responses; existing booking/trade_provenance",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/execution-evidence.db observations (created only after authorized deployment); existing monetary bookings remain in production/data/luffy.db",
+      "last_observation": "Six unique exact fills in retained accounting receipts; latest receipt observed_ms=1790649310967; production trade_fills=0",
+      "rate": "Every existing authorized response; per-fill rows may arrive at a later existing exit/reconciliation/accounting read",
+      "retention": "Append-only; 256 MiB storage ceiling and 512 KiB record ceiling; no automatic deletion. Exhaustion/STOP/queue saturation is an explicit persisted/logged blocker.",
+      "blocker": "Owner-reviewed deployment/restart is not authorized or performed; then an existing authorized execution event is required. No fuzzy symbol/time linkage or manufactured timestamps."
+    },
+    {
+      "evidence": "fees",
+      "producer": "ObservedExchange.report_order_fees/fetch_my_trades + safe_fill; existing accounting receipts",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/execution-evidence.db observations (created only after authorized deployment); existing monetary bookings remain in production/data/luffy.db",
+      "last_observation": "Six retained receipt-replayed fills have fees; no applicable paper commission authority",
+      "rate": "Each existing order/fill response; missing fee/asset stays missing",
+      "retention": "Append-only; 256 MiB storage ceiling and 512 KiB record ceiling; no automatic deletion. Exhaustion/STOP/queue saturation is an explicit persisted/logged blocker.",
+      "blocker": "Owner-reviewed deployment/restart is not authorized or performed; then an existing authorized execution event is required. No fuzzy symbol/time linkage or manufactured timestamps."
+    },
+    {
+      "evidence": "partial fills",
+      "producer": "ObservedExchange order/status filled/remaining and exact fill quantities, requested size; existing recovery reads",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/execution-evidence.db observations (created only after authorized deployment); existing monetary bookings remain in production/data/luffy.db",
+      "last_observation": "Historical requested-size coverage absent; zero measured partials is not absence",
+      "rate": "Each existing submission/status/fill response",
+      "retention": "Append-only; 256 MiB storage ceiling and 512 KiB record ceiling; no automatic deletion. Exhaustion/STOP/queue saturation is an explicit persisted/logged blocker.",
+      "blocker": "Owner-reviewed deployment/restart is not authorized or performed; then an existing authorized execution event is required. No fuzzy symbol/time linkage or manufactured timestamps."
+    },
+    {
+      "evidence": "cancellations",
+      "producer": "ObservedExchange.cancel_order and forwarded fapiPrivateDeleteAlgoOrder; existing recovery/protective calls",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/execution-evidence.db observations (created only after authorized deployment); existing monetary bookings remain in production/data/luffy.db",
+      "last_observation": "NONE with full prospective intent links",
+      "rate": "Each existing authorized cancellation response/error; acknowledgement is not terminal-state proof",
+      "retention": "Append-only; 256 MiB storage ceiling and 512 KiB record ceiling; no automatic deletion. Exhaustion/STOP/queue saturation is an explicit persisted/logged blocker.",
+      "blocker": "Owner-reviewed deployment/restart is not authorized or performed; then an existing authorized execution event is required. No fuzzy symbol/time linkage or manufactured timestamps."
+    },
+    {
+      "evidence": "rejections",
+      "producer": "ObservedExchange.create_order exception type; existing EntryRecovery persists explicit versus ambiguous rejection",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/execution-evidence.db observations (created only after authorized deployment); existing monetary bookings remain in production/data/luffy.db",
+      "last_observation": "NONE with full prospective intent links",
+      "rate": "Every attempted authorized submission; timeouts remain AMBIGUOUS",
+      "retention": "Append-only; 256 MiB storage ceiling and 512 KiB record ceiling; no automatic deletion. Exhaustion/STOP/queue saturation is an explicit persisted/logged blocker.",
+      "blocker": "Owner-reviewed deployment/restart is not authorized or performed; then an existing authorized execution event is required. No fuzzy symbol/time linkage or manufactured timestamps."
+    },
+    {
+      "evidence": "decision/submission order book",
+      "producer": "ObservedExchange decision/pre_submission intents and PaperExecutor.enter -> Capture.book -> execution_shadow.capture",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/execution-evidence.db observations (created only after authorized deployment); existing monetary bookings remain in production/data/luffy.db",
+      "last_observation": "192 old supplemental snapshots; last received_ms=1790811703989; zero event-linked snapshots",
+      "rate": "Up to two public GETs per existing order, one per paper entry; single daemon worker, max 32 pending tasks",
+      "retention": "Append-only; 256 MiB storage ceiling and 512 KiB record ceiling; no automatic deletion. Exhaustion/STOP/queue saturation is an explicit persisted/logged blocker.",
+      "blocker": "Owner-reviewed deployment/restart is not authorized or performed; then an existing authorized execution event is required. Late books are NOT_EXACT_EVENT_TIME_BOOK; static quotes never establish slippage/impact."
+    },
+    {
+      "evidence": "spread",
+      "producer": "Bid/ask levels from each linked depth observation; exact snapshot identity",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/execution-evidence.db observations (created only after authorized deployment); existing monetary bookings remain in production/data/luffy.db",
+      "last_observation": "Old supplemental snapshot bid/ask observations only; zero prospective links",
+      "rate": "At each successful event-linked depth response",
+      "retention": "Append-only; 256 MiB storage ceiling and 512 KiB record ceiling; no automatic deletion. Exhaustion/STOP/queue saturation is an explicit persisted/logged blocker.",
+      "blocker": "Owner-reviewed deployment/restart is not authorized or performed; then an existing authorized execution event is required. Late books are NOT_EXACT_EVENT_TIME_BOOK; static quotes never establish slippage/impact."
+    },
+    {
+      "evidence": "latency",
+      "producer": "Exact reference, actual pre-delegate submission, response and venue fill timestamps; depth event-to-request/receipt delays",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/execution-evidence.db observations (created only after authorized deployment); existing monetary bookings remain in production/data/luffy.db",
+      "last_observation": "Historical decision/submission latency UNAVAILABLE",
+      "rate": "Per exact prospective intent/response/fill/capture",
+      "retention": "Append-only; 256 MiB storage ceiling and 512 KiB record ceiling; no automatic deletion. Exhaustion/STOP/queue saturation is an explicit persisted/logged blocker.",
+      "blocker": "Owner-reviewed deployment/restart is not authorized or performed; then an existing authorized execution event is required. No fuzzy symbol/time linkage or manufactured timestamps."
+    },
+    {
+      "evidence": "venue position snapshots",
+      "producer": "Kernel._record_capacity_evidence -> evidence_capture.position_snapshot/record_snapshot from existing verified reconciliation response",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/luffy.db state_kv venue_position_snapshot + venue_position_snapshots",
+      "last_observation": "NONE in production snapshot table (table absent)",
+      "rate": "Every new existing reconciliation observation; append history only when distinct venue book changes",
+      "retention": "Latest state_kv value plus immutable distinct-book history; no new retention deletion",
+      "blocker": "Reviewed producer not deployed; owner deployment/restart required. No extra fetch_positions call."
+    },
+    {
+      "evidence": "available margin",
+      "producer": "Kernel._record_capacity_evidence -> evidence_capture.margin_observation/record_margin from SAME existing /fapi/v3/account response",
+      "status": "READY_WAITING_EVENT",
+      "destination": "production/data/luffy.db state_kv account_margin_observation",
+      "last_observation": "Margin evidence key absent; underlying account/equity observation fresh at 2026-10-01T12:24:47.720476Z",
+      "rate": "Existing Kernel account-read cycles (scan_interval_seconds=60); no additional request",
+      "retention": "Latest state_kv observation overwritten each cycle; no historical-margin promise",
+      "blocker": "Reviewed capture integration not deployed; owner deployment/restart required. A missing availableBalance remains unavailable, never inferred from equity."
+    },
+    {
+      "evidence": "account eligibility",
+      "producer": "Existing typed Binance registry ingestion from authoritative account/symbol permission responses",
+      "status": "EXTERNAL_BLOCKED",
+      "destination": "RegistrySnapshot/strategy capacity receipt; public exchangeInfo supplies metadata only",
+      "last_observation": "Account-specific per-symbol eligibility UNKNOWN",
+      "rate": "No authorized symbol-permission acquisition",
+      "retention": "Retain exact environment/instrument/source scope when authority is supplied",
+      "blocker": "EXTERNAL_AUTHORITY_REQUIRED: account-global canTrade is not per-symbol eligibility; no applicable saved per-symbol authority or newly authorized account request."
+    },
+    {
+      "evidence": "leverage brackets",
+      "producer": "Existing Binance registry ingestion accepts actual leverageBracket/symbolConfig responses",
+      "status": "EXTERNAL_BLOCKED",
+      "destination": "RegistrySnapshot/strategy capacity receipt",
+      "last_observation": "No applicable saved leverage-bracket authority",
+      "rate": "No authorized account bracket acquisition",
+      "retention": "Receipt-bound account/environment/instrument/time scope required",
+      "blocker": "EXTERNAL_AUTHORITY_REQUIRED: requested/configured leverage and exchangeInfo are not authoritative account leverage brackets; additional authenticated acquisition is unauthorized."
+    },
+    {
+      "evidence": "validated execution cost / capacity liquidity method",
+      "producer": "Exact existing execution evidence + prospective sidecar replay + execution_calibration.dataset; capacity contract refuses unvalidated dimensions",
+      "status": "EXTERNAL_BLOCKED",
+      "destination": "Exact execution evidence and immutable strategy capacity receipts",
+      "last_observation": "Matched historical calibration orders=0; model NOT_VALIDATED; CAPACITY UNAVAILABLE",
+      "rate": "Prospective observations only after deployment/authorized execution; no calibration without supported observations",
+      "retention": "Append-only; 256 MiB storage ceiling and 512 KiB record ceiling; no automatic deletion. Exhaustion/STOP/queue saturation is an explicit persisted/logged blocker.",
+      "blocker": "No matched size/reference/time/book/regime dataset or validated executable-cost/capacity method. A model cannot be manufactured from static quotes, sample counts or old unmatched fills."
+    }
+  ]
+}

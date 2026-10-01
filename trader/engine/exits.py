@@ -157,6 +157,10 @@ class ExitEngine:
         if not fresh or fresh[0]["status"] != "open":
             return None
         trade.update(fresh[0])
+        if snapshot is not None and snapshot.price == mark:
+            trade['_execution_reference'] = dict(price=mark,observed_at=snapshot.ts,basis='exit_decision_snapshot_price')
+        else:
+            trade.pop('_execution_reference',None)
         import json
         try:
             identity = json.loads(trade.get('entry_identity_json') or '{}')

@@ -2,30 +2,40 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
-  id: LUFFY-PAPER-EXECUTION-COST-EVIDENCE-CALIBRATION-R1
+  id: LUFFY-PORTFOLIO-ALLOCATOR-R1
+  stage: 6
+  type: PORTFOLIO_INTELLIGENCE
   status: SELECTED_NOT_STARTED
-  selected_stage_5_blocker: VALIDATED_EXECUTION_COST_EVIDENCE_UNAVAILABLE
-  objective: Establish a defensible registered executable-price cost evidence method covering both entry and exit paper quantities.
-  rationale: Paper fills remain reference-price simulations; depth snapshots alone do not establish costs, and no validated execution-cost adapter exists. This independently blocks economic probation.
+  objective: Build Stage 6 Portfolio Intelligence under existing deterministic Risk and trading authority fences.
+  rationale: Stage-5 BUILD contracts are tested and every time-dependent evidence dependency has a ready producer or explicit
+    external/owner blocker. Stage-5 economic maturity remains incomplete.
   last_completed:
-    id: LUFFY-VERSIONED-PAPER-COST-EVIDENCE-PROTOCOL-R1
+    id: LUFFY-STAGE5-CLOSURE-AND-EVIDENCE-FLOW-R1
     verdict: PASS
     state: TESTED
-    branch: luffy-versioned-paper-cost-evidence-protocol-r1
-    base_commit: 1ab0da0cb9cb3a3c290488d7c75edf09788b6462
-    report: docs/superpowers/reports/2026-10-01-versioned-paper-cost-evidence-protocol-r1.md
+    stage5_build_complete: true
+    stage5_real_maturity: EVIDENCE_BLOCKED
+    report: docs/superpowers/reports/2026-10-01-stage5-closure-and-evidence-flow-r1.md
     runtime_deployment: NOT_DEPLOYED
-  remaining_independent_gaps:
-    - Exact applicable commission-rate receipts and known maker/taker or classification-independent treatment for both legs.
-    - Complete historical funding events, venue timing semantics and applicable position/notional basis for futures.
-    - Effective requested-size capacity proof remains UNAVAILABLE and first-live remains BLOCKED.
+  preserved_authority:
+    PAPER_COST_PROTOCOL: TESTED
+    EXECUTION_COST_CALIBRATION: INSUFFICIENT_EVIDENCE
+    PRODUCTION_ECONOMIC_PROBATION: INCOMPLETE
+    CAPACITY: UNAVAILABLE
+    FIRST_LIVE: BLOCKED
+  evidence_collection:
+    matrix: docs/superpowers/evidence/stage5-closure-evidence-flow-r1/evidence-flow.json
+    status: READY_PRODUCERS_OR_EXPLICIT_BLOCKERS
+    deployment: OWNER_AUTHORIZATION_REQUIRED
+    research_activation: OWNER_ACTIVATION_DEPENDENCY; referee=false and handoff=false
+  parked_cost_calibration:
+    status: PARKED_UNTIL_NEW_REAL_EVIDENCE
+    no_more_stage_5_cost_micro_packages: true
+    requirements: docs/superpowers/reports/2026-10-01-paper-execution-cost-calibration-r1.md
   execution_constraints:
-    - No invented rates, bps, freshness, haircut or participation constants.
-    - Depth observations require defensible source/time, requested-size coverage and an already validated registered method before completing costs.
-    - No deployment, restart, authenticated requests, Risk change, capacity weakening, first-live activation or frontend/M4 work.
-    - Preserve 15 trades, 40 percent win rate and 1.15 net profit factor thresholds; preserve existing net win-rate policy.
-    - Keep finalized unknown receipts immutable; no historical cost backfill.
-
+  - No invented costs or capacity, weaker probation, first-live activation, Risk change, deployment or restart.
+  - Preserve exact version/install and exit-semantics binding and 15 trades / 40 percent win rate / 1.15 profit factor.
+  - Stage-5 BUILD closure grants no collection deployment, research activation, execution or cost-model authority.
 
 intelligence_spine_shadow_package:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
@@ -258,5 +268,5 @@ after_completion:
   - One-shot production-scale timing is a separate owner-decision candidate only. Authorization must specify the source DB path, shadow DB path, max_sources, wall_clock_deadline_s, invocation_key / recorded_at_ms, observation/timing goal, stop conditions and acceptable WAL/checkpoint/resource impact. Recurring cadence requires one-shot evidence, review of that evidence and separate owner authorization. Neither authorization grants trading authority.
   - max_sources bounds source selection only. Full-history derivation/verification, repeated Bank filing, WAL/checkpoint effects and storage growth remain unbounded; batch-independent results and production timing are not established. Source identity is not a full database fingerprint. Total research cost remains NOT_ESTABLISHED; budget manager authority is MISSING.
   - External Source Router/retrieval, registered falsifier predicates, a truthful WorldModel/regime source and failed-research suppression/no-repeat policy remain MISSING. Do not infer authority from context_only recall or reports.
-  - LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1 (BLOCKED) was unblocked by LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 (PASS, TESTED, NOT_DEPLOYED). The single next package is LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1, awaiting owner authorization.
+  - LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1 (BLOCKED) was unblocked by LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 (PASS, TESTED, NOT_DEPLOYED). The independent intelligence shadow package remains LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1, awaiting owner authorization; the main selected package is LUFFY-PORTFOLIO-ALLOCATOR-R1.
   - Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged.

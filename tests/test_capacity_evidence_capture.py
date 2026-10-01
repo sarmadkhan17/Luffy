@@ -476,8 +476,8 @@ def test_no_trading_behavior_change():
     for f in (ROOT / "trader").rglob("*.py"):
         t = f.read_text()
         if f.name not in ("capacity_depth_shadow.py",):
-            assert "depth_evidence" not in t or f.name == "depth_evidence.py", f
-            assert "execution_evidence" not in t or f.name == "execution_evidence.py", f
+            assert "depth_evidence" not in t or f.name in {"depth_evidence.py", "execution_shadow.py", "execution_calibration.py"}, f
+            assert "execution_evidence" not in t or f.name in {"execution_evidence.py", "execution_calibration.py"}, f
     kernel = (ROOT / "trader/kernel.py").read_text()
     assert kernel.count("evidence_capture") == 1 and "_record_capacity_evidence()" in kernel
     from trader.core.config import load_config

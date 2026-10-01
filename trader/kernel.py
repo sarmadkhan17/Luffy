@@ -504,6 +504,8 @@ class Kernel:
         self._start_owner_interface()
         threading.Thread(target=self._derivatives_recorder, daemon=True,
                          name="derivs-recorder").start()
+        threading.Thread(target=self._paper_funding_recorder, daemon=True,
+                         name="paper-funding-evidence").start()
         if (self.cfg.get("references", {}) or {}).get("enabled", True):
             threading.Thread(target=self._reference_recorder, daemon=True,
                              name="ref-recorder").start()
@@ -710,9 +712,16 @@ class Kernel:
         # 1. retire what has stopped working
         retired = analyst.review_deployed(book)
         for a in retired:
-            self.journal.query(
-                "UPDATE strategies SET state='retired', retire_reason=? "
-                "WHERE id=?", (a["evidence"]["verdict"][:200], a["spec"]))
+            from .strategy import factory_handoff as fh
+            if fh.versioned(self.journal, a["spec"]):
+                versions = self.journal.query("SELECT version_id FROM strategy_version_installs WHERE strategy_id=?", (a["spec"],))
+                if len(versions) != 1:
+                    raise ValueError('governor_install_ambiguous')
+                fh.retire_version(self.journal, versions[0]['version_id'], fh.RETIRED,
+                    reason_code=a["evidence"]["verdict"][:200], actor='strategy_governor', at_ms=int(time.time()*1000))
+            with self.journal._tx() as c:
+                c.execute("UPDATE strategies SET state='retired', retire_reason=? WHERE id=?",
+                          (a["evidence"]["verdict"][:200], a["spec"]))
         if retired:
             book = [s for s in book
                     if s.id not in {a["spec"] for a in retired}]
@@ -870,7 +879,9 @@ class Kernel:
                                            mode="paper",
                                            at_ms=int(time.time() * 1000))
         except fh.HandoffRefused as e:
-            # the row must not trade outside a bound probation
+            # The row is only a projection of the same version authority.
+            fh.retire_version(self.journal,version_id,fh.RETIRED,
+                reason_code='exact_install_refused:' + e.code,actor='strategy_governor',at_ms=int(time.time()*1000))
             with self.journal._tx() as c:
                 c.execute("UPDATE strategies SET state='retired', "
                           "retire_reason=?, state_changed_at=? WHERE id=?",
@@ -1461,10 +1472,42 @@ class Kernel:
             exec_mode="live", entry_identity=identity, reference=reference)
         return pos is not None
 
+    def _paper_funding_recorder(self):
+        """Public observation only, including when no new strategy snapshot arrives.
+        No paper position -> no request; no venue/account or trading capability.
+        The close path independently captures the exact final interval.
+        """
+        from .observability.prospective_execution import for_journal
+        capture=for_journal(self.journal)
+        if capture is None:
+            return
+        while not self._stop:
+            try:
+                self._paper_funding_once(capture)
+            except Exception as exc:
+                capture.blocked('PAPER_FUNDING_PRODUCER:' + type(exc).__name__)
+            for _ in range(60):
+                if self._stop:
+                    return
+                time.sleep(1)
+
+    def _paper_funding_once(self,capture):
+        if not self.journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='versioned_paper_trades'"):
+            return
+        rows=self.journal.query("SELECT * FROM versioned_paper_trades WHERE status='open' ORDER BY id LIMIT 33")
+        if len(rows)>32:
+            capture.blocked('PAPER_POSITION_COLLECTION_BOUND_EXCEEDED')
+            return
+        end=time.time_ns()//1_000_000
+        for trade in rows:
+            if trade['market_type']=='futures':
+                capture.funding(trade,end)
+
     def _paper_executor(self):
         from .engine.paper import PaperExecutor
         if not hasattr(self, "_paper"):
-            self._paper = PaperExecutor(self.journal, self.cfg)
+            from .observability.prospective_execution import environment
+            self._paper = PaperExecutor(self.journal, self.cfg, venue_environment=environment(self.feed.ex) if getattr(self,'feed',None) is not None else None)
         return self._paper
 
     def _manage_paper(self, snap):
@@ -1502,7 +1545,7 @@ class Kernel:
                          "basis": "decision_snapshot_price",
                          "definition": f"last {exec_tf} close in the decision snapshot; "
                                        "the price the entry was sized and stopped on",
-                         "snapshot_at": snap.ts, "bar_ts": bar_ts}
+                         "snapshot_at": snap.ts, "observed_at": snap.ts, "bar_ts": bar_ts}
         except Exception as e:                            # noqa: BLE001
             reference = {"price": None, "basis": "unavailable",
                          "reason": "reference_capture_failed:" + type(e).__name__}

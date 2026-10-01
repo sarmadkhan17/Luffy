@@ -1,0 +1,93 @@
+{
+  "purpose": "PUBLIC_ENDPOINT_OBSERVATION_ONLY; NOT_A_PAPER_TRADE_INTERVAL; NOT_POSITION_BASIS",
+  "receipt": {
+    "schema": "binance-funding-interval.v1",
+    "environment": "production",
+    "symbol": "BTCUSDT",
+    "open_ms": 1790726400000,
+    "close_ms": 1790812800000,
+    "pages": [
+      {
+        "url": "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&startTime=1790726400000&endTime=1790812800000&limit=1000",
+        "request_start_ms": 1790855382736,
+        "received_ms": 1790855384125,
+        "http_status": 200,
+        "response_body": "[{\"symbol\":\"BTCUSDT\",\"fundingTime\":1790726400000,\"fundingRate\":\"0.00007697\",\"markPrice\":\"83624.50000000\",\"rateType\":\"Regular\"},{\"symbol\":\"BTCUSDT\",\"fundingTime\":1790755200000,\"fundingRate\":\"-0.00000244\",\"markPrice\":\"83259.62923913\",\"rateType\":\"Regular\"},{\"symbol\":\"BTCUSDT\",\"fundingTime\":1790784000002,\"fundingRate\":\"0.00006606\",\"markPrice\":\"84104.80000000\",\"rateType\":\"Regular\"}]",
+        "response_sha256": "646d3395064f3db06342b9b0435787c0d5f6d84a72f672363574a931ebee58e8"
+      }
+    ],
+    "events": [
+      {
+        "symbol": "BTCUSDT",
+        "timestamp_ms": 1790726400000,
+        "published_rate": "0.00007697",
+        "published_mark_price": "83624.50000000",
+        "source_endpoint": "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&startTime=1790726400000&endTime=1790812800000&limit=1000",
+        "received_ms": 1790855384125,
+        "response_sha256": "646d3395064f3db06342b9b0435787c0d5f6d84a72f672363574a931ebee58e8",
+        "version": "binance-funding-interval.v1",
+        "position_notional_basis": null
+      },
+      {
+        "symbol": "BTCUSDT",
+        "timestamp_ms": 1790755200000,
+        "published_rate": "-0.00000244",
+        "published_mark_price": "83259.62923913",
+        "source_endpoint": "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&startTime=1790726400000&endTime=1790812800000&limit=1000",
+        "received_ms": 1790855384125,
+        "response_sha256": "646d3395064f3db06342b9b0435787c0d5f6d84a72f672363574a931ebee58e8",
+        "version": "binance-funding-interval.v1",
+        "position_notional_basis": null
+      },
+      {
+        "symbol": "BTCUSDT",
+        "timestamp_ms": 1790784000002,
+        "published_rate": "0.00006606",
+        "published_mark_price": "84104.80000000",
+        "source_endpoint": "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&startTime=1790726400000&endTime=1790812800000&limit=1000",
+        "received_ms": 1790855384125,
+        "response_sha256": "646d3395064f3db06342b9b0435787c0d5f6d84a72f672363574a931ebee58e8",
+        "version": "binance-funding-interval.v1",
+        "position_notional_basis": null
+      }
+    ],
+    "receipt_id": "caf01f77e2c62398a4bc7edbd1084ca477852618b5e91f6b9a1d47539ad37f30",
+    "crossed_events": [
+      {
+        "symbol": "BTCUSDT",
+        "timestamp_ms": 1790755200000,
+        "published_rate": "-0.00000244",
+        "published_mark_price": "83259.62923913",
+        "source_endpoint": "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&startTime=1790726400000&endTime=1790812800000&limit=1000",
+        "received_ms": 1790855384125,
+        "response_sha256": "646d3395064f3db06342b9b0435787c0d5f6d84a72f672363574a931ebee58e8",
+        "version": "binance-funding-interval.v1",
+        "position_notional_basis": null
+      },
+      {
+        "symbol": "BTCUSDT",
+        "timestamp_ms": 1790784000002,
+        "published_rate": "0.00006606",
+        "published_mark_price": "84104.80000000",
+        "source_endpoint": "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&startTime=1790726400000&endTime=1790812800000&limit=1000",
+        "received_ms": 1790855384125,
+        "response_sha256": "646d3395064f3db06342b9b0435787c0d5f6d84a72f672363574a931ebee58e8",
+        "version": "binance-funding-interval.v1",
+        "position_notional_basis": null
+      }
+    ],
+    "boundary_events": [
+      {
+        "symbol": "BTCUSDT",
+        "timestamp_ms": 1790726400000,
+        "published_rate": "0.00007697",
+        "published_mark_price": "83624.50000000",
+        "source_endpoint": "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&startTime=1790726400000&endTime=1790812800000&limit=1000",
+        "received_ms": 1790855384125,
+        "response_sha256": "646d3395064f3db06342b9b0435787c0d5f6d84a72f672363574a931ebee58e8",
+        "version": "binance-funding-interval.v1",
+        "position_notional_basis": null
+      }
+    ]
+  }
+}

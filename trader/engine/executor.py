@@ -61,9 +61,11 @@ def _reference(reference: dict | None, submitted_ms: int) -> dict:
     return out
 
 
-def _hint_reference(hint: float, submitted_ms: int) -> dict:
+def _hint_reference(hint: float, submitted_ms: int, captured=None) -> dict:
     """An exit's benchmark is the price hint its caller passed; the hint's own
     observation time is not carried by the exit path and is left unknown."""
+    if isinstance(captured,dict) and captured.get('price') == hint:
+        return _reference(captured,submitted_ms)
     return {"price": float(hint) if hint else None, "basis": "exit_price_hint",
             "observed_at": None, "submitted_ms": submitted_ms}
 
@@ -71,7 +73,9 @@ def _hint_reference(hint: float, submitted_ms: int) -> dict:
 class Executor:
     def __init__(self, exchange, journal: Journal, cfg: dict,
                  market_type: MarketType):
-        self.ex = exchange
+        from ..observability.prospective_execution import for_journal, ObservedExchange
+        capture = for_journal(journal)
+        self.ex = ObservedExchange(exchange,capture) if capture else exchange
         self.journal = journal
         self.market_type = market_type
         r = cfg["risk"]
@@ -195,6 +199,10 @@ class Executor:
                      exec_mode: str, entry_identity: dict | None = None,
                      reference: dict | None = None) -> Position | None:
         sym = decision.symbol
+        context = getattr(self.ex, 'context', None)
+        if context:
+            context(dict(decision_id=decision.id, strategy_id=strategy_id,
+                strategy_identity=entry_identity, reference=reference))
         side_ccxt = "buy" if decision.action == Action.BUY else "sell"
         pos_side = Side.LONG if decision.action == Action.BUY else Side.SHORT
         params: dict = {}
@@ -248,6 +256,7 @@ class Executor:
                 if intent:
                     intent["order_id"] = str(order.get("id") or "")
                     self.recovery.save(intent, "entry_submitted")
+        submitted_ms = getattr(self.ex,'submitted_ms',None) or submitted_ms
         if error is not None:
             e = error
             from ..data.feed import is_untradeable_error, mark_untradeable
@@ -463,6 +472,12 @@ class Executor:
                       price_hint: float = 0.0, reason: str = "partial") -> bool:
         """Reduce-only partial close; journal amount shrinks, trade stays open."""
         sym = trade["symbol"]
+        context = getattr(self.ex, 'context', None)
+        if context:
+            context(dict(decision_id=trade.get('decision_id'), trade_id=trade['id'],
+                strategy_id=trade.get('strategy_id'), strategy_identity=trade.get('entry_identity_json'),
+                reference=trade.get('_execution_reference') or {'price':price_hint if 'price_hint' in locals() else exit_price_hint,
+                           'basis':'exit_price_hint', 'observed_at':None}))
         side_close = "sell" if trade["side"] == "long" else "buy"
         amount = quantize(self.ex, sym, amount)
         if amount <= 0:
@@ -476,6 +491,7 @@ class Executor:
             sent_ms = submitted_ms - 60_000
             order = self.ex.create_order(sym, "market", side_close, amount,
                                          params={"reduceOnly": True})
+            submitted_ms = getattr(self.ex,'submitted_ms',None) or submitted_ms
             fills = self._order_fills(sym, str(order.get("id") or ""), sent_ms)
             if fills:
                 # this leg's own fills; the entry commission is settled when
@@ -510,7 +526,7 @@ class Executor:
             evidence = order_evidence(trade, order, fills, amount, sent_ms,
                                       "venue_order_fills" if fills else "estimated_order_booking")
             evidence.update(purpose="partial_exit", requested_quantity=requested,
-                            reference=_hint_reference(price_hint, submitted_ms))
+                            reference=_hint_reference(price_hint, submitted_ms, trade.get('_execution_reference')))
             self.journal.align_trade_amount(trade["id"], new_amt, new_notional,
                                             pnl_delta=round(pnl, 8), accounting=evidence, tp1_done=True)
             trade["amount"] = round(new_amt, 8)
@@ -527,6 +543,12 @@ class Executor:
     def close(self, trade: dict, exit_price_hint: float = 0.0,
               reason: str = "signal_exit") -> bool:
         sym = trade["symbol"]
+        context = getattr(self.ex, 'context', None)
+        if context:
+            context(dict(decision_id=trade.get('decision_id'), trade_id=trade['id'],
+                strategy_id=trade.get('strategy_id'), strategy_identity=trade.get('entry_identity_json'),
+                reference=trade.get('_execution_reference') or {'price':price_hint if 'price_hint' in locals() else exit_price_hint,
+                           'basis':'exit_price_hint', 'observed_at':None}))
         side_close = "sell" if trade["side"] == "long" else "buy"
         amount = quantize(self.ex, sym, float(trade["amount"]))
         if amount <= 0:
@@ -539,6 +561,7 @@ class Executor:
             sent_ms = submitted_ms - 60_000
             order = self.ex.create_order(sym, "market", side_close, amount,
                                          params={"reduceOnly": True})
+            submitted_ms = getattr(self.ex,'submitted_ms',None) or submitted_ms
             fills = self._order_fills(sym, str(order.get("id") or ""), sent_ms)
             if fills:
                 fill, amount = self._vwap(fills)
@@ -574,7 +597,7 @@ class Executor:
                 if trade.get("_strategy_exit_evidence", {}).get("intent") == reason and reason in ("stop", "target", "time"):
                     leg["strategy_exit"] = trade["_strategy_exit_evidence"]
                 leg.update(purpose="final_exit_partial_fill", requested_quantity=requested_qty,
-                           reference=_hint_reference(exit_price_hint, submitted_ms))
+                           reference=_hint_reference(exit_price_hint, submitted_ms, trade.get('_execution_reference')))
                 self.journal.align_trade_amount(
                     trade["id"], residual, residual * entry, pnl_delta=pnl,
                     accounting=leg)
@@ -604,7 +627,7 @@ class Executor:
             evidence['venue_window_net_excluding_funding'] = venue
             evidence['venue_window_observation'] = window_observation
             evidence.update(purpose="final_exit", requested_quantity=requested_qty,
-                            reference=_hint_reference(exit_price_hint, submitted_ms))
+                            reference=_hint_reference(exit_price_hint, submitted_ms, trade.get('_execution_reference')))
             self.journal.close_trade(trade["id"], fill, round(pnl, 8), reason, accounting=evidence)
             log.info(f"TRADE CLOSE {sym} @{fill} reason={reason} "
                      f"gross={gross:+.2f} fees={fees:.2f} pnl={pnl:+.2f} "
