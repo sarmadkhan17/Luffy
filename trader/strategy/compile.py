@@ -15,6 +15,7 @@ from ..core.types import TF_MS, Action, StrategySignal, closed_bars
 from . import dsl
 from .features import FeatureCtx
 from .spec import StrategySpec
+from .signal_occurrence import (ENTRY_SERIES_MISALIGNED, SIGNAL_BAR_CLOSE_UNAVAILABLE, bar_open_ms, spec_fingerprint)
 
 log = logging.getLogger(__name__)
 
@@ -30,6 +31,9 @@ class CompiledStrategy:
     _filters: list = field(default_factory=list)
     _exit: object | None = None
     data_requires: tuple = ("ohlcv",)
+    #: sha256 of the exact compiled spec this evaluator runs; stamped on every
+    #: signal so a trade can name the version that proposed it (provenance only)
+    spec_sha256: str | None = None
 
     # ── vectorized path (Analyst) ────────────────────────────────────────
     def entries(self, frames: dict, btc: dict | None = None,
@@ -138,13 +142,36 @@ class CompiledStrategy:
                     (time.time() * 1000 - closed_at) / 60_000, 1)
             except Exception:
                 pass
+            # Signal-occurrence identity: the exact close of the SAME closed
+            # bar lo/sh[-1] was evaluated on — never age, wall clock or a
+            # nearest bar. Unknown stays None with a reason.
+            tf = self.spec.timeframe
+            close_ms, unavailable = None, None
+            sig_frame = frames[tf]
+            if len(lo) != len(sig_frame):
+                unavailable = ENTRY_SERIES_MISALIGNED
+            else:
+                open_ms = (bar_open_ms(sig_frame["ts"].iloc[-1])
+                           if "ts" in sig_frame else None)
+                if open_ms is None or tf not in TF_MS:
+                    unavailable = SIGNAL_BAR_CLOSE_UNAVAILABLE
+                else:
+                    close_ms = int(open_ms + TF_MS[tf])
+            params = {"spec_id": self.spec.id,
+                      "spec_sha256": self.spec_sha256,
+                      "signal_bar_age_min": bar_age_min,
+                      "spec_fingerprint": (getattr(self, "fingerprint", "")
+                                           or spec_fingerprint(self.spec)),
+                      "signal_timeframe": tf,
+                      "signal_bar_close_ms": close_ms}
+            if unavailable:
+                params["signal_occurrence_unavailable"] = unavailable
             return StrategySignal(
                 strategy_id=self.spec.id, strategy_name=self.spec.name,
                 symbol=snap.symbol, action=action,
                 confidence=0.6,
                 rationale=f"{self.spec.name}: {why}",
-                params={"spec_id": self.spec.id,
-                        "signal_bar_age_min": bar_age_min})
+                params=params)
         _evaluate._diagnostic_capable = True
         return _evaluate
 
@@ -196,9 +223,14 @@ class CompiledStrategy:
         return "\n".join(lines)
 
 
-def compile_spec(spec: StrategySpec) -> CompiledStrategy:
+def compile_spec(spec: StrategySpec, *, exit_semantics_id=None) -> CompiledStrategy:
     """Parse every expression up front. A spec that cannot compile must never
     reach the gauntlet, let alone the book."""
+    if exit_semantics_id is not None:
+        from .exit_policy import EXIT_SEMANTICS_ID, bind_research, unsupported
+        if exit_semantics_id != EXIT_SEMANTICS_ID or unsupported(spec.exit):
+            raise ValueError('exit_semantics_unavailable')
+        bind_research(spec)
     errs = StrategySpec.validate(spec)
     if errs:
         raise dsl.SpecError(f"invalid spec '{spec.id}': {errs}")
@@ -212,5 +244,7 @@ def compile_spec(spec: StrategySpec) -> CompiledStrategy:
     trees = [t for t in (long_t, short_t, exit_t, *filters) if t is not None]
     req = dsl.data_requires(*trees)
     spec.data_requires = list(req)
+    from ..engine.trade_provenance import spec_version
     return CompiledStrategy(spec=spec, _long=long_t, _short=short_t,
-                            _filters=filters, _exit=exit_t, data_requires=req)
+                            _filters=filters, _exit=exit_t, data_requires=req,
+                            spec_sha256=spec_version(spec)["spec_sha256"])

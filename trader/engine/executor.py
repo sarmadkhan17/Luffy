@@ -18,7 +18,8 @@ from ..core.config import ROOT
 from ..core.journal import Journal
 from ..core.types import Action, Decision, MarketType, Position, Side, new_id
 from . import protective
-from .control_fence import control_fence, entry_block_reason, persisted_state
+from ..core import reason_codes as rc
+from .control_fence import control_fence, entry_block, persisted_state
 from .booking import monetary_total, order_evidence
 from .accounting import safe_fill
 from .reconcile import venue_realized_pnl
@@ -49,10 +50,32 @@ def quantize(ex, symbol: str, amount: float) -> float:
         return float(amount)
 
 
+def _reference(reference: dict | None, submitted_ms: int) -> dict:
+    """The entry's slippage benchmark: the decision price the order was sized
+    and stopped on, as the caller captured it, plus the moment just before
+    submission. No fresh quote is taken here; its absence is stated."""
+    out = dict(reference) if isinstance(reference, dict) else {
+        "price": None, "basis": "unavailable",
+        "reason": "caller supplied no pre-submission reference"}
+    out["submitted_ms"] = submitted_ms
+    return out
+
+
+def _hint_reference(hint: float, submitted_ms: int, captured=None) -> dict:
+    """An exit's benchmark is the price hint its caller passed; the hint's own
+    observation time is not carried by the exit path and is left unknown."""
+    if isinstance(captured,dict) and captured.get('price') == hint:
+        return _reference(captured,submitted_ms)
+    return {"price": float(hint) if hint else None, "basis": "exit_price_hint",
+            "observed_at": None, "submitted_ms": submitted_ms}
+
+
 class Executor:
     def __init__(self, exchange, journal: Journal, cfg: dict,
                  market_type: MarketType):
-        self.ex = exchange
+        from ..observability.prospective_execution import for_journal, ObservedExchange
+        capture = for_journal(journal)
+        self.ex = ObservedExchange(exchange,capture) if capture else exchange
         self.journal = journal
         self.market_type = market_type
         r = cfg["risk"]
@@ -97,16 +120,40 @@ class Executor:
     def open(self, decision: Decision, amount: float, atr: float,
              stop_loss: float, take_profit: float,
              strategy_id: str, strategy_name: str,
-             exec_mode: str = "live") -> Position | None:
+             exec_mode: str = "live", entry_identity: dict | None = None,
+             reference: dict | None = None) -> Position | None:
+        """`entry_identity` and `reference` are provenance only: the exact
+        strategy version and the decision price captured before submission.
+        Neither changes what is sent, when, or how much.
+
+        This is the real order path only: any `exec_mode` but "live" is
+        refused (there is no paper execution here, so a paper label on a
+        venue order would be false), and so is a factory StrategyVersion
+        that is not exact-version first-live eligible."""
+        if exec_mode != "live":
+            decision.skip_reason = f"exec_mode {exec_mode!r} has no real order path"
+            decision.reason_codes = [rc.EXEC_MODE_NOT_REAL]
+            log.warning(f"ENTRY REFUSED {decision.symbol}: {decision.skip_reason}")
+            return None
+        from ..strategy import factory_handoff as fh
+        blocked = fh.live_entry_block(self.journal, strategy_id)
+        if blocked:
+            decision.skip_reason = f"version fence: {blocked}"
+            decision.reason_codes = [rc.VERSION_NOT_LIVE_AUTHORIZED]
+            log.warning(f"ENTRY BLOCKED {decision.symbol} {strategy_id}: {blocked}")
+            return None
         with self._entry_lock:
             if self.recovery_pending():
                 decision.skip_reason = "execution_recovery_pending"
+                decision.reason_codes = [rc.SUBMISSION_RECOVERY_PENDING]
                 return None
             return self._open_serialized(decision, amount, atr, stop_loss,
-                                         take_profit, strategy_id, strategy_name, exec_mode)
+                                         take_profit, strategy_id, strategy_name, exec_mode,
+                                         entry_identity, reference)
 
     def _open_serialized(self, decision, amount, atr, stop_loss, take_profit,
-                         strategy_id, strategy_name, exec_mode):
+                         strategy_id, strategy_name, exec_mode,
+                         entry_identity=None, reference=None):
         lock = self._lock_for(decision.symbol)
         if not lock.acquire(blocking=False):
             log.warning(f"[{decision.symbol}] entry already in flight")
@@ -114,7 +161,7 @@ class Executor:
         try:
             return self._open_locked(decision, amount, atr, stop_loss,
                                      take_profit, strategy_id, strategy_name,
-                                     exec_mode)
+                                     exec_mode, entry_identity, reference)
         finally:
             lock.release()
 
@@ -149,8 +196,13 @@ class Executor:
     def _open_locked(self, decision: Decision, amount: float, atr: float,
                      stop_loss: float, take_profit: float,
                      strategy_id: str, strategy_name: str,
-                     exec_mode: str) -> Position | None:
+                     exec_mode: str, entry_identity: dict | None = None,
+                     reference: dict | None = None) -> Position | None:
         sym = decision.symbol
+        context = getattr(self.ex, 'context', None)
+        if context:
+            context(dict(decision_id=decision.id, strategy_id=strategy_id,
+                strategy_identity=entry_identity, reference=reference))
         side_ccxt = "buy" if decision.action == Action.BUY else "sell"
         pos_side = Side.LONG if decision.action == Action.BUY else Side.SHORT
         params: dict = {}
@@ -171,9 +223,10 @@ class Executor:
         # intent, the submission and its immediate result are fenced; fill
         # polling, protection and exits run outside it.
         with control_fence(self.journal):
-            blocked = entry_block_reason(persisted_state(self.journal))
+            blocked, blocked_code = entry_block(persisted_state(self.journal))
             if blocked:
                 decision.skip_reason = blocked
+                decision.reason_codes = [blocked_code]
                 log.warning(f"ENTRY BLOCKED {sym} at submission: {blocked}")
                 return None
             if self.market_type == MarketType.FUTURES:
@@ -183,8 +236,11 @@ class Executor:
                     stop_loss=stop_loss, take_profit=take_profit,
                     strategy_id=strategy_id, strategy_name=strategy_name,
                     decision_id=decision.id, market_type=self.market_type.value,
-                    exec_mode=exec_mode, confidence=decision.confidence))
+                    exec_mode=exec_mode, confidence=decision.confidence,
+                    entry_identity=entry_identity))
                 params["newClientOrderId"] = intent["client_order_id"]
+            requested = amount
+            submitted_ms = int(time.time() * 1000)
             try:
                 order = self.ex.create_order(sym, "market", side_ccxt, amount,
                                              params=params)
@@ -200,6 +256,7 @@ class Executor:
                 if intent:
                     intent["order_id"] = str(order.get("id") or "")
                     self.recovery.save(intent, "entry_submitted")
+        submitted_ms = getattr(self.ex,'submitted_ms',None) or submitted_ms
         if error is not None:
             e = error
             from ..data.feed import is_untradeable_error, mark_untradeable
@@ -246,8 +303,14 @@ class Executor:
             strategy_id=strategy_id, strategy_name=strategy_name,
             decision_id=decision.id,
             market_type=self.market_type.value, exec_mode=exec_mode,
-            confidence=decision.confidence, sl_order_id=sl_oid)
-        self.journal.add_trade(pos, accounting={"basis": "entry_order_confirmation", "order_id": oid, "confirmed_quantity": amount, "confirmed_price": fill})
+            confidence=decision.confidence, sl_order_id=sl_oid,
+            entry_identity=entry_identity)
+        self.journal.add_trade(pos, accounting={
+            "basis": "entry_order_confirmation", "order_id": oid,
+            "confirmed_quantity": amount, "confirmed_price": fill,
+            "purpose": "entry", "side": side_ccxt, "requested_quantity": requested,
+            "client_order_id": params.get("newClientOrderId"),
+            "reference": _reference(reference, submitted_ms)})
         decision.executed = True
         decision.size_usdt = pos.notional_usdt
         self.journal.set_decision_entry_price(decision.id, fill)
@@ -409,6 +472,12 @@ class Executor:
                       price_hint: float = 0.0, reason: str = "partial") -> bool:
         """Reduce-only partial close; journal amount shrinks, trade stays open."""
         sym = trade["symbol"]
+        context = getattr(self.ex, 'context', None)
+        if context:
+            context(dict(decision_id=trade.get('decision_id'), trade_id=trade['id'],
+                strategy_id=trade.get('strategy_id'), strategy_identity=trade.get('entry_identity_json'),
+                reference=trade.get('_execution_reference') or {'price':price_hint if 'price_hint' in locals() else exit_price_hint,
+                           'basis':'exit_price_hint', 'observed_at':None}))
         side_close = "sell" if trade["side"] == "long" else "buy"
         amount = quantize(self.ex, sym, amount)
         if amount <= 0:
@@ -417,9 +486,12 @@ class Executor:
             log.info(f"partial skipped {sym}: below one lot")
             return False
         try:
-            sent_ms = int(time.time() * 1000) - 60_000
+            requested = amount
+            submitted_ms = int(time.time() * 1000)
+            sent_ms = submitted_ms - 60_000
             order = self.ex.create_order(sym, "market", side_close, amount,
                                          params={"reduceOnly": True})
+            submitted_ms = getattr(self.ex,'submitted_ms',None) or submitted_ms
             fills = self._order_fills(sym, str(order.get("id") or ""), sent_ms)
             if fills:
                 # this leg's own fills; the entry commission is settled when
@@ -453,6 +525,8 @@ class Executor:
             new_notional = round(new_amt * float(trade["entry_price"]), 2)
             evidence = order_evidence(trade, order, fills, amount, sent_ms,
                                       "venue_order_fills" if fills else "estimated_order_booking")
+            evidence.update(purpose="partial_exit", requested_quantity=requested,
+                            reference=_hint_reference(price_hint, submitted_ms, trade.get('_execution_reference')))
             self.journal.align_trade_amount(trade["id"], new_amt, new_notional,
                                             pnl_delta=round(pnl, 8), accounting=evidence, tp1_done=True)
             trade["amount"] = round(new_amt, 8)
@@ -469,6 +543,12 @@ class Executor:
     def close(self, trade: dict, exit_price_hint: float = 0.0,
               reason: str = "signal_exit") -> bool:
         sym = trade["symbol"]
+        context = getattr(self.ex, 'context', None)
+        if context:
+            context(dict(decision_id=trade.get('decision_id'), trade_id=trade['id'],
+                strategy_id=trade.get('strategy_id'), strategy_identity=trade.get('entry_identity_json'),
+                reference=trade.get('_execution_reference') or {'price':price_hint if 'price_hint' in locals() else exit_price_hint,
+                           'basis':'exit_price_hint', 'observed_at':None}))
         side_close = "sell" if trade["side"] == "long" else "buy"
         amount = quantize(self.ex, sym, float(trade["amount"]))
         if amount <= 0:
@@ -476,9 +556,12 @@ class Executor:
                         f"nothing the venue will accept")
             return False
         try:
-            sent_ms = int(time.time() * 1000) - 60_000
+            requested_qty = amount
+            submitted_ms = int(time.time() * 1000)
+            sent_ms = submitted_ms - 60_000
             order = self.ex.create_order(sym, "market", side_close, amount,
                                          params={"reduceOnly": True})
+            submitted_ms = getattr(self.ex,'submitted_ms',None) or submitted_ms
             fills = self._order_fills(sym, str(order.get("id") or ""), sent_ms)
             if fills:
                 fill, amount = self._vwap(fills)
@@ -509,10 +592,15 @@ class Executor:
                     pnl = leg_net
                 else:
                     self._book_estimate(trade, "partial final-close accounting unavailable")
+                leg = order_evidence(trade, order, fills, amount, sent_ms,
+                                     "venue_order_fills" if fills else "estimated_order_booking")
+                if trade.get("_strategy_exit_evidence", {}).get("intent") == reason and reason in ("stop", "target", "time"):
+                    leg["strategy_exit"] = trade["_strategy_exit_evidence"]
+                leg.update(purpose="final_exit_partial_fill", requested_quantity=requested_qty,
+                           reference=_hint_reference(exit_price_hint, submitted_ms, trade.get('_execution_reference')))
                 self.journal.align_trade_amount(
                     trade["id"], residual, residual * entry, pnl_delta=pnl,
-                    accounting=order_evidence(trade, order, fills, amount, sent_ms,
-                                              "venue_order_fills" if fills else "estimated_order_booking"))
+                    accounting=leg)
                 log.warning(f"CLOSE PARTIAL {sym}: venue filled {amount:g} "
                             f"of {requested:g}; residual {residual:g} "
                             "left open with existing stop")
@@ -533,9 +621,13 @@ class Executor:
                 protective.cancel_stop(self.ex, trade["sl_order_id"], sym)
             evidence = order_evidence(trade, order, fills, amount, sent_ms,
                                       "venue_order_fills" if fills else "estimated_order_booking")
+            if trade.get('_strategy_exit_evidence', {}).get('intent') == reason and reason in ('stop', 'target', 'time'):
+                evidence['strategy_exit'] = trade['_strategy_exit_evidence']
             evidence['booked_pnl_basis'] = "symbol_time_window_subtotal_unattributed" if venue is not None else "estimated"
             evidence['venue_window_net_excluding_funding'] = venue
             evidence['venue_window_observation'] = window_observation
+            evidence.update(purpose="final_exit", requested_quantity=requested_qty,
+                            reference=_hint_reference(exit_price_hint, submitted_ms, trade.get('_execution_reference')))
             self.journal.close_trade(trade["id"], fill, round(pnl, 8), reason, accounting=evidence)
             log.info(f"TRADE CLOSE {sym} @{fill} reason={reason} "
                      f"gross={gross:+.2f} fees={fees:.2f} pnl={pnl:+.2f} "

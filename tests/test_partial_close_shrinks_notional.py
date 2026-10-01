@@ -25,7 +25,7 @@ from trader.engine.executor import Executor
 
 class FakeEx:
     def create_order(self, symbol, typ, side, amount, params=None):
-        return {"id": "x", "average": 110.0, "price": 110.0}
+        return {"id": "x", "average": 110.0, "price": 110.0, "filled": amount}
 
     def cancel_order(self, oid, symbol):
         return {}

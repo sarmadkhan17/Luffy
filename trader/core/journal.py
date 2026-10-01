@@ -187,6 +187,19 @@ CREATE TABLE IF NOT EXISTS strategies (
 """
 
 
+def _identity_json(p) -> str | None:
+    """The position's entry identity as stored JSON; None when absent. An
+    unserializable identity is recorded as such rather than failing the
+    booking of a position the venue already holds."""
+    identity = getattr(p, "entry_identity", None)
+    if not identity:
+        return None
+    try:
+        return json.dumps(identity, sort_keys=True, allow_nan=False)
+    except (TypeError, ValueError):
+        return json.dumps({"status": "UNKNOWN", "reason": "identity_not_serializable"})
+
+
 class Journal:
     def __init__(self, db_path: str | Path):
         self.db_path = Path(db_path)
@@ -224,11 +237,17 @@ class Journal:
                 "ALTER TABLE trades ADD COLUMN mfe_r REAL DEFAULT NULL",
                 "ALTER TABLE trades ADD COLUMN mae_r REAL DEFAULT NULL",
                 "ALTER TABLE trades ADD COLUMN excursion_json TEXT DEFAULT NULL",
+                # the exact strategy version an entry was taken on, frozen at
+                # insert (engine/trade_provenance.py). NULL means UNKNOWN —
+                # the trigger below refuses to fill it in later.
+                "ALTER TABLE trades ADD COLUMN entry_identity_json TEXT DEFAULT NULL",
             ):
                 try:
                     c.execute(stmt)
                 except Exception:
                     pass
+            from ..engine import trade_provenance
+            trade_provenance.migrate(c)
             # backfill: existing rows get their birth time so the demotion
             # clock starts now rather than firing retroactively
             try:
@@ -312,24 +331,28 @@ class Journal:
                 "INSERT INTO trades (id,decision_id,symbol,side,amount,"
                 "entry_price,notional_usdt,leverage,stop_loss,take_profit,"
                 "sl_order_id,strategy_id,strategy_name,market_type,exec_mode,"
-                "opened_at,realized_pnl,status,tp1_done,initial_risk) "
+                "opened_at,realized_pnl,status,tp1_done,initial_risk,"
+                "entry_identity_json) "
                 "VALUES (:id,:decision_id,:symbol,:side,:amount,:entry_price,"
                 ":notional_usdt,:leverage,:stop_loss,:take_profit,:sl_order_id,"
                 ":strategy_id,:strategy_name,:market_type,:exec_mode,"
-                ":opened_at,0,'open',0,:initial_risk)",
+                ":opened_at,0,'open',0,:initial_risk,:entry_identity_json)",
                 {"id": p.id, "decision_id": p.decision_id or "",
                  "symbol": p.symbol, "side": p.side.value, "amount": p.amount,
                  "entry_price": p.entry_price,
                  "notional_usdt": p.notional_usdt, "leverage": p.leverage,
                  "stop_loss": p.stop_loss, "take_profit": p.take_profit,
                  # frozen at entry: the risk the position was sized on
-                 "initial_risk": round(abs(p.entry_price - p.stop_loss), 10)
+                 "initial_risk": (((getattr(p, 'entry_identity', None) or {}).get('initial_risk')
+                                   if (getattr(p, 'entry_identity', None) or {}).get('version_id') else None)
+                                  or round(abs(p.entry_price - p.stop_loss), 10))
                  if p.stop_loss else None,
                  "sl_order_id": getattr(p, "sl_order_id", ""),
                  "strategy_id": p.strategy_id,
                  "strategy_name": p.strategy_name,
                  "market_type": p.market_type, "exec_mode": p.exec_mode,
-                 "opened_at": p.opened_at})
+                 "opened_at": p.opened_at,
+                 "entry_identity_json": _identity_json(p)})
             from ..engine.booking import persist
             persist(c, p.id, "entry", None, accounting)
 
@@ -537,7 +560,9 @@ class Journal:
         out = []
         for r in self.query(q, args):
             try:
-                out.append((r, StrategySpec.from_json(r["spec_json"])))
+                from ..strategy.factory_handoff import bind_installed_spec
+                spec = bind_installed_spec(self, StrategySpec.from_json(r['spec_json']))
+                out.append((r, spec))
             except Exception:
                 continue
         return out

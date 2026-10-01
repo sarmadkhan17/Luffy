@@ -17,7 +17,7 @@ with each partial close.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ..core.journal import Journal
 from ..core.types import Action, Position
@@ -58,13 +58,49 @@ class SpecExit:
     #: declared none and the engine keeps its configured default — the same
     #: 1.0 the vector backtest falls back to, so the two stay in step.
     arm_at_r: float | None = None
+    #: a factory StrategyVersion: its entry stop and target come from the
+    #: frozen spec alone (`frozen_levels`), never from mutable config
+    versioned: bool = False
+    exit_spec: object = field(default=None, compare=False, repr=False)
+
+    #: the frozen stop/target kinds the runtime reproduces exactly; a
+    #: version declaring anything else is refused at exact install
+    FROZEN_STOPS = ("atr", "pct")
+    FROZEN_TARGETS = ("rr", "atr", "pct", "none")
 
     @classmethod
-    def from_spec(cls, spec) -> "SpecExit":
+    def frozen_unsupported(cls, spec) -> str | None:
+        """Why the runtime cannot run this spec's frozen entry geometry
+        exactly, or None."""
+        return cls._unsupported(spec.exit)
+
+    @classmethod
+    def _unsupported(cls, ex) -> str | None:
+        stop = (ex.stop or {}).get("kind", "atr")
+        target = (ex.target or {}).get("kind", "rr")
+        if stop not in cls.FROZEN_STOPS:
+            return f"stop={stop}"
+        if target not in cls.FROZEN_TARGETS:
+            return f"target={target}"
+        return None
+
+    def frozen_levels(self, price: float, atr: float,
+                      side: str) -> tuple[float, float]:
+        """(stop, target) from the frozen spec by the vector backtest's own
+        distance functions (same 0.4% stop floor, same R basis), measured
+        from the decision price. 0.0 target = the spec declared none."""
+        from ..strategy.exit_policy import initialize
+        from ..core.types import TF_MS
+        policy, _ = initialize(self.exit_spec, price, atr, side, 0, TF_MS[self.timeframe])
+        return policy.stop, policy.target
+
+    @classmethod
+    def from_spec(cls, spec, versioned: bool = False) -> "SpecExit":
         ex = spec.exit
         trail = ex.trail or {}
         stop = ex.stop or {}
         return cls(
+            versioned=versioned, exit_spec=ex,
             max_bars=int((ex.time or {}).get("max_bars", 32)),
             timeframe=spec.timeframe,
             trail_atr_mult=float(trail.get("mult", 0.0))
@@ -113,7 +149,7 @@ class ExitEngine:
 
     # ── main entry, called once per cycle per open trade ────────────────
     def manage(self, trade: dict, mark: float, atr: float,
-               current_score: float | None) -> str | None:
+               current_score: float | None, *, snapshot=None) -> str | None:
         """Returns reason string if a closing action fired, else None."""
         # journal is the source of truth — the caller's dict may be stale
         fresh = self.journal.query(
@@ -121,6 +157,27 @@ class ExitEngine:
         if not fresh or fresh[0]["status"] != "open":
             return None
         trade.update(fresh[0])
+        if snapshot is not None and snapshot.price == mark:
+            trade['_execution_reference'] = dict(price=mark,observed_at=snapshot.ts,basis='exit_decision_snapshot_price')
+        else:
+            trade.pop('_execution_reference',None)
+        import json
+        try:
+            identity = json.loads(trade.get('entry_identity_json') or '{}')
+        except (ValueError,TypeError):
+            identity = {}
+        if not isinstance(identity,dict):
+            identity = {}
+        se = self.spec_exits.get(trade.get('strategy_id'))
+        from ..strategy import factory_handoff as F
+        if identity.get('version_id') or (se and se.versioned) or F.versioned(self.journal, trade.get('strategy_id') or ''):
+            if snapshot is None:
+                raise ValueError('versioned_exit_closed_snapshot_required')
+            from .versioned_exits import LiveExitAdapter
+            if not hasattr(self, '_versioned_adapter'):
+                self._versioned_adapter = LiveExitAdapter(self.journal, self.executor)
+            return self._versioned_adapter.manage(trade, snapshot)
+
         entry = float(trade["entry_price"])
         side = trade["side"]
         direction = 1.0 if side == "long" else -1.0
