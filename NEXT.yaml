@@ -3,66 +3,46 @@ sdd_version: '3.2'
 updated_at: '2026-10-01'
 
 work_package:
-  id: NO_ACTIVE_PACKAGE
-  type: NONE
-  status: NO_ACTIVE_PACKAGE
-  last_completed_package: LUFFY-STAGE6-IMPLEMENTATION-CLOSURE-R1
-  objective: >
-    Stage 6 SOFTWARE BUILD is IMPLEMENTED/TESTED. The A-M closure checklist has
-    no missing implementation. Real allocation maturity remains evidence-blocked.
-    No package is active and no runtime activation or trading is authorized.
+  id: LUFFY-STAGE7-HISTORICAL-OUTCOME-CAPTURE-R1
+  type: STAGE7_HISTORICAL_SOURCE_CAPTURE
+  status: RECOMMENDED_NOT_AUTHORIZED_FOR_RUNTIME_DEPLOYMENT
+  last_completed_package: LUFFY-STAGE7-LEARNING-CLOSED-LOOP-FOUNDATION-R1
+  objective: Implement the single missing historical-source capture/adaptation path
+    from decision/rejection/trade/research receipts into the canonical learning outcome
+    and detached replay. Retain exact original data, WorldModel, Opportunity Context,
+    StrategyVersion, Risk/config, portfolio/proposal/intent, reasons/action and post-decision
+    outcome evidence. Missing past sources stay INCOMPLETE; never reconstruct from
+    latest.
   completed_prerequisites:
-    - Whole-book allocator, comparable economics, common-factor context, capacity refusal and cash are TESTED.
-    - Opportunity-cost comparison, event-driven re-optimization gate and typed TradeIntent are TESTED.
-    - Live candidate contexts must match the same frozen venue book; current replay refuses changed authority.
-    - Final read-only shadow returned 0 candidates, 3 holdings, 4 contexts and CASH / NO_ALLOCATION under FROZEN control.
-    - Fresh-process replay preserves the proposal, event receipt and typed intent artifact exactly.
-  evidence:
-    - docs/superpowers/reports/2026-10-01-stage6-implementation-closure-r1.md
-    - docs/superpowers/evidence/stage6-implementation-closure-r1/requirements.json
-    - docs/superpowers/evidence/stage6-implementation-closure-r1/final-tests.txt
-    - docs/superpowers/evidence/stage6-implementation-closure-r1/final-shadow-result.json
-    - docs/superpowers/evidence/stage6-implementation-closure-r1/restart-replay.json
+  - Immutable contracts, descriptive attribution, proposals and deterministic replay
+    are TESTED; domain replay remains PARTIAL.
+  - Existing recent-decay rule and Strategy Governor retirement are TESTED in an isolated
+    in-memory journal only.
+  - 'Bounded real read-only shadow: 564 outcomes, all replay-incomplete; zero applicable
+    updates.'
+  - Exact Research Bank and structured-context recall remain context-only; no suppression
+    policy or claim identity was invented.
   next_steps:
-    - step: 1
-      action: >
-        Await owner authorization for LUFFY-STAGE7-LEARNING-CLOSED-LOOP-FOUNDATION-R1.
-        Begin with an inventory of existing typed outcomes, rejections, missed
-        opportunities, execution quality and attribution. No Stage-7 work starts here.
-  economic_evidence_requirements:
-    - Exact-version forward gross calibration, uncertainty reserve and forward actual-cost applicability remain unavailable.
-    - Capacity/liquidity, account/funding/leverage/size authority and actual strategy candidates remain unavailable.
-    - Marked exposure, venue-bound stop-risk heat, margin usage and holding StrategyVersion attribution remain unavailable.
-    - Switching costs/portfolio impact, materiality calibration and statistical independence remain unavailable.
-    - No further Stage-6 software micro-package solely to substitute for absent real evidence.
+  - step: 1
+    action: Build the exact retained-source outcome adapter/capture path and test
+      the detached learning shadow; preserve refusal for missing historical sources.
+  evidence:
+  - docs/superpowers/reports/2026-10-01-stage7-learning-foundation-r1.md
+  - docs/superpowers/evidence/stage7-learning-foundation-r1/final-shadow/summary.json
   execution_constraints:
-    - No commit, orders, resizing, activation, deployment, restart or Risk/control-limit change.
-    - TradeIntent contracts are detached; Risk/execution wiring and approval remain separate.
-    - Preserve all parked owner-authorization, cost-calibration and research boundaries.
+  - No orders, activation, production learning application, deploy/restart, Risk expansion,
+    StrategySpec mutation or normal-learning LLM.
+  - No new reward, confidence, allocation, attention priority, sufficiency threshold
+    or generic profit/loss rule.
+  - Stage 7 remains incomplete; real outcome replay capture is an implementation gap,
+    not an evidence-only closure.
   preserved_authority:
     PAPER_COST_PROTOCOL: TESTED
     EXECUTION_COST_CALIBRATION: INSUFFICIENT_EVIDENCE
     PRODUCTION_ECONOMIC_PROBATION: INCOMPLETE
     CAPACITY: UNAVAILABLE
     FIRST_LIVE: BLOCKED
-  evidence_collection:
-    matrix: docs/superpowers/evidence/stage5-closure-evidence-flow-r1/evidence-flow.json
-    status: READY_PRODUCERS_OR_EXPLICIT_BLOCKERS
-    deployment: OWNER_AUTHORIZATION_REQUIRED
-    research_activation: OWNER_ACTIVATION_DEPENDENCY; referee=false and handoff=false
-  parked_cost_calibration:
-    status: PARKED_UNTIL_NEW_REAL_EVIDENCE
-    no_more_stage_5_cost_micro_packages: true
-    requirements: docs/superpowers/reports/2026-10-01-paper-execution-cost-calibration-r1.md
-  stage5_closure_prerequisite:
-    id: LUFFY-STAGE5-CLOSURE-AND-EVIDENCE-FLOW-R1
-    verdict: PASS
-    state: TESTED
-    stage5_build_complete: true
-    stage5_real_maturity: EVIDENCE_BLOCKED
-    report: docs/superpowers/reports/2026-10-01-stage5-closure-and-evidence-flow-r1.md
-    runtime_deployment: NOT_DEPLOYED
-
+  preserved_stage6_evidence: docs/superpowers/reports/2026-10-01-stage6-implementation-closure-r1.md
 
 intelligence_spine_shadow_package:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
@@ -298,7 +278,7 @@ after_completion:
   - LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1 (BLOCKED) was unblocked by LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 (PASS, TESTED, NOT_DEPLOYED). The independent intelligence shadow package remains LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1, awaiting owner authorization; LUFFY-PORTFOLIO-ALLOCATOR-R1 is now TESTED; LUFFY-EXPECTED-NET-ECONOMICS-R1 is TESTED_CONTRACT with INSUFFICIENT_EVIDENCE for real economics; LUFFY-OPPORTUNITY-CONTEXT-LIVE-INTEGRATION-R1 reuses v1 and is TESTED_LIVE_INTEGRATION; LUFFY-STAGE6-CANDIDATE-FEASIBILITY-BRIDGE-R1 is recommended without trading authority.
   - Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged.
 
-next_recommended_package: LUFFY-STAGE7-LEARNING-CLOSED-LOOP-FOUNDATION-R1
+next_recommended_package: LUFFY-STAGE7-HISTORICAL-OUTCOME-CAPTURE-R1
 next_recommended_package_status: RECOMMENDED_NOT_AUTHORIZED
 stage6_build_complete: true
 stage6_real_world_mature: false

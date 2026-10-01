@@ -4858,3 +4858,55 @@ stage6_implementation_closure_r1:
   next_recommended_package: LUFFY-STAGE7-LEARNING-CLOSED-LOOP-FOUNDATION-R1
   scope: Software BUILD closure only; earlier package stage6_complete=false remains historical, real maturity is
     not granted.
+
+completed_stage7_learning_foundation_r1:
+  package: LUFFY-STAGE7-LEARNING-CLOSED-LOOP-FOUNDATION-R1
+  verdict: PASS
+  state: TESTED
+  base_commit: d256bfb
+  LEARNING_OUTCOME_CONTRACT: TESTED
+  ATTRIBUTION: TESTED
+  DIGITAL_TWIN_REPLAY: PARTIAL
+  LEARNING_EVIDENCE: TESTED
+  LEARNING_UPDATE_PROPOSAL: TESTED
+  REGISTERED_RULES:
+  - existing-recent-decay.v1
+  CLOSED_LOOP_APPLICATION: TESTED_ISOLATED_AUTHORITY; REAL_APPLICATION_EVIDENCE_BLOCKED
+  FAILED_RESEARCH_MEMORY: TESTED_EXACT_BANK_AND_STRUCTURED_CONTEXT_RECALL; NO_CLAIM_SUPPRESSION_AUTHORITY
+  EXECUTION_LEARNING_BOUNDARY: TESTED; NO_COST_CALIBRATION_OR_PREDICTIVE_CONFIDENCE_UPDATE
+  stage7_complete: false
+  trading_behavior_changed: false
+  runtime_deployment: NOT_DEPLOYED
+  real_shadow:
+    status: PASS
+    scope: bounded stratified snapshot; 564 decisions; limit 256 per stratum
+    realized: 0
+    counterfactual: 251
+    unassessable: 54
+    unresolved: 259
+    replay_complete: 0
+    replay_incomplete: 564
+    learning_evidence_objects: 564
+    applicable_updates: 0
+    insufficient_evidence: 0
+    unregistered_rules: 0
+    incomplete_replay_proposals: 564
+  evidence:
+  - trader/learning/foundation.py
+  - scripts/learning_shadow.py
+  - scripts/learning_replay.py
+  - tests/test_learning_foundation.py
+  - docs/superpowers/reports/2026-10-01-stage7-learning-foundation-r1.md
+  - docs/superpowers/evidence/stage7-learning-foundation-r1/tests.txt
+  - docs/superpowers/evidence/stage7-learning-foundation-r1/final-shadow/summary.json
+  gaps:
+  - Historical canonical source capture/adapters are missing; no latest-config backfill.
+  - Real application is blocked by replay-incomplete evidence; production application
+    API not implemented.
+  - Exact hypothesis identity/falsifier and suppression policy remain absent from
+    strategy-decay Research Bank.
+  - Derivative/reference/funding-provider replay and cost/capacity calibration require
+    registered sources/rules.
+  tests: 243 focused regression tests passed; final 20 foundation tests passed
+  artifact_replay: 564 event chains verified; unique outcome identities
+  next_recommended_package: LUFFY-STAGE7-HISTORICAL-OUTCOME-CAPTURE-R1

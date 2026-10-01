@@ -376,10 +376,10 @@ def test_nothing_in_the_live_path_calls_it():
                      if p.name != "research_recall.py"
                      and pat.search(p.read_text(errors="ignore")))
     # the offline read-only Research Bank view and the read-only research
-    # shadow owner report are the only readers
+    # shadow owner report and detached learning foundation are the only readers
     assert callers == ["cognition/research_bank_view.py",
                        "cognition/research_shadow_report.py",
-                       "core/journal.py"]
+                       "core/journal.py", "learning/foundation.py"]
     assert "research_recall" not in (root / "core/journal.py").read_text()
 
 
