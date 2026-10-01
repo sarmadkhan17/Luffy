@@ -454,10 +454,17 @@ class ResearchRunner:
             return {**out, "ok": True, "state": "deferred", "alpha": alpha}
 
         disc, held = self._symbols(tf)
-        book = [spec.to_dict() for _r, spec in
-                self.journal.list_specs(["paper", "active"])] \
-            if hasattr(self.journal, "list_specs") else []
+        book_specs = [spec for _r, spec in self.journal.list_specs(['paper','active'])] \
+            if hasattr(self.journal, 'list_specs') else []
+        book = [spec.to_dict() for spec in book_specs]
+        # Separate immutable receipt refs survive worker serialization;
+        # StrategySpec and legacy book rows remain unchanged.
+        book_exit_bindings = {spec.id: spec.exit._exit_binding for spec in book_specs
+                              if getattr(spec.exit, '_exit_binding', None)}
         rnd = f"referee:{h}"
+        # the look binds the rule it evaluated, rendered thresholds included
+        from .combo import evaluated_record
+        evaluated = evaluated_record(c)
         bid = self.ledger.start_batch(tf, geo, rnd, 1)
         t0 = time.monotonic()
         res = self.run(job.referee_job, {
@@ -466,7 +473,7 @@ class ResearchRunner:
             "discovery_symbols": list(disc or DISCOVERY),
             "heldout_symbols": list(held or HELDOUT),
             "draws": int(draws), "seed": int(self._r("seed")),
-            "book": book},
+            "book": book, "book_exit_bindings": book_exit_bindings},
             timeout_s=float(self._r("batch_seconds")),
             nice=int(self._r("nice")))
         v = res.value or {}
@@ -480,7 +487,8 @@ class ResearchRunner:
                 # it has almost certainly read held-out prices by now; a
                 # look that keeps failing is charged, never retried forever
                 self.ledger.record_test(h, tf, geo, "gate1", 1.0, alpha,
-                                        brake < 1.0, {"error": err})
+                                        brake < 1.0, {"error": err,
+                                                      "evaluated": evaluated})
                 self.ledger.set_candidate(h, tf, geo, "gate1_fail",
                                           reason=f"failed {attempts}x: {err}")
             return {**out, "ok": False, "error": err}
@@ -488,7 +496,7 @@ class ResearchRunner:
         g1 = v.get("gate1") or {"p": 1.0, "reason": "no gate1 result"}
         rejected = self.ledger.record_test(
             h, tf, geo, "gate1", float(g1["p"]), alpha, brake < 1.0,
-            {"a": v.get("a"), "b": v.get("b"),
+            {"evaluated": evaluated, "a": v.get("a"), "b": v.get("b"),
              "rotation": v.get("rotation"), "draws": draws, "t": t})
         g3 = v.get("gate3") or {"passed": False, "reason": "no gate3 result"}
         if not rejected:

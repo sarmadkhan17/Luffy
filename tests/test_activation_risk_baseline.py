@@ -598,6 +598,8 @@ def test_releases_never_move_the_baseline(world, monkeypatch):
 @pytest.mark.parametrize("path", ["macro", "spot_resume", "owner_unhalt"])
 def test_previously_approved_entry_submits_nothing(world, monkeypatch, path):
     journal, venue = world
+    from tests.authority_legacy_fixtures import seed
+    seed(journal, "s")  # explicit TEST-ONLY authority; exercise the control/Risk fence
     k, eid = _macro_frozen(journal, venue, monkeypatch) if path == "macro" else (
         _boot(journal, venue, monkeypatch), None)
     sizing = RiskManager(RISK_CFG, journal).check_entry(

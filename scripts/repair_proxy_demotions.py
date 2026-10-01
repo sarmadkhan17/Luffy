@@ -51,6 +51,9 @@ def main() -> int:
 
     now = datetime.now(timezone.utc).isoformat()
     for r in rows:
+        from trader.strategy import factory_handoff as F
+        if F.versioned(j, r["id"]):
+            raise ValueError("STRATEGY_GOVERNOR_REQUIRED")
         j.query(
             "UPDATE strategies SET state='paper', state_changed_at=?, "
             "retire_reason=? WHERE id=?",

@@ -1,6 +1,6 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-09-23'
+updated_at: '2026-10-02'
 status: EVIDENCE_BASED
 
 progress_method:
@@ -81,7 +81,27 @@ capabilities:
       - recent selection and decay logic are separate
       - legacy genome lifecycle no longer governs kind=spec rows
     gaps:
-      - Strategy Governor as one explicit authority/service is not yet established
+      - Governed exact-version lifecycle boundary is TESTED; full runtime integration remains Stage 6.
+
+  universal_strategy_authority:
+    state: TESTED
+    package: LUFFY-STAGE5-UNIVERSAL-STRATEGY-AUTHORITY-R1
+    evidence:
+      - trader/strategy/factory_handoff.py
+      - trader/strategy/legacy_authority.py
+      - tests/test_universal_strategy_authority.py
+      - docs/superpowers/reports/2026-10-02-stage5-universal-strategy-authority-r1.md
+      - docs/superpowers/evidence/stage5-universal-strategy-authority-r1/current-inventory.json
+    proven_facts:
+      - Dynamic unversioned proposals are research/paper only; real entries refuse VERSIONED_AUTHORITY_REQUIRED.
+      - Historical exceptions require preexisting immutable exact-definition owner receipts; no runtime grant issuer or automatic grandfathering exists.
+      - Governor alone records exact-version activation, pause, degrade, reactivation and retirement; database lifecycle bypasses are fenced.
+      - Activation rechecks immutable identity, validation, paper/net-economic probation, exact approval, current capacity and inputs under held control/Risk authority.
+      - Complete TEST-ONLY evidence can produce ACTIVE; the independent Factory real-entry fence remains closed.
+      - Current read-only inventory is FROZEN with zero versions, approvals, capacity or grandfather receipts; isolated activation refused version_missing.
+    gaps:
+      - Current first-live readiness is NO; no real first-live activation or execution is enabled.
+      - No automatic activation caller, deployment, restart, orders, research gate enablement or Risk limit change is authorized by this package.
 
   attention:
     state: IMPLEMENTED

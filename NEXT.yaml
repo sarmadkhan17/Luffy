@@ -1,58 +1,58 @@
 project: LUFFY
 sdd_version: '3.2'
+updated_at: '2026-10-02'
 
 work_package:
-  id: M3.2-SCHEME-D-V4-POST-PILOT
-  type: QUANT_VALIDATION_INFRA
-  priority: CRITICAL
-  status: PILOT_COMPLETE_AWAITING_SEPARATE_OWNER_DECISION
-
+  id: LUFFY-STAGE6-RUNTIME-PORTFOLIO-INTEGRATION-R1
+  type: STAGE6_RUNTIME_PORTFOLIO_INTEGRATION
+  status: RECOMMENDED_NOT_AUTHORIZED_FOR_TRADING
   objective: >
-    Preserve the completed bounded v4 pilot evidence and await a separate owner
-    decision on any future full-validation capacity and authorization.
-
+    Implement the missing authoritative event-driven exact-version opportunity
+    registry and frozen Opportunity Context feeding the detached allocator.
+    Preserve cycle/decision lineage, deterministic setup identity, source hashes,
+    strategy/version/spec binding, required versus optional evidence and
+    authoritative freshness. This is the next actual Stage-6 implementation
+    gap. Integrate the runtime portfolio boundary with universal creation and
+    exact-version Governor lifecycle authority. Do not create another economics
+    formula or micro-package; keep real first-live disabled until separately
+    authorized complete real evidence exists.
   completed_prerequisites:
-    - v4 bundle frozen at 079e8b5c590429aeb0ca5c7b0b261328291c6b2e (tag m32-scheme-d-v4-freeze), bundle SHA a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023
-    - v4 shard integration 2324c4186a062eba2d9c1b70fd5c1a2d9d3adf8a; 23 focused tests passed
-    - deterministic qualification PASS 4d3a0ae195cf7ae1eca9b536b5cb4c309c9afd0a, receipt SHA 5055e9d8998cf6a524663982133b8fb668acfbc05e15fb2bc8d7526bd031cb41
-    - integration manifest scripts/m32_scheme_d_sharding_v4_20260923/LAYER_MANIFEST.json
-    - report docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-shard-integration.md
-    - owner reviewed and accepted the documented v4 preparation exception on 2026-09-23; historical audit unchanged
-    - owner authorized and completed one local-CPU v4 phase-90 benchmark; evidence commit 137ca2f, authorization SHA f0c9cccf45aedbe893d17afd3b126abc9f8f0c32ed376b894ad9bf53274bdba4, receipt SHA f70ace0a02ab6187647ecc33446238cf5ba9dbe97320194ea75f32876972f23e
-    - benchmark measured 975.4548174287327 draws/s/core, 16406.782531828467 projected CPU-hours, bitwise identity PASS, no cloud, no validation run
-    - full v4 single-host qualification PASS at evidence commit 4238660 on ext4 /dev/sda2; 4 qualified workers; cross-host flock NOT_EXERCISED because only one host is available
-    - qualification generated no RNG, read no authorization, ran no benchmark and generated 0 validation worlds
-    - combined report sets single_host_qualified true but execution_hosts_ready_for_authorization false; projected full-run wall time is about 190.13 days on this host
-    - owner explicitly authorized one bounded v4 pilot on 2026-09-23; full validation remains unauthorized
-    - RECOVERY control state and entry/control fence TESTED at f6d6b2e
-    - deterministic Supervisor recovery orchestration TESTED at 5d586f4
-    - bounded v4 pilot completed successfully; 80 worlds across 16 shards, integrity clean
-    - pilot verdict GO with reason p6_encouraging_effect; P6/C4 positive in 20/20 worlds, median signed target lift 0.20497145020781576
-    - PILOT_VERDICT.json SHA256 38c5010ed353f1cccb71f337d9b86672091ff709d87a13ba5f19f003594e3cc4
-    - pilot evidence scripts/m32_scheme_d_pilot_v4_20260923/PILOT_VERDICT.json is non-final only; it does not satisfy full Scheme-D validation, Gate 2, search, referee, handoff or live trading
-
+    - LUFFY-STAGE5-UNIVERSAL-STRATEGY-AUTHORITY-R1 is TESTED; dynamic unversioned real-entry bypass closed and exact Governor activation boundary established.
+    - LUFFY-PORTFOLIO-ALLOCATOR-R1 is TESTED as a detached proposal-only layer.
+    - LUFFY-EXPECTED-NET-ECONOMICS-R1 is TESTED_CONTRACT; real economics remain INSUFFICIENT_EVIDENCE.
+    - No calibrated forward gross or economic reserve model exists; production model registries remain empty.
+    - Read-only real inventory observed zero exact versions or economic cost receipts; no candidates were fabricated.
+    - Detached real allocator shadow retained CASH / NO_ALLOCATION with FROZEN control and stale portfolio evidence.
+  evidence:
+    - docs/superpowers/reports/2026-10-02-stage5-universal-strategy-authority-r1.md
+    - docs/superpowers/evidence/stage5-universal-strategy-authority-r1/
+    - docs/superpowers/reports/2026-10-01-expected-net-economics-r1.md
+    - docs/superpowers/evidence/expected-net-economics-r1/
+    - SDD.md
+    - scripts/portfolio_allocator_shadow.py
   next_steps:
     - step: 1
       action: >
-        Preserve the bounded v4 pilot evidence, including the verdict, receipts,
-        manifests and integrity record. Do not alter the pilot artifacts.
-    - step: 2
-      owner_decision: true
-      requires: preserved pilot evidence and adequate qualified execution capacity
-      action: >
-        Await a separate owner decision on capacity and authorization for any
-        future full v4 validation. The 75,000-world run remains unauthorized and
-        locally capacity-infeasible at about 190 days on 4 qualified workers.
-
-  claude_executable_now:
-    - Preserve and report the completed pilot evidence without initiating another run.
-
+        Build and test the event-driven opportunity/context contract from real
+        registered sources. Retain UNAVAILABLE when required source evidence,
+        versions, costs, economic calibration or freshness is missing. Do not
+        manufacture opportunities from historical decisions or research support.
+  economic_evidence_requirements:
+    - Exact-version forward conditional outcomes with horizon/regime, sample period, gross units, cost exclusion/baseline and validated calibration.
+    - Calibrated uncertainty reserve with measured coverage/error, economic units and gross/cost evidence binding.
+    - Commission authority, validated execution/slippage, funding/borrow applicability and calibrated forward scope bridge to existing cost receipts.
   execution_constraints:
-    - The one authorized bounded v4 pilot is complete. Do not run another pilot, additional RNG benchmark or full validation without separate explicit owner authorization.
-    - Do not run cloud compute or spend money.
-    - Do not mint or fabricate owner authorization.
-    - Do not modify frozen v4/v3/v2/v1 bundles, the v3 shard layer, or the frozen truth package.
-    - Do not change generator, injection, FastMetric, RNG, BH, refusal or effect semantics.
+    - Proposals and evidence only; no orders, activation, deployment, restart, Risk change or frontend/M4 changes.
+    - No further economics formula or Stage-6 economics micro-package while calibration evidence is missing.
+    - Do not invent returns, costs, uncertainty haircuts, confidence weights, liquidity or correlation scores.
+    - Account eligibility, leverage and liquidity capacity gaps remain; stale portfolio evidence is refused.
+    - Stage-6 exit criteria and real allocation readiness remain unsatisfied.
 
-after_completion:
-  - Await the separate owner decision on future full-validation capacity and authorization.
+preserved_prior_work:
+  id: M3.2-SCHEME-D-V4-POST-PILOT
+  status: PILOT_COMPLETE_AWAITING_SEPARATE_OWNER_DECISION
+  evidence: scripts/m32_scheme_d_pilot_v4_20260923/PILOT_VERDICT.json
+  constraints:
+    - Completed bounded pilot remains non-final; full validation, Gate 2, search, referee, handoff and live trading remain unauthorized.
+    - Do not run another pilot, RNG benchmark, full validation or cloud compute without separate explicit owner authorization.
+    - Preserve all frozen v1/v2/v3/v4 bundles and truth artifacts.

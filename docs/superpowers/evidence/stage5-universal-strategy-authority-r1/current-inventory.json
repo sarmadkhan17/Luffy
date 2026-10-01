@@ -1,0 +1,29 @@
+{
+  "activation_probes": [
+    {
+      "reason": "version_missing",
+      "result": "REFUSED",
+      "version_id": "NO_EXACT_VERSION_IN_CURRENT_INVENTORY",
+      "writes": "TEMPORARY_SNAPSHOT_SCHEMA_ONLY"
+    }
+  ],
+  "control": "FROZEN",
+  "counts": {
+    "strategy_approval_decisions": 0,
+    "strategy_approval_requests": 0,
+    "strategy_capacity_receipts": 0,
+    "strategy_governor_events": 0,
+    "strategy_legacy_authorities": 0,
+    "strategy_probation_receipts": 0,
+    "strategy_validation_receipts": 0,
+    "strategy_version_events": 0,
+    "strategy_version_installs": 0,
+    "strategy_versions": 0
+  },
+  "current_first_live_ready": "NO",
+  "governor_events_after_probes": 0,
+  "observed_at_ms": 1790897707793,
+  "real_order_submissions": 0,
+  "schema": "universal-strategy-authority-inventory.v1",
+  "source_access": "SQLITE_READ_ONLY"
+}

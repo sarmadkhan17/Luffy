@@ -28,7 +28,11 @@ RETIRE_DEMOTED_DAYS = 14
 
 def _stats_for(journal: Journal, strategy_id: str) -> dict:
     trades = journal.trades_for_strategy(strategy_id)
-    closed = [t for t in trades if t["status"] == "closed"]
+    return stats_of([t for t in trades if t["status"] == "closed"])
+
+
+def stats_of(closed: list) -> dict:
+    """Probation arithmetic over closed trade rows, in journal order."""
     wins = [t for t in closed if float(t.get("realized_pnl") or 0) > 0]
     losses = [t for t in closed if float(t.get("realized_pnl") or 0) <= 0]
     gross_win = sum(float(t["realized_pnl"]) for t in wins)
@@ -108,8 +112,11 @@ def evaluate_population(journal: Journal, notifier=None) -> list[dict]:
             if st["trades"] >= PROMOTE_MIN_TRADES and \
                     st["winrate"] >= PROMOTE_MIN_WINRATE and \
                     st["pf"] >= PROMOTE_MIN_PF:
-                transition("active", f"probation passed: WR {st['winrate']:.0%}, "
-                                     f"PF {st['pf']:.2f}")
+                from .legacy_authority import grandfathered
+                if grandfathered(journal, sid):
+                    transition("active", f"probation passed: WR {st['winrate']:.0%}, "
+                                         f"PF {st['pf']:.2f}")
+                # Otherwise retain paper state; statistics cannot mint authority.
             # demotion must be reachable at ANY trade count — previously this
             # was nested under `trades >= PROMOTE_MIN_TRADES`, so a paper
             # strategy bleeding 14 straight losses could never be retired.

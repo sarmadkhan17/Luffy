@@ -28,6 +28,7 @@ from .agents.orderbook_depth import DepthScout
 from .agents.positioning import PositioningAnalyst
 from .agents.regime import btc_context
 from .agents.structure import StructureAnalyst
+from .core import reason_codes as rc
 from .core.config import ROOT, load_config
 from .core.journal import Journal
 from .core.types import (Action, ControlState, MarketType, RiskError,
@@ -41,6 +42,7 @@ from .engine.state import ControlStateMachine
 from .engine.supervisor import OwnerContext, Supervisor
 from .engine.watchdog import Heartbeat, start_stall_monitor
 from .notify.telegram import Telegram
+from .observability.portfolio_observation import observe_positions, trading_source
 from .strategy.genome import Genome
 
 log = logging.getLogger("luffy")
@@ -177,7 +179,10 @@ class Kernel:
 
     # ── boot ─────────────────────────────────────────────────────────────
     def _load_population(self) -> list[tuple]:
+        from .engine import trade_provenance
         pop = []
+        identities: dict = {}
+        loaded_at = dt.datetime.now(dt.timezone.utc).isoformat()
         for row in self.journal.list_strategies(["paper", "active", "demoted"]):
             if row.get("kind") == "spec":
                 # Specs enter through the compiled path below. Treating the
@@ -196,7 +201,16 @@ class Kernel:
                        generation=row["generation"] or 0)
             st.is_trade_eligible = row["state"] in ("paper", "active")
             pop.append((st, g))
+            identities[row["id"]] = trade_provenance.population_identity(
+                row["id"], kind=row["kind"], family=row["kind"], name=row["name"],
+                state=row["state"], generation=row["generation"] or 0,
+                parent_id=row.get("parent_id"), loaded_at=loaded_at,
+                params=st.params, created_at=row.get("created_at"))
+        self._spec_identities, self._identities_loaded_at = {}, loaded_at
         pop.extend(self._load_spec_population())
+        identities.update(self._spec_identities)
+        # swapped whole, with the population it describes (provenance only)
+        self._entry_identities = identities
         return pop
 
     def _load_spec_population(self) -> list[tuple]:
@@ -215,6 +229,8 @@ class Kernel:
         spec_exits: dict = {}
         self._spec_exits = spec_exits
         self._spec_rows = []
+        if not isinstance(getattr(self, "_spec_identities", None), dict):
+            self._spec_identities = {}
         try:
             rows = self.journal.list_specs(["paper", "active"])
         except Exception as e:
@@ -233,8 +249,26 @@ class Kernel:
             # the ExitEngine runs, or the backtest evidenced a different
             # strategy than the one trading
             from .engine.exits import SpecExit
-            spec_exits[spec.id] = SpecExit.from_spec(spec)
+            # a factory StrategyVersion runs its frozen entry geometry, never
+            # the mutable config target; unreadable counts as versioned (its
+            # own geometry, and the paper/live fence blocks it anyway)
+            from .strategy import factory_handoff as fh
+            try:
+                is_version = fh.versioned(self.journal, spec.id)
+            except Exception as e:                      # noqa: BLE001
+                log.warning(f"version lookup failed for {spec.id}: {e}")
+                is_version = True
+            spec_exits[spec.id] = SpecExit.from_spec(spec,
+                                                     versioned=is_version)
             register_evaluator(family, compiled.to_evaluator())
+            # the exact compiled version, for entry provenance (observation only)
+            from .engine.trade_provenance import population_identity
+            self._spec_identities[spec.id] = population_identity(
+                spec.id, kind="spec", family=family, name=spec.name,
+                state=row["state"], generation=spec.generation,
+                parent_id=spec.parent_id,
+                loaded_at=getattr(self, "_identities_loaded_at", None),
+                spec=spec, created_at=row.get("created_at"))
             st = type("S", (), {})()
             st.id, st.name, st.state = spec.id, spec.name, row["state"]
             st.params = {}
@@ -311,6 +345,8 @@ class Kernel:
                  f"state={self.state_machine.state.value} "
                  f"population={len(self.population)}")
         self._filter_universe_to_venue()
+        from .observability.stage5_activation import start
+        start(self)
         recovery = (self.supervisor.pass_once(boot=True)
                     if self.market_type == MarketType.FUTURES else None)
         report = (recovery.actions.get("reconcile", {}) if recovery is not None
@@ -530,9 +566,17 @@ class Kernel:
         # 1. retire what has stopped working
         retired = analyst.review_deployed(book)
         for a in retired:
-            self.journal.query(
-                "UPDATE strategies SET state='retired', retire_reason=? "
-                "WHERE id=?", (a["evidence"]["verdict"][:200], a["spec"]))
+            from .strategy import factory_handoff as fh
+            if fh.versioned(self.journal, a["spec"]):
+                versions = self.journal.query("SELECT version_id FROM strategy_version_installs WHERE strategy_id=?", (a["spec"],))
+                if len(versions) != 1:
+                    raise ValueError('governor_install_ambiguous')
+                fh.retire_version(self.journal, versions[0]['version_id'], fh.RETIRED,
+                    reason_code=a["evidence"]["verdict"][:200], actor='strategy_governor', at_ms=int(time.time()*1000))
+            else:
+                with self.journal._tx() as c:
+                    c.execute("UPDATE strategies SET state='retired', retire_reason=? WHERE id=?",
+                              (a["evidence"]["verdict"][:200], a["spec"]))
         if retired:
             book = [s for s in book
                     if s.id not in {a["spec"] for a in retired}]
@@ -587,7 +631,8 @@ class Kernel:
                         "spec_rejected", spec.id,
                         {"name": spec.name, "evidence": ev, "idea": iid})
                     continue
-                self._install_spec(spec, ev, analyst, {"idea": iid})
+                if not self._install_spec(spec, ev, analyst, {"idea": iid}):
+                    continue
                 book.append(spec)
                 added.append(spec.name)
 
@@ -599,8 +644,19 @@ class Kernel:
         log.info(f"mechanism: {rep}")
         return rep
 
-    def _install_spec(self, spec, ev: dict, analyst, extra: dict) -> None:
-        """Everything that follows an Analyst admission, whoever proposed."""
+    def _install_spec(self, spec, ev: dict, analyst, extra: dict,
+                      version_id: str | None = None) -> bool:
+        """Everything that follows an Analyst admission, whoever proposed.
+
+        With `version_id` the spec is a frozen StrategyVersion and is
+        installed exactly (`_install_version`); True when it was installed."""
+        if version_id is not None:
+            return self._install_version(spec, ev, analyst, extra, version_id)
+        from .strategy import factory_handoff as fh
+        if fh.versioned(self.journal, spec.id):
+            self.journal.log_brain_event("spec_install_refused", spec.id,
+                {"reason_code": "VERSIONED_AUTHORITY_REQUIRED", **extra})
+            return False
         # regime_filter as written is a guess; measure it before the
         # orchestrator starts gating live signals on it
         spec.timeframe = ev.get("chosen_timeframe", spec.timeframe)
@@ -616,28 +672,34 @@ class Kernel:
         self.journal.upsert_spec(spec, state="paper")
         self.journal.log_brain_event(
             "spec_admitted", spec.id,
-            {"name": spec.name, "evidence": ev, "regimes": rf, **extra})
+            {"name": spec.name, "evidence": ev, "regimes": rf, **extra,
+             "execution_authority": "RESEARCH_PAPER_ONLY_LEGACY",
+             "live_block_reason": "VERSIONED_AUTHORITY_REQUIRED"})
         if self.notifier:
             self.notifier.send(
                 f"\U0001f9ec New strategy: {spec.name} "
                 f"({spec.timeframe}, {'/'.join(spec.regime_filter)})\n"
                 f"recent PF {ev['recent']['pooled_pf']} over "
                 f"{ev['recent']['trades']} trades \u2192 paper")
+        return True
 
     def _research_handoff(self, analyst, book):
         """One `reason_passed` search candidate through `analyst.admit`.
 
         The search never writes `strategies`; this is its only way in, and
-        it is the same gate every other proposer faces. Returns the admitted
-        spec, or None.
+        it is the same gate every other proposer faces. The candidate is
+        first frozen as an immutable StrategyVersion bound to its registered
+        gate evidence; what is admitted and installed is exactly that
+        version. Returns the admitted spec, or None.
         """
         rcfg = self.cfg.get("research") or {}
         if not rcfg.get("handoff", False):
             return None
         try:
+            import copy
             from .research.ledger import Ledger
-            from .research.runner import ResearchRunner
-            from .research.universe import DISCOVERY, HELDOUT
+            from .strategy import factory_handoff as fh
+            from .strategy.spec import StrategySpec
             led = Ledger(self.journal)
             led.ensure()
             rows = led.candidates(state="reason_passed")
@@ -645,22 +707,21 @@ class Kernel:
                 return None
             cand = rows[0]
             h, tf, geo = cand["hash"], cand["tf"], cand["geo"]
-            combo_rows = self.journal.query(
-                "SELECT * FROM research_combos WHERE hash=?", (h,))
-            runner = ResearchRunner(self.journal, self.cfg,
-                                    run=lambda *a, **k: None)
-            c = runner._combo(combo_rows[0], tf, geo) if combo_rows else None
-            if c is None:
+            try:
+                ver = fh.create_version(
+                    self.journal, self.cfg,
+                    {"kind": "research_candidate", "hash": h},
+                    at_ms=int(time.time() * 1000))
+            except fh.HandoffRefused as e:
                 led.set_candidate(h, tf, geo, "refused",
-                                  reason="cannot be rebuilt at handoff")
+                                  reason=f"no immutable version: {e.code}")
                 return None
-            spec = c.to_spec()
-            # it was examined on discovery + held-out; that is what it has
-            # evidence for, so that is the universe it declares
-            spec.universe = {"include": list(DISCOVERY) + list(HELDOUT),
-                             "exclude": []}
-            spec.provenance = {**(spec.provenance or {}), "research_hash": h}
-            ok, ev = analyst.admit(spec, book)
+            vid = ver["version_id"]
+            spec = StrategySpec.from_dict(
+                fh.load_version(self.journal, vid)["spec"])
+            from .strategy.exit_policy import bind_research
+            bind_research(spec)
+            ok, ev = analyst.admit(copy.deepcopy(spec), book)
         except Exception as e:                          # noqa: BLE001
             log.warning(f"research handoff failed: {e}")
             return None
@@ -669,10 +730,16 @@ class Kernel:
                               reason=str(ev.get("reason", ""))[:400])
             self.journal.log_brain_event(
                 "spec_rejected", spec.id,
-                {"name": spec.name, "evidence": ev, "research_hash": h})
+                {"name": spec.name, "evidence": ev, "research_hash": h,
+                 "version_id": vid})
             return None
-        self._install_spec(spec, ev, analyst, {"research_hash": h})
-        led.set_candidate(h, tf, geo, "admitted", reason="analyst admitted")
+        if not self._install_spec(spec, ev, analyst,
+                                  {"research_hash": h}, version_id=vid):
+            led.set_candidate(h, tf, geo, "refused",
+                              reason=f"exact version {vid[:16]} not installed")
+            return None
+        led.set_candidate(h, tf, geo, "admitted",
+                          reason=f"analyst admitted; version {vid[:16]}")
         return spec
 
     def _strategist_knowledge(self) -> dict:
@@ -933,6 +1000,10 @@ class Kernel:
                                              "reason": "missing_snapshot"})
                 continue
             stats["scanned"] += 1
+            try:
+                self._manage_paper(snap)
+            except Exception as e:
+                log.warning("paper exits refused %s: %s", symbol, e)
             self.positioning_agent.set_context(symbol, funding.get(symbol),
                                                oi.get(symbol))
             self.depth_agent.set_context(symbol, self._order_book(symbol))
@@ -990,6 +1061,14 @@ class Kernel:
         # Both calls above live inside the scan loop, so before this pass a
         # rotated-out symbol got no trail, no time exit and no fill detection.
         stats["orphans_managed"] = self._manage_orphan_positions(scanned)
+        if hasattr(self, "_paper"):
+            for symbol in {p["symbol"] for p in self._paper.open_positions()} - scanned:
+                snap = self._snapshot_for(symbol, universe=universe_frames)
+                if snap is not None:
+                    try:
+                        self._manage_paper(snap)
+                    except Exception as e:
+                        log.warning("paper orphan exits refused %s: %s", symbol, e)
 
         self._maybe_resolve_outcomes()
         self._record_excursions()
@@ -1046,6 +1125,25 @@ class Kernel:
         exec_tf = self.cfg["timeframes"]["execution"]
         side = "long" if d.action == Action.BUY else "short"
         top_strategy = self._top_strategy(d)
+        # paper/live authority fence: a factory StrategyVersion reaches the
+        # real order path only when exact-version first-live eligible (never
+        # today); the executor re-checks at submission
+        from .strategy import factory_handoff as fh
+        blocked = fh.live_entry_block(self.journal, top_strategy)
+        if blocked:
+            # A separate capability with no venue handle. The live fence and
+            # return value stay unchanged: a paper entry is never a live fill.
+            try:
+                self._paper_executor().enter(
+                    d, snap, top_strategy, reference_equity=equity,
+                    state=self.state_machine.state)
+            except Exception as e:  # paper fails closed without changing control
+                log.info("PAPER REFUSE %s %s: %s", d.symbol, top_strategy, e)
+            d.skip_reason = f"version fence: {blocked}"
+            d.reason_codes = [rc.VERSIONED_AUTHORITY_REQUIRED if blocked == "VERSIONED_AUTHORITY_REQUIRED"
+                              else rc.VERSION_NOT_LIVE_AUTHORIZED]
+            log.info(f"VERSION FENCE {d.symbol} {top_strategy}: {blocked}")
+            return False
 
         # The stop must be measured on the frame the spec was validated on.
         # A 2.0x ATR stop means nothing until you say which bar's ATR: 4h ATR
@@ -1059,10 +1157,38 @@ class Kernel:
         if a <= 0:                       # spec frame absent — do not guess
             if se is not None:
                 d.skip_reason = f"no {atr_tf} bars to size the stop on"
+                d.reason_codes = [rc.STOP_ATR_UNAVAILABLE]
                 log.info(f"ENTRY DENY {d.symbol}: {d.skip_reason}")
                 return False
             a = _atr(snap.df(exec_tf))
-        sl, tp = self._protection_for(se, snap.price, a, side)
+        versioned_binding = None
+        if se is not None and se.versioned:
+            from .engine.versioned_exits import entry_contract
+            from .strategy import exit_policy as E
+            from .core.types import TF_MS
+            try:
+                installs = self.journal.query('SELECT version_id FROM strategy_version_installs WHERE strategy_id=?', (top_strategy,))
+                if len(installs) != 1:
+                    raise ValueError('versioned_entry_install_ambiguous')
+                version = fh.load_version(self.journal, installs[0]['version_id'])
+                fh.verify_validation(self.journal, version)
+                install = fh.verify_install(self.journal, version)
+                from .strategy.spec import StrategySpec
+                frozen = StrategySpec.from_dict(version['spec'])
+                sig = next(s for s in d.strategy_signals if s.get('strategy_id') == top_strategy and s.get('action') == d.action.value)
+                if sig.get('params', {}).get('spec_sha256') != version['spec_hash']:
+                    raise ValueError('versioned_entry_signal_differs')
+                ref, a, entry_bar = entry_contract(frozen, snap, sig.get('params', {}).get('signal_bar_close_ms'))
+                policy, state = E.initialize(frozen.exit, ref, a, side, entry_bar, TF_MS[frozen.timeframe])
+                sl, tp = policy.stop, policy.target
+                versioned_binding = dict(version_id=version['version_id'], install_id=install['install_id'],
+                    exit_semantics_id=E.EXIT_SEMANTICS_ID, exit_state=E.encode(policy,state),
+                    initial_risk=policy.initial_r, reference_price=ref)
+            except Exception as e:
+                d.skip_reason = 'versioned entry evidence: ' + str(e)
+                return False
+        else:
+            sl, tp = self._protection_for(se, snap.price, a, side)
         stop_frac = abs(snap.price - sl) / snap.price
         sizing = self.risk.check_entry(
             self.state_machine.state, d.symbol, snap.price, a, stop_frac,
@@ -1072,6 +1198,7 @@ class Kernel:
             market_type=self.market_type.value)
         if not sizing.ok:
             d.skip_reason = f"risk: {sizing.reason}"
+            d.reason_codes = [getattr(sizing, "code", "")]
             log.info(f"RISK DENY {d.symbol}: {sizing.reason}")
             return False
         # meta-label sizing: shrink-only multiplier from P(win) — bounded
@@ -1084,18 +1211,214 @@ class Kernel:
             if sizing.amount * snap.price < float(
                     self.cfg["risk"].get("min_notional_usdt", 10)):
                 d.skip_reason = "risk: meta-sized below min notional"
+                d.reason_codes = [rc.META_SIZE_BELOW_MIN_NOTIONAL]
                 log.info(f"META SIZE DENY {d.symbol}: {m:.2f}× too small")
                 return False
             log.info(f"meta size {d.symbol}: {m:.2f}× "
                      f"(p={getattr(d, 'meta_p', 0):.2f})")
+        identity, reference = self._entry_provenance(d, snap, top_strategy, exec_tf)
+        if versioned_binding:
+            if identity.get('status') != 'VERIFIED':
+                d.skip_reason = 'versioned entry identity unverified'
+                return False
+            identity.update(versioned_binding)
         pos = self.executor.open(
             d, sizing.amount, a, sl, tp,
             strategy_id=top_strategy or "orchestrator",
             strategy_name=top_strategy and next(
                 (s.get("strategy_name", "") for s in d.strategy_signals
                  if s.get("strategy_id") == top_strategy), "consensus"),
-            exec_mode="live")
+            exec_mode="live", entry_identity=identity, reference=reference)
         return pos is not None
+
+    def _install_version(self, spec, ev: dict, analyst, extra: dict,
+                         version_id: str) -> bool:
+        """Paper-install the EXACT frozen StrategyVersion (owner decision
+        2026-09-30: the frozen version is authority).
+
+        Nothing contributing to spec_hash is rewritten. If admission chose
+        another timeframe the version is refused, not refitted; measured
+        regimes are recorded as advisory, never applied (applying them would
+        also rewrite provenance). A materially different install is a new
+        derived version with its own validation, probation and approval."""
+        import copy
+        from .strategy import factory_handoff as fh
+
+        def refuse(code: str, detail: str = "") -> bool:
+            self.journal.log_brain_event(
+                "spec_install_refused", spec.id,
+                {"name": spec.name, "version_id": version_id,
+                 "reason_code": code, "detail": detail, "evidence": ev,
+                 **extra})
+            log.warning(f"exact version {version_id[:12]} of {spec.id} "
+                        f"not installed: {code} {detail}")
+            return False
+
+        chosen = ev.get("chosen_timeframe", spec.timeframe)
+        if chosen != spec.timeframe:
+            return refuse("timeframe_differs_from_version",
+                          f"admission chose {chosen}; version is frozen at "
+                          f"{spec.timeframe}")
+        try:
+            v = fh.load_version(self.journal, version_id)
+            fh.verify_validation(self.journal, v)
+        except fh.HandoffRefused as e:
+            return refuse(e.code)
+        if fh.state_of(self.journal, version_id) != fh.VALIDATED:
+            return refuse("version_not_validated",
+                          str(fh.state_of(self.journal, version_id)))
+        if spec.to_dict() != v["spec"]:
+            return refuse(fh.P_INSTALLED_DIFFERS, "spec is not the frozen one")
+        try:
+            rf = analyst.set_measured_regimes(copy.deepcopy(spec))
+        except Exception as e:                          # noqa: BLE001
+            rf = {"error": str(e)}
+        if (self.cfg.get("tv_harness", {}) or {}).get("enabled", False):
+            try:
+                ev["tv"] = analyst.confirm_on_tv(copy.deepcopy(spec))
+            except Exception as e:
+                log.debug(f"tv confirmation skipped: {e}")
+        self.journal.upsert_spec(spec, state="paper")
+        try:
+            inst = fh.record_exact_install(self.journal, version_id,
+                                           mode="paper",
+                                           at_ms=int(time.time() * 1000))
+        except fh.HandoffRefused as e:
+            # The row is only a projection of the same version authority.
+            fh.retire_version(self.journal,version_id,fh.RETIRED,
+                reason_code='exact_install_refused:' + e.code,actor='strategy_governor',at_ms=int(time.time()*1000))
+            return refuse(e.code, "installed row retired")
+        self.journal.log_brain_event(
+            "spec_admitted", spec.id,
+            {"name": spec.name, "evidence": ev, "version_id": version_id,
+             "spec_hash": v["spec_hash"], "install_id": inst["install_id"],
+             "regimes_advisory_not_applied": rf, **extra})
+        if self.notifier:
+            self.notifier.send(
+                f"\U0001f9ec New strategy version: {spec.name} "
+                f"({spec.timeframe}) {version_id[:12]} \u2192 paper probation")
+        return True
+
+
+    def _paper_funding_recorder(self):
+        """Public observation only, including when no new strategy snapshot arrives.
+        No paper position -> no request; no venue/account or trading capability.
+        The close path independently captures the exact final interval.
+        """
+        from .observability.prospective_execution import for_journal
+        capture=for_journal(self.journal)
+        if capture is None:
+            return
+        while not self._stop:
+            try:
+                self._paper_funding_once(capture)
+            except Exception as exc:
+                capture.blocked('PAPER_FUNDING_PRODUCER:' + type(exc).__name__)
+            for _ in range(60):
+                if self._stop:
+                    return
+                time.sleep(1)
+
+
+    def _paper_funding_once(self,capture):
+        if not self.journal.query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='versioned_paper_trades'"):
+            return
+        rows=self.journal.query("SELECT * FROM versioned_paper_trades WHERE status='open' ORDER BY id LIMIT 33")
+        if len(rows)>32:
+            capture.blocked('PAPER_POSITION_COLLECTION_BOUND_EXCEEDED')
+            return
+        end=time.time_ns()//1_000_000
+        for trade in rows:
+            if trade['market_type']=='futures':
+                capture.funding(trade,end)
+
+
+    def _paper_executor(self):
+        from .engine.paper import PaperExecutor
+        if not hasattr(self, "_paper"):
+            from .observability.prospective_execution import environment
+            self._paper = PaperExecutor(self.journal, self.cfg, venue_environment=environment(self.feed.ex) if getattr(self,'feed',None) is not None else None)
+        return self._paper
+
+
+    def _manage_paper(self, snap):
+        if not self._manages_exits():
+            return []
+        # No account, reconciliation, control, protective-order or venue
+        # capability is available to this runner.
+        closed = self._paper_executor().manage(snap)
+        if closed:
+            from .strategy import factory_handoff as fh
+            versions = set()
+            for trade_id in closed:
+                rows = self.journal.query('SELECT version_id FROM versioned_paper_trades WHERE id=?', (trade_id,))
+                versions.update(row['version_id'] for row in rows)
+            for version_id in versions:
+                if fh.state_of(self.journal, version_id) == fh.SHADOW:
+                    observed_ms = int(dt.datetime.fromisoformat(snap.ts).timestamp()*1000)
+                    fh.evaluate_probation(self.journal, self.cfg, version_id, at_ms=observed_ms)
+        return closed
+
+
+    def _record_capacity_evidence(self) -> None:
+        """Persist what this cycle's existing reads already observed: the
+        account response's available balance and the latest verified venue
+        position observation. No request is made here; a failure is logged
+        and ignored — observation never gates anything."""
+        from .engine import evidence_capture as ce
+        try:
+            resp = getattr(self, "_account_response", None) or {}
+            ce.record_margin(self.journal, ce.margin_observation(
+                resp.get("body"), request_url=resp.get("request_url"),
+                request_start_ms=resp.get("request_start_ms"),
+                received_ms=resp.get("received_ms")))
+        except Exception as e:
+            log.debug(f"margin observation not recorded: {e}")
+        try:
+            obs = getattr(self, "position_observation", None)
+            if obs is not None and obs.observation_id != getattr(
+                    self, "_position_snapshot_of", None):
+                ce.record_snapshot(self.journal, ce.position_snapshot(
+                    obs, getattr(self, "_position_rows", None)),
+                    at_ms=time.time_ns() // 1_000_000)
+                self._position_snapshot_of = obs.observation_id
+        except Exception as e:
+            log.debug(f"venue position snapshot not recorded: {e}")
+
+
+    def _entry_provenance(self, d, snap, top_strategy: str, exec_tf: str):
+        """(entry identity, slippage reference) for one entry. Observation
+        only: any failure yields an UNKNOWN identity and never blocks the entry."""
+        from .engine import trade_provenance
+        now = dt.datetime.now(dt.timezone.utc).isoformat()
+        try:
+            signal = next((s for s in (d.strategy_signals or [])
+                           if s.get("strategy_id") == top_strategy
+                           and s.get("action") == d.action.value), None) if top_strategy else None
+            loaded = (getattr(self, "_entry_identities", None) or {}).get(top_strategy)
+            identity = trade_provenance.entry_identity(
+                top_strategy, loaded, d, trade_provenance.clean(signal), now)
+        except Exception as e:                            # noqa: BLE001
+            identity = {"schema_version": trade_provenance.IDENTITY_VERSION,
+                        "status": "UNKNOWN", "reason": "identity_capture_failed:"
+                        + type(e).__name__, "strategy_id": top_strategy or None,
+                        "captured_at": now}
+        reference = {"price": None, "basis": "unavailable"}
+        try:
+            bar_ts = None
+            frame = snap.df(exec_tf)
+            if frame is not None and "ts" in frame:
+                bar_ts = str(frame["ts"].iloc[-1])
+            px = float(snap.price)
+            reference = {"price": px if px > 0 else None,
+                         "basis": "decision_snapshot_price",
+                         "definition": f"last {exec_tf} close in the decision snapshot; "
+                                       "the price the entry was sized and stopped on",
+                         "snapshot_at": snap.ts, "bar_ts": bar_ts}
+        except Exception as e:                            # noqa: BLE001
+            reference = {"price": None, "basis": "unavailable",
+                         "reason": "reference_capture_failed:" + type(e).__name__}
+        return identity, reference
 
     def _protection_for(self, se, price: float, atr: float,
                         side: str) -> tuple[float, float]:
@@ -1107,6 +1430,10 @@ class Kernel:
         if se is None:
             return self.risk.protection_levels(
                 price, atr, side, self.executor.tp_atr_mult)
+        if se.versioned:
+            # the frozen StrategyVersion's own stop AND target; config's
+            # take_profit_atr_mult never reaches a version
+            return se.frozen_levels(price, atr, side)
         if se.stop_atr_mult > 0:
             dist = se.stop_atr_mult * atr
         elif se.stop_pct > 0:
@@ -1188,6 +1515,18 @@ class Kernel:
 
     def _manage_one(self, t: dict, snap, score) -> str | None:
         """Run the exit engine over one open trade. Returns an exit reason."""
+        from .strategy import factory_handoff as F
+        # A terminal intent needs only the current execution price, even if
+        # candle data is unavailable or the strategy has since retired.
+        if F.versioned(self.journal, t.get('strategy_id') or ''):
+            try:
+                reason = self.exits.manage(t, snap.price, 0, score, snapshot=snap)
+            except Exception as e:
+                log.warning(f"versioned exit manage {t['symbol']}: {e}")
+                return None
+            if reason:
+                self.notifier.send(f"↪ {t['symbol']} exit: {reason} @ {snap.price:.4g}")
+            return reason
         from .agents.indicators import atr as _atr
         exec_tf = self.cfg["timeframes"]["execution"]
         # trail on the spec's own frame, for the same reason the stop is set
@@ -1198,11 +1537,12 @@ class Kernel:
             log.warning(f"exit manage {t['symbol']}: no {tf} bars, "
                         f"holding the stop where it is")
             return None
+        se = self.exits.spec_exits.get(t.get('strategy_id'))
         a = _atr(df) if df is not None else 0
-        if a <= 0:
+        if a <= 0 and not (se and se.versioned):
             return None
         try:
-            reason = self.exits.manage(t, snap.price, a, score)
+            reason = self.exits.manage(t, snap.price, a, score, snapshot=snap)
         except Exception as e:
             log.warning(f"exit manage {t['symbol']}: {e}")
             return None
@@ -1380,8 +1720,25 @@ class Kernel:
         lot-step rounding is never mistaken for an exit.
         """
         try:
+            request_start_ms = time.time_ns() // 1_000_000
+            position_rows = self.exchange.fetch_positions()
+            response_received_ms = time.time_ns() // 1_000_000
+            try:
+                environment, source_ref = trading_source(self.exchange)
+                observation = observe_positions(
+                    position_rows, exchange_id=getattr(self.exchange, "id", None),
+                    market_type=getattr(self, "market_type", None),
+                    environment=environment, source_ref=source_ref,
+                    request_start_ms=request_start_ms,
+                    response_received_ms=response_received_ms,
+                )
+            except (ValueError, TypeError, OverflowError):
+                pass  # unverified response never replaces the last good cut
+            else:
+                self.position_observation = observation
+                self._position_rows = position_rows   # the rows it was built from
             ex_amt = {norm_symbol(p["symbol"]): float(p.get("contracts") or 0)
-                      for p in self.exchange.fetch_positions()
+                      for p in position_rows
                       if float(p.get("contracts") or 0) > 0}
         except Exception:
             return 0
@@ -1402,13 +1759,20 @@ class Kernel:
             fees = self.executor.taker_fee * (sold * entry + sold * px)
             pnl = gross - fees
             reason = "tp_fill" if tp and abs(px - tp) <= abs(px - sl) else "sl_fill"
+            # provenance only: the venue's executing order/fill ids for a native
+            # stop are not read here, so none are claimed
+            observed = {"basis": "exchange_exit_detected_by_size", "purpose": "native_exit",
+                        "protective_algo_id": t.get("sl_order_id") or None,
+                        "booked_pnl_basis": "estimated", "mark_price": px,
+                        "journal_amount": amount, "venue_amount": held}
             if held <= 0:
-                self.journal.close_trade(t["id"], px, round(pnl, 8), reason)
+                self.journal.close_trade(t["id"], px, round(pnl, 8), reason,
+                                         accounting=observed)
                 log.info(f"EXCHANGE EXIT {symbol}: {reason} @{px} pnl={pnl:+.2f}")
             else:
                 # part of the line filled; what remains is a real position
                 self.journal.align_trade_amount(
-                    t["id"], held, held * entry, pnl_delta=pnl)
+                    t["id"], held, held * entry, pnl_delta=pnl, accounting=observed)
                 log.info(f"EXCHANGE PARTIAL {symbol}: {reason} @{px} "
                          f"-{sold:g} pnl={pnl:+.2f} remaining={held:g}")
             self.notifier.send(
@@ -1573,6 +1937,7 @@ class Kernel:
             fresh = None                # a malformed read is no read
         balance = fresh if fresh is not None else self._last_equity_fallback()
         self._record_account_observation(attempted, raw, fresh, balance)
+        self._record_capacity_evidence()
         status = self.risk.update_equity(balance, authoritative=fresh is not None)
         if status.get("halt_breached"):
             self.state_machine.set(ControlState.HALTED, "risk_engine",
@@ -1685,6 +2050,7 @@ class Kernel:
 
     def _fetch_balance_fresh(self) -> float | None:
         """Equity read from the venue now, or None. Never a stored value."""
+        self._account_response = None
         try:
             import hashlib, hmac as _hmac
             import requests
@@ -1694,11 +2060,21 @@ class Kernel:
             sig = _hmac.new(secret.encode(), q.encode(), hashlib.sha256).hexdigest()
             base = self.exchange.urls.get("api", {}).get("fapiPrivate",
                    "https://demo-fapi.binance.com/fapi/v1").rsplit("/", 1)[0]
-            r = requests.get(
-                f"{base}/fapi/v3/account" if "/v1" in base
-                else f"{base}/v3/account",
-                params=q + f"&signature={sig}",
-                headers={"X-MBX-APIKEY": key}, timeout=10)
+            url = (f"{base}/fapi/v3/account" if "/v1" in base
+                   else f"{base}/v3/account")
+            sent_ms = time.time_ns() // 1_000_000
+            r = requests.get(url, params=q + f"&signature={sig}",
+                             headers={"X-MBX-APIKEY": key}, timeout=10)
+            # capacity evidence only: the same response's bytes, the unsigned
+            # URL and its timing (never the query, signature or key). Isolated:
+            # it can never change the equity read below.
+            try:
+                self._account_response = {
+                    "body": getattr(r, "content", None), "request_url": url,
+                    "request_start_ms": sent_ms,
+                    "received_ms": time.time_ns() // 1_000_000}
+            except Exception:
+                self._account_response = None
             tmb = float(r.json().get("totalMarginBalance") or 0)
             if tmb > 0:
                 self._balance_read = {"basis": "venue_total_margin_balance",

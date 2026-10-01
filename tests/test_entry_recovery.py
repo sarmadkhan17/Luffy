@@ -77,6 +77,8 @@ class Venue:
 def setup(tmp_path, monkeypatch):
     monkeypatch.setattr('trader.engine.executor.time.sleep', lambda _: None)
     j = Journal(tmp_path/'journal.db')
+    from tests.authority_legacy_fixtures import seed
+    seed(j)  # explicit TEST-ONLY legacy authority for execution/recovery checks
     d = Decision('d', 'c', 'BTC/USDT', Action.BUY, 1., .5, .8, [], [])
     with j._tx() as db:
         db.execute("INSERT INTO cycles(id,ts,symbol) VALUES ('c','2026-09-16','BTC/USDT')")

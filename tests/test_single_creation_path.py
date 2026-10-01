@@ -121,7 +121,7 @@ def _handoff_kernel(tmp_path, handoff, admit_ok=True):
     from trader.core.child import ChildResult  # noqa: F401
     from trader.kernel import Kernel
     from trader.research import vocab
-    from trader.research.combo import Combination
+    from trader.research.combo import Combination, evaluated_record
     from trader.research.ledger import Ledger
 
     j = Journal(tmp_path / "j.db")
@@ -132,13 +132,18 @@ def _handoff_kernel(tmp_path, handoff, admit_ok=True):
                                  "usable": True}
                              for e in vocab.expressions("4h")})
     part = vocab.parts_for("4h", led.gauges("4h"))[0]
-    c = Combination((part,), "4h", "trail")
-    led.record_result({"hash": c.hash, "tf": "4h", "geo": "trail", "k": 1,
+    c = Combination((part,), "4h", "fixed")
+    led.record_result({"hash": c.hash, "tf": "4h", "geo": "fixed", "k": 1,
                        "parts": list(c.keys), "trades": 300,
                        "portfolio": {"total_pct": 40.0, "max_dd_pct": 20.0},
                        "testable": True, "verdict": "scored"},
                       "survivor", "r", {})
-    led.set_candidate(c.hash, "4h", "trail", "reason_passed", rank=40.0)
+    # TEST-ONLY registered referee evidence; an Analyst result cannot replace it.
+    led.record_test(c.hash, "4h", "fixed", "gate1", .001, .0025, False,
+                    {"t": 1, "evaluated": evaluated_record(c)})
+    led.set_candidate(c.hash, "4h", "fixed", "reason_passed", rank=40.0,
+                      gate1={"p": .001, "alpha": .0025, "t": 1},
+                      gate3={"passed": True, "reason": "TEST-ONLY book"})
 
     seen = []
 
@@ -185,6 +190,6 @@ def test_a_refused_candidate_is_recorded_and_not_installed(tmp_path):
 
 def test_only_reason_passed_candidates_are_handed_off(tmp_path):
     k, analyst, seen, c, led = _handoff_kernel(tmp_path, handoff=True)
-    led.set_candidate(c.hash, "4h", "trail", "referee_passed")
+    led.set_candidate(c.hash, "4h", "fixed", "referee_passed")
     assert k._research_handoff(analyst, []) is None
     assert seen == []

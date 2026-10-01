@@ -18,6 +18,8 @@ only, which is why the equivalence criterion compares trades/wins/pnl.
 """
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pandas as pd
 
@@ -72,7 +74,7 @@ def _target_distance(exit_spec: ExitSpec, ref_px: float, atr: float,
 
 def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
            max_bars, trail_mult, arm_at_r, exit_sig, fund_arr, funding_8h,
-           bar_minutes):
+           bar_minutes, exit_evidence_out=None, intended_quantity=1.0, transitions_out=None):
     """One trade entered at bar `i`'s close: (exit_i, stop distance, P&L per
     unit of size). Every cost scales with size, so P&L = unit P&L x amount
     and the R multiple — unit P&L / stop distance — does not depend on the
@@ -87,6 +89,17 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
     # then applied from the slipped entry
     sl_dist = _stop_distance(exit_spec, px, atr[i], df, i, side)
     tp_dist = _target_distance(exit_spec, px, atr[i], sl_dist)
+    canonical = getattr(exit_spec, "_exit_semantics_id", None) is not None
+    if canonical:
+        from . import exit_policy as E
+        from ..core.types import TF_MS
+        if exit_spec._exit_semantics_id != E.EXIT_SEMANTICS_ID:
+            raise ValueError("exit_semantics_mismatch")
+        step = TF_MS[exit_spec._exit_timeframe]
+        bar_minutes = step / 60_000
+        clock = df["ts"].iloc[i]
+        entry_ms = int(clock.timestamp()*1000) if hasattr(clock, "timestamp") else int(clock)
+        policy, state = E.initialize(exit_spec, px, atr[i], side, entry_ms, step)
     sl = entry - sign * sl_dist
     tp = entry + sign * tp_dist if tp_dist is not None else None
 
@@ -94,6 +107,19 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
     exit_i, exit_px = end, closes[end]
     best = entry
     for j in range(i + 1, end + 1):
+        if canonical:
+            row = df.iloc[j]
+            clock = row['ts']
+            ms = int(clock.timestamp()*1000) if hasattr(clock, 'timestamp') else int(clock)
+            transition = E.advance(policy, state, E.Observation(ms, float(row['open']),
+                highs[j], lows[j], closes[j]), intended_quantity)
+            if transitions_out is not None:
+                transitions_out.append(transition)
+            state = transition.state
+            if transition.due:
+                exit_i, exit_px = j, state.reference_exit
+                break
+            continue
         if trail_mult:
             best = max(best, highs[j]) if side == "long" \
                 else min(best, lows[j])
@@ -114,6 +140,13 @@ def _trade(i, side, df, closes, highs, lows, atr, exit_spec, slip_frac, fee,
             exit_i, exit_px = j, closes[j]
             break
 
+    if canonical:
+        if exit_evidence_out is not None:
+            exit_evidence_out.append({'entry_i': i, 'exit_i': exit_i if state.reason else None,
+                'exit_semantics_id': E.EXIT_SEMANTICS_ID, 'state': json.loads(E.encode(policy,state)),
+                'censored': not bool(state.reason), 'authority': 'STRATEGY'})
+        if not state.reason:
+            return -2, sl_dist, float('nan')
     exit_px = exit_px - sign * slip                   # exits pay the spread too
     gross = (exit_px - entry) * sign
     fees = fee * (entry + exit_px)
@@ -192,11 +225,13 @@ def walk_table(table: dict, long: np.ndarray, short: np.ndarray,
         if i < cursor or i >= n - 1:
             continue
         ex, r, pos = (lex, lr, lpos) if long[i] else (sex, sr, spos)
-        if ex[i] < 0:
+        if ex[i] == -1:
             continue
         staked = eq * risk_frac
         if staked * pos[i] < 10:                      # dust guard
             continue
+        if ex[i] == -2:  # censored position occupies the rest of this slice
+            break
         out.append((i, int(ex[i]), float(r[i])))
         eq += r[i] * staked
         cursor = int(ex[i]) + 1
@@ -209,7 +244,7 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
              exit_sig: np.ndarray | None = None,
              funding: np.ndarray | None = None,
              fills_out: list | None = None,
-             score_from: int = 0) -> BacktestResult:
+             score_from: int = 0, exit_evidence_out=None) -> BacktestResult:
     """`funding`, when given, is the SIGNED 8-hourly rate per bar.
 
     Without it the engine charges abs(flat rate) to both sides, which bills a
@@ -252,6 +287,8 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
         if trail.get("kind") == "atr" else 0.0
     arm_at_r = float(trail.get("arm_at_r", 1.0))
 
+    res.exit_semantics_id = getattr(exit_spec, "_exit_semantics_id", None)
+    trace = exit_evidence_out if exit_evidence_out is not None else ([] if res.exit_semantics_id else None)
     equity_curve = [equity]
     peak = equity
     candidates = np.flatnonzero(long | short)
@@ -268,10 +305,21 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
         exit_i, sl_dist, unit_pnl = _trade(
             i, side, df, closes, highs, lows, atr, exit_spec, slip_frac,
             fee, max_bars, trail_mult, arm_at_r, exit_sig, fund_arr,
-            funding_8h, bar_minutes)
+            funding_8h, bar_minutes, trace)
         amount = (equity_curve[-1] * risk_frac) / sl_dist
         if amount * px < 10:                          # dust guard
             continue
+        if exit_i == -2:
+            res.censored_position_count += 1
+            break  # open through dataset end; subsequent entries cannot open
+        if trace is not None and trace:
+            evidence = trace[-1]
+            state = evidence.get('state', {}).get('state', {})
+            reason = state.get('reason')
+            if reason:
+                res.exit_reasons[reason] = res.exit_reasons.get(reason, 0) + 1
+            if state.get('ambiguous'):
+                res.ambiguous_exit_count += 1
         pnl = unit_pnl * amount
 
         if fills_out is not None:

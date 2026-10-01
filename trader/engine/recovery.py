@@ -219,7 +219,11 @@ class EntryRecovery:
                           stop_loss=candidates[0]["stop_price"])
             self.journal.add_trade(Position(**values), accounting={
                 "basis": "recovered_entry_order_confirmation", "order_id": str(order.get("id") or ""),
-                "confirmed_quantity": amount, "confirmed_price": entry, "recovery_intent_id": intent["id"]})
+                "confirmed_quantity": amount, "confirmed_price": entry, "recovery_intent_id": intent["id"],
+                "purpose": "recovered_entry", "client_order_id": intent.get("client_order_id"),
+                "side": "buy" if p["side"] == "long" else "sell",
+                "reference": {"price": None, "basis": "unavailable",
+                              "reason": "recovered entry: pre-submission reference not persisted in intent"}})
         else:
             # Do not silently rewrite realized accounting if size changed during recovery.
             if not math.isclose(float(existing[0]["amount"]), amount, rel_tol=1e-8):

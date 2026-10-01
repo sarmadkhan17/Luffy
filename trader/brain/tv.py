@@ -158,6 +158,8 @@ def validate_population(journal, tv: TVClient, notifier=None,
     results = {"passed": [], "advisory_fail": [], "duplicates": []}
     seen_genomes: dict[str, str] = {}
     for row in journal.list_strategies(["paper", "active", "demoted"]):
+        if row["kind"] == "spec":
+            continue  # spec lifecycle belongs exclusively to the Governor
         fam, params = row["kind"], json.dumps(row["params"], sort_keys=True)
         key = f"{fam}:{params}"
         if key in seen_genomes:

@@ -90,13 +90,46 @@ def persist(db, trade_id, kind, before, evidence=None):
     if after is None:
         return
     evidence = evidence or {'basis': 'unattributed_journal_booking'}
+    # Separate external authorities from declared StrategySpec intent.
+    evidence = dict(evidence)
+    if kind == 'entry':
+        identity_row = db.execute('SELECT entry_identity_json,entry_price,stop_loss FROM trades WHERE id=?', (trade_id,)).fetchone()
+        try:
+            identity = json.loads(identity_row['entry_identity_json'] or '{}')
+        except (ValueError, TypeError):
+            identity = {}
+        if not isinstance(identity, dict):
+            identity = {}
+        if identity.get('version_id') and identity.get('exit_state'):
+            from ..strategy.exit_policy import decode
+            try:
+                policy, _ = decode(identity['exit_state'])
+                evidence['exit_risk_evidence'] = {'exit_semantics_id': policy.semantics_id,
+                    'reference_price': policy.reference, 'closed_bar_atr': policy.entry_atr,
+                    'frozen_initial_r': policy.initial_r,
+                    'actual_fill_to_stop_distance': abs(identity_row['entry_price']-identity_row['stop_loss']),
+                    'authority': 'EXECUTION_EVIDENCE'}
+            except (ValueError, TypeError, KeyError):
+                evidence['exit_risk_evidence'] = {'status': 'UNAVAILABLE', 'authority': 'EXECUTION_EVIDENCE'}
+    if kind in ('close:sl_fill', 'close:tp_fill'):
+        evidence['exit_authority'] = 'PROTECTION'
+    elif kind == 'close:panic' or evidence.get('purpose') == 'panic_exit':
+        evidence['exit_authority'] = 'RISK'
+    elif kind == 'close:reconciled_ghost' or str(evidence.get('basis','')).startswith(('reconcile', 'recover')):
+        evidence['exit_authority'] = 'RECOVERY'
+    elif evidence.get('strategy_exit'):
+        evidence['exit_authority'] = 'STRATEGY'
     receipt = {'schema_version': 'trade-booking.v1', 'trade_id': trade_id,
                'kind': kind, 'observed_ms': int(time.time()*1000),
                'before': before, 'after': after, 'evidence': evidence,
                'assessment': assess(evidence)}
     receipt['sha256'] = digest(receipt)
-    db.execute('INSERT INTO trade_accounting_bookings(trade_id,payload) VALUES (?,?)',
-               (trade_id, json.dumps(receipt, sort_keys=True, allow_nan=False)))
+    cur = db.execute('INSERT INTO trade_accounting_bookings(trade_id,payload) VALUES (?,?)',
+                     (trade_id, json.dumps(receipt, sort_keys=True, allow_nan=False)))
+    # order/fill provenance for this receipt; contained, never fails the booking
+    from .trade_provenance import record_safely
+    record_safely(db, trade_id, kind, before, after, evidence, cur.lastrowid,
+                  recorded_ms=receipt['observed_ms'])
 
 
 def replay(receipt):

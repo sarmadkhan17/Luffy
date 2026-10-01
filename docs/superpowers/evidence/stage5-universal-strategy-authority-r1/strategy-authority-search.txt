@@ -1,0 +1,55 @@
+trader/portfolio/economics.py:158:    body = paper_cost.verify(_FrozenCostReader(raw), raw['trade'], raw['strategy_version'], raw['install'])
+scripts/portfolio_allocator_shadow.py:26:          'strategy_version_installs', 'strategy_probation_receipts',
+scripts/repair_proxy_demotions.py:58:            "UPDATE strategies SET state='paper', state_changed_at=?, "
+trader/strategy/promotion.py:92:                    "UPDATE strategies SET state=?, state_changed_at=?, "
+trader/strategy/promotion.py:152:            c.execute("UPDATE strategies SET stats_json=? WHERE id=?",
+trader/strategy/genome.py:115:        params={}, state=StrategyState.PAPER,      # seeds start in paper probation
+trader/engine/supervisor.py:653:                if (f.state == ControlState.HALTED and not allow_unhalt
+trader/engine/supervisor.py:794:                own = f.state == ControlState.FROZEN and f.watermark == hold
+trader/engine/supervisor.py:800:                            if (final_hold is not None and f.state == ControlState.FROZEN
+trader/strategy/blend.py:99:    """{strategy_id: weight} for the currently eligible set.
+trader/brain/strategist.py:133:                    c.execute("UPDATE strategies SET state='retired', "
+trader/engine/versioned_exits.py:69:        if (trade['strategy_id'], identity.get('strategy_id'), identity.get('spec_sha256'), identity.get('install_id')) != (
+trader/engine/versioned_exits.py:70:                version['strategy_id'], version['strategy_id'], version['spec_hash'], install['install_id']):
+trader/strategy/factory_handoff.py:87:INSTALL_SCHEMA = "strategy-version-install.v1"
+trader/strategy/factory_handoff.py:102:           "strategy_version_installs", "strategy_probation_receipts", "strategy_approval_requests",
+trader/strategy/factory_handoff.py:124:CREATE TABLE IF NOT EXISTS strategy_version_installs (
+trader/strategy/factory_handoff.py:183:BEFORE INSERT ON strategy_governor_events WHEN strategy_governor_write() != 1
+trader/strategy/factory_handoff.py:186:BEFORE INSERT ON strategy_version_events
+trader/strategy/factory_handoff.py:190:BEFORE UPDATE OF state ON strategies
+trader/strategy/factory_handoff.py:194:CREATE TRIGGER IF NOT EXISTS version_strategy_insert_authority
+trader/strategy/factory_handoff.py:195:BEFORE INSERT ON strategies
+trader/strategy/factory_handoff.py:200:BEFORE DELETE ON strategies
+trader/strategy/factory_handoff.py:205:BEFORE INSERT ON strategies
+trader/strategy/factory_handoff.py:298:    c.execute("INSERT INTO strategy_version_events(version_id, from_state, "
+trader/strategy/factory_handoff.py:613:    rows = journal.query('SELECT version_id FROM strategy_version_installs WHERE strategy_id=?', (spec.id,))
+trader/strategy/factory_handoff.py:682:    row = _one(journal, "SELECT * FROM strategy_version_installs WHERE "
+trader/strategy/factory_handoff.py:734:        out, _ = _insert(c, "strategy_version_installs", "install_id",
+trader/strategy/factory_handoff.py:1455:        conn.execute('INSERT INTO strategy_governor_events(version_id,to_state,canonical_json,canonical_sha256) VALUES(?,?,?,?)',
+trader/strategy/factory_handoff.py:1458:            conn.execute("UPDATE strategies SET state='retired', retire_reason=?, state_changed_at=? WHERE id=?",
+trader/brain/tv.py:167:                "UPDATE strategies SET state='retired', retire_reason=?, "
+trader/engine/paper.py:123:        rows = self.journal.query('SELECT version_id FROM strategy_version_installs WHERE strategy_id=?', (strategy_id,))
+trader/engine/orchestrator.py:178:    """Is this strategy eligible in `regime`?
+trader/engine/orchestrator.py:434:                receipts.add("strategy", st.id, "ineligible_state")
+trader/engine/orchestrator.py:437:                receipts.add("strategy", st.id, "ineligible_market")
+trader/engine/orchestrator.py:440:                receipts.add("strategy", st.id, "ineligible_regime")
+trader/engine/orchestrator.py:444:                receipts.add("strategy", st.id, "ineligible_symbol")
+trader/engine/state.py:77:        self.state = ControlState(raw)
+trader/engine/state.py:84:            self.state = ControlState(raw)
+trader/engine/state.py:91:        return self.state == ControlState.ACTIVE
+trader/engine/state.py:131:            self.state = current
+trader/engine/state.py:190:        self.state = new
+trader/kernel.py:193:            st.id, st.name, st.state = row["id"], row["name"], row["state"]
+trader/kernel.py:273:            st.id, st.name, st.state = spec.id, spec.name, row["state"]
+trader/kernel.py:496:        strategy. Every cycle: sweep deployed specs for decay, then ask the
+trader/kernel.py:571:                versions = self.journal.query("SELECT version_id FROM strategy_version_installs WHERE strategy_id=?", (a["spec"],))
+trader/kernel.py:578:                    c.execute("UPDATE strategies SET state='retired', retire_reason=? WHERE id=?",
+trader/kernel.py:1170:                installs = self.journal.query('SELECT version_id FROM strategy_version_installs WHERE strategy_id=?', (top_strategy,))
+trader/kernel.py:1655:            elif f.state == ControlState.HALTED:
+trader/core/types.py:148:    state: StrategyState = StrategyState.PROPOSED
+trader/core/types.py:176:        return self.state in (StrategyState.PAPER, StrategyState.ACTIVE)
+trader/core/journal.py:259:                c.execute("UPDATE strategies SET state_changed_at=created_at "
+trader/core/journal.py:501:                "INSERT OR REPLACE INTO strategies "
+trader/core/journal.py:515:            c.execute("UPDATE strategies SET state_changed_at=created_at "
+trader/core/journal.py:541:            "INSERT OR REPLACE INTO strategies "
+trader/core/journal.py:570:                from ..strategy.factory_handoff import bind_installed_spec
