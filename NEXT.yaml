@@ -2,10 +2,33 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
+  id: LUFFY-VERSIONED-PAPER-EXECUTION-R1
+  status: SELECTED_NOT_STARTED
+  note: Stage 5 is incomplete because VERSIONED_PAPER_EXECUTION_MISSING - F1 fences every factory StrategyVersion from the real order path and Executor.open has no paper path, so exact-version probation (F2 counts only exec_mode = paper trades) cannot accrue trades. Scope, acceptance and constraints come from the owner's package brief; none are invented here. LUFFY-PORTFOLIO-ALLOCATOR-R1 is NOT selected.
+  preconditions_recorded:
+    - effective strategy capacity and the liquidity capacity model are UNAVAILABLE; leverage brackets UNAVAILABLE; account eligibility UNKNOWN; no capacity number may be treated as established
+    - F1-F4 (LUFFY-CROSS-STAGE-AUTHORITY-FIX-R1, commit 6b7f0f7f434fbe6b7c227595a43d4a325dc849e6) are locked; the live fence must not be weakened
+    - deterministic Risk remains the sizing authority; research.referee=false and research.handoff=false unchanged
+  last_completed:
+    id: LUFFY-CAPACITY-EVIDENCE-INTEGRATION-R1
+    verdict: PASS
+    state: TESTED (focused tests; see report)
+    branch: luffy-capacity-evidence-integration-r1 on 6b7f0f7f434fbe6b7c227595a43d4a325dc849e6 (uncommitted working tree)
+    report: docs/superpowers/reports/2026-10-01-capacity-evidence-integration-r1.md
+    record: STATE.yaml completed_capacity_evidence_integration_r1
+    integrates:
+      - LUFFY-CAPACITY-EVIDENCE-CAPTURE-R1 (PASS; TESTED; source luffy-capacity-evidence-capture-r1 on b35a4bc, uncommitted; record STATE.yaml completed_capacity_evidence_capture_r1)
+      - LUFFY-CROSS-STAGE-AUTHORITY-FIX-R1 (PASS F1-F4; TESTED; committed 6b7f0f7; record STATE.yaml completed_cross_stage_authority_fix_r1)
+    runtime_deployment: NOT_DEPLOYED
+  shadow_processes:
+    - LUFFY-CAPACITY-EVIDENCE-CAPTURE-R1 depth collector STOPPED (STOP file; final log {"stopped":"stop_file","ms":1790811736012}; 12 cycles, 192 snapshots); see STATE.yaml shadow_processes
+    - LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1 AUTHORIZATION_PENDING; PID 2949543 observed alive, not authorization (record below)
+
+intelligence_spine_shadow_package:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
   type: SHADOW_OPERATION
   priority: HIGH
-  status: IN_PROGRESS_SHADOW_RUNNING (authorized by owner 2026-09-30; see STATE.yaml current_active_work)
+  status: AUTHORIZATION_PENDING (a shadow runner process was observed running on 2026-10-01 - see STATE.yaml current_active_work; no owner authorization record of its values, duration or stop conditions exists, so it is not recorded as authorized; capability state remains TESTED, not SHADOW)
   objective: >
     Observe the TESTED intelligence spine on real data in shadow/read-only
     mode: enable attention.world_model and one bounded investigation consumer
@@ -72,7 +95,7 @@ work_package:
       id: LUFFY-STRATEGY-CAPACITY-R1
       verdict: PASS
       state: TESTED
-      branch: luffy-strategy-capacity-r1 (base luffy-integrated-core-r1 548ebb7; uncommitted)
+      branch: luffy-strategy-capacity-r1 (base luffy-integrated-core-r1 548ebb7; committed b35a4bc)
       evidence:
         - trader/strategy/capacity.py; trader/strategy/factory_handoff.py
         - tests/test_strategy_capacity.py (21 passed); tests/test_strategy_factory_handoff.py (53 passed)
@@ -80,8 +103,26 @@ work_package:
       runtime_deployment: NOT_DEPLOYED
       record: STATE.yaml completed_strategy_capacity_r1
       result: capacity contract TESTED; risk/account-equity/portfolio/strategy-stop/venue-minimum bounds computed from existing sources; LIQUIDITY_CAPACITY UNAVAILABLE (NO_REGISTERED_LIQUIDITY_CAPACITY_MODEL) so EFFECTIVE_CAPACITY UNAVAILABLE; first-live eligibility now requires a current ESTABLISHED receipt, so no version can be eligible today
-    next_stage5_gaps:  # owner decision to prioritize; none started
-      - effective capacity is UNAVAILABLE; do not invent a number. Missing, each needing its own authority - a registered liquidity/market-impact capacity model (SDD 16.3), a recorded available-margin (funding) observation, venue maximum quantity/notional and leverage-bracket capture in the instrument registry, per-symbol account eligibility evidence
+    cross_stage_authority_fix:
+      id: LUFFY-CROSS-STAGE-AUTHORITY-FIX-R1
+      verdict: PASS (F1-F4 fixed)
+      state: TESTED
+      branch: luffy-strategy-capacity-r1; committed 6b7f0f7f434fbe6b7c227595a43d4a325dc849e6
+      evidence:
+        - tests/test_cross_stage_authority.py
+        - trader/strategy/factory_handoff.py; trader/engine/executor.py; trader/engine/exits.py; trader/kernel.py; trader/research/combo.py; trader/research/runner.py
+      runtime_deployment: NOT_DEPLOYED
+      record: STATE.yaml completed_cross_stage_authority_fix_r1
+    capacity_evidence:
+      id: LUFFY-CAPACITY-EVIDENCE-CAPTURE-R1
+      verdict: PASS
+      state: TESTED (integrated onto 6b7f0f7 by LUFFY-CAPACITY-EVIDENCE-INTEGRATION-R1, uncommitted)
+      runtime_deployment: NOT_DEPLOYED
+      record: STATE.yaml completed_capacity_evidence_capture_r1
+      result: available margin, venue filters (max qty, market-order lot size), persisted venue position snapshots, public depth observations and an execution-evidence read model TESTED; liquidity capacity model UNAVAILABLE, leverage brackets UNAVAILABLE, account eligibility UNKNOWN, so EFFECTIVE_CAPACITY remains UNAVAILABLE
+    next_stage5_gaps:
+      - VERSIONED_PAPER_EXECUTION_MISSING; selected next as LUFFY-VERSIONED-PAPER-EXECUTION-R1, not started; the versioned live fence remains closed
+      - effective capacity is UNAVAILABLE; do not invent a number. Missing, each needing its own authority - a registered liquidity/market-impact capacity model (SDD 16.3), leverage brackets, per-symbol account eligibility evidence. Available-margin capture, venue quantity filters and durable venue snapshots are TESTED but NOT_DEPLOYED; maximum notional is NOT_PUBLISHED_IN_EXCHANGEINFO
       - wire version degradation/retirement to analyst.review_deployed
       - no real probation has run (0 research candidates; research.referee/handoff false - recorded stop)
   established_boundary:
