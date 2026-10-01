@@ -121,7 +121,7 @@ def _handoff_kernel(tmp_path, handoff, admit_ok=True, gates=True):
     from trader.core.child import ChildResult  # noqa: F401
     from trader.kernel import Kernel
     from trader.research import vocab
-    from trader.research.combo import Combination
+    from trader.research.combo import Combination, evaluated_record
     from trader.research.ledger import Ledger
 
     j = Journal(tmp_path / "j.db")
@@ -142,7 +142,7 @@ def _handoff_kernel(tmp_path, handoff, admit_ok=True, gates=True):
         # the registered referee evidence a handed-off candidate must carry:
         # one gate1 look that rejected at its alpha, and a passing gate3
         led.record_test(c.hash, "4h", "trail", "gate1", 0.001, 0.0025, False,
-                        {"t": 1})
+                        {"t": 1, "evaluated": evaluated_record(c)})
     led.set_candidate(c.hash, "4h", "trail", "reason_passed", rank=40.0,
                       gate1={"p": 0.001, "alpha": 0.0025, "t": 1},
                       gate3={"passed": True, "reason": "fixture"})

@@ -390,7 +390,17 @@ class Kernel:
             # the ExitEngine runs, or the backtest evidenced a different
             # strategy than the one trading
             from .engine.exits import SpecExit
-            spec_exits[spec.id] = SpecExit.from_spec(spec)
+            # a factory StrategyVersion runs its frozen entry geometry, never
+            # the mutable config target; unreadable counts as versioned (its
+            # own geometry, and the paper/live fence blocks it anyway)
+            from .strategy import factory_handoff as fh
+            try:
+                is_version = fh.versioned(self.journal, spec.id)
+            except Exception as e:                      # noqa: BLE001
+                log.warning(f"version lookup failed for {spec.id}: {e}")
+                is_version = True
+            spec_exits[spec.id] = SpecExit.from_spec(spec,
+                                                     versioned=is_version)
             register_evaluator(family, compiled.to_evaluator())
             # the exact compiled version, for entry provenance (observation only)
             from .engine.trade_provenance import population_identity
@@ -1331,6 +1341,16 @@ class Kernel:
         exec_tf = self.cfg["timeframes"]["execution"]
         side = "long" if d.action == Action.BUY else "short"
         top_strategy = self._top_strategy(d)
+        # paper/live authority fence: a factory StrategyVersion reaches the
+        # real order path only when exact-version first-live eligible (never
+        # today); the executor re-checks at submission
+        from .strategy import factory_handoff as fh
+        blocked = fh.live_entry_block(self.journal, top_strategy)
+        if blocked:
+            d.skip_reason = f"version fence: {blocked}"
+            d.reason_codes = [rc.VERSION_NOT_LIVE_AUTHORIZED]
+            log.info(f"VERSION FENCE {d.symbol} {top_strategy}: {blocked}")
+            return False
 
         # The stop must be measured on the frame the spec was validated on.
         # A 2.0x ATR stop means nothing until you say which bar's ATR: 4h ATR
@@ -1430,6 +1450,10 @@ class Kernel:
         if se is None:
             return self.risk.protection_levels(
                 price, atr, side, self.executor.tp_atr_mult)
+        if se.versioned:
+            # the frozen StrategyVersion's own stop AND target; config's
+            # take_profit_atr_mult never reaches a version
+            return se.frozen_levels(price, atr, side)
         if se.stop_atr_mult > 0:
             dist = se.stop_atr_mult * atr
         elif se.stop_pct > 0:

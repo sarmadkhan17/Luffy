@@ -120,7 +120,24 @@ class Executor:
              reference: dict | None = None) -> Position | None:
         """`entry_identity` and `reference` are provenance only: the exact
         strategy version and the decision price captured before submission.
-        Neither changes what is sent, when, or how much."""
+        Neither changes what is sent, when, or how much.
+
+        This is the real order path only: any `exec_mode` but "live" is
+        refused (there is no paper execution here, so a paper label on a
+        venue order would be false), and so is a factory StrategyVersion
+        that is not exact-version first-live eligible."""
+        if exec_mode != "live":
+            decision.skip_reason = f"exec_mode {exec_mode!r} has no real order path"
+            decision.reason_codes = [rc.EXEC_MODE_NOT_REAL]
+            log.warning(f"ENTRY REFUSED {decision.symbol}: {decision.skip_reason}")
+            return None
+        from ..strategy import factory_handoff as fh
+        blocked = fh.live_entry_block(self.journal, strategy_id)
+        if blocked:
+            decision.skip_reason = f"version fence: {blocked}"
+            decision.reason_codes = [rc.VERSION_NOT_LIVE_AUTHORIZED]
+            log.warning(f"ENTRY BLOCKED {decision.symbol} {strategy_id}: {blocked}")
+            return None
         with self._entry_lock:
             if self.recovery_pending():
                 decision.skip_reason = "execution_recovery_pending"

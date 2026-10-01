@@ -37,7 +37,7 @@ def cfg():
 def _candidate(j, state="referee_passed", p=0.001, alpha=0.0025,
                look=True, gate3=True, g1_p=None):
     from trader.research import vocab
-    from trader.research.combo import Combination
+    from trader.research.combo import Combination, evaluated_record
     from trader.research.ledger import Ledger
     led = Ledger(j)
     led.ensure()
@@ -54,7 +54,7 @@ def _candidate(j, state="referee_passed", p=0.001, alpha=0.0025,
                       "survivor", "r", {})
     if look:
         led.record_test(c.hash, "4h", "trail", "gate1", p, alpha, False,
-                        {"t": 1})
+                        {"t": 1, "evaluated": evaluated_record(c)})
     led.set_candidate(
         c.hash, "4h", "trail", state, rank=40.0,
         gate1={"p": p if g1_p is None else g1_p, "alpha": alpha, "t": 1,
@@ -180,8 +180,11 @@ def test_end_to_end_trace_uses_exact_stored_ids(tmp_path, cfg):
         F.canonical(vrec["spec"]).encode()).hexdigest()
     assert vrec["spec"]["provenance"]["research_hash"] == h
     assert vrec["evidence_ids"]["gate1_test_seq"] == look["seq"]
-    assert vrec["capacity"] == F.CAPACITY
-    assert vrec["capacity"]["status"] == "EVALUATED_AT_USE"   # never a number
+    # the immutable version is the strategy alone: capacity is evaluated at
+    # use against its own receipts, never stored in (or frozen into) it
+    assert "capacity" not in vrec
+    assert vrec["evidence_ids"]["evaluated_sha256"] == F._jsha(
+        json.loads(look["detail"])["evaluated"])
 
     # -> validation receipt
     rrow = _row(j, "SELECT * FROM strategy_validation_receipts "
@@ -886,20 +889,31 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
     for bad in ("upsert_spec", "state_kv", "control_events", "set_control",
                 "create_order", "executor", "orchestrator", "notifier"):
         assert bad not in code, bad
+    # the executor reads only the paper/live fence predicate
     for f in pathlib.Path("trader").rglob("*.py"):
-        if f.name not in ("factory_handoff.py", "kernel.py"):
+        if f.name not in ("factory_handoff.py", "kernel.py", "executor.py"):
             assert "factory_handoff" not in f.read_text(), f
-    # the Kernel reaches the factory only from the research handoff, which
-    # research.handoff=false keeps closed, and its exact-version install
+    ex_src = pathlib.Path("trader/engine/executor.py").read_text()
+    assert set(re.findall(r"\bfh\.(\w+)", ex_src)) == {"live_entry_block"}
+    # the Kernel reaches the factory from the research handoff, which
+    # research.handoff=false keeps closed, its exact-version install, and
+    # two read-only predicates: the paper/live fence and the versioned flag
     import ast
-    tree = ast.parse(pathlib.Path("trader/kernel.py").read_text())
+    k_src = pathlib.Path("trader/kernel.py").read_text()
+    tree = ast.parse(k_src)
     users = {fn.name for fn in ast.walk(tree)
              if isinstance(fn, ast.FunctionDef)
              and "factory_handoff" in ast.unparse(fn)
              and not any("factory_handoff" in ast.unparse(g) for g in
                          ast.walk(fn) if g is not fn
                          and isinstance(g, ast.FunctionDef))}
-    assert users == {"_research_handoff", "_install_version"}, users
+    assert users == {"_research_handoff", "_install_version",
+                     "_load_spec_population", "_try_enter"}, users
+    for name in ("_load_spec_population", "_try_enter"):
+        fn = next(f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)
+                  and f.name == name)
+        assert set(re.findall(r"\bfh\.(\w+)", ast.unparse(fn))) <= {
+            "versioned", "live_entry_block"}, name
     cfg = load_config()
     assert cfg["research"]["referee"] is False
     assert cfg["research"]["handoff"] is False

@@ -159,6 +159,21 @@ class Combination:
             round=d.get("round", "singles"), parent=d.get("parent", ""))
 
 
+#: what a referee look records about the rule it actually evaluated
+EVALUATED_SCHEMA = "research-evaluated-candidate.v1"
+
+
+def evaluated_record(c: Combination) -> dict:
+    """The exact rule a referee look evaluated: every part as rendered, its
+    numeric thresholds included. The hash names parts by percentile RANK, so
+    it alone cannot say which numbers were tested; this record can, and a
+    version built later is reconstructed from it, never from the gauges as
+    they are measured then."""
+    return {"schema": EVALUATED_SCHEMA, "hash": c.hash, "combo": c.as_dict(),
+            "entry_long": c.long, "entry_short": c.short,
+            "requires": list(c.requires)}
+
+
 def subsets(c: Combination) -> list:
     """Every rule reachable by removing exactly one part — the ablation.
 

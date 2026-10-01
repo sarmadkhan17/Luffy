@@ -90,6 +90,7 @@ def _kernel(spec_exits, min_notional=10):
 
     class _J:
         def open_trades(self): return []
+        def query(self, *a): return []     # no factory versions: legacy
     class _SM:
         state = "ACTIVE"
     k.journal, k.state_machine = _J(), _SM()

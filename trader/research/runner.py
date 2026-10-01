@@ -458,6 +458,9 @@ class ResearchRunner:
                 self.journal.list_specs(["paper", "active"])] \
             if hasattr(self.journal, "list_specs") else []
         rnd = f"referee:{h}"
+        # the look binds the rule it evaluated, rendered thresholds included
+        from .combo import evaluated_record
+        evaluated = evaluated_record(c)
         bid = self.ledger.start_batch(tf, geo, rnd, 1)
         t0 = time.monotonic()
         res = self.run(job.referee_job, {
@@ -480,7 +483,8 @@ class ResearchRunner:
                 # it has almost certainly read held-out prices by now; a
                 # look that keeps failing is charged, never retried forever
                 self.ledger.record_test(h, tf, geo, "gate1", 1.0, alpha,
-                                        brake < 1.0, {"error": err})
+                                        brake < 1.0, {"error": err,
+                                                      "evaluated": evaluated})
                 self.ledger.set_candidate(h, tf, geo, "gate1_fail",
                                           reason=f"failed {attempts}x: {err}")
             return {**out, "ok": False, "error": err}
@@ -488,7 +492,7 @@ class ResearchRunner:
         g1 = v.get("gate1") or {"p": 1.0, "reason": "no gate1 result"}
         rejected = self.ledger.record_test(
             h, tf, geo, "gate1", float(g1["p"]), alpha, brake < 1.0,
-            {"a": v.get("a"), "b": v.get("b"),
+            {"evaluated": evaluated, "a": v.get("a"), "b": v.get("b"),
              "rotation": v.get("rotation"), "draws": draws, "t": t})
         g3 = v.get("gate3") or {"passed": False, "reason": "no gate3 result"}
         if not rejected:

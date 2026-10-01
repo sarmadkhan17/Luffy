@@ -40,7 +40,7 @@ def _seen(codes):
 
 def test_vocabulary_is_stable_snake_case_and_versioned():
     assert rc.VERSION == "decision-rejection-reason.v1"
-    assert len(rc.VOCABULARY) == 26
+    assert len(rc.VOCABULARY) == 28
     for code in rc.VOCABULARY:
         assert code == code.lower() and code.replace("_", "").isalpha(), code
         assert not any(ch.isdigit() for ch in code)
@@ -409,6 +409,32 @@ def test_executor_recovery_pending(setup):
     assert _seen(d.reason_codes) == [rc.SUBMISSION_RECOVERY_PENDING]
 
 
+def test_executor_refuses_a_non_live_exec_mode(setup):
+    """The executor has only the real order path: a paper label is refused."""
+    ex, j, e, d = setup
+    assert e.open(d, 0.01, 10.0, 99.0, 101.0, strategy_id="s",
+                  strategy_name="s", exec_mode="paper") is None
+    assert ex.sent == []
+    assert _seen(d.reason_codes) == [rc.EXEC_MODE_NOT_REAL]
+
+
+def test_version_fence_code_at_kernel_and_executor(tmp_path, monkeypatch):
+    """A SHADOW factory version is fenced from the real order path."""
+    from tests.test_cross_stage_authority import (_D as _VD, _Snap as _VSnap,
+                                                  _live_kernel, _shadow)
+    j, v = _shadow(tmp_path)
+    k, venue = _live_kernel(j, monkeypatch)
+    d = _VD(v["strategy_id"])
+    assert k._try_enter(d, _VSnap(), 5000.0, 0) is False
+    assert _seen(d.reason_codes) == [rc.VERSION_NOT_LIVE_AUTHORIZED]
+    d2 = _VD(v["strategy_id"])
+    assert k.executor.open(d2, 1.0, 1.0, 97.0, 103.0,
+                           strategy_id=v["strategy_id"], strategy_name="x",
+                           exec_mode="live") is None
+    assert _seen(d2.reason_codes) == [rc.VERSION_NOT_LIVE_AUTHORIZED]
+    assert venue.sent == []
+
+
 def test_executor_success_leaves_empty_codes(setup):
     ex, j, e, d = setup
     assert enter(e, d) is not None
@@ -549,7 +575,7 @@ def test_every_skip_reason_assignment_sets_codes_in_the_same_block():
                                    for later in stmts[i + 1:i + 3]
                                    for u in _attr_target(later, "reason_codes")), \
                             f"{path.relative_to(ROOT)}:{st.lineno} skip_reason without reason_codes"
-    assert sites == 7    # orchestrator 1, kernel 4, executor 2
+    assert sites == 10   # orchestrator 1, kernel 5, executor 4
 
 
 def test_every_update_decision_outcome_call_classifies():

@@ -31,11 +31,14 @@ version, probation receipts, one approval request and at most one owner
 decision per request, and a lifecycle event log.
 
 Boundaries. Nothing here writes `strategies`, `trades`, control state or any
-Kernel input, and nothing here is imported by the Kernel or the engine.
-`eligible_for_first_live` is a read-only predicate: it grants ELIGIBILITY
-only — no activation, allocation, order or control-state change. Capacity is
-never frozen into a version or an approval: both carry a reference to the
-strategy-capacity-receipt.v1 contract (`capacity.py`), and eligibility requires
+Kernel input. The Kernel (exact install) and the executor read one predicate,
+`live_entry_block`, which fences every versioned strategy away from the real
+order path unless it is exact-version first-live eligible — and no activation
+path exists, so today it always blocks. `eligible_for_first_live` is a
+read-only predicate: it grants ELIGIBILITY only — no activation, allocation,
+order or control-state change. Capacity is never frozen into a version: the
+version is the strategy alone, and approvals carry a reference to the
+strategy-capacity-receipt.v1 contract (`capacity.py`); eligibility requires
 a CURRENT receipt for the exact version whose effective capacity is
 ESTABLISHED (SDD §14.1 lists a capacity estimate among a strategy's minimum
 fields; Stage 5 requires it). Stale or unestablished capacity fails closed.
@@ -108,6 +111,11 @@ IDENTITY_COLUMN = "entry_identity_json"
 IDENTITY_SCHEMA = "trade-entry-identity.v1"
 INSTALL_SCHEMA = "strategy-version-install.v1"
 INSTALL_MODES = ("paper",)
+# `trades.exec_mode` values that prove paper/shadow execution. The real
+# order path refuses anything but "live" (it has no paper execution), so a
+# paper-labelled trade cannot be a venue order; "live" or a missing/unknown
+# mode never counts toward probation.
+PAPER_EXEC_MODES = ("paper",)
 POLICY_KEYS = ("paper_probation_trades", "paper_min_winrate",
                "paper_min_profit_factor")
 
@@ -279,17 +287,33 @@ def _transition(c, version_id: str, to_state: str, reason_code: str,
 
 
 # ── the spec a candidate compiles to ─────────────────────────────────────
-def candidate_spec(journal, cfg: dict, candidate: dict) -> StrategySpec:
+def candidate_spec(journal, cfg: dict, candidate: dict,
+                   evaluated: dict | None = None) -> StrategySpec:
     """The spec `kernel._research_handoff` hands to `analyst.admit` for this
     candidate: `Combination.to_spec()`, its universe declared as the symbols
     it was examined on, and `provenance.research_hash`. The rebuilt
-    combination must reproduce the candidate's hash."""
+    combination must reproduce the candidate's hash.
+
+    With `evaluated` (the referee look's research-evaluated-candidate.v1)
+    the combination is the one the referee actually evaluated, rendered
+    thresholds included; without it, the ledger vocabulary as measured NOW
+    (the current gauges) renders it."""
+    from ..research.combo import Combination
     from ..research.runner import ResearchRunner
     from ..research.universe import DISCOVERY, HELDOUT
     h, tf, geo = candidate["hash"], candidate["tf"], candidate["geo"]
-    rows = journal.query("SELECT * FROM research_combos WHERE hash=?", (h,))
-    runner = ResearchRunner(journal, cfg, run=lambda *a, **k: None)
-    c = runner._combo(rows[0], tf, geo) if rows else None
+    if evaluated is not None:
+        try:
+            c = Combination.from_dict(evaluated["combo"])
+        except (KeyError, TypeError, ValueError):
+            c = None
+        if c is None or (c.tf, c.geo) != (tf, geo):
+            _refuse("candidate_cannot_be_rebuilt")
+    else:
+        rows = journal.query("SELECT * FROM research_combos WHERE hash=?",
+                             (h,))
+        runner = ResearchRunner(journal, cfg, run=lambda *a, **k: None)
+        c = runner._combo(rows[0], tf, geo) if rows else None
     if c is None or c.hash != h:
         _refuse("candidate_cannot_be_rebuilt")
     spec = c.to_spec()
@@ -349,12 +373,36 @@ def gate_evidence(journal, h: str) -> dict:
     look = {k: t[k] for k in ("seq", "hash", "tf", "geo", "gate", "p",
                               "alpha_t", "rejected", "braked", "detail",
                               "at")}
+    evaluated = _evaluated(t, h, cand["tf"], cand["geo"])
     return {"candidate": {"hash": h, "tf": cand["tf"], "geo": cand["geo"],
                           "state": cand["state"]},
             "gate1_look": look, "gate1_look_sha256": _jsha(look),
             "gate1": g1, "gate3": g3,
             "candidate_gates_sha256": _jsha({"gate1": g1, "gate3": g3}),
-            "combo_sha256": _jsha(dict(combo))}
+            "combo_sha256": _jsha(dict(combo)),
+            "evaluated": evaluated, "evaluated_sha256": _jsha(evaluated)}
+
+
+def _evaluated(look: dict, h: str, tf: str, geo: str) -> dict:
+    """The rule the registered gate1 look evaluated (gate3 ran in the same
+    referee job on the same rule), from the look's own append-only row.
+    A look that did not record it cannot bind any parameters: refused."""
+    from ..research.combo import EVALUATED_SCHEMA, Combination
+    try:
+        rec = (json.loads(look["detail"] or "null") or {}).get("evaluated")
+    except (TypeError, ValueError, AttributeError):
+        rec = None
+    if not isinstance(rec, dict) or rec.get("schema") != EVALUATED_SCHEMA:
+        _refuse("referee_evaluated_candidate_unbound")
+    try:
+        c = Combination.from_dict(rec["combo"])
+    except (KeyError, TypeError, ValueError):
+        _refuse("referee_evaluated_candidate_unbound")
+    if (c.hash, c.tf, c.geo) != (h, tf, geo) or rec.get("hash") != h \
+            or (c.long, c.short) != (rec.get("entry_long"),
+                                     rec.get("entry_short")):
+        _refuse("referee_evaluated_candidate_mismatch")
+    return rec
 
 
 def _receipt_evidence(ev: dict) -> dict:
@@ -365,7 +413,8 @@ def _receipt_evidence(ev: dict) -> dict:
             "gate1_test_seq": ev["gate1_look"]["seq"],
             "gate1_look_sha256": ev["gate1_look_sha256"],
             "candidate_gates_sha256": ev["candidate_gates_sha256"],
-            "combo_sha256": ev["combo_sha256"]}
+            "combo_sha256": ev["combo_sha256"],
+            "evaluated_sha256": ev["evaluated_sha256"]}
 
 
 # ── 1. candidate -> immutable version + validation receipt ──────────────
@@ -374,8 +423,32 @@ def _version_record(strategy_id, spec_d, spec_hash, parent, source,
     ident = {"schema": VERSION_SCHEMA, "strategy_id": strategy_id,
              "spec_hash": spec_hash, "parent_version_id": parent,
              "source": source}
+    # no capacity here: the version is the strategy itself; capacity is
+    # evaluated at use against its own receipts (records written before
+    # this carried a capacity reference and still load and dedupe)
     return {**ident, "version_id": _jsha(ident), "spec": spec_d,
-            "evidence_ids": evidence_ids, "capacity": CAPACITY}
+            "evidence_ids": evidence_ids}
+
+
+def _insert_version(c, rec: dict, at_ms: int) -> str:
+    """insert / duplicate / conflict for one version record. A stored record
+    that differs only in its (non-semantic) capacity reference is the same
+    version: a retry stays idempotent across the capacity contract change."""
+    row = _version_row(rec, at_ms)
+    old = c.execute("SELECT * FROM strategy_versions WHERE version_id=?",
+                    (row["version_id"],)).fetchone()
+    if old is None:
+        return _insert(c, "strategy_versions", "version_id", row)[0]
+    try:
+        stored = json.loads(old["canonical_json"])
+    except (TypeError, ValueError):
+        return "conflict"
+    stored.pop("capacity", None)
+    same = _sha(old["canonical_json"]) == old["canonical_sha256"] and all(
+        old[k] == row[k] for k in row
+        if k not in ("recorded_at_ms", "canonical_json", "canonical_sha256"))
+    return "duplicate" if same and canonical(stored) == canonical(rec) \
+        else "conflict"
 
 
 def _version_row(rec: dict, at_ms: int) -> dict:
@@ -410,7 +483,14 @@ def create_version(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
     ev = gate_evidence(journal, h)
     cand = _one(journal, "SELECT * FROM research_candidates WHERE hash=?",
                 (h,))
-    spec_d, spec_hash = _frozen_spec(candidate_spec(journal, cfg, dict(cand)))
+    # the version is what the referee evaluated, never a re-rendering from
+    # the gauges as measured now; if those would render anything else the
+    # evidence does not describe that strategy and nothing is issued
+    spec_d, spec_hash = _frozen_spec(candidate_spec(
+        journal, cfg, dict(cand), evaluated=ev["evaluated"]))
+    now_d, now_hash = _frozen_spec(candidate_spec(journal, cfg, dict(cand)))
+    if now_hash != spec_hash or canonical(now_d) != canonical(spec_d):
+        _refuse("validation_reconstruction_drift")
     ids = _receipt_evidence(ev)
     rec = _version_record(spec_d["id"], spec_d, spec_hash, None,
                           {"kind": "research_candidate", "id": h}, ids)
@@ -420,7 +500,7 @@ def create_version(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
                "evidence": ids}
     receipt = {**r_ident, "receipt_id": _jsha(r_ident),
                "gate1_look": ev["gate1_look"], "gate1": ev["gate1"],
-               "gate3": ev["gate3"],
+               "gate3": ev["gate3"], "evaluated": ev["evaluated"],
                "candidate_state_at_receipt": ev["candidate"]["state"],
                "semantics": ("this exact version may enter shadow/paper "
                              "probation because its candidate's registered "
@@ -430,8 +510,7 @@ def create_version(journal, cfg: dict, source: dict, *, at_ms: int) -> dict:
     r_text = canonical(receipt)
     with journal._tx() as c:
         _begin(c)
-        v_out, _ = _insert(c, "strategy_versions", "version_id",
-                           _version_row(rec, at_ms))
+        v_out = _insert_version(c, rec, at_ms)
         if v_out == "conflict":
             _refuse("version_conflict")
         r_out, _ = _insert(c, "strategy_validation_receipts", "receipt_id",
@@ -465,8 +544,7 @@ def derive_version(journal, parent_version_id: str, spec: StrategySpec, *,
                           {"kind": "derived", "id": parent_version_id}, {})
     with journal._tx() as c:
         _begin(c)
-        out, _ = _insert(c, "strategy_versions", "version_id",
-                         _version_row(rec, at_ms))
+        out = _insert_version(c, rec, at_ms)
         if out == "conflict":
             _refuse("version_conflict")
         _transition(c, rec["version_id"], PROPOSED, "derived_from_parent",
@@ -515,6 +593,10 @@ def verify_validation(journal, version: dict) -> dict:
     if _receipt_evidence(now) != rec["evidence"] \
             or rec["evidence"] != version["evidence_ids"]:
         _refuse("validation_evidence_changed")
+    spec = version["spec"]
+    if (spec.get("entry_long"), spec.get("entry_short")) != (
+            now["evaluated"]["entry_long"], now["evaluated"]["entry_short"]):
+        _refuse("version_spec_not_evaluated_candidate")
     return rec
 
 
@@ -560,6 +642,10 @@ def record_exact_install(journal, version_id: str, *, mode: str = "paper",
     cur = state_of(journal, version_id)
     if cur != VALIDATED:
         _refuse(f"not_validated:{cur}")
+    from ..engine.exits import SpecExit
+    bad = SpecExit.frozen_unsupported(StrategySpec.from_dict(v["spec"]))
+    if bad:
+        _refuse(f"unsupported_exit_geometry:{bad}")
     inst = _installed(journal, v["strategy_id"])
     if inst is None:
         _refuse(P_NOT_INSTALLED)
@@ -669,6 +755,10 @@ def _probation_trades(journal, v: dict, since_ms: int, until_ms: int):
         if o is None or cl is None or o < since_ms or cl > until_ms:
             continue
         kind = _classify(t, v)
+        if kind == "counted" and t["exec_mode"] not in PAPER_EXEC_MODES:
+            # this version's trade, but not proven paper execution
+            kind = "not_paper_execution" if t["exec_mode"] == "live" \
+                else "execution_mode_unproven"
         row = {k: t[k] for k in _TRADE_KEYS}
         if kind == "counted":
             counted.append({**row, "entry_identity_sha256":
@@ -696,9 +786,11 @@ def _assess(journal, cfg, v: dict, since_ms: int, at_ms: int, *,
         return {**base, "status": P_IDENTITY_UNAVAILABLE}
     trades, excluded = _probation_trades(journal, v, since_ms, at_ms)
     base.update(excluded_trades=excluded)
-    if any(e["reason"] == "unattributed" for e in excluded):
-        # a closed trade of this strategy id whose version cannot be proven
-        # may be this version's: counting around it would bias the record
+    if any(e["reason"] in ("unattributed", "execution_mode_unproven")
+           for e in excluded):
+        # a closed trade of this strategy id whose version or execution mode
+        # cannot be proven may be this version's paper trade: counting
+        # around it would bias the record
         return {**base, "status": P_INCOMPLETE}
     st = stats_of(trades)
     stats = {"trades": st["trades"], "wins": st["wins"],
@@ -1015,3 +1107,55 @@ def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
     reasons = list(dict.fromkeys(reasons))
     return FirstLiveEligibility(version_id, not reasons, tuple(reasons),
                                 capacity, decision_id)
+
+
+# ── 6. the paper/live authority fence ────────────────────────────────────
+def versioned(journal, strategy_id: str) -> bool:
+    """Whether `strategy_id` is a factory StrategyVersion's strategy.
+    Raises when the version table cannot be read (callers fail closed)."""
+    if not strategy_id:
+        return False
+    names = {r["name"] for r in journal.query(
+        "SELECT name FROM sqlite_master WHERE type='table'")}
+    if "strategy_versions" not in names:
+        return False
+    return bool(journal.query("SELECT 1 FROM strategy_versions WHERE "
+                              "strategy_id=? LIMIT 1", (strategy_id,)))
+
+
+def live_entry_block(journal, strategy_id: str) -> str | None:
+    """Why this strategy may not reach the real order path, or None.
+
+    None only for a strategy that is not a factory version: legacy genomes
+    and non-versioned specs keep their existing authority. A versioned
+    strategy is blocked unless its exact installed version is first-live
+    eligible, and nothing records first-live activation (eligibility is a
+    read-only predicate; activation is outside Stage 5 here), so every
+    versioned strategy is blocked: SHADOW / probation, awaiting approval,
+    approved without ESTABLISHED capacity, and approved with it alike.
+    Any read failure blocks."""
+    try:
+        if not versioned(journal, strategy_id):
+            return None
+        inst = _installed(journal, strategy_id)
+        if inst is None:
+            return "version_install_unbound"
+        rows = journal.query("SELECT version_id FROM strategy_versions WHERE "
+                             "strategy_id=? AND spec_hash=?",
+                             (strategy_id, inst[1]))
+        if len(rows) != 1:
+            return "version_install_unbound"
+        vid = rows[0]["version_id"]
+        st = state_of(journal, vid)
+        if st != APPROVED_FIRST_LIVE:
+            return f"version_not_live_authorized:{st}"
+        names = {r["name"] for r in journal.query(
+            "SELECT name FROM sqlite_master WHERE type='table'")}
+        est = cap.TABLE in names and journal.query(
+            f"SELECT 1 FROM {cap.TABLE} WHERE version_id=? AND status=? "
+            "LIMIT 1", (vid, cap.ESTABLISHED))
+        if not est:
+            return "version_capacity_not_established"
+        return "version_first_live_activation_absent"
+    except Exception as e:                              # noqa: BLE001
+        return f"version_authority_unreadable:{type(e).__name__}"

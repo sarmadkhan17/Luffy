@@ -17,7 +17,7 @@ with each partial close.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ..core.journal import Journal
 from ..core.types import Action, Position
@@ -58,13 +58,54 @@ class SpecExit:
     #: declared none and the engine keeps its configured default — the same
     #: 1.0 the vector backtest falls back to, so the two stay in step.
     arm_at_r: float | None = None
+    #: a factory StrategyVersion: its entry stop and target come from the
+    #: frozen spec alone (`frozen_levels`), never from mutable config
+    versioned: bool = False
+    exit_spec: object = field(default=None, compare=False, repr=False)
+
+    #: the frozen stop/target kinds the runtime reproduces exactly; a
+    #: version declaring anything else is refused at exact install
+    FROZEN_STOPS = ("atr", "pct")
+    FROZEN_TARGETS = ("rr", "atr", "pct", "none")
 
     @classmethod
-    def from_spec(cls, spec) -> "SpecExit":
+    def frozen_unsupported(cls, spec) -> str | None:
+        """Why the runtime cannot run this spec's frozen entry geometry
+        exactly, or None."""
+        return cls._unsupported(spec.exit)
+
+    @classmethod
+    def _unsupported(cls, ex) -> str | None:
+        stop = (ex.stop or {}).get("kind", "atr")
+        target = (ex.target or {}).get("kind", "rr")
+        if stop not in cls.FROZEN_STOPS:
+            return f"stop={stop}"
+        if target not in cls.FROZEN_TARGETS:
+            return f"target={target}"
+        return None
+
+    def frozen_levels(self, price: float, atr: float,
+                      side: str) -> tuple[float, float]:
+        """(stop, target) from the frozen spec by the vector backtest's own
+        distance functions (same 0.4% stop floor, same R basis), measured
+        from the decision price. 0.0 target = the spec declared none."""
+        from ..strategy.vector_backtest import _stop_distance, _target_distance
+        bad = self._unsupported(self.exit_spec)
+        if bad:
+            raise ValueError(f"unsupported_exit_geometry:{bad}")
+        sign = 1.0 if side == "long" else -1.0
+        sl_dist = _stop_distance(self.exit_spec, price, atr, None, 0, side)
+        tp_dist = _target_distance(self.exit_spec, price, atr, sl_dist)
+        return (price - sign * sl_dist,
+                0.0 if tp_dist is None else price + sign * tp_dist)
+
+    @classmethod
+    def from_spec(cls, spec, versioned: bool = False) -> "SpecExit":
         ex = spec.exit
         trail = ex.trail or {}
         stop = ex.stop or {}
         return cls(
+            versioned=versioned, exit_spec=ex,
             max_bars=int((ex.time or {}).get("max_bars", 32)),
             timeframe=spec.timeframe,
             trail_atr_mult=float(trail.get("mult", 0.0))

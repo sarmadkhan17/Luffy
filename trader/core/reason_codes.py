@@ -60,6 +60,8 @@ FENCE_STATE_FROZEN = "fence_state_frozen"
 FENCE_STATE_HALTED = "fence_state_halted"
 FENCE_STATE_UNREADABLE = "fence_state_unreadable"
 FENCE_STATE_NOT_ACTIVE = "fence_state_not_active"
+VERSION_NOT_LIVE_AUTHORIZED = "version_not_live_authorized"   # factory version: paper/live fence
+EXEC_MODE_NOT_REAL = "exec_mode_not_real"            # executor has only the real order path
 
 VOCABULARY = frozenset(v for k, v in dict(globals()).items()
                        if k.isupper() and k != "VERSION" and isinstance(v, str))
