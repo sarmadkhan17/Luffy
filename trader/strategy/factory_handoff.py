@@ -48,6 +48,7 @@ An investigation research result (e.g. investigation_volume_anomaly, whose
 from __future__ import annotations
 
 import copy
+from contextlib import nullcontext
 import hashlib
 import json
 import math
@@ -1361,14 +1362,19 @@ def governor_events(journal, version_id):
 
 def govern_version(journal, cfg, version_id, to_state, *, actor, reason_code,
                    at_ms, allocation=None, available_inputs=None,
-                   capacity_receipt_id=None):
+                   capacity_receipt_id=None, _connection=None, expected_target=None):
     """Owner establishes an allocation ceiling for this approved exact version.
     Governor may subsequently reduce, stop or restore inside that ceiling.
     Resume always rechecks approval, costs, installation, capacity and Risk
     configuration. A changed spec is a different version with no such grant.
     No network, activation, orders, or changes to global control/Risk.
     """
-    ensure(journal)
+    if _connection is None:
+        ensure(journal)
+    elif not _connection.in_transaction or getattr(journal, "connection", None) is not _connection:
+        _refuse("governor_transaction_required")
+    if expected_target is not None and lifecycle_target(journal, version_id) != expected_target:
+        _refuse("governor_state_changed")
     v = load_version(journal, version_id)
     if actor not in OWNER_ACTORS and actor != 'strategy_governor' and not (actor == 'factory' and to_state in (DEGRADED,RETIRED)):
         _refuse('governor_actor_invalid')
@@ -1408,10 +1414,21 @@ def govern_version(journal, cfg, version_id, to_state, *, actor, reason_code,
         previous_sha256=_sha(canonical(history[-1])) if history else None,
         grants='LIFECYCLE_ALLOCATION_ONLY; LIVE_EXECUTION_FENCE_PRESERVED')
     text = canonical(body)
-    with journal._tx() as c:
+    with (journal._tx() if _connection is None else nullcontext(_connection)) as c:
         _begin(c)
+        if expected_target is not None and lifecycle_target(journal, version_id) != expected_target:
+            _refuse("governor_state_changed")
         if state_of(journal, version_id) != cur or len(governor_events(journal, version_id)) != len(history):
             _refuse('governor_state_changed')
         c.execute('INSERT INTO strategy_governor_events(version_id,to_state,canonical_json,canonical_sha256) VALUES(?,?,?,?)',
                   (version_id,to_state,text,_sha(text)))
     return dict(status='inserted', version_id=version_id, event=body)
+
+
+def lifecycle_target(journal, version_id):
+    """Exact state plus history token; detects changes even after an ABA resume."""
+    version = load_version(journal, version_id)
+    return dict(version_id=version_id, spec_hash=version['spec_hash'],
+                state=state_of(journal, version_id),
+                history_sha256=_jsha(dict(factory=events(journal, version_id),
+                                         governor=governor_events(journal, version_id))))

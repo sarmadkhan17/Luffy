@@ -477,11 +477,9 @@ def evaluate_decay(history, current):
 
 
 def apply_to_isolated_journal(journal, outcome, sources, proposal, *, at_ms):
-    """Exercise existing authority on an in-memory clone only; never live state.
-
-    An application API for production is deliberately absent from R1.
-    """
+    """Compatibility fixture adapter; all application goes through one authority."""
     from trader.strategy import factory_handoff as F
+    from . import application as A
     if type(at_ms) is not int or at_ms < outcome.observed_ms:
         raise ValueError('application_clock_before_outcome')
     if any(row['file'] for row in journal.query('PRAGMA database_list')):
@@ -492,17 +490,21 @@ def apply_to_isolated_journal(journal, outcome, sources, proposal, *, at_ms):
     expected = propose(ev, proposal.target, current, rule=proposal.rule)
     if proposal != expected or proposal.status != Status.APPLICABLE:
         raise ValueError('proposal_not_applicable_or_verified')
-    actual = dict(current, state=F.state_of(journal, current['version_id']))
-    if actual != current:
-        if (actual['state'] == F.RETIRED and any(e.get('reason_code') == proposal.proposal_id
-                for e in F.events(journal, current['version_id']) + F.governor_events(journal, current['version_id']))):
-            return 'DUPLICATE'
+    A.ensure(journal)
+    rows = journal.query(f"SELECT * FROM {A.TABLE} WHERE proposal_id=? AND result='APPLIED'", (proposal.proposal_id,))
+    if rows:
+        saved = A._receipt(rows[0])
+        req = A.Request(**saved['request'])
+        A.apply(journal, json.loads(ev.historical_json)['risk_config'], ev, proposal, req, at_ms=at_ms)
+        return 'DUPLICATE'
+    target = F.lifecycle_target(journal, current['version_id'])
+    if current != {k:v for k,v in target.items() if k != 'history_sha256'}:
         raise ValueError('stale_authority_state')
-    v = F.load_version(journal, current['version_id'])
-    if v['spec_hash'] != current['spec_hash']:
-        raise ValueError('authority_version_differs')
-    F.retire_version(journal, current['version_id'], F.RETIRED,
-        reason_code=proposal.proposal_id, actor='strategy_governor', at_ms=at_ms)
+    cfg = json.loads(ev.historical_json)['risk_config']
+    req = A.request(ev, proposal, target, A.source_versions(cfg))
+    receipt = A.apply(journal, cfg, ev, proposal, req, at_ms=at_ms)
+    if receipt['result'] != 'APPLIED':
+        raise ValueError(receipt['reason'])
     return 'APPLIED'
 
 

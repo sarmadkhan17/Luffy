@@ -2,46 +2,48 @@ project: LUFFY
 sdd_version: '3.2'
 updated_at: '2026-10-02'
 
+active_package: NO_ACTIVE_PACKAGE
+
 work_package:
-  id: LUFFY-STAGE7-LEARNING-APPLICATION-INTEGRATION-R1
-  type: STAGE7_REPLAY_GATED_LEARNING_APPLICATION
+  id: LUFFY-STAGE7-IMPLEMENTATION-CLOSURE-R1
+  type: STAGE7_IMPLEMENTATION_CLOSURE
   status: RECOMMENDED_NOT_AUTHORIZED_FOR_RUNTIME_DEPLOYMENT
-  last_completed_package: LUFFY-STAGE7-VERIFIED-OUTCOME-PRODUCER-INTEGRATION-R1
+  last_completed_package: LUFFY-STAGE7-LEARNING-APPLICATION-INTEGRATION-R1
   prerequisite_verification: PASS
-  prerequisite_branch: luffy-stage7-verified-outcome-producer-integration-r1
+  prerequisite_branch: luffy-stage7-learning-application-integration-r1
   prerequisite_commit: COMMITTED_ON_PREREQUISITE_BRANCH
   objective: >
-    Close the single remaining Stage-7 implementation gap: connect applicable,
-    replayed LearningUpdateProposals to the existing owning authority with exact
-    version freshness, idempotency and a complete durable audit trail. Reverify
-    original decision and outcome sources at consumption. No unregistered rule
-    may apply; no speculative confidence, weight, Risk or StrategySpec updates.
+    Audit Stage 7 implementation acceptance end to end against SDD and the
+    tested outcome, replay, evidence and learning-application authorities.
+    Record remaining real-evidence and deployment gaps honestly; do not infer
+    Stage 7 completion from deterministic tests or zero-application shadow.
   completed_prerequisites:
-  - VERIFIED_OUTCOME_PRODUCERS = TESTED.
-  - PROSPECTIVE_OUTCOME_PIPELINE = TESTED; NOT_DEPLOYED.
-  - Existing off-path accounting worker automatically delivers exact verified whole-trade receipts and recovers delivery after restart.
-  - Finalized captures persist Outcome, Attribution, ReplayManifest, LearningEvidence and proposal without applying learning.
-  - Cash requires exact registered candidate/context; registered nontrade resolutions retain status without missed-profit claims.
-  - Research, execution-quality and data-quality outcomes preserve separate evidence and attribution boundaries.
-  - 212 focused tests and 4 final follow-up checks pass; git diff --check passes; AST-only Graphify refreshed.
-  - Real read-only shadow observed zero eligible captured outcomes and 705084 unregistered decisions; zero applicable updates and zero mutations.
+  - LEARNING_APPLICATION_AUTHORITY = TESTED; NOT_DEPLOYED.
+  - FIRST_REGISTERED_CLOSED_LOOP = TESTED through existing-recent-decay.v1 and Strategy Governor retirement.
+  - REAL_LEARNING_APPLICATION = NO_REPLAY_COMPLETE_EVIDENCE; real application count 0.
+  - Immutable receipts and Governor transitions commit atomically with exact target state/history and source versions.
+  - Retry, durable restart, concurrent application, stale state, incomplete replay, insufficient samples and unregistered updates tested.
+  - All SDD target categories are explicit; only the existing registered lifecycle rule applies.
+  - StrategySpec, Risk, leverage, catastrophe boundary, control state, capacity and owner approvals are outside learning mutation authority.
+  - Shared-lineage evidence is not pooled as independent samples; execution/confidence and failed-research context boundaries remain intact.
+  - 232 focused tests pass; git diff --check passes; AST-only Graphify refreshed.
+  - Real read-only shadow inspected 0 captured proposals, 0 replay-complete and 0 would_apply; production mutations and venue calls 0.
   next_steps:
   - step: 1
     action: >
-      Implement and test consumption of applicable replayed proposals by the
-      existing authority, preserving ownership, replay completeness, current
-      exact-version freshness and retry/restart identity. Refuse stale,
-      incomplete, insufficient or unregistered updates. Stage 7 remains incomplete.
+      Review the committed application integration package and perform a
+      bounded Stage 7 implementation closure audit. Do not continue automatically
+      or deploy/restart. Stage 7 remains incomplete until its closure acceptance
+      is explicitly assessed.
   evidence:
-  - docs/superpowers/reports/2026-10-02-stage7-verified-outcome-producer-integration-r1.md
-  - docs/superpowers/evidence/stage7-verified-outcome-producer-integration-r1/final-tests.txt
-  - docs/superpowers/evidence/stage7-verified-outcome-producer-integration-r1/real-shadow.json
-  - tests/test_verified_outcome_producers.py
+  - docs/superpowers/reports/2026-10-02-stage7-learning-application-integration-r1.md
+  - docs/superpowers/evidence/stage7-learning-application-integration-r1/final-tests.txt
+  - tests/test_learning_application.py
   execution_constraints:
-  - No orders, activation, live learning application, deploy/restart, Risk/config/StrategySpec or frontend/M4 changes are authorized here.
-  - No historical backfill, current-state substitution, fabricated money, causality, confidence changes, weights or sample thresholds.
+  - No orders, activation, production learning application, deploy/restart, Risk/config/StrategySpec or frontend/M4 changes.
+  - No historical backfill, source substitution, invented rules, rewards, confidence changes, weights or sample thresholds.
   - Existing accounting.enabled operation boundary remains unchanged; no production flag was created.
-  - Stage 7 remains incomplete; tested prospective paths are not deployed and missing normal Kernel WorldModel/context sources remain UNAVAILABLE.
+  - Stage 7 remains incomplete; tested prospective paths are not deployed and normal Kernel WorldModel/context gaps remain UNAVAILABLE.
   preserved_authority:
     PAPER_COST_PROTOCOL: TESTED
     EXECUTION_COST_CALIBRATION: INSUFFICIENT_EVIDENCE
