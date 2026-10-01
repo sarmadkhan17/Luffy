@@ -5,51 +5,40 @@ updated_at: '2026-10-02'
 active_package: NO_ACTIVE_PACKAGE
 
 work_package:
-  id: LUFFY-STAGE7-IMPLEMENTATION-CLOSURE-R1
-  type: STAGE7_IMPLEMENTATION_CLOSURE
+  id: LUFFY-STAGE7-LEARNING-TARGET-AUTHORITY-FRAMEWORK-R1
+  type: STAGE7_TARGET_AUTHORITY_FRAMEWORK
   status: RECOMMENDED_NOT_AUTHORIZED_FOR_RUNTIME_DEPLOYMENT
-  last_completed_package: LUFFY-STAGE7-LEARNING-APPLICATION-INTEGRATION-R1
-  prerequisite_verification: PASS
-  prerequisite_branch: luffy-stage7-learning-application-integration-r1
-  prerequisite_commit: COMMITTED_ON_PREREQUISITE_BRANCH
-  objective: >
-    Audit Stage 7 implementation acceptance end to end against SDD and the
-    tested outcome, replay, evidence and learning-application authorities.
-    Record remaining real-evidence and deployment gaps honestly; do not infer
-    Stage 7 completion from deterministic tests or zero-application shadow.
-  completed_prerequisites:
-  - LEARNING_APPLICATION_AUTHORITY = TESTED; NOT_DEPLOYED.
-  - FIRST_REGISTERED_CLOSED_LOOP = TESTED through existing-recent-decay.v1 and Strategy Governor retirement.
-  - REAL_LEARNING_APPLICATION = NO_REPLAY_COMPLETE_EVIDENCE; real application count 0.
-  - Immutable receipts and Governor transitions commit atomically with exact target state/history and source versions.
-  - Retry, durable restart, concurrent application, stale state, incomplete replay, insufficient samples and unregistered updates tested.
-  - All SDD target categories are explicit; only the existing registered lifecycle rule applies.
-  - StrategySpec, Risk, leverage, catastrophe boundary, control state, capacity and owner approvals are outside learning mutation authority.
-  - Shared-lineage evidence is not pooled as independent samples; execution/confidence and failed-research context boundaries remain intact.
-  - 232 focused tests pass; git diff --check passes; AST-only Graphify refreshed.
-  - Real read-only shadow inspected 0 captured proposals, 0 replay-complete and 0 would_apply; production mutations and venue calls 0.
-  next_steps:
-  - step: 1
-    action: >
-      Review the committed application integration package and perform a
-      bounded Stage 7 implementation closure audit. Do not continue automatically
-      or deploy/restart. Stage 7 remains incomplete until its closure acceptance
-      is explicitly assessed.
-  evidence:
-  - docs/superpowers/reports/2026-10-02-stage7-learning-application-integration-r1.md
-  - docs/superpowers/evidence/stage7-learning-application-integration-r1/final-tests.txt
-  - tests/test_learning_application.py
-  execution_constraints:
-  - No orders, activation, production learning application, deploy/restart, Risk/config/StrategySpec or frontend/M4 changes.
-  - No historical backfill, source substitution, invented rules, rewards, confidence changes, weights or sample thresholds.
-  - Existing accounting.enabled operation boundary remains unchanged; no production flag was created.
-  - Stage 7 remains incomplete; tested prospective paths are not deployed and normal Kernel WorldModel/context gaps remain UNAVAILABLE.
+  last_completed_package: LUFFY-STAGE7-IMPLEMENTATION-CLOSURE-R1
+  prerequisite_commit: 481b832
   preserved_authority:
     PAPER_COST_PROTOCOL: TESTED
     EXECUTION_COST_CALIBRATION: INSUFFICIENT_EVIDENCE
     PRODUCTION_ECONOMIC_PROBATION: INCOMPLETE
     CAPACITY: UNAVAILABLE
     FIRST_LIVE: BLOCKED
+  objective: Complete the existing LearningApplication target framework for the six
+    approved non-lifecycle categories. Add authority adapters and registered evaluator
+    dispatch without creating or registering any new statistical/calibration rule.
+    Empty registries must continue to fail closed.
+  next_steps:
+  - step: 1
+    action: Implement typed target identity/value/history and bounds, target-specific
+      evidence eligibility, registered evaluator dispatch and owning-authority compare-and-apply
+      with immutable provenance receipts. Verify future consumers can read the applied
+      value. Preserve the existing decay rule and Governor behavior; use isolated
+      test adapters, not production calibration rules.
+  evidence:
+  - docs/superpowers/reports/2026-10-02-stage7-implementation-closure-r1.md
+  - trader/learning/application.py
+  - trader/learning/foundation.py
+  - tests/test_learning_application.py
+  execution_constraints:
+  - No new learning rule, confidence formula, weights, sample threshold or calibrated
+    policy.
+  - No StrategySpec/Risk/catastrophe/control/capacity/approval mutation, orders, production
+    writes, deployment or restart.
+  - Real-evidence and calibration blocks do not justify additional rules or fabricated
+    evidence.
 
 intelligence_spine_shadow_package:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
@@ -285,7 +274,16 @@ after_completion:
   - LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1 (BLOCKED) was unblocked by LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 (PASS, TESTED, NOT_DEPLOYED). The independent intelligence shadow package remains LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1, awaiting owner authorization; LUFFY-PORTFOLIO-ALLOCATOR-R1 is now TESTED; LUFFY-EXPECTED-NET-ECONOMICS-R1 is TESTED_CONTRACT with INSUFFICIENT_EVIDENCE for real economics; LUFFY-OPPORTUNITY-CONTEXT-LIVE-INTEGRATION-R1 reuses v1 and is TESTED_LIVE_INTEGRATION; LUFFY-STAGE6-CANDIDATE-FEASIBILITY-BRIDGE-R1 is recommended without trading authority.
   - Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged.
 
-next_recommended_package: LUFFY-STAGE7-LEARNING-APPLICATION-INTEGRATION-R1
+next_recommended_package: LUFFY-STAGE7-LEARNING-TARGET-AUTHORITY-FRAMEWORK-R1
 next_recommended_package_status: RECOMMENDED_NOT_AUTHORIZED
 stage6_build_complete: true
 stage6_real_world_mature: false
+
+OVERALL_BUILD_PROGRESS: INCOMPLETE; Stage 6 build closed, Stage 7 target authority
+  framework missing; no percentage claim
+STAGE_7_BUILD: INCOMPLETE
+STAGE_7_REAL_WORLD_MATURITY: REAL_EVIDENCE_BLOCKED
+CURRENT_STAGE: Stage 7
+NEXT_STAGE: 'Stage 7: LUFFY-STAGE7-LEARNING-TARGET-AUTHORITY-FRAMEWORK-R1'
+STAGE7_BUILD_COMPLETE: false
+STAGE7_REAL_WORLD_MATURE: false

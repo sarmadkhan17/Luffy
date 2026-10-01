@@ -1,0 +1,12 @@
+Base: 481b832; no Python/config/production source changes.
+First batch: 278 passed, 1 failed in 204.73s.
+Command: /mnt/luffy-data/luffy/production/venv/bin/python -m pytest tests/test_learning_application.py tests/test_learning_foundation.py tests/test_historical_outcome_capture.py tests/test_verified_outcome_producers.py tests/test_legacy_learning_replay_gate.py tests/test_strategy_decay_research_recall.py tests/test_strategy_health_unreadable_recall.py -q
+Inherited failure: tests/test_strategy_health_unreadable_recall.py::test_decay_journal_readers_are_unchanged
+Assertion compares _record_registered source against historical Git base; actual requested base has the automatic capture on_insert callback. No test or implementation was altered to hide this failure. Behavioral recall checks passed.
+Second batch: 106 passed in 270.03s.
+Command: /mnt/luffy-data/luffy/production/venv/bin/python -m pytest tests/test_decision_sources.py tests/test_cross_stage_authority.py tests/test_strategy_factory_handoff.py -q
+Total: 384 passed, 1 inherited source snapshot failure. Full suite not run.
+Closed loop: test_closed_loop_receipt_future_state_retry_and_immutability PASSED; only existing-recent-decay.v1; synthetic TEST_ONLY evidence.
+Real shadow: proposals=0 replay_complete=0 applicable=0 would_apply=0 production_mutations=0 venue_calls=0.
+YAML parse: PASS. git diff --check: PASS.
+No commit, deployment, runtime restart, orders, new rules or production application.
