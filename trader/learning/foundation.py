@@ -186,6 +186,9 @@ class Replay:
 
 def replay(outcome, retained):
     """Reconstruct exact referenced snapshots; never substitute current state."""
+    if any(s.role == 'capture_manifest' for s in outcome.sources):
+        from trader.learning.capture import replay_manifest
+        return replay_manifest(outcome, retained)
     faults, snapshots = [], {}
     refs = {s.role: s for s in outcome.sources}
     for role in tuple(dict.fromkeys(REQUIRED + tuple(refs))):
@@ -514,3 +517,13 @@ def prior_failed_for_question(journal, question_id, *, max_objects):
     prior = [dict(p, structured_context_equal=all(p['identity_vs_question'].get(k) == R.EQUAL for k in keys))
              for p in receipt['prior'] if p['result_status'] in ('REFUTED', 'INCONCLUSIVE', 'FAILED')]
     return dict(receipt, prior=prior, suppression_authority=False)
+
+
+def refuse_legacy_learning(consumer):
+    """Legacy statistics have no verified replay/proposal authority adapter.
+
+    Even a complete receipt cannot authorize an unregistered weight/confidence
+    rule. Keep these writers closed until an explicit integration is verified.
+    Descriptive collection and existing stored state remain available.
+    """
+    raise ValueError(f'replay_complete_learning_authority_required:{consumer}')

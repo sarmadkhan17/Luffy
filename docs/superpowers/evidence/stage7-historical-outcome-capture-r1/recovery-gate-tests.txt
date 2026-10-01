@@ -1,0 +1,24 @@
+..............F......................................................... [ 64%]
+.......................................                                  [100%]
+=================================== FAILURES ===================================
+________________ test_state_changed_at_is_stamped_on_transition ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-166/test_state_changed_at_is_stamp0')
+
+    def test_state_changed_at_is_stamped_on_transition(tmp_path):
+        j = Journal(tmp_path / "j.db")
+        _mk(j, "s_stamp", "active")
+        _losses(j, "s_stamp", 6)
+        promotion.evaluate_population(j)
+        row = j.query("SELECT state, state_changed_at FROM strategies "
+                      "WHERE id='s_stamp'")[0]
+        assert row["state"] == "active"
+>       assert row["state_changed_at"] is None
+E       AssertionError: assert '' is None
+
+tests/test_promotion_rules.py:94: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.strategy.promotion:promotion.py:95 replay_complete_learning_authority_required:legacy_population_transition
+=========================== short test summary info ============================
+FAILED tests/test_promotion_rules.py::test_state_changed_at_is_stamped_on_transition
+1 failed, 110 passed in 21.80s

@@ -682,13 +682,20 @@ def test_filing_leaves_every_other_table_unchanged(tmp_path, verdicts):
     assert j.research_bank_objects()
     regs = j.query("SELECT * FROM research_registrations ORDER BY rowid")
     assert regs
-    before = _tables(j, skip=(TABLE, "research_registrations"))
+    capture_tables = ("learning_registrations", "learning_source_blobs",
+                      "learning_actions", "learning_outcome_captures")
+    retained_captures = _tables(j, only=capture_tables, skip=())
+    before = _tables(j, skip=(TABLE, "research_registrations") + capture_tables)
     decay_bank = rb.load(j)
     res = ub.record_from_journal(j, now_ms=9)
     assert len(res["inserted"]) == verdicts.count(CF) + verdicts.count(EF)
     ub.load(j)
     ub.record_from_journal(j, now_ms=10)
-    assert _tables(j, skip=(TABLE, "research_registrations")) == before
+    assert _tables(j, skip=(TABLE, "research_registrations") + capture_tables) == before
+    after_captures = _tables(j, only=capture_tables, skip=())
+    for table, rows in retained_captures.items():
+        assert all(row in after_captures[table] for row in rows)
+
     assert set(before) >= set(UNCHANGED) - {"research_registrations"}
     # decay receipts unchanged; only this family's first-insert receipts added
     after = j.query("SELECT * FROM research_registrations ORDER BY rowid")
@@ -849,7 +856,9 @@ def test_nothing_calls_the_new_module():
                        "cognition/research_shadow.py",
                        "cognition/research_shadow_report.py",
                        "cognition/research_unreadable_recall.py",
-                       "core/journal.py"]
+                       "core/journal.py",
+                       "learning/capture.py",
+                       "learning/capture_runtime.py"]
     assert "research_unreadable_bank import" not in \
         (root / "core/journal.py").read_text()
 

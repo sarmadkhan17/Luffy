@@ -711,6 +711,14 @@ class Kernel:
 
         # 1. retire what has stopped working
         retired = analyst.review_deployed(book)
+        if retired:
+            # The legacy sweep is descriptive, with no exact replay proposal.
+            from .learning.foundation import refuse_legacy_learning
+            try:
+                refuse_legacy_learning("legacy_recent_decay")
+            except ValueError as exc:
+                log.warning(str(exc))
+                retired = []
         for a in retired:
             from .strategy import factory_handoff as fh
             if fh.versioned(self.journal, a["spec"]):
@@ -1232,6 +1240,13 @@ class Kernel:
                 blocked_code = rc.EXECUTION_RECOVERY_PENDING
             snap = self._snapshot_for(symbol, universe=universe_frames)
             if snap is None:
+                try:
+                    from .learning import capture as lc, capture_runtime as lr
+                    with self.journal._tx() as capture_db:
+                        lc.safely(capture_db, 'missed-snapshot:'+symbol, lr.missed_snapshot,
+                            scan_id, symbol, int(time.time()*1000))
+                except Exception:
+                    pass
                 if scan_id and len(attention_causes) < attention_cap:
                     attention_causes.append({"symbol": symbol, "decision_id": None,
                                              "reason": "missing_snapshot"})
@@ -1243,12 +1258,22 @@ class Kernel:
                 log.warning("paper exits refused %s: %s", symbol, e)
             self.positioning_agent.set_context(symbol, funding.get(symbol),
                                                oi.get(symbol))
-            self.depth_agent.set_context(symbol, self._order_book(symbol))
+            original_order_book = self._order_book(symbol)
+            self.depth_agent.set_context(symbol, original_order_book)
+            from .learning.capture_runtime import runtime_inputs
+            try:
+                learning_inputs = runtime_inputs(self.journal, snap, self.cfg,
+                    cut_ms=int(time.time()*1000),additional_original_inputs=dict(
+                        order_book=original_order_book,positioning_funding=funding.get(symbol),
+                        positioning_open_interest=oi.get(symbol)))
+            except Exception:
+                learning_inputs = None
             d = self.orchestrator.decide(snap, self.population,
                                          entry_allowed=entry_allowed,
                                          blocked_reason=blocked,
                                          blocked_reason_code=blocked_code)
             d.scan_id = scan_id
+            d.learning_inputs = learning_inputs
             self.orchestrator.journalize(snap, d, self.market_type.value,
                                          mode="live")
             stats["decisions"] += 1
@@ -1431,12 +1456,24 @@ class Kernel:
         else:
             sl, tp = self._protection_for(se, snap.price, a, side)
         stop_frac = abs(snap.price - sl) / snap.price
+        risk_state = self.state_machine.state
+        risk_positions = [self._as_position(t) for t in self.journal.open_trades()]
         sizing = self.risk.check_entry(
-            self.state_machine.state, d.symbol, snap.price, a, stop_frac,
-            open_positions=[self._as_position(t) for t in
-                            self.journal.open_trades()],
+            risk_state, d.symbol, snap.price, a, stop_frac,
+            open_positions=risk_positions,
             equity=equity, closed_trades_count=closed_count,
             market_type=self.market_type.value)
+        try:
+            from .learning import capture as lc
+            with self.journal._tx() as capture_db:
+                lc.safely(capture_db, 'decision:'+d.id, lc.record_action, 'decision:'+d.id,
+                    dict(vars(sizing), config_risk_sha256=lc.L.digest(self.cfg['risk']),
+                         input=dict(state=risk_state,symbol=d.symbol,price=snap.price,atr=a,
+                             stop_fraction=stop_frac,equity=equity,closed_trades_count=closed_count,
+                             market_type=self.market_type.value,open_positions=[vars(p) for p in risk_positions])),
+                    int(time.time()*1000), risk=True)
+        except Exception:
+            pass
         if not sizing.ok:
             d.skip_reason = f"risk: {sizing.reason}"
             d.reason_codes = [sizing.code]

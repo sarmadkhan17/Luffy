@@ -87,6 +87,13 @@ def evaluate_population(journal: Journal, notifier=None) -> list[dict]:
             # `AND state=?` makes the write deterministic on the shared WAL:
             # if another writer moved the row first, this transition does not
             # fire at all rather than clobbering it, and no event is emitted.
+            # Raw legacy trade statistics cannot authorize lifecycle mutation.
+            from ..learning.foundation import refuse_legacy_learning
+            try:
+                refuse_legacy_learning("legacy_population_transition")
+            except ValueError as exc:
+                log.warning(str(exc))
+                return
             with journal._tx() as c:
                 changed = c.execute(
                     "UPDATE strategies SET state=?, state_changed_at=?, "

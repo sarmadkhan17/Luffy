@@ -172,6 +172,8 @@ def run(analysts: dict[str, Analyst], symbols: list[str],
     weights = {a: round(w / s, 4) for a, w in raw_weights.items()}
     report["base_weights"] = weights
 
+    from ..learning.foundation import refuse_legacy_learning
+    refuse_legacy_learning("agent_validation")
     out = ROOT / "data" / "agent_weights.json"
     out.write_text(json.dumps(report, indent=2))
     log.info(f"agent validation written: {out}")

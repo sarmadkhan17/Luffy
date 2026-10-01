@@ -1,11 +1,4 @@
-"""Lifecycle rules that previously could not fire.
-
-Covers three defects in strategy/promotion.py:
-  1. the paper demote branch was nested under `trades >= PROMOTE_MIN_TRADES`,
-     so a paper strategy bleeding losses under that count was undemotable
-  2. the retirement clock read created_at (birth) instead of demotion time
-  3. `demoted -> demoted` self-transitions fired an event + alert every cycle
-"""
+"""Legacy lifecycle statistics remain descriptive without replay authority."""
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -35,17 +28,14 @@ def _losses(j, sid, n, prefix="l"):
         j.close_trade(f"{prefix}{sid}{i}", 95, -5.0, "sl_fill")
 
 
-def test_paper_demotes_below_probation_trade_count(tmp_path):
-    """6 straight losses on only 6 trades must retire a paper strategy.
-
-    Previously impossible: the demote check sat behind `trades >= 15`.
-    """
+def test_paper_losses_do_not_authorize_retirement(tmp_path):
+    """Legacy loss counts cannot bypass replay evidence and proposal gates."""
     j = Journal(tmp_path / "j.db")
     _mk(j, "s_paper", "paper")
     _losses(j, "s_paper", 6)
     actions = promotion.evaluate_population(j)
-    assert any(a["id"] == "s_paper" and a["to"] == "retired"
-               for a in actions), actions
+    assert actions == []
+    assert j.query("SELECT state FROM strategies WHERE id='s_paper'")[0]["state"] == "paper"
 
 
 def test_no_self_transition_spam(tmp_path):
@@ -74,23 +64,21 @@ def test_retirement_clock_runs_from_demotion_not_birth(tmp_path):
     actions = promotion.evaluate_population(j)
     assert not [a for a in actions if a["to"] == "retired"], actions
 
-    # ...but one demoted 30d ago with no recovery must retire
+    # Even an old demotion cannot authorize retirement without replay evidence.
     j.query("UPDATE strategies SET state_changed_at=? WHERE id=?",
             ((datetime.now(timezone.utc) - timedelta(days=30)).isoformat(),
              "s_old"))
     actions = promotion.evaluate_population(j)
-    assert any(a["id"] == "s_old" and a["to"] == "retired"
-               for a in actions), actions
+    assert actions == []
+    assert j.query("SELECT state FROM strategies WHERE id='s_old'")[0]["state"] == "demoted"
 
 
-def test_state_changed_at_is_stamped_on_transition(tmp_path):
+def test_refused_transition_preserves_state_clock(tmp_path):
     j = Journal(tmp_path / "j.db")
     _mk(j, "s_stamp", "active")
     _losses(j, "s_stamp", 6)
     promotion.evaluate_population(j)
     row = j.query("SELECT state, state_changed_at FROM strategies "
                   "WHERE id='s_stamp'")[0]
-    assert row["state"] == "demoted"
-    assert row["state_changed_at"]
-    # parses as an ISO timestamp
-    datetime.fromisoformat(row["state_changed_at"])
+    assert row["state"] == "active"
+    assert row["state_changed_at"] == ""

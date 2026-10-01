@@ -1,0 +1,107 @@
+{
+  "source": "/mnt/luffy-data/luffy/workspaces/stage7-historical-outcome-capture-r1",
+  "source_branch": "luffy-stage7-historical-outcome-capture-r1",
+  "base": "9d31fbd61ed4c4b8c697248ac32dfd0451b537e4",
+  "files": [
+    {
+      "path": "NEXT.yaml",
+      "sha256": "9581d8027af9b2e17d1bc0a08bcb8f84ec586659116b01d297443726691c83f2"
+    },
+    {
+      "path": "STATE.yaml",
+      "sha256": "2630845b3637135669bac250d1f59f6a31e6437476ee781565c8eb5ba3ef0ce2"
+    },
+    {
+      "path": "tests/test_learning_foundation.py",
+      "sha256": "6b208a7bf212904edddbc8e88d825388549608bf893407ce5c041f93ff161497"
+    },
+    {
+      "path": "tests/test_strategy_decay_research_bank.py",
+      "sha256": "517b591cb0365be5c8206182c4947841d87cb6003a4cd22abf25503137219eca"
+    },
+    {
+      "path": "tests/test_strategy_factory_handoff.py",
+      "sha256": "6c2fc4aa4032676545b4a1547b288a7f76f20bd93f94b9848a9a4f8224bf010c"
+    },
+    {
+      "path": "tests/test_strategy_health_unreadable_bank.py",
+      "sha256": "4f81fd8341e72a2dce358ac00a71a0536159ffa503d1179b9263ae8b50e75830"
+    },
+    {
+      "path": "tests/test_trade_provenance.py",
+      "sha256": "16104947a2713225a963e036f6e78a7b983c26641c2d5e8f6671beff20353850"
+    },
+    {
+      "path": "trader/core/journal.py",
+      "sha256": "7bafe879568f01055e8e954785595b4faac2969f2c33f2396765e96563706b0b"
+    },
+    {
+      "path": "trader/engine/booking.py",
+      "sha256": "3dbadf3bf9560fe0621437f22b8f27c89593d87542c662aa1ef9653c315c58bc"
+    },
+    {
+      "path": "trader/engine/outcomes.py",
+      "sha256": "f8e26ba8b4d2068ce6047aa37668cceba003335ccfd9bd45e286dd5c62d88de0"
+    },
+    {
+      "path": "trader/engine/paper_cost_evidence.py",
+      "sha256": "9449a59b46dcef945a7d97b1e775cdda6df31af8dd12bb6bf25f36ecf53d8305"
+    },
+    {
+      "path": "trader/kernel.py",
+      "sha256": "113917ee482daa1463249a57ca1ac8609a3dd47fa652a25358d427b994fa5cf6"
+    },
+    {
+      "path": "trader/learning/foundation.py",
+      "sha256": "cef560d321eb3f98f62966decad86443d7a55e7acbb1bca38dff2cd8f1aad5a8"
+    },
+    {
+      "path": "trader/observability/investigation_research.py",
+      "sha256": "49c335fa04d694c434fe8b44f4cacbfc4aa87add3cf9daae877218aeaeceaa0c"
+    },
+    {
+      "path": "trader/observability/learning.py",
+      "sha256": "e77aa7f18dfb5418faf04d956cd511b9d458f14a798ea785cec04756ff74e29f"
+    },
+    {
+      "path": "docs/superpowers/evidence/stage7-historical-outcome-capture-r1/final-capture-tests.txt",
+      "sha256": "939592ada09089f519992cd8895ed8352c57cce17bba735c07f9ff173bf1289a"
+    },
+    {
+      "path": "docs/superpowers/evidence/stage7-historical-outcome-capture-r1/graphify-update.txt",
+      "sha256": "ebcea782e1a2cfef4c8c32ad21877ab0919d404875543d45257c1d7c5eaeaa74"
+    },
+    {
+      "path": "docs/superpowers/evidence/stage7-historical-outcome-capture-r1/inventory-summary.json",
+      "sha256": "9bf4c436af3991a5fa1c82c5b00bdfefe4955f0a35addf025c3251709b13fb24"
+    },
+    {
+      "path": "docs/superpowers/evidence/stage7-historical-outcome-capture-r1/risk-boundary-tests.txt",
+      "sha256": "dc6c34f93dd36dbfeaf967dd436aad2128dbcd53cb12a06809f443270c5b7690"
+    },
+    {
+      "path": "docs/superpowers/evidence/stage7-historical-outcome-capture-r1/tests.txt",
+      "sha256": "3a92813bcdfed3adc18349e88f1d3d640096cc49833a6187adf238459628e285"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-10-01-stage7-historical-outcome-capture-r1.md",
+      "sha256": "7683de4d82cc39eb5b2dd966deb793bdb94130957a5a558fc068185fe24d1c7f"
+    },
+    {
+      "path": "scripts/learning_capture_inventory.py",
+      "sha256": "cfd7a98f179a3cb4c148203dc265c6ca1ae07136541f29f8528dd23f2bbbaaf0"
+    },
+    {
+      "path": "tests/test_historical_outcome_capture.py",
+      "sha256": "3ee9622f24a8b4275fb08f081d1f74f1f308c905cefc610143efd64d990f6ef9"
+    },
+    {
+      "path": "trader/learning/capture.py",
+      "sha256": "c4ffad4e988a0742e667d3d263b5cae256da0bf45a4ee5fe311890834adb0a71"
+    },
+    {
+      "path": "trader/learning/capture_runtime.py",
+      "sha256": "e057d8a9e1bb20db2a7461f7592336d30d5f0557f949b7c881bf690542a51122"
+    }
+  ]
+}

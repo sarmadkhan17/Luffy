@@ -251,6 +251,10 @@ def finalize(db, trade, version, install, source_ids=None):
     ensure(db)
     body = build(db,binding(trade,version,install),source_ids)
     insert(db,TABLE,'trade_id',trade['id'],body)
+    from trader.learning import capture as lc, capture_runtime as lr
+    from time import time_ns
+    lc.safely(db, 'decision:'+str(trade.get('decision_id')), lr.paper_cost, trade, body,
+              observed_ms=time_ns()//1000000)
     return body
 
 

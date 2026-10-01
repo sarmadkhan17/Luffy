@@ -77,6 +77,8 @@ def collect_training_data(journal) -> dict[str, tuple[list[float], list[float]]]
 
 def refit(journal, min_samples: int = 60) -> dict:
     """Fit calibrations for every agent with enough evidence."""
+    from ..learning.foundation import refuse_legacy_learning
+    refuse_legacy_learning("calibration")
     state = load()
     data = collect_training_data(journal)
     changed = []

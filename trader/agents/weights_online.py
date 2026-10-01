@@ -44,6 +44,8 @@ def _load() -> dict:
 
 
 def _save(state: dict) -> None:
+    from ..learning.foundation import refuse_legacy_learning
+    refuse_legacy_learning("weights_online_save")
     PATH.parent.mkdir(parents=True, exist_ok=True)
     PATH.write_text(json.dumps(state, indent=2))
 
@@ -60,6 +62,8 @@ def update(journal, eta: float = 0.15, mix: float = 0.02) -> dict:
     back toward 1.0. Pure multiplicative decay can never recover — one
     bad month pins an expert at ~0 forever; mixing gives a recovery
     half-life of ~1/mix outcomes, matching non-stationary markets."""
+    from ..learning.foundation import refuse_legacy_learning
+    refuse_legacy_learning("weights_online")
     state = _load()
     agents: dict = state.get("agents", {})
     cursor = state.get("cursor", "")

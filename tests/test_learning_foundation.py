@@ -273,13 +273,23 @@ def test_detached_learning_has_no_runtime_caller_or_order_control_mutation():
             tree = ast.parse(path.read_text())
             for node in ast.walk(tree):
                 if isinstance(node, ast.ImportFrom):
-                    assert not (node.module or '').startswith('trader.learning'), path
+                    if (node.module or '').startswith('trader.learning'):
+                        assert node.module in ('trader.learning', 'trader.learning.capture_runtime'), path
+                        assert {a.name for a in node.names} <= {'capture','capture_runtime','runtime_inputs'}, path
                 if isinstance(node, ast.Import):
                     assert all(not alias.name.startswith('trader.learning') for alias in node.names), path
     tree = ast.parse(Path('trader/learning/foundation.py').read_text())
     banned = {'create_order', 'set_control', 'upsert_spec', 'log_decision', 'execute', 'executemany'}
     assert not any(isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
                    and node.func.attr in banned for node in ast.walk(tree))
+    # Prospective producers may capture evidence, never invoke update authority.
+    for path in root.rglob('*.py'):
+        if 'learning' not in path.parts:
+            assert 'LearningUpdateProposal' not in path.read_text()
+            for node in ast.walk(ast.parse(path.read_text())):
+                if isinstance(node, ast.ImportFrom) and (node.module or '').endswith('learning.foundation'):
+                    # Runtime consumers may refuse legacy writes, never apply proposals.
+                    assert {alias.name for alias in node.names} == {'refuse_legacy_learning'}, path
 
 
 def test_lifecycle_proposal_cannot_carry_risk_changes(chain):
