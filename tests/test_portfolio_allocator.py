@@ -17,17 +17,23 @@ MISSING = Evidence(Status.UNAVAILABLE, ())
 UNKNOWN = Evidence(Status.UNKNOWN, ())
 
 
-def economics(value='2', **kw):
-    return Economics(**dict(evidence=OK, expected_net_value=value, currency='USDT',
-                           horizon='4h', quantity_basis='net_return_per_unit_capital',
-                           capital_basis='one_unit', estimator_contract='test-estimator.v1',
-                           cost_basis='all_costs', **kw))
+@pytest.fixture(autouse=True)
+def test_only_models(monkeypatch):
+    from tests.economics_fixtures import install_models
+    install_models(monkeypatch)
+
+
+def economics(value='2', name='a', instrument='venue:futures:BTCUSDT', direction='LONG', **kw):
+    from tests.economics_fixtures import frozen, binding
+    from trader.portfolio.economics import build, to_allocator
+    e, _ = to_allocator(build(frozen(value, binding(name, instrument, direction))))
+    return replace(e, **kw)
 
 
 def candidate(name='a', instrument='venue:futures:BTCUSDT', direction='LONG', value='2'):
     return Candidate(name, instrument, 'futures', direction, 'strategy-' + name,
                      'version-' + name, digest({'spec': name}), 1000, '4h',
-                     OK, OK, economics(value), OK, OK, OK, OK, OK, UNKNOWN,
+                     OK, OK, economics(value, name, instrument, direction), OK, OK, OK, OK, OK, UNKNOWN,
                      UNKNOWN, UNKNOWN, OK, 2000,
                      tuple(Bound(authority, OK, maximum, 'base_quantity') for authority, maximum in
                            [('strategy_requested', '10'), ('risk_permitted', '3'),
@@ -38,6 +44,13 @@ def candidate(name='a', instrument='venue:futures:BTCUSDT', direction='LONG', va
 def inputs(*candidates, positions=(), **kw):
     base = Inputs(1500, tuple(candidates), Portfolio('snapshot', 1000, 2000, OK, positions,
                   (SOURCE.source_id,)), UNKNOWN, OK, 'ACTIVE', (SOURCE,))
+    from trader.portfolio.economics import from_payload, to_allocator
+    extra = []
+    for e in [c.economics for c in candidates] + [p.economics for p in positions if p.economics]:
+        if e.receipt_json:
+            _, source = to_allocator(from_payload(json.loads(e.receipt_json)))
+            extra.append(source)
+    base = replace(base, sources=(SOURCE, *{s.source_id: s for s in extra}.values()))
     return replace(base, **kw)
 
 
@@ -166,7 +179,7 @@ def test_restart_replay_identical_and_append_only(tmp_path):
     path = persist(p, tmp_path)
     assert persist(p, tmp_path) == path
     assert allocate(inputs_from_payload(json.loads(p.inputs_json))) == p
-    code = ('import json,sys; from trader.portfolio.allocator import allocate,inputs_from_payload,canonical; '
+    code = ('import json,sys; from tests.economics_fixtures import install_models; install_models(); from trader.portfolio.allocator import allocate,inputs_from_payload,canonical; '
             'b=json.load(open(sys.argv[1])); print(canonical(allocate(inputs_from_payload(b["inputs"])).payload()))')
     out = subprocess.check_output([sys.executable, '-c', code, str(path)], text=True)
     assert json.loads(out) == p.payload()
@@ -195,7 +208,10 @@ def test_no_positive_value_cash(value):
 
 def test_incomparable_economics_refuse_ranking():
     b = candidate('b', 'venue:futures:ETHUSDT', value='1000')
-    b = replace(b, economics=replace(b.economics, capital_basis='different-size'))
+    from tests.economics_fixtures import frozen, binding
+    from trader.portfolio.economics import build, to_allocator
+    econ, _ = to_allocator(build(frozen('1000', binding('b', 'venue:futures:ETHUSDT', capital_basis='different-size'))))
+    b = replace(b, economics=econ)
     r = result(inputs(candidate(), b))
     assert r['reason'] == 'INSUFFICIENT_COMPARABLE_ECONOMICS'
     assert not r['economic_order']

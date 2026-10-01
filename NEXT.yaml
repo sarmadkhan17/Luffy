@@ -1,40 +1,47 @@
 project: LUFFY
 sdd_version: '3.2'
+updated_at: '2026-10-01'
 
 work_package:
-  id: LUFFY-EXPECTED-NET-ECONOMICS-R1
-  type: STAGE6_EVIDENCE_CONTRACT
+  id: LUFFY-OPPORTUNITY-CONTEXT-R1
+  type: STAGE6_OPPORTUNITY_SET_AND_CONTEXT
   status: RECOMMENDED_NOT_AUTHORIZED_FOR_TRADING
   objective: >
-    Close the next observed Stage-6 gap: validated comparable expected net
-    economic value for exact-version current opportunities, with explicit
-    horizon, capital basis, costs, provenance and uncertainty. Preserve
-    UNAVAILABLE wherever the current evidence cannot establish the quantity.
+    Implement the missing authoritative event-driven exact-version opportunity
+    registry and frozen Opportunity Context feeding the detached allocator.
+    Preserve cycle/decision lineage, deterministic setup identity, source hashes,
+    strategy/version/spec binding, required versus optional evidence and
+    authoritative freshness. This is the next actual Stage-6 implementation
+    gap; do not create another economics formula or micro-package.
   completed_prerequisites:
     - LUFFY-PORTFOLIO-ALLOCATOR-R1 is TESTED as a detached proposal-only layer.
-    - Stage-5 evidence activation lineage is retained; production remains FROZEN.
-    - Bounded read-only shadow observed three holdings and zero frozen strategy versions or capacity receipts.
-    - Shadow returned CASH / NO_ALLOCATION / INSUFFICIENT_COMPARABLE_ECONOMICS.
+    - LUFFY-EXPECTED-NET-ECONOMICS-R1 is TESTED_CONTRACT; real economics remain INSUFFICIENT_EVIDENCE.
+    - No calibrated forward gross or economic reserve model exists; production model registries remain empty.
+    - Read-only real inventory observed zero exact versions or economic cost receipts; no candidates were fabricated.
+    - Detached real allocator shadow retained CASH / NO_ALLOCATION with FROZEN control and stale portfolio evidence.
   evidence:
-    - docs/superpowers/reports/2026-10-01-portfolio-allocator-r1.md
-    - docs/superpowers/evidence/portfolio-allocator-r1/final/shadow-1790868385193.json
-    - docs/superpowers/reports/2026-10-01-stage5-evidence-activation-r1.md
+    - docs/superpowers/reports/2026-10-01-expected-net-economics-r1.md
+    - docs/superpowers/evidence/expected-net-economics-r1/
+    - SDD.md
+    - scripts/portfolio_allocator_shadow.py
   next_steps:
     - step: 1
       action: >
-        Define and test one source-grounded expected-net-value contract and
-        exact-version current opportunity binding. Establish comparability
-        from validated evidence; historical win rate, profit factor, realized
-        net P&L, confidence and Attention are not substitutes. Identify actual
-        cost/capacity dependencies and refuse unavailable authorities.
+        Build and test the event-driven opportunity/context contract from real
+        registered sources. Retain UNAVAILABLE when required source evidence,
+        versions, costs, economic calibration or freshness is missing. Do not
+        manufacture opportunities from historical decisions or research support.
+  economic_evidence_requirements:
+    - Exact-version forward conditional outcomes with horizon/regime, sample period, gross units, cost exclusion/baseline and validated calibration.
+    - Calibrated uncertainty reserve with measured coverage/error, economic units and gross/cost evidence binding.
+    - Commission authority, validated execution/slippage, funding/borrow applicability and calibrated forward scope bridge to existing cost receipts.
   execution_constraints:
     - Proposals and evidence only; no orders, activation, deployment, restart, Risk change or frontend/M4 changes.
-    - Do not invent returns, costs, liquidity, correlation thresholds, Kelly sizing or weighted allocator scores.
-    - The remaining commission, account eligibility, leverage and liquidity capacity gaps are not waived by this recommendation.
-    - Stage-6 exit criteria and real allocation readiness are not satisfied by infrastructure tests.
-    - No invented costs or capacity, weaker probation, first-live activation, Risk change, deployment or restart.
-    - Preserve exact version/install and exit-semantics binding and 15 trades / 40 percent win rate / 1.15 profit factor.
-    - Stage-5 BUILD closure grants no collection deployment, research activation, execution or cost-model authority.
+    - No further economics formula or Stage-6 economics micro-package while calibration evidence is missing.
+    - Do not invent returns, costs, uncertainty haircuts, confidence weights, liquidity or correlation scores.
+    - Account eligibility, leverage and liquidity capacity gaps remain; stale portfolio evidence is refused.
+    - Stage-6 exit criteria and real allocation readiness remain unsatisfied.
+
   preserved_authority:
     PAPER_COST_PROTOCOL: TESTED
     EXECUTION_COST_CALIBRATION: INSUFFICIENT_EVIDENCE
@@ -290,5 +297,5 @@ after_completion:
   - One-shot production-scale timing is a separate owner-decision candidate only. Authorization must specify the source DB path, shadow DB path, max_sources, wall_clock_deadline_s, invocation_key / recorded_at_ms, observation/timing goal, stop conditions and acceptable WAL/checkpoint/resource impact. Recurring cadence requires one-shot evidence, review of that evidence and separate owner authorization. Neither authorization grants trading authority.
   - max_sources bounds source selection only. Full-history derivation/verification, repeated Bank filing, WAL/checkpoint effects and storage growth remain unbounded; batch-independent results and production timing are not established. Source identity is not a full database fingerprint. Total research cost remains NOT_ESTABLISHED; budget manager authority is MISSING.
   - External Source Router/retrieval, registered falsifier predicates, a truthful WorldModel/regime source and failed-research suppression/no-repeat policy remain MISSING. Do not infer authority from context_only recall or reports.
-  - LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1 (BLOCKED) was unblocked by LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 (PASS, TESTED, NOT_DEPLOYED). The independent intelligence shadow package remains LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1, awaiting owner authorization; LUFFY-PORTFOLIO-ALLOCATOR-R1 is now TESTED; LUFFY-EXPECTED-NET-ECONOMICS-R1 is recommended without trading authority.
+  - LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1 (BLOCKED) was unblocked by LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 (PASS, TESTED, NOT_DEPLOYED). The independent intelligence shadow package remains LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1, awaiting owner authorization; LUFFY-PORTFOLIO-ALLOCATOR-R1 is now TESTED; LUFFY-EXPECTED-NET-ECONOMICS-R1 is TESTED_CONTRACT with INSUFFICIENT_EVIDENCE for real economics; LUFFY-OPPORTUNITY-CONTEXT-R1 is recommended without trading authority.
   - Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged.

@@ -103,13 +103,25 @@ class Economics:
     capital_basis: str | None
     estimator_contract: str | None
     cost_basis: str | None
+    receipt_json: str | None = None
 
     def __post_init__(self):
         _immutable(self)
 
     def key(self):
         return (self.currency, self.horizon, self.quantity_basis,
-                self.capital_basis, self.estimator_contract, self.cost_basis)
+                self.capital_basis, self.estimator_contract, self.cost_basis,
+                self._receipt_key())
+
+
+    def _receipt_key(self):
+        if not self.receipt_json:
+            return None
+        from .economics import comparison_key, from_payload
+        try:
+            return comparison_key(from_payload(json.loads(self.receipt_json)))
+        except (ValueError, KeyError, TypeError):
+            return None
 
 
 @dataclass(frozen=True)
@@ -278,13 +290,33 @@ def _ordered(inputs):
     return frozen
 
 
-def _economic_reasons(c):
+def _economic_reasons(c, inputs):
     e = c.economics
     reasons = []
     if e.evidence.status != Status.ESTABLISHED or number(e.expected_net_value) is None:
         reasons.append('EXPECTED_ECONOMICS_UNAVAILABLE')
-    if not all(isinstance(v, str) and v for v in e.key()) or c.horizon != e.horizon:
+    if not all(isinstance(v, str) and v for v in e.key()[:-1]) or c.horizon != e.horizon:
         reasons.append('ECONOMIC_COMPARISON_BASIS_UNAVAILABLE')
+    from .economics import from_payload, from_inputs, to_allocator, verify
+    try:
+        if not e.receipt_json:
+            raise ValueError('MISSING_RECEIPT')
+        receipt = from_payload(json.loads(e.receipt_json))
+        frozen = from_inputs(json.loads(receipt.inputs_json))
+        b = frozen.binding
+        expected, source = to_allocator(receipt)
+        if (not verify(receipt, frozen, inputs.as_of_ms) or e != expected
+                or source not in inputs.sources
+                or any(s not in inputs.sources for s in frozen.context)
+                or (b.opportunity_id, b.strategy_id, b.version_id, b.spec_hash,
+                    b.instrument, b.market_type, b.direction, b.horizon, b.as_of_ms) !=
+                   (c.opportunity_id, c.strategy_id, c.version_id, c.spec_hash,
+                    c.instrument, c.market_type, c.direction, c.horizon, c.as_of_ms)
+                or b.context_json != canonical({k: asdict(getattr(c, k)) for k in
+                    ('validation', 'probation', 'evidence_quality', 'regime_world')})):
+            raise ValueError('RECEIPT_OR_CONTEXT_DIFFERS')
+    except (ValueError, TypeError, KeyError, AttributeError):
+        reasons.append('EXPECTED_ECONOMICS_RECEIPT_REFUSED')
     return reasons
 
 
@@ -306,6 +338,18 @@ def _size(c):
     if c.capacity.status != Status.ESTABLISHED:
         return UNAVAILABLE, 'CAPACITY_UNAVAILABLE'
     return str(min(values)), None
+
+
+def _holding_economics_current(e, inputs):
+    from .economics import from_payload, from_inputs, to_allocator, verify
+    try:
+        receipt = from_payload(json.loads(e.receipt_json))
+        expected, source = to_allocator(receipt)
+        return (e == expected and source in inputs.sources
+                and e.evidence.status == Status.ESTABLISHED
+                and verify(receipt, from_inputs(json.loads(receipt.inputs_json)), inputs.as_of_ms))
+    except (ValueError, TypeError, KeyError, AttributeError):
+        return False
 
 
 def allocate(inputs: Inputs) -> Proposal:
@@ -350,7 +394,7 @@ def allocate(inputs: Inputs) -> Proposal:
             missing.append('REQUIRED_EVIDENCE_EXPIRY_UNAVAILABLE')
         elif not c.as_of_ms <= now <= c.valid_until_ms:
             blocked.append('REQUIRED_EVIDENCE_STALE')
-        missing.extend(_economic_reasons(c))
+        missing.extend(_economic_reasons(c, inputs))
         if (c.instrument, c.market_type) in conflicts:
             conflict.append('OPPOSING_STRATEGY_DIRECTIONS')
         if interaction == 'CONFLICTS_EXISTING':
@@ -403,7 +447,7 @@ def allocate(inputs: Inputs) -> Proposal:
     for c, _, _ in ordered:
         for held in portfolio.positions:
             e = held.economics
-            if (e and e.evidence.status == Status.ESTABLISHED and e.key() == c.economics.key()
+            if (e and _holding_economics_current(e, inputs) and e.key() == c.economics.key()
                     and number(e.expected_net_value) is not None
                     and number(c.economics.expected_net_value) > number(e.expected_net_value)):
                 observations.append(dict(candidate=list(c.identity), holding=held.instrument,

@@ -508,6 +508,36 @@ capabilities:
       - actual commission authority, account eligibility, leverage brackets and registered liquidity capacity remain unavailable
       - no allocation activation, real economic readiness, portfolio optimizer calibration or production behavior claim
 
+  expected_net_economics:
+    state: TESTED
+    package: LUFFY-EXPECTED-NET-ECONOMICS-R1
+    EXPECTED_NET_ECONOMICS: TESTED_CONTRACT
+    REAL_ECONOMIC_VALUE: INSUFFICIENT_EVIDENCE
+    ECONOMIC_MODEL_STATUS: INSUFFICIENT_EVIDENCE
+    evidence:
+      - trader/portfolio/economics.py
+      - trader/portfolio/allocator.py
+      - scripts/expected_net_economics_inventory.py
+      - tests/test_expected_net_economics.py
+      - tests/test_expected_net_economics_inventory.py
+      - tests/test_portfolio_allocator.py
+      - docs/superpowers/reports/2026-10-01-expected-net-economics-r1.md
+      - docs/superpowers/evidence/expected-net-economics-r1/
+    proven_facts:
+      - immutable exact-context receipt, component provenance, economic statuses and deterministic replay are TESTED
+      - cost arithmetic and source verification reuse the existing paper cost protocol; historical costs require a calibrated forward scope bridge
+      - allocator refuses unreceipted, incomplete, stale or incompatible economics and ranks only complete comparable receipts
+      - complete synthetic TEST-ONLY evidence computes exact gross minus costs minus calibrated reserve
+      - read-only real inventory found zero exact versions, validation/probation records, research candidates/tests and cost receipts/sources
+      - current detached allocator shadow retained CASH / NO_ALLOCATION, FROZEN and three holdings; portfolio observation was stale
+    gaps:
+      - exact-version forward conditional gross outcome distribution and validated calibration are missing
+      - calibrated economic uncertainty reserve and measured coverage/error are missing
+      - authoritative expected costs and a calibrated forward scope bridge are missing
+      - event-driven current opportunity registry and frozen Opportunity Context remain unimplemented
+      - Stage 6 remains incomplete; no economics readiness, orders, activation, deployment or production behavior change
+
+
   process_isolation_and_secrets:
     state: DEFINED
     evidence:
@@ -4652,3 +4682,7 @@ stage5_closure_and_evidence_flow_r1:
   committed: false
 
 PORTFOLIO_ALLOCATOR: TESTED
+
+EXPECTED_NET_ECONOMICS: TESTED_CONTRACT
+REAL_ECONOMIC_VALUE: INSUFFICIENT_EVIDENCE
+ECONOMIC_MODEL_STATUS: INSUFFICIENT_EVIDENCE
