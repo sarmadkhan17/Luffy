@@ -14,7 +14,18 @@ CONFIG_KEYS=('mode','universe','derivatives','timeframes','risk','mechanism',
 
 
 def freeze(db, role, raw, cut, producer):
-    return C.snapshot(db, role, raw, source_id=L.digest(raw), version='prospective-source.v1',
+    identity=L.digest(raw)
+    if isinstance(raw,dict):
+        key={'portfolio':'snapshot_id','strategy':'version_id','risk_config':'config_version',
+             'economics':'receipt_id','proposal':'proposal_id','intent':'intent_id','control':'version'}.get(role)
+        if key: identity=raw.get(key) or identity
+        if role=='world':
+            from trader.world.replay import WorldModelRecord
+            identity=WorldModelRecord.from_json(raw['record_json']).model_id
+        if role=='context':
+            from trader.cognition.opportunity_context import OpportunityContext
+            identity=OpportunityContext.from_json(raw['context_json']).context_id
+    return C.snapshot(db, role, raw, source_id=identity, version='prospective-source.v1',
                       available_ms=cut, producer=producer)
 
 
@@ -110,16 +121,24 @@ def decision(db, row, cycle, inputs=None):
                 raise ValueError('snapshot_after_decision')
             data=frame_chunks(db,snap,source_cut)
             data['additional_original_inputs']=inputs.get('additional_original_inputs')
+            data['source_evidence']=inputs.get('source_evidence')
             deps.append(freeze(db,'data',data,source_cut,'original Snapshot and supplied market inputs observed before decision'))
         if config is not None:
             # Code-owned allowlist: no credentials, transport endpoints or .env.
             safe = {k:config[k] for k in CONFIG_KEYS if k in config}
-            cfg = dict(config=safe, risk=safe.get('risk'), config_version=L.digest(safe))
+            cfg = dict(config=safe, risk=safe.get('risk'), config_version=L.digest(safe), risk_version=L.digest(safe.get('risk')))
             deps.append(freeze(db,'risk_config',cfg,source_cut,'configuration used by decision producer'))
-        for role in ('world','context','portfolio','proposal','intent','derivative_identity'):
+        for role in ('world','context','portfolio','control','economics','proposal','intent','derivative_identity'):
             value = inputs.get(role)
             if value is not None:
-                deps.append(freeze(db,role,value,source_cut,'explicit original producer input'))
+                if role=='portfolio':
+                    from trader.engine.evidence_capture import verify_snapshot
+                    if verify_snapshot(value) is None or value.get('completeness')!='COMPLETE':
+                        deps.append(C.unavailable('portfolio','EXACT_VENUE_STATE_UNAVAILABLE_JOURNAL_NOT_TRUTH'))
+                        continue
+                clock_role={'world':'world_model','strategy':'strategy_version'}.get(role,role)
+                clock=(inputs.get('source_evidence') or {}).get(clock_role,{})
+                deps.append(freeze(db,role,value,clock.get('known_at_ms',source_cut),'explicit original producer input'))
         if inputs.get('proposal'):
             lineage['proposal_id']=inputs['proposal']['proposal_id']
         if inputs.get('intent'):
@@ -137,6 +156,7 @@ def decision(db, row, cycle, inputs=None):
             try:
                 version_dep=C.reference(db,'strategy','strategy_versions',v['version_id'],version=v['schema'],available_ms=cut,producer='exact signal-bound StrategyVersion')
                 if version_dep['status']!='AVAILABLE': raise ValueError('version_source_absent')
+                if C.resolve(db,version_dep)!=v: raise ValueError('supplied_exact_strategy_bytes_differ')
             except (ValueError,__import__('sqlite3').OperationalError):
                 version_dep=freeze(db,'strategy',v,cut,'exact strategy version used')
             deps.append(version_dep)
@@ -266,15 +286,16 @@ def incident(db,event,at_ms,subject,detail):
                     dict(subject=subject,detail=detail,reason='incident causal linkage unavailable'),at_ms)
 
 
-def runtime_inputs(journal, snap, config, *, cut_ms, additional_original_inputs=None):
+def runtime_inputs(journal, snap, config, *, cut_ms, additional_original_inputs=None, control_state=None):
     """Called before deciding, never when replaying historical rows."""
     safe = {k:config[k] for k in CONFIG_KEYS if k in config}
     result=dict(snapshot=deepcopy(snap),config=json.loads(L.canonical(safe)),source_cut_ms=cut_ms,
-        additional_original_inputs=deepcopy(additional_original_inputs),
-        portfolio=dict(positions=journal.open_trades(),basis='journal portfolio observed before decision',
-                       observed_ms=cut_ms))
+        additional_original_inputs=deepcopy(additional_original_inputs))
     # Exact objects must actually be carried by the decision producer. No
     # lookup of latest external context/WorldModel using a timestamp shortcut.
+    if control_state is not None:
+        record={'state':getattr(control_state,'value',control_state)}
+        result['control']=dict(state=record['state'],record=record,version=L.digest(record))
     result.update(deepcopy(getattr(snap,'learning_sources',{}) or {}))
     return result
 
@@ -418,3 +439,46 @@ def paper_cost(db, trade, receipt, *, observed_ms):
     if funding: deps.append(freeze(db,'funding',funding,at_ms,'existing public funding interval producer'))
     return C.attach(db,event,'paper-cost:'+L.digest(receipt),L.Kind.EXECUTED.value,
         L.Boundary.UNASSESSABLE.value,observation,at_ms,deps,post_lineage=dict(trade_ids=(trade['id'],)))
+
+
+def journalize_allocation(journal, snap, decision, config, receipt, proposal, allocation_inputs):
+    """Prospective producer adapter: carry the exact Stage-6 objects into capture.
+
+    The existing allocator/intent constructors own their decisions. This adapter
+    only records what they consumed; it never invokes Risk or routes an intent.
+    """
+    from trader.portfolio import opportunity_live as live, allocator as A, trade_intent as T, economics as E
+    p = json.loads(receipt.payload_json)
+    live.replay(receipt, tuple(A.Source(**s) for s in p['sources']), allocation_inputs.as_of_ms)
+    if not A.verify(proposal, allocation_inputs): raise ValueError('exact_allocation_refused')
+    if decision.cycle_id != p['cycle_id'] or timestamp(decision.ts) != allocation_inputs.as_of_ms:
+        raise ValueError('decision_allocation_cut_or_cycle_differs')
+    candidates = [c for c in allocation_inputs.candidates if c.opportunity_context_json == p['context_json']]
+    if len(candidates) != 1: raise ValueError('exact_decision_candidate_unavailable')
+    c = candidates[0]
+    er = E.from_payload(json.loads(c.economics.receipt_json))
+    intents = [i for i in T.build(proposal, allocation_inputs) if i.payload()['opportunity_id'] == c.opportunity_id]
+    if len(intents) != 1: raise ValueError('exact_candidate_intent_unavailable')
+    original = {s['source_id']: json.loads(s['payload_json']) for s in p['sources']}
+    carried = dict(context={'context_json': p['context_json'], 'live_receipt': json.loads(receipt.payload_json)},
+        opportunity_id=c.opportunity_id, economics=er.payload(), proposal=proposal.payload(),
+        intent=dict(intent_id=intents[0].intent_id, payload_json=intents[0].payload_json),
+        control=dict(state=allocation_inputs.control_state, record={'state':allocation_inputs.control_state},
+                     version=L.digest({'state':allocation_inputs.control_state})))
+    if 'world_model' in original: carried['world'] = {'record_json':original['world_model']['data']}
+    if 'portfolio' in original:
+        carried['portfolio'] = original['portfolio']['data']
+        carried['derivative_identity'] = {k:carried['portfolio'][k] for k in ('venue','market_type','environment')}
+    if 'strategy_version' in original:
+        v = json.loads(original['strategy_version']['data']['canonical_json'])
+        carried['strategy'] = v
+        authorities = [json.loads(s.payload_json)['result'] for s in allocation_inputs.sources
+                       if s.source_id.startswith('candidate-bridge:')]
+        if len(authorities) == 1:
+            carried['exit_semantics'] = {'exit_semantics_id':authorities[0]['exit_semantics_id']}
+    carried['source_evidence'] = {role:{k:v for k,v in raw.items() if k != 'data'} for role,raw in original.items()}
+    inputs = runtime_inputs(journal, snap, config, cut_ms=allocation_inputs.as_of_ms)
+    inputs.update(carried)
+    journal.log_cycle(snap, decision.cycle_id, 'prospective-allocation-capture')
+    journal.log_decision(decision, capture_inputs=inputs)
+    return intents[0]

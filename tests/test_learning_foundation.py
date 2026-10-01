@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from dataclasses import replace
+from dataclasses import replace, asdict
 from contextlib import contextmanager
 
 import pytest
@@ -53,6 +53,14 @@ def chain():
         version_id=version['version_id'], spec_hash=version['spec_hash'], world_id='world-old')
     o = L.Outcome(L.Kind.RESEARCH, L.Boundary.COUNTERFACTUAL, lineage, cutoff, cutoff+1,
                   sources, L.canonical(observation), 'SIMULATED / UNREALIZED')
+    from trader.learning import decision_sources as D
+    from trader.learning.capture import unavailable
+    deps=[dict(unavailable(s.role,'EXACT_TEST_REGISTRATION'),status='AVAILABLE',source_id=s.source_id,version=s.version,sha256=s.sha256,available_ms=s.available_ms) for s in sources if s.role in L.PRE_DECISION]
+    reg=dict(event_key='research:test',profile='RESEARCH',decision_ms=cutoff,lineage=json.loads(L.canonical(asdict(lineage))),dependencies=deps)
+    wrapper=dict(manifest=D.make(reg),registration=reg,outcome_sources=[asdict(s) for s in sources],kind=o.kind.value,boundary=o.boundary.value,observed_ms=o.observed_ms,observation_json=o.observation_json,label=o.label)
+    ref=L.Source('decision_manifest',wrapper['manifest']['manifest_id'],D.SCHEMA,L.digest(wrapper),cutoff)
+    retained[(ref.source_id,ref.version)]=wrapper
+    o=replace(o,sources=o.sources+(ref,))
     current = dict(version_id=version['version_id'], spec_hash=version['spec_hash'], state=F.APPROVED_FIRST_LIVE)
     return o, retained, current, version
 
@@ -123,8 +131,8 @@ def test_no_causal_blame_or_confidence_update_from_losing_trade(chain):
     assert not a.causal_claims
     assert all(d[1] != L.Support.ESTABLISHED for d in a.dimensions)
     e = get_evidence(trade, sources)
-    assert L.propose(e, L.Target.CONFIDENCE, .8).status == L.Status.UNREGISTERED
-    assert L.propose(e, L.Target.LIFECYCLE, current, rule=L.DECAY_RULE).status == L.Status.INSUFFICIENT
+    assert L.propose(e, L.Target.CONFIDENCE, .8).status == L.Status.INCOMPLETE
+    assert L.propose(e, L.Target.LIFECYCLE, current, rule=L.DECAY_RULE).status == L.Status.INCOMPLETE
     assert not e.eligible_targets
 
 
@@ -146,10 +154,10 @@ def test_stale_conflict_missing_sample_policy_and_code(chain):
     assert L.propose(e, L.Target.LIFECYCLE, cur, rule=L.DECAY_RULE, conflicting=True).status == L.Status.CONFLICTING
     h = json.loads(e.historical_json)
     del h['risk_config']['strategies']['decay_min_trades']
-    assert L.propose(replace(e, historical_json=L.canonical(h)), L.Target.LIFECYCLE, cur, rule=L.DECAY_RULE).status == L.Status.INSUFFICIENT
+    assert L.propose(replace(e, historical_json=L.canonical(h)), L.Target.LIFECYCLE, cur, rule=L.DECAY_RULE).status == L.Status.INCOMPLETE
     h = json.loads(e.historical_json)
     h['outcome']['code_manifest'] = {}
-    assert L.propose(replace(e, historical_json=L.canonical(h)), L.Target.LIFECYCLE, cur, rule=L.DECAY_RULE).status == L.Status.STALE
+    assert L.propose(replace(e, historical_json=L.canonical(h)), L.Target.LIFECYCLE, cur, rule=L.DECAY_RULE).status == L.Status.INCOMPLETE
 
 
 def test_immutable_retry_restart_artifacts(chain, tmp_path):
@@ -237,10 +245,10 @@ def test_verified_realized_execution_stays_separate(chain):
     actual = replace(o, kind=L.Kind.EXECUTED, boundary=L.Boundary.REALIZED, label='REALIZED',
         lineage=replace(o.lineage, trade_ids=('t',)), observation_json=L.canonical(observed),
         sources=tuple(replace(s, sha256=L.digest(payload)) if s.role=='outcome' else s for s in o.sources) + (L.Source('trade', 'trade', 'old-v1', L.digest(trade_payload), o.observed_ms),))
-    assert L.replay(actual, sources).status == 'COMPLETE'
+    assert L.replay(actual, sources).status == 'INCOMPLETE'  # original research manifest cannot become a trade
     e = get_evidence(actual, sources)
     assert not e.eligible_targets
-    assert L.propose(e, L.Target.CONFIDENCE, .8).status == L.Status.UNREGISTERED
+    assert L.propose(e, L.Target.CONFIDENCE, .8).status == L.Status.INCOMPLETE
 
 
 def test_learning_shadow_is_read_only_and_idempotent(tmp_path):

@@ -1,6 +1,6 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-10-01'
+updated_at: '2026-10-02'
 code_baseline: luffy-integrated-core-r1 (strategy-factory-r1 a883313 + trade-provenance-r1 54aefc5, LUFFY-CORE-LINEAGE-INTEGRATION-R1)
 status: EVIDENCE_BASED
 
@@ -4991,3 +4991,50 @@ completed_stage7_historical_outcome_capture_r1:
   - Legacy histories remain partial/incomplete/unassessable; no retrospective capture,
     source provenance, claim equivalence, sufficiency rule or causal effect was invented.
   next_recommended_package: LUFFY-STAGE7-DECISION-REPLAY-SOURCE-INTEGRATION-R1
+
+completed_stage7_decision_replay_source_integration_r1:
+  date: '2026-10-02'
+  package: LUFFY-STAGE7-DECISION-REPLAY-SOURCE-INTEGRATION-R1
+  STAGE7_DECISION_REPLAY_SOURCE_INTEGRATION_R1: PASS
+  base_commit: d400394
+  branch: luffy-stage7-decision-replay-source-integration-r1
+  worktree: /mnt/luffy-data/luffy/workspaces/stage7-decision-replay-source-integration-r1
+  commit: NOT_COMMITTED
+  runtime_deployment: NOT_DEPLOYED
+  DECISION_SOURCE_MANIFEST: TESTED
+  PROSPECTIVE_DECISION_REPLAY: TESTED
+  DIGITAL_TWIN_REPLAY: TESTED_PROSPECTIVE
+  stage7_complete: false
+  original_sources:
+  - Canonical immutable decision-source-manifest.v1 is automatically created by original registration and bound by later outcome captures.
+  - Exact WorldModel, Opportunity Context, venue portfolio, Risk/config/control, StrategyVersion/spec/exit semantics, economics/proposal/intent sources are verified when actually supplied and used.
+  - Missing sources remain UNAVAILABLE; unused stages remain NOT_APPLICABLE. Journal positions cannot satisfy venue truth.
+  - Original evidence clocks and relevant freshness boundaries are retained. Replay reads no latest/current substitutes.
+  - All Learning targets, including existing-recent-decay.v1, reverify original-source and outcome replay manifests; forged quality labels cannot bypass.
+  prospective_acceptance: Existing market evidence WorldModel/context/candidate/economics/allocation/intent producers through normal journal registration and existing forward outcome resolver to verified LearningEvidence; no manual source-link insertion.
+  rejection_cash_replay: TESTED_WITHOUT_EXECUTED_TRADES
+  real_shadow:
+    status: PASS
+    scope: latest 100 retained real live-journal decisions; read-only consistent snapshot; no new trading cycle invoked
+    decisions: 100
+    manifests: 0
+    complete: 0
+    incomplete: 100
+    missing_original_registration: 100
+    exact_missing_sources: [cycle, decision, data, world, context, portfolio, risk_config, control, reasons]
+    production_mutations: 0
+    historical_backfill: NONE
+  validation:
+    focused_tests: 240 passed
+    git_diff_check: PASS
+    graphify_update: AST_ONLY_NO_SEMANTIC_API_USE
+    baseline_mock_repair: Exchange URL metadata represented as ordinary mapping in kernel wiring test; baseline failure reproduced at d400394; no runtime behavior change.
+  trading_behavior_changed: false
+  risk_execution_control_mutation: NONE
+  live_boundary: Normal Kernel supplies no WorldModel/context input; truthful missing source records remain incomplete. Prospective allocation producer adapter is tested but not deployed.
+  evidence:
+  - docs/superpowers/reports/2026-10-02-stage7-decision-replay-source-integration-r1.md
+  - docs/superpowers/evidence/stage7-decision-replay-source-integration-r1/tests.txt
+  - docs/superpowers/evidence/stage7-decision-replay-source-integration-r1/real-shadow.json
+  - docs/superpowers/evidence/stage7-decision-replay-source-integration-r1/baseline-mock-failure.txt
+  next_recommended_package: LUFFY-STAGE7-VERIFIED-OUTCOME-PRODUCER-INTEGRATION-R1

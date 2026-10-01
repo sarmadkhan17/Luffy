@@ -260,6 +260,21 @@ def replay(outcome, retained):
                 raise ValueError('money_differs')
         except (ValueError, KeyError, TypeError):
             faults.append('realized_accounting_unverified')
+    if 'decision_manifest' not in snapshots:
+        faults.append('decision_manifest_missing_no_backfill')
+    else:
+        from .decision_sources import verify
+        wrapper=snapshots['decision_manifest']
+        reg=wrapper['registration']
+        if reg['decision_ms']!=outcome.decision_ms or reg['lineage']!=json.loads(canonical(asdict(outcome.lineage))) or (reg['profile']=='RESEARCH' and outcome.kind!=Kind.RESEARCH):
+            faults.append('decision_manifest_outcome_binding_differs')
+        declared={d['role']:d for d in reg['dependencies']}
+        for source in outcome.sources:
+            if source.role in PRE_DECISION:
+                dep=declared.get(source.role,{})
+                if any(dep.get(k)!=getattr(source,k) for k in ('source_id','version','sha256','available_ms')):
+                    faults.append('decision_manifest_source_binding:'+source.role)
+        faults.extend(verify(wrapper['manifest'],reg,snapshots))
     return Replay(outcome.outcome_id, 'INCOMPLETE' if faults else 'COMPLETE', tuple(faults), canonical(snapshots))
 
 
@@ -356,7 +371,7 @@ def propose(ev, target, current, *, rule=None, conflicting=False):
         raise ValueError('unapproved_update_target')
     status, proposed, why = Status.UNREGISTERED, None, 'no registered deterministic rule for target'
     history = json.loads(ev.historical_json)
-    if ev.quality != 'VERIFIED_REPLAY':
+    if ev.quality != 'VERIFIED_REPLAY' or not verified_history(ev):
         status, why = Status.INCOMPLETE, 'authoritative historical replay unavailable'
     elif rule != DECAY_RULE or target != Target.LIFECYCLE:
         pass
@@ -370,6 +385,32 @@ def propose(ev, target, current, *, rule=None, conflicting=False):
         canonical(proposed) if proposed is not None else None, rule,
         digest(code_manifest()) if rule == DECAY_RULE else None, status,
         (ev.outcome_id, ev.attribution_id, ev.replay_id), why)
+
+
+def verified_history(ev):
+    """Every consumer re-verifies manifests; a quality string is not authority."""
+    from . import capture as C, decision_sources as D
+    try:
+        history=json.loads(ev.historical_json)
+        if 'capture_manifest' in history:
+            m=history['capture_manifest']; b=m['capture']; reg=b['registration']
+            lineage=Lineage(**dict(b['lineage'],execution_ids=tuple(b['lineage'].get('execution_ids',())),trade_ids=tuple(b['lineage'].get('trade_ids',()))))
+            src=Source('capture_manifest',m['manifest_id'],C.SCHEMA,digest(m),b['observed_ms'])
+            outcome=Outcome(Kind(b['kind']),Boundary(b['boundary']),lineage,reg['decision_ms'],b['observed_ms'],(src,),canonical(b['observation']),b['label'])
+            r=C.replay_manifest(outcome,{(src.source_id,src.version):m})
+            return r.status=='COMPLETE' and ev==evidence(outcome,attribute(outcome),r)
+        wrapper=history['decision_manifest']; reg=wrapper['registration']
+        if D.verify(wrapper['manifest'],reg,history): return False
+        refs=wrapper['outcome_sources']
+        sources=tuple(Source(**s) for s in refs)
+        # The wrapper excludes its own reference to avoid a circular hash.
+        sources += (Source('decision_manifest',wrapper['manifest']['manifest_id'],D.SCHEMA,digest(wrapper),reg['decision_ms']),)
+        outcome=Outcome(Kind(wrapper['kind']),Boundary(wrapper['boundary']),Lineage(**dict(reg['lineage'],execution_ids=tuple(reg['lineage'].get('execution_ids',())),trade_ids=tuple(reg['lineage'].get('trade_ids',())))),reg['decision_ms'],wrapper['observed_ms'],sources,wrapper['observation_json'],wrapper['label'])
+        retained={(s.source_id,s.version):history[s.role] for s in sources}
+        r=replay(outcome,retained)
+        return r.status=='COMPLETE' and ev==evidence(outcome,attribute(outcome),r)
+    except (ValueError,KeyError,TypeError):
+        return False
 
 
 def evaluate_decay(history, current):

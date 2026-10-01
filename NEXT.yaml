@@ -1,62 +1,60 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-10-01'
+updated_at: '2026-10-02'
 
 work_package:
-  id: LUFFY-STAGE7-DECISION-REPLAY-SOURCE-INTEGRATION-R1
-  type: STAGE7_EXACT_ORIGINAL_DECISION_SOURCE_INTEGRATION
+  id: LUFFY-STAGE7-VERIFIED-OUTCOME-PRODUCER-INTEGRATION-R1
+  type: STAGE7_AUTOMATIC_VERIFIED_OUTCOME_CAPTURE
   status: RECOMMENDED_NOT_AUTHORIZED_FOR_RUNTIME_DEPLOYMENT
-  last_completed_package: LUFFY-STAGE7-HISTORICAL-OUTCOME-CAPTURE-R1
-  prerequisite_recovery_verification: PASS
-  prerequisite_recovery_branch: luffy-stage7-outcome-capture-recovery-r1
-  objective: Close the single original-decision source integration gap. Carry the
-    exact producer-owned WorldModel and Opportunity Context cut into the normal
-    trading decision's existing prospective capture inputs, with their original
-    source clocks and hashes. Verify the actual producer path without orders or
-    activation. A missing or unused cut must remain UNAVAILABLE; do not construct
-    it later from latest state or claim that an observational cut caused a decision.
+  last_completed_package: LUFFY-STAGE7-DECISION-REPLAY-SOURCE-INTEGRATION-R1
+  prerequisite_verification: PASS
+  prerequisite_branch: luffy-stage7-decision-replay-source-integration-r1
+  objective: Connect the existing verified whole-trade accounting producer to
+    automatic later learning outcome capture. Retain exact fill, commission,
+    funding and position-ownership receipts and bind them to the immutable
+    original decision-source manifest. The current booking path remains
+    UNASSESSABLE for realized money without those verified receipts.
   completed_prerequisites:
-  - Immutable contracts, descriptive attribution, proposals and deterministic replay
-    are TESTED; domain replay remains PARTIAL.
-  - Existing recent-decay rule and Strategy Governor retirement are TESTED in an isolated
-    in-memory journal only.
-  - 'Bounded read-only inventory: 564 chains; 0 complete, 251 partial, 259 incomplete,
-    54 unassessable; zero application and no legacy source backfill.'
-  - Append-only prospective capture and mechanically verified manifests are TESTED;
-    dataframes retain full float and timestamp precision; complete synthetic decision,
-    counterfactual, Risk-block, research and reconciled accounting paths are TESTED.
-  - Final isolated recovery verification passed 584 focused tests; registered
-    recent-decay rejects incomplete evidence and legacy statistical authority
-    writers fail closed. No commit or deployment; Stage7 remains incomplete.
-  - Exact Research Bank and structured-context recall remain context-only; no suppression
-    policy or claim identity was invented.
+  - DECISION_SOURCE_MANIFEST = TESTED.
+  - PROSPECTIVE_DECISION_REPLAY = TESTED.
+  - DIGITAL_TWIN_REPLAY = TESTED_PROSPECTIVE; Stage 7 remains incomplete.
+  - Exact original producer sources reach normal decision registration through
+    the prospective allocation adapter without hand-entered source links.
+  - CASH and rejection acceptance flows reach verified LearningEvidence through
+    the existing forward outcome resolver without executed trades.
+  - All authoritative Learning consumers, including existing-recent-decay.v1,
+    reverify original-source and outcome replay manifests before evaluating.
+  - 240 focused tests pass; git diff --check passes; code-only Graphify updated.
+  - Read-only real shadow observed 100 retained live decisions, 0 manifests,
+    0 complete and 100 incomplete; all lack original registration. No backfill.
   next_steps:
   - step: 1
-    action: Bind the actual original WorldModel/context producer inputs to the
-      normal decision registration and demonstrate complete replay through that
-      producer path. Keep absence explicit and leave legacy history unchanged.
+    action: Bind producer-owned verified whole-trade receipts automatically to
+      later outcomes. Preserve missing accounting as unknown; never infer money
+      from journal defaults, price paths or simulated paper results.
+  - step: 2
+    action: Prove an exact original decision to later verified outcome and
+      replay-complete LearningEvidence path with no manual source-link insertion,
+      no learning authority expansion, and no orders or production mutation.
   evidence:
-  - docs/superpowers/reports/2026-10-01-stage7-learning-foundation-r1.md
-  - docs/superpowers/evidence/stage7-learning-foundation-r1/final-shadow/summary.json
-  - docs/superpowers/reports/2026-10-01-stage7-historical-outcome-capture-r1.md
-  - docs/superpowers/evidence/stage7-historical-outcome-capture-r1/recovery-inventory-summary.json
-  - docs/superpowers/evidence/stage7-historical-outcome-capture-r1/recovery-final-tests.txt
-  - tests/test_historical_outcome_capture.py
+  - docs/superpowers/reports/2026-10-02-stage7-decision-replay-source-integration-r1.md
+  - docs/superpowers/evidence/stage7-decision-replay-source-integration-r1/tests.txt
+  - docs/superpowers/evidence/stage7-decision-replay-source-integration-r1/real-shadow.json
+  - tests/test_decision_sources.py
   execution_constraints:
-  - No orders, activation, production learning application, deploy/restart, Risk expansion,
-    StrategySpec mutation or normal-learning LLM.
-  - No new reward, confidence, allocation, attention priority, sufficiency threshold
-    or generic profit/loss rule.
-  - Stage 7 remains incomplete. Capture plumbing is TESTED, NOT_DEPLOYED;
-    completeness is conditional on actual exact source availability. The normal
-    decision producer currently supplies no WorldModel/context cut.
+  - No orders, activation, production learning application, deploy/restart,
+    Risk/config/strategy/allocation authority changes, frontend or M4 changes.
+  - No historical source repair, current-state substitution, invented accounting,
+    generic reward/update rules or new sample thresholds.
+  - Stage 7 remains incomplete. Prospective source capture is TESTED and
+    NOT_DEPLOYED. The normal Kernel currently supplies no WorldModel/context;
+    sources that were not supplied remain UNAVAILABLE.
   preserved_authority:
     PAPER_COST_PROTOCOL: TESTED
     EXECUTION_COST_CALIBRATION: INSUFFICIENT_EVIDENCE
     PRODUCTION_ECONOMIC_PROBATION: INCOMPLETE
     CAPACITY: UNAVAILABLE
     FIRST_LIVE: BLOCKED
-  preserved_stage6_evidence: docs/superpowers/reports/2026-10-01-stage6-implementation-closure-r1.md
 
 intelligence_spine_shadow_package:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1

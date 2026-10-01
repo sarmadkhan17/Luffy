@@ -10,7 +10,7 @@ import sqlite3
 from . import foundation as L
 
 SCHEMA = 'learning-replay-manifest.v1'
-TABLES = ('learning_source_blobs', 'learning_registrations', 'learning_outcome_captures', 'learning_actions')
+TABLES = ('learning_source_blobs', 'learning_registrations', 'learning_outcome_captures', 'learning_actions', 'learning_decision_source_manifests')
 DURABLE = {'strategy_versions': ('version_id', 'canonical_json'),
            'research_bank_objects': ('bank_object_id', 'canonical_json'),
            'research_questions': ('question_id', 'canonical_json'),
@@ -21,16 +21,17 @@ DURABLE = {'strategy_versions': ('version_id', 'canonical_json'),
            'versioned_paper_cost_receipts': ('trade_id', 'canonical_json')}
 ROLES = ('cycle', 'decision', 'data', 'world', 'context', 'strategy', 'exit_semantics',
          'portfolio', 'risk_config', 'proposal', 'intent', 'reasons', 'action',
-         'risk_decision', 'execution', 'trade', 'cost', 'funding', 'derivative_identity',
+         'control', 'economics', 'risk_decision', 'execution', 'trade', 'cost', 'funding', 'derivative_identity',
          'execution_reference', 'position_basis', 'question', 'plan', 'research_evidence',
          'falsifier_result', 'bank', 'outcome', 'prediction', 'research_run')
-TRADING = {'cycle', 'decision', 'data', 'world', 'context', 'portfolio', 'risk_config', 'reasons', 'action', 'outcome'}
+TRADING = {'cycle', 'decision', 'data', 'world', 'context', 'portfolio', 'risk_config', 'control', 'reasons', 'action', 'outcome'}
 RESEARCH = {'question', 'plan', 'research_evidence', 'falsifier_result', 'bank', 'outcome', 'research_run'}
 POST = {'action', 'risk_decision', 'execution', 'trade', 'cost', 'funding', 'execution_reference', 'position_basis', 'falsifier_result', 'bank', 'outcome', 'prediction', 'research_run'}
 
 
 def ensure(db):
-    definitions = {'learning_source_blobs': 'sha256 TEXT PRIMARY KEY,payload TEXT NOT NULL',
+    definitions = {'learning_decision_source_manifests': 'manifest_id TEXT PRIMARY KEY,event_key TEXT UNIQUE NOT NULL,payload TEXT NOT NULL',
+        'learning_source_blobs': 'sha256 TEXT PRIMARY KEY,payload TEXT NOT NULL',
         'learning_registrations': 'event_key TEXT PRIMARY KEY,registration_id TEXT UNIQUE NOT NULL,payload TEXT NOT NULL',
         'learning_outcome_captures': 'outcome_key TEXT PRIMARY KEY,outcome_id TEXT UNIQUE NOT NULL,payload TEXT NOT NULL',
         'learning_actions': 'action_id TEXT PRIMARY KEY,event_key TEXT NOT NULL,payload TEXT NOT NULL'}
@@ -121,7 +122,7 @@ def required(kind, lineage, *, profile='TRADING'):
     if lineage.get('strategy_id'):
         roles |= {'strategy', 'exit_semantics'}
     if lineage.get('proposal_id'):
-        roles.add('proposal')
+        roles |= {'proposal','economics'}
     if lineage.get('intent_id'):
         roles.add('intent')
     if kind == L.Kind.EXECUTED.value:
@@ -155,6 +156,10 @@ def register(db, event_key, kind, lineage, decision_ms, dependencies, *, profile
                 additional.append('derivative_identity')
     body = dict(schema=SCHEMA, additional_required=additional, event_key=event_key, kind=kind, lineage=lineage,
                 decision_ms=decision_ms, profile=profile, dependencies=sorted(deps, key=lambda d:d['role']))
+    from . import decision_sources as D
+    m = D.make(body)
+    insert(db, D.TABLE, 'manifest_id', m['manifest_id'], (m['manifest_id'], event_key, L.canonical(m)))
+    body['decision_source_manifest_id'] = m['manifest_id']
     rid = L.digest(body)
     insert(db, 'learning_registrations', 'event_key', event_key, (event_key, rid, L.canonical(body)))
     return rid
@@ -227,6 +232,9 @@ def attach(db, event_key, outcome_key, kind, boundary, observation, observed_ms,
         kind=kind.value, boundary=boundary.value, observation=observation, observed_ms=observed_ms,
         label='SIMULATED / UNREALIZED' if boundary == L.Boundary.COUNTERFACTUAL else boundary.value,
         dependencies=sorted(initial.values(), key=lambda d:d['role']))
+    if reg.get('decision_source_manifest_id'):
+        from . import decision_sources as D
+        body['decision_source_manifest'] = D.load(db, reg['decision_source_manifest_id'])
     oid = L.digest(body)
     insert(db, 'learning_outcome_captures', 'outcome_key', outcome_key, (outcome_key, oid, L.canonical(body)))
     return oid
@@ -242,6 +250,14 @@ def semantic(role, value, reg):
     elif role == 'context':
         from trader.cognition.opportunity_context import OpportunityContext
         context = OpportunityContext.from_json(value['context_json'])
+        if value.get('live_receipt'):
+            from trader.portfolio.opportunity_live import LiveReceipt, replay
+            from trader.portfolio.allocator import Source
+            raw=value['live_receipt']
+            receipt=LiveReceipt(L.digest(raw),L.canonical(raw))
+            replay(receipt,tuple(Source(**s) for s in raw['sources']),reg['decision_ms'])
+            if raw['context_json']!=value['context_json'] or raw['cycle_id']!=reg['lineage']['cycle_id']:
+                raise ValueError('original_live_context_receipt_differs')
         if context.context_id != reg['lineage'].get('context_id') or context.to_dict()['as_of_ms'] > reg['decision_ms']:
             raise ValueError('context_binding_or_cut_differs')
         world_id = context.to_dict()['world_model'].get('model_id')
@@ -305,9 +321,30 @@ def semantic(role, value, reg):
             replay(value)
         elif value.get('schema_version') != 'execution-accounting.v1' or not value.get('funding_complete'):
             raise ValueError('funding_evidence_not_verified')
+    elif role == 'portfolio':
+        from trader.engine.evidence_capture import verify_snapshot
+        if verify_snapshot(value) is None or value['completeness'] != 'COMPLETE':
+            raise ValueError('exact_venue_portfolio_unavailable_journal_not_truth')
+        obs = value['observation']
+        if obs['complete'] is not True or any(value[k]!=obs[j] for k,j in (('venue','venue'),('market_type','market_type'),('environment','environment'),('observed_at_ms','as_of_ms'),('received_at_ms','response_received_ms'),('request_start_ms','request_start_ms'))):
+            raise ValueError('venue_portfolio_projection_differs')
+        if value['observed_at_ms'] > reg['decision_ms'] or value['received_at_ms'] > reg['decision_ms']:
+            raise ValueError('future_portfolio')
+        if [(p['instrument_id'], p['side'], p['quantity']) for p in value['positions']] != [(iid, side, qty) for iid, present, side, qty in obs['positions'] if present]:
+            raise ValueError('venue_portfolio_projection_differs')
+    elif role == 'control':
+        if value.get('state') not in ('ACTIVE','FROZEN','HALTED') or value.get('version') != L.digest(value['record']) or value.get('state') != value['record'].get('state'):
+            raise ValueError('exact_control_state_unavailable')
+    elif role == 'economics':
+        from trader.portfolio.economics import from_payload, from_inputs, verify
+        receipt = from_payload(value)
+        if not verify(receipt, from_inputs(json.loads(receipt.inputs_json)), reg['decision_ms']):
+            raise ValueError('economics_receipt_unverified')
     elif role == 'risk_config':
         if not value.get('risk') or value.get('config_version') != L.digest(value['config']):
             raise ValueError('risk_config_version_unverified')
+        if value.get('risk_version') != L.digest(value['risk']) or value['risk'] != value['config'].get('risk'):
+            raise ValueError('risk_policy_binding_differs')
 
 
 def manifest(db, outcome_id):
@@ -353,13 +390,17 @@ def manifest(db, outcome_id):
             if dep['role']=='outcome':
                 dep.update(status='UNAVAILABLE',reason=str(exc))
         sources.pop('outcome',None)
-    complete = all(r['status']=='AVAILABLE' for r in rows if r['required'])
+    from . import decision_sources as D
+    dm = body.get('decision_source_manifest')
+    decision_faults = D.verify(dm, reg, sources) if dm else ('decision_manifest_missing_no_backfill',)
+    complete = not decision_faults and all(r['status']=='AVAILABLE' for r in rows if r['required'])
     if body['boundary'] in ('UNRESOLVED', 'UNASSESSABLE'):
         status = 'UNASSESSABLE' if body['boundary']=='UNASSESSABLE' else 'REPLAY_INCOMPLETE'
     else:
         status = 'REPLAY_COMPLETE' if complete else 'REPLAY_PARTIAL' if sources else 'REPLAY_INCOMPLETE'
     result = dict(schema=SCHEMA, outcome_id=outcome_id, registration_id=rid, status=status,
-                  dependencies=rows, sources=sources, data_blobs=blobs, capture=body)
+                  dependencies=rows, sources=sources, data_blobs=blobs, capture=body,
+                  decision_source_faults=list(decision_faults))
     return dict(manifest_id=L.digest(result), **result)
 
 
@@ -382,6 +423,9 @@ def replay_manifest(outcome, retained):
     b, reg = m['capture'], m['capture']['registration']
     if L.digest(b) != m['outcome_id'] or L.digest(reg) != m['registration_id']:
         faults.append('capture_identity_differs')
+    from . import decision_sources as D
+    dm = b.get('decision_source_manifest')
+    faults.extend(D.verify(dm, reg, m['sources']) if dm else ('decision_manifest_missing_no_backfill',))
     needs = required(b['kind'], reg['lineage'], profile=reg['profile']) | set(reg.get('additional_required',()))
     rows = {d['role']:d for d in m['dependencies']}
     declared = {d['role']:d for d in b['dependencies']}

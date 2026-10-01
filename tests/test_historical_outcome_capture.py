@@ -33,7 +33,8 @@ def prospective(tmp_path):
     inputs=dict(snapshot=snap,config={'risk':{'limit':.01},'strategies':{}},
         world={'record_json':world_record.to_json()},context={'context_json':context.canonical_json},
         derivative_identity={'venue':'binanceusdm','market_type':'futures','environment':'demo'},
-        portfolio={'positions':[],'basis':'TEST_ONLY_PORTFOLIO','observed_ms':CUT})
+        portfolio=__import__('tests.test_opportunity_live_integration',fromlist=['snapshot']).snapshot(None,CUT),
+        control=dict(state='ACTIVE',record={'state':'ACTIVE'},version=L.digest({'state':'ACTIVE'})))
     j.log_cycle(snap,'c','TEST_ONLY')
     j.log_decision(d,capture_inputs=inputs)
     assert not j.query('SELECT * FROM learning_capture_failures')
@@ -101,7 +102,7 @@ def test_future_measurement_cannot_rewrite_context_or_original_lineage(prospecti
     j,d,_=prospective
     before=j.query('SELECT * FROM learning_registrations')
     with j._tx() as db:
-        changed=R.freeze(db,'context',{'latest':True},CUT+1,'test')
+        changed=R.freeze(db,'context',prospective[2]['context'],CUT+1,'test')
         with pytest.raises(ValueError,match='cannot_rewrite'):
             C.attach(db,'decision:d','bad',L.Kind.CASH.value,L.Boundary.COUNTERFACTUAL.value,{},CUT+1,[changed])
         with pytest.raises(ValueError,match='cannot_rewrite'):

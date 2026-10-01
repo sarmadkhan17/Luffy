@@ -1263,7 +1263,7 @@ class Kernel:
             from .learning.capture_runtime import runtime_inputs
             try:
                 learning_inputs = runtime_inputs(self.journal, snap, self.cfg,
-                    cut_ms=int(time.time()*1000),additional_original_inputs=dict(
+                    cut_ms=int(time.time()*1000),control_state=state,additional_original_inputs=dict(
                         order_book=original_order_book,positioning_funding=funding.get(symbol),
                         positioning_open_interest=oi.get(symbol)))
             except Exception:

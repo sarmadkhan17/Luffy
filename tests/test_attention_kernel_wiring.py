@@ -161,6 +161,8 @@ def test_conflict_keeps_trading_and_scan_capture(tmp_path):
     (tmp_path / "b").mkdir(); (tmp_path / "c").mkdir()
     base, _, base_decided = kernel(tmp_path / "b", None, Mock())
     base.market_type = MarketType.FUTURES
+    # URL metadata is a mapping on real exchanges, not a network method.
+    base.feed.ex.urls = {}
     base_stats = base.cycle()
     k, data, decided = kernel(tmp_path / "c", None, Mock())
     k.market_type = MarketType.FUTURES
@@ -601,6 +603,7 @@ def test_trading_scan_orchestrator_risk_execution_unchanged(tmp_path):
     base_stats = base.cycle()
     reg, _, journal, ex = slot(tmp_path / "r", "BTC", "ETH", "SOL")
     k, data, decided = registry_kernel(tmp_path / "r", reg)
+    k.feed.ex.urls = {}
     stats = k.cycle()
     selected = stats["attention_supplemental"]["symbol"]
     assert trading_calls(k, decided) == trading_calls(base, base_decided)
