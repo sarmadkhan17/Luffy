@@ -1,0 +1,27 @@
+usage: predictive_bridge.py [-h] [--enable] [--once] --source SOURCE --bank
+                            BANK --candles CANDLES --quantitative-journal
+                            QUANTITATIVE_JOURNAL --config CONFIG --max-sources
+                            MAX_SOURCES --max-experiments MAX_EXPERIMENTS
+                            [--deadline-seconds DEADLINE_SECONDS]
+                            [--interval-seconds INTERVAL_SECONDS]
+
+Normal opt-in asynchronous Research Bank consumer, independent of Kernel.
+python -m trader.research.predictive_bridge --enable --once --source ...
+--bank ... --candles ... --config ... --max-sources 4 --max-experiments 1
+Without --once it consumes at a bounded cadence. No service is installed.
+Sources are read-only. One flock protects restart-safe checkpoints and the
+shared, cumulative referee error budget across isolated experiment ledgers.
+
+options:
+  -h, --help            show this help message and exit
+  --enable
+  --once
+  --source SOURCE
+  --bank BANK
+  --candles CANDLES
+  --quantitative-journal QUANTITATIVE_JOURNAL
+  --config CONFIG
+  --max-sources MAX_SOURCES
+  --max-experiments MAX_EXPERIMENTS
+  --deadline-seconds DEADLINE_SECONDS
+  --interval-seconds INTERVAL_SECONDS

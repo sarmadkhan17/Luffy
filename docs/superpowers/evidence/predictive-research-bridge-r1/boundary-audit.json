@@ -1,0 +1,31 @@
+{
+  "base": "b56682e936fe9907f023900a0daacf0aad5ac07e",
+  "worktree": "/mnt/luffy-data/luffy/workspaces/predictive-research-bridge-r1",
+  "committed": false,
+  "deployed": false,
+  "orders": 0,
+  "trading_behavior_changed": false,
+  "production_mutations": 0,
+  "llm_usage": 0,
+  "boundaries": {
+    "config.yaml": {
+      "unchanged": true,
+      "sha256": "a09571c59bbacee42e7541b439dee1f596444351305b7136bc617b6d95ac1a82"
+    },
+    "trader/kernel.py": {
+      "unchanged": true,
+      "sha256": "dd5069e72cb1617af9e35c0e37bb066edd84e23894cfee8f7bed252955f5e227"
+    },
+    "trader/engine/risk.py": {
+      "unchanged": true,
+      "sha256": "2a2a1105810c9e7ab3f43c42628384a752fc83cbffe13e2f59e878d26ea53c72"
+    },
+    "trader/strategy/factory_handoff.py": {
+      "unchanged": true,
+      "sha256": "7c43ad1bf62ea54afb5ffd3a0ef24d7dc8720452f0a1cb57b8ca3dcc2dd9b9ab"
+    }
+  },
+  "bridge_factory_import": "gate_evidence only; no Factory writer",
+  "source_mode": "SQLite mode=ro with query_only; scratch Bank only in shadow",
+  "claude_execution": "Minimal CLI execution unavailable: Not logged in; authorized implementation continued with Codex."
+}

@@ -11,6 +11,16 @@ from trader.core.journal import Journal
 from trader.research import vocab
 from trader.research.ledger import Ledger
 from trader.research.runner import ResearchRunner
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def registered_coverage(monkeypatch):
+    """Runner protocol fixtures must not depend on a production candle store."""
+    from trader.research import universe
+    monkeypatch.setattr(universe, 'coverage', lambda tfs=None: {
+        tf: {symbol: 11000 for symbol in universe.DISCOVERY + universe.HELDOUT}
+        for tf in (tfs or ['4h'])})
 
 CFG = {"risk": {"risk_per_trade_pct": 0.5, "max_open_trades": 8},
        "research": {"enabled": True, "horizons": ["4h"],

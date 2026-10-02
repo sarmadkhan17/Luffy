@@ -946,11 +946,17 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
         assert bad not in code, bad
     # the executor reads only the paper/live fence predicate
     for f in pathlib.Path("trader").rglob("*.py"):
-        if f not in (pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
+        if f not in (pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
             assert "factory_handoff" not in f.read_text(), f
     # Corrected Stage6 uses only the exact immutable version reader for capacity.
     current_src = pathlib.Path("trader/portfolio/current.py").read_text()
     assert set(re.findall(r"\bfactory_handoff\.(\w+)", current_src)) == {"load_version"}
+    # Predictive research may READ registered gates, and cannot call a Factory writer.
+    import ast
+    bridge = ast.parse(pathlib.Path('trader/research/predictive_bridge.py').read_text())
+    imports = [node for node in ast.walk(bridge) if isinstance(node, ast.ImportFrom)
+               and node.module == 'trader.strategy.factory_handoff']
+    assert len(imports) == 1 and [n.name for n in imports[0].names] == ['gate_evidence']
     ex_src = pathlib.Path("trader/engine/executor.py").read_text()
     assert set(re.findall(r"\bfh\.(\w+)", ex_src)) == {"live_entry_block"}
     # the Kernel reaches the factory from the research handoff, which

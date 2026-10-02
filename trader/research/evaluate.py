@@ -90,7 +90,11 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
         if df is not None and len(df) >= 500:
             full[sym] = df
 
-    cut = slices.cut_ms(full) or 0
+    split = (cfg.get('research') or {}).get('predictive_split')
+    if split:
+        full = {s: slices.before(slices.after(d, split['start_ms']), split['end_ms'] + 1)
+                for s, d in full.items()}
+    cut = int(split['cut_ms']) if split else (slices.cut_ms(full) or 0)
     disc = slices.discovery(full, cut)
 
     # held-out BAR COUNTS only — never their prices. The projection needs to
@@ -102,7 +106,8 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
         except Exception:                               # noqa: BLE001
             continue
         if df is not None and len(df) >= 500:
-            held_full[sym] = df
+            held_full[sym] = (slices.before(slices.after(df, split['start_ms']), cut)
+                              if split else df)
     heldout_bars = {"a": slices.bar_counts(held_full),
                     "b": slices.bar_counts(slices.heldout_b(full, cut))}
 

@@ -402,3 +402,48 @@ real_learning_authority_consumer_integration:
   - docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/boundary-audit.json
   - docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/lineage-integration.json
   - docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/files-changed.txt
+
+completed_predictive_research_bridge_r1:
+  package: LUFFY-PREDICTIVE-RESEARCH-BRIDGE-R1
+  base: b56682e936fe9907f023900a0daacf0aad5ac07e
+  state: TESTED
+  architecture_status: PASS
+  normal_consumer: trader.research.predictive_bridge
+  research_authority: QUESTIONS_AND_EXPERIMENTS_ONLY
+  missing_architecture: []
+  proven_facts:
+  - Exact retained investigation Research Bank chains generate immutable deterministic hypotheses.
+  - Normal asynchronous consumer submits bounded jobs through the existing quantitative planner, controls, ablations, protected referee and Factory evidence gate.
+  - Descriptive support and Stage7 attention priority cannot establish predictive support.
+  - Immutable snapshots and cumulative protected look accounting survive restarts.
+  - Verified predictive attachments remain distinct from original immutable v1 Bank objects.
+  real_shadow:
+    status: PASS
+    source_mutations: 0
+    eligible_research_results: 0
+    hypotheses_proposed: 0
+    planner_submissions: 0
+    supported: 0
+    unsupported: 0
+    inconclusive: 0
+    legacy_investigation_provenance_refusals: 13
+  real_evidence_blocked:
+  - No eligible retained investigation Research Bank records in existing production data.
+  - Legacy volume investigations lack retained opportunity_contexts; no backfill performed.
+  - Prospective protected predictive measurements and profitable/calibrated edge remain unestablished.
+  - Existing operational referee and handoff stops remain closed.
+  trading_behavior_changed: false
+  real_order_submissions: 0
+  deployed: false
+  committed: false
+  evidence:
+  - docs/superpowers/reports/2026-10-02-predictive-research-bridge-r1.md
+  - docs/superpowers/evidence/predictive-research-bridge-r1/validation.json
+  - docs/superpowers/evidence/predictive-research-bridge-r1/real-shadow.json
+  - docs/superpowers/evidence/predictive-research-bridge-r1/boundary-audit.json
+
+# Restore the exact limitation referenced by the existing source registry.
+# This does not upgrade decision evidence or introduce a new policy.
+completed_strategy_decay_research_plan_v1:
+  limitations:
+  - Decision evidence is a declared selection, not independent opportunity evidence.

@@ -70,6 +70,7 @@ class Combination:
     trigger: str = ""          # the single this grew from — recorded, not used
     round: str = "singles"     # singles | grow | seeded | control | ablation
     parent: str = ""           # parent hash, for the growth comparison
+    evaluation_scope: str = "" # isolated predictive experiment; empty preserves legacy identities
 
     # ── identity ─────────────────────────────────────────────────────────
     @property
@@ -78,9 +79,12 @@ class Combination:
 
     @property
     def hash(self) -> str:
-        blob = json.dumps({"v": SCHEMA_VERSION, "tf": self.tf,
+        identity = {"v": SCHEMA_VERSION, "tf": self.tf,
                            "geo": self.geo, "dir": "both",
-                           "parts": list(self.keys)}, sort_keys=True)
+                           "parts": list(self.keys)}
+        if self.evaluation_scope:
+            identity['evaluation_scope'] = self.evaluation_scope
+        blob = json.dumps(identity, sort_keys=True)
         return hashlib.sha256(blob.encode()).hexdigest()[:16]
 
     # Python's own equality must agree with the canonical hash. Without
@@ -148,16 +152,20 @@ class Combination:
 
     # ── transport ────────────────────────────────────────────────────────
     def as_dict(self) -> dict:
-        return {"parts": [p.as_dict() for p in self.parts], "tf": self.tf,
+        out = {"parts": [p.as_dict() for p in self.parts], "tf": self.tf,
                 "geo": self.geo, "trigger": self.trigger,
                 "round": self.round, "parent": self.parent}
+        if self.evaluation_scope:
+            out['evaluation_scope'] = self.evaluation_scope
+        return out
 
     @staticmethod
     def from_dict(d: dict) -> "Combination":
         return Combination(
             parts=tuple(Part.from_dict(p) for p in d["parts"]),
             tf=d["tf"], geo=d["geo"], trigger=d.get("trigger", ""),
-            round=d.get("round", "singles"), parent=d.get("parent", ""))
+            round=d.get("round", "singles"), parent=d.get("parent", ""),
+            evaluation_scope=d.get('evaluation_scope', ''))
 
 
 #: what a referee look records about the rule it actually evaluated
@@ -192,5 +200,5 @@ def subsets(c: Combination) -> list:
         parts = c.parts[:i] + c.parts[i + 1:]
         out.append(Combination(parts=parts, tf=c.tf, geo=c.geo,
                                trigger=c.trigger, round="ablation",
-                               parent=c.hash))
+                               parent=c.hash, evaluation_scope=c.evaluation_scope))
     return out

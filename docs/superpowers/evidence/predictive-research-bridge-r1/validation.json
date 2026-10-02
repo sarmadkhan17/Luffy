@@ -1,0 +1,41 @@
+{
+  "package": "LUFFY-PREDICTIVE-RESEARCH-BRIDGE-R1",
+  "status": "PASS",
+  "base": "b56682e936fe9907f023900a0daacf0aad5ac07e",
+  "suites": [
+    {
+      "log": "bank-bridge-final-tests.txt",
+      "passed": 261,
+      "seconds": 69.03
+    },
+    {
+      "log": "bridge-contract-final-tests.txt",
+      "passed": 74,
+      "seconds": 58.78
+    },
+    {
+      "log": "authority-learning-tests.txt",
+      "passed": 151,
+      "seconds": 84.57
+    },
+    {
+      "log": "planner-regression-tests.txt",
+      "passed": 144,
+      "seconds": 29.51
+    }
+  ],
+  "counts_may_overlap": true,
+  "new_bridge_tests": 21,
+  "normal_path": "Persisted existing investigation research result \u2192 normal consumer \u2192 immutable hypothesis \u2192 existing planner/runner \u2192 measurement \u2192 protected referee \u2192 Bank feedback",
+  "numerical_fixture_branches": [
+    "SUPPORTED",
+    "UNSUPPORTED",
+    "DATA_INSUFFICIENT"
+  ],
+  "actual_numerical_jobs": "Synthetic frozen candles; real jobs produce DATA_INSUFFICIENT, never invented support.",
+  "real_shadow": "real-shadow.json",
+  "diff_check": "PASS",
+  "graphify": "AST_ONLY_UPDATE_COMPLETE",
+  "no_commit": true,
+  "no_deploy": true
+}

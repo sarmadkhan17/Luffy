@@ -53,10 +53,16 @@ DEFAULTS = {
 
 
 class ResearchRunner:
-    def __init__(self, journal, cfg: dict, run=run_child):
+    def __init__(self, journal, cfg: dict, run=run_child, *, predictive_experiment=None):
         self.journal = journal
         self.cfg = cfg
         self.run = run
+        self.predictive_experiment = predictive_experiment
+        if predictive_experiment is not None:
+            from .predictive_experiment import validate
+            validate(predictive_experiment)
+            if (cfg.get('research') or {}).get('predictive_split') != predictive_experiment['split']:
+                raise ValueError('experiment_split_binding')
         self.ledger = Ledger(journal)
         self.ledger.ensure()
 
@@ -84,6 +90,9 @@ class ResearchRunner:
         return n
 
     def _symbols(self, tf: str):
+        if self.predictive_experiment is not None:
+            s = self.predictive_experiment['split']
+            return s['discovery_symbols'], s['heldout_symbols']
         from .universe import DISCOVERY, HELDOUT, coverage
         try:
             cov = coverage([tf])
@@ -131,7 +140,11 @@ class ResearchRunner:
             if out is not None:
                 return out
 
-        batch = planner.next_batch(self.ledger, self.cfg, self.journal)
+        if self.predictive_experiment is not None:
+            from .predictive_experiment import planner_batch
+            batch = planner_batch(self.ledger, self.cfg, self.predictive_experiment)
+        else:
+            batch = planner.next_batch(self.ledger, self.cfg, self.journal)
         if batch.kind == "idle":
             return {"skipped": "idle", "reason": batch.reason}
 
@@ -152,14 +165,20 @@ class ResearchRunner:
     def _measure(self, batch, disc, held) -> dict:
         from .vocab import GAUGES, expressions, part_requires, Part
         reqs = {"ohlcv"}
-        for g in GAUGES:
+        gauges=GAUGES
+        exprs=expressions(batch.tf)
+        if self.predictive_experiment is not None:
+            keys=self.predictive_experiment['predictor']
+            gauges=[g for g in GAUGES if any(key.startswith(g.key+'<') or key.startswith(g.key+'>') for key in keys)]
+            exprs=list(dict.fromkeys(e for g in gauges for e in (g.long,g.short)))
+        for g in gauges:
             reqs.update(part_requires(
                 Part(g.key, "gauge", g.key, f"{g.long} > 0",
                      f"{g.short} > 0")))
         payload = {"tf": batch.tf, "symbols": disc, "heldout_symbols": held,
                    "requires": sorted(reqs), "cfg": self.cfg,
                    "paths": self._paths(),
-                   "exprs": expressions(batch.tf)}
+                   "exprs": exprs}
         bid = self.ledger.start_batch(batch.tf, "", "measure", 0)
         t0 = time.monotonic()
         res = self.run(job.measure_job, payload,
@@ -258,6 +277,9 @@ class ResearchRunner:
                 "recorded": recorded, "deferred": deferred}
 
     def _record(self, r: dict, c, batch) -> None:
+        if c is not None and c.evaluation_scope:
+            r = dict(r, predictive_combo=c.as_dict(), source_hypothesis_id=c.trigger,
+                     experiment_id=c.evaluation_scope)
         if batch.round == "control":
             # `research_controls` (tf, window) is the only bookkeeping the
             # planner reads to decide a window has already been calibrated
@@ -340,6 +362,12 @@ class ResearchRunner:
     def _combo(self, row, tf, geo):
         import json as _json
         from .combo import Combination
+        result = self.ledger.result(row['hash']) or {}
+        if result.get('predictive_combo'):
+            c = Combination.from_dict(result['predictive_combo'])
+            if c.hash != row['hash']:
+                return None
+            return c
         by_key = {p.key: p for p in planner._parts(self.ledger, tf)}
         by_key.update({p.key: p for p in planner.seed_parts(self.journal)})
         keys = _json.loads(row["parts"] or "[]")
@@ -514,4 +542,3 @@ class ResearchRunner:
         log.info(f"research referee {h} {tf}/{geo}: {state} — {reason}")
         return {**out, "ok": True, "state": state, "p": g1["p"],
                 "alpha": alpha}
-

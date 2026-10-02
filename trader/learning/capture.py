@@ -607,7 +607,10 @@ def validate_chain(body,sources,blobs):
     if body['registration']['profile']=='RESEARCH' and 'bank' in sources:
         chain=sources['research_run']['chain']
         bank=sources['bank']
-        if bank.get('bank_kind')=='strategy_health_unreadable':
+        if bank.get('bank_kind')=='predictive_experiment':
+            from trader.research.predictive_bridge import replay_feedback
+            rebuilt=replay_feedback(chain,bank)
+        elif bank.get('bank_kind')=='strategy_health_unreadable':
             from trader.cognition import research_unreadable_bank as B
             rebuilt=B.build(chain)
         elif bank.get('bank_kind')=='investigation_volume_anomaly':

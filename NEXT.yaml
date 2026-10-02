@@ -2,38 +2,33 @@ project: LUFFY
 sdd_version: '3.2'
 updated_at: '2026-10-02'
 work_package:
-  id: LUFFY-PREDICTIVE-RESEARCH-BRIDGE-R1
-  type: PREDICTIVE_RESEARCH_BRIDGE
+  id: LUFFY-STAGE5-7-FINAL-INTELLIGENCE-GATE-R3
+  type: FINAL_INTELLIGENCE_GATE
   status: RECOMMENDED_NOT_AUTHORIZED_FOR_IMPLEMENTATION_OR_TRADING
-  objective: Review the completed Stage7 learning architecture and separately authorize
-    the predictive research bridge.
+  objective: "Review corrected Stage5\u20137 authority and the completed predictive\
+    \ research bridge against the final intelligence gate."
   completed_prerequisites:
-  - Corrected Stage5/Stage6 authority retained.
-  - Latest completed Stage7 source lineage integrated onto corrected Stage6.
-  - Real contextual learning owners, normal consumers and registered-only application
-    checkpoint implemented.
+  - Corrected Stage7 lineage b56682e retained.
+  - Predictive research bridge normal consumer and protected quantitative path tested.
+  - Read-only real shadow completed; no predictive support fabricated.
   evidence:
-  - docs/superpowers/reports/2026-10-02-stage7-real-learning-authority-consumer-integration-r1.md
-  - docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/real-shadow.json
-  remaining_stage7_architecture_gaps: []
-  policy_calibration_blocked:
-  - confidence_calibration
-  - strategy_allocation
-  - attention_priority
-  - research_priority
-  - evidence_weights
-  - world_model_learning
+  - docs/superpowers/reports/2026-10-02-predictive-research-bridge-r1.md
+  - docs/superpowers/evidence/predictive-research-bridge-r1/real-shadow.json
+  missing_architecture: []
+  real_evidence_blocked:
+  - No eligible retained investigation Research Bank sources in current real data.
+  - Protected prospective predictive evidence and calibrated edge remain unestablished.
   execution_constraints:
-  - No orders, deployment, activation, Risk limit changes or StrategySpec mutation.
-  - No production adaptive rules or learned values have been calibrated by this package.
+  - No orders, deployment, activation, allocation, Risk or StrategySpec changes.
+  - Preserve existing referee/handoff stops and frozen research artifacts.
   - This recommendation does not authorize the next package.
-  - Preserve existing research stop and all frozen research artifacts.
 preserved_prior_work:
   id: M3.2-SCHEME-D-V4-POST-PILOT
   status: PILOT_COMPLETE_AWAITING_SEPARATE_OWNER_DECISION
   evidence: scripts/m32_scheme_d_pilot_v4_20260923/PILOT_VERDICT.json
   constraints:
-  - Completed bounded pilot remains non-final; full validation, Gate 2, search, referee, handoff and live trading
-    remain unauthorized.
-  - Do not run another pilot, RNG benchmark, full validation or cloud compute without separate explicit owner authorization.
+  - Completed bounded pilot remains non-final; full validation, Gate 2, search, referee,
+    handoff and live trading remain unauthorized.
+  - Do not run another pilot, RNG benchmark, full validation or cloud compute without
+    separate explicit owner authorization.
   - Preserve all frozen v1/v2/v3/v4 bundles and truth artifacts.

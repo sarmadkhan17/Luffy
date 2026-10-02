@@ -62,6 +62,9 @@ def load_heldout(tf: str, part: str, symbols, cut: int, cfg: dict,
     if part not in ("a", "b"):
         raise ValueError(f"held-out part must be 'a' or 'b', got {part!r}")
     paths = paths or {}
+    split = (cfg.get('research') or {}).get('predictive_split')
+    if split and cut != split['cut_ms']:
+        raise ValueError('protected_cut_differs')
     feed = DataFeed(exchange=NoExchange(), db_path=paths.get("candles"))
     frames, first_bars = {}, {}
     for sym in symbols:
@@ -72,6 +75,8 @@ def load_heldout(tf: str, part: str, symbols, cut: int, cfg: dict,
             continue
         if df is None or not len(df):
             continue
+        if split:
+            df = slices.before(slices.after(df, split['start_ms']), split['end_ms'] + 1)
         ms = slices._ms(df).to_numpy()
         at = int(np.searchsorted(ms, int(cut), side="left"))
         if part == "a":
@@ -466,8 +471,9 @@ def examine(c, payload: dict) -> dict:
     from ..strategy.compile import compile_spec
     from ..strategy.spec import StrategySpec
     cfg, paths, tf = payload["cfg"], payload.get("paths"), c.tf
-    cut = current_cut(tf, payload["discovery_symbols"], paths,
-                      int(payload["cut_ms"]))
+    split = (cfg.get('research') or {}).get('predictive_split')
+    cut = (int(split['cut_ms']) if split else current_cut(tf, payload["discovery_symbols"], paths,
+                      int(payload["cut_ms"])))
     out = {"hash": c.hash, "looked": False}
     compiled = compile_spec(c.to_spec())
     risk = cfg.get("risk") or {}

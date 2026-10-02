@@ -422,7 +422,8 @@ def test_registry_readers_are_offline_research_modules_only():
     callers = sorted(str(p.relative_to(root)) for p in root.rglob("*.py")
                      if p.name != "research_sources.py"
                      and pat.search(p.read_text(errors="ignore")))
-    assert callers == ["cognition/research_evidence.py",
+    assert callers == ["cognition/_research_shadow_child.py",  # existing read-only registry pinning
+                       "cognition/research_evidence.py",
                        "cognition/research_plan.py",
                        # offline unreadable-health plan (read-only pin check)
                        "cognition/research_unreadable_plan.py"]
