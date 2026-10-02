@@ -337,6 +337,9 @@ def test_replay_export_reconstructs_inputs_and_evidence_without_dangling_ids(tmp
     restored={**original,'input':{'schema':INPUT_SCHEMA,'timeframe':out['scan']['timeframe'],
               'membership':out['scan']['membership'],'candles':candles,
               'decision_times':[now],'participation':[]}}
+    for key, field in [('positioning', 'positioning_input'), ('correlation_history', 'correlation_input')]:
+        if field in out['scan']:
+            restored['input'][key] = out['scan'][field]
     assert digest(restored['input'])==out['scan']['input_hash']
     replay=evaluate_snapshot(restored)
     assert replay['rows']==out['scan']['rows']

@@ -1,0 +1,55 @@
+........................................................................ [ 24%]
+........................................................................ [ 48%]
+........................................................................ [ 73%]
+...F.................................................................... [ 97%]
+.......                                                                  [100%]
+=================================== FAILURES ===================================
+_____________ test_replay_from_persisted_forms_reproduces_context ______________
+
+evidence = {'scan': {'as_of_ms': 1790928060000, 'capture_ms': 4.227861994877458, 'capture_settings': {'max_age_seconds': 604800, ...in unknown; this measurement is not P&L.', schema_version='investigation.v2'), schema_version='investigation.v2'), ...}
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-247/test_replay_from_persisted_for0')
+
+    def test_replay_from_persisted_forms_reproduces_context(evidence, tmp_path):
+        """Round-trip every input through its persisted form and rebuild."""
+        e = evidence
+        j = Journal(tmp_path / "luffy.db")
+        sel = _sel()
+>       record_selection(j, sel, selection_id=sel.selection_id, recorded_at_ms=sel.cycle_as_of_ms)
+
+tests/test_opportunity_context.py:138: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+journal = <trader.core.journal.Journal object at 0x7311517f6c90>
+selection = Selection(rule_version='registry-attention-selector/1', outcome='selected', cycle_as_of_ms=1800000000000, snapshot_id=...ount_eligibility='UNKNOWN', cursor_before=None, cursor_after='binance_usdm:futures:ETHUSDT', unmatched_scan_symbols=())
+selection_id = 'd0dfb9fe3f99da84770ac4c9d7026769bf7e388c8bd593eaa06814bc97562038'
+recorded_at_ms = 1800000000000
+
+    def record_selection(journal, selection: Selection, *, selection_id: str,
+                         recorded_at_ms: int) -> str:
+        """Commit the selection row and its cursor_after atomically.
+    
+        Returns INSERTED, or DUPLICATE when this exact selection is already
+        recorded (then nothing changes, including the cursor). A different
+        payload under the same ID is refused with the cursor untouched.
+    
+        Compare-and-swap: a new selection commits only if the durable cursor is
+        exactly its cursor_before (None = no cursor row); otherwise CURSOR_CONFLICT
+        and nothing is written. This holds for unselected outcomes too, so a stale
+        selection built from an old None cursor cannot delete an advanced one."""
+        _check_selection(selection)
+        if not _is_ms(recorded_at_ms):
+            raise SelectionPersistenceError(INVALID_SELECTION, "recorded_at_ms")
+        text = selection.canonical_json()
+        if not isinstance(selection_id, str) or selection_id != _digest(text):
+            raise SelectionPersistenceError(SELECTION_ID_MISMATCH,
+                                            "selection_id != sha256(canonical_json)")
+>       status = journal.record_attention_selection(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            _row(selection, selection_id, text), cursor_name=CURSOR_NAME,
+            recorded_at_ms=recorded_at_ms)
+E       AttributeError: 'Journal' object has no attribute 'record_attention_selection'
+
+trader/observability/selection_persistence.py:146: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_opportunity_context.py::test_replay_from_persisted_forms_reproduces_context
+1 failed, 294 passed in 67.57s (0:01:07)

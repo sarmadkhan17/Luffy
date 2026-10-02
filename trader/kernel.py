@@ -932,6 +932,7 @@ class Kernel:
     def cycle(self) -> dict:
         stats = {"scanned": 0, "decisions": 0, "entries": 0,
                  "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
         self.state_machine.refresh()
         balance, status = self._risk_step()
 
@@ -1014,6 +1015,7 @@ class Kernel:
             self.orchestrator.journalize(snap, d, self.market_type.value,
                                          mode="live")
             stats["decisions"] += 1
+            self._portfolio_market[d.id] = snap
 
             if d.action != Action.HOLD:
                 if d.skip_reason:
@@ -1086,8 +1088,23 @@ class Kernel:
         self.journal.log_equity(status["equity"], balance,
                                 len(self.journal.open_trades()),
                                 provenance=self._equity_provenance(status["equity"]))
+        stats['portfolio_runtime'] = self._portfolio_checkpoint()
         return {**stats, "equity": status["equity"],
                 "dd_pct": status["drawdown_pct"]}
+
+    def _portfolio_checkpoint(self):
+        """Proposal-only consumer; never feeds the existing entry/order path."""
+        from .portfolio.current import checkpoint
+        try:
+            result, detail = checkpoint(self.journal.db_path, self.cfg,
+                market_snapshots=getattr(self, '_portfolio_market', {}))
+            return dict(status='PASS', triggered=result['triggered'],
+                        portfolio_cut_id=result['portfolio_cut_id'],
+                        trade_intents=len(result['trade_intents']),
+                        risk_decisions=len(result['risk_decisions']), execution_routed=False)
+        except Exception as exc:
+            log.info('portfolio runtime evidence unavailable: %s', exc)
+            return dict(status='BLOCKED', reason=str(exc), execution_routed=False)
 
     def _publish_news_guard(self, news: dict) -> None:
         """Publish NewsGuard's own record. `published_at` is this publication;

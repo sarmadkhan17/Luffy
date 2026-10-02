@@ -12,6 +12,7 @@ import sqlite3
 import time
 
 from .attention import SCHEMA, code_manifest, digest, evaluate_snapshot
+from . import world_producer
 
 
 IDENTITY_SCHEMA = "attention-scan-identity.v1"
@@ -165,13 +166,21 @@ class Store:
                     self.db.execute("INSERT OR IGNORE INTO scan_versions VALUES (?,?)", (scan_id, vid))
                     refs.append({"version_id": vid, "first_seen_ms": first_seen,
                                  "symbol": candle["symbol"], "open_ms": candle["open_ms"]})
-                payload = evaluate_snapshot(event)
+                payload = (world_producer.evaluate(event)
+                           if event.get('capture_settings', {}).get('world_model') is True
+                           else evaluate_snapshot(event))
                 if ident: payload['collector_identity']=ident
                 payload.update(input_versions=refs, code_manifest=code_manifest(),
                                input_hash=digest(event["input"]),
                                membership=event["input"]["membership"],
                                timeframe=event["input"]["timeframe"],
                                prior_availability="unknown", persisted_at_ms=now_ms)
+                if 'positioning' in event['input']:
+                    payload['positioning_input'] = event['input']['positioning']
+                if 'correlation_history' in event['input']:
+                    payload['correlation_input'] = event['input']['correlation_history']
+                if 'positioning_capture' in event:
+                    payload['positioning_capture'] = event['positioning_capture']
                 self.db.execute("UPDATE scans SET payload=? WHERE scan_id=?",
                                 (encode(payload), scan_id))
             else:

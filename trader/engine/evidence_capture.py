@@ -123,6 +123,8 @@ def margin_observation(body, *, request_url: str | None, request_start_ms,
             rec["reason"] = "ACCOUNT_RESPONSE_TIME_INVALID"
         else:
             rec["equity_value_text"] = _venue_decimal(payload.get(EQUITY_FIELD))
+            # Independent observed field, never inferred from available balance.
+            rec["initial_margin_text"] = _venue_decimal(payload.get("totalInitialMargin"))
             rec["observed_at_ms"] = rec["received_at_ms"]
             if MARGIN_FIELD not in payload:
                 rec["reason"] = NOT_PRESENT
@@ -177,10 +179,12 @@ def position_snapshot(observation, rows) -> dict:
     if _sha(canonical(_observation_payload(obs))) != obs["observation_id"]:
         raise ValueError("observation identity does not verify")
     entry = {}
+    marks = {}
     for row in rows if isinstance(rows, list) else ():
         info = row.get("info") if isinstance(row, dict) else None
         if isinstance(info, dict) and isinstance(info.get("symbol"), str):
             entry[f"{VENUE}:futures:{info['symbol']}"] = _venue_decimal(info.get("entryPrice"))
+            marks[f"{VENUE}:futures:{info['symbol']}"] = _venue_decimal(info.get("markPrice"))
     positions = [{"instrument_id": iid, "symbol": iid.split(":")[-1], "side": side,
                   "quantity": qty, "entry_price_text": entry.get(iid),
                   "entry_price_basis": "venue positionRisk entryPrice (via ccxt info)"
@@ -197,6 +201,8 @@ def position_snapshot(observation, rows) -> dict:
                                 "read_by": "Kernel._detect_exchange_exits (reconciliation)"},
             "basis": "venue position response; not the journal",
             "positions": positions, "observation": obs}
+    for position in positions:
+        position['mark_price_text'] = marks.get(position['instrument_id'])
     return {**body, "snapshot_id": _sha(canonical(body))}
 
 

@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "modules": [
+    "trader/portfolio/runtime.py",
+    "trader/portfolio/current.py",
+    "trader/portfolio/runtime_metrics.py",
+    "trader/engine/risk_intent.py",
+    "scripts/runtime_portfolio_shadow.py"
+  ],
+  "execution_imports": 0,
+  "venue_submission_calls": 0,
+  "control_mutation_calls": 0,
+  "risk_evaluation": "existing RiskManager.check_entry",
+  "base": "1bed3958740ec2d0d575aabc817978086d31d390",
+  "staged_files": []
+}

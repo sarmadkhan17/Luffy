@@ -1,58 +1,39 @@
 project: LUFFY
 sdd_version: '3.2'
 updated_at: '2026-10-02'
-
 work_package:
-  id: LUFFY-STAGE6-RUNTIME-PORTFOLIO-INTEGRATION-R1
-  type: STAGE6_RUNTIME_PORTFOLIO_INTEGRATION
-  status: RECOMMENDED_NOT_AUTHORIZED_FOR_TRADING
-  objective: >
-    Implement the missing authoritative event-driven exact-version opportunity
-    registry and frozen Opportunity Context feeding the detached allocator.
-    Preserve cycle/decision lineage, deterministic setup identity, source hashes,
-    strategy/version/spec binding, required versus optional evidence and
-    authoritative freshness. This is the next actual Stage-6 implementation
-    gap. Integrate the runtime portfolio boundary with universal creation and
-    exact-version Governor lifecycle authority. Do not create another economics
-    formula or micro-package; keep real first-live disabled until separately
-    authorized complete real evidence exists.
+  id: LUFFY-STAGE7-REAL-LEARNING-AUTHORITY-CONSUMER-INTEGRATION-R1
+  type: STAGE7_REAL_LEARNING_AUTHORITY_CONSUMER_INTEGRATION
+  status: RECOMMENDED_NOT_AUTHORIZED_FOR_IMPLEMENTATION_OR_TRADING
+  objective: Review Stage6 normal source integration closure, then separately authorize the real learning authority consumer integration package.
   completed_prerequisites:
-    - LUFFY-STAGE5-UNIVERSAL-STRATEGY-AUTHORITY-R1 is TESTED; dynamic unversioned real-entry bypass closed and exact Governor activation boundary established.
-    - LUFFY-PORTFOLIO-ALLOCATOR-R1 is TESTED as a detached proposal-only layer.
-    - LUFFY-EXPECTED-NET-ECONOMICS-R1 is TESTED_CONTRACT; real economics remain INSUFFICIENT_EVIDENCE.
-    - No calibrated forward gross or economic reserve model exists; production model registries remain empty.
-    - Read-only real inventory observed zero exact versions or economic cost receipts; no candidates were fabricated.
-    - Detached real allocator shadow retained CASH / NO_ALLOCATION with FROZEN control and stale portfolio evidence.
+  - LUFFY-STAGE5-UNIVERSAL-STRATEGY-AUTHORITY-R1 committed base.
+  - LUFFY-STAGE6-RUNTIME-PORTFOLIO-INTEGRATION-R1 corrective implementation retained.
+  - LUFFY-STAGE6-NORMAL-SOURCE-INTEGRATION-R1 tested persisted-source path through deterministic Risk.
   evidence:
-    - docs/superpowers/reports/2026-10-02-stage5-universal-strategy-authority-r1.md
-    - docs/superpowers/evidence/stage5-universal-strategy-authority-r1/
-    - docs/superpowers/reports/2026-10-01-expected-net-economics-r1.md
-    - docs/superpowers/evidence/expected-net-economics-r1/
-    - SDD.md
-    - scripts/portfolio_allocator_shadow.py
-  next_steps:
-    - step: 1
-      action: >
-        Build and test the event-driven opportunity/context contract from real
-        registered sources. Retain UNAVAILABLE when required source evidence,
-        versions, costs, economic calibration or freshness is missing. Do not
-        manufacture opportunities from historical decisions or research support.
-  economic_evidence_requirements:
-    - Exact-version forward conditional outcomes with horizon/regime, sample period, gross units, cost exclusion/baseline and validated calibration.
-    - Calibrated uncertainty reserve with measured coverage/error, economic units and gross/cost evidence binding.
-    - Commission authority, validated execution/slippage, funding/borrow applicability and calibrated forward scope bridge to existing cost receipts.
+  - docs/superpowers/reports/2026-10-02-stage6-normal-source-integration-r1.md
+  - docs/superpowers/evidence/stage6-normal-source-integration-r1/final-focused-tests.txt
+  - docs/superpowers/evidence/stage6-normal-source-integration-r1/final-normal-path-tests.txt
+  - docs/superpowers/evidence/stage6-normal-source-integration-r1/verified-real-shadow/
+  remaining_stage6_architecture_gaps: []
+  validation_limitations:
+  - Pre-existing Journal.record_attention_selection absence fails one unrelated Opportunity Context replay test; retained in evidence.
+  real_readiness_requirements:
+  - Exact real StrategyVersions and coherent current Opportunity Context publications.
+  - Complete authoritative expected gross, cost scope, reserve, established capacity and allocation authority evidence.
+  - Current marked exposure and actual margin fields where required.
+  - Separate calibrated materiality policy before enabling materiality triggers.
   execution_constraints:
-    - Proposals and evidence only; no orders, activation, deployment, restart, Risk change or frontend/M4 changes.
-    - No further economics formula or Stage-6 economics micro-package while calibration evidence is missing.
-    - Do not invent returns, costs, uncertainty haircuts, confidence weights, liquidity or correlation scores.
-    - Account eligibility, leverage and liquidity capacity gaps remain; stale portfolio evidence is refused.
-    - Stage-6 exit criteria and real allocation readiness remain unsatisfied.
-
+  - No orders, Executor routing, activation, deployment, protection/control mutation or Risk limit changes.
+  - No Stage7 implementation authorized by this recommendation.
+  - Do not invent TTLs, models, thresholds, sizing, economics, capacity or allocation authority.
+  - Preserve existing research stop and all frozen research artifacts.
 preserved_prior_work:
   id: M3.2-SCHEME-D-V4-POST-PILOT
   status: PILOT_COMPLETE_AWAITING_SEPARATE_OWNER_DECISION
   evidence: scripts/m32_scheme_d_pilot_v4_20260923/PILOT_VERDICT.json
   constraints:
-    - Completed bounded pilot remains non-final; full validation, Gate 2, search, referee, handoff and live trading remain unauthorized.
-    - Do not run another pilot, RNG benchmark, full validation or cloud compute without separate explicit owner authorization.
-    - Preserve all frozen v1/v2/v3/v4 bundles and truth artifacts.
+  - Completed bounded pilot remains non-final; full validation, Gate 2, search, referee, handoff and live trading
+    remain unauthorized.
+  - Do not run another pilot, RNG benchmark, full validation or cloud compute without separate explicit owner authorization.
+  - Preserve all frozen v1/v2/v3/v4 bundles and truth artifacts.

@@ -466,7 +466,8 @@ class RiskManager:
             return False
 
     # ── equity tracking ────────────────────────────────────────────────
-    def update_equity(self, equity: float, *, authoritative: bool = True) -> dict:
+    def update_equity(self, equity: float, *, authoritative: bool = True,
+                      as_of: datetime | None = None) -> dict:
         """Call once per cycle with marked equity. Returns status flags.
 
         A corrupt baseline is never replaced: the peak is not re-seeded, nothing
@@ -495,7 +496,7 @@ class RiskManager:
                 prior = (self._peak_equity, self._day_start_equity, self._day_key)
             elif not valid:
                 return self._unusable(equity, "equity_unusable")
-            today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            today = (as_of or datetime.now(timezone.utc)).strftime("%Y-%m-%d")
             if today != self._day_key:
                 self._day_key = today
                 self._day_start_equity = equity
@@ -696,7 +697,8 @@ class RiskManager:
     def check_entry(self, state: ControlState, symbol: str, price: float,
                     atr: float, side_risk_frac: float,
                     open_positions: list[Position], equity: float,
-                    closed_trades_count: int, market_type: str) -> SizingResult:
+                    closed_trades_count: int, market_type: str, *,
+                    as_of: datetime | None = None) -> SizingResult:
         """side_risk_frac: stop distance as fraction of price (e.g. 0.02)."""
         if state == ControlState.FROZEN:
             return SizingResult(False, "state=FROZEN: entries blocked", 0, 0, 0, 0)
@@ -708,7 +710,7 @@ class RiskManager:
 
         # A stale journal fallback cannot initialize here: with no baseline
         # there is no equity history, so the only fallback is 0 (refused).
-        st = self.update_equity(equity)
+        st = self.update_equity(equity, as_of=as_of)
         if st["risk_state"] != "ok":
             return SizingResult(False, f"risk_state={st['risk_state']}: entries blocked",
                                 0, 0, 0, 0)
@@ -724,9 +726,9 @@ class RiskManager:
             return SizingResult(False, "already exposed here", 0, 0, 0, 0)
 
         # heat accounting: open risk + this trade's intended risk
-        open_risk = sum(self._position_risk(p, price) for p in open_positions)
-        same_symbol_risk = sum(self._position_risk(p, price) for p in open_positions
-                               if p.symbol == symbol)
+        metrics = self.portfolio_metrics(open_positions, equity)
+        open_risk = metrics['open_risk_usdt']
+        same_symbol_risk = metrics['per_symbol_risk_usdt'].get(symbol, 0.0)
         budget = equity * self.risk_pct
         headroom_heat = equity * self.heat_cap - open_risk
         headroom_sym = equity * self.symbol_cap - same_symbol_risk
@@ -748,7 +750,7 @@ class RiskManager:
         notional = amount * price
 
         # ── margin caps: reduce to fit rather than refuse ────────────────
-        open_margin = sum(p.notional_usdt for p in open_positions) / self.leverage
+        open_margin = metrics['risk_margin_usdt']
         margin_room = min(equity * self.max_pos_margin,
                           equity * self.max_total_margin - open_margin)
         if margin_room <= 0:
@@ -771,6 +773,27 @@ class RiskManager:
                             amount=round(amount, 8),
                             risk_usdt=round(allowed, 2),
                             size_mult=mult)
+
+    def portfolio_metrics(self, positions: list[Position], equity: float) -> dict:
+        """The entry gate's existing book calculations, without state writes.
+
+        Risk's entry-basis margin and stop-risk estimates are labelled as such;
+        they do not claim measured exchange margin or a confirmed protective stop.
+        Caller must establish a complete, reconciled book and positive equity.
+        """
+        if not math.isfinite(equity) or equity <= 0:
+            raise ValueError('RISK_METRICS_EQUITY_UNAVAILABLE')
+        by_symbol = {}
+        for p in positions:
+            by_symbol[p.symbol] = by_symbol.get(p.symbol, 0.0) + self._position_risk(p, p.entry_price)
+        risk = sum(self._position_risk(p, p.entry_price) for p in positions)
+        margin = sum(p.notional_usdt for p in positions) / self.leverage
+        return dict(open_risk_usdt=risk, per_symbol_risk_usdt=by_symbol,
+                    risk_heat_pct=risk / equity * 100,
+                    per_symbol_risk_pct={s: v / equity * 100 for s, v in by_symbol.items()},
+                    risk_margin_usdt=margin, total_margin_pct=margin / equity * 100,
+                    position_margin_pct={p.symbol: p.notional_usdt / self.leverage / equity * 100 for p in positions},
+                    basis='EXISTING_RISK_ENTRY_BASIS_CALCULATIONS')
 
     def _position_risk(self, p: Position, mark: float) -> float:
         """Open risk ≈ distance to stop × amount × leverage."""

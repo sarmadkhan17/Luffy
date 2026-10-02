@@ -1,0 +1,292 @@
+{
+  "base": "1bed3958740ec2d0d575aabc817978086d31d390",
+  "prerequisite_source": "d256bfb",
+  "worktree": "/mnt/luffy-data/luffy/workspaces/stage6-runtime-portfolio-integration-r1",
+  "committed": false,
+  "files": [
+    {
+      "path": "NEXT.yaml",
+      "sha256": "f1dc13bef9f1ef91d0b01cfff836cb8da9e4224e8ee017bcfefc40ed61176b51"
+    },
+    {
+      "path": "STATE.yaml",
+      "sha256": "2777337921e0cce3b4c0bd163f6d4d3420dc3c65493bfa98733ae7a284d1d39e"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-10-02-stage6-runtime-portfolio-integration-r1.md",
+      "sha256": "4f673301906d82474a0410d53592984667d9ae02b8c21e299e47d6517e7ae466"
+    },
+    {
+      "path": "scripts/common_factor_shadow.py",
+      "sha256": "0cf961139b7bdd0d9941c40b5b166d03883921912869405e24b69334b15f8842"
+    },
+    {
+      "path": "scripts/opportunity_context_shadow.py",
+      "sha256": "a68116d24714fc8990e8cfbf4e626d7b1d15368f4f5961f72d9615d51dc8bb52"
+    },
+    {
+      "path": "scripts/portfolio_allocator_shadow.py",
+      "sha256": "bbef243dd8c79c49b8d249c9c4925a6b8238fda4a0c54ad509a94c2b72e552f9"
+    },
+    {
+      "path": "scripts/runtime_portfolio_shadow.py",
+      "sha256": "5c6794f2aa17b385876b77090df8b8287e322efc0f68b079a65d3c7ac98ba1d8"
+    },
+    {
+      "path": "scripts/stage6_shadow.py",
+      "sha256": "f11207678f256eff6035cbbf186b10186cd77c4dc006708dfe6c154c4ae6cc8f"
+    },
+    {
+      "path": "tests/_corr_synth.py",
+      "sha256": "1ec4ce0cba196e18c523430169895203c2ad4edacea2b2608809bd07286c1a55"
+    },
+    {
+      "path": "tests/economics_fixtures.py",
+      "sha256": "2d2224fcde9dde39b2b607b0a1a0feec1b9a490ef2a0b14cb8f8b06b66e24030"
+    },
+    {
+      "path": "tests/paper_cost_evidence_fixture.py",
+      "sha256": "377f8b6b134dce878962833b969482245d760c85aabbbaccaedd5cf6dc23fbfe"
+    },
+    {
+      "path": "tests/test_attention_selection_persistence.py",
+      "sha256": "18e76354b764d654d7e3c21111ffa4e200daa185b66f5c4b630eff55719c9cce"
+    },
+    {
+      "path": "tests/test_attention_telemetry.py",
+      "sha256": "00672efde9d1dd18a09f6f363e9d00ac419d86cda23415ec8bd06464773303ab"
+    },
+    {
+      "path": "tests/test_candidate_bridge.py",
+      "sha256": "37bbea2ad253d743259b42e18b300ff1107dcc3937a36671ea24a8b638213f6b"
+    },
+    {
+      "path": "tests/test_expected_net_economics.py",
+      "sha256": "1e1623b534b6fe7a7f83662a6ff1a60301a850f54e32f404066c06d3ee4e8e97"
+    },
+    {
+      "path": "tests/test_intelligence_spine.py",
+      "sha256": "61d3fadb7781df240db72e4462feeeabc8b1038425c8f7876756745688cec8ec"
+    },
+    {
+      "path": "tests/test_investigation_research_family.py",
+      "sha256": "aa9ba8f600fac1d99733a06bb6a03c811a23efcaf21d84876385b303f53dbf6f"
+    },
+    {
+      "path": "tests/test_investigation_state_feedback.py",
+      "sha256": "a5977ee4a2af6200fa4046f998470c3c4212ced60064422fa74c1fcd2fa0f889"
+    },
+    {
+      "path": "tests/test_opportunity_context.py",
+      "sha256": "d033f0bb54a4fbe58b495485e3977b9b6485fb03e9aa41390222b0a30bc28ea6"
+    },
+    {
+      "path": "tests/test_opportunity_live_integration.py",
+      "sha256": "ad053f484a1833fdbc8538e18d6612a17423a73a77b3c5fd17b753ae74a148ed"
+    },
+    {
+      "path": "tests/test_portfolio_allocator.py",
+      "sha256": "86530befd318a8e6909f9dd87543582954ad1115d70bcf2b4f0e185a4bc649e9"
+    },
+    {
+      "path": "tests/test_portfolio_allocator_shadow.py",
+      "sha256": "40f6777ed138b9d722bd360df6584108bc6d582c589200e9aed39ee1f79c63af"
+    },
+    {
+      "path": "tests/test_portfolio_common_factor.py",
+      "sha256": "3e73711ffa4331344cc37769f1d5aaa2790db082a4cbd6025dfe648be98eb5a1"
+    },
+    {
+      "path": "tests/test_portfolio_common_factor_shadow.py",
+      "sha256": "f77cb5a00cbb6a4ef65102f3628596a07fbf7737f1960d863706a4fdf19c3599"
+    },
+    {
+      "path": "tests/test_runtime_portfolio_integration.py",
+      "sha256": "211e3edd4c81bd3f9f768854f1707683bc5a2a7da83b49d880fed6deb1207aa8"
+    },
+    {
+      "path": "tests/test_stage6_closure.py",
+      "sha256": "234363d9a8be725cb98c4b0465c37b49fa2a70145b40af9f9f9b5b3a51506d04"
+    },
+    {
+      "path": "tests/test_strategy_factory_handoff.py",
+      "sha256": "92948e7973f2b633f5bf89c1fe67261f7d8ad8afd8595a3f14d642f71f1d0980"
+    },
+    {
+      "path": "trader/cognition/attention.py",
+      "sha256": "1b3f7356a158d42567c93b2a48bccf3d6d0f7a007d86a7350c5bea335ce4b2b5"
+    },
+    {
+      "path": "trader/cognition/contracts.py",
+      "sha256": "7661dce4db9f8667740a28425f79a1599070f7659ab1914d6f121952d7d8d4ff"
+    },
+    {
+      "path": "trader/cognition/investigation.py",
+      "sha256": "d40572cefabf1cb78e0bf7a88f5711d6ecc4c142da3476329e98439c759f45c2"
+    },
+    {
+      "path": "trader/cognition/opportunity_context.py",
+      "sha256": "3c8d77258d046d5eff710bd90b69e924f535ae0aad47fa85ded7ea780172db81"
+    },
+    {
+      "path": "trader/cognition/research_families.py",
+      "sha256": "ff832d1e9e7c72968afa05394cea47542af114f19c238f008761d73b6f9f6511"
+    },
+    {
+      "path": "trader/cognition/research_question.py",
+      "sha256": "01d610d8aa43ad9afa32d8223f0fc2de803f0bd26b5e0fccc1a0737d21c63d15"
+    },
+    {
+      "path": "trader/cognition/research_unreadable_question.py",
+      "sha256": "5623482a9ed6b0e7cf6b818a17ae8deac1cc3cd4f79c1390c3fdaad15511941e"
+    },
+    {
+      "path": "trader/engine/evidence_capture.py",
+      "sha256": "617b92d68275c886ba82ec44fce541c83f30288cfcf8880b7c65147a8ec1290f"
+    },
+    {
+      "path": "trader/engine/risk.py",
+      "sha256": "2a2a1105810c9e7ab3f43c42628384a752fc83cbffe13e2f59e878d26ea53c72"
+    },
+    {
+      "path": "trader/engine/risk_intent.py",
+      "sha256": "9c599f5775f12013ee2fc0823e7b1d2988ee62fb460e868f3833ce2b69651dca"
+    },
+    {
+      "path": "trader/kernel.py",
+      "sha256": "3b95eb9f3adce0e84e6e743ba339a58b686c23236d7a3950662254441a408745"
+    },
+    {
+      "path": "trader/observability/_supplemental_child.py",
+      "sha256": "5b76f17425a5ea51e6b499e8f8b18ab38668538bb525338e2d321ad344741eca"
+    },
+    {
+      "path": "trader/observability/attention.py",
+      "sha256": "3ece55568a91b9c1ad10893f889af4962482339e23c6265c9f39ae8b0fc2fd99"
+    },
+    {
+      "path": "trader/observability/intelligence_trace.py",
+      "sha256": "8a48f51f295c21d5f1d2813d370dc5136779cf6cd3eab064c5843d2cd6ade0a3"
+    },
+    {
+      "path": "trader/observability/investigation.py",
+      "sha256": "dce5d3d19c0e34e867df2420e8b93136985b751a5a2b582dedd1c47a5bf3db21"
+    },
+    {
+      "path": "trader/observability/investigation_research.py",
+      "sha256": "19edc6e9c3277e3fff39189ea3ad782ac2eb78ee9a30584c662c9456d2536eeb"
+    },
+    {
+      "path": "trader/observability/positioning.py",
+      "sha256": "69f64014513664b30a2a9391247e2279700c4511f25ac58edf330bc8eb3e19c3"
+    },
+    {
+      "path": "trader/observability/registry_selector.py",
+      "sha256": "17704866cd1551a5fa822037d140202313aba52a814a020686baac3bd5471650"
+    },
+    {
+      "path": "trader/observability/selection_persistence.py",
+      "sha256": "9941d56a51f3b1184ecf8692e834c41937f685a357b1cd89d6428b4735c04d61"
+    },
+    {
+      "path": "trader/observability/store.py",
+      "sha256": "dd18b2be970781703de5e3114ec48c13aa0baa44ff029b6b606630eb00f183ac"
+    },
+    {
+      "path": "trader/observability/supplemental.py",
+      "sha256": "8e81b02db0e397df3c2a73452384575a373c714332359fd34af5c83562735583"
+    },
+    {
+      "path": "trader/observability/world_producer.py",
+      "sha256": "2aa22e96136a30d5eb014943b1b691d1e23c437d6fb10f2cff8887628df73d54"
+    },
+    {
+      "path": "trader/portfolio/__init__.py",
+      "sha256": "4916d03cc3deaf2bd0740a5b483a8f3c94b02155ced60d9d9dc637e58fe5f661"
+    },
+    {
+      "path": "trader/portfolio/allocator.py",
+      "sha256": "9c5efef360ac44ae67088a54e6920f97d3aedada6bac23b2d9b27cfa4bec112f"
+    },
+    {
+      "path": "trader/portfolio/candidate_bridge.py",
+      "sha256": "7efc029838ed64611911dfc41dcfae39717afbbe7490f99d90b959ad57489eb8"
+    },
+    {
+      "path": "trader/portfolio/common_factor.py",
+      "sha256": "c578571ed7f81e1ebd5e254788ab25b3475df4b2396ae58c93548c5a22b955a2"
+    },
+    {
+      "path": "trader/portfolio/current.py",
+      "sha256": "72ddc611a7695ee8c4e998f56aa7395d6f7e0fc43f5d4be2f7a74014863cb340"
+    },
+    {
+      "path": "trader/portfolio/economics.py",
+      "sha256": "3005e58cfbc2401cc6e5435c73962638b028209b1531a934e9e7b5b2ddd93113"
+    },
+    {
+      "path": "trader/portfolio/opportunity_cost.py",
+      "sha256": "b6a1b2b84c98a2ed5d4efb6726a47a8778cb295b80bad8f81525b2df6ebf3687"
+    },
+    {
+      "path": "trader/portfolio/opportunity_live.py",
+      "sha256": "c35e1190d9b11b450fc894e2603e67b45c37181960c602fed99da4ed4ba971e2"
+    },
+    {
+      "path": "trader/portfolio/opportunity_registry.py",
+      "sha256": "94a842044c94b7dbfbcee03aacd62784e41a5149f8b5568c8c2beb2c4e8bbeda"
+    },
+    {
+      "path": "trader/portfolio/reoptimization.py",
+      "sha256": "2793c4fa22046fd677f2f569ca90c0bf9bcdaec7d068f1b613393ee4868b0bec"
+    },
+    {
+      "path": "trader/portfolio/runtime.py",
+      "sha256": "a409588a5232b2c82511380612562391cf957bdf22deba46d9aec8a9773e8478"
+    },
+    {
+      "path": "trader/portfolio/runtime_metrics.py",
+      "sha256": "cd3d3c9252b42b0d26bc7d0beb30ee2d0562a820da1ebf3a4a37b36b1152a004"
+    },
+    {
+      "path": "trader/portfolio/trade_intent.py",
+      "sha256": "b80234ad1d54d590fd861cd7b10e19c068f4375320cfbf83b46e33a23c3829d0"
+    },
+    {
+      "path": "trader/strategy/health_observation.py",
+      "sha256": "20d3ecf449523d4da3d52d61649aefe5652788e59ddc79774430392bf9f8c3c5"
+    },
+    {
+      "path": "trader/world/__init__.py",
+      "sha256": "e204b8f3b0375dc38464339beb97af92d0f8e1cedd2effdaa43ce2c89867e8eb"
+    },
+    {
+      "path": "trader/world/claim.py",
+      "sha256": "38b6187b00ef9996aa7ae377ec6372adb6d0b341e6a5d8ceb88567788e9baf49"
+    },
+    {
+      "path": "trader/world/model.py",
+      "sha256": "252997af43147a64d06d49d831d7a3c28437b73fd311e9e3ff55360703b729eb"
+    },
+    {
+      "path": "trader/world/observation.py",
+      "sha256": "9733fbb6caa0a41c9cdf0c35c57d6d298d8c84013920a26729566680cb08ff4e"
+    },
+    {
+      "path": "trader/world/perception.py",
+      "sha256": "b61d4a7b86b707d6813d238613321117c93b4285da1749d05e742334963f7009"
+    },
+    {
+      "path": "trader/world/relationship.py",
+      "sha256": "4d0a75a6ad864b9319d447e99f19857716bfae5b582bcfeebeaaab9b720e3cec"
+    },
+    {
+      "path": "trader/world/replay.py",
+      "sha256": "57ec8b2649564cfd41d4d5c9896f7a26c7705bf4d0e3c2661b032c85227a4588"
+    },
+    {
+      "path": "trader/world/state.py",
+      "sha256": "c0552f1488f67e0976e715c314e90db53e7d0a09c90933d28c4945c934deda2d"
+    }
+  ]
+}
