@@ -102,6 +102,8 @@ def load() -> dict:
 
 
 def _save(state: dict) -> None:
+    from ..learning.foundation import refuse_legacy_learning
+    refuse_legacy_learning("meta_label_save")
     PATH.parent.mkdir(parents=True, exist_ok=True)
     PATH.write_text(json.dumps(state, indent=2))
 
@@ -142,6 +144,8 @@ def _brier(w: list[float], X: list[list[float]], y: list[float]) -> float:
 def refit(journal) -> dict:
     """Train on all resolved outcomes (directional + shadow leans),
     time-ordered 70/30 split, and refresh the live kill-switch stats."""
+    from ..learning.foundation import refuse_legacy_learning
+    refuse_legacy_learning("meta_label")
     rows = journal.query("""
         SELECT d.id, d.cycle_id, d.ts, d.action, d.score, d.threshold,
                d.signals_json, c.regime, c.adx,

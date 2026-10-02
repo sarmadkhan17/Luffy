@@ -221,7 +221,7 @@ def _world_volume(model, w, sym, timeframe, anchor_close, as_of):
 
 
 def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
-             open_episodes: dict, world_model: WorldModel | None = None) -> dict:
+             open_episodes: dict, world_model: WorldModel | None = None, learning_journal=None, frozen_priorities=None) -> dict:
     if world_model is not None:
         w = _world_module(world_model)
         if world_model.as_of_ms != as_of:
@@ -380,6 +380,26 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
 
     ranked = sorted((s for s in cohort if rows[s]["eligible"]),
                     key=lambda s: (-rows[s]["salience"], s))
+    from trader.learning import targets as learned_targets, consumers as learned_consumers, foundation as learning
+    priorities = dict(frozen_priorities or {})
+    if learning_journal is not None:
+        priorities = {symbol:learned_targets.read(learning_journal, learning.Target.ATTENTION,
+            learned_consumers.attention_context(symbol,str(ds.tf_ms))) for symbol in ranked}
+        priorities = {symbol:state for symbol,state in priorities.items() if state['value'] is not None}
+    if priorities:
+        from dataclasses import asdict
+        preference = {'HIGH':0,'NORMAL':1,'LOW':2}
+        for symbol,state in priorities.items():
+            body = {k:v for k,v in state.items() if k != 'state_hash'}
+            if (learning.digest(body) != state['state_hash']
+                    or state['context'] != asdict(learned_consumers.attention_context(symbol,str(ds.tf_ms)))
+                    or state['target'] != learning.Target.ATTENTION.value):
+                raise ValueError('governed_attention_state_mismatch')
+            learned_targets.typed(learning.Target.ATTENTION,state['value'])
+        ranked = sorted(ranked,key=lambda symbol:preference[
+            priorities[symbol]['value']['priority']] if symbol in priorities else preference['NORMAL'])
+        for symbol in ranked:
+            if symbol in priorities: rows[symbol]['governed_priority_state_hash']=priorities[symbol]['state_hash']
     selected = []
     for rank, sym in enumerate(ranked, 1):
         row = rows[sym]
@@ -402,7 +422,7 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
     return {"anchor_close_ms": anchor_close, "members": members + capped,
             "universe": [rows[s] for s in sorted(rows)], "rows": rows, "market": market,
             "features": feats, "cohort": cohort, "ranked": ranked,
-            "selected": selected, "observations": observations, "index": index}
+            "selected": selected, "observations": observations, "index": index, "governed_attention_state": priorities}
 
 
 def _participation(ds, sym, as_of, cfg, add):

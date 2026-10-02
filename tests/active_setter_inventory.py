@@ -104,7 +104,7 @@ def _call_name(func, aliases: dict[str, tuple[str, str]], imports: dict[str, str
 
 def _arg(call: ast.Call, name: str | None, index: int):
     """The argument bound to parameter `name` / position `index`, if any."""
-    if index < len(call.args) and not any(isinstance(a, ast.Starred)
+    if 0 <= index < len(call.args) and not any(isinstance(a, ast.Starred)
                                           for a in call.args[:index + 1]):
         return call.args[index]
     for k in call.keywords:
@@ -136,7 +136,9 @@ class _Scope:
     def param_entries(self, p: str) -> list[tuple[str | None, int]]:
         """How a caller binds this scope's parameter `p` (name, index)."""
         if p in self.params:
-            return [(p, self.params.index(p) - self.offset)]
+            index = self.params.index(p) - self.offset
+            # The implicit receiver is not a public argument of a method.
+            return [(p, index)] if index >= 0 else []
         if p in self.kwonly:
             return [(p, KWONLY)]
         if p == self.vararg:                                   # *args pass-through

@@ -438,6 +438,8 @@ def allocate(inputs: Inputs) -> Proposal:
                 and c.direction in ('LONG', 'SHORT')):
             directions.setdefault((c.instrument, c.market_type), set()).add(c.direction)
     conflicts = sorted(k for k, v in directions.items() if len(v) > 1)
+    learned_source = next((s for s in inputs.sources if s.source_id == 'governed-allocation-context'), None)
+    learned = json.loads(learned_source.payload_json) if learned_source else {}
     rows, comparable = [], []
     for c in sorted(inputs.candidates, key=lambda c: c.identity):
         held = book.get((c.instrument, c.market_type))
@@ -464,6 +466,12 @@ def allocate(inputs: Inputs) -> Proposal:
         elif not c.as_of_ms <= now <= c.valid_until_ms:
             blocked.append('REQUIRED_EVIDENCE_STALE')
         missing.extend(_economic_reasons(c, inputs))
+        learned_context = learned.get(c.candidate_id)
+        if learned_context and learned_context.get('value') is not None:
+            # A zero bound denies only future new allocation. Nonzero bounds
+            # remain context until units can be compared by a registered policy.
+            if not held and learned_context['value']['max_share'] == 0:
+                blocked.append('GOVERNED_ALLOCATION_BOUND_NO_NEW_RESOURCE')
         if (c.instrument, c.market_type) in conflicts:
             conflict.append('OPPOSING_STRATEGY_DIRECTIONS')
         if interaction == 'CONFLICTS_EXISTING':
@@ -486,6 +494,8 @@ def allocate(inputs: Inputs) -> Proposal:
                    proposed_size=UNAVAILABLE, size_bounds=[asdict(b) for b in c.bounds],
                    unresolved_evidence=missing, accepted=False,
                    relationship_context=asdict(c.relationships))
+        if learned_context and learned_context.get('value') is not None:
+            row['governed_allocation_context'] = learned_context
         rows.append(row)
         if state == Feasibility.COMPARABLE and interaction == 'NEW_POSITION':
             comparable.append((c, row, size))
@@ -552,6 +562,15 @@ def allocate(inputs: Inputs) -> Proposal:
                   risk_final_authority=True, side_effects='NONE')
     pid = digest(dict(allocator_version=VERSION, inputs=frozen, result=result))
     return Proposal(pid, canonical(frozen), canonical(result))
+
+
+def attach_learning(inputs, journal):
+    from trader.learning.consumers import allocation_observations
+    from dataclasses import replace
+    values = {k:v for k,v in allocation_observations(journal, inputs.candidates).items() if v['value'] is not None}
+    if not values: return inputs
+    return replace(inputs, sources=tuple(s for s in inputs.sources if s.source_id != 'governed-allocation-context')
+                   +(Source.freeze('governed-allocation-context', values),))
 
 
 def verify(proposal: Proposal, current_inputs: Inputs) -> bool:

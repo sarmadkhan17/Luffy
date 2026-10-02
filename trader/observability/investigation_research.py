@@ -491,6 +491,10 @@ def run(ledger_path, investigation_id, *, recorded_at_ms: int) -> dict:
             for name, rec, key in (("question", q, iid), ("plan", p, iid), ("evidence", e, uid),
                                    ("result", r, uid), ("run", rn, uid), ("bank", b, uid)):
                 outcomes[name] = _store(db, rec, iid, key, recorded_at_ms)
+            if outcomes['bank']=='inserted':
+                from trader.learning import capture as lc, capture_runtime as lr
+                lc.safely(db, 'research-bank:'+b['bank_object_id'], lr.investigation_research,
+                    dict(question=q,plan=p,evidence=e,result=r,receipt=rn),b,recorded_at_ms)
             db.commit()
         except BaseException as exc:
             db.rollback()
@@ -534,7 +538,13 @@ def research_pass(ledger_path, *, recorded_at_ms: int, max_cases: int) -> dict:
             (SOURCE_FAMILY,)).fetchall()
         done = {k for (k,) in db.execute("SELECT record_key FROM investigation_research_records "
                                          "WHERE record_type=?", (RUN_SCHEMA,))}
-    todo = [iid for iid, latest in rows if latest and latest not in done][:max_cases]
+    todo = [iid for iid, latest in rows if latest and latest not in done]
+    from trader.learning.consumers import retained, research_order
+    from pathlib import Path
+    with retained(Path(ledger_path).parent/'luffy.db') as learned:
+        if learned is not None:
+            todo = research_order(learned, todo)
+    todo = todo[:max_cases]
     out = {"attempted": len(todo), "ok": 0, "refused": {}}
     for iid in todo:
         r = run(ledger_path, iid, recorded_at_ms=recorded_at_ms)

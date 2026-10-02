@@ -202,7 +202,14 @@ def test_no_automatic_activation_caller():
     from pathlib import Path
     for path in Path('trader').rglob('*.py'):
         if path.name=='factory_handoff.py': continue
-        assert 'govern_version(' not in path.read_text(), str(path)
+        if path == Path('trader/learning/application.py'):
+            import ast
+            calls=[n for n in ast.walk(ast.parse(path.read_text())) if isinstance(n,ast.Call)
+                   and isinstance(n.func,ast.Attribute) and n.func.attr=='govern_version']
+            assert len(calls)==1 and isinstance(calls[0].args[3],ast.Attribute)
+            assert calls[0].args[3].attr=='RETIRED'
+        else:
+            assert 'govern_version(' not in path.read_text(), str(path)
 
 
 def test_legacy_authority_cannot_be_minted_by_current_database_writer(tmp_path):

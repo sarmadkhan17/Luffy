@@ -100,21 +100,12 @@ def strategy_weights(journal, strategies: list, regime: str) -> dict:
 
     Never drops a member: this weighs the set, it does not select within it.
     """
-    out: dict = {}
+    import json
+    getter = getattr(journal,'kv_get',lambda *a:'{}')
+    frozen = json.loads(getter('legacy_frozen_strategy_weights', '{}'))
+    out = {}
     for st in strategies or []:
-        sid = getattr(st, "id", None) or (
-            st.get("id") if isinstance(st, dict) else None)
-        if not sid:
-            continue
-        try:
-            trades = journal.trades_for_strategy(sid)
-        except Exception as e:
-            log.debug(f"blend: no trades for {sid}: {e}")
-            trades = []
-        prov = getattr(st, "provenance", None)
-        if prov is None and isinstance(st, dict):
-            prov = st.get("provenance")
-        ev = (prov or {}).get("regime_evidence") if isinstance(prov, dict) else None
-        w = performance_multiplier(trades) * regime_multiplier(ev, regime)
-        out[sid] = round(max(MIN_W, min(MAX_W, w)), 4)
+        sid = getattr(st, 'id', None) or (st.get('id') if isinstance(st, dict) else None)
+        if sid:
+            out[sid] = frozen.get(regime, {}).get(sid, 1.0)
     return out

@@ -166,9 +166,13 @@ class Store:
                     self.db.execute("INSERT OR IGNORE INTO scan_versions VALUES (?,?)", (scan_id, vid))
                     refs.append({"version_id": vid, "first_seen_ms": first_seen,
                                  "symbol": candle["symbol"], "open_ms": candle["open_ms"]})
-                payload = (world_producer.evaluate(event)
-                           if event.get('capture_settings', {}).get('world_model') is True
-                           else evaluate_snapshot(event))
+                from trader.learning.consumers import retained
+                from pathlib import Path
+                store_path = self.db.execute('PRAGMA database_list').fetchone()[2]
+                with retained(Path(store_path).parent/'luffy.db') as learned:
+                    payload = (world_producer.evaluate(event, learning_journal=learned)
+                               if event.get('capture_settings', {}).get('world_model') is True
+                               else evaluate_snapshot(event, learning_journal=learned))
                 if ident: payload['collector_identity']=ident
                 payload.update(input_versions=refs, code_manifest=code_manifest(),
                                input_hash=digest(event["input"]),

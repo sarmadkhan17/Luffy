@@ -96,12 +96,13 @@ def net_score(votes: list, sigs: list, base_weights: dict,
 
     Disagreement still counts fully. Only abstention is excused.
     """
+    from ..learning.consumers import vote_confidence, evidence_factor
     num = den = 0.0
     for v in votes:
         if abs(v.conviction) <= ABSTAIN_BELOW:
             continue
         w = base_weights.get(v.agent, 0.10) * v.meta.get("acc_mult", 1.0)
-        num += (v.conviction * abs(v.conviction) * v.confidence
+        num += (v.conviction * abs(v.conviction) * vote_confidence(v) * evidence_factor(v)
                 * v.meta.get("regime_fit", 1.0)) * w
         den += w
     # the SET speaks, weighted — never reduced to a single winner
@@ -298,30 +299,9 @@ class Orchestrator:
 
     # ── accuracy → weight multiplier (bounded 0.7..1.3, evidence-scaled) ──
     def _accuracy_multipliers(self, ttl: float = 1800.0) -> dict[str, float]:
-        now = time.time()
-        with self._lock:
-            ts, cache = self._acc_cache
-            if now - ts < ttl:
-                return cache
-        try:
-            rows = self.journal.agent_accuracy(since_hours=336)
-            fresh = {}
-            for r in rows:
-                n, acc = int(r["n"] or 0), r["accuracy"]
-                if n >= 5 and acc is not None:
-                    # deviation from 1.0 scaled by how much we trust the
-                    # estimate: n=5 → ±29% weight, n=60 → ±75%, n→∞ → full.
-                    # Small clusters can no longer pin an agent to the floor
-                    # (the old 2·acc clamp crushed everyone to 0.6 on the
-                    # first 54-outcome cluster and never recovered).
-                    conf = n / (n + 20.0)
-                    mult = 1.0 + (2.0 * float(acc) - 1.0) * conf
-                    fresh[r["agent"]] = round(max(0.7, min(1.3, mult)), 2)
-        except Exception:
-            fresh = {}
-        with self._lock:
-            self._acc_cache = (now, fresh)
-        return fresh
+        import json
+        raw = self.journal.kv_get('legacy_frozen_accuracy_multipliers', '{}')
+        return json.loads(raw)
 
     # ── adaptive base threshold (per-regime hit rates × vol scale) ──────
     def _adaptive_base(self, regime: str, vol_ratio: float = 1.0) -> float:
@@ -330,31 +310,9 @@ class Orchestrator:
         they lost it tightens. Falls back to the static base until
         min_outcomes labels exist for the regime. Scaled modestly by
         relative volatility expansion."""
-        if not self._adapt_cfg.get("enabled", True):
-            return self.base_threshold
-        now = time.time()
-        if now - self._hit_cache[0] > 1800:
-            try:
-                rows = self.journal.query(
-                    "SELECT c.regime r, AVG(o.correct_4h) hr, COUNT(*) n "
-                    "FROM outcomes o JOIN cycles c ON c.id=o.cycle_id "
-                    "WHERE o.resolved_at IS NOT NULL "
-                    "AND o.correct_4h IS NOT NULL "
-                    "AND o.ts >= datetime('now','-30 days') "
-                    "GROUP BY c.regime")
-                self._hit_cache = (now, {x["r"]: (x["hr"], x["n"])
-                                         for x in rows})
-            except Exception:
-                self._hit_cache = (now, {})
-        hr, n = self._hit_cache[1].get(regime, (None, 0))
-        if hr is None or n < int(self._adapt_cfg.get("min_outcomes", 30)):
-            base = self.base_threshold
-        else:
-            base = self.base_threshold * (0.5 / max(float(hr), 0.35))
-        base = max(0.16, min(0.34, base))
-        vscale = max(0.9, min(1.15,
-                              1.0 + (float(vol_ratio or 1.0) - 1.0) * 0.15))
-        return round(base * vscale, 4)
+        import json
+        frozen = json.loads(self.journal.kv_get('legacy_frozen_adaptive_base', '{}'))
+        return frozen.get(regime, self.base_threshold)
 
     # ── weighing the active strategy set ───────────────────────────────
     def _strategy_weights(self, population: list[tuple],
@@ -418,14 +376,12 @@ class Orchestrator:
             v.meta["acc_mult"] = round(acc_mults.get(name, 1.0), 2)
             v.meta["htf"] = round(htf, 3)
             v.meta["news_blackout"] = bool(news.get("active"))
-            raw_c = v.conviction
-            new_c, did = calibration.apply(
-                cal_state, v.agent, v.conviction, v.confidence,
-                int(self.calib_cfg.get("min_samples", 60)))
-            if did:
-                v.conviction = new_c
-                v.meta["raw_conviction"] = round(raw_c, 3)
-                v.meta["calibrated"] = True
+            v.meta['legacy_calibration_authority'] = 'HISTORICAL_INPUT_ONLY'
+            from ..learning.consumers import aggregate_vote, evidence_context
+            if v.meta.get('horizon') and snap.regime not in ('UNKNOWN','unknown'):
+                aggregate_vote(self.journal, v, evidence_context(snap.symbol,
+                    str(v.meta['horizon']), snap.regime, v.agent,
+                    v.side.value, 'analyst', v.agent))
             votes.append(v)
 
         sigs: list[StrategySignal] = []

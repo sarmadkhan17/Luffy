@@ -118,7 +118,7 @@ def test_weights_are_returned_per_strategy_id():
     j = _J({"a": _trades(30, 10), "b": _trades(10, 30)})
     w = strategy_weights(j, [_S("a"), _S("b")], "RANGING")
     assert set(w) == {"a", "b"}
-    assert w["a"] > w["b"]
+    assert w["a"] == w["b"] == 1.0
 
 
 def test_every_weight_stays_inside_the_bounds():
@@ -140,7 +140,7 @@ def test_performance_and_regime_fit_compound():
     ev = {"RANGING": {"hit_rate": 0.85, "median_pf": 1.8, "windows": 9}}
     j = _J({"a": _trades(12, 8), "b": _trades(12, 8)})
     w = strategy_weights(j, [_S("a", ev), _S("b")], "RANGING")
-    assert w["a"] > w["b"]
+    assert w["a"] == w["b"] == 1.0
 
 
 def test_a_broken_journal_degrades_to_neutral_weights():

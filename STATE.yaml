@@ -332,3 +332,73 @@ normal_source_integration:
   - docs/superpowers/evidence/stage6-normal-source-integration-r1/final-focused-tests.txt
   - docs/superpowers/evidence/stage6-normal-source-integration-r1/final-normal-path-tests.txt
   - docs/superpowers/evidence/stage6-normal-source-integration-r1/verified-real-shadow/
+
+real_learning_authority_consumer_integration:
+  package: LUFFY-STAGE7-REAL-LEARNING-AUTHORITY-CONSUMER-INTEGRATION-R1
+  state: TESTED
+  result: PASS
+  base: 640a5f20a8f78bf9ac68f1ac26d5c6c0de6977c3
+  integrated_stage7_lineage: 9d2a1b8
+  remaining_stage7_architecture_gaps: []
+  production_rule_status:
+    confidence_calibration: POLICY_UNAVAILABLE
+    strategy_allocation: POLICY_UNAVAILABLE
+    attention_priority: POLICY_UNAVAILABLE
+    research_priority: POLICY_UNAVAILABLE
+    evidence_weights: POLICY_UNAVAILABLE
+    world_model_learning: POLICY_UNAVAILABLE
+    strategy_lifecycle: existing-recent-decay.v1
+  legacy_adaptation:
+    strategy_weights: LEGACY_EXPLICIT_ISOLATED
+    adaptive_base: LEGACY_EXPLICIT_ISOLATED
+    accuracy_multipliers: LEGACY_EXPLICIT_ISOLATED
+  proven_facts:
+  - Six exact contextual owners have typed bounded state, version/hash reads, registered-rule
+    CAS and immutable application receipts.
+  - Normal Attention, research planning, evidence aggregation, Portfolio context and
+    explicit WorldModel learned-state readers consume governed state.
+  - Normal prospective recent-decay producer and automatic bounded checkpoint reach
+    StrategyGovernor retirement in isolated deterministic tests.
+  - Normal Portfolio decision capture delivers exact used replay objects; absent sources
+    remain UNAVAILABLE.
+  - No calibrated adaptive production rule or artificial learned value was introduced.
+  validation:
+    status: PASS
+    selected_checks_verified: 662
+    combined_run:
+      passed: 661
+      failed: 1
+      seconds: 511.88
+      failure: historical static caller inventory omitted existing corrected Stage6
+        readers
+    corrected_test_rerun:
+      passed: 1
+      failed: 0
+      seconds: 1.34
+    new_integration_scenarios: 17
+    file_descriptor_limit_for_test_process: 8192
+    risk_config_spec_unchanged: true
+    graphify: AST_ONLY_UPDATE_COMPLETE
+    diff_check: PASS
+  real_shadow:
+    mode: READ_ONLY_SHADOW
+    status: PASS
+    proposals: 0
+    replay_complete: 0
+    registered_rule_eligible: 0
+    would_apply: 0
+    policy_unavailable: 0
+    stale_conflict: 0
+    limitation: NO_REPLAY_COMPLETE_EVIDENCE; no backfill
+  trading_behavior_changed: false
+  real_order_submissions: 0
+  production_mutations: 0
+  committed: false
+  deployed: false
+  evidence:
+  - docs/superpowers/reports/2026-10-02-stage7-real-learning-authority-consumer-integration-r1.md
+  - docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/validation.json
+  - docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/real-shadow.json
+  - docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/boundary-audit.json
+  - docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/lineage-integration.json
+  - docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/files-changed.txt

@@ -744,7 +744,13 @@ ALLOWED_WRAPPERS = {
 #: _set_state path were removed by owner-interface-gateway-v1; owner controls
 #: now reach the kernel only through trader/owner (OwnerService).
 KNOWN_OUT_OF_SCOPE_SITES: set = set()
-KNOWN_OUT_OF_SCOPE_WRAPPERS: set = set()
+# The receiver-agnostic scanner sees LearningApplication.apply as the
+# FencedControl.apply homonym. These pass a Journal, never a control state;
+# actual ACTIVE sites remain forbidden and fully inventoried.
+KNOWN_OUT_OF_SCOPE_WRAPPERS: set = {
+    ('trader/learning/foundation.py','apply_to_isolated_journal'),
+    ('trader/learning/runtime.py','checkpoint'),
+}
 
 
 def assert_inventory(overrides=None):

@@ -166,7 +166,7 @@ def produce(event) -> tuple[WorldModel | None, dict]:
     return model, receipt(OK, None, as_of, record, _counts(model))
 
 
-def evaluate(event, *, model=None):
+def evaluate(event, *, model=None, learning_journal=None):
     """Attention payload through the existing WorldModel seam, plus receipt.
 
     `model` is injectable for tests (e.g. a stale cut); by default it is
@@ -178,18 +178,18 @@ def evaluate(event, *, model=None):
         rec = receipt(OK, None, event["as_of_ms"], WorldModelRecord.from_model(model),
                       _counts(model))
     if model is None:
-        return dict(evaluate_snapshot(event), world_model=rec)
+        return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=rec)
     if model.as_of_ms != event["as_of_ms"]:
         stale = receipt(REFUSED, "world_model_cut_mismatch", event["as_of_ms"])
         stale.update(model_id=model.model_id, refused_as_of_ms=model.as_of_ms)
-        return dict(evaluate_snapshot(event), world_model=stale)
+        return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=stale)
     try:
-        return dict(evaluate_snapshot(event, model), world_model=rec)
+        return dict(evaluate_snapshot(event, model, learning_journal), world_model=rec)
     except Exception as exc:        # never lose the scan to the shadow input
         failed = receipt(REFUSED, "attention_world_evaluation_failed:" + type(exc).__name__,
                          event["as_of_ms"])
         failed.update(model_id=model.model_id)
-        return dict(evaluate_snapshot(event), world_model=failed)
+        return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=failed)
 
 
 class ReplayRefused(ValueError):

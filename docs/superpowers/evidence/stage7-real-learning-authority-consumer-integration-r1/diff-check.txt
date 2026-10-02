@@ -1,0 +1,3 @@
+git diff --check: PASS
+STATE.yaml / NEXT.yaml: valid YAML
+NEXT preserved_prior_work: identical to corrected base

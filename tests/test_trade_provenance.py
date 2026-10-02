@@ -582,6 +582,7 @@ def test_kernel_population_identity_matches_the_evaluator_that_signalled(tmp_pat
     assert reference == {"price": 101.0, "basis": "decision_snapshot_price",
                          "definition": reference["definition"],
                          "snapshot_at": "2026-09-30T00:00:00+00:00",
+                         "observed_at": "2026-09-30T00:00:00+00:00",
                          "bar_ts": "2026-09-29T23:45:00"}
     # the registry changes and the population reloads: the old signal no longer verifies
     mutated = _valid()

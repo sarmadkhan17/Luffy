@@ -1,0 +1,103 @@
+........................................................................ [ 14%]
+........................................................................ [ 28%]
+........................................................................ [ 43%]
+..............................FFF....................................... [ 57%]
+........................................................................ [ 72%]
+........................................................................ [ 86%]
+....................................................................     [100%]
+=================================== FAILURES ===================================
+__________ test_filing_leaves_every_other_table_unchanged[verdicts0] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-164/test_filing_leaves_every_other0')
+verdicts = ['still_working', 'compile_failed', 'decayed']
+
+    @pytest.mark.parametrize("verdicts", [[W, CF, D], [W, EF, D], [CF, EF, D]])
+    def test_filing_leaves_every_other_table_unchanged(tmp_path, verdicts):
+        j = _decay_journal(tmp_path, verdicts)
+        rb.record_from_journal(j, now_ms=3)
+        ru.run(j, "k", 7)
+        assert j.research_bank_objects()
+        regs = j.query("SELECT * FROM research_registrations ORDER BY rowid")
+        assert regs
+        before = _tables(j, skip=(TABLE, "research_registrations"))
+        decay_bank = rb.load(j)
+        res = ub.record_from_journal(j, now_ms=9)
+        assert len(res["inserted"]) == verdicts.count(CF) + verdicts.count(EF)
+        ub.load(j)
+        ub.record_from_journal(j, now_ms=10)
+>       assert _tables(j, skip=(TABLE, "research_registrations")) == before
+E       assert {'attention_c...', ...}], ...} == {'attention_c...', ...}], ...}
+E
+E         Omitting 33 identical items, use -vv to show
+E         Differing items:
+E         {'learning_outcome_captures': [{'outcome_key': 'research-bank:b6e1a8774748cfec513e098614d3ca2c288abb4ccb7ff7b4fc111e23...tion_id":"e4f2efc4ee974cd7557f4c770da7feb3409453e927697580863110fc6cfbd81a","schema":"learning-replay-manifest.v1"}'}]} != {'learning_outcome_captures': [{'outcome_key': 'research-bank:b6e1a8774748cfec513e098614d3ca2c288abb4ccb7ff7b4fc111e23...tion_id":"3f048ff8570a160488c59a042e236831d3226cb1ded89a3e208ed43fad707bfa","schema":"learning-replay-manifest.v1"}'}]}
+E         {'learning_source_blobs': [{'sha...
+E
+E         ...Full output truncated (3 lines hidden), use '-vv' to show
+
+tests/test_strategy_health_unreadable_bank.py:691: AssertionError
+__________ test_filing_leaves_every_other_table_unchanged[verdicts1] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-164/test_filing_leaves_every_other1')
+verdicts = ['still_working', 'evaluation_failed', 'decayed']
+
+    @pytest.mark.parametrize("verdicts", [[W, CF, D], [W, EF, D], [CF, EF, D]])
+    def test_filing_leaves_every_other_table_unchanged(tmp_path, verdicts):
+        j = _decay_journal(tmp_path, verdicts)
+        rb.record_from_journal(j, now_ms=3)
+        ru.run(j, "k", 7)
+        assert j.research_bank_objects()
+        regs = j.query("SELECT * FROM research_registrations ORDER BY rowid")
+        assert regs
+        before = _tables(j, skip=(TABLE, "research_registrations"))
+        decay_bank = rb.load(j)
+        res = ub.record_from_journal(j, now_ms=9)
+        assert len(res["inserted"]) == verdicts.count(CF) + verdicts.count(EF)
+        ub.load(j)
+        ub.record_from_journal(j, now_ms=10)
+>       assert _tables(j, skip=(TABLE, "research_registrations")) == before
+E       assert {'attention_c...', ...}], ...} == {'attention_c...', ...}], ...}
+E
+E         Omitting 33 identical items, use -vv to show
+E         Differing items:
+E         {'learning_outcome_captures': [{'outcome_key': 'research-bank:7e1fa77e435561e1298fa2d947b855484e28711fa46c9631f1004a0d...tion_id":"6fc014e9280d9c71712ddba0ce26b48ccdd8b5d7659a3ce0e7e0320db744ac64","schema":"learning-replay-manifest.v1"}'}]} != {'learning_outcome_captures': [{'outcome_key': 'research-bank:7e1fa77e435561e1298fa2d947b855484e28711fa46c9631f1004a0d...tion_id":"d933c6ea69fba7d5cc6bed8a461bbb59677ce8d770698807a5d08675b8b41a71","schema":"learning-replay-manifest.v1"}'}]}
+E         {'learning_source_blobs': [{'sha...
+E
+E         ...Full output truncated (3 lines hidden), use '-vv' to show
+
+tests/test_strategy_health_unreadable_bank.py:691: AssertionError
+__________ test_filing_leaves_every_other_table_unchanged[verdicts2] ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-164/test_filing_leaves_every_other2')
+verdicts = ['compile_failed', 'evaluation_failed', 'decayed']
+
+    @pytest.mark.parametrize("verdicts", [[W, CF, D], [W, EF, D], [CF, EF, D]])
+    def test_filing_leaves_every_other_table_unchanged(tmp_path, verdicts):
+        j = _decay_journal(tmp_path, verdicts)
+        rb.record_from_journal(j, now_ms=3)
+        ru.run(j, "k", 7)
+        assert j.research_bank_objects()
+        regs = j.query("SELECT * FROM research_registrations ORDER BY rowid")
+        assert regs
+        before = _tables(j, skip=(TABLE, "research_registrations"))
+        decay_bank = rb.load(j)
+        res = ub.record_from_journal(j, now_ms=9)
+        assert len(res["inserted"]) == verdicts.count(CF) + verdicts.count(EF)
+        ub.load(j)
+        ub.record_from_journal(j, now_ms=10)
+>       assert _tables(j, skip=(TABLE, "research_registrations")) == before
+E       assert {'attention_c...', ...}], ...} == {'attention_c...', ...}], ...}
+E
+E         Omitting 33 identical items, use -vv to show
+E         Differing items:
+E         {'learning_outcome_captures': [{'outcome_key': 'research-bank:4357f6a5a8397a116f2351ec6d6158fe556739108c69011b74720143...tion_id":"41b5a74f8171732af76c7f9fc50e59b8b973a30aea3d24042a5d0d9ff2af158c","schema":"learning-replay-manifest.v1"}'}]} != {'learning_outcome_captures': [{'outcome_key': 'research-bank:4357f6a5a8397a116f2351ec6d6158fe556739108c69011b74720143...tion_id":"e12852a2c8647ff89c99e4df2d95e7d22c10e764b1788bd4646a4063ded466e5","schema":"learning-replay-manifest.v1"}'}]}
+E         {'learning_source_blobs': [{'sha...
+E
+E         ...Full output truncated (3 lines hidden), use '-vv' to show
+
+tests/test_strategy_health_unreadable_bank.py:691: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_strategy_health_unreadable_bank.py::test_filing_leaves_every_other_table_unchanged[verdicts0]
+FAILED tests/test_strategy_health_unreadable_bank.py::test_filing_leaves_every_other_table_unchanged[verdicts1]
+FAILED tests/test_strategy_health_unreadable_bank.py::test_filing_leaves_every_other_table_unchanged[verdicts2]
+3 failed, 497 passed in 91.69s (0:01:31)

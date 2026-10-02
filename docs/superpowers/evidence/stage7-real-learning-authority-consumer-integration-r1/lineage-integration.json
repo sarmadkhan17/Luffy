@@ -1,0 +1,19 @@
+{
+  "base": "640a5f20a8f78bf9ac68f1ac26d5c6c0de6977c3",
+  "latest_completed_stage7": "9d2a1b8",
+  "source_delta_base": "d256bfb",
+  "stage7_chain": [
+    "9d31fbd",
+    "d400394",
+    "1c77fdb",
+    "503d93c",
+    "481b832",
+    "9d2a1b8"
+  ],
+  "integration": "filewise_three_way_merge_and_selective_missing_prerequisites",
+  "state_next": "corrected_base_preserved_package_edits_only",
+  "duplicate_implementation": false,
+  "corrected_authority": "preserved",
+  "worktree": "/mnt/luffy-data/luffy/workspaces/stage7-real-learning-authority-consumer-integration-r1",
+  "no_commit": true
+}

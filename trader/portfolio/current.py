@@ -119,6 +119,11 @@ def freeze(journal, attention, investigation, config, available_inputs=None, mar
     inputs = Inputs(detail['as_of_ms'],tuple(candidates),portfolio,Evidence(Status.UNKNOWN,()),
         Evidence(Status.ESTABLISHED,(policy.source_id,)),control,tuple(unique.values()))
     inputs,context = common_factor.attach(inputs,venue,policy,tuple(lineages),measurement_sources=(metric,))
+    from trader.learning.consumers import retained
+    from .allocator import attach_learning
+    with retained(journal) as learned:
+        if learned is not None:
+            inputs = attach_learning(inputs, learned)
     detail.update(context_count=len(contexts),candidate_count=len(candidates),
         holdings_count=len(snap['positions']),portfolio_snapshot_id=snap['snapshot_id'],
         common_factor=json.loads(context.result_json), economics='UNAVAILABLE' if not candidates else 'SEE_EXACT_RECEIPTS')
@@ -137,4 +142,13 @@ def checkpoint(journal, config, ledger=None, available_inputs=None, market_snaps
     ledger=Path(ledger) if ledger else source.parent/'runtime-portfolio.db'
     if ledger.resolve()==source.resolve():
         raise ValueError('PROPOSAL_LEDGER_MUST_BE_SEPARATE')
-    return Consumer(ledger).consume(inputs),detail
+    result = Consumer(ledger).consume(inputs)
+    # Deliver the exact proposal's inputs at the consuming boundary.
+    import sqlite3
+    from trader.learning import capture as C, capture_runtime as R
+    with sqlite3.connect(source,timeout=2) as db:
+        db.row_factory=sqlite3.Row
+        C.ensure(db)
+        detail['learning_source_delivery'] = C.safely(db,'portfolio:'+result['portfolio_cut_id'],
+            R.deliver_allocation,config,inputs,result,market_snapshots)
+    return result,detail

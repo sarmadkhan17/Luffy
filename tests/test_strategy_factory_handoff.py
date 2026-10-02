@@ -863,8 +863,16 @@ def test_eligibility_requires_the_version_still_installed(tmp_path, cfg):
                         p["probation_receipt_id"])
     assert not F.eligible_for_first_live(j, b["version_id"], cfg=cfg,
                                          available_inputs=INPUTS).eligible
-    with j._tx() as c:
-        c.execute("DELETE FROM strategies")
+    with pytest.raises(__import__('sqlite3').IntegrityError,match='STRATEGY_GOVERNOR_REQUIRED'):
+        with j._tx() as c:
+            c.execute("DELETE FROM strategies")
+    # Isolated privileged corruption fixture, to verify missing-install refusal.
+    j._local.governor_write=True
+    try:
+        with j._tx() as c:
+            c.execute("DELETE FROM strategies")
+    finally:
+        j._local.governor_write=False
     e = F.eligible_for_first_live(j, a["version_id"], cfg=cfg,
                                   available_inputs=INPUTS)
     assert _r(e) == ("installed_version_missing",)
@@ -931,15 +939,18 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
     code = src.split('"""', 2)[2]
     writes = set(re.findall(r"\b(?:INSERT\s+(?:OR\s+\w+\s+)?INTO|UPDATE|"
                             r"DELETE\s+FROM)\s+(\w+)", code, re.I))
-    assert writes - {"ON"} <= set(F._TABLES), writes
+    assert writes - {"ON","OF","strategies"} <= set(F._TABLES), writes
     assert set(re.findall(r'_insert\(c, "(\w+)"', code)) <= set(F._TABLES)
     for bad in ("upsert_spec", "state_kv", "control_events", "set_control",
                 "create_order", "executor", "orchestrator", "notifier"):
         assert bad not in code, bad
     # the executor reads only the paper/live fence predicate
     for f in pathlib.Path("trader").rglob("*.py"):
-        if f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py"):
+        if f not in (pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
             assert "factory_handoff" not in f.read_text(), f
+    # Corrected Stage6 uses only the exact immutable version reader for capacity.
+    current_src = pathlib.Path("trader/portfolio/current.py").read_text()
+    assert set(re.findall(r"\bfactory_handoff\.(\w+)", current_src)) == {"load_version"}
     ex_src = pathlib.Path("trader/engine/executor.py").read_text()
     assert set(re.findall(r"\bfh\.(\w+)", ex_src)) == {"live_entry_block"}
     # the Kernel reaches the factory from the research handoff, which
@@ -955,12 +966,17 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
                          ast.walk(fn) if g is not fn
                          and isinstance(g, ast.FunctionDef))}
     assert users == {"_research_handoff", "_install_version",
-                     "_load_spec_population", "_try_enter", "_manage_one", "_mechanism_once"}, users
+                     "_load_spec_population", "_try_enter", "_manage_one", "_mechanism_once",
+                     "_install_spec", "_manage_paper"}, users
     for name in ("_load_spec_population", "_try_enter"):
         fn = next(f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef)
                   and f.name == name)
         assert set(re.findall(r"\bfh\.(\w+)", ast.unparse(fn))) <= {
             "versioned", "live_entry_block", "load_version", "verify_validation", "verify_install"}, name
+    for name, allowed in (("_install_spec", {"versioned"}),
+                          ("_manage_paper", {"state_of", "evaluate_probation", "SHADOW"})):
+        fn = next(f for f in ast.walk(tree) if isinstance(f, ast.FunctionDef) and f.name == name)
+        assert set(re.findall(r"\bfh\.(\w+)", ast.unparse(fn))) <= allowed
     cfg = load_config()
     assert cfg["research"]["referee"] is False
     assert cfg["research"]["handoff"] is False

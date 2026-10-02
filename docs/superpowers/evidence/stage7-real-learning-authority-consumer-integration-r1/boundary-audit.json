@@ -1,0 +1,25 @@
+{
+  "base": "640a5f20a8f78bf9ac68f1ac26d5c6c0de6977c3",
+  "files": {
+    "trader/engine/risk.py": {
+      "base_sha256": "2a2a1105810c9e7ab3f43c42628384a752fc83cbffe13e2f59e878d26ea53c72",
+      "current_sha256": "2a2a1105810c9e7ab3f43c42628384a752fc83cbffe13e2f59e878d26ea53c72",
+      "unchanged": true
+    },
+    "trader/strategy/spec.py": {
+      "base_sha256": "5ffaaec6e232132e7788a3a829bf9cf88ac19cf9f77b5379d0339ddcdea385e7",
+      "current_sha256": "5ffaaec6e232132e7788a3a829bf9cf88ac19cf9f77b5379d0339ddcdea385e7",
+      "unchanged": true
+    },
+    "config.yaml": {
+      "base_sha256": "a09571c59bbacee42e7541b439dee1f596444351305b7136bc617b6d95ac1a82",
+      "current_sha256": "a09571c59bbacee42e7541b439dee1f596444351305b7136bc617b6d95ac1a82",
+      "unchanged": true
+    }
+  },
+  "status": "PASS",
+  "production_mutations": 0,
+  "real_order_submissions": 0,
+  "committed": false,
+  "deployed": false
+}

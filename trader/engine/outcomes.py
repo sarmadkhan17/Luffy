@@ -65,6 +65,7 @@ def resolve_pending(journal: Journal, feed, now_ms: int | None = None) -> int:
         df = df[df["ts"] >= pd_to_dt(since_ms)]
 
         upd: dict = {}
+        capture_targets = {}
         for label, mins in HORIZONS.items():
             if elapsed_min < mins:                    # window not elapsed yet
                 continue
@@ -75,6 +76,8 @@ def resolve_pending(journal: Journal, feed, now_ms: int | None = None) -> int:
             if target.empty:
                 upd[col], upd[ok_col] = None, None
                 continue
+            capture_targets[label] = {k:(v.isoformat() if hasattr(v,'isoformat') else v.item() if hasattr(v,'item') else v)
+                                     for k,v in target.iloc[0].to_dict().items()}
             px = float(target.iloc[0]["close"])
             ret = (px - entry) / entry * direction
             upd[col] = round(ret, 6)
@@ -96,6 +99,10 @@ def resolve_pending(journal: Journal, feed, now_ms: int | None = None) -> int:
                  upd.get("fwd_ret_4h"), upd.get("correct_4h"),
                  upd.get("fwd_ret_24h"), upd.get("correct_24h"),
                  resolved_at, o["decision_id"]))
+            from ..learning import capture as lc, capture_runtime as lr
+            from ..cognition.outcomes import timestamp
+            measured_ms = timestamp(iso_now(now_ms))
+            lc.safely(c, 'decision:'+o['decision_id'], lr.forward, o, upd, capture_targets, measured_ms)
         resolved += 1
     if resolved:
         log.info(f"outcomes updated: {resolved}")

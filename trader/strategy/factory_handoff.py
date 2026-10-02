@@ -17,6 +17,7 @@ Historical exceptions require explicit immutable grandfather authority.
 from __future__ import annotations
 
 import copy
+from contextlib import nullcontext
 import hashlib
 import json
 import math
@@ -1361,7 +1362,8 @@ def governor_events(journal, version_id):
 
 def govern_version(journal, cfg, version_id, to_state, *, actor, reason_code,
                    at_ms, allocation=None, available_inputs=None,
-                   capacity_receipt_id=None, risk_manager=None, risk_release=None):
+                   capacity_receipt_id=None, risk_manager=None, risk_release=None,
+                   _connection=None, expected_target=None):
     """The sole lifecycle authority; no caller automatically activates.
 
     Activation/resume holds control and Risk authority through the exact
@@ -1370,6 +1372,16 @@ def govern_version(journal, cfg, version_id, to_state, *, actor, reason_code,
     from ..engine.control_fence import control_fence
     from ..engine.risk import RiskManager, RiskRelease, policy_from_config
     from ..core.types import ControlState
+    if _connection is not None:
+        # Learning can only retire, atomically within its receipt transaction.
+        if (to_state != RETIRED or actor != 'strategy_governor'
+                or not _connection.in_transaction
+                or getattr(journal, 'connection', None) is not _connection):
+            _refuse('learning_governor_retirement_transaction_required')
+        if expected_target is None or lifecycle_target(journal, version_id) != expected_target:
+            _refuse('governor_state_changed')
+        return _govern_version_locked(journal, cfg, version_id, to_state,
+            actor=actor, reason_code=reason_code, at_ms=at_ms, conn=_connection)
     ensure(journal)
     load_version(journal, version_id)
     activating = to_state in ('ACTIVE', 'REACTIVATED')
@@ -1450,13 +1462,25 @@ def _govern_version_locked(journal, cfg, version_id, to_state, *, actor, reason_
     text = canonical(body)
     if state_of(journal, version_id) != cur or len(governor_events(journal, version_id)) != len(history):
         _refuse('governor_state_changed')
-    journal._local.governor_write = True
+    local = getattr(journal, '_local', None)
+    if local is not None:
+        local.governor_write = True
     try:
         conn.execute('INSERT INTO strategy_governor_events(version_id,to_state,canonical_json,canonical_sha256) VALUES(?,?,?,?)',
                      (version_id,to_state,text,_sha(text)))
-        if to_state == RETIRED:
+        if to_state == RETIRED and journal.query("SELECT 1 FROM sqlite_master WHERE name='strategies'"):
             conn.execute("UPDATE strategies SET state='retired', retire_reason=?, state_changed_at=? WHERE id=?",
                          (reason_code, datetime.fromtimestamp(at_ms/1000, timezone.utc).isoformat(), v['strategy_id']))
     finally:
-        journal._local.governor_write = False
+        if local is not None:
+            local.governor_write = False
     return dict(status='inserted', version_id=version_id, event=body)
+
+
+def lifecycle_target(journal, version_id):
+    """Exact state plus history token; detects changes even after an ABA resume."""
+    version = load_version(journal, version_id)
+    return dict(version_id=version_id, spec_hash=version['spec_hash'],
+                state=state_of(journal, version_id),
+                history_sha256=_jsha(dict(factory=events(journal, version_id),
+                                         governor=governor_events(journal, version_id))))

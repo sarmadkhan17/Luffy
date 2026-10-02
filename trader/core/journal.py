@@ -9,6 +9,7 @@ SQLite + WAL; one writer (the OS process), many readers (dashboard, brain).
 from __future__ import annotations
 
 import json
+import hashlib
 import sqlite3
 import threading
 from contextlib import contextmanager
@@ -16,6 +17,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from .types import Decision, Snapshot, now_utc
+from . import reason_codes as _rc
 
 SCHEMA = """
 PRAGMA journal_mode=WAL;
@@ -184,6 +186,354 @@ CREATE TABLE IF NOT EXISTS strategies (
     created_at TEXT,
     stats_json TEXT DEFAULT '{}'
 );
+-- Attention supplemental selection: one row per pure-selector Selection,
+-- written in the same transaction as the rotating cursor it implies. The
+-- canonical JSON is authoritative; the other columns are its projection.
+CREATE TABLE IF NOT EXISTS attention_selections (
+    selection_id TEXT PRIMARY KEY,   -- sha256(canonical_json)
+    rule_version TEXT NOT NULL,
+    cycle_as_of_ms INTEGER NOT NULL,
+    outcome TEXT NOT NULL,
+    snapshot_id TEXT NOT NULL,
+    snapshot_as_of_ms INTEGER NOT NULL,
+    registry_age_ms INTEGER NOT NULL,
+    max_snapshot_age_ms INTEGER NOT NULL,
+    selected_id TEXT,
+    selected_symbol TEXT,
+    cursor_before TEXT,
+    cursor_after TEXT,
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL
+);
+
+-- durable rotating cursors; an absent row is "no cursor"
+CREATE TABLE IF NOT EXISTS attention_cursor (
+    name TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+-- what a later supplemental fetch did; never touches attention_cursor
+CREATE TABLE IF NOT EXISTS attention_fetch_outcomes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    selection_id TEXT NOT NULL REFERENCES attention_selections(selection_id),
+    status TEXT NOT NULL,
+    reason TEXT NOT NULL,
+    started_ms INTEGER,
+    ended_ms INTEGER,
+    recorded_at_ms INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS attention_fetch_outcomes_sel ON attention_fetch_outcomes(selection_id,id);
+
+-- research-question.v1 (cognition/research_question.py): one row per
+-- registered question. The canonical JSON is authoritative; the other
+-- columns are its projection. Append-only: never updated or deleted here.
+CREATE TABLE IF NOT EXISTS research_questions (
+    question_id TEXT PRIMARY KEY,    -- sha256 of the question identity
+    schema TEXT NOT NULL,
+    question_kind TEXT NOT NULL,
+    trigger TEXT NOT NULL,
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    source_kind TEXT NOT NULL,
+    source_event_id INTEGER NOT NULL,
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL,
+    UNIQUE(question_kind, source_kind, source_event_id)
+);
+
+-- research-plan.v1 (cognition/research_plan.py): one evidence-routing plan
+-- per verified research question. The canonical JSON is authoritative; the
+-- other columns are its projection. Append-only: never updated or deleted.
+CREATE TABLE IF NOT EXISTS research_plans (
+    plan_id TEXT PRIMARY KEY,        -- sha256 of the plan identity
+    schema TEXT NOT NULL,
+    plan_kind TEXT NOT NULL,
+    planner_id TEXT NOT NULL,
+    question_id TEXT NOT NULL,
+    question_sha256 TEXT NOT NULL,   -- sha256 of the question canonical JSON
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL,
+    UNIQUE(schema, plan_kind, question_id)
+);
+
+-- research-evidence.v1 (cognition/research_evidence.py): frozen evidence
+-- collected for one verified research plan. The canonical JSON is
+-- authoritative; the other columns are its projection. Append-only: never
+-- updated or deleted.
+CREATE TABLE IF NOT EXISTS research_evidence (
+    evidence_id TEXT PRIMARY KEY,    -- sha256 of the evidence identity
+    schema TEXT NOT NULL,
+    evidence_kind TEXT NOT NULL,
+    collector_id TEXT NOT NULL,
+    plan_id TEXT NOT NULL,
+    plan_sha256 TEXT NOT NULL,       -- sha256 of the plan canonical JSON
+    question_id TEXT NOT NULL,
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL,
+    UNIQUE(schema, evidence_kind, plan_id)
+);
+
+-- research-result.v1 (cognition/research_result.py): the structural result
+-- closing one verified research-evidence record. The canonical JSON is
+-- authoritative; the other columns are its projection. Append-only: never
+-- updated or deleted.
+CREATE TABLE IF NOT EXISTS research_results (
+    result_id TEXT PRIMARY KEY,      -- sha256 of the result identity
+    schema TEXT NOT NULL,
+    result_kind TEXT NOT NULL,
+    resolver_id TEXT NOT NULL,
+    evidence_id TEXT NOT NULL UNIQUE,
+    evidence_sha256 TEXT NOT NULL,   -- sha256 of the evidence canonical JSON
+    plan_id TEXT NOT NULL,
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    status TEXT NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL
+);
+
+-- research-run.v1 (cognition/research_run.py): one audit receipt per
+-- explicit offline run of the strategy-decay chain. The canonical JSON is
+-- authoritative; telemetry_json (digest telemetry_sha256) is MEASURED
+-- telemetry kept outside the receipt hash and duplicate comparison. Append-only: never updated or
+-- deleted.
+CREATE TABLE IF NOT EXISTS research_runs (
+    run_id TEXT PRIMARY KEY,         -- sha256 of the explicit run inputs
+    schema TEXT NOT NULL,
+    run_kind TEXT NOT NULL,
+    runner_id TEXT NOT NULL,
+    run_key TEXT NOT NULL,
+    run_recorded_at_ms INTEGER NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    telemetry_sha256 TEXT NOT NULL,  -- sha256 of telemetry_json
+    telemetry_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL
+);
+
+-- research-bank-object.v1 (cognition/research_bank.py): one immutable
+-- Research Bank object per verified result a completed research run
+-- reached. The canonical JSON is authoritative; the other columns are its
+-- projection. Append-only: never updated or deleted.
+CREATE TABLE IF NOT EXISTS research_bank_objects (
+    bank_object_id TEXT PRIMARY KEY, -- sha256 of the bank object identity
+    schema TEXT NOT NULL,
+    bank_kind TEXT NOT NULL,
+    builder_id TEXT NOT NULL,
+    run_id TEXT NOT NULL,
+    result_id TEXT NOT NULL,
+    evidence_id TEXT NOT NULL,
+    plan_id TEXT NOT NULL,
+    question_id TEXT NOT NULL,
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL,
+    UNIQUE(run_id, result_id)
+);
+
+-- research-next-question.v1 (cognition/research_next_question.py): one
+-- immutable context_only record per structural gap of a verified
+-- Research Bank object's result hypothesis entry. The canonical JSON is
+-- authoritative; the other columns are its projection. Append-only: never
+-- updated or deleted.
+CREATE TABLE IF NOT EXISTS research_next_questions (
+    next_question_id TEXT PRIMARY KEY, -- sha256 of the record identity
+    schema TEXT NOT NULL,
+    question_kind TEXT NOT NULL,
+    generator_id TEXT NOT NULL,
+    bank_object_id TEXT NOT NULL,
+    result_id TEXT NOT NULL,
+    hypothesis TEXT NOT NULL,
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    canonical_sha256 TEXT NOT NULL,    -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL,
+    UNIQUE(bank_object_id, hypothesis)
+);
+
+-- strategy-health-unreadable-question.v1
+-- (cognition/research_unreadable_question.py): one context_only question
+-- per unreadable strategy-health observation. Deliberately separate from
+-- research_questions so the strategy-decay question/plan chain never reads
+-- it. A first insert writes a research-registration.v1 receipt (record_type
+-- = this schema) in the same transaction; rows filed before receipts
+-- existed have none and are never backfilled. The canonical JSON is
+-- authoritative; the other columns are its projection. Append-only: never
+-- updated or deleted.
+CREATE TABLE IF NOT EXISTS research_unreadable_questions (
+    question_id TEXT PRIMARY KEY,    -- sha256 of the question identity
+    schema TEXT NOT NULL,
+    question_kind TEXT NOT NULL,
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    source_kind TEXT NOT NULL,
+    source_event_id INTEGER NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL,
+    UNIQUE(source_kind, source_event_id)
+);
+
+-- strategy-health-unreadable-plan.v1
+-- (cognition/research_unreadable_plan.py): one context_only evidence-routing
+-- plan per verified research_unreadable_questions row. Deliberately separate
+-- from research_plans so the strategy-decay plan/evidence chain never reads
+-- it; no registration receipt. The canonical JSON is authoritative; the
+-- other columns are its projection. Append-only: never updated or deleted.
+CREATE TABLE IF NOT EXISTS research_unreadable_plans (
+    plan_id TEXT PRIMARY KEY,        -- sha256 of the plan identity
+    schema TEXT NOT NULL,
+    plan_kind TEXT NOT NULL,
+    planner_id TEXT NOT NULL,
+    question_id TEXT NOT NULL,
+    question_sha256 TEXT NOT NULL,   -- sha256 of the question canonical JSON
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    source_event_id INTEGER NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL,
+    UNIQUE(schema, plan_kind, question_id)
+);
+
+-- strategy-health-unreadable-evidence.v1
+-- (cognition/research_unreadable_evidence.py): one context_only frozen
+-- evidence record per verified research_unreadable_plans row. Deliberately
+-- separate from research_evidence so the strategy-decay evidence/result/run
+-- chain never reads it; no registration receipt. The canonical JSON is
+-- authoritative; the other columns are its projection. Append-only: never
+-- updated or deleted.
+CREATE TABLE IF NOT EXISTS research_unreadable_evidence (
+    evidence_id TEXT PRIMARY KEY,    -- sha256 of the evidence identity
+    schema TEXT NOT NULL,
+    evidence_kind TEXT NOT NULL,
+    collector_id TEXT NOT NULL,
+    plan_id TEXT NOT NULL,
+    plan_sha256 TEXT NOT NULL,       -- sha256 of the plan canonical JSON
+    question_id TEXT NOT NULL,
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    source_event_id INTEGER NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL,
+    UNIQUE(schema, evidence_kind, plan_id)
+);
+
+-- strategy-health-unreadable-result.v1
+-- (cognition/research_unreadable_result.py): one context_only structural
+-- result per verified research_unreadable_evidence row, always INCONCLUSIVE
+-- / NOT_ASSESSED. Deliberately separate from research_results so the
+-- strategy-decay result/run/bank chain never reads it; no registration
+-- receipt. The canonical JSON is authoritative; the other columns are its
+-- projection. Append-only: never updated or deleted.
+CREATE TABLE IF NOT EXISTS research_unreadable_results (
+    result_id TEXT PRIMARY KEY,      -- sha256 of the result identity
+    schema TEXT NOT NULL,
+    result_kind TEXT NOT NULL,
+    resolver_id TEXT NOT NULL,
+    evidence_id TEXT NOT NULL,
+    evidence_sha256 TEXT NOT NULL,   -- sha256 of the evidence canonical JSON
+    plan_id TEXT NOT NULL,
+    question_id TEXT NOT NULL,
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    status TEXT NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL,
+    UNIQUE(schema, result_kind, evidence_id)
+);
+
+-- strategy-health-unreadable-run.v1 (cognition/research_unreadable_run.py):
+-- one audit receipt per explicit offline run of the unreadable
+-- strategy-health chain. Deliberately separate from research_runs so the
+-- strategy-decay runner, bank, recall and cost ledger never read it. The
+-- canonical JSON is authoritative; telemetry_json (digest telemetry_sha256)
+-- is MEASURED telemetry kept outside the receipt hash and duplicate
+-- comparison. Append-only: never updated or deleted.
+CREATE TABLE IF NOT EXISTS research_unreadable_runs (
+    run_id TEXT PRIMARY KEY,         -- sha256 of the explicit run inputs
+    schema TEXT NOT NULL,
+    run_kind TEXT NOT NULL,
+    runner_id TEXT NOT NULL,
+    run_key TEXT NOT NULL,
+    run_recorded_at_ms INTEGER NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    telemetry_sha256 TEXT NOT NULL,  -- sha256 of telemetry_json
+    telemetry_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL
+);
+
+-- strategy-health-unreadable-bank-object.v1
+-- (cognition/research_unreadable_bank.py): one immutable context_only
+-- Research Bank object per verified result a completed unreadable run
+-- reached. Deliberately separate from research_bank_objects so the
+-- strategy-decay bank, view, recall and next questions never read it. A
+-- first insert writes a research-registration.v1 receipt (record_type =
+-- this schema) in the same transaction; rows filed before receipts existed
+-- have none and are never backfilled. The canonical JSON is authoritative;
+-- the other columns are its projection. Append-only: never updated or
+-- deleted.
+CREATE TABLE IF NOT EXISTS research_unreadable_bank_objects (
+    bank_object_id TEXT PRIMARY KEY, -- sha256 of the bank object identity
+    schema TEXT NOT NULL,
+    bank_kind TEXT NOT NULL,
+    builder_id TEXT NOT NULL,
+    run_id TEXT NOT NULL,
+    result_id TEXT NOT NULL,
+    evidence_id TEXT NOT NULL,
+    plan_id TEXT NOT NULL,
+    question_id TEXT NOT NULL,
+    scope_kind TEXT NOT NULL,
+    scope_id TEXT NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of canonical_json
+    canonical_json TEXT NOT NULL,
+    recorded_at_ms INTEGER NOT NULL,
+    UNIQUE(run_id, result_id)
+);
+
+-- research-registration.v1: the first-registration receipt of one
+-- research-question.v1 / research-bank-object.v1 /
+-- strategy-health-unreadable-question.v1 /
+-- strategy-health-unreadable-bank-object.v1 row, written in the same
+-- transaction as that row's first insert. envelope_json is the canonical
+-- {schema, record_type, record_id, canonical_sha256, recorded_at_ms}; the
+-- other columns are its projection. Immutable: never updated or deleted.
+CREATE TABLE IF NOT EXISTS research_registrations (
+    record_type TEXT NOT NULL,       -- the record's schema
+    record_id TEXT NOT NULL,
+    canonical_sha256 TEXT NOT NULL,  -- sha256 of the record canonical JSON
+    recorded_at_ms INTEGER NOT NULL, -- first registration
+    envelope_sha256 TEXT NOT NULL UNIQUE,  -- sha256 of envelope_json
+    envelope_json TEXT NOT NULL,
+    PRIMARY KEY (record_type, record_id)
+);
+CREATE TRIGGER IF NOT EXISTS research_registrations_no_update
+BEFORE UPDATE ON research_registrations
+BEGIN SELECT RAISE(ABORT, 'research_registrations is immutable'); END;
+CREATE TRIGGER IF NOT EXISTS research_registrations_no_delete
+BEFORE DELETE ON research_registrations
+BEGIN SELECT RAISE(ABORT, 'research_registrations is immutable'); END;
+-- INSERT OR REPLACE deletes the conflicting row without firing the DELETE
+-- trigger (recursive_triggers is off): refuse any insert that collides with
+-- an existing receipt on either unique key
+CREATE TRIGGER IF NOT EXISTS research_registrations_no_replace
+BEFORE INSERT ON research_registrations
+WHEN EXISTS (SELECT 1 FROM research_registrations
+             WHERE (record_type=NEW.record_type AND record_id=NEW.record_id)
+                OR envelope_sha256=NEW.envelope_sha256)
+BEGIN SELECT RAISE(ABORT, 'research_registrations is immutable'); END;
 """
 
 
@@ -209,6 +559,8 @@ class Journal:
         with self._conn() as c:
             c.executescript(SCHEMA)
             for stmt in (
+                "ALTER TABLE decisions ADD COLUMN reason_codes TEXT DEFAULT NULL",
+                "ALTER TABLE decisions ADD COLUMN reason_codes_version TEXT DEFAULT NULL",
                 "ALTER TABLE decisions ADD COLUMN scan_id TEXT DEFAULT NULL",
                 "ALTER TABLE decisions ADD COLUMN signals_json TEXT DEFAULT '[]'",
                 "ALTER TABLE trades ADD COLUMN tp1_done INTEGER DEFAULT 0",
@@ -267,6 +619,8 @@ class Journal:
         if conn is None:
             conn = sqlite3.connect(str(self.db_path), timeout=30)
             conn.row_factory = sqlite3.Row
+            conn.create_function("learning_target_write", 0,
+                                 lambda: int(getattr(self._local, "learning_target_write", False)))
             conn.create_function("strategy_governor_write", 0,
                                  lambda: int(getattr(self._local, "governor_write", False)))
             conn.execute("PRAGMA foreign_keys=ON")
@@ -304,7 +658,7 @@ class Journal:
                 "INSERT INTO votes(cycle_id,ts,symbol,agent,side,conviction,"
                 "confidence,rationale,meta) VALUES (?,?,?,?,?,?,?,?,?)", rows)
 
-    def log_decision(self, d: Decision) -> None:
+    def log_decision(self, d: Decision, *, capture_inputs=None) -> None:
         strat_ids = ",".join(s.get("strategy_id", "")
                              for s in d.strategy_signals or [])
         signals = json.dumps(d.strategy_signals or [])
@@ -313,19 +667,33 @@ class Journal:
                 "INSERT OR REPLACE INTO decisions "
                 "(id,cycle_id,ts,symbol,action,score,threshold,confidence,"
                 "executed,skip_reason,size_usdt,entry_price,strategy_ids,"
-                "signals_json,meta_p,scan_id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "signals_json,meta_p,scan_id,reason_codes,reason_codes_version) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (d.id, d.cycle_id, d.ts, d.symbol, d.action.value, d.score,
                  d.threshold, d.confidence, int(d.executed), d.skip_reason,
                  d.size_usdt, None, strat_ids, signals,
-                 d.meta_p if d.meta_p else None, getattr(d, "scan_id", None)))
+                 d.meta_p if d.meta_p else None, getattr(d, "scan_id", None),
+                 *self._reason_codes_cols(getattr(d, "reason_codes", None))))
+
+            from ..learning import capture as lc, capture_runtime as lr
+            captured_row = dict(c.execute('SELECT * FROM decisions WHERE id=?', (d.id,)).fetchone())
+            cycle = c.execute('SELECT * FROM cycles WHERE id=?', (d.cycle_id,)).fetchone()
+            lc.safely(c, 'decision:'+d.id, lr.decision, captured_row, dict(cycle) if cycle else None,
+                      capture_inputs or getattr(d, 'learning_inputs', None))
 
     def update_decision_outcome(self, decision_id: str, executed: bool,
                                 size_usdt: float = 0.0,
-                                skip_reason: str = "") -> None:
+                                skip_reason: str = "", reason_codes: list | None = None) -> None:
         with self._tx() as c:
             c.execute("UPDATE decisions SET executed=?, size_usdt=?, "
-                      "skip_reason=? WHERE id=?",
-                      (int(executed), size_usdt, skip_reason, decision_id))
+                      "skip_reason=?, reason_codes=?, reason_codes_version=? WHERE id=?",
+                      (int(executed), size_usdt, skip_reason, *self._reason_codes_cols(reason_codes), decision_id))
+
+            from ..learning import capture as lc, capture_runtime as lr
+            row = c.execute('SELECT * FROM decisions WHERE id=?', (decision_id,)).fetchone()
+            if row is not None:
+                from ..cognition.outcomes import timestamp
+                lc.safely(c, 'decision:'+decision_id, lr.action, dict(row), timestamp(now_utc().isoformat()))
+
 
     def set_decision_entry_price(self, decision_id: str, price: float) -> None:
         with self._tx() as c:
@@ -456,9 +824,15 @@ class Journal:
 
     def log_brain_event(self, kind: str, subject: str, detail: Any) -> None:
         with self._tx() as c:
-            c.execute("INSERT INTO brain_events(ts,kind,subject,detail) VALUES (?,?,?,?)",
+            cursor = c.execute("INSERT INTO brain_events(ts,kind,subject,detail) VALUES (?,?,?,?)",
                       (now_utc().isoformat(), kind, subject,
                        detail if isinstance(detail, str) else json.dumps(detail)))
+            if kind in ('execution_incident', 'data_quality_incident', 'execution_error', 'data_error', 'stale_data',
+                        'malformed_evidence', 'required_input_unavailable', 'source_failure'):
+                from ..learning import capture as lc, capture_runtime as lr
+                from ..cognition.outcomes import timestamp
+                lc.safely(c, 'incident:'+str(cursor.lastrowid), lr.incident, cursor.lastrowid,
+                          timestamp(now_utc().isoformat()), subject, detail, incident_kind=kind)
 
     # -- control state ----------------------------------------------------
     def kv_get(self, key: str, default: str | None = None) -> str | None:
@@ -490,6 +864,801 @@ class Journal:
                 "(decision_id,cycle_id,symbol,ts,action,entry_price) "
                 "VALUES (?,?,?,?,?,?)",
                 (decision_id, cycle_id, symbol, ts, action, entry_price))
+
+            from ..learning import capture as lc
+            from ..cognition.outcomes import timestamp
+            declared=dict(decision_id=decision_id,cycle_id=cycle_id,symbol=symbol,ts=ts,action=action,entry_price=entry_price)
+            lc.safely(c,'decision:'+decision_id,lc.record_action,'decision:'+decision_id,dict(prediction=declared),timestamp(now_utc().isoformat()))
+
+    # -- Attention selection: primitives only; the Selection adapter is
+    # observability/selection_persistence.py --------------------------------
+    _SELECTION_COLUMNS = ("selection_id", "rule_version", "cycle_as_of_ms", "outcome",
+                          "snapshot_id", "snapshot_as_of_ms", "registry_age_ms",
+                          "max_snapshot_age_ms", "selected_id", "selected_symbol",
+                          "cursor_before", "cursor_after", "canonical_json")
+
+    def record_attention_selection(self, row: dict, *, cursor_name: str,
+                                   recorded_at_ms: int) -> str:
+        """Insert one selection row and set cursor `cursor_name` to its
+        cursor_after in ONE transaction; a None cursor_after deletes the row.
+
+        "inserted" on a write. "duplicate" when an identical row (ignoring
+        recorded_at_ms) exists: nothing is written, so a late replay cannot
+        rewind the cursor. "conflict" when the ID exists with other content:
+        nothing is written. "cursor_conflict" when a new row's cursor_before
+        is not exactly the durable cursor (None = no cursor row), e.g. another
+        writer advanced it first: nothing is written. The cursor is read under
+        BEGIN IMMEDIATE so no other connection can move it before the write."""
+        values = tuple(row[k] for k in self._SELECTION_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {','.join(self._SELECTION_COLUMNS)} FROM attention_selections "
+                "WHERE selection_id=?", (row["selection_id"],)).fetchone()
+            if old is not None:
+                return "duplicate" if tuple(old) == values else "conflict"
+            cur = c.execute("SELECT value FROM attention_cursor WHERE name=?",
+                            (cursor_name,)).fetchone()
+            if (cur[0] if cur else None) != row["cursor_before"]:
+                return "cursor_conflict"
+            c.execute(
+                f"INSERT INTO attention_selections({','.join(self._SELECTION_COLUMNS)},"
+                f"recorded_at_ms) VALUES ({','.join('?' * (len(values) + 1))})",
+                values + (recorded_at_ms,))
+            if row["cursor_after"] is None:
+                c.execute("DELETE FROM attention_cursor WHERE name=?", (cursor_name,))
+            else:
+                c.execute("INSERT OR REPLACE INTO attention_cursor(name,value) VALUES (?,?)",
+                          (cursor_name, row["cursor_after"]))
+        return "inserted"
+
+    def attention_cursor(self, name: str) -> str | None:
+        """The raw stored cursor, None when no row exists. Unvalidated."""
+        row = self._conn().execute(
+            "SELECT value FROM attention_cursor WHERE name=?", (name,)).fetchone()
+        return row["value"] if row else None
+
+    def attention_selection(self, selection_id: str) -> dict | None:
+        row = self._conn().execute(
+            "SELECT * FROM attention_selections WHERE selection_id=?",
+            (selection_id,)).fetchone()
+        return dict(row) if row else None
+
+    def record_attention_fetch_outcome(self, selection_id: str, status: str, reason: str,
+                                       started_ms: int | None, ended_ms: int | None,
+                                       recorded_at_ms: int) -> int:
+        """Its own transaction; never touches attention_cursor. The selection
+        must already exist (foreign key)."""
+        with self._tx() as c:
+            cur = c.execute(
+                "INSERT INTO attention_fetch_outcomes(selection_id,status,reason,"
+                "started_ms,ended_ms,recorded_at_ms) VALUES (?,?,?,?,?,?)",
+                (selection_id, status, reason, started_ms, ended_ms, recorded_at_ms))
+            return int(cur.lastrowid)
+
+    def attention_fetch_outcomes(self, selection_id: str) -> list[dict]:
+        return self.query("SELECT * FROM attention_fetch_outcomes WHERE selection_id=? "
+                          "ORDER BY id", (selection_id,))
+
+    # -- research registrations: first-registration receipts ------------
+    REGISTRATION_SCHEMA = "research-registration.v1"
+
+    @classmethod
+    def registration_envelope(cls, record_type: str, record_id: str,
+                              canonical_sha256: str,
+                              recorded_at_ms: int) -> str:
+        """The canonical research-registration.v1 envelope JSON."""
+        return json.dumps({"schema": cls.REGISTRATION_SCHEMA,
+                           "record_type": record_type, "record_id": record_id,
+                           "canonical_sha256": canonical_sha256,
+                           "recorded_at_ms": recorded_at_ms},
+                          sort_keys=True, separators=(",", ":"),
+                          allow_nan=False)
+
+    def _register(self, c, record_type: str, record_id: str,
+                  canonical_json: str, recorded_at_ms: int) -> bool:
+        """Write the first-registration receipt inside the caller's insert
+        transaction. An existing receipt is never replaced: True keeps it
+        when it binds the same content, False (conflict, nothing written)
+        when it binds other content."""
+        sha = hashlib.sha256(canonical_json.encode()).hexdigest()
+        old = c.execute("SELECT canonical_sha256 FROM research_registrations "
+                        "WHERE record_type=? AND record_id=?",
+                        (record_type, record_id)).fetchone()
+        if old is not None:
+            return old[0] == sha
+        env = self.registration_envelope(record_type, record_id, sha,
+                                         recorded_at_ms)
+        c.execute("INSERT INTO research_registrations(record_type,record_id,"
+                  "canonical_sha256,recorded_at_ms,envelope_sha256,"
+                  "envelope_json) VALUES (?,?,?,?,?,?)",
+                  (record_type, record_id, sha, recorded_at_ms,
+                   hashlib.sha256(env.encode()).hexdigest(), env))
+        return True
+
+    def research_registration(self, record_type: str,
+                              record_id: str) -> dict | None:
+        """The stored registration receipt of one record, or None."""
+        rows = self.query("SELECT * FROM research_registrations "
+                          "WHERE record_type=? AND record_id=?",
+                          (record_type, record_id))
+        return rows[0] if rows else None
+
+    class _RegistrationConflict(Exception):
+        """Rolls back an insert whose receipt would bind other content."""
+
+    def _record_registered(self, table: str, columns: tuple, id_key: str,
+                           dup_where: str, dup_args: tuple, row: dict,
+                           recorded_at_ms: int, *, on_insert=None) -> str:
+        """Insert one row and, only when it is inserted, its
+        research-registration.v1 receipt (record_type = row["schema"], the
+        same recorded_at_ms) in the same transaction. An identical or
+        conflicting existing row returns before any registration attempt,
+        so a row filed without a receipt stays without one. Any receipt
+        already present for an absent row is a conflict (nothing written),
+        so every receipt binds its row's insert-time recorded_at_ms. A
+        failed registration rolls the insert back."""
+        values = tuple(row[k] for k in columns)
+        cols = ",".join(columns)
+        try:
+            with self._tx() as c:
+                if not c.in_transaction:
+                    c.execute("BEGIN IMMEDIATE")
+                old = c.execute(f"SELECT {cols} FROM {table} WHERE {dup_where}",
+                                dup_args).fetchall()
+                if old:
+                    return ("duplicate" if len(old) == 1
+                            and tuple(old[0]) == values else "conflict")
+                if c.execute("SELECT 1 FROM research_registrations WHERE "
+                             "record_type=? AND record_id=?",
+                             (row["schema"], row[id_key])).fetchone():
+                    return "conflict"
+                c.execute(f"INSERT INTO {table}({cols},recorded_at_ms) "
+                          f"VALUES ({','.join('?' * (len(values) + 1))})",
+                          values + (recorded_at_ms,))
+                if not self._register(c, row["schema"], row[id_key],
+                                      row["canonical_json"], recorded_at_ms):
+                    raise self._RegistrationConflict
+                if on_insert is not None:
+                    on_insert(c)
+        except self._RegistrationConflict:
+            return "conflict"
+        return "inserted"
+
+    # -- research questions: primitives only; the contract is
+    # cognition/research_question.py --------------------------------------
+    _QUESTION_COLUMNS = ("question_id", "schema", "question_kind", "trigger",
+                         "scope_kind", "scope_id", "source_kind",
+                         "source_event_id", "canonical_json")
+
+    def record_research_question(self, row: dict, *, recorded_at_ms: int) -> str:
+        """Insert one research-question row. "inserted" on a write;
+        "duplicate" when an identical row (ignoring recorded_at_ms) already
+        exists under the same ID; "conflict" when the ID, or another
+        question of the same kind for the same source event, exists with
+        other content. Nothing is written unless "inserted"."""
+        values = tuple(row[k] for k in self._QUESTION_COLUMNS)
+        cols = ",".join(self._QUESTION_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {cols} FROM research_questions WHERE question_id=? "
+                "OR (question_kind=? AND source_kind=? AND source_event_id=?)",
+                (row["question_id"], row["question_kind"], row["source_kind"],
+                 row["source_event_id"])).fetchall()
+            if old:
+                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
+                        else "conflict")
+            if not self._register(c, row["schema"], row["question_id"],
+                                  row["canonical_json"], recorded_at_ms):
+                return "conflict"
+            c.execute(f"INSERT INTO research_questions({cols},recorded_at_ms) "
+                      f"VALUES ({','.join('?' * (len(values) + 1))})",
+                      values + (recorded_at_ms,))
+        return "inserted"
+
+    def research_questions(self, scope_id: str | None = None) -> list[dict]:
+        """Stored research-question rows, oldest source event first."""
+        if scope_id is None:
+            return self.query("SELECT * FROM research_questions "
+                              "ORDER BY source_event_id, question_id")
+        return self.query("SELECT * FROM research_questions WHERE scope_id=? "
+                          "ORDER BY source_event_id, question_id", (scope_id,))
+
+    def research_question_by_id(self, question_id: str) -> dict | None:
+        """One stored research-question row by its primary key, or None."""
+        rows = self.query("SELECT * FROM research_questions "
+                          "WHERE question_id=?", (question_id,))
+        return rows[0] if rows else None
+
+    # -- research plans: primitives only; the contract is
+    # cognition/research_plan.py ------------------------------------------
+    _PLAN_COLUMNS = ("plan_id", "schema", "plan_kind", "planner_id",
+                     "question_id", "question_sha256", "scope_kind",
+                     "scope_id", "canonical_json")
+
+    def record_research_plan(self, row: dict, *, recorded_at_ms: int) -> str:
+        """Insert one research-plan row. "inserted" on a write; "duplicate"
+        when an identical row (ignoring recorded_at_ms) already exists under
+        the same ID; "conflict" when the ID, or another plan of the same
+        schema/kind for the same question, exists with other content.
+        Nothing is written unless "inserted"."""
+        values = tuple(row[k] for k in self._PLAN_COLUMNS)
+        cols = ",".join(self._PLAN_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {cols} FROM research_plans WHERE plan_id=? "
+                "OR (schema=? AND plan_kind=? AND question_id=?)",
+                (row["plan_id"], row["schema"], row["plan_kind"],
+                 row["question_id"])).fetchall()
+            if old:
+                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_plans({cols},recorded_at_ms) "
+                      f"VALUES ({','.join('?' * (len(values) + 1))})",
+                      values + (recorded_at_ms,))
+        return "inserted"
+
+    def research_plans(self, question_id: str | None = None) -> list[dict]:
+        """Stored research-plan rows in insertion order."""
+        if question_id is None:
+            return self.query("SELECT * FROM research_plans "
+                              "ORDER BY rowid")
+        return self.query("SELECT * FROM research_plans "
+                          "WHERE question_id=? ORDER BY rowid", (question_id,))
+
+    def research_plan_by_id(self, plan_id: str) -> dict | None:
+        """One stored research-plan row by its primary key, or None."""
+        rows = self.query("SELECT * FROM research_plans WHERE plan_id=?",
+                          (plan_id,))
+        return rows[0] if rows else None
+
+    # -- research evidence: primitives only; the contract is
+    # cognition/research_evidence.py --------------------------------------
+    _EVIDENCE_COLUMNS = ("evidence_id", "schema", "evidence_kind",
+                         "collector_id", "plan_id", "plan_sha256",
+                         "question_id", "scope_kind", "scope_id",
+                         "canonical_sha256", "canonical_json")
+
+    def record_research_evidence(self, row: dict, *,
+                                 recorded_at_ms: int) -> str:
+        """Insert one research-evidence row. "inserted" on a write;
+        "duplicate" when an identical row (ignoring recorded_at_ms) already
+        exists under the same ID; "conflict" when the ID, or other evidence
+        of the same schema/kind for the same plan, exists with other
+        content. Nothing is written unless "inserted"."""
+        values = tuple(row[k] for k in self._EVIDENCE_COLUMNS)
+        cols = ",".join(self._EVIDENCE_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {cols} FROM research_evidence WHERE evidence_id=? "
+                "OR (schema=? AND evidence_kind=? AND plan_id=?)",
+                (row["evidence_id"], row["schema"], row["evidence_kind"],
+                 row["plan_id"])).fetchall()
+            if old:
+                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_evidence({cols},recorded_at_ms) "
+                      f"VALUES ({','.join('?' * (len(values) + 1))})",
+                      values + (recorded_at_ms,))
+        return "inserted"
+
+    def research_evidence(self, plan_id: str | None = None) -> list[dict]:
+        """Stored research-evidence rows in insertion order."""
+        if plan_id is None:
+            return self.query("SELECT * FROM research_evidence "
+                              "ORDER BY rowid")
+        return self.query("SELECT * FROM research_evidence "
+                          "WHERE plan_id=? ORDER BY rowid", (plan_id,))
+
+    def research_evidence_by_id(self, evidence_id: str) -> dict | None:
+        """One stored research-evidence row by its primary key, or None."""
+        rows = self.query("SELECT * FROM research_evidence "
+                          "WHERE evidence_id=?", (evidence_id,))
+        return rows[0] if rows else None
+
+    # -- research results: primitives only; the contract is
+    # cognition/research_result.py ----------------------------------------
+    _RESULT_COLUMNS = ("result_id", "schema", "result_kind", "resolver_id",
+                       "evidence_id", "evidence_sha256", "plan_id",
+                       "scope_kind", "scope_id", "status",
+                       "canonical_sha256", "canonical_json")
+
+    def record_research_result(self, row: dict, *,
+                               recorded_at_ms: int) -> str:
+        """Insert one research-result row. "inserted" on a write;
+        "duplicate" when an identical row (ignoring recorded_at_ms) already
+        exists under the same ID; "conflict" when the ID, or another result
+        for the same evidence, exists with other content. Nothing is written
+        unless "inserted"."""
+        values = tuple(row[k] for k in self._RESULT_COLUMNS)
+        cols = ",".join(self._RESULT_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {cols} FROM research_results WHERE result_id=? "
+                "OR evidence_id=?",
+                (row["result_id"], row["evidence_id"])).fetchall()
+            if old:
+                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_results({cols},recorded_at_ms) "
+                      f"VALUES ({','.join('?' * (len(values) + 1))})",
+                      values + (recorded_at_ms,))
+        return "inserted"
+
+    def research_results(self, evidence_id: str | None = None) -> list[dict]:
+        """Stored research-result rows in insertion order."""
+        if evidence_id is None:
+            return self.query("SELECT * FROM research_results "
+                              "ORDER BY rowid")
+        return self.query("SELECT * FROM research_results "
+                          "WHERE evidence_id=? ORDER BY rowid", (evidence_id,))
+
+    def research_result_by_id(self, result_id: str) -> dict | None:
+        """One stored research-result row by its primary key, or None."""
+        rows = self.query("SELECT * FROM research_results "
+                          "WHERE result_id=?", (result_id,))
+        return rows[0] if rows else None
+
+    # -- research runs: primitives only; the contract is
+    # cognition/research_run.py -------------------------------------------
+    _RUN_COLUMNS = ("run_id", "schema", "run_kind", "runner_id", "run_key",
+                    "run_recorded_at_ms", "canonical_sha256",
+                    "canonical_json")
+
+    def record_research_run(self, row: dict, *, recorded_at_ms: int) -> str:
+        """Insert one research-run receipt. "inserted" on a write;
+        "duplicate" when a row with the same run_id and identical receipt
+        columns exists (telemetry_sha256, telemetry_json and recorded_at_ms
+        are not compared);
+        "conflict" when the run_id exists with another receipt. Nothing is
+        written unless "inserted"."""
+        values = tuple(row[k] for k in self._RUN_COLUMNS)
+        cols = ",".join(self._RUN_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(f"SELECT {cols} FROM research_runs "
+                            "WHERE run_id=?", (row["run_id"],)).fetchall()
+            if old:
+                return ("duplicate" if tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_runs({cols},telemetry_sha256,"
+                      f"telemetry_json,recorded_at_ms) VALUES "
+                      f"({','.join('?' * (len(values) + 3))})",
+                      values + (row["telemetry_sha256"],
+                                row["telemetry_json"], recorded_at_ms))
+        return "inserted"
+
+    def research_runs(self, run_id: str | None = None) -> list[dict]:
+        """Stored research-run rows in insertion order."""
+        if run_id is None:
+            return self.query("SELECT * FROM research_runs ORDER BY rowid")
+        return self.query("SELECT * FROM research_runs WHERE run_id=? "
+                          "ORDER BY rowid", (run_id,))
+
+    # -- research bank objects: primitives only; the contract is
+    # cognition/research_bank.py ------------------------------------------
+    _BANK_COLUMNS = ("bank_object_id", "schema", "bank_kind", "builder_id",
+                     "run_id", "result_id", "evidence_id", "plan_id",
+                     "question_id", "scope_kind", "scope_id",
+                     "canonical_sha256", "canonical_json")
+
+    def record_research_bank_object(self, row: dict, *,
+                                    recorded_at_ms: int) -> str:
+        """Insert one research-bank-object row. "inserted" on a write;
+        "duplicate" when an identical row (ignoring recorded_at_ms) already
+        exists under the same ID; "conflict" when the ID, or another object
+        for the same (run_id, result_id), exists with other content.
+        Nothing is written unless "inserted"."""
+        values = tuple(row[k] for k in self._BANK_COLUMNS)
+        cols = ",".join(self._BANK_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {cols} FROM research_bank_objects "
+                "WHERE bank_object_id=? OR (run_id=? AND result_id=?)",
+                (row["bank_object_id"], row["run_id"],
+                 row["result_id"])).fetchall()
+            if old:
+                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
+                        else "conflict")
+            if not self._register(c, row["schema"], row["bank_object_id"],
+                                  row["canonical_json"], recorded_at_ms):
+                return "conflict"
+            c.execute(f"INSERT INTO research_bank_objects({cols},"
+                      f"recorded_at_ms) VALUES "
+                      f"({','.join('?' * (len(values) + 1))})",
+                      values + (recorded_at_ms,))
+            from ..learning import capture as lc, capture_runtime as lr
+            lc.safely(c, 'research-bank:'+row['bank_object_id'], lr.research_bank, row, recorded_at_ms, self)
+        return "inserted"
+
+    def research_bank_objects(self, run_id: str | None = None) -> list[dict]:
+        """Stored research-bank-object rows in insertion order."""
+        if run_id is None:
+            return self.query("SELECT * FROM research_bank_objects "
+                              "ORDER BY rowid")
+        return self.query("SELECT * FROM research_bank_objects "
+                          "WHERE run_id=? ORDER BY rowid", (run_id,))
+
+    def research_bank_registrations(self, record_type: str,
+                                    scope_kind: str,
+                                    scope_id: str) -> list[dict]:
+        """Every stored research-bank-object row of one scope with its
+        registration receipt columns (NULL when it has none): bank_object_id,
+        bank_canonical_sha256 and the research_registrations columns. Rows
+        only; the recall contract verifies them."""
+        return self.query(
+            "SELECT b.bank_object_id, b.canonical_sha256 AS "
+            "bank_canonical_sha256, r.record_type, r.record_id, "
+            "r.canonical_sha256, r.recorded_at_ms, r.envelope_sha256, "
+            "r.envelope_json FROM research_bank_objects b "
+            "LEFT JOIN research_registrations r ON r.record_type=? "
+            "AND r.record_id=b.bank_object_id "
+            "WHERE b.scope_kind=? AND b.scope_id=? ORDER BY b.bank_object_id",
+            (record_type, scope_kind, scope_id))
+
+    def research_bank_object(self, bank_object_id: str) -> dict | None:
+        """One stored research-bank-object row, or None."""
+        rows = self.query("SELECT * FROM research_bank_objects "
+                          "WHERE bank_object_id=?", (bank_object_id,))
+        return rows[0] if rows else None
+
+    # -- research next questions: primitives only; the contract is
+    # cognition/research_next_question.py ---------------------------------
+    _NEXT_QUESTION_COLUMNS = ("next_question_id", "schema", "question_kind",
+                              "generator_id", "bank_object_id", "result_id",
+                              "hypothesis", "scope_kind", "scope_id",
+                              "canonical_sha256", "canonical_json")
+
+    def record_research_next_question(self, row: dict, *,
+                                      recorded_at_ms: int) -> str:
+        """Insert one research-next-question row. "inserted" on a write;
+        "duplicate" when an identical row (ignoring recorded_at_ms) already
+        exists under the same ID; "conflict" when the ID, or another record
+        for the same (bank_object_id, hypothesis), exists with other
+        content. Nothing is written unless "inserted"."""
+        values = tuple(row[k] for k in self._NEXT_QUESTION_COLUMNS)
+        cols = ",".join(self._NEXT_QUESTION_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {cols} FROM research_next_questions "
+                "WHERE next_question_id=? OR "
+                "(bank_object_id=? AND hypothesis=?)",
+                (row["next_question_id"], row["bank_object_id"],
+                 row["hypothesis"])).fetchall()
+            if old:
+                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_next_questions({cols},"
+                      f"recorded_at_ms) VALUES "
+                      f"({','.join('?' * (len(values) + 1))})",
+                      values + (recorded_at_ms,))
+        return "inserted"
+
+    def research_next_questions(self, bank_object_id: str | None = None
+                                ) -> list[dict]:
+        """Stored research-next-question rows in insertion order, all or
+        those of one bank object. SELECT only."""
+        if bank_object_id is None:
+            return self.query("SELECT * FROM research_next_questions "
+                              "ORDER BY rowid")
+        return self.query("SELECT * FROM research_next_questions "
+                          "WHERE bank_object_id=? ORDER BY rowid",
+                          (bank_object_id,))
+
+    # -- unreadable strategy-health questions: primitives only; the contract
+    # is cognition/research_unreadable_question.py ------------------------
+    _UNREADABLE_QUESTION_COLUMNS = ("question_id", "schema", "question_kind",
+                                    "scope_kind", "scope_id", "source_kind",
+                                    "source_event_id", "canonical_sha256",
+                                    "canonical_json")
+
+    def record_research_unreadable_question(self, row: dict, *,
+                                            recorded_at_ms: int) -> str:
+        """Insert one research_unreadable_questions row. "inserted" on a
+        write; "duplicate" when an identical row (ignoring recorded_at_ms)
+        already exists under the same ID; "conflict" when the ID, or another
+        question for the same source event, exists with other content.
+        An insert writes its research-registration.v1 receipt in the same
+        transaction; a duplicate or conflict never registers. Nothing is
+        written unless "inserted"."""
+        return self._record_registered(
+            "research_unreadable_questions", self._UNREADABLE_QUESTION_COLUMNS,
+            "question_id",
+            "question_id=? OR (source_kind=? AND source_event_id=?)",
+            (row["question_id"], row["source_kind"], row["source_event_id"]),
+            row, recorded_at_ms)
+
+    def research_unreadable_questions(self, scope_id: str | None = None
+                                      ) -> list[dict]:
+        """Stored research_unreadable_questions rows, oldest source event
+        first, all or those of one spec. SELECT only."""
+        if scope_id is None:
+            return self.query("SELECT * FROM research_unreadable_questions "
+                              "ORDER BY source_event_id, question_id")
+        return self.query("SELECT * FROM research_unreadable_questions "
+                          "WHERE scope_id=? ORDER BY source_event_id, "
+                          "question_id", (scope_id,))
+
+    # -- unreadable strategy-health plans: primitives only; the contract is
+    # cognition/research_unreadable_plan.py ------------------------------
+    _UNREADABLE_PLAN_COLUMNS = ("plan_id", "schema", "plan_kind",
+                                "planner_id", "question_id", "question_sha256",
+                                "scope_kind", "scope_id", "source_event_id",
+                                "canonical_sha256", "canonical_json")
+
+    def record_research_unreadable_plan(self, row: dict, *,
+                                        recorded_at_ms: int) -> str:
+        """Insert one research_unreadable_plans row. "inserted" on a write;
+        "duplicate" when an identical row (ignoring recorded_at_ms) already
+        exists under the same ID; "conflict" when the ID, or another plan of
+        the same schema/kind for the same question or source event, exists
+        with other content. Nothing is written unless "inserted"."""
+        values = tuple(row[k] for k in self._UNREADABLE_PLAN_COLUMNS)
+        cols = ",".join(self._UNREADABLE_PLAN_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {cols} FROM research_unreadable_plans "
+                "WHERE plan_id=? OR (schema=? AND plan_kind=? "
+                "AND (question_id=? OR source_event_id=?))",
+                (row["plan_id"], row["schema"], row["plan_kind"],
+                 row["question_id"], row["source_event_id"])).fetchall()
+            if old:
+                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_unreadable_plans({cols},"
+                      f"recorded_at_ms) VALUES "
+                      f"({','.join('?' * (len(values) + 1))})",
+                      values + (recorded_at_ms,))
+        return "inserted"
+
+    def research_unreadable_plans(self, question_id: str | None = None
+                                  ) -> list[dict]:
+        """Stored research_unreadable_plans rows, oldest source event first,
+        all or those of one question. SELECT only."""
+        if question_id is None:
+            return self.query("SELECT * FROM research_unreadable_plans "
+                              "ORDER BY source_event_id, plan_id")
+        return self.query("SELECT * FROM research_unreadable_plans "
+                          "WHERE question_id=? ORDER BY source_event_id, "
+                          "plan_id", (question_id,))
+
+    # -- unreadable strategy-health evidence: primitives only; the contract
+    # is cognition/research_unreadable_evidence.py -----------------------
+    _UNREADABLE_EVIDENCE_COLUMNS = ("evidence_id", "schema", "evidence_kind",
+                                    "collector_id", "plan_id", "plan_sha256",
+                                    "question_id", "scope_kind", "scope_id",
+                                    "source_event_id", "canonical_sha256",
+                                    "canonical_json")
+
+    def record_research_unreadable_evidence(self, row: dict, *,
+                                            recorded_at_ms: int) -> str:
+        """Insert one research_unreadable_evidence row. "inserted" on a
+        write; "duplicate" when an identical row (ignoring recorded_at_ms)
+        already exists under the same ID; "conflict" when the ID, or other
+        evidence of the same schema/kind for the same plan or source event,
+        exists with other content. Nothing is written unless "inserted"."""
+        values = tuple(row[k] for k in self._UNREADABLE_EVIDENCE_COLUMNS)
+        cols = ",".join(self._UNREADABLE_EVIDENCE_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {cols} FROM research_unreadable_evidence "
+                "WHERE evidence_id=? OR (schema=? AND evidence_kind=? "
+                "AND (plan_id=? OR source_event_id=?))",
+                (row["evidence_id"], row["schema"], row["evidence_kind"],
+                 row["plan_id"], row["source_event_id"])).fetchall()
+            if old:
+                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_unreadable_evidence({cols},"
+                      f"recorded_at_ms) VALUES "
+                      f"({','.join('?' * (len(values) + 1))})",
+                      values + (recorded_at_ms,))
+        return "inserted"
+
+    def research_unreadable_evidence(self, plan_id: str | None = None
+                                     ) -> list[dict]:
+        """Stored research_unreadable_evidence rows, oldest source event
+        first, all or those of one plan. SELECT only."""
+        if plan_id is None:
+            return self.query("SELECT * FROM research_unreadable_evidence "
+                              "ORDER BY source_event_id, evidence_id")
+        return self.query("SELECT * FROM research_unreadable_evidence "
+                          "WHERE plan_id=? ORDER BY source_event_id, "
+                          "evidence_id", (plan_id,))
+
+    # -- unreadable strategy-health results: primitives only; the contract
+    # is cognition/research_unreadable_result.py -------------------------
+    _UNREADABLE_RESULT_COLUMNS = ("result_id", "schema", "result_kind",
+                                  "resolver_id", "evidence_id",
+                                  "evidence_sha256", "plan_id", "question_id",
+                                  "scope_kind", "scope_id", "status",
+                                  "canonical_sha256", "canonical_json")
+
+    def record_research_unreadable_result(self, row: dict, *,
+                                          recorded_at_ms: int) -> str:
+        """Insert one research_unreadable_results row. "inserted" on a
+        write; "duplicate" when an identical row (ignoring recorded_at_ms)
+        already exists under the same ID; "conflict" when the ID, or another
+        result of the same schema/kind for the same evidence, exists with
+        other content. Nothing is written unless "inserted"."""
+        values = tuple(row[k] for k in self._UNREADABLE_RESULT_COLUMNS)
+        cols = ",".join(self._UNREADABLE_RESULT_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(
+                f"SELECT {cols} FROM research_unreadable_results "
+                "WHERE result_id=? OR (schema=? AND result_kind=? "
+                "AND evidence_id=?)",
+                (row["result_id"], row["schema"], row["result_kind"],
+                 row["evidence_id"])).fetchall()
+            if old:
+                return ("duplicate" if len(old) == 1 and tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_unreadable_results({cols},"
+                      f"recorded_at_ms) VALUES "
+                      f"({','.join('?' * (len(values) + 1))})",
+                      values + (recorded_at_ms,))
+        return "inserted"
+
+    def research_unreadable_results(self, evidence_id: str | None = None
+                                    ) -> list[dict]:
+        """Stored research_unreadable_results rows, in evidence then result
+        order, all or those of one evidence record. SELECT only."""
+        if evidence_id is None:
+            return self.query("SELECT * FROM research_unreadable_results "
+                              "ORDER BY evidence_id, result_id")
+        return self.query("SELECT * FROM research_unreadable_results "
+                          "WHERE evidence_id=? ORDER BY result_id",
+                          (evidence_id,))
+
+    def _unreadable_by_id(self, table: str, key: str, value: str):
+        rows = self.query(f"SELECT * FROM {table} WHERE {key}=?", (value,))
+        return rows[0] if rows else None
+
+    def research_unreadable_question_by_id(self, question_id: str
+                                           ) -> dict | None:
+        """One research_unreadable_questions row by its primary key, or
+        None. SELECT only."""
+        return self._unreadable_by_id("research_unreadable_questions",
+                                      "question_id", question_id)
+
+    def research_unreadable_plan_by_id(self, plan_id: str) -> dict | None:
+        """One research_unreadable_plans row by its primary key, or None.
+        SELECT only."""
+        return self._unreadable_by_id("research_unreadable_plans",
+                                      "plan_id", plan_id)
+
+    def research_unreadable_evidence_by_id(self, evidence_id: str
+                                           ) -> dict | None:
+        """One research_unreadable_evidence row by its primary key, or
+        None. SELECT only."""
+        return self._unreadable_by_id("research_unreadable_evidence",
+                                      "evidence_id", evidence_id)
+
+    def research_unreadable_result_by_id(self, result_id: str
+                                         ) -> dict | None:
+        """One research_unreadable_results row by its primary key, or
+        None. SELECT only."""
+        return self._unreadable_by_id("research_unreadable_results",
+                                      "result_id", result_id)
+
+    # -- unreadable strategy-health runs: primitives only; the contract is
+    # cognition/research_unreadable_run.py ------------------------------
+    _UNREADABLE_RUN_COLUMNS = ("run_id", "schema", "run_kind", "runner_id",
+                               "run_key", "run_recorded_at_ms",
+                               "canonical_sha256", "canonical_json")
+
+    def record_research_unreadable_run(self, row: dict, *,
+                                       recorded_at_ms: int) -> str:
+        """Insert one research_unreadable_runs receipt. "inserted" on a
+        write; "duplicate" when a row with the same run_id and identical
+        receipt columns exists (telemetry_sha256, telemetry_json and
+        recorded_at_ms are not compared); "conflict" when the run_id exists
+        with another receipt. Nothing is written unless "inserted"."""
+        values = tuple(row[k] for k in self._UNREADABLE_RUN_COLUMNS)
+        cols = ",".join(self._UNREADABLE_RUN_COLUMNS)
+        with self._tx() as c:
+            if not c.in_transaction:
+                c.execute("BEGIN IMMEDIATE")
+            old = c.execute(f"SELECT {cols} FROM research_unreadable_runs "
+                            "WHERE run_id=?", (row["run_id"],)).fetchall()
+            if old:
+                return ("duplicate" if tuple(old[0]) == values
+                        else "conflict")
+            c.execute(f"INSERT INTO research_unreadable_runs({cols},"
+                      f"telemetry_sha256,telemetry_json,recorded_at_ms) "
+                      f"VALUES ({','.join('?' * (len(values) + 3))})",
+                      values + (row["telemetry_sha256"],
+                                row["telemetry_json"], recorded_at_ms))
+        return "inserted"
+
+    def research_unreadable_runs(self, run_id: str | None = None
+                                 ) -> list[dict]:
+        """Stored research_unreadable_runs rows in insertion order.
+        SELECT only."""
+        if run_id is None:
+            return self.query("SELECT * FROM research_unreadable_runs "
+                              "ORDER BY rowid")
+        return self.query("SELECT * FROM research_unreadable_runs "
+                          "WHERE run_id=? ORDER BY rowid", (run_id,))
+
+    # -- unreadable strategy-health bank objects: primitives only; the
+    # contract is cognition/research_unreadable_bank.py ------------------
+    _UNREADABLE_BANK_COLUMNS = ("bank_object_id", "schema", "bank_kind",
+                                "builder_id", "run_id", "result_id",
+                                "evidence_id", "plan_id", "question_id",
+                                "scope_kind", "scope_id", "canonical_sha256",
+                                "canonical_json")
+
+    def record_research_unreadable_bank_object(self, row: dict, *,
+                                               recorded_at_ms: int) -> str:
+        """Insert one research_unreadable_bank_objects row. "inserted" on a
+        write; "duplicate" when an identical row (ignoring recorded_at_ms)
+        already exists under the same ID; "conflict" when the ID, or another
+        object for the same (run_id, result_id), exists with other content.
+        An insert writes its research-registration.v1 receipt in the same
+        transaction; a duplicate or conflict never registers. Nothing is
+        written unless "inserted"."""
+        from ..learning import capture as lc, capture_runtime as lr
+        return self._record_registered(
+            "research_unreadable_bank_objects", self._UNREADABLE_BANK_COLUMNS,
+            "bank_object_id",
+            "bank_object_id=? OR (run_id=? AND result_id=?)",
+            (row["bank_object_id"], row["run_id"], row["result_id"]),
+            row, recorded_at_ms,
+            on_insert=lambda c: lc.safely(c, 'research-bank:'+row['bank_object_id'], lr.research_bank,
+                row, recorded_at_ms, self, unreadable=True))
+
+    def research_unreadable_bank_objects(self, run_id: str | None = None
+                                         ) -> list[dict]:
+        """Stored research_unreadable_bank_objects rows in insertion order.
+        SELECT only."""
+        if run_id is None:
+            return self.query("SELECT * FROM research_unreadable_bank_objects "
+                              "ORDER BY rowid")
+        return self.query("SELECT * FROM research_unreadable_bank_objects "
+                          "WHERE run_id=? ORDER BY rowid", (run_id,))
+
+    def research_unreadable_bank_registrations(self, record_type: str,
+                                               scope_kind: str,
+                                               scope_id: str) -> list[dict]:
+        """Every stored research_unreadable_bank_objects row of one scope
+        (its contract columns, never its own recorded_at_ms) with its
+        registration receipt columns prefixed ``reg_`` (NULL when it has
+        none). Rows only; the unreadable recall contract verifies them.
+        SELECT only."""
+        cols = ", ".join(f"b.{k}" for k in self._UNREADABLE_BANK_COLUMNS)
+        return self.query(
+            f"SELECT {cols}, r.record_type AS reg_record_type, "
+            "r.record_id AS reg_record_id, "
+            "r.canonical_sha256 AS reg_canonical_sha256, "
+            "r.recorded_at_ms AS reg_recorded_at_ms, "
+            "r.envelope_sha256 AS reg_envelope_sha256, "
+            "r.envelope_json AS reg_envelope_json "
+            "FROM research_unreadable_bank_objects b "
+            "LEFT JOIN research_registrations r ON r.record_type=? "
+            "AND r.record_id=b.bank_object_id "
+            "WHERE b.scope_kind=? AND b.scope_id=? ORDER BY b.bank_object_id",
+            (record_type, scope_kind, scope_id))
 
     # -- strategy population ------------------------------------------------
     def upsert_strategy(self, st) -> None:
@@ -620,3 +1789,56 @@ class Journal:
               AND v.ts >= datetime('now', ?)
             GROUP BY v.agent
         """, (f"-{since_hours} hours",))
+
+    def strategy_health_rows_for_spec(self, spec_id: str) -> list[dict]:
+        """The subset of `strategy_health_rows` that research-question and
+        research-plan verification of one spec can consult: every sweep
+        record, the spec's own observation rows, and observation rows with
+        no usable subject (NULL, empty or non-text), which derivation must
+        still see in order to refuse them. Other specs' observation rows
+        are excluded. Id order, as `strategy_health_rows` returns them
+        (brain_events has no kind index, so that scan is in rowid order).
+        SELECT only."""
+        return self.query(
+            "SELECT id, ts, kind, subject, detail FROM brain_events "
+            "WHERE kind='strategy_health_sweep' "
+            "OR (kind='strategy_health_observed' AND (subject=? "
+            "OR subject IS NULL OR typeof(subject)<>'text' OR subject='')) "
+            "ORDER BY id", (spec_id,))
+
+
+    def strategy_health_rows_by_id(self, event_ids) -> list[dict]:
+        """The `strategy_health_rows` rows with the given event ids, in id
+        order. SELECT only."""
+        ids = sorted(set(event_ids))
+        if not ids:
+            return []
+        return self.query(
+            "SELECT id, ts, kind, subject, detail FROM brain_events "
+            "WHERE kind IN ('strategy_health_observed', "
+            "'strategy_health_sweep') "
+            f"AND id IN ({','.join('?' * len(ids))}) ORDER BY id",
+            tuple(ids))
+
+
+    @staticmethod
+    def _reason_codes_cols(codes) -> tuple:
+        if codes is None:
+            return None, None
+        return _rc.encode(codes), _rc.VERSION
+
+
+    def decision_observation_rows(self) -> list[dict]:
+        """Raw decision columns for strategy/signal_occurrence_observation.
+        SELECT only — decoding and ordering belong to the summariser."""
+        return self.query(
+            "SELECT id, ts, scan_id, symbol, action, executed, reason_codes, "
+            "reason_codes_version, signals_json FROM decisions")
+
+    def strategy_health_rows(self) -> list[dict]:
+        """Raw strategy-health-observation.v1 brain_events for
+        strategy/health_observation.history. SELECT only."""
+        return self.query(
+            "SELECT id, ts, kind, subject, detail FROM brain_events "
+            "WHERE kind IN ('strategy_health_observed', "
+            "'strategy_health_sweep')")

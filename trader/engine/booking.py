@@ -130,6 +130,8 @@ def persist(db, trade_id, kind, before, evidence=None):
     from .trade_provenance import record_safely
     record_safely(db, trade_id, kind, before, after, evidence, cur.lastrowid,
                   recorded_ms=receipt['observed_ms'])
+    from ..learning import capture as lc, capture_runtime as lr
+    lc.safely(db, 'booking:'+receipt['sha256'], lr.booking, trade_id, receipt)
 
 
 def replay(receipt):

@@ -195,6 +195,11 @@ class WorldModel:
                          if state.instrument == scope.identifier), None)
         return None
 
+    def learned_claim_confidence(self, journal, context):
+        """Explicit latest learned layer, separate from this immutable snapshot."""
+        from trader.learning import targets as T, foundation as L
+        return T.observation(journal, L.Target.WORLD, context)
+
     def get_observations(self, scope: Scope, horizon: Horizon,
                          *, kind: str | None = None) -> tuple[Observation, ...]:
         """Return all exact-scope, exact-horizon observations in canonical order."""

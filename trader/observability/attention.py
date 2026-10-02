@@ -188,7 +188,7 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
     }
 
 
-def evaluate_snapshot(event, world_model: WorldModel | None = None):
+def evaluate_snapshot(event, world_model: WorldModel | None = None, learning_journal=None):
     if world_model is not None:
         if not isinstance(world_model, WorldModel):
             raise TypeError("world_model must be a WorldModel or None")
@@ -196,8 +196,9 @@ def evaluate_snapshot(event, world_model: WorldModel | None = None):
             raise ValueError("world_model cut does not match as_of")
     cfg = CognitionConfig(max_symbols=len(event["input"]["membership"]) or 1)
     ds = load_input(event["input"])
-    result = evaluate(ds, event["as_of_ms"], cfg, event["scan_id"], {}, world_model)
-    return {"schema_version": SCHEMA, "scan_id": event["scan_id"],
+    result = evaluate(ds, event["as_of_ms"], cfg, event["scan_id"], {}, world_model, learning_journal, event.get('governed_attention_state'))
+    learned = ({'governed_attention_state':result['governed_attention_state']} if result['governed_attention_state'] else {})
+    return {**learned, "schema_version": SCHEMA, "scan_id": event["scan_id"],
             "as_of_ms": event["as_of_ms"], "scope": event["scope"],
             "capture_ms": event["capture_ms"], "issues": event["issues"],
             "capture_settings": event["capture_settings"],
@@ -239,7 +240,7 @@ def code_manifest():
              "cognition/attention.py", "cognition/contracts.py",
              "observability/positioning.py", "observability/world_producer.py",
              "observability/diagnostics.py", "strategy/library.py", "strategy/compile.py",
-             "engine/orchestrator.py", "kernel.py")
+             "engine/orchestrator.py", "kernel.py", "learning/targets.py", "learning/consumers.py")
     return {name: hashlib.sha256((base / name).read_bytes()).hexdigest() for name in names}
 
 

@@ -20,8 +20,9 @@ def identity(context, cycle_id, candidate_id, strategy_version_id=None):
 
 
 class Registry:
-    """Caller-owned shadow DB. Never opens or migrates the trading journal."""
-    def __init__(self, path):
+    """Caller-owned registry; optional journal adapter captures exact resolutions."""
+    def __init__(self, path, *, learning_journal=None):
+        self.learning_journal = learning_journal
         self.db = sqlite3.connect(path)
         self.db.execute('CREATE TABLE IF NOT EXISTS opportunities '
                         '(opportunity_id TEXT PRIMARY KEY, payload TEXT NOT NULL)')
@@ -50,10 +51,11 @@ class Registry:
                        direction=({'BUY': 'LONG', 'SELL': 'SHORT'}.get(key['action']) if key else None),
                        horizon=key['signal_timeframe'] if key else None,
                        opened_at=cut, status='OPEN', related_cycle_ids=[], related_candidate_ids=[],
-                       context_ids=[], investigation_id=None, resolution=None,
+                       context_ids=[], context_jsons=[], investigation_id=None, resolution=None,
                        lineage=lineage, last_observed_at=cut)
         old['related_cycle_ids'] = sorted(set(old['related_cycle_ids'] + [cycle_id]))
         old['related_candidate_ids'] = sorted(set(old['related_candidate_ids'] + [candidate_id]))
+        old['context_jsons'] = sorted(set(old.get('context_jsons', []) + [context.canonical_json]))
         old['context_ids'] = sorted(set(old['context_ids'] + [context.context_id]))
         iid = body['investigation'].get('investigation_id')
         if iid and old['investigation_id'] not in (None, iid):
@@ -79,4 +81,10 @@ class Registry:
         body.update(status='RESOLVED', resolution=result)
         with self.db:
             self.db.execute('UPDATE opportunities SET payload=? WHERE opportunity_id=?', (canonical(body), opportunity_id))
+        if self.learning_journal is not None and resolution != 'TRADED':
+            from trader.learning import capture as C, producers as P
+            with self.learning_journal._tx() as db:
+                rows=db.execute("SELECT event_key FROM learning_registrations WHERE json_extract(payload,'$.lineage.opportunity_id')=?",(opportunity_id,)).fetchall()
+                for (event,) in rows:
+                    C.safely(db,'missed:'+opportunity_id,P.missed,event,body)
         return body

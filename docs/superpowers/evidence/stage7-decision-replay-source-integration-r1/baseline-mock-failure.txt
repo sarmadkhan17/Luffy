@@ -1,0 +1,35 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_trading_scan_orchestrator_risk_execution_unchanged ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-179/test_trading_scan_orchestrator0')
+
+    def test_trading_scan_orchestrator_risk_execution_unchanged(tmp_path):
+        (tmp_path / "b").mkdir(); (tmp_path / "r").mkdir()
+        base, _, base_decided = kernel(tmp_path / "b", None, Mock())
+        base.market_type = MarketType.FUTURES
+        base_stats = base.cycle()
+        reg, _, journal, ex = slot(tmp_path / "r", "BTC", "ETH", "SOL")
+        k, data, decided = registry_kernel(tmp_path / "r", reg)
+        stats = k.cycle()
+        selected = stats["attention_supplemental"]["symbol"]
+        assert trading_calls(k, decided) == trading_calls(base, base_decided)
+        assert selected not in repr(trading_calls(k, decided))
+        assert selected not in data and k._scan_symbols() == ["A/USDT", "B/USDT"]
+        for key in ("scanned", "decisions", "entries", "skips"):
+            assert stats[key] == base_stats[key]
+>       assert k.feed.method_calls == []
+E       AssertionError: assert [call.ex.urls...et('api', {})] == []
+E
+E         Left contains 2 more items, first extra item: call.ex.urls.get('api', {})
+E         Use -v to get more diff
+
+tests/test_attention_kernel_wiring.py:611: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:1258 paper exits refused A/USDT: 'types.SimpleNamespace' object has no attribute '_tx'
+WARNING  luffy:kernel.py:1258 paper exits refused B/USDT: 'types.SimpleNamespace' object has no attribute '_tx'
+WARNING  luffy:kernel.py:1258 paper exits refused A/USDT: 'types.SimpleNamespace' object has no attribute '_tx'
+WARNING  luffy:kernel.py:1258 paper exits refused B/USDT: 'types.SimpleNamespace' object has no attribute '_tx'
+=========================== short test summary info ============================
+FAILED tests/test_attention_kernel_wiring.py::test_trading_scan_orchestrator_risk_execution_unchanged
+1 failed in 2.45s
