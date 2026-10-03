@@ -93,8 +93,8 @@ stage_status:
 
   stage_3_attention_and_research:
     state: IMPLEMENTED
-    build_complete: UNKNOWN
-    formal_closure: NOT_DONE
+    build_complete: false
+    formal_closure: AUDITED_MANDATORY_GAP
     evidence:
       - trader/cognition/attention.py
       - trader/cognition/investigation.py
@@ -115,15 +115,19 @@ stage_status:
       - the predictive bridge can produce bounded falsifiable hypotheses and route supported experiment shapes through the existing quantitative planner/referee path.
       - Stage7 governed Attention and research-priority consumer state exists for future registered rules.
     gaps:
-      - full dynamic connected-account observation coverage is not proven.
-      - broader SDD trigger coverage and event-driven material-change semantics remain partial.
+      - mandatory architecture: no question-driven Source Router maps a research question to authoritative source classes.
+      - mandatory architecture: research-source-registry.v1 is internal-only; there is no complete external Source Registry implementing SDD 12.4 metadata/selection.
+      - mandatory architecture: no normal Search Broker/retriever path takes a registered question through metadata search, deterministic filtering/deduplication and bounded evidence collection.
+      - existing Scraper/DeepCrawler are useful external collectors but remain feed/seed/frontier driven rather than question-driven, so they do not satisfy the SDD Stage3 exit by themselves.
+      - automatic research-question generation exists for selected families/outcomes but does not yet cover the full SDD question-driven external evidence loop.
+      - full dynamic connected-account observation coverage and broader Attention trigger coverage remain operational/evidence maturity gaps.
       - real eligible Research Bank sources for the predictive bridge are absent in current production data.
       - usefulness/resource-bound policies remain parked or evidence-blocked.
-      - formal Stage3 exit has not been reconciled against the latest lineage.
 
   stage_4_quant_falsification:
     state: TESTED
-    build_complete: UNKNOWN
+    build_complete: true
+    formal_closure: COMPLETE_WITH_VALIDATION_PARKED
     validation_maturity: PARKED_NON_FINAL
     evidence:
       - trader/research/runner.py
@@ -139,9 +143,9 @@ stage_status:
       - the bounded Scheme-D v4 pilot completed 80 worlds across 16 shards with clean integrity and GO reason p6_encouraging_effect.
       - the bounded pilot is non-final and does not establish full validation, Gate2, admission or live edge.
     gaps:
-      - full 75000-world Scheme-D validation remains unauthorized.
+      - full 75000-world Scheme-D validation remains unauthorized; this is validation maturity for the frozen Scheme-D protocol, not a missing Stage4 research architecture.
       - local projection is about 190 days on 4 qualified workers; multi-host execution is not qualified.
-      - formal Stage4 exit has not been reconciled against the parked validation boundary.
+      - candidate mechanisms still require their own held-out/referee evidence before any admission or economic-edge claim.
 
   stage_5_strategy_factory:
     state: TESTED
@@ -381,8 +385,32 @@ known_stale_documents:
   - LUFFY_Official_Solution_Design_v3.md is an older duplicate snapshot and not architecture authority.
   - historical package reports may describe uncommitted/undeployed state that has since been integrated; current git lineage wins.
 
+completed_stage3_4_pre_stage8_closure_audit_r1:
+  state: COMPLETED_DESIGN_EVIDENCE
+  result:
+    stage3_build_complete: false
+    stage4_build_complete: true
+    stage4_validation_maturity: PARKED_NON_FINAL
+    can_start_stage8_architecture: false
+  mandatory_before_stage8:
+    - question-driven external research routing from ResearchQuestion to authoritative source classes, external Source Registry, bounded search/retrieval and structured Research Bank evidence.
+  can_run_in_parallel_with_stage8_after_stage3_closure:
+    - Stage1 real-world safety/accounting/protection maturity.
+    - Stage2 broader production/shadow WorldModel evidence.
+    - Stage4 Scheme-D full validation if separately authorized and adequately resourced.
+    - Stage5-7 policy calibration, real evidence and deployment maturity.
+  parked:
+    - Scheme-D v4 full validation.
+    - Stage3 usefulness feedback without a truthful label/policy source.
+  audit_basis:
+    - SDD.md sections 12 and 13 plus Stage3/Stage4 exit criteria.
+    - trader/cognition/research_question.py and research_sources.py.
+    - trader/brain/scraper.py and crawler.py.
+    - trader/research/* and quantitative/referee tests.
+    - predictive research bridge and final Stage5-7 lineage.
+
 current_active_work:
-  id: LUFFY-STAGE3-4-PRE-STAGE8-CLOSURE-AUDIT-R1
-  type: READ_ONLY_CLOSURE_AUDIT
+  id: LUFFY-STAGE3-QUESTION-DRIVEN-RESEARCH-ROUTER-R1
+  type: IMPLEMENTATION
   status: RECOMMENDED_NOT_STARTED
-  purpose: Determine whether remaining Stage3/Stage4 gaps are mandatory build blockers before Stage8 or are parked/evidence/deployment maturity.
+  purpose: Close the one mandatory Stage3 architecture gap before Stage8 by connecting registered research questions to authoritative source classes, external source registry/search/retrieval, deterministic relevance/dedup and structured Research Bank evidence without giving research trading authority.
