@@ -36,7 +36,7 @@ stage_status:
     proven_facts:
     - SDD.md v3.2 is the sole architecture authority.
     - STATE.yaml is reconciled to the reviewed Stage5-8 architecture.
-    - Stage3 formal closure is COMPLETE; STAGE8_INDEPENDENT_REVIEW_R2 is PASS with no blocking defects. Stage1 pre-start safety/truth closure is BLOCKED by implementation and deterministic-test gaps.
+    - Stage3 formal closure is COMPLETE; STAGE8_INDEPENDENT_REVIEW_R2 is PASS with no blocking defects. Stage1 MI-1 through MI-7 are independently reviewed and CLOSED; build_complete remains false pending formal Stage1 closure R2.
     gaps: []
 
   stage_1_safety_and_truth:
@@ -73,22 +73,32 @@ stage_status:
     - docs/superpowers/evidence/stage1-data-provenance-pit-r1/focused-tests.txt
     - docs/superpowers/evidence/stage1-data-provenance-pit-r1/world-regressions.txt
     - docs/superpowers/evidence/stage1-data-provenance-pit-r1/caller-audit.json
+    - trader/persistence/backup.py
+    - trader/observability/safety.py
+    - trader/engine/watchdog.py
+    - tests/test_stage1_recovery_monitoring.py
+    - docs/superpowers/reports/2026-10-04-stage1-recovery-monitoring-foundation-r1.md
+    - docs/superpowers/evidence/stage1-recovery-monitoring-foundation-r1/acceptance-supervisor-tests.txt
     proven_facts:
-    - MI-2/MI-3 are independently reviewed and CLOSED through retained canonical source receipts, typed quality, append-only local revisions,
-      explicit availability-based as-of reads and native/aggregated HTF and future-cache rejection.
-    - Actual Kernel, feature, Attention/World, Opportunity and replay callers are bounded by retained receipts;
-      unqualified legacy projections and late backfills do not establish earlier decision evidence.
-    - Canonical RegistrySnapshot/capability receipts bind proposals, TradeIntent, final Risk, Execution, booking
-      and reconciliation; unknown account permissions and leverage fail closed.
+    - MI-2/MI-3 are independently reviewed and CLOSED through retained canonical source receipts, typed quality, append-only
+      local revisions, explicit availability-based as-of reads and native/aggregated HTF and future-cache rejection.
+    - Actual Kernel, feature, Attention/World, Opportunity and replay callers are bounded by retained receipts; unqualified
+      legacy projections and late backfills do not establish earlier decision evidence.
+    - Canonical RegistrySnapshot/capability receipts bind proposals, TradeIntent, final Risk, Execution, booking and
+      reconciliation; unknown account permissions and leverage fail closed.
     - Final entry requires a process-issued exact deterministic Risk ALLOW/RESIZE permission, current policy/account/book
       receipts, finite valid inputs and the current control-intent fence.
     - Existing Journal/EntryRecovery retain completed and ambiguous logical requests durably; retry, store reopen,
       fresh interpreter, partial fill and acknowledgement-write failure are tested with fake venues.
-    - Boot/recovery/owner entry fixtures and Risk negative-control proofs pass without expanding StrategyVersion
-      or owner first-live authority.
+    - Boot/recovery/owner entry fixtures and Risk negative-control proofs pass without expanding StrategyVersion or
+      owner first-live authority.
     - Truthful current account/Risk/News contracts and provenance-aware owner reads remain; actual connected-account
       and runtime maturity are not proven.
     audit_gap_status:
+      MI-1:
+        status: CLOSED
+        implementation: PASS
+        independent_review: PASS
       MI-2:
         status: CLOSED
         implementation: PASS
@@ -97,13 +107,35 @@ stage_status:
         status: CLOSED
         implementation: PASS
         independent_review: PASS
-      MI-6: OPEN
-      MI-7: OPEN
-    gaps:
-    - 'MI-6: Integrity-checked critical-store/config/evidence backup and restore with an off-host seam.'
-    - 'MI-7: Critical storage/journal-unavailable and missing-heartbeat safety alert paths.'
-    pre_start_closure: BLOCKED
-    closure_mode: PRE_START_BUILD_CLOSURE
+      MI-4:
+        status: CLOSED
+        implementation: PASS
+        independent_review: PASS
+      MI-5:
+        status: CLOSED
+        implementation: PASS
+        independent_review: PASS
+      MI-6:
+        implementation: IMPLEMENTED
+        state: TESTED
+        status: CLOSED
+        independent_review: PASS
+      MI-7:
+        implementation: IMPLEMENTED
+        state: TESTED
+        status: CLOSED
+        independent_review: PASS
+    closed_audit_gaps: [MI-1, MI-2, MI-3, MI-4, MI-5, MI-6, MI-7]
+    gaps: []
+    formal_closure: AWAITING_R2
+    pre_start_closure: AWAITING_FORMAL_STAGE1_CLOSURE_R2
+    latest_independent_review: STAGE1_RECOVERY_MONITORING_INDEPENDENT_REVIEW_R2
+    independent_review: PASS
+    regression_found: false
+    authority_regression: false
+    undeployed: true
+    startup_performed: false
+    closure_mode: FINAL_STAGE1_PRE_START_SAFETY_IMPLEMENTATION
     closure_report: docs/superpowers/reports/2026-10-03-stage1-safety-truth-closure-r1.md
     closure_base_head: 52aac90e004662610de006fd5c4eb8cdcf39bb7a
     component_results:
@@ -116,27 +148,43 @@ stage_status:
       execution_idempotency: PASS
       protective_order_architecture: PASS
       venue_reconciliation_architecture: PASS
-      backup_recovery_architecture: BLOCKED
-      monitoring_alerts: BLOCKED
-      failure_injection_prestart: BLOCKED
-    missing_implementation:
-    - 'MI-6: Integrity-checked critical-store/config/evidence backup and restore with an off-host seam.'
-    - 'MI-7: Critical storage/journal-unavailable and missing-heartbeat safety alert paths.'
+      backup_recovery_architecture: PASS
+      monitoring_alerts: PASS
+      failure_injection_prestart: PASS
+    missing_implementation: []
     pre_start_test_blocker: []
-    policy_not_configured: []
+    policy_not_configured:
+    - Configured backup destination/mount (physical off-host status not inferred).
+    - Production backup cadence.
+    - Backup retention.
+    - Production restore-drill cadence.
+    - Real safety-notification routing/delivery configuration.
     needs_real_runtime_evidence:
-    - 'RT-1: Sustained completed-system recovery, latency/resources, alert delivery and durable producer publication.'
-    - 'RT-2: Operational off-host backup/restore drill after MI-6 is implemented.'
+    - Physical off-host backup operation.
+    - Production backup history and restore drill.
+    - Real kernel heartbeat/restart history and watchdog observations.
+    - Real safety alert delivery.
+    - Post-restore venue truth, reconciliation, protection verification and Risk release.
     needs_real_venue_evidence:
-    - 'VE-1: Actual account eligibility/permissions, instrument availability, leverage/brackets, commission and
-      rate-budget facts.'
-    - 'VE-2: Actual balances, positions/orders/fills, monetary completeness, protection, reconciliation/unknown
-      outcomes and read-key permissions.'
+    - 'VE-1: Actual account eligibility/permissions, instrument availability, leverage/brackets, commission and rate-budget
+      facts.'
+    - 'VE-2: Actual balances, positions/orders/fills, monetary completeness, protection, reconciliation/unknown outcomes
+      and read-key permissions.'
     deployment_not_performed:
     - 'DP-1: Latest completed-system architecture not deployed/started for first controlled startup.'
-    latest_completed_implementation: LUFFY-STAGE1-DATA-PROVENANCE-PIT-BLOCKER-FIX-R1
-    latest_implementation_report: docs/superpowers/reports/2026-10-04-stage1-data-provenance-pit-blocker-fix-r1.md
-    next_recommended_package: LUFFY-STAGE1-RECOVERY-MONITORING-FOUNDATION-R1
+    latest_completed_implementation: LUFFY-STAGE1-RECOVERY-MONITORING-BLOCKER-FIX-R1
+    latest_implementation_report: docs/superpowers/reports/2026-10-04-stage1-recovery-monitoring-blocker-fix-r1.md
+    next_recommended_package: LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R2
+    baseline_test_observations:
+    - test: tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing
+      cases:
+      - macro
+      - spot_resume
+      - owner_unhalt
+      result: 3 baseline failures reproduced unchanged
+      reason: Legacy assertion requires set_leverage on a HALTED entry; required base already prevents that side effect.
+      evidence: docs/superpowers/evidence/stage1-recovery-monitoring-foundation-r1/baseline-stale-assertions.txt
+      mi_1_through_5_reopened: false
 
   stage_2_world_model:
     state: TESTED
@@ -544,14 +592,18 @@ completed_stage3_4_pre_stage8_closure_audit_r1:
     - predictive research bridge and final Stage5-7 lineage.
 
 current_active_work:
-  id: LUFFY-STAGE1-DATA-PROVENANCE-PIT-FINALIZE-R1
+  id: LUFFY-STAGE1-RECOVERY-MONITORING-FINALIZE-R1
   type: PACKAGE_FINALIZATION
   status: COMPLETE_COMMITTED_UNDEPLOYED
   result: PASS
   independent_review: PASS
-  review_id: STAGE1_DATA_PROVENANCE_PIT_INDEPENDENT_REVIEW_R2
-  purpose: Finalize independently reviewed MI-2/MI-3; MI-6/MI-7 remain open.
-  next_recommended_package: LUFFY-STAGE1-RECOVERY-MONITORING-FOUNDATION-R1
+  review_id: STAGE1_RECOVERY_MONITORING_INDEPENDENT_REVIEW_R2
+  purpose: Finalize independently reviewed MI-6/MI-7; all MI-1 through MI-7 are closed, pending formal Stage1 closure R2.
+  undeployed: true
+  startup_performed: false
+  trading_authority_changed: false
+  real_order_submissions: 0
+  next_recommended_package: LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R2
   next_package_status: RECOMMENDED_NOT_STARTED
 
 completed_stage3_question_driven_research_router_r1:
@@ -922,3 +974,101 @@ completed_stage1_data_provenance_pit_blocker_fix_r1:
     production_store_attempts: 0
   stage1_build_complete: false
   real_order_submissions: 0
+
+completed_stage1_recovery_monitoring_foundation_r1:
+  package: LUFFY-STAGE1-RECOVERY-MONITORING-FOUNDATION-R1
+  mode: FINAL_STAGE1_PRE_START_SAFETY_IMPLEMENTATION
+  result: PASS
+  baseline_head: fcfe9e0359874b18d65a0b1e1ccfd156d18115e1
+  branch: luffy-stage1-recovery-monitoring-foundation-r1
+  uncommitted: false
+  undeployed: true
+  startup_performed: false
+  real_order_submissions: 0
+  trading_authority_changed: false
+  MI-6:
+    implementation: IMPLEMENTED
+    state: TESTED
+    status: CLOSED
+    independent_review: PASS
+  MI-7:
+    implementation: IMPLEMENTED
+    state: TESTED
+    status: CLOSED
+    independent_review: PASS
+  stage1_build_complete: false
+  independent_review: PASS
+  review_id: STAGE1_RECOVERY_MONITORING_INDEPENDENT_REVIEW_R2
+  missing_implementation: []
+  pre_start_test_blocker: []
+  policy_not_configured:
+  - Configured backup destination/mount (physical off-host status not inferred).
+  - Production backup cadence.
+  - Backup retention.
+  - Production restore-drill cadence.
+  - Real safety-notification routing/delivery configuration.
+  needs_real_runtime_evidence:
+  - Physical off-host backup operation.
+  - Production backup history and restore drill.
+  - Real kernel heartbeat/restart history and watchdog observations.
+  - Real safety alert delivery.
+  - Post-restore venue truth, reconciliation, protection verification and Risk release.
+  report: docs/superpowers/reports/2026-10-04-stage1-recovery-monitoring-foundation-r1.md
+  evidence: docs/superpowers/evidence/stage1-recovery-monitoring-foundation-r1/
+  tests:
+    acceptance_and_supervisor: 103 passed in 15.03s
+    control_entry: 154 passed in 41.98s
+    recovery_owner: 121 passed in 21.60s
+    risk_owner_health: 285 passed, 3 baseline-only expectations deselected in 75.65s
+    baseline_comparison: 3 legacy set_leverage assertions fail identically at required base
+    mutants_detected: 6
+    package_acceptance: 54 passed in 9.04s
+  safe_to_review: true
+  next_recommended_package: LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R2
+
+completed_stage1_recovery_monitoring_blocker_fix_r1:
+  package: LUFFY-STAGE1-RECOVERY-MONITORING-BLOCKER-FIX-R1
+  result: PASS
+  baseline_head: fcfe9e0359874b18d65a0b1e1ccfd156d18115e1
+  branch: luffy-stage1-recovery-monitoring-foundation-r1
+  uncommitted: false
+  undeployed: true
+  startup_performed: false
+  real_order_submissions: 0
+  trading_authority_changed: false
+  MI-6:
+    implementation: IMPLEMENTED
+    state: TESTED
+    status: CLOSED
+    independent_review: PASS
+  MI-7:
+    implementation: IMPLEMENTED
+    state: TESTED
+    status: CLOSED
+    independent_review: PASS
+  stage1_build_complete: false
+  independent_review: PASS
+  review_id: STAGE1_RECOVERY_MONITORING_INDEPENDENT_REVIEW_R2
+  blocking_defects: []
+  regression_found: false
+  formal_stage1_closure: AWAITING_R2
+  missing_implementation: []
+  pre_start_test_blocker: []
+  blockers_fixed:
+  - Mandatory PIT configuration/declaration/freeze/exported receipt inventory closure.
+  - Required successful-cycle heartbeat context and strict identity/chronology validation.
+  - Reproducible guarded batches, exact-base snapshot comparison and complete descriptor rerun mapping.
+  report: docs/superpowers/reports/2026-10-04-stage1-recovery-monitoring-blocker-fix-r1.md
+  evidence: docs/superpowers/evidence/stage1-recovery-monitoring-blocker-fix-r1/
+  tests:
+    package_acceptance: 80 passed
+    control_entry: 154 passed
+    recovery_owner: 121 passed
+    risk_owner_health: 285 passed; 3 baseline-only expectations deselected and separately executed
+    pit_regression: 43 passed
+    baseline_comparison: 3 identical assertion failures at exact required base and candidate
+    descriptor_rerun_coverage: 563 of 563 nodes; 560 passed plus 3 base-identical failures
+    mutants_detected: 9
+  authority_regression: false
+  safe_to_review: true
+  next_recommended_package: LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R2

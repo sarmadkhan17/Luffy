@@ -1,0 +1,187 @@
+{
+  "selected": [
+    "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[macro]",
+    "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[spot_resume]",
+    "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[owner_unhalt]"
+  ],
+  "deselected": [],
+  "reports": [
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[macro]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.15681010801927187
+    },
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[macro]",
+      "when": "call",
+      "outcome": "failed",
+      "duration": 0.9450390030106064
+    },
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[macro]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00043595500756055117
+    },
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[spot_resume]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14812605499173515
+    },
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[spot_resume]",
+      "when": "call",
+      "outcome": "failed",
+      "duration": 0.0854658059834037
+    },
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[spot_resume]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004509330028668046
+    },
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[owner_unhalt]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.22553306998452172
+    },
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[owner_unhalt]",
+      "when": "call",
+      "outcome": "failed",
+      "duration": 0.05258203198900446
+    },
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[owner_unhalt]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00047932600136846304
+    }
+  ],
+  "failures": [
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[macro]",
+      "when": "call",
+      "path": "/mnt/luffy-data/luffy/production/tests/test_activation_risk_baseline.py",
+      "line": 628,
+      "message": "AssertionError: assert [] == ['set_leverage']\n  \n  Right contains one more item: 'set_leverage'\n  Use -v to get more diff",
+      "full_traceback": "world = (<trader.core.journal.Journal object at 0x7e09a47c1640>, <tests.test_owner_recovery.HookVenue object at 0x7e09a3c8fb60>)\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e09a3cb2360>\npath = 'macro'\n\n    @pytest.mark.parametrize(\"path\", [\"macro\", \"spot_resume\", \"owner_unhalt\"])\n    def test_previously_approved_entry_submits_nothing(world, monkeypatch, path):\n        journal, venue = world\n        from tests.authority_legacy_fixtures import seed\n        seed(journal, \"s\")  # explicit TEST-ONLY authority; exercise the control/Risk fence\n        k, eid = _macro_frozen(journal, venue, monkeypatch) if path == \"macro\" else (\n            _boot(journal, venue, monkeypatch), None)\n        sizing = RiskManager(RISK_CFG, journal).check_entry(\n            ControlState.ACTIVE, \"ETH/USDT\", 100.0, 1.0, .02, [], 1000.0, 50, \"futures\")\n        assert sizing.ok                                          # approved while ACTIVE\n        venue.equity = BREACH\n        k._risk_step()\n        assert _state(journal) == \"HALTED\"\n        mark = _last_event(journal)\n        if path == \"macro\":\n            k._macro_step({\"active\": False})\n        elif path == \"spot_resume\":\n            k.market_type = MarketType.SPOT\n            tg(k, monkeypatch, \"/resume\")\n            tg(k, monkeypatch, \"/unhalt\")\n            k.market_type = MarketType.FUTURES\n        else:\n            k.owner_resume(OWNER, allow_unhalt=True)\n        assert _activations(journal, mark) == [] and _state(journal) == \"HALTED\"\n        d = Decision(\"d-approved\", \"c-1\", \"ETH/USDT\", Action.BUY, .7, .2, .8, [], [])\n        pos = k.executor.open(d, sizing.amount, 1.0, 98.0, 103.0, \"s\", \"s\")\n        assert pos is None and d.skip_reason == \"state=HALTED\"\n        assert [m for m in venue.mutations if m[0] == \"create_order\"] == []\n        # Recorded separately (LUFFY-ENTRY-FENCE-SIDE-EFFECT-V1): leverage is still\n        # applied before the final fence even though no order is sent.\n>       assert [m[0] for m in venue.mutations] == [\"set_leverage\"]\nE       AssertionError: assert [] == ['set_leverage']\nE         \nE         Right contains one more item: 'set_leverage'\nE         Use -v to get more diff\n\ntests/test_activation_risk_baseline.py:628: AssertionError"
+    },
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[spot_resume]",
+      "when": "call",
+      "path": "/mnt/luffy-data/luffy/production/tests/test_activation_risk_baseline.py",
+      "line": 628,
+      "message": "AssertionError: assert [] == ['set_leverage']\n  \n  Right contains one more item: 'set_leverage'\n  Use -v to get more diff",
+      "full_traceback": "world = (<trader.core.journal.Journal object at 0x7e0995a692e0>, <tests.test_owner_recovery.HookVenue object at 0x7e099632f5c0>)\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e0995b46ea0>\npath = 'spot_resume'\n\n    @pytest.mark.parametrize(\"path\", [\"macro\", \"spot_resume\", \"owner_unhalt\"])\n    def test_previously_approved_entry_submits_nothing(world, monkeypatch, path):\n        journal, venue = world\n        from tests.authority_legacy_fixtures import seed\n        seed(journal, \"s\")  # explicit TEST-ONLY authority; exercise the control/Risk fence\n        k, eid = _macro_frozen(journal, venue, monkeypatch) if path == \"macro\" else (\n            _boot(journal, venue, monkeypatch), None)\n        sizing = RiskManager(RISK_CFG, journal).check_entry(\n            ControlState.ACTIVE, \"ETH/USDT\", 100.0, 1.0, .02, [], 1000.0, 50, \"futures\")\n        assert sizing.ok                                          # approved while ACTIVE\n        venue.equity = BREACH\n        k._risk_step()\n        assert _state(journal) == \"HALTED\"\n        mark = _last_event(journal)\n        if path == \"macro\":\n            k._macro_step({\"active\": False})\n        elif path == \"spot_resume\":\n            k.market_type = MarketType.SPOT\n            tg(k, monkeypatch, \"/resume\")\n            tg(k, monkeypatch, \"/unhalt\")\n            k.market_type = MarketType.FUTURES\n        else:\n            k.owner_resume(OWNER, allow_unhalt=True)\n        assert _activations(journal, mark) == [] and _state(journal) == \"HALTED\"\n        d = Decision(\"d-approved\", \"c-1\", \"ETH/USDT\", Action.BUY, .7, .2, .8, [], [])\n        pos = k.executor.open(d, sizing.amount, 1.0, 98.0, 103.0, \"s\", \"s\")\n        assert pos is None and d.skip_reason == \"state=HALTED\"\n        assert [m for m in venue.mutations if m[0] == \"create_order\"] == []\n        # Recorded separately (LUFFY-ENTRY-FENCE-SIDE-EFFECT-V1): leverage is still\n        # applied before the final fence even though no order is sent.\n>       assert [m[0] for m in venue.mutations] == [\"set_leverage\"]\nE       AssertionError: assert [] == ['set_leverage']\nE         \nE         Right contains one more item: 'set_leverage'\nE         Use -v to get more diff\n\ntests/test_activation_risk_baseline.py:628: AssertionError"
+    },
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[owner_unhalt]",
+      "when": "call",
+      "path": "/mnt/luffy-data/luffy/production/tests/test_activation_risk_baseline.py",
+      "line": 628,
+      "message": "AssertionError: assert [] == ['set_leverage']\n  \n  Right contains one more item: 'set_leverage'\n  Use -v to get more diff",
+      "full_traceback": "world = (<trader.core.journal.Journal object at 0x7e0995636c90>, <tests.test_owner_recovery.HookVenue object at 0x7e09a13c6c00>)\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7e099554a420>\npath = 'owner_unhalt'\n\n    @pytest.mark.parametrize(\"path\", [\"macro\", \"spot_resume\", \"owner_unhalt\"])\n    def test_previously_approved_entry_submits_nothing(world, monkeypatch, path):\n        journal, venue = world\n        from tests.authority_legacy_fixtures import seed\n        seed(journal, \"s\")  # explicit TEST-ONLY authority; exercise the control/Risk fence\n        k, eid = _macro_frozen(journal, venue, monkeypatch) if path == \"macro\" else (\n            _boot(journal, venue, monkeypatch), None)\n        sizing = RiskManager(RISK_CFG, journal).check_entry(\n            ControlState.ACTIVE, \"ETH/USDT\", 100.0, 1.0, .02, [], 1000.0, 50, \"futures\")\n        assert sizing.ok                                          # approved while ACTIVE\n        venue.equity = BREACH\n        k._risk_step()\n        assert _state(journal) == \"HALTED\"\n        mark = _last_event(journal)\n        if path == \"macro\":\n            k._macro_step({\"active\": False})\n        elif path == \"spot_resume\":\n            k.market_type = MarketType.SPOT\n            tg(k, monkeypatch, \"/resume\")\n            tg(k, monkeypatch, \"/unhalt\")\n            k.market_type = MarketType.FUTURES\n        else:\n            k.owner_resume(OWNER, allow_unhalt=True)\n        assert _activations(journal, mark) == [] and _state(journal) == \"HALTED\"\n        d = Decision(\"d-approved\", \"c-1\", \"ETH/USDT\", Action.BUY, .7, .2, .8, [], [])\n        pos = k.executor.open(d, sizing.amount, 1.0, 98.0, 103.0, \"s\", \"s\")\n        assert pos is None and d.skip_reason == \"state=HALTED\"\n        assert [m for m in venue.mutations if m[0] == \"create_order\"] == []\n        # Recorded separately (LUFFY-ENTRY-FENCE-SIDE-EFFECT-V1): leverage is still\n        # applied before the final fence even though no order is sent.\n>       assert [m[0] for m in venue.mutations] == [\"set_leverage\"]\nE       AssertionError: assert [] == ['set_leverage']\nE         \nE         Right contains one more item: 'set_leverage'\nE         Use -v to get more diff\n\ntests/test_activation_risk_baseline.py:628: AssertionError"
+    }
+  ],
+  "network_attempts": [],
+  "production_store_attempts": [],
+  "module_origins": {
+    "trader": "/mnt/luffy-data/luffy/production/trader/__init__.py",
+    "trader.agents": "/mnt/luffy-data/luffy/production/trader/agents/__init__.py",
+    "trader.agents.base": "/mnt/luffy-data/luffy/production/trader/agents/base.py",
+    "trader.agents.calibration": "/mnt/luffy-data/luffy/production/trader/agents/calibration.py",
+    "trader.agents.flow": "/mnt/luffy-data/luffy/production/trader/agents/flow.py",
+    "trader.agents.indicators": "/mnt/luffy-data/luffy/production/trader/agents/indicators.py",
+    "trader.agents.macro_guard": "/mnt/luffy-data/luffy/production/trader/agents/macro_guard.py",
+    "trader.agents.momentum": "/mnt/luffy-data/luffy/production/trader/agents/momentum.py",
+    "trader.agents.news_guard": "/mnt/luffy-data/luffy/production/trader/agents/news_guard.py",
+    "trader.agents.orderbook_depth": "/mnt/luffy-data/luffy/production/trader/agents/orderbook_depth.py",
+    "trader.agents.positioning": "/mnt/luffy-data/luffy/production/trader/agents/positioning.py",
+    "trader.agents.regime": "/mnt/luffy-data/luffy/production/trader/agents/regime.py",
+    "trader.agents.structure": "/mnt/luffy-data/luffy/production/trader/agents/structure.py",
+    "trader.brain": "/mnt/luffy-data/luffy/production/trader/brain/__init__.py",
+    "trader.brain.ideas": "/mnt/luffy-data/luffy/production/trader/brain/ideas.py",
+    "trader.brain.scraper": "/mnt/luffy-data/luffy/production/trader/brain/scraper.py",
+    "trader.cognition": "/mnt/luffy-data/luffy/production/trader/cognition/__init__.py",
+    "trader.cognition.forecast_protocol": "/mnt/luffy-data/luffy/production/trader/cognition/forecast_protocol.py",
+    "trader.cognition.outcomes": "/mnt/luffy-data/luffy/production/trader/cognition/outcomes.py",
+    "trader.core": "/mnt/luffy-data/luffy/production/trader/core/__init__.py",
+    "trader.core.config": "/mnt/luffy-data/luffy/production/trader/core/config.py",
+    "trader.core.instrument_registry": "/mnt/luffy-data/luffy/production/trader/core/instrument_registry.py",
+    "trader.core.journal": "/mnt/luffy-data/luffy/production/trader/core/journal.py",
+    "trader.core.reason_codes": "/mnt/luffy-data/luffy/production/trader/core/reason_codes.py",
+    "trader.core.types": "/mnt/luffy-data/luffy/production/trader/core/types.py",
+    "trader.data": "/mnt/luffy-data/luffy/production/trader/data/__init__.py",
+    "trader.data.binance_usdm_registry": "/mnt/luffy-data/luffy/production/trader/data/binance_usdm_registry.py",
+    "trader.data.feed": "/mnt/luffy-data/luffy/production/trader/data/feed.py",
+    "trader.data.market_provenance": "/mnt/luffy-data/luffy/production/trader/data/market_provenance.py",
+    "trader.data.registry_provider": "/mnt/luffy-data/luffy/production/trader/data/registry_provider.py",
+    "trader.data.sqlite_tx": "/mnt/luffy-data/luffy/production/trader/data/sqlite_tx.py",
+    "trader.engine": "/mnt/luffy-data/luffy/production/trader/engine/__init__.py",
+    "trader.engine.accounting": "/mnt/luffy-data/luffy/production/trader/engine/accounting.py",
+    "trader.engine.booking": "/mnt/luffy-data/luffy/production/trader/engine/booking.py",
+    "trader.engine.control_fence": "/mnt/luffy-data/luffy/production/trader/engine/control_fence.py",
+    "trader.engine.entry_authority": "/mnt/luffy-data/luffy/production/trader/engine/entry_authority.py",
+    "trader.engine.evidence_capture": "/mnt/luffy-data/luffy/production/trader/engine/evidence_capture.py",
+    "trader.engine.executor": "/mnt/luffy-data/luffy/production/trader/engine/executor.py",
+    "trader.engine.outcomes": "/mnt/luffy-data/luffy/production/trader/engine/outcomes.py",
+    "trader.engine.paper_exit_evidence": "/mnt/luffy-data/luffy/production/trader/engine/paper_exit_evidence.py",
+    "trader.engine.protective": "/mnt/luffy-data/luffy/production/trader/engine/protective.py",
+    "trader.engine.reconcile": "/mnt/luffy-data/luffy/production/trader/engine/reconcile.py",
+    "trader.engine.recovery": "/mnt/luffy-data/luffy/production/trader/engine/recovery.py",
+    "trader.engine.risk": "/mnt/luffy-data/luffy/production/trader/engine/risk.py",
+    "trader.engine.state": "/mnt/luffy-data/luffy/production/trader/engine/state.py",
+    "trader.engine.supervisor": "/mnt/luffy-data/luffy/production/trader/engine/supervisor.py",
+    "trader.engine.trade_provenance": "/mnt/luffy-data/luffy/production/trader/engine/trade_provenance.py",
+    "trader.engine.watchdog": "/mnt/luffy-data/luffy/production/trader/engine/watchdog.py",
+    "trader.kernel": "/mnt/luffy-data/luffy/production/trader/kernel.py",
+    "trader.learning": "/mnt/luffy-data/luffy/production/trader/learning/__init__.py",
+    "trader.learning.capture": "/mnt/luffy-data/luffy/production/trader/learning/capture.py",
+    "trader.learning.capture_runtime": "/mnt/luffy-data/luffy/production/trader/learning/capture_runtime.py",
+    "trader.learning.foundation": "/mnt/luffy-data/luffy/production/trader/learning/foundation.py",
+    "trader.notify": "/mnt/luffy-data/luffy/production/trader/notify/__init__.py",
+    "trader.notify.telegram": "/mnt/luffy-data/luffy/production/trader/notify/telegram.py",
+    "trader.observability": "/mnt/luffy-data/luffy/production/trader/observability/__init__.py",
+    "trader.observability.depth_evidence": "/mnt/luffy-data/luffy/production/trader/observability/depth_evidence.py",
+    "trader.observability.execution_shadow": "/mnt/luffy-data/luffy/production/trader/observability/execution_shadow.py",
+    "trader.observability.funding_events": "/mnt/luffy-data/luffy/production/trader/observability/funding_events.py",
+    "trader.observability.portfolio_observation": "/mnt/luffy-data/luffy/production/trader/observability/portfolio_observation.py",
+    "trader.observability.prospective_execution": "/mnt/luffy-data/luffy/production/trader/observability/prospective_execution.py",
+    "trader.observability.safety": "/mnt/luffy-data/luffy/production/trader/observability/safety.py",
+    "trader.observability.stage5_activation": "/mnt/luffy-data/luffy/production/trader/observability/stage5_activation.py",
+    "trader.owner": "/mnt/luffy-data/luffy/production/trader/owner/__init__.py",
+    "trader.owner.adapters": "/mnt/luffy-data/luffy/production/trader/owner/adapters/__init__.py",
+    "trader.owner.adapters.render": "/mnt/luffy-data/luffy/production/trader/owner/adapters/render.py",
+    "trader.owner.adapters.telegram": "/mnt/luffy-data/luffy/production/trader/owner/adapters/telegram.py",
+    "trader.owner.authz": "/mnt/luffy-data/luffy/production/trader/owner/authz.py",
+    "trader.owner.contract": "/mnt/luffy-data/luffy/production/trader/owner/contract.py",
+    "trader.owner.service": "/mnt/luffy-data/luffy/production/trader/owner/service.py",
+    "trader.strategy": "/mnt/luffy-data/luffy/production/trader/strategy/__init__.py",
+    "trader.strategy.exit_policy": "/mnt/luffy-data/luffy/production/trader/strategy/exit_policy.py",
+    "trader.strategy.genome": "/mnt/luffy-data/luffy/production/trader/strategy/genome.py",
+    "trader.strategy.legacy_authority": "/mnt/luffy-data/luffy/production/trader/strategy/legacy_authority.py",
+    "trader.strategy.spec": "/mnt/luffy-data/luffy/production/trader/strategy/spec.py",
+    "trader.world": "/mnt/luffy-data/luffy/production/trader/world/__init__.py",
+    "trader.world.claim": "/mnt/luffy-data/luffy/production/trader/world/claim.py",
+    "trader.world.model": "/mnt/luffy-data/luffy/production/trader/world/model.py",
+    "trader.world.observation": "/mnt/luffy-data/luffy/production/trader/world/observation.py",
+    "trader.world.perception": "/mnt/luffy-data/luffy/production/trader/world/perception.py",
+    "trader.world.relationship": "/mnt/luffy-data/luffy/production/trader/world/relationship.py",
+    "trader.world.replay": "/mnt/luffy-data/luffy/production/trader/world/replay.py",
+    "trader.world.state": "/mnt/luffy-data/luffy/production/trader/world/state.py"
+  },
+  "network_guard_active": true,
+  "production_store_guard_active": true,
+  "exit_code": 1,
+  "counts": {
+    "passed": 0,
+    "failed": 3,
+    "skipped": 0,
+    "errors": 0,
+    "deselected": 0
+  }
+}

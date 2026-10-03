@@ -1,0 +1,155 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+____________ test_previously_approved_entry_submits_nothing[macro] _____________
+
+world = (<trader.core.journal.Journal object at 0x7a7eb86a91c0>, <tests.test_owner_recovery.HookVenue object at 0x7a7eb86acf50>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a7eb88cb9b0>
+path = 'macro'
+
+    @pytest.mark.parametrize("path", ["macro", "spot_resume", "owner_unhalt"])
+    def test_previously_approved_entry_submits_nothing(world, monkeypatch, path):
+        journal, venue = world
+        from tests.authority_legacy_fixtures import seed
+        seed(journal, "s")  # explicit TEST-ONLY authority; exercise the control/Risk fence
+        k, eid = _macro_frozen(journal, venue, monkeypatch) if path == "macro" else (
+            _boot(journal, venue, monkeypatch), None)
+        sizing = RiskManager(RISK_CFG, journal).check_entry(
+            ControlState.ACTIVE, "ETH/USDT", 100.0, 1.0, .02, [], 1000.0, 50, "futures")
+        assert sizing.ok                                          # approved while ACTIVE
+        venue.equity = BREACH
+        k._risk_step()
+        assert _state(journal) == "HALTED"
+        mark = _last_event(journal)
+        if path == "macro":
+            k._macro_step({"active": False})
+        elif path == "spot_resume":
+            k.market_type = MarketType.SPOT
+            tg(k, monkeypatch, "/resume")
+            tg(k, monkeypatch, "/unhalt")
+            k.market_type = MarketType.FUTURES
+        else:
+            k.owner_resume(OWNER, allow_unhalt=True)
+        assert _activations(journal, mark) == [] and _state(journal) == "HALTED"
+        d = Decision("d-approved", "c-1", "ETH/USDT", Action.BUY, .7, .2, .8, [], [])
+        pos = k.executor.open(d, sizing.amount, 1.0, 98.0, 103.0, "s", "s")
+        assert pos is None and d.skip_reason == "state=HALTED"
+        assert [m for m in venue.mutations if m[0] == "create_order"] == []
+        # Recorded separately (LUFFY-ENTRY-FENCE-SIDE-EFFECT-V1): leverage is still
+        # applied before the final fence even though no order is sent.
+>       assert [m[0] for m in venue.mutations] == ["set_leverage"]
+E       AssertionError: assert [] == ['set_leverage']
+E
+E         Right contains one more item: 'set_leverage'
+E         Use -v to get more diff
+
+tests/test_activation_risk_baseline.py:628: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+WARNING  trader.engine.state:state.py:191 CONTROL STATE RECOVERY → ACTIVE (by supervisor) all recovery safety checks proved
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by macro_guard) CPI
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → HALTED (by risk_engine) drawdown 30.0%
+_________ test_previously_approved_entry_submits_nothing[spot_resume] __________
+
+world = (<trader.core.journal.Journal object at 0x7a7eb84bcce0>, <tests.test_owner_recovery.HookVenue object at 0x7a7eb84be6f0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a7eb84bdcd0>
+path = 'spot_resume'
+
+    @pytest.mark.parametrize("path", ["macro", "spot_resume", "owner_unhalt"])
+    def test_previously_approved_entry_submits_nothing(world, monkeypatch, path):
+        journal, venue = world
+        from tests.authority_legacy_fixtures import seed
+        seed(journal, "s")  # explicit TEST-ONLY authority; exercise the control/Risk fence
+        k, eid = _macro_frozen(journal, venue, monkeypatch) if path == "macro" else (
+            _boot(journal, venue, monkeypatch), None)
+        sizing = RiskManager(RISK_CFG, journal).check_entry(
+            ControlState.ACTIVE, "ETH/USDT", 100.0, 1.0, .02, [], 1000.0, 50, "futures")
+        assert sizing.ok                                          # approved while ACTIVE
+        venue.equity = BREACH
+        k._risk_step()
+        assert _state(journal) == "HALTED"
+        mark = _last_event(journal)
+        if path == "macro":
+            k._macro_step({"active": False})
+        elif path == "spot_resume":
+            k.market_type = MarketType.SPOT
+            tg(k, monkeypatch, "/resume")
+            tg(k, monkeypatch, "/unhalt")
+            k.market_type = MarketType.FUTURES
+        else:
+            k.owner_resume(OWNER, allow_unhalt=True)
+        assert _activations(journal, mark) == [] and _state(journal) == "HALTED"
+        d = Decision("d-approved", "c-1", "ETH/USDT", Action.BUY, .7, .2, .8, [], [])
+        pos = k.executor.open(d, sizing.amount, 1.0, 98.0, 103.0, "s", "s")
+        assert pos is None and d.skip_reason == "state=HALTED"
+        assert [m for m in venue.mutations if m[0] == "create_order"] == []
+        # Recorded separately (LUFFY-ENTRY-FENCE-SIDE-EFFECT-V1): leverage is still
+        # applied before the final fence even though no order is sent.
+>       assert [m[0] for m in venue.mutations] == ["set_leverage"]
+E       AssertionError: assert [] == ['set_leverage']
+E
+E         Right contains one more item: 'set_leverage'
+E         Use -v to get more diff
+
+tests/test_activation_risk_baseline.py:628: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+WARNING  trader.engine.state:state.py:191 CONTROL STATE RECOVERY → ACTIVE (by supervisor) all recovery safety checks proved
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → HALTED (by risk_engine) drawdown 30.0%
+_________ test_previously_approved_entry_submits_nothing[owner_unhalt] _________
+
+world = (<trader.core.journal.Journal object at 0x7a7eb84bdd30>, <tests.test_owner_recovery.HookVenue object at 0x7a7eb83b4cb0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7a7eb83b4170>
+path = 'owner_unhalt'
+
+    @pytest.mark.parametrize("path", ["macro", "spot_resume", "owner_unhalt"])
+    def test_previously_approved_entry_submits_nothing(world, monkeypatch, path):
+        journal, venue = world
+        from tests.authority_legacy_fixtures import seed
+        seed(journal, "s")  # explicit TEST-ONLY authority; exercise the control/Risk fence
+        k, eid = _macro_frozen(journal, venue, monkeypatch) if path == "macro" else (
+            _boot(journal, venue, monkeypatch), None)
+        sizing = RiskManager(RISK_CFG, journal).check_entry(
+            ControlState.ACTIVE, "ETH/USDT", 100.0, 1.0, .02, [], 1000.0, 50, "futures")
+        assert sizing.ok                                          # approved while ACTIVE
+        venue.equity = BREACH
+        k._risk_step()
+        assert _state(journal) == "HALTED"
+        mark = _last_event(journal)
+        if path == "macro":
+            k._macro_step({"active": False})
+        elif path == "spot_resume":
+            k.market_type = MarketType.SPOT
+            tg(k, monkeypatch, "/resume")
+            tg(k, monkeypatch, "/unhalt")
+            k.market_type = MarketType.FUTURES
+        else:
+            k.owner_resume(OWNER, allow_unhalt=True)
+        assert _activations(journal, mark) == [] and _state(journal) == "HALTED"
+        d = Decision("d-approved", "c-1", "ETH/USDT", Action.BUY, .7, .2, .8, [], [])
+        pos = k.executor.open(d, sizing.amount, 1.0, 98.0, 103.0, "s", "s")
+        assert pos is None and d.skip_reason == "state=HALTED"
+        assert [m for m in venue.mutations if m[0] == "create_order"] == []
+        # Recorded separately (LUFFY-ENTRY-FENCE-SIDE-EFFECT-V1): leverage is still
+        # applied before the final fence even though no order is sent.
+>       assert [m[0] for m in venue.mutations] == ["set_leverage"]
+E       AssertionError: assert [] == ['set_leverage']
+E
+E         Right contains one more item: 'set_leverage'
+E         Use -v to get more diff
+
+tests/test_activation_risk_baseline.py:628: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+WARNING  trader.engine.state:state.py:191 CONTROL STATE RECOVERY → ACTIVE (by supervisor) all recovery safety checks proved
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → HALTED (by risk_engine) drawdown 30.0%
+=========================== short test summary info ============================
+FAILED tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[macro]
+FAILED tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[spot_resume]
+FAILED tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[owner_unhalt]
+3 failed in 1.08s

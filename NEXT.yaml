@@ -3,8 +3,8 @@ sdd_version: '3.2'
 updated_at: '2026-10-04'
 
 repository_checkpoint:
-  branch: luffy-stage1-data-provenance-pit-r1
-  working_tree_base_head: 8d49c6976dc7359aed9451c4b3fd5c9bf55b0198
+  branch: luffy-stage1-recovery-monitoring-foundation-r1
+  working_tree_base_head: fcfe9e0359874b18d65a0b1e1ccfd156d18115e1
   reviewed_code_head: 57ad32332a98518c083b750f9df9d43596d0d531
   production_main_head: 1bed3958740ec2d0d575aabc817978086d31d390
 
@@ -37,32 +37,37 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
-  id: LUFFY-STAGE1-RECOVERY-MONITORING-FOUNDATION-R1
-  type: BOUNDED_IMPLEMENTATION
+  id: LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R2
+  type: READ_ONLY_STAGE_CLOSURE
   status: RECOMMENDED_NOT_STARTED
-  mode: PRE_START_SAFETY_IMPLEMENTATION
+  mode: READ_ONLY_STAGE_CLOSURE
   implementation_started: false
-  purpose: Close exactly MI-6/MI-7 through existing backup/restore, critical-store,
-    deterministic Supervisor, recovery and heartbeat boundaries.
-  source_closure: docs/superpowers/reports/2026-10-04-stage1-data-provenance-pit-blocker-fix-r1.md
-  prerequisite_review: STAGE1_DATA_PROVENANCE_PIT_INDEPENDENT_REVIEW_R2
-  prerequisite_review_result: PASS
-  closed_stage1_gaps: [MI-2, MI-3]
+  purpose: Perform formal Stage1 closure R2 after all MI-1 through MI-7 were independently reviewed and closed.
+  implementation_package: LUFFY-STAGE1-RECOVERY-MONITORING-BLOCKER-FIX-R1
+  foundation_package: LUFFY-STAGE1-RECOVERY-MONITORING-FOUNDATION-R1
+  source_closure: docs/superpowers/reports/2026-10-04-stage1-recovery-monitoring-blocker-fix-r1.md
+  evidence: docs/superpowers/evidence/stage1-recovery-monitoring-blocker-fix-r1/
+  baseline_head: fcfe9e0359874b18d65a0b1e1ccfd156d18115e1
+  branch: luffy-stage1-recovery-monitoring-foundation-r1
+  independent_review: PASS
+  review_id: STAGE1_RECOVERY_MONITORING_INDEPENDENT_REVIEW_R2
+  closed_audit_gaps: [MI-1, MI-2, MI-3, MI-4, MI-5, MI-6, MI-7]
+  remaining_stage1_implementation_gaps: []
+  blocking_defects: []
+  regression_found: false
+  authority_regression: false
   scope:
-  - 'MI-6: Integrity-checked critical backup/restore with an off-host-capable destination seam.'
-  - 'MI-7: Critical storage/journal-unavailable detection and missing-heartbeat safety alerts.'
+  - Reconcile Stage1 closure status against retained independently reviewed implementation and test evidence.
+  - Classify production policy, runtime and venue evidence separately from implementation closure.
   acceptance:
-  - Offline temporary-store backup/restore proves integrity, manifest completeness and recovery of critical state.
-  - Controlled faults and clocks prove critical storage/journal-unavailable and missing-heartbeat safety alerts through existing containment authority.
-  - Stage1 remains incomplete until both remaining gaps pass independent review.
-  remaining_stage1_blockers:
-  - MI-6
-  - MI-7
+  - Confirm all MI-1 through MI-7 are closed with no remaining Stage1 implementation gaps.
+  - Record the formal Stage1 closure R2 verdict without claiming PROVEN or ACTIVE maturity.
   constraints:
-  - Do not deploy, start LUFFY, restart services, call live venues or submit orders.
-  - Do not change trading authority, run Scheme-D or weaken tests.
+  - Do not reopen frozen MI-1 through MI-7 without a concrete defect.
+  - Do not edit implementation, deploy, start LUFFY, restart services, call venues or submit orders.
+  - Do not change Risk policy, trading authority, run Scheme-D or weaken tests.
   - Preserve unrelated frontend/M4, knowledge and frozen architecture work.
-  next_after_all_stage1_blockers_close: LUFFY-PRE-START-SYSTEM-READINESS-R1
+  pre_start_readiness_selected: false
 
 completed_stage8_owner_os_closure_r1:
   result: PASS

@@ -1,0 +1,895 @@
+{
+  "selected": [
+    "tests/test_pit_population.py::test_selected_ignored_registration_resolution_and_capture",
+    "tests/test_pit_population.py::test_missing_and_expired_survive_eviction",
+    "tests/test_pit_population.py::test_late_activation_is_gap_not_backfill",
+    "tests/test_pit_population.py::test_investigation_all_results_and_registration_memory",
+    "tests/test_pit_population.py::test_investigation_expiry_and_pruning",
+    "tests/test_pit_population.py::test_outbox_rollback_capacity_immutable_and_retry",
+    "tests/test_pit_population.py::test_failed_export_prevents_source_pruning",
+    "tests/test_pit_population.py::test_capacity_rolls_back_registration",
+    "tests/test_pit_population.py::test_boundary_and_clock_regression",
+    "tests/test_pit_population.py::test_capture_replays_without_source_and_refuses_tamper",
+    "tests/test_pit_population.py::test_late_terminal_cannot_enter_prospective_typed_dataset",
+    "tests/test_pit_population.py::test_local_index_preserves_knowledge_clock_and_rejects_conflict",
+    "tests/test_population_rollforward.py::test_two_window_rotation_preserves_old_capture_bytes",
+    "tests/test_population_rollforward.py::test_old_pending_episodes_are_not_backfilled_or_given_future_terminals",
+    "tests/test_population_rollforward.py::test_old_pending_receipts_refuse_rotation_until_exported_by_old_config",
+    "tests/test_population_rollforward.py::test_no_cross_window_export",
+    "tests/test_population_rollforward.py::test_directory_conflicts_and_rebind",
+    "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over0-1789084860000-window_overlap]",
+    "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over1-1789084860001-retroactive_freeze]",
+    "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over2-1789084859999-prior_window_open]",
+    "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over3-1789084860000-prior_window_unknown]",
+    "tests/test_population_rollforward.py::test_refreeze_of_active_window_is_refused",
+    "tests/test_population_rollforward.py::test_third_window_uses_recorded_bounds",
+    "tests/test_population_cohort.py::test_neutral_investigation_cohort_includes_unclassified_terminals",
+    "tests/test_population_cohort.py::test_forecast_selected_ignored_retries_and_unavailable",
+    "tests/test_population_cohort.py::test_expired_and_orphan_results_stay_explicit",
+    "tests/test_population_cohort.py::test_index_reconciliation_detects_lost_and_pending_exports",
+    "tests/test_population_cohort.py::test_cut_and_restoration_clocks_do_not_backdate_labels",
+    "tests/test_population_cohort.py::test_old_frozen_capture_still_replays",
+    "tests/test_population_cohort.py::test_no_observations_leave_full_window_gap",
+    "tests/test_population_cohort.py::test_repeated_scans_are_not_additional_episodes",
+    "tests/test_declared_population.py::test_membership_independent_of_selection_and_cap",
+    "tests/test_declared_population.py::test_capacity_never_truncates",
+    "tests/test_declared_population.py::test_errors_stale_missing_and_retry",
+    "tests/test_declared_population.py::test_malformed_no_partial_or_fabricated_data",
+    "tests/test_declared_population.py::test_persistence_provenance_revisions_and_bound_read",
+    "tests/test_declared_population.py::test_failure_invalidates_previous_success",
+    "tests/test_declared_population.py::test_opt_in_no_silent_fallback",
+    "tests/test_declared_population.py::test_consumers_see_whole_universe",
+    "tests/test_declared_population.py::test_per_symbol_first_seen_is_fetch_completion",
+    "tests/test_declared_population.py::test_snapshot_crossing_bar_boundary_is_stale",
+    "tests/test_declared_population.py::test_timeout_is_bounded",
+    "tests/test_declared_population.py::test_population_receipts_include_availability_and_refuse_wrong_binding"
+  ],
+  "deselected": [],
+  "reports": [
+    {
+      "nodeid": "tests/test_pit_population.py::test_selected_ignored_registration_resolution_and_capture",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0031889700039755553
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_selected_ignored_registration_resolution_and_capture",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 1.8066499199776445
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_selected_ignored_registration_resolution_and_capture",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002678199962247163
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_missing_and_expired_survive_eviction",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0022244550054892898
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_missing_and_expired_survive_eviction",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.7876063940057065
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_missing_and_expired_survive_eviction",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0009066649945452809
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_late_activation_is_gap_not_backfill",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0019928150286432356
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_late_activation_is_gap_not_backfill",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.4997613080195151
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_late_activation_is_gap_not_backfill",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003975229919888079
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_investigation_all_results_and_registration_memory",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0026956279762089252
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_investigation_all_results_and_registration_memory",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 1.869950198015431
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_investigation_all_results_and_registration_memory",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003192769945599139
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_investigation_expiry_and_pruning",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0013977130001876503
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_investigation_expiry_and_pruning",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.7954801529995166
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_investigation_expiry_and_pruning",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00040989601984620094
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_outbox_rollback_capacity_immutable_and_retry",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0012681799998972565
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_outbox_rollback_capacity_immutable_and_retry",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.029804521007463336
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_outbox_rollback_capacity_immutable_and_retry",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00035830901470035315
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_failed_export_prevents_source_pruning",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0012795369839295745
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_failed_export_prevents_source_pruning",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.5026981629780494
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_failed_export_prevents_source_pruning",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003703820111695677
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_capacity_rolls_back_registration",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001068948011379689
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_capacity_rolls_back_registration",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.4868682560045272
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_capacity_rolls_back_registration",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00048468599561601877
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_boundary_and_clock_regression",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0011362530058249831
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_boundary_and_clock_regression",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.017878987011499703
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_boundary_and_clock_regression",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003865530015900731
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_capture_replays_without_source_and_refuses_tamper",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0013695630186703056
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_capture_replays_without_source_and_refuses_tamper",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.9477734809916001
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_capture_replays_without_source_and_refuses_tamper",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00028491299599409103
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_late_terminal_cannot_enter_prospective_typed_dataset",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0014319539768621325
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_late_terminal_cannot_enter_prospective_typed_dataset",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 1.4032179249916226
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_late_terminal_cannot_enter_prospective_typed_dataset",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002600860025268048
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_local_index_preserves_knowledge_clock_and_rejects_conflict",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0012004640011582524
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_local_index_preserves_knowledge_clock_and_rejects_conflict",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 1.6317069199867547
+    },
+    {
+      "nodeid": "tests/test_pit_population.py::test_local_index_preserves_knowledge_clock_and_rejects_conflict",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002976460091304034
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_two_window_rotation_preserves_old_capture_bytes",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0009514790144748986
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_two_window_rotation_preserves_old_capture_bytes",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 2.886176828003954
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_two_window_rotation_preserves_old_capture_bytes",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00028255899087525904
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_old_pending_episodes_are_not_backfilled_or_given_future_terminals",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001155860983999446
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_old_pending_episodes_are_not_backfilled_or_given_future_terminals",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.5356685320148245
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_old_pending_episodes_are_not_backfilled_or_given_future_terminals",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00029080300009809434
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_old_pending_receipts_refuse_rotation_until_exported_by_old_config",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0010427390225231647
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_old_pending_receipts_refuse_rotation_until_exported_by_old_config",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.5615188749798108
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_old_pending_receipts_refuse_rotation_until_exported_by_old_config",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003014339890796691
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_no_cross_window_export",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0012645339884329587
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_no_cross_window_export",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04412520499317907
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_no_cross_window_export",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002526119933463633
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_directory_conflicts_and_rebind",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0054264990030787885
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_directory_conflicts_and_rebind",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.044511921994853765
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_directory_conflicts_and_rebind",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002312920114491135
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over0-1789084860000-window_overlap]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0019637049990706146
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over0-1789084860000-window_overlap]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.02339166498859413
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over0-1789084860000-window_overlap]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00037714900099672377
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over1-1789084860001-retroactive_freeze]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0017229149816557765
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over1-1789084860001-retroactive_freeze]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.032186392025323585
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over1-1789084860001-retroactive_freeze]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000390430010156706
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over2-1789084859999-prior_window_open]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.003612783009884879
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over2-1789084859999-prior_window_open]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.023455032001947984
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over2-1789084859999-prior_window_open]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00038464899989776313
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over3-1789084860000-prior_window_unknown]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0023455189948435873
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over3-1789084860000-prior_window_unknown]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03190778198768385
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_invalid_rotation_leaves_ledger_unchanged[over3-1789084860000-prior_window_unknown]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00033062801230698824
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_refreeze_of_active_window_is_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0015393990033771843
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_refreeze_of_active_window_is_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03972866199910641
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_refreeze_of_active_window_is_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002857240033335984
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_third_window_uses_recorded_bounds",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0024485960020683706
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_third_window_uses_recorded_bounds",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05452495001372881
+    },
+    {
+      "nodeid": "tests/test_population_rollforward.py::test_third_window_uses_recorded_bounds",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004243830044288188
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_neutral_investigation_cohort_includes_unclassified_terminals",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0011774410086218268
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_neutral_investigation_cohort_includes_unclassified_terminals",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 2.5349162599886768
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_neutral_investigation_cohort_includes_unclassified_terminals",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00050996700883843
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_forecast_selected_ignored_retries_and_unavailable",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.019488570018438622
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_forecast_selected_ignored_retries_and_unavailable",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 1.4454516670084558
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_forecast_selected_ignored_retries_and_unavailable",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004209929902572185
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_expired_and_orphan_results_stay_explicit",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001476790988817811
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_expired_and_orphan_results_stay_explicit",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 1.3551761900016572
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_expired_and_orphan_results_stay_explicit",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00048350400174967945
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_index_reconciliation_detects_lost_and_pending_exports",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.002872733981348574
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_index_reconciliation_detects_lost_and_pending_exports",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.948131794022629
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_index_reconciliation_detects_lost_and_pending_exports",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00032165099401026964
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_cut_and_restoration_clocks_do_not_backdate_labels",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0012973519915249199
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_cut_and_restoration_clocks_do_not_backdate_labels",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 1.3798321740177926
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_cut_and_restoration_clocks_do_not_backdate_labels",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003274189948569983
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_old_frozen_capture_still_replays",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.00027951199444942176
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_old_frozen_capture_still_replays",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.12553211499471217
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_old_frozen_capture_still_replays",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0001575940113980323
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_no_observations_leave_full_window_gap",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001044892007485032
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_no_observations_leave_full_window_gap",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.005382921022828668
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_no_observations_leave_full_window_gap",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00019531598081812263
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_repeated_scans_are_not_additional_episodes",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0010327700001653284
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_repeated_scans_are_not_additional_episodes",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.9158001529867761
+    },
+    {
+      "nodeid": "tests/test_population_cohort.py::test_repeated_scans_are_not_additional_episodes",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004485880199354142
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_membership_independent_of_selection_and_cap",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.00024125099298544228
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_membership_independent_of_selection_and_cap",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 2.9887258599919733
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_membership_independent_of_selection_and_cap",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00021189599647186697
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_capacity_never_truncates",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0001712299999780953
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_capacity_never_truncates",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 2.9648046259826515
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_capacity_never_truncates",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003006719925906509
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_errors_stale_missing_and_retry",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0002257919986732304
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_errors_stale_missing_and_retry",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.2761418540030718
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_errors_stale_missing_and_retry",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0009316409996245056
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_malformed_no_partial_or_fabricated_data",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.00017932499758899212
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_malformed_no_partial_or_fabricated_data",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.002677053998922929
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_malformed_no_partial_or_fabricated_data",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002503280120436102
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_persistence_provenance_revisions_and_bound_read",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0018494459800422192
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_persistence_provenance_revisions_and_bound_read",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 3.1034272920223884
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_persistence_provenance_revisions_and_bound_read",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00034882198087871075
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_failure_invalidates_previous_success",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0015091309905983508
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_failure_invalidates_previous_success",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.16624034399865195
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_failure_invalidates_previous_success",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00022845700732432306
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_opt_in_no_silent_fallback",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0008864970004651695
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_opt_in_no_silent_fallback",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0034293689823243767
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_opt_in_no_silent_fallback",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00016639099339954555
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_consumers_see_whole_universe",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0012102919863536954
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_consumers_see_whole_universe",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 2.7913517330016475
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_consumers_see_whole_universe",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0006549039972014725
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_per_symbol_first_seen_is_fetch_completion",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0020511740003712475
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_per_symbol_first_seen_is_fetch_completion",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.195568886003457
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_per_symbol_first_seen_is_fetch_completion",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00037752598291262984
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_snapshot_crossing_bar_boundary_is_stale",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.000224379007704556
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_snapshot_crossing_bar_boundary_is_stale",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0613100090122316
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_snapshot_crossing_bar_boundary_is_stale",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003276419884059578
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_timeout_is_bounded",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.000455672008683905
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_timeout_is_bounded",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0011743450013455003
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_timeout_is_bounded",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00022618297953158617
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_population_receipts_include_availability_and_refuse_wrong_binding",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001595733017893508
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_population_receipts_include_availability_and_refuse_wrong_binding",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 3.864151028014021
+    },
+    {
+      "nodeid": "tests/test_declared_population.py::test_population_receipts_include_availability_and_refuse_wrong_binding",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004254349914845079
+    }
+  ],
+  "failures": [],
+  "network_attempts": [],
+  "production_store_attempts": [],
+  "module_origins": {
+    "trader": "/mnt/luffy-data/luffy/production/trader/__init__.py",
+    "trader.cognition": "/mnt/luffy-data/luffy/production/trader/cognition/__init__.py",
+    "trader.cognition.attention": "/mnt/luffy-data/luffy/production/trader/cognition/attention.py",
+    "trader.cognition.contracts": "/mnt/luffy-data/luffy/production/trader/cognition/contracts.py",
+    "trader.cognition.dataset": "/mnt/luffy-data/luffy/production/trader/cognition/dataset.py",
+    "trader.cognition.forecast_protocol": "/mnt/luffy-data/luffy/production/trader/cognition/forecast_protocol.py",
+    "trader.cognition.investigation": "/mnt/luffy-data/luffy/production/trader/cognition/investigation.py",
+    "trader.cognition.memory": "/mnt/luffy-data/luffy/production/trader/cognition/memory.py",
+    "trader.cognition.opportunity_context": "/mnt/luffy-data/luffy/production/trader/cognition/opportunity_context.py",
+    "trader.cognition.outcomes": "/mnt/luffy-data/luffy/production/trader/cognition/outcomes.py",
+    "trader.cognition.research_families": "/mnt/luffy-data/luffy/production/trader/cognition/research_families.py",
+    "trader.cognition.research_question": "/mnt/luffy-data/luffy/production/trader/cognition/research_question.py",
+    "trader.cognition.research_unreadable_question": "/mnt/luffy-data/luffy/production/trader/cognition/research_unreadable_question.py",
+    "trader.core": "/mnt/luffy-data/luffy/production/trader/core/__init__.py",
+    "trader.core.instrument_registry": "/mnt/luffy-data/luffy/production/trader/core/instrument_registry.py",
+    "trader.core.types": "/mnt/luffy-data/luffy/production/trader/core/types.py",
+    "trader.data": "/mnt/luffy-data/luffy/production/trader/data/__init__.py",
+    "trader.data.market_provenance": "/mnt/luffy-data/luffy/production/trader/data/market_provenance.py",
+    "trader.engine": "/mnt/luffy-data/luffy/production/trader/engine/__init__.py",
+    "trader.engine.protective": "/mnt/luffy-data/luffy/production/trader/engine/protective.py",
+    "trader.learning": "/mnt/luffy-data/luffy/production/trader/learning/__init__.py",
+    "trader.learning.capture": "/mnt/luffy-data/luffy/production/trader/learning/capture.py",
+    "trader.learning.capture_runtime": "/mnt/luffy-data/luffy/production/trader/learning/capture_runtime.py",
+    "trader.learning.consumers": "/mnt/luffy-data/luffy/production/trader/learning/consumers.py",
+    "trader.learning.decision_sources": "/mnt/luffy-data/luffy/production/trader/learning/decision_sources.py",
+    "trader.learning.foundation": "/mnt/luffy-data/luffy/production/trader/learning/foundation.py",
+    "trader.learning.producers": "/mnt/luffy-data/luffy/production/trader/learning/producers.py",
+    "trader.learning.targets": "/mnt/luffy-data/luffy/production/trader/learning/targets.py",
+    "trader.observability": "/mnt/luffy-data/luffy/production/trader/observability/__init__.py",
+    "trader.observability.attention": "/mnt/luffy-data/luffy/production/trader/observability/attention.py",
+    "trader.observability.cohort": "/mnt/luffy-data/luffy/production/trader/observability/cohort.py",
+    "trader.observability.collector": "/mnt/luffy-data/luffy/production/trader/observability/collector.py",
+    "trader.observability.collector_health": "/mnt/luffy-data/luffy/production/trader/observability/collector_health.py",
+    "trader.observability.declared": "/mnt/luffy-data/luffy/production/trader/observability/declared.py",
+    "trader.observability.intelligence_trace": "/mnt/luffy-data/luffy/production/trader/observability/intelligence_trace.py",
+    "trader.observability.investigation": "/mnt/luffy-data/luffy/production/trader/observability/investigation.py",
+    "trader.observability.investigation_research": "/mnt/luffy-data/luffy/production/trader/observability/investigation_research.py",
+    "trader.observability.learning": "/mnt/luffy-data/luffy/production/trader/observability/learning.py",
+    "trader.observability.memory": "/mnt/luffy-data/luffy/production/trader/observability/memory.py",
+    "trader.observability.outcomes": "/mnt/luffy-data/luffy/production/trader/observability/outcomes.py",
+    "trader.observability.population": "/mnt/luffy-data/luffy/production/trader/observability/population.py",
+    "trader.observability.registry_selector": "/mnt/luffy-data/luffy/production/trader/observability/registry_selector.py",
+    "trader.observability.selection_persistence": "/mnt/luffy-data/luffy/production/trader/observability/selection_persistence.py",
+    "trader.observability.store": "/mnt/luffy-data/luffy/production/trader/observability/store.py",
+    "trader.observability.world_producer": "/mnt/luffy-data/luffy/production/trader/observability/world_producer.py",
+    "trader.strategy": "/mnt/luffy-data/luffy/production/trader/strategy/__init__.py",
+    "trader.strategy.health_observation": "/mnt/luffy-data/luffy/production/trader/strategy/health_observation.py",
+    "trader.strategy.signal_occurrence": "/mnt/luffy-data/luffy/production/trader/strategy/signal_occurrence.py",
+    "trader.world": "/mnt/luffy-data/luffy/production/trader/world/__init__.py",
+    "trader.world.claim": "/mnt/luffy-data/luffy/production/trader/world/claim.py",
+    "trader.world.model": "/mnt/luffy-data/luffy/production/trader/world/model.py",
+    "trader.world.observation": "/mnt/luffy-data/luffy/production/trader/world/observation.py",
+    "trader.world.perception": "/mnt/luffy-data/luffy/production/trader/world/perception.py",
+    "trader.world.relationship": "/mnt/luffy-data/luffy/production/trader/world/relationship.py",
+    "trader.world.replay": "/mnt/luffy-data/luffy/production/trader/world/replay.py",
+    "trader.world.state": "/mnt/luffy-data/luffy/production/trader/world/state.py"
+  },
+  "network_guard_active": true,
+  "production_store_guard_active": true,
+  "exit_code": 0,
+  "counts": {
+    "passed": 43,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "deselected": 0
+  }
+}

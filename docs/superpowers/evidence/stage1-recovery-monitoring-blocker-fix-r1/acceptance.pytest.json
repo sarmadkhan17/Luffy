@@ -1,0 +1,1651 @@
+{
+  "selected": [
+    "tests/test_stage1_recovery_monitoring.py::test_wal_snapshot_exact_restore_requires_recovery_restart_destination",
+    "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[bit]",
+    "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[missing]",
+    "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[manifest]",
+    "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[db]",
+    "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[incomplete]",
+    "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[duplicate]",
+    "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[traversal]",
+    "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[schema]",
+    "tests/test_stage1_recovery_monitoring.py::test_sqlite_corruption_even_rehashed_is_refused",
+    "tests/test_stage1_recovery_monitoring.py::test_interrupted_restore_does_not_publish_or_overwrite[asset]",
+    "tests/test_stage1_recovery_monitoring.py::test_interrupted_restore_does_not_publish_or_overwrite[before_publish]",
+    "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[.env]",
+    "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[credential.json]",
+    "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[data/session_key]",
+    "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[graphify-out/graph.json]",
+    "tests/test_stage1_recovery_monitoring.py::test_embedded_config_secrets_refused",
+    "tests/test_stage1_recovery_monitoring.py::test_cross_file_change_refused",
+    "tests/test_stage1_recovery_monitoring.py::test_schema_incompatibility_and_destination_refused",
+    "tests/test_stage1_recovery_monitoring.py::test_heartbeat_fresh_stale_stopped_dedup_reopen_recovery_restart",
+    "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{]",
+    "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{}]",
+    "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[null]",
+    "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{\"timestamp\":100}]",
+    "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{\"timestamp\":NaN}]",
+    "tests/test_stage1_recovery_monitoring.py::test_missing_unconfigured_future_and_restamped_heartbeat",
+    "tests/test_stage1_recovery_monitoring.py::test_journal_read_failure_alert_and_entry_block",
+    "tests/test_stage1_recovery_monitoring.py::test_journal_readable_unwritable_entry_and_independent_alert",
+    "tests/test_stage1_recovery_monitoring.py::test_actual_entry_write_failure_prevents_submission",
+    "tests/test_stage1_recovery_monitoring.py::test_critical_store_unavailable_and_monitor_without_journal",
+    "tests/test_stage1_recovery_monitoring.py::test_alert_sink_survives_artifact_and_journal_failure",
+    "tests/test_stage1_recovery_monitoring.py::test_supervisor_only_release_after_venue_risk_proof",
+    "tests/test_stage1_recovery_monitoring.py::test_heartbeat_outage_blocks_supervisor_and_new_entry",
+    "tests/test_stage1_recovery_monitoring.py::test_owner_health_query_visible_with_failed_journal",
+    "tests/test_stage1_recovery_monitoring.py::test_mutant_ignoring_hash_mismatch_detected",
+    "tests/test_stage1_recovery_monitoring.py::test_mutant_accepting_incomplete_detected",
+    "tests/test_stage1_recovery_monitoring.py::test_mutant_restoring_active_detected",
+    "tests/test_stage1_recovery_monitoring.py::test_mutant_allowing_write_failure_entry_detected",
+    "tests/test_stage1_recovery_monitoring.py::test_mutant_stale_as_fresh_detected",
+    "tests/test_stage1_recovery_monitoring.py::test_mutant_journal_only_alert_detected",
+    "tests/test_stage1_recovery_monitoring.py::test_backup_remains_verifiable_after_source_state_loss",
+    "tests/test_stage1_recovery_monitoring.py::test_interruption_during_capture_has_no_complete_marker",
+    "tests/test_stage1_recovery_monitoring.py::test_atomic_restore_target_race_refused",
+    "tests/test_stage1_recovery_monitoring.py::test_accounting_detached_artifacts_mandatory",
+    "tests/test_stage1_recovery_monitoring.py::test_required_additional_store_write_failure",
+    "tests/test_stage1_recovery_monitoring.py::test_critical_store_registration_blocks_entry_immediately",
+    "tests/test_stage1_recovery_monitoring.py::test_failed_notifier_does_not_hide_health",
+    "tests/test_stage1_recovery_monitoring.py::test_new_outage_has_new_incident_and_durable_transition_receipts",
+    "tests/test_stage1_recovery_monitoring.py::test_recovery_clear_cannot_erase_newer_outage",
+    "tests/test_stage1_recovery_monitoring.py::test_owner_authenticated_health_remains_observable_read_failure",
+    "tests/test_stage1_recovery_monitoring.py::test_outage_between_risk_proof_and_activation_cas_refuses_active",
+    "tests/test_stage1_recovery_monitoring.py::test_restored_state_boot_requires_owner_and_fresh_venue_risk",
+    "tests/test_stage1_recovery_monitoring.py::test_incomplete_inventory_cannot_claim_complete",
+    "tests/test_stage1_recovery_monitoring.py::test_secret_content_in_operational_store_refused",
+    "tests/test_stage1_recovery_monitoring.py::test_pit_population_dependency_closure_exact_and_restored",
+    "tests/test_stage1_recovery_monitoring.py::test_pit_missing_required_dependency_refuses_backup[declaration]",
+    "tests/test_stage1_recovery_monitoring.py::test_pit_missing_required_dependency_refuses_backup[receipt]",
+    "tests/test_stage1_recovery_monitoring.py::test_pit_missing_required_dependency_refuses_backup[export]",
+    "tests/test_stage1_recovery_monitoring.py::test_pit_tampered_dependency_restore_refused[declaration.json]",
+    "tests/test_stage1_recovery_monitoring.py::test_pit_tampered_dependency_restore_refused[freeze.json]",
+    "tests/test_stage1_recovery_monitoring.py::test_pit_tampered_dependency_restore_refused[export]",
+    "tests/test_stage1_recovery_monitoring.py::test_pit_manifest_dependency_omission_even_rehashed_refuses",
+    "tests/test_stage1_recovery_monitoring.py::test_pit_sqlite_only_manual_inventory_cannot_pass",
+    "tests/test_stage1_recovery_monitoring.py::test_pit_config_missing_but_ledger_remains_refuses",
+    "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context0]",
+    "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context1]",
+    "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context2]",
+    "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context3]",
+    "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context4]",
+    "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context5]",
+    "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context6]",
+    "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[producer-]",
+    "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[instance_id- ]",
+    "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[timestamp-invalid]",
+    "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[started_at--1]",
+    "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[sequence-0]",
+    "tests/test_stage1_recovery_monitoring.py::test_mutant_removing_cycle_context_chronology_detected[context0]",
+    "tests/test_stage1_recovery_monitoring.py::test_mutant_removing_cycle_context_chronology_detected[context1]",
+    "tests/test_stage1_recovery_monitoring.py::test_mutant_removing_cycle_context_chronology_detected[context2]",
+    "tests/test_stage1_recovery_monitoring.py::test_pit_implicit_ledger_cannot_be_manually_omitted"
+  ],
+  "deselected": [],
+  "reports": [
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_wal_snapshot_exact_restore_requires_recovery_restart_destination",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.17635581499780528
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_wal_snapshot_exact_restore_requires_recovery_restart_destination",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.1753838669974357
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_wal_snapshot_exact_restore_requires_recovery_restart_destination",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004978440119884908
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[bit]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13029729199479334
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[bit]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06557849299861118
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[bit]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004996420175302774
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[missing]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13700150599470362
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[missing]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06748385398532264
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[missing]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004030749842058867
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[manifest]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14900674202363007
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[manifest]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06118070302181877
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[manifest]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00046361799468286335
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[db]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13644982600817457
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[db]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10113222399377264
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[db]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00047417599125765264
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[incomplete]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1477968100225553
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[incomplete]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05996935602161102
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[incomplete]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00044113502372056246
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[duplicate]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13142222500755452
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[duplicate]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06194406599388458
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[duplicate]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00042121700244024396
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[traversal]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14496365500963293
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[traversal]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06297448600525968
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[traversal]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00044514398905448616
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[schema]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14729279300081544
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[schema]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06228461500722915
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_refuses_faults[schema]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00035791899426840246
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_sqlite_corruption_even_rehashed_is_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13107843298348598
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_sqlite_corruption_even_rehashed_is_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06936503999168053
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_sqlite_corruption_even_rehashed_is_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003295459900982678
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_interrupted_restore_does_not_publish_or_overwrite[asset]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1388881579914596
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_interrupted_restore_does_not_publish_or_overwrite[asset]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10425023699644953
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_interrupted_restore_does_not_publish_or_overwrite[asset]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004862200003117323
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_interrupted_restore_does_not_publish_or_overwrite[before_publish]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1330420149897691
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_interrupted_restore_does_not_publish_or_overwrite[before_publish]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.11825460402178578
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_interrupted_restore_does_not_publish_or_overwrite[before_publish]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004293730016797781
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[.env]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13373898400459439
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[.env]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.011773784994147718
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[.env]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00036544399335980415
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[credential.json]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14044450502842665
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[credential.json]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.009793098986847326
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[credential.json]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00038921201485209167
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[data/session_key]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13069029297912493
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[data/session_key]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.011278287012828514
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[data/session_key]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0014422950043808669
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[graphify-out/graph.json]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13306898798327893
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[graphify-out/graph.json]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.010088865004945546
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secrets_cannot_be_registered[graphify-out/graph.json]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00035083500551991165
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_embedded_config_secrets_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14656464901054278
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_embedded_config_secrets_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.033587601996259764
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_embedded_config_secrets_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004730669897980988
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_cross_file_change_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1455434929812327
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_cross_file_change_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03977120399940759
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_cross_file_change_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00048262201016768813
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_schema_incompatibility_and_destination_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13909349899040535
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_schema_incompatibility_and_destination_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06809996798983775
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_schema_incompatibility_and_destination_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000459594011772424
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_heartbeat_fresh_stale_stopped_dedup_reopen_recovery_restart",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0014824270037934184
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_heartbeat_fresh_stale_stopped_dedup_reopen_recovery_restart",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.059145684994291514
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_heartbeat_fresh_stale_stopped_dedup_reopen_recovery_restart",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004535909974947572
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0017062000115402043
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.00479855400044471
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003190769930370152
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{}]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0013186739815864712
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{}]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.005712565005524084
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{}]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000375001021893695
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[null]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0016057330067269504
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[null]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0056713930098339915
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[null]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00048200099263340235
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{\"timestamp\":100}]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0018596370064187795
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{\"timestamp\":100}]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.005058676993940026
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{\"timestamp\":100}]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00047065000399015844
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{\"timestamp\":NaN}]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0017153259832412004
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{\"timestamp\":NaN}]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.005125346011482179
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_malformed_partial_heartbeat_never_fresh[{\"timestamp\":NaN}]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004710060020443052
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_missing_unconfigured_future_and_restamped_heartbeat",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0011327020183671266
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_missing_unconfigured_future_and_restamped_heartbeat",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03203873900929466
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_missing_unconfigured_future_and_restamped_heartbeat",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00040407897904515266
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_journal_read_failure_alert_and_entry_block",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001334657019469887
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_journal_read_failure_alert_and_entry_block",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.28188771300483495
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_journal_read_failure_alert_and_entry_block",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000427049002610147
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_journal_readable_unwritable_entry_and_independent_alert",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0018041589937638491
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_journal_readable_unwritable_entry_and_independent_alert",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.15694601999712177
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_journal_readable_unwritable_entry_and_independent_alert",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004143140104133636
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_actual_entry_write_failure_prevents_submission",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 1.0610184989927802
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_actual_entry_write_failure_prevents_submission",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.08247604299685918
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_actual_entry_write_failure_prevents_submission",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00043024399201385677
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_critical_store_unavailable_and_monitor_without_journal",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001568631996633485
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_critical_store_unavailable_and_monitor_without_journal",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.018742749991361052
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_critical_store_unavailable_and_monitor_without_journal",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004694279923569411
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_alert_sink_survives_artifact_and_journal_failure",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001387783995596692
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_alert_sink_survives_artifact_and_journal_failure",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.000875021010870114
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_alert_sink_survives_artifact_and_journal_failure",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00041903401142917573
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_supervisor_only_release_after_venue_risk_proof",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.00132355498499237
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_supervisor_only_release_after_venue_risk_proof",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.19363925300422125
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_supervisor_only_release_after_venue_risk_proof",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004908679984509945
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_heartbeat_outage_blocks_supervisor_and_new_entry",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0017270800017286092
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_heartbeat_outage_blocks_supervisor_and_new_entry",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.17538250601501204
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_heartbeat_outage_blocks_supervisor_and_new_entry",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005377760098781437
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_owner_health_query_visible_with_failed_journal",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0017779040208552033
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_owner_health_query_visible_with_failed_journal",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.1440100860199891
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_owner_health_query_visible_with_failed_journal",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00034400299773551524
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_ignoring_hash_mismatch_detected",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1605286569974851
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_ignoring_hash_mismatch_detected",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.09295616101007909
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_ignoring_hash_mismatch_detected",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004866390081588179
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_accepting_incomplete_detected",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14172352600144222
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_accepting_incomplete_detected",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0787004949816037
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_accepting_incomplete_detected",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005071679770480841
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_restoring_active_detected",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.23654059501131997
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_restoring_active_detected",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10928518100990914
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_restoring_active_detected",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005534650117624551
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_allowing_write_failure_entry_detected",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0015142600168474019
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_allowing_write_failure_entry_detected",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.11593433501548134
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_allowing_write_failure_entry_detected",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00033583800541236997
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_stale_as_fresh_detected",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001602556003490463
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_stale_as_fresh_detected",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.012280341004952788
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_stale_as_fresh_detected",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0006084769847802818
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_journal_only_alert_detected",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0014033630141057074
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_journal_only_alert_detected",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.1338471880008001
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_journal_only_alert_detected",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000455483008408919
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_remains_verifiable_after_source_state_loss",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14595399098470807
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_remains_verifiable_after_source_state_loss",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.14669444898026995
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_backup_remains_verifiable_after_source_state_loss",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00040311599150300026
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_interruption_during_capture_has_no_complete_marker",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13965729798655957
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_interruption_during_capture_has_no_complete_marker",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.021476588997757062
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_interruption_during_capture_has_no_complete_marker",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005109870107844472
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_atomic_restore_target_race_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13891388100455515
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_atomic_restore_target_race_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.11435060799703933
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_atomic_restore_target_race_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003962320042774081
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_accounting_detached_artifacts_mandatory",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1349266519828234
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_accounting_detached_artifacts_mandatory",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.20825089002028108
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_accounting_detached_artifacts_mandatory",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00039298401679843664
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_required_additional_store_write_failure",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0014876379864290357
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_required_additional_store_write_failure",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.008851711987517774
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_required_additional_store_write_failure",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003551639965735376
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_critical_store_registration_blocks_entry_immediately",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001232232985785231
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_critical_store_registration_blocks_entry_immediately",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10097785899415612
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_critical_store_registration_blocks_entry_immediately",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00031336199026554823
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_failed_notifier_does_not_hide_health",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0011880600068252534
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_failed_notifier_does_not_hide_health",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0047148370067588985
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_failed_notifier_does_not_hide_health",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003147789975628257
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_new_outage_has_new_incident_and_durable_transition_receipts",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0010602569964248687
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_new_outage_has_new_incident_and_durable_transition_receipts",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.012751603993820027
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_new_outage_has_new_incident_and_durable_transition_receipts",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00029448801069520414
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_recovery_clear_cannot_erase_newer_outage",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0011229929805267602
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_recovery_clear_cannot_erase_newer_outage",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.011630927998339757
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_recovery_clear_cannot_erase_newer_outage",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003761650004889816
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_owner_authenticated_health_remains_observable_read_failure",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0011267779918853194
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_owner_authenticated_health_remains_observable_read_failure",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.11644277698360384
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_owner_authenticated_health_remains_observable_read_failure",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00033693001023493707
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_outage_between_risk_proof_and_activation_cas_refuses_active",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0012038770073559135
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_outage_between_risk_proof_and_activation_cas_refuses_active",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.11436966797919013
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_outage_between_risk_proof_and_activation_cas_refuses_active",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004406259977258742
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_restored_state_boot_requires_owner_and_fresh_venue_risk",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11129219899885356
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_restored_state_boot_requires_owner_and_fresh_venue_risk",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.2762625500035938
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_restored_state_boot_requires_owner_and_fresh_venue_risk",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003330449981149286
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_incomplete_inventory_cannot_claim_complete",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10225033800816163
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_incomplete_inventory_cannot_claim_complete",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0027589630044531077
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_incomplete_inventory_cannot_claim_complete",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003111500118393451
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secret_content_in_operational_store_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10391217400319874
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secret_content_in_operational_store_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0170465340197552
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_secret_content_in_operational_store_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004090040165465325
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_population_dependency_closure_exact_and_restored",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2643897949892562
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_population_dependency_closure_exact_and_restored",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.2596031049906742
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_population_dependency_closure_exact_and_restored",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004156259819865227
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_missing_required_dependency_refuses_backup[declaration]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1762781050056219
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_missing_required_dependency_refuses_backup[declaration]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0447558099986054
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_missing_required_dependency_refuses_backup[declaration]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004166790167801082
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_missing_required_dependency_refuses_backup[receipt]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.17886471000383608
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_missing_required_dependency_refuses_backup[receipt]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05350630098837428
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_missing_required_dependency_refuses_backup[receipt]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00040679099038243294
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_missing_required_dependency_refuses_backup[export]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.16939384301076643
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_missing_required_dependency_refuses_backup[export]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.07032554401666857
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_missing_required_dependency_refuses_backup[export]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003699990047607571
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_tampered_dependency_restore_refused[declaration.json]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1793149290024303
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_tampered_dependency_restore_refused[declaration.json]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.12479201500536874
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_tampered_dependency_restore_refused[declaration.json]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005582230223808438
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_tampered_dependency_restore_refused[freeze.json]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.18273849500110373
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_tampered_dependency_restore_refused[freeze.json]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.128710807999596
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_tampered_dependency_restore_refused[freeze.json]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003616049943957478
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_tampered_dependency_restore_refused[export]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.16007387300487608
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_tampered_dependency_restore_refused[export]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.1174347190244589
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_tampered_dependency_restore_refused[export]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003994639846496284
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_manifest_dependency_omission_even_rehashed_refuses",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2146290650125593
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_manifest_dependency_omission_even_rehashed_refuses",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.22095411000191234
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_manifest_dependency_omission_even_rehashed_refuses",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005224529886618257
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_sqlite_only_manual_inventory_cannot_pass",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1707236969959922
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_sqlite_only_manual_inventory_cannot_pass",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.017070836998755112
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_sqlite_only_manual_inventory_cannot_pass",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003130449913442135
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_config_missing_but_ledger_remains_refuses",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1605705860129092
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_config_missing_but_ledger_remains_refuses",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.006859704997623339
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_config_missing_but_ledger_remains_refuses",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003110220131929964
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context0]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0012306179851293564
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context0]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10240924899699166
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context0]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00037507200613617897
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context1]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001070931990398094
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context1]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10349415001110174
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context1]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00041476599290035665
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context2]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0015998239978216588
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context2]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10180400899844244
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context2]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00030447900644503534
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context3]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.00119792899931781
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context3]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10561704501742497
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context3]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0008044599962886423
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context4]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.002461881987983361
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context4]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.11389951797900721
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context4]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004972390015609562
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context5]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0013522680092137307
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context5]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.12851323498762213
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context5]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005215749843046069
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context6]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0020348910184111446
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context6]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.11969921298441477
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_cycle_context_unavailable_alert_entry_block_no_restamp[context6]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00047198199899867177
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[producer-]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0015786409785505384
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[producer-]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.007434349012328312
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[producer-]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00038391799898818135
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[instance_id- ]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0015534739941358566
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[instance_id- ]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0063134380034171045
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[instance_id- ]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004177610098849982
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[timestamp-invalid]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001434150995919481
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[timestamp-invalid]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.005749798991018906
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[timestamp-invalid]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002978669945150614
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[started_at--1]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0014344619994517416
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[started_at--1]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.006128580018412322
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[started_at--1]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00036806799471378326
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[sequence-0]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001520542980870232
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[sequence-0]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.006175357004394755
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_invalid_heartbeat_identity_cannot_be_fresh[sequence-0]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003929249942302704
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_removing_cycle_context_chronology_detected[context0]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0015247699921019375
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_removing_cycle_context_chronology_detected[context0]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.009182077017612755
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_removing_cycle_context_chronology_detected[context0]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004272980149835348
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_removing_cycle_context_chronology_detected[context1]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0016953290032688528
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_removing_cycle_context_chronology_detected[context1]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.007203465007478371
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_removing_cycle_context_chronology_detected[context1]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00041718001011759043
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_removing_cycle_context_chronology_detected[context2]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001960814988706261
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_removing_cycle_context_chronology_detected[context2]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.008937124977819622
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_mutant_removing_cycle_context_chronology_detected[context2]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00038250998477451503
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_implicit_ledger_cannot_be_manually_omitted",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.19492293198709376
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_implicit_ledger_cannot_be_manually_omitted",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.059272012003930286
+    },
+    {
+      "nodeid": "tests/test_stage1_recovery_monitoring.py::test_pit_implicit_ledger_cannot_be_manually_omitted",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0007842399936635047
+    }
+  ],
+  "failures": [],
+  "network_attempts": [],
+  "production_store_attempts": [],
+  "module_origins": {
+    "trader": "/mnt/luffy-data/luffy/production/trader/__init__.py",
+    "trader.agents": "/mnt/luffy-data/luffy/production/trader/agents/__init__.py",
+    "trader.agents.indicators": "/mnt/luffy-data/luffy/production/trader/agents/indicators.py",
+    "trader.cognition": "/mnt/luffy-data/luffy/production/trader/cognition/__init__.py",
+    "trader.cognition.attention": "/mnt/luffy-data/luffy/production/trader/cognition/attention.py",
+    "trader.cognition.contracts": "/mnt/luffy-data/luffy/production/trader/cognition/contracts.py",
+    "trader.cognition.dataset": "/mnt/luffy-data/luffy/production/trader/cognition/dataset.py",
+    "trader.cognition.forecast_protocol": "/mnt/luffy-data/luffy/production/trader/cognition/forecast_protocol.py",
+    "trader.cognition.investigation": "/mnt/luffy-data/luffy/production/trader/cognition/investigation.py",
+    "trader.cognition.memory": "/mnt/luffy-data/luffy/production/trader/cognition/memory.py",
+    "trader.cognition.opportunity_context": "/mnt/luffy-data/luffy/production/trader/cognition/opportunity_context.py",
+    "trader.cognition.outcomes": "/mnt/luffy-data/luffy/production/trader/cognition/outcomes.py",
+    "trader.cognition.research_families": "/mnt/luffy-data/luffy/production/trader/cognition/research_families.py",
+    "trader.cognition.research_question": "/mnt/luffy-data/luffy/production/trader/cognition/research_question.py",
+    "trader.cognition.research_unreadable_question": "/mnt/luffy-data/luffy/production/trader/cognition/research_unreadable_question.py",
+    "trader.core": "/mnt/luffy-data/luffy/production/trader/core/__init__.py",
+    "trader.core.config": "/mnt/luffy-data/luffy/production/trader/core/config.py",
+    "trader.core.instrument_registry": "/mnt/luffy-data/luffy/production/trader/core/instrument_registry.py",
+    "trader.core.journal": "/mnt/luffy-data/luffy/production/trader/core/journal.py",
+    "trader.core.reason_codes": "/mnt/luffy-data/luffy/production/trader/core/reason_codes.py",
+    "trader.core.truth": "/mnt/luffy-data/luffy/production/trader/core/truth.py",
+    "trader.core.types": "/mnt/luffy-data/luffy/production/trader/core/types.py",
+    "trader.dashboard": "/mnt/luffy-data/luffy/production/trader/dashboard/__init__.py",
+    "trader.dashboard.current_truth": "/mnt/luffy-data/luffy/production/trader/dashboard/current_truth.py",
+    "trader.data": "/mnt/luffy-data/luffy/production/trader/data/__init__.py",
+    "trader.data.binance_usdm_registry": "/mnt/luffy-data/luffy/production/trader/data/binance_usdm_registry.py",
+    "trader.data.feed": "/mnt/luffy-data/luffy/production/trader/data/feed.py",
+    "trader.data.market_provenance": "/mnt/luffy-data/luffy/production/trader/data/market_provenance.py",
+    "trader.data.registry_provider": "/mnt/luffy-data/luffy/production/trader/data/registry_provider.py",
+    "trader.data.sqlite_tx": "/mnt/luffy-data/luffy/production/trader/data/sqlite_tx.py",
+    "trader.engine": "/mnt/luffy-data/luffy/production/trader/engine/__init__.py",
+    "trader.engine.accounting": "/mnt/luffy-data/luffy/production/trader/engine/accounting.py",
+    "trader.engine.booking": "/mnt/luffy-data/luffy/production/trader/engine/booking.py",
+    "trader.engine.control_fence": "/mnt/luffy-data/luffy/production/trader/engine/control_fence.py",
+    "trader.engine.entry_authority": "/mnt/luffy-data/luffy/production/trader/engine/entry_authority.py",
+    "trader.engine.evidence_capture": "/mnt/luffy-data/luffy/production/trader/engine/evidence_capture.py",
+    "trader.engine.executor": "/mnt/luffy-data/luffy/production/trader/engine/executor.py",
+    "trader.engine.paper_exit_evidence": "/mnt/luffy-data/luffy/production/trader/engine/paper_exit_evidence.py",
+    "trader.engine.protection_snapshot": "/mnt/luffy-data/luffy/production/trader/engine/protection_snapshot.py",
+    "trader.engine.protective": "/mnt/luffy-data/luffy/production/trader/engine/protective.py",
+    "trader.engine.reconcile": "/mnt/luffy-data/luffy/production/trader/engine/reconcile.py",
+    "trader.engine.recovery": "/mnt/luffy-data/luffy/production/trader/engine/recovery.py",
+    "trader.engine.risk": "/mnt/luffy-data/luffy/production/trader/engine/risk.py",
+    "trader.engine.state": "/mnt/luffy-data/luffy/production/trader/engine/state.py",
+    "trader.engine.supervisor": "/mnt/luffy-data/luffy/production/trader/engine/supervisor.py",
+    "trader.engine.trade_accounting": "/mnt/luffy-data/luffy/production/trader/engine/trade_accounting.py",
+    "trader.engine.trade_provenance": "/mnt/luffy-data/luffy/production/trader/engine/trade_provenance.py",
+    "trader.engine.watchdog": "/mnt/luffy-data/luffy/production/trader/engine/watchdog.py",
+    "trader.learning": "/mnt/luffy-data/luffy/production/trader/learning/__init__.py",
+    "trader.learning.capture": "/mnt/luffy-data/luffy/production/trader/learning/capture.py",
+    "trader.learning.capture_runtime": "/mnt/luffy-data/luffy/production/trader/learning/capture_runtime.py",
+    "trader.learning.decision_sources": "/mnt/luffy-data/luffy/production/trader/learning/decision_sources.py",
+    "trader.learning.foundation": "/mnt/luffy-data/luffy/production/trader/learning/foundation.py",
+    "trader.learning.producers": "/mnt/luffy-data/luffy/production/trader/learning/producers.py",
+    "trader.observability": "/mnt/luffy-data/luffy/production/trader/observability/__init__.py",
+    "trader.observability.accounting": "/mnt/luffy-data/luffy/production/trader/observability/accounting.py",
+    "trader.observability.attention": "/mnt/luffy-data/luffy/production/trader/observability/attention.py",
+    "trader.observability.collector": "/mnt/luffy-data/luffy/production/trader/observability/collector.py",
+    "trader.observability.collector_health": "/mnt/luffy-data/luffy/production/trader/observability/collector_health.py",
+    "trader.observability.depth_evidence": "/mnt/luffy-data/luffy/production/trader/observability/depth_evidence.py",
+    "trader.observability.execution_shadow": "/mnt/luffy-data/luffy/production/trader/observability/execution_shadow.py",
+    "trader.observability.funding_events": "/mnt/luffy-data/luffy/production/trader/observability/funding_events.py",
+    "trader.observability.intelligence_trace": "/mnt/luffy-data/luffy/production/trader/observability/intelligence_trace.py",
+    "trader.observability.investigation": "/mnt/luffy-data/luffy/production/trader/observability/investigation.py",
+    "trader.observability.investigation_research": "/mnt/luffy-data/luffy/production/trader/observability/investigation_research.py",
+    "trader.observability.learning": "/mnt/luffy-data/luffy/production/trader/observability/learning.py",
+    "trader.observability.memory": "/mnt/luffy-data/luffy/production/trader/observability/memory.py",
+    "trader.observability.outcomes": "/mnt/luffy-data/luffy/production/trader/observability/outcomes.py",
+    "trader.observability.population": "/mnt/luffy-data/luffy/production/trader/observability/population.py",
+    "trader.observability.portfolio_observation": "/mnt/luffy-data/luffy/production/trader/observability/portfolio_observation.py",
+    "trader.observability.prospective_execution": "/mnt/luffy-data/luffy/production/trader/observability/prospective_execution.py",
+    "trader.observability.registry_selector": "/mnt/luffy-data/luffy/production/trader/observability/registry_selector.py",
+    "trader.observability.safety": "/mnt/luffy-data/luffy/production/trader/observability/safety.py",
+    "trader.observability.selection_persistence": "/mnt/luffy-data/luffy/production/trader/observability/selection_persistence.py",
+    "trader.observability.store": "/mnt/luffy-data/luffy/production/trader/observability/store.py",
+    "trader.observability.world_producer": "/mnt/luffy-data/luffy/production/trader/observability/world_producer.py",
+    "trader.owner": "/mnt/luffy-data/luffy/production/trader/owner/__init__.py",
+    "trader.owner.authz": "/mnt/luffy-data/luffy/production/trader/owner/authz.py",
+    "trader.owner.contract": "/mnt/luffy-data/luffy/production/trader/owner/contract.py",
+    "trader.owner.service": "/mnt/luffy-data/luffy/production/trader/owner/service.py",
+    "trader.persistence": "/mnt/luffy-data/luffy/production/trader/persistence/__init__.py",
+    "trader.persistence.backup": "/mnt/luffy-data/luffy/production/trader/persistence/backup.py",
+    "trader.persistence.pit_inventory": "/mnt/luffy-data/luffy/production/trader/persistence/pit_inventory.py",
+    "trader.portfolio": "/mnt/luffy-data/luffy/production/trader/portfolio/__init__.py",
+    "trader.portfolio.allocator": "/mnt/luffy-data/luffy/production/trader/portfolio/allocator.py",
+    "trader.portfolio.common_factor": "/mnt/luffy-data/luffy/production/trader/portfolio/common_factor.py",
+    "trader.strategy": "/mnt/luffy-data/luffy/production/trader/strategy/__init__.py",
+    "trader.strategy.capacity": "/mnt/luffy-data/luffy/production/trader/strategy/capacity.py",
+    "trader.strategy.compile": "/mnt/luffy-data/luffy/production/trader/strategy/compile.py",
+    "trader.strategy.dsl": "/mnt/luffy-data/luffy/production/trader/strategy/dsl.py",
+    "trader.strategy.exit_policy": "/mnt/luffy-data/luffy/production/trader/strategy/exit_policy.py",
+    "trader.strategy.factory_handoff": "/mnt/luffy-data/luffy/production/trader/strategy/factory_handoff.py",
+    "trader.strategy.features": "/mnt/luffy-data/luffy/production/trader/strategy/features.py",
+    "trader.strategy.features_deriv": "/mnt/luffy-data/luffy/production/trader/strategy/features_deriv.py",
+    "trader.strategy.features_xs": "/mnt/luffy-data/luffy/production/trader/strategy/features_xs.py",
+    "trader.strategy.health": "/mnt/luffy-data/luffy/production/trader/strategy/health.py",
+    "trader.strategy.health_observation": "/mnt/luffy-data/luffy/production/trader/strategy/health_observation.py",
+    "trader.strategy.legacy_authority": "/mnt/luffy-data/luffy/production/trader/strategy/legacy_authority.py",
+    "trader.strategy.promotion": "/mnt/luffy-data/luffy/production/trader/strategy/promotion.py",
+    "trader.strategy.signal_occurrence": "/mnt/luffy-data/luffy/production/trader/strategy/signal_occurrence.py",
+    "trader.strategy.spec": "/mnt/luffy-data/luffy/production/trader/strategy/spec.py",
+    "trader.world": "/mnt/luffy-data/luffy/production/trader/world/__init__.py",
+    "trader.world.claim": "/mnt/luffy-data/luffy/production/trader/world/claim.py",
+    "trader.world.model": "/mnt/luffy-data/luffy/production/trader/world/model.py",
+    "trader.world.observation": "/mnt/luffy-data/luffy/production/trader/world/observation.py",
+    "trader.world.perception": "/mnt/luffy-data/luffy/production/trader/world/perception.py",
+    "trader.world.relationship": "/mnt/luffy-data/luffy/production/trader/world/relationship.py",
+    "trader.world.replay": "/mnt/luffy-data/luffy/production/trader/world/replay.py",
+    "trader.world.state": "/mnt/luffy-data/luffy/production/trader/world/state.py"
+  },
+  "network_guard_active": true,
+  "production_store_guard_active": true,
+  "exit_code": 0,
+  "counts": {
+    "passed": 80,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "deselected": 0
+  }
+}

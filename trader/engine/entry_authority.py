@@ -291,6 +291,10 @@ def intent(decision, requested, atr, stop, target, strategy_id, identity, refere
 
 
 def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, identity=None, reference=None, trade_intent=None):
+    from ..observability.safety import entry_refusal
+    refusal = entry_refusal(manager.journal, probe=True)
+    if refusal:
+        raise ValueError(refusal)
     with control_fence(manager.journal):
         control_id = latest_intent_event_id(manager.journal)
         if manager.journal.kv_get('control_state') != ControlState.ACTIVE.value:
@@ -352,6 +356,10 @@ def authorize(manager, decision, requested, atr, stop, target, strategy_id, *, i
 
 
 def validate(executor, permission, decision, amount, atr, stop, target, strategy_id, identity, reference, conn=None):
+    from ..observability.safety import entry_refusal
+    refusal = entry_refusal(executor.journal)
+    if refusal:
+        raise ValueError(refusal)
     manager = executor.risk_manager
     if manager is None or not isinstance(permission, EntryPermission):
         raise ValueError('exact_risk_permission_required')
@@ -423,10 +431,18 @@ def submit(executor, permission, decision, amount, atr, stop, target,
     from ccxt import InvalidOrder, InsufficientFunds
     from ..strategy import factory_handoff
     from .recovery import KEY
+    from ..observability.safety import entry_refusal
+    refusal = entry_refusal(executor.journal)
+    if refusal:
+        raise ValueError(refusal)
     manager = executor.risk_manager
     if manager is None or not isinstance(permission, EntryPermission):
         raise ValueError('exact_risk_permission_required')
     logical_id = permission.payload()['logical_id']
+    from ..observability.safety import entry_refusal
+    refusal = entry_refusal(executor.journal, probe=True)
+    if refusal:
+        raise ValueError(refusal)
     with control_fence(executor.journal):
         blocked, _ = entry_block(persisted_state(executor.journal))
         if blocked:

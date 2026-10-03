@@ -184,8 +184,28 @@ def gate(j: Journal) -> list[str]:
     return []
 
 
+def safety_check(root, cfg, *, clock=None, sink=None):
+    """Independent local safety pass; no Journal initialization or venue calls."""
+    import time
+    from trader.observability.safety import SafetyHealth, SafetyObserver, HeartbeatPolicy
+    root = Path(root)
+    health = SafetyHealth(root / 'data/safety_health.json', clock=clock or time.time, sink=sink)
+    observer = SafetyObserver(health, clock=clock or time.time)
+    results = [observer.store(root / 'data/luffy.db', 'journal', journal=True)]
+    for store in (cfg.get('safety_monitor') or {}).get('critical_stores', []):
+        results.append(observer.store(root / store['path'], store['role']))
+    results.append(observer.heartbeat(root / 'data/heartbeat_luffy.json', 'luffy', HeartbeatPolicy.configured(cfg)))
+    return dict(schema='luffy-safety-observation.v1', components=results, health=health.read())
+
+
 def main() -> int:
     cfg = load_config()
+    if '--safety-only' in sys.argv:
+        import json
+        from trader.core.config import ROOT
+        result = safety_check(ROOT, cfg, sink=lambda event: print(json.dumps(event), file=sys.stderr))
+        print(json.dumps(result, sort_keys=True))
+        return int(bool(result['health']['recovery_required']))
     j = Journal(DB)
     ex = make_exchange("futures",
                        demo=bool(cfg.get("exchange", {}).get("demo", True)),

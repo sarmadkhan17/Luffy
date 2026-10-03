@@ -87,12 +87,20 @@ class ControlStateMachine:
         return self.state
 
     def can_enter(self) -> bool:
+        from ..observability.safety import entry_refusal
+        if entry_refusal(self.journal, probe=True):
+            return False
         self.refresh()
         return self.state == ControlState.ACTIVE
 
     def manages_exits(self) -> bool:
         """FROZEN and RECOVERY still manage exits; HALTED does not."""
-        self.refresh()
+        try:
+            self.refresh()
+        except (OSError, __import__('sqlite3').DatabaseError):
+            # Unavailable persistence cannot authorize entries. Previously
+            # known exit management remains permitted; HALTED stays respected.
+            pass
         return self.state in (ControlState.ACTIVE, ControlState.FROZEN,
                               ControlState.RECOVERY)
 

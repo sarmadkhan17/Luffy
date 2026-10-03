@@ -155,6 +155,9 @@ class Supervisor:
 
     def _risk_now(self) -> RiskRelease:
         """Freshly ask Risk; anything but an explicit allow fails closed."""
+        from ..observability.safety import SafetyHealth, health_path
+        if hasattr(self.journal, 'db_path') and SafetyHealth(health_path(self.journal)).active_reasons():
+            return RiskRelease(False, 'critical_storage_or_heartbeat_unavailable')
         if self.risk_release is None:
             return RiskRelease(False, "risk_gate_unconfigured")
         try:
@@ -180,7 +183,16 @@ class Supervisor:
             yield getattr(risk, "reason", None) or "risk_release_unproven", None
             return
         with self._held(risk.verify, risk) as held:
-            yield held
+            # The existing Risk/control fence still owns activation. Serialize
+            # its last health observation with independent outage publication.
+            from ..observability.safety import SafetyHealth, health_path
+            from contextlib import nullcontext
+            safety = SafetyHealth(health_path(self.journal)) if hasattr(self.journal, 'db_path') else None
+            with safety.locked() if safety else nullcontext():
+                if safety and safety.active_reasons():
+                    yield 'critical_storage_or_heartbeat_unavailable', None
+                else:
+                    yield held
 
     @contextmanager
     def _held(self, verifier, risk):
@@ -294,6 +306,14 @@ class Supervisor:
             return self._pass_once(boot=boot, advance_entry=advance_entry)
 
     def _pass_once(self, *, boot: bool, advance_entry: bool) -> RecoveryResult:
+        from ..observability.safety import SafetyHealth, health_path, check_journal
+        safety = SafetyHealth(health_path(self.journal)) if hasattr(self.journal, 'db_path') else None
+        if safety and not check_journal(self.journal):
+            # No durable transition is claimed while persistence is unavailable.
+            return RecoveryResult(control_state_observed='UNAVAILABLE', outcome='NEEDS_OWNER',
+                stage='STORAGE_UNAVAILABLE', safe_to_activate=False, needs_owner=True,
+                reasons=safety.active_reasons() or ['critical_journal_unavailable'])
+        safety_revision = safety.read()['revision'] if safety else None
         prior = self._prior_status()
         state = self.state_machine.refresh()
         prior, actions = self._acknowledge(prior, state)
@@ -306,7 +326,7 @@ class Supervisor:
             state = ControlState.RECOVERY
         owned = self._owned(prior, state)
 
-        reasons = []
+        reasons = safety.active_reasons() if safety else []
         checks = {"venue_positions": False, "reconciliation": False,
                   "entry_intent_resolved": False, "venue_protection": False,
                   "entries_safe": False}
@@ -449,9 +469,20 @@ class Supervisor:
                               reasons=list(dict.fromkeys(reasons)), checks=checks,
                               actions=actions)
         self._next_pass = time.monotonic() + self.interval_s
-        return self._save(result)
+        saved = self._save(result)
+        if safety and safe and current == ControlState.ACTIVE:
+            safety.clear_after_supervisor(safety_revision)
+        return saved
 
     def cycle(self) -> RecoveryResult | None:
+        from ..observability.safety import SafetyHealth, health_path, check_journal
+        if hasattr(self.journal, 'db_path'):
+            if not check_journal(self.journal):
+                return RecoveryResult(control_state_observed='UNAVAILABLE', outcome='NEEDS_OWNER',
+                    stage='STORAGE_UNAVAILABLE', safe_to_activate=False, needs_owner=True,
+                    reasons=['critical_journal_unavailable'])
+            if SafetyHealth(health_path(self.journal)).entry_block():
+                self.trigger('critical_storage_or_heartbeat_recovery')
         if self.state_machine.refresh() != ControlState.RECOVERY:
             return None
         if time.monotonic() < self._next_pass:

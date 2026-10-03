@@ -102,6 +102,9 @@ class Kernel:
     def __init__(self, cfg: dict):
         self.cfg = cfg
         self.journal = Journal(str(ROOT / "data" / "luffy.db"))
+        self.journal._critical_store_paths = [
+            (ROOT / store['path'], store['role'])
+            for store in (cfg.get('safety_monitor') or {}).get('critical_stores', [])]
         self.state_machine = ControlStateMachine(self.journal)
         self.risk = RiskManager(cfg, self.journal)
         self.heartbeat = Heartbeat()
@@ -1076,6 +1079,9 @@ class Kernel:
         stats = {"scanned": 0, "decisions": 0, "entries": 0,
                  "skips": 0, "exits_detected": 0}
         self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
         self.state_machine.refresh()
         balance, status = self._risk_step()
 
@@ -1095,7 +1101,7 @@ class Kernel:
             state = self.state_machine.refresh()
         if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
             self.executor.recover_entries()
-        entry_allowed = state == ControlState.ACTIVE
+        entry_allowed = self.state_machine.can_enter()
         blocked = "" if entry_allowed else f"state={state.value}"
         if self.market_type == MarketType.FUTURES and self.executor.recovery_pending():
             entry_allowed = False
@@ -1250,7 +1256,6 @@ class Kernel:
         self._maybe_resolve_outcomes()
         self._record_excursions()
         if supervisor is not None and self.market_type == MarketType.FUTURES:
-            supervisor.cycle()
             state = self.state_machine.refresh()
         self._attention_call("causes", scan_id, attention_causes)
         attention_health = self._attention_call("health")
@@ -1258,8 +1263,6 @@ class Kernel:
         if attention_health or attention_error:
             stats["attention"] = attention_health or {"enabled": True, "status": "error"}
             stats["attention"]["kernel_error"] = attention_error
-        self.heartbeat.beat({"equity": round(balance, 2),
-                             "state": state.value, **stats})
         self.journal.log_equity(status["equity"], balance,
                                 len(self.journal.open_trades()),
                                 provenance=self._equity_provenance(status["equity"]))
@@ -1281,6 +1284,8 @@ class Kernel:
                 at_ms=now_ms,max_work=8)
         except (ValueError, KeyError, AttributeError, __import__('sqlite3').OperationalError) as exc:
             log.info('learning checkpoint refused: %s', exc)
+        self.heartbeat.beat({"equity": round(balance, 2), "state": state.value,
+                             "last_successful_cycle_at": time.time(), **stats})
         return {**stats, "equity": status["equity"],
                 "dd_pct": status["drawdown_pct"]}
 

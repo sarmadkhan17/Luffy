@@ -1,0 +1,3064 @@
+{
+  "selected": [
+    "tests/test_supervisor.py::test_serious_active_fault_contains_before_recovery",
+    "tests/test_supervisor.py::test_clean_boot_proves_safety_without_recovery",
+    "tests/test_supervisor.py::test_binance_style_live_protected_position_verifies",
+    "tests/test_supervisor.py::test_binance_style_naked_position_rearms_without_global_ordinary_call",
+    "tests/test_supervisor.py::test_binance_style_orphan_algo_stop_is_swept",
+    "tests/test_supervisor.py::test_safe_recovery_can_activate",
+    "tests/test_supervisor.py::test_pending_entry_intent_blocks_until_resolved",
+    "tests/test_supervisor.py::test_entry_resolved_in_first_pass_still_enters_recovery",
+    "tests/test_supervisor.py::test_unreadable_entry_ledger_requires_owner",
+    "tests/test_supervisor.py::test_naked_position_requires_owner_and_persists_across_restart",
+    "tests/test_supervisor.py::test_corrupt_critical_status_fails_closed",
+    "tests/test_supervisor.py::test_repeated_entry_failure_requires_owner",
+    "tests/test_supervisor.py::test_contradictory_position_ownership_requires_owner",
+    "tests/test_supervisor.py::test_wrong_side_stop_is_not_proven_protection",
+    "tests/test_supervisor.py::test_rearmed_stop_awaits_listing_then_allows_safe_recovery",
+    "tests/test_supervisor.py::test_awaiting_verification_never_places_duplicate_stop",
+    "tests/test_supervisor.py::test_listed_rearm_without_journal_id_stays_contained",
+    "tests/test_supervisor.py::test_explicit_rearm_failure_remains_unsafe",
+    "tests/test_supervisor.py::test_supervisor_reconcile_uses_canonical_protection_match",
+    "tests/test_supervisor.py::test_flat_account_failed_orphan_cancellation_is_not_safe",
+    "tests/test_supervisor.py::test_flat_account_unreadable_protection_snapshot_is_not_safe",
+    "tests/test_supervisor.py::test_flat_venue_without_global_listing_is_not_safe",
+    "tests/test_supervisor.py::test_recovery_reconciliation_has_cadence",
+    "tests/test_supervisor.py::test_kernel_boot_uses_supervisor_without_real_services",
+    "tests/test_supervisor.py::test_owner_change_during_reconcile_wins[FROZEN]",
+    "tests/test_supervisor.py::test_owner_change_during_reconcile_wins[HALTED]",
+    "tests/test_supervisor.py::test_owner_frozen_with_pending_recovery_never_auto_resumes",
+    "tests/test_supervisor.py::test_stale_supervisor_evidence_cannot_promote_owner_frozen[RECOVERING]",
+    "tests/test_supervisor.py::test_stale_supervisor_evidence_cannot_promote_owner_frozen[NEEDS_OWNER]",
+    "tests/test_supervisor.py::test_only_supervisor_owned_recovery_auto_activates",
+    "tests/test_supervisor.py::test_unreadable_ledger_has_no_reconcile_mutations",
+    "tests/test_supervisor.py::test_halted_boot_with_pending_recovery_does_no_recovery",
+    "tests/test_supervisor.py::test_owner_hold_persists_until_later_owner_active_and_restart[operator]",
+    "tests/test_supervisor.py::test_owner_hold_persists_until_later_owner_active_and_restart[dashboard]",
+    "tests/test_supervisor.py::test_owner_hold_persists_until_later_owner_active_and_restart[chat]",
+    "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[macro_guard]",
+    "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[risk_engine]",
+    "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[watchdog]",
+    "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[supervisor]",
+    "tests/test_supervisor.py::test_activation_cas_loses_to_other_process",
+    "tests/test_supervisor.py::test_failed_safety_evidence_write_blocks_activation",
+    "tests/test_supervisor.py::test_owner_reasserts_frozen_before_recovery_transition[operator]",
+    "tests/test_supervisor.py::test_owner_reasserts_frozen_before_recovery_transition[chat]",
+    "tests/test_supervisor.py::test_owner_hold_immediately_after_containment_cas_keeps_exact_event",
+    "tests/test_supervisor.py::test_owner_hold_between_ownership_check_and_recovery_cas",
+    "tests/test_supervisor.py::test_owner_hold_during_recovery_network_work_blocks_activation",
+    "tests/test_supervisor.py::test_restart_acknowledged_hold_with_pending_entry_is_contained",
+    "tests/test_supervisor.py::test_restart_acknowledged_hold_with_awaiting_stop_is_contained",
+    "tests/test_supervisor.py::test_restart_acknowledged_hold_with_clean_venue_is_proved",
+    "tests/test_supervisor.py::test_trigger_after_owner_ack_does_not_require_second_ack",
+    "tests/test_supervisor.py::test_owner_active_during_fault_observation_is_not_refrozen",
+    "tests/test_control_state_recovery.py::test_recovery_persists_and_reloads",
+    "tests/test_control_state_recovery.py::test_refresh_sees_recovery_written_by_another_process",
+    "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[ACTIVE-True-True]",
+    "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[FROZEN-False-True]",
+    "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[HALTED-False-False]",
+    "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[RECOVERY-False-True]",
+    "tests/test_control_state_recovery.py::test_transition_table_exact",
+    "tests/test_control_state_recovery.py::test_specified_transitions[path0]",
+    "tests/test_control_state_recovery.py::test_specified_transitions[path1]",
+    "tests/test_control_state_recovery.py::test_specified_transitions[path2]",
+    "tests/test_control_state_recovery.py::test_specified_transitions[path3]",
+    "tests/test_control_state_recovery.py::test_specified_transitions[path4]",
+    "tests/test_control_state_recovery.py::test_specified_transitions[path5]",
+    "tests/test_control_state_recovery.py::test_active_to_recovery_is_refused",
+    "tests/test_control_state_recovery.py::test_compare_and_set_refreshes_cross_process_state_and_leaves_no_event",
+    "tests/test_control_state_recovery.py::test_compare_and_set_refuses_unreadable_persisted_state",
+    "tests/test_control_state_recovery.py::test_compare_and_set_returns_exact_event_and_refuses_stale_intent",
+    "tests/test_control_state_recovery.py::test_risk_check_entry_blocks_recovery",
+    "tests/test_control_state_recovery.py::test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits[False]",
+    "tests/test_control_state_recovery.py::test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits[True]",
+    "tests/test_stage1_entry_authority.py::test_active_needs_exact_risk",
+    "tests/test_stage1_entry_authority.py::test_raw_symbol_is_not_capability",
+    "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-nan]",
+    "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-inf]",
+    "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount--1]",
+    "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-0]",
+    "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-1e-9999]",
+    "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[stop_loss-nan]",
+    "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[atr-inf]",
+    "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[nan]",
+    "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[inf]",
+    "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[-1]",
+    "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[0]",
+    "tests/test_stage1_entry_authority.py::test_size_bound",
+    "tests/test_stage1_entry_authority.py::test_changed_capability_receipt_refused",
+    "tests/test_stage1_entry_authority.py::test_identity_mismatch_refused",
+    "tests/test_stage1_entry_authority.py::test_policy_changed_refused",
+    "tests/test_stage1_entry_authority.py::test_unissued_permission_refused",
+    "tests/test_stage1_entry_authority.py::test_unknown_leverage_refused",
+    "tests/test_stage1_entry_authority.py::test_leverage_requires_replayable_venue_records[scalar-leverage_unverified]",
+    "tests/test_stage1_entry_authority.py::test_leverage_requires_replayable_venue_records[projection-leverage_receipt_mismatch]",
+    "tests/test_stage1_entry_authority.py::test_containment_fences_queued_permission[FROZEN]",
+    "tests/test_stage1_entry_authority.py::test_containment_fences_queued_permission[HALTED]",
+    "tests/test_stage1_entry_authority.py::test_containment_fences_queued_permission[RECOVERY]",
+    "tests/test_stage1_entry_authority.py::test_late_freeze",
+    "tests/test_stage1_entry_authority.py::test_completed_action_survives_store_reopen",
+    "tests/test_stage1_entry_authority.py::test_accounting_preserves_exact_identity",
+    "tests/test_stage1_entry_authority.py::test_control_mutant_detected",
+    "tests/test_stage1_entry_authority.py::test_risk_mutant_detected",
+    "tests/test_stage1_entry_authority.py::test_identity_mutant_detected",
+    "tests/test_stage1_entry_authority.py::test_dedup_mutant_detected",
+    "tests/test_stage1_entry_authority.py::test_missing_control_is_not_active",
+    "tests/test_stage1_entry_authority.py::test_direction_mismatch_refused",
+    "tests/test_stage1_entry_authority.py::test_completed_fill_retry_and_reopen_never_recreates_exposure",
+    "tests/test_stage1_entry_authority.py::test_reconciliation_refuses_changed_canonical_binding",
+    "tests/test_stage1_entry_authority.py::test_recovery_refuses_conflicting_venue_position_identity",
+    "tests/test_stage1_entry_authority.py::test_reconciliation_refuses_symbol_alias_collision",
+    "tests/test_stage1_entry_authority.py::test_all_live_order_callers_have_classified_boundaries",
+    "tests/test_stage1_entry_authority.py::test_bracket_must_cover_this_exact_notional",
+    "tests/test_stage1_entry_authority.py::test_partial_retry_never_recreates_original_amount",
+    "tests/test_stage1_entry_authority.py::test_trade_intent_capability_is_immutable_and_exact",
+    "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[amount]",
+    "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[entry_price]",
+    "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[notional_usdt]",
+    "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[stop_loss]",
+    "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[leverage]",
+    "tests/test_stage1_entry_authority.py::test_stale_account_after_authorization_refuses",
+    "tests/test_stage1_entry_authority.py::test_raw_symbol_with_existing_registry_still_cannot_authorize",
+    "tests/test_stage1_entry_authority.py::test_registry_changed_after_proposal_before_risk_refuses",
+    "tests/test_stage1_entry_authority.py::test_portfolio_proposal_carries_exact_registry_source",
+    "tests/test_stage1_entry_authority.py::test_account_context_changed_before_execution_refuses",
+    "tests/test_stage1_entry_authority.py::test_venue_book_receipt_for_another_account_refuses",
+    "tests/test_stage1_entry_authority.py::test_completed_request_is_retained_in_fresh_interpreter",
+    "tests/test_stage1_entry_authority.py::test_db_lock_failure_at_reservation_prevents_submission",
+    "tests/test_stage1_entry_authority.py::test_ack_write_failure_preserves_committed_unknown_attempt",
+    "tests/test_stage1_entry_authority.py::test_account_producer_uses_exact_execution_credential_context",
+    "tests/test_stage1_entry_authority.py::test_newer_control_intent_invalidates_old_permission_even_after_active",
+    "tests/test_stage1_entry_authority.py::test_pre_upgrade_durable_history_also_blocks_completed_action",
+    "tests/test_entry_recovery.py::test_success_clears_durable_intent_only_after_journalling",
+    "tests/test_entry_recovery.py::test_ambiguous_submission_survives_restart_and_adopts_exact_exposure",
+    "tests/test_entry_recovery.py::test_entry_recovery_uses_canonical_protection_match",
+    "tests/test_entry_recovery.py::test_explicit_rejection_releases_gate",
+    "tests/test_entry_recovery.py::test_unavailable_venue_retains_intent_and_operator_hold",
+    "tests/test_entry_recovery.py::test_flat_snapshot_does_not_release_nonterminal_entry",
+    "tests/test_entry_recovery.py::test_partial_entry_cancels_remainder_then_protects_actual_size",
+    "tests/test_entry_recovery.py::test_failed_stop_close_is_pending_until_terminal_and_flat",
+    "tests/test_entry_recovery.py::test_confirmed_partial_close_retries_only_remaining_venue_size",
+    "tests/test_entry_recovery.py::test_existing_stop_preserved_and_no_duplicate_placement",
+    "tests/test_entry_recovery.py::test_stop_read_failure_is_not_empty_protection",
+    "tests/test_entry_recovery.py::test_journal_write_failure_prevents_entry_submission",
+    "tests/test_entry_recovery.py::test_malformed_recovery_record_fails_closed",
+    "tests/test_entry_recovery.py::test_ambiguous_stop_attempt_is_not_repeated",
+    "tests/test_entry_recovery.py::test_rejected_emergency_close_retries_without_assuming_flat",
+    "tests/test_entry_recovery.py::test_crash_after_trade_insert_does_not_duplicate_trade",
+    "tests/test_entry_recovery.py::test_recovery_does_not_claim_non_reduce_only_stop_is_protection",
+    "tests/test_entry_recovery.py::test_side_conflict_keeps_gate_without_sending_an_order",
+    "tests/test_entry_recovery.py::test_boot_reconciliation_does_not_adopt_recovery_owned_position",
+    "tests/test_entry_recovery.py::test_unknown_order_is_not_replaced_by_flat_snapshot",
+    "tests/test_entry_recovery.py::test_intervening_size_change_is_not_adopted_with_zero_accounting",
+    "tests/test_entry_recovery.py::test_flat_with_residual_stop_does_not_allow_a_new_entry",
+    "tests/test_entry_recovery.py::test_order_price_is_not_a_confirmed_fill_average",
+    "tests/test_entry_recovery.py::test_take_profit_is_not_downside_protection",
+    "tests/test_entry_recovery.py::test_malformed_stop_snapshot_is_not_absence"
+  ],
+  "deselected": [],
+  "reports": [
+    {
+      "nodeid": "tests/test_supervisor.py::test_serious_active_fault_contains_before_recovery",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.19546988201909699
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_serious_active_fault_contains_before_recovery",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.030050977977225557
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_serious_active_fault_contains_before_recovery",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0017162770091090351
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_clean_boot_proves_safety_without_recovery",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.17467976099578664
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_clean_boot_proves_safety_without_recovery",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03687159201945178
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_clean_boot_proves_safety_without_recovery",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003951079852413386
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_binance_style_live_protected_position_verifies",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.178974415990524
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_binance_style_live_protected_position_verifies",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.09858640498714522
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_binance_style_live_protected_position_verifies",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003609440173022449
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_binance_style_naked_position_rearms_without_global_ordinary_call",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1528163499897346
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_binance_style_naked_position_rearms_without_global_ordinary_call",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.046115735021885484
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_binance_style_naked_position_rearms_without_global_ordinary_call",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00029355898732319474
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_binance_style_orphan_algo_stop_is_swept",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11824204999720678
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_binance_style_orphan_algo_stop_is_swept",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.014729724993230775
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_binance_style_orphan_algo_stop_is_swept",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003134859725832939
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_safe_recovery_can_activate",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10869486699812114
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_safe_recovery_can_activate",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0321213299757801
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_safe_recovery_can_activate",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003361690032761544
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_pending_entry_intent_blocks_until_resolved",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12426540598971769
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_pending_entry_intent_blocks_until_resolved",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.033190375979756936
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_pending_entry_intent_blocks_until_resolved",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00029344900394789875
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_entry_resolved_in_first_pass_still_enters_recovery",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14083526300964877
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_entry_resolved_in_first_pass_still_enters_recovery",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.027401229017414153
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_entry_resolved_in_first_pass_still_enters_recovery",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00047632100176997483
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_unreadable_entry_ledger_requires_owner",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14141517598181963
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_unreadable_entry_ledger_requires_owner",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.016294674016535282
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_unreadable_entry_ledger_requires_owner",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0009400869894307107
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_naked_position_requires_owner_and_persists_across_restart",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13857950398232788
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_naked_position_requires_owner_and_persists_across_restart",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06934319299762137
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_naked_position_requires_owner_and_persists_across_restart",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00033580700983293355
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_corrupt_critical_status_fails_closed",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.155240792024415
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_corrupt_critical_status_fails_closed",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.02320812299149111
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_corrupt_critical_status_fails_closed",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003087569784838706
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_repeated_entry_failure_requires_owner",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1449191650026478
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_repeated_entry_failure_requires_owner",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.02225188899319619
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_repeated_entry_failure_requires_owner",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00029338800231926143
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_contradictory_position_ownership_requires_owner",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.15219234401592985
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_contradictory_position_ownership_requires_owner",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.032270850002532825
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_contradictory_position_ownership_requires_owner",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003561150224413723
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_wrong_side_stop_is_not_proven_protection",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.18362933900789358
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_wrong_side_stop_is_not_proven_protection",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03536012000404298
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_wrong_side_stop_is_not_proven_protection",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00033870298648253083
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_rearmed_stop_awaits_listing_then_allows_safe_recovery",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12977808600408025
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_rearmed_stop_awaits_listing_then_allows_safe_recovery",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04162462300155312
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_rearmed_stop_awaits_listing_then_allows_safe_recovery",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00036589399678632617
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_awaiting_verification_never_places_duplicate_stop",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13059580500703305
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_awaiting_verification_never_places_duplicate_stop",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.055574099998921156
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_awaiting_verification_never_places_duplicate_stop",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004400729958433658
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_listed_rearm_without_journal_id_stays_contained",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13041362099465914
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_listed_rearm_without_journal_id_stays_contained",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04839317899313755
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_listed_rearm_without_journal_id_stays_contained",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003981119953095913
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_explicit_rearm_failure_remains_unsafe",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1288837630127091
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_explicit_rearm_failure_remains_unsafe",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04112007300136611
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_explicit_rearm_failure_remains_unsafe",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003883059835061431
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_supervisor_reconcile_uses_canonical_protection_match",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.15617384898359887
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_supervisor_reconcile_uses_canonical_protection_match",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06763931500609033
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_supervisor_reconcile_uses_canonical_protection_match",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.001298596995184198
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_flat_account_failed_orphan_cancellation_is_not_safe",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13620445999549702
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_flat_account_failed_orphan_cancellation_is_not_safe",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.01745276598376222
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_flat_account_failed_orphan_cancellation_is_not_safe",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00110148498788476
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_flat_account_unreadable_protection_snapshot_is_not_safe",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12979537501814775
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_flat_account_unreadable_protection_snapshot_is_not_safe",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.014587725017918274
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_flat_account_unreadable_protection_snapshot_is_not_safe",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00043214799370616674
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_flat_venue_without_global_listing_is_not_safe",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.22701241399045102
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_flat_venue_without_global_listing_is_not_safe",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.015508445998420939
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_flat_venue_without_global_listing_is_not_safe",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002242299960926175
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_recovery_reconciliation_has_cadence",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1704990900179837
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_recovery_reconciliation_has_cadence",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03864999700454064
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_recovery_reconciliation_has_cadence",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00036500199348665774
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_kernel_boot_uses_supervisor_without_real_services",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11721057299291715
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_kernel_boot_uses_supervisor_without_real_services",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.8321100760076661
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_kernel_boot_uses_supervisor_without_real_services",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004221390117891133
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_change_during_reconcile_wins[FROZEN]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0950141689972952
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_change_during_reconcile_wins[FROZEN]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.017298510996624827
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_change_during_reconcile_wins[FROZEN]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0007529880094807595
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_change_during_reconcile_wins[HALTED]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11090405998402275
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_change_during_reconcile_wins[HALTED]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.017219604982528836
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_change_during_reconcile_wins[HALTED]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005532339855562896
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_frozen_with_pending_recovery_never_auto_resumes",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12315173100796528
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_frozen_with_pending_recovery_never_auto_resumes",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.017889206996187568
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_frozen_with_pending_recovery_never_auto_resumes",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003009630017913878
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_stale_supervisor_evidence_cannot_promote_owner_frozen[RECOVERING]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11357346500153653
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_stale_supervisor_evidence_cannot_promote_owner_frozen[RECOVERING]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.014441259001614526
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_stale_supervisor_evidence_cannot_promote_owner_frozen[RECOVERING]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00030263501685112715
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_stale_supervisor_evidence_cannot_promote_owner_frozen[NEEDS_OWNER]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10901111899875104
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_stale_supervisor_evidence_cannot_promote_owner_frozen[NEEDS_OWNER]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.009719085996039212
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_stale_supervisor_evidence_cannot_promote_owner_frozen[NEEDS_OWNER]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0008650569943711162
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_only_supervisor_owned_recovery_auto_activates",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10003159000189044
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_only_supervisor_owned_recovery_auto_activates",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.033420609979657456
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_only_supervisor_owned_recovery_auto_activates",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0007755290134809911
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_unreadable_ledger_has_no_reconcile_mutations",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1207192369911354
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_unreadable_ledger_has_no_reconcile_mutations",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.02049950699438341
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_unreadable_ledger_has_no_reconcile_mutations",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00035279899020679295
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_halted_boot_with_pending_recovery_does_no_recovery",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11683245102176443
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_halted_boot_with_pending_recovery_does_no_recovery",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0048357330088038
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_halted_boot_with_pending_recovery_does_no_recovery",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0006880239816382527
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_persists_until_later_owner_active_and_restart[operator]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10911864001536742
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_persists_until_later_owner_active_and_restart[operator]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.07321296099689789
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_persists_until_later_owner_active_and_restart[operator]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004554920014925301
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_persists_until_later_owner_active_and_restart[dashboard]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10579891799716279
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_persists_until_later_owner_active_and_restart[dashboard]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.08579604799160734
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_persists_until_later_owner_active_and_restart[dashboard]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00031157201738096774
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_persists_until_later_owner_active_and_restart[chat]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11049161799019203
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_persists_until_later_owner_active_and_restart[chat]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.07917288001044653
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_persists_until_later_owner_active_and_restart[chat]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000358669989509508
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[macro_guard]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.09760341700166464
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[macro_guard]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.032437297020806
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[macro_guard]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003069740196224302
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[risk_engine]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11547904199687764
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[risk_engine]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03475354300462641
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[risk_engine]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00037773599615320563
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[watchdog]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.09367573002236895
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[watchdog]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.023420576006174088
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[watchdog]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00032859400380402803
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[supervisor]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0925464500032831
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[supervisor]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.02206049399683252
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_system_active_does_not_acknowledge_hold[supervisor]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003148480027448386
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_activation_cas_loses_to_other_process",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12114089701208286
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_activation_cas_loses_to_other_process",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.025304242997663096
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_activation_cas_loses_to_other_process",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00039277400355786085
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_failed_safety_evidence_write_blocks_activation",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13264361300389282
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_failed_safety_evidence_write_blocks_activation",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.019903272012015805
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_failed_safety_evidence_write_blocks_activation",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00035265900078229606
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_reasserts_frozen_before_recovery_transition[operator]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10954437099280767
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_reasserts_frozen_before_recovery_transition[operator]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0250730820116587
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_reasserts_frozen_before_recovery_transition[operator]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00040389501373283565
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_reasserts_frozen_before_recovery_transition[chat]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1564269310038071
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_reasserts_frozen_before_recovery_transition[chat]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.024005254002986476
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_reasserts_frozen_before_recovery_transition[chat]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003927540092263371
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_immediately_after_containment_cas_keeps_exact_event",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10600196101586334
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_immediately_after_containment_cas_keeps_exact_event",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.018558973009930924
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_immediately_after_containment_cas_keeps_exact_event",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000360423990059644
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_between_ownership_check_and_recovery_cas",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1038769060105551
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_between_ownership_check_and_recovery_cas",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.021070906979730353
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_between_ownership_check_and_recovery_cas",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00032701101736165583
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_during_recovery_network_work_blocks_activation",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.22350678901420906
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_during_recovery_network_work_blocks_activation",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.017878373997518793
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_hold_during_recovery_network_work_blocks_activation",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00040863300091587007
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_restart_acknowledged_hold_with_pending_entry_is_contained",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1051867839996703
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_restart_acknowledged_hold_with_pending_entry_is_contained",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0465836719959043
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_restart_acknowledged_hold_with_pending_entry_is_contained",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00035378101165406406
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_restart_acknowledged_hold_with_awaiting_stop_is_contained",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10198823100654408
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_restart_acknowledged_hold_with_awaiting_stop_is_contained",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05475294598727487
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_restart_acknowledged_hold_with_awaiting_stop_is_contained",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0006879559950903058
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_restart_acknowledged_hold_with_clean_venue_is_proved",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11582539198570885
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_restart_acknowledged_hold_with_clean_venue_is_proved",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06279120699036866
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_restart_acknowledged_hold_with_clean_venue_is_proved",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00045058198156766593
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_trigger_after_owner_ack_does_not_require_second_ack",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12197302302229218
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_trigger_after_owner_ack_does_not_require_second_ack",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.049774118000641465
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_trigger_after_owner_ack_does_not_require_second_ack",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004455530142877251
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_active_during_fault_observation_is_not_refrozen",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12516625999705866
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_active_during_fault_observation_is_not_refrozen",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.01716253999620676
+    },
+    {
+      "nodeid": "tests/test_supervisor.py::test_owner_active_during_fault_observation_is_not_refrozen",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004389400128275156
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_recovery_persists_and_reloads",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11364127599517815
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_recovery_persists_and_reloads",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.004911570984404534
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_recovery_persists_and_reloads",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002871630131267011
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_refresh_sees_recovery_written_by_another_process",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1259977479930967
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_refresh_sees_recovery_written_by_another_process",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.00818980298936367
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_refresh_sees_recovery_written_by_another_process",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003020240110345185
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[ACTIVE-True-True]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1314693900058046
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[ACTIVE-True-True]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.004354378004791215
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[ACTIVE-True-True]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00035989200114272535
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[FROZEN-False-True]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12178307300200686
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[FROZEN-False-True]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.006355588004225865
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[FROZEN-False-True]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0006663060048595071
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[HALTED-False-False]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.37765799602493644
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[HALTED-False-False]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0053963090176694095
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[HALTED-False-False]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0008120879938360304
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[RECOVERY-False-True]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13993427201057784
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[RECOVERY-False-True]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.004042640997795388
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_entry_and_exit_permissions[RECOVERY-False-True]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003201889921911061
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_transition_table_exact",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.00021103498875163496
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_transition_table_exact",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.00020596498507075012
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_transition_table_exact",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00018691999139264226
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path0]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11861157801467925
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path0]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.008007691998500377
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path0]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004992930043954402
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path1]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.19276377800269984
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path1]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.005346287012798712
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path1]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000454699998954311
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path2]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11493872301070951
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path2]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.00825344500481151
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path2]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00030076198163442314
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path3]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3275189349951688
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path3]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.012134980002883822
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path3]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00037114397855475545
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path4]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14626172097632661
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path4]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.01016778001212515
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path4]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002941200218629092
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path5]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.27063071899465285
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path5]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.006699338991893455
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_specified_transitions[path5]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004426380037330091
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_active_to_recovery_is_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.145539243996609
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_active_to_recovery_is_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.00539809899055399
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_active_to_recovery_is_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004079020000062883
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_compare_and_set_refreshes_cross_process_state_and_leaves_no_event",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.147152132994961
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_compare_and_set_refreshes_cross_process_state_and_leaves_no_event",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.011219114996492863
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_compare_and_set_refreshes_cross_process_state_and_leaves_no_event",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0012760850077029318
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_compare_and_set_refuses_unreadable_persisted_state",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.15136265399632975
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_compare_and_set_refuses_unreadable_persisted_state",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0020986930176150054
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_compare_and_set_refuses_unreadable_persisted_state",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0014533069916069508
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_compare_and_set_returns_exact_event_and_refuses_stale_intent",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1691243770183064
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_compare_and_set_returns_exact_event_and_refuses_stale_intent",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.016839206975419074
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_compare_and_set_returns_exact_event_and_refuses_stale_intent",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0011718799942173064
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_risk_check_entry_blocks_recovery",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14565792298526503
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_risk_check_entry_blocks_recovery",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.16599565400974825
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_risk_check_entry_blocks_recovery",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002665779902599752
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits[False]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.00035148701863363385
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits[False]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10775383599684574
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits[False]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003906399942934513
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits[True]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.00036482198629528284
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits[True]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.004183479002676904
+    },
+    {
+      "nodeid": "tests/test_control_state_recovery.py::test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits[True]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00038367699016816914
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_active_needs_exact_risk",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.846521669998765
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_active_needs_exact_risk",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0020337309979368
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_active_needs_exact_risk",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005889800086151809
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_raw_symbol_is_not_capability",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.35431285202503204
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_raw_symbol_is_not_capability",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.007727733027422801
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_raw_symbol_is_not_capability",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003418489941395819
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-nan]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.350936823990196
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-nan]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.02160115700098686
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-nan]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0028218840016052127
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-inf]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.29236675999709405
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-inf]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.02338943601353094
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-inf]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00044339802116155624
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount--1]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3641733620024752
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount--1]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.006866079987958074
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount--1]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003965509822592139
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-0]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2755908709950745
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-0]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.005812196002807468
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-0]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00036303800879977643
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-1e-9999]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.4578431179979816
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-1e-9999]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0063107479945756495
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[amount-1e-9999]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003929249942302704
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[stop_loss-nan]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.35844411997823045
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[stop_loss-nan]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.012217111012432724
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[stop_loss-nan]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00043947200174443424
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[atr-inf]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3539889910025522
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[atr-inf]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.009005014988360927
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_numeric_never_submits[atr-inf]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00035268900683149695
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[nan]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.32243647301220335
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[nan]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.038540776004083455
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[nan]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003714539925567806
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[inf]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.8567319780122489
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[inf]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04066942201461643
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[inf]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004469350096769631
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[-1]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.46720696199918166
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[-1]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.006050137017155066
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[-1]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0007848670065868646
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[0]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.5397479969833512
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[0]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.004272469988791272
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_invalid_equity_cannot_authorize[0]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005327419785317034
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_size_bound",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.6392002689826768
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_size_bound",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.01526667401776649
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_size_bound",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00047238299157470465
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_changed_capability_receipt_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.4388358170108404
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_changed_capability_receipt_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.015215410996461287
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_changed_capability_receipt_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000509292003698647
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_identity_mismatch_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.46424288797425106
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_identity_mismatch_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.01697816699743271
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_identity_mismatch_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005621950258500874
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_policy_changed_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.45169076399179175
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_policy_changed_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.015040973987197503
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_policy_changed_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005263530183583498
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_unissued_permission_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3963182820007205
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_unissued_permission_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.011784431000705808
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_unissued_permission_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005114160012453794
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_unknown_leverage_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.45191359700402245
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_unknown_leverage_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0056346589990425855
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_unknown_leverage_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005748139810748398
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_leverage_requires_replayable_venue_records[scalar-leverage_unverified]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.41963690498960204
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_leverage_requires_replayable_venue_records[scalar-leverage_unverified]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.004638479993445799
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_leverage_requires_replayable_venue_records[scalar-leverage_unverified]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00048188099754042923
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_leverage_requires_replayable_venue_records[projection-leverage_receipt_mismatch]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.38603560798219405
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_leverage_requires_replayable_venue_records[projection-leverage_receipt_mismatch]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06461788900196552
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_leverage_requires_replayable_venue_records[projection-leverage_receipt_mismatch]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004504320095293224
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_containment_fences_queued_permission[FROZEN]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3112252250139136
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_containment_fences_queued_permission[FROZEN]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.009560630976920947
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_containment_fences_queued_permission[FROZEN]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0012320819951128215
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_containment_fences_queued_permission[HALTED]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.4060204609995708
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_containment_fences_queued_permission[HALTED]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.11714339698664844
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_containment_fences_queued_permission[HALTED]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00045912800123915076
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_containment_fences_queued_permission[RECOVERY]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.4466941689897794
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_containment_fences_queued_permission[RECOVERY]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.00630701202317141
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_containment_fences_queued_permission[RECOVERY]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00030933800735510886
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_late_freeze",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.4179716130020097
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_late_freeze",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.011095218011178076
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_late_freeze",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00035329998354427516
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_completed_action_survives_store_reopen",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.725054225011263
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_completed_action_survives_store_reopen",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.22634807997383177
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_completed_action_survives_store_reopen",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000412402005167678
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_accounting_preserves_exact_identity",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.8559973909868859
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_accounting_preserves_exact_identity",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.20233133298461325
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_accounting_preserves_exact_identity",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005303110228851438
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_control_mutant_detected",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.5707954969839193
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_control_mutant_detected",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.1264250559906941
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_control_mutant_detected",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0006272619939409196
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_mutant_detected",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3702916699985508
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_mutant_detected",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.091050830000313
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_mutant_detected",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004483480006456375
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_identity_mutant_detected",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.30473603698192164
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_identity_mutant_detected",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.11636479198932648
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_identity_mutant_detected",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00043284898856654763
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_dedup_mutant_detected",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.44188072698307224
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_dedup_mutant_detected",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.2732848350133281
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_dedup_mutant_detected",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00045721500646322966
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_missing_control_is_not_active",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.34024315600981936
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_missing_control_is_not_active",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.00345779798226431
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_missing_control_is_not_active",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003578989999368787
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_direction_mismatch_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.32808399299392477
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_direction_mismatch_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.009656852984335274
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_direction_mismatch_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003464450128376484
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_completed_fill_retry_and_reopen_never_recreates_exposure",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.36270995100494474
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_completed_fill_retry_and_reopen_never_recreates_exposure",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.18648962999577634
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_completed_fill_retry_and_reopen_never_recreates_exposure",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003625719982665032
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_reconciliation_refuses_changed_canonical_binding",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3001127539901063
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_reconciliation_refuses_changed_canonical_binding",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.2249195690092165
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_reconciliation_refuses_changed_canonical_binding",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003086969954892993
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_recovery_refuses_conflicting_venue_position_identity",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.402071574004367
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_recovery_refuses_conflicting_venue_position_identity",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.045337358984397724
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_recovery_refuses_conflicting_venue_position_identity",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000484364980366081
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_reconciliation_refuses_symbol_alias_collision",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.30808235399308614
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_reconciliation_refuses_symbol_alias_collision",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.09278583500417881
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_reconciliation_refuses_symbol_alias_collision",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00045944799785502255
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_all_live_order_callers_have_classified_boundaries",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0005294690199662
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_all_live_order_callers_have_classified_boundaries",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 3.1669872509955894
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_all_live_order_callers_have_classified_boundaries",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002952920040115714
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_bracket_must_cover_this_exact_notional",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3003635809873231
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_bracket_must_cover_this_exact_notional",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.013053937000222504
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_bracket_must_cover_this_exact_notional",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00034834101097658277
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_partial_retry_never_recreates_original_amount",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3206989800091833
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_partial_retry_never_recreates_original_amount",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.5619254669873044
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_partial_retry_never_recreates_original_amount",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004927409754600376
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_trade_intent_capability_is_immutable_and_exact",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 1.2012469850014895
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_trade_intent_capability_is_immutable_and_exact",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.19365914197987877
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_trade_intent_capability_is_immutable_and_exact",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00032183199073188007
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[amount]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3664056029811036
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[amount]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0005503389984369278
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[amount]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003938870213460177
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[entry_price]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.4267841950058937
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[entry_price]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0005110249912831932
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[entry_price]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003834369999822229
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[notional_usdt]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.4017619529913645
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[notional_usdt]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0006475950067397207
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[notional_usdt]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00047047898988239467
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[stop_loss]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.4043613490066491
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[stop_loss]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0004587479925248772
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[stop_loss]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003680179943330586
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[leverage]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.42295949399704114
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[leverage]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.00041991498437710106
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_risk_rejects_invalid_held_position_numbers[leverage]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00039412701153196394
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_stale_account_after_authorization_refuses",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3573388319928199
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_stale_account_after_authorization_refuses",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.012649783020606264
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_stale_account_after_authorization_refuses",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004004579968750477
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_raw_symbol_with_existing_registry_still_cannot_authorize",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3057226829987485
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_raw_symbol_with_existing_registry_still_cannot_authorize",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.005807413021102548
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_raw_symbol_with_existing_registry_still_cannot_authorize",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0008414780022576451
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_registry_changed_after_proposal_before_risk_refuses",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.273667783010751
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_registry_changed_after_proposal_before_risk_refuses",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.005117286986205727
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_registry_changed_after_proposal_before_risk_refuses",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003468020004220307
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_portfolio_proposal_carries_exact_registry_source",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2766022930154577
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_portfolio_proposal_carries_exact_registry_source",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05264939699554816
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_portfolio_proposal_carries_exact_registry_source",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003975729923695326
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_account_context_changed_before_execution_refuses",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3332453900075052
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_account_context_changed_before_execution_refuses",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.010196182993240654
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_account_context_changed_before_execution_refuses",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003402860020287335
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_venue_book_receipt_for_another_account_refuses",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2821238079923205
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_venue_book_receipt_for_another_account_refuses",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.005143574002431706
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_venue_book_receipt_for_another_account_refuses",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00038598099490627646
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_completed_request_is_retained_in_fresh_interpreter",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.30309786400175653
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_completed_request_is_retained_in_fresh_interpreter",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 1.8894171020074282
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_completed_request_is_retained_in_fresh_interpreter",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004333399992901832
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_db_lock_failure_at_reservation_prevents_submission",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2601248560240492
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_db_lock_failure_at_reservation_prevents_submission",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.007065224985126406
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_db_lock_failure_at_reservation_prevents_submission",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00034269000752829015
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_ack_write_failure_preserves_committed_unknown_attempt",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2503890060179401
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_ack_write_failure_preserves_committed_unknown_attempt",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.15553752600681037
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_ack_write_failure_preserves_committed_unknown_attempt",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00028360000578686595
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_account_producer_uses_exact_execution_credential_context",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2650165460072458
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_account_producer_uses_exact_execution_credential_context",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.000607073976425454
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_account_producer_uses_exact_execution_credential_context",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000345776992617175
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_newer_control_intent_invalidates_old_permission_even_after_active",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3726280489936471
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_newer_control_intent_invalidates_old_permission_even_after_active",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.01586917499662377
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_newer_control_intent_invalidates_old_permission_even_after_active",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00045062799472361803
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_pre_upgrade_durable_history_also_blocks_completed_action",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.4779753109905869
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_pre_upgrade_durable_history_also_blocks_completed_action",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.009364541998365894
+    },
+    {
+      "nodeid": "tests/test_stage1_entry_authority.py::test_pre_upgrade_durable_history_also_blocks_completed_action",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00034519299515523016
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_success_clears_durable_intent_only_after_journalling",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.26718852497288026
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_success_clears_durable_intent_only_after_journalling",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.058703855000203475
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_success_clears_durable_intent_only_after_journalling",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004123099788557738
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_ambiguous_submission_survives_restart_and_adopts_exact_exposure",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2178233999875374
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_ambiguous_submission_survives_restart_and_adopts_exact_exposure",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.16509999899426475
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_ambiguous_submission_survives_restart_and_adopts_exact_exposure",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004155240021646023
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_entry_recovery_uses_canonical_protection_match",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.27578748200903647
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_entry_recovery_uses_canonical_protection_match",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.09313799501978792
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_entry_recovery_uses_canonical_protection_match",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000453799992101267
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_explicit_rejection_releases_gate",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2876601259922609
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_explicit_rejection_releases_gate",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03595756899449043
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_explicit_rejection_releases_gate",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00042758899508044124
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_unavailable_venue_retains_intent_and_operator_hold",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3037665590236429
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_unavailable_venue_retains_intent_and_operator_hold",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04694785800529644
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_unavailable_venue_retains_intent_and_operator_hold",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00045328697888180614
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_flat_snapshot_does_not_release_nonterminal_entry",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.31643281498691067
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_flat_snapshot_does_not_release_nonterminal_entry",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05089629697613418
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_flat_snapshot_does_not_release_nonterminal_entry",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004294130194466561
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_partial_entry_cancels_remainder_then_protects_actual_size",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.28503270098008215
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_partial_entry_cancels_remainder_then_protects_actual_size",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.08063302599475719
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_partial_entry_cancels_remainder_then_protects_actual_size",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004068670095875859
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_failed_stop_close_is_pending_until_terminal_and_flat",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2522320649877656
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_failed_stop_close_is_pending_until_terminal_and_flat",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.07921648601768538
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_failed_stop_close_is_pending_until_terminal_and_flat",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000354263000190258
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_confirmed_partial_close_retries_only_remaining_venue_size",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.22472064098110422
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_confirmed_partial_close_retries_only_remaining_venue_size",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.07141426298767328
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_confirmed_partial_close_retries_only_remaining_venue_size",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00038297599530778825
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_existing_stop_preserved_and_no_duplicate_placement",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.22825868899235502
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_existing_stop_preserved_and_no_duplicate_placement",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.031037209992064163
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_existing_stop_preserved_and_no_duplicate_placement",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000287116999970749
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_stop_read_failure_is_not_empty_protection",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.23078671901021153
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_stop_read_failure_is_not_empty_protection",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.00044854299630969763
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_stop_read_failure_is_not_empty_protection",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002850230084732175
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_journal_write_failure_prevents_entry_submission",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.22407381600351073
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_journal_write_failure_prevents_entry_submission",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.012871654005721211
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_journal_write_failure_prevents_entry_submission",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000319737009704113
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_malformed_recovery_record_fails_closed",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2121629409957677
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_malformed_recovery_record_fails_closed",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0034486140066292137
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_malformed_recovery_record_fails_closed",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003397550026420504
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_ambiguous_stop_attempt_is_not_repeated",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.22651678600232117
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_ambiguous_stop_attempt_is_not_repeated",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04163853399222717
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_ambiguous_stop_attempt_is_not_repeated",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00035421198117546737
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_rejected_emergency_close_retries_without_assuming_flat",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2248384359991178
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_rejected_emergency_close_retries_without_assuming_flat",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.08491750500979833
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_rejected_emergency_close_retries_without_assuming_flat",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002889600000344217
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_crash_after_trade_insert_does_not_duplicate_trade",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.21962519898079336
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_crash_after_trade_insert_does_not_duplicate_trade",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06378735901671462
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_crash_after_trade_insert_does_not_duplicate_trade",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003112419799435884
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_recovery_does_not_claim_non_reduce_only_stop_is_protection",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.22127391601679847
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_recovery_does_not_claim_non_reduce_only_stop_is_protection",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03382630198029801
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_recovery_does_not_claim_non_reduce_only_stop_is_protection",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003339950053486973
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_side_conflict_keeps_gate_without_sending_an_order",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.240234202996362
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_side_conflict_keeps_gate_without_sending_an_order",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.030589703004807234
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_side_conflict_keeps_gate_without_sending_an_order",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002685519866645336
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_boot_reconciliation_does_not_adopt_recovery_owned_position",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.22943627499626018
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_boot_reconciliation_does_not_adopt_recovery_owned_position",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.030505340022500604
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_boot_reconciliation_does_not_adopt_recovery_owned_position",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003506049979478121
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_unknown_order_is_not_replaced_by_flat_snapshot",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2320487210236024
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_unknown_order_is_not_replaced_by_flat_snapshot",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.029178061988204718
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_unknown_order_is_not_replaced_by_flat_snapshot",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000374209979781881
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_intervening_size_change_is_not_adopted_with_zero_accounting",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.22282515600090846
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_intervening_size_change_is_not_adopted_with_zero_accounting",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.030376237991731614
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_intervening_size_change_is_not_adopted_with_zero_accounting",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003641340008471161
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_flat_with_residual_stop_does_not_allow_a_new_entry",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2238057100039441
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_flat_with_residual_stop_does_not_allow_a_new_entry",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03104144101962447
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_flat_with_residual_stop_does_not_allow_a_new_entry",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00033684002119116485
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_order_price_is_not_a_confirmed_fill_average",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2417667809932027
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_order_price_is_not_a_confirmed_fill_average",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.015495753003051504
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_order_price_is_not_a_confirmed_fill_average",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00028338999254629016
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_take_profit_is_not_downside_protection",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.252240397996502
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_take_profit_is_not_downside_protection",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03277952200733125
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_take_profit_is_not_downside_protection",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00030019102268852293
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_malformed_stop_snapshot_is_not_absence",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.23386975401081145
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_malformed_stop_snapshot_is_not_absence",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0003367789904586971
+    },
+    {
+      "nodeid": "tests/test_entry_recovery.py::test_malformed_stop_snapshot_is_not_absence",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000895162986125797
+    }
+  ],
+  "failures": [],
+  "network_attempts": [],
+  "production_store_attempts": [],
+  "module_origins": {
+    "trader": "/mnt/luffy-data/luffy/production/trader/__init__.py",
+    "trader.agents": "/mnt/luffy-data/luffy/production/trader/agents/__init__.py",
+    "trader.agents.base": "/mnt/luffy-data/luffy/production/trader/agents/base.py",
+    "trader.agents.calibration": "/mnt/luffy-data/luffy/production/trader/agents/calibration.py",
+    "trader.agents.flow": "/mnt/luffy-data/luffy/production/trader/agents/flow.py",
+    "trader.agents.indicators": "/mnt/luffy-data/luffy/production/trader/agents/indicators.py",
+    "trader.agents.macro_guard": "/mnt/luffy-data/luffy/production/trader/agents/macro_guard.py",
+    "trader.agents.momentum": "/mnt/luffy-data/luffy/production/trader/agents/momentum.py",
+    "trader.agents.news_guard": "/mnt/luffy-data/luffy/production/trader/agents/news_guard.py",
+    "trader.agents.orderbook_depth": "/mnt/luffy-data/luffy/production/trader/agents/orderbook_depth.py",
+    "trader.agents.positioning": "/mnt/luffy-data/luffy/production/trader/agents/positioning.py",
+    "trader.agents.regime": "/mnt/luffy-data/luffy/production/trader/agents/regime.py",
+    "trader.agents.structure": "/mnt/luffy-data/luffy/production/trader/agents/structure.py",
+    "trader.brain": "/mnt/luffy-data/luffy/production/trader/brain/__init__.py",
+    "trader.brain.ideas": "/mnt/luffy-data/luffy/production/trader/brain/ideas.py",
+    "trader.brain.scraper": "/mnt/luffy-data/luffy/production/trader/brain/scraper.py",
+    "trader.cognition": "/mnt/luffy-data/luffy/production/trader/cognition/__init__.py",
+    "trader.cognition.attention": "/mnt/luffy-data/luffy/production/trader/cognition/attention.py",
+    "trader.cognition.contracts": "/mnt/luffy-data/luffy/production/trader/cognition/contracts.py",
+    "trader.cognition.forecast_protocol": "/mnt/luffy-data/luffy/production/trader/cognition/forecast_protocol.py",
+    "trader.cognition.investigation": "/mnt/luffy-data/luffy/production/trader/cognition/investigation.py",
+    "trader.cognition.opportunity_context": "/mnt/luffy-data/luffy/production/trader/cognition/opportunity_context.py",
+    "trader.cognition.outcomes": "/mnt/luffy-data/luffy/production/trader/cognition/outcomes.py",
+    "trader.core": "/mnt/luffy-data/luffy/production/trader/core/__init__.py",
+    "trader.core.config": "/mnt/luffy-data/luffy/production/trader/core/config.py",
+    "trader.core.instrument_registry": "/mnt/luffy-data/luffy/production/trader/core/instrument_registry.py",
+    "trader.core.journal": "/mnt/luffy-data/luffy/production/trader/core/journal.py",
+    "trader.core.reason_codes": "/mnt/luffy-data/luffy/production/trader/core/reason_codes.py",
+    "trader.core.truth": "/mnt/luffy-data/luffy/production/trader/core/truth.py",
+    "trader.core.types": "/mnt/luffy-data/luffy/production/trader/core/types.py",
+    "trader.dashboard": "/mnt/luffy-data/luffy/production/trader/dashboard/__init__.py",
+    "trader.dashboard.current_truth": "/mnt/luffy-data/luffy/production/trader/dashboard/current_truth.py",
+    "trader.data": "/mnt/luffy-data/luffy/production/trader/data/__init__.py",
+    "trader.data.binance_usdm_registry": "/mnt/luffy-data/luffy/production/trader/data/binance_usdm_registry.py",
+    "trader.data.feed": "/mnt/luffy-data/luffy/production/trader/data/feed.py",
+    "trader.data.market_provenance": "/mnt/luffy-data/luffy/production/trader/data/market_provenance.py",
+    "trader.data.registry_provider": "/mnt/luffy-data/luffy/production/trader/data/registry_provider.py",
+    "trader.data.sqlite_tx": "/mnt/luffy-data/luffy/production/trader/data/sqlite_tx.py",
+    "trader.engine": "/mnt/luffy-data/luffy/production/trader/engine/__init__.py",
+    "trader.engine.accounting": "/mnt/luffy-data/luffy/production/trader/engine/accounting.py",
+    "trader.engine.booking": "/mnt/luffy-data/luffy/production/trader/engine/booking.py",
+    "trader.engine.control_fence": "/mnt/luffy-data/luffy/production/trader/engine/control_fence.py",
+    "trader.engine.entry_authority": "/mnt/luffy-data/luffy/production/trader/engine/entry_authority.py",
+    "trader.engine.evidence_capture": "/mnt/luffy-data/luffy/production/trader/engine/evidence_capture.py",
+    "trader.engine.executor": "/mnt/luffy-data/luffy/production/trader/engine/executor.py",
+    "trader.engine.outcomes": "/mnt/luffy-data/luffy/production/trader/engine/outcomes.py",
+    "trader.engine.paper": "/mnt/luffy-data/luffy/production/trader/engine/paper.py",
+    "trader.engine.paper_cost_evidence": "/mnt/luffy-data/luffy/production/trader/engine/paper_cost_evidence.py",
+    "trader.engine.paper_exit_evidence": "/mnt/luffy-data/luffy/production/trader/engine/paper_exit_evidence.py",
+    "trader.engine.protection_snapshot": "/mnt/luffy-data/luffy/production/trader/engine/protection_snapshot.py",
+    "trader.engine.protective": "/mnt/luffy-data/luffy/production/trader/engine/protective.py",
+    "trader.engine.reconcile": "/mnt/luffy-data/luffy/production/trader/engine/reconcile.py",
+    "trader.engine.recovery": "/mnt/luffy-data/luffy/production/trader/engine/recovery.py",
+    "trader.engine.risk": "/mnt/luffy-data/luffy/production/trader/engine/risk.py",
+    "trader.engine.state": "/mnt/luffy-data/luffy/production/trader/engine/state.py",
+    "trader.engine.supervisor": "/mnt/luffy-data/luffy/production/trader/engine/supervisor.py",
+    "trader.engine.trade_provenance": "/mnt/luffy-data/luffy/production/trader/engine/trade_provenance.py",
+    "trader.engine.versioned_exits": "/mnt/luffy-data/luffy/production/trader/engine/versioned_exits.py",
+    "trader.engine.watchdog": "/mnt/luffy-data/luffy/production/trader/engine/watchdog.py",
+    "trader.kernel": "/mnt/luffy-data/luffy/production/trader/kernel.py",
+    "trader.learning": "/mnt/luffy-data/luffy/production/trader/learning/__init__.py",
+    "trader.learning.application": "/mnt/luffy-data/luffy/production/trader/learning/application.py",
+    "trader.learning.capture": "/mnt/luffy-data/luffy/production/trader/learning/capture.py",
+    "trader.learning.capture_runtime": "/mnt/luffy-data/luffy/production/trader/learning/capture_runtime.py",
+    "trader.learning.decision_sources": "/mnt/luffy-data/luffy/production/trader/learning/decision_sources.py",
+    "trader.learning.dispatch": "/mnt/luffy-data/luffy/production/trader/learning/dispatch.py",
+    "trader.learning.foundation": "/mnt/luffy-data/luffy/production/trader/learning/foundation.py",
+    "trader.learning.producers": "/mnt/luffy-data/luffy/production/trader/learning/producers.py",
+    "trader.learning.runtime": "/mnt/luffy-data/luffy/production/trader/learning/runtime.py",
+    "trader.learning.targets": "/mnt/luffy-data/luffy/production/trader/learning/targets.py",
+    "trader.notify": "/mnt/luffy-data/luffy/production/trader/notify/__init__.py",
+    "trader.notify.telegram": "/mnt/luffy-data/luffy/production/trader/notify/telegram.py",
+    "trader.observability": "/mnt/luffy-data/luffy/production/trader/observability/__init__.py",
+    "trader.observability.attention": "/mnt/luffy-data/luffy/production/trader/observability/attention.py",
+    "trader.observability.depth_evidence": "/mnt/luffy-data/luffy/production/trader/observability/depth_evidence.py",
+    "trader.observability.execution_shadow": "/mnt/luffy-data/luffy/production/trader/observability/execution_shadow.py",
+    "trader.observability.funding_events": "/mnt/luffy-data/luffy/production/trader/observability/funding_events.py",
+    "trader.observability.portfolio_observation": "/mnt/luffy-data/luffy/production/trader/observability/portfolio_observation.py",
+    "trader.observability.prospective_execution": "/mnt/luffy-data/luffy/production/trader/observability/prospective_execution.py",
+    "trader.observability.registry_selector": "/mnt/luffy-data/luffy/production/trader/observability/registry_selector.py",
+    "trader.observability.safety": "/mnt/luffy-data/luffy/production/trader/observability/safety.py",
+    "trader.observability.selection_persistence": "/mnt/luffy-data/luffy/production/trader/observability/selection_persistence.py",
+    "trader.observability.stage5_activation": "/mnt/luffy-data/luffy/production/trader/observability/stage5_activation.py",
+    "trader.portfolio": "/mnt/luffy-data/luffy/production/trader/portfolio/__init__.py",
+    "trader.portfolio.allocator": "/mnt/luffy-data/luffy/production/trader/portfolio/allocator.py",
+    "trader.portfolio.candidate_bridge": "/mnt/luffy-data/luffy/production/trader/portfolio/candidate_bridge.py",
+    "trader.portfolio.common_factor": "/mnt/luffy-data/luffy/production/trader/portfolio/common_factor.py",
+    "trader.portfolio.current": "/mnt/luffy-data/luffy/production/trader/portfolio/current.py",
+    "trader.portfolio.economics": "/mnt/luffy-data/luffy/production/trader/portfolio/economics.py",
+    "trader.portfolio.opportunity_cost": "/mnt/luffy-data/luffy/production/trader/portfolio/opportunity_cost.py",
+    "trader.portfolio.opportunity_live": "/mnt/luffy-data/luffy/production/trader/portfolio/opportunity_live.py",
+    "trader.portfolio.opportunity_registry": "/mnt/luffy-data/luffy/production/trader/portfolio/opportunity_registry.py",
+    "trader.portfolio.runtime_metrics": "/mnt/luffy-data/luffy/production/trader/portfolio/runtime_metrics.py",
+    "trader.portfolio.trade_intent": "/mnt/luffy-data/luffy/production/trader/portfolio/trade_intent.py",
+    "trader.strategy": "/mnt/luffy-data/luffy/production/trader/strategy/__init__.py",
+    "trader.strategy.capacity": "/mnt/luffy-data/luffy/production/trader/strategy/capacity.py",
+    "trader.strategy.compile": "/mnt/luffy-data/luffy/production/trader/strategy/compile.py",
+    "trader.strategy.dsl": "/mnt/luffy-data/luffy/production/trader/strategy/dsl.py",
+    "trader.strategy.exit_policy": "/mnt/luffy-data/luffy/production/trader/strategy/exit_policy.py",
+    "trader.strategy.factory_handoff": "/mnt/luffy-data/luffy/production/trader/strategy/factory_handoff.py",
+    "trader.strategy.features": "/mnt/luffy-data/luffy/production/trader/strategy/features.py",
+    "trader.strategy.features_deriv": "/mnt/luffy-data/luffy/production/trader/strategy/features_deriv.py",
+    "trader.strategy.features_xs": "/mnt/luffy-data/luffy/production/trader/strategy/features_xs.py",
+    "trader.strategy.genome": "/mnt/luffy-data/luffy/production/trader/strategy/genome.py",
+    "trader.strategy.legacy_authority": "/mnt/luffy-data/luffy/production/trader/strategy/legacy_authority.py",
+    "trader.strategy.promotion": "/mnt/luffy-data/luffy/production/trader/strategy/promotion.py",
+    "trader.strategy.signal_occurrence": "/mnt/luffy-data/luffy/production/trader/strategy/signal_occurrence.py",
+    "trader.strategy.spec": "/mnt/luffy-data/luffy/production/trader/strategy/spec.py",
+    "trader.world": "/mnt/luffy-data/luffy/production/trader/world/__init__.py",
+    "trader.world.claim": "/mnt/luffy-data/luffy/production/trader/world/claim.py",
+    "trader.world.model": "/mnt/luffy-data/luffy/production/trader/world/model.py",
+    "trader.world.observation": "/mnt/luffy-data/luffy/production/trader/world/observation.py",
+    "trader.world.perception": "/mnt/luffy-data/luffy/production/trader/world/perception.py",
+    "trader.world.relationship": "/mnt/luffy-data/luffy/production/trader/world/relationship.py",
+    "trader.world.replay": "/mnt/luffy-data/luffy/production/trader/world/replay.py",
+    "trader.world.state": "/mnt/luffy-data/luffy/production/trader/world/state.py"
+  },
+  "network_guard_active": true,
+  "production_store_guard_active": true,
+  "exit_code": 0,
+  "counts": {
+    "passed": 154,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "deselected": 0
+  }
+}

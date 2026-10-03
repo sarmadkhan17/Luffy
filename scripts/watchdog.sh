@@ -25,6 +25,10 @@ act() { if [ -n "${DRY_RUN:-}" ]; then say "DRY_RUN would run: $*"; else "$@" >>
 
 [ -e "$DIR/data/watchdog.off" ] && exit 0
 
+# Independent local safety alerts precede any launcher action. This command
+# never contacts a venue and publishes without requiring Journal writes.
+act ./venv/bin/python -m scripts.monitor --safety-only
+
 # -x: the WHOLE command line must match, so `python -m trader.kernel --status`
 # and shells that merely mention the module are not mistaken for the kernel
 kpid=$(pgrep -f -x '.*/python[0-9.]* -m trader\.kernel' | head -1)

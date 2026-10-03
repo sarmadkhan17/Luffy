@@ -321,6 +321,9 @@ class OwnerService:
         except Exception as e:                   # a read never breaks the kernel
             data["snapshot_error"] = type(e).__name__
         if req.operation == "health":
+            from ..observability.safety import SafetyHealth, health_path
+            if hasattr(self.journal, 'db_path'):
+                data['safety'] = SafetyHealth(health_path(self.journal)).read()
             data["supervisor"] = self._supervisor_summary()
             data["owner_interface"] = {"boot_id": self.boot_id,
                                        "recovery_in_progress": self._recover_lock.locked()}
@@ -331,14 +334,14 @@ class OwnerService:
                            control_state_after=data["control_state"], data=data)
 
     def _supervisor_summary(self) -> dict | None:
-        raw = self.journal.kv_get("supervisor_status")
-        if not raw:
-            return None
         try:
+            raw = self.journal.kv_get("supervisor_status")
+            if not raw:
+                return None
             s = json.loads(raw)
             return {k: s.get(k) for k in ("outcome", "stage", "safe_to_activate",
                                           "needs_owner", "reasons", "updated_at")}
-        except (TypeError, ValueError):
+        except Exception:
             return {"error": "supervisor_status_unreadable"}
 
     # ── controls ──────────────────────────────────────────────────────────

@@ -1,0 +1,32 @@
+{
+  "result": "PASS",
+  "base": "fcfe9e0359874b18d65a0b1e1ccfd156d18115e1",
+  "base_run": "legacy-base.run.json",
+  "candidate_run": "legacy-candidate.run.json",
+  "normalization": "Only source-root prefix removed from failure path; nodeid, phase, line and entire crash message retained.",
+  "same_failures": [
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[macro]",
+      "when": "call",
+      "path": "tests/test_activation_risk_baseline.py",
+      "line": 628,
+      "message": "AssertionError: assert [] == ['set_leverage']\n  \n  Right contains one more item: 'set_leverage'\n  Use -v to get more diff"
+    },
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[owner_unhalt]",
+      "when": "call",
+      "path": "tests/test_activation_risk_baseline.py",
+      "line": 628,
+      "message": "AssertionError: assert [] == ['set_leverage']\n  \n  Right contains one more item: 'set_leverage'\n  Use -v to get more diff"
+    },
+    {
+      "nodeid": "tests/test_activation_risk_baseline.py::test_previously_approved_entry_submits_nothing[spot_resume]",
+      "when": "call",
+      "path": "tests/test_activation_risk_baseline.py",
+      "line": 628,
+      "message": "AssertionError: assert [] == ['set_leverage']\n  \n  Right contains one more item: 'set_leverage'\n  Use -v to get more diff"
+    }
+  ],
+  "same_test_arguments": true,
+  "source_test_sha256_equal": true
+}

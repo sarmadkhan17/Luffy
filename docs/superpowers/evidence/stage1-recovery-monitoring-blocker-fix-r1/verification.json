@@ -1,0 +1,13 @@
+{
+  "result": "PASS",
+  "command": "git diff --check; ./venv/bin/python docs/superpowers/evidence/stage1-recovery-monitoring-blocker-fix-r1/verify_campaign.py; Python AST/YAML/control-plane and temp-root cleanup assertions",
+  "cwd": "/mnt/luffy-data/luffy/production",
+  "branch": "luffy-stage1-recovery-monitoring-foundation-r1",
+  "HEAD": "fcfe9e0359874b18d65a0b1e1ccfd156d18115e1",
+  "preserved_initial_failure_sha256": "bee86d913405d883c9c53342b7531d6592e7933cf9d8c97e9f3103e0f3a21d37",
+  "temporary_fixture_and_base_roots_removed": true,
+  "trading_authority_changed": false,
+  "real_order_submissions": 0,
+  "deployed": false,
+  "startup_performed": false
+}

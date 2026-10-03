@@ -634,12 +634,17 @@ class Journal:
     def _tx(self):
         """Serialized write transaction (single-writer discipline)."""
         with self._write_lock:
-            conn = self._conn()
+            conn = None
             try:
+                conn = self._conn()
                 yield conn
                 conn.commit()
-            except Exception:
-                conn.rollback()
+            except Exception as exc:
+                from ..observability.safety import journal_failure, is_storage_error
+                if is_storage_error(exc):
+                    journal_failure(self, 'write', exc)
+                if conn is not None:
+                    conn.rollback()
                 raise
 
     # -- writes ----------------------------------------------------------
@@ -839,9 +844,15 @@ class Journal:
 
     # -- control state ----------------------------------------------------
     def kv_get(self, key: str, default: str | None = None) -> str | None:
-        row = self._conn().execute(
-            "SELECT value FROM state_kv WHERE key=?", (key,)).fetchone()
-        return row["value"] if row else default
+        try:
+            row = self._conn().execute(
+                "SELECT value FROM state_kv WHERE key=?", (key,)).fetchone()
+            return row["value"] if row else default
+        except Exception as exc:
+            from ..observability.safety import journal_failure, is_storage_error
+            if is_storage_error(exc):
+                journal_failure(self, 'read', exc)
+            raise
 
     def kv_set(self, key: str, value: str) -> None:
         with self._tx() as c:
@@ -1764,8 +1775,14 @@ class Journal:
 
     # -- reads (used by brain, dashboard, learning) -----------------------
     def query(self, sql: str, params: tuple = ()) -> list[dict]:
-        rows = self._conn().execute(sql, params).fetchall()
-        return [dict(r) for r in rows]
+        try:
+            rows = self._conn().execute(sql, params).fetchall()
+            return [dict(r) for r in rows]
+        except Exception as exc:
+            from ..observability.safety import journal_failure, is_storage_error
+            if is_storage_error(exc):
+                journal_failure(self, 'read', exc)
+            raise
 
     def open_trades(self) -> list[dict]:
         return self.query("SELECT * FROM trades WHERE status='open'")

@@ -1,0 +1,2413 @@
+{
+  "selected": [
+    "tests/test_kernel_boot_recovery.py::test_a_clean_boot_proves_and_activates_without_venue_mutation",
+    "tests/test_kernel_boot_recovery.py::test_b_venue_timeout_contains_notifies_and_boots",
+    "tests/test_kernel_boot_recovery.py::test_c_pending_entry_with_unreadable_order_status",
+    "tests/test_kernel_boot_recovery.py::test_d_wrong_side_stop_is_not_protection",
+    "tests/test_kernel_boot_recovery.py::test_e_loosened_stop_requires_owner_without_mutation",
+    "tests/test_kernel_boot_recovery.py::test_f_owner_frozen_is_never_appropriated",
+    "tests/test_kernel_boot_recovery.py::test_g_repeated_boot_after_persisted_recovery_then_owner_resume",
+    "tests/test_kernel_boot_recovery.py::test_g_repeated_boot_with_fault_persisting_stays_contained",
+    "tests/test_kernel_boot_recovery.py::test_matrix_missing_stop_rearms_then_proves",
+    "tests/test_kernel_boot_recovery.py::test_matrix_orphan_stop_is_cancelled",
+    "tests/test_kernel_boot_recovery.py::test_matrix_journal_venue_id_mismatch_cancels_and_rearms",
+    "tests/test_kernel_boot_recovery.py::test_matrix_incomplete_listing_never_sweeps",
+    "tests/test_owner_recovery.py::test_a_recovery_fault_cleared_activates_after_fresh_proof",
+    "tests/test_owner_recovery.py::test_b_fault_remains_stays_recovery",
+    "tests/test_owner_recovery.py::test_c_stale_reason_fresh_safe_activates_only_after_fresh_pass",
+    "tests/test_owner_recovery.py::test_c2_stale_safe_status_cannot_authorize",
+    "tests/test_owner_recovery.py::test_d_concurrent_frozen_during_recheck_wins",
+    "tests/test_owner_recovery.py::test_d2_concurrent_frozen_between_proof_and_activation_wins",
+    "tests/test_owner_recovery.py::test_e_concurrent_new_containment_prevents_activation",
+    "tests/test_owner_recovery.py::test_e2_new_fault_appearing_during_recheck_prevents_activation",
+    "tests/test_owner_recovery.py::test_f_venue_unreadable_during_recheck_stays_contained",
+    "tests/test_owner_recovery.py::test_g_loosened_protection_zero_mutation",
+    "tests/test_owner_recovery.py::test_h_unresolved_entry_intent_stays_recovery",
+    "tests/test_owner_recovery.py::test_i_repeated_requests_auditable_without_duplicate_actions",
+    "tests/test_owner_recovery.py::test_i2_overlapping_request_and_cadence_are_serialized",
+    "tests/test_owner_recovery.py::test_j_already_active_is_a_typed_noop",
+    "tests/test_owner_recovery.py::test_owner_hold_at_intake_is_released_into_contained_recheck[FROZEN-False]",
+    "tests/test_owner_recovery.py::test_owner_hold_at_intake_is_released_into_contained_recheck[HALTED-True]",
+    "tests/test_owner_recovery.py::test_non_owner_actor_rejected",
+    "tests/test_owner_recovery.py::test_entry_blocked_during_recheck_and_after_refusal_allowed_after_activation",
+    "tests/test_owner_recovery.py::test_entry_blocked_when_recovery_refused",
+    "tests/test_owner_recovery.py::test_telegram_resume_is_guarded_and_audited",
+    "tests/test_owner_recovery.py::test_telegram_listener_keeps_chat_id_authorization",
+    "tests/test_owner_recovery.py::test_rollback_prepare_ready_converts_to_old_compatible_frozen",
+    "tests/test_owner_recovery.py::test_rollback_prepare_from_active_and_supervisor_cannot_reactivate",
+    "tests/test_owner_recovery.py::test_rollback_prepare_blocked_when_fault_remains",
+    "tests/test_owner_recovery.py::test_rollback_prepare_refuses_halted",
+    "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_fault_remains_contained-mutant_direct_resume]",
+    "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_fault_remains_contained-mutant_no_fresh_pass]",
+    "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_concurrent_frozen_wins-mutant_ignores_concurrent_hold]",
+    "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_stale_safe_cannot_authorize-mutant_reuses_stale_safe]",
+    "tests/test_owner_recovery.py::test_negative_control_old_telegram_resume_is_caught",
+    "tests/test_owner_recovery.py::test_guarded_telegram_passes_same_check",
+    "tests/test_owner_recovery_risk_guard.py::test_release_check_uses_the_halt_rule_and_is_read_only",
+    "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[None]",
+    "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[0]",
+    "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[-5]",
+    "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[nan]",
+    "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[inf]",
+    "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[x]",
+    "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[None]",
+    "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[not json]",
+    "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[{\"peak_equity\": null}]",
+    "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[{\"peak_equity\": \"NaN\"}]",
+    "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[{\"peak_equity\": -1}]",
+    "tests/test_owner_recovery_risk_guard.py::test_release_check_uses_the_more_conservative_peak",
+    "tests/test_owner_recovery_risk_guard.py::test_kernel_wires_risk_into_the_supervisor_and_balance_fallback_is_unchanged",
+    "tests/test_owner_recovery_risk_guard.py::test_real_equity_read_failure_fails_closed",
+    "tests/test_owner_recovery_risk_guard.py::test_a_active_drawdown_unhalt_stays_halted",
+    "tests/test_owner_recovery_risk_guard.py::test_a2_breach_arising_after_unhalt_intake_blocks_activation",
+    "tests/test_owner_recovery_risk_guard.py::test_b_frozen_bypass_does_not_activate",
+    "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[equity_read_fails]",
+    "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[baseline_missing]",
+    "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[baseline_corrupt]",
+    "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[risk_raises]",
+    "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[gate_unconfigured]",
+    "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[untyped_answer]",
+    "tests/test_owner_recovery_risk_guard.py::test_c_boot_with_unreadable_equity_stays_contained",
+    "tests/test_owner_recovery_risk_guard.py::test_d_stale_risk_clearance_cannot_authorize",
+    "tests/test_owner_recovery_risk_guard.py::test_e_risk_clears_and_recovery_safe_activates",
+    "tests/test_owner_recovery_risk_guard.py::test_e2_frozen_path_activates_once_risk_clears",
+    "tests/test_owner_recovery_risk_guard.py::test_f_risk_clears_but_newer_halted_wins",
+    "tests/test_owner_recovery_risk_guard.py::test_g_previously_approved_entry_during_failed_unhalt_submits_nothing[unhalt]",
+    "tests/test_owner_recovery_risk_guard.py::test_g_previously_approved_entry_during_failed_unhalt_submits_nothing[frozen_resume]",
+    "tests/test_owner_recovery_risk_guard.py::test_h_cadence_cannot_bypass_active_risk_halt",
+    "tests/test_owner_recovery_risk_guard.py::test_h2_boot_pass_cannot_activate_through_breach",
+    "tests/test_owner_recovery_risk_guard.py::test_i_owner_recovery_preserves_risk_baseline",
+    "tests/test_owner_recovery_risk_guard.py::test_j_repeated_unhalts_audited_and_idempotent",
+    "tests/test_owner_recovery_risk_guard.py::test_rollback_with_active_breach_is_frozen_never_active",
+    "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[omit_risk_check:unhalt]",
+    "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[omit_risk_check:frozen]",
+    "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[unreadable_as_safe]",
+    "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[frozen_bypass]",
+    "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[cadence_without_risk]",
+    "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[stale_risk_reuse]",
+    "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_unhalt_blocked_by_active_breach]",
+    "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_frozen_bypass_blocked]",
+    "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[_check_unreadable]",
+    "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_cadence_respects_risk]",
+    "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_stale_risk_clearance_not_reused]",
+    "tests/test_owner_recovery_concurrency.py::test_a_halted_reasserted_after_intake_stays_halted",
+    "tests/test_owner_recovery_concurrency.py::test_a2_halted_reasserted_during_fresh_proof_stays_halted",
+    "tests/test_owner_recovery_concurrency.py::test_b_halted_between_fresh_proof_and_activation_cas",
+    "tests/test_owner_recovery_concurrency.py::test_same_state_owner_halt_and_freeze_are_holds[operator]",
+    "tests/test_owner_recovery_concurrency.py::test_same_state_owner_halt_and_freeze_are_holds[dashboard]",
+    "tests/test_owner_recovery_concurrency.py::test_same_state_owner_halt_and_freeze_are_holds[chat]",
+    "tests/test_owner_recovery_concurrency.py::test_non_owner_same_state_refresh_is_not_noisy",
+    "tests/test_owner_recovery_concurrency.py::test_c_frozen_reasserted_same_state_after_intake_newer_hold_wins",
+    "tests/test_owner_recovery_concurrency.py::test_d_running_cycle_cannot_overwrite_owner_acknowledgement",
+    "tests/test_owner_recovery_concurrency.py::test_e_owner_request_first_cadence_skips_one_pass",
+    "tests/test_owner_recovery_concurrency.py::test_f_overlapping_requests_second_refused_but_audited",
+    "tests/test_owner_recovery_concurrency.py::test_overlap_between_request_and_rollback_is_audited",
+    "tests/test_owner_recovery_concurrency.py::test_g_rollback_sees_frozen_then_newer_halted",
+    "tests/test_owner_recovery_concurrency.py::test_h_rollback_own_frozen_then_newer_frozen_wins",
+    "tests/test_owner_recovery_concurrency.py::test_i_rollback_newer_event_before_finalization_blocks[<lambda>-FROZEN]",
+    "tests/test_owner_recovery_concurrency.py::test_i_rollback_newer_event_before_finalization_blocks[<lambda>-HALTED]",
+    "tests/test_owner_recovery_concurrency.py::test_j_rollback_ready_with_exact_own_hold",
+    "tests/test_owner_recovery_concurrency.py::test_j2_rollback_from_owner_frozen_ready_with_own_same_state_hold",
+    "tests/test_owner_recovery_concurrency.py::test_rollback_blocked_from_owner_frozen_keeps_owner_frozen",
+    "tests/test_owner_recovery_concurrency.py::test_k_halted_request_without_unhalt_stays_halted",
+    "tests/test_owner_recovery_concurrency.py::test_l_halted_explicit_unhalt_enters_recovery_and_needs_fresh_proof",
+    "tests/test_owner_recovery_concurrency.py::test_non_owner_cannot_unhalt",
+    "tests/test_owner_recovery_concurrency.py::test_telegram_resume_keeps_halt_and_unhalt_is_explicit",
+    "tests/test_owner_recovery_concurrency.py::test_owner_interface_is_transport_neutral",
+    "tests/test_owner_recovery_concurrency.py::test_negative_invisible_same_state_halt_is_caught",
+    "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[ack_outside_lock]",
+    "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[unaudited_overlap]",
+    "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[adopt_latest_frozen]",
+    "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[lost_halted_in_rollback]",
+    "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[halted_auto_release]",
+    "tests/test_owner_recovery_concurrency.py::test_negative_rollback_without_final_check_is_caught[<lambda>]"
+  ],
+  "deselected": [],
+  "reports": [
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_a_clean_boot_proves_and_activates_without_venue_mutation",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.15280363001511432
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_a_clean_boot_proves_and_activates_without_venue_mutation",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 1.057287116011139
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_a_clean_boot_proves_and_activates_without_venue_mutation",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003595520101953298
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_b_venue_timeout_contains_notifies_and_boots",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10084413600270636
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_b_venue_timeout_contains_notifies_and_boots",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04434075701283291
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_b_venue_timeout_contains_notifies_and_boots",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00047425602679140866
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_c_pending_entry_with_unreadable_order_status",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1386204439913854
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_c_pending_entry_with_unreadable_order_status",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04849266400560737
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_c_pending_entry_with_unreadable_order_status",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00045704797958023846
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_d_wrong_side_stop_is_not_protection",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13219350497820415
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_d_wrong_side_stop_is_not_protection",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04873260098975152
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_d_wrong_side_stop_is_not_protection",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002893710043281317
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_e_loosened_stop_requires_owner_without_mutation",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13160453300224617
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_e_loosened_stop_requires_owner_without_mutation",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.043362539989175275
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_e_loosened_stop_requires_owner_without_mutation",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004255050153005868
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_f_owner_frozen_is_never_appropriated",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13166660798015073
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_f_owner_frozen_is_never_appropriated",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04847593299928121
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_f_owner_frozen_is_never_appropriated",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00033193998388014734
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_g_repeated_boot_after_persisted_recovery_then_owner_resume",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.16109052201500162
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_g_repeated_boot_after_persisted_recovery_then_owner_resume",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.11909464802010916
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_g_repeated_boot_after_persisted_recovery_then_owner_resume",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00044847800745628774
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_g_repeated_boot_with_fault_persisting_stays_contained",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14020906400401145
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_g_repeated_boot_with_fault_persisting_stays_contained",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.07524749700678512
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_g_repeated_boot_with_fault_persisting_stays_contained",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005528129986487329
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_matrix_missing_stop_rearms_then_proves",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.17346291401190683
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_matrix_missing_stop_rearms_then_proves",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04974767300882377
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_matrix_missing_stop_rearms_then_proves",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00044639501720666885
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_matrix_orphan_stop_is_cancelled",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.15186777300550602
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_matrix_orphan_stop_is_cancelled",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03755345899844542
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_matrix_orphan_stop_is_cancelled",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003996669838670641
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_matrix_journal_venue_id_mismatch_cancels_and_rearms",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14057845599018037
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_matrix_journal_venue_id_mismatch_cancels_and_rearms",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04673281399300322
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_matrix_journal_venue_id_mismatch_cancels_and_rearms",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00033912400249391794
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_matrix_incomplete_listing_never_sweeps",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10233693299232982
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_matrix_incomplete_listing_never_sweeps",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03925272298511118
+    },
+    {
+      "nodeid": "tests/test_kernel_boot_recovery.py::test_matrix_incomplete_listing_never_sweeps",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00038357701851055026
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_a_recovery_fault_cleared_activates_after_fresh_proof",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11655794898979366
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_a_recovery_fault_cleared_activates_after_fresh_proof",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.056318071990972385
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_a_recovery_fault_cleared_activates_after_fresh_proof",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0014875610067974776
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_b_fault_remains_stays_recovery",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14330402499763295
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_b_fault_remains_stays_recovery",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04317475901916623
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_b_fault_remains_stays_recovery",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005234979907982051
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_c_stale_reason_fresh_safe_activates_only_after_fresh_pass",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12636175300576724
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_c_stale_reason_fresh_safe_activates_only_after_fresh_pass",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06812712599639781
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_c_stale_reason_fresh_safe_activates_only_after_fresh_pass",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.001676843996392563
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_c2_stale_safe_status_cannot_authorize",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.15183829099987634
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_c2_stale_safe_status_cannot_authorize",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05459546099882573
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_c2_stale_safe_status_cannot_authorize",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003651549923233688
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_d_concurrent_frozen_during_recheck_wins",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.22294885301380418
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_d_concurrent_frozen_during_recheck_wins",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05221444499329664
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_d_concurrent_frozen_during_recheck_wins",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003822149883490056
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_d2_concurrent_frozen_between_proof_and_activation_wins",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.17171288401004858
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_d2_concurrent_frozen_between_proof_and_activation_wins",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.09603881600196473
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_d2_concurrent_frozen_between_proof_and_activation_wins",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004431790148373693
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_e_concurrent_new_containment_prevents_activation",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.136158505018102
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_e_concurrent_new_containment_prevents_activation",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05572398501681164
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_e_concurrent_new_containment_prevents_activation",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004394320130813867
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_e2_new_fault_appearing_during_recheck_prevents_activation",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14300812198780477
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_e2_new_fault_appearing_during_recheck_prevents_activation",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.042807769001228735
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_e2_new_fault_appearing_during_recheck_prevents_activation",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0016603539988864213
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_f_venue_unreadable_during_recheck_stays_contained",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13171383700682782
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_f_venue_unreadable_during_recheck_stays_contained",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0445948280103039
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_f_venue_unreadable_during_recheck_stays_contained",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003515870193950832
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_g_loosened_protection_zero_mutation",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1274199509934988
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_g_loosened_protection_zero_mutation",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.049903622013516724
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_g_loosened_protection_zero_mutation",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003949279780499637
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_h_unresolved_entry_intent_stays_recovery",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0951839599874802
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_h_unresolved_entry_intent_stays_recovery",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.034242265013745055
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_h_unresolved_entry_intent_stays_recovery",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003626469988375902
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_i_repeated_requests_auditable_without_duplicate_actions",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.09754360400256701
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_i_repeated_requests_auditable_without_duplicate_actions",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.08510919401305728
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_i_repeated_requests_auditable_without_duplicate_actions",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004074410244356841
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_i2_overlapping_request_and_cadence_are_serialized",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10519174300134182
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_i2_overlapping_request_and_cadence_are_serialized",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.059529630991164595
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_i2_overlapping_request_and_cadence_are_serialized",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0009972229890991002
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_j_already_active_is_a_typed_noop",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11828441999386996
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_j_already_active_is_a_typed_noop",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.036322733998531476
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_j_already_active_is_a_typed_noop",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003652620071079582
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_owner_hold_at_intake_is_released_into_contained_recheck[FROZEN-False]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11362447298597544
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_owner_hold_at_intake_is_released_into_contained_recheck[FROZEN-False]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04069444999913685
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_owner_hold_at_intake_is_released_into_contained_recheck[FROZEN-False]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00035927101271227
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_owner_hold_at_intake_is_released_into_contained_recheck[HALTED-True]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12919379098457284
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_owner_hold_at_intake_is_released_into_contained_recheck[HALTED-True]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03976148899528198
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_owner_hold_at_intake_is_released_into_contained_recheck[HALTED-True]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00041992400656454265
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_non_owner_actor_rejected",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10145980099332519
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_non_owner_actor_rejected",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.024734826001804322
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_non_owner_actor_rejected",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00032882500090636313
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_entry_blocked_during_recheck_and_after_refusal_allowed_after_activation",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1110525589901954
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_entry_blocked_during_recheck_and_after_refusal_allowed_after_activation",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0682910330069717
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_entry_blocked_during_recheck_and_after_refusal_allowed_after_activation",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0011191130033694208
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_entry_blocked_when_recovery_refused",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11994718600180931
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_entry_blocked_when_recovery_refused",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05763355101225898
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_entry_blocked_when_recovery_refused",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004565429990179837
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_telegram_resume_is_guarded_and_audited",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13069347600685433
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_telegram_resume_is_guarded_and_audited",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.07195857499027625
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_telegram_resume_is_guarded_and_audited",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00033096899278461933
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_telegram_listener_keeps_chat_id_authorization",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12274467901443131
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_telegram_listener_keeps_chat_id_authorization",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.02547954599140212
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_telegram_listener_keeps_chat_id_authorization",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003886659978888929
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_rollback_prepare_ready_converts_to_old_compatible_frozen",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.21928840901819058
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_rollback_prepare_ready_converts_to_old_compatible_frozen",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.30465325599652715
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_rollback_prepare_ready_converts_to_old_compatible_frozen",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00040118000470101833
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_rollback_prepare_from_active_and_supervisor_cannot_reactivate",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11154387300484814
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_rollback_prepare_from_active_and_supervisor_cannot_reactivate",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0740043020050507
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_rollback_prepare_from_active_and_supervisor_cannot_reactivate",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0007378080044873059
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_rollback_prepare_blocked_when_fault_remains",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.126600382005563
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_rollback_prepare_blocked_when_fault_remains",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.038904029002878815
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_rollback_prepare_blocked_when_fault_remains",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00040189101127907634
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_rollback_prepare_refuses_halted",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.16975526802707464
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_rollback_prepare_refuses_halted",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.02751055601402186
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_rollback_prepare_refuses_halted",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00033527601044625044
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_fault_remains_contained-mutant_direct_resume]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1271202679781709
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_fault_remains_contained-mutant_direct_resume]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.02582186899962835
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_fault_remains_contained-mutant_direct_resume]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003797799872700125
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_fault_remains_contained-mutant_no_fresh_pass]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1261039079981856
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_fault_remains_contained-mutant_no_fresh_pass]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03135302601731382
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_fault_remains_contained-mutant_no_fresh_pass]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00036378001095727086
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_concurrent_frozen_wins-mutant_ignores_concurrent_hold]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.20389130202238448
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_concurrent_frozen_wins-mutant_ignores_concurrent_hold]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.040684386010980234
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_concurrent_frozen_wins-mutant_ignores_concurrent_hold]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0007527830020990223
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_stale_safe_cannot_authorize-mutant_reuses_stale_safe]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11346676698303781
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_stale_safe_cannot_authorize-mutant_reuses_stale_safe]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.029342616006033495
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_mutant_is_caught[check_stale_safe_cannot_authorize-mutant_reuses_stale_safe]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00038456902257166803
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_old_telegram_resume_is_caught",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11037153398501687
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_old_telegram_resume_is_caught",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.02998701698379591
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_negative_control_old_telegram_resume_is_caught",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000765835982747376
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_guarded_telegram_passes_same_check",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11880163598107174
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_guarded_telegram_passes_same_check",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04853785698651336
+    },
+    {
+      "nodeid": "tests/test_owner_recovery.py::test_guarded_telegram_passes_same_check",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003428510099183768
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_uses_the_halt_rule_and_is_read_only",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0011291529808659106
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_uses_the_halt_rule_and_is_read_only",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10249287099577487
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_uses_the_halt_rule_and_is_read_only",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003674469771794975
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[None]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0019090580171905458
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[None]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10189329402055591
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[None]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00024323500110767782
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[0]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.007584230013890192
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[0]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.106490528996801
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[0]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00033367399009875953
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[-5]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0011712090054061264
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[-5]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10665876301936805
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[-5]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00029545201687142253
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[nan]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0011389689752832055
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[nan]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10721304701291956
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[nan]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002805539988912642
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[inf]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.011068627994973212
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[inf]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.12696036300621927
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[inf]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00027480299468152225
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[x]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0012952899851370603
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[x]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.12083340101526119
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_unreadable_equity_fails_closed[x]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00035594499786384404
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[None]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001302364020375535
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[None]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.38104196297354065
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[None]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0002329450217075646
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[not json]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0009730079909786582
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[not json]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.13005155298742466
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[not json]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004090349830221385
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[{\"peak_equity\": null}]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0013588489964604378
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[{\"peak_equity\": null}]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.13092203499400057
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[{\"peak_equity\": null}]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003064030024688691
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[{\"peak_equity\": \"NaN\"}]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.001275879010790959
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[{\"peak_equity\": \"NaN\"}]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.11942828798783012
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[{\"peak_equity\": \"NaN\"}]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003486420027911663
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[{\"peak_equity\": -1}]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0017145139863714576
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[{\"peak_equity\": -1}]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.1962805269868113
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_missing_or_corrupt_baseline_fails_closed[{\"peak_equity\": -1}]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00037715499638579786
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_uses_the_more_conservative_peak",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0020961080153938383
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_uses_the_more_conservative_peak",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.3082571230188478
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_release_check_uses_the_more_conservative_peak",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00038539001252502203
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_kernel_wires_risk_into_the_supervisor_and_balance_fallback_is_unchanged",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14386249700328335
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_kernel_wires_risk_into_the_supervisor_and_balance_fallback_is_unchanged",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05008271199767478
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_kernel_wires_risk_into_the_supervisor_and_balance_fallback_is_unchanged",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00048172101378440857
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_real_equity_read_failure_fails_closed",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.26720434401067905
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_real_equity_read_failure_fails_closed",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.050012010004138574
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_real_equity_read_failure_fails_closed",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00034871199750341475
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_a_active_drawdown_unhalt_stays_halted",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1342895400011912
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_a_active_drawdown_unhalt_stays_halted",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.08609561299090274
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_a_active_drawdown_unhalt_stays_halted",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0007458440086338669
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_a2_breach_arising_after_unhalt_intake_blocks_activation",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.16078573500271887
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_a2_breach_arising_after_unhalt_intake_blocks_activation",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10801943100523204
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_a2_breach_arising_after_unhalt_intake_blocks_activation",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00045055299415253103
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_b_frozen_bypass_does_not_activate",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.17702867099433206
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_b_frozen_bypass_does_not_activate",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10568659799173474
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_b_frozen_bypass_does_not_activate",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0009126460063271224
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[equity_read_fails]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10697088102460839
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[equity_read_fails]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.211258856987115
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[equity_read_fails]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004095250042155385
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[baseline_missing]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.607579553994583
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[baseline_missing]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.1058399030007422
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[baseline_missing]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004527360142674297
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[baseline_corrupt]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1381026149902027
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[baseline_corrupt]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.08658672301680781
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[baseline_corrupt]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005112049984745681
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[risk_raises]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1476904890150763
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[risk_raises]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.09645389998331666
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[risk_raises]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004228210018482059
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[gate_unconfigured]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.16941742299241014
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[gate_unconfigured]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05871568599832244
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[gate_unconfigured]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00046321601257659495
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[untyped_answer]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14360138500342146
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[untyped_answer]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0981021490006242
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_unreadable_risk_stays_contained[untyped_answer]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00029348800308071077
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_boot_with_unreadable_equity_stays_contained",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12293030499131419
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_boot_with_unreadable_equity_stays_contained",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.036492793005891144
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_c_boot_with_unreadable_equity_stays_contained",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0008255630091298372
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_d_stale_risk_clearance_cannot_authorize",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1970045640191529
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_d_stale_risk_clearance_cannot_authorize",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.21514629499870352
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_d_stale_risk_clearance_cannot_authorize",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.003548562992364168
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_e_risk_clears_and_recovery_safe_activates",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12938491499517113
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_e_risk_clears_and_recovery_safe_activates",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.12332578399218619
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_e_risk_clears_and_recovery_safe_activates",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00033927400363609195
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_e2_frozen_path_activates_once_risk_clears",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13582145699183457
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_e2_frozen_path_activates_once_risk_clears",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10481623298255727
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_e2_frozen_path_activates_once_risk_clears",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00041771100950427353
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_f_risk_clears_but_newer_halted_wins",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12722115599899553
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_f_risk_clears_but_newer_halted_wins",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06956903799436986
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_f_risk_clears_but_newer_halted_wins",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004139029770158231
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_g_previously_approved_entry_during_failed_unhalt_submits_nothing[unhalt]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12110331500298344
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_g_previously_approved_entry_during_failed_unhalt_submits_nothing[unhalt]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05217014602385461
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_g_previously_approved_entry_during_failed_unhalt_submits_nothing[unhalt]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0006299169908743352
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_g_previously_approved_entry_during_failed_unhalt_submits_nothing[frozen_resume]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1338703589863144
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_g_previously_approved_entry_during_failed_unhalt_submits_nothing[frozen_resume]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.08137029901263304
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_g_previously_approved_entry_during_failed_unhalt_submits_nothing[frozen_resume]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0008826289849821478
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_h_cadence_cannot_bypass_active_risk_halt",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13742507799179293
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_h_cadence_cannot_bypass_active_risk_halt",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.1330385259934701
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_h_cadence_cannot_bypass_active_risk_halt",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000430744985351339
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_h2_boot_pass_cannot_activate_through_breach",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11435051399166696
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_h2_boot_pass_cannot_activate_through_breach",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03294233500491828
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_h2_boot_pass_cannot_activate_through_breach",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003985110088251531
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_i_owner_recovery_preserves_risk_baseline",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13002903500455432
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_i_owner_recovery_preserves_risk_baseline",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.1339858639985323
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_i_owner_recovery_preserves_risk_baseline",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003563670034054667
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_j_repeated_unhalts_audited_and_idempotent",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.6093878649990074
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_j_repeated_unhalts_audited_and_idempotent",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.10511812299955636
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_j_repeated_unhalts_audited_and_idempotent",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00033492600778117776
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_rollback_with_active_breach_is_frozen_never_active",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.29801749798934907
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_rollback_with_active_breach_is_frozen_never_active",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.13849635899532586
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_rollback_with_active_breach_is_frozen_never_active",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004690269997809082
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[omit_risk_check:unhalt]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13665320599102415
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[omit_risk_check:unhalt]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.17912964700371958
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[omit_risk_check:unhalt]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00042922201100736856
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[omit_risk_check:frozen]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.3187622650002595
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[omit_risk_check:frozen]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.2378450460091699
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[omit_risk_check:frozen]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000647840992314741
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[unreadable_as_safe]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.32251819598604925
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[unreadable_as_safe]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.2614501600037329
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[unreadable_as_safe]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00045381899690255523
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[frozen_bypass]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.18857965298229828
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[frozen_bypass]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.14476606401149184
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[frozen_bypass]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005859869997948408
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[cadence_without_risk]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.16744768698117696
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[cadence_without_risk]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.15209054300794378
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[cadence_without_risk]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005189400108065456
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[stale_risk_reuse]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.17185362899908796
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[stale_risk_reuse]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.13123950498993509
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_negative_control_mutant_is_caught[stale_risk_reuse]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004449620028026402
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_unhalt_blocked_by_active_breach]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2196107519848738
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_unhalt_blocked_by_active_breach]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.08789374801563099
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_unhalt_blocked_by_active_breach]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0006164320220705122
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_frozen_bypass_blocked]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.16941942798439413
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_frozen_bypass_blocked]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.1354275019839406
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_frozen_bypass_blocked]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000567690993193537
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[_check_unreadable]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.21058330501546152
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[_check_unreadable]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.80698767901049
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[_check_unreadable]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005391580052673817
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_cadence_respects_risk]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.15460626798449084
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_cadence_respects_risk]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.1983354080002755
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_cadence_respects_risk]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004831580154132098
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_stale_risk_clearance_not_reused]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.16732146497815847
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_stale_risk_clearance_not_reused]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.1523195339832455
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_risk_guard.py::test_checks_pass_on_real_code[check_stale_risk_clearance_not_reused]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.001080609014024958
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_a_halted_reasserted_after_intake_stays_halted",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14961427199887112
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_a_halted_reasserted_after_intake_stays_halted",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03253599000163376
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_a_halted_reasserted_after_intake_stays_halted",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004523049865383655
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_a2_halted_reasserted_during_fresh_proof_stays_halted",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13892456100438721
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_a2_halted_reasserted_during_fresh_proof_stays_halted",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.12621674701222219
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_a2_halted_reasserted_during_fresh_proof_stays_halted",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00039095000829547644
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_b_halted_between_fresh_proof_and_activation_cas",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14259182201931253
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_b_halted_between_fresh_proof_and_activation_cas",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05211139499442652
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_b_halted_between_fresh_proof_and_activation_cas",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0008534469816368073
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_same_state_owner_halt_and_freeze_are_holds[operator]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.002238534012576565
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_same_state_owner_halt_and_freeze_are_holds[operator]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.2970908670104109
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_same_state_owner_halt_and_freeze_are_holds[operator]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004064589738845825
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_same_state_owner_halt_and_freeze_are_holds[dashboard]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.006481293996330351
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_same_state_owner_halt_and_freeze_are_holds[dashboard]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.2035217780212406
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_same_state_owner_halt_and_freeze_are_holds[dashboard]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00039582501631230116
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_same_state_owner_halt_and_freeze_are_holds[chat]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0014730569964740425
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_same_state_owner_halt_and_freeze_are_holds[chat]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.2532891259761527
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_same_state_owner_halt_and_freeze_are_holds[chat]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00034530600532889366
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_non_owner_same_state_refresh_is_not_noisy",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0018949749937746674
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_non_owner_same_state_refresh_is_not_noisy",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.16055129101732746
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_non_owner_same_state_refresh_is_not_noisy",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00025443502818234265
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_c_frozen_reasserted_same_state_after_intake_newer_hold_wins",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.11677491400041617
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_c_frozen_reasserted_same_state_after_intake_newer_hold_wins",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.27248288100236095
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_c_frozen_reasserted_same_state_after_intake_newer_hold_wins",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0003737189981620759
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_d_running_cycle_cannot_overwrite_owner_acknowledgement",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.43078132200753316
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_d_running_cycle_cannot_overwrite_owner_acknowledgement",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.06697614002041519
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_d_running_cycle_cannot_overwrite_owner_acknowledgement",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00036880900734104216
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_e_owner_request_first_cadence_skips_one_pass",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.129808714002138
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_e_owner_request_first_cadence_skips_one_pass",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.1934471660060808
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_e_owner_request_first_cadence_skips_one_pass",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005105260061100125
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_f_overlapping_requests_second_refused_but_audited",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.5922249839932192
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_f_overlapping_requests_second_refused_but_audited",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.1753020589821972
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_f_overlapping_requests_second_refused_but_audited",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005246410146355629
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_overlap_between_request_and_rollback_is_audited",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.27461574401240796
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_overlap_between_request_and_rollback_is_audited",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.08001583197619766
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_overlap_between_request_and_rollback_is_audited",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005428259901236743
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_g_rollback_sees_frozen_then_newer_halted",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1844677210028749
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_g_rollback_sees_frozen_then_newer_halted",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 1.0965231740265153
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_g_rollback_sees_frozen_then_newer_halted",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00043207700946368277
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_h_rollback_own_frozen_then_newer_frozen_wins",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.15188176298397593
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_h_rollback_own_frozen_then_newer_frozen_wins",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0438168789842166
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_h_rollback_own_frozen_then_newer_frozen_wins",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0007189240131992847
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_i_rollback_newer_event_before_finalization_blocks[<lambda>-FROZEN]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.2973315450071823
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_i_rollback_newer_event_before_finalization_blocks[<lambda>-FROZEN]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0504120800178498
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_i_rollback_newer_event_before_finalization_blocks[<lambda>-FROZEN]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000642350991256535
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_i_rollback_newer_event_before_finalization_blocks[<lambda>-HALTED]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13377378397854045
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_i_rollback_newer_event_before_finalization_blocks[<lambda>-HALTED]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05185116198845208
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_i_rollback_newer_event_before_finalization_blocks[<lambda>-HALTED]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0008505700097884983
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_j_rollback_ready_with_exact_own_hold",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.17801112798042595
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_j_rollback_ready_with_exact_own_hold",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.049121374002425
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_j_rollback_ready_with_exact_own_hold",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005351959844119847
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_j2_rollback_from_owner_frozen_ready_with_own_same_state_hold",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12090755699318834
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_j2_rollback_from_owner_frozen_ready_with_own_same_state_hold",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03569579400937073
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_j2_rollback_from_owner_frozen_ready_with_own_same_state_hold",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00033152999822050333
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_rollback_blocked_from_owner_frozen_keeps_owner_frozen",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14519966900115833
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_rollback_blocked_from_owner_frozen_keeps_owner_frozen",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.03678251200472005
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_rollback_blocked_from_owner_frozen_keeps_owner_frozen",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00036867900053039193
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_k_halted_request_without_unhalt_stays_halted",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12648414800059982
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_k_halted_request_without_unhalt_stays_halted",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.017897790006827563
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_k_halted_request_without_unhalt_stays_halted",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00047012901632115245
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_l_halted_explicit_unhalt_enters_recovery_and_needs_fresh_proof",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.12177425500703976
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_l_halted_explicit_unhalt_enters_recovery_and_needs_fresh_proof",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05679401400266215
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_l_halted_explicit_unhalt_enters_recovery_and_needs_fresh_proof",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004432880086824298
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_non_owner_cannot_unhalt",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.18780218198662624
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_non_owner_cannot_unhalt",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.022308857005555183
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_non_owner_cannot_unhalt",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0005109850026201457
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_telegram_resume_keeps_halt_and_unhalt_is_explicit",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13938173599308357
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_telegram_resume_keeps_halt_and_unhalt_is_explicit",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.08610743199824356
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_telegram_resume_keeps_halt_and_unhalt_is_explicit",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0011457770015113056
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_owner_interface_is_transport_neutral",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14642232199548744
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_owner_interface_is_transport_neutral",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05146181699819863
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_owner_interface_is_transport_neutral",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0004106069973204285
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_invisible_same_state_halt_is_caught",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.0014157159894239157
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_invisible_same_state_halt_is_caught",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.2733581390057225
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_invisible_same_state_halt_is_caught",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00030256601166911423
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[ack_outside_lock]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.32991259000846185
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[ack_outside_lock]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0733020190091338
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[ack_outside_lock]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00032907500280998647
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[unaudited_overlap]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.14759475900791585
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[unaudited_overlap]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.059271694015478715
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[unaudited_overlap]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00036824800190515816
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[adopt_latest_frozen]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1253485520137474
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[adopt_latest_frozen]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.04650495000532828
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[adopt_latest_frozen]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.000441655982285738
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[lost_halted_in_rollback]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.1363057470007334
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[lost_halted_in_rollback]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.0364456009992864
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[lost_halted_in_rollback]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00045954901725053787
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[halted_auto_release]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.10050801699981093
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[halted_auto_release]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.052310466999188066
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_control_mutant_is_caught[halted_auto_release]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.00042989401845261455
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_rollback_without_final_check_is_caught[<lambda>]",
+      "when": "setup",
+      "outcome": "passed",
+      "duration": 0.13002723598037846
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_rollback_without_final_check_is_caught[<lambda>]",
+      "when": "call",
+      "outcome": "passed",
+      "duration": 0.05623178102541715
+    },
+    {
+      "nodeid": "tests/test_owner_recovery_concurrency.py::test_negative_rollback_without_final_check_is_caught[<lambda>]",
+      "when": "teardown",
+      "outcome": "passed",
+      "duration": 0.0008856659987941384
+    }
+  ],
+  "failures": [],
+  "network_attempts": [],
+  "production_store_attempts": [],
+  "module_origins": {
+    "trader": "/mnt/luffy-data/luffy/production/trader/__init__.py",
+    "trader.agents": "/mnt/luffy-data/luffy/production/trader/agents/__init__.py",
+    "trader.agents.base": "/mnt/luffy-data/luffy/production/trader/agents/base.py",
+    "trader.agents.calibration": "/mnt/luffy-data/luffy/production/trader/agents/calibration.py",
+    "trader.agents.flow": "/mnt/luffy-data/luffy/production/trader/agents/flow.py",
+    "trader.agents.indicators": "/mnt/luffy-data/luffy/production/trader/agents/indicators.py",
+    "trader.agents.macro_guard": "/mnt/luffy-data/luffy/production/trader/agents/macro_guard.py",
+    "trader.agents.momentum": "/mnt/luffy-data/luffy/production/trader/agents/momentum.py",
+    "trader.agents.news_guard": "/mnt/luffy-data/luffy/production/trader/agents/news_guard.py",
+    "trader.agents.orderbook_depth": "/mnt/luffy-data/luffy/production/trader/agents/orderbook_depth.py",
+    "trader.agents.positioning": "/mnt/luffy-data/luffy/production/trader/agents/positioning.py",
+    "trader.agents.regime": "/mnt/luffy-data/luffy/production/trader/agents/regime.py",
+    "trader.agents.structure": "/mnt/luffy-data/luffy/production/trader/agents/structure.py",
+    "trader.brain": "/mnt/luffy-data/luffy/production/trader/brain/__init__.py",
+    "trader.brain.ideas": "/mnt/luffy-data/luffy/production/trader/brain/ideas.py",
+    "trader.brain.scraper": "/mnt/luffy-data/luffy/production/trader/brain/scraper.py",
+    "trader.cognition": "/mnt/luffy-data/luffy/production/trader/cognition/__init__.py",
+    "trader.cognition.forecast_protocol": "/mnt/luffy-data/luffy/production/trader/cognition/forecast_protocol.py",
+    "trader.cognition.outcomes": "/mnt/luffy-data/luffy/production/trader/cognition/outcomes.py",
+    "trader.core": "/mnt/luffy-data/luffy/production/trader/core/__init__.py",
+    "trader.core.config": "/mnt/luffy-data/luffy/production/trader/core/config.py",
+    "trader.core.instrument_registry": "/mnt/luffy-data/luffy/production/trader/core/instrument_registry.py",
+    "trader.core.journal": "/mnt/luffy-data/luffy/production/trader/core/journal.py",
+    "trader.core.reason_codes": "/mnt/luffy-data/luffy/production/trader/core/reason_codes.py",
+    "trader.core.types": "/mnt/luffy-data/luffy/production/trader/core/types.py",
+    "trader.data": "/mnt/luffy-data/luffy/production/trader/data/__init__.py",
+    "trader.data.binance_usdm_registry": "/mnt/luffy-data/luffy/production/trader/data/binance_usdm_registry.py",
+    "trader.data.feed": "/mnt/luffy-data/luffy/production/trader/data/feed.py",
+    "trader.data.market_provenance": "/mnt/luffy-data/luffy/production/trader/data/market_provenance.py",
+    "trader.data.registry_provider": "/mnt/luffy-data/luffy/production/trader/data/registry_provider.py",
+    "trader.data.sqlite_tx": "/mnt/luffy-data/luffy/production/trader/data/sqlite_tx.py",
+    "trader.engine": "/mnt/luffy-data/luffy/production/trader/engine/__init__.py",
+    "trader.engine.accounting": "/mnt/luffy-data/luffy/production/trader/engine/accounting.py",
+    "trader.engine.booking": "/mnt/luffy-data/luffy/production/trader/engine/booking.py",
+    "trader.engine.control_fence": "/mnt/luffy-data/luffy/production/trader/engine/control_fence.py",
+    "trader.engine.entry_authority": "/mnt/luffy-data/luffy/production/trader/engine/entry_authority.py",
+    "trader.engine.evidence_capture": "/mnt/luffy-data/luffy/production/trader/engine/evidence_capture.py",
+    "trader.engine.executor": "/mnt/luffy-data/luffy/production/trader/engine/executor.py",
+    "trader.engine.outcomes": "/mnt/luffy-data/luffy/production/trader/engine/outcomes.py",
+    "trader.engine.paper_exit_evidence": "/mnt/luffy-data/luffy/production/trader/engine/paper_exit_evidence.py",
+    "trader.engine.protective": "/mnt/luffy-data/luffy/production/trader/engine/protective.py",
+    "trader.engine.reconcile": "/mnt/luffy-data/luffy/production/trader/engine/reconcile.py",
+    "trader.engine.recovery": "/mnt/luffy-data/luffy/production/trader/engine/recovery.py",
+    "trader.engine.risk": "/mnt/luffy-data/luffy/production/trader/engine/risk.py",
+    "trader.engine.state": "/mnt/luffy-data/luffy/production/trader/engine/state.py",
+    "trader.engine.supervisor": "/mnt/luffy-data/luffy/production/trader/engine/supervisor.py",
+    "trader.engine.trade_provenance": "/mnt/luffy-data/luffy/production/trader/engine/trade_provenance.py",
+    "trader.engine.watchdog": "/mnt/luffy-data/luffy/production/trader/engine/watchdog.py",
+    "trader.kernel": "/mnt/luffy-data/luffy/production/trader/kernel.py",
+    "trader.learning": "/mnt/luffy-data/luffy/production/trader/learning/__init__.py",
+    "trader.learning.capture": "/mnt/luffy-data/luffy/production/trader/learning/capture.py",
+    "trader.learning.capture_runtime": "/mnt/luffy-data/luffy/production/trader/learning/capture_runtime.py",
+    "trader.learning.foundation": "/mnt/luffy-data/luffy/production/trader/learning/foundation.py",
+    "trader.notify": "/mnt/luffy-data/luffy/production/trader/notify/__init__.py",
+    "trader.notify.telegram": "/mnt/luffy-data/luffy/production/trader/notify/telegram.py",
+    "trader.observability": "/mnt/luffy-data/luffy/production/trader/observability/__init__.py",
+    "trader.observability.depth_evidence": "/mnt/luffy-data/luffy/production/trader/observability/depth_evidence.py",
+    "trader.observability.execution_shadow": "/mnt/luffy-data/luffy/production/trader/observability/execution_shadow.py",
+    "trader.observability.funding_events": "/mnt/luffy-data/luffy/production/trader/observability/funding_events.py",
+    "trader.observability.portfolio_observation": "/mnt/luffy-data/luffy/production/trader/observability/portfolio_observation.py",
+    "trader.observability.prospective_execution": "/mnt/luffy-data/luffy/production/trader/observability/prospective_execution.py",
+    "trader.observability.safety": "/mnt/luffy-data/luffy/production/trader/observability/safety.py",
+    "trader.observability.stage5_activation": "/mnt/luffy-data/luffy/production/trader/observability/stage5_activation.py",
+    "trader.owner": "/mnt/luffy-data/luffy/production/trader/owner/__init__.py",
+    "trader.owner.adapters": "/mnt/luffy-data/luffy/production/trader/owner/adapters/__init__.py",
+    "trader.owner.adapters.render": "/mnt/luffy-data/luffy/production/trader/owner/adapters/render.py",
+    "trader.owner.adapters.telegram": "/mnt/luffy-data/luffy/production/trader/owner/adapters/telegram.py",
+    "trader.owner.authz": "/mnt/luffy-data/luffy/production/trader/owner/authz.py",
+    "trader.owner.contract": "/mnt/luffy-data/luffy/production/trader/owner/contract.py",
+    "trader.owner.service": "/mnt/luffy-data/luffy/production/trader/owner/service.py",
+    "trader.strategy": "/mnt/luffy-data/luffy/production/trader/strategy/__init__.py",
+    "trader.strategy.capacity": "/mnt/luffy-data/luffy/production/trader/strategy/capacity.py",
+    "trader.strategy.compile": "/mnt/luffy-data/luffy/production/trader/strategy/compile.py",
+    "trader.strategy.dsl": "/mnt/luffy-data/luffy/production/trader/strategy/dsl.py",
+    "trader.strategy.exit_policy": "/mnt/luffy-data/luffy/production/trader/strategy/exit_policy.py",
+    "trader.strategy.factory_handoff": "/mnt/luffy-data/luffy/production/trader/strategy/factory_handoff.py",
+    "trader.strategy.features": "/mnt/luffy-data/luffy/production/trader/strategy/features.py",
+    "trader.strategy.features_deriv": "/mnt/luffy-data/luffy/production/trader/strategy/features_deriv.py",
+    "trader.strategy.features_xs": "/mnt/luffy-data/luffy/production/trader/strategy/features_xs.py",
+    "trader.strategy.genome": "/mnt/luffy-data/luffy/production/trader/strategy/genome.py",
+    "trader.strategy.legacy_authority": "/mnt/luffy-data/luffy/production/trader/strategy/legacy_authority.py",
+    "trader.strategy.promotion": "/mnt/luffy-data/luffy/production/trader/strategy/promotion.py",
+    "trader.strategy.signal_occurrence": "/mnt/luffy-data/luffy/production/trader/strategy/signal_occurrence.py",
+    "trader.strategy.spec": "/mnt/luffy-data/luffy/production/trader/strategy/spec.py",
+    "trader.world": "/mnt/luffy-data/luffy/production/trader/world/__init__.py",
+    "trader.world.claim": "/mnt/luffy-data/luffy/production/trader/world/claim.py",
+    "trader.world.model": "/mnt/luffy-data/luffy/production/trader/world/model.py",
+    "trader.world.observation": "/mnt/luffy-data/luffy/production/trader/world/observation.py",
+    "trader.world.perception": "/mnt/luffy-data/luffy/production/trader/world/perception.py",
+    "trader.world.relationship": "/mnt/luffy-data/luffy/production/trader/world/relationship.py",
+    "trader.world.replay": "/mnt/luffy-data/luffy/production/trader/world/replay.py",
+    "trader.world.state": "/mnt/luffy-data/luffy/production/trader/world/state.py"
+  },
+  "network_guard_active": true,
+  "production_store_guard_active": true,
+  "exit_code": 0,
+  "counts": {
+    "passed": 121,
+    "failed": 0,
+    "skipped": 0,
+    "errors": 0,
+    "deselected": 0
+  }
+}
