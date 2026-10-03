@@ -949,8 +949,10 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
             links_error = "lookup_timeout"
         except Exception as e:                              # noqa: BLE001
             links_error = f"lookup_failed:{type(e).__name__}"
-        return _json({"request_id": rid, "reply": reply, "evidence": [],
-                      "evidence_note": "The chat backend supplies no evidence identifiers",
+        evidence = getattr(engine, 'evidence', [])
+        evidence = evidence if isinstance(evidence, list) else []
+        return _json({"request_id": rid, "reply": reply, "evidence": evidence,
+                      "evidence_note": "Exact records returned by typed query tools; mentions remain separate from sources" if evidence else "UNAVAILABLE: this engine supplied no exact consulted records",
                       "links": mentions["links"] if mentions else None,
                       "links_error": links_error,
                       "unresolved": mentions["unresolved"] if mentions else None,
@@ -969,8 +971,10 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
     @app.get(PREFIX + "/knowledge")
     def owner_knowledge():
         try:
-            return Response(knowledge_cache.read(), media_type="application/json",
-                            headers={"Cache-Control": "no-store"})
+            from ..owner.knowledge import enrich
+            base = json.loads(knowledge_cache.read())
+            return Response(json.dumps(enrich(base, journal, root, vault, cfg)),
+                            media_type='application/json', headers={'Cache-Control': 'no-store'})
         except (OSError, ValueError):
             return _json({"error": "knowledge_source_unavailable",
                           "detail": "No cached snapshot substituted; retry after the source is readable and stable."}, 503)
@@ -978,6 +982,45 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
     @app.get(PREFIX + "/system")
     def owner_system():
         return _json(system(journal, root, cfg))
+
+    @app.get(PREFIX + "/query/{kind}")
+    def owner_query(kind: str, identity: str | None = None, offset: int = 0):
+        from ..owner.queries import query
+        try:
+            return _json(query(journal, kind, identity, root=root, cfg=cfg, offset=offset))
+        except (ValueError, KeyError, TypeError, OSError) as e:
+            return _json({'error': 'owner_evidence_unavailable', 'reason': str(e)}, 422)
+
+    @app.get(PREFIX + "/needs-you")
+    def owner_needs_you(offset: int = 0):
+        from ..owner.approvals import items
+        try:
+            return _json(items(journal, cfg, offset=offset))
+        except (ValueError, KeyError, TypeError, OSError) as e:
+            return _json({'error': 'approval_evidence_unavailable', 'reason': type(e).__name__}, 503)
+
+    @app.post(PREFIX + "/needs-you/decision")
+    async def owner_approval_decision(request: Request):
+        from ..owner.adapters.dashboard import to_request
+        from ..owner.contract import MalformedRequest
+        try:
+            body = await request.json()
+            if set(body) != {'request_id', 'issued_at_ms', 'item_id', 'binding_hash', 'decision'}:
+                raise ValueError('exact_approval_request_required')
+            req = to_request('approval_decision', body['request_id'], body['issued_at_ms'],
+                             authenticated=auth.authenticated(request.scope),
+                             args={k: body[k] for k in ('item_id', 'binding_hash', 'decision')})
+        except (ValueError, KeyError, TypeError, MalformedRequest):
+            return _json({'error': 'malformed_approval_request'}, 400)
+        if req is None:
+            return _json({'error': 'authentication required'}, 401)
+        # Same transport-neutral authenticated control gateway, no local writer.
+        if gateway is None:
+            from ..owner.contract import Status, refused
+            return _json(refused(req, 'owner_interface_not_configured', Status.UNAVAILABLE).to_wire())
+        result = await asyncio.to_thread(gateway, 'approval_decision', body['request_id'],
+                                        body['issued_at_ms'], request, req.args)
+        return _json(result.to_wire())
 
     @app.get(PREFIX + "/trades")
     def owner_trades(limit: int = trade_history.DEFAULT_LIMIT, status: str = "all",

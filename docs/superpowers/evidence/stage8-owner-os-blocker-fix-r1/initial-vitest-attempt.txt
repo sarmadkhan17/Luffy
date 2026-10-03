@@ -1,0 +1,244 @@
+
+> luffy-owner-frontend-preview@0.1.0 test
+> vitest run tests/stage8.test.tsx
+
+
+ RUN  v5.0.2 /mnt/luffy-data/luffy/production/frontend
+
+ ❯ tests/stage8.test.tsx (8 tests | 1 failed) 1523ms
+   × typed research catalog navigates to the oldest question page 1109ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/stage8.test.tsx > typed research catalog navigates to the oldest question page
+TestingLibraryElementError: Found multiple elements with the text: /question:q0/
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<summary>[39m
+  [0mquestion:q0[0m
+  [0m · [0m
+  [0mRECORDED[0m
+[36m</summary>[39m
+
+Ignored nodes: comments, script, style
+[36m<pre[39m
+  [33mstyle[39m=[32m"white-space: pre-wrap; overflow-wrap: anywhere;"[39m
+[36m>[39m
+  [0m{
+  "record_id": "question:q0",
+  "verification": "RECORDED"
+}[0m
+[36m</pre>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<details[39m
+      [33mclass[39m=[32m"side-note"[39m
+      [33mdata-testid[39m=[32m"owner-evidence-query"[39m
+      [33mopen[39m=[32m""[39m
+    [36m>[39m
+      [36m<summary>[39m
+        [0mInterrogate exact internal evidence[0m
+      [36m</summary>[39m
+      [36m<form>[39m
+        [36m<label>[39m
+          [0mEvidence class [0m
+          [36m<select>[39m
+            [36m<option>[39m
+              [0mdecision[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mtrade[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mresearch[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mportfolio[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mworld[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mstrategies[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mcost[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mapprovals[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mlearning[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mcapability[0m
+            [36m</option>[39m
+          [36m</select>[39m
+        [36m</label>[39m
+        [0m [0m
+        [36m<label>[39m
+          [0mExact stored identity [0m
+          [36m<input[39m
+            [33mmaxlength[39m=[32m"128"[39m
+            [33mplaceholder[39m=[32m"Blank for bounded catalog"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</label>[39m
+        [36m<button>[39m
+          [0mRead evidence[0m
+        [36m</button>[39m
+      [36m</form>[39m
+      [36m<p>[39m
+        [0mAVAILABLE[0m
+        [0m · historical records; journal is not venue. Query config is not historical decision config.[0m
+      [36m</p>[39m
+      [36m<details>[39m
+        [36m<summary>[39m
+          [0mquestion:q0[0m
+          [0m · [0m
+          [0mRECORDED[0m
+        [36m</summary>[39m
+        [36m<pre[39m
+          [33mstyle[39m=[32m"white-space: pre-wrap; overflow-wrap: anywhere;"[39m
+        [36m>[39m
+          [0m{
+  "record_id": "question:q0",
+  "verification": "RECORDED"
+}[0m
+        [36m</pre>[39m
+      [36m</details>[39m
+      [36m<div[39m
+        [33maria-label[39m=[32m"Research question paging"[39m
+      [36m>[39m
+        [36m<button>[39m
+          [0mPrevious questions[0m
+        [36m</button>[39m
+        [0m [0m
+        [36m<button[39m
+          [33mdisabled[39m=[32m""[39m
+        [36m>[39m
+          [0mMore questions[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</details>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<details[39m
+      [33mclass[39m=[32m"side-note"[39m
+      [33mdata-testid[39m=[32m"owner-evidence-query"[39m
+      [33mopen[39m=[32m""[39m
+    [36m>[39m
+      [36m<summary>[39m
+        [0mInterrogate exact internal evidence[0m
+      [36m</summary>[39m
+      [36m<form>[39m
+        [36m<label>[39m
+          [0mEvidence class [0m
+          [36m<select>[39m
+            [36m<option>[39m
+              [0mdecision[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mtrade[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mresearch[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mportfolio[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mworld[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mstrategies[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mcost[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mapprovals[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mlearning[0m
+            [36m</option>[39m
+            [36m<option>[39m
+              [0mcapability[0m
+            [36m</option>[39m
+          [36m</select>[39m
+        [36m</label>[39m
+        [0m [0m
+        [36m<label>[39m
+          [0mExact stored identity [0m
+          [36m<input[39m
+            [33mmaxlength[39m=[32m"128"[39m
+            [33mplaceholder[39m=[32m"Blank for bounded catalog"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</label>[39m
+        [36m<button>[39m
+          [0mRead evidence[0m
+        [36m</button>[39m
+      [36m</form>[39m
+      [36m<p>[39m
+        [0mAVAILABLE[0m
+        [0m · historical records; journal is not venue. Query config is not historical decision config.[0m
+      [36m</p>[39m
+      [36m<details>[39m
+        [36m<summary>[39m
+          [0mquestion:q0[0m
+          [0m · [0m
+          [0mRECORDED[0m
+        [36m</summary>[39m
+        [36m<pre[39m
+          [33mstyle[39m=[32m"white-space: pre-wrap; overflow-wrap: anywhere;"[39m
+        [36m>[39m
+          [0m{
+  "record_id": "question:q0",
+  "verification": "RECORDED"
+}[0m
+        [36m</pre>[39m
+      [36m</details>[39m
+      [36m<div[39m
+        [33maria-label[39m=[32m"Research question paging"[39m
+      [36m>[39m
+        [36m<button>[39m
+          [0mPrevious questions[0m
+        [36m</button>[39m
+        [0m [0m
+        [36m<button[39m
+          [33mdisabled[39m=[32m""[39m
+        [36m>[39m
+          [0mMore questions[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</details>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ tests/stage8.test.tsx:78:23
+     76|   await userEvent.setup().click(screen.getByRole("button",{name:"Read …
+     77|   await userEvent.setup().click(await screen.findByRole("button",{name…
+     78|   expect(await screen.findByText(/question:q0/)).toBeVisible();
+       |                       ^
+     79|   expect(read.mock.calls.some(c=>c[0]==="query/research?offset=50")).t…
+     80| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  18:23:45
+   Duration  3.24s (tests 49%, environment 23%, import 15%, transform 8%, setup 4%)

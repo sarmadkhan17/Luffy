@@ -1,0 +1,16 @@
+
+> luffy-owner-frontend-preview@0.1.0 test
+> vitest run tests/stage8.test.tsx tests/live.test.tsx tests/m2.test.tsx tests/contracts.test.ts tests/health.test.tsx tests/graphPath.test.ts
+
+
+ RUN  v5.0.2 /mnt/luffy-data/luffy/production/frontend
+
+
+ Test Files  6 passed (6)
+      Tests  80 passed (80)
+   Start at  17:41:28
+   Duration  18.12s (environment 49%, tests 19%, setup 15%, import 9%, transform 7%, worker 1%)
+
+Environment  jsdom was created 6 times · 23.37s total, 49% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments

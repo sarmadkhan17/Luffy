@@ -336,11 +336,8 @@ test("Knowledge binds vault relations and lists what it cannot draw", async ({
   await login(page);
   await page.goto(LIVE + "/#knowledge");
   await expect(page.locator(".react-flow__node")).toHaveCount(4);
-  await expect(page.getByRole("button", { name: /^Evidence/ })).toBeDisabled();
-  await expect(page.getByRole("button", { name: /^Code/ })).toBeDisabled();
-  await expect(page.getByTestId("lens-limits")).toContainText(
-    "Evidence lens unavailable",
-  );
+  await expect(page.getByRole("button", { name: /^Evidence/ })).toBeEnabled();
+  await expect(page.getByRole("button", { name: /^Code/ })).toBeEnabled();
   const undrawn = page.getByTestId("undrawn");
   await expect(undrawn).toContainText("2 connections not drawn — see list");
   await undrawn.locator("summary").click();

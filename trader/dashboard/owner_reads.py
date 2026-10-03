@@ -488,8 +488,19 @@ def research(journal, limit: int = 50, offset: int = 0) -> dict:
     offset = max(0, min(int(offset), 100000))
     out: dict = {"generated_at": _iso(_now()),
                  "source": "journal research ledger (trader/research/ledger.py)"}
+    from trader.owner.queries import rows as question_rows, record as question_record
+    questions = question_rows(journal, 'research_questions', 'question_id', limit=limit+1, offset=offset)
+    out['questions'] = [question_record('question', r['question_id'], json.loads(r['canonical_json']),
+                        source='research_questions', at=r['recorded_at_ms'], available=r['recorded_at_ms'])
+                        for r in questions[:limit]]
+    out['questions_page'] = dict(offset=offset, limit=limit, has_more=len(questions)>limit,
+                                order='journal insertion order, newest first')
+    question_gaps = [] if _table_exists(journal, 'research_questions') else [
+        _unavailable('questions', 'research-question store is unavailable')]
     if not _table_exists(journal, "research_combos"):
-        out.update(available=False, reason="research ledger tables are absent")
+        out.update(available=bool(out['questions']), partial=True,
+                   reason="quantitative research ledger tables are absent",
+                   unavailable=question_gaps+[_unavailable('results', 'quantitative result store is unavailable')])
         return out
     out["available"] = True
     out["counts"] = {
@@ -533,8 +544,7 @@ def research(journal, limit: int = 50, offset: int = 0) -> dict:
                                           "rejected, braked, at FROM research_tests "
                                           "ORDER BY seq DESC LIMIT ?", (limit,))
     out["ideas"] = assessed_ideas(journal, limit=min(limit, 50))
-    out["unavailable"] = [
-        _unavailable("questions", "no persisted research-question store"),
+    out["unavailable"] = question_gaps + [
         _unavailable("plans", "frozen protocols are not persisted as records the API can read"),
         _unavailable("costs", "no attributed research cost records; missing is not zero"),
         _unavailable("shadow_reports", "no shadow-report store"),

@@ -131,10 +131,11 @@ class OwnerService:
                  authorizer: Authorizer | None = None, clock=time.time,
                  max_age_s: float = 300.0, future_skew_s: float = 60.0,
                  busy_wait_s: float = 10.0, request_retention_days: float = 7.0,
-                 audit_retention_days: float = 30.0):
+                 audit_retention_days: float = 30.0, approval_cfg=None):
         self.journal = journal
         self.state_machine = state_machine
         self._resume = resume                  # Kernel.owner_resume (guarded path)
+        self.approval_cfg = approval_cfg if approval_cfg is not None else {}
         self._snapshot = snapshot or (lambda: {})
         self.authorizer = authorizer or Authorizer()
         self.clock = clock
@@ -405,6 +406,16 @@ class OwnerService:
             return self._close_trade(req, principal)
         if op == "set_market_type":
             return self._set_market_type(req, principal)
+        if op == "approval_decision":
+            from .approvals import decide
+            try:
+                receipt = decide(self.journal, self.approval_cfg, req.args,
+                                 actor=actor_for(req.channel), request_id=req.request_id,
+                                 now_ms=int(self.clock()*1000))
+            except (ValueError, KeyError, TypeError) as e:
+                return refused(req, str(e))
+            return OwnerResult(req.request_id, req.operation, Status.ACCEPTED,
+                               reasons=("owner_decision_recorded_no_execution",), data=receipt)
         return self._recover(req, principal, allow_unhalt=op == "unhalt")
 
     def _detail(self, req: OwnerRequest, principal: str) -> str:

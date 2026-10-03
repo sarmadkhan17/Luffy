@@ -512,7 +512,7 @@ def test_approval_bound_to_another_version_is_refused(tmp_path, cfg):
                    "operator", T0))
     e = F.eligible_for_first_live(j, a["version_id"], cfg=cfg,
                                   available_inputs=INPUTS)
-    assert not e.eligible and _r(e) == ("owner_approval_wrong_version",)
+    assert not e.eligible and set(_r(e)) == {"owner_approval_wrong_version", "owner_approval_configuration_not_recorded"}
 
 
 def test_rejected_approval_is_never_eligible(tmp_path, cfg):
@@ -946,8 +946,15 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
         assert bad not in code, bad
     # the executor reads only the paper/live fence predicate
     for f in pathlib.Path("trader").rglob("*.py"):
-        if f not in (pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
+        if f not in (pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
             assert "factory_handoff" not in f.read_text(), f
+    # Stage8 may read exact versions and record an authenticated exact owner
+    # decision. It cannot create/install/activate/govern a strategy version.
+    for path in ('trader/owner/queries.py', 'trader/owner/approvals.py'):
+        text = pathlib.Path(path).read_text()
+        for forbidden in ('create_version(', 'derive_version(', 'record_exact_install(',
+                          'govern_version(', 'evaluate_probation(', 'create_order('):
+            assert forbidden not in text, (path, forbidden)
     # Corrected Stage6 uses only the exact immutable version reader for capacity.
     current_src = pathlib.Path("trader/portfolio/current.py").read_text()
     assert set(re.findall(r"\bfactory_handoff\.(\w+)", current_src)) == {"load_version"}

@@ -63,8 +63,8 @@ export function UnavailableFields({ items }: { items: unknown }) {
   if (!list.length) return null;
   return (
     <ul className="unavailable-list" data-testid="unavailable-fields">
-      {list.map((u) => (
-        <li key={String(u.field)}>
+      {list.map((u, i) => (
+        <li key={`${u.field}:${i}`}>
           <Badge tone="amber">UNAVAILABLE</Badge>{" "}
           <strong>{label(String(u.field))}</strong> — {String(u.reason)}
         </li>

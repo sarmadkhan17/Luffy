@@ -172,6 +172,7 @@ export default function GraphView({
     () => window.matchMedia("(max-width: 759px)").matches,
   );
   const [eventId, setEventId] = useState<string | null>(null);
+  const [pathEdges, setPathEdges] = useState<string[]>([]);
   const reduced = useMotionPreference();
   const visible = useVisible();
   useEffect(() => {
@@ -271,6 +272,8 @@ export default function GraphView({
         const meta =
           n.evidence.timeBasis === "file_modified"
             ? "Modified time · unassessed"
+            : n.evidence.timeBasis === "event"
+              ? "Event chronology · historical"
             : n.evidence.freshness === "fresh"
               ? live
                 ? "recorded"
@@ -328,11 +331,13 @@ export default function GraphView({
               ? undefined
               : e.relation,
           type: system ? "routed" : "straight",
-          className: focus
-            ? e.source === selected || e.target === selected
-              ? "in-focus"
-              : "out-focus"
-            : undefined,
+          className: pathEdges.includes(e.id)
+            ? "path-selected"
+            : focus
+              ? e.source === selected || e.target === selected
+                ? "in-focus"
+                : "out-focus"
+              : undefined,
           data: { path: paths.get(e.id) },
           animated:
             visible &&
@@ -341,14 +346,18 @@ export default function GraphView({
             event?.edgeId === e.id,
           style: {
             stroke:
-              e.kind === "typed"
+              pathEdges.includes(e.id)
+                ? "#e6c27e"
+                : e.kind === "typed"
                 ? "#77cbbb"
                 : e.kind === "link"
                   ? "#d9b779"
                   : "#9aafc1",
             strokeDasharray: e.kind === "typed" ? undefined : "6 5",
             strokeWidth:
-              event?.edgeId === e.id
+              pathEdges.includes(e.id)
+                ? 3.5
+                : event?.edgeId === e.id
                 ? 3
                 : !system && focus
                   ? e.source === selected || e.target === selected
@@ -380,6 +389,7 @@ export default function GraphView({
       d.provenance.freshness,
       focus,
       selected,
+      pathEdges,
     ],
   );
   /** Every connection touching the visible scope that is not drawn, with why.
@@ -605,6 +615,7 @@ export default function GraphView({
                         {lens === "Timeline" && (
                           <time dateTime={n.evidence.observedAt ?? undefined}>
                             {" "}
+                            · {n.evidence.timeBasis === "event" ? "Event chronology" : n.evidence.timeBasis === "file_modified" ? "File modification time — not event chronology" : "Event time NOT_RECORDED"}
                             · {timestamp(n.evidence.observedAt)}
                           </time>
                         )}
@@ -798,7 +809,7 @@ export default function GraphView({
                   </ul>
                   <EvidenceDetails value={node.evidence} />
                   {!system && (
-                    <PathTrace key={node.id} data={d} source={node.id} />
+                    <PathTrace key={node.id} data={d} source={node.id} onPathChange={setPathEdges} />
                   )}
                 </>
               ) : (

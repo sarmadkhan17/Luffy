@@ -1,0 +1,63 @@
+[WebServer] (node:723699) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:723713) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 5 tests using 1 worker
+
+(node:723884) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/browser/stage8.spec.ts:4:1 › typed owner interrogations and Needs You are available without fixture substitution (5.0s)
+  ✓  2 tests/browser/stage8.spec.ts:16:1 › Knowledge lenses distinguish event chronology from file modification and absent code (1.8s)
+  ✓  3 tests/browser/stage8.spec.ts:27:1 › failed Needs You endpoint is explicit and cannot enable approvals (1.0s)
+  ✓  4 tests/browser/stage8.spec.ts:35:1 › pending owner actions survive completed history and later pages are reachable (1.3s)
+  ✘  5 tests/browser/stage8.spec.ts:47:1 › Research route renders stored questions rather than false absence (6.1s)
+
+
+  1) tests/browser/stage8.spec.ts:47:1 › Research route renders stored questions rather than false absence
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('body')
+    Timeout: 5000ms
+    - Expected substring  - 1
+    + Received string     + 5
+
+    - question:q0
+    +
+    +     Skip to contentLIVE — Luffy backend · demo venue account (BINANCE_DEMO) · owner controls only through the Owner InterfaceLUFFYOWNER WORKSPACEDeskOverviewTradesResearchStrategiesPartnerLUFFYMachineOperationsControls · PanicLive SystemKnowledgeDiagnosticsLIVE · DEMO VENUEDesk/ResearchOWNER WORKSPACELiveOOWNER / RESEARCHResearchHypotheses, results and their lineage in the research ledger.Research ledgerUNAVAILABLEData unavailableBackend response did not match the research contract. No substitute data was loaded.Retry requestQuestionsRead failedPlansRead failedEvidenceRead failedResultsRead failedRunsRead failedResearch BankRead failedPrior recallRead failedRegistrationsRead failedCostsRead failedShadow reportsRead failedQuestionsVersioned research questions and their source context.InvestigationsunavailableSource: /api/investigations/latest · bounded to 16 dossiers. Recorded investigations do not establish current scanning activity.Inspect investigation healthNo dossiers returned. Source status: unavailable.Interpretation boundariesINCONCLUSIVE NOT_ASSESSED NOT_ESTABLISHED context_onlyThese are distinct evidence states, not failed or successful deployment gates. Discovery ranks candidates; it does not grant admission. No results, run progress, cost totals or approval actions are fabricated.LUFFY · OWNER WORKSPACE · backend commit unknownLIVE · text chat · backend time 2026-10-03 15:25:26 UTC · voice unavailable
+    +
+    +
+    +
+
+    Call log:
+      - Expect "toContainText" locator('body') with timeout 5000ms
+      - waiting for locator('body')
+        - locator resolved to <body>…</body>
+        - unexpected value "
+        Skip to contentLIVE — Luffy backend · demo venue account (BINANCE_DEMO) · owner controls only through the Owner InterfaceLUFFYOWNER WORKSPACEDeskOverviewTradesResearchStrategiesPartnerLUFFYMachineOperationsControls · PanicLive SystemKnowledgeDiagnosticsLIVE · DEMO VENUEDesk/ResearchOWNER WORKSPACELiveOOWNER / RESEARCHResearchHypotheses, results and their lineage in the research ledger.Research ledgerUNAVAILABLEData unavailableBackend response did not match the research contract. No substitute data was loaded.Retry requestQuestionsRead failedPlansRead failedEvidenceRead failedResultsRead failedRunsRead failedResearch BankRead failedPrior recallRead failedRegistrationsRead failedCostsRead failedShadow reportsRead failedQuestionsVersioned research questions and their source context.InvestigationsUnavailableLoading from the Luffy backend…Interpretation boundariesINCONCLUSIVE NOT_ASSESSED NOT_ESTABLISHED context_onlyThese are distinct evidence states, not failed or successful deployment gates. Discovery ranks candidates; it does not grant admission. No results, run progress, cost totals or approval actions are fabricated.LUFFY · OWNER WORKSPACE · backend commit unknownLIVE · text chat · backend time 2026-10-03 15:25:26 UTC · voice unavailable
+
+
+    "
+        13 × locator resolved to <body>…</body>
+           - unexpected value "
+        Skip to contentLIVE — Luffy backend · demo venue account (BINANCE_DEMO) · owner controls only through the Owner InterfaceLUFFYOWNER WORKSPACEDeskOverviewTradesResearchStrategiesPartnerLUFFYMachineOperationsControls · PanicLive SystemKnowledgeDiagnosticsLIVE · DEMO VENUEDesk/ResearchOWNER WORKSPACELiveOOWNER / RESEARCHResearchHypotheses, results and their lineage in the research ledger.Research ledgerUNAVAILABLEData unavailableBackend response did not match the research contract. No substitute data was loaded.Retry requestQuestionsRead failedPlansRead failedEvidenceRead failedResultsRead failedRunsRead failedResearch BankRead failedPrior recallRead failedRegistrationsRead failedCostsRead failedShadow reportsRead failedQuestionsVersioned research questions and their source context.InvestigationsunavailableSource: /api/investigations/latest · bounded to 16 dossiers. Recorded investigations do not establish current scanning activity.Inspect investigation healthNo dossiers returned. Source status: unavailable.Interpretation boundariesINCONCLUSIVE NOT_ASSESSED NOT_ESTABLISHED context_onlyThese are distinct evidence states, not failed or successful deployment gates. Discovery ranks candidates; it does not grant admission. No results, run progress, cost totals or approval actions are fabricated.LUFFY · OWNER WORKSPACE · backend commit unknownLIVE · text chat · backend time 2026-10-03 15:25:26 UTC · voice unavailable
+
+
+    "
+
+
+      50 |   await page.goto(LIVE+"/#research");
+      51 |   await page.getByRole("button",{name:/Questions/}).click();
+    > 52 |   await expect(page.locator("body")).toContainText("question:q0");
+         |                                      ^
+      53 |   await expect(page.locator("body")).not.toContainText("no persisted research-question store");
+      54 | });
+      55 |
+        at /mnt/luffy-data/luffy/production/frontend/tests/browser/stage8.spec.ts:52:38
+
+    Error Context: .stage8-test-results/stage8-Research-route-rend-fe412-s-rather-than-false-absence/error-context.md
+
+  1 failed
+    tests/browser/stage8.spec.ts:47:1 › Research route renders stored questions rather than false absence
+  4 passed (21.5s)

@@ -1106,7 +1106,7 @@ def record_owner_decision(journal, cfg: dict, request_id: str,
              "probation_receipt_id": req["probation_receipt_id"],
              "requested_at_ms": req["requested_at_ms"],
              "decision": decision, "actor": actor,
-             "decided_at_ms": int(decided_at_ms)}
+             "decided_at_ms": int(decided_at_ms), "config_sha256": _jsha(cfg)}
     rec = {**ident, "decision_id": _jsha(ident),
            "grants": ("first-live eligibility of this exact version only; "
                       "no activation, allocation or order")
@@ -1164,6 +1164,32 @@ def evaluate_capacity(journal, cfg: dict, version_id: str, *,
         _refuse(e.code)
     return {**out, "version_id": version_id, "status_capacity":
             receipt["status"], "effective": receipt["result"]["effective"]}
+
+
+def verify_owner_configuration(journal, cfg, request, decision):
+    """Consume exact configuration binding; absent historical proof fails closed.
+
+    Gateway envelopes and Factory-native decisions use the same current config.
+    This strengthens eligibility only; the execution fences remain unchanged.
+    """
+    from trader.owner.approvals import digest, exists, receipt_from
+    native = decision.get('config_sha256')
+    envelopes = journal.query('SELECT payload FROM owner_approval_receipts WHERE item_id=?',
+                              (request['request_id'],)) if exists(journal, 'owner_approval_receipts') else []
+    if native is None and not envelopes:
+        _refuse('owner_approval_configuration_not_recorded')
+    if native is not None and native != _jsha(cfg):
+        _refuse('approved_configuration_changed')
+    if envelopes:
+        try:
+            envelope = receipt_from(envelopes[0]['payload'], request['request_id'])
+            expected = digest(dict(request=request, config_sha256=digest(cfg)))
+            if envelope['binding_hash'] != expected:
+                _refuse('approved_configuration_changed')
+            if (envelope['decision'], envelope['actor']) != (decision['decision'], decision['actor']):
+                _refuse('owner_approval_envelope_mismatch')
+        except (ValueError, KeyError, TypeError):
+            _refuse('owner_approval_envelope_invalid')
 
 
 # ── 5. the eligibility predicate ─────────────────────────────────────────
@@ -1246,6 +1272,9 @@ def eligible_for_first_live(journal, version_id: str, *, cfg: dict,
                 "request_id", "version_id", "spec_hash",
                 "validation_receipt_id", "probation_receipt_id",
                 "requested_at_ms")}
+            if "config_sha256" in d:
+                ident["config_sha256"] = d["config_sha256"]
+            check(verify_owner_configuration, journal, cfg, req, d)
             if _jsha(ident) != d["decision_id"] or any(
                     d[k] != bound[k] for k in bound):
                 reasons.append("owner_approval_wrong_version")

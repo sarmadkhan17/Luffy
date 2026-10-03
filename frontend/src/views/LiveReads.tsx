@@ -472,6 +472,7 @@ export function ResearchLive() {
   );
   const [pick, setPick] = useState(0);
   const page = rec(q.data?.results_page);
+  const questionPage = rec(q.data?.questions_page);
   const d = q.data;
   const missing = new Map(
     rows(d?.unavailable).map((u) => [String(u.field), String(u.reason)]),
@@ -484,7 +485,17 @@ export function ResearchLive() {
     {
       title: "Questions",
       note: "Versioned research questions and their source context.",
-      unavailable: gap("questions"),
+      count: rows(d?.questions).length,
+      unavailable: missing.has("questions") ? gap("questions") : undefined,
+      render: () => <>
+        <PagingBar count={rows(d?.questions).length} limit={typeof questionPage?.limit === "number" ? questionPage.limit : 50}
+          offset={offset} hasMore={questionPage?.has_more === true} onPage={questionPage ? setOffset : undefined} busy={q.isFetching} />
+        {rows(d?.questions).map(r => <details key={String(r.record_id)}><summary>{value(r.record_id)} · recorded question</summary>
+          <a href={`#luffy?query=research&id=${encodeURIComponent(String(r.identity))}`}>Discuss exact evidence in LUFFY ↗</a>
+          <pre style={{whiteSpace:"pre-wrap",overflowWrap:"anywhere"}}>{JSON.stringify(r,null,2)}</pre>
+        </details>)}
+        {rows(d?.questions).length === 0 && !missing.has("questions") && <p>No questions on this page of the available store.</p>}
+      </>,
     },
     {
       title: "Plans",

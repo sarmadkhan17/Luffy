@@ -20,6 +20,11 @@ export function graphScope(
       `${n.label} ${n.kind}`.toLowerCase().includes(search.toLowerCase()) &&
       (!neighbours || adjacent.has(n.id)),
   );
+  if (lens === "Timeline" && !system) matches.sort((a,b) => {
+    const ta = a.evidence.observedAt ? Date.parse(a.evidence.observedAt) : Infinity;
+    const tb = b.evidence.observedAt ? Date.parse(b.evidence.observedAt) : Infinity;
+    return (Number.isFinite(ta) ? ta : Infinity) - (Number.isFinite(tb) ? tb : Infinity) || a.id.localeCompare(b.id);
+  });
   const nodes = matches.slice(0, MAX_GRAPH_NODES);
   const ids = new Set(nodes.map((n) => n.id));
   return {

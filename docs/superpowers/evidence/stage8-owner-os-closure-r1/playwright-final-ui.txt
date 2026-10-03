@@ -1,0 +1,8 @@
+
+Running 3 tests using 1 worker
+
+  ✓  1 tests/browser/stage8.spec.ts:4:1 › typed owner interrogations and Needs You are available without fixture substitution (8.2s)
+  ✓  2 tests/browser/stage8.spec.ts:16:1 › Knowledge lenses distinguish event chronology from file modification and absent code (3.1s)
+  ✓  3 tests/browser/stage8.spec.ts:27:1 › failed Needs You endpoint is explicit and cannot enable approvals (2.3s)
+
+  3 passed (29.1s)

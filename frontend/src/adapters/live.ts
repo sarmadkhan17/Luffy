@@ -328,7 +328,7 @@ export function mapKnowledge(k: Json): GraphData {
     id: String(n.id),
     label: String(n.label),
     kind: String(n.kind),
-    lenses: available,
+    lenses: Array.isArray(n.lenses) ? n.lenses.filter((l: Lens) => available.includes(l)) : available,
     evidence: {
       id: String(n.provenance?.id ?? n.id),
       source: String(n.provenance?.source ?? n.id),
@@ -579,7 +579,12 @@ export function createLiveAdapter(onUnauthorized: () => void): OwnerAdapter {
       onChunk(r.reply);
       return {
         text: r.reply,
-        evidence: [],
+        evidence: Array.isArray(r.evidence) ? r.evidence.map((e: Json) => ({
+          id: String(e.record_id), source: typeof e.source === "string" ? e.source : JSON.stringify(e.source),
+          observedAt: typeof e.timestamp === "string" ? e.timestamp : typeof e.timestamp === "number" ? new Date(e.timestamp).toISOString() : null,
+          freshness: "not_assessed" as const, summary: JSON.stringify(e.value),
+          classification: `${e.verification} · historical · SHA256 ${e.sha256}`,
+        })) : [],
         requestId: r.request_id,
         ...mapMentions(r),
       };
@@ -736,6 +741,14 @@ export function createLiveAdapter(onUnauthorized: () => void): OwnerAdapter {
           `MALFORMED evidence: the ${what} response ${issue}. No substitute data was loaded.`,
         );
       return d;
+    },
+    async approvalDecision(body, pending) {
+      const result = await api<Json>(`${API}/needs-you/decision`, {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({...body, request_id: pending.id, issued_at_ms: pending.t}),
+      });
+      need(typeof result.status === "string" && Array.isArray(result.reasons), "approval result");
+      return result;
     },
     async attention(signal) {
       const d = await api<Json>("/api/attention/latest", { signal });

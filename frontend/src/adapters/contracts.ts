@@ -269,6 +269,7 @@ export interface OwnerAdapter {
    * diagnostics, trades/<id>/lineage, strategies/<id>, knowledge/note?id=…
    * Fields a store does not record arrive listed under `unavailable`. */
   ownerRead?(path: string, signal: AbortSignal): Promise<OwnerRecord>;
+  approvalDecision?(body: {item_id: string; binding_hash: string; decision: "APPROVED" | "REJECTED"}, pending: PendingRequest): Promise<OwnerRecord>;
   /** The attention collector's latest scan (/api/attention/latest). */
   attention?(signal: AbortSignal): Promise<OwnerRecord>;
 }

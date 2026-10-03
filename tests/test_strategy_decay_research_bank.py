@@ -690,7 +690,11 @@ def test_nothing_in_the_live_path_calls_it():
                        "learning/capture.py",
                        "learning/capture_runtime.py",
                        "learning/foundation.py",
+                       "owner/approvals.py",  # exact read-only Bank hash binding; no Bank writer
                        "research/external_research.py"]
+    owner = (root / 'owner/approvals.py').read_text()
+    assert 'record_research_bank_object(' not in owner
+    assert 'rb.record_' not in owner
     assert "research_bank import" not in (root / "core/journal.py").read_text()
 
 

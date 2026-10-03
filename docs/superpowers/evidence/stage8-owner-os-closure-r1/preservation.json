@@ -1,0 +1,477 @@
+{
+  "original_frontend_files": [
+    {
+      "path": "frontend/src/Shell.tsx",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/src/components/Avatar.tsx",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/src/components/PathTrace.tsx",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/src/demo.tsx",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/src/liveRoot.tsx",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/src/views/Evidence.tsx",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/src/views/GraphView.tsx",
+      "classification": "EXTEND",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/src/views/Luffy.tsx",
+      "classification": "EXTEND",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/src/views/Operations.tsx",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/src/views/Overview.tsx",
+      "classification": "EXTEND",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/src/views/Routes.tsx",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/README.md",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/browser-results.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/desktop-diagnostics.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/desktop-knowledge.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/desktop-live-system.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/desktop-luffy.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/desktop-operations.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/desktop-overview.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/desktop-research.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/desktop-routes.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/desktop-strategies.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/desktop-trades.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-browser-results.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/accessibility.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/live-binding/performance-live.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/m1-concurrency.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/m1-routes.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/m2-concurrency.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/m2-routes.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/m2-workflow.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/m3/accessibility.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/m3/luffy-widths.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/m3/mobile.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/m3/routes.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/m4/desktop-routes.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/m4/motion-observations.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/performance.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/scale-performance.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/topology-regression.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/final-suite/v2/accessibility.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/full-browser-results.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/knowledge-selected.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/live-perf-after-motion-results.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/live-perf-final-results.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/live-perf-repeat-results.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/live-system-selected.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/luffy-active.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/m3-regression.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/m3/accessibility.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/m3/luffy-widths.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/m3/mobile.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/m3/routes.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/mobile-knowledge.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/mobile-luffy.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/mobile-overview.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/mobile-trade-story.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/motion-knowledge-path.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/motion-live-flows.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/motion-luffy-error.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/motion-luffy-idle-after-reply.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/motion-observations.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/perf-after-motion/live-binding/performance-live.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/perf-final/live-binding/performance-live.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/perf-repeat/live-binding/performance-live.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/performance-comparison.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression-fixes/v2/accessibility.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/accessibility.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/live-binding/performance-live.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/m1-concurrency.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/m1-routes.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/m2-concurrency.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/m2-routes.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/m2-workflow.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/m3/accessibility.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/m3/luffy-widths.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/m3/mobile.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/m3/routes.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/m4/desktop-routes.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/m4/motion-observations.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/performance.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/scale-performance.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/regression/topology-regression.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/research-detail.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/side-by-side-board.webp",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/strategy-workspace.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/targeted-results.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/trade-story.png",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/evidence/m4/v21-targeted.json",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/playwright.m4.config.ts",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/src/assets/luffy-horizon.webp",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/src/m4.css",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    },
+    {
+      "path": "frontend/tests/browser/m4-capture.spec.ts",
+      "classification": "KEEP",
+      "wholesale_replacement": false
+    }
+  ],
+  "superseded_by_stage8_requirement": [],
+  "missing_original_files": [],
+  "original_m4_capture_changes": [],
+  "knowledge_task_edits": [],
+  "independent_generated_note_changes": [
+    "knowledge/50 Daily/2026-10-03.md"
+  ],
+  "note": "Generated daily note changed independently during the session; this task did not write knowledge/. Existing tracked owner-modified knowledge and M4 evidence remain preserved."
+}

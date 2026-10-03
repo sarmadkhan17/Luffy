@@ -85,9 +85,13 @@ const decision = shape({
 });
 
 const researchList: Check = (v, at) => {
-  const base = shape({ available: bool })(v, at);
+  const question = shape({record_id: id, identity: id, source: str, sha256: str, value: record});
+  const questionsPage = shape({offset: num, limit: num, has_more: bool});
+  const base = shape({ available: bool, questions: optional(list(question)), questions_page: optional(questionsPage) })(v, at);
   if (base) return base;
   if ((v as Record<string, unknown>).available === false) return null;
+  if ((v as Record<string, unknown>).partial === true)
+    return shape({reason: str, questions: list(question), questions_page: questionsPage})(v, at);
   return shape({
     counts: record,
     results: list(

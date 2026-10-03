@@ -144,3 +144,22 @@ TOOL_SCHEMAS = [
             "Equity points over time for trend questions.",
             {"limit": {"type": "integer"}}),
 ]
+
+# Stage8 runtime conversation uses this finite query contract, never raw SQL,
+# shell, paths, controls, approval writers or provider retrieval.
+def owner_query(journal, kind, identity=None, offset=0):
+    from trader.owner.queries import query
+    return query(journal, kind, identity, offset=offset)
+
+TOOLS['owner_query'] = owner_query
+from trader.owner.queries import KINDS
+GROUNDED_SCHEMAS = [_schema('owner_query',
+    'Read exact stored owner evidence. Use decision/trade ids for why enter/skip/size; '
+    'research for questions, routing, evidence, experiment, referee, gaps and costs; '
+    'portfolio for candidate sets, allocation/rejection, factors, intents and Risk; '
+    'world for captured changes and contradictions; strategies for versions/decay; '
+    'approvals for Needs You. Without identity, returns a bounded catalog. '
+    'Use questions_page.next_offset to traverse all stored questions; offset also pages approvals. '
+    'RECORDED is not verified/current; missing values are UNKNOWN, never zero.',
+    {'kind': {'type': 'string', 'enum': list(KINDS)}, 'identity': {'type': 'string'}, 'offset': {'type': 'integer', 'minimum': 0}}, ['kind'])]
+TOOL_SCHEMAS += GROUNDED_SCHEMAS

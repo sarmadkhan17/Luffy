@@ -1,0 +1,58 @@
+...................................F......................F............. [ 64%]
+.......................................                                  [100%]
+=================================== FAILURES ===================================
+___________ test_oldest_stored_question_is_reachable_by_api_and_chat ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-370/test_oldest_stored_question_is0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b5f7dc6f740>
+
+    def test_oldest_stored_question_is_reachable_by_api_and_chat(tmp_path, monkeypatch):
+>       from trader.chat.agent import ChatAgent
+E       ImportError: cannot import name 'ChatAgent' from 'trader.chat.agent' (/mnt/luffy-data/luffy/production/trader/chat/agent.py)
+
+tests/test_stage8_owner_os.py:291: ImportError
+______________ test_approval_bound_to_another_version_is_refused _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-370/test_approval_bound_to_another0')
+cfg = {'mode': {'market': 'futures', 'execution': 'paper'}, 'universe': {'majors': ['BTC/USDT', 'ETH/USDT', 'SOL/USDT'], 'au...SDT', 'SUI/USDT'], ...}, 'timeframes': {'execution': '15m', 'context': ['1h', '4h'], 'scan_interval_seconds': 60}, ...}
+
+    def test_approval_bound_to_another_version_is_refused(tmp_path, cfg):
+        j, _h = _journal(tmp_path)
+        a, p = _to_approval(j, cfg)
+        req = F.approval_request(j, a["version_id"])
+        ident = {"schema": F.DECISION_SCHEMA, "request_id": p["request_id"],
+                 "version_id": "0" * 64, "spec_hash": "1" * 64,
+                 "validation_receipt_id": req["validation_receipt_id"],
+                 "probation_receipt_id": req["probation_receipt_id"],
+                 "requested_at_ms": req["requested_at_ms"],
+                 "decision": "APPROVED", "actor": "operator",
+                 "decided_at_ms": T0 + 31 * DAY}
+        rec = {**ident, "decision_id": F._jsha(ident)}
+        text = F.canonical(rec)
+        with j._tx() as c:          # a forged row: inserts are not blocked
+            c.execute("INSERT INTO strategy_approval_decisions VALUES "
+                      "(?,?,?,?,?,?,?)",
+                      (rec["decision_id"], p["request_id"], "APPROVED",
+                       "operator", hashlib.sha256(text.encode()).hexdigest(),
+                       text, T0))
+            c.execute("INSERT INTO strategy_version_events(version_id, "
+                      "from_state, to_state, reason_code, ref_id, actor, at_ms) "
+                      "VALUES (?,?,?,?,?,?,?)",
+                      (a["version_id"], F.APPROVAL_REQUIRED,
+                       F.APPROVED_FIRST_LIVE, "forged", rec["decision_id"],
+                       "operator", T0))
+        e = F.eligible_for_first_live(j, a["version_id"], cfg=cfg,
+                                      available_inputs=INPUTS)
+>       assert not e.eligible and _r(e) == ("owner_approval_wrong_version",)
+E       AssertionError: assert (not False and ('owner_appro...rong_version') == ('owner_appro...ong_version',)
+E        +  where False = FirstLiveEligibility(version_id='1c1a119af18fc9a645455059568f60ebcfa533bd5496425d44a7a515b0b897dd', eligible=False, re... 'receipt_id': None, 'current': False}, decision_id='470e82443b2a808316ae19997c7dda7825ba309b8aca2ea66bd810c145a0c23f').eligible
+E
+E         At index 0 diff: 'owner_approval_configuration_not_recorded' != 'owner_approval_wrong_version'
+E         Left contains one more item: 'owner_approval_wrong_version'
+E         Use -v to get more diff)
+
+tests/test_strategy_factory_handoff.py:515: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_stage8_owner_os.py::test_oldest_stored_question_is_reachable_by_api_and_chat
+FAILED tests/test_strategy_factory_handoff.py::test_approval_bound_to_another_version_is_refused
+2 failed, 109 passed in 24.26s

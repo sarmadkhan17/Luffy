@@ -1,0 +1,22 @@
+........F.............................................................   [100%]
+=================================== FAILURES ===================================
+____________________________ test_research_contract ____________________________
+
+live = (<starlette.testclient.TestClient object at 0x7a8b890ba240>, <trader.core.journal.Journal object at 0x7a8b8a13dee0>, <....applications.FastAPI object at 0x7a8b8a1ae9c0>, PosixPath('/tmp/pytest-of-sarmad/pytest-372/test_research_contract0'))
+
+    def test_research_contract(live):
+        c, *_ = live
+        d = c.get("/owner-api/v1/research", headers=H).json()
+        assert d["available"] is True
+        assert d["results"][0]["hash"] == "h-fixture" and d["results"][0]["verdict"] == "prune"
+        assert d["runs"][0]["n"] == 5 and d["counts"]["registered_tests"] == 0
+>       assert {u["field"] for u in d["unavailable"]} >= {"questions", "plans", "costs"}
+E       AssertionError: assert {'costs', 'pl...adow_reports'} >= {'costs', 'pl..., 'questions'}
+E
+E         Extra items in the right set:
+E         'questions'
+
+/home/sarmad/trader/tests/test_owner_reads.py:173: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_owner_reads.py::test_research_contract - AssertionError: as...
+1 failed, 69 passed in 28.48s

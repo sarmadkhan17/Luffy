@@ -7,9 +7,11 @@ authority:
   target: SDD.md
   current_state: STATE.yaml
   immediate_work: NEXT.yaml
-  reviewed_branch: luffy-stage7-normal-replay-world-consumer-closure-r2
+  reviewed_branch: luffy-stage8-owner-os-closure-r1
   reviewed_head: 57ad32332a98518c083b750f9df9d43596d0d531
   production_main_head: 1bed3958740ec2d0d575aabc817978086d31d390
+  stage8_reviewed_base_head: f5e5156b8a294cd53db277e8d46cb30645611a61
+  stage8_review_id: STAGE8_INDEPENDENT_REVIEW_R2
 
 progress_method:
   rule: Progress is acceptance-evidence based, not code-volume based.
@@ -28,13 +30,14 @@ stage_status:
     state: IMPLEMENTED
     build_complete: true
     evidence:
-      - SDD.md
-      - STATE.yaml
-      - NEXT.yaml
+    - SDD.md
+    - STATE.yaml
+    - NEXT.yaml
     proven_facts:
-      - SDD.md v3.2 is the sole architecture authority.
-      - STATE.yaml is reconciled to the latest reviewed Stage5-7 lineage.
-      - NEXT.yaml names one read-only closure audit before Stage8 implementation.
+    - SDD.md v3.2 is the sole architecture authority.
+    - STATE.yaml is reconciled to the reviewed Stage5-8 architecture.
+    - Stage3 formal closure is COMPLETE; STAGE8_INDEPENDENT_REVIEW_R2 is PASS with no blocking defects. Stage1 safety/truth
+      closure is recommended and not started.
     gaps: []
 
   stage_1_safety_and_truth:
@@ -93,9 +96,10 @@ stage_status:
 
   stage_3_attention_and_research:
     state: TESTED
-    build_complete: false
-    formal_closure: PENDING_STAGE3_CLOSURE_R2
-    runtime_maturity: NOT_PROVEN_FOR_EXTERNAL_RESEARCH
+    build_complete: true
+    formal_closure: COMPLETE
+    runtime_maturity: PARTIAL
+    closure_basis: Owner-provided LUFFY_STAGE3_CLOSURE_R2 PASS; MISSING_IMPLEMENTATION NONE; CAN_START_STAGE8 YES
     evidence:
       - trader/cognition/attention.py
       - trader/cognition/investigation.py
@@ -134,7 +138,8 @@ stage_status:
       - Query/page/time/byte/storage bounds, zero paid spend and zero LLM calls are tested; no live-loop network or trading authority was added.
       - The existing predictive bridge rejects the external-evidence contract and retains its independent provenance and quantitative gates.
     gaps:
-      - Stage3 formal build closure awaits LUFFY-STAGE3-CLOSURE-R2; the R1 closure defects are implemented and tested, not yet independently closed.
+      - External worker remains undeployed; production usefulness remains unproven.
+      - External descriptive evidence transformation to predictive hypotheses remains policy-blocked.
       - External research is TESTED with offline HTTP fixtures; the worker is not deployed and production usefulness/network reliability is not PROVEN.
       - Automatic question generation and source coverage remain limited to registered supported families; broader trigger/source coverage is operational/evidence maturity work.
       - full dynamic connected-account observation coverage and broader Attention trigger coverage remain operational/evidence maturity gaps.
@@ -232,26 +237,63 @@ stage_status:
       - latest architecture is not deployed to production.
 
   stage_8_owner_os:
-    state: IMPLEMENTED
-    build_complete: false
+    state: TESTED
+    build_complete: true
+    formal_closure: COMPLETE
+    runtime_maturity: PARTIAL_UNDEPLOYED
+    package: LUFFY-STAGE8-OWNER-OS-CLOSURE-R1
     evidence:
-      - trader/dashboard/
-      - trader/api/graphql_schema.py
-      - trader/chat/
-      - trader/owner/
-      - frontend/
-      - docs/superpowers/reports/2026-09-28-owner-interface-gateway-v1.md
-      - docs/superpowers/reports/2026-09-28-owner-frontend-live-binding-v1.md
+    - trader/dashboard/owner_api.py
+    - trader/owner/queries.py
+    - trader/owner/approvals.py
+    - trader/owner/knowledge.py
+    - trader/owner/service.py
+    - trader/chat/agent.py
+    - frontend/src/components/OwnerEvidence.tsx
+    - tests/test_stage8_owner_os.py
+    - docs/superpowers/reports/2026-10-03-stage8-owner-os-closure-r1.md
+    - docs/superpowers/evidence/stage8-owner-os-closure-r1/
+    - docs/superpowers/reports/2026-09-28-owner-interface-gateway-v1.md
+    - docs/superpowers/reports/2026-09-28-owner-frontend-live-binding-v1.md
     proven_facts:
-      - authenticated owner API/GraphQL and read-only grounded chat foundations exist.
-      - owner-control gateway architecture and reviewed frontend/live-binding work exist.
-      - target frontend/navigation implementation is partially present.
+    - Authenticated typed owner queries follow exact retained decision/research/portfolio/version/learning records; missing
+      evidence stays unavailable.
+    - Conversation exposes consulted records/hashes and refuses factual synthesis without consulted evidence and exact record
+      citations.
+    - Overview and LUFFY share Needs You; all six SDD approval classes have exact identities and context/config bindings.
+    - Approval decisions reuse OwnerService reservation, actor authorization, request idempotency and audit; no execution or
+      activation is granted.
+    - Strategy first-live requests reuse Factory version, validation and probation verification; configuration invalidation
+      now reaches the eligibility consumer; independent R2 review passed.
+    - Knowledge, Evidence, Timeline and Code reuse the vault and existing stores; Graphify remains engineering-only.
+    - Event chronology and file modification times are distinct; unavailable linkage remains unlinked.
+    - Research route question binding has been corrected; independent R2 review confirms route truth, with no fixture fallback;
+      declared architecture is distinct from observed runtime.
+    - Private UI state clears after session/auth failure; normal trading still requires zero LLM calls.
+    missing_implementation: []
+    independent_review_r1: BLOCKED
+    architecture_freeze: true
+    closure_status: COMPLETE
+    review_defects: []
     gaps:
-      - final Needs You workflow is not integrated end to end.
-      - actor identity/least-privilege boundary is incomplete.
-      - final owner-facing Knowledge/Evidence/Timeline/Code experience is incomplete.
-      - final visual approval exists only for a subset of routes.
-      - latest backend architecture is not deployed/bound into the production Owner OS.
+    - DEPLOYMENT_BLOCKED - latest reviewed architecture remains UNDEPLOYED; no service was restarted.
+    - REAL_EVIDENCE_BLOCKED - latest exact production trading/research/portfolio/learning chains and current venue usefulness
+      are not established.
+    - SECURITY_MATURITY_BLOCKED - accepted same-UID V1 boundary does not establish separate OS users/process secrets; copied
+      sessions are not revoked server-side before expiry.
+    - OWNER_VISUAL_APPROVAL_PENDING - Stage8 additions and outstanding route visuals are not owner-approved by these tests.
+    - POLICY_BLOCKED - predictive transformation, unsupported capabilities and calibrated economic/capacity policies remain
+      separate existing gates.
+    architecture_frozen: true
+    independent_review: PASS
+    review_id: STAGE8_INDEPENDENT_REVIEW_R2
+    blocking_defects: NONE
+    maturity_limitations:
+    - POLICY_BLOCKED
+    - REAL_EVIDENCE_BLOCKED
+    - DEPLOYMENT_BLOCKED
+    - SECURITY_MATURITY_BLOCKED
+    - OWNER_VISUAL_APPROVAL_PENDING
 
   stage_9_multi_market:
     state: DEFINED
@@ -280,99 +322,95 @@ stage_status:
       - prior intelligence review found no demonstrated need for a fruit-fly/connectome production architecture, generic new mixture-of-experts layer, RL, ART, CfC or generative world model.
 
 cross_cutting:
-
   production_deployment:
     state: BLOCKED
     latest_reviewed_head: 57ad32332a98518c083b750f9df9d43596d0d531
     production_main_head: 1bed3958740ec2d0d575aabc817978086d31d390
     facts:
-      - latest Stage5-7 architecture is remote but not deployed to production.
-      - production remains intentionally FROZEN.
-
+    - latest reviewed Stage5-8 architecture remains UNDEPLOYED.
+    - production remains intentionally FROZEN.
+    - Architecture/test closure makes no real-money readiness claim.
+    latest_architecture: UNDEPLOYED
+    production_state: FROZEN
+    real_money_ready: false
+    latest_independent_review: STAGE8_INDEPENDENT_REVIEW_R2
   data_and_evidence:
     state: IMPLEMENTED
     maturity: PARTIAL
     gaps:
-      - real versioned paper/execution/learning evidence remains sparse or absent.
-      - some collectors/consumers are not deployed on the latest lineage.
-
+    - real versioned paper/execution/learning evidence remains sparse or absent.
+    - some collectors/consumers are not deployed on the latest lineage.
   accounting_truth:
     state: IMPLEMENTED
     maturity: PARTIAL
     gaps:
-      - exchange-authoritative fee/funding/monetary completeness is not proven end to end.
-
+    - exchange-authoritative fee/funding/monetary completeness is not proven end to end.
   costs_and_capacity:
     state: IMPLEMENTED
     maturity: BLOCKED
     gaps:
-      - authoritative commission, realized slippage/capacity and account eligibility/leverage evidence remain incomplete.
-
+    - authoritative commission, realized slippage/capacity and account eligibility/leverage evidence remain incomplete.
   protection_and_reconciliation:
     state: TESTED
     maturity: PARTIAL
     gaps:
-      - current venue protection proof and sustained production recovery evidence remain incomplete.
-
+    - current venue protection proof and sustained production recovery evidence remain incomplete.
   process_isolation_and_secrets:
     state: DEFINED
     maturity: INCOMPLETE
     gaps:
-      - full Trading Core/Research/UI/Gateway isolation is not proven.
-      - per-service least-privilege secrets are not established.
-
+    - full Trading Core/Research/UI/Gateway isolation is not proven.
+    - per-service least-privilege secrets are not established.
   storage_and_backup:
     state: IMPLEMENTED
     maturity: PARTIAL
     facts:
-      - operational SQLite/WAL, evidence artifacts and expanded external storage are available.
+    - operational SQLite/WAL, evidence artifacts and expanded external storage are available.
     gaps:
-      - final retention/capacity policy and full hot/warm/cold history model remain incomplete.
-
+    - final retention/capacity policy and full hot/warm/cold history model remain incomplete.
   monitoring_and_recovery:
     state: TESTED
     maturity: PARTIAL
     gaps:
-      - sustained production recovery evidence remains incomplete.
-
+    - sustained production recovery evidence remains incomplete.
   knowledge_and_memory:
     state: IMPLEMENTED
     maturity: PARTIAL
     facts:
-      - structured operational/research memory and Graphify/code knowledge exist.
+    - structured operational/research memory and Graphify/code knowledge exist.
     gaps:
-      - final owner-facing Knowledge/Evidence/Timeline/Code model is incomplete.
-      - hot/warm/cold historical intelligence is not fully proven.
-
+    - owner lenses are TESTED; exact real-world linkage and historical intelligence coverage remain partial.
+    - hot/warm/cold historical intelligence is not fully proven.
   owner_os_and_frontend:
-    state: IMPLEMENTED
-    maturity: PARTIAL
+    state: TESTED
+    build_complete: true
+    maturity: PARTIAL_UNDEPLOYED
     gaps:
-      - Stage8 exit is not met.
-
+    - Architecture is complete and independently reviewed. Deployment, real evidence, security maturity, policy and owner
+      visual approval remain separate limitations.
+    independent_review: PASS
+    architecture_frozen: true
   llm_runtime:
     state: IMPLEMENTED
     facts:
-      - normal live trading requires zero LLM calls.
-      - LLM is limited to research/conversation/development roles.
+    - normal live trading requires zero LLM calls.
+    - LLM is limited to research/conversation/development roles.
     gaps:
-      - final deterministic fast/deep routing and cost-policy maturity remain incomplete.
-
+    - final deterministic fast/deep routing and cost-policy maturity remain incomplete.
   replay_and_equivalence:
     state: TESTED
     maturity: PARTIAL
     facts:
-      - backtest/live semantics, exact decision replay and Stage7 learning replay have dedicated tests.
+    - backtest/live semantics, exact decision replay and Stage7 learning replay have dedicated tests.
     gaps:
-      - real execution evidence remains insufficient for full operational equivalence proof.
-
+    - real execution evidence remains insufficient for full operational equivalence proof.
   economic_self_sufficiency:
     state: MISSING
     economic_proof: NOT_ESTABLISHED
     gaps:
-      - sustainable profitable edge is not proven.
-      - net trading contribution covering recurring system/data/LLM cost is not proven.
-      - no live approved strategy portfolio exists on the latest architecture.
+    - sustainable profitable edge is not proven.
+    - net trading contribution covering recurring system/data/LLM cost is not proven.
+    - no live approved strategy portfolio exists on the latest architecture.
 
 parked:
 
@@ -389,12 +427,18 @@ parked:
       - do not invent usefulness labels or adaptive suppression from descriptive/PnL evidence.
 
 architecture_freeze:
-  stages: [5, 6, 7]
+  stages:
+  - 5
+  - 6
+  - 7
+  - 8
   reviewed_head: 57ad32332a98518c083b750f9df9d43596d0d531
   rule:
-    - do not reopen for speculative redesign.
-    - reopen only for concrete regression, safety defect or explicit SDD revision.
-    - remaining work is evidence, policy/calibration or deployment maturity unless new repository evidence proves otherwise.
+  - do not reopen for speculative redesign.
+  - reopen only for concrete regression, safety defect or explicit SDD revision.
+  - remaining work is evidence, policy/calibration or deployment maturity unless new repository evidence proves otherwise.
+  stage8_review_id: STAGE8_INDEPENDENT_REVIEW_R2
+  stage8_architecture_frozen: true
 
 known_stale_documents:
   - REQUIREMENTS.md is historical and not architecture authority.
@@ -427,10 +471,13 @@ completed_stage3_4_pre_stage8_closure_audit_r1:
     - predictive research bridge and final Stage5-7 lineage.
 
 current_active_work:
-  id: LUFFY-STAGE3-CLOSURE-R2
-  type: READ_ONLY_CLOSURE_CHECK
-  status: READY
-  purpose: Recheck the SDD Stage3 exit after repairing generated-question handoff and negative-memory suppression; do not implement, deploy or advance directly to Stage8.
+  id: LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R1
+  type: DESIGN_EVIDENCE_CLOSURE_AUDIT
+  status: RECOMMENDED_NOT_STARTED
+  next_recommended_package: LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R1
+  purpose: Determine whether SDD Stage1 still contains mandatory implementation/build gaps versus operational/real-evidence/deployment
+    maturity gaps.
+  implementation_started: false
 
 completed_stage3_question_driven_research_router_r1:
   package: LUFFY-STAGE3-QUESTION-DRIVEN-RESEARCH-ROUTER-R1
@@ -488,3 +535,76 @@ completed_strategy_decay_research_plan_v1:
     - trader/cognition/research_sources.py
   limitations:
     - Decision evidence is a declared selection, not independent opportunity evidence.
+
+completed_stage3_closure_r2:
+  result: PASS
+  source: Owner-provided completed read-only closure result in current session
+  build_complete: true
+  formal_closure: COMPLETE
+  missing_implementation: []
+  can_start_stage8: true
+  runtime_maturity: PARTIAL
+  external_worker: UNDEPLOYED
+  predictive_transformation: POLICY_BLOCKED
+  production_usefulness: NOT_PROVEN
+  supersedes_current_status_only: Historical R1 audits and reports are retained unchanged.
+
+completed_stage8_owner_os_closure_r1:
+  result: PASS
+  prior_self_reported_result: PASS
+  independent_review_r1: BLOCKED
+  sdd_stage8_exit: PASS
+  architecture_freeze: true
+  safe_to_commit: true
+  baseline_head: f5e5156b8a294cd53db277e8d46cb30645611a61
+  branch: luffy-stage8-owner-os-closure-r1
+  state: TESTED
+  build_complete: true
+  formal_closure: COMPLETE
+  missing_implementation: []
+  control_plane_reconciled: true
+  owner_actor_boundary: AUTHENTICATED_TYPED_V1
+  security_maturity: SAME_UID_ISOLATION_UNPROVEN
+  live_fixture_fallback: false
+  trading_authority_changed: false
+  live_llm_dependency: ZERO
+  real_order_submissions: 0
+  tests:
+    focused_pytest: 380 passed
+    final_owner_query_regression: 132 passed
+    final_stage8_proof: 35 passed
+    research_bank_authority_guard: 1 passed
+    frontend_typecheck: PASS
+    frontend_build: PASS
+    focused_vitest: 80 passed
+    focused_playwright: 19 passed; final changed-UI repeat 3 passed
+  next_recommended_package: LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R1
+  boundary:
+  - Original implementation/test campaign performed no deployment, restart, venue calls, orders, activation, paid spend, Scheme-D, commit or push.
+  - Stage1 build closure remains unresolved; Stage2 build is complete with operational/evidence limitations. Stage9 is not
+    selected automatically.
+  independent_review: PASS
+  independent_review_r2: PASS
+  review_id: STAGE8_INDEPENDENT_REVIEW_R2
+  architecture_frozen: true
+  blocking_defects: NONE
+
+stage8_owner_os_blocker_fix_r1:
+  package: LUFFY-STAGE8-OWNER-OS-BLOCKER-FIX-R1
+  result: PASS
+  independent_closure: PASS
+  stage8_build_complete: true
+  architecture_freeze_stage8: true
+  safe_to_commit: true
+  report: docs/superpowers/reports/2026-10-03-stage8-owner-os-blocker-fix-r1.md
+  tests:
+    focused_pytest: 191 passed
+    focused_vitest: 30 passed
+    focused_playwright: 5 passed
+    frontend_typecheck: PASS
+    frontend_build: PASS
+  next_recommended_package: LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R1
+  real_order_submissions: 0
+  deployed: false
+  committed: true
+  review_id: STAGE8_INDEPENDENT_REVIEW_R2

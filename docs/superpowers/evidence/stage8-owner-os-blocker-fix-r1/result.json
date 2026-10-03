@@ -1,0 +1,46 @@
+{
+  "package": "LUFFY-STAGE8-OWNER-OS-BLOCKER-FIX-R1",
+  "result": "FIXED_TESTED_PENDING_INDEPENDENT_REVIEW",
+  "stage8_build_complete": false,
+  "architecture_freeze_stage8": false,
+  "safe_to_commit": false,
+  "control_plane_reconciled": true,
+  "next_recommended_package": "LUFFY-STAGE8-INDEPENDENT-REVIEW-R2",
+  "tests": {
+    "pytest": "191 passed in 53.31s",
+    "vitest": "30 passed / 4 files",
+    "playwright": "5 passed in 15.9s",
+    "typecheck": "PASS",
+    "build": "PASS"
+  },
+  "authored_files": [
+    "STATE.yaml",
+    "NEXT.yaml",
+    "trader/owner/queries.py",
+    "trader/owner/approvals.py",
+    "trader/dashboard/owner_api.py",
+    "trader/dashboard/owner_reads.py",
+    "trader/chat/tools.py",
+    "trader/strategy/factory_handoff.py",
+    "frontend/src/components/OwnerEvidence.tsx",
+    "frontend/src/views/LiveReads.tsx",
+    "frontend/src/adapters/readContracts.ts",
+    "tests/test_stage8_owner_os.py",
+    "tests/test_strategy_factory_handoff.py",
+    "tests/test_owner_reads.py",
+    "frontend/tests/stage8.test.tsx",
+    "frontend/tests/browser/stage8.spec.ts",
+    "docs/superpowers/reports/2026-10-03-stage8-owner-os-blocker-fix-r1.md"
+  ],
+  "generated_files": [
+    "graphify-out/ (AST engineering update)",
+    "docs/superpowers/evidence/stage8-owner-os-blocker-fix-r1"
+  ],
+  "real_order_submissions": 0,
+  "live_llm_dependency": "ZERO",
+  "live_fixture_fallback": false,
+  "trading_authority_expanded": false,
+  "execution_risk_sources_changed": false,
+  "committed": false,
+  "deployed": false
+}

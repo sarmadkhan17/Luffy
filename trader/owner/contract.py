@@ -27,7 +27,8 @@ CONTAINMENT_OPERATIONS = ("freeze", "halt", "panic")
 RECOVERY_OPERATIONS = ("resume", "unhalt")
 #: owner intents the kernel executes on its next cycle
 INTENT_OPERATIONS = ("close_trade", "set_market_type")
-CONTROL_OPERATIONS = CONTAINMENT_OPERATIONS + RECOVERY_OPERATIONS + INTENT_OPERATIONS
+GOVERNANCE_OPERATIONS = ("approval_decision",)
+CONTROL_OPERATIONS = CONTAINMENT_OPERATIONS + RECOVERY_OPERATIONS + INTENT_OPERATIONS + GOVERNANCE_OPERATIONS
 OPERATIONS = READ_OPERATIONS + CONTROL_OPERATIONS
 CHANNELS = ("telegram", "dashboard", "openclaw", "whatsapp", "cli", "test")
 
@@ -122,6 +123,13 @@ def _check_args(operation: str, args) -> dict:
     elif operation == "set_market_type":
         if set(args) != {"market"} or args["market"] not in ("spot", "futures"):
             raise MalformedRequest("set_market_type needs market spot|futures")
+    elif operation == "approval_decision":
+        if (set(args) != {"item_id", "binding_hash", "decision"}
+                or not isinstance(args["item_id"], str) or not _TRADE_ID.fullmatch(args["item_id"])
+                or not isinstance(args["binding_hash"], str)
+                or not re.fullmatch(r"[0-9a-f]{64}", args["binding_hash"])
+                or args["decision"] not in ("APPROVED", "REJECTED")):
+            raise MalformedRequest("approval_decision needs exact item_id, binding_hash and decision")
     elif args:
         raise MalformedRequest(f"{operation} takes no args")
     return dict(args)

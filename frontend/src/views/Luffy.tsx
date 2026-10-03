@@ -10,6 +10,7 @@ import {
   useMedia,
 } from "../components/ui";
 import type { RequestState } from "../components/Avatar";
+import { NeedsYou, OwnerEvidence } from "../components/OwnerEvidence";
 const Avatar = lazyChunk(() => import("../components/Avatar"));
 export default function Luffy() {
   const { adapter, scenario, messages, setMessages } = usePreview();
@@ -27,6 +28,7 @@ export default function Luffy() {
   const transcript = useRef<HTMLDivElement>(null);
   const composer = useRef<HTMLTextAreaElement>(null);
   const busy = state === "pending" || state === "responding";
+  const coreState = state === "cancelled" ? "idle" : state;
   const abortPending = useCallback(
     (reason: string) => {
       const pending = request.current;
@@ -68,7 +70,7 @@ export default function Luffy() {
       <Suspense
         fallback={<span className="avatar-placeholder">Core loading</span>}
       >
-        <Avatar state={state === "cancelled" ? "idle" : state} />
+        <Avatar state={coreState} />
       </Suspense>
     </VisualBoundary>
   );
@@ -157,8 +159,14 @@ export default function Luffy() {
     composer.current?.focus();
   }
   return (
-    <div className="conversation-layout">
-      <section className="panel conversation" aria-label="Conversation">
+    <div
+      className="conversation-layout luffy-bridge"
+      data-core-state={coreState}
+    >
+      <section
+        className="panel conversation luffy-console"
+        aria-label="Conversation"
+      >
         <div className="panel-heading conversation-header">
           {mobile && <div className="mobile-core">{avatar}</div>}
           <div className="conversation-title">
@@ -311,44 +319,73 @@ export default function Luffy() {
           )}
         </form>
       </section>
-      <aside className="conversation-side">
-        {!mobile && avatar}
+      <aside className="conversation-side luffy-chamber">
+        <div className="chamber-sky" aria-hidden="true" />
+        <div className="chamber-mark" aria-hidden="true">
+          <span className="chamber-wordmark">LUFFY</span>
+          <span className="chamber-sub">
+            MECHANICAL CORE · TEXT CONVERSATION
+          </span>
+        </div>
+        {!mobile && <div className="core-mount">{avatar}</div>}
         <div className="avatar-description">
           <Badge tone={state === "error" ? "rose" : "neutral"}>
             {state === "idle" ? "Ready" : state}
           </Badge>
           <p>The core reflects this request’s state.</p>
+          <ol className="core-states" aria-label="Core request states">
+            {CORE_STATES.map(([s, label]) => (
+              <li
+                key={s}
+                data-on={coreState === s}
+                aria-current={coreState === s ? "step" : undefined}
+              >
+                {label}
+              </li>
+            ))}
+          </ol>
         </div>
-        <div className="side-note">
-          <div className="eyebrow">EVIDENCE, NOT ASSUMPTIONS</div>
-          <h2>Keep the source in view.</h2>
-          <p>
-            {live
-              ? "Replies list the stored records they mention by exact id, and the read-only tools consulted. Names are not linked. A mention is not the reply's source; check claims in the linked record before acting."
-              : "Responses link to their supporting records. Inspect freshness and limitations before interpreting a claim."}
-          </p>
-          <a className="text-link" href="#knowledge">
-            Explore Knowledge <ArrowUpRight size={15} />
-          </a>
-        </div>
-        <div className="side-note">
-          <h3>{live ? "Owner controls" : "Isolated conversation"}</h3>
-          <p>
-            {live
-              ? "Replies come from Luffy's read-only chat backend. It cannot freeze, halt, resume or trade — owner controls are on Operations. The backend supplies no evidence identifiers for its claims; record links are only exact mentions. Voice is not connected."
-              : "Deterministic fixture replies. No LLM, microphone, approvals or trading commands are connected."}
-          </p>
-          {live && (
-            <a className="button secondary" href="#operations">
-              Open Operations ↗
+        <div className="chamber-notes">
+          <NeedsYou />
+          <OwnerEvidence />
+          <div className="side-note">
+            <div className="eyebrow">EVIDENCE, NOT ASSUMPTIONS</div>
+            <h2>Keep the source in view.</h2>
+            <p>
+              {live
+                ? "Replies expose exact consulted records and hashes from typed read-only tools. Mention links are separate from sources. Missing evidence stays unavailable."
+                : "Responses link to their supporting records. Inspect freshness and limitations before interpreting a claim."}
+            </p>
+            <a className="text-link" href="#knowledge">
+              Explore Knowledge <ArrowUpRight size={15} />
             </a>
-          )}
+          </div>
+          <div className="side-note">
+            <h3>{live ? "Owner controls" : "Isolated conversation"}</h3>
+            <p>
+              {live
+                ? "Conversation uses typed internal queries. It cannot approve, spend, activate or trade. Needs You records exact owner decisions through the existing control gateway; recovery uses Operations. Voice is not connected."
+                : "Deterministic fixture replies. No LLM, microphone, approvals or trading commands are connected."}
+            </p>
+            {live && (
+              <a className="button secondary" href="#operations">
+                Open Operations ↗
+              </a>
+            )}
+          </div>
         </div>
       </aside>
     </div>
   );
 }
 
+/** The request states the core can show; only the current one is lit. */
+const CORE_STATES: [RequestState, string][] = [
+  ["idle", "Ready"],
+  ["pending", "Request pending"],
+  ["responding", "Responding"],
+  ["error", "Error"],
+];
 const MENTION_KIND: Record<string, RecordKind> = {
   strategy: "strategy",
   trade: "trade",

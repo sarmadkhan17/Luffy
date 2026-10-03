@@ -3,18 +3,25 @@ sdd_version: '3.2'
 updated_at: '2026-10-03'
 
 repository_checkpoint:
-  branch: luffy-stage7-normal-replay-world-consumer-closure-r2
+  branch: luffy-stage8-owner-os-closure-r1
+  working_tree_base_head: f5e5156b8a294cd53db277e8d46cb30645611a61
   reviewed_code_head: 57ad32332a98518c083b750f9df9d43596d0d531
   production_main_head: 1bed3958740ec2d0d575aabc817978086d31d390
 
 completed_architecture_freeze:
-  stages: [5, 6, 7]
+  stages:
+  - 5
+  - 6
+  - 7
+  - 8
   result: COMPLETE
   missing_architecture: []
   astra_r4b:
     reviewed_head: 57ad32332a98518c083b750f9df9d43596d0d531
     verdict: MOVE_TO_STAGE8
     architecture_freeze: true
+  stage8_review_id: STAGE8_INDEPENDENT_REVIEW_R2
+  architecture_freeze_stage8: true
 
 completed_pre_stage8_audit:
   id: LUFFY-STAGE3-4-PRE-STAGE8-CLOSURE-AUDIT-R1
@@ -30,38 +37,58 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
-  id: LUFFY-STAGE3-CLOSURE-R2
-  type: READ_ONLY_CLOSURE_CHECK
-  status: READY
-  objective: >-
-    Determine whether SDD v3.2 Stage3 Attention and Research Intelligence is
-    BUILD COMPLETE after the question-driven router and generated-question
-    handoff/negative-memory implementation. Read and verify existing architecture;
-    do not implement or require real-world maturity where SDD requires architecture.
-  inputs:
-    - SDD.md
-    - STATE.yaml
-    - docs/superpowers/reports/2026-10-03-stage3-question-driven-research-router-r1.md
-    - docs/superpowers/reports/2026-10-03-stage3-generated-question-handoff-negative-memory-r1.md
+  id: LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R1
+  type: DESIGN_EVIDENCE_CLOSURE_AUDIT
+  status: RECOMMENDED_NOT_STARTED
+  purpose: Determine whether SDD Stage1 still contains mandatory implementation/build gaps versus operational/real-evidence/deployment
+    maturity gaps.
+  objective: Determine whether SDD Stage1 still contains mandatory implementation/build gaps versus operational/real-evidence/deployment
+    maturity gaps.
+  implementation_started: false
   acceptance:
-    - Classify Attention, research-question generator, Source Router, Source Registry, bounded broker/retrievers, relevance/dedup, Research Bank, cost/budget and failed-research memory against the SDD Stage3 exit.
-    - Trace existing event to real shadow producer to persisted exact question to read-only generated-question adapter to worker/router/registry/search/evidence/Bank, without manual question registration or supplied URLs.
-    - Verify exact source/registration/invocation provenance and restart idempotency; corrupt or unverifiable questions fail closed.
-    - Verify negative historical attempts remain auditable and do not suppress independent questions without registered policy; no production reconsideration policy was installed.
-    - Verify immutable positive content reuse retains original identity and timestamps; changed truthful search evidence becomes a separate attempt.
-    - Verify existing source metadata unknowns, paid-source owner approval and unsupported-class refusal boundaries.
-    - Verify resource bounds and measured cost; classify missing calibrated policies separately from missing architecture.
-    - Verify descriptive evidence cannot bypass PredictiveHypothesis transformation, quantitative experiment, protected evaluation, Referee or Factory.
-    - Verify collectors remain reusable research-side components and have zero Risk, allocation, StrategySpec, StrategyVersion, execution or live-loop LLM authority.
-    - Treat future Attention trigger producers supported by existing interfaces as extension/policy/evidence maturity unless new architecture is required.
-    - BUILD COMPLETE requires no missing implementation and a satisfiable normal SDD Stage3 exit; policy, real-evidence and deployment blockers may remain.
+  - Classify mandatory implementation/build gaps separately from operational, real-evidence and deployment maturity gaps.
+  - Ground Stage1 closure in SDD requirements and exact repository evidence; do not infer real-money readiness.
   constraints:
-    - read only; do not edit, commit or deploy
-    - no trading activation, orders, Scheme-D, cloud or paid-source spend
-    - no Stage5-7 architecture change or Stage3 redesign
-  decision:
-    - Return LUFFY_STAGE3_CLOSURE_R2 PASS or BLOCKED with exact missing implementation and policy/evidence/deployment blockers.
-    - Recommend LUFFY-STAGE8-OWNER-OS-CLOSURE-R1 only if this closure establishes Stage3 BUILD COMPLETE.
+  - Do not implement Stage1 in the Stage8 finalization package.
+  - Preserve Stage5-8 frozen architecture and deterministic Risk/Execution authority.
+  - Production remains FROZEN; latest architecture remains UNDEPLOYED.
+  - Scheme-D full validation and paid spend remain unauthorized.
+
+completed_stage8_owner_os_closure_r1:
+  result: PASS
+  prior_self_reported_result: PASS
+  independent_review_r1: BLOCKED
+  sdd_stage8_exit: PASS
+  architecture_freeze: true
+  safe_to_commit: true
+  state: TESTED
+  build_complete: true
+  formal_closure: COMPLETE
+  branch: luffy-stage8-owner-os-closure-r1
+  baseline_head: f5e5156b8a294cd53db277e8d46cb30645611a61
+  uncommitted: false
+  undeployed: true
+  evidence:
+  - docs/superpowers/reports/2026-10-03-stage8-owner-os-closure-r1.md
+  - docs/superpowers/evidence/stage8-owner-os-closure-r1/
+  trading_authority_changed: false
+  real_order_submissions: 0
+  independent_review: PASS
+  independent_review_r2: PASS
+  review_id: STAGE8_INDEPENDENT_REVIEW_R2
+  architecture_frozen: true
+  blocking_defects: NONE
+
+completed_stage3_closure_r2:
+  result: PASS
+  build_complete: true
+  formal_closure: COMPLETE
+  missing_implementation: []
+  source: Owner-provided completed read-only closure result in current session
+  operational_maturity: PARTIAL
+  external_worker: UNDEPLOYED
+  predictive_transformation: POLICY_BLOCKED
+  production_usefulness: NOT_PROVEN
 
 previous_implementation:
   id: LUFFY-STAGE3-GENERATED-QUESTION-HANDOFF-AND-NEGATIVE-MEMORY-R1
@@ -74,3 +101,23 @@ previous_implementation:
   trading_authority_changed: false
   production_retry_policy_added: false
   real_order_submissions: 0
+
+stage8_owner_os_blocker_fix_r1:
+  package: LUFFY-STAGE8-OWNER-OS-BLOCKER-FIX-R1
+  result: PASS
+  independent_closure: PASS
+  stage8_build_complete: true
+  architecture_freeze_stage8: true
+  safe_to_commit: true
+  report: docs/superpowers/reports/2026-10-03-stage8-owner-os-blocker-fix-r1.md
+  tests:
+    focused_pytest: 191 passed
+    focused_vitest: 30 passed
+    focused_playwright: 5 passed
+    frontend_typecheck: PASS
+    frontend_build: PASS
+  next_recommended_package: LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R1
+  real_order_submissions: 0
+  deployed: false
+  committed: true
+  review_id: STAGE8_INDEPENDENT_REVIEW_R2

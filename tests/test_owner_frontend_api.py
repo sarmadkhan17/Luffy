@@ -254,7 +254,7 @@ def test_knowledge_binding_real_relations_and_unresolved(live):
     c, *_ = live
     k = c.get("/owner-api/v1/knowledge", headers=H).json()
     ids = {n["id"] for n in k["nodes"]}
-    assert k["total_nodes"] == 4 and not k["truncated"]
+    assert len([n for n in k['nodes'] if 'Knowledge' in n['lenses']]) == 4 and not k["truncated"]
     typed = [e for e in k["edges"] if e["kind"] == "typed"]
     assert {e["relation"] for e in typed} >= {"supports", "contradicts", "works_in", "fails_in"}
     unresolved = [e for e in k["edges"] if not e["resolved"]]
@@ -262,8 +262,8 @@ def test_knowledge_binding_real_relations_and_unresolved(live):
                                                  "unresolved:Nowhere Note"}
     assert k["unresolved_edges"] == 2
     assert all(e["target"] in ids for e in k["edges"] if e["resolved"])
-    assert k["lenses"]["Evidence"]["available"] is False
-    assert k["lenses"]["Code"]["available"] is False
+    assert k["lenses"]["Evidence"]["available"] is True
+    assert k["lenses"]["Code"]["available"] is True
     node = next(n for n in k["nodes"] if n["label"] == "Aggressor Flow")
     assert node["provenance"]["time_basis"] == "file_modified"
 

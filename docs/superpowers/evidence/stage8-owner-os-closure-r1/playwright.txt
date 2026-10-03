@@ -1,0 +1,24 @@
+
+Running 19 tests using 1 worker
+
+  ✓   1 tests/browser/live.spec.ts:22:1 › LIVE overview binds real backend values, never fixtures (5.9s)
+  ✓   2 tests/browser/live.spec.ts:44:1 › stale protection can never appear healthy (2.1s)
+  ✓   3 tests/browser/live.spec.ts:65:1 › missing data is shown missing, not zero (1.7s)
+  ✓   4 tests/browser/live.spec.ts:77:1 › LIVE backend failure cannot fall back to DEMO fixtures (1.6s)
+  ✓   5 tests/browser/live.spec.ts:105:1 › unreachable backend shows no data, then reconnects (2.4s)
+  ✓   6 tests/browser/live.spec.ts:121:1 › guarded Resume goes through the Owner Interface (3.1s)
+  ✓   7 tests/browser/live.spec.ts:164:1 › Owner Interface unavailable: controls fail closed (2.5s)
+  ✓   8 tests/browser/live.spec.ts:183:1 › unknown outcome keeps the id; retry re-sends the same request (4.0s)
+  ✓   9 tests/browser/live.spec.ts:211:1 › chat cannot mutate controls (4.6s)
+  ✓  10 tests/browser/live.spec.ts:251:1 › chat cancellation and failure keep the transcript honest (2.9s)
+  ✓  11 tests/browser/live.spec.ts:273:1 › session expiry and logout clear private data (6.3s)
+  ✓  12 tests/browser/live.spec.ts:317:1 › session expiry by time clears the page before any 401 (6.5s)
+  ✓  13 tests/browser/live.spec.ts:333:1 › Knowledge binds vault relations and lists what it cannot draw (3.3s)
+  ✓  14 tests/browser/live.spec.ts:357:1 › Live System separates architecture, telemetry, stale and missing (3.1s)
+  ✓  15 tests/browser/live.spec.ts:389:1 › other routes: real contracts or explicit unavailability (2.6s)
+  ✓  16 tests/browser/live.spec.ts:408:1 › LIVE accessibility: axe on primary LIVE surfaces (18.4s)
+  ✓  17 tests/browser/stage8.spec.ts:4:1 › typed owner interrogations and Needs You are available without fixture substitution (2.4s)
+  ✓  18 tests/browser/stage8.spec.ts:16:1 › Knowledge lenses distinguish event chronology from file modification and absent code (2.3s)
+  ✓  19 tests/browser/stage8.spec.ts:27:1 › failed Needs You endpoint is explicit and cannot enable approvals (2.0s)
+
+  19 passed (1.5m)

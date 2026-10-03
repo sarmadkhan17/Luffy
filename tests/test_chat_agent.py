@@ -137,8 +137,8 @@ def _msg(content=None, tool_calls=None):
 def test_agent_runs_tool_then_answers(tmp_path):
     j = _journal(tmp_path)
     llm = _StubLLM([
-        _msg(tool_calls=[_tc("get_pnl", {"period": "all"})]),
-        _msg(content="You're up 30 USDT, 1 win 1 loss."),
+        _msg(tool_calls=[_tc("owner_query", {"kind": "trade"})]),
+        _msg(content="Journal records 30 USDT, 1 win 1 loss [trade:t1]; consult trade sources."),
     ])
     out = AnalystAgent(j, llm).run("how did we do?")
     assert "30" in out

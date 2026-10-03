@@ -1,18 +1,23 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { GraphData } from "../adapters/contracts";
 import { evidencePath } from "../views/graphPath";
 export default function PathTrace({
   data,
   source,
+  onPathChange,
 }: {
   data: GraphData;
   source: string;
+  onPathChange?: (ids: string[]) => void;
 }) {
   const [target, setTarget] = useState("");
   const path = useMemo(
     () => (target ? evidencePath(data, source, target) : null),
     [data, source, target],
   );
+  useEffect(() => {
+    onPathChange?.(path?.map((edge) => edge.id) ?? []);
+  }, [path, onPathChange]);
   const label = (id: string) =>
     data.nodes.find((n) => n.id === id)?.label ?? id;
   return (

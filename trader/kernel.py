@@ -2502,6 +2502,7 @@ class Kernel:
             service = OwnerService(
                 self.journal, self.state_machine, resume=self.owner_resume,
                 snapshot=self._owner_snapshot, authorizer=Authorizer.from_config(self.cfg),
+                approval_cfg=self.cfg,
                 max_age_s=float(section.get("max_request_age_s", 300)),
                 busy_wait_s=float(section.get("busy_wait_s", 10)))
             self._owner_service = service
