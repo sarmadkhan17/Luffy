@@ -200,6 +200,29 @@ class WorldModel:
         from trader.learning import targets as T, foundation as L
         return T.observation(journal, L.Target.WORLD, context)
 
+    def effective_claims(self, scope: Scope, horizon: Horizon, *, learning_journal, context_for,
+                         dimension: str | None = None) -> tuple[EffectiveClaim, ...]:
+        """Base claims plus the exact governed learned-confidence overlay.
+
+        The stored claims and this snapshot are never rewritten. A learned
+        value applies only when ``context_for(claim)`` returns a Context that
+        names this claim's own scope, horizon, evidence source and dimension
+        AND the owner holds state for exactly that Context. Any other case
+        (unknown regime/direction, other asset or horizon, no state) leaves
+        the base claim's confidence unchanged. There is no fallback to a
+        nearby context.
+        """
+        return tuple(_overlay(claim, learning_journal, context_for)
+                     for claim in self.get_claims(scope, horizon, dimension=dimension))
+
+    def effective_claim(self, scope: Scope, horizon: Horizon, *, learning_journal, context_for,
+                        dimension: str) -> EffectiveClaim:
+        matches = self.effective_claims(scope, horizon, learning_journal=learning_journal,
+                                        context_for=context_for, dimension=dimension)
+        if len(matches) != 1:
+            raise LookupError(f"expected exactly one claim, found {len(matches)}")
+        return matches[0]
+
     def get_observations(self, scope: Scope, horizon: Horizon,
                          *, kind: str | None = None) -> tuple[Observation, ...]:
         """Return all exact-scope, exact-horizon observations in canonical order."""
@@ -248,6 +271,41 @@ class WorldModel:
     def to_json(self) -> str:
         return json.dumps(self.to_dict(), sort_keys=True, separators=(",", ":"),
                           ensure_ascii=False, allow_nan=False)
+
+
+@dataclass(frozen=True, slots=True)
+class EffectiveClaim:
+    """Query-time view: the immutable base claim and a separate learned overlay."""
+    claim: WorldClaim
+    base_confidence: float | None
+    effective_confidence: float | None
+    learned: dict | None
+    reason: str
+
+    @property
+    def applied(self) -> bool:
+        return self.learned is not None
+
+
+def _overlay(claim, journal, context_for) -> EffectiveClaim:
+    base = claim.confidence
+    from trader.learning import targets as T, foundation as L
+    try:
+        context = context_for(claim)
+    except (ValueError, KeyError, TypeError):
+        context = None
+    if not isinstance(context, T.Context):
+        return EffectiveClaim(claim, base, base, None, "CONTEXT_UNAVAILABLE")
+    coordinate = claim.coordinate
+    if (context.asset_scope != coordinate.scope.identifier
+            or context.horizon != coordinate.horizon.value
+            or context.subject_id != coordinate.dimension
+            or context.evidence_type != claim.source):
+        return EffectiveClaim(claim, base, base, None, "CONTEXT_DOES_NOT_MATCH_CLAIM")
+    state = T.observation(journal, L.Target.WORLD, context)
+    if state["value"] is None:
+        return EffectiveClaim(claim, base, base, None, "NO_LEARNED_STATE")
+    return EffectiveClaim(claim, base, float(state["value"]["confidence"]), state, "LEARNED_OVERLAY_APPLIED")
 
 
 def _items(value: Iterable[Any], item_type: type, name: str) -> tuple[Any, ...]:

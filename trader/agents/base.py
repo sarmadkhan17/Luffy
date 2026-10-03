@@ -14,6 +14,10 @@ class Analyst(ABC):
     name: str = "analyst"
     #: regimes where this mechanism is historically paid; orchestrator scales fit
     regime_affinity: tuple = ("TRENDING_UP", "TRENDING_DOWN", "RANGING", "VOLATILE")
+    #: bar timeframe the mechanism is actually computed from. None means it
+    #: genuinely has no bar horizon (e.g. an order-book snapshot); contextual
+    #: learned adjustments then never apply to its votes.
+    evidence_timeframe: str | None = None
 
     @abstractmethod
     def evaluate(self, snap: Snapshot) -> Vote: ...

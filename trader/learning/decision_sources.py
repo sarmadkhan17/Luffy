@@ -31,7 +31,8 @@ def make(reg):
     for role in sorted(set(ROLES) | set(deps)):
         dep = deps.get(role)
         if dep is None:
-            dep = unavailable(role, 'NOT_SUPPLIED_AT_DECISION' if role in required else 'STAGE_NOT_USED')
+            dep = unavailable(role, reg.get('not_consulted', {}).get(role) or
+                              ('NOT_SUPPLIED_AT_DECISION' if role in required else 'STAGE_NOT_USED'))
             if role not in required: dep['status'] = 'NOT_APPLICABLE'
         rows.append(dict(dep, required=role in required))
     body = dict(schema=SCHEMA, event_key=reg['event_key'], profile=reg['profile'],

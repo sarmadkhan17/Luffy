@@ -128,10 +128,23 @@ def read(journal, target, context):
 
 @dataclass(frozen=True)
 class Rule:
+    """A registered deterministic update rule.
+
+    The optional fields are the generic dispatch contract (learning/dispatch.py):
+    which outcome kinds it accepts, exact retained source roles/versions it
+    needs, how the exact target context is derived from replayed evidence, and
+    its sufficiency test. A rule missing any of them can still be applied by an
+    explicit caller but is never dispatched automatically.
+    """
     rule_id: str
     target: L.Target
     version: str
     evaluate: object
+    kinds: tuple = ()
+    required_sources: tuple = ()
+    context: object = None
+    sufficient: object = None
+    requirements: tuple = ()
 
 
 def registry(journal, supplied=None):

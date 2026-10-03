@@ -138,7 +138,7 @@ def required(kind, lineage, *, profile='TRADING'):
     return roles
 
 
-def register(db, event_key, kind, lineage, decision_ms, dependencies, *, profile='TRADING'):
+def register(db, event_key, kind, lineage, decision_ms, dependencies, *, profile='TRADING', chain=None, not_consulted=None):
     ensure(db)
     if type(decision_ms) is not int or decision_ms < 0 or profile not in ('TRADING', 'RESEARCH', 'INCIDENT'):
         raise ValueError('capture_registration_invalid')
@@ -161,6 +161,20 @@ def register(db, event_key, kind, lineage, decision_ms, dependencies, *, profile
                 additional.append('derivative_identity')
     body = dict(schema=SCHEMA, additional_required=additional, event_key=event_key, kind=kind, lineage=lineage,
                 decision_ms=decision_ms, profile=profile, dependencies=sorted(deps, key=lambda d:d['role']))
+    if not_consulted:
+        # Stages the producing decision path did not use, said explicitly at
+        # decision time (not dependencies, so they are never 'required').
+        body['not_consulted'] = dict(sorted(not_consulted.items()))
+    if chain is not None:
+        # A later stage of ONE decision: same decision_id/cycle as its exact
+        # original registration, never an unrelated identity.
+        parent_id, parent = registration(db, chain['parent_event_key'])
+        if (chain['parent_registration_id'] != parent_id or chain['decision_id'] != lineage.get('decision_id')
+                or parent['lineage'].get('decision_id') != lineage.get('decision_id')
+                or parent['lineage'].get('cycle_id') != lineage.get('cycle_id')
+                or decision_ms < parent['decision_ms']):
+            raise ValueError('decision_chain_parent_differs')
+        body['chain'] = chain
     from . import decision_sources as D
     m = D.make(body)
     insert(db, D.TABLE, 'manifest_id', m['manifest_id'], (m['manifest_id'], event_key, L.canonical(m)))
@@ -193,17 +207,58 @@ def existing_outcome(db,outcome_key):
     return row[0]
 
 
-def record_action(db, event_key, value, at_ms, *, risk=False):
+def record_action(db, event_key, value, at_ms, *, risk=False, source_id=None):
     rid, reg = registration(db, event_key)
     if at_ms < reg['decision_ms']:
         raise ValueError('action_precedes_decision')
     dep = snapshot(db, 'risk_decision' if risk else 'action', value,
-                   source_id=L.digest(value), version='captured-action.v1', available_ms=at_ms,
+                   source_id=source_id or L.digest(value), version='captured-action.v1', available_ms=at_ms,
                    producer='original decision/action producer')
     body = dict(registration_id=rid, event_key=event_key, dependency=dep)
     aid = L.digest(body)
     insert(db, 'learning_actions', 'action_id', aid, (aid, event_key, L.canonical(body)))
     return dep
+
+
+STAGE_ALLOCATION = 'ALLOCATION'
+
+
+def trade_event(db, decision_id, trade_id):
+    """Event of the decision chain that governed this trade.
+
+    A trade whose entry identity names the TradeIntent it executed resolves that
+    intent's stage; every other trade resolves its original decision event.
+    """
+    try:
+        row = db.execute('SELECT entry_identity_json FROM trades WHERE id=?', (trade_id,)).fetchone()
+    except sqlite3.OperationalError:
+        row = None
+    identity = json.loads(row[0]) if row and row[0] else {}
+    return chain_event(db, decision_id, identity.get('trade_intent_id') if isinstance(identity, dict) else None)
+
+
+def stage_event(decision_id, proposal_id, version_id, stage=STAGE_ALLOCATION):
+    return 'decision:%s#%s:%s:%s' % (decision_id, stage.lower(), proposal_id, version_id)
+
+
+def chain_event(db, decision_id, intent_id=None):
+    """The registered event an outcome of this decision must resolve.
+
+    Without an intent identity the outcome belongs to the original decision
+    event: an execution that was not routed through the Portfolio stage is
+    never re-attributed to it. With the TradeIntent identity that execution
+    came from, the unique stage event of that exact intent is returned.
+    """
+    original = 'decision:' + str(decision_id)
+    if intent_id is None:
+        return original
+    rows = db.execute("SELECT event_key FROM learning_registrations WHERE "
+                      "json_extract(payload,'$.lineage.decision_id')=? AND "
+                      "json_extract(payload,'$.lineage.intent_id')=? AND json_extract(payload,'$.chain') IS NOT NULL",
+                      (str(decision_id), intent_id)).fetchall()
+    if len(rows) != 1:
+        raise ValueError('decision_chain_stage_unavailable_or_ambiguous')
+    return rows[0][0]
 
 
 def attach(db, event_key, outcome_key, kind, boundary, observation, observed_ms, dependencies=(), *, post_lineage=None):
@@ -468,6 +523,10 @@ def replay_manifest(outcome, retained):
     if (asdict(outcome.lineage) != dict(b['lineage'], execution_ids=tuple(b['lineage'].get('execution_ids',())), trade_ids=tuple(b['lineage'].get('trade_ids',())))
             or json.loads(outcome.observation_json)!=b['observation'] or outcome.kind.value!=b['kind'] or outcome.boundary.value!=b['boundary']):
         faults.append('canonical_outcome_differs')
+    chain = reg.get('chain')
+    if chain and (chain.get('decision_id') != reg['lineage'].get('decision_id')
+                  or chain.get('stage') != STAGE_ALLOCATION or not chain.get('parent_registration_id')):
+        faults.append('decision_chain_binding_differs')
     if m['status'] != 'REPLAY_COMPLETE' or b['boundary'] in ('UNRESOLVED','UNASSESSABLE'):
         faults.append('manifest_not_complete')
     return L.Replay(outcome.outcome_id, 'INCOMPLETE' if faults else 'COMPLETE', tuple(sorted(faults)), L.canonical({'capture_manifest':m}))

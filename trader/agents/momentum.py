@@ -13,6 +13,7 @@ from ..core.types import Snapshot, Vote
 
 class MomentumAnalyst(Analyst):
     name = "momentum"
+    evidence_timeframe = "15m"
     regime_affinity = ("TRENDING_UP", "TRENDING_DOWN")
 
     def evaluate(self, snap: Snapshot) -> Vote:
@@ -65,6 +66,7 @@ class MomentumAnalyst(Analyst):
 class ValueAnalyst(Analyst):
     """Stat-arb view: extremes vs anchored VWAP revert absent trend regime."""
     name = "value"
+    evidence_timeframe = "15m"
     regime_affinity = ("RANGING",)
 
     def evaluate(self, snap: Snapshot) -> Vote:
@@ -96,6 +98,7 @@ class ValueAnalyst(Analyst):
 class RotationAnalyst(Analyst):
     """Cross-asset cascade: BTC impulse drags lagging alts within hours."""
     name = "rotation"
+    evidence_timeframe = "1h"
     regime_affinity = ("TRENDING_UP", "TRENDING_DOWN")
 
     def evaluate(self, snap: Snapshot) -> Vote:

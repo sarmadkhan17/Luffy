@@ -1117,10 +1117,21 @@ class Kernel:
                                 len(self.journal.open_trades()),
                                 provenance=self._equity_provenance(status["equity"]))
         stats['portfolio_runtime'] = self._portfolio_checkpoint()
+        now_ms = int(time.time()*1000)
+        try:
+            # Replay-complete evidence -> exact registered rules -> queued
+            # proposals. The production registry is the only one reachable here.
+            from .learning.dispatch import dispatch_pending as learning_dispatch
+            stats['learning_dispatch'] = [dict(outcome_id=r['outcome_id'], proposals=sum(
+                1 for x in r['results'] if x['result'] == 'PROPOSED'), reasons=sorted({
+                str(x['reason']) for x in r['results']})) for r in learning_dispatch(
+                self.journal,self.cfg,at_ms=now_ms,max_work=8)]
+        except Exception as exc:  # telemetry/learning never reaches trading
+            log.info('learning dispatch refused: %s', exc)
         try:
             from .learning.runtime import checkpoint as learning_checkpoint
             stats['learning_application'] = learning_checkpoint(self.journal,self.cfg,
-                at_ms=int(time.time()*1000),max_work=8)
+                at_ms=now_ms,max_work=8)
         except (ValueError, KeyError, AttributeError, __import__('sqlite3').OperationalError) as exc:
             log.info('learning checkpoint refused: %s', exc)
         return {**stats, "equity": status["equity"],

@@ -78,6 +78,15 @@ def validate(body, sources):
         if out['observation'] != dict(status=resolved['resolution']['resolution'],
                 evidence_id=resolved['resolution']['evidence_id'], measurement='registered_nontrade_status_not_missed_profit'):
             raise ValueError('missed_status_differs')
+    if out.get('protocol') == 'portfolio-risk-block.v1':
+        risk = sources.get('risk_decision') or {}
+        line = body['lineage']
+        if (body['kind'] != L.Kind.RISK_BLOCKED.value or risk.get('ok') is not False
+                or out['observation'].get('risk_decision_id') != risk.get('risk_decision_id')
+                or line.get('risk_decision_id') != risk.get('risk_decision_id')
+                or line.get('intent_id') != risk.get('trade_intent_id')
+                or not line.get('proposal_id') or not body['registration'].get('chain')):
+            raise ValueError('risk_block_decision_chain_differs')
     if out.get('protocol') == 'data-quality.v1' and (
             body['kind'] != L.Kind.DATA.value or body['boundary'] != L.Boundary.UNASSESSABLE.value or
             out['observation'].get('market_conclusion') != 'NOT_APPLICABLE'):
@@ -100,7 +109,7 @@ def execution_quality(db, trade, receipt):
     from .capture_runtime import freeze
     from trader.engine.booking import replay
     replay(receipt)
-    event = 'decision:'+trade['decision_id']
+    event = C.trade_event(db, trade['decision_id'], trade['id'])
     _, reg = C.registration(db, event)
     key = 'execution-quality:'+receipt['sha256']
     previous = C.existing_outcome(db, key)
@@ -139,6 +148,39 @@ def missed(db, event, resolved):
     return C.attach(db,event,key,L.Kind.MISSED.value,L.Boundary.UNASSESSABLE.value,obs,cut,deps)
 
 
+def latest_action(db, event, role, at_ms):
+    rows = [json.loads(r[0])['dependency'] for r in db.execute(
+        'SELECT payload FROM learning_actions WHERE event_key=?', (event,))]
+    found = [d for d in rows if d['role'] == role and d['available_ms'] <= at_ms]
+    return max(found, key=lambda d: (d['available_ms'], d['sha256'])) if found else None
+
+
+def risk_blocked(db, event, risk_dep, at_ms):
+    """Portfolio Risk refusal resolved on the SAME decision chain that was refused.
+
+    No future return is invented: the measurement is the refusal itself, so the
+    boundary stays UNASSESSABLE until a registered future measurement exists.
+    """
+    from .capture_runtime import freeze
+    C.registration(db, event)
+    value = C.resolve(db, risk_dep)
+    if value.get('ok') is not False:
+        raise ValueError('risk_decision_is_not_a_refusal')
+    obs = dict(status='RISK_' + value['result'], risk_decision_id=value['risk_decision_id'],
+               trade_intent_id=value['trade_intent_id'],
+               measurement='registered_nontrade_status_not_missed_profit')
+    key = 'risk-blocked:' + value['risk_decision_id']
+    previous = C.existing_outcome(db, key)
+    if previous:
+        return previous
+    action = latest_action(db, event, 'action', at_ms)
+    deps = [risk_dep, freeze(db, 'outcome', dict(protocol='portfolio-risk-block.v1', observation=obs),
+                             at_ms, 'portfolio Risk refusal')]
+    if action:
+        deps.append(action)
+    return C.attach(db, event, key, L.Kind.RISK_BLOCKED.value, L.Boundary.UNASSESSABLE.value, obs, at_ms, deps)
+
+
 def deliver_accounting(journal_path, artifact):
     """Off-path worker delivery, no Journal constructor or trading-table writes."""
     from pathlib import Path
@@ -149,7 +191,7 @@ def deliver_accounting(journal_path, artifact):
     with sqlite3.connect(Path(journal_path).resolve().as_uri()+'?mode=ro',uri=True,timeout=2) as src:
         if not src.execute("SELECT 1 FROM sqlite_master WHERE name='learning_registrations'").fetchone():
             raise ValueError('original_registration_missing_no_backfill')
-        _,reg=C.registration(src,'decision:'+artifact['bookings']['trade']['decision_id'])
+        _,reg=C.registration(src,C.trade_event(src,artifact['bookings']['trade']['decision_id'],artifact['bookings']['trade']['id']))
         row=src.execute('SELECT entry_identity_json FROM trades WHERE id=?',(artifact['bookings']['trade']['id'],)).fetchone()
         verify_trade_binding(reg,json.loads(row[0]) if row and row[0] else None,artifact['bookings']['trade'])
     with sqlite3.connect(Path(journal_path).resolve().as_uri()+'?mode=rw',uri=True,timeout=2) as db:

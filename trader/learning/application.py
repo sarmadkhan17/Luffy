@@ -202,6 +202,11 @@ def apply(journal, cfg, evidence, proposal, req, *, at_ms, shadow=False, test_re
         return receipt
 
 
+def apply_with_rules(journal, cfg, evidence, proposal, req, *, at_ms, shadow=False, rules=None):
+    """Checkpoint entry: ``rules`` is None in normal runtime (production rules only)."""
+    return apply(journal, cfg, evidence, proposal, req, at_ms=at_ms, shadow=shadow, test_registry=rules)
+
+
 def prepare_captured(journal, cfg, outcome_id):
     """Explicit consumer for real retained evidence; missing sources stay missing."""
     from . import capture as C

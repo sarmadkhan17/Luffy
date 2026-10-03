@@ -18,6 +18,7 @@ from ..core.types import Snapshot, Vote
 
 class StructureAnalyst(Analyst):
     name = "structure"
+    evidence_timeframe = "15m"
     regime_affinity = ("TRENDING_UP", "TRENDING_DOWN", "RANGING")
 
     def evaluate(self, snap: Snapshot) -> Vote:

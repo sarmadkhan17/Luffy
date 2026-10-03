@@ -67,20 +67,8 @@ class Registry:
         return old
 
     def resolve(self, opportunity_id, resolution, evidence_id, at_ms):
-        if resolution not in RESOLUTIONS or not isinstance(evidence_id, str) or not evidence_id:
-            raise ValueError('RESOLUTION_EVIDENCE_REQUIRED')
-        row = self.db.execute('SELECT payload FROM opportunities WHERE opportunity_id=?', (opportunity_id,)).fetchone()
-        if not row:
-            raise ValueError('OPPORTUNITY_MISSING')
-        body = json.loads(row[0])
-        if type(at_ms) is not int or at_ms < body['last_observed_at']:
-            raise ValueError('RESOLUTION_TIME_INVALID')
-        result = dict(resolution=resolution, evidence_id=evidence_id, at_ms=at_ms)
-        if body['resolution'] not in (None, result):
-            raise ValueError('TERMINAL_RESOLUTION_IMMUTABLE')
-        body.update(status='RESOLVED', resolution=result)
         with self.db:
-            self.db.execute('UPDATE opportunities SET payload=? WHERE opportunity_id=?', (canonical(body), opportunity_id))
+            body = resolve_row(self.db, opportunity_id, resolution, evidence_id, at_ms)
         if self.learning_journal is not None and resolution != 'TRADED':
             from trader.learning import capture as C, producers as P
             with self.learning_journal._tx() as db:
@@ -88,3 +76,21 @@ class Registry:
                 for (event,) in rows:
                     C.safely(db,'missed:'+opportunity_id,P.missed,event,body)
         return body
+
+
+def resolve_row(db, opportunity_id, resolution, evidence_id, at_ms):
+    """Terminal exact resolution on the caller's connection and transaction."""
+    if resolution not in RESOLUTIONS or not isinstance(evidence_id, str) or not evidence_id:
+        raise ValueError('RESOLUTION_EVIDENCE_REQUIRED')
+    row = db.execute('SELECT payload FROM opportunities WHERE opportunity_id=?', (opportunity_id,)).fetchone()
+    if not row:
+        raise ValueError('OPPORTUNITY_MISSING')
+    body = json.loads(row[0])
+    if type(at_ms) is not int or at_ms < body['last_observed_at']:
+        raise ValueError('RESOLUTION_TIME_INVALID')
+    result = dict(resolution=resolution, evidence_id=evidence_id, at_ms=at_ms)
+    if body['resolution'] not in (None, result):
+        raise ValueError('TERMINAL_RESOLUTION_IMMUTABLE')
+    body.update(status='RESOLVED', resolution=result)
+    db.execute('UPDATE opportunities SET payload=? WHERE opportunity_id=?', (canonical(body), opportunity_id))
+    return body

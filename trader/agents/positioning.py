@@ -19,6 +19,7 @@ EXTREME = 0.00100          # violent disagreement — strongest fade
 
 class PositioningAnalyst(Analyst):
     name = "positioning"
+    evidence_timeframe = "1h"
     regime_affinity = ("TRENDING_UP", "TRENDING_DOWN", "RANGING", "VOLATILE")
 
     def __init__(self, exchange=None):

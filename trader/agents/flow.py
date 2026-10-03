@@ -13,6 +13,7 @@ from ..core.types import Snapshot, Vote
 
 class FlowAnalyst(Analyst):
     name = "flow"
+    evidence_timeframe = "15m"
     regime_affinity = ("TRENDING_UP", "TRENDING_DOWN", "RANGING", "VOLATILE")
 
     def evaluate(self, snap: Snapshot) -> Vote:

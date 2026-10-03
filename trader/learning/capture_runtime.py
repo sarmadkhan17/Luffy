@@ -98,19 +98,34 @@ def restore_frame(raw):
     return frame
 
 
-def decision(db, row, cycle, inputs=None):
-    """No lookup of latest context/config/strategy after original registration."""
-    cut = timestamp(row['ts'])
+#: Sources a scan-time decision never consults. They belong to the later
+#: Portfolio stage of the SAME decision (see allocation_stage), so the original
+#: registration says so explicitly instead of leaving them silently absent.
+LATER_STAGE_ROLES = ('world', 'context', 'portfolio', 'economics', 'proposal', 'intent')
+
+
+def decision(db, row, cycle, inputs=None, *, stage=None):
+    """No lookup of latest context/config/strategy after original registration.
+
+    ``stage`` registers a later stage of the same decision (same decision_id and
+    cycle) at the stage's own cut; without it this is the original decision.
+    """
+    cut = stage['cut_ms'] if stage else timestamp(row['ts'])
+    event = stage['event_key'] if stage else 'decision:'+row['id']
     votes=[dict(v) for v in db.execute('SELECT * FROM votes WHERE cycle_id=? AND symbol=? ORDER BY rowid',
                                      (row['cycle_id'],row['symbol']))]
+    reasons=dict(skip_reason=row.get('skip_reason'), reason_codes=row.get('reason_codes'),
+                 signals=row.get('signals_json'),votes=votes)
+    if stage: reasons['allocation_stage']=stage['reason']
     deps = [freeze(db,'decision',row,cut,'Journal.log_decision'),
-            freeze(db,'reasons',dict(skip_reason=row.get('skip_reason'), reason_codes=row.get('reason_codes'),
-                                    signals=row.get('signals_json'),votes=votes),cut,'original decision and recorded votes')]
+            freeze(db,'reasons',reasons,cut,'original decision and recorded votes')]
     lineage = asdict(L.Lineage(row['cycle_id'],row['id'],None))
     if cycle:
         deps.append(freeze(db,'cycle',cycle,cut,'Journal.log_cycle'))
     if inputs:
-        inputs=bind_signal_version(db,inputs,row)
+        # A stage already carries its exact candidate version; only the
+        # original decision infers it from the signal that proposed the action.
+        if not stage: inputs=bind_signal_version(db,inputs,row)
         source_cut=inputs.get('source_cut_ms',cut)
         if source_cut>cut: raise ValueError('source_cut_after_decision')
         snap, config = inputs.get('snapshot'), inputs.get('config')
@@ -168,10 +183,15 @@ def decision(db, row, cycle, inputs=None):
             # Do not pick today's version for an old/unversioned signal.
             lineage['strategy_id']=row['strategy_ids']
             deps.append(C.unavailable('strategy','EXACT_SIGNAL_VERSION_NOT_SUPPLIED'))
-    kind = L.Kind.CASH if row['action']=='HOLD' else L.Kind.REJECTED
-    rid=C.register(db,'decision:'+row['id'],kind.value,lineage,cut,deps)
-    C.attach(db,'decision:'+row['id'],'decision:'+row['id']+':pending',kind.value,L.Boundary.UNRESOLVED.value,dict(reason='future_outcome_pending'),cut)
-    C.record_action(db,'decision:'+row['id'],dict(action=row['action'],executed=row['executed'],skip_reason=row.get('skip_reason')),cut)
+    present={d['role'] for d in deps}
+    not_consulted={} if stage else {role:'STAGE_AFTER_SCAN_DECISION_SEE_DECISION_CHAIN'
+                                   for role in LATER_STAGE_ROLES if role not in present}
+    kind = stage['kind'] if stage else (L.Kind.CASH if row['action']=='HOLD' else L.Kind.REJECTED)
+    rid=C.register(db,event,kind.value,lineage,cut,deps,chain=stage['chain'] if stage else None,
+                   not_consulted=not_consulted)
+    C.attach(db,event,event+':pending',kind.value,L.Boundary.UNRESOLVED.value,dict(reason='future_outcome_pending'),cut)
+    C.record_action(db,event,stage['action'] if stage else
+        dict(action=row['action'],executed=row['executed'],skip_reason=row.get('skip_reason')),cut)
     return rid
 
 
@@ -186,7 +206,7 @@ def action(db, row, at_ms, risk_value=None):
 def booking(db, trade_id, receipt):
     row=db.execute('SELECT * FROM trades WHERE id=?',(trade_id,)).fetchone()
     trade=dict(row)
-    event='decision:'+trade['decision_id']
+    event=C.trade_event(db,trade['decision_id'],trade_id)
     C.registration(db,event)
     at_ms=receipt['observed_ms']
     dep=freeze(db,'execution',receipt,at_ms,'existing trade-booking.v1')
@@ -295,12 +315,15 @@ def runtime_inputs(journal, snap, config, *, cut_ms, additional_original_inputs=
     safe = {k:config[k] for k in CONFIG_KEYS if k in config}
     result=dict(snapshot=deepcopy(snap),config=json.loads(L.canonical(safe)),source_cut_ms=cut_ms,
         additional_original_inputs=deepcopy(additional_original_inputs))
-    # Exact objects must actually be carried by the decision producer. No
-    # lookup of latest external context/WorldModel using a timestamp shortcut.
+    # Only what the decision path itself used is carried (snapshot, config,
+    # control; the signal-bound StrategyVersion is bound in decision()). Later
+    # stages (WorldModel, Opportunity Context, portfolio cut, proposal, intent)
+    # are registered explicitly UNAVAILABLE on the scan decision and bound as a
+    # stage of the same decision by deliver_allocation. Nothing is looked up
+    # from 'latest', and no optional producer attribute can inject sources.
     if control_state is not None:
         record={'state':getattr(control_state,'value',control_state)}
         result['control']=dict(state=record['state'],record=record,version=L.digest(record))
-    result.update(deepcopy(getattr(snap,'learning_sources',{}) or {}))
     return result
 
 
@@ -318,28 +341,41 @@ def missed_snapshot(db,scan_id,symbol,at_ms):
         observation,at_ms,[action,out])
 
 
+def _signal_version(db, strategy_id, spec_hash, cut_ms):
+    """(version, install) of one signal's own exact StrategyVersion, else (None, None)."""
+    rows=db.execute('SELECT canonical_json,recorded_at_ms FROM strategy_versions WHERE strategy_id=? AND spec_hash=?',
+                    (strategy_id,spec_hash)).fetchall()
+    if len(rows)!=1 or rows[0][1]>cut_ms: return None,None
+    version=json.loads(rows[0][0]); install=None
+    if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_version_installs'").fetchone():
+        matches=db.execute('SELECT canonical_json FROM strategy_version_installs WHERE version_id=?',(version['version_id'],)).fetchall()
+        if len(matches)==1: install=json.loads(matches[0][0])
+    return version,install
+
+
 def bind_signal_version(db, inputs, row):
     signals=json.loads(row.get('signals_json') or '[]')
     agreeing=[s for s in signals if s.get('action')==row['action']]
     if not agreeing or not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_versions'").fetchone():
         return inputs
     top=max(agreeing,key=lambda s:s.get('confidence',0))
-    params=top.get('params') or {}
-    sh=params.get('spec_sha256')
+    sh=(top.get('params') or {}).get('spec_sha256')
     if not sh: return inputs
-    rows=db.execute('SELECT canonical_json,recorded_at_ms FROM strategy_versions WHERE strategy_id=? AND spec_hash=?',
-                    (top['strategy_id'],sh)).fetchall()
-    if len(rows)!=1 or rows[0][1]>timestamp(row['ts']): return inputs
-    version=json.loads(rows[0][0])
-    # A durable immutable reference when the upstream actually protects it;
-    # otherwise a content snapshot of the exact signal-bound version.
+    cut=timestamp(row['ts'])
+    version,install=_signal_version(db,top['strategy_id'],sh,cut)
+    if version is None: return inputs
     result=dict(inputs,strategy=version)
-    installs=db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_version_installs'").fetchone()
-    if installs:
-        matches=db.execute('SELECT canonical_json FROM strategy_version_installs WHERE version_id=?',(version['version_id'],)).fetchall()
-        if len(matches)==1:
-            install=json.loads(matches[0][0])
-            result['exit_semantics']=dict(exit_semantics_id=install.get('exit_semantics_id'),install=install)
+    # Every agreeing signal binds ITS OWN version's exit semantics; none inherits another's.
+    bindings=[]
+    for s in agreeing:
+        h=(s.get('params') or {}).get('spec_sha256')
+        v,i=_signal_version(db,s['strategy_id'],h,cut) if h else (None,None)
+        bindings.append(dict(strategy_id=s['strategy_id'],spec_hash=h,version_id=v['version_id'] if v else None,
+            exit_semantics_id=i.get('exit_semantics_id') if i else None,
+            reason='EXACT_VERSION_INSTALL' if i else 'EXACT_EXIT_BINDING_UNAVAILABLE'))
+    if install:
+        result['exit_semantics']=dict(exit_semantics_id=install.get('exit_semantics_id'),install=install,
+                                      signal_bindings=bindings)
     return result
 
 
@@ -376,7 +412,7 @@ def verified_trade(db, receipt):
     whole=receipt['source']['whole_trade_capture']
     accounting=accounting_replay(whole)['accounting']
     trade=whole['bookings']['trade']
-    event='decision:'+trade['decision_id']
+    event=C.trade_event(db,trade['decision_id'],trade['id'])
     _,reg=C.registration(db,event)
     identity_row=db.execute('SELECT entry_identity_json FROM trades WHERE id=?',(trade['id'],)).fetchone()
     identity=json.loads(identity_row[0]) if identity_row and identity_row[0] else None
@@ -420,7 +456,7 @@ def paper_cost(db, trade, receipt, *, observed_ms):
     Paper fills remain simulated. Missing calibrated cost authorities remain
     unavailable, even when a public funding interval was exactly captured.
     """
-    event='decision:'+trade['decision_id']
+    event=C.trade_event(db,trade['decision_id'],trade['id'])
     C.registration(db,event)
     at_ms=observed_ms
     sources={}
@@ -493,6 +529,23 @@ def journalize_allocation(journal, snap, decision, config, receipt, proposal, al
     return intents[0]
 
 
+def exit_binding(c, er):
+    """Exact (version -> exit semantics) provenance of one candidate, or UNAVAILABLE."""
+    from trader.portfolio import economics as E
+    base = dict(candidate_id=c.candidate_id, version_id=c.version_id, spec_hash=c.spec_hash)
+    try:
+        authorities = [json.loads(s.payload_json)['result'] for s in E.from_inputs(json.loads(er.inputs_json)).context
+                       if s.source_id.startswith('candidate-bridge:')]
+        if len(authorities) != 1:
+            return dict(base, exit_semantics_id=None, reason='CANDIDATE_BRIDGE_AUTHORITY_NOT_UNIQUE')
+        a = authorities[0]
+        if a.get('version_id') != c.version_id or a.get('spec_hash') != c.spec_hash or not a.get('exit_semantics_id'):
+            return dict(base, exit_semantics_id=None, reason='CANDIDATE_BRIDGE_AUTHORITY_VERSION_DIFFERS')
+        return dict(base, exit_semantics_id=a['exit_semantics_id'], reason='EXACT_VERSION_AUTHORITY')
+    except (ValueError, KeyError, TypeError, AttributeError):
+        return dict(base, exit_semantics_id=None, reason='CANDIDATE_BRIDGE_AUTHORITY_UNREADABLE')
+
+
 def allocation_sources(journal, snap, config, receipt, proposal, allocation_inputs, c, intents):
     from trader.portfolio import economics as E
     er = E.from_payload(json.loads(c.economics.receipt_json))
@@ -510,10 +563,15 @@ def allocation_sources(journal, snap, config, receipt, proposal, allocation_inpu
     if 'strategy_version' in original:
         v = json.loads(original['strategy_version']['data']['canonical_json'])
         carried['strategy'] = v
-        authorities = [json.loads(s.payload_json)['result'] for s in allocation_inputs.sources
-                       if s.source_id.startswith('candidate-bridge:')]
-        if len(authorities) == 1:
-            carried['exit_semantics'] = {'exit_semantics_id':authorities[0]['exit_semantics_id']}
+        # Each candidate binds ITS OWN StrategyVersion authority: the single
+        # bridge source inside this candidate's economics receipt. A cut with
+        # many candidates therefore carries one binding per version; a missing
+        # or mismatching authority leaves exit semantics UNAVAILABLE.
+        binding = exit_binding(c, er)
+        if binding.get('exit_semantics_id'):
+            carried['exit_semantics'] = dict(binding, cut_bindings=[
+                exit_binding(x, E.from_payload(json.loads(x.economics.receipt_json)))
+                for x in sorted(allocation_inputs.candidates, key=lambda x: x.identity)])
     carried['source_evidence'] = {role:{k:v for k,v in raw.items() if k != 'data'} for role,raw in original.items()}
     inputs = (runtime_inputs(journal, snap, config, cut_ms=allocation_inputs.as_of_ms) if snap is not None
               else dict(config=config,source_cut_ms=allocation_inputs.as_of_ms))
@@ -522,22 +580,32 @@ def allocation_sources(journal, snap, config, receipt, proposal, allocation_inpu
 
 
 def deliver_allocation(db, config, current, result, market_snapshots):
-    """Normal allocation decision manifest from actually consumed objects.
+    """Allocation stage of each REAL decision, on that decision's own identity.
 
-    This is a new allocator decision, after the scan decision, never a backfill
-    of that earlier decision. Only learning tables are written.
+    The candidate's origin is a Kernel decision already in the journal. The
+    Portfolio cut, AllocationProposal, TradeIntent and Risk decision are bound
+    as a stage of THAT decision (same decision_id and cycle, parent registration
+    linked), never a fresh identity and never a fabricated HOLD. A candidate
+    whose origin decision or original registration is absent is recorded as a
+    capture failure; nothing is reconstructed later. Only learning tables are
+    written, no Risk/Executor/venue call is made.
     """
-    from trader.portfolio.allocator import Source
+    from trader.portfolio.allocator import Source, Proposal
     from trader.portfolio.opportunity_live import receipt_from_source
-    from trader.portfolio.trade_intent import build
-    from datetime import datetime, timezone
+    from trader.portfolio.trade_intent import build, Action
     proposal = result.get('proposal')
     if proposal is None:
         return []
-    from trader.portfolio.allocator import Proposal
     p = Proposal(proposal['proposal_id'],L.canonical(proposal['inputs']),L.canonical(proposal['result']),proposal['allocator_version'])
     all_intents = build(p,current)
+    risk_by_intent = {}
+    for d in result.get('risk_decisions', ()):
+        risk_by_intent[json.loads(d['payload_json'])['trade_intent_id']] = d
     delivered=[]
+    def refuse(key, reason):
+        # One explicit row per refusal, not one per Kernel cycle.
+        if not db.execute('SELECT 1 FROM learning_capture_failures WHERE event_key=? AND reason=?', (key, reason)).fetchone():
+            db.execute('INSERT INTO learning_capture_failures VALUES(?,?)', (key, reason))
     for source in current.sources:
         if not source.source_id.startswith('live-context:'):
             continue
@@ -549,19 +617,68 @@ def deliver_allocation(db, config, current, result, market_snapshots):
         c=candidates[0]
         intents=[i for i in all_intents if i.payload()['opportunity_id']==c.opportunity_id]
         origin=raw['candidate_id'].removesuffix(':'+c.version_id)
+        event=C.stage_event(origin,p.proposal_id,c.version_id)
+        if db.execute('SELECT 1 FROM learning_registrations WHERE event_key=?',(event,)).fetchone():
+            delivered.append(event)
+            continue
+        row=db.execute('SELECT * FROM decisions WHERE id=?',(origin,)).fetchone()
+        parent=db.execute('SELECT registration_id FROM learning_registrations WHERE event_key=?',('decision:'+origin,)).fetchone()
+        if row is None or parent is None or len(intents)!=1:
+            refuse(event,'allocation_origin_decision_or_registration_or_intent_unavailable_no_backfill')
+            continue
+        row=dict(row)
+        cycle=db.execute('SELECT * FROM cycles WHERE id=?',(row['cycle_id'],)).fetchone()
+        if row['cycle_id']!=raw['cycle_id'] or cycle is None:
+            refuse(event,'allocation_origin_cycle_differs')
+            continue
+        intent=intents[0]
         snap=(market_snapshots or {}).get(origin)
         inputs=allocation_sources(None,snap,config,receipt,p,current,c,intents)
-        identity='allocation:'+L.digest(dict(proposal=p.proposal_id,candidate=c.candidate_id))
-        if db.execute('SELECT 1 FROM learning_registrations WHERE event_key=?',('decision:'+identity,)).fetchone():
-            delivered.append(identity)
-            continue
-        cut=current.as_of_ms
-        # An allocator result is its own typed decision source, not a journal
-        # trading decision or a made-up signal.
-        row=dict(id=identity,cycle_id=raw['cycle_id'],ts=datetime.fromtimestamp(cut/1000,timezone.utc).isoformat(),
-            symbol=raw['symbol'],action='HOLD',executed=False,skip_reason=proposal['result']['reason'],
-            signals_json='[]',strategy_ids=c.strategy_id,decision_kind='ALLOCATION',
-            allocation_proposal_id=p.proposal_id)
-        decision(db,row,dict(id=raw['cycle_id'],ts=row['ts'],producer='portfolio.runtime'),inputs)
-        delivered.append(identity)
+        opens=intent.requested_action==Action.OPEN
+        stage=dict(cut_ms=current.as_of_ms,event_key=event,
+            kind=L.Kind.REJECTED if opens else L.Kind.CASH,
+            reason=dict(proposal_id=p.proposal_id,allocation_decision=proposal['result']['decision'],
+                        reason=proposal['result']['reason'],intent_id=intent.intent_id,
+                        intent_action=intent.requested_action.value,intent_status=intent.status.value),
+            action=dict(action='ALLOCATION_'+intent.requested_action.value,stage=C.STAGE_ALLOCATION,
+                        proposal_id=p.proposal_id,intent_id=intent.intent_id,executed=False,
+                        allocation_decision=proposal['result']['decision']),
+            chain=dict(decision_id=origin,stage=C.STAGE_ALLOCATION,parent_event_key='decision:'+origin,
+                       parent_registration_id=parent[0]))
+        decision(db,row,dict(cycle),inputs,stage=stage)
+        risk=risk_by_intent.get(intent.intent_id)
+        if risk is not None:
+            record_risk(db,event,config,intent.intent_id,risk,current.as_of_ms,opens)
+        if proposal['result']['decision'] in ('CASH','NO_ALLOCATION'):
+            resolve_nontrade(db,c.opportunity_id,p.proposal_id,current.as_of_ms,event)
+        delivered.append(event)
     return delivered
+
+
+def record_risk(db, event, config, intent_id, risk, at_ms, opens):
+    """Bind the portfolio Risk decision to the chain it evaluated.
+
+    Only a REQUESTED open that Risk did not approve is Risk-blocked; KEEP /
+    NO_ACTION intents were never trade requests, so their refusal is recorded
+    as the Risk answer but is not an outcome of its own.
+    """
+    body = json.loads(risk['payload_json'])
+    value = dict(risk_decision_id=risk['decision_id'], result=body['result'], ok=body['result'] == 'APPROVE',
+                 trade_intent_id=intent_id, config_risk_sha256=L.digest(config['risk']), payload=body)
+    dep = C.record_action(db, event, value, at_ms, risk=True, source_id=risk['decision_id'])
+    if opens and not value['ok']:
+        from .producers import risk_blocked
+        return risk_blocked(db, event, dep, at_ms)
+    return None
+
+
+def resolve_nontrade(db, opportunity_id, proposal_id, at_ms, event):
+    """The allocator's own CASH/NO_ALLOCATION answer, on this chain's opportunity."""
+    from trader.portfolio.opportunity_registry import resolve_row
+    from .producers import missed
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE name='opportunities'").fetchone():
+        return None
+    if db.execute('SELECT 1 FROM opportunities WHERE opportunity_id=?',(opportunity_id,)).fetchone() is None:
+        return None
+    body=resolve_row(db,opportunity_id,'SKIPPED',proposal_id,at_ms)
+    return missed(db,event,body)

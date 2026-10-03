@@ -20,25 +20,34 @@ def ensure(journal):
         """)
 
 
+def insert_proposal(c, evidence, proposal, req):
+    """Connection-level, idempotent queue insert (caller owns the transaction)."""
+    body = dict(evidence=asdict(evidence), proposal=asdict(proposal), request=asdict(req))
+    old = c.execute(f'SELECT payload FROM {TABLE} WHERE proposal_id=?', (proposal.proposal_id,)).fetchone()
+    if old:
+        if old[0] != L.canonical(body): raise ValueError('proposal_queue_conflict')
+        return proposal.proposal_id
+    c.execute(f'INSERT INTO {TABLE} VALUES(?,?,?)', (proposal.proposal_id,L.canonical(body),L.digest(body)))
+    return proposal.proposal_id
+
+
 def enqueue(journal, evidence, proposal, req):
     ensure(journal)
-    body = dict(evidence=asdict(evidence), proposal=asdict(proposal), request=asdict(req))
     with journal._tx() as c:
-        old = c.execute(f'SELECT payload FROM {TABLE} WHERE proposal_id=?', (proposal.proposal_id,)).fetchone()
-        if old:
-            if old[0] != L.canonical(body): raise ValueError('proposal_queue_conflict')
-            return proposal.proposal_id
-        c.execute(f'INSERT INTO {TABLE} VALUES(?,?,?)', (proposal.proposal_id,L.canonical(body),L.digest(body)))
-    return proposal.proposal_id
+        return insert_proposal(c, evidence, proposal, req)
+
+
+def evidence_from_body(e):
+    e = dict(e)
+    for key in ('supported','unknown','provenance','eligible_targets'):
+        e[key] = tuple(tuple(v) if isinstance(v,list) else v for v in e[key])
+    return L.LearningEvidence(**e)
 
 
 def decode(row):
     body = json.loads(row['payload'])
     if L.digest(body) != row['sha256']: raise ValueError('proposal_queue_corrupt')
-    e = body['evidence']
-    for key in ('supported','unknown','provenance','eligible_targets'):
-        e[key] = tuple(tuple(v) if isinstance(v,list) else v for v in e[key])
-    ev = L.LearningEvidence(**e)
+    ev = evidence_from_body(body['evidence'])
     p = body['proposal']; p['target']=L.Target(p['target']);p['status']=L.Status(p['status']);p['basis']=tuple(p['basis'])
     proposal = L.LearningUpdateProposal(**p)
     if proposal.proposal_id != row['proposal_id']: raise ValueError('proposal_identity_corrupt')
@@ -46,15 +55,24 @@ def decode(row):
 
 
 def checkpoint(journal, cfg, *, at_ms, max_work=8, shadow=False):
+    """Normal runtime checkpoint: production-registered rules only."""
+    return _checkpoint(journal, cfg, at_ms, max_work, shadow, None)
+
+
+def _checkpoint(journal, cfg, at_ms, max_work, shadow, extra):
+    """``extra`` is only ever an already-validated isolated registry (dispatch.checkpoint_isolated)."""
     if type(max_work) is not int or not 1 <= max_work <= 64:
         raise ValueError('bounded_application_work_required')
+    from . import targets as T
+    supplied = extra
     if not journal.query("SELECT 1 FROM sqlite_master WHERE name=?", (TABLE,)):
         return []
     if not shadow: A.ensure(journal)
     receipts = journal.query("SELECT 1 FROM sqlite_master WHERE name=?", (A.TABLE,))
-    from . import targets as T
     registered = {r.rule_id:r.target for r in L.REGISTERED_RULES.values()}
     registered.update({r.rule_id:r.target for r in T.PRODUCTION_RULES.values()})
+    if supplied is not None:
+        registered.update({r.rule_id:r.target for r in supplied.values()})
     pairs = sorted(registered.items())
     clauses = " OR ".join("(json_extract(q.payload,'$.proposal.rule')=? AND json_extract(q.payload,'$.proposal.target')=?)" for _ in pairs)
     if not clauses: return []
@@ -69,7 +87,8 @@ def checkpoint(journal, cfg, *, at_ms, max_work=8, shadow=False):
         # Only registered production rules are even dispatched normally.
         if registered.get(p.rule) != p.target:
             continue
-        result.append(A.apply(journal,cfg,ev,p,req,at_ms=at_ms,shadow=shadow))
+        result.append(A.apply_with_rules(journal,cfg,ev,p,req,at_ms=at_ms,shadow=shadow,
+            rules=supplied if p.target != L.Target.LIFECYCLE else None))
     return result
 
 

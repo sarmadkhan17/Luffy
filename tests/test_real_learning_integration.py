@@ -184,27 +184,24 @@ def test_normal_decay_producer_automatic_checkpoint_retirement_restart(isolated)
     assert cfg==risk and F.load_version(j,v['version_id'])==spec
     assert not j.query('SELECT * FROM trades')
 
-def test_normal_portfolio_checkpoint_delivers_actual_sources(producer,monkeypatch,tmp_path):
+def test_normal_portfolio_checkpoint_refuses_an_origin_that_is_not_a_journalled_decision(producer,monkeypatch,tmp_path):
+    """Stage 7 closure: the Portfolio stage binds to the REAL decision identity.
+
+    This fixture's candidate origin ('test-setup') is not a Kernel decision, so
+    nothing is fabricated: no allocation:<digest> identity, no HOLD row, only an
+    explicit capture failure. The positive path is in
+    tests/test_normal_learning_loop_closure.py.
+    """
     from trader.portfolio import current
-    from trader.learning import capture as capture
     j,d,snap,cfg,receipt,p,ai,intent,v=producer
     monkeypatch.setattr(current,'freeze',lambda *a,**kw:(ai,{}))
+    registrations=j.query('SELECT event_key FROM learning_registrations')
+    decisions=j.query('SELECT id FROM decisions')
     result,detail=current.checkpoint(j.db_path,cfg,ledger=tmp_path/'portfolio.db',
         market_snapshots={json.loads(receipt.payload_json)['candidate_id'].removesuffix(':'+v['version_id']):snap})
-    assert detail['learning_source_delivery']
-    identity=detail['learning_source_delivery'][0]
-    _,reg=capture.registration(j._conn(),'decision:'+identity)
-    from trader.learning.decision_sources import load
-    manifest=load(j._conn(),reg['decision_source_manifest_id'])
-    deps={d['role']:d for d in manifest['dependencies']}
-    for role in ('data','world','context','portfolio','risk_config','control','strategy','proposal','intent'):
-        assert deps[role]['status']=='AVAILABLE',role
-    retained={role:capture.resolve(j._conn(),dep) for role,dep in deps.items() if dep['status']=='AVAILABLE'}
-    assert retained['proposal']==result['proposal']
-    assert retained['context']['context_json']==receipt.context.canonical_json
-    assert retained['strategy']==v
-    from trader.learning import decision_sources as DS
-    assert DS.verify(manifest,reg,retained)==()
+    assert detail['learning_source_delivery']==[]
+    assert j.query('SELECT event_key FROM learning_registrations')==registrations
+    assert j.query('SELECT id FROM decisions')==decisions
     assert not getattr(snap,'learning_sources',None)
     assert not j.query('SELECT * FROM trades')
 

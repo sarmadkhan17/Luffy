@@ -377,11 +377,9 @@ class Orchestrator:
             v.meta["htf"] = round(htf, 3)
             v.meta["news_blackout"] = bool(news.get("active"))
             v.meta['legacy_calibration_authority'] = 'HISTORICAL_INPUT_ONLY'
-            from ..learning.consumers import aggregate_vote, evidence_context
-            if v.meta.get('horizon') and snap.regime not in ('UNKNOWN','unknown'):
-                aggregate_vote(self.journal, v, evidence_context(snap.symbol,
-                    str(v.meta['horizon']), snap.regime, v.agent,
-                    v.side.value, 'analyst', v.agent))
+            from ..learning.consumers import govern_vote
+            govern_vote(self.journal, v, snap.symbol, snap.regime,
+                        getattr(analyst, 'evidence_timeframe', None) or v.meta.get('horizon'))
             votes.append(v)
 
         sigs: list[StrategySignal] = []

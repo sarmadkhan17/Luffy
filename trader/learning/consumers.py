@@ -44,6 +44,45 @@ def evidence_context(symbol, horizon, regime, evidence_type, direction, family, 
     return T.Context(symbol, horizon, regime, evidence_type, direction, family, subject)
 
 
+UNKNOWN_REGIMES = ('', 'UNKNOWN', 'unknown', 'NOT_PROVEN')
+
+
+def vote_context(vote, symbol, regime, timeframe):
+    """Exact identity of this analyst's evidence from what is actually known.
+
+    Returns (Context, None) or (None, reason). No dimension is defaulted: an
+    unknown horizon or regime means no contextual learned adjustment applies.
+    """
+    missing = [name for name, value in (('horizon', timeframe), ('regime', regime), ('instrument', symbol))
+               if not value or (name == 'regime' and regime in UNKNOWN_REGIMES)]
+    if missing:
+        return None, 'UNAVAILABLE:' + ','.join(missing)
+    try:
+        return evidence_context(symbol, str(timeframe), regime, vote.agent,
+                                vote.side.value, 'analyst', vote.agent), None
+    except ValueError:
+        return None, 'UNAVAILABLE:context_dimension_invalid'
+
+
+def govern_vote(journal, vote, symbol, regime, timeframe):
+    """Normal analyst vote path: carry truthful context, then look up governed state.
+
+    Raw conviction/confidence are never rewritten. With no learned state the
+    vote is unchanged apart from the recorded context identity.
+    """
+    context, reason = vote_context(vote, symbol, regime, timeframe)
+    if timeframe:
+        vote.meta['horizon'] = str(timeframe)
+    if context is None:
+        vote.meta['learning_context'] = dict(status='UNAVAILABLE', reason=reason)
+        return vote
+    vote.meta['learning_context'] = dict(status='EXACT', context_id=context.identity,
+        instrument=context.asset_scope, horizon=context.horizon, regime=context.regime,
+        evidence_type=context.evidence_type, direction=context.direction,
+        strategy_family=context.strategy_family, subject_id=context.subject_id)
+    return aggregate_vote(journal, vote, context)
+
+
 def aggregate_vote(journal, vote, context):
     """Preserve raw evidence; attach optional governed reliability projections."""
     for target, key in ((L.Target.CONFIDENCE, 'governed_confidence'), (L.Target.WEIGHTS, 'governed_evidence')):
@@ -81,3 +120,17 @@ def allocation_observations(journal, candidates):
             continue # Unknown horizon/identity receives no learned adjustment.
         result[candidate.candidate_id] = T.observation(journal,L.Target.ALLOCATION,context)
     return result
+
+
+def claim_context(claim, *, regime, direction, family):
+    """Exact ClaimConfidence context for one WorldClaim; caller supplies only
+    what it truly knows, anything invalid raises and yields no overlay."""
+    c = claim.coordinate
+    return T.Context(c.scope.identifier, c.horizon.value, regime, claim.source,
+                     direction, family, c.dimension)
+
+
+def world_claims(journal, model, scope, horizon, *, regime, direction, family, dimension=None):
+    """Normal WorldModel decision query: base claims + governed learned overlay."""
+    return model.effective_claims(scope, horizon, learning_journal=journal, dimension=dimension,
+        context_for=lambda claim: claim_context(claim, regime=regime, direction=direction, family=family))

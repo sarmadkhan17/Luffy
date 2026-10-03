@@ -2,12 +2,13 @@ project: LUFFY
 sdd_version: '3.2'
 updated_at: '2026-10-02'
 work_package:
-  id: LUFFY-STAGE5-7-FINAL-INTELLIGENCE-GATE-R3
+  id: LUFFY-STAGE5-7-FINAL-INTELLIGENCE-GATE-R4
   type: FINAL_INTELLIGENCE_GATE
   status: RECOMMENDED_NOT_AUTHORIZED_FOR_IMPLEMENTATION_OR_TRADING
   objective: "Review corrected Stage5\u20137 authority and the completed predictive\
     \ research bridge against the final intelligence gate."
   completed_prerequisites:
+  - Stage7 normal learning loop closure R1 (four Astra R3 gaps closed; see report).
   - Corrected Stage7 lineage b56682e retained.
   - Predictive research bridge normal consumer and protected quantitative path tested.
   - Read-only real shadow completed; no predictive support fabricated.
