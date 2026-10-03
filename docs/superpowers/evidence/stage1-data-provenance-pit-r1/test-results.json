@@ -1,0 +1,30 @@
+{
+  "focused-tests": {
+    "passed": 649,
+    "seconds": 116.62,
+    "network_attempts": 0,
+    "production_store_attempts": 0,
+    "artifact": "docs/superpowers/evidence/stage1-data-provenance-pit-r1/focused-tests.txt"
+  },
+  "acceptance-tests": {
+    "passed": 49,
+    "seconds": 2.77,
+    "network_attempts": 0,
+    "production_store_attempts": 0,
+    "artifact": "docs/superpowers/evidence/stage1-data-provenance-pit-r1/acceptance-tests.txt"
+  },
+  "world-regressions": {
+    "passed": 14,
+    "seconds": 239.05,
+    "network_attempts": 0,
+    "production_store_attempts": 0,
+    "artifact": "docs/superpowers/evidence/stage1-data-provenance-pit-r1/world-regressions.txt"
+  },
+  "engine-gates": {
+    "passed": 2,
+    "seconds": 49.39,
+    "network_attempts": 0,
+    "production_store_attempts": 0,
+    "artifact": "docs/superpowers/evidence/stage1-data-provenance-pit-r1/engine-gates.txt"
+  }
+}

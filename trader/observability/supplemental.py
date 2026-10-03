@@ -239,7 +239,7 @@ def _decimal(v) -> float:
 
 
 def _parse(out: bytes, *, symbol: str, interval: str, limit: int,
-           started_ms: int, ended_ms: int) -> pd.DataFrame:
+           started_ms: int, ended_ms: int, source_url: str = KLINES_URL) -> pd.DataFrame:
     """Validated child message -> ts/OHLCV frame. Any deviation fails the whole
     response (`invalid_response:*`); nothing is dropped, coerced or filled."""
     def bad(why):
@@ -297,7 +297,15 @@ def _parse(out: bytes, *, symbol: str, interval: str, limit: int,
         prev = ts
     df = pd.DataFrame(parsed, columns=["ts", "open", "high", "low", "close", "volume"])
     df["ts"] = pd.to_datetime(df["ts"].astype("int64"), unit="ms", utc=True)
-    return df
+    from trader.data import market_provenance as mp
+    from trader.core.instrument_registry import InstrumentId
+    from trader.core.types import MarketType
+    iid = InstrumentId('binanceusdm',MarketType.FUTURES,symbol).value if source_url == KLINES_URL else None
+    return mp.annotate(df,instrument_id=iid,source=source_url,kind='candle',
+                       received_ms=max(ended_ms,t1),timeframe=interval,raw=rows,
+                       request_started_ms=started_ms,
+                       request_id=mp.digest(dict(symbol=symbol,interval=interval,start=t0,end=t1)),
+                       transform_version='binance_kline_projection.v1')
 
 
 class IsolatedSource:
@@ -384,7 +392,7 @@ class IsolatedSource:
             if proc.returncode != 0:
                 raise SupplementalFetchError(f"fetch_failed:child_exit_{proc.returncode}")
             return _parse(out, symbol=venue_symbol, interval=tf, limit=limit,
-                          started_ms=started_ms, ended_ms=ended_ms)
+                          started_ms=started_ms, ended_ms=ended_ms,source_url=self.url)
         finally:
             if proc is not None:
                 if proc.poll() is None:

@@ -59,4 +59,7 @@ def scan_frames(symbols, now=None):
             'ts': pd.to_datetime([anchor - (30 - i) * TF for i in range(30)], unit='ms', utc=True),
             'open': c, 'high': c * 1.01, 'low': c * .99, 'close': c,
             'volume': 100 + np.arange(30) % 7})}
+        from trader.data.market_provenance import annotate
+        out[sym]['4h'] = annotate(out[sym]['4h'],instrument_id='offline:futures:'+sym.replace('/',''),
+                                  source='offline:registry_fixture',kind='candle',received_ms=now,timeframe='4h')
     return out

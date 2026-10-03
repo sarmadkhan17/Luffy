@@ -65,6 +65,8 @@ def validate_symbol(analysts: dict[str, Analyst], symbol: str,
     """Replay analysts over one symbol's history.
 
     Returns {agent: {regime: {n, correct_1h, correct_4h}}}."""
+    if 'revision_id' in df and df.attrs.get('read_mode') != 'replay':
+        raise ValueError('historical validation requires retained bar-cut replay')
     reg = _rolling_regime(df)
     closes = df["close"].values
     n = len(df)
@@ -72,14 +74,23 @@ def validate_symbol(analysts: dict[str, Analyst], symbol: str,
         lambda: defaultdict(lambda: {"n1": 0, "c1": 0, "n4": 0, "c4": 0}))
 
     for i in range(warmup, n - HORIZON_BARS["4h"], step):
+        if 'quality' in df and df['quality'].iloc[i] != 'VALID':
+            continue
         regime = reg["regime"].iloc[i]
         px = float(closes[i])
         # CRITICAL: analysts see ONLY bars ≤ i. Handing the full frame
         # would leak the future into every vote (look-ahead bias).
         win = df.iloc[max(0, i - 400):i + 1]
-        dfs = {"15m": win, "1h": win}
+        from ..strategy.backtest import resample
+        from ..data.market_provenance import ms
+        cut = int(ms(win['ts'])[-1])+900_000
+        higher = resample(win,'1h')
+        dfs = {"15m": win, "1h": higher[ms(higher['ts'])+3_600_000 <= cut]}
         if btc_1h is not None:
-            dfs["BTC_1h"] = btc_1h[btc_1h["ts"] <= win["ts"].iloc[-1]]
+            known = ms(btc_1h['ts'])+3_600_000
+            if 'available_at_ms' in btc_1h:
+                known = np.maximum(known,btc_1h['available_at_ms'].fillna(np.inf))
+            dfs["BTC_1h"] = btc_1h[known <= cut]
         snap = _snap(symbol, win, i, px, dfs)
         for name, analyst in analysts.items():
             try:
@@ -92,6 +103,8 @@ def validate_symbol(analysts: dict[str, Analyst], symbol: str,
             bucket = scores[name][regime]
             for hkey, hb in HORIZON_BARS.items():
                 if i + hb >= n:
+                    continue
+                if not np.isfinite(closes[i + hb]):
                     continue
                 fwd = (float(closes[i + hb]) - px) / px * direction
                 if hkey == "1h":
@@ -109,7 +122,7 @@ def _snap(symbol, df, i, px, dfs):
     import datetime as dt
     btc_15 = dfs.get("BTC_1h")
     return Snapshot(symbol=symbol,
-                    ts=dt.datetime.now(dt.timezone.utc).isoformat(),
+                    ts=(pd.Timestamp(df['ts'].iloc[-1])+pd.Timedelta(minutes=15)).isoformat(),
                     price=px, dfs=dfs, market_type="futures",
                     btc_ctx=btc_context(btc_15, btc_15)
                     if btc_15 is not None else {})
@@ -123,7 +136,7 @@ def run(analysts: dict[str, Analyst], symbols: list[str],
     per_symbol = []
 
     def _one(sym):
-        df = feed.fetch_ohlcv(sym, "15m", limit=limit, force=True)
+        df = feed.cached_ohlcv(sym, "15m", limit=limit)
         if df is None or len(df) < 400:
             return None
         btc = btc_1h if sym != "BTC/USDT" else None

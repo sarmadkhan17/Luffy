@@ -14,6 +14,9 @@ Retention is asymmetric and it drives the design:
   taker     /futures/data/takerlongshortRatio       ~30 d  -> record forward
   ls_ratio  /futures/data/topLongShortPositionRatio ~30 d  -> record forward
 
+Provider retention above describes retrievable content, not historical LUFFY
+availability. Only retained receipt/revision clocks can establish PIT replay.
+
 Because the ~30-day series cannot be backfilled, the recorder runs from day
 one — every day without it is a day of history permanently lost.
 """
@@ -25,6 +28,10 @@ import time
 
 import pandas as pd
 import requests
+
+from . import market_provenance as mp
+from ..core.types import MarketType
+from ..core.instrument_registry import InstrumentId
 
 log = logging.getLogger(__name__)
 
@@ -56,10 +63,12 @@ def to_binance(symbol: str) -> str:
 
 
 class DerivFeed:
-    def __init__(self, db_path=None, timeout: int = 15):
+    def __init__(self, db_path=None, timeout: int = 15, clock_ms=None):
         self._db_path = str(db_path) if db_path else None
         self._local = threading.local()
         self.timeout = timeout
+        self._clock_ms = clock_ms or (lambda: int(time.time()*1000))
+        self._local.receipts = []
 
     # ── store ────────────────────────────────────────────────────────────
     @property
@@ -76,6 +85,7 @@ class DerivFeed:
                 "symbol TEXT NOT NULL, series TEXT NOT NULL, "
                 "ts INTEGER NOT NULL, value REAL, "
                 "PRIMARY KEY (symbol, series, ts))")
+            mp.init(conn)
             conn.commit()
             self._local.conn = conn
         return conn
@@ -98,29 +108,27 @@ class DerivFeed:
     def save(self, symbol: str, series: str, df: pd.DataFrame) -> None:
         if df is None or df.empty:
             return
-        ms = self._to_ms(df["ts"])
-        try:
-            self.db.executemany(
-                "INSERT OR REPLACE INTO derivs VALUES (?,?,?,?)",
-                [(symbol, series, int(t), float(v))
-                 for t, v in zip(ms, df["value"])])
-            self.db.commit()
-        except Exception as e:
-            log.warning(f"derivs write {symbol} {series}: {e}")
+        # Imported plain values are inventory, never historical receipt proof.
+        if not all(k in df for k in mp.META):
+            df = mp.annotate(df, instrument_id=None, source=None, kind='derivative',
+                             received_ms=self._clock_ms())
+        from .sqlite_tx import write_tx
+        with write_tx(self._local, self.db, 'derivative receipt') as conn:
+            mp.append(conn, 'derivative:'+symbol+':'+series, df)
+            conn.executemany('INSERT OR REPLACE INTO derivs VALUES (?,?,?,?)',
+                             [(symbol, series, int(t), float(v))
+                              for t, v in zip(mp.ms(df['ts']), df['value'])])
 
-    def load(self, symbol: str, series: str,
-             limit: int = 200000) -> pd.DataFrame | None:
-        try:
-            rows = self.db.execute(
-                "SELECT ts, value FROM derivs WHERE symbol=? AND series=? "
-                "ORDER BY ts DESC LIMIT ?", (symbol, series, limit)).fetchall()
-        except Exception as e:
-            log.warning(f"derivs read {symbol} {series}: {e}")
-            return None
-        if not rows:
-            return None
-        df = pd.DataFrame(rows[::-1], columns=["ts", "value"])
-        df["ts"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
+    def load(self, symbol: str, series: str, limit: int = 200000, *, as_of_ms=None):
+        at = self._clock_ms() if as_of_ms is None else mp.cut(as_of_ms)
+        df = mp.load(self.db, 'derivative:'+symbol+':'+series, as_of_ms=at, limit=limit, revision_stream=as_of_ms is None)
+        df = mp.eligible_frame(df, None, at)
+        if as_of_ms is not None and df is not None and len(df):
+            tail=df.iloc[-1]
+            age=tail.get('max_age_ms')
+            if age is not None and pd.notna(age) and at-int(tail.event_time_ms)>age:
+                df['quality']='STALE'
+                df['value']=float('nan')
         return df
 
     def coverage(self) -> dict:
@@ -135,24 +143,55 @@ class DerivFeed:
 
     # ── fetch ────────────────────────────────────────────────────────────
     def _get(self, path: str, params: dict, base: str = FAPI) -> list:
+        import uuid
+        self._local.receipts = []
+        started = self._clock_ms()
         try:
             r = requests.get(f"{base}{path}", params=params, headers=UA,
                              timeout=self.timeout)
             r.raise_for_status()
             data = r.json()
+            self._local.receipts = [dict(source=base+path, params=dict(params),
+                                         received_ms=self._clock_ms(), request_started_ms=started,
+                                         request_id=uuid.uuid4().hex, raw=data)]
             return data if isinstance(data, list) else []
         except Exception as e:
             log.warning(f"derivs fetch {path} {params.get('symbol')}: {e}")
             return []
 
-    @staticmethod
-    def _frame(pairs: list) -> pd.DataFrame:
+    def _frame(self, pairs: list) -> pd.DataFrame:
         df = pd.DataFrame(pairs, columns=["ts", "value"])
         if df.empty:
             df["ts"] = pd.to_datetime(df["ts"], utc=True)
             return df
         df["ts"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
-        return df.dropna().sort_values("ts").reset_index(drop=True)
+        df = df.sort_values("ts").reset_index(drop=True)
+        receipts = getattr(self._local, 'receipts', [])
+        identity = None
+        source = None
+        if receipts:
+            symbol = receipts[-1]['params'].get('symbol')
+            if symbol:
+                identity = InstrumentId('binanceusdm', MarketType.FUTURES, symbol).value
+                source = receipts[-1]['source']
+        def source_row(record, event):
+            if isinstance(record, dict):
+                return record.get('timestamp', record.get('fundingTime')) == event
+            return isinstance(record, (list,tuple)) and len(record)>6 and record[6] == event
+        raw = [{'receipts': [{**{k:v for k,v in r.items() if k!='raw'},
+                              'raw': [item for item in r['raw'] if source_row(item,int(event))]}
+                             for r in receipts],
+                'event_ms': int(event), 'value': float(value)}
+               for event,value in zip(mp.ms(df['ts']),df['value'])]
+        valid_receipts = bool(receipts) and all(r['received_ms'] >= r['request_started_ms'] for r in receipts)
+        return mp.annotate(df, instrument_id=identity if valid_receipts else None,
+                           source=source if valid_receipts else None, kind='derivative',
+                           received_ms=self._clock_ms(), raw=raw,
+                           request_started_ms=min((r['request_started_ms'] for r in receipts),default=None),
+                           max_age_ms=(8*3_600_000+1_800_000 if source and 'fundingRate' in source
+                                       else _PERIOD_MS.get(receipts[-1]['params'].get('period',receipts[-1]['params'].get('interval','1h')),3_600_000)+1_800_000
+                                       if receipts else None))
+
 
     def _parse_funding(self, raw: list) -> pd.DataFrame:
         return self._frame([(int(r["fundingTime"]), float(r["fundingRate"]))
@@ -272,9 +311,8 @@ class DerivFeed:
         feature from the start and no fetcher ever existed, so every basis
         spec reported UNTESTED forever. This is that fetcher.
         """
-        import time as _t
         span_ms = _PERIOD_MS.get(period, 3600_000) * int(limit)
-        start = int(_t.time() * 1000) - span_ms
+        start = self._clock_ms() - span_ms
         return self._basis_between(symbol, period, start)
 
     def _basis_between(self, symbol: str, period: str,
@@ -282,13 +320,49 @@ class DerivFeed:
         sym = to_binance(symbol)
         perp = dict(self._klines(FAPI, "/fapi/v1/klines", sym, period,
                                  start_ms, self._KLINE_PAGE))
+        perp_receipts = list(getattr(self._local, 'receipts', []))
         spot = dict(self._klines(SAPI, "/api/v3/klines", sym, period,
                                  start_ms, self._KLINE_PAGE))
         # inner join on close time: a bar missing on either venue has no basis
         pairs = [(ts, (perp[ts] - spot[ts]) / spot[ts])
                  for ts in sorted(perp.keys() & spot.keys())
                  if spot[ts] > 0]
-        return self._frame(pairs)
+        spot_receipts = list(getattr(self._local, 'receipts', []))
+        self._local.receipts = perp_receipts + spot_receipts
+        if not pairs:
+            return self._frame([])
+        rows = []
+        for event, value in pairs:
+            components = []
+            for receipts, price, venue, market in (
+                    (perp_receipts, perp[event], 'binanceusdm', MarketType.FUTURES),
+                    (spot_receipts, spot[event], 'binance', MarketType.SPOT)):
+                for r in receipts:
+                    records = [k for k in r['raw'] if isinstance(k, (list, tuple))
+                               and len(k)>6 and k[6] == event and float(k[4]) == price]
+                    if not records:
+                        continue
+                    component = mp.annotate(pd.DataFrame(dict(
+                        ts=pd.to_datetime([event], unit='ms', utc=True), value=[price])),
+                        instrument_id=InstrumentId(venue, market, sym).value,
+                        source=r['source'], kind='derivative', received_ms=r['received_ms'],
+                        request_id=r.get('request_id'), request_started_ms=r['request_started_ms'],
+                        raw=[records[-1]])
+                    components.append({k: component.to_dict('records')[0][k] for k in mp.META})
+            valid = len(components) == 2 and all(c['quality'] == 'VALID' for c in components)
+            # A derived receipt cannot precede either required input receipt.
+            component_times = [c['available_at_ms'] for c in components if c['available_at_ms'] is not None]
+            component_times += [c['observed_at_ms'] for c in components]
+            available = max([self._clock_ms()] + component_times)
+            raw = dict(components=components, derivation='basis.spot-perp.v1',
+                       event_ms=event, value=value)
+            rows.append(mp.annotate(pd.DataFrame(dict(
+                ts=pd.to_datetime([event], unit='ms', utc=True), value=[value])),
+                instrument_id=InstrumentId('binanceusdm', MarketType.FUTURES, sym).value if valid else None,
+                source='binance:spot+usdm:basis' if valid else None, kind='derivative',
+                received_ms=available, raw=[raw], transform_version='basis.spot-perp.v1',
+                max_age_ms=_PERIOD_MS.get(period, 3_600_000)+1_800_000))
+        return pd.concat(rows, ignore_index=True)
 
     def basis_history(self, symbol: str, years: float = 2.0,
                       period: str = "1h", delay: float = 0.25,
@@ -300,7 +374,7 @@ class DerivFeed:
         limited it was the default.
         """
         import time as _t
-        now_ms = int(_t.time() * 1000)
+        now_ms = self._clock_ms()
         step = _PERIOD_MS.get(period, 3600_000) * self._KLINE_PAGE
         cursor = (int(since_ms) if since_ms
                   else now_ms - int(years * 365.25 * 86400 * 1000))

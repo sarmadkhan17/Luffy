@@ -45,12 +45,19 @@ def legacy_signals(genome, df: pd.DataFrame, ctx: dict | None = None):
     if ctx and ts_vals is not None:
         for k, cdf in ctx.items():
             if cdf is not None and len(cdf) and "ts" in cdf.columns:
-                ctx_idx[k] = (cdf, pd.to_datetime(cdf["ts"], utc=True).values)
+                from trader.data.market_provenance import ms
+                from trader.core.types import TF_MS
+                known = ms(cdf['ts']) + TF_MS.get(k.removeprefix('BTC_'), 0)
+                if 'available_at_ms' in cdf:
+                    known = np.maximum(known,cdf['available_at_ms'].fillna(np.iinfo(np.int64).max).to_numpy(dtype='int64'))
+                ctx_idx[k] = (cdf, np.maximum.accumulate(known))
 
     def ctx_at(i):
         if not ctx_idx:
             return {}
-        now = ts_vals[i]
+        from trader.data.market_provenance import ms
+        from trader.core.types import TF_MS
+        now = ms(df['ts'])[i] + TF_MS[df.attrs.get('timeframe') or '15m']
         out = {}
         for k, (cdf, cts) in ctx_idx.items():
             j = int(np.searchsorted(cts, now, side="right"))

@@ -36,14 +36,19 @@ class PositioningAnalyst(Analyst):
         if funding is None and not oi:
             return self._vote(self.name, snap, 0.0, 0.25, "no positioning data")
         conv, conf, notes = 0.0, 0.3, []
-        fr = float(funding) if funding is not None else 0.0
+        fr = float(funding) if funding is not None else float("nan")
+        if funding is None:
+            notes.append("funding unavailable")
 
         oi_now = oi.get("now") if oi else None
         oi_chg = oi.get("chg_24h") if oi else None     # fractional, e.g. 0.08
-        price_chg = 0.0
+        price_chg = float("nan")
         df = snap.df("1h")
-        if df is not None and len(df) >= 24:
-            price_chg = float(df["close"].iloc[-1] / df["close"].iloc[-24] - 1)
+        if df is not None and len(df) >= 25:
+            from ..data.market_provenance import ms
+            stamps=ms(df['ts'].tail(25))
+            if all(b-a==3_600_000 for a,b in zip(stamps,stamps[1:])):
+                price_chg = float(df["close"].iloc[-1] / df["close"].iloc[-25] - 1)
 
         if fr >= EXTREME:
             conv -= 0.40; conf += 0.12

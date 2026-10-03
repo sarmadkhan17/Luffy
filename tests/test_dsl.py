@@ -103,8 +103,8 @@ def ctx(frame):
 
 def test_comparison_returns_boolean_series(ctx, frame):
     out = evaluate(parse("close > ema(20)"), ctx)
-    assert isinstance(out, pd.Series) and out.dtype == bool
-    assert out.equals(frame["close"] > ind.ema(frame["close"], 20))
+    assert isinstance(out, pd.Series) and pd.api.types.is_bool_dtype(out.dtype)
+    assert out.astype(bool).equals(frame["close"] > ind.ema(frame["close"], 20))
 
 
 def test_and_is_elementwise(ctx):
@@ -160,7 +160,9 @@ def test_htf_missing_timeframe_is_false(ctx):
 
 
 def test_unary_minus_literal(ctx):
-    assert evaluate(parse("zscore(close, 96) < -1.0"), ctx).dtype == bool
+    result = evaluate(parse("zscore(close, 96) < -1.0"), ctx)
+    assert pd.api.types.is_bool_dtype(result.dtype)
+    assert result.iloc[:95].isna().all()
 
 
 def test_prev_enables_crossing_logic(ctx):

@@ -1,0 +1,19 @@
+{
+  "A": "test_normal_feed_source_canonical_identity_and_raw; test_normal_derivative_adapter_preserves_raw_receipt",
+  "B": "test_receipt_availability_not_event_time; test_request_clock_reversal_never_qualifies",
+  "C": "test_unusable_quality_never_numeric_current; test_unknown_flow_and_leader_never_become_neutral_market_values",
+  "D": "test_stale_failure_does_not_restamp_current; test_reference_revisions_reopen_and_stale_quality; test_auxiliary_stale_and_future_book_fail_closed",
+  "E": "test_revision_retention_pit_and_reopen; test_derivative_revisions_quality_and_pit",
+  "F": "test_revision_retention_pit_and_reopen; test_reference_revisions_reopen_and_stale_quality",
+  "G": "test_future_observation_and_cache_rejected",
+  "H": "test_htf_final_cannot_appear_early; test_htf_delayed_receipt_not_nominal_close",
+  "I": "test_partial_final_lineage_and_eligibility",
+  "J": "test_aggregate_constituent_availability_and_identity; test_aggregation_propagates_constituent_quality; test_aggregation_cannot_mix_canonical_instruments",
+  "K": "test_future_observation_and_cache_rejected; test_kernel_historical_read_bypasses_future_memory_cache; test_listing_cache_future_receipt_rejected",
+  "L": "test_latest_asof_and_replay_separate; test_unqualified_snapshot_cannot_use_latest; test_current_receipts_fenced_from_historical_engines",
+  "M": "test_feature_provenance_and_future_cache_binding; test_cross_section_rejects_delayed_peer_at_historical_cut",
+  "N": "test_kernel_snapshot_actual_boundary; test_world_capture_rejects_future_and_preserves_lineage; test_world_state_refuses_future_and_quality_survives; test_opportunity_refuses_future_signal_source",
+  "O": "test_replay_original_revision_not_later_backfill; test_funding_cost_reader_respects_revision_availability; test_replay_export_reconstructs_inputs_and_evidence_without_dangling_ids",
+  "P": "test_revision_retention_pit_and_reopen; test_reference_revisions_reopen_and_stale_quality; test_auxiliary_receipt_durable_and_unknown_provider_clock",
+  "Q": "test_negative_control_event_clock_detected; test_negative_control_overwrite_detected; test_negative_control_future_cache_detected; test_negative_control_early_htf_detected"
+}

@@ -25,6 +25,8 @@ from __future__ import annotations
 
 import sqlite3
 import threading
+import time
+from . import market_provenance as mp
 from dataclasses import dataclass
 
 import numpy as np
@@ -82,15 +84,16 @@ def _num(v):
 
 
 class RefStore:
-    """Closed reference bars, one row per (key, ts)."""
+    """Append-only receipt/revisions plus the legacy one-row inventory projection."""
 
     #: seconds a statement waits on a lock before "database is locked"
     BUSY_TIMEOUT_S = BUSY_TIMEOUT_S
 
-    def __init__(self, db_path=None):
+    def __init__(self, db_path=None, clock_ms=None):
         self._db_path = str(db_path) if db_path else \
             str(ROOT / "data" / "candles.db")
         self._local = threading.local()
+        self._clock_ms = clock_ms or (lambda: int(time.time()*1000))
 
     @property
     def db(self):
@@ -102,6 +105,7 @@ class RefStore:
                     "CREATE TABLE IF NOT EXISTS refs (key TEXT NOT NULL, "
                     "ts INTEGER NOT NULL, open REAL, high REAL, low REAL, "
                     "close REAL, volume REAL, PRIMARY KEY (key, ts))")
+                mp.init(conn)
                 conn.commit()
             except BaseException:
                 close_quietly(conn, "init")  # setup error wins; not cached
@@ -112,13 +116,41 @@ class RefStore:
     def save(self, key: str, df, now_ms: int | None = None) -> int:
         """Persist CLOSED bars with a measured close. Returns rows written."""
         ref = REFS[key]
+        raw = df.attrs.get('raw_source_record') if df is not None else None
         if df is None or not len(df):
             return 0
         if ref.tf in TF_MS:
             df = closed_bars(df, ref.tf, now_ms)
             if df is None or not len(df):
                 return 0
+        df = df.copy()
+        for column in ('open','high','low','volume'):
+            if column not in df:
+                df[column] = np.nan
         n = len(df)
+        received = self._clock_ms() if now_ms is None else mp.cut(now_ms)
+        if not all(k in df for k in mp.META):
+            # The recorder's source receipt is required. Arbitrary imported
+            # projections and old table rows do not establish historical truth.
+            raw = df.attrs.get('raw_source_record')
+            df = mp.annotate(df, instrument_id='ref:'+key if raw is not None else None,
+                             source=df.attrs.get('source') if raw is not None else None,
+                             kind='reference', received_ms=received,
+                             request_started_ms=df.attrs.get('request_started_ms'),
+                             timeframe=ref.tf if ref.tf in TF_MS else None,
+                             raw=[{'raw_source_hash':mp.digest(raw), 'event_ms':int(t)} for t in to_ms(df['ts'])] if raw is not None else None)
+        known = to_ms(df['ts']) + ref.close_after_ms
+        if not ref.close_only:
+            numeric=df[['open','high','low','close','volume']]
+            finite=np.isfinite(numeric).all(axis=1)
+            geometry=(df['volume'].ge(0) & df['low'].le(df[['open','close']].min(axis=1)) &
+                      df['high'].ge(df[['open','close']].max(axis=1)))
+            df.loc[df['quality'].eq('VALID') & ~finite,'quality']='INCOMPLETE'
+            df.loc[df['quality'].eq('VALID') & ~geometry,'quality']='INVALID'
+        df['available_at_ms'] = np.maximum(df['available_at_ms'], known)
+        early = df['available_at_ms'] > received
+        df.loc[early, 'quality'] = 'INCOMPLETE'
+        df.loc[early, 'bar_state'] = 'PARTIAL'
 
         def col(c):
             return df[c].tolist() if c in df else [None] * n
@@ -132,21 +164,24 @@ class RefStore:
             # a failure raises to the caller with nothing left open or
             # half-committed on this thread's connection — see sqlite_tx
             with write_tx(self._local, self.db, f"ref {key}") as conn:
+                if raw is not None:
+                    conn.execute('INSERT OR IGNORE INTO market_raw_sources VALUES (?,?,?)',
+                                 (mp.digest(raw), df['source'].iloc[0], mp.encode(raw)))
+                mp.append(conn, "reference:"+key, df)
                 conn.executemany(
                     "INSERT OR REPLACE INTO refs VALUES (?,?,?,?,?,?,?)", rows)
         return len(rows)
 
-    def load(self, key: str, since_ms: int = 0):
-        rows = self.db.execute(
-            "SELECT ts, open, high, low, close, volume FROM refs "
-            "WHERE key=? AND ts>=? ORDER BY ts", (key, int(since_ms))).fetchall()
-        if not rows:
-            return None
-        df = pd.DataFrame(rows, columns=["ts", "open", "high", "low",
-                                         "close", "volume"])
-        df["ts"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
-        return df.astype({c: float for c in
-                          ("open", "high", "low", "close", "volume")})
+    def load(self, key: str, since_ms: int = 0, *, as_of_ms=None):
+        at = self._clock_ms() if as_of_ms is None else mp.cut(as_of_ms)
+        df = mp.load(self.db, 'reference:'+key, as_of_ms=at, revision_stream=as_of_ms is None)
+        df = mp.eligible_frame(df, None, at)
+        if as_of_ms is not None and df is not None and len(df):
+            ref = REFS[key]
+            if at-int(df.event_time_ms.iloc[-1])-ref.close_after_ms > ref.max_stale_ms:
+                df['quality']='STALE'
+                df.loc[:,[k for k in mp.VALUES if k in df]]=np.nan
+        return df.loc[to_ms(df['ts']) >= since_ms].copy() if df is not None else None
 
     def last_ts(self, key: str) -> int | None:
         r = self.db.execute("SELECT MAX(ts) FROM refs WHERE key=?",

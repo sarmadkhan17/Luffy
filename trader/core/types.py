@@ -100,6 +100,7 @@ class Snapshot:
     market: dict | None = None        # {ref key: frame} for ref() specs
 
     instrument_binding_json: str | None = None  # exact registry capability at proposal cut
+    market_provenance_json: str | None = None  # exact market revisions at the decision cut
 
     def df(self, tf: str):
         return self.dfs.get(tf)

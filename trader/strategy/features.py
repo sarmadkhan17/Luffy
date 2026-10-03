@@ -64,6 +64,52 @@ class FeatureCtx:
     symbol: str | None = None         # this ctx's own key in `universe`, if known
     _cache: dict = field(default_factory=dict, repr=False)
 
+    as_of_ms: int | None = None
+
+    def __post_init__(self):
+        from ..data import market_provenance as mp
+        if self.as_of_ms is None:
+            self.as_of_ms = self.frames.get(self.tf, pd.DataFrame()).attrs.get('as_of_ms')
+        if self.as_of_ms is not None:
+            mp.cut(self.as_of_ms)
+            def safe(frames):
+                if not frames:
+                    return frames
+                return {tf: mp.eligible_frame(df, tf, self.as_of_ms,
+                            require_provenance=True) for tf, df in frames.items()}
+            self.frames = safe(self.frames)
+            self.btc = safe(self.btc)
+            self.universe = {sym: safe(frames) for sym, frames in (self.universe or {}).items()}
+            self.derivs = {key: mp.eligible_frame(df, None, self.as_of_ms)
+                           for key, df in (self.derivs or {}).items()}
+            self.market = {key: mp.eligible_frame(df, None, self.as_of_ms)
+                           for key, df in (self.market or {}).items()}
+            if self.frames.get(self.tf) is None:
+                raise ValueError('market provenance unavailable at feature cut')
+
+    def temporal_identity(self):
+        from ..data.market_provenance import digest
+        def ids(frames):
+            return {k: list(v['revision_id']) if v is not None and 'revision_id' in v else []
+                    for k, v in (frames or {}).items()}
+        return digest(dict(cut=self.as_of_ms, frames=ids(self.frames), btc=ids(self.btc),
+                           derivs=ids(self.derivs), market=ids(self.market),
+                           universe={s:ids(f) for s,f in (self.universe or {}).items()}, symbol=self.symbol))
+
+    def bind_result(self, result, name):
+        if isinstance(result, pd.Series):
+            if 'quality' in self.df:
+                result = result.where(self.df['quality'].eq('VALID'))
+            result.attrs['market_provenance'] = dict(
+                transform_version='features.v1:'+name, as_of_ms=self.as_of_ms,
+                source_identity=self.temporal_identity(),
+                source_revisions={tf: list(df['revision_id']) for tf, df in self.frames.items()
+                                  if df is not None and 'revision_id' in df},
+                context_revisions={kind:{key:list(frame['revision_id']) for key,frame in (frames or {}).items()
+                                         if frame is not None and 'revision_id' in frame}
+                                   for kind,frames in (('btc',self.btc),('derivs',self.derivs),('market',self.market))})
+        return result
+
     @property
     def df(self) -> pd.DataFrame:
         return self.frames[self.tf]
@@ -76,9 +122,9 @@ class FeatureCtx:
         """Memoised feature evaluation. `ema(20)` typically appears in both
         the entry expression and the filters; computing it twice per bar
         across a 5-symbol gauntlet is pure waste."""
-        key = (name, self.tf, args)
+        key = (name, self.tf, args, self.temporal_identity())
         if key not in self._cache:
-            self._cache[key] = FEATURES[name].fn(self, *args)
+            self._cache[key] = self.bind_result(FEATURES[name].fn(self, *args), name)
         return self._cache[key]
 
     def scoped(self, tf: str) -> "FeatureCtx":
@@ -86,7 +132,7 @@ class FeatureCtx:
         return FeatureCtx(frames=self.frames, tf=tf, btc=self.btc,
                           derivs=self.derivs, universe=self.universe,
                           market=self.market, symbol=self.symbol,
-                          _cache=self._cache)
+                          _cache=self._cache, as_of_ms=self.as_of_ms)
 
     def for_symbol(self, symbol: str) -> "FeatureCtx | None":
         """A view on another member of the universe at the same timeframe.
@@ -95,7 +141,7 @@ class FeatureCtx:
         than a fabricated value.
         """
         frames = (self.universe or {}).get(symbol)
-        if not frames or self.tf not in frames:
+        if not frames or self.tf not in frames or frames[self.tf] is None or not len(frames[self.tf]):
             return None
         # Fresh cache: the memo key is (name, tf, args) with no symbol
         # component, so sharing the parent's cache would return this
@@ -111,7 +157,7 @@ class FeatureCtx:
         # must come out honestly NaN rather than quietly wrong.
         return FeatureCtx(frames=frames, tf=self.tf, btc=self.btc,
                           derivs=None, universe=self.universe,
-                          market=self.market, symbol=symbol, _cache={})
+                          market=self.market, symbol=symbol, _cache={}, as_of_ms=self.as_of_ms)
 
 
 def _s(ctx: FeatureCtx, col: str) -> pd.Series:

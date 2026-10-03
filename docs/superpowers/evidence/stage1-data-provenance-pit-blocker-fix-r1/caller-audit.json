@@ -1,0 +1,79 @@
+{
+  "package": "LUFFY-STAGE1-DATA-PROVENANCE-PIT-BLOCKER-FIX-R1",
+  "scope": "Only the two R1 review blockers and their normal consumers",
+  "routes": [
+    {
+      "consumer": "Universe membership",
+      "locations": [
+        "trader/data/feed.py:676",
+        "trader/data/feed.py:683",
+        "trader/data/feed.py:709"
+      ],
+      "finding": "The membership payload is bound to a sealed result receipt with retrieval ID, content/result hashes, component source identities, observed and availability clocks. Failed refresh returns without rewriting the result or scan timestamp. Earlier reads exclude future alts; configuration majors are separately labelled."
+    },
+    {
+      "consumer": "Kernel scan selection",
+      "locations": [
+        "trader/kernel.py:1729",
+        "trader/kernel.py:912"
+      ],
+      "finding": "Normal selection uses eligible Universe.symbols; explicit older cuts use fenced symbols/volumes. Detached result receipts accompany scan selection and Snapshot lineage. Explicit strategy includes are labelled strategy.universe.include, not volume-ranked membership."
+    },
+    {
+      "consumer": "Attention membership lineage",
+      "locations": [
+        "trader/kernel.py:168",
+        "trader/observability/collector.py:73",
+        "trader/observability/attention.py:91",
+        "trader/observability/store.py:179"
+      ],
+      "finding": "Kernel passes detached membership receipts through Collector to capture. Supplied missing/future receipts exclude membership and candles. Exact source result identity survives normal Store persistence."
+    },
+    {
+      "consumer": "Basis recording and backfill",
+      "locations": [
+        "trader/data/derivatives.py:145",
+        "trader/data/derivatives.py:289",
+        "trader/data/derivatives.py:318",
+        "trader/data/derivatives.py:104",
+        "trader/data/derivatives.py:122"
+      ],
+      "finding": "Real requests.get fixture exercises both actual HTTP parsers and derivation legs. Canonical spot/perp instrument identities, source endpoints, actual provider close event, local receipt/availability, request/content/revision IDs and derivation version reside in raw_json in append-only existing revisions. Availability is max of derivation and both component clocks. Recording/backfill do not backdate historical events; reopening selects only eligible stored revisions."
+    },
+    {
+      "consumer": "Derivative basis features and replay/backtest",
+      "locations": [
+        "trader/strategy/spec_evidence.py:33",
+        "trader/kernel.py:302",
+        "trader/strategy/features_deriv.py:18",
+        "trader/data/market_provenance.py:183",
+        "trader/strategy/backtest.py:141",
+        "trader/strategy/vector_backtest.py:368"
+      ],
+      "finding": "Normal Kernel passes explicit snapshot cut to load_derivs/DerivFeed.load. Availability-filtered revision ledger serves as-of reads; revision streams feed per-bar align. Both historical engines retain their existing replay requirement. No direct HTTP basis fallback or raw derivative projection read found in these normal consumers."
+    },
+    {
+      "consumer": "WorldModel",
+      "locations": [
+        "trader/observability/world_producer.py:126",
+        "trader/world/observation.py:191",
+        "trader/world/state.py:45",
+        "trader/world/model.py:136"
+      ],
+      "finding": "World production reads capture members_asof and bar_asof. Future membership is rejected upstream before capture; WorldState/WorldModel retain existing explicit availability/receipt/model-cut guards."
+    },
+    {
+      "consumer": "OpportunityContext",
+      "locations": [
+        "trader/cognition/opportunity_context.py:391",
+        "trader/cognition/opportunity_context.py:303",
+        "trader/cognition/opportunity_context.py:541"
+      ],
+      "finding": "Existing signal ancestry, scan cut, source availability/observed and world-model cut checks remain. No newer result is rebound to an earlier context cut."
+    }
+  ],
+  "live_capable_pit_bypass_found": false,
+  "authority_changed": false,
+  "real_network_attempts": 0,
+  "limitations": "Offline implementation evidence; independent R2 review required. Config/strategy membership is an explicit selection, not historical provider-universe proof."
+}

@@ -1,0 +1,48 @@
+{
+  "accepted_final_campaigns": {
+    "focused-tests": {
+      "passed": 649,
+      "seconds": 116.62,
+      "network_attempts": 0,
+      "production_store_attempts": 0,
+      "artifact": "docs/superpowers/evidence/stage1-data-provenance-pit-r1/focused-tests.txt"
+    },
+    "acceptance-tests": {
+      "passed": 49,
+      "seconds": 2.77,
+      "network_attempts": 0,
+      "production_store_attempts": 0,
+      "artifact": "docs/superpowers/evidence/stage1-data-provenance-pit-r1/acceptance-tests.txt"
+    },
+    "world-regressions": {
+      "passed": 14,
+      "seconds": 239.05,
+      "network_attempts": 0,
+      "production_store_attempts": 0,
+      "artifact": "docs/superpowers/evidence/stage1-data-provenance-pit-r1/world-regressions.txt"
+    },
+    "engine-gates": {
+      "passed": 2,
+      "seconds": 49.39,
+      "network_attempts": 0,
+      "production_store_attempts": 0,
+      "artifact": "docs/superpowers/evidence/stage1-data-provenance-pit-r1/engine-gates.txt"
+    }
+  },
+  "superseded_preliminary_campaigns": [
+    {
+      "status": "INVALID_INTERRUPTED_NOT_CLOSURE_EVIDENCE",
+      "reason": "An existing derivative basis fixture left an HTTP helper unmocked. Network code entered DNS/socket paths; the process was interrupted. Successful venue contact was not established.",
+      "observed_pytest_summary": "3 failed, 112 passed in 238.81s"
+    },
+    {
+      "status": "INVALID_OFFLINE_GUARD_DENIALS_NOT_CLOSURE_EVIDENCE",
+      "reason": "Network guard denied 37 attempted calls from the unmocked existing basis fixture. Pytest case pass count alone was not accepted.",
+      "observed_pytest_summary": "238 passed in 229.53s",
+      "network_attempts_denied": 37
+    }
+  ],
+  "correction": "Default mocked derivative helper now returns no data; basis fixtures mock both requests and remove pagination delays. Accepted campaigns deny HTTP/socket and production-store connections and fail on any attempt.",
+  "final_mutant_assertions": "Event-clock mutant asserts returned reader evidence is available at its cut; future-cache mutant asserts receipt/availability of the returned observation. No mutant is accepted merely because None differs from an empty frame.",
+  "scope": "Final runs establish offline implementation safety, not real-venue behavior, real-order evidence, deployment, sustained runtime or independent review."
+}

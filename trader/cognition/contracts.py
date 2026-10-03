@@ -104,6 +104,12 @@ class PositioningPoint:
     series: str
     ts: int
     value: float
+    available_ms: int | None = None
+    observed_ms: int | None = None
+    source: str | None = None
+    instrument_id: str | None = None
+    revision_id: str | None = None
+    quality: str = 'UNKNOWN'
 
 
 # Package-owned implementation policy (SDD-STAGE-3-ATTENTION-CORRELATION-
@@ -422,7 +428,14 @@ def _positioning(raw, reject):
         if not _is_num(val):
             bad(i, "non_finite", sym, series)
             continue
-        rec = PositioningPoint(sym, series, ts, float(val))
+        available, observed = p.get('available_ms'), p.get('observed_ms')
+        if (not _is_ts(available) or not _is_ts(observed) or available < ts or observed > available
+                or p.get('quality') != 'VALID' or not all(isinstance(p.get(k),str) and p[k]
+                    for k in ('source','instrument_id','revision_id'))):
+            bad(i, 'market_provenance_unavailable', sym, series)
+            continue
+        rec = PositioningPoint(sym, series, ts, float(val), available, observed,
+                               p['source'], p['instrument_id'], p['revision_id'], p['quality'])
         clash = seen.get((sym, series, ts))
         if clash is None:
             seen[(sym, series, ts)] = rec

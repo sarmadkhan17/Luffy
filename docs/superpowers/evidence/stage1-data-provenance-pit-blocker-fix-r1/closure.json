@@ -1,0 +1,59 @@
+{
+  "package": "LUFFY-STAGE1-DATA-PROVENANCE-PIT-BLOCKER-FIX-R1",
+  "result": "PASS",
+  "future_universe_cache": "PASS",
+  "failed_refresh_time_laundering": "ELIMINATED",
+  "cache_availability_identity": "PASS",
+  "kernel_universe_pit": "PASS",
+  "attention_membership_lineage": "PASS",
+  "basis_real_production_path": "PASS",
+  "basis_component_provenance": "PASS",
+  "basis_availability": "PASS",
+  "basis_replay_pit": "PASS",
+  "network_test_isolation": "PASS",
+  "real_network_attempts": 0,
+  "production_store_attempts": 0,
+  "live_capable_pit_bypass_found": false,
+  "mutant_detection": "PASS",
+  "new_mutants_detected": 5,
+  "authority_regression": false,
+  "missing_implementation": [],
+  "pre_start_test_blocker": [],
+  "MI2_status": "AWAITING_REVIEW",
+  "MI3_status": "AWAITING_REVIEW",
+  "remaining_stage1_gaps": [
+    "MI-2",
+    "MI-3",
+    "MI-6",
+    "MI-7"
+  ],
+  "tests": {
+    "focused_regressions": {
+      "passed": 663,
+      "seconds": 121.3,
+      "artifact": "focused-tests.txt"
+    },
+    "final_blocker_and_prior_acceptance": {
+      "passed": 64,
+      "seconds": 3.83,
+      "artifact": "blocker-tests.txt"
+    },
+    "authority_world": {
+      "passed": 94,
+      "seconds": 265.21,
+      "artifact": "authority-world-tests.txt"
+    }
+  },
+  "independent_review_r1": "BLOCKED",
+  "independent_re_review": "AWAITING_R2",
+  "state_updated": true,
+  "next_updated": true,
+  "next_recommended_package": "LUFFY-STAGE1-DATA-PROVENANCE-PIT-INDEPENDENT-REVIEW-R2",
+  "safe_to_review": true,
+  "committed": false,
+  "deployed": false,
+  "startup_performed": false,
+  "report": "docs/superpowers/reports/2026-10-04-stage1-data-provenance-pit-blocker-fix-r1.md",
+  "caller_audit": "caller-audit.json",
+  "files_changed": "files-changed.json"
+}

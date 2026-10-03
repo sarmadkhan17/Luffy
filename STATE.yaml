@@ -1,6 +1,6 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-10-03'
+updated_at: '2026-10-04'
 status: EVIDENCE_BASED
 
 authority:
@@ -67,7 +67,17 @@ stage_status:
     - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/focused-tests.txt
     - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/acceptance-tests.txt
     - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/registry-collected-tests.txt
+    - docs/superpowers/reports/2026-10-03-stage1-data-provenance-pit-r1.md
+    - docs/superpowers/evidence/stage1-data-provenance-pit-r1/closure.json
+    - docs/superpowers/evidence/stage1-data-provenance-pit-r1/acceptance-tests.txt
+    - docs/superpowers/evidence/stage1-data-provenance-pit-r1/focused-tests.txt
+    - docs/superpowers/evidence/stage1-data-provenance-pit-r1/world-regressions.txt
+    - docs/superpowers/evidence/stage1-data-provenance-pit-r1/caller-audit.json
     proven_facts:
+    - MI-2/MI-3 are independently reviewed and CLOSED through retained canonical source receipts, typed quality, append-only local revisions,
+      explicit availability-based as-of reads and native/aggregated HTF and future-cache rejection.
+    - Actual Kernel, feature, Attention/World, Opportunity and replay callers are bounded by retained receipts;
+      unqualified legacy projections and late backfills do not establish earlier decision evidence.
     - Canonical RegistrySnapshot/capability receipts bind proposals, TradeIntent, final Risk, Execution, booking
       and reconciliation; unknown account permissions and leverage fail closed.
     - Final entry requires a process-issued exact deterministic Risk ALLOW/RESIZE permission, current policy/account/book
@@ -78,9 +88,18 @@ stage_status:
       or owner first-live authority.
     - Truthful current account/Risk/News contracts and provenance-aware owner reads remain; actual connected-account
       and runtime maturity are not proven.
+    audit_gap_status:
+      MI-2:
+        status: CLOSED
+        implementation: PASS
+        independent_review: PASS
+      MI-3:
+        status: CLOSED
+        implementation: PASS
+        independent_review: PASS
+      MI-6: OPEN
+      MI-7: OPEN
     gaps:
-    - 'MI-2: Durable normal market-feed source/receipt/quality and historical revision provenance.'
-    - 'MI-3: Native HTF close/availability alignment and rejection of future cached observations.'
     - 'MI-6: Integrity-checked critical-store/config/evidence backup and restore with an off-host seam.'
     - 'MI-7: Critical storage/journal-unavailable and missing-heartbeat safety alert paths.'
     pre_start_closure: BLOCKED
@@ -89,8 +108,8 @@ stage_status:
     closure_base_head: 52aac90e004662610de006fd5c4eb8cdcf39bb7a
     component_results:
       canonical_instrument_identity: PASS
-      data_provenance_quality: BLOCKED
-      point_in_time_correctness: BLOCKED
+      data_provenance_quality: PASS
+      point_in_time_correctness: PASS
       journal_truth: PASS
       control_state_machine: PASS
       risk_authority: PASS
@@ -101,8 +120,6 @@ stage_status:
       monitoring_alerts: BLOCKED
       failure_injection_prestart: BLOCKED
     missing_implementation:
-    - 'MI-2: Durable normal market-feed source/receipt/quality and historical revision provenance.'
-    - 'MI-3: Native HTF close/availability alignment and rejection of future cached observations.'
     - 'MI-6: Integrity-checked critical-store/config/evidence backup and restore with an off-host seam.'
     - 'MI-7: Critical storage/journal-unavailable and missing-heartbeat safety alert paths.'
     pre_start_test_blocker: []
@@ -117,9 +134,9 @@ stage_status:
       outcomes and read-key permissions.'
     deployment_not_performed:
     - 'DP-1: Latest completed-system architecture not deployed/started for first controlled startup.'
-    latest_completed_implementation: LUFFY-STAGE1-ENTRY-AUTHORITY-IDEMPOTENCY-R1
-    latest_implementation_report: docs/superpowers/reports/2026-10-03-stage1-entry-authority-idempotency-r1.md
-    next_recommended_package: LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1
+    latest_completed_implementation: LUFFY-STAGE1-DATA-PROVENANCE-PIT-BLOCKER-FIX-R1
+    latest_implementation_report: docs/superpowers/reports/2026-10-04-stage1-data-provenance-pit-blocker-fix-r1.md
+    next_recommended_package: LUFFY-STAGE1-RECOVERY-MONITORING-FOUNDATION-R1
 
   stage_2_world_model:
     state: TESTED
@@ -527,14 +544,14 @@ completed_stage3_4_pre_stage8_closure_audit_r1:
     - predictive research bridge and final Stage5-7 lineage.
 
 current_active_work:
-  id: LUFFY-STAGE1-ENTRY-AUTHORITY-IDEMPOTENCY-R1
-  type: BOUNDED_IMPLEMENTATION
-  status: COMPLETE_TESTED_COMMITTED_UNDEPLOYED
+  id: LUFFY-STAGE1-DATA-PROVENANCE-PIT-FINALIZE-R1
+  type: PACKAGE_FINALIZATION
+  status: COMPLETE_COMMITTED_UNDEPLOYED
   result: PASS
-  mode: PRE_START_SAFETY_IMPLEMENTATION
-  implementation_started: true
-  purpose: Close MI-1/MI-4/MI-5 and PT-1/PT-2/PT-3; preserve remaining Stage1 build blockers.
-  next_recommended_package: LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1
+  independent_review: PASS
+  review_id: STAGE1_DATA_PROVENANCE_PIT_INDEPENDENT_REVIEW_R2
+  purpose: Finalize independently reviewed MI-2/MI-3; MI-6/MI-7 remain open.
+  next_recommended_package: LUFFY-STAGE1-RECOVERY-MONITORING-FOUNDATION-R1
   next_package_status: RECOMMENDED_NOT_STARTED
 
 completed_stage3_question_driven_research_router_r1:
@@ -768,3 +785,140 @@ completed_stage1_entry_authority_idempotency_r1:
   - 'MI-7: Critical storage/journal-unavailable and missing-heartbeat safety alert paths.'
   stage1_build_complete: false
   next_recommended_package: LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1
+
+completed_stage1_data_provenance_pit_r1:
+  package: LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1
+  implementation: PASS
+  result: PASS
+  status: COMPLETE_REVIEWED_COMMITTED_UNDEPLOYED
+  branch: luffy-stage1-data-provenance-pit-r1
+  baseline_head: 8d49c6976dc7359aed9451c4b3fd5c9bf55b0198
+  independent_review: PASS
+  independent_review_r1: BLOCKED
+  independent_review_r2: PASS
+  review_id: STAGE1_DATA_PROVENANCE_PIT_INDEPENDENT_REVIEW_R2
+  blocking_defects: NONE
+  safe_to_commit: true
+  MI-2:
+    status: CLOSED
+    implementation: PASS
+    independent_review: PASS
+  MI-3:
+    status: CLOSED
+    implementation: PASS
+    independent_review: PASS
+  safe_to_review: true
+  uncommitted: false
+  undeployed: true
+  stage1_build_complete: false
+  closed_audit_gaps:
+  - MI-2
+  - MI-3
+  remaining_stage1_gaps:
+  - MI-6
+  - MI-7
+  report: docs/superpowers/reports/2026-10-03-stage1-data-provenance-pit-r1.md
+  evidence:
+  - docs/superpowers/evidence/stage1-data-provenance-pit-r1/focused-tests.txt
+  - docs/superpowers/evidence/stage1-data-provenance-pit-r1/acceptance-tests.txt
+  - docs/superpowers/evidence/stage1-data-provenance-pit-r1/world-regressions.txt
+  - docs/superpowers/evidence/stage1-data-provenance-pit-r1/engine-gates.txt
+  - docs/superpowers/evidence/stage1-data-provenance-pit-r1/closure.json
+  - docs/superpowers/evidence/stage1-data-provenance-pit-r1/caller-audit.json
+  tests:
+    focused-tests:
+      passed: 649
+      seconds: 116.62
+      network_attempts: 0
+      production_store_attempts: 0
+      artifact: docs/superpowers/evidence/stage1-data-provenance-pit-r1/focused-tests.txt
+    acceptance-tests:
+      passed: 49
+      seconds: 2.77
+      network_attempts: 0
+      production_store_attempts: 0
+      artifact: docs/superpowers/evidence/stage1-data-provenance-pit-r1/acceptance-tests.txt
+    world-regressions:
+      passed: 14
+      seconds: 239.05
+      network_attempts: 0
+      production_store_attempts: 0
+      artifact: docs/superpowers/evidence/stage1-data-provenance-pit-r1/world-regressions.txt
+    engine-gates:
+      passed: 2
+      seconds: 49.39
+      network_attempts: 0
+      production_store_attempts: 0
+      artifact: docs/superpowers/evidence/stage1-data-provenance-pit-r1/engine-gates.txt
+  mutants_detected:
+  - event_clock_substitution
+  - revision_overwrite
+  - future_cache_reuse
+  - early_final_htf
+  live_capable_pit_bypass_found: false
+  trading_authority_changed: false
+  real_order_submissions: 0
+  missing_implementation: []
+  pre_start_test_blocker: []
+  next_recommended_package: LUFFY-STAGE1-RECOVERY-MONITORING-FOUNDATION-R1
+
+completed_stage1_data_provenance_pit_blocker_fix_r1:
+  package: LUFFY-STAGE1-DATA-PROVENANCE-PIT-BLOCKER-FIX-R1
+  implementation: PASS
+  result: PASS
+  independent_review: PASS
+  independent_review_r1: BLOCKED
+  independent_review_r2: PASS
+  review_id: STAGE1_DATA_PROVENANCE_PIT_INDEPENDENT_REVIEW_R2
+  blocking_defects: NONE
+  safe_to_commit: true
+  status: COMPLETE_REVIEWED_COMMITTED_UNDEPLOYED
+  MI-2:
+    status: CLOSED
+    implementation: PASS
+    independent_review: PASS
+  MI-3:
+    status: CLOSED
+    implementation: PASS
+    independent_review: PASS
+  MI-6: OPEN
+  MI-7: OPEN
+  closed_audit_gaps: [MI-2, MI-3]
+  remaining_stage1_gaps: [MI-6, MI-7]
+  report: docs/superpowers/reports/2026-10-04-stage1-data-provenance-pit-blocker-fix-r1.md
+  evidence: docs/superpowers/evidence/stage1-data-provenance-pit-blocker-fix-r1/
+  tests:
+    focused_regressions: 663 passed in 121.30s
+    final_blocker_and_prior_acceptance: 64 passed in 3.83s
+    authority_world_regressions: 94 passed in 265.21s
+    new_pit_mutants_detected: 5
+  real_network_attempts: 0
+  production_store_attempts: 0
+  authority_changed: false
+  live_capable_pit_bypass_found: false
+  uncommitted: false
+  undeployed: true
+  startup_performed: false
+  safe_to_review: true
+  next_recommended_package: LUFFY-STAGE1-RECOVERY-MONITORING-FOUNDATION-R1
+  final_review_findings:
+    future_universe_cache_time_laundering: ELIMINATED
+    kernel_universe_pit: PASS
+    attention_membership_lineage: PASS
+    production_basis_path_through_transport_boundary: PASS
+    basis_component_provenance: PASS
+    basis_availability: PASS
+    basis_replay_pit: PASS
+    live_capable_pit_bypass_found: false
+    network_isolation: PASS
+    real_network_attempts: 0
+    authority_regression: NONE
+  independent_review_verification:
+    blocker_and_prior_acceptance: 64 passed in 3.20s
+    full_pit_regression: 664 passed in 105.29s
+    authority_regression: 80 passed in 21.72s
+    new_pit_mutants_detected: 5
+    prior_pit_mutants_detected: 4
+    production_store_attempts: 0
+  stage1_build_complete: false
+  real_order_submissions: 0

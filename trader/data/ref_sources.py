@@ -61,15 +61,18 @@ def yahoo_frame(ticker: str, interval: str, rng: str,
         v = q.get(k)
         return v if v is not None and len(v) == n else [None] * n
 
-    return _finish(pd.DataFrame({
+    frame = _finish(pd.DataFrame({
         "ts": pd.to_datetime(r["timestamp"], unit="s", utc=True),
         "open": col("open"), "high": col("high"), "low": col("low"),
         "close": col("close"), "volume": col("volume")}))
+    frame.attrs.update(source=YAHOO+quote(ticker, safe=''), raw_source_record=d)
+    return frame
 
 
 def defillama_stables(get=get_json) -> pd.DataFrame:
     ts, close = [], []
-    for row in get(DEFILLAMA_STABLES) or []:
+    raw = get(DEFILLAMA_STABLES) or []
+    for row in raw:
         try:
             v = float((row.get("totalCirculatingUSD") or {})["peggedUSD"])
             ts.append(int(row["date"]))
@@ -82,16 +85,23 @@ def defillama_stables(get=get_json) -> pd.DataFrame:
                        "close": close})
     for c in ("open", "high", "low", "volume"):
         df[c] = np.nan
-    return _finish(df)
+    df = _finish(df)
+    df.attrs.update(source=DEFILLAMA_STABLES, raw_source_record=raw)
+    return df
 
 
 def coingecko_global(get=get_json) -> dict:
-    d = (get(COINGECKO_GLOBAL) or {}).get("data") or {}
+    raw = get(COINGECKO_GLOBAL) or {}
+    d = raw.get("data") or {}
     total = float((d.get("total_market_cap") or {})["usd"])
     pct = d.get("market_cap_percentage") or {}
     btc, usdt = float(pct["btc"]), float(pct["usdt"])
-    return {"cg_btc_d": btc, "cg_usdt_d": usdt, "cg_total": total,
-            "cg_total2": total * (1.0 - btc / 100.0)}
+    class SourceSnapshot(dict):
+        pass
+    result = SourceSnapshot(cg_btc_d=btc, cg_usdt_d=usdt, cg_total=total,
+                            cg_total2=total * (1.0 - btc / 100.0))
+    result.raw_source_record = raw
+    return result
 
 
 def binance_klines(fetch, symbol: str, tf: str, since_ms: int, now_ms: int,
@@ -117,7 +127,9 @@ def binance_klines(fetch, symbol: str, tf: str, since_ms: int, now_ms: int,
         return _empty()
     df = pd.DataFrame([r[:6] for r in rows], columns=COLS)
     df["ts"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
-    return _finish(df)
+    df = _finish(df)
+    df.attrs.update(source='binance:public:klines', raw_source_record=rows)
+    return df
 
 
 # ── the alt index ─────────────────────────────────────────────────────────
@@ -147,7 +159,17 @@ def alts_index(frames: dict, min_members: int = 5) -> pd.DataFrame:
     df = pd.DataFrame({"ts": grid, "close": level.to_numpy()})
     for c in ("open", "high", "low", "volume"):
         df[c] = np.nan
-    return _finish(df)
+    result = _finish(df)
+    from . import market_provenance as mp
+    qualified = all(all(key in member for key in mp.META) for member in frames.values()
+                    if member is not None and len(member))
+    if qualified:
+        result.attrs.update(source='derived:equal_weight_alt_index.v1',
+                            raw_source_record={'derivation':'equal_weight_alt_index.v1',
+                              'min_members':min_members,
+                              'constituents':{sym:member['revision_id'].tolist()
+                                for sym,member in frames.items() if member is not None and len(member)}})
+    return result
 
 
 # ── one refresh of everything ─────────────────────────────────────────────
@@ -168,7 +190,10 @@ def refresh_all(feed, members: list, store=None, get=get_json,
 
     def run(key, fn):
         try:
-            out[key] = store.save(key, fn(), now_ms=now)
+            started=store._clock_ms()
+            frame=fn()
+            frame.attrs['request_started_ms']=started
+            out[key] = store.save(key, frame, now_ms=store._clock_ms())
         except Exception as e:
             out[key] = f"error: {e}"
             log.warning(f"reference {key}: {e}")
@@ -192,16 +217,23 @@ def refresh_all(feed, members: list, store=None, get=get_json,
             run(key, lambda: defillama_stables(get))
 
     run("alts", lambda: alts_index(
-        {s: feed.cached_ohlcv(s, "4h", limit=40000) for s in members}))
+        {s: feed.cached_ohlcv(s, "4h", limit=40000, as_of_ms=now) for s in members}))
 
     last = store.last_ts("cg_btc_d")
     if last is None or now - last >= cg_every:
         try:
+            started=store._clock_ms()
             snap = coingecko_global(get)
-            ts = pd.to_datetime([now], unit="ms", utc=True)
+            received = store._clock_ms()
+            ts = pd.to_datetime([received], unit="ms", utc=True)
             for k, v in snap.items():
-                out[k] = store.save(k, pd.DataFrame({"ts": ts, "close": [v]}),
-                                    now_ms=now)
+                frame = pd.DataFrame({"ts": ts, "close": [v]})
+                frame.attrs.update(source=COINGECKO_GLOBAL,
+                                   request_started_ms=started,
+                                   raw_source_record={'response':snap.raw_source_record,
+                                     'event_time_basis':'local_capture', 'field':k,
+                                     'derivation':'coingecko_global.v1'})
+                out[k] = store.save(k, frame, now_ms=received)
         except Exception as e:
             out["coingecko"] = f"error: {e}"
             log.warning(f"reference coingecko: {e}")

@@ -83,7 +83,8 @@ class ValueAnalyst(Analyst):
         conv = side * min(0.2 + 0.15 * (abs(z) - 1.8), 0.65)
         conf = min(0.3 + 0.08 * (abs(z) - 1.8), 0.7)
         btc = snap.btc_ctx or {}
-        if abs(btc.get("ret_1h") or 0) > 0.01:
+        ret=btc.get('ret_1h')
+        if ret is not None and abs(ret) > 0.01:
             conv *= 0.6                                    # never fade a live BTC impulse
             conf *= 0.85
             return self._vote(self.name, snap, conv, conf,

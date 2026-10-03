@@ -7,7 +7,8 @@ import inspect
 
 import pandas as pd
 
-from trader.core.types import Action, Snapshot
+from trader.core.types import Action
+from tests.market_receipt_fixtures import snapshot as Snapshot
 from trader.strategy.compile import compile_spec
 from trader.strategy.spec import ExitSpec, StrategySpec
 
@@ -53,7 +54,7 @@ def test_without_the_reference_it_cannot_fire():
 def test_the_kernel_hands_references_to_every_snapshot():
     from trader import kernel as K
     src = inspect.getsource(K)
-    assert "market=self._market_for()" in src
+    assert 'market = self._market_for(as_of_ms=as_of)' in src
 
 
 def test_market_for_loads_only_what_the_book_needs(monkeypatch):
@@ -61,7 +62,7 @@ def test_market_for_loads_only_what_the_book_needs(monkeypatch):
     from trader.strategy import spec_evidence
     calls = []
     monkeypatch.setattr(spec_evidence, "load_refs",
-                        lambda req, store=None: calls.append(tuple(req))
+                        lambda req, store=None, as_of_ms=None: calls.append(tuple(req))
                         or {"spx": "F"})
     k = object.__new__(K.Kernel)
     k._spec_requires = ("ohlcv",)

@@ -41,7 +41,7 @@ class CompiledStrategy:
                 market: dict | None = None, symbol: str | None = None):
         ctx = self._ctx(frames, btc, derivs, universe, market, symbol)
         n = len(ctx.index)
-        keep = np.ones(n, dtype=bool)
+        keep = ctx.df['quality'].eq('VALID').to_numpy() if 'quality' in ctx.df else np.ones(n, dtype=bool)
         for f in self._filters:
             keep &= dsl.evaluate_bool(f, ctx)
         lo = (dsl.evaluate_bool(self._long, ctx) & keep) \
@@ -79,6 +79,16 @@ class CompiledStrategy:
         (library.py:293) find it like any other evaluator.
         """
         def _evaluate(_genome, snap, *, diagnostic=None):
+            import pandas as pd
+            from ..data.market_provenance import cut as valid_cut
+            try:
+                if not snap.ts or snap.ts in ('now','today'):
+                    raise ValueError('explicit snapshot cut required')
+                cut = valid_cut(int(pd.Timestamp(snap.ts).timestamp()*1000))
+            except (ValueError,TypeError,OverflowError):
+                if diagnostic:
+                    diagnostic('invalid_snapshot_cut')
+                return None
             # Judge CLOSED bars only. The live frame's last row is the bar
             # currently forming, whose `close` is just the last trade — but
             # the statistics that admitted this spec came from
@@ -95,7 +105,12 @@ class CompiledStrategy:
                     continue
                 # "BTC_1h" is a context frame keyed by name, not timeframe
                 tf = k if k in TF_MS else _CTX_TF.get(k)
-                v = closed_bars(v, tf) if tf else v
+                from ..data.market_provenance import eligible_frame
+                if cut is not None:
+                    v = eligible_frame(v, tf, cut)
+                    if v is None:
+                        continue
+                v = closed_bars(v, tf, cut) if tf else v
                 if len(v):
                     frames[k] = v
             if self.spec.timeframe not in frames:
@@ -139,7 +154,7 @@ class CompiledStrategy:
                 closed_at = (sig_tf["ts"].iloc[-1].timestamp() * 1000
                              + TF_MS.get(self.spec.timeframe, 0))
                 bar_age_min = round(
-                    (time.time() * 1000 - closed_at) / 60_000, 1)
+                    (cut - closed_at) / 60_000, 1)
             except Exception:
                 pass
             # Signal-occurrence identity: the exact close of the SAME closed
@@ -164,6 +179,17 @@ class CompiledStrategy:
                                            or spec_fingerprint(self.spec)),
                       "signal_timeframe": tf,
                       "signal_bar_close_ms": close_ms}
+            sources=[]
+            for family, bundle in (('frames',frames),('derivs',snap.derivs),('references',snap.market)):
+                for name, source_frame in (bundle or {}).items():
+                    if source_frame is None or 'revision_id' not in source_frame:
+                        continue
+                    sources.append(dict(kind=family,key=name,
+                        available_at_ms=int(source_frame['available_at_ms'].max()),
+                        observed_at_ms=int(source_frame['observed_at_ms'].max()),
+                        revision_ids=source_frame['revision_id'].tolist(),
+                        content_hashes=source_frame['content_hash'].tolist()))
+            params['market_provenance'] = dict(schema_version='market.receipt.v1',as_of_ms=cut,sources=sources)
             if unavailable:
                 params["signal_occurrence_unavailable"] = unavailable
             return StrategySignal(

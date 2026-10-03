@@ -61,6 +61,8 @@ def observe(symbol, fetcher, clock):
     try:
         raw = fetcher(symbol)
         observed = clock()
+        if observed < started:
+            raise ValueError('request_clock_reversed')
         if not isinstance(raw, list) or len(raw) > BAR_LIMIT:
             raise ValueError('invalid_response')
         bars = []
@@ -79,6 +81,21 @@ def observe(symbol, fetcher, clock):
             if ms+TF_MS['4h'] <= observed:
                 bars.append(dict(symbol=symbol, open_ms=ms, **dict(zip(FIELDS,values)),
                                  available_ms=observed, source=ENDPOINT))
+        if bars:
+            import pandas as pd
+            from trader.data import market_provenance as mp
+            from trader.core.instrument_registry import InstrumentId
+            from trader.core.types import MarketType
+            frame=pd.DataFrame(bars)
+            frame['ts']=pd.to_datetime(frame['open_ms'],unit='ms',utc=True)
+            by_event={row[0]:row for row in raw}
+            iid=InstrumentId('binanceusdm',MarketType.FUTURES,symbol.replace('/','')).value
+            retained=mp.annotate(frame,instrument_id=iid,source=ENDPOINT,kind='candle',
+                                 received_ms=observed,request_started_ms=started,timeframe='4h',
+                                 raw=[by_event[bar['open_ms']] for bar in bars])
+            for bar,receipt in zip(bars,retained.to_dict('records')):
+                bar['source_receipt']={key:receipt[key] for key in mp.META}
+                bar['source']=ENDPOINT+'|instrument='+iid+'|content='+receipt['content_hash']
         anchor = (observed//TF_MS['4h']-1)*TF_MS['4h']
         status = 'unavailable' if not bars else 'stale' if bars[-1]['open_ms'] != anchor else 'available'
         return bars[-26:], dict(symbol=symbol, status=status, started_ms=started,
@@ -100,6 +117,8 @@ def collect(d, fetcher=fetch, clock=H.clock_ms):
     with ThreadPoolExecutor(max_workers=4) as pool:
         results = list(pool.map(lambda s: observe(s, fetcher, clock), symbols))
     now = clock()
+    if now < started or any(receipt['observed_ms'] > now for _,receipt in results):
+        raise ValueError('scan_clock_reversed')
     cfg = settings({'max_symbols': max(2,len(symbols))})
     receipts = [r for _,r in results]
     # Recheck freshness at scan completion (a pass may cross a bar boundary).

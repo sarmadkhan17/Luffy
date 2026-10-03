@@ -89,7 +89,7 @@ def _history(symbol, df, tf_ms, as_of):
 
 
 def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
-            provenance=None):
+            provenance=None, membership_receipts=None):
     """Detach a bounded primitive snapshot; never pass mutable DataFrames on.
 
     `supplemental` is at most one observation-only SupplementalResult for a
@@ -109,8 +109,20 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
     as_of = int(time.time() * 1000) if as_of_ms is None else as_of_ms
     need = CognitionConfig().window + CognitionConfig().short + 1
     symbols = list(dict.fromkeys(members))
+    membership_issues = []
+    if membership_receipts is not None:
+        safe = []
+        for symbol in symbols:
+            r = membership_receipts.get(symbol)
+            if (r and r.get('quality') == 'VALID' and
+                    r.get('available_at_ms', as_of+1) <= as_of and
+                    r.get('observed_at_ms', as_of+1) <= as_of):
+                safe.append(symbol)
+            else:
+                membership_issues.append(dict(symbol=symbol, reason='unavailable_membership'))
+        symbols = safe
     included = symbols[:cfg["max_symbols"]]
-    candles, issues, histories = [], [], []
+    candles, issues, histories = [], membership_issues, []
     sources = [(symbol, (frames.get(symbol) or {}).get(tf), "kernel.universe_frames")
                for symbol in included]
     extra = None
@@ -127,6 +139,11 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
                            "reason": "supplemental_" + supplemental.status,
                            "detail": supplemental.reason})
     for symbol, df, source in sources:
+        if df is not None:
+            from trader.data.market_provenance import eligible_frame
+            df = eligible_frame(df, tf, as_of)
+            if df is not None:
+                df = df.loc[df['quality'].eq('VALID')].copy()
         histories.append(_history(symbol, df, tf_ms, as_of))
         if df is None or not len(df):
             issues.append({"symbol": symbol, "reason": "missing_timeframe"})
@@ -141,7 +158,12 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
             columns = [df[field].array[-tail_n:].tolist() for field in FIELDS]
             rows = []
             previous = -1
-            for ms, *values in zip(opens, *columns):
+            proven = df is not None and 'revision_id' in df
+            receipts = df['available_at_ms'].array[-tail_n:].tolist() if proven else [as_of]*len(opens)
+            refs = [(str(row['source']) + '|instrument=' + str(row['instrument_id']) +
+                     '|revision=' + str(row['revision_id'])) for _, row in df.iloc[-tail_n:].iterrows()] if proven else [source]*len(opens)
+            retained = df.iloc[-tail_n:].to_dict('records')
+            for index, (ms, available, source_ref, *values) in enumerate(zip(opens, receipts, refs, *columns)):
                 if ms <= previous:
                     raise ValueError("unordered candle tail")
                 previous = ms
@@ -149,7 +171,10 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
                     continue
                 rows.append({"symbol": symbol, "open_ms": ms,
                              **dict(zip(FIELDS, map(_number, values))),
-                             "available_ms": as_of, "source": source})
+                             "available_ms": int(available), "source": source_ref})
+                from trader.data.market_provenance import META
+                receipt = retained[index]
+                rows[-1]['source_receipt'] = {key:receipt[key] for key in META}
             candles.extend(rows[-need:])
         except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
             issues.append({"symbol": symbol, "reason": "invalid_frame"})
@@ -158,16 +183,20 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
         # the earlier instant at which copying began.
         as_of = int(time.time() * 1000)
         for candle in candles:
-            candle["available_ms"] = as_of
+            candle["available_ms"] = max(candle["available_ms"], as_of)
     membership = [{"symbol": sym, "from_ms": as_of, "to_ms": None,
                    "available_ms": as_of, "source": "kernel.scan_symbols"}
                   for sym in included]
+    if membership_receipts is not None:
+        import copy
+        for row in membership:
+            row['source_receipt'] = copy.deepcopy(membership_receipts[row['symbol']])
     scope = {"kind": "strategy_volume_subset", "candidate_count": len(symbols),
              "included_count": len(included), "cap": cfg["max_symbols"],
              "excluded_count": max(0, len(symbols) - len(included)),
              "exclusions": "trailing candidates beyond cap; not venue-wide",
              "universe_membership_before_capture": "unknown",
-             "upstream_endpoint_and_cache_layer": "not_recorded_by_DataFeed"}
+             "upstream_endpoint_and_cache_layer": "retained_market_revision_when_supplied"}
     if extra is not None:
         if provenance is not None:
             extra["provenance"] = provenance
@@ -214,7 +243,7 @@ def evaluate_snapshot(event, world_model: WorldModel | None = None, learning_jou
                             "First-seen and revision lineage extend only over retained snapshots.",
                             "Participation inputs are not captured in this milestone.",
                             "No hypotheses, edge claims or learned ranking are produced."]
-            + (["Positioning values are as stored at capture read time; no claim they were stored at as_of."]
+            + (["Positioning uses retained revisions eligible at the exact as-of cut."]
                if "positioning" in event["input"] else [])
             + (["Correlation change is a deterministic Fisher-scaled correlation-change feature of "
                 "each asset against its captured leave-one-out peer basket (recent 30 vs prior 120 "

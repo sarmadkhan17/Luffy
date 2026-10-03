@@ -164,6 +164,8 @@ class Kernel:
         if collector is None:
             return None
         try:
+            if method == 'begin' and hasattr(getattr(self, 'universe', None), 'membership_receipts'):
+                return collector.begin(*args, membership_receipts=getattr(self, '_scan_membership_receipts', {}))
             return getattr(collector, method)(*args)
         except Exception as exc:
             self._attention_error = type(exc).__name__
@@ -297,17 +299,17 @@ class Kernel:
     # exactly how three authored specs sat in `paper` with zero trades.
     _DERIVS_TTL = 300.0                # recorder writes every 15m
 
-    def _derivs_for(self, symbol: str) -> dict | None:
+    def _derivs_for(self, symbol: str, *, as_of_ms=None) -> dict | None:
         reqs = getattr(self, "_spec_requires", ())
         if not any(r != "ohlcv" for r in reqs):
             return None
         hit = getattr(self, "_derivs_cache", {}).get(symbol)
         now = time.time()
-        if hit and now - hit[0] < self._DERIVS_TTL:
+        if as_of_ms is None and hit and 0 <= now - hit[0] < self._DERIVS_TTL:
             return hit[1]
         try:
             from .strategy.spec_evidence import load_derivs
-            out = load_derivs(symbol, reqs)
+            out = load_derivs(symbol, reqs, as_of_ms=as_of_ms)
         except Exception as e:
             log.warning(f"derivs unavailable for {symbol}: {e}")
             out = None
@@ -316,7 +318,7 @@ class Kernel:
 
     _MARKET_TTL = 300.0                # the recorder refreshes hourly
 
-    def _market_for(self) -> dict | None:
+    def _market_for(self, *, as_of_ms=None) -> dict | None:
         """The reference frames the book's specs read through ref().
 
         Keyed on the book, not the symbol: the S&P is the same series for
@@ -329,11 +331,11 @@ class Kernel:
             return None
         hit = getattr(self, "_market_cache", None)
         now = time.time()
-        if hit and now - hit[0] < self._MARKET_TTL:
+        if as_of_ms is None and hit and 0 <= now - hit[0] < self._MARKET_TTL:
             return hit[1]
         try:
             from .strategy.spec_evidence import load_refs
-            out = load_refs(reqs) or None
+            out = load_refs(reqs, as_of_ms=as_of_ms) or None
         except Exception as e:
             log.warning(f"reference series unavailable: {e}")
             out = None
@@ -856,86 +858,217 @@ class Kernel:
                       universe: dict | None = None) -> Snapshot | None:
         from .engine.entry_authority import proposal_binding
         instrument_binding = proposal_binding(self.journal, symbol)
+        if instrument_binding:
+            from .core.instrument_registry import InstrumentId
+            cap=json.loads(instrument_binding)
+            iid=cap['record']['instrument_id']
+            bound_iid = InstrumentId(iid['venue'],MarketType(iid['market_type']),iid['venue_symbol'])
+            self.feed.bind_instrument(symbol,bound_iid)
         dfs = self.feed.fetch_multi(
             symbol, self.cfg["timeframes"]["context"] + [self.cfg["timeframes"]["execution"]])
         exec_tf = self.cfg["timeframes"]["execution"]
+        from .data import market_provenance as mp
+        as_of = int(time.time()*1000)
+        btc = self.feed.fetch_ohlcv('BTC/USDT', '1h')
+        # Use a post-acquisition cut: this is when these receipts were held.
+        as_of = int(time.time()*1000)
+        if btc is not None:
+            dfs['BTC_1h'] = btc
+        dfs = {key: mp.usable_current(frame, '1h' if key == 'BTC_1h' else key,
+                    as_of, self.feed.ttl.get('1h' if key == 'BTC_1h' else key, 300))
+               for key, frame in dfs.items()}
+        dfs = {key: frame for key, frame in dfs.items()
+               if frame is not None and len(frame) and frame['quality'].eq('VALID').all()}
         if exec_tf not in dfs:
             return None
-        btc = self.feed.fetch_ohlcv("BTC/USDT", "1h")
-        if btc is not None:
-            dfs["BTC_1h"] = btc
-        price = float(dfs[exec_tf]["close"].iloc[-1])
+        iid = dfs[exec_tf]['instrument_id'].iloc[-1]
+        if not iid or not dfs[exec_tf]['instrument_id'].eq(iid).all():
+            return None
+        if instrument_binding and iid != bound_iid.value:
+            return None
+        safe_universe = {}
+        for sym, frames in (universe or {}).items():
+            safe = {tf: mp.usable_current(frame, tf, as_of, self.feed.ttl.get(tf, 300))
+                    for tf, frame in frames.items()}
+            safe_universe[sym] = {tf: frame for tf, frame in safe.items()
+                                 if frame is not None and len(frame) and frame['quality'].eq('VALID').all()}
+        price = float(dfs[exec_tf]['close'].iloc[-1])
+        derivs = self._derivs_for(symbol, as_of_ms=as_of)
+        derivs = {key: frame for key, frame in (derivs or {}).items() if frame['instrument_id'].eq(iid).all()}
+        market = self._market_for(as_of_ms=as_of)
+        lineage = dict(schema_version=mp.SCHEMA, as_of_ms=as_of, instrument_id=iid,
+                       frames={tf: frame['revision_id'].tolist() for tf, frame in dfs.items()},
+                       derivs={key: frame['revision_id'].tolist() for key, frame in (derivs or {}).items()},
+                       references={key: frame['revision_id'].tolist() for key, frame in (market or {}).items()},
+                       universe={sym: {tf: frame['revision_id'].tolist() for tf, frame in frames.items()}
+                                 for sym, frames in safe_universe.items()})
+        btc_context_receipt = getattr(self, '_btc_ctx_receipt', None)
+        btc_ctx = self._btc_ctx if btc_context_receipt and 0 <= as_of-btc_context_receipt['as_of_ms'] <= 600_000 else {}
+        lineage['btc_context'] = btc_context_receipt if btc_ctx else None
+        lineage['universe_selection_receipts'] = {sym:r for sym,r in getattr(self.universe, '_volume_receipts', {}).items()
+                                                  if r['available_at_ms'] <= as_of}
+        lineage['universe_listing_receipts'] = {sym:r for sym,r in getattr(self.universe, '_listing_cache', {}).items()
+                                                if r['available_at_ms'] <= as_of}
+        lineage['universe_membership_receipts'] = {sym:r for sym,r in getattr(self, '_scan_membership_receipts', {}).items()
+                                                  if r['available_at_ms'] <= as_of and r['observed_at_ms'] <= as_of}
         return Snapshot(symbol=symbol,
-                        ts=dt.datetime.now(dt.timezone.utc).isoformat(),
-                        price=price, dfs=dfs,
-                        market_type=self.market_type.value,
-                        btc_ctx=self._btc_ctx,
-                        universe=universe,
-                        derivs=self._derivs_for(symbol),
-                        market=self._market_for(), instrument_binding_json=instrument_binding)
+                        ts=dt.datetime.fromtimestamp(as_of/1000, dt.timezone.utc).isoformat(),
+                        price=price, dfs=dfs, market_type=self.market_type.value,
+                        btc_ctx=btc_ctx, universe=safe_universe, derivs=derivs, market=market,
+                        instrument_binding_json=instrument_binding,
+                        market_provenance_json=mp.encode(lineage))
 
     def _refresh_btc_context(self) -> None:
         """Leader context computed once per cycle, shared by all scouts."""
         b15 = self.feed.fetch_ohlcv("BTC/USDT", "15m")
         b1h = self.feed.fetch_ohlcv("BTC/USDT", "1h")
+        from .data import market_provenance as mp
+        at = int(time.time()*1000)
+        b15 = mp.usable_current(b15, '15m', at, self.feed.ttl.get('15m', 180))
+        b1h = mp.usable_current(b1h, '1h', at, self.feed.ttl.get('1h', 600))
+        if any(frame is None or not len(frame) or frame['quality'].iloc[-1] != 'VALID'
+               for frame in (b15, b1h)):
+            self._btc_ctx, self._btc_ctx_receipt = {}, None
+            return
         self._btc_ctx = btc_context(b15, b1h)
+        self._btc_ctx_receipt = dict(as_of_ms=at, transform_version='btc_context.v1',
+                                    source_revisions=b15['revision_id'].tolist()+b1h['revision_id'].tolist())
+
+    def _retain_market_input(self, symbol, exchange, kind, raw, value, *, received_ms, attempt_ms):
+        """Retain an auxiliary read in the existing Journal, before using it.
+
+        Absent provider event time stays null. The ledger index in that case
+        is the local capture time, explicitly labelled rather than backdated.
+        """
+        import math, uuid
+        from .data import market_provenance as mp
+        iid, source = mp.venue_identity(exchange, symbol)
+        if not iid or not source or received_ms < attempt_ms:
+            return None
+        if kind=='order_book':
+            try:
+                sides=[[tuple(float(x) for x in row) for row in raw[name]] for name in ('bids','asks')]
+                if (any(not rows for rows in sides) or any(len(row)!=2 or not all(math.isfinite(x) for x in row)
+                    or row[0]<=0 or row[1]<0 for rows in sides for row in rows)
+                    or sides[0][0][0]>sides[1][0][0]
+                    or any(b[0]>a[0] for a,b in zip(sides[0],sides[0][1:]))
+                    or any(b[0]<a[0] for a,b in zip(sides[1],sides[1][1:]))):
+                    return None
+            except (KeyError,TypeError,ValueError):
+                return None
+        event = raw.get('timestamp') if isinstance(raw, dict) else None
+        if event is not None and (type(event) not in (int, float) or
+                                  not math.isfinite(event) or event < 0 or event > received_ms):
+            return None
+        max_age={'order_book':45_000,'funding':int(self._DERIVS_TTL*1000),
+                 'open_interest':3_600_000+900_000}.get(kind)
+        if event is not None and max_age is not None and received_ms-event > max_age:
+            return None
+        try:
+            body = dict(schema_version=mp.SCHEMA, instrument_id=iid, source=source,
+                        kind=kind, event_time_ms=event, observed_at_ms=received_ms,
+                        available_at_ms=received_ms, request_started_ms=attempt_ms,
+                        event_time_basis='provider' if event is not None else 'UNKNOWN',
+                        quality='VALID', value=value, raw=raw,
+                        content_hash=mp.digest(raw), request_id=uuid.uuid4().hex)
+            body['revision_id'] = mp.digest(body)
+            with self.journal._tx() as conn:
+                mp.init(conn)
+                conn.execute('INSERT INTO market_revisions VALUES (?,?,?,?,?,?)',
+                             (body['revision_id'], 'aux:'+iid+':'+kind,
+                              int(event) if event is not None else received_ms,
+                              received_ms, received_ms, mp.encode(body)))
+            if not hasattr(self, '_market_aux'):
+                self._market_aux = {}
+            self._market_aux[kind+':'+symbol] = body
+            return body
+        except (ValueError, TypeError, OverflowError):
+            return None
 
     def _order_book(self, symbol: str) -> dict | None:
         hit = self._book_cache.get(symbol)
         now = time.time()
-        if hit and now - hit[0] < 45:
+        receipt = getattr(self, '_market_aux', {}).get('order_book:'+symbol)
+        if hit and receipt and 0 <= now - hit[0] < 45 and receipt['available_at_ms'] <= int(now*1000):
             return hit[1]
         try:
+            attempt = int(now*1000)
             ob = self.exchange.fetch_order_book(symbol, limit=20)
-            self._book_cache[symbol] = (now, ob)
+            received = int(time.time()*1000)
+            if not isinstance(ob, dict) or not ob.get('bids') or not ob.get('asks'):
+                return None
+            if self._retain_market_input(symbol, self.exchange, 'order_book', ob, ob,
+                                         received_ms=received, attempt_ms=attempt) is None:
+                return None
+            self._book_cache[symbol] = (received/1000, ob)
             return ob
         except Exception:
-            return hit[1] if hit else None
+            return None
 
     def _funding_map(self) -> dict[str, float]:
-        if self._funding_cache is not None:
-            return self._funding_cache
-        out: dict[str, float] = {}
+        import math
+        now = int(time.time()*1000)
+        cached = self._funding_cache
+        if cached is not None:
+            return {sym: value for sym, value in cached.items()
+                    if (r := getattr(self, '_market_aux', {}).get('funding:'+sym))
+                    and 0 <= now-r['available_at_ms'] <= self._DERIVS_TTL*1000}
+        out = {}
         if self.market_type == MarketType.FUTURES:
             for sym in self.universe.symbols():
                 try:
-                    fr = self.exchange.fetch_funding_rate(sym)
-                    out[sym] = float(fr.get("fundingRate") or 0)
+                    attempt = int(time.time()*1000)
+                    raw = self.exchange.fetch_funding_rate(sym)
+                    value = float(raw['fundingRate'])
+                    if not math.isfinite(value):
+                        continue
+                    if self._retain_market_input(sym, self.exchange, 'funding', raw, value,
+                            received_ms=int(time.time()*1000), attempt_ms=attempt) is not None:
+                        out[sym] = value
                 except Exception:
                     continue
         self._funding_cache = out
         return out
 
     def _oi_map(self, ttl: float = 900.0) -> dict[str, dict]:
-        """Open interest now + 24h change per symbol (TTL-cached).
-
-        OI history lives on production fapiData — the demo venue has no
-        route for it, so a public no-key instance serves the reads.
-        """
+        import math
         now = time.time()
-        if now - self._oi_cache[0] < ttl:
-            return self._oi_cache[1]
-        out: dict[str, dict] = {}
+        if 0 <= now-self._oi_cache[0] < ttl:
+            return {sym: value for sym, value in self._oi_cache[1].items()
+                    if (r := getattr(self, '_market_aux', {}).get('open_interest:'+sym))
+                    and 0 <= int(now*1000)-r['available_at_ms'] <= ttl*1000}
+        out = {}
         try:
-            if getattr(self, "_oi_ex", None) is None:
-                self._oi_ex = make_exchange("futures", demo=False,
-                                            with_keys=False)
+            if getattr(self, '_oi_ex', None) is None:
+                self._oi_ex = make_exchange('futures', demo=False, with_keys=False)
             for sym in self.universe.symbols():
                 try:
-                    hist = self._oi_ex.fetch_open_interest_history(
-                        sym, timeframe="1h", limit=25) or []
-                    points = [float(p.get("openInterestAmount") or
-                                    p.get("openInterestValue") or 0)
-                              for p in hist if isinstance(p, dict)]
-                    points = [p for p in points if p > 0]
-                    if len(points) >= 6:
-                        chg = (points[-1] - points[0]) / points[0]
-                        out[sym] = {"now": points[-1], "chg_24h": round(chg, 4)}
+                    attempt = int(time.time()*1000)
+                    hist = self._oi_ex.fetch_open_interest_history(sym, timeframe='1h', limit=25) or []
+                    received = int(time.time()*1000)
+                    # Do not combine a future provider observation or replace missing OI with zero.
+                    if any(type(p.get('timestamp')) not in (int, float) or
+                           not math.isfinite(p['timestamp']) or p['timestamp'] > received for p in hist):
+                        continue
+                    points = [float(p['openInterestAmount'] if p.get('openInterestAmount') is not None
+                                    else p['openInterestValue']) for p in hist]
+                    if len(points) < 6 or not all(math.isfinite(p) and p > 0 for p in points):
+                        continue
+                    stamps=[int(p['timestamp']) for p in hist]
+                    if any(b<=a for a,b in zip(stamps,stamps[1:])):
+                        continue
+                    full_window=len(points)==25 and all(b-a==3_600_000 for a,b in zip(stamps,stamps[1:]))
+                    value = dict(now=points[-1],chg_24h=round((points[-1]-points[0])/points[0],4) if full_window else None)
+                    if self._retain_market_input(sym,self._oi_ex,'open_interest',
+                            dict(timestamp=hist[-1]['timestamp'],constituents=hist,
+                                 transform_version='oi_change.first-last.v1'),value,
+                            received_ms=received,attempt_ms=attempt) is not None:
+                        out[sym] = value
                 except Exception:
                     continue
         except Exception as e:
-            log.warning(f"OI map failed: {e}")
-        self._oi_cache = (now, out)
+            log.warning(f'OI map unavailable: {type(e).__name__}')
+        self._oi_cache = (time.time(),out)
         return out
 
     # ── main loop ─────────────────────────────────────────────────────────
@@ -1026,6 +1159,18 @@ class Kernel:
                                                oi.get(symbol))
             original_order_book = self._order_book(symbol)
             self.depth_agent.set_context(symbol, original_order_book)
+            if getattr(snap, 'market_provenance_json', None):
+                lineage = json.loads(snap.market_provenance_json)
+                cut = int(time.time()*1000)
+                if cut < lineage['as_of_ms']:
+                    stats['skips'] += 1
+                    continue
+                auxiliary = {kind: receipt for kind in ('order_book','funding','open_interest')
+                             if (receipt := getattr(self, '_market_aux', {}).get(kind+':'+symbol))
+                             and receipt['available_at_ms'] <= cut}
+                lineage.update(as_of_ms=cut, auxiliary=auxiliary)
+                snap.ts = dt.datetime.fromtimestamp(cut/1000, dt.timezone.utc).isoformat()
+                snap.market_provenance_json = json.dumps(lineage,sort_keys=True)
             from .learning.capture_runtime import runtime_inputs
             try:
                 learning_inputs = runtime_inputs(self.journal, snap, self.cfg,
@@ -1565,6 +1710,12 @@ class Kernel:
             frames = {}
             for tf in tfs:
                 try:
+                    from .engine.entry_authority import proposal_binding
+                    binding=proposal_binding(self.journal,sym)
+                    if binding:
+                        from .core.instrument_registry import InstrumentId
+                        iid=json.loads(binding)['record']['instrument_id']
+                        self.feed.bind_instrument(sym,InstrumentId(iid['venue'],MarketType(iid['market_type']),iid['venue_symbol']))
                     df = self.feed.fetch_ohlcv(sym, tf)
                 except Exception as e:
                     log.warning(f"universe frame {sym} {tf}: {e}")
@@ -1575,25 +1726,34 @@ class Kernel:
                 out[sym] = frames
         return out
 
-    def _scan_symbols(self) -> list[str]:
+    def _scan_symbols(self, *, as_of_ms=None) -> list[str]:
         """Venue candidates, filtered and extended by what the book asks for.
 
         Falls back to the plain universe whenever no spec expresses a
         preference, so a book of legacy genomes behaves exactly as before.
         """
-        base = self.universe.symbols()
+        base = self.universe.symbols() if as_of_ms is None else self.universe.symbols(as_of_ms=as_of_ms)
+        at = int(time.time()*1000) if as_of_ms is None else as_of_ms
+        receipts = self.universe.membership_receipts(as_of_ms=at) if hasattr(self.universe, 'membership_receipts') else {}
+        self._scan_membership_receipts = receipts
         specs = [sp for _row, sp in getattr(self, "_spec_rows", [])]
         if not specs:
             return base
         try:
             from .strategy.scan_plan import plan_scan
-            plan = plan_scan(specs, base, self.universe.volumes())
+            volumes = self.universe.volumes() if as_of_ms is None else self.universe.volumes(as_of_ms=as_of_ms)
+            plan = plan_scan(specs, base, volumes)
         except Exception as e:
             log.warning(f"scan plan failed, using plain universe: {e}")
             return base
         self._scan_plan = plan
         self._scan_timeframes = plan.timeframes
         merged = list(dict.fromkeys(list(plan.symbols) + self.universe.majors))
+        for sym in merged:
+            if sym not in receipts:
+                self._scan_membership_receipts[sym] = dict(source='strategy.universe.include',
+                    symbol=sym, observed_at_ms=at, available_at_ms=at, quality='VALID',
+                    strategy_ids=[sp.id for sp in specs if sym in plan.by_strategy.get(sp.id, ())])
         return merged or base
 
     def _manage_one(self, t: dict, snap, score) -> str | None:
@@ -1646,7 +1806,7 @@ class Kernel:
             from .engine import excursion
 
             def bars_for(symbol: str, tf: str):
-                df = self.feed.cached_ohlcv(symbol, tf)
+                df = self.feed.latest_ohlcv(symbol, tf)
                 if df is None or not len(df):
                     return []
                 ts = df["ts"]

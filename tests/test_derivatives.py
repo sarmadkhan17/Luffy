@@ -5,14 +5,21 @@ from trader.data.derivatives import SERIES, DerivFeed, to_binance
 
 
 @pytest.fixture
-def feed(tmp_path):
-    return DerivFeed(db_path=tmp_path / "derivs.db")
+def feed(tmp_path, monkeypatch):
+    feed = DerivFeed(db_path=tmp_path / 'derivs.db')
+    monkeypatch.setattr(feed, '_get', lambda *a, **kw: [])
+    monkeypatch.setattr('trader.data.derivatives.time.sleep',lambda *_:None)
+    return feed
 
 
 def _df(start="2026-08-01", n=10, freq="15min", val=None):
-    return pd.DataFrame({
+    df = pd.DataFrame({
         "ts": pd.date_range(start, periods=n, freq=freq, tz="UTC"),
         "value": list(range(n)) if val is None else [val] * n})
+    from trader.data.market_provenance import annotate, ms
+    return annotate(df, instrument_id='binanceusdm:futures:BTCUSDT',
+                    source='offline:derivative-fixture', kind='derivative',
+                    received_ms=int(ms(df['ts'])[-1])+1)
 
 
 def test_symbol_conversion():
@@ -64,7 +71,10 @@ def test_store_is_idempotent(feed):
 def test_store_merges_new_observations(feed):
     feed.save("BTC/USDT", "oi", _df(n=5, val=1.0))
     feed.save("BTC/USDT", "oi", _df("2026-08-01 01:00", n=5, val=2.0))
-    assert len(feed.load("BTC/USDT", "oi")) == 9      # one overlapping bar
+    history=feed.load('BTC/USDT','oi')
+    assert len(history)==10 and history['ts'].nunique()==9  # both revisions retained
+    at=int(history['available_at_ms'].max())
+    assert len(feed.load('BTC/USDT','oi',as_of_ms=at))==9
 
 
 def test_series_are_isolated_per_symbol_and_kind(feed):
@@ -90,7 +100,7 @@ def test_parse_funding_payload(feed):
     raw = [{"symbol": "BTCUSDT", "fundingTime": 1756000000000,
             "fundingRate": "0.0001"}]
     df = feed._parse_funding(raw)
-    assert list(df.columns) == ["ts", "value"]
+    assert {"ts", "value", "quality", "available_at_ms", "revision_id"} <= set(df.columns)
     assert df["value"].iloc[0] == pytest.approx(0.0001)
 
 
@@ -120,6 +130,7 @@ def test_record_all_survives_a_raising_endpoint(feed, monkeypatch):
     monkeypatch.setattr(feed, "open_interest", lambda *a, **k: _df(n=3))
     monkeypatch.setattr(feed, "taker_ratio", lambda *a, **k: _df(n=3))
     monkeypatch.setattr(feed, "ls_ratio", lambda *a, **k: _df(n=3))
+    monkeypatch.setattr(feed, "basis", lambda *a, **k: _df(n=3))
     counts = feed.record_all(["BTC/USDT"], delay=0.0)
     assert "funding" not in counts and counts["oi"] == 3
 
@@ -147,6 +158,7 @@ def test_backfill_pulls_coarser_periods_and_skips_funding(feed, monkeypatch):
     for m in ("open_interest", "taker_ratio", "ls_ratio"):
         monkeypatch.setattr(feed, m, rec(m))
     monkeypatch.setattr(feed, "funding", rec("funding"))
+    monkeypatch.setattr(feed, "basis", rec("basis"))
     counts = feed.backfill(["BTC/USDT"], delay=0.0)
     assert not any(n == "funding" for n, _ in seen)
     assert {p for _, p in seen} == set(DerivFeed.BACKFILL_PERIODS)

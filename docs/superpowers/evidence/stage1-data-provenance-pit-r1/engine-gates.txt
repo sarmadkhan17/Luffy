@@ -1,0 +1,32 @@
+COMMAND: ./venv/bin/python -m pytest -p tests.stage1_pit_offline_plugin -q --tb=short -s tests/test_stage1_pit_engine_gates.py
+engine equivalence on SYNTHETIC/USDT (1200 bars)
+
+{"family": "ema_trend", "signals": 188, "old": {"trades": 15, "wins": 6, "pnl": -132.1818}, "new": {"trades": 15, "wins": 6, "pnl": -132.1818}, "match": true}
+{"family": "vwap_fade", "signals": 58, "old": {"trades": 14, "wins": 5, "pnl": -39.815}, "new": {"trades": 14, "wins": 5, "pnl": -39.815}, "match": true}
+{"family": "breakout_retest", "signals": 33, "old": {"trades": 15, "wins": 5, "pnl": -191.3136}, "new": {"trades": 15, "wins": 5, "pnl": -191.3136}, "match": true}
+{"family": "sweep_reversal", "signals": 101, "old": {"trades": 25, "wins": 16, "pnl": 188.3509}, "new": {"trades": 25, "wins": 16, "pnl": 188.3509}, "match": true}
+{"family": "rotation_momo", "signals": 0, "old": {"trades": 0, "wins": 0, "pnl": 0.0}, "new": {"trades": 0, "wins": 0, "pnl": 0.0}, "match": true}
+
+ENGINE EQUIVALENCE: PASS
+
+.symbols=['SYNTHETIC/USDT']
+bars={'SYNTHETIC/USDT': 1200}
+
+{
+  "runs": 5,
+  "old_total_s": 14.79,
+  "old_per_run_s": 2.959,
+  "new_total_s": 0.093,
+  "new_per_run_s": 0.0185,
+  "speedup": 159.9
+}
+
+BENCH: PASS
+
+.
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+2 passed in 49.39s
+
+EXIT_CODE: 0

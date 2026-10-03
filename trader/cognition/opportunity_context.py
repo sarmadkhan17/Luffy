@@ -395,6 +395,20 @@ def _occurrences(signals, key, as_of_ms):
         _same(d.get("symbol"), key, "signal")
         occ, reason = signal_occurrence(d)
         params = d.get("params") or {}
+        provenance = params.get('market_provenance')
+        if provenance is not None:
+            if not isinstance(provenance,dict) or provenance.get('schema_version') != 'market.receipt.v1':
+                _refuse(CORRUPT_EVIDENCE,'signal market provenance')
+            _not_after(provenance.get('as_of_ms'),as_of_ms,'signal market cut')
+            sources = provenance.get('sources')
+            if not isinstance(sources,list) or not sources:
+                _refuse(CORRUPT_EVIDENCE,'signal market sources')
+            for source in sources:
+                if not isinstance(source,dict):
+                    _refuse(CORRUPT_EVIDENCE,'signal market source')
+                for clock in ('available_at_ms','observed_at_ms'):
+                    _not_after(source.get(clock),as_of_ms,'signal source '+clock)
+                    _not_after(source.get(clock),provenance['as_of_ms'],'signal source ancestry')
         if occ is None:
             out.append({"status": UNKNOWN, "reason": reason, "occurrence_schema": OCCURRENCE_VERSION,
                         "key": None, "spec_id": params.get("spec_id"),

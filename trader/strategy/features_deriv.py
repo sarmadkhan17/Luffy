@@ -18,10 +18,10 @@ from .features import SERIES_ARG, FeatureCtx, register
 def align(obs: pd.DataFrame | None, base_ts) -> pd.Series:
     """Map an irregular observation series onto the base bar index.
 
-    A bar closing at time t may only see observations STRICTLY BEFORE t. An
-    observation stamped exactly t becomes knowable at t — i.e. at the close of
-    that bar — so using it to decide an entry on that same bar is lookahead.
-    `side='left'` gives that; `side='right'` would leak.
+    Retained observations require availability AND receipt <= the explicit
+    decision cut, with event ancestry and registered staleness checked.
+    Unqualified numerical fixtures retain their conservative strict-event
+    alignment; production/historical loaders supply retained receipts.
 
     Missing data is NaN, never a neutral default. A fabricated 0.0 funding
     rate reads as 'funding is flat' and would fire mean-reversion signals on
@@ -33,17 +33,48 @@ def align(obs: pd.DataFrame | None, base_ts) -> pd.Series:
     o = obs.dropna(subset=["ts"]).sort_values("ts")
     if o.empty:
         return pd.Series(np.nan, index=idx)
-    o_ts = pd.to_datetime(o["ts"], utc=True).values
-    b_ts = pd.to_datetime(pd.Series(list(base_ts)), utc=True).values
-    pos = np.searchsorted(o_ts, b_ts, side="left") - 1
-    vals = o["value"].to_numpy(float)
-    out = np.where(pos >= 0, vals[np.clip(pos, 0, None)], np.nan)
-    return pd.Series(out, index=idx)
+    if 'available_at_ms' in o:
+        # Select the newest EVENT, then its exact revision at each cut. A
+        # late correction of an older event must not displace a newer event.
+        times = pd.to_datetime(pd.Series(list(base_ts)), utc=True).to_numpy(dtype='datetime64[ms]').astype('int64')
+        rows = o.sort_values(['available_at_ms','observed_at_ms']).to_dict('records')
+        out = np.full(len(times),np.nan)
+        by_event = {}
+        cursor = 0
+        for index in np.argsort(times,kind='stable'):
+            at = int(times[index])
+            while cursor<len(rows) and rows[cursor]['available_at_ms'] <= at:
+                row=rows[cursor];cursor+=1
+                if row['observed_at_ms'] <= at and row['event_time_ms'] <= at:
+                    by_event[row['event_time_ms']]=row
+            if by_event:
+                newest=by_event[max(by_event)]
+                age_limit = newest.get('max_age_ms')
+                fresh = age_limit is None or pd.isna(age_limit) or at-newest['event_time_ms'] <= age_limit
+                if newest['quality']=='VALID' and fresh:
+                    out[index]=newest['value']
+        return pd.Series(out,index=idx)
+    o_ts = pd.to_datetime(o['ts'],utc=True).values
+    b_ts = pd.to_datetime(pd.Series(list(base_ts)),utc=True).values
+    pos = np.searchsorted(o_ts,b_ts,side='left')-1
+    vals=o['value'].to_numpy(float)
+    return pd.Series(np.where(pos>=0,vals[np.clip(pos,0,None)],np.nan),index=idx)
+
 
 
 def _deriv(ctx: FeatureCtx, name: str) -> pd.Series:
     src = (ctx.derivs or {}).get(name)
-    s = align(src, ctx.df["ts"])
+    cuts = ctx.df['ts']
+    if src is not None and 'available_at_ms' in src:
+        from ..core.types import TF_MS
+        from ..data.market_provenance import ms
+        points = ms(ctx.df['ts'])+TF_MS[ctx.tf]
+        if ctx.as_of_ms is not None:
+            points = np.minimum(points,ctx.as_of_ms)
+            if ctx.df.attrs.get('read_mode')!='replay' and len(points):
+                points[-1]=ctx.as_of_ms
+        cuts=pd.to_datetime(points,unit='ms',utc=True)
+    s = align(src,cuts)
     s.index = ctx.index
     return s
 

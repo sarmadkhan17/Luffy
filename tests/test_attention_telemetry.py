@@ -36,6 +36,10 @@ def frames(count=6, now=None):
             'ts': pd.to_datetime([anchor - (30-i)*tf for i in range(30)], unit='ms', utc=True),
             'open': c, 'high': c*1.01, 'low': c*.99, 'close': c,
             'volume': 100 + np.arange(30) % 7})}
+        from trader.data.market_provenance import annotate
+        out[f'S{j}/USDT']['4h'] = annotate(out[f'S{j}/USDT']['4h'],
+            instrument_id=f'offline:futures:S{j}USDT',source='offline:attention',
+            kind='candle',received_ms=now,timeframe='4h')
     return out
 
 
@@ -188,7 +192,7 @@ def test_journal_scan_link_is_nullable(tmp_path):
     from trader.core.types import Decision, Action
     j = Journal(tmp_path/'journal.db')
     d = Decision('d','c','S',Action.HOLD,0,.2,0,[],[])
-    from trader.core.types import Snapshot
+    from tests.market_receipt_fixtures import snapshot as Snapshot
     j.log_cycle(Snapshot('S',d.ts,100,{}), 'c', 'test')
     j.log_decision(d)
     assert j.query('SELECT scan_id FROM decisions')[0]['scan_id'] is None
@@ -303,7 +307,7 @@ def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name,
 
 def test_compiled_spec_reports_missing_and_failed_inputs(monkeypatch):
     from trader.strategy import compile as mod, library
-    from trader.core.types import Snapshot
+    from tests.market_receipt_fixtures import snapshot as Snapshot
     compiled=object.__new__(mod.CompiledStrategy)
     compiled.spec=NS(timeframe='4h',id='fixture')
     fn=compiled.to_evaluator()
@@ -334,6 +338,8 @@ def test_replay_export_reconstructs_inputs_and_evidence_without_dangling_ids(tmp
     for ref in out['scan']['input_versions']:
         v=versions[ref['version_id']]
         candles.append({**json.loads(v['payload']),'available_ms':v['first_seen_ms']})
+    from trader.observability.store import restore_market_receipts
+    restore_market_receipts(candles,out['scan'])
     restored={**original,'input':{'schema':INPUT_SCHEMA,'timeframe':out['scan']['timeframe'],
               'membership':out['scan']['membership'],'candles':candles,
               'decision_times':[now],'participation':[]}}

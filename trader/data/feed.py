@@ -12,6 +12,7 @@ import time
 
 from ..core.types import TF_MS as _TF_MS_SHARED, closed_bars, norm_symbol
 from .sqlite_tx import BUSY_TIMEOUT_S, close_quietly, write_tx
+from . import market_provenance as mp
 from typing import Optional
 
 import pandas as pd
@@ -73,7 +74,8 @@ class DataFeed:
     """
 
     def __init__(self, exchange=None, ttl_by_tf: dict | None = None,
-                 db_path=None):
+                 db_path=None, clock_ms=None):
+        self._clock_ms = clock_ms or (lambda: int(time.time() * 1000))
         self._ex = exchange
         #: the venue orders are actually sent to (demo, when demo is on)
         self.trade_ex = exchange
@@ -92,6 +94,7 @@ class DataFeed:
         # cache freshness: 15m data ~2min old max; 1h ~10min; 4h ~30min
         self.ttl = ttl_by_tf or {"5m": 120, "15m": 180, "1h": 600, "4h": 1800, "1d": 7200}
         self._cache: dict[tuple, tuple[float, pd.DataFrame]] = {}
+        self._instruments = {}
         self._db_path = str(db_path) if db_path else None   # resolved lazily
         self._local = threading.local()                     # per-thread conns
         #: symbol -> unix ts it was last seen as non-existent on the exchange
@@ -134,6 +137,7 @@ class DataFeed:
                     "CREATE TABLE IF NOT EXISTS candle_floor ("
                     "symbol TEXT NOT NULL, tf TEXT NOT NULL, first_ts INTEGER "
                     "NOT NULL, PRIMARY KEY (symbol, tf))")
+                mp.init(conn)
                 conn.commit()
             except BaseException:
                 close_quietly(conn, "init")  # setup error wins; not cached
@@ -166,16 +170,16 @@ class DataFeed:
         width = max(len(r) for r in raw)
         rows = [list(r) + [None] * (width - len(r)) for r in raw]
         df = pd.DataFrame([r[:6] for r in rows], columns=COLUMNS)
-        df["ts"] = pd.to_datetime(df["ts"], unit="ms", utc=True)
+        df["ts"] = pd.to_datetime(df["ts"], unit="ms", utc=True, errors='coerce')
         for col in COLUMNS[1:]:
-            df[col] = pd.to_numeric(df[col], errors="coerce")
+            df[col] = pd.to_numeric(df[col].map(lambda x: np.nan if isinstance(x,(bool,np.bool_)) else x), errors="coerce")
         if width > self._TAKER_BUY_IDX:
             df["taker_buy"] = pd.to_numeric(
                 [r[self._TAKER_BUY_IDX] for r in rows], errors="coerce")
         else:
             df["taker_buy"] = np.nan
         # taker_buy is allowed to be absent; an incomplete OHLCV bar is not
-        df = df.dropna(subset=COLUMNS).reset_index(drop=True)
+        df = df.dropna(subset=["ts"]).reset_index(drop=True)
         return df
 
     @staticmethod
@@ -200,7 +204,8 @@ class DataFeed:
         """
         try:
             ex = self.ex
-            params = {"symbol": self._venue_symbol(ex, symbol),
+            bound=self._instruments.get(norm_symbol(symbol))
+            params = {"symbol": bound.venue_symbol if bound is not None and bound.venue==getattr(ex,"id",None) else self._venue_symbol(ex, symbol),
                       "interval": tf, "limit": int(limit)}
             if since is not None:
                 params["startTime"] = int(since)
@@ -259,8 +264,13 @@ class DataFeed:
         feature and live signal above it.
         """
         symbol = norm_symbol(symbol)
+        if now_ms is None:
+            now_ms = self._clock_ms()
+        original = df
         df = closed_bars(df, tf, now_ms)
         if not len(df):
+            with write_tx(self._local, self.db, "partial receipt") as conn:
+                mp.append(conn, self._series_key(symbol, tf), original)
             return
         try:
             # .value/.astype(int64) are ns-based only for datetime64[ns];
@@ -279,6 +289,7 @@ class DataFeed:
             # a failed commit must not leave this thread's connection holding
             # the lock (and the batch) open — see sqlite_tx
             with write_tx(self._local, self.db, "write") as conn:
+                mp.append(conn, self._series_key(symbol, tf), original)
                 conn.executemany(
                     "INSERT OR REPLACE INTO candles VALUES (?,?,?,?,?,?,?,?,?)",
                     rows)
@@ -291,8 +302,9 @@ class DataFeed:
         df = fresh if stored is None else pd.concat([stored, fresh]) \
             .drop_duplicates(subset="ts", keep="last") \
             .sort_values("ts").reset_index(drop=True)
-        self._store_save(symbol, tf, df)
-        return df
+        self._store_save(symbol, tf, fresh)
+        retained = self.ohlcv_asof(symbol, tf, as_of_ms=self._clock_ms(), limit=len(df), include_partial=True)
+        return retained
 
     @staticmethod
     def _first_ms(df: pd.DataFrame) -> int:
@@ -345,24 +357,75 @@ class DataFeed:
                 break
         return rows[-limit:]
 
-    def cached_ohlcv(self, symbol: str, tf: str = "15m",
-                     limit: int = 20000) -> Optional[pd.DataFrame]:
-        """Read the local candle store ONLY — never touches the exchange.
+    def bind_instrument(self, symbol, instrument_id):
+        """Use the existing Registry's typed identity; grants no trade capability."""
+        from ..core.instrument_registry import InstrumentId
+        if not isinstance(instrument_id,InstrumentId):
+            raise TypeError('Registry InstrumentId required')
+        self._instruments[norm_symbol(symbol)] = instrument_id
 
-        Backtests want every bar already on disk, which is a very different
-        request from 'give me fresh candles'. Routing them through
-        fetch_ohlcv(limit=20000) triggers _fetch_paged and walks the REST API
-        backwards for every symbol, turning an offline gauntlet into minutes
-        of network I/O.
+    def _identity(self,symbol):
+        iid,source=mp.venue_identity(self.ex,symbol)
+        if iid:
+            return iid,source
+        binding=self._instruments.get(norm_symbol(symbol))
+        if binding is not None and binding.venue == getattr(self.ex,'id',None):
+            return binding.value,mp.venue_source(self.ex)
+        return None,None
+
+    @staticmethod
+    def _series_key(symbol, tf):
+        return "candle:" + norm_symbol(symbol) + ":" + tf
+
+    def _received_frame(self, raw, symbol, tf):
+        # One conservative local receipt for the completed retrieval, including
+        # pagination. Raw provider rows remain exact and publication is unknown.
+        df = self._frame(raw)
+        iid, source = self._identity(symbol)
+        valid_raw = [r for r in raw if len(r) >= 6 and
+                     not pd.isna(pd.to_numeric(r[0], errors='coerce'))]
+        return mp.annotate(df, instrument_id=iid, source=source, kind='candle',
+                           received_ms=self._clock_ms(), timeframe=tf,
+                           request_started_ms=getattr(self._local,'acquisition_started_ms',None),
+                           raw=valid_raw if len(valid_raw) == len(df) else None)
+
+    def ohlcv_asof(self, symbol, tf='15m', *, as_of_ms, limit=20000,
+                   include_partial=False):
+        """Offline historical read; never routes through latest or the network."""
+        iid,source=self._identity(symbol)
+        df = mp.load(self.db, self._series_key(symbol, tf), as_of_ms=as_of_ms,
+                     limit=limit, include_partial=include_partial, instrument_id=iid, source=source)
+        return mp.eligible_frame(df, tf, as_of_ms, final=not include_partial)
+
+    def latest_ohlcv(self, symbol, tf='15m', limit=20000):
+        """Explicit current offline view; unsuitable for historical decisions."""
+        return self.ohlcv_asof(symbol, tf, as_of_ms=self._clock_ms(), limit=limit)
+
+    def replay_ohlcv(self, symbol, tf='15m', limit=20000):
+        """Bar-close replay from revisions actually retained by each bar cut.
+
+        Late backfills and unqualified pre-upgrade rows cannot prove what
+        LUFFY knew at an earlier close and are deliberately unavailable.
         """
-        return self._store_load(symbol, tf, limit)
+        at = self._clock_ms()
+        df = mp.load(self.db, self._series_key(symbol, tf),
+                     as_of_ms=at, limit=limit, replay_tf=tf)
+        return mp.eligible_frame(df,tf,at)
+
+    def cached_ohlcv(self, symbol, tf='15m', limit=20000, *, as_of_ms=None):
+        """Compatibility historical API: replay by default, explicit cut otherwise."""
+        if as_of_ms is not None:
+            return self.ohlcv_asof(symbol, tf, as_of_ms=as_of_ms, limit=limit)
+        return self.replay_ohlcv(symbol, tf, limit)
 
     def fetch_ohlcv(self, symbol: str, tf: str = "15m",
                     limit: int = 400, force: bool = False,
-                    min_bars: int = 30) -> Optional[pd.DataFrame]:
+                    min_bars: int = 30, *, as_of_ms=None) -> Optional[pd.DataFrame]:
+        if as_of_ms is not None:
+            return self.ohlcv_asof(symbol, tf, as_of_ms=as_of_ms, limit=limit)
         ck = (symbol, tf)
         tf_ms = self._TF_MS.get(tf, 900_000)
-        now_ms = int(time.time() * 1000)
+        now_ms = self._clock_ms()
 
         if self.is_dead(symbol):
             # delisted / never-listed symbol: serve whatever is stored and do
@@ -371,18 +434,26 @@ class DataFeed:
             # being refetched every single cycle forever.
             stored = self._store_load(symbol, tf, limit)
             if stored is not None and len(stored) >= min_bars:
-                return stored
+                return mp.usable_current(self.latest_ohlcv(symbol, tf, limit), tf, now_ms, self.ttl.get(tf, 300))
             return None
 
         def finish(df: pd.DataFrame) -> pd.DataFrame:
-            self._cache[ck] = (time.time(), df)
-            return df
+            at = self._clock_ms()
+            safe = mp.usable_current(df, tf, at, self.ttl.get(tf, 300))
+            self._cache[ck] = (at / 1000, safe)
+            return safe
 
         hit = self._cache.get(ck)
-        if hit and not force and time.time() - hit[0] < self.ttl.get(tf, 300):
-            return hit[1]
+        iid,source=self._identity(symbol)
+        if hit and hit[1] is not None and ('instrument_id' not in hit[1] or
+                not hit[1]['instrument_id'].eq(iid).all() or not hit[1]['source'].eq(source).all()):
+            hit=None
+        if hit and not force and 0 <= now_ms / 1000 - hit[0] < self.ttl.get(tf, 300):
+            return mp.usable_current(hit[1], tf, now_ms, self.ttl.get(tf, 300))
 
-        stored = self._store_load(symbol, tf, limit)
+        stored = self.latest_ohlcv(symbol, tf, limit)
+        if stored is None:
+            stored = self._store_load(symbol, tf, limit)  # inventory only, never qualified
         # "full" = the window asked for is stored, OR the store already
         # reaches back to where the venue's history begins (a symbol younger
         # than `limit` can never hold `limit` bars, and must not be re-walked
@@ -397,6 +468,7 @@ class DataFeed:
 
         try:
             # force means "refresh now", not "forget the store": history
+            self._local.acquisition_started_ms = self._clock_ms()
             # already on disk is extended from its tail, never re-downloaded
             if stored is not None and len(stored) > 0:
                 # extend/refresh whatever is stored instead of redownloading
@@ -418,7 +490,7 @@ class DataFeed:
                     raw = (self._klines(symbol, tf, since=resume, limit=1000)
                            if missing < 950 else
                            self._fetch_paged(symbol, tf, limit))
-                new = self._frame(raw or [])
+                new = self._received_frame(raw or [], symbol, tf)
                 if new.empty:
                     return finish(stored)
                 return finish(self._note_floor(symbol, tf, limit,
@@ -428,9 +500,8 @@ class DataFeed:
             raw = (self._fetch_paged(symbol, tf, limit) if limit > 1000
                    else self._klines(symbol, tf, limit=limit))
             if not raw or len(raw) < min_bars:
-                return hit[1] if hit else (stored if stored is not None
-                                           and len(stored) >= min_bars else None)
-            new = self._frame(raw)
+                return finish(stored) if stored is not None else None
+            new = self._received_frame(raw, symbol, tf)
             return finish(self._note_floor(symbol, tf, limit,
                                            self._merge_save(symbol, tf,
                                                             stored, new)))
@@ -442,7 +513,7 @@ class DataFeed:
                 log.warning(f"ohlcv {symbol} {tf}: {e}")
             if stored is not None and len(stored) >= min_bars:
                 return finish(stored)
-            return hit[1] if hit else None
+            return mp.usable_current(hit[1], tf, now_ms, self.ttl.get(tf, 300)) if hit and hit[0] * 1000 <= now_ms else None
 
     # ── dead-symbol negative cache ──────────────────────────────────────
     #: exchange messages that mean "this market will never exist"
@@ -486,12 +557,8 @@ class DataFeed:
         return out
 
     def price(self, symbol: str) -> float | None:
-        try:
-            t = self.ex.fetch_ticker(symbol)
-            return float(t.get("last") or t.get("close") or 0) or None
-        except Exception as e:
-            log.warning(f"price {symbol}: {e}")
-            return None
+        """Explicit latest valuation, validated by the ticker receipt contract."""
+        return self.ticker_quote(symbol)['price']
 
     def ticker_quote(self, symbol: str) -> dict:
         """The same ticker valuation as price() (last, else close), with its
@@ -519,10 +586,20 @@ class DataFeed:
         except (TypeError, ValueError):
             px = None
         ts = t.get("timestamp")
-        error = None if px else "ticker_price_missing"
+        error = None if px and np.isfinite(px) and px > 0 else 'ticker_price_missing'
+        if error:
+            px = None
+        if ts is not None and (type(ts) not in (int,float) or not np.isfinite(ts) or ts > received*1000):
+            px,error = None,'ticker_time_invalid'
+        iid,source=mp.venue_identity(self.ex,symbol)
+        if not iid or not source:
+            px,error=None,'ticker_identity_unknown'
         if received < attempt:
             px, error = None, "quote_receipt_before_attempt"
         return {"symbol": symbol, "price": px, "field": field,
+                'instrument_id':iid,'source':source,'available_at_ms':int(received*1000),
+                'quality':'VALID' if error is None else 'INVALID',
+                'content_hash':mp.digest(t), 'raw':t,
                 "source_ms": ts if isinstance(ts, (int, float))
                 and not isinstance(ts, bool) else None,
                 "attempt_started_at": attempt, "received_at": received,
@@ -581,8 +658,10 @@ class Universe:
             "futures", demo=False, with_keys=False) if on_demo else (exchange or None)
         self._last_scan = 0.0
         self._alts: list[str] = []
-        self._listing_cache: dict[str, float] = {}   # symbol -> first-candle ts (ms)
+        self._selection_receipt = None
+        self._listing_cache: dict[str, dict] = {}
         #: symbol -> last seen 24h quote volume, for strategy liquidity floors
+        self._volume_receipts = {}
         self._volumes: dict[str, float] = {}
 
     @property
@@ -594,12 +673,27 @@ class Universe:
             self._ex = make_exchange()
         return self._ex
 
-    def symbols(self) -> list[str]:
-        if self.enabled and time.time() - self._last_scan > self.rescan_hours * 3600:
+    def symbols(self, *, as_of_ms=None) -> list[str]:
+        at = int(time.time()*1000) if as_of_ms is None else mp.cut(as_of_ms)
+        if self.enabled and (at < self._last_scan*1000 or at/1000 - self._last_scan > self.rescan_hours * 3600):
             self._rescan()
-        return self.majors + [s for s in self._alts if s not in self.majors]
+        receipt = self.membership_receipts(as_of_ms=at)
+        return self.majors + [s for s in self._alts if s not in self.majors and s in receipt]
 
-    def volumes(self) -> dict:
+    def membership_receipts(self, *, as_of_ms):
+        """Configuration members and the exact eligible scan result, never backdated."""
+        import copy
+        at = mp.cut(as_of_ms)
+        out = {sym: dict(source='config.universe.majors', observed_at_ms=at,
+                         available_at_ms=at, quality='VALID', symbol=sym)
+               for sym in self.majors}
+        r = self._selection_receipt
+        if (r and r['quality'] == 'VALID' and r['available_at_ms'] <= at
+                and r['observed_at_ms'] <= at and self._last_scan*1000 <= at):
+            out.update({sym: copy.deepcopy(r) for sym in self._alts if sym in r['members']})
+        return out
+
+    def volumes(self, *, as_of_ms=None) -> dict:
         """{symbol: 24h quote volume} as of the last scan.
 
         A spec's `min_volume_usdt` needs a reading to test against; a symbol
@@ -607,27 +701,43 @@ class Universe:
         """
         if not self._volumes and self.enabled:
             self._rescan()
-        out = dict(self._volumes)
-        for m in self.majors:                # majors are scanned regardless
-            out.setdefault(m, float("inf"))
-        return out
+        now_ms=int(time.time()*1000) if as_of_ms is None else mp.cut(as_of_ms)
+        return {sym:value for sym,value in self._volumes.items()
+                if (r := self._volume_receipts.get(sym)) and r['quality']=='VALID'
+                and 0 <= now_ms-r['available_at_ms'] <= self.rescan_hours*3600*1000}
 
     def _rescan(self) -> None:
+        import uuid
+        started = int(time.time()*1000)
         try:
-            tickers = self.ex.fetch_tickers() or {}
+            tickers = self.ex.fetch_tickers()
+            if not isinstance(tickers, dict) or not tickers:
+                return  # Missing response is not proof of an empty universe.
         except Exception as e:
             log.warning(f"universe rescan failed: {e}")
-            self._last_scan = time.time()
             return
         scored = []
+        volume_receipts = {}
         for sym_raw, t in tickers.items():
             sym = norm_symbol(sym_raw)
             if not sym.endswith("/USDT") or sym in self.blacklist:
                 continue
+            iid, source = mp.venue_identity(self.ex, sym_raw)
+            quote_vol = pd.to_numeric(t.get('quoteVolume'),errors='coerce')
+            last = pd.to_numeric(t.get('last'),errors='coerce')
+            received=int(time.time()*1000)
+            event=t.get('timestamp')
+            if (not iid or not source or not np.isfinite(quote_vol) or not np.isfinite(last)
+                    or quote_vol < 0 or last <= 0 or event is not None and
+                    (type(event) not in (int,float) or not np.isfinite(event) or event > received)):
+                continue
+            self._volumes[sym] = float(quote_vol)
+            self._volume_receipts[sym] = dict(instrument_id=iid,source=source,
+                event_time_ms=event,observed_at_ms=received,available_at_ms=received,
+                content_hash=mp.digest(t),raw=t,quality='VALID')
+            volume_receipts[sym] = self._volume_receipts[sym]
             if sym in self.majors:
                 continue
-            quote_vol = float(t.get("quoteVolume") or 0)
-            last = float(t.get("last") or 0)
             if quote_vol < self.min_vol or last < self.min_price:
                 continue
             if not self._old_enough(sym):
@@ -635,24 +745,57 @@ class Universe:
             scored.append((quote_vol, sym))
             self._volumes[sym] = quote_vol
         scored.sort(reverse=True)
-        self._alts = [s for _, s in scored[:self.top_n]]
-        self._last_scan = time.time()
-        log.info(f"universe: {len(self.symbols())} symbols "
+        received = int(time.time()*1000)
+        if received < started or not mp.venue_source(self.ex):
+            return
+        if self._selection_receipt and received < self._selection_receipt['available_at_ms']:
+            return  # An older cut must not replace a valid later result.
+        members = [s for _, s in scored[:self.top_n]]
+        required_receipts = list(volume_receipts.values()) + [self._listing_cache[sym] for sym in members]
+        if any(received < max(r['available_at_ms'], r['observed_at_ms']) for r in required_receipts):
+            return  # A reversed local clock cannot backdate required selection inputs.
+        body = dict(source=mp.venue_source(self.ex), members=members,
+                    request_id=uuid.uuid4().hex, request_started_ms=started,
+                    observed_at_ms=received, available_at_ms=received,
+                    content_hash=mp.digest(tickers), raw=tickers, quality='VALID',
+                    selection_version='universe.volume-age.v1',
+                    selection_config=dict(top_n=self.top_n, min_vol=self.min_vol,
+                        min_price=self.min_price, min_age_days=self.min_age_days,
+                        blacklist=sorted(self.blacklist)),
+                    volume_receipts=volume_receipts,
+                    listing_receipts={sym:self._listing_cache[sym] for sym in members})
+        body['revision_id'] = mp.digest(body)
+        self._selection_receipt = body
+        self._alts = members
+        self._last_scan = received/1000
+        log.info(f"universe: {len(self.majors) + len(self._alts)} symbols "
                  f"(majors {len(self.majors)} + alts {len(self._alts)})")
 
     def _old_enough(self, symbol: str) -> bool:
         """Listing age ≥ min_age_days via first 1d candle (cached)."""
-        if symbol in self._listing_cache:
-            first_ms = self._listing_cache[symbol]
-        else:
+        now = int(time.time()*1000)
+        iid, source = mp.venue_identity(self.ex, symbol)
+        receipt = self._listing_cache.get(symbol)
+        if (not receipt or receipt['available_at_ms'] > now or
+                receipt['instrument_id'] != iid or receipt['source'] != source):
             try:
                 raw = self.ex.fetch_ohlcv(symbol, "1d", since=0, limit=1)
-                first_ms = raw[0][0] if raw else 0
+                received = int(time.time()*1000)
+                first_ms = raw[0][0] if raw else None
+                if (not iid or not source or received < now or
+                        type(first_ms) not in (int,float) or not np.isfinite(first_ms)
+                        or first_ms < 0 or first_ms > received):
+                    return False
+                receipt = dict(instrument_id=iid, source=source, available_at_ms=received,
+                               observed_at_ms=received, event_time_ms=first_ms,
+                               raw=raw, content_hash=mp.digest(raw), quality='VALID')
             except Exception:
-                first_ms = 0
-            self._listing_cache[symbol] = first_ms
-        if not first_ms or first_ms > time.time() * 1000 - 86_400_000 * 5:
+                return False
+            self._listing_cache[symbol] = receipt
+        first_ms = receipt['event_time_ms']
+        now = int(time.time()*1000)
+        if receipt['available_at_ms'] > now or not first_ms or first_ms > now - 86_400_000 * 5:
             # no history, or "first" candle is recent (since=0 unsupported)
             return False
-        age_days = (time.time() * 1000 - first_ms) / 86_400_000
+        age_days = (now - first_ms) / 86_400_000
         return age_days >= self.min_age_days

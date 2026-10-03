@@ -1,0 +1,86 @@
+........................................................................ [ 10%]
+........................................................................ [ 21%]
+........................................................................ [ 32%]
+........................................F...F...F...F...F...F...F...F... [ 43%]
+........................................................................ [ 54%]
+........................................................................ [ 65%]
+........................................................................ [ 76%]
+........................................................................ [ 87%]
+........................................................................ [ 98%]
+.............                                                            [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[False-ACTIVE-normal] _____
+tests/test_attention_telemetry.py:298: in test_real_kernel_cycle_keeps_entry_exit_behavior
+    assert d.scan_id
+E   AssertionError: assert None
+E    +  where None = Decision(id='d', cycle_id='c', symbol='S0/USDT', action=<Action.BUY: 'BUY'>, score=0.7, threshold=0.2, confidence=0.8,...+00:00', meta_p=0.0, meta_size=1.0, scan_id=None, evaluation_causes=[], omitted_causes=0, instrument_binding_json=None).scan_id
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:172 attention begin failed: AttributeError
+WARNING  luffy:kernel.py:1157 paper exits refused S0/USDT: 'types.SimpleNamespace' object has no attribute '_tx'
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[False-FROZEN-normal] _____
+tests/test_attention_telemetry.py:298: in test_real_kernel_cycle_keeps_entry_exit_behavior
+    assert d.scan_id
+E   AssertionError: assert None
+E    +  where None = Decision(id='d', cycle_id='c', symbol='S0/USDT', action=<Action.BUY: 'BUY'>, score=0.7, threshold=0.2, confidence=0.8,...+00:00', meta_p=0.0, meta_size=1.0, scan_id=None, evaluation_causes=[], omitted_causes=0, instrument_binding_json=None).scan_id
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:172 attention begin failed: AttributeError
+WARNING  luffy:kernel.py:1157 paper exits refused S0/USDT: 'types.SimpleNamespace' object has no attribute '_tx'
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[False-HALTED-normal] _____
+tests/test_attention_telemetry.py:298: in test_real_kernel_cycle_keeps_entry_exit_behavior
+    assert d.scan_id
+E   AssertionError: assert None
+E    +  where None = Decision(id='d', cycle_id='c', symbol='S0/USDT', action=<Action.BUY: 'BUY'>, score=0.7, threshold=0.2, confidence=0.8,...+00:00', meta_p=0.0, meta_size=1.0, scan_id=None, evaluation_causes=[], omitted_causes=0, instrument_binding_json=None).scan_id
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:172 attention begin failed: AttributeError
+___ test_real_kernel_cycle_keeps_entry_exit_behavior[False-RECOVERY-normal] ____
+tests/test_attention_telemetry.py:298: in test_real_kernel_cycle_keeps_entry_exit_behavior
+    assert d.scan_id
+E   AssertionError: assert None
+E    +  where None = Decision(id='d', cycle_id='c', symbol='S0/USDT', action=<Action.BUY: 'BUY'>, score=0.7, threshold=0.2, confidence=0.8,...+00:00', meta_p=0.0, meta_size=1.0, scan_id=None, evaluation_causes=[], omitted_causes=0, instrument_binding_json=None).scan_id
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:172 attention begin failed: AttributeError
+WARNING  luffy:kernel.py:1157 paper exits refused S0/USDT: 'types.SimpleNamespace' object has no attribute '_tx'
+_____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-ACTIVE-normal] _____
+tests/test_attention_telemetry.py:298: in test_real_kernel_cycle_keeps_entry_exit_behavior
+    assert d.scan_id
+E   AssertionError: assert None
+E    +  where None = Decision(id='d', cycle_id='c', symbol='S0/USDT', action=<Action.BUY: 'BUY'>, score=0.7, threshold=0.2, confidence=0.8,...+00:00', meta_p=0.0, meta_size=1.0, scan_id=None, evaluation_causes=[], omitted_causes=0, instrument_binding_json=None).scan_id
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:172 attention begin failed: AttributeError
+WARNING  luffy:kernel.py:1157 paper exits refused S0/USDT: 'types.SimpleNamespace' object has no attribute '_tx'
+_____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-FROZEN-normal] _____
+tests/test_attention_telemetry.py:298: in test_real_kernel_cycle_keeps_entry_exit_behavior
+    assert d.scan_id
+E   AssertionError: assert None
+E    +  where None = Decision(id='d', cycle_id='c', symbol='S0/USDT', action=<Action.BUY: 'BUY'>, score=0.7, threshold=0.2, confidence=0.8,...+00:00', meta_p=0.0, meta_size=1.0, scan_id=None, evaluation_causes=[], omitted_causes=0, instrument_binding_json=None).scan_id
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:172 attention begin failed: AttributeError
+WARNING  luffy:kernel.py:1157 paper exits refused S0/USDT: 'types.SimpleNamespace' object has no attribute '_tx'
+_____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-HALTED-normal] _____
+tests/test_attention_telemetry.py:298: in test_real_kernel_cycle_keeps_entry_exit_behavior
+    assert d.scan_id
+E   AssertionError: assert None
+E    +  where None = Decision(id='d', cycle_id='c', symbol='S0/USDT', action=<Action.BUY: 'BUY'>, score=0.7, threshold=0.2, confidence=0.8,...+00:00', meta_p=0.0, meta_size=1.0, scan_id=None, evaluation_causes=[], omitted_causes=0, instrument_binding_json=None).scan_id
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:172 attention begin failed: AttributeError
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-RECOVERY-normal] ____
+tests/test_attention_telemetry.py:298: in test_real_kernel_cycle_keeps_entry_exit_behavior
+    assert d.scan_id
+E   AssertionError: assert None
+E    +  where None = Decision(id='d', cycle_id='c', symbol='S0/USDT', action=<Action.BUY: 'BUY'>, score=0.7, threshold=0.2, confidence=0.8,...+00:00', meta_p=0.0, meta_size=1.0, scan_id=None, evaluation_causes=[], omitted_causes=0, instrument_binding_json=None).scan_id
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:172 attention begin failed: AttributeError
+WARNING  luffy:kernel.py:1157 paper exits refused S0/USDT: 'types.SimpleNamespace' object has no attribute '_tx'
+=========================== short test summary info ============================
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-ACTIVE-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-FROZEN-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-HALTED-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-RECOVERY-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-ACTIVE-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-FROZEN-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-HALTED-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-RECOVERY-normal]
+8 failed, 653 passed in 109.01s (0:01:49)

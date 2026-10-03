@@ -1,10 +1,10 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-10-03'
+updated_at: '2026-10-04'
 
 repository_checkpoint:
-  branch: luffy-stage1-entry-authority-idempotency-r1
-  working_tree_base_head: f571c988b866fdeaa27957d2d950625aa292ebd9
+  branch: luffy-stage1-data-provenance-pit-r1
+  working_tree_base_head: 8d49c6976dc7359aed9451c4b3fd5c9bf55b0198
   reviewed_code_head: 57ad32332a98518c083b750f9df9d43596d0d531
   production_main_head: 1bed3958740ec2d0d575aabc817978086d31d390
 
@@ -37,33 +37,31 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
-  id: LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1
+  id: LUFFY-STAGE1-RECOVERY-MONITORING-FOUNDATION-R1
   type: BOUNDED_IMPLEMENTATION
   status: RECOMMENDED_NOT_STARTED
   mode: PRE_START_SAFETY_IMPLEMENTATION
-  purpose: Close normal feed provenance and point-in-time HTF/cache correctness; remaining backup/alerts stay
-    open.
   implementation_started: false
-  source_closure: docs/superpowers/reports/2026-10-03-stage1-entry-authority-idempotency-r1.md
+  purpose: Close exactly MI-6/MI-7 through existing backup/restore, critical-store,
+    deterministic Supervisor, recovery and heartbeat boundaries.
+  source_closure: docs/superpowers/reports/2026-10-04-stage1-data-provenance-pit-blocker-fix-r1.md
+  prerequisite_review: STAGE1_DATA_PROVENANCE_PIT_INDEPENDENT_REVIEW_R2
+  prerequisite_review_result: PASS
+  closed_stage1_gaps: [MI-2, MI-3]
   scope:
-  - 'MI-2: Durable normal market-feed source/receipt/quality and historical revision provenance.'
-  - 'MI-3: Native HTF close/availability alignment and rejection of future cached observations.'
-  - Retain source identity, event/receipt/availability times, quality and revision lineage.
-  - Reject future cached observations; align HTF reads to actual historical availability.
+  - 'MI-6: Integrity-checked critical backup/restore with an off-host-capable destination seam.'
+  - 'MI-7: Critical storage/journal-unavailable detection and missing-heartbeat safety alerts.'
   acceptance:
-  - Deterministic fake-feed/isolated-cache tests establish no future data reaches research/backtest/live decisions.
-  - UNKNOWN and STALE remain distinct from zero/current; replay retains historical provenance.
-  - No live venue, production database mutation, startup or deployment.
+  - Offline temporary-store backup/restore proves integrity, manifest completeness and recovery of critical state.
+  - Controlled faults and clocks prove critical storage/journal-unavailable and missing-heartbeat safety alerts through existing containment authority.
+  - Stage1 remains incomplete until both remaining gaps pass independent review.
   remaining_stage1_blockers:
-  - MI-2
-  - MI-3
   - MI-6
   - MI-7
   constraints:
-  - Do not start LUFFY, deploy, restart services, activate trading, submit real orders or call real venue APIs.
-  - Do not change Risk policy, invent thresholds, run Scheme-D or spend money.
-  - Preserve pre-existing frontend/M4/knowledge work and Stage5-8 frozen architecture.
-  - Completed LUFFY has not been started; require deterministic pre-start proofs, not sustained production evidence.
+  - Do not deploy, start LUFFY, restart services, call live venues or submit orders.
+  - Do not change trading authority, run Scheme-D or weaken tests.
+  - Preserve unrelated frontend/M4, knowledge and frozen architecture work.
   next_after_all_stage1_blockers_close: LUFFY-PRE-START-SYSTEM-READINESS-R1
 
 completed_stage8_owner_os_closure_r1:

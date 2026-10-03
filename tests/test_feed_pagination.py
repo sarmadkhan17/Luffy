@@ -16,6 +16,12 @@ from trader.data.feed import DataFeed
 class FakeEx:
     """Returns 1000 bars per call, advancing with `since`."""
 
+    id = 'binanceusdm'
+    urls = {'api': {'fapiPublic': 'https://offline.invalid'}}
+
+    def market(self, symbol):
+        return {'id': symbol.split(':')[0].replace('/', ''), 'contract': True}
+
     def __init__(self, total: int = 4000, tf_ms: int = 900_000):
         self.total = total
         self.tf_ms = tf_ms
@@ -98,6 +104,9 @@ def test_incremental_tail_fetch(tmp_path):
     # simulate the feed having stopped 12 bars (~3h) ago
     import sqlite3
     con = sqlite3.connect(p)
+    con.execute("DELETE FROM market_revisions WHERE event_ms IN "
+                "(SELECT ts FROM candles WHERE symbol='BTC/USDT' AND tf='15m' "
+                "ORDER BY ts DESC LIMIT 12)")
     con.execute(
         "DELETE FROM candles WHERE symbol='BTC/USDT' AND tf='15m' AND ts IN "
         "(SELECT ts FROM candles WHERE symbol='BTC/USDT' AND tf='15m' "

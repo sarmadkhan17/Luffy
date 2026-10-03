@@ -1,0 +1,65 @@
+BRANCH: luffy-stage1-data-provenance-pit-r1
+BASE_HEAD_UNCHANGED: 8d49c6976dc7359aed9451c4b3fd5c9bf55b0198
+PACKAGE_FILES: 60
+SCOPED_GIT_DIFF_CHECK: PASS
+NEW_SOURCE_WHITESPACE: PASS
+CONTROL_YAML_PARSE_AND_EXACT_REMAINING_GAPS: PASS
+EVIDENCE_JSON_PARSE: PASS
+SCOPED_SECRET_PATTERN_SCAN: PASS (added tracked lines and new package artifacts)
+INDEX_EMPTY: YES
+GRAPHIFY_INCLUDED_IN_PACKAGE: NO
+UNRELATED_FILES_INCLUDED_IN_PACKAGE: NO
+PROTECTED_AUTHORITY_BYTE_IDENTICAL_TO_HEAD: YES
+NO_COMMIT_DEPLOYMENT_STARTUP_SERVICE_ACTION: YES
+REAL_ORDER_SUBMISSIONS: 0
+NETWORK_HISTORY: See test-run-history.json; preliminary invalid campaigns are excluded.
+FINAL_TEST_CAMPAIGNS_NETWORK_AND_PRODUCTION_STORE_ATTEMPTS: 0
+PROTECTED_AUTHORITY_SHA256:
+{
+  "trader/engine/entry_authority.py": "330a9c2a3863df787875a42ec68c055070edd0cf4890ea98de35c88ca3f88d0a",
+  "trader/engine/executor.py": "b80dac8277c46b24f4e5a3cb5bf6f52de022a313a66ea9e69262f39972c2b278",
+  "trader/engine/recovery.py": "543c45361856bc1ee3bac3f4bc3523e55395a6b9531bd16d19f7d3e4146c8ce9",
+  "trader/engine/risk.py": "d9cd5a0d74beda512f67255d7319239c8cf7f12be8743bd2c3b6a8fc46c52132",
+  "trader/engine/risk_intent.py": "9c599f5775f12013ee2fc0823e7b1d2988ee62fb460e868f3833ce2b69651dca",
+  "trader/engine/supervisor.py": "8f51b185c3d06e3d65254cd7d71b7c5b824cb83c87b663094b3dd628ab84e8b9",
+  "trader/learning/__init__.py": "6b5fffcc95ae685af024be05e1e3b6e843ff83d94c5ce458e89ce9b7797328c7",
+  "trader/learning/adaptive_application.py": "f83634d0631e1456b83968397d33c557f8521171847c2c795d963fa3e87084d6",
+  "trader/learning/application.py": "d5d0bfb90ded1937e33b048c0974e8ccb77b1fa8374d1150c4088a4700be88d5",
+  "trader/learning/capture.py": "7f1d89e0323fa83359f56082f35226fc9e9df50a7a41f0d2ee281d63e5deca4d",
+  "trader/learning/capture_runtime.py": "14c6fa75d870f94574e75a85cc809cd777aa6f17d5a37705a3aa08b2425c29ff",
+  "trader/learning/consumers.py": "a66fcbe652182946601534ad40f1eeadecf95ccdd7af16246cb7c2158e15b301",
+  "trader/learning/decision_sources.py": "be05ddbd4d919e035a51a8c8e9bb1a186b5160dd6c6f3a61f92a66c336c636a1",
+  "trader/learning/dispatch.py": "883ec340ab48b3818da323bfa2198914882161fa256ae63f938403ff34bc41e0",
+  "trader/learning/foundation.py": "e8b6395f34cc13f83ee2c90d6c9435ec2ad0c338fb224abbf8eb357fed50144d",
+  "trader/learning/producers.py": "53039a47745719182bfd5a36daad83c525f0d5759b8ce27a9c70850bd97f1261",
+  "trader/learning/runtime.py": "f61aa84e2d692668c80b7827eb8ea25a3a8453f839449a5e29f6f33f19eaec35",
+  "trader/learning/targets.py": "5eebc3e6f8684ba9d652ea8007061dea51ce2e729658a31b6e61e9c5cb55aca8",
+  "trader/owner/__init__.py": "01eb0e9f97720584b299767973b4f1c536acfe269a2df2873475bd46a2fb9193",
+  "trader/owner/adapters/__init__.py": "57e91a27496138fdbcc710ee2b81ddf7f95b6893791e863699a006cd951d3432",
+  "trader/owner/adapters/dashboard.py": "c18f174119455eb611b836667f9cd7d3955225ab66f6990073a2206d78e0053c",
+  "trader/owner/adapters/openclaw.py": "d077abf4276fa5dde28b64b42139c2549616fca6328a49ad5495a57fdfd09695",
+  "trader/owner/adapters/render.py": "333ef784e4c8a3a0b647fdc8810ec539251d559c8e34c1e6477a53b122b3c529",
+  "trader/owner/adapters/telegram.py": "793f7b1895ea7cc69d7f4775961b73ab62125779a07fb50de92c30429c1af631",
+  "trader/owner/approvals.py": "2cd6b7b7f959e699b9c0c14436e12128b6680b7031c0cf6f59505c09395ba640",
+  "trader/owner/authz.py": "30c4240856554de08ed3e73d0468a7f86bcb990715f788605c3106e0cffd2753",
+  "trader/owner/cli.py": "d04c575e3e49a0f76fe76b833be5711ceda1dce509cc2243b7706734e53d6e0c",
+  "trader/owner/contract.py": "073fa1bd3ad1fbc4fc970c05dd8f86db63bdf2202b0a7b4295c468cd02bd7d87",
+  "trader/owner/ipc.py": "b0e38043cdf31a3d096ca3c573243792f0731ccaaf3e06bff24e173a0b406fec",
+  "trader/owner/knowledge.py": "0d9f3833c4003bd91760de267ffb63d4180bf53d77a205b14bb8405dd0234fd0",
+  "trader/owner/queries.py": "2b760f5a1a251f9062fae9f46478c93dc1a4df892509a3a96b369b812ad43285",
+  "trader/owner/service.py": "4563b969b4871b017b9df4042db9942823b26594cb0ab3a11ed121a019bdf117",
+  "trader/portfolio/__init__.py": "4916d03cc3deaf2bd0740a5b483a8f3c94b02155ced60d9d9dc637e58fe5f661",
+  "trader/portfolio/allocator.py": "afd44f35888b47aab3811c2faa3975373a8bc0f7ad7fb78cce21d8714f6e9acf",
+  "trader/portfolio/candidate_bridge.py": "15ca3ff946ffa453e7bdaf934facb145dec27227d98a74c2339083587888c1f6",
+  "trader/portfolio/common_factor.py": "c578571ed7f81e1ebd5e254788ab25b3475df4b2396ae58c93548c5a22b955a2",
+  "trader/portfolio/current.py": "f9d42e58bfe6db5566613ac4c031e9524d342fe952dafba36086b400a5e55ff4",
+  "trader/portfolio/economics.py": "3005e58cfbc2401cc6e5435c73962638b028209b1531a934e9e7b5b2ddd93113",
+  "trader/portfolio/opportunity_cost.py": "b6a1b2b84c98a2ed5d4efb6726a47a8778cb295b80bad8f81525b2df6ebf3687",
+  "trader/portfolio/opportunity_live.py": "33c2e50f3c981dc44680c7bd3d7da75e8341884464e211ec4c065d6827685434",
+  "trader/portfolio/opportunity_registry.py": "f6b9e8152fb337682e9884862f87326fa7833d9588871824b38e512d72f595c5",
+  "trader/portfolio/reoptimization.py": "2793c4fa22046fd677f2f569ca90c0bf9bcdaec7d068f1b613393ee4868b0bec",
+  "trader/portfolio/runtime.py": "941b9a51b098f8940bafd41c2a50123f6661fd8996b90026678cf4cd433befbd",
+  "trader/portfolio/runtime_metrics.py": "cd3d3c9252b42b0d26bc7d0beb30ee2d0562a820da1ebf3a4a37b36b1152a004",
+  "trader/portfolio/source_adapter.py": "d32ffa8364363c11fa0fd6b1b160e8ef2de0f753b20151424c5e09023e8bf94c",
+  "trader/portfolio/trade_intent.py": "d7b38a33915d26a578a2f2096e41dc7dd13ca9fa3c920230cd7bde282a6249e5"
+}

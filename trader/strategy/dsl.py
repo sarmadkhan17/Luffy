@@ -200,10 +200,10 @@ def _eval(node, ctx):
         # never collide in the cache
         key = tuple(a.value if isinstance(a, ast.Constant) else ast.dump(a)
                     for a in node.args)
-        cache_key = (name, ctx.tf, key)
+        cache_key = (name, ctx.tf, key, ctx.temporal_identity())
         if cache_key not in ctx._cache:
             args = tuple(_eval(a, ctx) for a in node.args)
-            ctx._cache[cache_key] = FEATURES[name].fn(ctx, *args)
+            ctx._cache[cache_key] = ctx.bind_result(FEATURES[name].fn(ctx, *args), name)
         return ctx._cache[cache_key]
 
     if isinstance(node, ast.BoolOp):
@@ -232,6 +232,11 @@ def _eval(node, ctx):
         for op, comp in zip(node.ops, node.comparators):
             right = _eval(comp, ctx)
             r = _CMP[type(op)](left, right)
+            if isinstance(r,pd.Series):
+                missing = pd.isna(left) | pd.isna(right)
+                r = r.astype('boolean').mask(missing,pd.NA)
+            elif pd.isna(left) or pd.isna(right):
+                r = pd.Series(pd.NA,index=ctx.index,dtype='boolean')
             out = r if out is None else (_as_bool(out, ctx) & _as_bool(r, ctx))
             left = right
         return out
@@ -240,12 +245,10 @@ def _eval(node, ctx):
 
 
 def _as_bool(v, ctx) -> pd.Series:
-    """Coerce to a boolean Series on the base index. NaN -> False."""
+    """Preserve unknown through boolean algebra, including negation."""
     if isinstance(v, pd.Series):
-        if v.dtype == bool:
-            return v
-        return v.fillna(False).astype(bool)
-    return pd.Series(bool(v), index=ctx.index)
+        return v.map(lambda x: pd.NA if pd.isna(x) else bool(x)).astype('boolean')
+    return pd.Series(pd.NA if pd.isna(v) else bool(v), index=ctx.index,dtype='boolean')
 
 
 def _eval_htf(node: ast.Call, ctx):
@@ -264,9 +267,26 @@ def _eval_htf(node: ast.Call, ctx):
     if not isinstance(vals, pd.Series):
         return pd.Series(vals, index=ctx.index)
     base_ts = pd.to_datetime(ctx.df["ts"], utc=True).values
-    htf_ts = pd.to_datetime(ctx.frames[tf]["ts"], utc=True).values
-    pos = np.searchsorted(htf_ts, base_ts, side="right") - 1
-    arr = vals.to_numpy(dtype=float)
+    from ..core.types import TF_MS
+    from ..data.market_provenance import ms
+    frame = ctx.frames[tf]
+    # Native klines are OPEN-labelled; aggregates declare their label semantics.
+    known = ms(frame['ts']) + (0 if frame.attrs.get('timestamp_semantics') == 'interval_close'
+                               else TF_MS[tf])
+    if 'available_at_ms' in frame:
+        known = np.maximum(known, frame['available_at_ms'].fillna(np.iinfo(np.int64).max).to_numpy(dtype='int64'))
+        # A rolling transform also depends on earlier source revisions.
+        known = np.maximum.accumulate(known)
+    base_cut = ms(ctx.df['ts']) + TF_MS[ctx.tf]
+    if ctx.as_of_ms is not None:
+        base_cut = np.minimum(base_cut, ctx.as_of_ms)
+        # Current evaluation's anchor is the explicit receipt/decision cut.
+        if ctx.df.attrs.get('read_mode') != 'replay' and len(base_cut):
+            base_cut[-1] = ctx.as_of_ms
+    pos = np.searchsorted(known, base_cut, side='right') - 1
+    arr = vals.to_numpy(dtype=float,na_value=np.nan)
+    if 'quality' in frame:
+        arr = np.where(frame['quality'].eq('VALID') & frame['bar_state'].eq('FINAL'), arr, np.nan)
     out = np.where(pos >= 0, arr[np.clip(pos, 0, None)], np.nan)
     return pd.Series(out, index=ctx.index)
 
@@ -290,17 +310,48 @@ def _eval_ref(node: ast.Call, ctx):
     frame = (ctx.market or {}).get(key)
     if frame is None or not len(frame):
         return pd.Series(np.nan, index=ctx.index)
+    if 'available_at_ms' in frame and frame['ts'].duplicated().any():
+        # Revision streams are evaluated per retained availability epoch. An
+        # overwritten current view cannot reconstruct the earlier revision.
+        base_cut = to_ms(ctx.df['ts']) + TF_MS.get(ctx.tf,0)
+        if ctx.as_of_ms is not None:
+            base_cut = np.minimum(base_cut,ctx.as_of_ms)
+            if ctx.df.attrs.get('read_mode') != 'replay' and len(base_cut):
+                base_cut[-1] = ctx.as_of_ms
+        epochs = np.sort(frame['available_at_ms'].dropna().unique())
+        groups = np.searchsorted(epochs,base_cut,side='right')-1
+        result = np.full(len(base_cut),np.nan)
+        for group in np.unique(groups[groups>=0]):
+            selected = frame.loc[frame['available_at_ms'] <= epochs[group]].sort_values(
+                ['event_time_ms','available_at_ms','observed_at_ms']).drop_duplicates('ts',keep='last')
+            selected.attrs = dict(frame.attrs,as_of_ms=int(epochs[group]))
+            vals = _eval(node.args[1],FeatureCtx(frames={ref.tf:selected},tf=ref.tf,symbol=key))
+            arr = vals.to_numpy(dtype=float,na_value=np.nan) if isinstance(vals,pd.Series) else np.full(len(selected),vals)
+            event_close = to_ms(selected['ts'])+ref.close_after_ms
+            known = np.maximum.accumulate(np.maximum(event_close,selected['available_at_ms'].to_numpy(dtype='int64')))
+            target = np.flatnonzero(groups==group)
+            positions = np.searchsorted(known,base_cut[target],side='right')-1
+            safe = np.clip(positions,0,None)
+            result[target] = np.where((positions>=0) & (base_cut[target]-event_close[safe]<=ref.max_stale_ms),arr[safe],np.nan)
+        return pd.Series(result,index=ctx.index)
     sub = FeatureCtx(frames={ref.tf: frame}, tf=ref.tf, market=None,
                      symbol=key, _cache={})
     vals = _eval(node.args[1], sub)
     if not isinstance(vals, pd.Series):
         return pd.Series(vals, index=ctx.index)
-    known = to_ms(frame["ts"]) + ref.close_after_ms
+    event_known = to_ms(frame["ts"]) + ref.close_after_ms
+    known = event_known.copy()
+    if 'available_at_ms' in frame:
+        known = np.maximum.accumulate(np.maximum(known, frame['available_at_ms'].fillna(np.iinfo(np.int64).max).to_numpy(dtype='int64')))
     base_close = to_ms(ctx.df["ts"]) + TF_MS.get(ctx.tf, 0)
+    if ctx.as_of_ms is not None:
+        base_close = np.minimum(base_close,ctx.as_of_ms)
+        if ctx.df.attrs.get('read_mode') != 'replay' and len(base_close):
+            base_close[-1] = ctx.as_of_ms
     pos = np.searchsorted(known, base_close, side="right") - 1
     safe = np.clip(pos, 0, None)
-    arr = vals.to_numpy(dtype=float)
-    fresh = (pos >= 0) & (base_close - known[safe] <= ref.max_stale_ms)
+    arr = vals.to_numpy(dtype=float,na_value=np.nan)
+    fresh = (pos >= 0) & (base_close - event_known[safe] <= ref.max_stale_ms)
     return pd.Series(np.where(fresh, arr[safe], np.nan), index=ctx.index)
 
 
@@ -352,11 +403,21 @@ def _eval_xs(name: str, node: ast.Call, ctx):
         vals = _eval(node.args[0], sub)
         if not isinstance(vals, pd.Series):
             continue
-        peer_ts = pd.to_datetime(sub.df["ts"], utc=True).values
-        pos = np.searchsorted(peer_ts, base_ts, side="right") - 1
-        arr = vals.to_numpy(dtype=float)
+        from ..data.market_provenance import ms
+        from ..core.types import TF_MS
+        peer_ts = ms(sub.df['ts'])+TF_MS[ctx.tf]
+        known = peer_ts.copy()
+        if 'available_at_ms' in sub.df:
+            known = np.maximum.accumulate(np.maximum(known,sub.df['available_at_ms'].fillna(np.iinfo(np.int64).max).to_numpy(dtype='int64')))
+        cuts = ms(ctx.df['ts'])+TF_MS[ctx.tf]
+        if ctx.as_of_ms is not None:
+            cuts = np.minimum(cuts,ctx.as_of_ms)
+            if ctx.df.attrs.get('read_mode')!='replay' and len(cuts):
+                cuts[-1]=ctx.as_of_ms
+        pos = np.searchsorted(known, cuts, side="right") - 1
+        arr = vals.to_numpy(dtype=float,na_value=np.nan)
         clipped = np.clip(pos, 0, None)
-        fresh = (pos >= 0) & (base_ts - peer_ts[clipped] <= stale_after)
+        fresh = (pos >= 0) & ((cuts - peer_ts[clipped])*1_000_000 <= stale_after.astype('int64'))
         cols[sym] = np.where(fresh, arr[clipped], np.nan)
 
     if not cols:

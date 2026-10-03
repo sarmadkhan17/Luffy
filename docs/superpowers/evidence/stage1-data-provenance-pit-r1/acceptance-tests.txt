@@ -1,0 +1,64 @@
+COMMAND: ./venv/bin/python -m pytest -p tests.stage1_pit_offline_plugin -v --tb=short tests/test_stage1_data_provenance_pit.py
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /mnt/luffy-data/luffy/production/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /mnt/luffy-data/luffy/production
+plugins: anyio-4.14.2
+collecting ... collected 49 items
+
+tests/test_stage1_data_provenance_pit.py::test_normal_feed_source_canonical_identity_and_raw PASSED [  2%]
+tests/test_stage1_data_provenance_pit.py::test_receipt_availability_not_event_time PASSED [  4%]
+tests/test_stage1_data_provenance_pit.py::test_unusable_quality_never_numeric_current[UNKNOWN] PASSED [  6%]
+tests/test_stage1_data_provenance_pit.py::test_unusable_quality_never_numeric_current[MISSING] PASSED [  8%]
+tests/test_stage1_data_provenance_pit.py::test_unusable_quality_never_numeric_current[INVALID] PASSED [ 10%]
+tests/test_stage1_data_provenance_pit.py::test_unusable_quality_never_numeric_current[STALE] PASSED [ 12%]
+tests/test_stage1_data_provenance_pit.py::test_unusable_quality_never_numeric_current[INCOMPLETE] PASSED [ 14%]
+tests/test_stage1_data_provenance_pit.py::test_unknown_identity_is_not_qualified PASSED [ 16%]
+tests/test_stage1_data_provenance_pit.py::test_stale_failure_does_not_restamp_current PASSED [ 18%]
+tests/test_stage1_data_provenance_pit.py::test_revision_retention_pit_and_reopen PASSED [ 20%]
+tests/test_stage1_data_provenance_pit.py::test_future_observation_and_cache_rejected PASSED [ 22%]
+tests/test_stage1_data_provenance_pit.py::test_htf_final_cannot_appear_early PASSED [ 24%]
+tests/test_stage1_data_provenance_pit.py::test_htf_delayed_receipt_not_nominal_close PASSED [ 26%]
+tests/test_stage1_data_provenance_pit.py::test_partial_final_lineage_and_eligibility PASSED [ 28%]
+tests/test_stage1_data_provenance_pit.py::test_aggregate_constituent_availability_and_identity PASSED [ 30%]
+tests/test_stage1_data_provenance_pit.py::test_latest_asof_and_replay_separate PASSED [ 32%]
+tests/test_stage1_data_provenance_pit.py::test_replay_original_revision_not_later_backfill PASSED [ 34%]
+tests/test_stage1_data_provenance_pit.py::test_feature_provenance_and_future_cache_binding PASSED [ 36%]
+tests/test_stage1_data_provenance_pit.py::test_world_capture_rejects_future_and_preserves_lineage PASSED [ 38%]
+tests/test_stage1_data_provenance_pit.py::test_world_state_refuses_future_and_quality_survives PASSED [ 40%]
+tests/test_stage1_data_provenance_pit.py::test_derivative_revisions_quality_and_pit PASSED [ 42%]
+tests/test_stage1_data_provenance_pit.py::test_negative_control_event_clock_detected PASSED [ 44%]
+tests/test_stage1_data_provenance_pit.py::test_negative_control_overwrite_detected PASSED [ 46%]
+tests/test_stage1_data_provenance_pit.py::test_negative_control_future_cache_detected PASSED [ 48%]
+tests/test_stage1_data_provenance_pit.py::test_negative_control_early_htf_detected PASSED [ 51%]
+tests/test_stage1_data_provenance_pit.py::test_kernel_snapshot_actual_boundary PASSED [ 53%]
+tests/test_stage1_data_provenance_pit.py::test_opportunity_refuses_future_signal_source PASSED [ 55%]
+tests/test_stage1_data_provenance_pit.py::test_auxiliary_receipt_durable_and_unknown_provider_clock PASSED [ 57%]
+tests/test_stage1_data_provenance_pit.py::test_unqualified_snapshot_cannot_use_latest PASSED [ 59%]
+tests/test_stage1_data_provenance_pit.py::test_revision_content_tamper_rejected PASSED [ 61%]
+tests/test_stage1_data_provenance_pit.py::test_canonical_alias_change_does_not_reuse_old_cache PASSED [ 63%]
+tests/test_stage1_data_provenance_pit.py::test_listing_cache_future_receipt_rejected PASSED [ 65%]
+tests/test_stage1_data_provenance_pit.py::test_attention_unqualified_frame_is_explicitly_missing PASSED [ 67%]
+tests/test_stage1_data_provenance_pit.py::test_cross_section_rejects_delayed_peer_at_historical_cut PASSED [ 69%]
+tests/test_stage1_data_provenance_pit.py::test_current_receipts_fenced_from_historical_engines PASSED [ 71%]
+tests/test_stage1_data_provenance_pit.py::test_supplemental_raw_receipt_is_not_backdated PASSED [ 73%]
+tests/test_stage1_data_provenance_pit.py::test_request_clock_reversal_never_qualifies PASSED [ 75%]
+tests/test_stage1_data_provenance_pit.py::test_funding_cost_reader_respects_revision_availability PASSED [ 77%]
+tests/test_stage1_data_provenance_pit.py::test_reference_revisions_reopen_and_stale_quality PASSED [ 79%]
+tests/test_stage1_data_provenance_pit.py::test_kernel_historical_read_bypasses_future_memory_cache PASSED [ 81%]
+tests/test_stage1_data_provenance_pit.py::test_unknown_flow_and_leader_never_become_neutral_market_values PASSED [ 83%]
+tests/test_stage1_data_provenance_pit.py::test_auxiliary_stale_and_future_book_fail_closed PASSED [ 85%]
+tests/test_stage1_data_provenance_pit.py::test_normal_derivative_adapter_preserves_raw_receipt PASSED [ 87%]
+tests/test_stage1_data_provenance_pit.py::test_aggregation_propagates_constituent_quality[INVALID] PASSED [ 89%]
+tests/test_stage1_data_provenance_pit.py::test_aggregation_propagates_constituent_quality[UNKNOWN] PASSED [ 91%]
+tests/test_stage1_data_provenance_pit.py::test_aggregation_propagates_constituent_quality[MISSING] PASSED [ 93%]
+tests/test_stage1_data_provenance_pit.py::test_aggregation_propagates_constituent_quality[STALE] PASSED [ 95%]
+tests/test_stage1_data_provenance_pit.py::test_aggregation_cannot_mix_canonical_instruments PASSED [ 97%]
+tests/test_stage1_data_provenance_pit.py::test_feed_uses_existing_typed_registry_identity_without_account_authority PASSED [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+
+============================== 49 passed in 2.77s ==============================
+
+EXIT_CODE: 0

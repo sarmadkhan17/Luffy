@@ -1,0 +1,8 @@
+COMMAND: ./venv/bin/python -m pytest -p tests.stage1_pit_offline_plugin -q --tb=short tests/test_stage7_replay_world_closure_r2.py
+..............                                                           [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+14 passed in 239.05s (0:03:59)
+
+EXIT_CODE: 0

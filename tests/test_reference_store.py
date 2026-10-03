@@ -20,7 +20,9 @@ def _frame(start_ms, n, step_ms, close0=100.0, ohlc=True):
     if ohlc:
         d.update(open=c, high=[x + 1 for x in c], low=[x - 1 for x in c],
                  volume=[10.0] * n)
-    return pd.DataFrame(d)
+    df=pd.DataFrame(d)
+    df.attrs.update(source='offline:reference-fixture',raw_source_record=d | {'ts':list(map(int,ts.astype('int64')))})
+    return df
 
 
 def test_the_registry_names_every_source():
@@ -53,8 +55,8 @@ def test_references_do_not_touch_the_candles_table(tmp_path):
 
 def test_a_close_only_series_reads_nan_high_and_low(tmp_path):
     s = RefStore(tmp_path / "c.db")
-    s.save("stables", _frame(0, 3, DAY, ohlc=False), now_ms=10 ** 13)
-    df = s.load("stables")
+    s.save("stables", _frame(10**13-3*DAY, 3, DAY, ohlc=False), now_ms=10 ** 13)
+    df = s.load("stables",as_of_ms=10**13)
     assert df["high"].isna().all() and df["low"].isna().all()
     assert df["close"].tolist() == [100.0, 101.0, 102.0]
 

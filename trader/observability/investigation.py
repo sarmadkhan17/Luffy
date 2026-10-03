@@ -244,6 +244,8 @@ def adapt(source, observed_ms):
             candles.append(dict(b))
     if set(versions) != set(refs):
         raise ValueError("missing_version_join")
+    from .store import restore_market_receipts
+    restore_market_receipts(candles,scan)
     for m in scan["membership"]:
         if not is_timestamp(m.get("available_ms")) or m["available_ms"] > scan["as_of_ms"]:
             raise ValueError("unavailable_membership")

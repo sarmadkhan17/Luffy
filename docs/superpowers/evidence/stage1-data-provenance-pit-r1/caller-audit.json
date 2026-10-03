@@ -1,0 +1,304 @@
+{
+  "package": "LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1",
+  "live_capable_pit_bypass_found": false,
+  "normal_live_paths": [
+    {
+      "consumer": "Kernel decision snapshot",
+      "route": [
+        {
+          "path": "trader/kernel.py",
+          "line": 855
+        },
+        {
+          "path": "trader/data/feed.py",
+          "line": 421
+        }
+      ],
+      "mechanism": "Post-acquisition explicit cut; canonical Registry/source identities; availability and receipt fences; final/fresh valid frames only; source revision ledger attached to Snapshot.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Compiled live strategy",
+      "route": [
+        {
+          "path": "trader/strategy/compile.py",
+          "line": 73
+        },
+        {
+          "path": "trader/strategy/features.py",
+          "line": 69
+        }
+      ],
+      "mechanism": "Reject missing/relative snapshot cut and unqualified frames. Filter source clocks at the explicit cut; feature caches bind cut and source revisions. Signals retain temporal source receipts.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Native HTF and cross-section",
+      "route": [
+        {
+          "path": "trader/strategy/dsl.py",
+          "line": 254
+        },
+        {
+          "path": "trader/strategy/dsl.py",
+          "line": 368
+        }
+      ],
+      "mechanism": "Respect interval close AND receipt availability. Rolling ancestry and per-base decision cuts prevent forward alignment; missing remains unknown under negation.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Live auxiliary inputs",
+      "route": [
+        {
+          "path": "trader/kernel.py",
+          "line": 933
+        },
+        {
+          "path": "trader/kernel.py",
+          "line": 1004
+        },
+        {
+          "path": "trader/kernel.py",
+          "line": 1029
+        },
+        {
+          "path": "trader/kernel.py",
+          "line": 984
+        }
+      ],
+      "mechanism": "Retain exact raw canonical/source envelope in existing Journal before use; reject future/reversed clocks and stale caches. No missing funding/OI zero; 24h OI change requires its full timed window.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Universe selection",
+      "route": [
+        {
+          "path": "trader/data/feed.py",
+          "line": 693
+        },
+        {
+          "path": "trader/data/feed.py",
+          "line": 732
+        }
+      ],
+      "mechanism": "Finite source-bound volume/listing receipts, with future-cache rejection and canonical identity checks. Snapshot lineage freezes selection/listing receipts.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Attention / World producer",
+      "route": [
+        {
+          "path": "trader/observability/attention.py",
+          "line": 91
+        },
+        {
+          "path": "trader/observability/world_producer.py",
+          "line": 126
+        }
+      ],
+      "mechanism": "Capture rejects unqualified/future/invalid feed frames; canonical/content/revision provenance is retained. Existing WorldState/WorldModel/perception temporal guards remain in force.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Supplemental acquisition",
+      "route": [
+        {
+          "path": "trader/observability/supplemental.py",
+          "line": 241
+        }
+      ],
+      "mechanism": "Exact validated raw source rows and post-request receipt clocks are annotated; historical capture cuts reject later acquisition. Custom/unproven venue identity remains UNKNOWN.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Declared forward population",
+      "route": [
+        {
+          "path": "trader/observability/declared.py",
+          "line": 59
+        },
+        {
+          "path": "trader/observability/declared.py",
+          "line": 111
+        }
+      ],
+      "mechanism": "Existing registered public source gains canonical raw receipt lineage and request/scan clock-reversal rejection. Receipt records retained separately from unchanged content versions.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Attention positioning",
+      "route": [
+        {
+          "path": "trader/observability/positioning.py",
+          "line": 39
+        },
+        {
+          "path": "trader/cognition/contracts.py",
+          "line": 102
+        }
+      ],
+      "mechanism": "Read-only retained revision selection replaces raw overwrite-only SQL. Exact scan cut checks receipt and availability; unqualified records are UNKNOWN and excluded.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Opportunity context",
+      "route": [
+        {
+          "path": "trader/cognition/opportunity_context.py",
+          "line": 391
+        }
+      ],
+      "mechanism": "Reject source availability/receipt or signal cut after context cut, and reject future temporal ancestry; preserve existing world/scan/registry cut validation.",
+      "status": "MIGRATED"
+    }
+  ],
+  "historical_paths": [
+    {
+      "consumer": "Candle replay / as-of",
+      "route": [
+        {
+          "path": "trader/data/feed.py",
+          "line": 415
+        },
+        {
+          "path": "trader/data/feed.py",
+          "line": 392
+        },
+        {
+          "path": "trader/data/feed.py",
+          "line": 404
+        }
+      ],
+      "mechanism": "Historical/as-of is offline only. Default compatibility cache read is bar-cut replay, with availability <= event+timeframe. Explicit historical cut never reaches latest-now.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Research and spec evidence loaders",
+      "route": [
+        {
+          "path": "trader/strategy/evidence.py",
+          "line": 46
+        },
+        {
+          "path": "trader/strategy/spec_evidence.py",
+          "line": 216
+        },
+        {
+          "path": "trader/research/evaluate.py",
+          "line": 86
+        },
+        {
+          "path": "trader/research/referee.py",
+          "line": 72
+        }
+      ],
+      "mechanism": "Actual candle readers route through retained replay; cold/unqualified history remains unavailable. Latest-network fallback removed from strategy evidence.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Derivative/ref/funding features",
+      "route": [
+        {
+          "path": "trader/strategy/features_deriv.py",
+          "line": 18
+        },
+        {
+          "path": "trader/strategy/spec_evidence.py",
+          "line": 64
+        },
+        {
+          "path": "trader/strategy/dsl.py",
+          "line": 294
+        }
+      ],
+      "mechanism": "Retain revision streams and select what was available at each bar cut. Later correction of an old event cannot displace a newer event; funding costs share availability alignment.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Historical engines",
+      "route": [
+        {
+          "path": "trader/strategy/backtest.py",
+          "line": 138
+        },
+        {
+          "path": "trader/strategy/vector_backtest.py",
+          "line": 366
+        }
+      ],
+      "mechanism": "Reject qualified current/as-of snapshots from bar-cut backtests. Aggregate from actual constituent receipts; freeze derivation/version and interval/source identities; quality propagates.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Analyst historical validation",
+      "route": [
+        {
+          "path": "trader/agents/validate.py",
+          "line": 131
+        },
+        {
+          "path": "trader/agents/validate.py",
+          "line": 62
+        }
+      ],
+      "mechanism": "Use retained replay rather than latest fetch; reject current snapshots; construct true completed 1h aggregates; truncate BTC context by actual availability; use bar-derived historical cut.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Archived Attention investigation",
+      "route": [
+        {
+          "path": "trader/observability/store.py",
+          "line": 269
+        },
+        {
+          "path": "trader/observability/investigation.py",
+          "line": 248
+        }
+      ],
+      "mechanism": "Persist per-scan exact acquisition receipts; reconstruct them without re-querying latest data; reject future receipt joins.",
+      "status": "MIGRATED"
+    },
+    {
+      "consumer": "Predictive frozen legacy projection",
+      "route": [
+        {
+          "path": "trader/research/predictive_experiment.py",
+          "line": 137
+        }
+      ],
+      "mechanism": "Raw copy is an unqualified inventory snapshot. Existing evaluate/referee DataFeed readers require retained revisions; a legacy copy with no receipt ledger yields no PIT evidence/admission.",
+      "status": "FENCED"
+    },
+    {
+      "consumer": "Research history collection",
+      "route": [
+        {
+          "path": "trader/research/universe.py",
+          "line": 88
+        }
+      ],
+      "mechanism": "Explicit collection remains a current acquisition operation. Collection does not backdate availability or supply bar-cut replay of newly acquired history.",
+      "status": "EXPLICIT_COLLECTION"
+    },
+    {
+      "consumer": "Post-decision outcome collection",
+      "route": [
+        {
+          "path": "trader/engine/outcomes.py",
+          "line": 59
+        }
+      ],
+      "mechanism": "Explicit later realized labels, not historical decision input. Source-bound normal feed receipts remain; no outcome re-labelled as information available before its receipt.",
+      "status": "EXPLICIT_POST_DECISION_LABEL"
+    }
+  ],
+  "legacy_projection_semantics": "candles/derivs/refs tables remain inventory projections. Qualified market reads use append-only retained market_revisions; historical availability is not inferred from old timestamps.",
+  "numerical_fixture_boundary": "Pure numerical functions remain usable for synthetic engine checks. Actual live snapshot readers require provenance and actual historical data loaders require retained replay.",
+  "authority_boundary": "Risk, Execution, StrategyVersion, Portfolio, Learning limits, Owner OS and first-live approval authority unchanged.",
+  "remaining_stage1_gaps": [
+    "MI-6",
+    "MI-7"
+  ]
+}

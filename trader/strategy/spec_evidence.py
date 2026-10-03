@@ -30,7 +30,7 @@ _SERIES_FOR = {"funding": "funding", "open_interest": "oi",
                "basis": "basis"}
 
 
-def load_derivs(symbol: str, requires, feed: DerivFeed | None = None) -> dict:
+def load_derivs(symbol: str, requires, feed: DerivFeed | None = None, *, as_of_ms=None) -> dict:
     """{feature-series-name: raw observation frame} for one symbol."""
     feed = feed or DerivFeed()
     out = {}
@@ -38,13 +38,13 @@ def load_derivs(symbol: str, requires, feed: DerivFeed | None = None) -> dict:
         series = _SERIES_FOR.get(req)
         if series is None:                      # "ohlcv" and anything unknown
             continue
-        df = feed.load(symbol, series)
+        df = feed.load(symbol, series, as_of_ms=as_of_ms)
         if df is not None and len(df):
             out[series] = df
     return out
 
 
-def load_refs(requires, store=None) -> dict:
+def load_refs(requires, store=None, *, as_of_ms=None) -> dict:
     """{reference key: frame} for every `ref:<key>` a spec requires."""
     keys = [r.split(":", 1)[1] for r in requires or ()
             if isinstance(r, str) and r.startswith("ref:")]
@@ -55,7 +55,7 @@ def load_refs(requires, store=None) -> dict:
         store = RefStore()
     out = {}
     for k in keys:
-        df = store.load(k)
+        df = store.load(k, as_of_ms=as_of_ms)
         if df is not None and len(df):
             out[k] = df
     return out
@@ -83,6 +83,13 @@ def funding_series(symbol: str, df, feed: DerivFeed | None = None):
         return None
     if f is None or not len(f) or df is None or not len(df):
         return None
+    if 'available_at_ms' in f:
+        from .features_deriv import align
+        from ..data.market_provenance import ms
+        from ..core.types import TF_MS
+        import pandas as pd
+        tf = df.attrs.get('timeframe') or '15m'
+        return align(f,pd.to_datetime(ms(df['ts'])+TF_MS[tf],unit='ms',utc=True)).to_numpy(float)
     fts = f["ts"].to_numpy("datetime64[ns]")
     bts = df["ts"].to_numpy("datetime64[ns]")
     idx = np.searchsorted(fts, bts, side="right") - 1

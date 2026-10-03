@@ -1,17 +1,14 @@
 """Bounded read-only capture of recorded derivatives positioning for Attention.
 
-Runs inside the disposable Attention worker child, never on the trading-thread
-producer. Reads only the local `derivs` table written by the kernel
-derivatives recorder; no network, no trader.data import, no writes.
-
-The capture reads the values stored at read time with `ts <= as_of`. The
-recorder can overwrite a stored (symbol, series, ts) value, so nothing here
-claims those values were stored at `as_of`: the exact values and timestamps
-read are frozen into the scan input, and replay consumes that input only.
+Runs inside the disposable Attention worker child and reads retained market
+revisions through a read-only connection. Both receipt and availability must
+precede the exact scan cut. Legacy overwrite-only rows provide no PIT proof.
+Exact revision IDs are frozen alongside the detached scan input.
 """
 from __future__ import annotations
 
 import math
+from trader.data import market_provenance as mp
 import sqlite3
 import time
 from pathlib import Path
@@ -25,8 +22,6 @@ LIMIT = POSITIONING_REFERENCE + 1
 #: whole-read deadline; well inside the worker child's timeout
 DEADLINE_SECONDS = 1.0
 MAX_SYMBOLS = 128
-_QUERY = ("SELECT ts, value FROM derivs WHERE symbol=? AND series=? AND ts<=? "
-          "ORDER BY ts DESC LIMIT ?")
 
 
 def _wall_ms() -> int:
@@ -48,11 +43,11 @@ def read(path, symbols, as_of_ms, *, deadline_seconds=DEADLINE_SECONDS,
     started = _wall_ms()
     symbols = sorted(set(symbols))[:MAX_SYMBOLS]
     prov = {"schema": CAPTURE_SCHEMA, "source": "derivs", "series": list(POSITIONING_SERIES),
-            "as_of_ms": as_of_ms, "eligibility": "ts <= as_of_ms",
+            "as_of_ms": as_of_ms, "eligibility": "retained availability and receipt <= as_of_ms",
             "limit_per_series": LIMIT, "symbols": symbols,
             "read_started_ms": started, "read_finished_ms": None,
             "status": "ok", "reason": None,
-            "pit": "values as stored at read time; no claim they were stored at as_of_ms"}
+            "pit": "retained revision eligible at exact as_of_ms", "revisions": {}}
     db = None
     try:
         p = Path(path)
@@ -65,12 +60,18 @@ def read(path, symbols, as_of_ms, *, deadline_seconds=DEADLINE_SECONDS,
         records = []
         for sym in symbols:
             for series in POSITIONING_SERIES:
-                rows = db.execute(_QUERY, (sym, series, as_of_ms, LIMIT)).fetchall()
+                df = mp.load(db, 'derivative:'+sym+':'+series, as_of_ms=as_of_ms, limit=LIMIT)
                 if time.monotonic() > stop:
-                    raise TimeoutError("positioning_deadline")
-                for ts, value in reversed(rows):
-                    records.append({"symbol": sym, "series": series, "ts": ts,
-                                    "value": _value(value)})
+                    raise TimeoutError('positioning_deadline')
+                if df is None:
+                    continue
+                prov['revisions'][sym+':'+series] = df['revision_id'].tolist()
+                for _, row in df.iterrows():
+                    records.append(dict(symbol=sym, series=series, ts=int(row.event_time_ms),
+                                        value=_value(row.value) if row.quality=='VALID' else None,
+                                        available_ms=int(row.available_at_ms), observed_ms=int(row.observed_at_ms),
+                                        source=row.source, instrument_id=row.instrument_id,
+                                        revision_id=row.revision_id, quality=row.quality))
         prov["read_finished_ms"] = _wall_ms()
         return records, prov
     except Exception as exc:              # never kill the scan

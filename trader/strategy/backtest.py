@@ -63,16 +63,60 @@ class BacktestResult:
 
 
 def resample(df: pd.DataFrame, rule: str) -> pd.DataFrame:
-    """15m OHLCV → a higher timeframe. Right-closed/right-labelled so a bar
-    is only emitted once complete — no lookahead."""
-    if df is None or df.empty or "ts" not in df.columns:
+    """Aggregate OPEN-labelled candles, retaining exact constituent ancestry.
+
+    The interval is [open, close); final values cannot precede either its
+    close or any constituent's availability. Incomplete buckets stay partial.
+    """
+    from ..data import market_provenance as mp
+    from ..core.types import TF_MS
+    if df is None or df.empty or 'ts' not in df:
         return df
-    out = (df.set_index(pd.to_datetime(df["ts"], utc=True))
-             .resample(rule, closed="right", label="right")
-             .agg({"open": "first", "high": "max", "low": "min",
-                   "close": "last", "volume": "sum"})
-             .dropna())
-    return out.reset_index().rename(columns={"index": "ts"})
+    duration = TF_MS[rule]
+    opens = mp.ms(df['ts'])
+    own = df.attrs.get('timeframe')
+    step = TF_MS.get(own) or (int(np.median(np.diff(opens))) if len(opens) > 1 else duration)
+    if step > duration or duration % step:
+        raise ValueError('cannot aggregate a finer interval from coarse bars')
+    qualified = all(k in df for k in mp.META)
+    records = []
+    for bucket, group in df.assign(_bucket=opens//duration*duration).groupby('_bucket'):
+        stamps = mp.ms(group['ts'])
+        complete = np.array_equal(stamps, np.arange(bucket, bucket+duration, step))
+        value = dict(ts=pd.to_datetime(bucket, unit='ms', utc=True),
+                     open=group['open'].iloc[0], high=group['high'].max(skipna=False),
+                     low=group['low'].min(skipna=False), close=group['close'].iloc[-1],
+                     volume=group['volume'].sum(min_count=len(group)))
+        if qualified:
+            receipts = group['observed_at_ms'].astype('int64')
+            available = group['available_at_ms']
+            known = int(available.max()) if available.notna().all() else None
+            received = int(receipts.max())
+            ids = group['revision_id'].tolist()
+            quality=next((state for state in ('INVALID','UNKNOWN','MISSING','STALE','SUSPECT','REPAIRED','UNSUPPORTED','INCOMPLETE')
+                          if group['quality'].eq(state).any()),'VALID')
+            if group['instrument_id'].nunique(dropna=False)!=1 or group['source'].nunique(dropna=False)!=1:
+                quality='INVALID'
+            elif quality=='VALID' and (not complete or known is None):
+                quality='INCOMPLETE'
+            body = {k: group[k].iloc[0] for k in mp.META}
+            body.update(event_time_ms=int(bucket), observed_at_ms=received,
+                        available_at_ms=max(int(bucket)+duration, known) if known is not None and complete else known,
+                        request_id=mp.digest(ids), content_hash=mp.digest(ids),
+                        revision_id=mp.digest(dict(tf=rule, open=int(bucket), sources=ids,
+                                                  derivation='ohlcv.aggregate.v1')),
+                        supersedes=None, raw_json=mp.encode(dict(constituents=ids, timeframe=rule,
+                                                open_ms=int(bucket), close_ms=int(bucket)+duration)),
+                        transform_version='ohlcv.aggregate.v1',
+                        bar_state='FINAL' if complete else 'PARTIAL',
+                        quality=quality)
+            value.update(body)
+        records.append(value)
+    out = pd.DataFrame(records)
+    out.attrs.update(df.attrs)
+    out.attrs.update(timeframe=rule, timestamp_semantics='interval_open',
+                     transform_version='ohlcv.aggregate.v1')
+    return out
 
 
 def _snap(df: pd.DataFrame, price: float,
@@ -94,6 +138,10 @@ def _snap(df: pd.DataFrame, price: float,
 def backtest(genome: Genome, df: pd.DataFrame, risk_cfg: dict,
              equity: float = 2000.0,
              ctx: dict[str, pd.DataFrame] | None = None) -> BacktestResult:
+    if df.attrs.get('schema_version') == 'market.receipt.v1' and df.attrs.get('read_mode') != 'replay':
+        raise ValueError('historical backtest requires replay revisions, not latest/as-of snapshot')
+    if 'quality' in df and not df['quality'].eq('VALID').all():
+        raise ValueError('historical backtest requires valid market evidence')
     res = BacktestResult(genome_id=genome.strategy_id, symbol="BT",
                          bars=len(df))
     sl_mult = float(risk_cfg["stop_loss_atr_mult"])
@@ -120,13 +168,21 @@ def backtest(genome: Genome, df: pd.DataFrame, risk_cfg: dict,
     if ctx and ts_vals is not None:
         for k, cdf in ctx.items():
             if cdf is not None and len(cdf) and "ts" in cdf.columns:
-                ctx_idx[k] = (cdf, pd.to_datetime(cdf["ts"], utc=True).values)
+                from ..data.market_provenance import ms
+                from ..core.types import TF_MS
+                frame_tf = k.removeprefix('BTC_')
+                known = ms(cdf['ts']) + TF_MS.get(frame_tf, 0)
+                if 'available_at_ms' in cdf:
+                    known = np.maximum(known, cdf['available_at_ms'].fillna(np.iinfo(np.int64).max).to_numpy(dtype='int64'))
+                ctx_idx[k] = (cdf, np.maximum.accumulate(known))
 
     def ctx_at(i: int) -> dict:
         """Context frames truncated to bars that had CLOSED by bar i."""
         if not ctx_idx:
             return {}
-        now = ts_vals[i]
+        from ..data.market_provenance import ms
+        from ..core.types import TF_MS
+        now = ms(df['ts'])[i] + TF_MS[df.attrs.get('timeframe') or '15m']
         out = {}
         for k, (cdf, cts) in ctx_idx.items():
             j = int(np.searchsorted(cts, now, side="right"))

@@ -350,6 +350,8 @@ def simulate(long: np.ndarray, short: np.ndarray, df: pd.DataFrame,
 def vector_backtest(compiled, frames: dict, risk_cfg: dict, btc=None,
                     derivs=None, equity: float = 2000.0,
                     symbol: str = "BT") -> BacktestResult:
+    _require_replay(frames)
+    _require_replay(btc)
     lo, sh = compiled.entries(frames, btc=btc, derivs=derivs, symbol=symbol)
     ex = compiled.exit_signal(frames, btc=btc, derivs=derivs, symbol=symbol)
     return simulate(lo, sh, frames[compiled.spec.timeframe], compiled.spec.exit,
@@ -359,6 +361,14 @@ def vector_backtest(compiled, frames: dict, risk_cfg: dict, btc=None,
 
 #: (symbol, first bar, bar count) -> aligned signed funding, or None
 _FUNDING_CACHE: dict = {}
+
+
+def _require_replay(frames):
+    for df in (frames or {}).values():
+        if df is not None and 'revision_id' in df and df.attrs.get('read_mode') != 'replay':
+            raise ValueError('historical engine requires retained bar-cut replay')
+        if df is not None and 'quality' in df and not df['quality'].eq('VALID').all():
+            raise ValueError('historical engine requires valid market evidence')
 
 
 def funding_for(symbol: str, df, risk_cfg: dict):
@@ -372,7 +382,9 @@ def funding_for(symbol: str, df, risk_cfg: dict):
         return None
     if df is None or not len(df) or "ts" not in getattr(df, "columns", ()):
         return None
-    key = (symbol, str(df["ts"].iloc[0]), len(df))
+    from ..data.market_provenance import digest
+    key = (symbol, str(df["ts"].iloc[0]), len(df),
+           df.attrs.get('as_of_ms'),digest(df['revision_id'].tolist()) if 'revision_id' in df else None)
     if key not in _FUNDING_CACHE:
         try:
             from . import spec_evidence
@@ -393,6 +405,10 @@ def vector_walk_forward(compiled, frames: dict, risk_cfg: dict,
     cost the test half its first 210 bars. Handing `simulate` the bare half
     still cost them, until `warm_window` (2026-09-14).
     """
+    _require_replay(frames)
+    _require_replay(btc)
+    for member in (universe or {}).values():
+        _require_replay(member)
     tf = compiled.spec.timeframe
     df = frames[tf]
     lo, sh = compiled.entries(frames, btc=btc, derivs=derivs,

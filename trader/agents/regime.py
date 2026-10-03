@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 def classify(df_exec: pd.DataFrame, df_htf: pd.DataFrame | None) -> dict:
     """Return regime classification for one symbol."""
     if df_exec is None or len(df_exec) < 60:
-        return {"regime": "UNKNOWN", "adx": 0.0, "vol_ratio": 1.0}
+        return {"regime": "UNKNOWN", "adx": None, "vol_ratio": None}
 
     adx_v = adx(df_exec)
     rv_now = realized_vol(df_exec, 24)
@@ -54,7 +54,7 @@ def btc_context(df_exec: pd.DataFrame | None,
     Alts are beta on BTC: scouts use this to boost signals aligned with
     the leader and suppress fades against an active BTC impulse.
     """
-    out = {"trend": "FLAT", "ret_1h": 0.0, "ret_4h": 0.0}
+    out = {"trend": "UNKNOWN", "ret_1h": None, "ret_4h": None}
     try:
         if df_exec is not None and len(df_exec) >= 17:
             c = df_exec["close"]

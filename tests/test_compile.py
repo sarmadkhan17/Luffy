@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from trader.core.types import Action, Snapshot
+from trader.core.types import Action
+from tests.market_receipt_fixtures import snapshot as Snapshot
 from trader.strategy.compile import compile_spec
 from trader.strategy.dsl import SpecError
 from trader.strategy.spec import ExitSpec, StrategySpec

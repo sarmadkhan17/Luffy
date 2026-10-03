@@ -1,0 +1,84 @@
+{
+  "package": "LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1",
+  "result": "PASS",
+  "mode": "PRE_START_SAFETY_IMPLEMENTATION",
+  "branch": "luffy-stage1-data-provenance-pit-r1",
+  "baseline_head": "8d49c6976dc7359aed9451c4b3fd5c9bf55b0198",
+  "components": {
+    "market_feed_provenance": "PASS",
+    "quality_semantics": "PASS",
+    "receipt_availability_time": "PASS",
+    "revision_history": "PASS",
+    "point_in_time_read": "PASS",
+    "htf_availability": "PASS",
+    "partial_bar_semantics": "PASS",
+    "aggregated_htf": "PASS",
+    "future_cache_rejection": "PASS",
+    "latest_asof_separation": "PASS",
+    "feature_provenance": "PASS",
+    "world_opportunity_pit": "PASS",
+    "replay_pit": "PASS",
+    "mutant_detection": "PASS"
+  },
+  "closed_stage1_gaps": [
+    "MI-2",
+    "MI-3"
+  ],
+  "remaining_stage1_gaps": [
+    "MI-6",
+    "MI-7"
+  ],
+  "stage1_build_complete": false,
+  "tests": {
+    "focused-tests": {
+      "passed": 649,
+      "seconds": 116.62,
+      "network_attempts": 0,
+      "production_store_attempts": 0,
+      "artifact": "docs/superpowers/evidence/stage1-data-provenance-pit-r1/focused-tests.txt"
+    },
+    "acceptance-tests": {
+      "passed": 49,
+      "seconds": 2.77,
+      "network_attempts": 0,
+      "production_store_attempts": 0,
+      "artifact": "docs/superpowers/evidence/stage1-data-provenance-pit-r1/acceptance-tests.txt"
+    },
+    "world-regressions": {
+      "passed": 14,
+      "seconds": 239.05,
+      "network_attempts": 0,
+      "production_store_attempts": 0,
+      "artifact": "docs/superpowers/evidence/stage1-data-provenance-pit-r1/world-regressions.txt"
+    },
+    "engine-gates": {
+      "passed": 2,
+      "seconds": 49.39,
+      "network_attempts": 0,
+      "production_store_attempts": 0,
+      "artifact": "docs/superpowers/evidence/stage1-data-provenance-pit-r1/engine-gates.txt"
+    }
+  },
+  "mutants_detected": 4,
+  "engine_equivalence": "PASS",
+  "synthetic_benchmark_speedup": 159.9,
+  "live_capable_pit_bypass_found": false,
+  "trading_authority_changed": false,
+  "real_order_submissions": 0,
+  "independent_review": "NOT_PERFORMED",
+  "safe_to_review": true,
+  "missing_implementation": [],
+  "pre_start_test_blocker": [],
+  "committed": false,
+  "deployed": false,
+  "startup_performed": false,
+  "runtime_operations_performed": false,
+  "next_recommended_package": "LUFFY-STAGE1-RECOVERY-MONITORING-FOUNDATION-R1",
+  "next_status": "RECOMMENDED_NOT_STARTED",
+  "caller_audit": "caller-audit.json",
+  "acceptance_map": "acceptance-map.json",
+  "test_history": "test-run-history.json",
+  "evidence_limit": "No original historical receipt is manufactured for legacy/backfilled data. Provider revision/publication guarantees remain unknown unless actually supplied. Earlier invalid campaigns are explicitly excluded.",
+  "package_manifest": "files-changed.json",
+  "verification": "verification.txt"
+}

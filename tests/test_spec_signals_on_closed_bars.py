@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from trader.core.types import Snapshot
+from tests.market_receipt_fixtures import snapshot as Snapshot
 from trader.strategy.compile import compile_spec
 from trader.strategy.spec import ExitSpec, StrategySpec
 
@@ -57,15 +57,22 @@ def _frame(n: int, last_open: float, last_high: float, last_close: float,
 
 
 def _snap(df: pd.DataFrame) -> Snapshot:
-    return Snapshot(symbol="UNI/USDT",
-                    ts=pd.Timestamp.utcnow().isoformat(),
+    snap = Snapshot(symbol="UNI/USDT",
+                    ts="",
                     price=float(df["close"].iloc[-1]),
                     dfs={"4h": df}, market_type="futures")
+    from trader.data.market_provenance import annotate
+    at=1_780_000_000_000
+    snap.ts=pd.Timestamp(at,unit='ms',tz='UTC').isoformat()
+    snap.dfs['4h']=annotate(df,instrument_id='binanceusdm:futures:UNIUSDT',
+                          source='offline:closed-bar-fixture',kind='candle',
+                          received_ms=at,timeframe='4h')
+    return snap
 
 
 def _forming_end() -> pd.Timestamp:
     """Open time of the 4h bar that is forming right now."""
-    now = pd.Timestamp.utcnow().tz_localize(None).tz_localize("UTC")
+    now = pd.Timestamp(1_780_000_000_000, unit="ms", tz="UTC")
     ms = int(now.timestamp() * 1000)
     return pd.Timestamp(ms - ms % TF_MS, unit="ms", tz="UTC")
 

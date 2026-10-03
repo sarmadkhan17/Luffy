@@ -27,6 +27,8 @@ class Quality(str, Enum):
     REPAIRED = "REPAIRED"
     UNSUPPORTED = "UNSUPPORTED"
     INVALID = "INVALID"
+    INCOMPLETE = "INCOMPLETE"
+    UNKNOWN = "UNKNOWN"
 
 
 def _timestamp(value: int | None, name: str, *, optional: bool = False) -> None:

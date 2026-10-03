@@ -486,7 +486,8 @@ def _positioning(ds, sym, series, as_of, add):
     reason = ds.positioning_invalid.get((sym, series))
     if reason is not None:
         return out("invalid", detail={"reason": reason})
-    pts = [p for p in ds.positioning.get(sym, {}).get(series, ()) if p.ts <= as_of]
+    pts = [p for p in ds.positioning.get(sym, {}).get(series, ()) if p.ts <= as_of and p.available_ms is not None and p.available_ms <= as_of
+           and p.observed_ms is not None and p.observed_ms <= as_of and p.quality == 'VALID']
     if not pts:
         return out("missing")
     need = POSITIONING_REFERENCE + 1

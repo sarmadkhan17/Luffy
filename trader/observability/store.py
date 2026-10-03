@@ -145,7 +145,7 @@ class Store:
                 refs = []
                 for candle in event["input"]["candles"]:
                     tf = event["input"]["timeframe"]
-                    content = {k: v for k, v in candle.items() if k != "available_ms"}
+                    content = {k: v for k, v in candle.items() if k not in ("available_ms","source_receipt")}
                     hashed = digest(content)
                     prev = self.db.execute("SELECT * FROM versions WHERE symbol=? AND tf=? "
                                            "AND open_ms=? ORDER BY first_seen_ms DESC, rowid DESC LIMIT 1",
@@ -179,6 +179,8 @@ class Store:
                                membership=event["input"]["membership"],
                                timeframe=event["input"]["timeframe"],
                                prior_availability="unknown", persisted_at_ms=now_ms)
+                payload['market_source_receipts'] = [dict(symbol=c['symbol'],open_ms=c['open_ms'],
+                    receipt=c['source_receipt']) for c in event['input']['candles'] if 'source_receipt' in c]
                 if 'positioning' in event['input']:
                     payload['positioning_input'] = event['input']['positioning']
                 if 'correlation_history' in event['input']:
@@ -262,3 +264,26 @@ def export_scan(path, scan_id, destination):
         causes = [json.loads(r[0]) for r in db.execute("SELECT payload FROM causes WHERE scan_id=?", (scan_id,))]
     with Path(destination).open("x") as out:
         out.write(encode({"scan": json.loads(row[0]), "versions": versions, "causes": causes}))
+
+
+def restore_market_receipts(candles, scan):
+    """Rebind each archived candle to that scan's exact acquisition receipt."""
+    records=scan.get('market_source_receipts',[])
+    if not isinstance(records,list) or len(records)>4096:
+        raise ValueError('market_receipt_bound')
+    lookup={}
+    for record in records:
+        key=(record['symbol'],record['open_ms'])
+        receipt=record['receipt']
+        if key in lookup or any(type(receipt.get(clock)) is not int or
+                               receipt[clock]>scan['as_of_ms']
+                               for clock in ('available_at_ms','observed_at_ms')):
+            raise ValueError('invalid_or_future_market_receipt')
+        lookup[key]=receipt
+    for candle in candles:
+        key=(candle['symbol'],candle['open_ms'])
+        if key in lookup:
+            candle['source_receipt']=lookup.pop(key)
+    if lookup:
+        raise ValueError('missing_market_receipt_join')
+    return candles

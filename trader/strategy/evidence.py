@@ -48,7 +48,8 @@ def _load_one(feed, symbol: str, limit: int):
 
     The candle store is the right source here: it already holds ~87 days of
     15m bars, and a gauntlet must not spend minutes paging the REST API. Only
-    a genuinely cold symbol falls through to a bounded network fetch.
+    retained bar-cut receipts establish replay eligibility; a cold or
+    unqualified store returns unavailable rather than fetching latest data.
     """
     df = None
     try:
@@ -58,12 +59,9 @@ def _load_one(feed, symbol: str, limit: int):
         log.warning(f"evidence: store read {symbol} failed: {e}")
     if df is not None and len(df) >= 400:
         return df
-    try:
-        return feed.fetch_ohlcv(symbol, "15m",
-                                limit=min(limit, COLD_FETCH_BARS))
-    except Exception as e:
-        log.warning(f"evidence: fetch {symbol} failed: {e}")
-        return None
+    # A late acquisition is not evidence available to earlier simulated
+    # decisions. Collection is an explicit separate operation.
+    return None
 
 
 def load_frames(feed, cfg: dict, symbols: list[str] | None = None) -> dict:
