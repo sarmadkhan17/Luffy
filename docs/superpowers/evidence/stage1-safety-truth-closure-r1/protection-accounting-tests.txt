@@ -1,0 +1,17 @@
+.......................F................................................ [ 26%]
+........................................................................ [ 53%]
+........................................................................ [ 80%]
+...................................................                      [100%]
+=================================== FAILURES ===================================
+____________ test_kernel_boot_uses_supervisor_without_real_services ____________
+/home/sarmad/trader/tests/test_supervisor.py:376: in test_kernel_boot_uses_supervisor_without_real_services
+    k.boot()
+trader/kernel.py:349: in boot
+    start(self)
+trader/observability/stage5_activation.py:93: in start
+    data = Path(kernel.journal.db_path).parent
+                ^^^^^^^^^^^^^^
+E   AttributeError: 'Kernel' object has no attribute 'journal'
+=========================== short test summary info ============================
+FAILED tests/test_supervisor.py::test_kernel_boot_uses_supervisor_without_real_services
+1 failed, 266 passed in 32.21s

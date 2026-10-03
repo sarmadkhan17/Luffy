@@ -1,0 +1,18 @@
+........................................................................ [ 86%]
+...........                                                              [100%]
+=============================== warnings summary ===============================
+tests/test_spec_signals_on_closed_bars.py::test_a_forming_bar_above_the_level_is_not_yet_a_signal
+tests/test_spec_signals_on_closed_bars.py::test_a_closed_bar_above_the_level_is_a_signal
+tests/test_spec_signals_on_closed_bars.py::test_a_forming_bar_does_not_mask_a_closed_signal_beneath_it
+tests/test_spec_signals_on_closed_bars.py::test_a_forming_bar_does_not_mask_a_closed_signal_beneath_it
+  /home/sarmad/trader/tests/test_spec_signals_on_closed_bars.py:68: Pandas4Warning: Timestamp.utcnow is deprecated and will be removed in a future version. Use Timestamp.now('UTC') instead.
+    now = pd.Timestamp.utcnow().tz_localize(None).tz_localize("UTC")
+
+tests/test_spec_signals_on_closed_bars.py::test_a_forming_bar_above_the_level_is_not_yet_a_signal
+tests/test_spec_signals_on_closed_bars.py::test_a_closed_bar_above_the_level_is_a_signal
+tests/test_spec_signals_on_closed_bars.py::test_a_forming_bar_does_not_mask_a_closed_signal_beneath_it
+  /home/sarmad/trader/tests/test_spec_signals_on_closed_bars.py:61: Pandas4Warning: Timestamp.utcnow is deprecated and will be removed in a future version. Use Timestamp.now('UTC') instead.
+    ts=pd.Timestamp.utcnow().isoformat(),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+83 passed, 7 warnings in 6.62s

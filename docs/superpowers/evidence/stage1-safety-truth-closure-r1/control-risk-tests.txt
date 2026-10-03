@@ -1,0 +1,200 @@
+....................................FFFFF...........................F... [ 19%]
+............FF.......................................................... [ 39%]
+..F...........FF........................................................ [ 59%]
+.......................................................F................ [ 79%]
+.....................F.........................................F........ [ 99%]
+..                                                                       [100%]
+=================================== FAILURES ===================================
+_______________ test_b_venue_timeout_contains_notifies_and_boots _______________
+/home/sarmad/trader/tests/test_kernel_boot_recovery.py:214: in test_b_venue_timeout_contains_notifies_and_boots
+    assert _entry_probe(k)[1:] == ("state=RECOVERY: entries blocked", 0)
+E   AssertionError: assert ('version fen..._REQUIRED', 0) == ('state=RECOV...s blocked', 0)
+E
+E     At index 0 diff: 'version fence: VERSIONED_AUTHORITY_REQUIRED' != 'state=RECOVERY: entries blocked'
+E     Use -v to get more diff
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+ERROR    trader.engine.reconcile:reconcile.py:100 reconcile: cannot fetch positions (venue timeout) — keeping journal as-is
+WARNING  trader.engine.executor:executor.py:144 ENTRY BLOCKED ETH/USDT s: VERSIONED_AUTHORITY_REQUIRED
+______________ test_c_pending_entry_with_unreadable_order_status _______________
+/home/sarmad/trader/tests/test_kernel_boot_recovery.py:243: in test_c_pending_entry_with_unreadable_order_status
+    assert pos is None and reason == "execution_recovery_pending" and orders == 0
+E   AssertionError: assert (None is None and 'version fenc...RITY_REQUIRED' == 'execution_recovery_pending'
+E
+E     - execution_recovery_pending
+E     + version fence: VERSIONED_AUTHORITY_REQUIRED)
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+WARNING  trader.engine.executor:executor.py:144 ENTRY BLOCKED ETH/USDT s: VERSIONED_AUTHORITY_REQUIRED
+___________________ test_d_wrong_side_stop_is_not_protection ___________________
+/home/sarmad/trader/tests/test_kernel_boot_recovery.py:259: in test_d_wrong_side_stop_is_not_protection
+    assert _entry_probe(k)[1:] == ("state=RECOVERY: entries blocked", 0)
+E   AssertionError: assert ('version fen..._REQUIRED', 0) == ('state=RECOV...s blocked', 0)
+E
+E     At index 0 diff: 'version fence: VERSIONED_AUTHORITY_REQUIRED' != 'state=RECOVERY: entries blocked'
+E     Use -v to get more diff
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+WARNING  trader.engine.executor:executor.py:144 ENTRY BLOCKED ETH/USDT s: VERSIONED_AUTHORITY_REQUIRED
+_____________ test_e_loosened_stop_requires_owner_without_mutation _____________
+/home/sarmad/trader/tests/test_kernel_boot_recovery.py:274: in test_e_loosened_stop_requires_owner_without_mutation
+    assert _entry_probe(k)[1:] == ("state=RECOVERY: entries blocked", 0)
+E   AssertionError: assert ('version fen..._REQUIRED', 0) == ('state=RECOV...s blocked', 0)
+E
+E     At index 0 diff: 'version fence: VERSIONED_AUTHORITY_REQUIRED' != 'state=RECOVERY: entries blocked'
+E     Use -v to get more diff
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+WARNING  trader.engine.executor:executor.py:144 ENTRY BLOCKED ETH/USDT s: VERSIONED_AUTHORITY_REQUIRED
+__________________ test_f_owner_frozen_is_never_appropriated ___________________
+/home/sarmad/trader/tests/test_kernel_boot_recovery.py:294: in test_f_owner_frozen_is_never_appropriated
+    assert _entry_probe(k)[1:] == ("state=FROZEN: entries blocked", 0)
+E   AssertionError: assert ('version fen..._REQUIRED', 0) == ('state=FROZE...s blocked', 0)
+E
+E     At index 0 diff: 'version fence: VERSIONED_AUTHORITY_REQUIRED' != 'state=FROZEN: entries blocked'
+E     Use -v to get more diff
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by operator) owner hold
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.executor:executor.py:144 ENTRY BLOCKED ETH/USDT s: VERSIONED_AUTHORITY_REQUIRED
+_____________________ test_b_fault_remains_stays_recovery ______________________
+/home/sarmad/trader/tests/test_owner_recovery.py:161: in test_b_fault_remains_stays_recovery
+    _, r = check_fault_remains_contained(journal, venue, monkeypatch, owner_request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/home/sarmad/trader/tests/test_owner_recovery.py:117: in check_fault_remains_contained
+    assert _entry_probe(k)[1:] == ("state=RECOVERY: entries blocked", 0)
+E   AssertionError: assert ('version fen..._REQUIRED', 0) == ('state=RECOV...s blocked', 0)
+E
+E     At index 0 diff: 'version fence: VERSIONED_AUTHORITY_REQUIRED' != 'state=RECOVERY: entries blocked'
+E     Use -v to get more diff
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+WARNING  trader.engine.executor:executor.py:144 ENTRY BLOCKED ETH/USDT s: VERSIONED_AUTHORITY_REQUIRED
+_ test_entry_blocked_during_recheck_and_after_refusal_allowed_after_activation _
+/home/sarmad/trader/tests/test_owner_recovery.py:362: in test_entry_blocked_during_recheck_and_after_refusal_allowed_after_activation
+    assert {p[1] for p in during} == {"state=RECOVERY: entries blocked"}
+E   AssertionError: assert {'version fen...ITY_REQUIRED'} == {'state=RECOV...ries blocked'}
+E
+E     Extra items in the left set:
+E     'version fence: VERSIONED_AUTHORITY_REQUIRED'
+E     Extra items in the right set:
+E     'state=RECOVERY: entries blocked'
+E     Use -v to get more diff
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+ERROR    trader.engine.reconcile:reconcile.py:100 reconcile: cannot fetch positions (venue timeout) — keeping journal as-is
+WARNING  trader.engine.executor:executor.py:144 ENTRY BLOCKED ETH/USDT s: VERSIONED_AUTHORITY_REQUIRED
+WARNING  trader.engine.state:state.py:191 CONTROL STATE RECOVERY → ACTIVE (by supervisor) all recovery safety checks proved
+___________________ test_entry_blocked_when_recovery_refused ___________________
+/home/sarmad/trader/tests/test_owner_recovery.py:373: in test_entry_blocked_when_recovery_refused
+    assert _entry_probe(k)[1:] == ("state=RECOVERY: entries blocked", 0)
+E   AssertionError: assert ('version fen..._REQUIRED', 0) == ('state=RECOV...s blocked', 0)
+E
+E     At index 0 diff: 'version fence: VERSIONED_AUTHORITY_REQUIRED' != 'state=RECOVERY: entries blocked'
+E     Use -v to get more diff
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+WARNING  trader.engine.executor:executor.py:144 ENTRY BLOCKED ETH/USDT s: VERSIONED_AUTHORITY_REQUIRED
+____________________ test_b_frozen_bypass_does_not_activate ____________________
+/home/sarmad/trader/tests/test_owner_recovery_risk_guard.py:226: in test_b_frozen_bypass_does_not_activate
+    assert _entry_blocked(k, "state=RECOVERY: entries blocked")
+E   AssertionError: assert False
+E    +  where False = _entry_blocked(<trader.kernel.Kernel object at 0x7d6e68c00ec0>, 'state=RECOVERY: entries blocked')
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+WARNING  trader.engine.state:state.py:191 CONTROL STATE RECOVERY → ACTIVE (by supervisor) all recovery safety checks proved
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → HALTED (by risk_engine) drawdown 30.0%
+WARNING  trader.engine.state:state.py:191 CONTROL STATE HALTED → FROZEN (by operator) owner freeze via telegram principal owner request telegram-3580d31c6692b1e8d9edea9f6b64413cfa4a0600
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by operator) owner owner_recovery request #13: contained recheck
+WARNING  trader.engine.executor:executor.py:144 ENTRY BLOCKED ETH/USDT s: VERSIONED_AUTHORITY_REQUIRED
+_ test_g_previously_approved_entry_during_failed_unhalt_submits_nothing[unhalt] _
+/home/sarmad/trader/tests/test_owner_recovery_risk_guard.py:392: in test_g_previously_approved_entry_during_failed_unhalt_submits_nothing
+    assert pos is None and d.skip_reason == expect
+E   AssertionError: assert (None is None and 'version fenc...RITY_REQUIRED' == 'state=HALTED'
+E
+E     - state=HALTED
+E     + version fence: VERSIONED_AUTHORITY_REQUIRED)
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+WARNING  trader.engine.state:state.py:191 CONTROL STATE RECOVERY → ACTIVE (by supervisor) all recovery safety checks proved
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → HALTED (by risk_engine) drawdown 30.0%
+WARNING  trader.engine.executor:executor.py:144 ENTRY BLOCKED ETH/USDT s: VERSIONED_AUTHORITY_REQUIRED
+_ test_g_previously_approved_entry_during_failed_unhalt_submits_nothing[frozen_resume] _
+/home/sarmad/trader/tests/test_owner_recovery_risk_guard.py:392: in test_g_previously_approved_entry_during_failed_unhalt_submits_nothing
+    assert pos is None and d.skip_reason == expect
+E   AssertionError: assert (None is None and 'version fenc...RITY_REQUIRED' == 'state=RECOVE...tries blocked'
+E
+E     - state=RECOVERY: entries blocked
+E     + version fence: VERSIONED_AUTHORITY_REQUIRED)
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+WARNING  trader.engine.state:state.py:191 CONTROL STATE RECOVERY → ACTIVE (by supervisor) all recovery safety checks proved
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → HALTED (by risk_engine) drawdown 30.0%
+WARNING  trader.engine.state:state.py:191 CONTROL STATE HALTED → FROZEN (by operator) owner freeze via telegram principal owner request telegram-99a7d5b01f40f6fe92338819ab6f943038d4a4f2
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → RECOVERY (by operator) owner owner_recovery request #12: contained recheck
+WARNING  trader.engine.executor:executor.py:144 ENTRY BLOCKED ETH/USDT s: VERSIONED_AUTHORITY_REQUIRED
+___________________ test_every_active_setter_is_inventoried ____________________
+tests/test_activation_risk_baseline_v2.py:769: in test_every_active_setter_is_inventoried
+    inv = assert_inventory()
+          ^^^^^^^^^^^^^^^^^^
+tests/test_activation_risk_baseline_v2.py:764: in assert_inventory
+    assert inv.wrapper_defs - wrappers == KNOWN_OUT_OF_SCOPE_WRAPPERS
+E   AssertionError: assert {('trader/lea...ted_journal')} == {('trader/lea...'checkpoint')}
+E
+E     Extra items in the right set:
+E     ('trader/learning/runtime.py', 'checkpoint')
+E     Use -v to get more diff
+______________ test_inventory_ignores_containment_and_comparisons ______________
+tests/test_activation_risk_baseline_v2.py:932: in test_inventory_ignores_containment_and_comparisons
+    assert_inventory({"trader/kernel.py": kernel + benign})
+tests/test_activation_risk_baseline_v2.py:764: in assert_inventory
+    assert inv.wrapper_defs - wrappers == KNOWN_OUT_OF_SCOPE_WRAPPERS
+E   AssertionError: assert {('trader/lea...ted_journal')} == {('trader/lea...'checkpoint')}
+E
+E     Extra items in the right set:
+E     ('trader/learning/runtime.py', 'checkpoint')
+E     Use -v to get more diff
+_ test_negative_control_review_mutant_is_caught[cas_lock_only:raw_journal_writer] _
+tests/test_activation_risk_baseline_v2.py:1653: in test_negative_control_review_mutant_is_caught
+    with pytest.raises((AssertionError, pytest.fail.Exception)):
+E   Failed: DID NOT RAISE any of (AssertionError, Failed)
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+WARNING  trader.engine.state:state.py:191 CONTROL STATE ACTIVE → FROZEN (by operator) hold
+WARNING  trader.engine.state:state.py:191 CONTROL STATE FROZEN → ACTIVE (by supervisor) probe
+=========================== short test summary info ============================
+FAILED tests/test_kernel_boot_recovery.py::test_b_venue_timeout_contains_notifies_and_boots
+FAILED tests/test_kernel_boot_recovery.py::test_c_pending_entry_with_unreadable_order_status
+FAILED tests/test_kernel_boot_recovery.py::test_d_wrong_side_stop_is_not_protection
+FAILED tests/test_kernel_boot_recovery.py::test_e_loosened_stop_requires_owner_without_mutation
+FAILED tests/test_kernel_boot_recovery.py::test_f_owner_frozen_is_never_appropriated
+FAILED tests/test_owner_recovery.py::test_b_fault_remains_stays_recovery - As...
+FAILED tests/test_owner_recovery.py::test_entry_blocked_during_recheck_and_after_refusal_allowed_after_activation
+FAILED tests/test_owner_recovery.py::test_entry_blocked_when_recovery_refused
+FAILED tests/test_owner_recovery_risk_guard.py::test_b_frozen_bypass_does_not_activate
+FAILED tests/test_owner_recovery_risk_guard.py::test_g_previously_approved_entry_during_failed_unhalt_submits_nothing[unhalt]
+FAILED tests/test_owner_recovery_risk_guard.py::test_g_previously_approved_entry_during_failed_unhalt_submits_nothing[frozen_resume]
+FAILED tests/test_activation_risk_baseline_v2.py::test_every_active_setter_is_inventoried
+FAILED tests/test_activation_risk_baseline_v2.py::test_inventory_ignores_containment_and_comparisons
+FAILED tests/test_activation_risk_baseline_v2.py::test_negative_control_review_mutant_is_caught[cas_lock_only:raw_journal_writer]
+14 failed, 348 passed in 74.69s (0:01:14)

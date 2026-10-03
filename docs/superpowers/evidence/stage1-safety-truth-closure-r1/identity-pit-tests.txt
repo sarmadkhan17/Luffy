@@ -1,0 +1,16 @@
+
+==================================== ERRORS ====================================
+____________ ERROR collecting tests/test_attention_kernel_wiring.py ____________
+ImportError while importing test module '/mnt/luffy-data/luffy/production/tests/test_attention_kernel_wiring.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/usr/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_attention_kernel_wiring.py:28: in <module>
+    from tests.test_attention_supplemental import FakeEx, kernel, scan_frames, trading_calls
+E   ModuleNotFoundError: No module named 'tests.test_attention_supplemental'
+=========================== short test summary info ============================
+ERROR tests/test_attention_kernel_wiring.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 2.04s

@@ -1,0 +1,55 @@
+{
+  "package": "LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R1",
+  "mode": "PRE_START_BUILD_CLOSURE",
+  "result": "BLOCKED",
+  "baseline_head": "52aac90e004662610de006fd5c4eb8cdcf39bb7a",
+  "branch": "luffy-stage1-safety-truth-closure-r1",
+  "stage1_build_complete": false,
+  "ready_for_pre_start_system_readiness": false,
+  "risk_bypass_found": true,
+  "risk_bypass_scope": "Public Executor.open accepts a decision without Risk approval; normal Kernel caller checks Risk; no UI/chat/research direct-order route found.",
+  "trading_authority_changed": false,
+  "real_order_submissions": 0,
+  "report": "docs/superpowers/reports/2026-10-03-stage1-safety-truth-closure-r1.md",
+  "next_recommended_package": "LUFFY-STAGE1-ENTRY-AUTHORITY-IDEMPOTENCY-R1",
+  "component_results": {
+    "canonical_instrument_identity": "BLOCKED",
+    "data_provenance_quality": "BLOCKED",
+    "point_in_time_correctness": "BLOCKED",
+    "journal_truth": "PASS",
+    "control_state_machine": "BLOCKED",
+    "risk_authority": "BLOCKED",
+    "execution_idempotency": "BLOCKED",
+    "protective_order_architecture": "PASS",
+    "venue_reconciliation_architecture": "PASS",
+    "backup_recovery_architecture": "BLOCKED",
+    "monitoring_alerts": "BLOCKED",
+    "failure_injection_prestart": "BLOCKED"
+  },
+  "missing_implementation": [
+    "MI-1: End-to-end canonical registry identity/capability binding in Risk, Execution and Accounting.",
+    "MI-2: Durable normal market-feed source/receipt/quality and historical revision provenance.",
+    "MI-3: Native HTF close/availability alignment and rejection of future cached observations.",
+    "MI-4: Required final Risk permission, fresh authoritative/numeric inputs and verified leverage assumptions.",
+    "MI-5: Durable completed logical-request deduplication across retry/restart.",
+    "MI-6: Integrity-checked critical-store/config/evidence backup and restore with an off-host seam.",
+    "MI-7: Critical storage/journal-unavailable and missing-heartbeat safety alert paths."
+  ],
+  "pre_start_test_blocker": [
+    "PT-1: 12 failing boot/recovery/entry-boundary proofs (11 masked by strategy authority; 1 incomplete Kernel fixture).",
+    "PT-2: 3 failing Risk proofs (2 stale ACTIVE-setter inventories; 1 mutant not detected).",
+    "PT-3: Registry kernel-wiring suite cannot collect: absent test_attention_supplemental and test_registry_provider helpers."
+  ],
+  "policy_not_configured": [],
+  "needs_real_runtime_evidence": [
+    "RT-1: Sustained completed-system recovery, latency/resources, alert delivery and durable producer publication.",
+    "RT-2: Operational off-host backup/restore drill after MI-6 is implemented."
+  ],
+  "needs_real_venue_evidence": [
+    "VE-1: Actual account eligibility/permissions, instrument availability, leverage/brackets, commission and rate-budget facts.",
+    "VE-2: Actual balances, positions/orders/fills, monetary completeness, protection, reconciliation/unknown outcomes and read-key permissions."
+  ],
+  "deployment_not_performed": [
+    "DP-1: Latest completed-system architecture not deployed/started for first controlled startup."
+  ]
+}
