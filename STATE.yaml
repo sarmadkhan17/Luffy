@@ -1,500 +1,388 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-10-02'
+updated_at: '2026-10-03'
 status: EVIDENCE_BASED
-
-progress_method:
-  rule: Progress is acceptance-evidence based, not code-volume based.
-  maturity_states: [DEFINED, IMPLEMENTED, TESTED, SHADOW, PROVEN, ACTIVE, DEGRADED, RETIRED]
-  evidence_rule: Every state claim must cite current repository code/tests/artifacts or be marked UNKNOWN/MISSING.
-  scoring_rule: No percentage progress scores are authoritative.
-
-capabilities:
-
-  execution_and_reconciliation:
-    state: TESTED
-    evidence:
-      - trader/engine/executor.py
-      - trader/engine/reconcile.py
-      - trader/engine/recovery.py
-      - trader/engine/protective.py
-      - trader/engine/control_fence.py
-      - tests/test_entry_control_fence.py
-    proven_facts:
-      - durable ambiguous-entry recovery exists
-      - exchange-first position reconciliation exists
-      - orphan/ghost handling exists
-      - missing protective-stop detection/re-arm logic exists
-      - RECOVERY entry/control fence is TESTED at f6d6b2e
-    gaps:
-      - recovery behavior beyond the tested control fence and deterministic Supervisor orchestration is not established here
-
-  control_state:
-    state: TESTED
-    evidence:
-      - trader/engine/state.py
-      - trader/engine/control_fence.py
-      - tests/test_control_state_recovery.py
-      - tests/test_entry_control_fence.py
-    proven_facts:
-      - ACTIVE/FROZEN/HALTED/RECOVERY control state and entry/control fence are TESTED at f6d6b2e
-
-  strategy_spec_and_live_parity:
-    state: TESTED
-    evidence:
-      - trader/strategy/spec.py
-      - trader/strategy/compile.py
-      - trader/engine/exits.py
-      - scripts/backtest_equivalence.py
-      - tests/test_compile.py
-      - tests/test_vector_backtest.py
-    proven_facts:
-      - StrategySpec is compiled into the live evaluator path
-      - live spec exits are derived from the strategy spec
-      - equivalence harness exists for backtest/live-engine semantics
-      - derivative-backed live/vector signal parity has explicit tests
-    gaps:
-      - immutable family/version/spec_hash approval binding from SDD v3.2 is not yet established end-to-end
-
-  research_and_referee:
-    state: TESTED
-    evidence:
-      - trader/research/runner.py
-      - trader/research/referee.py
-      - trader/research/evaluate.py
-      - trader/research/growth.py
-      - trader/research/ledger.py
-    proven_facts:
-      - discovery and held-out evaluation paths exist
-      - held-out gate1 and book-level gate3 exist
-      - candidate state referee_passed exists
-    gaps:
-      - research-to-live approval/handoff is not yet the finalized SDD v3.2 path
-      - bounded M3.2 Scheme-D v4 pilot is non-final; full validation remains unauthorized (see current_active_work)
-
-  strategy_decay_and_lifecycle:
-    state: TESTED
-    evidence:
-      - trader/strategy/rolling.py
-      - trader/strategy/promotion.py
-    proven_facts:
-      - recent selection and decay logic are separate
-      - legacy genome lifecycle no longer governs kind=spec rows
-    gaps:
-      - Governed exact-version lifecycle boundary is TESTED; full runtime integration remains Stage 6.
-
-  universal_strategy_authority:
-    state: TESTED
-    package: LUFFY-STAGE5-UNIVERSAL-STRATEGY-AUTHORITY-R1
-    evidence:
-      - trader/strategy/factory_handoff.py
-      - trader/strategy/legacy_authority.py
-      - tests/test_universal_strategy_authority.py
-      - docs/superpowers/reports/2026-10-02-stage5-universal-strategy-authority-r1.md
-      - docs/superpowers/evidence/stage5-universal-strategy-authority-r1/current-inventory.json
-    proven_facts:
-      - Dynamic unversioned proposals are research/paper only; real entries refuse VERSIONED_AUTHORITY_REQUIRED.
-      - Historical exceptions require preexisting immutable exact-definition owner receipts; no runtime grant issuer or automatic grandfathering exists.
-      - Governor alone records exact-version activation, pause, degrade, reactivation and retirement; database lifecycle bypasses are fenced.
-      - Activation rechecks immutable identity, validation, paper/net-economic probation, exact approval, current capacity and inputs under held control/Risk authority.
-      - Complete TEST-ONLY evidence can produce ACTIVE; the independent Factory real-entry fence remains closed.
-      - Current read-only inventory is FROZEN with zero versions, approvals, capacity or grandfather receipts; isolated activation refused version_missing.
-    gaps:
-      - Current first-live readiness is NO; no real first-live activation or execution is enabled.
-      - No automatic activation caller, deployment, restart, orders, research gate enablement or Risk limit change is authorized by this package.
-
-  attention:
-    state: IMPLEMENTED
-    evidence:
-      - trader/cognition/attention.py
-      - trader/observability/attention.py
-    proven_facts:
-      - current GitHub repository contains cognition attention code
-      - attention produces structured observations and selection reasons
-    gaps:
-      - SDD v3.2 dynamic full connected-account universe is not yet proven
-      - final integration with Opportunity Context is not yet implemented
-
-  investigation:
-    state: IMPLEMENTED
-    evidence:
-      - trader/cognition/investigation.py
-      - trader/observability/investigation.py
-    proven_facts:
-      - episode_id and investigation_id exist
-      - investigations persist updates and terminal state
-    gaps:
-      - separate lightweight trading Opportunity registry from SDD v3.2 is not yet implemented
-
-  operator_api_and_auth:
-    state: IMPLEMENTED
-    evidence:
-      - trader/api/graphql_schema.py
-      - trader/dashboard/auth.py
-      - trader/dashboard/server.py
-    proven_facts:
-      - protected GraphQL API exists
-      - DASH_TOKEN and signed dashboard session exist
-      - same-origin checks exist
-      - control mutations exist
-    gaps:
-      - Needs You approval objects are not yet implemented
-      - authenticated narrow remote-gateway API is not yet implemented
-      - actor identity is still partly caller-supplied in mutations
-
-  luffy_chat:
-    state: IMPLEMENTED
-    evidence:
-      - trader/chat/agent.py
-      - trader/chat/engine.py
-      - trader/chat/tools.py
-      - trader/brain/llm.py
-    proven_facts:
-      - read-only tool-calling chat exists
-      - current LLM client is provider-swappable through OpenAI-compatible base_url
-      - token budgets by purpose exist
-    gaps:
-      - deterministic/fast/deep router from SDD v3.2 is not yet implemented
-      - chat identity remains crypto-centric in current prompts
-      - no finalized Needs You integration
-
-  accounting_and_truth:
-    state: IMPLEMENTED
-    evidence:
-      - trader/engine/accounting.py
-      - trader/engine/trade_accounting.py
-      - trader/engine/reconcile.py
-    proven_facts:
-      - venue reconciliation paths exist
-    gaps:
-      - exact SDD v3.2 exchange-authoritative accounting contract is not yet proven across all monetary fields
-
-  memory_and_knowledge:
-    state: IMPLEMENTED
-    evidence:
-      - trader/knowledge/
-      - trader/observability/memory.py
-      - graphify-out/
-    gaps:
-      - final layered owner-facing Knowledge/Evidence/Timeline/Code model is not yet proven
-      - hot/warm/cold historical-intelligence architecture is not yet fully established
-
-  world_model:
-    state: DEFINED
-    evidence:
-      - SDD.md
-    gaps:
-      - no repo evidence yet of a complete first-class shared hierarchical world model
-
-  opportunity_context:
-    state: DEFINED
-    evidence:
-      - SDD.md
-    gaps:
-      - coherent frozen Opportunity Context object is not yet implemented
-
-  portfolio_allocation:
-    state: DEFINED
-    evidence:
-      - SDD.md
-      - existing risk/orchestrator code provides partial inputs
-    gaps:
-      - final lightweight Portfolio Allocator authority from SDD v3.2 is not yet implemented/proven
-      - one-asset-one-real-position rule is not yet proven end-to-end
-
-  process_isolation_and_secrets:
-    state: DEFINED
-    evidence:
-      - trader/core/config.py
-      - trader/kernel.py
-    proven_facts:
-      - current kernel still runs multiple background duties as daemon threads
-      - current secrets are loaded from repo-level .env
-    gaps:
-      - Core/Research/UI/Gateway isolation is not yet implemented
-      - per-service least-privilege secrets are not yet implemented
-      - Clawd/gateway filesystem and credential isolation is not yet implemented
-
-  monitoring_and_recovery:
-    state: TESTED
-    evidence:
-      - trader/engine/watchdog.py
-      - trader/engine/recovery.py
-      - trader/engine/reconcile.py
-      - trader/engine/supervisor.py
-      - tests/test_supervisor.py
-      - tests/test_control_state_recovery.py
-    proven_facts:
-      - deterministic Supervisor recovery orchestration is TESTED at 5d586f4
-    gaps:
-      - production recovery behavior beyond deterministic tests is not established here
-
-current_active_work:
-  id: M3.2-SCHEME-D-V4
-  state: TESTED
-  status: BOUNDED_PILOT_GO_NON_FINAL_FULL_VALIDATION_UNAUTHORIZED
-  evidence:
-    - docs/superpowers/reports/2026-09-22-m32-validation-bundle-v4.md
-    - docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-shard-integration.md
-    - scripts/m32_scheme_d_sharding_v4_20260923/LAYER_MANIFEST.json
-    - scripts/m32_scheme_d_qualification_v4_20260923/QUALIFICATION_RECEIPT.json
-    - scripts/m32_scheme_d_phase90_fast_benchmark_v4_20260923/benchmark_summary.json
-    - docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-fast-benchmark.md
-    - scripts/m32_scheme_d_host_qualification_v4_20260923/QUALIFICATION_REPORT.json
-    - scripts/m32_scheme_d_host_qualification_v4_20260923/receipts/receipt_sarmad-VMware-Virtual-Platform.json
-    - docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-host-qualification.md
-    - tests/test_m32_shard_layer_v4.py
-    - scripts/m32_scheme_d_pilot_v4_20260923/PILOT_VERDICT.json
-  proven_facts:
-    - v4 bundle frozen at 079e8b5c590429aeb0ca5c7b0b261328291c6b2e (tag m32-scheme-d-v4-freeze); bundle SHA a1e671f581d984521cab43199694f31bec41d0233c4232c1a4e7799114da3023
-    - v4 shard layer integrated at 2324c4186a062eba2d9c1b70fd5c1a2d9d3adf8a; dispatches injection on has_scenario so P1/P3 perturbed_null cells keep injection
-    - focused shard tests tests/test_m32_shard_layer_v4.py - 23 passed
-    - deterministic qualification PASS at 4d3a0ae195cf7ae1eca9b536b5cb4c309c9afd0a; receipt SHA 5055e9d8998cf6a524663982133b8fb668acfbc05e15fb2bc8d7526bd031cb41
-    - deterministic qualification constructed 0 RNG instances, requested 0 random variates and generated 0 validation worlds
-    - no validation authorization minted; production/full validation authorization is false
-    - owner reviewed and accepted the documented v4 preparation exception on 2026-09-23; the historical audit remains unchanged and this acceptance grants no validation authorization
-    - owner authorized and completed one local-CPU phase-90 v4 benchmark only; benchmark evidence commit 137ca2f, authorization SHA f0c9cccf45aedbe893d17afd3b126abc9f8f0c32ed376b894ad9bf53274bdba4, receipt SHA f70ace0a02ab6187647ecc33446238cf5ba9dbe97320194ea75f32876972f23e
-    - benchmark measured 975.4548174287327 draws/s/core and projected 16406.782531828467 CPU-hours; bitwise identity PASS; no cloud and no validation run
-    - full v4 single-host host/filesystem/performance qualification PASS at evidence commit 4238660; ext4 /dev/sda2; 4 qualified workers; all exercised checks PASS; cross-host flock NOT_EXERCISED
-    - host qualification constructed no RNG, read no authorization, ran no benchmark and generated 0 validation worlds
-    - combined qualification report: single_host_qualified true, execution_hosts_ready_for_authorization false, projected full-run wall time 190.1348913893578 days on 4 qualified workers
-    - owner authorized one bounded v4 pilot on 2026-09-23; that pilot completed successfully with 80 worlds across 16 shards and clean integrity
-    - pilot verdict GO, reason p6_encouraging_effect; P6/C4 positive in 20/20 worlds with median signed target lift 0.20497145020781576
-    - PILOT_VERDICT.json SHA256 38c5010ed353f1cccb71f337d9b86672091ff709d87a13ba5f19f003594e3cc4
-    - pilot is non-final only; it does not satisfy full Scheme-D validation, Gate 2, search, referee, handoff or live trading
-    - pilot completion does not authorize another run or full validation
-    - SDD v3.2 is the sole architecture authority and reconciles finalized kernel/component/dashboard/approval/storage/LLM/security decisions
-    - v1/v2/v3 bundles, v3 shard layer and frozen truth package unchanged
-  blockers:
-    - full 75,000-world validation remains unauthorized and locally capacity-infeasible at about 190 days on 4 qualified workers; multi-host execution is not qualified
-    - any future full v4 validation requires separate owner authorization and adequate qualified execution capacity; v3 authorizations/pilot are refused or non-transferable
-  constraints:
-    - the one authorized bounded v4 pilot is complete; do not run another pilot, full validation or any additional RNG benchmark without separate explicit owner authorization
-    - do not spend cloud money
-    - leave v1/v2/v3, frozen v4 and frozen truth package untouched
-
-known_stale_docs:
-  - REQUIREMENTS.md contains older frozen decisions and is not the current architecture authority.
-  - LUFFY_Official_Solution_Design_v3.md duplicates an older SDD snapshot and is not the authority.
-  - NEXT.yaml prior A1 rationale about cognition code being absent from GitHub is stale.
 
 authority:
   target: SDD.md
   current_state: STATE.yaml
   immediate_work: NEXT.yaml
+  reviewed_branch: luffy-stage7-normal-replay-world-consumer-closure-r2
+  reviewed_head: 57ad32332a98518c083b750f9df9d43596d0d531
+  production_main_head: 1bed3958740ec2d0d575aabc817978086d31d390
 
-runtime_portfolio_integration:
-  package: LUFFY-STAGE6-RUNTIME-PORTFOLIO-INTEGRATION-R1
-  state: TESTED
-  RUNTIME_PORTFOLIO_METRICS: TESTED
-  EVENT_DRIVEN_REOPTIMIZATION_RUNTIME: TESTED
-  TRADEINTENT_TO_RISK: TESTED
-  real_allocation: NOT_ACTIVE
-  execution_authority: false
-  evidence:
-  - docs/superpowers/reports/2026-10-02-stage6-runtime-portfolio-integration-r1.md
-  - docs/superpowers/evidence/stage6-runtime-portfolio-integration-r1/tests.txt
-  - docs/superpowers/evidence/stage6-runtime-portfolio-integration-r1/final-focused-tests.txt
-  - docs/superpowers/evidence/stage6-runtime-portfolio-integration-r1/verified-real-shadow/
-  remaining_stage6_architecture_gaps: []
-  real_readiness_gaps:
-  - No current exact StrategyVersions/opportunities or complete economics/capacity receipts.
-  - Retained venue snapshots lack marked exposure and actual initial-margin fields; these remain UNAVAILABLE.
-  - Materiality calibration remains unavailable; those events cannot auto-trigger.
-  proven_facts:
-  - Normal Kernel checkpoint freezes one coherent cut and persists proposal-only event checkpoints in a separate
-    ledger.
-  - Exact events are idempotent across restart; duplicate events cannot reoptimize twice.
-  - Established independent metrics reach common_factor with hashes/freshness; only existing owner Risk bounds apply.
-  - Typed TradeIntent reaches existing RiskManager formulas and typed RiskDecision; approval has no Execution authority.
+progress_method:
+  rule: Progress is acceptance-evidence based, not code-volume based.
+  maturity_states: [DEFINED, IMPLEMENTED, TESTED, SHADOW, PROVEN, ACTIVE, DEGRADED, RETIRED]
+  evidence_rule: Every claim must be supported by current repository evidence or marked UNKNOWN/MISSING.
+  scoring_rule: No percentage progress score is authoritative.
+  dimensions:
+    - architecture_build
+    - operational_production_maturity
+    - real_evidence_maturity
+    - economic_maturity
 
-normal_source_integration:
-  package: LUFFY-STAGE6-NORMAL-SOURCE-INTEGRATION-R1
-  state: TESTED
-  source_adapter: existing_immutable_context_and_economics_publications_plus_factory_journal
-  freshness: authoritative_expiry_only_unknown_is_incomplete
-  normal_path_to_risk: TESTED_WITH_PERSISTED_SYNTHETIC_AUTHORITIES
-  real_shadow: PASS_ZERO_CANDIDATES_NO_ALLOCATION
-  remaining_stage6_architecture_gaps: []
-  real_readiness_gaps:
-  - No exact real StrategyVersions, current complete economics publications or established capacity receipts.
-  - No registered production gross, forward cost scope, uncertainty or allocation authority adapters.
-  - Current marked exposure and actual initial-margin utilization remain unavailable.
-  - Calibrated materiality authority remains unavailable.
-  regression_limitations:
-  - Existing Opportunity Context replay test fails because base Journal lacks record_attention_selection; unrelated to this package.
-  stage6_build_complete: true
-  trading_behavior_changed: false
-  execution_authority: false
-  real_order_submissions: 0
-  evidence:
-  - docs/superpowers/reports/2026-10-02-stage6-normal-source-integration-r1.md
-  - docs/superpowers/evidence/stage6-normal-source-integration-r1/final-focused-tests.txt
-  - docs/superpowers/evidence/stage6-normal-source-integration-r1/final-normal-path-tests.txt
-  - docs/superpowers/evidence/stage6-normal-source-integration-r1/verified-real-shadow/
+stage_status:
 
-real_learning_authority_consumer_integration:
-  package: LUFFY-STAGE7-REAL-LEARNING-AUTHORITY-CONSUMER-INTEGRATION-R1
-  state: TESTED
-  result: PASS
-  base: 640a5f20a8f78bf9ac68f1ac26d5c6c0de6977c3
-  integrated_stage7_lineage: 9d2a1b8
-  remaining_stage7_architecture_gaps: []
-  production_rule_status:
-    confidence_calibration: POLICY_UNAVAILABLE
-    strategy_allocation: POLICY_UNAVAILABLE
-    attention_priority: POLICY_UNAVAILABLE
-    research_priority: POLICY_UNAVAILABLE
-    evidence_weights: POLICY_UNAVAILABLE
-    world_model_learning: POLICY_UNAVAILABLE
-    strategy_lifecycle: existing-recent-decay.v1
-  legacy_adaptation:
-    strategy_weights: LEGACY_EXPLICIT_ISOLATED
-    adaptive_base: LEGACY_EXPLICIT_ISOLATED
-    accuracy_multipliers: LEGACY_EXPLICIT_ISOLATED
-  proven_facts:
-  - Six exact contextual owners have typed bounded state, version/hash reads, registered-rule
-    CAS and immutable application receipts.
-  - Normal Attention, research planning, evidence aggregation, Portfolio context and
-    explicit WorldModel learned-state readers consume governed state.
-  - Normal prospective recent-decay producer and automatic bounded checkpoint reach
-    StrategyGovernor retirement in isolated deterministic tests.
-  - Normal Portfolio decision capture delivers exact used replay objects; absent sources
-    remain UNAVAILABLE.
-  - No calibrated adaptive production rule or artificial learned value was introduced.
-  validation:
-    status: PASS
-    selected_checks_verified: 662
-    combined_run:
-      passed: 661
-      failed: 1
-      seconds: 511.88
-      failure: historical static caller inventory omitted existing corrected Stage6
-        readers
-    corrected_test_rerun:
-      passed: 1
-      failed: 0
-      seconds: 1.34
-    new_integration_scenarios: 17
-    file_descriptor_limit_for_test_process: 8192
-    risk_config_spec_unchanged: true
-    graphify: AST_ONLY_UPDATE_COMPLETE
-    diff_check: PASS
-  real_shadow:
-    mode: READ_ONLY_SHADOW
-    status: PASS
-    proposals: 0
-    replay_complete: 0
-    registered_rule_eligible: 0
-    would_apply: 0
-    policy_unavailable: 0
-    stale_conflict: 0
-    limitation: NO_REPLAY_COMPLETE_EVIDENCE; no backfill
-  trading_behavior_changed: false
-  real_order_submissions: 0
-  production_mutations: 0
-  committed: false
-  deployed: false
-  evidence:
-  - docs/superpowers/reports/2026-10-02-stage7-real-learning-authority-consumer-integration-r1.md
-  - docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/validation.json
-  - docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/real-shadow.json
-  - docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/boundary-audit.json
-  - docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/lineage-integration.json
-  - docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/files-changed.txt
+  stage_0_control_plane:
+    state: IMPLEMENTED
+    build_complete: true
+    evidence:
+      - SDD.md
+      - STATE.yaml
+      - NEXT.yaml
+    proven_facts:
+      - SDD.md v3.2 is the sole architecture authority.
+      - STATE.yaml is reconciled to the latest reviewed Stage5-7 lineage.
+      - NEXT.yaml names one read-only closure audit before Stage8 implementation.
+    gaps: []
 
-completed_predictive_research_bridge_r1:
-  package: LUFFY-PREDICTIVE-RESEARCH-BRIDGE-R1
-  base: b56682e936fe9907f023900a0daacf0aad5ac07e
-  state: TESTED
-  architecture_status: PASS
-  normal_consumer: trader.research.predictive_bridge
-  research_authority: QUESTIONS_AND_EXPERIMENTS_ONLY
-  missing_architecture: []
-  proven_facts:
-  - Exact retained investigation Research Bank chains generate immutable deterministic hypotheses.
-  - Normal asynchronous consumer submits bounded jobs through the existing quantitative planner, controls, ablations, protected referee and Factory evidence gate.
-  - Descriptive support and Stage7 attention priority cannot establish predictive support.
-  - Immutable snapshots and cumulative protected look accounting survive restarts.
-  - Verified predictive attachments remain distinct from original immutable v1 Bank objects.
-  real_shadow:
-    status: PASS
-    source_mutations: 0
-    eligible_research_results: 0
-    hypotheses_proposed: 0
-    planner_submissions: 0
-    supported: 0
-    unsupported: 0
-    inconclusive: 0
-    legacy_investigation_provenance_refusals: 13
-  real_evidence_blocked:
-  - No eligible retained investigation Research Bank records in existing production data.
-  - Legacy volume investigations lack retained opportunity_contexts; no backfill performed.
-  - Prospective protected predictive measurements and profitable/calibrated edge remain unestablished.
-  - Existing operational referee and handoff stops remain closed.
-  trading_behavior_changed: false
-  real_order_submissions: 0
-  deployed: false
-  committed: false
-  evidence:
-  - docs/superpowers/reports/2026-10-02-predictive-research-bridge-r1.md
-  - docs/superpowers/evidence/predictive-research-bridge-r1/validation.json
-  - docs/superpowers/evidence/predictive-research-bridge-r1/real-shadow.json
-  - docs/superpowers/evidence/predictive-research-bridge-r1/boundary-audit.json
+  stage_1_safety_and_truth:
+    state: TESTED
+    build_complete: false
+    runtime_maturity: NOT_PROVEN
+    evidence:
+      - trader/core/instrument_registry.py
+      - trader/engine/state.py
+      - trader/engine/risk.py
+      - trader/engine/executor.py
+      - trader/engine/protective.py
+      - trader/engine/reconcile.py
+      - trader/engine/recovery.py
+      - trader/engine/supervisor.py
+      - docs/superpowers/reports/2026-09-30-current-truth-contract-r1.md
+    proven_facts:
+      - canonical instrument identity and fail-closed account eligibility representation exist.
+      - ACTIVE/FROZEN/HALTED/RECOVERY control state and deterministic Risk authority are tested.
+      - execution idempotency, recovery fencing, reconciliation and protection logic have focused test evidence.
+      - truthful current account/Risk/News contracts and provenance-aware owner reads exist in the reviewed lineage.
+    gaps:
+      - real venue protection proof is incomplete.
+      - exchange-authoritative accounting is not proven across all monetary fields.
+      - authoritative commission, account eligibility and leverage-bracket evidence remain incomplete.
+      - production recovery behavior is not PROVEN.
 
-# Restore the exact limitation referenced by the existing source registry.
-# This does not upgrade decision evidence or introduce a new policy.
-completed_strategy_decay_research_plan_v1:
-  limitations:
-  - Decision evidence is a declared selection, not independent opportunity evidence.
+  stage_2_world_model:
+    state: TESTED
+    build_complete: true
+    runtime_maturity: PARTIAL
+    evidence:
+      - trader/world/observation.py
+      - trader/world/state.py
+      - trader/world/perception.py
+      - trader/world/model.py
+      - trader/world/relationship.py
+      - trader/world/claim.py
+      - trader/world/replay.py
+      - tests/test_world_observation.py
+      - tests/test_world_state.py
+      - tests/test_world_perception.py
+      - tests/test_world_model.py
+      - tests/test_world_relationship.py
+      - tests/test_world_claim.py
+      - tests/test_world_replay.py
+    proven_facts:
+      - immutable point-in-time observations and WorldState exist.
+      - hierarchical multi-horizon WorldModel and cross-market relationship state are tested.
+      - claims carry explicit confidence plus supporting/contradicting evidence.
+      - exact historical WorldModel replay is tested.
+      - Stage7 R2 preserves immutable snapshots and adds governed learned-confidence overlay consumption through the normal Attention WorldModel query path.
+    gaps:
+      - broad production/shadow WorldModel evidence remains limited.
+      - real relationship/calibration coverage is not economically proven.
 
-completed_stage7_normal_learning_loop_closure_r1:
-  package: LUFFY-STAGE7-NORMAL-LEARNING-LOOP-CLOSURE-R1
-  state: TESTED
-  base: 3bf9f87
-  astra_r3_gaps: {decision_outcome_continuity: CLOSED, adaptive_rule_dispatch: CLOSED, contextual_vote_consumption: CLOSED, world_model_consumption: CLOSED}
-  missing_architecture: []
-  policy_calibration_blocked: [confidence_calibration, strategy_allocation, attention_priority, research_priority, evidence_weights, world_model_learning]
-  real_evidence_blocked: [No replay-complete real LearningEvidence captured yet, No production WorldClaim emitter, No intent-routed execution]
-  trading_behavior_changed: false
-  real_order_submissions: 0
-  committed: false
-  deployed: false
-  evidence:
-  - docs/superpowers/reports/2026-10-02-stage7-normal-learning-loop-closure-r1.md
-  - docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/real-shadow.json
+  stage_3_attention_and_research:
+    state: IMPLEMENTED
+    build_complete: UNKNOWN
+    formal_closure: NOT_DONE
+    evidence:
+      - trader/cognition/attention.py
+      - trader/cognition/investigation.py
+      - trader/cognition/research_bank.py
+      - trader/cognition/research_next_question.py
+      - trader/cognition/research_sources.py
+      - trader/observability/attention.py
+      - trader/observability/investigation.py
+      - trader/observability/investigation_research.py
+      - trader/research/predictive_bridge.py
+      - trader/research/predictive_experiment.py
+      - docs/superpowers/reports/2026-09-16-attention-implementation.md
+      - docs/superpowers/reports/2026-10-02-predictive-research-bridge-r1.md
+    proven_facts:
+      - Attention produces structured observations and bounded selections.
+      - investigation state, Research Bank memory, failed/unassessable recall and bounded research-cost receipts exist.
+      - descriptive investigation results cannot directly become predictive edge.
+      - the predictive bridge can produce bounded falsifiable hypotheses and route supported experiment shapes through the existing quantitative planner/referee path.
+      - Stage7 governed Attention and research-priority consumer state exists for future registered rules.
+    gaps:
+      - full dynamic connected-account observation coverage is not proven.
+      - broader SDD trigger coverage and event-driven material-change semantics remain partial.
+      - real eligible Research Bank sources for the predictive bridge are absent in current production data.
+      - usefulness/resource-bound policies remain parked or evidence-blocked.
+      - formal Stage3 exit has not been reconciled against the latest lineage.
 
-completed_stage7_normal_replay_world_consumer_closure_r2:
-  package: LUFFY-STAGE7-NORMAL-REPLAY-AND-WORLD-CONSUMER-CLOSURE-R2
-  state: TESTED
-  package_result: PASS
-  unique_passing_checks: 386
-  base: 50a4545484798207e4b126a0b7a0547ea9b0ec79
-  branch: luffy-stage7-normal-replay-world-consumer-closure-r2
-  workspace: /mnt/luffy-data/luffy/stage7-r2
-  astra_r4_gaps:
-    decision_outcome_continuity: CLOSED
-    world_model_learned_confidence: CLOSED
-  missing_architecture: []
-  policy_calibration_blocked:
-  - confidence_calibration
-  - evidence_weights
-  - attention_priority
-  - research_priority
-  - strategy_allocation
-  - world_model_learning
-  real_evidence_blocked:
-  - No replay-complete real LearningEvidence captured in the bounded shadow.
-  - No production WorldClaim emitter or WorldModel learning rule.
-  - No intent-routed execution evidence; execution routing remains disabled.
-  trading_behavior_changed: false
-  real_order_submissions: 0
-  production_mutations: 0
-  committed: false
-  deployed: false
-  next_recommended_package: LUFFY-STAGE5-7-FINAL-INTELLIGENCE-GATE-R4B
-  evidence:
-  - docs/superpowers/reports/2026-10-03-stage7-normal-replay-world-consumer-closure-r2.md
-  - docs/superpowers/evidence/stage7-replay-world-closure-r2/real-shadow.json
-  - docs/superpowers/evidence/stage7-replay-world-closure-r2/boundaries.json
-  - docs/superpowers/evidence/stage7-replay-world-closure-r2/validation.json
+  stage_4_quant_falsification:
+    state: TESTED
+    build_complete: UNKNOWN
+    validation_maturity: PARKED_NON_FINAL
+    evidence:
+      - trader/research/runner.py
+      - trader/research/referee.py
+      - trader/research/evaluate.py
+      - trader/research/fdr.py
+      - trader/research/portfolio_null.py
+      - scripts/m32_scheme_d_pilot_v4_20260923/PILOT_VERDICT.json
+      - docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-fast-benchmark.md
+      - docs/superpowers/reports/2026-09-23-m32-scheme-d-v4-host-qualification.md
+    proven_facts:
+      - held-out evaluation, null/dependence controls, multiple-testing support, ablation/search infrastructure and referee gates exist.
+      - the bounded Scheme-D v4 pilot completed 80 worlds across 16 shards with clean integrity and GO reason p6_encouraging_effect.
+      - the bounded pilot is non-final and does not establish full validation, Gate2, admission or live edge.
+    gaps:
+      - full 75000-world Scheme-D validation remains unauthorized.
+      - local projection is about 190 days on 4 qualified workers; multi-host execution is not qualified.
+      - formal Stage4 exit has not been reconciled against the parked validation boundary.
+
+  stage_5_strategy_factory:
+    state: TESTED
+    build_complete: true
+    architecture_frozen: true
+    real_world_mature: false
+    evidence:
+      - trader/strategy/factory_handoff.py
+      - trader/strategy/legacy_authority.py
+      - docs/superpowers/reports/2026-10-02-stage5-universal-strategy-authority-r1.md
+    proven_facts:
+      - one governed exact-version research-to-StrategyVersion authority exists.
+      - unversioned dynamic proposals are research/paper-only and cannot acquire real execution authority.
+      - Governor is the sole versioned lifecycle authority.
+      - activation rechecks validation, installation, probation/cost evidence, owner approval, capacity, inputs, control and Risk prerequisites.
+      - no audited strategy-authority bypass remains.
+    gaps:
+      - current first-live readiness is NO.
+      - real StrategyVersions, economic probation, cost/capacity and live activation evidence remain absent.
+      - deployment/real-world maturity is incomplete.
+
+  stage_6_portfolio_intelligence:
+    state: TESTED
+    build_complete: true
+    architecture_frozen: true
+    real_world_mature: false
+    evidence:
+      - trader/portfolio/
+      - docs/superpowers/reports/2026-10-02-stage6-runtime-portfolio-integration-r1.md
+      - docs/superpowers/reports/2026-10-02-stage6-normal-source-integration-r1.md
+    proven_facts:
+      - frozen Opportunity Context, economics/capacity source delivery and candidate lineage exist.
+      - whole-book allocation includes explicit cash/no-allocation and one-asset-one-position semantics.
+      - common-factor/concentration evidence is fail-closed.
+      - event-driven runtime reoptimization is checkpointed/idempotent.
+      - TradeIntent reaches deterministic RiskDecision with no automatic Execution authority.
+      - no remaining Stage6 architecture gap was found in the final Stage5-7 intelligence gate.
+    gaps:
+      - no current real StrategyVersions/complete economics/capacity receipts.
+      - calibrated gross/cost/uncertainty/allocation authorities remain unavailable.
+      - marked exposure/actual initial-margin evidence is incomplete.
+      - real allocation remains inactive.
+
+  stage_7_learning_loop:
+    state: TESTED
+    build_complete: true
+    architecture_frozen: true
+    real_world_mature: false
+    reviewed_head: 57ad32332a98518c083b750f9df9d43596d0d531
+    evidence:
+      - trader/learning/
+      - trader/observability/outcomes.py
+      - docs/superpowers/reports/2026-10-03-stage7-normal-replay-world-consumer-closure-r2.md
+      - tests/test_stage7_replay_world_closure_r2.py
+    proven_facts:
+      - normal decision-to-manifest-to-outcome-to-replay-to-LearningEvidence continuity exists.
+      - generic registered-rule dispatch, durable proposal/application checkpoints and owner compare-and-apply semantics exist.
+      - contextual confidence/evidence, Attention priority, research priority, allocation context and WorldModel learned-confidence have real owner state and normal downstream consumers.
+      - existing-recent-decay.v1 can reach StrategyGovernor retirement with replay/idempotency constraints.
+      - legacy outcome-driven adaptation paths are explicitly isolated.
+      - final Astra R4B review of this exact remote HEAD reported MISSING_ARCHITECTURE=NONE and ARCHITECTURE_FREEZE=YES.
+    gaps:
+      - no replay-complete real LearningEvidence is present in the reviewed production sample.
+      - no production non-lifecycle adaptive rules are registered.
+      - no production WorldClaim emitter/observed real overlay use.
+      - no live Portfolio-intent-routed execution evidence.
+      - latest architecture is not deployed to production.
+
+  stage_8_owner_os:
+    state: IMPLEMENTED
+    build_complete: false
+    evidence:
+      - trader/dashboard/
+      - trader/api/graphql_schema.py
+      - trader/chat/
+      - trader/owner/
+      - frontend/
+      - docs/superpowers/reports/2026-09-28-owner-interface-gateway-v1.md
+      - docs/superpowers/reports/2026-09-28-owner-frontend-live-binding-v1.md
+    proven_facts:
+      - authenticated owner API/GraphQL and read-only grounded chat foundations exist.
+      - owner-control gateway architecture and reviewed frontend/live-binding work exist.
+      - target frontend/navigation implementation is partially present.
+    gaps:
+      - final Needs You workflow is not integrated end to end.
+      - actor identity/least-privilege boundary is incomplete.
+      - final owner-facing Knowledge/Evidence/Timeline/Code experience is incomplete.
+      - final visual approval exists only for a subset of routes.
+      - latest backend architecture is not deployed/bound into the production Owner OS.
+
+  stage_9_multi_market:
+    state: DEFINED
+    build_complete: false
+    proven_facts:
+      - canonical asset/instrument abstractions and Binance crypto spot/derivatives infrastructure exist.
+      - architecture is designed to extend through adapters without changing the intelligence model.
+    gaps:
+      - equities, futures, commodities, FX and rates are not end-to-end proven across data, research, strategy, portfolio, Risk, execution, reconciliation and shadow.
+      - options remain explicitly dependent on dedicated pricing/Greeks/volatility/risk support.
+
+  stage_10_advanced_capabilities:
+    state: DEFINED
+    baseline_required: false
+    status: DEFERRED_BY_DESIGN
+    deferred_items:
+      - multi-leg/pair/basket execution
+      - options/volatility system
+      - deeper microstructure/tick research
+      - machine learning
+      - alternative data
+      - paid institutional datasets
+      - additional compute architecture
+    boundary:
+      - these items enter only after a measured problem/opportunity justifies complexity.
+      - prior intelligence review found no demonstrated need for a fruit-fly/connectome production architecture, generic new mixture-of-experts layer, RL, ART, CfC or generative world model.
+
+cross_cutting:
+
+  production_deployment:
+    state: BLOCKED
+    latest_reviewed_head: 57ad32332a98518c083b750f9df9d43596d0d531
+    production_main_head: 1bed3958740ec2d0d575aabc817978086d31d390
+    facts:
+      - latest Stage5-7 architecture is remote but not deployed to production.
+      - production remains intentionally FROZEN.
+
+  data_and_evidence:
+    state: IMPLEMENTED
+    maturity: PARTIAL
+    gaps:
+      - real versioned paper/execution/learning evidence remains sparse or absent.
+      - some collectors/consumers are not deployed on the latest lineage.
+
+  accounting_truth:
+    state: IMPLEMENTED
+    maturity: PARTIAL
+    gaps:
+      - exchange-authoritative fee/funding/monetary completeness is not proven end to end.
+
+  costs_and_capacity:
+    state: IMPLEMENTED
+    maturity: BLOCKED
+    gaps:
+      - authoritative commission, realized slippage/capacity and account eligibility/leverage evidence remain incomplete.
+
+  protection_and_reconciliation:
+    state: TESTED
+    maturity: PARTIAL
+    gaps:
+      - current venue protection proof and sustained production recovery evidence remain incomplete.
+
+  process_isolation_and_secrets:
+    state: DEFINED
+    maturity: INCOMPLETE
+    gaps:
+      - full Trading Core/Research/UI/Gateway isolation is not proven.
+      - per-service least-privilege secrets are not established.
+
+  storage_and_backup:
+    state: IMPLEMENTED
+    maturity: PARTIAL
+    facts:
+      - operational SQLite/WAL, evidence artifacts and expanded external storage are available.
+    gaps:
+      - final retention/capacity policy and full hot/warm/cold history model remain incomplete.
+
+  monitoring_and_recovery:
+    state: TESTED
+    maturity: PARTIAL
+    gaps:
+      - sustained production recovery evidence remains incomplete.
+
+  knowledge_and_memory:
+    state: IMPLEMENTED
+    maturity: PARTIAL
+    facts:
+      - structured operational/research memory and Graphify/code knowledge exist.
+    gaps:
+      - final owner-facing Knowledge/Evidence/Timeline/Code model is incomplete.
+      - hot/warm/cold historical intelligence is not fully proven.
+
+  owner_os_and_frontend:
+    state: IMPLEMENTED
+    maturity: PARTIAL
+    gaps:
+      - Stage8 exit is not met.
+
+  llm_runtime:
+    state: IMPLEMENTED
+    facts:
+      - normal live trading requires zero LLM calls.
+      - LLM is limited to research/conversation/development roles.
+    gaps:
+      - final deterministic fast/deep routing and cost-policy maturity remain incomplete.
+
+  replay_and_equivalence:
+    state: TESTED
+    maturity: PARTIAL
+    facts:
+      - backtest/live semantics, exact decision replay and Stage7 learning replay have dedicated tests.
+    gaps:
+      - real execution evidence remains insufficient for full operational equivalence proof.
+
+  economic_self_sufficiency:
+    state: MISSING
+    economic_proof: NOT_ESTABLISHED
+    gaps:
+      - sustainable profitable edge is not proven.
+      - net trading contribution covering recurring system/data/LLM cost is not proven.
+      - no live approved strategy portfolio exists on the latest architecture.
+
+parked:
+
+  scheme_d_v4:
+    status: BOUNDED_PILOT_GO_NON_FINAL_FULL_VALIDATION_UNAUTHORIZED
+    constraints:
+      - do not run another pilot, RNG benchmark or full validation without separate owner authorization.
+      - do not spend cloud money.
+      - preserve frozen v1/v2/v3/v4 bundles and pilot evidence.
+
+  stage3_usefulness_feedback:
+    status: PARKED_LABEL_SOURCE_OR_POLICY_REQUIRED
+    boundary:
+      - do not invent usefulness labels or adaptive suppression from descriptive/PnL evidence.
+
+architecture_freeze:
+  stages: [5, 6, 7]
+  reviewed_head: 57ad32332a98518c083b750f9df9d43596d0d531
+  rule:
+    - do not reopen for speculative redesign.
+    - reopen only for concrete regression, safety defect or explicit SDD revision.
+    - remaining work is evidence, policy/calibration or deployment maturity unless new repository evidence proves otherwise.
+
+known_stale_documents:
+  - REQUIREMENTS.md is historical and not architecture authority.
+  - ROADMAP.md is historical and not architecture authority.
+  - LUFFY_Official_Solution_Design_v3.md is an older duplicate snapshot and not architecture authority.
+  - historical package reports may describe uncommitted/undeployed state that has since been integrated; current git lineage wins.
+
+current_active_work:
+  id: LUFFY-STAGE3-4-PRE-STAGE8-CLOSURE-AUDIT-R1
+  type: READ_ONLY_CLOSURE_AUDIT
+  status: RECOMMENDED_NOT_STARTED
+  purpose: Determine whether remaining Stage3/Stage4 gaps are mandatory build blockers before Stage8 or are parked/evidence/deployment maturity.
