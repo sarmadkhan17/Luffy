@@ -82,14 +82,25 @@ def setup(tmp_path, monkeypatch):
     d = Decision('d', 'c', 'BTC/USDT', Action.BUY, 1., .5, .8, [], [])
     with j._tx() as db:
         db.execute("INSERT INTO cycles(id,ts,symbol) VALUES ('c','2026-09-16','BTC/USDT')")
-    j.log_decision(d)
     ex = Venue()
-    e = Executor(ex, j, load_config(), MarketType.FUTURES)
+    from tests.entry_authority_fixtures import bind
+    risk, _ = bind(j, ex, load_config())
+    from trader.engine.entry_authority import proposal_binding
+    d.instrument_binding_json = proposal_binding(j, d.symbol)
+    j.log_decision(d)
+    e = Executor(ex, j, load_config(), MarketType.FUTURES, risk_manager=risk)
     return ex, j, e, d
 
 
 def enter(e, d):
-    return e.open(d, 2., 2., 95., 110., 'strategy', 'strategy')
+    from tests.entry_authority_fixtures import permission
+    kwargs = {}
+    if not e.recovery_pending() and e.risk_manager is not None:
+        try:
+            kwargs = permission(e, d)
+        except ValueError:
+            pass
+    return e.open(d, 2., 2., 95., 110., 'strategy', 'strategy', **kwargs)
 
 
 def test_success_clears_durable_intent_only_after_journalling(setup):
@@ -236,7 +247,7 @@ def test_stop_read_failure_is_not_empty_protection(setup):
 
 def test_journal_write_failure_prevents_entry_submission(setup, monkeypatch):
     ex, j, e, d = setup
-    monkeypatch.setattr(j, 'kv_set', lambda *a: (_ for _ in ()).throw(OSError('disk full')))
+    monkeypatch.setattr(e.recovery, 'begin', lambda *a, **kw: (_ for _ in ()).throw(OSError('disk full')))
     with pytest.raises(OSError):
         enter(e, d)
     assert not ex.sent

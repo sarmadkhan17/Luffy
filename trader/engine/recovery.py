@@ -39,10 +39,19 @@ class EntryRecovery:
         # Read failures propagate: callers cannot enter with an unreadable ledger.
         return read(self.journal)
 
-    def save(self, intent, reason):
+    def save(self, intent, reason, *, conn=None):
         intent.update(reason=reason, updated_ms=int(time.time()*1000))
-        self.journal.kv_set(KEY, json.dumps(intent, allow_nan=False))
-        self.journal.log_control_event("execution_recovery", "executor", detail={
+        if conn is None:
+            with self.journal._tx() as db:
+                return self.save(intent, reason, conn=db)
+        conn.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES (?,?)", (KEY, json.dumps(intent, allow_nan=False)))
+        if intent.get('logical_id'):
+            state = {'entry_submission_ambiguous':'UNKNOWN_OUTCOME', 'entry_submitted':'ACKNOWLEDGED',
+                     'entry_fill_unconfirmed':'UNKNOWN_OUTCOME', 'entry_order_not_terminal':'PARTIAL',
+                     'entry_intent_persisted':'SUBMISSION_ATTEMPTED'}.get(reason, 'UNKNOWN_OUTCOME')
+            conn.execute("UPDATE execution_requests SET state=?,recovery_json=?,order_id=? WHERE logical_id=?",
+                         (state,json.dumps(intent,allow_nan=False),intent.get('order_id'),intent['logical_id']))
+        detail={
             "intent_id": intent["id"], "decision_id": intent["position"]["decision_id"],
             "symbol": intent["symbol"], "reason": reason,
             "phase": intent["phase"], "order_id": intent.get("order_id"),
@@ -55,7 +64,9 @@ class EntryRecovery:
             "entry_observation": intent.get("entry_observation"),
             "close_observation": intent.get("close_observation"),
             "accounting": "recovery observations; not realized P&L",
-            "attempts": intent.get("attempts", 0)})
+            "attempts": intent.get("attempts", 0)}
+        conn.execute("INSERT INTO control_events(ts,event,actor,detail) VALUES (?, 'execution_recovery','executor',?)",
+                     (time.strftime('%Y-%m-%dT%H:%M:%S+00:00', time.gmtime()),json.dumps(detail,allow_nan=False)))
 
     def finish(self, intent, reason):
         # Audit before release; an audit failure must retain the entry barrier.
@@ -63,19 +74,25 @@ class EntryRecovery:
         # Archive before release, atomically. Accounting failures cannot erase
         # the intent; no network accounting call delays the safety path.
         with self.journal._tx() as db:
+            if intent.get('logical_id'):
+                db.execute("UPDATE execution_requests SET state='TERMINAL',result_json=?,recovery_json=? WHERE logical_id=?",
+                           (json.dumps({'reason':reason,'position_id':intent['position']['id']}),json.dumps(intent,allow_nan=False),intent['logical_id']))
             if reason == "terminal_orders_and_flat_venue":
                 from .accounting import archive_flat
                 archive_flat(db, intent)
             db.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES (?,?)",
                        (KEY, "null"))
 
-    def begin(self, position):
+    def begin(self, position, *, logical_id=None, conn=None):
         intent = {"id": uuid4().hex, "symbol": position.symbol,
                   "schema_version": 1, "code_hash": self.code_hash,
                   "position": position.as_dict(), "phase": "entry",
                   "client_order_id": "lr_"+uuid4().hex,
                   "created_ms": int(time.time()*1000)}
-        self.save(intent, "entry_intent_persisted")
+        if logical_id:
+            intent['logical_id'] = logical_id
+            intent['client_order_id'] = 'lr_' + hashlib.sha256(logical_id.encode()).hexdigest()[:28]
+        self.save(intent, "entry_intent_persisted", conn=conn)
         return intent
 
     def order(self, intent, close=False):
@@ -116,6 +133,16 @@ class EntryRecovery:
             self.save(intent, "venue_or_recovery_unavailable")
 
     def _tick(self, intent):
+        binding = (intent['position'].get('entry_identity') or {}).get('execution_binding')
+        if binding:
+            market = self.ex.market(intent['symbol'])
+            from ..data.feed import execution_account_scope
+            cap = binding['capability']
+            iid = cap['record']['instrument_id']
+            if (getattr(self.ex, 'id', None) != 'binanceusdm'
+                    or execution_account_scope(self.ex) != cap['account_scope']
+                    or market.get('id') != iid['venue_symbol']):
+                raise ValueError('recovery_canonical_identity_mismatch')
         order = self.order(intent)
         if str(order.get("status", "")).lower() not in TERMINAL:
             # Stop a partial entry accumulating more exposure before adoption.
@@ -144,7 +171,16 @@ class EntryRecovery:
             raise ValueError("position snapshot unavailable")
         matches = []
         for p in positions:
-            if norm_symbol(p["symbol"]) != intent["symbol"]:
+            if binding:
+                # Loaded canonical market identity is the authority. Aliases
+                # may differ; a raw symbol comparison cannot own a position.
+                venue_market = self.ex.market(p['symbol'])
+                venue_id = (p.get('info') or {}).get('symbol', venue_market.get('id'))
+                if venue_id != venue_market.get('id'):
+                    raise ValueError('recovery_venue_position_identity_mismatch')
+                if venue_id != iid['venue_symbol']:
+                    continue
+            elif norm_symbol(p["symbol"]) != intent["symbol"]:
                 continue
             amount = float(p["contracts"])
             if not math.isfinite(amount) or amount < 0:

@@ -558,7 +558,10 @@ class Journal:
         self._write_lock = threading.Lock()
         with self._conn() as c:
             c.executescript(SCHEMA)
+            from ..engine.entry_authority import SCHEMA as entry_request_schema
+            c.executescript(entry_request_schema)
             for stmt in (
+                "ALTER TABLE decisions ADD COLUMN instrument_binding_json TEXT DEFAULT NULL",
                 "ALTER TABLE decisions ADD COLUMN reason_codes TEXT DEFAULT NULL",
                 "ALTER TABLE decisions ADD COLUMN reason_codes_version TEXT DEFAULT NULL",
                 "ALTER TABLE decisions ADD COLUMN scan_id TEXT DEFAULT NULL",
@@ -667,12 +670,12 @@ class Journal:
                 "INSERT OR REPLACE INTO decisions "
                 "(id,cycle_id,ts,symbol,action,score,threshold,confidence,"
                 "executed,skip_reason,size_usdt,entry_price,strategy_ids,"
-                "signals_json,meta_p,scan_id,reason_codes,reason_codes_version) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                "signals_json,meta_p,scan_id,reason_codes,reason_codes_version,instrument_binding_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (d.id, d.cycle_id, d.ts, d.symbol, d.action.value, d.score,
                  d.threshold, d.confidence, int(d.executed), d.skip_reason,
                  d.size_usdt, None, strat_ids, signals,
                  d.meta_p if d.meta_p else None, getattr(d, "scan_id", None),
-                 *self._reason_codes_cols(getattr(d, "reason_codes", None))))
+                 *self._reason_codes_cols(getattr(d, "reason_codes", None)), getattr(d, "instrument_binding_json", None)))
 
             from ..learning import capture as lc, capture_runtime as lr
             captured_row = dict(c.execute('SELECT * FROM decisions WHERE id=?', (d.id,)).fetchone())

@@ -99,6 +99,8 @@ class Snapshot:
     derivs: dict | None = None        # {series: obs frame} for funding/OI/taker specs
     market: dict | None = None        # {ref key: frame} for ref() specs
 
+    instrument_binding_json: str | None = None  # exact registry capability at proposal cut
+
     def df(self, tf: str):
         return self.dfs.get(tf)
 
@@ -136,6 +138,7 @@ class Decision:
     scan_id: str | None = None
     evaluation_causes: list = field(default_factory=list)
     omitted_causes: int = 0
+    instrument_binding_json: str | None = None
 
 
 @dataclass

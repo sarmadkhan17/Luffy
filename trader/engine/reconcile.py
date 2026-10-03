@@ -108,6 +108,53 @@ def reconcile_futures(exchange, journal: Journal, exclude_symbols=(), *, verify=
     excluded = set(exclude_symbols)
     journal_rows = [t for t in journal.open_trades() if t["symbol"] not in excluded]
     j_open = {t["symbol"]: t for t in journal_rows}
+    # Exact identities already recorded by the entry boundary cannot be
+    # silently projected onto another account or loaded venue instrument.
+    for row in journal_rows:
+        try:
+            binding = json.loads(row.get('entry_identity_json') or '{}').get('execution_binding')
+            if binding:
+                from ..data.feed import execution_account_scope
+                cap = binding['capability']
+                market = exchange.market(row['symbol'])
+                if (getattr(exchange, 'id', None) != 'binanceusdm'
+                        or execution_account_scope(exchange) != cap['account_scope']
+                        or market.get('id') != cap['record']['instrument_id']['venue_symbol']):
+                    raise ValueError('canonical_binding_mismatch')
+        except (ValueError, TypeError, KeyError, AttributeError):
+            return {'adopted':0,'ghosts':0,'aligned':0,'positions_readable':True,
+                    'safety_issues':['canonical_binding_mismatch']}
+    exact_open = {}
+    for row in journal_rows:
+        binding = json.loads(row.get('entry_identity_json') or '{}').get('execution_binding')
+        key = norm_symbol(row['symbol'])
+        if binding:
+            expected = binding['capability']['record']['instrument_id']['venue_symbol']
+            try:
+                venue_ids = {}
+                for sym,p in ex_positions.items():
+                    loaded_id = exchange.market(p['symbol']).get('id')
+                    if not loaded_id or (p.get('info') or {}).get('symbol', loaded_id) != loaded_id:
+                        raise ValueError('contradictory venue instrument identity')
+                    venue_ids[sym] = loaded_id
+                matches = [sym for sym,venue_id in venue_ids.items() if venue_id == expected]
+            except Exception:
+                return {'adopted':0,'ghosts':0,'aligned':0,'positions_readable':True,
+                        'safety_issues':['canonical_position_identity_unverified']}
+            if len(matches) > 1:
+                return {'adopted':0,'ghosts':0,'aligned':0,'positions_readable':True,
+                        'safety_issues':['contradictory_venue_ownership']}
+            if matches:
+                key = matches[0]
+            elif key in ex_positions:
+                # A symbol alias collision is not a canonical position match.
+                return {'adopted':0,'ghosts':0,'aligned':0,'positions_readable':True,
+                        'safety_issues':['canonical_position_identity_unverified']}
+        if key in exact_open:
+            return {'adopted':0,'ghosts':0,'aligned':0,'positions_readable':True,
+                    'safety_issues':['contradictory_journal_ownership']}
+        exact_open[key] = row
+    j_open = exact_open
     if verify:
         ownership = []
         if len(j_open) != len(journal_rows):

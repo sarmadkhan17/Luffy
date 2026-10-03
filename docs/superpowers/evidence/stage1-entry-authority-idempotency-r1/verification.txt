@@ -1,0 +1,7 @@
+PASS: JSON and YAML parsed.
+PASS: historical STATE/NEXT records and all unrelated Stage control-plane sections preserved semantically.
+PASS: Stage1 remains build_complete=false; next package RECOMMENDED_NOT_STARTED.
+PASS: current package STATE/NEXT evidence agrees.
+PASS: git diff --check.
+PASS: git index empty; no staging or commit.
+PASS: branch luffy-stage1-entry-authority-idempotency-r1; HEAD f571c988b866fdeaa27957d2d950625aa292ebd9 unchanged.

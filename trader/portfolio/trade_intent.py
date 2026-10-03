@@ -117,7 +117,17 @@ def build(proposal: Proposal, current_inputs: Inputs) -> tuple[TradeIntent, ...]
                             proposal_inputs_sha256=digest(json.loads(proposal.inputs_json))),
             boundary='PROPOSED_TO_RISK_ONLY', risk_approval='NOT_REQUESTED',
             risk_final_authority=True, execution_routed=False, side_effects='NONE')
-        intents.append(TradeIntent(digest(raw), canonical(raw)))
+        typed = TradeIntent(digest(raw), canonical(raw))
+        capabilities = []
+        for source in current_inputs.sources:
+            value = json.loads(source.payload_json)
+            if isinstance(value, dict) and value.get('schema') == 'entry-capability.v1' and value.get('instrument_id') == c.instrument:
+                capabilities.append(value)
+        if len(capabilities) == 1:
+            typed = bind_capability(typed, capabilities[0])
+        elif len(capabilities) > 1:
+            raise ValueError('TRADE_INTENT_CAPABILITY_AMBIGUOUS')
+        intents.append(typed)
     return tuple(intents)
 
 
@@ -126,3 +136,20 @@ def verify_intents(intents, proposal, current_inputs):
         return tuple(intents) == build(proposal, current_inputs)
     except (ValueError, TypeError, KeyError, AttributeError):
         return False
+
+
+def bind_capability(intent: TradeIntent, capability: dict) -> TradeIntent:
+    """Freeze the exact existing registry receipt for the final Risk consumer.
+
+    This adds provenance, never approval. Risk rereads the trusted capability
+    at authorization and execution; hashes alone cannot confer permission.
+    """
+    raw = json.loads(intent.payload_json)
+    from trader.engine.entry_authority import digest as capability_digest
+    if (capability.get('instrument_id') != raw['instrument']
+            or capability.get('receipt_id') != capability_digest({k:v for k,v in capability.items() if k!='receipt_id'})):
+        raise ValueError('TRADE_INTENT_CAPABILITY_MISMATCH')
+    if raw.get('capability_receipt_id') and raw['capability_receipt_id'] != capability['receipt_id']:
+        raise ValueError('TRADE_INTENT_CAPABILITY_REBIND_REFUSED')
+    raw.update(capability_receipt_id=capability['receipt_id'], capability=capability)
+    return TradeIntent(digest(raw), canonical(raw))

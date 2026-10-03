@@ -292,7 +292,7 @@ def test_real_balance_paths_record_basis_and_completion(journal, monkeypatch):
     monkeypatch.setattr(config.Env, "binance_keys", staticmethod(lambda: ("k", "s")))
     monkeypatch.setattr(requests, "get", lambda *a, **kw: NS(
         json=lambda: {"totalMarginBalance": "1234.5"}))
-    k.exchange = NS(urls={"api": {"fapiPrivate": "https://demo.test/fapi/v1"}},
+    k.exchange = NS(id="binanceusdm", apiKey="k", urls={"api": {"fapiPrivateV3": "https://demo-fapi.binance.com/fapi/v3"}},
                     fetch_balance=lambda: {"USDT": {"total": 900}})
     t0 = time.time()
     assert k._fetch_balance_fresh() == 1234.5
@@ -565,8 +565,9 @@ def test_news_icon_per_truth(truth_, active, icon):
 @pytest.mark.parametrize("st", [_news("QUIET", age=5000), _news("ARMED", True, age=5000),
                                 {"truth": "QUIET", "assessed_at": None},
                                 {"truth": "QUIET", "assessed_at": "garbage"},
-                                _news("QUIET", age=-60)])
+                                lambda: _news("QUIET", age=-60)])
 def test_news_icon_stale_or_untimed_is_never_healthy(st):
+    st = st() if callable(st) else st  # future at assertion time, not collection time
     from trader.kernel import news_status_line
     icon, label = news_status_line(st, 1260.0)
     assert icon == "📰⏳" and label.startswith("STALE")

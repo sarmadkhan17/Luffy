@@ -540,6 +540,7 @@ class Orchestrator:
             action=action, score=_clean(net), threshold=threshold,
             confidence=confidence, ts=d_ts, meta_p=meta_p,
             meta_size=meta_size,
+            instrument_binding_json=getattr(snap, 'instrument_binding_json', None),
             votes=[v.as_dict() for v in votes],
             strategy_signals=[vars(s) | {"action": s.action.value}
                               for s in sigs])

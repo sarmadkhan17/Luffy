@@ -10,8 +10,9 @@ serializes two things across the kernel, dashboard and any other process:
 So once FROZEN / RECOVERY / HALTED is persisted, no later entry can be sent;
 an entry already past the fence finishes its submission first and the
 transition waits. The fence is a file lock, never a SQLite transaction: each
-journal write inside it commits on its own, so no database write lock is held
-across the venue call. Fill polling, protective stops, exits and
+recovery reservation commits before the venue call. Final entry Risk
+validation holds its existing database transaction through submission so
+account/capability/policy changes cannot race the exact authorization. Fill polling, protective stops, exits and
 reconciliation never take it and keep running in any blocking state.
 
 Each acquisition opens its own file description, so threads in one process

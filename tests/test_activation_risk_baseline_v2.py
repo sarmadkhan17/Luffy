@@ -749,7 +749,6 @@ KNOWN_OUT_OF_SCOPE_SITES: set = set()
 # actual ACTIVE sites remain forbidden and fully inventoried.
 KNOWN_OUT_OF_SCOPE_WRAPPERS: set = {
     ('trader/learning/foundation.py','apply_to_isolated_journal'),
-    ('trader/learning/runtime.py','checkpoint'),
 }
 
 
@@ -1099,14 +1098,14 @@ def _reader_blob(path):
         c.close()
 
 
-def _writer(kind, db_path):
+def _writer(kind, db_path, other=None):
     """Runs in its own thread: a separate Journal (own connections) writing Risk."""
     def write():
-        other = Journal(db_path)
+        target = other or Journal(db_path)
         if kind == "raw_journal":
-            other.kv_set("risk_state", "{corrupt")
+            target.kv_set("risk_state", "{corrupt")
         else:
-            RiskManager(RISK_CFG, other).update_equity(NEW_HIGH)       # new baseline
+            RiskManager(RISK_CFG, target).update_equity(NEW_HIGH)       # new baseline
     return write
 
 
@@ -1125,10 +1124,11 @@ def check_cross_connection_write_serialized(tmp_path, monkeypatch, mutate=None,
     before = j.kv_get("risk_state")
     proof = r.release_check(CLEAR)
     real, seen = sm._set_fenced, {}
+    other = Journal(j.db_path)
 
     def set_fenced(new, actor, detail, *, conn=None):
         if new == ControlState.ACTIVE and "t" not in seen:
-            t = _Thread(target=_writer(kind, j.db_path), daemon=True)
+            t = _Thread(target=_writer(kind, j.db_path, other), daemon=True)
             seen["t"] = t
             t.start()
             t.join(0.5)

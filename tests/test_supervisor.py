@@ -362,6 +362,7 @@ def test_kernel_boot_uses_supervisor_without_real_services(system, monkeypatch):
     journal, state, venue, _, executor, supervisor = system
     k = object.__new__(Kernel)
     k.market_type = MarketType.FUTURES
+    k.journal = journal
     k.state_machine = state
     k.population = []
     k._filter_universe_to_venue = Mock()

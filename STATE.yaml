@@ -60,66 +60,66 @@ stage_status:
     - docs/superpowers/evidence/stage1-safety-truth-closure-r1/truth-data-tests.txt
     - docs/superpowers/evidence/stage1-safety-truth-closure-r1/pit-collected-tests.txt
     - docs/superpowers/evidence/stage1-safety-truth-closure-r1/audit-probes.txt
+    - trader/engine/entry_authority.py
+    - tests/test_stage1_entry_authority.py
+    - docs/superpowers/reports/2026-10-03-stage1-entry-authority-idempotency-r1.md
+    - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/closure.json
+    - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/focused-tests.txt
+    - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/acceptance-tests.txt
+    - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/registry-collected-tests.txt
     proven_facts:
-    - canonical instrument identity and fail-closed account eligibility representation exist.
-    - Four-state control and deterministic Risk machinery exist; current pre-start authority/recovery proofs are partially blocked.
-    - Pending ambiguous-entry recovery, recovery fencing, reconciliation and protection have focused test evidence; completed-request deduplication is missing.
-    - truthful current account/Risk/News contracts and provenance-aware owner reads exist in the reviewed lineage.
+    - Canonical RegistrySnapshot/capability receipts bind proposals, TradeIntent, final Risk, Execution, booking
+      and reconciliation; unknown account permissions and leverage fail closed.
+    - Final entry requires a process-issued exact deterministic Risk ALLOW/RESIZE permission, current policy/account/book
+      receipts, finite valid inputs and the current control-intent fence.
+    - Existing Journal/EntryRecovery retain completed and ambiguous logical requests durably; retry, store reopen,
+      fresh interpreter, partial fill and acknowledgement-write failure are tested with fake venues.
+    - Boot/recovery/owner entry fixtures and Risk negative-control proofs pass without expanding StrategyVersion
+      or owner first-live authority.
+    - Truthful current account/Risk/News contracts and provenance-aware owner reads remain; actual connected-account
+      and runtime maturity are not proven.
     gaps:
-    - 'MI-1: End-to-end canonical registry identity/capability binding in Risk, Execution and Accounting.'
     - 'MI-2: Durable normal market-feed source/receipt/quality and historical revision provenance.'
     - 'MI-3: Native HTF close/availability alignment and rejection of future cached observations.'
-    - 'MI-4: Required final Risk permission, fresh authoritative/numeric inputs and verified leverage assumptions.'
-    - 'MI-5: Durable completed logical-request deduplication across retry/restart.'
     - 'MI-6: Integrity-checked critical-store/config/evidence backup and restore with an off-host seam.'
     - 'MI-7: Critical storage/journal-unavailable and missing-heartbeat safety alert paths.'
-    - 'PT-1: 12 failing boot/recovery/entry-boundary proofs (11 masked by strategy authority; 1 incomplete Kernel
-      fixture).'
-    - 'PT-2: 3 failing Risk proofs (2 stale ACTIVE-setter inventories; 1 mutant not detected).'
-    - 'PT-3: Registry kernel-wiring suite cannot collect: absent test_attention_supplemental and test_registry_provider
-      helpers.'
     pre_start_closure: BLOCKED
     closure_mode: PRE_START_BUILD_CLOSURE
     closure_report: docs/superpowers/reports/2026-10-03-stage1-safety-truth-closure-r1.md
     closure_base_head: 52aac90e004662610de006fd5c4eb8cdcf39bb7a
     component_results:
-      canonical_instrument_identity: BLOCKED
+      canonical_instrument_identity: PASS
       data_provenance_quality: BLOCKED
       point_in_time_correctness: BLOCKED
       journal_truth: PASS
-      control_state_machine: BLOCKED
-      risk_authority: BLOCKED
-      execution_idempotency: BLOCKED
+      control_state_machine: PASS
+      risk_authority: PASS
+      execution_idempotency: PASS
       protective_order_architecture: PASS
       venue_reconciliation_architecture: PASS
       backup_recovery_architecture: BLOCKED
       monitoring_alerts: BLOCKED
       failure_injection_prestart: BLOCKED
     missing_implementation:
-    - 'MI-1: End-to-end canonical registry identity/capability binding in Risk, Execution and Accounting.'
     - 'MI-2: Durable normal market-feed source/receipt/quality and historical revision provenance.'
     - 'MI-3: Native HTF close/availability alignment and rejection of future cached observations.'
-    - 'MI-4: Required final Risk permission, fresh authoritative/numeric inputs and verified leverage assumptions.'
-    - 'MI-5: Durable completed logical-request deduplication across retry/restart.'
     - 'MI-6: Integrity-checked critical-store/config/evidence backup and restore with an off-host seam.'
     - 'MI-7: Critical storage/journal-unavailable and missing-heartbeat safety alert paths.'
-    pre_start_test_blocker:
-    - 'PT-1: 12 failing boot/recovery/entry-boundary proofs (11 masked by strategy authority; 1 incomplete Kernel
-      fixture).'
-    - 'PT-2: 3 failing Risk proofs (2 stale ACTIVE-setter inventories; 1 mutant not detected).'
-    - 'PT-3: Registry kernel-wiring suite cannot collect: absent test_attention_supplemental and test_registry_provider
-      helpers.'
+    pre_start_test_blocker: []
     policy_not_configured: []
     needs_real_runtime_evidence:
     - 'RT-1: Sustained completed-system recovery, latency/resources, alert delivery and durable producer publication.'
     - 'RT-2: Operational off-host backup/restore drill after MI-6 is implemented.'
     needs_real_venue_evidence:
-    - 'VE-1: Actual account eligibility/permissions, instrument availability, leverage/brackets, commission and rate-budget
-      facts.'
-    - 'VE-2: Actual balances, positions/orders/fills, monetary completeness, protection, reconciliation/unknown outcomes
-      and read-key permissions.'
+    - 'VE-1: Actual account eligibility/permissions, instrument availability, leverage/brackets, commission and
+      rate-budget facts.'
+    - 'VE-2: Actual balances, positions/orders/fills, monetary completeness, protection, reconciliation/unknown
+      outcomes and read-key permissions.'
     deployment_not_performed:
     - 'DP-1: Latest completed-system architecture not deployed/started for first controlled startup.'
+    latest_completed_implementation: LUFFY-STAGE1-ENTRY-AUTHORITY-IDEMPOTENCY-R1
+    latest_implementation_report: docs/superpowers/reports/2026-10-03-stage1-entry-authority-idempotency-r1.md
+    next_recommended_package: LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1
 
   stage_2_world_model:
     state: TESTED
@@ -529,11 +529,13 @@ completed_stage3_4_pre_stage8_closure_audit_r1:
 current_active_work:
   id: LUFFY-STAGE1-ENTRY-AUTHORITY-IDEMPOTENCY-R1
   type: BOUNDED_IMPLEMENTATION
-  status: RECOMMENDED_NOT_STARTED
-  purpose: Close mandatory entry Risk authority and durable logical-request idempotency gaps identified by Stage1
-    pre-start closure.
-  implementation_started: false
-  next_recommended_package: LUFFY-STAGE1-ENTRY-AUTHORITY-IDEMPOTENCY-R1
+  status: COMPLETE_TESTED_COMMITTED_UNDEPLOYED
+  result: PASS
+  mode: PRE_START_SAFETY_IMPLEMENTATION
+  implementation_started: true
+  purpose: Close MI-1/MI-4/MI-5 and PT-1/PT-2/PT-3; preserve remaining Stage1 build blockers.
+  next_recommended_package: LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1
+  next_package_status: RECOMMENDED_NOT_STARTED
 
 completed_stage3_question_driven_research_router_r1:
   package: LUFFY-STAGE3-QUESTION-DRIVEN-RESEARCH-ROUTER-R1
@@ -718,3 +720,51 @@ completed_stage1_safety_truth_closure_r1:
     and read-key permissions.'
   deployment_not_performed:
   - 'DP-1: Latest completed-system architecture not deployed/started for first controlled startup.'
+
+completed_stage1_entry_authority_idempotency_r1:
+  package: LUFFY-STAGE1-ENTRY-AUTHORITY-IDEMPOTENCY-R1
+  mode: PRE_START_SAFETY_IMPLEMENTATION
+  result: PASS
+  implementation: PASS
+  independent_review: PASS
+  review_id: STAGE1_ENTRY_AUTHORITY_IDEMPOTENCY_INDEPENDENT_REVIEW_R1
+  blocking_defects: NONE
+  safe_to_commit: true
+  state: TESTED
+  baseline_head: f571c988b866fdeaa27957d2d950625aa292ebd9
+  branch: luffy-stage1-entry-authority-idempotency-r1
+  uncommitted: false
+  undeployed: true
+  real_order_submissions: 0
+  trading_authority_changed: false
+  expanded_trading_authority: false
+  risk_bypass_found: false
+  report: docs/superpowers/reports/2026-10-03-stage1-entry-authority-idempotency-r1.md
+  evidence:
+  - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/closure.json
+  - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/focused-tests.txt
+  - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/acceptance-tests.txt
+  - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/registry-collected-tests.txt
+  - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/submission-callers.txt
+  - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/graphify-update.txt
+  tests:
+    focused_regressions: 854 passed in 147.75s
+    final_acceptance_and_recovery: 116 passed in 60.87s
+    registry_collection: 46 tests collected
+    negative_controls: Risk, identity, dedup and control mutants detected
+  closed_audit_gaps:
+  - MI-1
+  - MI-4
+  - MI-5
+  - PT-1
+  - PT-2
+  - PT-3
+  missing_implementation: []
+  pre_start_test_blocker: []
+  remaining_stage1_missing_implementation:
+  - 'MI-2: Durable normal market-feed source/receipt/quality and historical revision provenance.'
+  - 'MI-3: Native HTF close/availability alignment and rejection of future cached observations.'
+  - 'MI-6: Integrity-checked critical-store/config/evidence backup and restore with an off-host seam.'
+  - 'MI-7: Critical storage/journal-unavailable and missing-heartbeat safety alert paths.'
+  stage1_build_complete: false
+  next_recommended_package: LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1

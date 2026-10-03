@@ -3,8 +3,8 @@ sdd_version: '3.2'
 updated_at: '2026-10-03'
 
 repository_checkpoint:
-  branch: luffy-stage1-safety-truth-closure-r1
-  working_tree_base_head: 52aac90e004662610de006fd5c4eb8cdcf39bb7a
+  branch: luffy-stage1-entry-authority-idempotency-r1
+  working_tree_base_head: f571c988b866fdeaa27957d2d950625aa292ebd9
   reviewed_code_head: 57ad32332a98518c083b750f9df9d43596d0d531
   production_main_head: 1bed3958740ec2d0d575aabc817978086d31d390
 
@@ -37,32 +37,28 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
-  id: LUFFY-STAGE1-ENTRY-AUTHORITY-IDEMPOTENCY-R1
+  id: LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1
   type: BOUNDED_IMPLEMENTATION
   status: RECOMMENDED_NOT_STARTED
-  mode: PRE_START_BUILD_REPAIR
-  purpose: Repair final Risk permission and durable completed-request execution idempotency; Stage1 closure remains
-    BLOCKED.
+  mode: PRE_START_SAFETY_IMPLEMENTATION
+  purpose: Close normal feed provenance and point-in-time HTF/cache correctness; remaining backup/alerts stay
+    open.
   implementation_started: false
-  source_closure: docs/superpowers/reports/2026-10-03-stage1-safety-truth-closure-r1.md
+  source_closure: docs/superpowers/reports/2026-10-03-stage1-entry-authority-idempotency-r1.md
   scope:
-  - 'MI-4: Bind final entry to deterministic Risk permission, exact decision/policy/size and validated fresh authoritative
-    inputs; verify required leverage assumptions.'
-  - 'MI-5: Persist logical request identity and completed results; refuse duplicate exposure across retry/restart.'
-  - Repair/re-establish affected PT-1/PT-2 entry authority proofs without weakening strategy, Risk or containment
-    fences.
+  - 'MI-2: Durable normal market-feed source/receipt/quality and historical revision provenance.'
+  - 'MI-3: Native HTF close/availability alignment and rejection of future cached observations.'
+  - Retain source identity, event/receipt/availability times, quality and revision lineage.
+  - Reject future cached observations; align HTF reads to actual historical availability.
   acceptance:
-  - Risk-bypass, stale/nonfinite-input and duplicate-completed-request attempts submit zero additional fake-venue
-    exposure.
-  - Fake-venue/temp-journal failure and restart proofs pass.
-  - Other Stage1 blockers remain explicit; this package alone does not grant Stage1 BUILD COMPLETE.
+  - Deterministic fake-feed/isolated-cache tests establish no future data reaches research/backtest/live decisions.
+  - UNKNOWN and STALE remain distinct from zero/current; replay retains historical provenance.
+  - No live venue, production database mutation, startup or deployment.
   remaining_stage1_blockers:
-  - MI-1
   - MI-2
   - MI-3
   - MI-6
   - MI-7
-  - PT-3
   constraints:
   - Do not start LUFFY, deploy, restart services, activate trading, submit real orders or call real venue APIs.
   - Do not change Risk policy, invent thresholds, run Scheme-D or spend money.
@@ -191,3 +187,51 @@ completed_stage1_safety_truth_closure_r1:
     and read-key permissions.'
   deployment_not_performed:
   - 'DP-1: Latest completed-system architecture not deployed/started for first controlled startup.'
+
+completed_stage1_entry_authority_idempotency_r1:
+  package: LUFFY-STAGE1-ENTRY-AUTHORITY-IDEMPOTENCY-R1
+  mode: PRE_START_SAFETY_IMPLEMENTATION
+  result: PASS
+  implementation: PASS
+  independent_review: PASS
+  review_id: STAGE1_ENTRY_AUTHORITY_IDEMPOTENCY_INDEPENDENT_REVIEW_R1
+  blocking_defects: NONE
+  safe_to_commit: true
+  state: TESTED
+  baseline_head: f571c988b866fdeaa27957d2d950625aa292ebd9
+  branch: luffy-stage1-entry-authority-idempotency-r1
+  uncommitted: false
+  undeployed: true
+  real_order_submissions: 0
+  trading_authority_changed: false
+  expanded_trading_authority: false
+  risk_bypass_found: false
+  report: docs/superpowers/reports/2026-10-03-stage1-entry-authority-idempotency-r1.md
+  evidence:
+  - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/closure.json
+  - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/focused-tests.txt
+  - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/acceptance-tests.txt
+  - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/registry-collected-tests.txt
+  - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/submission-callers.txt
+  - docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/graphify-update.txt
+  tests:
+    focused_regressions: 854 passed in 147.75s
+    final_acceptance_and_recovery: 116 passed in 60.87s
+    registry_collection: 46 tests collected
+    negative_controls: Risk, identity, dedup and control mutants detected
+  closed_audit_gaps:
+  - MI-1
+  - MI-4
+  - MI-5
+  - PT-1
+  - PT-2
+  - PT-3
+  missing_implementation: []
+  pre_start_test_blocker: []
+  remaining_stage1_missing_implementation:
+  - 'MI-2: Durable normal market-feed source/receipt/quality and historical revision provenance.'
+  - 'MI-3: Native HTF close/availability alignment and rejection of future cached observations.'
+  - 'MI-6: Integrity-checked critical-store/config/evidence backup and restore with an off-host seam.'
+  - 'MI-7: Critical storage/journal-unavailable and missing-heartbeat safety alert paths.'
+  stage1_build_complete: false
+  next_recommended_package: LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1

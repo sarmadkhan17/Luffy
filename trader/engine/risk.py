@@ -694,6 +694,10 @@ class RiskManager:
         return m
 
     # ── entry permission + sizing ───────────────────────────────────────
+    def authorize_entry(self, *args, **kwargs):
+        from .entry_authority import authorize
+        return authorize(self, *args, **kwargs)
+
     def check_entry(self, state: ControlState, symbol: str, price: float,
                     atr: float, side_risk_frac: float,
                     open_positions: list[Position], equity: float,
@@ -707,6 +711,18 @@ class RiskManager:
         if state != ControlState.ACTIVE:  # RECOVERY, and fail closed on any other
             return SizingResult(False, f"state={state.value}: entries blocked",
                                 0, 0, 0, 0)
+
+        if any(not _is_number(v) or not math.isfinite(v) or v <= 0
+               for v in (price, atr, side_risk_frac, equity)):
+            return SizingResult(False, "risk_inputs_invalid", 0, 0, 0, 0)
+        if not math.isfinite(price * side_risk_frac) or price * side_risk_frac <= 0:
+            return SizingResult(False, "risk_geometry_invalid", 0, 0, 0, 0)
+
+        for position in open_positions:
+            values = (position.amount, position.entry_price, position.notional_usdt,
+                      position.stop_loss, position.leverage)
+            if any(not _is_number(v) or not math.isfinite(v) or v <= 0 for v in values):
+                return SizingResult(False, 'risk_position_inputs_invalid', 0, 0, 0, 0)
 
         # A stale journal fallback cannot initialize here: with no baseline
         # there is no equity history, so the only fallback is 0 (refused).
@@ -768,6 +784,8 @@ class RiskManager:
 
         if notional / self.leverage < self.min_notional:
             return SizingResult(False, "below min notional", 0, 0, 0, 0)
+        if any(not math.isfinite(v) or v <= 0 for v in (amount, notional, allowed)) or round(amount, 8) <= 0:
+            return SizingResult(False, "risk_sizing_invalid", 0, 0, 0, 0)
         return SizingResult(True, "ok",
                             size_usdt=round(notional / self.leverage, 2),
                             amount=round(amount, 8),

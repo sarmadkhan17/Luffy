@@ -72,16 +72,17 @@ def _hint_reference(hint: float, submitted_ms: int, captured=None) -> dict:
 
 class Executor:
     def __init__(self, exchange, journal: Journal, cfg: dict,
-                 market_type: MarketType):
+                 market_type: MarketType, risk_manager=None):
         from ..observability.prospective_execution import for_journal, ObservedExchange
         capture = for_journal(journal)
         self.ex = ObservedExchange(exchange,capture) if capture else exchange
         self.journal = journal
         self.market_type = market_type
+        self.risk_manager = risk_manager
+        from .risk import policy_from_config
+        self.policy_id = policy_from_config(cfg)['digest'] if risk_manager is not None else None
         r = cfg["risk"]
         self.leverage = int(r["leverage"])
-        #: symbols whose venue leverage already matches self.leverage
-        self._leverage_set: set = set()
         self.tp_atr_mult = float(r["take_profit_atr_mult"])
         self.taker_fee = float(r.get("taker_fee_pct", 0.05)) / 100.0
         self._locks: dict[str, threading.Lock] = {}
@@ -121,15 +122,22 @@ class Executor:
              stop_loss: float, take_profit: float,
              strategy_id: str, strategy_name: str,
              exec_mode: str = "live", entry_identity: dict | None = None,
-             reference: dict | None = None) -> Position | None:
-        """`entry_identity` and `reference` are provenance only: the exact
-        strategy version and the decision price captured before submission.
-        Neither changes what is sent, when, or how much.
+             reference: dict | None = None, risk_permission=None) -> Position | None:
+        """Admit only an exact current Risk-issued permission. Strategy,
+        capability, decision-price and account/book receipts are bound to it.
 
         This is the real order path only: any `exec_mode` but "live" is
         refused (there is no paper execution here, so a paper label on a
         venue order would be false), and so is a factory StrategyVersion
         that is not exact-version first-live eligible."""
+        blocked, code = entry_block(persisted_state(self.journal))
+        if blocked:
+            decision.skip_reason = blocked
+            decision.reason_codes = [code]
+            return None
+        if self.recovery_pending():
+            decision.skip_reason = 'execution_recovery_pending'
+            return None
         if exec_mode != "live":
             decision.skip_reason = f"exec_mode {exec_mode!r} has no real order path"
             decision.reason_codes = [rc.EXEC_MODE_NOT_REAL]
@@ -150,11 +158,11 @@ class Executor:
                 return None
             return self._open_serialized(decision, amount, atr, stop_loss,
                                          take_profit, strategy_id, strategy_name, exec_mode,
-                                         entry_identity, reference)
+                                         entry_identity, reference, risk_permission)
 
     def _open_serialized(self, decision, amount, atr, stop_loss, take_profit,
                          strategy_id, strategy_name, exec_mode,
-                         entry_identity=None, reference=None):
+                         entry_identity=None, reference=None, risk_permission=None):
         lock = self._lock_for(decision.symbol)
         if not lock.acquire(blocking=False):
             log.warning(f"[{decision.symbol}] entry already in flight")
@@ -162,43 +170,15 @@ class Executor:
         try:
             return self._open_locked(decision, amount, atr, stop_loss,
                                      take_profit, strategy_id, strategy_name,
-                                     exec_mode, entry_identity, reference)
+                                     exec_mode, entry_identity, reference, risk_permission)
         finally:
             lock.release()
-
-    def _ensure_leverage(self, symbol: str) -> None:
-        """Apply the configured leverage to the venue, once per symbol.
-
-        risk.leverage drove the margin figure (notional / leverage) and was
-        journalled on every trade, while set_leverage was never called — so
-        the venue traded at whatever the account was set to and the sizer
-        budgeted for something else. At 1x on the venue, every position needs
-        five times the margin the risk manager believes it does.
-
-        Cached because Binance rejects a leverage change while a position is
-        open on that symbol; a rejection is expected, never a reason to skip
-        the trade, and is not cached so it is retried once the symbol is flat.
-        """
-        if self.market_type != MarketType.FUTURES:
-            return
-        if symbol in self._leverage_set:
-            return
-        fn = getattr(self.ex, "set_leverage", None)
-        if fn is None:
-            return
-        try:
-            fn(self.leverage, symbol)
-            self._leverage_set.add(symbol)
-            log.info(f"leverage {self.leverage}x applied to {symbol}")
-        except Exception as e:
-            log.warning(f"leverage {self.leverage}x not applied to {symbol}: "
-                        f"{e} — venue keeps its current setting")
 
     def _open_locked(self, decision: Decision, amount: float, atr: float,
                      stop_loss: float, take_profit: float,
                      strategy_id: str, strategy_name: str,
                      exec_mode: str, entry_identity: dict | None = None,
-                     reference: dict | None = None) -> Position | None:
+                     reference: dict | None = None, risk_permission=None) -> Position | None:
         sym = decision.symbol
         context = getattr(self.ex, 'context', None)
         if context:
@@ -209,8 +189,14 @@ class Executor:
         params: dict = {}
         if self.market_type == MarketType.FUTURES:
             params["reduceOnly"] = False
-        self._ensure_leverage(sym)
-        amount = quantize(self.ex, sym, amount)
+        from .entry_authority import positive, submit
+        try:
+            positive(amount)
+            amount = quantize(self.ex, sym, amount)
+            positive(amount)
+        except (ValueError, TypeError, OverflowError):
+            decision.skip_reason = 'entry_numeric_invalid'
+            return None
         if amount <= 0:
             log.warning(f"ENTRY SKIPPED {sym}: size rounds to zero lots")
             return None
@@ -223,40 +209,21 @@ class Executor:
         # RECOVERY / HALTED persisted first means no order is sent. Only the
         # intent, the submission and its immediate result are fenced; fill
         # polling, protection and exits run outside it.
-        with control_fence(self.journal):
-            blocked, blocked_code = entry_block(persisted_state(self.journal))
-            if blocked:
-                decision.skip_reason = blocked
-                decision.reason_codes = [blocked_code]
-                log.warning(f"ENTRY BLOCKED {sym} at submission: {blocked}")
-                return None
-            if self.market_type == MarketType.FUTURES:
-                intent = self.recovery.begin(Position(
-                    id=position_id, symbol=sym, side=pos_side, amount=amount,
+        try:
+            order, intent, error, submitted_ms, binding = submit(self, risk_permission,
+                decision, amount, atr, stop_loss, take_profit, strategy_id, entry_identity, reference,
+                Position(id=position_id, symbol=sym, side=pos_side, amount=amount,
                     entry_price=0, notional_usdt=0, leverage=self.leverage,
-                    stop_loss=stop_loss, take_profit=take_profit,
-                    strategy_id=strategy_id, strategy_name=strategy_name,
-                    decision_id=decision.id, market_type=self.market_type.value,
-                    exec_mode=exec_mode, confidence=decision.confidence,
-                    entry_identity=entry_identity))
-                params["newClientOrderId"] = intent["client_order_id"]
+                    stop_loss=stop_loss, take_profit=take_profit, strategy_id=strategy_id,
+                    strategy_name=strategy_name, decision_id=decision.id,
+                    market_type=self.market_type.value, exec_mode=exec_mode,
+                    confidence=decision.confidence, entry_identity=entry_identity))
+            entry_identity = dict(entry_identity or {}, execution_binding=binding)
+            params['newClientOrderId'] = intent['client_order_id']
             requested = amount
-            submitted_ms = int(time.time() * 1000)
-            try:
-                order = self.ex.create_order(sym, "market", side_ccxt, amount,
-                                             params=params)
-            except Exception as e:
-                error = e
-                if intent:
-                    from ccxt import InvalidOrder, InsufficientFunds, AuthenticationError, PermissionDenied
-                    if isinstance(e, (InvalidOrder, InsufficientFunds, AuthenticationError, PermissionDenied)):
-                        self.recovery.finish(intent, "entry_explicitly_rejected")
-                    else:
-                        self.recovery.save(intent, "entry_submission_ambiguous")
-            else:
-                if intent:
-                    intent["order_id"] = str(order.get("id") or "")
-                    self.recovery.save(intent, "entry_submitted")
+        except (ValueError, KeyError, TypeError, AttributeError) as exc:
+            decision.skip_reason = str(exc)
+            return None
         submitted_ms = getattr(self.ex,'submitted_ms',None) or submitted_ms
         if error is not None:
             e = error

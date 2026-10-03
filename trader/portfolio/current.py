@@ -55,6 +55,19 @@ def freeze(journal, attention, investigation, config, available_inputs=None, mar
                 candidate, economics, frozen = bridge.build(Reader(),receipt,config,
                     available_inputs=observed_inputs,dimensions=DIMENSIONS)
                 if market is not None:
+                    binding_text = getattr(market, 'instrument_binding_json', None)
+                    if binding_text:
+                        from trader.engine.entry_authority import CAP_KEY, digest as capability_digest
+                        capability = json.loads(binding_text)
+                        row = db.execute('SELECT value FROM state_kv WHERE key=?',
+                                         (CAP_KEY + market.symbol,)).fetchone()
+                        if (row is None or json.loads(row[0]) != capability
+                                or capability.get('instrument_id') != candidate.instrument
+                                or capability.get('receipt_id') != capability_digest({k:v for k,v in capability.items() if k!='receipt_id'})):
+                            raise ValueError('PROPOSAL_CAPABILITY_CHANGED_DURING_READ')
+                        source = Source.freeze('entry-capability:' + candidate.instrument, capability)
+                        if source not in sources:
+                            sources.append(source)
                     from trader.strategy.spec import StrategySpec
                     from trader.strategy import exit_policy as exits
                     from trader.engine.versioned_exits import entry_contract

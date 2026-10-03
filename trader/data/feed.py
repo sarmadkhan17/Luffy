@@ -45,7 +45,23 @@ def make_exchange(market_type: str = "futures", demo: bool | None = None,
             ex.enable_demo_trading(True)
         else:   # legacy ccxt
             ex.set_sandbox_mode(True)
+    ex.entry_account_scope = execution_account_scope(ex)
     return ex
+
+
+def execution_account_scope(exchange):
+    """Opaque identity of actual venue/credential context; never permission."""
+    import hashlib
+    from ..observability.portfolio_observation import trading_source
+    key = getattr(exchange, 'apiKey', None)
+    if getattr(exchange, 'id', None) != 'binanceusdm' or not isinstance(key, str) or not key:
+        return None
+    try:
+        environment, source = trading_source(exchange)
+    except (ValueError, TypeError, AttributeError):
+        return None
+    return 'execution-account.v1:' + hashlib.sha256(
+        (environment + '\0' + source + '\0' + key).encode()).hexdigest()
 
 
 class DataFeed:

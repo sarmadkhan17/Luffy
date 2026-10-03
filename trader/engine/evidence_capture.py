@@ -80,7 +80,7 @@ def _is_ms(v) -> bool:
 
 # ── available margin, from the existing account response ────────────────
 def margin_observation(body, *, request_url: str | None, request_start_ms,
-                       received_ms) -> dict:
+                       received_ms, account_scope=None) -> dict:
     """One `account-margin-observation.v1` from the raw bytes of the account
     response the Kernel already read. `body=None` means no response exists
     this cycle. Never raises on venue content: absence or malformation is a
@@ -135,6 +135,8 @@ def margin_observation(body, *, request_url: str | None, request_start_ms,
                 else:
                     rec.update(value_text=text, value=float(Decimal(text)),
                                status=AVAILABLE)
+    if account_scope is not None:
+        rec["account_scope"] = account_scope
     rec["observation_id"] = _sha(canonical(rec))
     return rec
 
@@ -171,7 +173,7 @@ def _observation_payload(o: dict) -> dict:
                               "positions")}
 
 
-def position_snapshot(observation, rows) -> dict:
+def position_snapshot(observation, rows, *, account_scope=None) -> dict:
     """A `venue-position-snapshot.v1` from a verified PortfolioObservation and
     the exact rows it was built from. Entry price is the venue's
     ``info.entryPrice`` string for present positions (None if absent)."""
@@ -203,6 +205,8 @@ def position_snapshot(observation, rows) -> dict:
             "positions": positions, "observation": obs}
     for position in positions:
         position['mark_price_text'] = marks.get(position['instrument_id'])
+    if account_scope is not None:
+        body["account_scope"] = account_scope
     return {**body, "snapshot_id": _sha(canonical(body))}
 
 

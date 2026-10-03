@@ -1,0 +1,84 @@
+{
+  "package": "LUFFY-STAGE1-ENTRY-AUTHORITY-IDEMPOTENCY-R1",
+  "mode": "PRE_START_SAFETY_IMPLEMENTATION",
+  "result": "PASS",
+  "branch": "luffy-stage1-entry-authority-idempotency-r1",
+  "baseline_head": "f571c988b866fdeaa27957d2d950625aa292ebd9",
+  "component_results": {
+    "canonical_identity_binding": "PASS",
+    "capability_receipt_binding": "PASS",
+    "final_risk_authority": "PASS",
+    "numeric_validation": "PASS",
+    "leverage_truth": "PASS",
+    "durable_idempotency": "PASS",
+    "unknown_outcome_recovery": "PASS",
+    "control_entry_fence": "PASS",
+    "accounting_identity_binding": "PASS",
+    "registry_test_collection": "PASS",
+    "risk_mutant_detection": "PASS",
+    "boot_recovery_entry_tests": "PASS"
+  },
+  "risk_bypass_found": false,
+  "real_order_submissions": 0,
+  "trading_authority_changed": false,
+  "missing_implementation": [],
+  "pre_start_test_blocker": [],
+  "remaining_stage1_gaps": [
+    {
+      "classification": "MISSING_IMPLEMENTATION",
+      "gap": "MI-2: Durable normal market-feed source/receipt/quality and historical revision provenance."
+    },
+    {
+      "classification": "MISSING_IMPLEMENTATION",
+      "gap": "MI-3: Native HTF close/availability alignment and rejection of future cached observations."
+    },
+    {
+      "classification": "MISSING_IMPLEMENTATION",
+      "gap": "MI-6: Integrity-checked critical-store/config/evidence backup and restore with an off-host seam."
+    },
+    {
+      "classification": "MISSING_IMPLEMENTATION",
+      "gap": "MI-7: Critical storage/journal-unavailable and missing-heartbeat safety alert paths."
+    }
+  ],
+  "closed_audit_gaps": [
+    "MI-1",
+    "MI-4",
+    "MI-5",
+    "PT-1",
+    "PT-2",
+    "PT-3"
+  ],
+  "tests": {
+    "focused_regressions": "854 passed in 147.75s",
+    "final_acceptance_and_recovery": "116 passed in 60.87s",
+    "registry_collection": "46 tests collected",
+    "negative_controls": "Risk, identity, dedup and control mutants detected",
+    "earlier_boundary_regressions": "168 passed in 32.20s (superseded by final verification)"
+  },
+  "test_scope": "Fake venues, temporary Journals, isolated config; no network or production Journal.",
+  "needs_real_runtime_evidence": [
+    "RT-1: Sustained completed-system recovery, latency/resources, alert delivery and durable producer publication.",
+    "RT-2: Operational off-host backup/restore drill after MI-6 is implemented."
+  ],
+  "needs_real_venue_evidence": [
+    "VE-1: Actual account eligibility/permissions, instrument availability, leverage/brackets, commission and rate-budget facts.",
+    "VE-2: Actual balances, positions/orders/fills, monetary completeness, protection, reconciliation/unknown outcomes and read-key permissions."
+  ],
+  "policy_not_configured": [],
+  "deployment_not_performed": [
+    "DP-1: Latest completed-system architecture not deployed/started for first controlled startup."
+  ],
+  "stage1_build_complete": false,
+  "started": false,
+  "deployed": false,
+  "committed": false,
+  "state_updated": true,
+  "next_updated": true,
+  "next_recommended_package": "LUFFY-STAGE1-DATA-PROVENANCE-PIT-R1",
+  "next_status": "RECOMMENDED_NOT_STARTED",
+  "report": "docs/superpowers/reports/2026-10-03-stage1-entry-authority-idempotency-r1.md",
+  "files_changed_manifest": "docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/files-changed.json",
+  "verification": "docs/superpowers/evidence/stage1-entry-authority-idempotency-r1/verification.txt",
+  "graphify": "PASS: local AST-only update; no API calls."
+}

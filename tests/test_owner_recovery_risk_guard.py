@@ -391,9 +391,8 @@ def test_g_previously_approved_entry_during_failed_unhalt_submits_nothing(world,
     pos = k.executor.open(d, sizing.amount, 1.0, 98.0, 103.0, "s", "s")
     assert pos is None and d.skip_reason == expect
     assert [m for m in venue.mutations if m[0] == "create_order"] == []
-    # Known, recorded separately (LUFFY-ENTRY-FENCE-SIDE-EFFECT-V1): leverage
-    # is still applied before the final fence even though no order is sent.
-    assert [m[0] for m in venue.mutations] == ["set_leverage"]
+    # Containment does not change leverage or submit orders.
+    assert venue.mutations == []
 
 
 # ── H: cadence cannot bypass an active Risk halt ────────────────────────────

@@ -1,0 +1,28 @@
+trader/dashboard/owner_reads.py:1017:        with wd_log.open("rb") as f:
+trader/dashboard/owner_api.py:1058:            with p.open("rb") as f:
+trader/cognition/m32_scheme_d_validation.py:660:        with path.open("x", encoding="utf-8") as handle:
+trader/observability/population.py:273:        fd = os.open(directory, os.O_RDONLY)
+trader/observability/store.py:263:    with Path(destination).open("x") as out:
+trader/observability/_supplemental_child.py:42:        with opener.open(f"{url}?{query}", timeout=timeout_s) as resp:
+trader/observability/prospective_execution.py:231:    def create_order(self, symbol, type, side, amount, *args, **kwargs):
+trader/observability/prospective_execution.py:255:            result = self.exchange.create_order(symbol,type,side,amount,*args,**kwargs)
+trader/observability/accounting.py:130:                with path.open('xb') as output:
+trader/observability/accounting.py:193:    with (args.directory / 'worker.lock').open('a') as lock:
+trader/observability/declared.py:177:    with (data/'declared_population.lock').open('a') as lock:
+trader/cognition/research_shadow.py:492:    lock_fd = os.open(str(shadow) + ".lock", os.O_RDWR | os.O_CREAT, 0o600)
+trader/observability/collector_health.py:89:        with Path(path).open('rb') as f: raw=f.read(MAX_HEALTH_BYTES+1)
+trader/observability/investigation.py:1006:    lock = (data / "investigation.lock").open("a")
+trader/owner/ipc.py:107:    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+trader/owner/ipc.py:138:            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+trader/engine/executor.py:359:                o = self.ex.create_order(
+trader/engine/executor.py:460:            order = self.ex.create_order(sym, "market", side_close, amount,
+trader/engine/executor.py:530:            order = self.ex.create_order(sym, "market", side_close, amount,
+trader/engine/entry_authority.py:471:                order = executor.ex.create_order(decision.symbol, 'market',
+trader/engine/control_fence.py:53:    fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
+trader/engine/protective.py:123:    o = ex.create_order(symbol, "market", close_side, amount,
+trader/engine/venue_reads.py:18:    (``create_order``, ``cancel_order``, algo deletes …) are refused before
+trader/engine/recovery.py:113:            order = self.ex.create_order(intent["symbol"], "market", side, amount,
+trader/data/registry_provider.py:127:        with opener.open(request, timeout=timeout_s) as resp:
+trader/engine/reconcile.py:478:            order = exchange.create_order(
+trader/learning/foundation.py:527:        with path.open('x') as f:
+trader/kernel.py:1307:        pos = self.executor.open(

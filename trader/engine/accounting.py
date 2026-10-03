@@ -38,7 +38,8 @@ def safe_fill(fill):
             'order': str(fill.get('order') or info.get('orderId') or ''),
             'realized_pnl': info.get('realizedPnl'),
             'commission': info.get('commission'),
-            'commission_asset': info.get('commissionAsset')}
+            'commission_asset': info.get('commissionAsset'),
+            'venue_symbol': info.get('symbol'), 'instrument_id': fill.get('instrument_id')}
     # Invalid numeric responses must remain serializable missing evidence.
     return {k: (None if isinstance(v, float) and not math.isfinite(v)
                 else v if isinstance(v, (str, int, float, bool, type(None))) else None)
@@ -107,7 +108,13 @@ def reconcile(record, fills, fetch_reason=None):
             ts = number(f['timestamp'])
             if qty <= 0 or price <= 0:
                 raise ValueError('invalid_fill')
-            if norm_symbol(f['symbol']) != record['symbol']:
+            binding = (record['position'].get('entry_identity') or {}).get('execution_binding')
+            if binding:
+                venue_symbol = binding['capability']['record']['instrument_id']['venue_symbol']
+                if (f.get('venue_symbol') != venue_symbol
+                        or (f.get('instrument_id') is not None and f['instrument_id'] != binding['instrument_id'])):
+                    raise ValueError('wrong_canonical_instrument')
+            elif norm_symbol(f['symbol']) != record['symbol']:
                 raise ValueError('wrong_symbol')
             if not record['created_ms'] <= ts <= record['flat_verified_ms']:
                 raise ValueError('fill_outside_intent_window')
@@ -140,6 +147,14 @@ def capture(record, exchange):
     reason = None
     fills = []
     try:
+        binding = (record['position'].get('entry_identity') or {}).get('execution_binding')
+        if binding:
+            from ..data.feed import execution_account_scope
+            cap = binding['capability']
+            if (getattr(exchange, 'id', None) != 'binanceusdm'
+                    or execution_account_scope(exchange) != cap['account_scope']
+                    or exchange.market(record['symbol']).get('id') != cap['record']['instrument_id']['venue_symbol']):
+                raise ValueError('accounting_canonical_identity_mismatch')
         raw = exchange.fetch_my_trades(record['symbol'], since=record['created_ms'], limit=1000)
         if not isinstance(raw, list):
             raise ValueError('invalid_fill_response')

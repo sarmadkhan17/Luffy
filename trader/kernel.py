@@ -126,7 +126,7 @@ class Kernel:
         self.orchestrator = Orchestrator(self.analysts, self.journal,
                                          news_guard=self.news_guard, cfg=cfg)
         self.executor = Executor(self.exchange, self.journal, cfg,
-                                 self.market_type)
+                                 self.market_type, risk_manager=self.risk)
         self.supervisor = Supervisor(self.journal, self.state_machine,
                                      self.executor, self.exchange,
                                      risk_release=self._risk_release)
@@ -854,6 +854,8 @@ class Kernel:
     # ── per-symbol pipeline ───────────────────────────────────────────────
     def _snapshot_for(self, symbol: str,
                       universe: dict | None = None) -> Snapshot | None:
+        from .engine.entry_authority import proposal_binding
+        instrument_binding = proposal_binding(self.journal, symbol)
         dfs = self.feed.fetch_multi(
             symbol, self.cfg["timeframes"]["context"] + [self.cfg["timeframes"]["execution"]])
         exec_tf = self.cfg["timeframes"]["execution"]
@@ -870,7 +872,7 @@ class Kernel:
                         btc_ctx=self._btc_ctx,
                         universe=universe,
                         derivs=self._derivs_for(symbol),
-                        market=self._market_for())
+                        market=self._market_for(), instrument_binding_json=instrument_binding)
 
     def _refresh_btc_context(self) -> None:
         """Leader context computed once per cycle, shared by all scouts."""
@@ -1296,13 +1298,20 @@ class Kernel:
                 d.skip_reason = 'versioned entry identity unverified'
                 return False
             identity.update(versioned_binding)
+        try:
+            permission = self.risk.authorize_entry(d, sizing.amount, a, sl, tp, top_strategy or "orchestrator",
+                                                  identity=identity, reference=reference)
+        except (ValueError, KeyError, TypeError, AttributeError) as exc:
+            d.skip_reason = 'final Risk: ' + str(exc)
+            return False
         pos = self.executor.open(
             d, sizing.amount, a, sl, tp,
             strategy_id=top_strategy or "orchestrator",
             strategy_name=top_strategy and next(
                 (s.get("strategy_name", "") for s in d.strategy_signals
                  if s.get("strategy_id") == top_strategy), "consensus"),
-            exec_mode="live", entry_identity=identity, reference=reference)
+            exec_mode="live", entry_identity=identity, reference=reference,
+            risk_permission=permission)
         return pos is not None
 
     def _install_version(self, spec, ev: dict, analyst, extra: dict,
@@ -1445,7 +1454,7 @@ class Kernel:
             ce.record_margin(self.journal, ce.margin_observation(
                 resp.get("body"), request_url=resp.get("request_url"),
                 request_start_ms=resp.get("request_start_ms"),
-                received_ms=resp.get("received_ms")))
+                received_ms=resp.get("received_ms"), account_scope=resp.get("account_scope")))
         except Exception as e:
             log.debug(f"margin observation not recorded: {e}")
         try:
@@ -1453,7 +1462,7 @@ class Kernel:
             if obs is not None and obs.observation_id != getattr(
                     self, "_position_snapshot_of", None):
                 ce.record_snapshot(self.journal, ce.position_snapshot(
-                    obs, getattr(self, "_position_rows", None)),
+                    obs, getattr(self, "_position_rows", None), account_scope=getattr(self, "_position_account_scope", None)),
                     at_ms=time.time_ns() // 1_000_000)
                 self._position_snapshot_of = obs.observation_id
         except Exception as e:
@@ -1794,6 +1803,8 @@ class Kernel:
         lot-step rounding is never mistaken for an exit.
         """
         try:
+            from .data.feed import execution_account_scope
+            position_scope = execution_account_scope(self.exchange)
             request_start_ms = time.time_ns() // 1_000_000
             position_rows = self.exchange.fetch_positions()
             response_received_ms = time.time_ns() // 1_000_000
@@ -1811,6 +1822,7 @@ class Kernel:
             else:
                 self.position_observation = observation
                 self._position_rows = position_rows   # the rows it was built from
+                self._position_account_scope = position_scope
             ex_amt = {norm_symbol(p["symbol"]): float(p.get("contracts") or 0)
                       for p in position_rows
                       if float(p.get("contracts") or 0) > 0}
@@ -2130,12 +2142,15 @@ class Kernel:
             import requests
             from .core.config import Env
             key, secret = Env.binance_keys()
+            from .data.feed import execution_account_scope
+            account_scope = execution_account_scope(self.exchange)
+            if account_scope is None or key != getattr(self.exchange, 'apiKey', None):
+                return None
             q = f"timestamp={int(time.time()*1000)}&recvWindow=10000"
             sig = _hmac.new(secret.encode(), q.encode(), hashlib.sha256).hexdigest()
-            base = self.exchange.urls.get("api", {}).get("fapiPrivate",
-                   "https://demo-fapi.binance.com/fapi/v1").rsplit("/", 1)[0]
-            url = (f"{base}/fapi/v3/account" if "/v1" in base
-                   else f"{base}/v3/account")
+            from .observability.portfolio_observation import trading_source
+            _, source_ref = trading_source(self.exchange)
+            url = source_ref + '/fapi/v3/account'
             sent_ms = time.time_ns() // 1_000_000
             r = requests.get(url, params=q + f"&signature={sig}",
                              headers={"X-MBX-APIKEY": key}, timeout=10)
@@ -2145,14 +2160,14 @@ class Kernel:
             try:
                 self._account_response = {
                     "body": getattr(r, "content", None), "request_url": url,
-                    "request_start_ms": sent_ms,
+                    "request_start_ms": sent_ms, "account_scope": account_scope,
                     "received_ms": time.time_ns() // 1_000_000}
             except Exception:
                 self._account_response = None
             tmb = float(r.json().get("totalMarginBalance") or 0)
             if tmb > 0:
                 self._balance_read = {"basis": "venue_total_margin_balance",
-                                      "errors": [], "completed_at": time.time()}
+                                      "errors": [], "completed_at": time.time(), "account_scope": account_scope}
                 return tmb
             v3_error = "venue_account_nonpositive"
         except Exception as e:
@@ -2237,7 +2252,7 @@ class Kernel:
         try:
             read = getattr(self, "_balance_read", None) or {}
             recorded = dt.datetime.now(dt.timezone.utc)
-            obs = {"schema": 2, "currency": "USDT", "attempted_at": attempted.isoformat(),
+            obs = {"schema": 2, "currency": "USDT", "account_scope": (getattr(self, "_balance_read", None) or {}).get("account_scope"), "attempted_at": attempted.isoformat(),
                    "recorded_at": recorded.isoformat(), "risk_input": balance,
                    "authoritative": fresh is not None,
                    "attempt_errors": [e for e in read.get("errors", []) if e],

@@ -83,11 +83,8 @@ def heal(v):
 
 
 def _entry_probe(k):
-    d = Decision("d-probe", "c-probe", "ETH/USDT", Action.BUY, .7, .2, .8, [], [])
-    before = sum(m[0] == "create_order" for m in k.exchange.mutations)
-    pos = k.executor.open(d, 1.0, 1.0, 90.0, 110.0, "s", "s")
-    orders = sum(m[0] == "create_order" for m in k.exchange.mutations) - before
-    return pos, d.skip_reason, orders
+    from tests.test_kernel_boot_recovery import _entry_probe as probe
+    return probe(k)
 
 
 def _events(journal, name):
@@ -361,9 +358,8 @@ def test_entry_blocked_during_recheck_and_after_refusal_allowed_after_activation
     assert during and all(p[0] is None and p[2] == 0 for p in during)
     assert {p[1] for p in during} == {"state=RECOVERY: entries blocked"}
     pos, reason, orders = _entry_probe(k)            # ordinary guards only
-    assert orders == 1 and reason == ""
-    entry = [m for m in venue.mutations if m[0] == "create_order"][-1]
-    assert entry[1:3] == ("ETH/USDT", "buy") and entry[4]["reduceOnly"] is False
+    assert pos is None and orders == 0 and reason == 'exact_risk_permission_required'
+
 
 
 def test_entry_blocked_when_recovery_refused(world, monkeypatch):

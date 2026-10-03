@@ -168,6 +168,14 @@ def _status(journal):
 
 def _entry_probe(k):
     """Offer a real entry to the real Executor; only the fence may stop it."""
+    from tests.authority_legacy_fixtures import seed
+    if not k.journal.query("SELECT 1 FROM strategies WHERE id='s'"):
+        seed(k.journal, 's')
+    else:
+        from trader.strategy import legacy_authority as L
+        from tests.authority_legacy_fixtures import grant
+        if not k.journal.query(f"SELECT 1 FROM {L.TABLE} WHERE strategy_id='s'"):
+            grant(k.journal, 's')
     d = Decision("d-probe", "c-probe", "ETH/USDT", Action.BUY, .7, .2, .8, [], [])
     before = len([m for m in k.exchange.mutations if m[0] == "create_order"])
     pos = k.executor.open(d, 1.0, 1.0, 90.0, 110.0, "s", "s")
@@ -240,7 +248,7 @@ def test_c_pending_entry_with_unreadable_order_status(world, monkeypatch):
     assert k.executor.recovery.pending()["order_id"] == "entry-1"  # never resubmitted
     assert venue.mutations == []
     pos, reason, orders = _entry_probe(k)
-    assert pos is None and reason == "execution_recovery_pending" and orders == 0
+    assert pos is None and reason == "state=RECOVERY: entries blocked" and orders == 0
 
 
 # ── D. wrong-side stop ─────────────────────────────────────────────────────

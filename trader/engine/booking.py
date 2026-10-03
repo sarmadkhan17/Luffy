@@ -57,7 +57,10 @@ def assess(evidence):
         expected = number(evidence['quantity'])
         if expected <= 0 or not evidence['order_id'] or not fs:
             raise ValueError('missing_order_or_quantity')
+        binding = evidence.get('execution_binding')
         for f in fs:
+            if binding and f.get('venue_symbol') != binding['capability']['record']['instrument_id']['venue_symbol']:
+                raise ValueError('canonical_fill_attribution_mismatch')
             if not f.get('id') or str(f['id']) in seen:
                 raise ValueError('missing_or_duplicate_fill_identity')
             seen.add(str(f['id']))
@@ -111,6 +114,13 @@ def persist(db, trade_id, kind, before, evidence=None):
                     'authority': 'EXECUTION_EVIDENCE'}
             except (ValueError, TypeError, KeyError):
                 evidence['exit_risk_evidence'] = {'status': 'UNAVAILABLE', 'authority': 'EXECUTION_EVIDENCE'}
+    try:
+        identity_row = db.execute('SELECT entry_identity_json FROM trades WHERE id=?',(trade_id,)).fetchone()
+        recorded_identity = json.loads(identity_row['entry_identity_json'] or '{}')
+        if recorded_identity.get('execution_binding'):
+            evidence['execution_binding'] = recorded_identity['execution_binding']
+    except (TypeError, ValueError):
+        evidence['execution_binding'] = {'status':'UNKNOWN'}
     if kind in ('close:sl_fill', 'close:tp_fill'):
         evidence['exit_authority'] = 'PROTECTION'
     elif kind == 'close:panic' or evidence.get('purpose') == 'panic_exit':
