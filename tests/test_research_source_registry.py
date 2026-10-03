@@ -449,6 +449,7 @@ def test_only_offline_research_modules_read_the_registry():
     # no Kernel, Attention, Analyst, Risk, Execution or journal caller;
     # research_evidence.py binds collected sources to the registry
     assert callers == ["cognition/_research_shadow_child.py",  # existing read-only registry pinning
+                       "cognition/external_sources.py",  # research-only metadata fact abstraction
                        "cognition/research_evidence.py",
                        "cognition/research_plan.py",
                        # offline unreadable-health plan: read-only

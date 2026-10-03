@@ -828,9 +828,14 @@ def test_nothing_in_the_live_path_calls_it():
     # the journal owns the storage primitive; research_result.py is the
     # offline result consumer, research_run.py the offline runner and
     # research_bank.py the offline bank filer, each guarded by its own test
-    assert callers == ["cognition/research_bank.py",
+    # Existing shadow/capture/trace/bridge consumers retain exact evidence
+    # bindings. Keep this an exact caller list, rather than allowing live use.
+    assert callers == ["cognition/_research_shadow_child.py",
+                       "cognition/research_bank.py",
                        "cognition/research_result.py",
-                       "cognition/research_run.py", "core/journal.py"]
+                       "cognition/research_run.py", "core/journal.py",
+                       "learning/capture.py", "learning/capture_runtime.py",
+                       "observability/intelligence_trace.py", "research/predictive_bridge.py"]
     assert "research_evidence import" not in (root / "core/journal.py").read_text()
 
 

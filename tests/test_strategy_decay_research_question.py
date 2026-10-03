@@ -459,6 +459,7 @@ def test_nothing_in_the_live_path_calls_it():
                # allow-list); their own tests guard that nothing live calls
                # them
                if p.name not in ("research_question.py", "research_plan.py",
+                                 "external_sources.py",  # research-only question routing
                                  "research_families.py",
                                  "_research_shadow_child.py",
                                  "research_evidence.py", "research_result.py",

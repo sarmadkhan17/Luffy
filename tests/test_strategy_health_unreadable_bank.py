@@ -630,13 +630,14 @@ def test_decay_bank_rejects_unreadable_chain(tmp_path):
     with pytest.raises(rb.ResearchBankError, match="^source_missing:result$"):
         rb._chain(j, urun["run_id"], row["result_id"],
                   stored={"receipt": {}, "telemetry": {}})
-    # an unreadable object placed in research_bank_objects is refused
+    # Shared Bank storage isolates verified schema families. An unreadable
+    # object never becomes a decay object merely by being in the same table.
     k = _copy(tmp_path, j, "forged.db")
     with k._tx() as c:
         c.execute("INSERT INTO research_bank_objects SELECT * FROM "
                   f"{TABLE}")
-    with pytest.raises(rb.ResearchBankError, match="^keys$"):
-        rb.load(k)
+    assert rb.load(k) == []
+    assert k.research_bank_objects(schema=ub.SCHEMA)
 
 
 def test_unreadable_bank_rejects_decay_chain(tmp_path):
@@ -683,7 +684,8 @@ def test_filing_leaves_every_other_table_unchanged(tmp_path, verdicts):
     regs = j.query("SELECT * FROM research_registrations ORDER BY rowid")
     assert regs
     capture_tables = ("learning_registrations", "learning_source_blobs",
-                      "learning_actions", "learning_outcome_captures")
+                      "learning_actions", "learning_outcome_captures",
+                      "learning_produced_chains", "learning_decision_source_manifests")
     retained_captures = _tables(j, only=capture_tables, skip=())
     before = _tables(j, skip=(TABLE, "research_registrations") + capture_tables)
     decay_bank = rb.load(j)

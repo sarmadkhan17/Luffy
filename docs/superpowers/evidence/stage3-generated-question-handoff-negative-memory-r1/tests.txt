@@ -1,0 +1,53 @@
+Interpreter: /mnt/luffy-data/luffy/production/venv/bin/python
+Workdir: /mnt/luffy-data/luffy/stage7-r2
+All retrieval fixtures offline. No production process/Journal or venue accessed.
+
+Focused regression batch A:
+test_research_source_registry.py
+test_strategy_decay_research_question.py
+test_strategy_health_observation.py
+test_strategy_decay_research_plan.py
+test_strategy_decay_research_evidence.py
+424 passed; 2 stale exact-caller assertions corrected and individually retested PASS.
+Unique final coverage: 426 cases.
+
+Focused regression batch B:
+test_strategy_decay_research_run.py
+test_strategy_decay_research_bank.py
+test_strategy_decay_research_recall.py
+254 passed; 2 exact-caller assertions corrected and individually retested PASS.
+Unique final coverage: 256 cases.
+
+Focused regression batch C:
+test_strategy_health_unreadable_question.py
+test_strategy_health_unreadable_run.py
+test_strategy_health_unreadable_bank.py
+test_cognition_attention.py
+test_investigation_research_family.py
+test_predictive_research_bridge.py
+test_single_creation_path.py
+310 passed; schema isolation expectation and 3 existing capture-table expectations
+corrected and individually retested: 4 passed.
+Unique final coverage: 314 cases.
+
+Final router / real generated-question acceptance:
+python -m pytest -q --tb=short tests/test_generated_question_handoff_negative_memory.py tests/test_external_research_router.py
+39 passed in 31.27s (12 new handoff/memory cases + 27 router cases).
+
+Regular Journal Bank capture and existing inconclusive memory:
+test_historical_outcome_capture.py::test_automatic_research_bank_chain_capture
+test_historical_outcome_capture.py::test_unreadable_research_bank_exact_chain_captured
+test_learning_foundation.py::test_exact_prior_inconclusive_research_recalled_and_tamper_refused
+3 passed, 46 deselected in 2.25s.
+
+Total distinct focused cases verified: 426 + 256 + 314 + 39 + 3 = 1038.
+No single-process full-suite result is claimed. Combined batch exceeded its process
+descriptor limit due to retained fixture SQLite connections; split processes completed.
+The process-only ulimit adjustment did not alter any repository or worker resource policy.
+
+Collection limitation: tests/test_attention_kernel_wiring.py imports the absent
+tests.test_attention_supplemental. Available Attention / investigation interfaces passed.
+
+Python compilation and git diff --check: PASS.
+STATE/NEXT YAML and next package consistency: validated separately after update.
+Graphify AST-only update: graphify-update.txt.

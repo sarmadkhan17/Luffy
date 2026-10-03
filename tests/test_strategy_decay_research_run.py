@@ -794,7 +794,9 @@ def test_nothing_in_the_live_path_calls_it():
                        "cognition/research_cost.py",
                        # the research shadow parent verifies stored runs
                        # (from_json / row_for only) during recovery
-                       "cognition/research_shadow.py", "core/journal.py"]
+                       "cognition/research_shadow.py", "core/journal.py",
+                       "learning/capture.py", "learning/capture_runtime.py",
+                       "research/predictive_bridge.py"]
     assert "research_run import" not in (root / "core/journal.py").read_text()
 
 

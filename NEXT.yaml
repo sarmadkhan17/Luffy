@@ -30,55 +30,47 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
-  id: LUFFY-STAGE3-QUESTION-DRIVEN-RESEARCH-ROUTER-R1
-  type: IMPLEMENTATION
-  status: RECOMMENDED_NOT_STARTED
+  id: LUFFY-STAGE3-CLOSURE-R2
+  type: READ_ONLY_CLOSURE_CHECK
+  status: READY
   objective: >-
-    Close the one mandatory Stage3 architecture gap before Stage8: take a
-    registered ResearchQuestion, route it to appropriate authoritative source
-    classes, discover/select sources through a typed external Source Registry,
-    perform bounded metadata search/retrieval with deterministic filter/dedup,
-    and store structured evidence in the existing Research Bank.
-
-  preserve:
-    - existing Attention/investigation semantics
-    - existing internal research-source-registry.v1 contracts
-    - existing Scraper/DeepCrawler as reusable retrievers where appropriate
-    - predictive research bridge and quantitative/referee boundaries
-    - Stage5-7 architecture freeze
-    - zero LLM dependency in the normal live trading loop
-    - research has zero Risk/Execution/trading authority
-
-  implementation_boundary:
-    - extend/reuse existing research-question and source abstractions; do not create a second Research Bank or validation system.
-    - external source metadata must represent source_id, type, domains, primary/secondary, credibility class, cost, access method, historical depth, rate limits and known weaknesses without inventing unknown values.
-    - Source Router maps question type/scope to source classes; it does not decide truth.
-    - Search Broker/retrievers are asynchronous/research-side and bounded by query/page/time/cost budgets.
-    - deterministic metadata filtering, URL/content dedup and cheap relevance happen before optional LLM synthesis.
-    - evidence retains URL/source, retrieval/availability time, content hash, question id, query/provenance and extraction status.
-    - paid-source adoption requires owner approval; no new paid source is authorized by this package.
-    - failed/empty/unavailable retrieval is explicit evidence, not a fabricated quiet result.
-    - external evidence cannot directly create a StrategyVersion or predictive edge.
-
+    Determine whether SDD v3.2 Stage3 Attention and Research Intelligence is
+    BUILD COMPLETE after the question-driven router and generated-question
+    handoff/negative-memory implementation. Read and verify existing architecture;
+    do not implement or require real-world maturity where SDD requires architecture.
+  inputs:
+    - SDD.md
+    - STATE.yaml
+    - docs/superpowers/reports/2026-10-03-stage3-question-driven-research-router-r1.md
+    - docs/superpowers/reports/2026-10-03-stage3-generated-question-handoff-negative-memory-r1.md
   acceptance:
-    - one normal registered research question selects source classes without a user-supplied URL.
-    - at least one bounded external retriever path uses the router/registry and records exact provenance.
-    - deterministic filter/dedup prevents duplicate evidence work.
-    - structured Research Bank object links question, sources, evidence, limitations, cost/status and next questions.
-    - unsupported question/source class fails closed.
-    - no network call occurs in the live trading decision loop.
-    - no Risk, Execution, StrategySpec, StrategyVersion or trading authority changes.
-    - existing predictive bridge only consumes research results after its own provenance and quantitative gates.
-    - tests prove restart/idempotency and bounded resource behavior.
-
+    - Classify Attention, research-question generator, Source Router, Source Registry, bounded broker/retrievers, relevance/dedup, Research Bank, cost/budget and failed-research memory against the SDD Stage3 exit.
+    - Trace existing event to real shadow producer to persisted exact question to read-only generated-question adapter to worker/router/registry/search/evidence/Bank, without manual question registration or supplied URLs.
+    - Verify exact source/registration/invocation provenance and restart idempotency; corrupt or unverifiable questions fail closed.
+    - Verify negative historical attempts remain auditable and do not suppress independent questions without registered policy; no production reconsideration policy was installed.
+    - Verify immutable positive content reuse retains original identity and timestamps; changed truthful search evidence becomes a separate attempt.
+    - Verify existing source metadata unknowns, paid-source owner approval and unsupported-class refusal boundaries.
+    - Verify resource bounds and measured cost; classify missing calibrated policies separately from missing architecture.
+    - Verify descriptive evidence cannot bypass PredictiveHypothesis transformation, quantitative experiment, protected evaluation, Referee or Factory.
+    - Verify collectors remain reusable research-side components and have zero Risk, allocation, StrategySpec, StrategyVersion, execution or live-loop LLM authority.
+    - Treat future Attention trigger producers supported by existing interfaces as extension/policy/evidence maturity unless new architecture is required.
+    - BUILD COMPLETE requires no missing implementation and a satisfiable normal SDD Stage3 exit; policy, real-evidence and deployment blockers may remain.
   constraints:
-    - no deployment or restart
-    - no trading activation or venue orders
-    - no Risk or StrategySpec changes
-    - no Scheme-D pilot/benchmark/full validation
-    - no cloud or paid-data spend
-    - no Stage5-7 redesign
+    - read only; do not edit, commit or deploy
+    - no trading activation, orders, Scheme-D, cloud or paid-source spend
+    - no Stage5-7 architecture change or Stage3 redesign
+  decision:
+    - Return LUFFY_STAGE3_CLOSURE_R2 PASS or BLOCKED with exact missing implementation and policy/evidence/deployment blockers.
+    - Recommend LUFFY-STAGE8-OWNER-OS-CLOSURE-R1 only if this closure establishes Stage3 BUILD COMPLETE.
 
-after_completion:
-  - run a narrow Stage3 closure check only.
-  - if Stage3 exit is satisfied, Stage8 architecture may start while Stage1/2/4 operational/evidence maturity continues separately.
+previous_implementation:
+  id: LUFFY-STAGE3-GENERATED-QUESTION-HANDOFF-AND-NEGATIVE-MEMORY-R1
+  status: COMPLETE_TESTED_UNCOMMITTED_UNDEPLOYED
+  result: PASS
+  tests: 1038 focused cases verified across isolated batches and targeted corrections
+  evidence:
+    - docs/superpowers/reports/2026-10-03-stage3-generated-question-handoff-negative-memory-r1.md
+    - docs/superpowers/evidence/stage3-generated-question-handoff-negative-memory-r1/tests.txt
+  trading_authority_changed: false
+  production_retry_policy_added: false
+  real_order_submissions: 0

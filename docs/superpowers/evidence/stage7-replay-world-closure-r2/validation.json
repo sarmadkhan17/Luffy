@@ -1,0 +1,100 @@
+{
+  "package": "LUFFY-STAGE7-NORMAL-REPLAY-AND-WORLD-CONSUMER-CLOSURE-R2",
+  "status": "PASS",
+  "base": "50a4545484798207e4b126a0b7a0547ea9b0ec79",
+  "workspace": "/mnt/luffy-data/luffy/stage7-r2",
+  "astra_r4_gaps": {
+    "decision_outcome_continuity": "CLOSED",
+    "world_model_learned_confidence": "CLOSED"
+  },
+  "missing_architecture": [],
+  "normal_end_to_end": {
+    "tests": 14,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "unique_passing_checks": 386,
+  "regressions": {
+    "initial_run": {
+      "tests": 372,
+      "failures": 2,
+      "errors": 0,
+      "skipped": 0
+    },
+    "resolved_reruns": {
+      "tests": 2,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "remaining_failures": [],
+    "corrected_checks": [
+      "Learning cannot directly import Risk; receipt verification uses the existing portfolio boundary",
+      "NO_ACTION refusal cannot be relabeled a Risk-blocked OPEN"
+    ]
+  },
+  "final_signal_binding_regressions": {
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "excluded_historical_module": {
+    "path": "tests/test_attention_kernel_wiring.py",
+    "reason": "Base lacks imported tests.test_attention_supplemental; normal Kernel execution boundary covered in runtime portfolio suite"
+  },
+  "real_shadow": {
+    "attention_scans_inspected": 64,
+    "counts": {
+      "allocation_registrations": 0,
+      "governed_overlays_applicable": 0,
+      "replay_complete": 0,
+      "replay_incomplete": 0,
+      "replay_partial": 0,
+      "resolved_outcomes": 0,
+      "risk_linked_registrations": 0,
+      "scan_registrations": 0,
+      "unassessable": 0,
+      "world_model_claims_queried": 0
+    },
+    "exact_missing_roles": {},
+    "limit": 64,
+    "mode": "READ_ONLY_SHADOW",
+    "production_mutations": 0,
+    "real_order_submissions": 0,
+    "samples": [],
+    "source": "/mnt/luffy-data/luffy/production/data/luffy.db",
+    "status": "PASS",
+    "trading_behavior_changed": false,
+    "world_claim_query_basis": "Retained normal Attention queries; no production WorldClaim emitter or production WorldModel learning rule exists."
+  },
+  "production_rules_unchanged": true,
+  "stage7_build_complete": true,
+  "trading_behavior_changed": false,
+  "real_order_submissions": 0,
+  "committed": false,
+  "deployed": false,
+  "safe_to_review": true,
+  "files_changed": [
+    "STATE.yaml",
+    "docs/NEXT_SESSION.md",
+    "tests/test_decision_sources.py",
+    "tests/test_verified_outcome_producers.py",
+    "trader/cognition/attention.py",
+    "trader/learning/capture.py",
+    "trader/learning/capture_runtime.py",
+    "trader/learning/consumers.py",
+    "trader/learning/decision_sources.py",
+    "trader/learning/producers.py",
+    "trader/observability/attention.py",
+    "trader/observability/investigation.py",
+    "trader/portfolio/current.py",
+    "trader/portfolio/runtime.py",
+    "tests/test_stage7_replay_world_closure_r2.py",
+    "scripts/stage7_replay_world_shadow.py",
+    "docs/superpowers/reports/2026-10-03-stage7-normal-replay-world-consumer-closure-r2.md",
+    "docs/superpowers/evidence/stage7-replay-world-closure-r2/",
+    "graphify-out/ (generated code graph and caches)"
+  ]
+}

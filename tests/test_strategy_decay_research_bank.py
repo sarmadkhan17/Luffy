@@ -685,10 +685,12 @@ def test_nothing_in_the_live_path_calls_it():
                        # (from_json / row_for only) during recovery
                        "cognition/research_shadow.py",
                        "cognition/research_shadow_report.py",
+                       "cognition/research_shadow_store.py",  # isolated store capture hook
                        "core/journal.py",
                        "learning/capture.py",
                        "learning/capture_runtime.py",
-                       "learning/foundation.py"]
+                       "learning/foundation.py",
+                       "research/external_research.py"]
     assert "research_bank import" not in (root / "core/journal.py").read_text()
 
 

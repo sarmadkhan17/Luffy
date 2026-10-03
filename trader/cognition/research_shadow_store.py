@@ -293,6 +293,11 @@ class ShadowJournal(Journal):
     """A Journal whose main database is the shadow store and whose only
     source access is the read-only views above. Single-thread."""
 
+    def _capture_research_bank(self, conn, row, recorded_at_ms):
+        # This research-only database has no learning target tables or authority.
+        # Keep Bank persistence/registration; do not import forbidden consumers.
+        return None
+
     def _conn(self) -> sqlite3.Connection:
         if threading.get_ident() != self._owner:
             raise ShadowStoreError("shadow_journal_single_thread")

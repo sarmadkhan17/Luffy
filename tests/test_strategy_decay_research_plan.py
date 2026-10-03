@@ -388,7 +388,10 @@ def test_nothing_in_the_live_path_calls_it():
     # offline evidence-collection consumer, research_run.py the offline
     # runner and research_bank.py the offline bank filer, each guarded by
     # its own test
-    assert callers == ["cognition/research_bank.py",
+    # The existing isolated shadow producer also names this contract in its
+    # exact import allow-list; it cannot import live authority modules.
+    assert callers == ["cognition/_research_shadow_child.py",
+                       "cognition/research_bank.py",
                        "cognition/research_evidence.py",
                        "cognition/research_run.py", "core/journal.py"]
     journal_src = (root / "core/journal.py").read_text()

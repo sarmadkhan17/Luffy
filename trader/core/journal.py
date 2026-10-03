@@ -1279,17 +1279,26 @@ class Journal:
                       f"recorded_at_ms) VALUES "
                       f"({','.join('?' * (len(values) + 1))})",
                       values + (recorded_at_ms,))
-            from ..learning import capture as lc, capture_runtime as lr
-            lc.safely(c, 'research-bank:'+row['bank_object_id'], lr.research_bank, row, recorded_at_ms, self)
+            self._capture_research_bank(c, row, recorded_at_ms)
         return "inserted"
 
-    def research_bank_objects(self, run_id: str | None = None) -> list[dict]:
-        """Stored research-bank-object rows in insertion order."""
+    def _capture_research_bank(self, conn, row, recorded_at_ms):
+        """Regular Journal capture; isolated research stores override this hook."""
+        from ..learning import capture as lc, capture_runtime as lr
+        lc.safely(conn, 'research-bank:'+row['bank_object_id'], lr.research_bank, row, recorded_at_ms, self)
+
+    def research_bank_objects(self, run_id: str | None = None, *,
+                              schema: str = "research-bank-object.v1") -> list[dict]:
+        """Stored objects of one contract in insertion order.
+
+        Existing consumers retain their verified v1 family. External evidence
+        shares this Bank store but must be read through its own contract.
+        """
         if run_id is None:
             return self.query("SELECT * FROM research_bank_objects "
-                              "ORDER BY rowid")
+                              "WHERE schema=? ORDER BY rowid", (schema,))
         return self.query("SELECT * FROM research_bank_objects "
-                          "WHERE run_id=? ORDER BY rowid", (run_id,))
+                          "WHERE run_id=? AND schema=? ORDER BY rowid", (run_id, schema))
 
     def research_bank_registrations(self, record_type: str,
                                     scope_kind: str,
@@ -1305,8 +1314,8 @@ class Journal:
             "r.envelope_json FROM research_bank_objects b "
             "LEFT JOIN research_registrations r ON r.record_type=? "
             "AND r.record_id=b.bank_object_id "
-            "WHERE b.scope_kind=? AND b.scope_id=? ORDER BY b.bank_object_id",
-            (record_type, scope_kind, scope_id))
+            "WHERE b.scope_kind=? AND b.scope_id=? AND b.schema=? ORDER BY b.bank_object_id",
+            (record_type, scope_kind, scope_id, record_type))
 
     def research_bank_object(self, bank_object_id: str) -> dict | None:
         """One stored research-bank-object row, or None."""

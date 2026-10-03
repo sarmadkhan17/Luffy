@@ -92,15 +92,24 @@ stage_status:
       - real relationship/calibration coverage is not economically proven.
 
   stage_3_attention_and_research:
-    state: IMPLEMENTED
+    state: TESTED
     build_complete: false
-    formal_closure: AUDITED_MANDATORY_GAP
+    formal_closure: PENDING_STAGE3_CLOSURE_R2
+    runtime_maturity: NOT_PROVEN_FOR_EXTERNAL_RESEARCH
     evidence:
       - trader/cognition/attention.py
       - trader/cognition/investigation.py
       - trader/cognition/research_bank.py
       - trader/cognition/research_next_question.py
       - trader/cognition/research_sources.py
+      - trader/cognition/external_sources.py
+      - trader/research/external_research.py
+      - trader/research/generated_question_source.py
+      - tests/test_generated_question_handoff_negative_memory.py
+      - docs/superpowers/reports/2026-10-03-stage3-generated-question-handoff-negative-memory-r1.md
+      - tests/test_external_research_router.py
+      - docs/superpowers/reports/2026-10-03-stage3-question-driven-research-router-r1.md
+      - docs/superpowers/evidence/stage3-question-driven-research-router-r1/tests.txt
       - trader/observability/attention.py
       - trader/observability/investigation.py
       - trader/observability/investigation_research.py
@@ -114,15 +123,23 @@ stage_status:
       - descriptive investigation results cannot directly become predictive edge.
       - the predictive bridge can produce bounded falsifiable hypotheses and route supported experiment shapes through the existing quantitative planner/referee path.
       - Stage7 governed Attention and research-priority consumer state exists for future registered rules.
+      - Registered research-question.v1 strategy-decay questions select academic source classes without owner URLs; unsupported types/scopes/classes fail closed.
+      - A typed free-only external source catalog reuses internal fact states and records all SDD 12.4 fields without inventing credibility, depth or provider limits.
+      - The opt-in asynchronous research worker performs bounded Crossref metadata search/retrieval and reuses DeepCrawler HTML extraction after deterministic relevance and URL/content dedup.
+      - External evidence objects share the existing Research Bank table and registration receipts; legacy Bank/recall readers retain their own contract family.
+      - The enabled worker reads exact persisted shadow-producer questions through a read-only source adapter, including original registration, source snapshot and invocation provenance; it does not import or re-register questions.
+      - Durable request claims/results and cross-process locking resume the same question without duplicate attempts or Bank objects; interrupted requests remain explicit unavailable historical evidence.
+      - Negative attempts are question-scoped historical memory; a later independent question performs bounded search again without a registered reconsideration policy. The production reconsideration registry is empty.
+      - Positive retrieval reuse requires exact newly searched metadata identity and retains original response hashes and timestamps; negative outcomes never qualify for cross-question reuse.
+      - Query/page/time/byte/storage bounds, zero paid spend and zero LLM calls are tested; no live-loop network or trading authority was added.
+      - The existing predictive bridge rejects the external-evidence contract and retains its independent provenance and quantitative gates.
     gaps:
-      - mandatory architecture: no question-driven Source Router maps a research question to authoritative source classes.
-      - mandatory architecture: research-source-registry.v1 is internal-only; there is no complete external Source Registry implementing SDD 12.4 metadata/selection.
-      - mandatory architecture: no normal Search Broker/retriever path takes a registered question through metadata search, deterministic filtering/deduplication and bounded evidence collection.
-      - existing Scraper/DeepCrawler are useful external collectors but remain feed/seed/frontier driven rather than question-driven, so they do not satisfy the SDD Stage3 exit by themselves.
-      - automatic research-question generation exists for selected families/outcomes but does not yet cover the full SDD question-driven external evidence loop.
+      - Stage3 formal build closure awaits LUFFY-STAGE3-CLOSURE-R2; the R1 closure defects are implemented and tested, not yet independently closed.
+      - External research is TESTED with offline HTTP fixtures; the worker is not deployed and production usefulness/network reliability is not PROVEN.
+      - Automatic question generation and source coverage remain limited to registered supported families; broader trigger/source coverage is operational/evidence maturity work.
       - full dynamic connected-account observation coverage and broader Attention trigger coverage remain operational/evidence maturity gaps.
       - real eligible Research Bank sources for the predictive bridge are absent in current production data.
-      - usefulness/resource-bound policies remain parked or evidence-blocked.
+      - usefulness/adaptive-priority policies remain parked or evidence-blocked; external collection hard resource bounds are TESTED.
 
   stage_4_quant_falsification:
     state: TESTED
@@ -410,7 +427,64 @@ completed_stage3_4_pre_stage8_closure_audit_r1:
     - predictive research bridge and final Stage5-7 lineage.
 
 current_active_work:
-  id: LUFFY-STAGE3-QUESTION-DRIVEN-RESEARCH-ROUTER-R1
-  type: IMPLEMENTATION
-  status: RECOMMENDED_NOT_STARTED
-  purpose: Close the one mandatory Stage3 architecture gap before Stage8 by connecting registered research questions to authoritative source classes, external source registry/search/retrieval, deterministic relevance/dedup and structured Research Bank evidence without giving research trading authority.
+  id: LUFFY-STAGE3-CLOSURE-R2
+  type: READ_ONLY_CLOSURE_CHECK
+  status: READY
+  purpose: Recheck the SDD Stage3 exit after repairing generated-question handoff and negative-memory suppression; do not implement, deploy or advance directly to Stage8.
+
+completed_stage3_question_driven_research_router_r1:
+  package: LUFFY-STAGE3-QUESTION-DRIVEN-RESEARCH-ROUTER-R1
+  baseline_head: 06d331b6c86566e4bf8220984a30bea75ce99975
+  state: TESTED
+  missing_architecture: []
+  narrow_stage3_closure: SUPERSEDED_BY_CLOSURE_R1_BLOCKED
+  can_start_stage8_architecture: false
+  trading_authority_changed: false
+  evidence:
+    - trader/cognition/external_sources.py
+    - trader/research/external_research.py
+    - tests/test_external_research_router.py
+    - docs/superpowers/reports/2026-10-03-stage3-question-driven-research-router-r1.md
+    - docs/superpowers/evidence/stage3-question-driven-research-router-r1/tests.txt
+  next_recommended_package: LUFFY-STAGE3-CLOSURE-R2
+  boundary:
+    - Completion is architecture/test evidence, not production deployment, research usefulness, predictive edge or trading readiness.
+    - Stage1/2/4 operational/evidence maturity and Stage5-7 calibration remain separate; Scheme-D full validation remains unauthorized.
+
+completed_stage3_generated_question_handoff_and_negative_memory_r1:
+  package: LUFFY-STAGE3-GENERATED-QUESTION-HANDOFF-AND-NEGATIVE-MEMORY-R1
+  baseline_head: 06d331b6c86566e4bf8220984a30bea75ce99975
+  base: Current uncommitted LUFFY-STAGE3-QUESTION-DRIVEN-RESEARCH-ROUTER-R1
+  result: PASS
+  status: COMPLETE_TESTED_UNCOMMITTED_UNDEPLOYED
+  generated_question_handoff: PASS
+  manual_registration_required: false
+  question_identity_preserved: true
+  restart_idempotency: PASS
+  historical_failure_preserved: true
+  negative_cache_permanent_suppression: false
+  registered_policy_seam: PASS
+  production_retry_policy_added: false
+  trading_authority_changed: false
+  real_order_submissions: 0
+  missing_architecture: []
+  policy_blocked:
+    - External evidence has no registered predictive transformation; existing bridge eligibility and quantitative/referee gates remain required.
+  evidence:
+    - trader/research/generated_question_source.py
+    - trader/research/external_research.py
+    - tests/test_generated_question_handoff_negative_memory.py
+    - docs/superpowers/reports/2026-10-03-stage3-generated-question-handoff-negative-memory-r1.md
+    - docs/superpowers/evidence/stage3-generated-question-handoff-negative-memory-r1/tests.txt
+  tests: 1038 focused cases verified across isolated batches and targeted corrections
+  next_recommended_package: LUFFY-STAGE3-CLOSURE-R2
+  boundary:
+    - Regular Journal Bank capture is unchanged; the research-only shadow store skips that consumer hook under its existing import/write sandbox.
+    - No deployed worker, production retry policy, predictive transformation, trading activation, Scheme-D, paid spend or Stage5-7 architecture change.
+
+completed_strategy_decay_research_plan_v1:
+  evidence:
+    - trader/cognition/research_plan.py
+    - trader/cognition/research_sources.py
+  limitations:
+    - Decision evidence is a declared selection, not independent opportunity evidence.

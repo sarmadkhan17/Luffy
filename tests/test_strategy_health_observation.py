@@ -77,6 +77,12 @@ class _Journal:
     def of(self, kind):
         return [d for k, _s, d in self.events if k == kind]
 
+    def query(self, sql, args=()):
+        # Current Analyst asks for exact governed versions before recording
+        # legacy health. This fixture has no version inventory.
+        assert sql == 'SELECT version_id FROM strategy_versions WHERE strategy_id=? AND spec_hash=?'
+        return []
+
 
 def _analyst(frames, journal=None):
     a = Analyst(journal or _Journal(), CFG)

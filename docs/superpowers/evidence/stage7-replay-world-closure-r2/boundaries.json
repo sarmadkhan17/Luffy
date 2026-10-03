@@ -1,0 +1,45 @@
+{
+  "base": "50a4545484798207e4b126a0b7a0547ea9b0ec79",
+  "boundaries": {
+    "trader/engine/risk.py": {
+      "unchanged": true,
+      "sha256": "2a2a1105810c9e7ab3f43c42628384a752fc83cbffe13e2f59e878d26ea53c72"
+    },
+    "trader/engine/executor.py": {
+      "unchanged": true,
+      "sha256": "67b33bcdfe0fb67d9db159c6603ebd1ff8a72f94c78bb83ea021c49114b3abe3"
+    },
+    "trader/strategy/spec.py": {
+      "unchanged": true,
+      "sha256": "5ffaaec6e232132e7788a3a829bf9cf88ac19cf9f77b5379d0339ddcdea385e7"
+    },
+    "trader/learning/application.py": {
+      "unchanged": true,
+      "sha256": "d5d0bfb90ded1937e33b048c0974e8ccb77b1fa8374d1150c4088a4700be88d5"
+    },
+    "trader/learning/targets.py": {
+      "unchanged": true,
+      "sha256": "5eebc3e6f8684ba9d652ea8007061dea51ce2e729658a31b6e61e9c5cb55aca8"
+    },
+    "trader/learning/dispatch.py": {
+      "unchanged": true,
+      "sha256": "883ec340ab48b3818da323bfa2198914882161fa256ae63f938403ff34bc41e0"
+    },
+    "trader/cognition/predictive.py": {
+      "unchanged": true,
+      "sha256": "89c1aaa36f93f308db0c12acd27ffa01b259a2ee739715d6186d47c02809bbbd"
+    },
+    "trader/strategy/factory_handoff.py": {
+      "unchanged": true,
+      "sha256": "7c43ad1bf62ea54afb5ffd3a0ef24d7dc8720452f0a1cb57b8ca3dcc2dd9b9ab"
+    }
+  },
+  "production_adaptive_rules": [],
+  "production_generic_rules": [],
+  "registered_legacy_rules": [
+    "existing-recent-decay.v1"
+  ],
+  "real_order_submissions": 0,
+  "committed": false,
+  "deployed": false
+}
