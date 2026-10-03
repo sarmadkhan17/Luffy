@@ -161,7 +161,10 @@ def test_journal_portfolio_never_satisfies_venue_truth(producer):
     assert 'missing:portfolio' in faults
     dep=next(dep for dep in dm['dependencies'] if dep['role']=='portfolio')
     assert dep['status']=='UNAVAILABLE' and 'JOURNAL_NOT_TRUTH' in dep['reason']
-    assert 'missing:world' in faults and 'missing:context' in faults
+    # A scan never consulted the later world/opportunity stages. Supplying an
+    # invalid portfolio cannot waive that genuinely supplied dependency.
+    assert reg['stage_contract']['stage']=='SCAN'
+    assert 'missing:world' not in faults and 'missing:context' not in faults
 
 
 def test_legacy_registration_is_not_repaired(producer):

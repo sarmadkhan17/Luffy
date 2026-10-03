@@ -108,3 +108,20 @@ def replay(body):
     elif body['proposal'] or body['trade_intents'] or body['risk_decisions']:
         raise ValueError('RUNTIME_UNTRIGGERED_WORK_REFUSED')
     return body
+
+
+def verify_recorded_risk(value, registration):
+    """Replay a retained normal Risk answer in its existing isolated adapter.
+
+    Learning may verify this producer receipt; it receives no RiskManager,
+    sizing authority, Execution path or capability to write live Risk state.
+    """
+    payload = value['payload']
+    risk_replay(RiskDecision(value['risk_decision_id'], canonical(payload)))
+    line = registration['lineage']
+    if (value['trade_intent_id'] != line.get('intent_id')
+            or payload['trade_intent_id'] != value['trade_intent_id']
+            or payload['allocation_proposal_id'] != line.get('proposal_id')
+            or payload['as_of_ms'] != registration['decision_ms']
+            or value['result'] != payload['result'] or value['ok'] != (payload['result']=='APPROVE')):
+        raise ValueError('risk_stage_binding_differs')

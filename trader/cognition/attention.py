@@ -180,7 +180,7 @@ def _world_module(world_model):
     return mod
 
 
-def _world_volume(model, w, sym, timeframe, anchor_close, as_of):
+def _world_volume(model, w, sym, timeframe, anchor_close, as_of, claim_reader):
     """One accepted world z-score for `sym`, or an explicit no-contribution."""
     valid = sys.modules["trader.world.observation"].Quality.VALID
     out = {"model_id": model.model_id, "observation_id": None, "record_sha256": None,
@@ -192,6 +192,16 @@ def _world_volume(model, w, sym, timeframe, anchor_close, as_of):
         return dict(out, reason="unknown_scope")
     except ValueError:
         return dict(out, status="unsupported", reason="horizon_not_declared")
+    # The established WorldModel query presents confidence alongside immutable
+    # measurements to Attention's reasoning input. No confidence-to-salience
+    # calibration exists: values, ranks and strategy signals remain unchanged.
+    from trader.learning.consumers import world_claims
+    views = world_claims(claim_reader, model, w.Scope(w.ScopeLevel.INSTRUMENT, sym),
+        w.Horizon.INTRADAY, dimension=WORLD_KIND, regime='NOT_APPLICABLE',
+        direction='NOT_APPLICABLE', family='NOT_APPLICABLE')
+    if views:
+        out['claims'] = [dict(claim=v.claim.to_dict(), confidence=v.effective_confidence,
+            base_confidence=v.base_confidence, learned=v.learned, reason=v.reason) for v in views]
     if not found:
         return out
     if len(found) > 1:
@@ -221,7 +231,9 @@ def _world_volume(model, w, sym, timeframe, anchor_close, as_of):
 
 
 def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
-             open_episodes: dict, world_model: WorldModel | None = None, learning_journal=None, frozen_priorities=None) -> dict:
+             open_episodes: dict, world_model: WorldModel | None = None, learning_journal=None, frozen_priorities=None, frozen_claim_states=None) -> dict:
+    from trader.learning.consumers import WorldQueryReader
+    claim_reader = WorldQueryReader(learning_journal, frozen_claim_states)
     if world_model is not None:
         w = _world_module(world_model)
         if world_model.as_of_ms != as_of:
@@ -334,7 +346,7 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
         avail = {k: abs(v) for k, v in comps.items() if v is not None}
         world = None
         if world_model is not None:
-            world = _world_volume(world_model, w, sym, ds.timeframe, anchor_close, as_of)
+            world = _world_volume(world_model, w, sym, ds.timeframe, anchor_close, as_of, claim_reader)
             if world["status"] == "ok":
                 avail[WORLD_COMPONENT] = abs(world["value"])
         positioning = None
@@ -422,7 +434,7 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
     return {"anchor_close_ms": anchor_close, "members": members + capped,
             "universe": [rows[s] for s in sorted(rows)], "rows": rows, "market": market,
             "features": feats, "cohort": cohort, "ranked": ranked,
-            "selected": selected, "observations": observations, "index": index, "governed_attention_state": priorities}
+            "selected": selected, "observations": observations, "index": index, "governed_attention_state": priorities, "governed_world_claim_state": claim_reader.states if frozen_claim_states is None else frozen_claim_states}
 
 
 def _participation(ds, sym, as_of, cfg, add):

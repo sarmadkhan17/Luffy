@@ -151,4 +151,6 @@ def checkpoint(journal, config, ledger=None, available_inputs=None, market_snaps
         C.ensure(db)
         detail['learning_source_delivery'] = C.safely(db,'portfolio:'+result['portfolio_cut_id'],
             R.deliver_allocation,config,inputs,result,market_snapshots)
+        if result.get('proposal') is not None and detail['learning_source_delivery'] is None:
+            R.failed_allocation_delivery(db, inputs, result)
     return result,detail

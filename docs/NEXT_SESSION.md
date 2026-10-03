@@ -33,6 +33,25 @@ The August `NEXT-SESSION-TODO.md` is historical, not the active work queue.
 
 ## Session start
 
+### Latest: Stage7 normal replay and WorldModel consumer closure R2, October 3
+
+Package `LUFFY-STAGE7-NORMAL-REPLAY-AND-WORLD-CONSUMER-CLOSURE-R2` is isolated
+at `/mnt/luffy-data/luffy/stage7-r2`, based exactly on `50a4545`. Read its
+[closure report](superpowers/reports/2026-10-03-stage7-normal-replay-world-consumer-closure-r2.md)
+and `superpowers/evidence/stage7-replay-world-closure-r2/validation.json` for
+final validation status. R4's two architecture gaps are addressed by frozen
+stage contracts, exact terminal lineage/source delivery, and normal Attention
+consumption of governed WorldClaim confidence. Production policy/rules and
+real evidence remain unavailable; no strategy, Risk or trading behavior changed.
+The read-only shadow found zero real complete samples and zero overlays.
+No commit, deployment or order submission was performed.
+
+Next recommended package: **LUFFY-STAGE5-7-FINAL-INTELLIGENCE-GATE-R4B**.
+Review the isolated changes and their strict missing-source refusals before
+making any broader intelligence conclusion. Earlier package R1 closure claims
+are superseded by R2 for these two R4 defects only.
+
+
 ### Latest: M3.2 validation bundle revision 4, September 22
 
 [Report](superpowers/reports/2026-09-22-m32-validation-bundle-v4.md), bundle

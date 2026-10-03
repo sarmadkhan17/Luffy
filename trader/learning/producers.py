@@ -55,7 +55,8 @@ def opportunity(reg, sources):
 def validate(body, sources):
     out = sources['outcome']
     if out.get('protocol') == 'existing-forward-outcome.v1':
-        if body['kind'] in (L.Kind.CASH.value, L.Kind.MISSED.value):
+        if body['kind'] in (L.Kind.CASH.value, L.Kind.MISSED.value) and (
+                body['registration'].get('chain') or body['lineage'].get('opportunity_id') or body['lineage'].get('context_id')):
             opportunity(body['registration'], sources)
     if out.get('protocol') == 'execution-quality.v1':
         from trader.engine.booking import replay

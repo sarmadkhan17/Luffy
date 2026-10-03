@@ -171,7 +171,7 @@ def test_worker_delivers_exact_trade_and_recovers_delivery_after_restart(produce
     assert j.query("SELECT outcome_id FROM learning_outcome_captures WHERE outcome_key LIKE 'verified-trade:%'")==rows
 
 
-def test_rejection_is_frozen_and_risk_block_later_remains_unrealized(producer):
+def test_rejection_is_frozen_and_no_action_refusal_is_not_a_trade_block(producer):
     import pandas as pd
     from trader.core.types import Action
     j,d,snap,cfg,receipt,proposal,ai,_,_=producer
@@ -193,7 +193,10 @@ def test_rejection_is_frozen_and_risk_block_later_remains_unrealized(producer):
         target={'1h':dict(ts=pd.Timestamp(cut+3600000,unit='ms',tz='UTC').isoformat(),close=110)}
         oid=R.forward(db,declaration,{'fwd_ret_1h':.1},target,cut+3900000)
     raw=P.materialize(j._conn(),oid)
-    assert raw['outcome']['kind']=='RISK_BLOCKED_SIGNAL'
+    # This fixture's actual TradeIntent is NO_ACTION, despite the root BUY
+    # row. A later refusal must not fabricate a requested OPEN. The genuine
+    # normal OPEN -> Risk REFUSE case is covered by the R2 end-to-end suite.
+    assert raw['outcome']['kind']=='REJECTED_TRADE'
     assert raw['outcome']['boundary']=='COUNTERFACTUAL'
     obs=json.loads(raw['outcome']['observation_json'])
     assert obs['original_reasons']['skip_reason']=='first-live refused'

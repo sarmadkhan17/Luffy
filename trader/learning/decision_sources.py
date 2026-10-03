@@ -9,10 +9,29 @@ ROLES = ('cycle', 'decision', 'data', 'world', 'context', 'portfolio', 'risk_con
 MANDATORY = {'cycle', 'decision', 'data', 'world', 'context', 'portfolio', 'risk_config', 'control', 'reasons'}
 
 
+# Frozen code-owned contracts. Legacy registrations keep their original broad
+# requirements; not_consulted is documentation and never changes this contract.
+STAGE_SCHEMA = 'decision-stage-contract.v1'
+STAGE_REQUIRED = {
+    'SCAN': frozenset(('cycle', 'decision', 'data', 'risk_config', 'control', 'reasons')),
+    'ALLOCATION': frozenset(MANDATORY | {'proposal', 'intent', 'economics'}),
+}
+
+
+def stage_contract(stage):
+    return dict(schema=STAGE_SCHEMA, stage=stage, required=sorted(STAGE_REQUIRED[stage]))
+
+
 def needs(reg):
     if reg['profile'] in ('RESEARCH', 'DECAY_EVALUATION'):
         return {d['role'] for d in reg['dependencies']}
-    required = set(MANDATORY)
+    contract = reg.get('stage_contract')
+    if contract is not None:
+        if contract != stage_contract(contract['stage']):
+            raise ValueError('frozen_decision_stage_contract_differs')
+        required = set(contract['required'])
+    else:
+        required = set(MANDATORY)
     for role, key in (('strategy', 'strategy_id'), ('proposal', 'proposal_id'), ('intent', 'intent_id')):
         if reg['lineage'].get(key): required.add(role)
     if 'strategy' in required: required.add('exit_semantics')

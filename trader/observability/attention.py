@@ -196,8 +196,10 @@ def evaluate_snapshot(event, world_model: WorldModel | None = None, learning_jou
             raise ValueError("world_model cut does not match as_of")
     cfg = CognitionConfig(max_symbols=len(event["input"]["membership"]) or 1)
     ds = load_input(event["input"])
-    result = evaluate(ds, event["as_of_ms"], cfg, event["scan_id"], {}, world_model, learning_journal, event.get('governed_attention_state'))
+    result = evaluate(ds, event["as_of_ms"], cfg, event["scan_id"], {}, world_model, learning_journal, event.get('governed_attention_state'), event.get('governed_world_claim_state'))
     learned = ({'governed_attention_state':result['governed_attention_state']} if result['governed_attention_state'] else {})
+    if result['governed_world_claim_state']:
+        learned['governed_world_claim_state'] = result['governed_world_claim_state']
     return {**learned, "schema_version": SCHEMA, "scan_id": event["scan_id"],
             "as_of_ms": event["as_of_ms"], "scope": event["scope"],
             "capture_ms": event["capture_ms"], "issues": event["issues"],

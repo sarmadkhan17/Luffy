@@ -188,7 +188,7 @@ def decision(db, row, cycle, inputs=None, *, stage=None):
                                    for role in LATER_STAGE_ROLES if role not in present}
     kind = stage['kind'] if stage else (L.Kind.CASH if row['action']=='HOLD' else L.Kind.REJECTED)
     rid=C.register(db,event,kind.value,lineage,cut,deps,chain=stage['chain'] if stage else None,
-                   not_consulted=not_consulted)
+                   not_consulted=not_consulted, decision_stage='ALLOCATION' if stage else 'SCAN')
     C.attach(db,event,event+':pending',kind.value,L.Boundary.UNRESOLVED.value,dict(reason='future_outcome_pending'),cut)
     C.record_action(db,event,stage['action'] if stage else
         dict(action=row['action'],executed=row['executed'],skip_reason=row.get('skip_reason')),cut)
@@ -226,18 +226,22 @@ def booking(db, trade_id, receipt):
 
 
 def forward(db, original, updates, targets, now_ms):
-    event='decision:'+original['decision_id']
+    root_event='decision:'+original['decision_id']
+    event=C.forward_event(db,original['decision_id'],now_ms)
     _,reg=C.registration(db,event)
     # Registered reasons and initial action are frozen; no text-based Risk inference.
     kind=reg['kind']
-    if kind in (L.Kind.CASH.value,L.Kind.MISSED.value):
+    if kind in (L.Kind.CASH.value,L.Kind.MISSED.value) and (reg.get('chain') or reg['lineage'].get('opportunity_id') or reg['lineage'].get('context_id')):
         from .producers import opportunity
         opportunity(reg,{d['role']:C.resolve(db,d) for d in reg['dependencies'] if d['status']=='AVAILABLE'})
     action_rows=db.execute('SELECT payload FROM learning_actions WHERE event_key=?',(event,)).fetchall()
     actions=sorted([json.loads(r[0])['dependency'] for r in action_rows if json.loads(r[0])['dependency']['available_ms']<=now_ms],
                    key=lambda d:(d['available_ms'],d['sha256']))
     risk=[d for d in actions if d['role']=='risk_decision']
-    if risk and C.resolve(db,risk[-1]).get('ok') is False:
+    intent_dep=next((d for d in reg['dependencies'] if d['role']=='intent' and d['status']=='AVAILABLE'),None)
+    requested_open = (json.loads(C.resolve(db,intent_dep)['payload_json'])['requested_action']=='OPEN'
+                      if intent_dep else reg['kind'] != L.Kind.CASH.value)
+    if requested_open and risk and C.resolve(db,risk[-1]).get('ok') is False:
         kind=L.Kind.RISK_BLOCKED.value
     deps=[]
     action_dep=next((d for d in reversed(actions) if d['role']=='action' and 'prediction' not in C.resolve(db,d)),None)
@@ -245,7 +249,12 @@ def forward(db, original, updates, targets, now_ms):
     if risk: deps.append(risk[-1])
     observation=dict(measurement='counterfactual_price_return_not_money', returns=updates,
         original_rejection=reg['kind'], original_reasons=next((C.resolve(db,d) for d in reg['dependencies'] if d['role']=='reasons' and d['status']=='AVAILABLE'),None))
-    prediction_rows=[d for d in actions if d['role']=='action' and 'prediction' in C.resolve(db,d)]
+    # A scheduled measurement belongs to the root decision, retained verbatim.
+    # The terminal stage owns the action/outcome; its parent owns the declaration.
+    prediction_actions = actions if event == root_event else [json.loads(r[0])['dependency']
+        for r in db.execute('SELECT payload FROM learning_actions WHERE event_key=?',(root_event,))]
+    prediction_rows=[d for d in prediction_actions if d['role']=='action'
+        and d['available_ms']<=now_ms and 'prediction' in C.resolve(db,d)]
     declaration=C.resolve(db,prediction_rows[0])['prediction'] if prediction_rows else {k:original[k] for k in ('decision_id','cycle_id','symbol','ts','action','entry_price')}
     if prediction_rows:
         deps.append(freeze(db,'prediction',dict(declaration=declaration),prediction_rows[0]['available_ms'],'original schedule_outcome'))
@@ -356,6 +365,11 @@ def _signal_version(db, strategy_id, spec_hash, cut_ms):
 def bind_signal_version(db, inputs, row):
     signals=json.loads(row.get('signals_json') or '[]')
     agreeing=[s for s in signals if s.get('action')==row['action']]
+    # A gated HOLD with one consulted signal still used that exact version.
+    # Multiple signals without a selected direction remain ambiguous; never
+    # infer a governing version from current state or mutable rejection text.
+    if row['action']=='HOLD' and len(signals)==1:
+        agreeing=signals
     if not agreeing or not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='strategy_versions'").fetchone():
         return inputs
     top=max(agreeing,key=lambda s:s.get('confidence',0))
@@ -682,3 +696,24 @@ def resolve_nontrade(db, opportunity_id, proposal_id, at_ms, event):
         return None
     body=resolve_row(db,opportunity_id,'SKIPPED',proposal_id,at_ms)
     return missed(db,event,body)
+
+
+def failed_allocation_delivery(db, current, result):
+    """Record attempted terminal identities at the normal caller's own cut.
+
+    If a supplied exact object cannot be retained, an earlier scan cannot later
+    masquerade as the governing portfolio decision. No source is repaired.
+    """
+    proposal = result['proposal']
+    for source in current.sources:
+        if not source.source_id.startswith('live-context:'):
+            continue
+        raw = json.loads(source.payload_json)
+        for candidate in current.candidates:
+            if candidate.opportunity_context_json != raw['context_json']:
+                continue
+            origin = raw['candidate_id'].removesuffix(':' + candidate.version_id)
+            event = C.stage_event(origin,proposal['proposal_id'],candidate.version_id)
+            reason = 'terminal_source_delivery_failed_no_scan_fallback'
+            if not db.execute('SELECT 1 FROM learning_capture_failures WHERE event_key=? AND reason=?',(event,reason)).fetchone():
+                db.execute('INSERT INTO learning_capture_failures VALUES (?,?)',(event,reason))

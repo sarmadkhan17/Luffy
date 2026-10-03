@@ -2,6 +2,7 @@
 from contextlib import contextmanager
 from pathlib import Path
 import sqlite3
+import json
 from . import targets as T, foundation as L
 
 
@@ -134,3 +135,31 @@ def world_claims(journal, model, scope, horizon, *, regime, direction, family, d
     """Normal WorldModel decision query: base claims + governed learned overlay."""
     return model.effective_claims(scope, horizon, learning_journal=journal, dimension=dimension,
         context_for=lambda claim: claim_context(claim, regime=regime, direction=direction, family=family))
+
+
+class WorldQueryReader:
+    """Retain the exact governed revision consumed, or replay frozen revisions.
+
+    This descriptive Attention query has no regime, direction or strategy
+    family; those dimensions are explicitly NOT_APPLICABLE. It cannot consume
+    an overlay governed for a directional strategy or a named regime.
+    """
+    def __init__(self, journal=None, frozen=None):
+        self.journal = journal
+        self.frozen = frozen
+        self.states = {}
+
+    def query(self, sql, params=()):
+        if self.frozen is None and self.journal is not None:
+            rows = self.journal.query(sql, params)
+            if params and rows:
+                body = json.loads(rows[0]['payload'])
+                self.states[params[1]] = dict(body, state_hash=rows[0]['sha256'])
+            return rows
+        if not params:
+            return [{'present': 1}] if self.frozen else []
+        state = (self.frozen or {}).get(params[1])
+        if state is None:
+            return []
+        body = {k:v for k,v in state.items() if k != 'state_hash'}
+        return [dict(payload=L.canonical(body), sha256=state['state_hash'], revision=state['revision'])]

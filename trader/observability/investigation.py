@@ -274,7 +274,7 @@ def adapt(source, observed_ms):
         world = world_producer.replay(scan, ds)
     except world_producer.ReplayRefused as exc:
         raise ValueError(exc.reason) from None
-    result = evaluate(ds, scan["as_of_ms"], cfg, scan["scan_id"], {}, world, frozen_priorities=scan.get("governed_attention_state"))
+    result = evaluate(ds, scan["as_of_ms"], cfg, scan["scan_id"], {}, world, frozen_priorities=scan.get("governed_attention_state"), frozen_claim_states=scan.get("governed_world_claim_state"))
     if (result["universe"] != scan["rows"] or result["market"] != scan["market"]
             or [asdict(o) for o in result["observations"]] != scan["observations"]):
         raise ValueError("source_evaluator_mismatch")
@@ -379,7 +379,7 @@ def allocate(snapshot, state, scan_sha256, cut_ms, mode=ALLOCATION_POLICY, refus
         if snapshot.dataset is None:
             raise LedgerRefused("allocation_dataset_missing")
         ctx = evaluate(snapshot.dataset, scan["as_of_ms"], cfg, scan["scan_id"], open_episodes,
-                       snapshot.world_model, frozen_priorities=scan.get("governed_attention_state"))
+                       snapshot.world_model, frozen_priorities=scan.get("governed_attention_state"), frozen_claim_states=scan.get("governed_world_claim_state"))
         strip = lambda rows: {s: {k: v for k, v in r.items() if k not in _CONTEXT_KEYS}
                               for s, r in rows.items()}
         if ctx["ranked"] != legacy["ranked"] or strip(ctx["rows"]) != strip(legacy["rows"]):

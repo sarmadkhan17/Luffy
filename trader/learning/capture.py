@@ -114,12 +114,16 @@ def resolve(db, dep):
     return raw
 
 
-def required(kind, lineage, *, profile='TRADING'):
+def required(kind, lineage, *, profile='TRADING', registration=None):
     if profile == 'RESEARCH':
         return set(RESEARCH)
     if profile == 'INCIDENT':
         return {'decision', 'data', 'action', 'outcome'}
-    roles = set(TRADING)
+    if registration and registration.get('stage_contract'):
+        from .decision_sources import needs
+        roles = needs(registration) | {'action', 'outcome'}
+    else:
+        roles = set(TRADING)
     if lineage.get('strategy_id'):
         roles |= {'strategy', 'exit_semantics'}
     if lineage.get('proposal_id'):
@@ -138,7 +142,7 @@ def required(kind, lineage, *, profile='TRADING'):
     return roles
 
 
-def register(db, event_key, kind, lineage, decision_ms, dependencies, *, profile='TRADING', chain=None, not_consulted=None):
+def register(db, event_key, kind, lineage, decision_ms, dependencies, *, profile='TRADING', chain=None, not_consulted=None, decision_stage=None):
     ensure(db)
     if type(decision_ms) is not int or decision_ms < 0 or profile not in ('TRADING', 'RESEARCH', 'INCIDENT'):
         raise ValueError('capture_registration_invalid')
@@ -157,7 +161,7 @@ def register(db, event_key, kind, lineage, decision_ms, dependencies, *, profile
     for dep in deps:
         if dep['role']=='data' and dep['status']=='AVAILABLE':
             data=resolve(db,dep)
-            if isinstance(data,dict) and (data.get('market_type')=='futures' or data.get('chunks',{}).get('derivs')):
+            if decision_stage != 'SCAN' and isinstance(data,dict) and (data.get('market_type')=='futures' or data.get('chunks',{}).get('derivs')):
                 additional.append('derivative_identity')
     body = dict(schema=SCHEMA, additional_required=additional, event_key=event_key, kind=kind, lineage=lineage,
                 decision_ms=decision_ms, profile=profile, dependencies=sorted(deps, key=lambda d:d['role']))
@@ -176,6 +180,8 @@ def register(db, event_key, kind, lineage, decision_ms, dependencies, *, profile
             raise ValueError('decision_chain_parent_differs')
         body['chain'] = chain
     from . import decision_sources as D
+    if decision_stage is not None:
+        body['stage_contract'] = D.stage_contract(decision_stage)
     m = D.make(body)
     insert(db, D.TABLE, 'manifest_id', m['manifest_id'], (m['manifest_id'], event_key, L.canonical(m)))
     body['decision_source_manifest_id'] = m['manifest_id']
@@ -261,6 +267,26 @@ def chain_event(db, decision_id, intent_id=None):
     return rows[0][0]
 
 
+def forward_event(db, decision_id, observed_ms):
+    original = 'decision:' + str(decision_id)
+    _, root = registration(db, original)
+    rows = db.execute("SELECT event_key,payload FROM learning_registrations WHERE "
+        "json_extract(payload,'$.chain.parent_event_key')=? AND "
+        "json_extract(payload,'$.decision_ms')<=?", (original, observed_ms)).fetchall()
+    if not rows:
+        if db.execute("SELECT 1 FROM learning_capture_failures WHERE substr(event_key,1,?)=? LIMIT 1",
+                      (len(original+'#allocation:'), original+'#allocation:')).fetchone():
+            raise ValueError('terminal_allocation_registration_unavailable_no_scan_fallback')
+        return original
+    if len(rows) != 1:
+        raise ValueError('terminal_decision_chain_ambiguous')
+    event, payload = rows[0]
+    child = json.loads(payload)
+    if child['chain']['parent_registration_id'] != L.digest(root):
+        raise ValueError('terminal_decision_parent_differs')
+    return event
+
+
 def attach(db, event_key, outcome_key, kind, boundary, observation, observed_ms, dependencies=(), *, post_lineage=None):
     rid, reg = registration(db, event_key)
     kind, boundary = L.Kind(kind), L.Boundary(boundary)
@@ -276,7 +302,10 @@ def attach(db, event_key, outcome_key, kind, boundary, observation, observed_ms,
             raise ValueError('future_outcome_cannot_rewrite_original_context')
         if dep['role'] in initial:
             raise ValueError('original_dependency_is_frozen')
-        if dep['status'] == 'AVAILABLE' and not reg['decision_ms'] <= dep['available_ms'] <= observed_ms:
+        lower = reg['decision_ms']
+        if dep['role'] == 'prediction' and reg.get('chain'):
+            lower = registration(db, reg['chain']['parent_event_key'])[1]['decision_ms']
+        if dep['status'] == 'AVAILABLE' and not lower <= dep['available_ms'] <= observed_ms:
             raise ValueError('outcome_source_clock_invalid')
         initial[dep['role']] = dep
     extra = post_lineage or {}
@@ -292,6 +321,8 @@ def attach(db, event_key, outcome_key, kind, boundary, observation, observed_ms,
         kind=kind.value, boundary=boundary.value, observation=observation, observed_ms=observed_ms,
         label='SIMULATED / UNREALIZED' if boundary == L.Boundary.COUNTERFACTUAL else boundary.value,
         dependencies=sorted(initial.values(), key=lambda d:d['role']))
+    if reg.get('stage_contract'):
+        body['terminal_contract'] = terminal_contract(reg, kind.value)
     if reg.get('decision_source_manifest_id'):
         from . import decision_sources as D
         body['decision_source_manifest'] = D.load(db, reg['decision_source_manifest_id'])
@@ -358,6 +389,9 @@ def semantic(role, value, reg):
         intent=TradeIntent(value['intent_id'],value['payload_json'])
         if intent.intent_id!=reg['lineage']['intent_id']:
             raise ValueError('trade_intent_binding_differs')
+    elif role == 'risk_decision' and value.get('payload', {}).get('schema') == 'portfolio-risk-decision.v1':
+        from trader.portfolio.runtime import verify_recorded_risk
+        verify_recorded_risk(value, reg)
     elif role == 'decision':
         if value.get('decision_id', value.get('id')) != reg['lineage'].get('decision_id'):
             raise ValueError('decision_binding_differs')
@@ -410,6 +444,13 @@ def semantic(role, value, reg):
             raise ValueError('risk_policy_binding_differs')
 
 
+def terminal_contract(reg, kind):
+    return dict(schema='terminal-source-contract.v1', stage='TERMINAL', kind=kind,
+        decision_stage=reg['stage_contract']['stage'],
+        required=sorted(required(kind,reg['lineage'],profile=reg['profile'],registration=reg)
+                        | set(reg.get('additional_required',()))))
+
+
 def manifest(db, outcome_id):
     row = db.execute('SELECT payload FROM learning_outcome_captures WHERE outcome_id=?', (outcome_id,)).fetchone()
     if row is None:
@@ -421,7 +462,9 @@ def manifest(db, outcome_id):
     rid, stored = registration(db, reg['event_key'])
     if rid != body['registration_id'] or stored != reg:
         raise ValueError('outcome_registration_differs')
-    needs = required(body['kind'], reg['lineage'], profile=reg['profile']) | set(reg.get('additional_required',()))
+    if reg.get('stage_contract') and body.get('terminal_contract') != terminal_contract(reg,body['kind']):
+        raise ValueError('frozen_terminal_contract_differs')
+    needs = required(body['kind'], reg['lineage'], profile=reg['profile'], registration=reg) | set(reg.get('additional_required',()))
     deps = {d['role']:d for d in body['dependencies']}
     rows, sources, blobs = [], {}, {}
     for role in ROLES:
@@ -456,6 +499,8 @@ def manifest(db, outcome_id):
     from . import decision_sources as D
     dm = body.get('decision_source_manifest')
     decision_faults = D.verify(dm, reg, sources) if dm else ('decision_manifest_missing_no_backfill',)
+    ancestors = retained_ancestors(db, reg)
+    decision_faults += verify_ancestors(reg, ancestors)
     complete = not decision_faults and all(r['status']=='AVAILABLE' for r in rows if r['required'])
     if body['boundary'] in ('UNRESOLVED', 'UNASSESSABLE'):
         status = 'UNASSESSABLE' if body['boundary']=='UNASSESSABLE' else 'REPLAY_INCOMPLETE'
@@ -463,7 +508,7 @@ def manifest(db, outcome_id):
         status = 'REPLAY_COMPLETE' if complete else 'REPLAY_PARTIAL' if sources else 'REPLAY_INCOMPLETE'
     result = dict(schema=SCHEMA, outcome_id=outcome_id, registration_id=rid, status=status,
                   dependencies=rows, sources=sources, data_blobs=blobs, capture=body,
-                  decision_source_faults=list(decision_faults))
+                  decision_source_faults=list(decision_faults), ancestors=ancestors)
     return dict(manifest_id=L.digest(result), **result)
 
 
@@ -475,6 +520,55 @@ def learning_outcome(db, outcome_id):
     o = L.Outcome(L.Kind(b['kind']), L.Boundary(b['boundary']), lineage, r['decision_ms'], b['observed_ms'],
                   (src,), L.canonical(b['observation']), b['label'])
     return o, {(src.source_id, src.version): m}
+
+
+def retained_ancestors(db, reg):
+    """Exact parent registrations and source bytes, never current state."""
+    from . import decision_sources as D
+    result, seen = [], set()
+    while reg.get('chain'):
+        link = reg['chain']
+        if link['parent_registration_id'] in seen:
+            raise ValueError('decision_lineage_cycle')
+        seen.add(link['parent_registration_id'])
+        rid, parent = registration(db, link['parent_event_key'])
+        sources = {d['role']: resolve(db, d) for d in parent['dependencies'] if d['status']=='AVAILABLE'}
+        blobs = {}
+        for sha in chunk_hashes(sources.get('data')):
+            row = db.execute('SELECT payload FROM learning_source_blobs WHERE sha256=?', (sha,)).fetchone()
+            if row: blobs[sha] = json.loads(row[0])
+        result.append(dict(registration_id=rid, registration=parent, sources=sources, data_blobs=blobs,
+                           decision_source_manifest=D.load(db,parent['decision_source_manifest_id'])))
+        reg = parent
+    return result
+
+
+def verify_ancestors(reg, ancestors):
+    from . import decision_sources as D
+    faults = []
+    seen = set()
+    for retained in ancestors:
+        link = reg.get('chain')
+        parent = retained['registration']
+        rid = retained['registration_id']
+        if (not link or rid in seen or L.digest(parent)!=rid or link['parent_registration_id']!=rid
+                or link['parent_event_key']!=parent['event_key']
+                or parent['decision_ms']>reg['decision_ms']
+                or any(parent['lineage'].get(k)!=reg['lineage'].get(k) for k in ('decision_id','cycle_id'))):
+            return ('decision_ancestor_binding_differs',)
+        seen.add(rid)
+        faults.extend('parent:' + f for f in D.verify(retained['decision_source_manifest'],parent,retained['sources']))
+        for sha in chunk_hashes(retained['sources'].get('data')):
+            raw = retained['data_blobs'].get(sha)
+            if raw is None or L.digest(raw)!=sha:
+                faults.append('parent:data_chunk_unverified')
+            else:
+                from .capture_runtime import restore_frame
+                try: restore_frame(raw)
+                except (ValueError, KeyError, TypeError): faults.append('parent:data_chunk_invalid')
+        reg = parent
+    if reg.get('chain'): faults.append('decision_ancestor_missing_no_backfill')
+    return tuple(faults)
 
 
 def replay_manifest(outcome, retained):
@@ -489,7 +583,10 @@ def replay_manifest(outcome, retained):
     from . import decision_sources as D
     dm = b.get('decision_source_manifest')
     faults.extend(D.verify(dm, reg, m['sources']) if dm else ('decision_manifest_missing_no_backfill',))
-    needs = required(b['kind'], reg['lineage'], profile=reg['profile']) | set(reg.get('additional_required',()))
+    faults.extend(verify_ancestors(reg, m.get('ancestors', [])))
+    if reg.get('stage_contract') and b.get('terminal_contract') != terminal_contract(reg,b['kind']):
+        faults.append('frozen_terminal_contract_differs')
+    needs = required(b['kind'], reg['lineage'], profile=reg['profile'], registration=reg) | set(reg.get('additional_required',()))
     rows = {d['role']:d for d in m['dependencies']}
     declared = {d['role']:d for d in b['dependencies']}
     original = {d['role']:d for d in reg['dependencies']}
@@ -626,6 +723,12 @@ def validate_chain(body,sources,blobs):
             if identity and (identity['environment']!=whole['environment'] or
                     aliases.get(identity['venue'],identity['venue'])!=aliases.get(whole['venue'],whole['venue'])):
                 raise ValueError('realized_derivative_environment_differs')
+    risk_payload = sources.get('risk_decision', {}).get('payload', {})
+    if risk_payload.get('schema') == 'portfolio-risk-decision.v1':
+        bound = risk_payload['input_binding']
+        if (bound['proposal'] != sources.get('proposal') or bound['intent'] != sources.get('intent')
+                or bound['inputs'] != sources['proposal']['inputs']):
+            raise ValueError('risk_original_sources_differ')
     if 'risk_decision' in sources and 'risk_config' in sources:
         if sources['risk_decision'].get('config_risk_sha256')!=L.digest(sources['risk_config']['risk']):
             raise ValueError('risk_decision_config_binding_differs')
@@ -657,7 +760,7 @@ def validate_chain(body,sources,blobs):
         horizons={'1h':3600000,'4h':14400000,'24h':86400000}
         for label,bar in out['target_bars'].items():
             opened=int(pd.Timestamp(bar['ts']).timestamp()*1000)
-            if opened < timestamp(declaration['ts'])+horizons[label] or opened+300000>out['measured_ms']:
+            if opened < body['registration']['decision_ms'] or opened < timestamp(declaration['ts'])+horizons[label] or opened+300000>out['measured_ms']:
                 raise ValueError('target_clock_not_closed_or_horizon_differs')
             expected=round((float(bar['close'])-declaration['entry_price'])/declaration['entry_price']*direction,6)
             if out['observation']['returns'].get('fwd_ret_'+label)!=expected:

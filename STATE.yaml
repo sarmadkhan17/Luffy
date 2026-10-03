@@ -463,3 +463,38 @@ completed_stage7_normal_learning_loop_closure_r1:
   evidence:
   - docs/superpowers/reports/2026-10-02-stage7-normal-learning-loop-closure-r1.md
   - docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/real-shadow.json
+
+completed_stage7_normal_replay_world_consumer_closure_r2:
+  package: LUFFY-STAGE7-NORMAL-REPLAY-AND-WORLD-CONSUMER-CLOSURE-R2
+  state: TESTED
+  package_result: PASS
+  unique_passing_checks: 386
+  base: 50a4545484798207e4b126a0b7a0547ea9b0ec79
+  branch: luffy-stage7-normal-replay-world-consumer-closure-r2
+  workspace: /mnt/luffy-data/luffy/stage7-r2
+  astra_r4_gaps:
+    decision_outcome_continuity: CLOSED
+    world_model_learned_confidence: CLOSED
+  missing_architecture: []
+  policy_calibration_blocked:
+  - confidence_calibration
+  - evidence_weights
+  - attention_priority
+  - research_priority
+  - strategy_allocation
+  - world_model_learning
+  real_evidence_blocked:
+  - No replay-complete real LearningEvidence captured in the bounded shadow.
+  - No production WorldClaim emitter or WorldModel learning rule.
+  - No intent-routed execution evidence; execution routing remains disabled.
+  trading_behavior_changed: false
+  real_order_submissions: 0
+  production_mutations: 0
+  committed: false
+  deployed: false
+  next_recommended_package: LUFFY-STAGE5-7-FINAL-INTELLIGENCE-GATE-R4B
+  evidence:
+  - docs/superpowers/reports/2026-10-03-stage7-normal-replay-world-consumer-closure-r2.md
+  - docs/superpowers/evidence/stage7-replay-world-closure-r2/real-shadow.json
+  - docs/superpowers/evidence/stage7-replay-world-closure-r2/boundaries.json
+  - docs/superpowers/evidence/stage7-replay-world-closure-r2/validation.json
