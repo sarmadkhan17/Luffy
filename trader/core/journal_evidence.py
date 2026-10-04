@@ -18,13 +18,15 @@ from dataclasses import dataclass
 
 PREFIX = '!luffy-journal-detail.v1!'
 BLOCK = 64 * 1024
-SCHEMA = """
+BLOB_SCHEMA = """
 CREATE TABLE IF NOT EXISTS journal_evidence_blobs_v1 (
  sha256 TEXT PRIMARY KEY CHECK(length(sha256)=64),
  byte_length INTEGER NOT NULL CHECK(byte_length>=0),
  codec TEXT NOT NULL CHECK(codec='zlib.v1'),
  payload BLOB NOT NULL
 );
+"""
+SCHEMA = BLOB_SCHEMA + """
 CREATE TABLE IF NOT EXISTS journal_representation_v1 (
  version TEXT PRIMARY KEY, status TEXT NOT NULL, manifest TEXT NOT NULL
 );

@@ -60,12 +60,44 @@ def test_real_producer_reader_large_source_retry_replay_growth(tmp_path, monkeyp
     assert store.db.execute('SELECT count(*),sum(length(payload)) FROM journal_evidence_blobs_v1').fetchone()==before
     assert store.db.execute('SELECT count(*) FROM scans').fetchone()[0]==1
     j=Journal(tmp_path/'luffy.db');j.kv_set('venue_position_snapshot',json.dumps(snapshot(side=None,cut=at)));j.kv_set('control_state','FROZEN')
+    from trader.strategy.factory_handoff import ensure
+    ensure(j)
     import trader.core.config as C
     config=C.load_config();config['attention']['stale_seconds']=300
     requests,_,control,inventory,detail=portfolio_capture(j.db_path,store.path,tmp_path/'absent.db',config)
     assert control=='FROZEN' and detail['scan_id']=='observed-scale' and requests
     retained_scan=json.loads(inventory.payload_json)['scan']
     assert retained_scan==json.loads(original)
+    from trader.portfolio import current as P,runtime as R
+    inputs,_=P.freeze(j.db_path,store.path,tmp_path/'absent.db',config)
+    consumer=R.Consumer(tmp_path/'portfolio.db')
+    first=consumer.consume(inputs)
+    assert consumer.evaluation(first['portfolio_cut_id'])==first
+    with consumer._db() as db:
+        packet=db.execute('SELECT payload FROM evaluations').fetchone()[0]
+        assert packet.startswith(E.PREFIX) and len(packet.encode())<S.LIMIT
+        assert json.loads(E.resolve(db,packet))==first
+        assert json.loads(db.execute('SELECT payload FROM evaluations_logical_v1').fetchone()[0])==first
+        before=db.execute('SELECT count(*),sum(length(payload)) FROM journal_evidence_blobs_v1').fetchone()
+    retry=consumer.consume(inputs)
+    assert retry['duplicate'] and {**retry,'duplicate':False}==first
+    with consumer._db() as db:
+        assert db.execute('SELECT count(*),sum(length(payload)) FROM journal_evidence_blobs_v1').fetchone()==before
+        assert db.execute('SELECT count(*) FROM evaluations').fetchone()[0]==1
+    # A new cut comes through the real reader/metric producer too; an old
+    # metric receipt cannot merely be relabeled to a different as-of clock.
+    j.kv_set('venue_position_snapshot',json.dumps(snapshot(side=None,cut=int(time.time()*1000))))
+    next_inputs,_=P.freeze(j.db_path,store.path,tmp_path/'absent.db',config)
+    second=consumer.consume(next_inputs)
+    assert R.replay(consumer.evaluation(second['portfolio_cut_id']))==second
+    with consumer._db() as db:
+        assert db.execute('SELECT sum(length(payload)) FROM journal_evidence_blobs_v1').fetchone()[0]<32*1024**2
+        assert db.execute('SELECT count(*) FROM evaluations').fetchone()[0]==2
+        sha=json.loads(packet[len(E.PREFIX):])['chunks'][0]
+        db.execute("UPDATE journal_evidence_blobs_v1 SET payload=x'00' WHERE sha256=?",(sha,))
+    with pytest.raises(E.EvidenceError):consumer.consume(inputs)
+    with consumer._db() as db:db.execute('DELETE FROM journal_evidence_blobs_v1 WHERE sha256=?',(sha,))
+    with pytest.raises(E.EvidenceError,match='evidence_missing'):consumer.evaluation(first['portfolio_cut_id'])
     export_scan(store.path,'observed-scale',tmp_path/'replay.json')
     assert json.loads((tmp_path/'replay.json').read_text())['scan']==retained_scan
     # Cached verified chunks must never hide a changed stored source.

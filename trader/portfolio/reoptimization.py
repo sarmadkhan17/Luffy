@@ -96,10 +96,14 @@ def evaluate(previous: Inputs | None, current: Inputs, *, processed_ids=(), mate
     before = _state(previous) if previous is not None else None
     after = _state(current)
     events = []
+    # The immutable cuts are identical for every event in this evaluation.
+    # Hash each once, retaining exactly the old event/cursor identities.
+    previous_cut_sha256 = digest(previous_raw)
+    current_cut_sha256 = digest(current_raw)
 
     def record(kind, left, right, exact=False):
         event_binding = dict(kind=kind, before=left, after=right,
-                             previous_cut_sha256=digest(previous_raw), current_cut_sha256=digest(current_raw),
+                             previous_cut_sha256=previous_cut_sha256, current_cut_sha256=current_cut_sha256,
                              as_of_ms=current.as_of_ms)
         event_binding = json.loads(canonical(event_binding))
         eid = digest(event_binding)
@@ -163,7 +167,7 @@ def evaluate(previous: Inputs | None, current: Inputs, *, processed_ids=(), mate
     frozen = dict(previous=previous_raw, current=current_raw, processed_ids=sorted(set(processed_ids)),
                   materiality_sources=[asdict(s) for s in sorted(sources, key=lambda s: s.source_id)])
     result = dict(events=events, trigger=any(e['trigger'] for e in events),
-                  next_cursor=digest(current_raw), side_effects='NONE', polling=False)
+                  next_cursor=current_cut_sha256, side_effects='NONE', polling=False)
     return EventReceipt(digest(dict(schema=SCHEMA, inputs=frozen, result=result)), canonical(frozen), canonical(result))
 
 

@@ -15,6 +15,7 @@ from enum import Enum
 from collections import OrderedDict
 import hashlib
 import json
+import math
 import os
 import threading
 from pathlib import Path
@@ -53,7 +54,7 @@ def digest(value) -> str:
 _SOURCE_DIGESTS = OrderedDict()
 _SOURCE_DIGEST_LOCK = threading.Lock()
 _SOURCE_DIGEST_BYTES = 0
-_SOURCE_DIGEST_LIMIT = 64 * 1024**2
+_SOURCE_DIGEST_LIMIT = 256 * 1024**2
 
 
 def _remember_source(text, sha, size):
@@ -326,7 +327,7 @@ def _references(inputs):
                 visit(v)
     visit(asdict(inputs))
     for s in inputs.sources:
-        if digest(json.loads(s.payload_json)) != s.sha256:
+        if _source_digest(s.payload_json) != s.sha256:
             raise ValueError('SOURCE_INTEGRITY_REFUSED')
 
 
@@ -339,7 +340,19 @@ def _ordered(inputs):
     for p in positions:
         if p.direction not in ('LONG', 'SHORT') or number(p.quantity) is None or number(p.quantity) <= 0:
             raise ValueError('PORTFOLIO_POSITION_INVALID')
-    frozen = json.loads(canonical(asdict(inputs)))
+    # Dataclass leaves are immutable contracts. Normalize the same JSON
+    # shape without encoding/decoding large payload_json strings again.
+    def plain(value):
+        if isinstance(value, dict):
+            return {k:plain(v) for k,v in value.items()}
+        if isinstance(value, (tuple,list)):
+            return [plain(v) for v in value]
+        if isinstance(value, Enum):
+            return value.value
+        if isinstance(value, float) and not math.isfinite(value):
+            raise ValueError('Out of range float values are not JSON compliant')
+        return value
+    frozen = plain(asdict(inputs))
     frozen['candidates'].sort(key=lambda c: (c['opportunity_id'], c['version_id']))
     frozen['sources'].sort(key=lambda s: s['source_id'])
     frozen['portfolio']['positions'].sort(key=lambda p: (p['instrument'], p['market_type']))

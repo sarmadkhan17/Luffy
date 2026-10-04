@@ -92,6 +92,8 @@ def main():
   wrap(M,name,'market.'+name,lambda a,k,r:dict(rows_returned=len(r) if r is not None else 0))
  from trader.portfolio import current as P
  from trader.portfolio import allocator as A
+ from trader.portfolio import runtime as PR, reoptimization as G
+ from trader.observability import scan_source as SS
  from trader.observability.collector import Collector
  from scripts import opportunity_context_shadow as S
  from trader.learning import capture as C, capture_runtime as R, dispatch as D, runtime as L, foundation as F
@@ -104,6 +106,11 @@ def main():
  wrap(A,'canonical','portfolio.serialize')
  wrap(A,'digest','portfolio.hash')
  wrap(A,'_source_digest','portfolio.source_verify')
+ wrap(P,'capture','portfolio.sources_load',lambda a,k,r:dict(scan_id=r[4].get('scan_id'),current_attention=r[4].get('current_attention'),missing_sources=r[4].get('missing_sources'),requests=len(r[0])))
+ wrap(SS,'read','portfolio.attention_read',lambda a,k,r:dict(scan_id=a[1],members=len(r.get('membership',())) if r else 0))
+ wrap(PR.Consumer,'consume','portfolio.evaluate_store')
+ wrap(G,'evaluate','portfolio.event_evaluate')
+ wrap(G,'replay','portfolio.event_replay')
  wrap(Collector,'_run','attention.worker')
  wrap(Collector,'_job','attention.serialize',lambda a,k,r:dict(expanded_bytes=len(r.encode())))
  wrap(M,'encode','provenance.serialize')
