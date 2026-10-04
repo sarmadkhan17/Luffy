@@ -27,6 +27,7 @@ from __future__ import annotations
 import logging
 import sqlite3
 import threading
+from itertools import islice
 from contextlib import contextmanager
 
 log = logging.getLogger(__name__)
@@ -35,6 +36,21 @@ log = logging.getLogger(__name__)
 #: and cannot drift. Contention is handled by releasing locks, not by
 #: waiting longer.
 BUSY_TIMEOUT_S = 5.0
+
+
+def insert_rows(conn, prefix, rows, width):
+    """Bounded VALUES statements inside the caller's atomic transaction.
+
+    Unlike executemany's per-row SQLite crossings, one statement does each
+    bounded group while retaining input order, conflict policy and rollback.
+    All current producers use at most nine columns: 64 rows fit even the
+    historical 999-variable SQLite bound. prefix is code-owned SQL only.
+    """
+    iterator = iter(rows)
+    while batch := list(islice(iterator, 64)):
+        conn.execute(prefix + ' VALUES ' + ','.join(
+            '(' + ','.join('?' for _ in range(width)) + ')' for _ in batch),
+            tuple(value for row in batch for value in row))
 
 
 def close_quietly(conn: sqlite3.Connection, label: str = "") -> None:

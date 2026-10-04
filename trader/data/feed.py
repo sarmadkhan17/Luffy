@@ -283,10 +283,12 @@ class DataFeed:
         original = df
         df = closed_bars(df, tf, now_ms)
         if not len(df):
+            prepared = mp.prepare(original)
             with write_tx(self._local, self.db, "partial receipt") as conn:
-                mp.append(conn, self._series_key(symbol, tf), original)
+                mp.append(conn, self._series_key(symbol, tf), prepared=prepared)
             return
         try:
+            prepared = mp.prepare(original)
             # .value/.astype(int64) are ns-based only for datetime64[ns];
             # this repo's pandas keeps ms resolution → convert explicitly
             unit = getattr(df["ts"].dt, "unit", None) or (
@@ -303,10 +305,9 @@ class DataFeed:
             # a failed commit must not leave this thread's connection holding
             # the lock (and the batch) open — see sqlite_tx
             with write_tx(self._local, self.db, "write") as conn:
-                mp.append(conn, self._series_key(symbol, tf), original)
-                conn.executemany(
-                    "INSERT OR REPLACE INTO candles VALUES (?,?,?,?,?,?,?,?,?)",
-                    rows)
+                mp.append(conn, self._series_key(symbol, tf), prepared=prepared)
+                from .sqlite_tx import insert_rows
+                insert_rows(conn, "INSERT OR REPLACE INTO candles", rows, 9)
         except Exception as e:
             log.warning(f"candle store write {symbol} {tf}: {e}")
 

@@ -10,6 +10,7 @@ import hashlib
 import json
 import math
 import uuid
+from itertools import islice
 from ccxt.base.errors import ExchangeError
 
 import numpy as np
@@ -187,16 +188,49 @@ def prepare(df):
 
 def append(conn, key, df=None, *, prepared=None):
     """Append/link exact retrievals atomically; ancestry stays inside the write."""
-    for original in prepare(df) if prepared is None else prepared:
-        record = dict(original)
-        prior = conn.execute('''SELECT revision_id FROM market_revisions
-            WHERE series_key=? AND event_ms=? AND json_extract(record_json,'$.instrument_id') IS ?
-            AND json_extract(record_json,'$.source') IS ? ORDER BY observed_ms DESC, rowid DESC LIMIT 1''',
-                             (key, record['event_time_ms'], record['instrument_id'], record['source'])).fetchone()
-        record['supersedes'] = prior[0] if prior and prior[0] != record['revision_id'] else None
-        conn.execute('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)',
-                     (record['revision_id'], key, record['event_time_ms'],
-                      record['available_at_ms'], record['observed_at_ms'], encode(record)))
+    iterator = iter(prepare(df) if prepared is None else prepared)
+    while batch := list(islice(iterator, 128)):
+        # All parent selection remains inside the existing transaction. Bound
+        # both temporary state and SQLite crossings, rather than releasing
+        # the GIL once for every historical row while owning a writer lock.
+        ids = tuple(dict.fromkeys(r['revision_id'] for r in batch))
+        existing = set(json.loads(conn.execute('SELECT json_group_array(revision_id) FROM market_revisions '
+                    'WHERE revision_id IN (' + ','.join('?' for _ in ids) + ')', ids).fetchone()[0]))
+        groups = {}
+        for r in batch:
+            groups.setdefault((r['instrument_id'], r['source']), set()).add(r['event_time_ms'])
+        parents = {}
+        for (instrument, source), events in groups.items():
+            events = tuple(events)
+            query = '''SELECT revision_id,event_ms,observed_ms FROM (
+                SELECT revision_id,event_ms,observed_ms,ROW_NUMBER() OVER (
+                PARTITION BY event_ms ORDER BY observed_ms DESC,rowid DESC) AS ordinal
+                FROM market_revisions WHERE series_key=? AND event_ms IN ('''
+            query += ','.join('?' for _ in events) + ''')
+                AND json_extract(record_json,'$.instrument_id') IS ?
+                AND json_extract(record_json,'$.source') IS ?) WHERE ordinal=1'''
+            # Aggregate bounded metadata in SQLite to avoid per-row cursor
+            # crossings under background CPU contention.
+            result = conn.execute('SELECT json_group_array(json_array(revision_id,event_ms,observed_ms)) '
+                                  'FROM (' + query + ')', (key, *events, instrument, source)).fetchone()[0]
+            for rid, event, observed in json.loads(result):
+                parents[(instrument, source, event)] = (rid, observed)
+        writes = []
+        for original in batch:
+            record = dict(original)
+            identity = (record['instrument_id'], record['source'], record['event_time_ms'])
+            prior = parents.get(identity)
+            rid, observed = record['revision_id'], record['observed_at_ms']
+            record['supersedes'] = prior[0] if prior and prior[0] != rid else None
+            writes.append((rid, key, record['event_time_ms'], record['available_at_ms'], observed, encode(record)))
+            # New equal-clock rows win by rowid, exactly as the sequential
+            # INSERT does. Ignored retries and older observations cannot win.
+            if rid not in existing and (prior is None or observed >= prior[1]):
+                parents[identity] = (rid, observed)
+            existing.add(rid)
+        conn.execute('INSERT OR IGNORE INTO market_revisions VALUES '
+                     + ','.join('(?,?,?,?,?,?)' for _ in writes),
+                     tuple(value for row in writes for value in row))
 
 
 def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=False, revision_stream=False, instrument_id=None, source=None, window_start_ms=None):

@@ -34,7 +34,7 @@ import pandas as pd
 
 from ..core.config import ROOT
 from ..core.types import TF_MS, closed_bars
-from .sqlite_tx import BUSY_TIMEOUT_S, close_quietly, write_tx
+from .sqlite_tx import BUSY_TIMEOUT_S, close_quietly, write_tx, insert_rows
 
 HOUR = 3_600_000
 DAY = 86_400_000
@@ -173,8 +173,7 @@ class RefStore:
                     conn.execute('INSERT OR IGNORE INTO market_raw_sources VALUES (?,?,?)',
                                  (raw_hash, df['source'].iloc[0], raw_text))
                 mp.append(conn, "reference:"+key, prepared=prepared)
-                conn.executemany(
-                    "INSERT OR REPLACE INTO refs VALUES (?,?,?,?,?,?,?)", rows)
+                insert_rows(conn, "INSERT OR REPLACE INTO refs", rows, 7)
         return len(rows)
 
     def load(self, key: str, since_ms: int = 0, *, as_of_ms=None):

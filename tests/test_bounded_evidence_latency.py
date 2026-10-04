@@ -160,3 +160,33 @@ def test_derivative_receipt_index_preserves_duplicates_and_source_context(tmp_pa
     feed.save('BTC/USDT','funding',frame)
     retained=feed.load('BTC/USDT','funding',as_of_ms=receipt['received_ms'])
     assert retained.raw_json.tolist()==frame.raw_json.tolist()
+
+
+def test_batched_ancestry_matches_sequential_retention_across_retries(tmp_path):
+    from trader.data import market_provenance as mp
+    import pandas as pd
+    import sqlite3
+    frame=pd.DataFrame(dict(ts=pd.date_range('2025-01-01',periods=600,freq='h',tz='UTC'),value=[i/1000 for i in range(600)]))
+    cut=int(frame.ts.iloc[-1].timestamp()*1000)+3600000
+    def records(source,clock,request):
+        annotated=mp.annotate(frame,instrument_id='venue:futures:BTC',source=source,
+                              kind='derivative',received_ms=clock,request_id=request)
+        return mp.prepare(annotated)
+    first=records('source-a',cut,'first');new=records('source-a',cut+2000,'new')
+    tie=records('source-a',cut+2000,'equal-clock-new-row');old=records('source-a',cut+1000,'older')
+    other=records('source-b',cut+3000,'other-identity')
+    left=sqlite3.connect(tmp_path/'sequential.db');right=sqlite3.connect(tmp_path/'batched.db')
+    for db in (left,right):mp.init(db)
+    def sequential(db,rows):
+        for original in rows:
+            r=dict(original)
+            prior=db.execute("SELECT revision_id FROM market_revisions WHERE series_key=? AND event_ms=? AND json_extract(record_json,'$.instrument_id') IS ? AND json_extract(record_json,'$.source') IS ? ORDER BY observed_ms DESC,rowid DESC LIMIT 1",('series',r['event_time_ms'],r['instrument_id'],r['source'])).fetchone()
+            r['supersedes']=prior[0] if prior and prior[0]!=r['revision_id'] else None
+            db.execute('INSERT OR IGNORE INTO market_revisions VALUES (?,?,?,?,?,?)',(r['revision_id'],'series',r['event_time_ms'],r['available_at_ms'],r['observed_at_ms'],mp.encode(r)))
+    for rows in (first,tuple(new)+tuple(new[:170])+tuple(first[:100])+tuple(tie)+tuple(old)+tuple(other),first):
+        with left:sequential(left,rows)
+        with right:mp.append(right,'series',prepared=rows)
+        assert left.execute('SELECT rowid,* FROM market_revisions ORDER BY rowid').fetchall()==right.execute('SELECT rowid,* FROM market_revisions ORDER BY rowid').fetchall()
+    selected=mp.load(right,'series',as_of_ms=cut+3000,source='source-a',instrument_id='venue:futures:BTC')
+    assert len(selected)==600
+    assert set(selected.request_id)=={'equal-clock-new-row'}

@@ -117,11 +117,10 @@ class DerivFeed:
         prepared = mp.prepare(df)
         projection = [(symbol, series, int(t), float(v))
                       for t, v in zip(mp.ms(df['ts']), df['value'])]
-        from .sqlite_tx import write_tx
+        from .sqlite_tx import write_tx, insert_rows
         with write_tx(self._local, self.db, 'derivative receipt') as conn:
             mp.append(conn, 'derivative:'+symbol+':'+series, prepared=prepared)
-            conn.executemany('INSERT OR REPLACE INTO derivs VALUES (?,?,?,?)',
-                             projection)
+            insert_rows(conn, 'INSERT OR REPLACE INTO derivs', projection, 4)
 
     def load(self, symbol: str, series: str, limit: int = 200000, *, as_of_ms=None, window_start_ms=None):
         at = self._clock_ms() if as_of_ms is None else mp.cut(as_of_ms)

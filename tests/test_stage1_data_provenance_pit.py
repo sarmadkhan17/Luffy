@@ -265,8 +265,8 @@ def test_negative_control_event_clock_detected(store,monkeypatch):
 
 
 def test_negative_control_overwrite_detected(store,monkeypatch):
-    broken=mutant(P.append,"        prior = conn.execute(",
-                          "        conn.execute('DELETE FROM market_revisions WHERE series_key=? AND event_ms=?', (key, record['event_time_ms']))\n        prior = conn.execute(")
+    broken=mutant(P.append,"        ids = tuple(",
+                          "        for record in batch:\n            conn.execute('DELETE FROM market_revisions WHERE series_key=? AND event_ms=?', (key, record['event_time_ms']))\n        ids = tuple(")
     monkeypatch.setattr(P,'append',broken)
     f,c=store;persist(f,frame(),c.at);persist(f,frame(value=20),c.at+1)
     with pytest.raises(AssertionError):
