@@ -557,7 +557,14 @@ class Journal:
         self._local = threading.local()
         self._write_lock = threading.Lock()
         with self._conn() as c:
+            if c.execute("SELECT 1 FROM sqlite_master WHERE name='journal_representation_v1'").fetchone():
+                representation = c.execute("SELECT status FROM journal_representation_v1 WHERE version='detail.v1'").fetchone()
+                if representation and representation[0] != 'VERIFIED':
+                    from .journal_evidence import EvidenceError
+                    raise EvidenceError('journal_candidate_not_verified')
             c.executescript(SCHEMA)
+            from . import journal_evidence
+            c.executescript(journal_evidence.SCHEMA)
             from ..engine.entry_authority import SCHEMA as entry_request_schema
             c.executescript(entry_request_schema)
             for stmt in (
@@ -622,6 +629,8 @@ class Journal:
         if conn is None:
             conn = sqlite3.connect(str(self.db_path), timeout=30)
             conn.row_factory = sqlite3.Row
+            from . import journal_evidence
+            journal_evidence.install(conn)
             conn.create_function("learning_target_write", 0,
                                  lambda: int(getattr(self._local, "learning_target_write", False)))
             conn.create_function("strategy_governor_write", 0,
@@ -836,13 +845,20 @@ class Journal:
         with self._tx() as c:
             cursor = c.execute("INSERT INTO brain_events(ts,kind,subject,detail) VALUES (?,?,?,?)",
                       (now_utc().isoformat(), kind, subject,
-                       detail if isinstance(detail, str) else json.dumps(detail)))
+                       self._brain_detail(c, kind, detail)))
             if kind in ('execution_incident', 'data_quality_incident', 'execution_error', 'data_error', 'stale_data',
                         'malformed_evidence', 'required_input_unavailable', 'source_failure'):
                 from ..learning import capture as lc, capture_runtime as lr
                 from ..cognition.outcomes import timestamp
                 lc.safely(c, 'incident:'+str(cursor.lastrowid), lr.incident, cursor.lastrowid,
                           timestamp(now_utc().isoformat()), subject, detail, incident_kind=kind)
+
+    @staticmethod
+    def _brain_detail(conn, kind, detail):
+        if kind == "market_provenance":
+            from .journal_evidence import store
+            return store(conn, detail)
+        return detail if isinstance(detail, str) else json.dumps(detail)
 
     # -- control state ----------------------------------------------------
     def kv_get(self, key: str, default: str | None = None) -> str | None:
@@ -1778,7 +1794,9 @@ class Journal:
     # -- reads (used by brain, dashboard, learning) -----------------------
     def query(self, sql: str, params: tuple = ()) -> list[dict]:
         try:
-            rows = self._conn().execute(sql, params).fetchall()
+            from .journal_evidence import read_sql
+            conn = self._conn()
+            rows = conn.execute(read_sql(conn, sql), params).fetchall()
             return [dict(r) for r in rows]
         except Exception as exc:
             from ..observability.safety import journal_failure, is_storage_error

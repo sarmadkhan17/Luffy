@@ -560,11 +560,14 @@ class Orchestrator:
 
     def journalize(self, snap: Snapshot, decision: Decision,
                    market_type: str, mode: str) -> None:
-        if snap.market_provenance_json:
+        receipt = getattr(snap, 'market_provenance_parts', None)
+        if receipt is None and snap.market_provenance_json:
             import json
+            receipt = json.loads(snap.market_provenance_json)
+        if receipt is not None:
             self.journal.log_brain_event('market_provenance', 'market_data', dict(
                 decision_id=decision.id, cycle_id=decision.cycle_id,
-                receipt=json.loads(snap.market_provenance_json)))
+                receipt=receipt))
         self.journal.log_cycle(snap, decision.cycle_id, mode)
         votes = [Vote(**{**v, "side": Side(v["side"])})
                  for v in decision.votes]

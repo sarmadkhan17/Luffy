@@ -69,7 +69,8 @@ BUSY_TIMEOUT_S = 5.0
 
 SOURCE_ACCESS = ("sqlite_attach_uri_mode_ro;temp_views:brain_events("
                  "strategy_health_rows_bounded),decisions(live);"
-                 "authorizer_denies_src_writes_and_other_tables")
+                 "journal_src_detail_v1_verifies_exact_evidence;"
+                 "authorizer_denies_src_writes_and_other_tables_except_evidence_blobs_v1")
 
 SHADOW_DDL = """
 CREATE TABLE IF NOT EXISTS research_shadow_source_binding (
@@ -258,7 +259,7 @@ _DENY_ON_SRC = {sqlite3.SQLITE_INSERT, sqlite3.SQLITE_UPDATE,
                 sqlite3.SQLITE_DROP_TRIGGER, sqlite3.SQLITE_DROP_VIEW,
                 sqlite3.SQLITE_REINDEX, sqlite3.SQLITE_ANALYZE,
                 sqlite3.SQLITE_PRAGMA}
-_SRC_READABLE = set(SOURCE_TABLES)
+_SRC_READABLE = set(SOURCE_TABLES) | {'journal_evidence_blobs_v1'}
 
 
 def _authorizer(action, arg1, _arg2, db_name, _trigger):
@@ -277,7 +278,7 @@ _BOUND_DDL = (
     "sweep_max INTEGER NOT NULL)",
     "INSERT INTO temp.shadow_bound VALUES (0, 0)",
     "CREATE TEMP VIEW brain_events AS SELECT b.id AS id, b.ts AS ts, "
-    "b.kind AS kind, b.subject AS subject, b.detail AS detail "
+    "b.kind AS kind, b.subject AS subject, journal_src_detail_v1(b.detail) AS detail "
     "FROM src.brain_events b "
     f"WHERE b.kind IN ('{SPEC_KIND}', '{SWEEP_KIND}') "
     "AND b.id <= (SELECT sweep_max FROM temp.shadow_bound) "
@@ -356,6 +357,10 @@ class ShadowJournal(Journal):
 
     def source_query(self, sql: str, params: tuple = ()) -> list:
         """A SELECT against the attached source (authorizer-limited)."""
+        import re
+        sql = re.sub(r'FROM\s+src\.brain_events\b',
+            'FROM (SELECT id,ts,kind,subject,journal_src_detail_v1(detail) AS detail FROM src.brain_events)',
+            sql, flags=re.I)
         return [dict(r) for r in self._conn().execute(sql, params)]
 
     def close(self) -> None:
@@ -379,6 +384,8 @@ def open_shadow(shadow_path, source_path, *, readonly: bool) -> ShadowJournal:
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys=ON")
         conn.execute(f"ATTACH DATABASE ? AS {SRC}", (_uri(source, "ro"),))
+        from ..core.journal_evidence import install
+        install(conn, schema=SRC)
         have = {r[0] for r in conn.execute(
             f"SELECT name FROM {SRC}.sqlite_master WHERE type='table'")}
         if not set(SOURCE_TABLES) <= have:

@@ -73,7 +73,7 @@ import time
 #: data/venue feeds, dashboard, api — is refused.
 TRADER_ALLOWED = frozenset({
     "trader", "trader.cognition", "trader.core", "trader.core.journal",
-    "trader.core.reason_codes", "trader.core.types", "trader.strategy",
+    "trader.core.reason_codes", "trader.core.types", "trader.core.journal_evidence", "trader.strategy",
     "trader.strategy.health_observation", "trader.strategy.signal_occurrence",
     "trader.strategy.signal_occurrence_observation",
     # pure ``venue_key`` symbol normaliser, imported by signal_occurrence

@@ -101,9 +101,28 @@ class Snapshot:
 
     instrument_binding_json: str | None = None  # exact registry capability at proposal cut
     market_provenance_json: str | None = None  # exact market revisions at the decision cut
+    market_provenance_parts: dict | None = None
 
     def df(self, tf: str):
         return self.dfs.get(tf)
+
+
+def _provenance_get(self):
+    if self.market_provenance_parts is not None:
+        from .journal_evidence import serialize
+        return ''.join(serialize(self.market_provenance_parts))
+    return self.__dict__.get('_market_provenance_json')
+
+
+def _provenance_set(self, value):
+    self.__dict__['_market_provenance_json'] = value
+    if value is not None:
+        self.market_provenance_parts = None
+
+
+# Preserve the legacy constructor/read contract; only explicit legacy reads
+# materialize JSON. The live writer consumes the parts directly.
+Snapshot.market_provenance_json = property(_provenance_get, _provenance_set)
 
 
 @dataclass

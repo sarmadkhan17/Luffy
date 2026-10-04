@@ -580,3 +580,27 @@ def test_universe_first_selection_uses_post_acquisition_cut_only_for_current(mon
     u._rescan = rescan
     result = u.symbols(as_of_ms=T) if historical else u.symbols()
     assert result == (['BTC/USDT'] if historical else ['BTC/USDT', 'SOL/USDT'])
+
+
+def test_snapshot_frozen_acquisitions_reused_and_new_observations_retained(store,tmp_path,monkeypatch):
+    from types import SimpleNamespace
+    from trader.kernel import Kernel
+    from trader.core.journal import Journal
+    from trader.core.types import MarketType
+    from trader.core import journal_evidence as E
+    import trader.kernel as module
+    f,c=store;df=f.fetch_ohlcv('BTC/USDT',min_bars=1)
+    f.fetch_multi=lambda *args:{'15m':df};f.fetch_ohlcv=lambda *args:None
+    k=Kernel.__new__(Kernel);k.feed=f;k.journal=Journal(tmp_path/'journal.db')
+    k.cfg={'timeframes':{'context':[],'execution':'15m'}};k.market_type=MarketType.FUTURES
+    r={'available_at_ms':c.at,'observed_at_ms':c.at,'content_hash':'same-value-hash','raw':{'price':10}}
+    k.universe=SimpleNamespace(_volume_receipts={'BTC/USDT':r})
+    k._derivs_for=lambda *args,**kw:None;k._market_for=lambda **kw:None
+    monkeypatch.setattr(module.time,'time',lambda:c.at/1000)
+    first=k._snapshot_for('BTC/USDT');a=first.market_provenance_parts['universe_selection_receipts']
+    second=k._snapshot_for('BTC/USDT');assert second.market_provenance_parts['universe_selection_receipts'] is a
+    c.at+=1;k.universe._volume_receipts['BTC/USDT']={**r,'available_at_ms':c.at,'observed_at_ms':c.at}
+    third=k._snapshot_for('BTC/USDT');b=third.market_provenance_parts['universe_selection_receipts']
+    assert b is not a
+    assert json.loads(first.market_provenance_json)['universe_selection_receipts']['BTC/USDT']['observed_at_ms']==c.at-1
+    assert json.loads(third.market_provenance_json)['universe_selection_receipts']['BTC/USDT']['observed_at_ms']==c.at

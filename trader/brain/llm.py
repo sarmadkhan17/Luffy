@@ -18,6 +18,7 @@ log = logging.getLogger(__name__)
 class BrainLLM:
     def __init__(self, cfg: dict):
         b = cfg["brain"]
+        self._brain_config = b
         self.model_fast = b["model_fast"]
         self.model_deep = b["model_deep"]
         self.max_tokens = int(b["max_tokens_per_call"])
@@ -36,7 +37,7 @@ class BrainLLM:
 
     @property
     def available(self) -> bool:
-        return bool(self._key)
+        return self._brain_config.get("enabled", True) is True and bool(self._key)
 
     def _usage(self) -> dict:
         try:
@@ -128,6 +129,8 @@ class BrainLLM:
             return 0  # An unreadable ledger is never an empty budget ledger.
 
     def _admit(self, request, deep, purpose):
+        if self._brain_config.get("enabled", True) is not True:
+            return None
         # Reserve input as UTF-8 request bytes (a conservative tokenizer-independent
         # estimate) plus the admitted output ceiling. Actual billed usage remains
         # authoritative at settlement, including unexpected provider overages.
@@ -152,7 +155,7 @@ class BrainLLM:
             self._write_usage(data)
 
     def _call(self, request, deep, purpose):
-        if not self.available or self.budget_left(purpose) <= 0:
+        if self._brain_config.get("enabled", True) is not True or not self.available or self.budget_left(purpose) <= 0:
             return None
         try:
             admitted = self._admit(request, deep, purpose)

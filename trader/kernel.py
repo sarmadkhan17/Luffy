@@ -913,18 +913,32 @@ class Kernel:
         btc_context_receipt = getattr(self, '_btc_ctx_receipt', None)
         btc_ctx = self._btc_ctx if btc_context_receipt and 0 <= as_of-btc_context_receipt['as_of_ms'] <= 600_000 else {}
         lineage['btc_context'] = btc_context_receipt if btc_ctx else None
-        lineage['universe_selection_receipts'] = {sym:r for sym,r in getattr(self.universe, '_volume_receipts', {}).items()
-                                                  if r['available_at_ms'] <= as_of}
-        lineage['universe_listing_receipts'] = {sym:r for sym,r in getattr(self.universe, '_listing_cache', {}).items()
-                                                if r['available_at_ms'] <= as_of}
-        lineage['universe_membership_receipts'] = {sym:r for sym,r in getattr(self, '_scan_membership_receipts', {}).items()
-                                                  if r['available_at_ms'] <= as_of and r['observed_at_ms'] <= as_of}
+        from .core.journal_evidence import FrozenJSON
+        cache = self.__dict__.setdefault('_provenance_acquisitions', {})
+        for name, receipts in (
+            ('universe_selection_receipts', getattr(self.universe, '_volume_receipts', {})),
+            ('universe_listing_receipts', getattr(self.universe, '_listing_cache', {})),
+            ('universe_membership_receipts', getattr(self, '_scan_membership_receipts', {})),
+        ):
+            selected = {sym: r for sym, r in receipts.items()
+                        if r['available_at_ms'] <= as_of and
+                        (name != 'universe_membership_receipts' or r['observed_at_ms'] <= as_of)}
+            # These acquisition records are replaced, never edited, by their
+            # producers. Include all receipt identities and clocks, rather than
+            # values/prices, so equal-valued different observations never merge.
+            identity = tuple((sym, id(r), r.get('revision_id'), r.get('content_hash'),
+                              r.get('available_at_ms'), r.get('observed_at_ms'))
+                             for sym, r in sorted(selected.items()))
+            old = cache.get(name)
+            if old is None or old[0] != identity:
+                old = cache[name] = (identity, FrozenJSON.freeze(selected), tuple(selected.values()))
+            lineage[name] = old[1]
         return Snapshot(symbol=symbol,
                         ts=dt.datetime.fromtimestamp(as_of/1000, dt.timezone.utc).isoformat(),
                         price=price, dfs=dfs, market_type=self.market_type.value,
                         btc_ctx=btc_ctx, universe=safe_universe, derivs=derivs, market=market,
                         instrument_binding_json=instrument_binding,
-                        market_provenance_json=mp.encode(lineage))
+                        market_provenance_parts=lineage)
 
     def _refresh_btc_context(self) -> None:
         """Leader context computed once per cycle, shared by all scouts."""
@@ -1177,8 +1191,10 @@ class Kernel:
                                                oi.get(symbol))
             original_order_book = self._order_book(symbol)
             self.depth_agent.set_context(symbol, original_order_book)
-            if getattr(snap, 'market_provenance_json', None):
+            lineage = getattr(snap, 'market_provenance_parts', None)
+            if lineage is None and getattr(snap, 'market_provenance_json', None):
                 lineage = json.loads(snap.market_provenance_json)
+            if lineage is not None:
                 cut = int(time.time()*1000)
                 if cut < lineage['as_of_ms']:
                     stats['skips'] += 1
@@ -1188,7 +1204,7 @@ class Kernel:
                              and receipt['available_at_ms'] <= cut}
                 lineage.update(as_of_ms=cut, auxiliary=auxiliary)
                 snap.ts = dt.datetime.fromtimestamp(cut/1000, dt.timezone.utc).isoformat()
-                snap.market_provenance_json = json.dumps(lineage,sort_keys=True)
+                snap.market_provenance_parts = lineage
             from .learning.capture_runtime import runtime_inputs
             try:
                 learning_inputs = runtime_inputs(self.journal, snap, self.cfg,

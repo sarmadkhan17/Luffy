@@ -396,6 +396,7 @@ crawler:
     - https://www.bis.org/list/wpapers/index.htm  # BIS working papers
 
 brain:
+  enabled: false                      # contained observation: block provider admission
   provider: deepseek
   base_url: https://api.deepseek.com   # OpenAI-compatible; swap for Ollama/OpenRouter later
   model_fast: deepseek-chat            # V3 — proposals, summaries
