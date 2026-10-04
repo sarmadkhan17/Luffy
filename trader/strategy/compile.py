@@ -41,7 +41,8 @@ class CompiledStrategy:
                 market: dict | None = None, symbol: str | None = None):
         ctx = self._ctx(frames, btc, derivs, universe, market, symbol)
         n = len(ctx.index)
-        keep = ctx.df['quality'].eq('VALID').to_numpy() if 'quality' in ctx.df else np.ones(n, dtype=bool)
+        # This accumulator is mutated below; pandas can expose a read-only view.
+        keep = ctx.df['quality'].eq('VALID').to_numpy(copy=True) if 'quality' in ctx.df else np.ones(n, dtype=bool)
         for f in self._filters:
             keep &= dsl.evaluate_bool(f, ctx)
         lo = (dsl.evaluate_bool(self._long, ctx) & keep) \

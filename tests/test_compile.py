@@ -49,6 +49,17 @@ def test_filters_are_anded_with_entry(frame):
     assert np.array_equal(with_f, with_f & without)
 
 
+def test_filters_preserve_provenance_quality_with_readonly_pandas_arrays(frame):
+    frame['quality'] = 'VALID'
+    frame.loc[frame.index[-1], 'quality'] = 'INVALID'
+    original = frame.copy(deep=True)
+    with pd.option_context('mode.copy_on_write', True):
+        lo, sh = compile_spec(_spec(entry_long='close > 0', filters=['close > 0'])).entries({'15m': frame})
+    assert lo[:-1].all() and not lo[-1]
+    assert not sh.any()
+    pd.testing.assert_frame_equal(frame, original)
+
+
 def test_data_requires_is_derived(frame):
     assert compile_spec(_spec()).data_requires == ("ohlcv",)
 
