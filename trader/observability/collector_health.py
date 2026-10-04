@@ -113,8 +113,8 @@ def bound_snapshot(path, *, now_ms=None, fresh_ms=300000):
             db.execute('BEGIN')
             row=db.execute('SELECT payload,causes_complete FROM scans WHERE scan_id=?',(sid,)).fetchone()
             if not row or not row[0] or not row[1]: raise Refused('snapshot_incomplete',ev)
-            if len(row[0])>2*1024**2: raise Refused('source_payload_bound',ev)
-            scan=json.loads(row[0]); ident=scan.get('collector_identity')
+            from .scan_source import read
+            scan=read(db,sid,deadline); ident=scan.get('collector_identity')
             expected=dict(schema=IDENTITY_SCHEMA,instance_id=h['instance_id'],seq=h['last_complete']['seq'])
             if ident!=expected or scan.get('scan_id')!=sid: raise Refused('snapshot_identity_mismatch',ev)
             if h.get('health_schema') == 'declared-population-health.v1':

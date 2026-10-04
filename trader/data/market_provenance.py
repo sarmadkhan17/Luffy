@@ -157,10 +157,11 @@ def seal(df):
     return out
 
 
-def append(conn, key, df):
-    """Append and link each retrieval atomically with the existing projection."""
+def prepare(df):
+    """Detach and seal receipt records before entering a data write transaction."""
     if not all(k in df for k in META):
-        return
+        return ()
+    records = []
     for _, row in seal(df).iterrows():
         record = {k: None if pd.isna(row[k]) else row[k] for k in META}
         record.update({k: None if pd.isna(row[k]) else float(row[k]) for k in VALUES if k in df})
@@ -171,6 +172,14 @@ def append(conn, key, df):
         for clock in ('request_started_ms','max_age_ms'):
             if record[clock] is not None:
                 record[clock] = int(record[clock])
+        records.append(record)
+    return tuple(records)
+
+
+def append(conn, key, df=None, *, prepared=None):
+    """Append/link exact retrievals atomically; ancestry stays inside the write."""
+    for original in prepare(df) if prepared is None else prepared:
+        record = dict(original)
         prior = conn.execute('''SELECT revision_id FROM market_revisions
             WHERE series_key=? AND event_ms=? AND json_extract(record_json,'$.instrument_id') IS ?
             AND json_extract(record_json,'$.source') IS ? ORDER BY observed_ms DESC, rowid DESC LIMIT 1''',
@@ -181,13 +190,17 @@ def append(conn, key, df):
                       record['available_at_ms'], record['observed_at_ms'], encode(record)))
 
 
-def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=False, revision_stream=False, instrument_id=None, source=None):
+def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=False, revision_stream=False, instrument_id=None, source=None, window_start_ms=None):
     """Last retained revision of EACH event eligible at the exact decision cut.
 
     Replay additionally requires first-use eligibility at that bar's close.
     UNKNOWN legacy rows never receive inferred receipt clocks.
     """
     cut(as_of_ms)
+    if window_start_ms is not None:
+        cut(window_start_ms)
+        if window_start_ms > as_of_ms or replay_tf or revision_stream:
+            raise ValueError('current_window_requires_exact_asof_revision_selection')
     clauses = 'WHERE series_key=? AND available_ms<=? AND observed_ms<=?'
     args = [key,as_of_ms,as_of_ms]
     if instrument_id is not None:
@@ -217,6 +230,22 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
         query = f"""SELECT record_json FROM (SELECT record_json,event_ms,
             ROW_NUMBER() OVER (PARTITION BY event_ms ORDER BY observed_ms DESC,rowid DESC) AS ordinal
             FROM market_revisions {clauses}) WHERE ordinal=1 ORDER BY event_ms DESC LIMIT ?"""
+        if window_start_ms is not None:
+            # Filter AFTER exact revision selection. Before the first supplied
+            # bar retain its exact predecessor plus only late older events
+            # that can become the newest event. Dominated late corrections
+            # cannot change align() at any cut in this window.
+            query = f"""WITH ranked AS (SELECT record_json,event_ms,available_ms,observed_ms,
+                ROW_NUMBER() OVER (PARTITION BY event_ms ORDER BY observed_ms DESC,rowid DESC) AS ordinal
+                FROM market_revisions {clauses}), current AS (
+                SELECT *,MAX(event_ms,available_ms,observed_ms) AS ready_ms FROM ranked WHERE ordinal=1),
+                frontier AS (SELECT *,MAX(event_ms) OVER (
+                    ORDER BY ready_ms,event_ms DESC ROWS UNBOUNDED PRECEDING) AS newest FROM current)
+                SELECT record_json FROM frontier WHERE event_ms>=?
+                OR (ready_ms>=? AND event_ms=newest)
+                OR event_ms=(SELECT MAX(event_ms) FROM current WHERE ready_ms<?)
+                ORDER BY event_ms DESC LIMIT ?"""
+            args += [window_start_ms]*3
         args.append(limit)
     rows = conn.execute(query,args).fetchall()
     if not revision_stream:

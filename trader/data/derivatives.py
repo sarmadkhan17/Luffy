@@ -112,16 +112,20 @@ class DerivFeed:
         if not all(k in df for k in mp.META):
             df = mp.annotate(df, instrument_id=None, source=None, kind='derivative',
                              received_ms=self._clock_ms())
+        # Receipt sealing and projection conversion do not own SQLite's
+        # writer lock. Exact ancestry selection remains atomic in append().
+        prepared = mp.prepare(df)
+        projection = [(symbol, series, int(t), float(v))
+                      for t, v in zip(mp.ms(df['ts']), df['value'])]
         from .sqlite_tx import write_tx
         with write_tx(self._local, self.db, 'derivative receipt') as conn:
-            mp.append(conn, 'derivative:'+symbol+':'+series, df)
+            mp.append(conn, 'derivative:'+symbol+':'+series, prepared=prepared)
             conn.executemany('INSERT OR REPLACE INTO derivs VALUES (?,?,?,?)',
-                             [(symbol, series, int(t), float(v))
-                              for t, v in zip(mp.ms(df['ts']), df['value'])])
+                             projection)
 
-    def load(self, symbol: str, series: str, limit: int = 200000, *, as_of_ms=None):
+    def load(self, symbol: str, series: str, limit: int = 200000, *, as_of_ms=None, window_start_ms=None):
         at = self._clock_ms() if as_of_ms is None else mp.cut(as_of_ms)
-        df = mp.load(self.db, 'derivative:'+symbol+':'+series, as_of_ms=at, limit=limit, revision_stream=as_of_ms is None)
+        df = mp.load(self.db, 'derivative:'+symbol+':'+series, as_of_ms=at, limit=limit, revision_stream=as_of_ms is None, window_start_ms=window_start_ms)
         df = mp.eligible_frame(df, None, at)
         if as_of_ms is not None and df is not None and len(df):
             tail=df.iloc[-1]

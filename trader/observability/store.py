@@ -78,6 +78,8 @@ class Store:
             event_id TEXT PRIMARY KEY, scan_id TEXT REFERENCES scans(scan_id)
               ON DELETE CASCADE, symbol TEXT, payload TEXT NOT NULL);
         """)
+        from .scan_source import ensure
+        ensure(self.db)
         # Enforce a hard SQLite allocation ceiling as well as logical retention.
         page_size = self.db.execute("PRAGMA page_size").fetchone()[0]
         self.db.execute(f"PRAGMA max_page_count={max(16, cfg['max_bytes'] // page_size)}")
@@ -94,6 +96,9 @@ class Store:
                         "LIMIT -1 OFFSET ?)", (keep,))
         self.db.execute("DELETE FROM versions WHERE id NOT IN "
                         "(SELECT version_id FROM scan_versions)")
+
+        from .scan_source import prune
+        prune(self.db)
 
     def write(self, event):
         """Persist one event; return the read-back identity proof of its scan."""
@@ -187,8 +192,10 @@ class Store:
                     payload['correlation_input'] = event['input']['correlation_history']
                 if 'positioning_capture' in event:
                     payload['positioning_capture'] = event['positioning_capture']
-                self.db.execute("UPDATE scans SET payload=? WHERE scan_id=?",
-                                (encode(payload), scan_id))
+                text = encode(payload)
+                self.db.execute("UPDATE scans SET payload=? WHERE scan_id=?", (text, scan_id))
+                from .scan_source import publish
+                publish(self.db, scan_id, text)
             else:
                 raise ValueError("unknown event kind")
             self._prune(now_ms)

@@ -302,7 +302,7 @@ class Kernel:
     # exactly how three authored specs sat in `paper` with zero trades.
     _DERIVS_TTL = 300.0                # recorder writes every 15m
 
-    def _derivs_for(self, symbol: str, *, as_of_ms=None) -> dict | None:
+    def _derivs_for(self, symbol: str, *, as_of_ms=None, window_start_ms=None) -> dict | None:
         reqs = getattr(self, "_spec_requires", ())
         if not any(r != "ohlcv" for r in reqs):
             return None
@@ -312,7 +312,8 @@ class Kernel:
             return hit[1]
         try:
             from .strategy.spec_evidence import load_derivs
-            out = load_derivs(symbol, reqs, as_of_ms=as_of_ms)
+            out = load_derivs(symbol, reqs, as_of_ms=as_of_ms,
+                              **({'window_start_ms':window_start_ms} if window_start_ms is not None else {}))
         except Exception as e:
             log.warning(f"derivs unavailable for {symbol}: {e}")
             out = None
@@ -901,7 +902,10 @@ class Kernel:
             safe_universe[sym] = {tf: frame for tf, frame in safe.items()
                                  if frame is not None and len(frame) and frame['quality'].eq('VALID').all()}
         price = float(dfs[exec_tf]['close'].iloc[-1])
-        derivs = self._derivs_for(symbol, as_of_ms=as_of)
+        # Only revisions that can affect these supplied market bars are current
+        # inputs. Research/replay keep the full historical loader.
+        window_start = min(int(mp.ms(frame['ts'])[0]) for frame in dfs.values())
+        derivs = self._derivs_for(symbol, as_of_ms=as_of, window_start_ms=window_start)
         derivs = {key: frame for key, frame in (derivs or {}).items() if frame['instrument_id'].eq(iid).all()}
         market = self._market_for(as_of_ms=as_of)
         lineage = dict(schema_version=mp.SCHEMA, as_of_ms=as_of, instrument_id=iid,

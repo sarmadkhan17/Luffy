@@ -183,9 +183,8 @@ def source_snapshot(path):
         if row is None:
             return None
         sid, size = row
-        if size > 2*1024**2:
-            raise ValueError("source_payload_bound")
-        scan = json.loads(db.execute("SELECT payload FROM scans WHERE scan_id=?", (sid,)).fetchone()[0])
+        from .scan_source import read
+        scan = read(db,sid,started+1)
         count, max_size = db.execute("SELECT COUNT(*),MAX(length(v.payload)) FROM versions v JOIN scan_versions s ON v.id=s.version_id WHERE s.scan_id=?", (sid,)).fetchone()
         if count > 4096 or (max_size or 0) > 4096:
             raise ValueError("input_bound_exceeded")

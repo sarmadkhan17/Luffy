@@ -38,7 +38,7 @@ def _tables(db):
 
 
 def _json(text):
-    if len(text) > 2 * 1024**2:
+    if len(text.encode()) > 2 * 1024**2:
         raise ValueError('SOURCE_PAYLOAD_BOUND_EXCEEDED')
     return json.loads(text)
 
@@ -80,8 +80,9 @@ def capture(journal, attention, investigation, config, max_contexts=4):
         scan = None
         if attention.exists():
             ad = _read(stack, attention, deadline)
-            row = ad.execute('SELECT payload FROM scans WHERE payload IS NOT NULL AND causes_complete=1 ORDER BY rowid DESC LIMIT 1').fetchone()
-            scan = _json(row[0]) if row else None
+            from trader.observability.scan_source import latest
+            from trader.observability.attention import settings
+            scan = latest(ad, deadline, max_bytes=settings(config.get('attention'))['max_bytes']//2)
         else:
             missing.append('ATTENTION_STORE_MISSING')
         cases, allocations, updates = [], [], {}
@@ -195,6 +196,8 @@ def capture(journal, attention, investigation, config, max_contexts=4):
                    source_delivery=availability(config, journal.parent),
                    missing_sources=missing, source_set_sha256=source_set.sha256,
                    read_only=True, authenticated_requests=0, production_mutations=0)
+    if time.monotonic() > deadline:
+        raise ValueError('SOURCE_READ_DEADLINE_EXCEEDED')
     return requests, snapshot, kv.get('control_state', 'UNKNOWN'), source_set, details
 
 

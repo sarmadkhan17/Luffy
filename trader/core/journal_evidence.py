@@ -11,6 +11,9 @@ import hashlib
 import json
 import re
 import zlib
+import time
+import threading
+from collections import OrderedDict
 from dataclasses import dataclass
 
 PREFIX = '!luffy-journal-detail.v1!'
@@ -98,21 +101,42 @@ def store(conn, detail):
     buffer = []
     buffered = 0
 
+    pending = {}
+    hash_pending = []
+
+    def flush():
+        if not pending:
+            return
+        hasher.update(b''.join(hash_pending))
+        hash_pending.clear()
+        keys = tuple(pending)
+        found = {r[0]: r[1:] for r in conn.execute(
+            'SELECT sha256,byte_length,codec,payload FROM journal_evidence_blobs_v1 '
+            'WHERE sha256 IN (' + ','.join('?' for _ in keys) + ')', keys)}
+        inserts = []
+        for sha, data in pending.items():
+            row = found.get(sha)
+            if row is None:
+                inserts.append((sha, len(data), 'zlib.v1', zlib.compress(data, 6)))
+            elif _blob(row, sha) != data:
+                raise EvidenceError('evidence_hash_collision')
+        conn.executemany('INSERT INTO journal_evidence_blobs_v1 VALUES (?,?,?,?)', inserts)
+        pending.clear()
+
     def save(raw):
         nonlocal size
         data = raw.encode('utf-8')
-        hasher.update(data)
+        hash_pending.append(data)
         size += len(data)
-        sha = hashlib.sha256(data).hexdigest()
-        row = conn.execute('SELECT byte_length,codec,payload FROM journal_evidence_blobs_v1 WHERE sha256=?', (sha,)).fetchone()
-        if row is None:
-            conn.execute('INSERT INTO journal_evidence_blobs_v1 VALUES (?,?,?,?)',
-                         (sha, len(data), 'zlib.v1', zlib.compress(data, 6)))
-        else:
-            existing = _blob(row, sha)
-            if existing != data:
-                raise EvidenceError('evidence_hash_collision')
+        sha = _segment_sha(data)
+        if sha in pending and pending[sha] != data:
+            raise EvidenceError('evidence_hash_collision')
+        pending[sha] = data
         refs.append(sha)
+        # At most 64 bounded segments await verification/insertion. Keep the
+        # original streaming contract even for full owner history exports.
+        if len(hash_pending) >= 64:
+            flush()
 
     for part in raw_parts:
         # Preserve pre-frozen segment boundaries. Ordinary tiny JSON tokens
@@ -128,10 +152,73 @@ def store(conn, detail):
                 save(''.join(buffer)); buffer = []; buffered = 0
     if buffer:
         save(''.join(buffer))
+    flush()
     return PREFIX + json.dumps({'sha256': hasher.hexdigest(), 'byte_length': size, 'chunks': refs}, separators=(',', ':'))
 
 
+# A content-only memo for the pure segment digest. Exact immutable bytes are
+# the key; changed bytes never reuse a digest. This avoids repeatedly yielding
+# the GIL to CPU-heavy background work for every identical shared segment.
+_SEGMENT_HASHES = OrderedDict()
+_SEGMENT_LOCK = threading.Lock()
+_SEGMENT_BYTES = 0
+_SEGMENT_LIMIT = 64 * 1024**2
+
+
+def _segment_sha(data):
+    global _SEGMENT_BYTES
+    with _SEGMENT_LOCK:
+        hit = _SEGMENT_HASHES.get(data)
+        if hit is not None:
+            _SEGMENT_HASHES.move_to_end(data)
+            return hit
+    sha = hashlib.sha256(data).hexdigest()
+    with _SEGMENT_LOCK:
+        if data not in _SEGMENT_HASHES:
+            _SEGMENT_HASHES[data] = sha
+            _SEGMENT_BYTES += len(data)
+            while _SEGMENT_BYTES > _SEGMENT_LIMIT or len(_SEGMENT_HASHES) > 1024:
+                old, _ = _SEGMENT_HASHES.popitem(last=False)
+                _SEGMENT_BYTES -= len(old)
+    return sha
+
+
+# Cache only bytes already verified against these EXACT stored bytes and
+# metadata. No connection identity/data_version assumption can hide corruption.
+# Entries from another database are safe only when the entire source is equal.
+_VERIFIED = OrderedDict()
+_VERIFIED_LOCK = threading.Lock()
+_VERIFIED_BYTES = 0
+_VERIFIED_LIMIT = 32 * 1024**2
+
+
 def _blob(row, sha):
+    global _VERIFIED_BYTES
+    try:
+        length, codec, payload = row
+        if type(length) is not int or not 0 <= length <= 16 * BLOCK or codec != 'zlib.v1' or not isinstance(payload, bytes):
+            raise EvidenceError('evidence_blob_metadata_invalid:' + sha)
+    except (TypeError, ValueError) as exc:
+        raise EvidenceError('evidence_blob_metadata_invalid:' + sha) from exc
+    key = (sha, length, codec, payload)
+    with _VERIFIED_LOCK:
+        hit = _VERIFIED.get(key)
+        if hit is not None:
+            _VERIFIED.move_to_end(key)
+            return hit
+    data = _decode_blob(row, sha)
+    cost = len(data) + len(row[2])
+    with _VERIFIED_LOCK:
+        if key not in _VERIFIED:
+            _VERIFIED[key] = data
+            _VERIFIED_BYTES += cost
+            while _VERIFIED_BYTES > _VERIFIED_LIMIT or len(_VERIFIED) > 1024:
+                old, value = _VERIFIED.popitem(last=False)
+                _VERIFIED_BYTES -= len(value) + len(old[3])
+    return data
+
+
+def _decode_blob(row, sha):
     try:
         length, codec, payload = row
         if codec != 'zlib.v1' or type(length) is not int or not 0 <= length <= 16 * BLOCK:
@@ -147,7 +234,7 @@ def _blob(row, sha):
         raise EvidenceError('evidence_blob_corrupt:' + sha) from exc
 
 
-def resolve(conn, detail, *, schema='main'):
+def resolve(conn, detail, *, schema='main', deadline=None, max_bytes=None):
     if not isinstance(detail, str) or not detail.startswith(PREFIX):
         return detail
     if schema not in ('main', 'src'):
@@ -156,17 +243,27 @@ def resolve(conn, detail, *, schema='main'):
         manifest = json.loads(detail[len(PREFIX):])
         if set(manifest) != {'sha256', 'byte_length', 'chunks'} or not isinstance(manifest['chunks'], list):
             raise EvidenceError('evidence_manifest_invalid')
+        if type(manifest['byte_length']) is not int or manifest['byte_length'] < 0:
+            raise EvidenceError('evidence_manifest_length_invalid')
+        if max_bytes is not None and manifest['byte_length'] > max_bytes:
+            raise EvidenceError('evidence_expanded_bound_exceeded')
         out = bytearray()
         for sha in manifest['chunks']:
+            if deadline is not None and time.monotonic() > deadline:
+                raise EvidenceError('evidence_read_deadline_exceeded')
             if not isinstance(sha, str) or not re.fullmatch('[0-9a-f]{64}', sha):
                 raise EvidenceError('evidence_reference_invalid')
             row = conn.execute(f'SELECT byte_length,codec,payload FROM {schema}.journal_evidence_blobs_v1 WHERE sha256=?', (sha,)).fetchone()
             if row is None:
                 raise EvidenceError('evidence_missing:' + sha)
             out.extend(_blob(row, sha))
+            if len(out) > manifest['byte_length']:
+                raise EvidenceError('evidence_detail_length_exceeded')
         if len(out) != manifest['byte_length'] or hashlib.sha256(out).hexdigest() != manifest['sha256']:
             raise EvidenceError('evidence_detail_hash_mismatch')
         return out.decode('utf-8')
+    except EvidenceError:
+        raise
     except (KeyError, TypeError, ValueError, UnicodeError) as exc:
         raise EvidenceError('evidence_detail_invalid') from exc
 

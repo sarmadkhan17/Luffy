@@ -30,7 +30,7 @@ _SERIES_FOR = {"funding": "funding", "open_interest": "oi",
                "basis": "basis"}
 
 
-def load_derivs(symbol: str, requires, feed: DerivFeed | None = None, *, as_of_ms=None) -> dict:
+def load_derivs(symbol: str, requires, feed: DerivFeed | None = None, *, as_of_ms=None, window_start_ms=None) -> dict:
     """{feature-series-name: raw observation frame} for one symbol."""
     feed = feed or DerivFeed()
     out = {}
@@ -38,7 +38,8 @@ def load_derivs(symbol: str, requires, feed: DerivFeed | None = None, *, as_of_m
         series = _SERIES_FOR.get(req)
         if series is None:                      # "ohlcv" and anything unknown
             continue
-        df = feed.load(symbol, series, as_of_ms=as_of_ms)
+        df = feed.load(symbol, series, as_of_ms=as_of_ms,
+                       **({'window_start_ms':window_start_ms} if window_start_ms is not None else {}))
         if df is not None and len(df):
             out[series] = df
     return out
