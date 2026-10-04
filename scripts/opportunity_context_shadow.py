@@ -34,7 +34,7 @@ def _read(stack, path, deadline):
 
 
 def _tables(db):
-    return {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    return set(json.loads(db.execute("SELECT json_group_array(name) FROM sqlite_master WHERE type='table'").fetchone()[0]))
 
 
 def _json(text):
@@ -74,7 +74,7 @@ def capture(journal, attention, investigation, config, max_contexts=4):
             authority_inventory[version['version_id']] = inventory
         # Read current stored decision occurrences, never turn historical
         # decisions/PF into current opportunities or synthesize signals.
-        columns = {r[1] for r in db.execute('PRAGMA table_info(decisions)')}
+        columns = set(json.loads(db.execute("SELECT json_group_array(name) FROM pragma_table_info('decisions')").fetchone()[0]))
         decisions = [dict(r) for r in db.execute('SELECT id,cycle_id,ts,symbol,signals_json FROM decisions ORDER BY ts DESC LIMIT 32')] if versions and 'signals_json' in columns else []
         selections = [dict(r) for r in db.execute('SELECT * FROM attention_selections ORDER BY cycle_as_of_ms DESC LIMIT 16')] if 'attention_selections' in names else []
         scan = None

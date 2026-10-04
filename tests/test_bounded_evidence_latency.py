@@ -80,6 +80,76 @@ def test_decoder_cache_scoped_to_exact_bytes_and_deadline():
     with pytest.raises(E.EvidenceError):E.resolve(db,marker)
 
 
+def test_existing_source_packet_keeps_exact_owner_root_when_anchored(tmp_path):
+    db=sqlite3.connect(tmp_path/'legacy.db')
+    db.executescript('CREATE TABLE scans(scan_id TEXT PRIMARY KEY,payload TEXT,causes_complete INTEGER);'
+                     'CREATE TABLE scan_sources_v1(scan_id TEXT PRIMARY KEY,detail TEXT NOT NULL);'+E.SCHEMA)
+    receipt=dict(raw='x'*350_000,context=dict(endpoint='retained'))
+    text=json.dumps(dict(scan_id='legacy',membership=[dict(source_receipt=receipt) for _ in range(12)]),
+                    sort_keys=True,separators=(',',':'))
+    db.execute('INSERT INTO scans VALUES (?,?,1)',('legacy',text))
+    original=E.store(db,text)
+    db.execute('INSERT INTO scan_sources_v1 VALUES (?,?)',('legacy',original));db.commit()
+    S.ensure(db)
+    with db:S.publish(db,'legacy',text)
+    primary,alternate=db.execute('SELECT detail,anchored_detail FROM scan_sources_v1').fetchone()
+    assert primary==original and alternate and E.resolve(db,primary)==E.resolve(db,alternate)==text
+    assert json.loads(primary[len(E.PREFIX):])['sha256']==json.loads(alternate[len(E.PREFIX):])['sha256']
+    before=db.execute('SELECT count(*),sum(length(payload)) FROM journal_evidence_blobs_v1').fetchone()
+    with db:S.publish(db,'legacy',text);S.prune(db)
+    assert db.execute('SELECT count(*),sum(length(payload)) FROM journal_evidence_blobs_v1').fetchone()==before
+    assert S.latest(db,time.monotonic()+5)==json.loads(text)
+    assert E.resolve(db,primary)==text
+    with pytest.raises(ValueError,match='SCAN_SOURCE_IDENTITY_CHANGED'):
+        S.publish(db,'legacy',text.replace('retained','modified'))
+
+
+def test_latest_decision_index_retains_equal_timestamp_selection(tmp_path):
+    j=Journal(tmp_path/'journal.db')
+    with sqlite3.connect(j.db_path) as db:
+        db.execute('DROP INDEX idx_decisions_current_ts')
+        for n in range(80):
+            db.execute('INSERT INTO cycles(id,ts,symbol) VALUES (?,?,?)',(str(n),'2026-01-01','BTC/USDT'))
+            db.execute('INSERT INTO decisions(id,cycle_id,ts,symbol,action,score,threshold,confidence) VALUES (?,?,?,?,?,0,0,0)',
+                       (str(n),str(n),'2026-01-01' if n<40 else '2026-01-02','BTC/USDT','HOLD'))
+        q='SELECT id,cycle_id,ts,symbol,signals_json FROM decisions ORDER BY ts DESC LIMIT 32'
+        original=db.execute(q).fetchall()
+        db.execute('CREATE INDEX idx_decisions_current_ts ON decisions(ts DESC)')
+        assert db.execute(q).fetchall()==original
+        assert 'idx_decisions_current_ts' in str(db.execute('EXPLAIN QUERY PLAN '+q).fetchall())
+        assert 'TEMP B-TREE' not in str(db.execute('EXPLAIN QUERY PLAN '+q).fetchall())
+
+
+def test_source_digest_memo_never_reuses_changed_payload_or_supplied_hash(monkeypatch):
+    from trader.portfolio import allocator as A
+    with A._SOURCE_DIGEST_LOCK:
+        A._SOURCE_DIGESTS.clear();A._SOURCE_DIGEST_BYTES=0
+    original=A.Source.freeze('source',dict(context='retained'))
+    assert A.Source(original.source_id,original.sha256,original.payload_json)==original
+    with pytest.raises(ValueError,match='SOURCE_INTEGRITY_REFUSED'):
+        A.Source(original.source_id,original.sha256,original.payload_json.replace('retained','changed'))
+    with pytest.raises(ValueError,match='SOURCE_INTEGRITY_REFUSED'):
+        A.Source(original.source_id,'0'*64,original.payload_json)
+    # Noncanonical legacy JSON still verifies the canonical logical hash.
+    assert A.Source('legacy',original.sha256,'{ "context" : "retained" }').sha256==original.sha256
+    monkeypatch.setattr(A,'_SOURCE_DIGEST_LIMIT',64)
+    for n in range(100):A.Source.freeze(str(n),dict(text='x'*100,n=n))
+    assert A._SOURCE_DIGEST_BYTES<=64 and len(A._SOURCE_DIGESTS)<=64
+
+
+def test_disabled_provider_makes_zero_attempts_and_leaves_ledger_exact(tmp_path,monkeypatch):
+    from tests.test_final_audit_llm_reservation import brain,invoke
+    attempts=[]
+    b=brain(tmp_path,monkeypatch,client=lambda **kw:attempts.append(kw))
+    b._brain_config['enabled']=False
+    b._usage_path.write_text('{"retained":"unchanged"}')
+    original=b._usage_path.read_bytes()
+    assert not b.available
+    assert b._admit(dict(messages=[]),False,'research') is None
+    assert invoke(b,False) is None and invoke(b,True) is None
+    assert not attempts and b._usage_path.read_bytes()==original
+
+
 def test_current_derivative_window_matches_full_alignment_with_late_revisions(tmp_path):
     import numpy as np
     import pandas as pd

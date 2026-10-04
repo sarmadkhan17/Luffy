@@ -91,6 +91,7 @@ def main():
  for name in ('load','append','eligible_frame','usable_current'):
   wrap(M,name,'market.'+name,lambda a,k,r:dict(rows_returned=len(r) if r is not None else 0))
  from trader.portfolio import current as P
+ from trader.portfolio import allocator as A
  from scripts import opportunity_context_shadow as S
  from trader.learning import capture as C, capture_runtime as R, dispatch as D, runtime as L, foundation as F
  for obj,names in [(P,('freeze','checkpoint')),(S,('capture',)),(C,('snapshot','resolve','register')),
@@ -99,6 +100,9 @@ def main():
    if hasattr(obj,name):wrap(obj,name)
  wrap(F,'canonical','evidence.serialize')
  wrap(F,'digest','evidence.hash')
+ wrap(A,'canonical','portfolio.serialize')
+ wrap(A,'digest','portfolio.hash')
+ wrap(A,'_source_digest','portfolio.source_verify')
  wrap(M,'encode','provenance.serialize')
  wrap(M,'digest','provenance.hash')
  import requests

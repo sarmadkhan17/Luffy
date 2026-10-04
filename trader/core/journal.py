@@ -70,6 +70,9 @@ CREATE TABLE IF NOT EXISTS decisions (
 );
 CREATE INDEX IF NOT EXISTS idx_decisions_symbol ON decisions(symbol, ts);
 CREATE INDEX IF NOT EXISTS idx_decisions_exec ON decisions(executed);
+-- Portfolio reads the bounded latest decisions across all symbols. Descending
+-- keys retain ascending rowid order for equal timestamps, as the table sorter.
+CREATE INDEX IF NOT EXISTS idx_decisions_current_ts ON decisions(ts DESC);
 -- exact latest-match reads (owner surfaces): partial indexes, newest by ts
 CREATE INDEX IF NOT EXISTS idx_decisions_executed_ts ON decisions(ts) WHERE executed=1;
 CREATE INDEX IF NOT EXISTS idx_decisions_directional_ts ON decisions(ts)

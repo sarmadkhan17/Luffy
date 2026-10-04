@@ -12,9 +12,11 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, fields, is_dataclass
 from decimal import Decimal, InvalidOperation
 from enum import Enum
+from collections import OrderedDict
 import hashlib
 import json
 import os
+import threading
 from pathlib import Path
 
 from ..core.instrument_registry import is_canonical_instrument_id
@@ -45,6 +47,37 @@ def digest(value) -> str:
     return hashlib.sha256(canonical(value).encode()).hexdigest()
 
 
+# Pure verification results scoped to exact immutable serialized content.
+# A changed payload cannot reuse a digest; identities and supplied hashes are
+# still checked by every Source. Keep retained text bounded across cycles.
+_SOURCE_DIGESTS = OrderedDict()
+_SOURCE_DIGEST_LOCK = threading.Lock()
+_SOURCE_DIGEST_BYTES = 0
+_SOURCE_DIGEST_LIMIT = 64 * 1024**2
+
+
+def _remember_source(text, sha, size):
+    global _SOURCE_DIGEST_BYTES
+    with _SOURCE_DIGEST_LOCK:
+        if text not in _SOURCE_DIGESTS:
+            _SOURCE_DIGESTS[text] = (sha, size)
+            _SOURCE_DIGEST_BYTES += size
+        _SOURCE_DIGESTS.move_to_end(text)
+        while _SOURCE_DIGEST_BYTES > _SOURCE_DIGEST_LIMIT or len(_SOURCE_DIGESTS) > 64:
+            _, (_, cost) = _SOURCE_DIGESTS.popitem(last=False)
+            _SOURCE_DIGEST_BYTES -= cost
+    return sha
+
+
+def _source_digest(text):
+    with _SOURCE_DIGEST_LOCK:
+        hit = _SOURCE_DIGESTS.get(text)
+        if hit is not None:
+            _SOURCE_DIGESTS.move_to_end(text)
+            return hit[0]
+    return _remember_source(text, digest(json.loads(text)), len(text.encode()))
+
+
 class Status(str, Enum):
     ESTABLISHED = 'ESTABLISHED'
     UNKNOWN = 'UNKNOWN'
@@ -68,12 +101,18 @@ class Source:
 
     def __post_init__(self):
         _immutable(self)
-        if not self.source_id or digest(json.loads(self.payload_json)) != self.sha256:
+        if not self.source_id or _source_digest(self.payload_json) != self.sha256:
             raise ValueError('SOURCE_INTEGRITY_REFUSED')
 
     @classmethod
     def freeze(cls, source_id, payload):
-        return cls(source_id, digest(payload), canonical(payload))
+        text = canonical(payload)
+        data = text.encode()
+        # Canonical serialization has already verified JSON validity. Hash
+        # those exact bytes once; the regular constructor verifies this hash
+        # against the identical immutable text, including on later replays.
+        sha = _remember_source(text, hashlib.sha256(data).hexdigest(), len(data))
+        return cls(source_id, sha, text)
 
 
 @dataclass(frozen=True)

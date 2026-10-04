@@ -110,9 +110,7 @@ def store(conn, detail):
         hasher.update(b''.join(hash_pending))
         hash_pending.clear()
         keys = tuple(pending)
-        found = {r[0]: r[1:] for r in conn.execute(
-            'SELECT sha256,byte_length,codec,payload FROM journal_evidence_blobs_v1 '
-            'WHERE sha256 IN (' + ','.join('?' for _ in keys) + ')', keys)}
+        found = _read_blobs(conn, 'main', keys)
         inserts = []
         for sha, data in pending.items():
             row = found.get(sha)
@@ -165,6 +163,28 @@ _SEGMENT_BYTES = 0
 _SEGMENT_LIMIT = 64 * 1024**2
 
 
+def _chunk_sha(data):
+    # hashlib releases the GIL above 2047 bytes per update. A bounded chunk
+    # can be verified with the identical SHA256 using small updates, avoiding
+    # one scheduler handoff per chunk under measured background CPU load.
+    digest = hashlib.sha256()
+    view = memoryview(data)
+    for offset in range(0, len(view), 2047):
+        digest.update(view[offset:offset + 2047])
+    return digest.hexdigest()
+
+
+def _read_blobs(conn, schema, keys):
+    # One bounded SQLite result rather than per-row cursor/GIL crossings.
+    # Hex transports the exact compressed bytes without changing the codec.
+    query = f'''SELECT json_group_array(json_array(sha256,byte_length,codec,
+                typeof(payload),CASE WHEN typeof(payload)='blob' THEN hex(payload) END))
+                FROM {schema}.journal_evidence_blobs_v1 WHERE sha256 IN ('''
+    packet = conn.execute(query + ','.join('?' for _ in keys) + ')', keys).fetchone()[0]
+    return {sha:(length,codec,bytes.fromhex(payload) if typ=='blob' else None)
+            for sha,length,codec,typ,payload in json.loads(packet)}
+
+
 def _segment_sha(data):
     global _SEGMENT_BYTES
     with _SEGMENT_LOCK:
@@ -172,7 +192,7 @@ def _segment_sha(data):
         if hit is not None:
             _SEGMENT_HASHES.move_to_end(data)
             return hit
-    sha = hashlib.sha256(data).hexdigest()
+    sha = _chunk_sha(data)
     with _SEGMENT_LOCK:
         if data not in _SEGMENT_HASHES:
             _SEGMENT_HASHES[data] = sha
@@ -227,7 +247,7 @@ def _decode_blob(row, sha):
         data = decoder.decompress(payload, length + 1)
         if not decoder.eof or decoder.unused_data or decoder.unconsumed_tail or len(data) != length:
             raise EvidenceError('evidence_blob_length_invalid:' + sha)
-        if hashlib.sha256(data).hexdigest() != sha:
+        if _chunk_sha(data) != sha:
             raise EvidenceError('evidence_blob_hash_mismatch:' + sha)
         return data
     except (TypeError, ValueError, zlib.error) as exc:
@@ -248,6 +268,11 @@ def resolve(conn, detail, *, schema='main', deadline=None, max_bytes=None):
         if max_bytes is not None and manifest['byte_length'] > max_bytes:
             raise EvidenceError('evidence_expanded_bound_exceeded')
         out = bytearray()
+        # Repeated immutable references within this single resolve share the
+        # same fetched, verified physical bytes. Bound the local working set;
+        # every new resolve rereads the database, so changed/corrupt sources
+        # cannot be hidden by the process-wide content verification memo.
+        retained = OrderedDict()
         for offset in range(0, len(manifest['chunks']), 64):
             if deadline is not None and time.monotonic() > deadline:
                 raise EvidenceError('evidence_read_deadline_exceeded')
@@ -255,9 +280,9 @@ def resolve(conn, detail, *, schema='main', deadline=None, max_bytes=None):
             if any(not isinstance(sha, str) or not re.fullmatch('[0-9a-f]{64}', sha) for sha in batch):
                 raise EvidenceError('evidence_reference_invalid')
             keys = tuple(dict.fromkeys(batch))
-            rows = {r[0]: r[1:] for r in conn.execute(
-                f'SELECT sha256,byte_length,codec,payload FROM {schema}.journal_evidence_blobs_v1 '
-                'WHERE sha256 IN (' + ','.join('?' for _ in keys) + ')', keys)}
+            missing = tuple(sha for sha in keys if sha not in retained)
+            rows = _read_blobs(conn, schema, missing) if missing else {}
+            rows.update((sha, retained[sha]) for sha in keys if sha in retained)
             for sha in batch:
                 if deadline is not None and time.monotonic() > deadline:
                     raise EvidenceError('evidence_read_deadline_exceeded')
@@ -265,6 +290,10 @@ def resolve(conn, detail, *, schema='main', deadline=None, max_bytes=None):
                 if row is None:
                     raise EvidenceError('evidence_missing:' + sha)
                 out.extend(_blob(row, sha))
+                retained[sha] = row
+                retained.move_to_end(sha)
+                while len(retained) > 64:
+                    retained.popitem(last=False)
                 if len(out) > manifest['byte_length']:
                     raise EvidenceError('evidence_detail_length_exceeded')
         if len(out) != manifest['byte_length'] or hashlib.sha256(out).hexdigest() != manifest['sha256']:
