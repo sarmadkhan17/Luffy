@@ -92,6 +92,7 @@ def main():
   wrap(M,name,'market.'+name,lambda a,k,r:dict(rows_returned=len(r) if r is not None else 0))
  from trader.portfolio import current as P
  from trader.portfolio import allocator as A
+ from trader.observability.collector import Collector
  from scripts import opportunity_context_shadow as S
  from trader.learning import capture as C, capture_runtime as R, dispatch as D, runtime as L, foundation as F
  for obj,names in [(P,('freeze','checkpoint')),(S,('capture',)),(C,('snapshot','resolve','register')),
@@ -103,6 +104,8 @@ def main():
  wrap(A,'canonical','portfolio.serialize')
  wrap(A,'digest','portfolio.hash')
  wrap(A,'_source_digest','portfolio.source_verify')
+ wrap(Collector,'_run','attention.worker')
+ wrap(Collector,'_job','attention.serialize',lambda a,k,r:dict(expanded_bytes=len(r.encode())))
  wrap(M,'encode','provenance.serialize')
  wrap(M,'digest','provenance.hash')
  import requests

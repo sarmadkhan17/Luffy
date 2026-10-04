@@ -43,6 +43,9 @@ def test_real_producer_reader_large_source_retry_replay_growth(tmp_path, monkeyp
     cfg=settings({'max_symbols':16,'max_bytes':128*1024**2})
     event=capture(data,members,'observed-scale',cfg,at,
         membership_receipts=u.membership_receipts(as_of_ms=at))
+    from trader.observability.collector import Collector
+    child=Collector(tmp_path/'disposable',cfg,start=False)
+    assert child._run(event)['present']
     store=Store(tmp_path/'attention.db',cfg);store.write(event)
     store.write(dict(kind='causes',scan_id=event['scan_id'],as_of_ms=at,items=[]))
     original=store.db.execute('SELECT payload FROM scans').fetchone()[0]
@@ -148,6 +151,46 @@ def test_disabled_provider_makes_zero_attempts_and_leaves_ledger_exact(tmp_path,
     assert b._admit(dict(messages=[]),False,'research') is None
     assert invoke(b,False) is None and invoke(b,True) is None
     assert not attempts and b._usage_path.read_bytes()==original
+
+
+def test_derivative_writer_preserves_committed_reader_snapshot_and_rollback(tmp_path,monkeypatch):
+    import pandas as pd
+    from contextlib import contextmanager
+    from trader.data import market_provenance as M,sqlite_tx as T
+    from trader.data.derivatives import DerivFeed
+    path=tmp_path/'derivative.db';cut=1_800_000_000_000
+    frame=pd.DataFrame(dict(ts=pd.date_range('2025-01-01',periods=2000,freq='h',tz='UTC'),value=range(2000)))
+    def source(value,clock):
+        return M.annotate(value,instrument_id='binance_usdm:futures:BTCUSDT',
+                          source='offline:funding',kind='derivative',received_ms=clock)
+    writer=DerivFeed(path,clock_ms=lambda:cut+1000)
+    writer.save('BTC/USDT','funding',source(frame,cut))
+    reader=DerivFeed(path)
+    original=reader.load('BTC/USDT','funding',as_of_ms=cut+1000)
+    assert writer.db.execute('PRAGMA journal_mode').fetchone()[0]=='wal'
+    correction=frame.copy();correction['value']+=1
+    transaction=T.write_tx
+    @contextmanager
+    def refused(local,conn,label=''):
+        with transaction(local,conn,label) as db:
+            yield db
+            assert conn.in_transaction
+            pd.testing.assert_frame_equal(reader.load('BTC/USDT','funding',as_of_ms=cut+1000),original)
+            raise RuntimeError('rollback probe')
+    monkeypatch.setattr(T,'write_tx',refused)
+    with pytest.raises(RuntimeError,match='rollback probe'):
+        writer.save('BTC/USDT','funding',source(correction,cut+1000))
+    assert not writer.db.in_transaction
+    pd.testing.assert_frame_equal(reader.load('BTC/USDT','funding',as_of_ms=cut+1000),original)
+    monkeypatch.setattr(T,'write_tx',transaction)
+    reader.db.execute('BEGIN')
+    pd.testing.assert_frame_equal(reader.load('BTC/USDT','funding',as_of_ms=cut+1000),original)
+    writer.save('BTC/USDT','funding',source(correction,cut+1000))
+    pd.testing.assert_frame_equal(reader.load('BTC/USDT','funding',as_of_ms=cut+1000),original)
+    reader.db.rollback()
+    current=reader.load('BTC/USDT','funding',as_of_ms=cut+1000)
+    assert current.value.tolist()==correction.value.tolist()
+    pd.testing.assert_frame_equal(reader.load('BTC/USDT','funding',as_of_ms=cut),original)
 
 
 def test_current_derivative_window_matches_full_alignment_with_late_revisions(tmp_path):

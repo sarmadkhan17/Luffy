@@ -80,6 +80,10 @@ class DerivFeed:
                 from ..core.config import ROOT
                 self._db_path = str(ROOT / "data" / "derivs.db")
             conn = sqlite3.connect(self._db_path)
+            # Measured recorder transactions outlive bounded current readers.
+            # WAL retains atomic revisions while readers see committed source
+            # snapshots without waiting for an unrelated writer to commit.
+            conn.execute('PRAGMA journal_mode=WAL')
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS derivs ("
                 "symbol TEXT NOT NULL, series TEXT NOT NULL, "

@@ -20,6 +20,7 @@ from uuid import uuid4
 
 from .attention import capture, settings
 from . import collector_health as H
+import tempfile
 
 
 class Collector:
@@ -229,13 +230,23 @@ class Collector:
     def close(self):
         self._stop.set()  # never join/wait on the trading or exit thread
 
+    def _job(self, event):
+        return json.dumps({"path": str(self.path), "settings": self.cfg, "event": event},
+                          allow_nan=False, separators=(",", ":"))
+
     def _run(self, event):
-        job = json.dumps({"path": str(self.path), "settings": self.cfg, "event": event},
-                         allow_nan=False, separators=(",", ":"))
-        result = subprocess.run([sys.executable, "-m", "trader.observability.worker"],
-                                input=job, text=True, capture_output=True,
-                                cwd=str(Path(__file__).resolve().parents[2]),
-                                timeout=self.cfg["timeout_seconds"])
+        job = self._job(event)
+        # A PIPE feeds large receipts in thousands of 4 KiB writes, each
+        # yielding to CPU workers. A private seekable descriptor gives the
+        # same child the exact immutable JSON without parent scheduling on
+        # every block. It closes/unlinks on success, failure or timeout.
+        with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as transport:
+            transport.write(job)
+            transport.seek(0)
+            result = subprocess.run([sys.executable, "-m", "trader.observability.worker"],
+                                    stdin=transport, text=True, capture_output=True,
+                                    cwd=str(Path(__file__).resolve().parents[2]),
+                                    timeout=self.cfg["timeout_seconds"])
         try:
             data = json.loads(result.stdout)
         except (ValueError,TypeError):
