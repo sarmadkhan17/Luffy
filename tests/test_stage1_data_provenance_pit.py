@@ -543,3 +543,20 @@ def test_feed_uses_existing_typed_registry_identity_without_account_authority(st
     f.bind_instrument('BTC/USDT',InstrumentId('binanceusdm',MarketType.FUTURES,'BTCUSDT'))
     obs=f.fetch_ohlcv('BTC/USDT',min_bars=1)
     assert obs.quality.iloc[0]=='VALID' and obs.instrument_id.iloc[0]=='binance_usdm:futures:BTCUSDT'
+
+
+def test_current_closed_bar_survives_between_closes_with_fresh_receipt():
+    at = T + 2*Q - 1000
+    df = receipt(frame(), at)
+    out = P.usable_current(df, '15m', at, 180)
+    assert out['quality'].eq('VALID').all()
+    assert out.iloc[0].close == 10
+    assert P.usable_current(df, '15m', at+181_000, 180)['quality'].eq('STALE').all()
+
+
+def test_fresh_receipt_cannot_make_missing_latest_closed_bar_current():
+    at = T + 3*Q
+    df = receipt(frame(), at)
+    out = P.usable_current(df, '15m', at, 180)
+    assert out['quality'].eq('STALE').all()
+    assert out['close'].isna().all()

@@ -66,8 +66,9 @@ def create_app(cfg: dict | None = None) -> FastAPI:
     gateway = _owner_gateway(cfg, auth)
     app.include_router(make_graphql_router(journal, gateway))
     from . import owner_api
+    from ..knowledge.vault import VAULT
     owner_api.install(app, journal=journal, cfg=cfg, root=ROOT, auth=auth, gateway=gateway,
-                      marks=_position_marks, quotes=_position_quotes)
+                      marks=_position_marks, quotes=_position_quotes, vault=VAULT)
 
     @app.get("/api/investigations/latest")
     def investigations_latest():

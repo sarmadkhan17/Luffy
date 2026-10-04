@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
+import shutil
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -17,7 +18,8 @@ from ..org import Org
 
 log = logging.getLogger(__name__)
 
-VAULT = ROOT / "knowledge"
+SOURCE_VAULT = ROOT / "knowledge"
+VAULT = ROOT / "data" / "knowledge"
 
 #: note type -> vault folder, for building an employee's "Files here" backlinks
 _AUTHOR_FOLDERS = {
@@ -144,7 +146,12 @@ class Vault:
     def __init__(self, journal, org: Org | None = None):
         self.journal = journal
         self.org = org or Org.load()
-        VAULT.mkdir(exist_ok=True)
+        # Keep authored source immutable; retain its initial content alongside
+        # generated learning notes in the runtime vault across restarts.
+        if not VAULT.exists() and SOURCE_VAULT.exists():
+            VAULT.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(SOURCE_VAULT, VAULT)
+        VAULT.mkdir(parents=True, exist_ok=True)
         for d in ("00 Company", "10 Theories", "20 Strategies",
                   "30 Postmortems", "40 Regimes", "50 Daily"):
             (VAULT / d).mkdir(exist_ok=True)

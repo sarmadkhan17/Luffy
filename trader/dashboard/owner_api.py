@@ -730,7 +730,7 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
     dashboard's auth Guard, installed by the caller)."""
     from ..owner.authz import Authorizer
     version = backend_version(root)
-    vault = vault or (root / "knowledge")          # knowledge.vault.VAULT for the real ROOT
+    vault = vault or (root / "knowledge")          # caller supplies the runtime vault
     dist = dist or (root / "frontend" / "dist")
     knowledge_cache = KnowledgeReadCache(Path(vault))
     chat_slots = asyncio.Semaphore(CHAT_CONCURRENCY)

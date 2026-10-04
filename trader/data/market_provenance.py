@@ -275,7 +275,8 @@ def usable_current(df, tf, as_of_ms, ttl_s):
     # Historical window values remain historical. The anchor must be current
     # within the feed's existing interval + TTL budget; no new risk policy.
     age = as_of_ms - (int(ms(out['ts'])[-1]) + TF_MS[tf])
-    if age > ttl_s * 1000:
+    receipt_age = as_of_ms - int(out['observed_at_ms'].iloc[-1])
+    if age > TF_MS[tf] + ttl_s * 1000 or receipt_age > ttl_s * 1000:
         out['quality'] = Quality.STALE.value
         out.loc[:, [k for k in VALUES if k in out]] = np.nan
         out.attrs['quality'] = Quality.STALE.value

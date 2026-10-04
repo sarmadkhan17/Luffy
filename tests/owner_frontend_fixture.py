@@ -593,6 +593,8 @@ def make_app(root: Path, monkeypatch=None, scenario: str = "normal"):
             setattr(obj, name, value)
 
     setattr_(server, "ROOT", root)
+    from trader.knowledge import vault as vaultmod
+    setattr_(vaultmod, "VAULT", root / "knowledge")
     setattr_(server, "_owner_gateway", lambda cfg, auth: gateway)
     setattr_(server, "_position_marks",
              lambda j: {"BTC/USDT": {"mark": 61000.0, "upnl": 10.0}})

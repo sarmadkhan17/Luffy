@@ -89,3 +89,21 @@ def test_moc_has_company_section(tmp_path, monkeypatch):
     assert "## Company" in text
     assert "[[Manager]]" in text
     assert "[[Strategist]]" in text
+
+
+def test_runtime_vault_bootstrap_preserves_source_and_survives_restart(tmp_path, monkeypatch):
+    source = tmp_path / 'source'
+    source.mkdir()
+    (source / 'MOC.md').write_text('authored source')
+    runtime = tmp_path / 'data' / 'knowledge'
+    monkeypatch.setattr(vaultmod, 'SOURCE_VAULT', source)
+    monkeypatch.setattr(vaultmod, 'VAULT', runtime)
+    v = Vault(StubJournal())
+    assert (runtime / 'MOC.md').read_text() == 'authored source'
+    v.refresh_strategy_notes()
+    v.write_moc()
+    learned = (runtime / 'MOC.md').read_text()
+    Vault(StubJournal())
+    assert (runtime / 'MOC.md').read_text() == learned
+    assert (source / 'MOC.md').read_text() == 'authored source'
+    assert not (source / '20 Strategies').exists()

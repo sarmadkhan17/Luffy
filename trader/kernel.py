@@ -406,6 +406,9 @@ class Kernel:
                     tradable.add(f"{base}/USDT")
             before = self.universe.symbols()
             kept = [s for s in before if s in tradable]
+            self._venue_universe_counts = dict(loaded_venue_markets=len(self.exchange.markets),
+                tradable_usdt_markets=len(tradable), universe_before_filter=len(before),
+                universe_after_filter=len(kept))
             dropped = set(before) - set(kept)
             self.universe._alts = [s for s in self.universe._alts
                                    if s in kept]
@@ -871,6 +874,7 @@ class Kernel:
         dfs = self.feed.fetch_multi(
             symbol, self.cfg["timeframes"]["context"] + [self.cfg["timeframes"]["execution"]])
         exec_tf = self.cfg["timeframes"]["execution"]
+        self._last_snapshot_feed_available = exec_tf in dfs and dfs[exec_tf] is not None and len(dfs[exec_tf]) > 0
         from .data import market_provenance as mp
         as_of = int(time.time()*1000)
         btc = self.feed.fetch_ohlcv('BTC/USDT', '1h')
@@ -1132,6 +1136,11 @@ class Kernel:
         # add a symbol a spec explicitly named, so the scan tracks the book
         # instead of a list hardcoded beside it.
         scan_symbols = self._scan_symbols()
+        boundaries = dict(getattr(self, '_venue_universe_counts', {}),
+            selected_universe=getattr(self, '_scan_universe_count', None),
+            scan_candidates=len(scan_symbols), execution_datafeed_available=0,
+            snapshots_constructed=0)
+        stats['scan_boundaries'] = boundaries
         universe_frames = self._universe_frames(scan_symbols)
         scan_id = self._attention_call("begin", universe_frames, scan_symbols)
         attention_causes = []
@@ -1145,6 +1154,7 @@ class Kernel:
                 entry_allowed = False
                 blocked = "execution_recovery_pending"
             snap = self._snapshot_for(symbol, universe=universe_frames)
+            boundaries['execution_datafeed_available'] += int(getattr(self, '_last_snapshot_feed_available', False))
             if snap is None:
                 try:
                     from .learning import capture as lc, capture_runtime as lr
@@ -1158,6 +1168,7 @@ class Kernel:
                                              "reason": "missing_snapshot"})
                 continue
             stats["scanned"] += 1
+            boundaries['snapshots_constructed'] += 1
             try:
                 self._manage_paper(snap)
             except Exception as e:
@@ -1294,6 +1305,11 @@ class Kernel:
         """Proposal-only consumer; never feeds the existing entry/order path."""
         from .portfolio.current import checkpoint
         try:
+            # Whole-book truth must not depend on successful market snapshots
+            # or per-symbol exit detection. Refresh at the consuming boundary.
+            if self.market_type == MarketType.FUTURES:
+                self._observe_venue_positions()
+                self._record_capacity_evidence()
             result, detail = checkpoint(self.journal.db_path, self.cfg,
                 market_snapshots=getattr(self, '_portfolio_market', {}))
             return dict(status='PASS', triggered=result['triggered'],
@@ -1739,6 +1755,7 @@ class Kernel:
         preference, so a book of legacy genomes behaves exactly as before.
         """
         base = self.universe.symbols() if as_of_ms is None else self.universe.symbols(as_of_ms=as_of_ms)
+        self._scan_universe_count = len(base)
         at = int(time.time()*1000) if as_of_ms is None else as_of_ms
         receipts = self.universe.membership_receipts(as_of_ms=at) if hasattr(self.universe, 'membership_receipts') else {}
         self._scan_membership_receipts = receipts
@@ -1952,6 +1969,24 @@ class Kernel:
                     f"⚠️ {sym} manual close REJECTED by the venue — "
                     f"still open, press again or use /panic")
         return n
+
+    def _observe_venue_positions(self):
+        """One complete venue GET; validate identity before publishing truth."""
+        from .data.feed import execution_account_scope
+        position_scope = execution_account_scope(self.exchange)
+        request_start_ms = time.time_ns() // 1_000_000
+        rows = self.exchange.fetch_positions()
+        response_received_ms = time.time_ns() // 1_000_000
+        environment, source_ref = trading_source(self.exchange)
+        observation = observe_positions(
+            rows, exchange_id=getattr(self.exchange, "id", None),
+            market_type=self.market_type, environment=environment,
+            source_ref=source_ref, request_start_ms=request_start_ms,
+            response_received_ms=response_received_ms)
+        self.position_observation = observation
+        self._position_rows = rows
+        self._position_account_scope = position_scope
+        return rows
 
     def _detect_exchange_exits(self, symbol: str) -> int:
         """Reconcile one symbol's journalled size against the venue's.

@@ -235,6 +235,8 @@ def test_normal_kernel_checkpoint_has_no_execution_capability(tmp_path,book,monk
     kernel=Kernel.__new__(Kernel)
     kernel.journal=type('JournalPath',(),{'db_path':tmp_path/'source.db'})()
     kernel.cfg=load_config()
+    from trader.core.types import MarketType
+    kernel.market_type=MarketType.SPOT
     assert kernel._portfolio_checkpoint()['status']=='PASS' and len(calls)==1
     import inspect
     assert 'self._portfolio_checkpoint()' in inspect.getsource(Kernel.cycle)
@@ -293,3 +295,38 @@ def test_unknown_mark_preserves_each_instrument_independently(book):
     m=result(i)['portfolio']['metrics']['per_instrument_exposure']
     assert m['components']['binance_usdm:futures:BTCUSDT']['status']=='ESTABLISHED'
     assert m['components']['binance_usdm:futures:BTCUSDT']['value']=='12.0'
+
+
+def test_frozen_checkpoint_refreshes_verified_book_without_market_snapshots(tmp_path, monkeypatch):
+    from trader.kernel import Kernel
+    from trader.core.journal import Journal
+    from trader.core.types import MarketType
+    from trader.portfolio import current
+    from trader.engine.evidence_capture import verify_snapshot
+    from trader.engine.executor import Executor
+    journal = Journal(tmp_path / 'luffy.db')
+    rows = [dict(info={'symbol':'SOLUSDT', 'entryPrice':'100', 'markPrice':'101'},
+                 symbol='SOL/USDT:USDT', contracts=5.77, side='long')]
+    class Venue:
+        id = 'binanceusdm'
+        apiKey = 'test-only'
+        urls = {'api': {'fapiPrivateV3':'https://demo-fapi.binance.com/fapi/v3'}}
+        def fetch_positions(self): return rows
+    kernel = Kernel.__new__(Kernel)
+    kernel.journal, kernel.cfg = journal, load_config()
+    kernel.exchange, kernel.market_type = Venue(), MarketType.FUTURES
+    def checkpoint(*args, **kw):
+        snap = json.loads(journal.kv_get('venue_position_snapshot'))
+        assert verify_snapshot(snap)
+        assert snap['positions'][0]['quantity'] == 5.77
+        assert kw['market_snapshots'] == {}
+        return dict(triggered=False, portfolio_cut_id='test-cut', trade_intents=[], risk_decisions=[]), {}
+    monkeypatch.setattr(current, 'checkpoint', checkpoint)
+    monkeypatch.setattr(Executor, 'open', lambda *a, **kw: pytest.fail('order'))
+    assert kernel._portfolio_checkpoint()['status'] == 'PASS'
+    first = json.loads(journal.kv_get('venue_position_snapshot'))['snapshot_id']
+    assert kernel._portfolio_checkpoint()['status'] == 'PASS'
+    assert json.loads(journal.kv_get('venue_position_snapshot'))['snapshot_id'] != first
+    rows[0]['symbol'] = 'BTC/USDT:USDT'
+    assert kernel._portfolio_checkpoint()['status'] == 'BLOCKED'
+    assert json.loads(journal.kv_get('venue_position_snapshot'))['snapshot_id'] != first
