@@ -560,3 +560,23 @@ def test_fresh_receipt_cannot_make_missing_latest_closed_bar_current():
     out = P.usable_current(df, '15m', at, 180)
     assert out['quality'].eq('STALE').all()
     assert out['close'].isna().all()
+
+
+@pytest.mark.parametrize('historical', [False, True])
+def test_universe_first_selection_uses_post_acquisition_cut_only_for_current(monkeypatch, historical):
+    from trader.data.feed import Universe
+    import trader.data.feed as module
+    clock = Clock(T)
+    monkeypatch.setattr(module.time, 'time', lambda: clock.at/1000)
+    u = Universe.__new__(Universe)
+    u.enabled, u.rescan_hours, u._last_scan = True, 4, 0
+    u.majors, u._alts, u._selection_receipt = ['BTC/USDT'], [], None
+    def rescan():
+        clock.at += 1000
+        u._last_scan = clock.at/1000
+        u._alts = ['SOL/USDT']
+        u._selection_receipt = dict(quality='VALID', available_at_ms=clock.at,
+            observed_at_ms=clock.at, members=['SOL/USDT'])
+    u._rescan = rescan
+    result = u.symbols(as_of_ms=T) if historical else u.symbols()
+    assert result == (['BTC/USDT'] if historical else ['BTC/USDT', 'SOL/USDT'])

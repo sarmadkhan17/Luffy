@@ -691,6 +691,10 @@ class Universe:
         at = int(time.time()*1000) if as_of_ms is None else mp.cut(as_of_ms)
         if self.enabled and (at < self._last_scan*1000 or at/1000 - self._last_scan > self.rescan_hours * 3600):
             self._rescan()
+            if as_of_ms is None:
+                # The current call acquired this selection. Its receipts were
+                # not yet available at the pre-request cut; never backdate them.
+                at = int(time.time()*1000)
         receipt = self.membership_receipts(as_of_ms=at)
         return self.majors + [s for s in self._alts if s not in self.majors and s in receipt]
 
