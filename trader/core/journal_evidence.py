@@ -248,17 +248,25 @@ def resolve(conn, detail, *, schema='main', deadline=None, max_bytes=None):
         if max_bytes is not None and manifest['byte_length'] > max_bytes:
             raise EvidenceError('evidence_expanded_bound_exceeded')
         out = bytearray()
-        for sha in manifest['chunks']:
+        for offset in range(0, len(manifest['chunks']), 64):
             if deadline is not None and time.monotonic() > deadline:
                 raise EvidenceError('evidence_read_deadline_exceeded')
-            if not isinstance(sha, str) or not re.fullmatch('[0-9a-f]{64}', sha):
+            batch = manifest['chunks'][offset:offset + 64]
+            if any(not isinstance(sha, str) or not re.fullmatch('[0-9a-f]{64}', sha) for sha in batch):
                 raise EvidenceError('evidence_reference_invalid')
-            row = conn.execute(f'SELECT byte_length,codec,payload FROM {schema}.journal_evidence_blobs_v1 WHERE sha256=?', (sha,)).fetchone()
-            if row is None:
-                raise EvidenceError('evidence_missing:' + sha)
-            out.extend(_blob(row, sha))
-            if len(out) > manifest['byte_length']:
-                raise EvidenceError('evidence_detail_length_exceeded')
+            keys = tuple(dict.fromkeys(batch))
+            rows = {r[0]: r[1:] for r in conn.execute(
+                f'SELECT sha256,byte_length,codec,payload FROM {schema}.journal_evidence_blobs_v1 '
+                'WHERE sha256 IN (' + ','.join('?' for _ in keys) + ')', keys)}
+            for sha in batch:
+                if deadline is not None and time.monotonic() > deadline:
+                    raise EvidenceError('evidence_read_deadline_exceeded')
+                row = rows.get(sha)
+                if row is None:
+                    raise EvidenceError('evidence_missing:' + sha)
+                out.extend(_blob(row, sha))
+                if len(out) > manifest['byte_length']:
+                    raise EvidenceError('evidence_detail_length_exceeded')
         if len(out) != manifest['byte_length'] or hashlib.sha256(out).hexdigest() != manifest['sha256']:
             raise EvidenceError('evidence_detail_hash_mismatch')
         return out.decode('utf-8')

@@ -128,6 +128,10 @@ class RefStore:
             if column not in df:
                 df[column] = np.nan
         n = len(df)
+        # A single immutable acquisition is shared by all its bars. Hash it
+        # once; repeated whole-response hashing made reference refresh O(n²).
+        raw_hash = mp.digest(raw) if raw is not None else None
+        raw_text = mp.encode(raw) if raw is not None else None
         received = self._clock_ms() if now_ms is None else mp.cut(now_ms)
         if not all(k in df for k in mp.META):
             # The recorder's source receipt is required. Arbitrary imported
@@ -138,7 +142,7 @@ class RefStore:
                              kind='reference', received_ms=received,
                              request_started_ms=df.attrs.get('request_started_ms'),
                              timeframe=ref.tf if ref.tf in TF_MS else None,
-                             raw=[{'raw_source_hash':mp.digest(raw), 'event_ms':int(t)} for t in to_ms(df['ts'])] if raw is not None else None)
+                             raw=[{'raw_source_hash':raw_hash, 'event_ms':int(t)} for t in to_ms(df['ts'])] if raw is not None else None)
         known = to_ms(df['ts']) + ref.close_after_ms
         if not ref.close_only:
             numeric=df[['open','high','low','close','volume']]
@@ -161,13 +165,14 @@ class RefStore:
                     col("close"), col("volume"))]
         rows = [r for r in rows if r[5] is not None]  # no close, no bar
         if rows:
+            prepared = mp.prepare(df)
             # a failure raises to the caller with nothing left open or
             # half-committed on this thread's connection — see sqlite_tx
             with write_tx(self._local, self.db, f"ref {key}") as conn:
                 if raw is not None:
                     conn.execute('INSERT OR IGNORE INTO market_raw_sources VALUES (?,?,?)',
-                                 (mp.digest(raw), df['source'].iloc[0], mp.encode(raw)))
-                mp.append(conn, "reference:"+key, df)
+                                 (raw_hash, df['source'].iloc[0], raw_text))
+                mp.append(conn, "reference:"+key, prepared=prepared)
                 conn.executemany(
                     "INSERT OR REPLACE INTO refs VALUES (?,?,?,?,?,?,?)", rows)
         return len(rows)

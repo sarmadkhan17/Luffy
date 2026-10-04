@@ -6,19 +6,20 @@ I/O measurement. Inclusive stages nest; sum exclusive costs only within one
 thread. Run from the deployed checkout with --output outside production data.
 """
 def main():
- import sys,os,json,time,threading,functools,inspect
+ import sys,os,json,time,threading,functools,inspect,hashlib
  from pathlib import Path
  import argparse
  ap=argparse.ArgumentParser()
  ap.add_argument('--output',type=Path,required=True)
  ap.add_argument('--config')
+ ap.add_argument('--cycles',type=int,help='Stop cleanly at this completed cycle boundary; stop on a failed/over-240-second cycle too.')
  args=ap.parse_args()
  ROOT=Path(__file__).resolve().parents[1]
  sys.path.insert(0,str(ROOT))
  OUT=args.output
  OUT.mkdir(parents=True,exist_ok=True)
  sys.argv=[sys.argv[0]]+(['--config',args.config] if args.config else [])
- local=threading.local(); lock=threading.Lock(); totals={}; counters={}
+ local=threading.local(); lock=threading.RLock(); totals={}; counters={}; completed_cycles=0
  fd=os.open(OUT/'stages.jsonl',os.O_CREAT|os.O_APPEND|os.O_WRONLY,0o600)
  def emit(rec):
   os.write(fd,(json.dumps(dict(at=time.time(),pid=os.getpid(),native_id=threading.get_native_id(),thread=threading.current_thread().name,**rec),sort_keys=True)+'\n').encode())
@@ -26,6 +27,7 @@ def main():
   fn=getattr(obj,name);descriptor=inspect.getattr_static(obj,name);label=label or obj.__name__+'.'+name
   @functools.wraps(fn)
   def run(*a,**kw):
+   nonlocal completed_cycles
    stack=getattr(local,'stack',None)
    if stack is None: local.stack=stack=[]
    frame=[time.perf_counter(),time.thread_time(),0.,0.];stack.append(frame);error=None;result=None
@@ -49,17 +51,28 @@ def main():
       summary=dict(stage='cycle.summary',stats=result,timings=[dict(thread=k[0],stage=k[1],**v) for k,v in totals.items()],counters=dict(counters))
       totals.clear();counters.clear()
      emit(summary)
+     completed_cycles+=1
+     if args.cycles is not None and (completed_cycles>=args.cycles or error or elapsed>240):
+      # At a completed boundary no producer transaction is interrupted, and
+      # the controller cannot race the next cycle while recording storage.
+      a[0]._graceful(15,None)
+    elif label=='kernel.boot':
+     with lock:
+      startup=dict(stage='startup.summary',timings=[dict(thread=k[0],stage=k[1],**v) for k,v in totals.items()],counters=dict(counters))
+      totals.clear();counters.clear()
+     emit(startup)
   setattr(obj,name,staticmethod(run) if isinstance(descriptor,staticmethod) else run)
  from trader import kernel as K
  from trader.core import journal_evidence as E
  from trader.data import market_provenance as M
  from trader.data.feed import DataFeed,Universe
  from trader.data.derivatives import DerivFeed
+ from trader.data.references import RefStore
  from trader.core.journal import Journal
  from trader.engine.watchdog import Heartbeat
  for name,fn in list(vars(K.Kernel).items()):
   if callable(fn) and name not in ('main',):wrap(K.Kernel,name,'kernel.'+name)
- for cls,names in [(DataFeed,('fetch_multi','fetch_ohlcv','cached_ohlcv','_store_save')),(Universe,('membership_receipts','_rescan')),(DerivFeed,('save','load','record')),(Journal,('log_brain_event','query','log_decision')),(Heartbeat,('beat',))]:
+ for cls,names in [(DataFeed,('fetch_multi','fetch_ohlcv','cached_ohlcv','_store_save')),(Universe,('membership_receipts','_rescan')),(DerivFeed,('save','load','record','backfill','record_all')),(RefStore,('save','load')),(Journal,('log_brain_event','query','log_decision')),(Heartbeat,('beat',))]:
   for name in names:
    if hasattr(cls,name):wrap(cls,name)
  def blobmeta(a,kw,result):
@@ -79,11 +92,15 @@ def main():
   wrap(M,name,'market.'+name,lambda a,k,r:dict(rows_returned=len(r) if r is not None else 0))
  from trader.portfolio import current as P
  from scripts import opportunity_context_shadow as S
- from trader.learning import capture as C, capture_runtime as R, dispatch as D, runtime as L
+ from trader.learning import capture as C, capture_runtime as R, dispatch as D, runtime as L, foundation as F
  for obj,names in [(P,('freeze','checkpoint')),(S,('capture',)),(C,('snapshot','resolve','register')),
-                   (R,('decision','runtime_inputs')),(D,('dispatch_pending',)),(L,('checkpoint',))]:
+                   (R,('decision','runtime_inputs','exact_frame','freeze')),(D,('dispatch_pending',)),(L,('checkpoint',))]:
   for name in names:
    if hasattr(obj,name):wrap(obj,name)
+ wrap(F,'canonical','evidence.serialize')
+ wrap(F,'digest','evidence.hash')
+ wrap(M,'encode','provenance.serialize')
+ wrap(M,'digest','provenance.hash')
  import requests
  wrap(requests.Session,'send','network.wait')
  from trader.brain.llm import BrainLLM
@@ -93,7 +110,8 @@ def main():
   return dict(admitted=r is not None,enabled=a[0]._brain_config.get('enabled',True) is True)
  wrap(BrainLLM,'_admit','provider.admission',admissionmeta)
  def querymeta(a,k,r):
-  return dict(rows_returned=len(r) if r is not None else 0)
+  caller=sys._getframe(2)
+  return dict(rows_returned=len(r) if r is not None else 0,sql_sha256=hashlib.sha256(a[1].encode()).hexdigest(),caller=caller.f_code.co_name,caller_file=Path(caller.f_code.co_filename).name,caller_line=caller.f_lineno)
  # Query results are counted, never logged.
  wrap(Journal,'query','database.rows',querymeta)
  import sqlite3

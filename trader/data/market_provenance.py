@@ -99,7 +99,12 @@ def annotate(df, *, instrument_id, source, kind, received_ms, timeframe=None,
     stamps = ms(out['ts'])
     req = request_id or uuid.uuid4().hex
     records = []
-    for i, (event, (_, row)) in enumerate(zip(stamps, out.iterrows())):
+    # Pandas propagates/deep-copies attrs into every iterrows Series. Source
+    # responses can contain years of records: iterate values without copying
+    # that identical context per bar, preserving attrs on the returned frame.
+    values_frame = out.copy(deep=False)
+    values_frame.attrs = {}
+    for i, (event, (_, row)) in enumerate(zip(stamps, values_frame.iterrows())):
         value = {k: (float(row[k]) if pd.notna(row[k]) and math.isfinite(float(row[k])) else None)
                  for k in VALUES if k in out}
         closed = timeframe is None or int(event) + TF_MS[timeframe] <= received_ms
@@ -143,7 +148,9 @@ def annotate(df, *, instrument_id, source, kind, received_ms, timeframe=None,
 
 def seal(df):
     out = df.copy()
-    for index, row in out.iterrows():
+    values_frame = out.copy(deep=False)
+    values_frame.attrs = {}
+    for index, row in values_frame.iterrows():
         value = {k: None if pd.isna(row[k]) or not math.isfinite(float(row[k])) else float(row[k])
                  for k in VALUES if k in out}
         content = digest({'raw': json.loads(row['raw_json']), 'value': value})
@@ -162,7 +169,9 @@ def prepare(df):
     if not all(k in df for k in META):
         return ()
     records = []
-    for _, row in seal(df).iterrows():
+    sealed = seal(df)
+    sealed.attrs = {}
+    for _, row in sealed.iterrows():
         record = {k: None if pd.isna(row[k]) else row[k] for k in META}
         record.update({k: None if pd.isna(row[k]) else float(row[k]) for k in VALUES if k in df})
         record['event_time_ms'] = int(record['event_time_ms'])

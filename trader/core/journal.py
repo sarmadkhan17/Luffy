@@ -49,6 +49,9 @@ CREATE TABLE IF NOT EXISTS votes (
 );
 CREATE INDEX IF NOT EXISTS idx_votes_agent ON votes(agent, ts);
 CREATE INDEX IF NOT EXISTS idx_votes_symbol ON votes(symbol, ts);
+-- Outcome/owner accuracy joins use the exact cycle and symbol together.
+-- A symbol/time lookup rescanned millions of unrelated votes per outcome.
+CREATE INDEX IF NOT EXISTS idx_votes_cycle_symbol ON votes(cycle_id, symbol);
 
 CREATE TABLE IF NOT EXISTS decisions (
     id TEXT PRIMARY KEY,
@@ -1831,7 +1834,7 @@ class Journal:
                    AVG(CASE WHEN (v.conviction > 0) = (o.action = 'BUY')
                             THEN o.correct_4h ELSE 1 - o.correct_4h END
                        ) AS accuracy
-            FROM votes v
+            FROM votes v INDEXED BY idx_votes_cycle_symbol
             JOIN outcomes o ON o.symbol=v.symbol AND o.cycle_id=v.cycle_id
              AND o.resolved_at IS NOT NULL
             WHERE v.conviction != 0 AND o.correct_4h IS NOT NULL

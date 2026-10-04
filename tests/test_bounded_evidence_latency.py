@@ -111,3 +111,52 @@ def test_current_derivative_window_matches_full_alignment_with_late_revisions(tm
     assert len(historical)==5003
     with pytest.raises(ValueError,match='current_window'):
         feed.load('BTC/USDT','funding',window_start_ms=start)
+
+
+def test_reference_refresh_shared_response_preserves_all_source_rows(tmp_path, monkeypatch):
+    from trader.data import ref_sources, market_provenance as mp
+    from trader.data.references import RefStore, DAY
+    # Same multi-year response shape/scale as the retained 3,232-row source.
+    raw = [dict(date=str(1_500_000_000+i*86400),
+                totalCirculatingUSD=dict(peggedUSD=10_000_000+i),
+                totalCirculating={str(k):i+k for k in range(12)}) for i in range(3232)]
+    frame = ref_sources.defillama_stables(get=lambda url:raw)
+    cut = int(frame.ts.iloc[-1].timestamp()*1000)+DAY
+    expected_hash = mp.digest(raw)
+    original = mp.digest
+    calls=[]
+    def digest(value):
+        if value is raw: calls.append(1)
+        return original(value)
+    monkeypatch.setattr(mp,'digest',digest)
+    store=RefStore(tmp_path/'references.db',clock_ms=lambda:cut)
+    assert store.save('stables',frame,now_ms=cut)==3232
+    assert len(calls)==1
+    retained = store.db.execute('SELECT raw_json FROM market_raw_sources WHERE content_hash=?',(expected_hash,)).fetchone()
+    assert json.loads(retained[0])==raw
+    current=store.load('stables',as_of_ms=cut)
+    assert len(current)==3232
+    assert current.close.tolist()==frame.close.tolist()
+    assert all(json.loads(text)['raw_source_hash']==expected_hash for text in current.raw_json)
+
+
+def test_derivative_receipt_index_preserves_duplicates_and_source_context(tmp_path):
+    from trader.data.derivatives import DerivFeed
+    base=1_700_000_000_000
+    feed=DerivFeed(tmp_path/'deriv.db',clock_ms=lambda:base+1000*3_600_000)
+    raw=[dict(fundingTime=base+i*3_600_000,fundingRate=str(i/10000)) for i in range(1000)]
+    raw += [dict(raw[17]),dict(timestamp=base+17*3_600_000,fundingRate='duplicate'),
+            dict(timestamp=None,fundingTime=base+17*3_600_000),dict(timestamp=[base])]
+    receipt=dict(source='https://fapi.binance.com/fapi/v1/fundingRate',
+                 params=dict(symbol='BTCUSDT'),request_id='exact',
+                 request_started_ms=base,received_ms=base+1000*3_600_000,raw=raw)
+    feed._local.receipts=[receipt]
+    frame=feed._parse_funding(raw[:1000])
+    for text,event in zip(frame.raw_json,frame.event_time_ms):
+        payload=json.loads(text)
+        expected=[r for r in raw if r.get('timestamp',r.get('fundingTime'))==event]
+        assert payload['receipts'][0]['raw']==expected
+        assert payload['receipts'][0]['request_id']=='exact'
+    feed.save('BTC/USDT','funding',frame)
+    retained=feed.load('BTC/USDT','funding',as_of_ms=receipt['received_ms'])
+    assert retained.raw_json.tolist()==frame.raw_json.tolist()

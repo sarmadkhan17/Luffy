@@ -178,13 +178,22 @@ class DerivFeed:
             if symbol:
                 identity = InstrumentId('binanceusdm', MarketType.FUTURES, symbol).value
                 source = receipts[-1]['source']
-        def source_row(record, event):
-            if isinstance(record, dict):
-                return record.get('timestamp', record.get('fundingTime')) == event
-            return isinstance(record, (list,tuple)) and len(record)>6 and record[6] == event
+        # Preserve receipt order and duplicate source rows, indexing once
+        # instead of rescanning every acquisition for every observation.
+        indexed = []
+        for receipt in receipts:
+            events = {}
+            for record in receipt['raw']:
+                event = (record.get('timestamp', record.get('fundingTime')) if isinstance(record, dict)
+                         else record[6] if isinstance(record, (list,tuple)) and len(record)>6 else None)
+                try:
+                    events.setdefault(event, []).append(record)
+                except TypeError:
+                    pass  # Unhashable source stamps never matched an integer.
+            indexed.append(events)
         raw = [{'receipts': [{**{k:v for k,v in r.items() if k!='raw'},
-                              'raw': [item for item in r['raw'] if source_row(item,int(event))]}
-                             for r in receipts],
+                              'raw': matches.get(int(event), [])}
+                             for r,matches in zip(receipts,indexed)],
                 'event_ms': int(event), 'value': float(value)}
                for event,value in zip(mp.ms(df['ts']),df['value'])]
         valid_receipts = bool(receipts) and all(r['received_ms'] >= r['request_started_ms'] for r in receipts)
