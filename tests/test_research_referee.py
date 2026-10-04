@@ -38,6 +38,8 @@ def store(tmp_path):
                         rows)
     con.commit()
     con.close()
+    from tests.retained_candle_fixtures import qualify
+    qualify(db)  # explicitly generated first-close test receipts
     return str(db)
 
 

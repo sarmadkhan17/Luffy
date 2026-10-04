@@ -1,0 +1,15 @@
+{
+  "result": "PASS",
+  "frozen_source_matches": true,
+  "control_plane_matches": true,
+  "final_matrix_all_pass": true,
+  "branch": "luffy-final-audit-repair-loop-r1",
+  "head_unchanged": true,
+  "uncommitted": true,
+  "F8": "PENDING",
+  "startup": false,
+  "implementation_control_file_count": 58,
+  "evidence_file_count": 129,
+  "graphify_file_count": 80,
+  "network_and_production_store_attempts_final_campaigns": 0
+}

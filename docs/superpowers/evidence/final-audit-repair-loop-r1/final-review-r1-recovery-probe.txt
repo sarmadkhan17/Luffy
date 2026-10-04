@@ -1,0 +1,6 @@
+partial close failed BTC/USDT: executed then response lost
+CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+CONTROL STATE RECOVERY → ACTIVE (by supervisor) all recovery safety checks proved
+{"probe": "Supervisor boot with UNKNOWN partial exit", "safe_to_activate": true, "control_state": "ACTIVE", "pending": true, "checks": {"venue_positions": true, "reconciliation": true, "entry_intent_resolved": true, "venue_protection": true, "entries_safe": true, "risk_release": true}, "reasons": []}
+OFFLINE GUARD: 0 network/store attempts

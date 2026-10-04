@@ -108,19 +108,60 @@ def ensure(journal):
         """)
 
 
-def read(journal, target, context):
+def temporal_state(state, target, context, as_of_ms):
+    """Validate the immutable application proof retained by a historical read."""
+    if type(as_of_ms) is not int or as_of_ms < 0:
+        raise ValueError('explicit_temporal_cut_required')
+    body = {k:v for k,v in state.items() if k not in ('state_hash', 'application', 'application_sha256')}
+    if (L.digest(body) != state['state_hash'] or body['context'] != asdict(context)
+            or body['target'] != target.value):
+        raise ValueError('target_state_corrupt')
+    if body['revision'] == 0 and body['value'] is None:
+        return state
+    receipt = state.get('application')
+    if (not isinstance(receipt, dict) or L.digest(receipt) != state.get('application_sha256')
+            or receipt.get('result') != 'APPLIED' or receipt.get('target_type') != target.value
+            or receipt.get('resulting') != dict(body, state_hash=state['state_hash'])
+            or type(receipt.get('applied_at')) is not int or not 0 <= receipt['applied_at'] <= as_of_ms):
+        raise ValueError('future_or_unqualified_temporal_target_state')
+    typed(target, body['value'])
+    return state
+
+
+def read(journal, target, context, *, as_of_ms=None):
     if target not in ADAPTIVE or not isinstance(context, Context):
         raise ValueError('typed_adaptive_target_required')
+    if as_of_ms is not None and (type(as_of_ms) is not int or as_of_ms < 0):
+        raise ValueError('explicit_temporal_cut_required')
+    if hasattr(journal, 'read_target'):
+        return journal.read_target(target, context, as_of_ms=as_of_ms)
     if journal.query("SELECT 1 FROM sqlite_master WHERE name='learning_target_revisions'"):
-        rows = journal.query('SELECT * FROM learning_target_revisions WHERE target=? AND context_id=? ORDER BY revision DESC LIMIT 1',
-                             (target.value, context.identity))
+        if as_of_ms is None:
+            rows = journal.query('SELECT * FROM learning_target_revisions WHERE target=? AND context_id=? ORDER BY revision DESC LIMIT 1',
+                                 (target.value, context.identity))
+        else:
+            rows = journal.query("""SELECT r.*, a.payload AS application_payload,
+                    a.sha256 AS application_sha256
+                FROM learning_target_revisions r JOIN learning_application_receipts a
+                  ON a.application_id=r.application_id
+                WHERE r.target=? AND r.context_id=? AND a.result='APPLIED'
+                  AND json_type(a.payload,'$.applied_at')='integer'
+                  AND json_extract(a.payload,'$.applied_at') BETWEEN 0 AND ?
+                ORDER BY r.revision DESC LIMIT 1""", (target.value, context.identity, as_of_ms))
         if rows:
             row = rows[0]; body = json.loads(row['payload'])
             if (L.digest(body) != row['sha256'] or body['context'] != asdict(context)
                     or body['target'] != target.value or body['revision'] != row['revision']):
                 raise ValueError('target_state_corrupt')
             typed(target, body['value'])
-            return dict(body, state_hash=row['sha256'])
+            state = dict(body, state_hash=row['sha256'])
+            if as_of_ms is not None:
+                receipt = json.loads(row['application_payload'])
+                if receipt.get('application_id') != row['application_id']:
+                    raise ValueError('temporal_application_identity_mismatch')
+                state.update(application=receipt, application_sha256=row['application_sha256'])
+                temporal_state(state, target, context, as_of_ms)
+            return state
     body = dict(schema=SCHEMA, target=target.value, context=asdict(context),
                 revision=0, value=None, previous_hash=None)
     return dict(body, state_hash=L.digest(body))
@@ -209,11 +250,26 @@ def compare_and_apply(connection, journal, target, expected, value, application_
     return dict(body, state_hash=L.digest(body))
 
 
-def observation(journal, target, context):
-    state = read(journal, target, context)
+def observation(journal, target, context, *, as_of_ms=None):
+    state = read(journal, target, context, as_of_ms=as_of_ms)
     return dict(target=target.value, context_id=context.identity, revision=state['revision'],
-                state_hash=state['state_hash'], value=state['value'])
+                state_hash=state['state_hash'], value=state['value'],
+                **({k:state[k] for k in ('application','application_sha256')} if 'application' in state else {}))
 
+
+
+def temporal_observation(item, target, context, as_of_ms):
+    """A frozen projection must match its full immutable application state."""
+    receipt = item.get('application')
+    if not isinstance(receipt, dict) or not isinstance(receipt.get('resulting'), dict):
+        raise ValueError('temporal_target_projection_unqualified')
+    state = dict(receipt['resulting'], application=receipt,
+                 application_sha256=item.get('application_sha256'))
+    temporal_state(state, target, context, as_of_ms)
+    if (item.get('context_id') != context.identity or item.get('target') != target.value
+            or any(item.get(key) != state[key] for key in ('state_hash', 'revision', 'value'))):
+        raise ValueError('temporal_target_projection_mismatch')
+    return item
 
 def priority_order(journal, target, items, context_for):
     # Ordinal preference only. Existing eligibility/evidence gates remain owned

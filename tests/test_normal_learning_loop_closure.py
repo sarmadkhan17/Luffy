@@ -643,23 +643,23 @@ def test_governed_state_reaches_net_score_through_the_normal_path_and_baseline_i
 
 
 # -------------------------------------- 8/9. WorldModel learned confidence
-def world_fixture():
+def world_fixture(as_of=200):
     from trader.world import (ClaimCollection, ClaimCoordinate, ClaimEvidenceRef, HierarchyNode, Horizon,
                               Observation, Quality, Scope, ScopeLevel, WorldClaim, WorldModel, WorldState)
     glob, asset = Scope(ScopeLevel.GLOBAL, 'world'), Scope(ScopeLevel.ASSET_CLASS, 'digital-assets')
     btc, eth = Scope(ScopeLevel.INSTRUMENT, 'BTC'), Scope(ScopeLevel.INSTRUMENT, 'ETH')
     nodes = (HierarchyNode(glob), HierarchyNode(asset, glob), HierarchyNode(btc, asset), HierarchyNode(eth, asset))
     obs = Observation('BTC', 100, 150, '1h', 'price', 1, 'test', 'bar-1', Quality.VALID, available_at_ms=120)
-    claims = tuple(WorldClaim(ClaimCoordinate(scope, Horizon.INTRADAY, dim), 200, 'weak', Quality.SUSPECT, conf,
+    claims = tuple(WorldClaim(ClaimCoordinate(scope, Horizon.INTRADAY, dim), as_of, 'weak', Quality.SUSPECT, conf,
                               {'reason': 'tentative'}, (ClaimEvidenceRef.from_observation(obs),), (), 'test', 'claim-v1')
                    for scope, dim, conf in ((btc, 'trend', .6), (btc, 'stress', None)))
-    model = WorldModel(200, nodes, (WorldState('BTC', 200, (obs,)),), tuple(Horizon), claims=ClaimCollection(200, claims))
+    model = WorldModel(as_of, nodes, (WorldState('BTC', as_of, (obs,)),), tuple(Horizon), claims=ClaimCollection(as_of, claims))
     return model, btc, eth, Horizon.INTRADAY
 
 
 def test_world_model_learned_confidence_is_a_separate_exact_overlay(isolated):
     j, cfg, ev, o, v = isolated
-    model, btc, eth, horizon = world_fixture()
+    model, btc, eth, horizon = world_fixture(as_of=o.observed_ms)
     frozen = (model.to_json(), model.model_id, [c.to_json() for c in model.claims.claims])
     context = lambda claim: K.claim_context(claim, regime='ranging', direction='LONG', family='family')
     base, = model.get_claims(btc, horizon, dimension='trend')

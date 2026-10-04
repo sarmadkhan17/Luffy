@@ -51,6 +51,11 @@ class Capability(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
+def canonical_venue(venue):
+    """Registry venue vocabulary; adapters may supply their native CCXT id."""
+    return {"binanceusdm": "binance_usdm"}.get(venue, venue)
+
+
 @dataclass(frozen=True)
 class InstrumentId:
     venue: str
@@ -58,6 +63,7 @@ class InstrumentId:
     venue_symbol: str
 
     def __post_init__(self) -> None:
+        object.__setattr__(self, "venue", canonical_venue(self.venue))
         if not self.venue or not self.venue_symbol or ":" in self.venue or ":" in self.venue_symbol:
             raise ValueError("venue and venue_symbol must be nonempty and colon-free")
 

@@ -1,0 +1,37 @@
+.................................................................F...... [ 59%]
+..................................................                       [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+_______ test_world_model_learned_confidence_is_a_separate_exact_overlay ________
+
+isolated = (<trader.core.journal.Journal object at 0x776d051d4da0>, {'risk': {'bar_minutes': 60, 'funding_rate_8h': 0.0001, 'real...'r1', 'spec_hash': '326e988be12c4ae772bd0d29cc0b3999c9c048f34d29470ed5827fe471e317c4', 'parent_version_id': None, ...})
+
+    def test_world_model_learned_confidence_is_a_separate_exact_overlay(isolated):
+        j, cfg, ev, o, v = isolated
+        model, btc, eth, horizon = world_fixture()
+        frozen = (model.to_json(), model.model_id, [c.to_json() for c in model.claims.claims])
+        context = lambda claim: K.claim_context(claim, regime='ranging', direction='LONG', family='family')
+        base, = model.get_claims(btc, horizon, dimension='trend')
+        # no learned state: the base claim, unchanged
+        view = K.world_claims(j, model, btc, horizon, regime='ranging', direction='LONG', family='family', dimension='trend')[0]
+        assert (view.effective_confidence, view.base_confidence, view.applied, view.reason) == (.6, .6, False, 'NO_LEARNED_STATE')
+        assert view.claim is base
+        rules = make_rule(L.Target.WORLD, context(base), {'confidence': .9}, kinds=(L.Kind.RESEARCH,))
+        rid, = rules
+        state = T.read(j, L.Target.WORLD, context(base))
+        p = T.propose(ev, L.Target.WORLD, state, rid, rules)
+        assert A.apply(j, cfg, ev, p, A.request(ev, p, state, A.source_versions(cfg)), at_ms=o.observed_ms,
+                       test_registry=rules)['result'] == 'APPLIED'
+        got = K.world_claims(j, model, btc, horizon, regime='ranging', direction='LONG', family='family', dimension='trend')[0]
+>       assert (got.base_confidence, got.effective_confidence, got.applied) == (.6, .9, True)
+E       assert (0.6, 0.6, False) == (0.6, 0.9, True)
+E
+E         At index 1 diff: 0.6 != 0.9
+E         Use -v to get more diff
+
+tests/test_normal_learning_loop_closure.py:677: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_normal_learning_loop_closure.py::test_world_model_learned_confidence_is_a_separate_exact_overlay
+1 failed, 121 passed in 585.98s (0:09:45)

@@ -272,10 +272,27 @@ def test_owner_query_auth_and_decision_uses_same_gateway(tmp_path,monkeypatch):
     assert j.kv_get('control_state')==before
 
 
-def test_normal_risk_execution_modules_unchanged():
+def test_normal_risk_execution_authorities_preserved():
     import subprocess
-    out=subprocess.check_output(['git','diff','--name-only','--','trader/engine/risk.py','trader/engine/executor.py','trader/engine/risk_intent.py'],text=True)
-    assert out==''
+    root=Path(__file__).resolve().parents[1]
+    baseline='53e7c8567c259b2326315a0acdd4b838af030998'
+    for name in ('risk.py','risk_intent.py','executor.py'):
+        path='trader/engine/'+name
+        before=subprocess.check_output(['git','show',baseline+':'+path],cwd=root,text=True)
+        after=(root/path).read_text()
+        if name!='executor.py':
+            assert after==before
+            continue
+        # This audit authorizes durable partial-exit/recovery repair. Every
+        # other method, including all entry authority/reservation gates, must
+        # remain exactly equal to the audited starting implementation.
+        allowed={'close_partial','recover_entries','recovery_pending'}
+        def authorities(source):
+            tree=ast.parse(source)
+            executor=next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='Executor')
+            return {n.name:ast.dump(n,include_attributes=False) for n in executor.body
+                    if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)) and n.name not in allowed}
+        assert authorities(after)==authorities(before)
 
 
 def stored_questions(j, n=51):

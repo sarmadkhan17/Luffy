@@ -1,0 +1,57 @@
+{
+  "kind": "BASELINE_DEFECT_REPRODUCTIONS_NOT_REPAIR_PASS",
+  "head": "53e7c8567c259b2326315a0acdd4b838af030998",
+  "results": {
+    "F1": {
+      "reproduced": true,
+      "exception": "ExchangeError",
+      "message": "binanceusdm markets not loaded"
+    },
+    "F2": {
+      "reproduced": true,
+      "provenance": "binanceusdm:futures:BTCUSDT",
+      "registry": "binance_usdm:futures:BTCUSDT",
+      "scope": "Identity boundary; Kernel end-to-end proof remains pending."
+    },
+    "F4": {
+      "reproduced": true,
+      "initial_quantity": 10,
+      "intended_reduction": 5,
+      "venue_quantity_after_retry": 0.0,
+      "submission_count": 2,
+      "scope": "Lost responses; durable reopen/reconciliation proof remains pending."
+    },
+    "F5": {
+      "reproduced": true,
+      "publication_age": 0,
+      "successful_cycle_age": 998,
+      "injected_stale_after_s": 10,
+      "status": "FRESH",
+      "entry_block": null
+    },
+    "F6": {
+      "reproduced": true,
+      "received_at": 2000.0,
+      "observation_time": 1000,
+      "failed_refreshes": 0,
+      "active": true
+    },
+    "F7": {
+      "reproduced": true,
+      "retained_ewa_present": true,
+      "inventory_contains_ewa": false
+    },
+    "F9": {
+      "reproduced": true,
+      "budget_remaining_before_call": 1,
+      "requested_max_tokens": 4000,
+      "actual_usage_recorded": 119,
+      "provider": "injected_fake"
+    }
+  },
+  "F3": "PENDING_COMPLETE_AUDIT_SOURCE_AND_ACTUAL_REVISION_PROBE",
+  "attempts": {
+    "network": [],
+    "production_store": []
+  }
+}

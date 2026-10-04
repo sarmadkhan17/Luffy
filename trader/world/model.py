@@ -212,7 +212,7 @@ class WorldModel:
         the base claim's confidence unchanged. There is no fallback to a
         nearby context.
         """
-        return tuple(_overlay(claim, learning_journal, context_for)
+        return tuple(_overlay(claim, learning_journal, context_for, self.as_of_ms)
                      for claim in self.get_claims(scope, horizon, dimension=dimension))
 
     def effective_claim(self, scope: Scope, horizon: Horizon, *, learning_journal, context_for,
@@ -287,7 +287,7 @@ class EffectiveClaim:
         return self.learned is not None
 
 
-def _overlay(claim, journal, context_for) -> EffectiveClaim:
+def _overlay(claim, journal, context_for, as_of_ms) -> EffectiveClaim:
     base = claim.confidence
     from trader.learning import targets as T, foundation as L
     try:
@@ -302,7 +302,7 @@ def _overlay(claim, journal, context_for) -> EffectiveClaim:
             or context.subject_id != coordinate.dimension
             or context.evidence_type != claim.source):
         return EffectiveClaim(claim, base, base, None, "CONTEXT_DOES_NOT_MATCH_CLAIM")
-    state = T.observation(journal, L.Target.WORLD, context)
+    state = T.observation(journal, L.Target.WORLD, context, as_of_ms=as_of_ms)
     if state["value"] is None:
         return EffectiveClaim(claim, base, base, None, "NO_LEARNED_STATE")
     return EffectiveClaim(claim, base, float(state["value"]["confidence"]), state, "LEARNED_OVERLAY_APPLIED")

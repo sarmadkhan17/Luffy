@@ -51,6 +51,7 @@ def backup(tmp_path):
     j.kv_set('replay_sentinel', 'exact-bytes-state')
     (root / '.env').write_text('API_SECRET=DO_NOT_CAPTURE')
     (root / 'credential.json').write_text('DO_NOT_CAPTURE')
+    (root / 'data/ewa_state.json').write_text('{"agents":{},"processed":[],"updated":0}')
     inv = critical_inventory(root)
     sets = BackupSets(root, tmp_path / 'external-mount', inv,
                       repository_version='fixture-commit+config-hashes', clock=lambda: 1234.)
@@ -423,7 +424,7 @@ def test_mutant_allowing_write_failure_entry_detected(tmp_path, monkeypatch):
 
 def test_mutant_stale_as_fresh_detected(monitor):
     now, _, _, observer, hb = monitor; hb.beat({'last_successful_cycle_at': hb.clock()}); now[0] += 11
-    mutated_method(observer, 'heartbeat', "now - record['timestamp'] > policy.stale_after_s", 'False')
+    mutated_method(observer, 'heartbeat', "max(now - record['timestamp'],\n                 now - record['context']['last_successful_cycle_at']) > policy.stale_after_s", 'False')
     with pytest.raises(AssertionError, match='stale accepted fresh'):
         assert observer.heartbeat(hb.path, 'luffy', HeartbeatPolicy(10))['status'] == 'STALE', 'stale accepted fresh'
 
@@ -753,6 +754,9 @@ def test_mutant_removing_cycle_context_chronology_detected(monitor, monkeypatch,
     namespace = dict(W.read_heartbeat.__globals__)
     exec(source[:start] + source[end:], namespace)
     monkeypatch.setattr(W, 'read_heartbeat', namespace['read_heartbeat'])
+    # Remove the parallel successful-work age read too: otherwise missing/None
+    # contexts are still refused by the independent observer's numeric operation.
+    mutated_method(observer, 'heartbeat', "now - record['context']['last_successful_cycle_at']", '0')
     with pytest.raises(AssertionError, match='invalid heartbeat accepted fresh'):
         assert observer.heartbeat(hb.path, 'luffy', HeartbeatPolicy(10))['status'] == 'UNAVAILABLE', 'invalid heartbeat accepted fresh'
 

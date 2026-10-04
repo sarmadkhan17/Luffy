@@ -59,7 +59,8 @@ class Heartbeat:
     def age_seconds(self):
         try:
             now = self.clock()
-            return now - read_heartbeat(self.path, self.producer, now)['timestamp']
+            record = read_heartbeat(self.path, self.producer, now)
+            return max(now - record['timestamp'], now - record['context']['last_successful_cycle_at'])
         except Exception:
             return None
 

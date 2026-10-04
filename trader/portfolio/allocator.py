@@ -468,6 +468,9 @@ def allocate(inputs: Inputs) -> Proposal:
         missing.extend(_economic_reasons(c, inputs))
         learned_context = learned.get(c.candidate_id)
         if learned_context and learned_context.get('value') is not None:
+            from trader.learning import targets as learned_targets, consumers as learned_consumers, foundation as learning
+            learned_targets.temporal_observation(learned_context, learning.Target.ALLOCATION,
+                learned_consumers.allocation_context(c), now)
             # A zero bound denies only future new allocation. Nonzero bounds
             # remain context until units can be compared by a registered policy.
             if not held and learned_context['value']['max_share'] == 0:
@@ -567,7 +570,7 @@ def allocate(inputs: Inputs) -> Proposal:
 def attach_learning(inputs, journal):
     from trader.learning.consumers import allocation_observations
     from dataclasses import replace
-    values = {k:v for k,v in allocation_observations(journal, inputs.candidates).items() if v['value'] is not None}
+    values = {k:v for k,v in allocation_observations(journal, inputs.candidates, as_of_ms=inputs.as_of_ms).items() if v['value'] is not None}
     if not values: return inputs
     return replace(inputs, sources=tuple(s for s in inputs.sources if s.source_id != 'governed-allocation-context')
                    +(Source.freeze('governed-allocation-context', values),))

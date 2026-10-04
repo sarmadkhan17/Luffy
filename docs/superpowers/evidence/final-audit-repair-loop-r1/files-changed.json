@@ -1,0 +1,1633 @@
+{
+  "branch": "luffy-final-audit-repair-loop-r1",
+  "final_head": "UNCOMMITTED",
+  "implementation_and_control_paths": [
+    "NEXT.yaml",
+    "STATE.yaml",
+    "tests/_corr_synth.py",
+    "tests/retained_candle_fixtures.py",
+    "tests/stage1_pit_offline_plugin.py",
+    "tests/test_attention_selection_persistence.py",
+    "tests/test_attention_telemetry.py",
+    "tests/test_derivatives.py",
+    "tests/test_final_audit_attention_allocation_time.py",
+    "tests/test_final_audit_backup_input.py",
+    "tests/test_final_audit_entry_partial_barrier.py",
+    "tests/test_final_audit_feed_identity.py",
+    "tests/test_final_audit_heartbeat_age.py",
+    "tests/test_final_audit_learning_time.py",
+    "tests/test_final_audit_llm_reservation.py",
+    "tests/test_final_audit_macro_time.py",
+    "tests/test_final_audit_partial_ack.py",
+    "tests/test_final_audit_partial_intent.py",
+    "tests/test_final_audit_research_snapshot.py",
+    "tests/test_final_audit_supervisor_partial.py",
+    "tests/test_intelligence_spine.py",
+    "tests/test_kernel_boot_recovery.py",
+    "tests/test_macro_guard.py",
+    "tests/test_normal_learning_loop_closure.py",
+    "tests/test_owner_interface_boundary.py",
+    "tests/test_predictive_research_bridge.py",
+    "tests/test_real_learning_integration.py",
+    "tests/test_research_calibration.py",
+    "tests/test_research_evidence_source_binding.py",
+    "tests/test_research_referee.py",
+    "tests/test_spec_signals_on_closed_bars.py",
+    "tests/test_stage1_data_provenance_pit.py",
+    "tests/test_stage1_pit_blocker_fix.py",
+    "tests/test_stage1_recovery_monitoring.py",
+    "tests/test_stage8_owner_os.py",
+    "tests/test_strategy_factory_handoff.py",
+    "tests/test_supervisor.py",
+    "trader/agents/macro_guard.py",
+    "trader/brain/llm.py",
+    "trader/cognition/attention.py",
+    "trader/core/instrument_registry.py",
+    "trader/core/journal.py",
+    "trader/data/feed.py",
+    "trader/data/market_provenance.py",
+    "trader/engine/entry_authority.py",
+    "trader/engine/executor.py",
+    "trader/engine/partial_intent.py",
+    "trader/engine/supervisor.py",
+    "trader/engine/watchdog.py",
+    "trader/kernel.py",
+    "trader/learning/consumers.py",
+    "trader/learning/targets.py",
+    "trader/observability/attention.py",
+    "trader/observability/safety.py",
+    "trader/persistence/backup.py",
+    "trader/portfolio/allocator.py",
+    "trader/research/predictive_experiment.py",
+    "trader/world/model.py"
+  ],
+  "evidence_paths": [
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/attention-fixture-update.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/baseline-attention-fixtures.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/baseline-final-matrix-failures.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/baseline-results.json",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/baseline_probes.py",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/current-and-historical-world-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/defect-ledger.json",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage1_data.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage1_entry.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage1_exit_accounting.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage2_spine.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage3_research.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage4_referee.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage5_authority.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage6_portfolio.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage7_learning.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/engineering-closure.json",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/entry_gap_probe.py",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f1-before.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f1-graphify.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f1-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f1-review.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f10-before.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f10-focused.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f10-r3-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f10-regression-r2.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f10-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f10-review.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f11-before.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f11-r2-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f11-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f11-review-r1.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f11-review-r2.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f11-risk-cas-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f12-before.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f12-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f12-review.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-before.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-consumer-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-final-review-r2.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-final-review.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-r2-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-review-r2.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-review.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-wide-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f14-before.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f14-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f2-before.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f2-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f2-review.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f3-before.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f3-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f3-review.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f4-before.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f4-r2-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f4-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f4-review-r1.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f4-review-r2.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f5-before.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f5-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f5-review.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f6-before.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f6-r2-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f6-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f6-review-r1.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f6-review-r2.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f7-before.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f7-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f7-review.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f9-before.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f9-regression-r2.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f9-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f9-review-r2.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/f9-review.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/files-changed.json",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage1_data.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage1_entry.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage1_exit_accounting.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage2_spine.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage3_research-r5.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage3_research.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage4_referee.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage5_authority.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage6_portfolio.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage7_learning.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage8_owner.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-caller-audit.json",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-exit-variant-review.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-frontend-typecheck.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-graphify-update-r2.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-graphify-update.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-installed-ccxt-contract.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-matrix-progress.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-matrix-run.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-original-and-safety-r2.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-original-and-safety-r3.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-original-and-safety-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-original-probes.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-regression-matrix.json",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-return.yaml",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r1-allocation-probe.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r1-probes.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r1-recovery-probe.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r2-entry-probe.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r4-source.json",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r5-source.json",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-source.json",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-verification.json",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/finalize.py",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/fixture-current-cut-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/owner-boundary-thread-diagnostic.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/owner-local-ipc-regression.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/owner-test-thread-diagnostic.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage1_data.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage1_entry.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage1_exit_accounting.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage2_spine.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage3_research.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage4_referee.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage5_authority.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage6_portfolio.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage7_learning.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage8_owner.txt",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-regression-matrix.json",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/run_final_matrix.py",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/superseded-stage3-guard-result.json",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/test-temp-relocation.json",
+    "docs/superpowers/reports/2026-10-04-final-audit-repair-loop-r1.md"
+  ],
+  "graphify_paths": [
+    "graphify-out/.graphify_labels.json",
+    "graphify-out/.graphify_labels.json.sig",
+    "graphify-out/.graphify_root",
+    "graphify-out/2026-10-04/.graphify_labels.json",
+    "graphify-out/2026-10-04/GRAPH_REPORT.md",
+    "graphify-out/2026-10-04/graph.json",
+    "graphify-out/2026-10-04/manifest.json",
+    "graphify-out/GRAPH_REPORT.md",
+    "graphify-out/cache/ast/v0.9.63-s3/00f471049983427bcbd3ee1961a79d2553a1f0dfc991af48d6a333103bff7faa.json",
+    "graphify-out/cache/ast/v0.9.63-s3/01de1e21b3025c201703ce5ed4ba31f02a1f1930ba8865db86d486b858c63bdd.json",
+    "graphify-out/cache/ast/v0.9.63-s3/077e6ad1bf2e64634e06507a1d113c3fe48fd2a0c75de3f0b699a05f0e888928.json",
+    "graphify-out/cache/ast/v0.9.63-s3/105f4d9d730925eee03b596001cbee09722a8ba23420836262dcaa548ea54dcd.json",
+    "graphify-out/cache/ast/v0.9.63-s3/16e548d3161bd9f8a6d26e07c397a5aae5f8b7b49cbc6879129319f286d59e45.json",
+    "graphify-out/cache/ast/v0.9.63-s3/1977b0d61e70344df9fde9c989fc5a551867a5950acc740cf66c1f193c709506.json",
+    "graphify-out/cache/ast/v0.9.63-s3/1b8a4a77298840b66d3736c4a355229767038e3cfe6a025dd8917363298ef897.json",
+    "graphify-out/cache/ast/v0.9.63-s3/247255e3baca8dca39d727c82c0490e90ce4441358a4ea31d95cbe588b329b98.json",
+    "graphify-out/cache/ast/v0.9.63-s3/24b60b69e8947ddee9c5175cdf90ce57c2dea459d81b7e7d5bf77d701768d61b.json",
+    "graphify-out/cache/ast/v0.9.63-s3/24b7ef777428ea5f08647fc26275f686fe98269a5b2cf8fa83890d74070f0b60.json",
+    "graphify-out/cache/ast/v0.9.63-s3/2e1dc3f017bdf66c750353b299cb0074728410b0461be77be72075c6070d3af4.json",
+    "graphify-out/cache/ast/v0.9.63-s3/2e394ad6ff4e2c0aa66e5d8714f464c517aa9ed6f0ca01479ad4d3c8245ed003.json",
+    "graphify-out/cache/ast/v0.9.63-s3/2e3a0f57464e0c5d801853f666999270b5d32a70991218d09da79e5c0c7ee5b6.json",
+    "graphify-out/cache/ast/v0.9.63-s3/32e7cf61f0ef20eaf8b7fc4c35c17dcb997b8ec566c413fae01a17279fa87323.json",
+    "graphify-out/cache/ast/v0.9.63-s3/349f6b872ac26859260df659487514895f73c781edf73d674468891554a494e4.json",
+    "graphify-out/cache/ast/v0.9.63-s3/34bd3ce9154375fc2efbb3456dff46f2c383b28325e70cc0434d8acb3e47635f.json",
+    "graphify-out/cache/ast/v0.9.63-s3/35886f841f89cf80ae5724cad1f0ca0e78c4636453c72dffc142dc6e9112bb5c.json",
+    "graphify-out/cache/ast/v0.9.63-s3/37220ebfbf25826d1b37405a782eae4c0b5112d5b9981e377c1bada9e01aab87.json",
+    "graphify-out/cache/ast/v0.9.63-s3/3cf4e25cca9fb33165c807f3bbbafe7d31564c3086f03f80d321243ee62320d1.json",
+    "graphify-out/cache/ast/v0.9.63-s3/3f3da107ec973e2f03d08092b4dd9c15c4ddcd3ce10f56b2a352aa58e9d7baea.json",
+    "graphify-out/cache/ast/v0.9.63-s3/4612666f494e9d3e9246e0e58951af6e284d857b0d4bd3c841d928efbb8f8cca.json",
+    "graphify-out/cache/ast/v0.9.63-s3/482958558683bbf4883032d6e98a112aadcdc908d662f5153c3f870e80635b24.json",
+    "graphify-out/cache/ast/v0.9.63-s3/52c2b19cfd69c26a896291884c976195fcb7fb35979841d1db4abc2c54493613.json",
+    "graphify-out/cache/ast/v0.9.63-s3/5ae7ba582f2f8bce26437ddc2dfdcb034c9ae8141c3b99bbea8bb46308af8404.json",
+    "graphify-out/cache/ast/v0.9.63-s3/5b9e63308ad5a75878e18195a8bcdc69f52ba246da8400efe20941fb166750e4.json",
+    "graphify-out/cache/ast/v0.9.63-s3/5c008d261a895691cc7d50f3429560b86664c5fbf81d14541f4f9899b49143d6.json",
+    "graphify-out/cache/ast/v0.9.63-s3/5e4758f4d79265f1ee288f86f633552699d02fa125179e332f348db26f617ef8.json",
+    "graphify-out/cache/ast/v0.9.63-s3/60bcfeb871cc5cf611b018d2dcd8caa0b94ab105b3febac74daf9707d784dfab.json",
+    "graphify-out/cache/ast/v0.9.63-s3/62f37ce8d99b8c4201cf88caa14c064f3e4a8dc87ea37fd9c80aeda92cae9abd.json",
+    "graphify-out/cache/ast/v0.9.63-s3/702f49500de957a88ef72891b9aaeb0b5458e6759a841a550ba4ab08e9d0e924.json",
+    "graphify-out/cache/ast/v0.9.63-s3/70644716002e47a24b944940ed053303f143c93324c35b8bc11e5bd406398d09.json",
+    "graphify-out/cache/ast/v0.9.63-s3/70e7dd2b8a26bf35c6c0d2fa2c39ae5b9000e7864f51b14080c2344aaf749652.json",
+    "graphify-out/cache/ast/v0.9.63-s3/7b5d3d6e1a756e2dae5c7f8e93bd0e84b25319274f056bec562ced26a60eefa7.json",
+    "graphify-out/cache/ast/v0.9.63-s3/835ce45d6724ade113d51b4c6eba2b8cb5a08c3e12f3745f432c0e73934a1f79.json",
+    "graphify-out/cache/ast/v0.9.63-s3/87ce7c7b21305400ee1edf7e25d571e68fe7c7cf4ff6ecc92db5ef5cabd4b2e8.json",
+    "graphify-out/cache/ast/v0.9.63-s3/9551dba96776894b9333b6ee4659354c7da7f8dd733da1fc828ab6bb2e05ccf5.json",
+    "graphify-out/cache/ast/v0.9.63-s3/9ab7425570a0663f27c6b86e20d409ece8283a6c6313671454309c3aac81d7bf.json",
+    "graphify-out/cache/ast/v0.9.63-s3/9f27ce3bb46a45918c8fae0b484da1dfa71bcac3016a8dfb3b28d22822892a0c.json",
+    "graphify-out/cache/ast/v0.9.63-s3/a07a10d9ef7daf4b85a662981a34536373a5c18be5d9bae52fe28b09656529b0.json",
+    "graphify-out/cache/ast/v0.9.63-s3/a3065abf250203eb072e51e7769b8bc67176c45d6d95e1c397da399dfeb44e67.json",
+    "graphify-out/cache/ast/v0.9.63-s3/a8b353e0c9a43e02a061c742b940cb548d59b8580f3c00db1164ae46a8777a93.json",
+    "graphify-out/cache/ast/v0.9.63-s3/aa311bb9fed467fb5475fccb793b36be600594da695df92e66fadbc6181a0c22.json",
+    "graphify-out/cache/ast/v0.9.63-s3/ab350aea0c2f4882a7e7c57f448a199c5613e4b4c8cfd23515302aa912413774.json",
+    "graphify-out/cache/ast/v0.9.63-s3/ad3c46962b65b19112e248fc33365718d33b895d4d00b0dba44d0d87e3d49fb3.json",
+    "graphify-out/cache/ast/v0.9.63-s3/b264adda79b943c37fb1312a17311ebc40efd8a1e95a1e3e474eb36dd8b719b1.json",
+    "graphify-out/cache/ast/v0.9.63-s3/b346e7035ba198062e3f02e836e6e3379da0fd92ac46ddf32c21750033558800.json",
+    "graphify-out/cache/ast/v0.9.63-s3/b4f7f4a868ba7ddc512dc8011317cd230e79fbf4b0993bd51b229d55f1a6f56d.json",
+    "graphify-out/cache/ast/v0.9.63-s3/b64950cc5920674e2c1c79f84be5fadf719b53c1bc8a3c94438b2aa2ae63fedf.json",
+    "graphify-out/cache/ast/v0.9.63-s3/bd4b2d738e1653522d34276ee27251f8be6960e1e4d3a8a458259d673900866f.json",
+    "graphify-out/cache/ast/v0.9.63-s3/cb821605168396b45cdc22cd83f94f0c02fa266736f57cfbc08cee8a27b7986a.json",
+    "graphify-out/cache/ast/v0.9.63-s3/cc46357de7d2549eeaa06ed4b3ce084022e5ef9696848fb5501d1e7cce37b01e.json",
+    "graphify-out/cache/ast/v0.9.63-s3/cf4be13b6582e9f65cdaa2ba7670d723c0544c39fb85584e4891f55996aef01b.json",
+    "graphify-out/cache/ast/v0.9.63-s3/d38626083f624d636af236f43973689200a1068f5e635e157360304fd5366977.json",
+    "graphify-out/cache/ast/v0.9.63-s3/d67ebe076f402d293268f78cbd58dfd44d7af33d92e03c2221eeb66851d299d3.json",
+    "graphify-out/cache/ast/v0.9.63-s3/dd6312bf69820910e3f6730a74cce0859beda95150d7e5cb3d6612a44c433bce.json",
+    "graphify-out/cache/ast/v0.9.63-s3/ddbd369a482882e1ac240cba1b511802e02a35844528c9059e123f4b2efedce7.json",
+    "graphify-out/cache/ast/v0.9.63-s3/debe18779cc68c15b2e386c239412c8f9c57a73758de3951175b12ca92cfd4b6.json",
+    "graphify-out/cache/ast/v0.9.63-s3/e5b577ed8771b4a363e9c63dd694ef762b69b34d306c2167fa51a8bcc2e2e254.json",
+    "graphify-out/cache/ast/v0.9.63-s3/e935cf54412fa71111c76955fadb0598b06e0a2b22e3b0a803dde4686623886e.json",
+    "graphify-out/cache/ast/v0.9.63-s3/e940ab579e1c6f41583605b454130fd4fa5c291e6bbe452e7c4a2c992ef25d0c.json",
+    "graphify-out/cache/ast/v0.9.63-s3/eadf534ee78e36b359d3a0cdbf9ccdcc703d8d0d5d4d9746990deff70a2fe745.json",
+    "graphify-out/cache/ast/v0.9.63-s3/f3d1d9d41214d888da58006a156e68fd02afcf2a608d0459c3783c5be41ab399.json",
+    "graphify-out/cache/ast/v0.9.63-s3/f513d7e3795f875bb26dbd416e89cbd3865ffd80b492aed7169ada2a5454de58.json",
+    "graphify-out/cache/ast/v0.9.63-s3/f759e3485ba2de2fb9657c92eccfa9a9b24cb51f219f1890e55fd5af0f891351.json",
+    "graphify-out/cache/ast/v0.9.63-s3/f9a729bce79632e583c3b1e3c02e90a00e73fb127979666881914b22d5e46b3e.json",
+    "graphify-out/cache/ast/v0.9.63-s3/f9f794bee109ba35a2a1ce40482f48c8428ced62f548cdc960a81e52f6f1dcd8.json",
+    "graphify-out/cache/ast/v0.9.63-s3/fadf1a15920dc54e70784c9eaa4f266384a419b2159f70f54974faf6da2056c5.json",
+    "graphify-out/cache/last_query_stamp",
+    "graphify-out/cache/stat-index.json",
+    "graphify-out/graph.html",
+    "graphify-out/graph.json",
+    "graphify-out/manifest.json"
+  ],
+  "files": [
+    {
+      "path": "NEXT.yaml",
+      "role": "implementation_or_regression",
+      "sha256": "8b3d57bbc7480f6a86d160cec27e53281d3c7060135cb7e313d2541ff1f4e786"
+    },
+    {
+      "path": "STATE.yaml",
+      "role": "implementation_or_regression",
+      "sha256": "706cc56f936772dd36fdd160fb0394cde38638db358bbf62dc613b95a00266fc"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/attention-fixture-update.txt",
+      "role": "engineering_evidence",
+      "sha256": "9e6104eafff5f35b0e7e55800a7935738d2b17e7355fa87dc3e56ac260f2f379"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/baseline-attention-fixtures.txt",
+      "role": "engineering_evidence",
+      "sha256": "f0bde37b167017bbf494e7c37879480cd5caf6308b3edaa221a47d46cfa5aa4f"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/baseline-final-matrix-failures.txt",
+      "role": "engineering_evidence",
+      "sha256": "47f1d18843e0dbfe281358261390aabb0043f07985d3951f087269ccaef55ce1"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/baseline-results.json",
+      "role": "engineering_evidence",
+      "sha256": "d4a705594cb68bcbb20dc263786d0c0e9cbccfed3a6f263fece9bc6e59162afb"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/baseline_probes.py",
+      "role": "engineering_evidence",
+      "sha256": "577e207ca87a43e61f3cc788fc3e9ad01beeff4e28f7db587185fc93f96ed040"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/current-and-historical-world-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "62af09e5d470d4b6eae403d897520f9eb39c07c104c5da3ad6d2023b1c846efd"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/defect-ledger.json",
+      "role": "engineering_evidence",
+      "sha256": "ed755d13b20c6ac7ac721a8127a53ee5fb5118d879def9c8b7c196e166fb1d72"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage1_data.txt",
+      "role": "engineering_evidence",
+      "sha256": "755ca8f61c030c2b3d5473fdbdf99ef4a1d5c5dee1512039b0673d0903dc4fa4"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage1_entry.txt",
+      "role": "engineering_evidence",
+      "sha256": "0179c04a12125d4b8ee95d719ae6e39847f57fe8af3ef99eae598993a3af0f90"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage1_exit_accounting.txt",
+      "role": "engineering_evidence",
+      "sha256": "c67106c9f952800751d0cb9d99da0f9ef5d33c2432b1da62fe2e354c80b5672f"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage2_spine.txt",
+      "role": "engineering_evidence",
+      "sha256": "83224cef13828ed15c0eece791505d8da684ea9e94c86cd683020a6b79a6d2c9"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage3_research.txt",
+      "role": "engineering_evidence",
+      "sha256": "292f1fdbd34f99526d3606f3db22362321ad6133f416ff3b2998b4092c50d78a"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage4_referee.txt",
+      "role": "engineering_evidence",
+      "sha256": "50eab6b1964791bc4640a353d5749a82e4ad1df4ff3db96cf60631c00e6302ad"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage5_authority.txt",
+      "role": "engineering_evidence",
+      "sha256": "5b12344cf24e5f9290ee39fc52cf28e6fc72a689b1bd4075323752234ac6a90f"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage6_portfolio.txt",
+      "role": "engineering_evidence",
+      "sha256": "3ea2a72a8f17c85f995ece51afc5a2f052024628e3d0df5d781c77723b716460"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage7_learning.txt",
+      "role": "engineering_evidence",
+      "sha256": "f8fe3eba6eaffa550a6731e335dbf09483f196a8808f6eec91afe0c36cef9fc9"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/engineering-closure.json",
+      "role": "engineering_evidence",
+      "sha256": "98c0f27f7fb9b4ca49bb6374af406ee6761a697c098539ebf426089a679710a9"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/entry_gap_probe.py",
+      "role": "engineering_evidence",
+      "sha256": "a3d6239309a511256d39ba53b97b537c48bad5162173e05d87c70721872f77a8"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f1-before.txt",
+      "role": "engineering_evidence",
+      "sha256": "4c5a955d90417e721189c31aa1e8506091b2866dd6dfaad8610155bcf826dfed"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f1-graphify.txt",
+      "role": "engineering_evidence",
+      "sha256": "f69f5ce192aba013de2093111257c0da5f4fbc870b651836c1e78510af0c9195"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f1-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "56b517c278352c4d78a5f36f71a7ee6020201ec6a14168c57ad1c1fb8d7d9dcb"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f1-review.txt",
+      "role": "engineering_evidence",
+      "sha256": "d612886a52f7ed3980335f496d8c0fbf1a9eaf905a282622141e64bc07cfedc1"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f10-before.txt",
+      "role": "engineering_evidence",
+      "sha256": "115e0c90c92fa666800901ef155502e4438aef2aeb9d742df974734713a653cb"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f10-focused.txt",
+      "role": "engineering_evidence",
+      "sha256": "7c490bcc3b49d23b50b5f87623053646788c0c6dfa819ed66f4ecc168277c219"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f10-r3-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "5c686d9f829d9712828984e52e4f912fa449bfe3f1f7571eeb65579a7161d6db"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f10-regression-r2.txt",
+      "role": "engineering_evidence",
+      "sha256": "43a00bef1b95c7c74cb0f447dd4ff0d47511edc14dfbaf7b905bda6dca42fa18"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f10-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "39344bef6fff8bc141205d636be486f71ac710d17f25d2498d2a5df1a0df5594"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f10-review.txt",
+      "role": "engineering_evidence",
+      "sha256": "d85650af37c702602c765e8e19b9cfb24f74c463f89ef30f8dc564a051130943"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f11-before.txt",
+      "role": "engineering_evidence",
+      "sha256": "66a59e3ba9da7507370212b8807c9fad6c6ffeed0b9172617acecf7a02563899"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f11-r2-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "1eb5493952e50ec73935281eda0ac1340f1d64c02f2708d2887e2063219f4bc4"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f11-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "3f85b20d5d0bf834ad2f70c9b323a643477163f1ac5c6d3eb42615cf1d6db2e9"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f11-review-r1.txt",
+      "role": "engineering_evidence",
+      "sha256": "797f43c80ab83f0e99c1a8735bc5296df79d1bd9fec957ef7f47d6f6e0ecec1c"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f11-review-r2.txt",
+      "role": "engineering_evidence",
+      "sha256": "14b3c8da009e44755b59b70e47aba53f9af7e1a48a00ece1074974dd60c786f1"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f11-risk-cas-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "79b27d5cfe6396fa4537ee31b2ce9a90d31b9bad111c80c6800dec01f867e656"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f12-before.txt",
+      "role": "engineering_evidence",
+      "sha256": "295f16797e4d3e3980e820bcdde8034ebdecefd16dbd13d8f0ef45fadf7d8ccc"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f12-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "a26d64d1e842d5f915c068e0a1080942506b98591b8c9c9a7d441c347d43bdee"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f12-review.txt",
+      "role": "engineering_evidence",
+      "sha256": "3e5f18014a02ff66a9af4e1f2afc6d7cd140bd38615637a0d1a351acf19ce8a9"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-before.txt",
+      "role": "engineering_evidence",
+      "sha256": "b79ce23641a6d9474b18f0548ec569bf1091625ca112aa6d6745c5cf1b04f35e"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-consumer-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "f54583c8c3560bc9ba0a0c4e4c48f3b8628624f004f83eee78d692fd3bfb4911"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-final-review-r2.txt",
+      "role": "engineering_evidence",
+      "sha256": "4038bda4c8b6073dae633630f063bcabdb5a0af387dd9e855669da3adf03d51d"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-final-review.txt",
+      "role": "engineering_evidence",
+      "sha256": "249e851ea832ec97fbcc088b3e3f3b2a34c8b42b857472ba7eb96600b190fac1"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-r2-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "38c38c3d135b58ece1171bf2af468af6ce783f76c51ab48cdc95b4a9240ca77d"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "01a643cbcb4cb7bf0848a5247bf585361b8c823c9c344804a18ade16f3056613"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-review-r2.txt",
+      "role": "engineering_evidence",
+      "sha256": "139d19b1799725a9cfbfed84fff3d1a61d633c13d95539c2818f3fda4decf3bd"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-review.txt",
+      "role": "engineering_evidence",
+      "sha256": "48f7ea5589acc6d5d62d204fbd4f4565030acab8e6354e953fb74f97a1e1d9c3"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f13-wide-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "79507c3fcc7191ccb44f090c4669396a9dba585f33db634b61c5b7e096b4c539"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f14-before.txt",
+      "role": "engineering_evidence",
+      "sha256": "9bfd5dab62979d29050961a91aee0435e17e729e5c3afcb951bea8a565840229"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f14-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "17ea5f1b2690b889e7a1dadc8d0bb120532e7ea78d2690e116c4b8793befb3d3"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f2-before.txt",
+      "role": "engineering_evidence",
+      "sha256": "cf1fa57654d2df8dc6f201076f3923d6d8f8ced87f63b0afd23c6d9ffe4cfeed"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f2-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "0977fe546c59e1232f32f445b979035b5dd1b8cbda1127e345faa56044651c56"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f2-review.txt",
+      "role": "engineering_evidence",
+      "sha256": "945cd5c89510022ae13e7001e58fcc2259b48782228def5e4abc87e698ce3e3f"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f3-before.txt",
+      "role": "engineering_evidence",
+      "sha256": "e9e21a59852a8912925e531fa46338b0a8860d94715f5ed82206ed0bef363d03"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f3-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "e8209229910f033546bc50a6309dd43a304d45fbbabf19eaf1ac4c959faa9082"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f3-review.txt",
+      "role": "engineering_evidence",
+      "sha256": "1bed37d045dabb35b7376e2fbb2758aaf73e56cba0b7dad0f3fda2593cac953d"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f4-before.txt",
+      "role": "engineering_evidence",
+      "sha256": "ddae2bb18f40f6805afa1807c4387647512fec3fb0707c7b3583c456abdf6809"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f4-r2-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "7371681a0b951ca891bd9ad6d2700b549f2693da50cf6e6605e9cd76e2736aa7"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f4-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "199d536b2f460923a9366c0cbdfa691b453dac619d232a9408552050f184b389"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f4-review-r1.txt",
+      "role": "engineering_evidence",
+      "sha256": "d347456ec7bce15d933d00944092ffcdf0d57b9bda9bc0f4e85047e981d10a44"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f4-review-r2.txt",
+      "role": "engineering_evidence",
+      "sha256": "b0aff0e9ab8b9875e5c2d3e36baf6d068a4d428c8af478654a86a3bc2c660950"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f5-before.txt",
+      "role": "engineering_evidence",
+      "sha256": "bb29b8b15a8bed799236a55242554dd49fcaf989ca92cfe70f4dd2917ffb25b6"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f5-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "5a3c697b2b7a097ccc5dde4c504a1b024da666b45706629be97c5c2253d04c94"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f5-review.txt",
+      "role": "engineering_evidence",
+      "sha256": "e06eae50dd9b861317312b69282ce711fd399ad4bc1648142e42261eac5b4260"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f6-before.txt",
+      "role": "engineering_evidence",
+      "sha256": "2c287bc7a86f1cf4d84a16786bfdaf641d246fae76d5b8fe214e7665f5c9f98f"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f6-r2-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "3c51b8309e80de0a9ab270b69461ed100facf31e83b15987fc6cdf798d13d2ab"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f6-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "fd8ff16e2e2e97b58dc05e3bd6983795b7eac0160dd3bce0eaafbb6a907690ca"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f6-review-r1.txt",
+      "role": "engineering_evidence",
+      "sha256": "f1e82f1a74909c656b08b049f4ff7aace1ad4585178ecb4b440cc85d326d8edc"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f6-review-r2.txt",
+      "role": "engineering_evidence",
+      "sha256": "a8c002da128af468ff269cbcb179db27e5eb23d202e002c9b20f7200ab62e3de"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f7-before.txt",
+      "role": "engineering_evidence",
+      "sha256": "09bf9001eb625d6804d68015635f8db72508fcc3541fa64a463d90deb06e7e93"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f7-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "0552a323c3c39f6926d173f582546a203eb470efea8ba7bf1d255c1fb8f3527b"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f7-review.txt",
+      "role": "engineering_evidence",
+      "sha256": "bce20cc59e4f66978148c51efa085ab67dcb9b8dc2b41a23270d748662196dc8"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f9-before.txt",
+      "role": "engineering_evidence",
+      "sha256": "694ac8d14dcfdd61df9e782dc1ce9a845e8cf00487bf067b73cad5c0c7051cce"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f9-regression-r2.txt",
+      "role": "engineering_evidence",
+      "sha256": "c051ad83dd98df5c0f3a1e31b46e393f3decd21e30933cbea3f38d01aa41c711"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f9-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "63f500461fc1a0f4c0a40cf6f7a0e6dba337f3c398b338d76d4081e181a62b86"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f9-review-r2.txt",
+      "role": "engineering_evidence",
+      "sha256": "af2d5f6b626045411e5474646722db9651e5f80b22a0601e514ead61270af277"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/f9-review.txt",
+      "role": "engineering_evidence",
+      "sha256": "4e524c2de8b2ee21ac39711cd3f4bd45c4a5735f94e746e0b7db81d994a5d6d3"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/files-changed.json",
+      "role": "engineering_evidence",
+      "sha256": null
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage1_data.txt",
+      "role": "engineering_evidence",
+      "sha256": "73377f6287e13c7d9921633423bef9fd4f4d81de286b929b4c3451fc2a50957d"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage1_entry.txt",
+      "role": "engineering_evidence",
+      "sha256": "cbef0d1fe886cb4301b07c862d38b0e7eb6697926b79624bc9ee103b433528e2"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage1_exit_accounting.txt",
+      "role": "engineering_evidence",
+      "sha256": "bdc3b770c64b79fec879b5b5f69a37efa8faac829de20353d7bbb6878a60f114"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage2_spine.txt",
+      "role": "engineering_evidence",
+      "sha256": "18a2efe347f39afea40ca4520eea4080c0fd72d4e3284369b047f5548a55cde8"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage3_research-r5.txt",
+      "role": "engineering_evidence",
+      "sha256": "ee76259012ff089d839bbcfb711fce519734472ed472c0b7dee7bfaf8dacd32a"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage3_research.txt",
+      "role": "engineering_evidence",
+      "sha256": "f437ba1e6d24d11a53698845d8306300ec8824ba4b6594ef30aadf5b8a253881"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage4_referee.txt",
+      "role": "engineering_evidence",
+      "sha256": "49ad17eb67adc27de7c533abafd2343cea43472c852fce49c05cdb39604e2d29"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage5_authority.txt",
+      "role": "engineering_evidence",
+      "sha256": "ee56cfa3a295d6a2c4926a09e0656d90f8071186638b84cc4c93dcb1ce450e62"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage6_portfolio.txt",
+      "role": "engineering_evidence",
+      "sha256": "e0b40efdcfb37ca9705a6f4fa18d9e6956fc01521ff014126aa77edd29403745"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage7_learning.txt",
+      "role": "engineering_evidence",
+      "sha256": "ca1c2388f76140d3522ca3da21df7c5d058a2db7c3a2e505e523038f1c57ce3a"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage8_owner.txt",
+      "role": "engineering_evidence",
+      "sha256": "fd439488f8edabb318ca31a6b6bbb375fd503fe59dd94d77e3172a898d3379af"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-caller-audit.json",
+      "role": "engineering_evidence",
+      "sha256": "550ee1e5147b2c8d027cdcf510a81c8c4268221ee669679178ee4cba3a51ab03"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-exit-variant-review.txt",
+      "role": "engineering_evidence",
+      "sha256": "da1de4a0669b89f8010dc38c80b12ef0f8cc6d44201ba866feb54c2ffd4e1d38"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-frontend-typecheck.txt",
+      "role": "engineering_evidence",
+      "sha256": "df5b1a32268deadc76c961e1492136f89ea2641ac6912633b7a66c273711a130"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-graphify-update-r2.txt",
+      "role": "engineering_evidence",
+      "sha256": "c24b462ffcc006f47340c13b602aed0c52d022d2641e5b849e02d68c090e98d5"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-graphify-update.txt",
+      "role": "engineering_evidence",
+      "sha256": "7adfa88806ab8a5e4514fcc9f674c7052bb593e611d62b3b1bc917d1f46a96e7"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-installed-ccxt-contract.txt",
+      "role": "engineering_evidence",
+      "sha256": "b230b15fb94afce811553d38f1a03e7b1e27caf10734f1015c72af321a796bae"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-matrix-progress.txt",
+      "role": "engineering_evidence",
+      "sha256": "49f9fa7cb0908a3e67876733c64ff33fe79ebfa4821e52e986cb8a9f588fd99e"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-matrix-run.txt",
+      "role": "engineering_evidence",
+      "sha256": "81372ea26b4635fa8e1b0c5df1c942e6aa6b7299e1e22f85e94a20267937c423"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-original-and-safety-r2.txt",
+      "role": "engineering_evidence",
+      "sha256": "93bf5a8359f3a99b0829a9b1a7bf43e1ec1dde450fd48b806a16175c798e9c52"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-original-and-safety-r3.txt",
+      "role": "engineering_evidence",
+      "sha256": "bbd7617ee23a373628fb0288048855f0a7bfcd9fa4e2131f2b075778b34352b5"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-original-and-safety-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "c21b316702e719143c9667528b558fce3b469b12efbdbee936dc93d3a4c5bed9"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-original-probes.txt",
+      "role": "engineering_evidence",
+      "sha256": "d938205385fc5e75878aaa4a442a2019d24ffbf874847d484c7d076386efe0ef"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-regression-matrix.json",
+      "role": "engineering_evidence",
+      "sha256": "3a71364eebd90b49dcb8a7723c1270bc1368afd8d2a1b7d043e5d14067970ac3"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-return.yaml",
+      "role": "engineering_evidence",
+      "sha256": null
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r1-allocation-probe.txt",
+      "role": "engineering_evidence",
+      "sha256": "1f72a882bdf0711cdb8008ca593917f337c1e32bd4fa08506d81b2ffb3d61ec1"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r1-probes.txt",
+      "role": "engineering_evidence",
+      "sha256": "2db4cff7fbbadf02720cffce5d63e546c85a53fa029c78b9b9288c6d028fbcb9"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r1-recovery-probe.txt",
+      "role": "engineering_evidence",
+      "sha256": "ccb9d0d36543664be31ccce93da8aa5af67ad8b5df25e09166adfcdee9c3fcca"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r2-entry-probe.txt",
+      "role": "engineering_evidence",
+      "sha256": "28cc289f9f09eba4e6d6ebf11d16d7d0250ea319a2fd63adce1106eabd48df78"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r4-source.json",
+      "role": "engineering_evidence",
+      "sha256": "28438045e8e482ca9ec4c04a85e281de871dbd4b428b0e854dcaaf5bd173402b"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r5-source.json",
+      "role": "engineering_evidence",
+      "sha256": "49dd968ad6c7ac93d22789647e5f3de9323f803682404a6463770e1937dcca65"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-source.json",
+      "role": "engineering_evidence",
+      "sha256": "8598a2c8de158aab2e3d7be09bceec067beb6ec739b100e94146bc8b8dd7cf21"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-verification.json",
+      "role": "engineering_evidence",
+      "sha256": null
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/finalize.py",
+      "role": "engineering_evidence",
+      "sha256": "781b93b975fd242c60e7621da320d9172473af2c134eda66cb24ee023ec03824"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/fixture-current-cut-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "8b7cf80b165c0d876659648a5ae7f98e41046ae6b2a7c89763e1857cb3dfb003"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/owner-boundary-thread-diagnostic.txt",
+      "role": "engineering_evidence",
+      "sha256": "a52f02417852ceb7b86dd3b49e2fd3d1115039116b93480d678f631b290d4d37"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/owner-local-ipc-regression.txt",
+      "role": "engineering_evidence",
+      "sha256": "b590e04e7e765c8eeda7553ecb251f356205ab53cc0a368e18565d9f75895fb6"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/owner-test-thread-diagnostic.txt",
+      "role": "engineering_evidence",
+      "sha256": "95060568c7de0e5ac2cd946f87e493aeb97219fdfd13430e1f05e89ab12f178a"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage1_data.txt",
+      "role": "engineering_evidence",
+      "sha256": "3cb6795a837c2075a38e86167855213fcd72b5f0d2fcd8796630e8ec726ce9e6"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage1_entry.txt",
+      "role": "engineering_evidence",
+      "sha256": "3753e11c6bf315e5b94b3fc245ff2cc2ffbaa148c304ea438d0ea1e84dda24bc"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage1_exit_accounting.txt",
+      "role": "engineering_evidence",
+      "sha256": "f823ec0e401385ad35523baea5e35f2a4e2bb49743e3d68ffcd7db705bfe69e9"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage2_spine.txt",
+      "role": "engineering_evidence",
+      "sha256": "ff636c915463faa2c834700f1eccf99db3f8fd127c01a754f8a89b05ed107e99"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage3_research.txt",
+      "role": "engineering_evidence",
+      "sha256": "589980c44652d71f9bda326a71171e926e0f5d5b63ade8c70a5b53ef23ea0d8a"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage4_referee.txt",
+      "role": "engineering_evidence",
+      "sha256": "029d59c54fc117813a24c08517eea94d2f30070cd46ed0f42a879a0a998c72ac"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage5_authority.txt",
+      "role": "engineering_evidence",
+      "sha256": "d5a41524b8709354f94b277c56454e093d8ced298ec3d4542994ea38f6aab1ce"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage6_portfolio.txt",
+      "role": "engineering_evidence",
+      "sha256": "18faf8464c849aa803ce392e036750b297079e36a64d72e84ad74858328be03f"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage7_learning.txt",
+      "role": "engineering_evidence",
+      "sha256": "3a32c900bcfe850479a51e918401892aaabe39ac719a315cc2f22b1a2178688b"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage8_owner.txt",
+      "role": "engineering_evidence",
+      "sha256": "87630dedbd0bdb283714e3a179ae0df0112fe1726b4629d8843a5c9b7bd3436e"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-regression-matrix.json",
+      "role": "engineering_evidence",
+      "sha256": "8f7837f2668920ba9dc2f65c6a72c2bafe7314bf0c2a391ff184746e348c1ecb"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/run_final_matrix.py",
+      "role": "engineering_evidence",
+      "sha256": "74a14dc0db86ea49620f6f7fadd15b4493034c446881a977f66bd91b49dbcc0f"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/superseded-stage3-guard-result.json",
+      "role": "engineering_evidence",
+      "sha256": "ab3422376d95ccb9791e91f59bcadb8d2bd2d5a4de41342c4df8d6e358836a1f"
+    },
+    {
+      "path": "docs/superpowers/evidence/final-audit-repair-loop-r1/test-temp-relocation.json",
+      "role": "engineering_evidence",
+      "sha256": "f0c85749beae4ddc03b071af6ea1dfecdbe38fc77faf047e11a42e087a5ccbae"
+    },
+    {
+      "path": "docs/superpowers/reports/2026-10-04-final-audit-repair-loop-r1.md",
+      "role": "engineering_evidence",
+      "sha256": "59bb5a9a37123e6b759a700c44647a08a4aae3fb863a33fce05243e044254052"
+    },
+    {
+      "path": "graphify-out/.graphify_labels.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "15e86c794e9a06db29f90a564eaac9bf9a5f404f56285f3078fa1150719dd9a6"
+    },
+    {
+      "path": "graphify-out/.graphify_labels.json.sig",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "7cc7927af3f90fea281acb806b0d10abdaea269b95c21c9cb4c27d71612e88d2"
+    },
+    {
+      "path": "graphify-out/.graphify_root",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "cdb4ee2aea69cc6a83331bbe96dc2caa9a299d21329efb0336fc02a82e1839a8"
+    },
+    {
+      "path": "graphify-out/2026-10-04/.graphify_labels.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "7d615a8b61b2758dab4530b9076757e6ad1f73070dd225265dcd4d9545a77adf"
+    },
+    {
+      "path": "graphify-out/2026-10-04/GRAPH_REPORT.md",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "077abaa0a0e790cdc7ac644c594d801023bb75f916adae769804b2b3351c450c"
+    },
+    {
+      "path": "graphify-out/2026-10-04/graph.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "f957498181084ce49dc63ce15b698d16c949ee66783ad237e1657a14dd72dbbf"
+    },
+    {
+      "path": "graphify-out/2026-10-04/manifest.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "233a814e997bc57c82a077fd956291b3e3c9fb259faf29978eb5e57dc38b81c7"
+    },
+    {
+      "path": "graphify-out/GRAPH_REPORT.md",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "7584989002db0c9f1f1cdc4a2b7d469642240ea84da48b7a40bf93dadc77efe1"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/00f471049983427bcbd3ee1961a79d2553a1f0dfc991af48d6a333103bff7faa.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "91cfbb91f483d9d95460ee11025d0f2cb1fc8d9aaed186017a1c4c527a1099a9"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/01de1e21b3025c201703ce5ed4ba31f02a1f1930ba8865db86d486b858c63bdd.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "6896c3e7b2595f47a10710b5c05f20e07ca49fafa689f7d5d97188f25787a905"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/077e6ad1bf2e64634e06507a1d113c3fe48fd2a0c75de3f0b699a05f0e888928.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "2241b245b20cc819055b08804e7d8fc2fd029cd209f4af6951638a0274b90b1d"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/105f4d9d730925eee03b596001cbee09722a8ba23420836262dcaa548ea54dcd.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "9f19c833d70367ea2e465fa3b493447be076bbb16dce8d339d71d59777f4ebfb"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/16e548d3161bd9f8a6d26e07c397a5aae5f8b7b49cbc6879129319f286d59e45.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "f06a66285f3eeda3b01eba6b963cba7b223618c9fdbaf8984eb80d1e2f41c43c"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/1977b0d61e70344df9fde9c989fc5a551867a5950acc740cf66c1f193c709506.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "e24032f18967903527938805622c4817be198e9216f3a73f0dca86f83421752f"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/1b8a4a77298840b66d3736c4a355229767038e3cfe6a025dd8917363298ef897.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "495cf0c69a1eb99856c8e9148f3536f39c865cf8ae6a91d219985bca6562d362"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/247255e3baca8dca39d727c82c0490e90ce4441358a4ea31d95cbe588b329b98.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "52e7de76af7651fd9138c7a8d9c90437c59cfa83b7e0b87cee44799d05744aa5"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/24b60b69e8947ddee9c5175cdf90ce57c2dea459d81b7e7d5bf77d701768d61b.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "acae09c01b877a648dba3ba60abd037c925e3a905dafab58837a10f4470d3829"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/24b7ef777428ea5f08647fc26275f686fe98269a5b2cf8fa83890d74070f0b60.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "24fcb217d97fa2b46530f5dafe926e23ec0a5f850ce216530ab5aa50d3315779"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/2e1dc3f017bdf66c750353b299cb0074728410b0461be77be72075c6070d3af4.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "4e7e15af574c7eec096c1d439525070385854f9edfc7669bbb1dc44053f0c51c"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/2e394ad6ff4e2c0aa66e5d8714f464c517aa9ed6f0ca01479ad4d3c8245ed003.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "2db3762315ac23f61ddfff779f220cb7e2a643e76dd520fe0a97cea111bbaeb7"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/2e3a0f57464e0c5d801853f666999270b5d32a70991218d09da79e5c0c7ee5b6.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "5132f782f2b18eec3ebfea2b1700b8303b181046221a18128f187eba455eb3bb"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/32e7cf61f0ef20eaf8b7fc4c35c17dcb997b8ec566c413fae01a17279fa87323.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "13a8aacc72af2cdb1724df2680c369a8ea7cbb4ed8ad30d71279c1d4129839f9"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/349f6b872ac26859260df659487514895f73c781edf73d674468891554a494e4.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "801a1c9c70e348af1a779a1b2b50ee574a1f38ae5278ffd88023af760de4bfd5"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/34bd3ce9154375fc2efbb3456dff46f2c383b28325e70cc0434d8acb3e47635f.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "d3841abbc89fe9c8e512ad03483e99dda7e8df9cd84134a6ba781e891c93a7aa"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/35886f841f89cf80ae5724cad1f0ca0e78c4636453c72dffc142dc6e9112bb5c.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "aa609b3322c6f89dca2d082dda7de582a6fbd427485dbca7ef29b7e72b608c24"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/37220ebfbf25826d1b37405a782eae4c0b5112d5b9981e377c1bada9e01aab87.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "bac9e9c0da66299a00f5a307ea4c793f068870029beb0c92e7ca2ccc1ffdfd50"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/3cf4e25cca9fb33165c807f3bbbafe7d31564c3086f03f80d321243ee62320d1.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "dcebc0434c68827798352c6ee64aff7fb464bb507d90f523b4eaa2903df85061"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/3f3da107ec973e2f03d08092b4dd9c15c4ddcd3ce10f56b2a352aa58e9d7baea.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "777dc73d05ffc21e6ad8b0b1495d146d1e07350b46fd62de83b8bcf72bee8d76"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/4612666f494e9d3e9246e0e58951af6e284d857b0d4bd3c841d928efbb8f8cca.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "46b690cb4fcbcc9781ab7c56ece16e8fe7b0d16222f2d1d2dec6a336132c5fdc"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/482958558683bbf4883032d6e98a112aadcdc908d662f5153c3f870e80635b24.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "0cfe147809808b9bd925e1a8097f78292b3ee6318a471911eab51d4b5ec6e6f0"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/52c2b19cfd69c26a896291884c976195fcb7fb35979841d1db4abc2c54493613.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "409a27d846b4b582d0dc68bdd32b82d677411bc44d445751485382ec80ca44dc"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/5ae7ba582f2f8bce26437ddc2dfdcb034c9ae8141c3b99bbea8bb46308af8404.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "31ab11b070dfe98fe2709881628f60c6cb7446d4684285d488e6334330068b96"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/5b9e63308ad5a75878e18195a8bcdc69f52ba246da8400efe20941fb166750e4.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "9898a75c1178d99013ad4218bd55c2964a709faf97fad770f86d50495a27ca14"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/5c008d261a895691cc7d50f3429560b86664c5fbf81d14541f4f9899b49143d6.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "7f53308beb68879202341f364954f4c6a41ed8fb238a2ff39a4a4e97ef7c439a"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/5e4758f4d79265f1ee288f86f633552699d02fa125179e332f348db26f617ef8.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "b17a829fe177be14371ae00885e9f80977be4b3dcd424a9f26a987a3966e2f16"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/60bcfeb871cc5cf611b018d2dcd8caa0b94ab105b3febac74daf9707d784dfab.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "a162268eb677ce8c09bc03a1c41e3e200186512abd81b58cbf8e7fb03a624aaf"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/62f37ce8d99b8c4201cf88caa14c064f3e4a8dc87ea37fd9c80aeda92cae9abd.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "e2f4dac4d83e62b8341014cdb16bd6772baeaff3096258b9b420b9dd444f6b3b"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/702f49500de957a88ef72891b9aaeb0b5458e6759a841a550ba4ab08e9d0e924.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "353ad18e791ccde3df0c4fcfa3765685bd1200879ac786e857fde260ff3128a5"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/70644716002e47a24b944940ed053303f143c93324c35b8bc11e5bd406398d09.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "3f81062d7b9927bd86ab385d4c22d8d33a48a84015cea60dc63041b080f74dca"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/70e7dd2b8a26bf35c6c0d2fa2c39ae5b9000e7864f51b14080c2344aaf749652.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "2a2e1b6502ee1f8b65de74f86f93b05783c7ba20546b32b53bf323733f20e61a"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/7b5d3d6e1a756e2dae5c7f8e93bd0e84b25319274f056bec562ced26a60eefa7.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "dc2f6477d98ee5ffd82a072ce5ac3af862694605bff30b675890bf4fa7f9ab10"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/835ce45d6724ade113d51b4c6eba2b8cb5a08c3e12f3745f432c0e73934a1f79.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "59b4afcee4148afaf3315e6483ac8c562b686230878dc3d45469ac9c313f6cd8"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/87ce7c7b21305400ee1edf7e25d571e68fe7c7cf4ff6ecc92db5ef5cabd4b2e8.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "f52043f731e8a76f0a1b673891a762fa83be8dfbaaabe43385706c4d7f7e83ad"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/9551dba96776894b9333b6ee4659354c7da7f8dd733da1fc828ab6bb2e05ccf5.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "27216e17f1c4fd1234ae9417c54646ce10abbcc4792f6c96cc1e4550be6a9d02"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/9ab7425570a0663f27c6b86e20d409ece8283a6c6313671454309c3aac81d7bf.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "0d80411f281fdbb7792ce59eaf8c2f4a6279ac0e80f423366e3cbfa11b4861c0"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/9f27ce3bb46a45918c8fae0b484da1dfa71bcac3016a8dfb3b28d22822892a0c.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "3780c58d9ee4fc9775f00e40a945e66e59a74864f2b4eea57d256596f75f8408"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/a07a10d9ef7daf4b85a662981a34536373a5c18be5d9bae52fe28b09656529b0.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "43c0c5919bfc0f201dc3fc3f976fd996c1beadd68fdf2e2fa896badccc09fd92"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/a3065abf250203eb072e51e7769b8bc67176c45d6d95e1c397da399dfeb44e67.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "90b0a3bc51754f23a30ae16b4d2d1a05af4e70968fbcffca0fcddd2e1c8be526"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/a8b353e0c9a43e02a061c742b940cb548d59b8580f3c00db1164ae46a8777a93.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "3ac99d6343909213cc9732def5398fe5ffda27ef7e3fc16d3956166cb9ae55c1"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/aa311bb9fed467fb5475fccb793b36be600594da695df92e66fadbc6181a0c22.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "8ed9ec4e686c71684e7ce46590e0cbd9c73c6de8778174169137b349b6740bc1"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/ab350aea0c2f4882a7e7c57f448a199c5613e4b4c8cfd23515302aa912413774.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "096a6bd26cd64d2ad7afa31b312b367d095781d4058af1b2d602ee5903fbfa95"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/ad3c46962b65b19112e248fc33365718d33b895d4d00b0dba44d0d87e3d49fb3.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "4a36edfa0b368e22888e305f6b673f42c36734544a10821d6f8785767a959614"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/b264adda79b943c37fb1312a17311ebc40efd8a1e95a1e3e474eb36dd8b719b1.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "2f5f48c0d981775e0032029f3577a987a115a5cb030bf5e557d5683f1e722f39"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/b346e7035ba198062e3f02e836e6e3379da0fd92ac46ddf32c21750033558800.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "a5ff1af1dede1f8c52f2631aa7ac48149a950734f2c3fd39d5bfc086b8bb2966"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/b4f7f4a868ba7ddc512dc8011317cd230e79fbf4b0993bd51b229d55f1a6f56d.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "b391dff9650aaf4ea2e6cb93252a74b945aa39f3a52a2dabb02d3f4403f4f5d3"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/b64950cc5920674e2c1c79f84be5fadf719b53c1bc8a3c94438b2aa2ae63fedf.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "c83706bcf4483baf26cf1897f50c1e1629973a8ee9301ae4210c73d984491770"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/bd4b2d738e1653522d34276ee27251f8be6960e1e4d3a8a458259d673900866f.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "2f4c35056e508595ce7821e0de16159f7d4b2b14a42388f5ccd8bacff9b62c9f"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/cb821605168396b45cdc22cd83f94f0c02fa266736f57cfbc08cee8a27b7986a.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "d6f8575315703a4086e6a744be8ea66a402fc754a627d70aad08f3411896101d"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/cc46357de7d2549eeaa06ed4b3ce084022e5ef9696848fb5501d1e7cce37b01e.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "ca2ac66d9aa70cbd55bb477b53e91e67085e7979ad4c0c0a46f76a220cc64ad4"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/cf4be13b6582e9f65cdaa2ba7670d723c0544c39fb85584e4891f55996aef01b.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "270c68ae3dd20fc9e0709696316c0149de6017701f45630079663fa2baad1929"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/d38626083f624d636af236f43973689200a1068f5e635e157360304fd5366977.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "f9d3f60ae0d8116aecb4b557d92bdd0c8afa1dcb8b91a2d06c05465002f3bc68"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/d67ebe076f402d293268f78cbd58dfd44d7af33d92e03c2221eeb66851d299d3.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "7bd1c3890678c20ef6effc09bbb3f5edab3fc64cc7348e12309b4253e31aebe6"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/dd6312bf69820910e3f6730a74cce0859beda95150d7e5cb3d6612a44c433bce.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "a86bb805b2305004956fe293723ee06634f3a0d1b133b6c7cbadeabbbc341f3d"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/ddbd369a482882e1ac240cba1b511802e02a35844528c9059e123f4b2efedce7.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "10481045ac65813966d50fc71dd74f870388355dfe7d2a83d1149bf10486adc6"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/debe18779cc68c15b2e386c239412c8f9c57a73758de3951175b12ca92cfd4b6.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "e40afbadba86067d9c0b5513a1012e1f51b4cd18917936b471696ff649334ee1"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/e5b577ed8771b4a363e9c63dd694ef762b69b34d306c2167fa51a8bcc2e2e254.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "b0cf91e2dd855fdfbf41929d4cee526a871eb4e97a0e5a4702dda7d8d97f6859"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/e935cf54412fa71111c76955fadb0598b06e0a2b22e3b0a803dde4686623886e.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "15c8cd19d78a35113ac51e098b9211924b21a28a18d1ae35abb22f5d6594e5c7"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/e940ab579e1c6f41583605b454130fd4fa5c291e6bbe452e7c4a2c992ef25d0c.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "e2a0ac1ba28c0bea99380d5300c0607a1950fdd38ef1ad3489ff2453703e578d"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/eadf534ee78e36b359d3a0cdbf9ccdcc703d8d0d5d4d9746990deff70a2fe745.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "1fd8e75023619b5593867100384332b0c6211e57bf61882a2d4dd13096305fd3"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/f3d1d9d41214d888da58006a156e68fd02afcf2a608d0459c3783c5be41ab399.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "4858f4106ec49622fd60fe2676a5a39d87696f3464966c59b23a5abdc2a40bcb"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/f513d7e3795f875bb26dbd416e89cbd3865ffd80b492aed7169ada2a5454de58.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "15c7579ef009b07986818a13b567957ed2b895820ab18edda0aeb1ad2fa92816"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/f759e3485ba2de2fb9657c92eccfa9a9b24cb51f219f1890e55fd5af0f891351.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "98ff4bdad9ac4ff26fd196d84c6c82528f11f17c71dc03040a5466dfda92541a"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/f9a729bce79632e583c3b1e3c02e90a00e73fb127979666881914b22d5e46b3e.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "c861d60f2cf5d89971350ddf78ae9faefeebc4e5b3e6a7892653fb4dc0825519"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/f9f794bee109ba35a2a1ce40482f48c8428ced62f548cdc960a81e52f6f1dcd8.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "4858f4106ec49622fd60fe2676a5a39d87696f3464966c59b23a5abdc2a40bcb"
+    },
+    {
+      "path": "graphify-out/cache/ast/v0.9.63-s3/fadf1a15920dc54e70784c9eaa4f266384a419b2159f70f54974faf6da2056c5.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "885ac762586837868545729bde35d3e3ad7025ade48676ba21d88dfe6b09fcc6"
+    },
+    {
+      "path": "graphify-out/cache/last_query_stamp",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "8e3a518eba7cd405ea5cf00fd0b19872913adefd343bb7d1f306c8c63c7f8e7c"
+    },
+    {
+      "path": "graphify-out/cache/stat-index.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "5979733c2b9eae1792457652f65d5097b54a9004d75963127f6327f426b55fcc"
+    },
+    {
+      "path": "graphify-out/graph.html",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "de43d8306b369637620d995f328950811ee4ce877e114d68e43c351a8014aea6"
+    },
+    {
+      "path": "graphify-out/graph.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "6760333e690c75768dd71751fb441629343c9f75c05de599b6cffc9609ef56c7"
+    },
+    {
+      "path": "graphify-out/manifest.json",
+      "role": "graphify_generated_or_refreshed",
+      "sha256": "dea151d1086548bbc16e9d5fb91402bd508e39ddf32d42b8602a9c2bb1aa8081"
+    },
+    {
+      "path": "tests/_corr_synth.py",
+      "role": "implementation_or_regression",
+      "sha256": "5a089efb74c18f6f3cbe6c67181d4d5e71052e0c703318134e1987cd3f523534"
+    },
+    {
+      "path": "tests/retained_candle_fixtures.py",
+      "role": "implementation_or_regression",
+      "sha256": "b873d5e99d51e083b78901c5a625e9161164964d9b63d0d291e1c607f20f2d15"
+    },
+    {
+      "path": "tests/stage1_pit_offline_plugin.py",
+      "role": "implementation_or_regression",
+      "sha256": "a7fa20a01ce7c0dbcbb0f399c0df8af161605b56e3f357d33d9800506a6432ab"
+    },
+    {
+      "path": "tests/test_attention_selection_persistence.py",
+      "role": "implementation_or_regression",
+      "sha256": "14e384e5c350e5c7d7218ff84919d93ca6761dd8a0ae653e619e59fe724e15ca"
+    },
+    {
+      "path": "tests/test_attention_telemetry.py",
+      "role": "implementation_or_regression",
+      "sha256": "7b16e50005d8db83b6242d0833bf4e7d1f48e4c6deefae023007c02902002245"
+    },
+    {
+      "path": "tests/test_derivatives.py",
+      "role": "implementation_or_regression",
+      "sha256": "df417cd083f29bd2126c3a1cdd977a629c14b175d6eae21e4a567ea856e6969e"
+    },
+    {
+      "path": "tests/test_final_audit_attention_allocation_time.py",
+      "role": "implementation_or_regression",
+      "sha256": "ace9634591afdb5d75e2f42b238836656fdcbdafe5a6b07d63a1cad7d502145e"
+    },
+    {
+      "path": "tests/test_final_audit_backup_input.py",
+      "role": "implementation_or_regression",
+      "sha256": "19b91d481beb3882eedf14afb5de13b36fcc8b34ea10d6c7b1b96f544dc137a8"
+    },
+    {
+      "path": "tests/test_final_audit_entry_partial_barrier.py",
+      "role": "implementation_or_regression",
+      "sha256": "4114914be70805815f8feb7a17a291871f9cc0f261f13d85b16404d1421c5f32"
+    },
+    {
+      "path": "tests/test_final_audit_feed_identity.py",
+      "role": "implementation_or_regression",
+      "sha256": "f78192c513cfce4ede4610fc859ba8dba5dfaa86bfcfcee3a516755602424365"
+    },
+    {
+      "path": "tests/test_final_audit_heartbeat_age.py",
+      "role": "implementation_or_regression",
+      "sha256": "4177436f937521eb0664f74f29062999b249acf112e6a9b00794438fdd2af441"
+    },
+    {
+      "path": "tests/test_final_audit_learning_time.py",
+      "role": "implementation_or_regression",
+      "sha256": "d2626bf24c233125bdf26dc7fbbb9adc2b9fc8ac9d8eb9a4f6d27e24872fd361"
+    },
+    {
+      "path": "tests/test_final_audit_llm_reservation.py",
+      "role": "implementation_or_regression",
+      "sha256": "f3994c6f2d004d774b96e43e15b497e150df194c389a3aa9f02ec50e3540d550"
+    },
+    {
+      "path": "tests/test_final_audit_macro_time.py",
+      "role": "implementation_or_regression",
+      "sha256": "abe421f0e2a7d5825dafb7168cd7b648bb8c9e03e2e7136c1777594141269796"
+    },
+    {
+      "path": "tests/test_final_audit_partial_ack.py",
+      "role": "implementation_or_regression",
+      "sha256": "19037cd1a3f6a5d49920f70bf154abd9fad11f37450ee826fca0e104b36cd2af"
+    },
+    {
+      "path": "tests/test_final_audit_partial_intent.py",
+      "role": "implementation_or_regression",
+      "sha256": "96b0c41ea55a3bad5e405fd3fbb2bd3c90095a26b109e84d61c9cc1f38c322f4"
+    },
+    {
+      "path": "tests/test_final_audit_research_snapshot.py",
+      "role": "implementation_or_regression",
+      "sha256": "79c878fc17541703f5d09d6faa7bc547a116a2af0fa81932306b9c1f2291c883"
+    },
+    {
+      "path": "tests/test_final_audit_supervisor_partial.py",
+      "role": "implementation_or_regression",
+      "sha256": "e57d612d6f0ecd9b30c55b3520ee7d08462939cb8d17941fff12469ac57eeb5c"
+    },
+    {
+      "path": "tests/test_intelligence_spine.py",
+      "role": "implementation_or_regression",
+      "sha256": "b4a5eaeb5c06e616a67cfe101843b7f414e797b61a465fc99be98619431a2743"
+    },
+    {
+      "path": "tests/test_kernel_boot_recovery.py",
+      "role": "implementation_or_regression",
+      "sha256": "7aad0fc1b704cf41b15f11a02acba1856e35e739ab067e8426dd7cd9cc33bed2"
+    },
+    {
+      "path": "tests/test_macro_guard.py",
+      "role": "implementation_or_regression",
+      "sha256": "16ed191202bbb10ea72fab134e1ed3886723098d77fcb8426780dd9ab10654f4"
+    },
+    {
+      "path": "tests/test_normal_learning_loop_closure.py",
+      "role": "implementation_or_regression",
+      "sha256": "7de1954def47e7e766a887f79e9298a99b94c4150ecec71864e18f8a5b465ea2"
+    },
+    {
+      "path": "tests/test_owner_interface_boundary.py",
+      "role": "implementation_or_regression",
+      "sha256": "d181662387e9d2f6e7c9598e8eed06f880299ff3c5f06b717dd436b2a9d5ab77"
+    },
+    {
+      "path": "tests/test_predictive_research_bridge.py",
+      "role": "implementation_or_regression",
+      "sha256": "9835fb00f2d94295d057dfae745e92be7ec26d4c080a8299a52a624f7457d7a1"
+    },
+    {
+      "path": "tests/test_real_learning_integration.py",
+      "role": "implementation_or_regression",
+      "sha256": "798b433c19aec03e5d41944451b5462b2f16d1e4a722a9a604f6bb17e92d89b5"
+    },
+    {
+      "path": "tests/test_research_calibration.py",
+      "role": "implementation_or_regression",
+      "sha256": "922da41a7c89a235b7105249cc3e443c1360dbb5353bd2d5a4c7b06f8e926e75"
+    },
+    {
+      "path": "tests/test_research_evidence_source_binding.py",
+      "role": "implementation_or_regression",
+      "sha256": "8af9d38e92f3a9acae799689180929a3cbc85acc1d9d5106f631ba74b024eeef"
+    },
+    {
+      "path": "tests/test_research_referee.py",
+      "role": "implementation_or_regression",
+      "sha256": "20eacc49d094ef635809684e4070331069d28e1ab09a731ffb5d747e39f8ab4d"
+    },
+    {
+      "path": "tests/test_spec_signals_on_closed_bars.py",
+      "role": "implementation_or_regression",
+      "sha256": "d03bd5f78c3100d7291400d115281ac871eedcb823f3abd3cb98520441b823f0"
+    },
+    {
+      "path": "tests/test_stage1_data_provenance_pit.py",
+      "role": "implementation_or_regression",
+      "sha256": "d27c136754d97873630d534849b17edf1f018d88bd6b633158ab379aebcf4c23"
+    },
+    {
+      "path": "tests/test_stage1_pit_blocker_fix.py",
+      "role": "implementation_or_regression",
+      "sha256": "9e28e16b7f147f1becaa0f287209b89994038d2ca8ba6e14edffae01c752de18"
+    },
+    {
+      "path": "tests/test_stage1_recovery_monitoring.py",
+      "role": "implementation_or_regression",
+      "sha256": "9c8eaf0bd65b35cd7536e1b76847c6e5d4983963b5a70ac4060abffda2dc40ca"
+    },
+    {
+      "path": "tests/test_stage8_owner_os.py",
+      "role": "implementation_or_regression",
+      "sha256": "cea35234f5c7bd96d30967b202ef4e6c45e5863b8fef7c0b56b131bff2feba76"
+    },
+    {
+      "path": "tests/test_strategy_factory_handoff.py",
+      "role": "implementation_or_regression",
+      "sha256": "e30b6079e7fc08c1bb030554e1fd0ef839ae00e196d97a26ae48848d87834546"
+    },
+    {
+      "path": "tests/test_supervisor.py",
+      "role": "implementation_or_regression",
+      "sha256": "e552c063406aa7307e99ead2a8c9ca694f3bd6f54dc0f25b0718bb93d5db4156"
+    },
+    {
+      "path": "trader/agents/macro_guard.py",
+      "role": "implementation_or_regression",
+      "sha256": "11ab4acfb82d313c84196aa42e3828a870b0179d606a93f0dd02a36790daeb07"
+    },
+    {
+      "path": "trader/brain/llm.py",
+      "role": "implementation_or_regression",
+      "sha256": "9623fce894dc7c7f8bcb3a3db2ace5a5deed981506b1c6cce9ca5d29c166d142"
+    },
+    {
+      "path": "trader/cognition/attention.py",
+      "role": "implementation_or_regression",
+      "sha256": "0bff434d9fa983476f5ef1bdc7c76938415d7eaaccd042bae93b01ca55de1dcf"
+    },
+    {
+      "path": "trader/core/instrument_registry.py",
+      "role": "implementation_or_regression",
+      "sha256": "f52be0568a7b1573a35e7df35291d3d52dcc0897667a5d8d400102c731e15908"
+    },
+    {
+      "path": "trader/core/journal.py",
+      "role": "implementation_or_regression",
+      "sha256": "5200625b7ec883ef477d084a1f29cbb74a9050e8fd1212f6b1d675102c3bd797"
+    },
+    {
+      "path": "trader/data/feed.py",
+      "role": "implementation_or_regression",
+      "sha256": "a80581f249493da0aac0ba0a30d1591870398f602b97b4e14eec107814993fb4"
+    },
+    {
+      "path": "trader/data/market_provenance.py",
+      "role": "implementation_or_regression",
+      "sha256": "ab4e6ec8278119797b59a436a5fdf8be23420640a8a81a8dc82b8c1d3bec05aa"
+    },
+    {
+      "path": "trader/engine/entry_authority.py",
+      "role": "implementation_or_regression",
+      "sha256": "11adbe7a8d371515888bc8af62192a4566da1481d40a8bf0e3a2174ff9c60b59"
+    },
+    {
+      "path": "trader/engine/executor.py",
+      "role": "implementation_or_regression",
+      "sha256": "79fa29948e5119851366e9f7b2c0e671dd26b406753cb2c078d99e63dd5c0644"
+    },
+    {
+      "path": "trader/engine/partial_intent.py",
+      "role": "implementation_or_regression",
+      "sha256": "bdd752df4beaf39e1298e4e3dd2380192c3766c0e34e39bbe5fa53027890893a"
+    },
+    {
+      "path": "trader/engine/supervisor.py",
+      "role": "implementation_or_regression",
+      "sha256": "c80e346bd7ff704a0064132d0c8473a806e406cf7b6ce019ffd217a9fc87cb11"
+    },
+    {
+      "path": "trader/engine/watchdog.py",
+      "role": "implementation_or_regression",
+      "sha256": "bc1342ab1f204a6fc2af9369b629bcad903d41dd85385d34b5cb7519ef69a9e5"
+    },
+    {
+      "path": "trader/kernel.py",
+      "role": "implementation_or_regression",
+      "sha256": "ccfe479ed7f22770b0ed24393ccce7c034045711620be2525c0bbb0711302da7"
+    },
+    {
+      "path": "trader/learning/consumers.py",
+      "role": "implementation_or_regression",
+      "sha256": "2b4e1bb2a373120eba0d24773a997d5417845a397e58d5033f2e3b61ef3b254b"
+    },
+    {
+      "path": "trader/learning/targets.py",
+      "role": "implementation_or_regression",
+      "sha256": "c0c59f471b3601a4cdf3c101880eebb022ab0a5ea1b3db38832c8904b9d313f1"
+    },
+    {
+      "path": "trader/observability/attention.py",
+      "role": "implementation_or_regression",
+      "sha256": "037db6bbf0ad3200d83afad4989b14b4ab3bb822bfc019351c7926ffb3f808e2"
+    },
+    {
+      "path": "trader/observability/safety.py",
+      "role": "implementation_or_regression",
+      "sha256": "a386335d8468fc74448d03dcd925148c5290cb4e0b2af1067538c4e61fe20feb"
+    },
+    {
+      "path": "trader/persistence/backup.py",
+      "role": "implementation_or_regression",
+      "sha256": "33be7fd4f6fc618091e2ec19fec8cf7a5a084215cde37b61e180f6ce647cfcbf"
+    },
+    {
+      "path": "trader/portfolio/allocator.py",
+      "role": "implementation_or_regression",
+      "sha256": "36304b238e0e95dd95dac828a4a7ebdab23773c7ed222f1069103778f96cc35d"
+    },
+    {
+      "path": "trader/research/predictive_experiment.py",
+      "role": "implementation_or_regression",
+      "sha256": "dfc37c0bf7095a300e251fb8b500fd6743a1d71a2bf39fd052c2ae5430f1c0ea"
+    },
+    {
+      "path": "trader/world/model.py",
+      "role": "implementation_or_regression",
+      "sha256": "b85f1c1bf41942d8f85941f0d9da01dfb0b7a0228346c13830dbce45151262e1"
+    }
+  ],
+  "unrelated_preexisting_changes_preserved": [
+    "docs/superpowers/reports/2026-09-20-donchian-retirement-attribution-audit.md",
+    "frontend/src/Shell.tsx",
+    "frontend/src/components/Avatar.tsx",
+    "frontend/src/views/Evidence.tsx",
+    "frontend/src/views/Operations.tsx",
+    "frontend/src/views/Routes.tsx",
+    "knowledge/00 Company/Company.md",
+    "knowledge/00 Company/Manager.md",
+    "knowledge/00 Company/Theorist.md",
+    "knowledge/20 Strategies/Donchian_Breakout_Trail.md",
+    "knowledge/MOC.md"
+  ],
+  "graph_attribution": "Shared graph files were already dirty; this list covers refreshed tracked files and generated files modified since the first reproduction. Existing unrelated source changes are preserved.",
+  "self_describing_artifacts": [
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/files-changed.json",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-return.yaml",
+    "docs/superpowers/evidence/final-audit-repair-loop-r1/final-verification.json"
+  ]
+}

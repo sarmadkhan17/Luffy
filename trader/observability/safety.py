@@ -226,7 +226,8 @@ class SafetyObserver:
             record = read_heartbeat(path, producer, now)
             if policy.stale_after_s is None:
                 reason = 'POLICY_NOT_CONFIGURED'
-            elif now - record['timestamp'] > policy.stale_after_s:
+            elif max(now - record['timestamp'],
+                     now - record['context']['last_successful_cycle_at']) > policy.stale_after_s:
                 reason = 'STALE'
             with self.health.locked():
                 v = self.health.read()

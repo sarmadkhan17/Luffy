@@ -42,7 +42,7 @@ def frame(at=T, n=1, step=Q, value=10):
 
 
 def receipt(df, at, tf='15m', **kw):
-    return P.annotate(df, instrument_id='binanceusdm:futures:BTCUSDT',
+    return P.annotate(df, instrument_id='binance_usdm:futures:BTCUSDT',
                       source='https://offline.example/fapi/v1/klines', kind='candle',
                       received_ms=at, timeframe=tf, **kw)
 
@@ -66,7 +66,7 @@ def test_normal_feed_source_canonical_identity_and_raw(store):
     f,c = store
     df = f.fetch_ohlcv('BTC/USDT', min_bars=1)
     row=df.iloc[0]
-    assert row.instrument_id == 'binanceusdm:futures:BTCUSDT'
+    assert row.instrument_id == 'binance_usdm:futures:BTCUSDT'
     assert 'offline.example' in row.source
     assert json.loads(row.raw_json) == [T,10,11,9,10,5]
     assert row.event_time_ms == T and row.observed_at_ms == c.at
@@ -224,7 +224,7 @@ def test_world_capture_rejects_future_and_preserves_lineage():
 def test_world_state_refuses_future_and_quality_survives():
     from trader.world.observation import Observation,Quality
     from trader.world.state import WorldState
-    obs=Observation(instrument='binanceusdm:futures:BTCUSDT',timestamp_ms=T,
+    obs=Observation(instrument='binance_usdm:futures:BTCUSDT',timestamp_ms=T,
                     observed_at_ms=T+1,available_at_ms=T+1,timeframe='15m',kind='price',
                     value=10,source='offline',source_ref='revision:a',quality=Quality.VALID)
     with pytest.raises(ValueError,match='not yet'):
@@ -239,7 +239,7 @@ def test_derivative_revisions_quality_and_pit(tmp_path):
     assert f.load('BTC/USDT','oi')['value'].isna().all()
     for at,value in [(T+200,2),(T+300,3)]:
         df=plain.copy();df['value']=value
-        df=P.annotate(df,instrument_id='binanceusdm:futures:BTCUSDT',source='offline:oi',
+        df=P.annotate(df,instrument_id='binance_usdm:futures:BTCUSDT',source='offline:oi',
                       kind='derivative',received_ms=at)
         f.save('BTC/USDT','oi',df)
     assert f.load('BTC/USDT','oi',as_of_ms=T+250).iloc[0].value==2
@@ -430,7 +430,7 @@ def test_supplemental_raw_receipt_is_not_backdated():
 
 
 def test_request_clock_reversal_never_qualifies():
-    df=P.annotate(frame(),instrument_id='binanceusdm:futures:BTCUSDT',source='offline',
+    df=P.annotate(frame(),instrument_id='binance_usdm:futures:BTCUSDT',source='offline',
                    kind='candle',timeframe='15m',received_ms=T+Q,request_started_ms=T+Q+1)
     assert df.quality.iloc[0]=='INVALID'
     assert P.eligible_frame(df,'15m',T+Q).empty
@@ -440,7 +440,7 @@ def test_funding_cost_reader_respects_revision_availability(tmp_path):
     from trader.strategy.spec_evidence import funding_series
     f=DerivFeed(tmp_path/'derivs.db',clock_ms=Clock(T+Q+100))
     obs=pd.DataFrame({'ts':pd.to_datetime([T],unit='ms',utc=True),'value':[.01]})
-    obs=P.annotate(obs,instrument_id='binanceusdm:futures:BTCUSDT',source='offline:funding',
+    obs=P.annotate(obs,instrument_id='binance_usdm:futures:BTCUSDT',source='offline:funding',
                    kind='derivative',received_ms=T+Q+100)
     f.save('BTC/USDT','funding',obs)
     base=frame(n=2);base.attrs['timeframe']='15m'
@@ -512,7 +512,7 @@ def test_normal_derivative_adapter_preserves_raw_receipt(tmp_path,monkeypatch):
     f=DerivFeed(tmp_path/'derivs.db',clock_ms=Clock(T+100))
     df=f.funding('BTC/USDT')
     assert df.source.iloc[0]=='https://fapi.binance.com/fapi/v1/fundingRate'
-    assert df.instrument_id.iloc[0]=='binanceusdm:futures:BTCUSDT'
+    assert df.instrument_id.iloc[0]=='binance_usdm:futures:BTCUSDT'
     assert json.loads(df.raw_json.iloc[0])['receipts'][0]['raw']==payload
     f.save('BTC/USDT','funding',df)
     assert f.load('BTC/USDT','funding',as_of_ms=T+99) is None
@@ -542,4 +542,4 @@ def test_feed_uses_existing_typed_registry_identity_without_account_authority(st
     f.ex.market=lambda _: (_ for _ in ()).throw(KeyError('unloaded'))
     f.bind_instrument('BTC/USDT',InstrumentId('binanceusdm',MarketType.FUTURES,'BTCUSDT'))
     obs=f.fetch_ohlcv('BTC/USDT',min_bars=1)
-    assert obs.quality.iloc[0]=='VALID' and obs.instrument_id.iloc[0]=='binanceusdm:futures:BTCUSDT'
+    assert obs.quality.iloc[0]=='VALID' and obs.instrument_id.iloc[0]=='binance_usdm:futures:BTCUSDT'

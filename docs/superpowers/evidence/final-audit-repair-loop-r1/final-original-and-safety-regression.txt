@@ -1,0 +1,27 @@
+........................................................................ [ 34%]
+........................................................................ [ 69%]
+...........................................F...................          [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+__________________ TestMacroGuardNoToken.test_no_token_clears __________________
+
+self = <tests.test_macro_guard.TestMacroGuardNoToken object at 0x7c49fdaeb080>
+
+    def test_no_token_clears(self):
+        mg = MacroGuard(_cfg(token=""))
+        with patch("requests.get", side_effect=OSError("offline fixture")) as source:
+            result = mg.check()
+>       assert source.call_count == 1  # the free source is attempted without a token
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert 2 == 1
+E        +  where 2 = <MagicMock name='get' id='136657072968224'>.call_count
+
+tests/test_macro_guard.py:64: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.agents.macro_guard:macro_guard.py:275 macro_guard finnhub fetch failed: offline fixture
+WARNING  trader.agents.macro_guard:macro_guard.py:245 macro_guard: forexfactory calendar unavailable (fail-open): offline fixture
+=========================== short test summary info ============================
+FAILED tests/test_macro_guard.py::TestMacroGuardNoToken::test_no_token_clears
+1 failed, 206 passed in 93.13s (0:01:33)

@@ -13,6 +13,7 @@ import time
 from ..core.types import TF_MS as _TF_MS_SHARED, closed_bars, norm_symbol
 from .sqlite_tx import BUSY_TIMEOUT_S, close_quietly, write_tx
 from . import market_provenance as mp
+from ..core.instrument_registry import canonical_venue
 from typing import Optional
 
 import pandas as pd
@@ -108,6 +109,19 @@ class DataFeed:
         if self._ex is None:
             self._ex = make_exchange()
         return self._ex
+
+    def initialize_markets(self):
+        """Boot initializes this feed's own public exchange, independently of execution.
+
+        Failure leaves identity UNKNOWN; observation retries and protection/exit
+        work can continue without fabricating a tradable identity.
+        """
+        try:
+            self.ex.load_markets()
+            return True
+        except Exception as exc:
+            log.warning("market-data initialization unavailable: %s", exc)
+            return False
 
     # ── persistent candle store ─────────────────────────────────────────
     #: seconds a statement waits on a lock before "database is locked"
@@ -205,7 +219,7 @@ class DataFeed:
         try:
             ex = self.ex
             bound=self._instruments.get(norm_symbol(symbol))
-            params = {"symbol": bound.venue_symbol if bound is not None and bound.venue==getattr(ex,"id",None) else self._venue_symbol(ex, symbol),
+            params = {"symbol": bound.venue_symbol if bound is not None and bound.venue==canonical_venue(getattr(ex,"id",None)) else self._venue_symbol(ex, symbol),
                       "interval": tf, "limit": int(limit)}
             if since is not None:
                 params["startTime"] = int(since)
@@ -369,7 +383,7 @@ class DataFeed:
         if iid:
             return iid,source
         binding=self._instruments.get(norm_symbol(symbol))
-        if binding is not None and binding.venue == getattr(self.ex,'id',None):
+        if binding is not None and binding.venue == canonical_venue(getattr(self.ex,'id',None)):
             return binding.value,mp.venue_source(self.ex)
         return None,None
 

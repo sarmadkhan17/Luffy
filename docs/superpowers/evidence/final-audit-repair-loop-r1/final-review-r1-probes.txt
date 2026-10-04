@@ -1,0 +1,17 @@
+{"probe": "historical Attention normal evaluate_snapshot", "as_of": 1800000001000, "applied_at": 1800086401000, "before": ["S0/USDT", "S1/USDT", "S2/USDT"], "after": ["S0/USDT", "S1/USDT", "S5/USDT"], "future_revision_changed_historical_selection": true}
+Traceback (most recent call last):
+  File "<stdin>", line 29, in <module>
+  File "/mnt/luffy-data/luffy/production/tests/test_portfolio_allocator.py", line 36, in candidate
+    OK, OK, economics(value, name, instrument, direction), OK, OK, OK, OK, OK, UNKNOWN,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/luffy-data/luffy/production/tests/test_portfolio_allocator.py", line 29, in economics
+    e, _ = to_allocator(build(frozen(value, binding(name, instrument, direction))))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/luffy-data/luffy/production/tests/economics_fixtures.py", line 93, in frozen
+    costs = cost_source(b)
+            ^^^^^^^^^^^^^^
+  File "/mnt/luffy-data/luffy/production/tests/economics_fixtures.py", line 80, in cost_source
+    cost.freeze_source(db, raw)
+  File "/mnt/luffy-data/luffy/production/trader/engine/paper_cost_evidence.py", line 103, in freeze_source
+    raise ValueError('cost_source_authority_unavailable')
+ValueError: cost_source_authority_unavailable

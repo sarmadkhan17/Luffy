@@ -1,0 +1,26 @@
+{
+  "group": "Stage3_research",
+  "command": [
+    "/mnt/luffy-data/luffy/production/venv/bin/python",
+    "-m",
+    "pytest",
+    "--basetemp",
+    "/mnt/luffy-data/luffy/production/.audit-tmp/Stage3_research",
+    "-p",
+    "tests.stage1_pit_offline_plugin",
+    "tests/test_external_research_router.py",
+    "tests/test_research_source_registry.py",
+    "tests/test_investigation_research_family.py",
+    "tests/test_research_evidence_source_binding.py",
+    "tests/test_research_control.py",
+    "tests/test_predictive_research_bridge.py",
+    "tests/test_research_runner.py",
+    "-q"
+  ],
+  "exit_code": 1,
+  "summary": "267 passed in 437.39s (0:07:17)",
+  "elapsed_s": 487.78,
+  "evidence": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage3_research.txt",
+  "network_guard_zero": true,
+  "production_store_guard_zero": false
+}

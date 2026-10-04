@@ -10,6 +10,7 @@ import hashlib
 import json
 import math
 import uuid
+from ccxt.base.errors import ExchangeError
 
 import numpy as np
 import pandas as pd
@@ -83,7 +84,7 @@ def venue_identity(exchange, symbol):
             return None,None
         iid=InstrumentId(exchange.id,typ,market['id']).value
         return iid,venue_source(exchange)
-    except (AttributeError,TypeError,KeyError,ValueError):
+    except (AttributeError,TypeError,KeyError,ValueError,ExchangeError):
         return None,None
 
 

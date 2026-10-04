@@ -1,0 +1,127 @@
+FFF                                                                      [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+____________ test_installed_ccxt_cold_fetch_retains_unknown_receipt ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-482/test_installed_ccxt_cold_fetch0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b79581fc260>
+
+    def test_installed_ccxt_cold_fetch_retains_unknown_receipt(tmp_path, monkeypatch):
+        feed, calls = cold_feed(tmp_path, monkeypatch)
+        with pytest.raises(ccxt.ExchangeError, match='markets not loaded'):
+            feed.ex.market('BTC/USDT')
+>       result = feed.fetch_ohlcv('BTC/USDT', limit=1, min_bars=1)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_final_audit_feed_identity.py:29:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+trader/data/feed.py:447: in fetch_ohlcv
+    iid,source=self._identity(symbol)
+               ^^^^^^^^^^^^^^^^^^^^^^
+trader/data/feed.py:368: in _identity
+    iid,source=mp.venue_identity(self.ex,symbol)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/data/market_provenance.py:77: in venue_identity
+    market=exchange.market(symbol)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ccxt.binanceusdm(), symbol = 'BTC/USDT'
+
+    def market(self, symbol: Str) -> MarketInterface:
+        if symbol is None:
+            raise ArgumentsRequired(self.id + ' market() requires a symbol argument')
+        if self.markets is None:
+>           raise ExchangeError(self.id + ' markets not loaded')
+E           ccxt.base.errors.ExchangeError: binanceusdm markets not loaded
+
+venv/lib/python3.12/site-packages/ccxt/binance.py:2894: ExchangeError
+_______ test_feed_initialization_is_independent_and_failure_is_contained _______
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-482/test_feed_initialization_is_in0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b7957525760>
+
+    def test_feed_initialization_is_independent_and_failure_is_contained(tmp_path, monkeypatch):
+        feed, _ = cold_feed(tmp_path, monkeypatch)
+        def unavailable():
+            raise ccxt.ExchangeError('offline initialization failure')
+        monkeypatch.setattr(feed.ex, 'load_markets', unavailable)
+>       assert feed.initialize_markets() is False
+               ^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'DataFeed' object has no attribute 'initialize_markets'
+
+tests/test_final_audit_feed_identity.py:42: AttributeError
+________ test_frozen_kernel_cycle_reaches_exit_and_successful_heartbeat ________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-482/test_frozen_kernel_cycle_reach0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b795793b6e0>
+
+    def test_frozen_kernel_cycle_reaches_exit_and_successful_heartbeat(tmp_path, monkeypatch):
+        import trader.kernel as module
+        from trader.core.journal import Journal
+        feed, calls = cold_feed(tmp_path, monkeypatch)
+        k = Kernel.__new__(Kernel)
+        k.feed = feed
+        k.journal = Journal(tmp_path/'journal.db')
+        k.journal.kv_set('control_state', 'FROZEN')
+        k.state_machine = SimpleNamespace(refresh=lambda:ControlState.FROZEN, can_enter=lambda:False)
+        k.market_type = MarketType.FUTURES
+        k.cfg = {'timeframes': {'execution':'15m'}}
+        k.executor = SimpleNamespace(recover_entries=lambda:None, recovery_pending=lambda:False)
+        k._risk_step = lambda:(100, {'equity':100, 'drawdown_pct':0})
+        k._drain_close_requests = lambda:0
+        k._drain_panic = lambda:None
+        k.macro_guard = SimpleNamespace(check=lambda:{})
+        k.news_guard = SimpleNamespace(check=lambda:{})
+        k._macro_step = lambda _:None
+        k._publish_news_guard = lambda _:None
+        k._record_risk_assessment = lambda *a:None
+        k._funding_map = k._oi_map = lambda:{}
+        k._scan_symbols = lambda:[]
+        k._universe_frames = lambda _:{}
+        k._attention_call = lambda *a:None
+        exits = []
+        k._manage_orphan_positions = lambda scanned:exits.append('managed') or 1
+        k._maybe_resolve_outcomes = k._record_excursions = lambda:None
+        k._equity_provenance = lambda _:{}
+        k._portfolio_checkpoint = lambda:{}
+        k.heartbeat = Heartbeat(path=tmp_path/'heartbeat.json', clock=lambda:NOW/1000)
+        monkeypatch.setattr(module.time, 'time', lambda:NOW/1000)
+>       result = k.cycle()
+                 ^^^^^^^^^
+
+tests/test_final_audit_feed_identity.py:77:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+trader/kernel.py:1120: in cycle
+    self._refresh_btc_context()
+trader/kernel.py:926: in _refresh_btc_context
+    b15 = self.feed.fetch_ohlcv("BTC/USDT", "15m")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/data/feed.py:447: in fetch_ohlcv
+    iid,source=self._identity(symbol)
+               ^^^^^^^^^^^^^^^^^^^^^^
+trader/data/feed.py:368: in _identity
+    iid,source=mp.venue_identity(self.ex,symbol)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/data/market_provenance.py:77: in venue_identity
+    market=exchange.market(symbol)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ccxt.binanceusdm(), symbol = 'BTC/USDT'
+
+    def market(self, symbol: Str) -> MarketInterface:
+        if symbol is None:
+            raise ArgumentsRequired(self.id + ' market() requires a symbol argument')
+        if self.markets is None:
+>           raise ExchangeError(self.id + ' markets not loaded')
+E           ccxt.base.errors.ExchangeError: binanceusdm markets not loaded
+
+venv/lib/python3.12/site-packages/ccxt/binance.py:2894: ExchangeError
+=========================== short test summary info ============================
+FAILED tests/test_final_audit_feed_identity.py::test_installed_ccxt_cold_fetch_retains_unknown_receipt
+FAILED tests/test_final_audit_feed_identity.py::test_feed_initialization_is_independent_and_failure_is_contained
+FAILED tests/test_final_audit_feed_identity.py::test_frozen_kernel_cycle_reaches_exit_and_successful_heartbeat
+3 failed in 1.80s

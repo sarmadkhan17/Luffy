@@ -122,6 +122,10 @@ def freeze_candles(source, dest, experiment):
     validate(experiment)
     s = experiment['split']
     if Path(dest).exists():
+        with closing(readonly(dest)) as old:
+            required={'candles','candle_floor','market_revisions','market_raw_sources','market_revision_cut'}
+            if not required <= {r[0] for r in old.execute('SELECT name FROM sqlite_master')}:
+                raise ValueError('frozen_candle_provenance_unavailable')
         return
     temporary = Path(str(dest) + '.tmp')
     if temporary.exists():
@@ -133,10 +137,19 @@ def freeze_candles(source, dest, experiment):
             raise ValueError('unsupported_candle_schema')
         dst.execute('CREATE TABLE candles(symbol TEXT,tf TEXT,ts INTEGER,open REAL,high REAL,low REAL,close REAL,volume REAL,taker_buy REAL,PRIMARY KEY(symbol,tf,ts))')
         dst.execute('CREATE TABLE candle_floor(symbol TEXT,tf TEXT,first_ts INTEGER,PRIMARY KEY(symbol,tf))')
+        from ..data import market_provenance as provenance
+        from ..data.feed import DataFeed
+        provenance.init(dst)
+        retained = bool(src.execute("SELECT 1 FROM sqlite_master WHERE name='market_revisions'").fetchone())
         for sym in DISCOVERY + HELDOUT:
             rows = src.execute("SELECT * FROM candles WHERE symbol=? AND tf='4h' AND ts>=? AND ts<=? ORDER BY ts LIMIT 200000",
                                (sym,s['start_ms'],s['end_ms'])).fetchall()
             dst.executemany('INSERT INTO candles VALUES (?,?,?,?,?,?,?,?,?)', rows)
+            if retained:
+                revisions = src.execute("SELECT * FROM market_revisions WHERE series_key=? AND event_ms>=? AND event_ms<=? AND available_ms<=? AND observed_ms<=? ORDER BY rowid",
+                    (DataFeed._series_key(sym,'4h'),s['start_ms'],s['end_ms'],
+                     s['end_ms']+14_400_000,s['end_ms']+14_400_000)).fetchall()
+                dst.executemany('INSERT INTO market_revisions VALUES (?,?,?,?,?,?)', revisions)
     temporary.replace(dest)
 
 

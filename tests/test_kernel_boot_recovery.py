@@ -126,6 +126,9 @@ def _kernel(journal, venue, monkeypatch):
     k.market_type = MarketType.FUTURES
     k.journal = journal
     k.exchange = venue
+    from trader.data.feed import DataFeed
+    k.feed = DataFeed(exchange=RecordingVenue(), db_path=journal.db_path.with_name("candles.db"))
+    assert k.feed.ex is not venue  # boot initializes independent public data identity
     k.state_machine = state
     k.executor = executor
     # Real Risk wiring: RiskManager + Kernel._risk_release; only the venue

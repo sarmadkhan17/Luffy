@@ -26,14 +26,14 @@ from trader.learning import capture as Lc, foundation as L
 from tests.test_investigation_state_feedback import paths
 from tests.test_investigation_research_family import measured
 
-CFG = {'risk': {'risk_per_trade_pct': .5, 'max_open_trades': 8}, 'research': {
+CFG = {'risk': {'risk_per_trade_pct': .5, 'max_open_trades': 8, 'real_funding': False}, 'research': {
     'enabled': True, 'referee': True, 'handoff': False, 'horizons': ['4h'],
     'geometries': ['fixed'], 'min_discovery_symbols': 16, 'batch_seconds': 10,
     'batch_combos': 4, 'referee_max_draws': 19999}}
 
 
 @pytest.fixture
-def population(paths, tmp_path):
+def population(paths, tmp_path, monkeypatch):
     from trader.research.ledger import Ledger
     Ledger(Journal(tmp_path/'luffy.db')).ensure()
     _, source, _ = paths
@@ -50,6 +50,10 @@ def population(paths, tmp_path):
             db.executemany('INSERT INTO candles VALUES (?,?,?,?,?,?,?,?,?)',
                 [(sym,'4h',start+i*I.TF,100+i*.01,101+i*.01,99+i*.01,100.1+i*.01,
                   100+(i%37)**2,50) for i in range(1800)])
+    from tests.retained_candle_fixtures import qualify
+    qualify(candles)
+    # These artificial bars extend beyond wall time; observe at their actual fixture cut.
+    monkeypatch.setattr('trader.data.feed.time.time', lambda: (start+1800*I.TF)/1000)
     return source, tmp_path/'bridge.db', candles, end+3, start+1800*I.TF, s
 
 
@@ -233,17 +237,17 @@ def test_snapshot_scores_exclude_generation_and_search_cannot_read_protected(pop
     copy=candles.parent/'copy.db'
     E.freeze_candles(candles,copy,ex)
     from trader.research.evaluate import load_bundle
-    discovery=load_bundle('4h',DISCOVERY,cfg,requires=('ohlcv',),heldout_symbols=HELDOUT,paths={'candles':str(copy)})
+    discovery=load_bundle('4h',DISCOVERY,cfg,requires=('ohlcv',),heldout_symbols=HELDOUT,paths={'candles':str(copy),'derivs':str(copy.parent/'unused-test-derivs.db')})
     assert discovery.frames
     for frame in discovery.frames.values():
         assert int(slices._ms(frame).min())>created
         assert int(slices._ms(frame).max())<ex['split']['cut_ms']
-    protected=referee.load_heldout('4h','b',DISCOVERY,cfg=cfg,cut=ex['split']['cut_ms'],paths={'candles':str(copy)})
+    protected=referee.load_heldout('4h','b',DISCOVERY,cfg=cfg,cut=ex['split']['cut_ms'],paths={'candles':str(copy),'derivs':str(copy.parent/'unused-test-derivs.db')})
     for sym,frame in protected.frames.items():
         assert int(slices._ms(frame).iloc[protected.first_bars[sym]])>=ex['split']['cut_ms']
     # Real numerical job, no mocked child and no protected prices consumed.
     output=job.measure_job(dict(tf='4h',symbols=DISCOVERY,heldout_symbols=HELDOUT,
-        cfg=cfg,requires=['ohlcv'],paths={'candles':str(copy)},exprs=['volume_z(96)']))
+        cfg=cfg,requires=['ohlcv'],paths={'candles':str(copy),'derivs':str(copy.parent/'unused-test-derivs.db')},exprs=['volume_z(96)']))
     assert output['cut_ms']==ex['split']['cut_ms']
     assert output['gauges']['volume_z(96)']['n']>0
 

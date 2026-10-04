@@ -1,0 +1,99 @@
+FF                                                                       [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+___ test_partial_intent_after_early_gate_cannot_reach_new_exposure_submit[1] ___
+
+setup = (<tests.test_entry_recovery.Venue object at 0x72ba08d0cdd0>, <trader.core.journal.Journal object at 0x72ba0698e810>, <...id_until_ms":1791076782737,"venue_market_sha256":"dbd71e71a990bb114aad1b3c966846d946ce83240851f3aa5c7cd723248ae9e3"}'))
+appears_before_hold = 1
+
+    @pytest.mark.parametrize('appears_before_hold',[1,2])
+    def test_partial_intent_after_early_gate_cannot_reach_new_exposure_submit(setup,appears_before_hold):
+        ex,j,e,d=setup
+        cap=json.loads(j.kv_get('entry_capability:'+d.symbol))
+        old_cap=dict(cap,record=dict(cap['record'],instrument_id=dict(cap['record']['instrument_id'],venue_symbol='ETHUSDT')))
+        binding=dict(instrument_id='binance_usdm:futures:ETHUSDT',capability=old_cap)
+        j.add_trade(Position(id='old',symbol='ETH/USDT',side=Side.LONG,amount=10,entry_price=100,
+            notional_usdt=1000,stop_loss=95,market_type='futures',exec_mode='live',entry_identity={'execution_binding':binding}))
+        ex.positions=[dict(symbol='ETH/USDT:USDT',side='long',contracts=10,entryPrice=100,markPrice=100,info={'symbol':'ETHUSDT'})]
+        now=int(time.time()*1000)
+        observation=observe_positions(ex.positions,exchange_id=ex.id,market_type=e.market_type,
+            environment='demo',source_ref='https://demo-fapi.binance.com',request_start_ms=now,response_received_ms=now)
+        record_snapshot(j,position_snapshot(observation,j.open_trades(),account_scope=cap['account_scope']),at_ms=now)
+        market=ex.market
+        ex.market=lambda s:dict(market(s),id='ETHUSDT',base='ETH') if s.startswith('ETH/') else market(s)
+        params=permission(e,d)
+        original_hold=e.risk_manager._durable_hold;calls=[0]
+        original_order=ex.create_order
+        def provider(symbol,kind,side,amount,params=None):
+            if params and params.get('reduceOnly'):
+                ex.positions[0]['contracts']-=amount
+            return original_order(symbol,kind,side,amount,params)
+        ex.create_order=provider
+        @contextmanager
+        def held():
+            calls[0]+=1
+            if calls[0]==appears_before_hold:
+                ex.close_error=RequestTimeout('partial executed then response lost')
+                assert e.close_partial(dict(j.query("SELECT * FROM trades WHERE id='old'")[0]),5) is False
+            with original_hold() as db:yield db
+        e.risk_manager._durable_hold=held
+>       assert e.open(d,2,2,95,110,'strategy','strategy',**params) is None
+E       assert Position(id='pos_bae6e6dc62', symbol='BTC/USDT', side=<Side.LONG: 'long'>, amount=2.0, entry_price=100.0, notional_usd... '6076302ae3be7a9a43b97ee5be3778ee1024e79d64842da2d493ab44c7156293', 'strategy_identity': None, 'trade_intent': None}}) is None
+E        +  where Position(id='pos_bae6e6dc62', symbol='BTC/USDT', side=<Side.LONG: 'long'>, amount=2.0, entry_price=100.0, notional_usd... '6076302ae3be7a9a43b97ee5be3778ee1024e79d64842da2d493ab44c7156293', 'strategy_identity': None, 'trade_intent': None}}) = open(Decision(id='d', cycle_id='c', symbol='BTC/USDT', action=<Action.BUY: 'BUY'>, score=1.0, threshold=0.5, confidence=0.8...lid_until_ms":1791076782737,"venue_market_sha256":"dbd71e71a990bb114aad1b3c966846d946ce83240851f3aa5c7cd723248ae9e3"}'), 2, 2, 95, 110, 'strategy', 'strategy', **{'reference': {'price': 100.0}, 'risk_permission': EntryPermission(payload_json='{"account_id":"c0843415323ed358b643fa...48c1ecaa', state_digest='6aae6b29452206976a5d34f74156c0675bd482c757e85bb21fe7ca26eabb2af3', read_at=258481.033306839))})
+E        +    where open = <trader.engine.executor.Executor object at 0x72b9f83e5280>.open
+
+tests/test_final_audit_entry_partial_barrier.py:43: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 10000.0
+ERROR    trader.engine.executor:executor.py:516 partial close failed ETH/USDT: partial executed then response lost
+___ test_partial_intent_after_early_gate_cannot_reach_new_exposure_submit[2] ___
+
+setup = (<tests.test_entry_recovery.Venue object at 0x72b9f768b3e0>, <trader.core.journal.Journal object at 0x72b9f8ea95b0>, <...id_until_ms":1791076784152,"venue_market_sha256":"dbd71e71a990bb114aad1b3c966846d946ce83240851f3aa5c7cd723248ae9e3"}'))
+appears_before_hold = 2
+
+    @pytest.mark.parametrize('appears_before_hold',[1,2])
+    def test_partial_intent_after_early_gate_cannot_reach_new_exposure_submit(setup,appears_before_hold):
+        ex,j,e,d=setup
+        cap=json.loads(j.kv_get('entry_capability:'+d.symbol))
+        old_cap=dict(cap,record=dict(cap['record'],instrument_id=dict(cap['record']['instrument_id'],venue_symbol='ETHUSDT')))
+        binding=dict(instrument_id='binance_usdm:futures:ETHUSDT',capability=old_cap)
+        j.add_trade(Position(id='old',symbol='ETH/USDT',side=Side.LONG,amount=10,entry_price=100,
+            notional_usdt=1000,stop_loss=95,market_type='futures',exec_mode='live',entry_identity={'execution_binding':binding}))
+        ex.positions=[dict(symbol='ETH/USDT:USDT',side='long',contracts=10,entryPrice=100,markPrice=100,info={'symbol':'ETHUSDT'})]
+        now=int(time.time()*1000)
+        observation=observe_positions(ex.positions,exchange_id=ex.id,market_type=e.market_type,
+            environment='demo',source_ref='https://demo-fapi.binance.com',request_start_ms=now,response_received_ms=now)
+        record_snapshot(j,position_snapshot(observation,j.open_trades(),account_scope=cap['account_scope']),at_ms=now)
+        market=ex.market
+        ex.market=lambda s:dict(market(s),id='ETHUSDT',base='ETH') if s.startswith('ETH/') else market(s)
+        params=permission(e,d)
+        original_hold=e.risk_manager._durable_hold;calls=[0]
+        original_order=ex.create_order
+        def provider(symbol,kind,side,amount,params=None):
+            if params and params.get('reduceOnly'):
+                ex.positions[0]['contracts']-=amount
+            return original_order(symbol,kind,side,amount,params)
+        ex.create_order=provider
+        @contextmanager
+        def held():
+            calls[0]+=1
+            if calls[0]==appears_before_hold:
+                ex.close_error=RequestTimeout('partial executed then response lost')
+                assert e.close_partial(dict(j.query("SELECT * FROM trades WHERE id='old'")[0]),5) is False
+            with original_hold() as db:yield db
+        e.risk_manager._durable_hold=held
+>       assert e.open(d,2,2,95,110,'strategy','strategy',**params) is None
+E       assert Position(id='pos_b7ddade81f', symbol='BTC/USDT', side=<Side.LONG: 'long'>, amount=2.0, entry_price=100.0, notional_usd... '067ef7afd81ba45064645beafd9c093870669677b0c839e80e96862f10de6e4c', 'strategy_identity': None, 'trade_intent': None}}) is None
+E        +  where Position(id='pos_b7ddade81f', symbol='BTC/USDT', side=<Side.LONG: 'long'>, amount=2.0, entry_price=100.0, notional_usd... '067ef7afd81ba45064645beafd9c093870669677b0c839e80e96862f10de6e4c', 'strategy_identity': None, 'trade_intent': None}}) = open(Decision(id='d', cycle_id='c', symbol='BTC/USDT', action=<Action.BUY: 'BUY'>, score=1.0, threshold=0.5, confidence=0.8...lid_until_ms":1791076784152,"venue_market_sha256":"dbd71e71a990bb114aad1b3c966846d946ce83240851f3aa5c7cd723248ae9e3"}'), 2, 2, 95, 110, 'strategy', 'strategy', **{'reference': {'price': 100.0}, 'risk_permission': EntryPermission(payload_json='{"account_id":"d57d906887a1a6ab28c850...2f155da3', state_digest='6aae6b29452206976a5d34f74156c0675bd482c757e85bb21fe7ca26eabb2af3', read_at=258481.693082205))})
+E        +    where open = <trader.engine.executor.Executor object at 0x72b9f76b43e0>.open
+
+tests/test_final_audit_entry_partial_barrier.py:43: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 10000.0
+ERROR    trader.engine.executor:executor.py:516 partial close failed ETH/USDT: partial executed then response lost
+=========================== short test summary info ============================
+FAILED tests/test_final_audit_entry_partial_barrier.py::test_partial_intent_after_early_gate_cannot_reach_new_exposure_submit[1]
+FAILED tests/test_final_audit_entry_partial_barrier.py::test_partial_intent_after_early_gate_cannot_reach_new_exposure_submit[2]
+2 failed in 2.89s

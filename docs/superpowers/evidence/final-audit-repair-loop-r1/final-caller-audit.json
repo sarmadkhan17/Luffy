@@ -1,0 +1,102 @@
+{
+  "mode": "READ_ONLY_SOURCE_AND_ACTUAL_CALLERS",
+  "review_round": 5,
+  "status": "PASS",
+  "areas": [
+    {
+      "area": "Data/provenance/PIT",
+      "actual_callers": "Kernel.boot -> independent DataFeed.initialize_markets; Kernel._snapshot_for -> feed.fetch_multi/venue_identity -> canonical InstrumentId",
+      "invariant_review": "Installed CCXT cold boundary, closed bars, qualified receipts, Registry snapshot binding; no invented acquisition clocks",
+      "deterministic_evidence": "test_final_audit_feed_identity.py; Stage1_data; Stage1 PIT engine gates"
+    },
+    {
+      "area": "WorldModel",
+      "actual_callers": "Attention Store.write -> world_producer.evaluate -> WorldQueryReader -> WorldModel.effective_claims -> targets.read(as_of_ms)",
+      "invariant_review": "Immutable base claims; APPLIED receipt cut qualification; exact frozen state proofs, future state rejected",
+      "deterministic_evidence": "test_final_audit_learning_time.py; Stage2_spine; Stage7_learning"
+    },
+    {
+      "area": "Attention/research",
+      "actual_callers": "Kernel Attention capture -> cognition.evaluate; ResearchRunner -> predictive_bridge.cycle -> freeze_candles -> numerical job readers",
+      "invariant_review": "Priority as-of qualification and empty frozen priority capture; one snapshot keeps exact qualified candle rows and stable hash; raw history stays UNKNOWN",
+      "deterministic_evidence": "test_final_audit_attention_allocation_time.py; test_final_audit_research_snapshot.py; Stage3_research"
+    },
+    {
+      "area": "Referee",
+      "actual_callers": "ResearchRunner.step -> measure/evaluate/select/referee jobs -> heldout slices, dependence/rotation and LORD ledger",
+      "invariant_review": "Prediction admission remains quantitative; no descriptive evidence grants predictive support; synthetic known-good and known-bad assertions retained",
+      "deterministic_evidence": "Stage4_referee; predictive normal numerical caller"
+    },
+    {
+      "area": "Strategy Factory",
+      "actual_callers": "Research handoff -> gate evidence -> immutable Factory; Kernel._try_enter/entry_authority -> live_entry_block",
+      "invariant_review": "Exact version/install/approval/capacity binding retained; ACTIVE lifecycle alone does not authorize first-live execution",
+      "deterministic_evidence": "Stage5_authority; Stage1_entry; Stage8 owner authority"
+    },
+    {
+      "area": "Portfolio",
+      "actual_callers": "Kernel._portfolio_checkpoint -> current.freeze -> allocator.attach_learning -> allocate; final Risk remains independent",
+      "invariant_review": "Proposal-only normal checkpoint; cut-qualified allocation adaptation; replay checks retained application proof; unknown economics/capacity unavailable",
+      "deterministic_evidence": "Stage6_portfolio; test_final_audit_attention_allocation_time.py"
+    },
+    {
+      "area": "Risk",
+      "actual_callers": "Kernel._try_enter -> process-issued EntryPermission -> entry_authority.validate held policy/account/book/capability -> venue submission",
+      "invariant_review": "Risk remains final and exact; both durable admission/submission phases reject unresolved partials; refusal records known unsubmitted entry truth",
+      "deterministic_evidence": "Stage1_entry; test_final_audit_entry_partial_barrier.py; activation Risk CAS suites"
+    },
+    {
+      "area": "Execution",
+      "actual_callers": "Executor.open -> entry_authority.submit; Executor.close_partial -> partial_intent.reserve/resolve/consume",
+      "invariant_review": "One durable logical TP1 per trade, stable reduce-only client identity; UNKNOWN never resubmits; accounting/consumption atomic",
+      "deterministic_evidence": "test_final_audit_partial_intent.py; test_final_audit_partial_ack.py; Stage1_exit_accounting"
+    },
+    {
+      "area": "Exits/protection",
+      "actual_callers": "Kernel.cycle -> _manage_one/_manage_orphan_positions -> ExitEngine.manage -> Executor.close_partial/close; protective.stop repair",
+      "invariant_review": "FROZEN still observes/manages exits and publishes successful-cycle heartbeat; partial intent does not grant new exposure",
+      "deterministic_evidence": "test_final_audit_feed_identity.py FROZEN caller; Stage1_exit_accounting; working acknowledgement variant"
+    },
+    {
+      "area": "Accounting/reconciliation",
+      "actual_callers": "Executor partial consumption -> Journal.align_trade_amount same transaction; Supervisor recovery -> reconcile -> exact execution accounting",
+      "invariant_review": "Already aligned position consumes once without duplicate P&L; exact pending intent remains until venue truth resolves; reduce-only full/panic boundaries retain declared incomplete accounting",
+      "deterministic_evidence": "Stage1_exit_accounting; partial reopen/reconciliation proofs"
+    },
+    {
+      "area": "Learning",
+      "actual_callers": "Governed application receipts -> target revisions -> historical World/Attention/Portfolio consumers and frozen replay",
+      "invariant_review": "Latest current reads remain available; historical consumers use explicit cut and immutable APPLIED proof; no runtime test registry",
+      "deterministic_evidence": "Stage7_learning; temporal original probes"
+    },
+    {
+      "area": "Backup/recovery",
+      "actual_callers": "BackupSet critical_inventory/capture/verify/restore; Orchestrator.reload_weights -> weights_online.blended_weights -> data/ewa_state.json",
+      "invariant_review": "Mandatory retained input hash/role bound; missing input refuses capture; staged absent-target restore remains contained; prior PIT dependency closure retained",
+      "deterministic_evidence": "test_final_audit_backup_input.py; Stage1 recovery monitoring"
+    },
+    {
+      "area": "Heartbeat/monitoring",
+      "actual_callers": "Kernel successful cycle -> Heartbeat.beat; SafetyObserver.heartbeat and stall monitor read both ages",
+      "invariant_review": "Publication and successful-work ages share configured policy; malformed/chronology guards remain; unsafe state creates recovery-required safety response",
+      "deterministic_evidence": "test_final_audit_heartbeat_age.py; Stage1 recovery monitoring"
+    },
+    {
+      "area": "Owner OS",
+      "actual_callers": "Authenticated adapters -> OwnerService -> Supervisor owned recovery/CAS; exact approvals consumed by Factory",
+      "invariant_review": "No browser/chat/research direct order authority; pending execution intents block ACTIVE through held final CAS; isolated restore only FROZEN/RECOVERY supervisor transitions",
+      "deterministic_evidence": "Stage8_owner; test_final_audit_supervisor_partial.py; final entry partial barriers"
+    },
+    {
+      "area": "startup code path",
+      "actual_callers": "Kernel.boot -> trading and independent feed initialization -> Supervisor recovery -> cycle -> exits/accounting/heartbeat",
+      "invariant_review": "Offline boot/cycle only; old processes are F8 handoff gate; no singleton handoff/startup implemented or executed in this package",
+      "deterministic_evidence": "test_kernel_boot_recovery.py; test_supervisor.py; FROZEN cold-cycle probe"
+    }
+  ],
+  "normal_trading_llm_dependency": "ZERO",
+  "llm_scope": "BrainLLM is research/conversation; normal trading cycle and postmortem are deterministic. Background mechanism research remains separate.",
+  "F8": "OPERATIONAL_HANDOFF_PENDING",
+  "production_runtime_certification": false,
+  "architecture_redesign": false
+}

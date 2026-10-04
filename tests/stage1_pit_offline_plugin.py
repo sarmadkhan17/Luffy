@@ -17,8 +17,20 @@ def _deny(*args, **kwargs):
 
 def pytest_sessionstart(session):
     requests.sessions.Session.request = _deny
-    socket.socket.connect = _deny
-    socket.socket.connect_ex = _deny
+    # Temporary Unix IPC is exercised offline by Owner OS tests. IP sockets
+    # and production IPC remain forbidden, including unknown/abstract paths.
+    import tempfile
+    for name in ('connect', 'connect_ex'):
+        original = getattr(socket.socket, name)
+        def local_only(sock, address, *args, _original=original, **kwargs):
+            if sock.family == socket.AF_UNIX:
+                raw = address.decode() if isinstance(address, bytes) else address
+                if isinstance(raw, str) and raw and not raw.startswith('\0'):
+                    path = Path(raw).resolve()
+                    if path.is_relative_to(Path(tempfile.gettempdir()).resolve()):
+                        return _original(sock, address, *args, **kwargs)
+            return _deny(sock, address, *args, **kwargs)
+        setattr(socket.socket, name, local_only)
     socket.getaddrinfo = _deny
     original_connect=sqlite3.connect
     production_data=Path(__file__).resolve().parents[1]/'data'

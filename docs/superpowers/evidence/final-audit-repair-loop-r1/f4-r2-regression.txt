@@ -1,0 +1,374 @@
+........................................................................ [ 54%]
+...............................................FFFFFFFFFFFF              [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+________ test_a_clean_boot_proves_and_activates_without_venue_mutation _________
+
+world = (<trader.core.journal.Journal object at 0x7f4a0e7d21b0>, <tests.test_kernel_boot_recovery.RecordingVenue object at 0x7f4a0e7cf590>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4a0e7f3500>
+
+    def test_a_clean_boot_proves_and_activates_without_venue_mutation(world, monkeypatch):
+        journal, venue = world
+        _protected(journal, venue)
+        k, sent, started = _kernel(journal, venue, monkeypatch)
+        k._stop = True                       # run() = boot() then no cycles
+>       k.run()
+
+tests/test_kernel_boot_recovery.py:197:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+trader/kernel.py:2898: in run
+    self.boot()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x7f4a0e7f1580>
+
+    def boot(self) -> None:
+        log.info(f"LUFFY BOOT | market={self.market_type.value} "
+                 f"state={self.state_machine.state.value} "
+                 f"population={len(self.population)}")
+>       self.feed.initialize_markets()
+        ^^^^^^^^^
+E       AttributeError: 'Kernel' object has no attribute 'feed'
+
+trader/kernel.py:352: AttributeError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+_______________ test_b_venue_timeout_contains_notifies_and_boots _______________
+
+world = (<trader.core.journal.Journal object at 0x7f4a0e7cfef0>, <tests.test_kernel_boot_recovery.RecordingVenue object at 0x7f4a0e7d3d40>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4a0e7f33b0>
+
+    def test_b_venue_timeout_contains_notifies_and_boots(world, monkeypatch):
+        journal, venue = world
+        _protected(journal, venue)
+        venue.unreadable = True
+        k, sent, started = _kernel(journal, venue, monkeypatch)
+        k._stop = True
+>       k.run()                              # formerly AttributeError here
+        ^^^^^^^
+
+tests/test_kernel_boot_recovery.py:215:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+trader/kernel.py:2898: in run
+    self.boot()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x7f4a0e7f2360>
+
+    def boot(self) -> None:
+        log.info(f"LUFFY BOOT | market={self.market_type.value} "
+                 f"state={self.state_machine.state.value} "
+                 f"population={len(self.population)}")
+>       self.feed.initialize_markets()
+        ^^^^^^^^^
+E       AttributeError: 'Kernel' object has no attribute 'feed'
+
+trader/kernel.py:352: AttributeError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+______________ test_c_pending_entry_with_unreadable_order_status _______________
+
+world = (<trader.core.journal.Journal object at 0x7f4a0e8a5a90>, <tests.test_kernel_boot_recovery.RecordingVenue object at 0x7f4a0e8a6600>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4a0e8a7cb0>
+
+    def test_c_pending_entry_with_unreadable_order_status(world, monkeypatch):
+        journal, venue = world
+        _protected(journal, venue)
+        k, sent, started = _kernel(journal, venue, monkeypatch)
+        intent = k.executor.recovery.begin(Position(
+            id="pos_eth", symbol="ETH/USDT", side=Side.LONG, amount=1.0, entry_price=0,
+            notional_usdt=0, leverage=5, stop_loss=90.0, take_profit=110.0,
+            strategy_id="s", strategy_name="s", decision_id="d-crash",
+            market_type="futures", exec_mode="live"))
+        intent["order_id"] = "entry-1"
+        k.executor.recovery.save(intent, "entry_submitted")
+        venue.order_status_unreadable = True
+>       k.boot()
+
+tests/test_kernel_boot_recovery.py:239:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x7f4a0e7dec90>
+
+    def boot(self) -> None:
+        log.info(f"LUFFY BOOT | market={self.market_type.value} "
+                 f"state={self.state_machine.state.value} "
+                 f"population={len(self.population)}")
+>       self.feed.initialize_markets()
+        ^^^^^^^^^
+E       AttributeError: 'Kernel' object has no attribute 'feed'
+
+trader/kernel.py:352: AttributeError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+___________________ test_d_wrong_side_stop_is_not_protection ___________________
+
+world = (<trader.core.journal.Journal object at 0x7f4a0e7d0980>, <tests.test_kernel_boot_recovery.RecordingVenue object at 0x7f4a0e7f2270>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4a0e7f2660>
+
+    def test_d_wrong_side_stop_is_not_protection(world, monkeypatch):
+        journal, venue = world
+        _protected(journal, venue, stop=_stop(side="BUY"))
+        k, sent, started = _kernel(journal, venue, monkeypatch)
+>       k.boot()
+
+tests/test_kernel_boot_recovery.py:259:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x7f4a0e7dffe0>
+
+    def boot(self) -> None:
+        log.info(f"LUFFY BOOT | market={self.market_type.value} "
+                 f"state={self.state_machine.state.value} "
+                 f"population={len(self.population)}")
+>       self.feed.initialize_markets()
+        ^^^^^^^^^
+E       AttributeError: 'Kernel' object has no attribute 'feed'
+
+trader/kernel.py:352: AttributeError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+_____________ test_e_loosened_stop_requires_owner_without_mutation _____________
+
+world = (<trader.core.journal.Journal object at 0x7f4a0e7dd880>, <tests.test_kernel_boot_recovery.RecordingVenue object at 0x7f4a0e7ddc40>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4a0e7dfd10>
+
+    def test_e_loosened_stop_requires_owner_without_mutation(world, monkeypatch):
+        journal, venue = world
+        _protected(journal, venue, stop=_stop(trigger="80"))
+        k, sent, started = _kernel(journal, venue, monkeypatch)
+>       k.boot()
+
+tests/test_kernel_boot_recovery.py:275:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x7f4a0e7dc8f0>
+
+    def boot(self) -> None:
+        log.info(f"LUFFY BOOT | market={self.market_type.value} "
+                 f"state={self.state_machine.state.value} "
+                 f"population={len(self.population)}")
+>       self.feed.initialize_markets()
+        ^^^^^^^^^
+E       AttributeError: 'Kernel' object has no attribute 'feed'
+
+trader/kernel.py:352: AttributeError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+__________________ test_f_owner_frozen_is_never_appropriated ___________________
+
+world = (<trader.core.journal.Journal object at 0x7f4a0e7e5490>, <tests.test_kernel_boot_recovery.RecordingVenue object at 0x7f4a0e7dd6d0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4a0e7e52e0>
+
+    def test_f_owner_frozen_is_never_appropriated(world, monkeypatch):
+        journal, venue = world
+        _protected(journal, venue)
+        ControlStateMachine(journal).set(ControlState.FROZEN, "operator", "owner hold")
+        mark = _last_event(journal)
+        k, sent, started = _kernel(journal, venue, monkeypatch)
+>       k.boot()
+
+tests/test_kernel_boot_recovery.py:292:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x7f4a0e7e5fa0>
+
+    def boot(self) -> None:
+        log.info(f"LUFFY BOOT | market={self.market_type.value} "
+                 f"state={self.state_machine.state.value} "
+                 f"population={len(self.population)}")
+>       self.feed.initialize_markets()
+        ^^^^^^^^^
+E       AttributeError: 'Kernel' object has no attribute 'feed'
+
+trader/kernel.py:352: AttributeError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.state:state.py:199 CONTROL STATE ACTIVE → FROZEN (by operator) owner hold
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+_______ test_g_repeated_boot_after_persisted_recovery_then_owner_resume ________
+
+world = (<trader.core.journal.Journal object at 0x7f4a0e7e4dd0>, <tests.test_kernel_boot_recovery.RecordingVenue object at 0x7f4a0e7e5280>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4a0e899400>
+
+    def test_g_repeated_boot_after_persisted_recovery_then_owner_resume(world, monkeypatch):
+        journal, venue = world
+        _protected(journal, venue)
+        venue.unreadable = True
+        k1, _, _ = _kernel(journal, venue, monkeypatch)
+>       k1.boot()
+
+tests/test_kernel_boot_recovery.py:311:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x7f4a0e7e8740>
+
+    def boot(self) -> None:
+        log.info(f"LUFFY BOOT | market={self.market_type.value} "
+                 f"state={self.state_machine.state.value} "
+                 f"population={len(self.population)}")
+>       self.feed.initialize_markets()
+        ^^^^^^^^^
+E       AttributeError: 'Kernel' object has no attribute 'feed'
+
+trader/kernel.py:352: AttributeError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+__________ test_g_repeated_boot_with_fault_persisting_stays_contained __________
+
+world = (<trader.core.journal.Journal object at 0x7f4a0e7eaba0>, <tests.test_kernel_boot_recovery.RecordingVenue object at 0x7f4a0e7ea5a0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4a0e7f5550>
+
+    def test_g_repeated_boot_with_fault_persisting_stays_contained(world, monkeypatch):
+        journal, venue = world
+        _protected(journal, venue, stop=_stop(trigger="80"))
+        for _ in range(3):
+            k, sent, started = _kernel(journal, venue, monkeypatch)
+>           k.boot()
+
+tests/test_kernel_boot_recovery.py:358:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x7f4a0e7f6810>
+
+    def boot(self) -> None:
+        log.info(f"LUFFY BOOT | market={self.market_type.value} "
+                 f"state={self.state_machine.state.value} "
+                 f"population={len(self.population)}")
+>       self.feed.initialize_markets()
+        ^^^^^^^^^
+E       AttributeError: 'Kernel' object has no attribute 'feed'
+
+trader/kernel.py:352: AttributeError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+_________________ test_matrix_missing_stop_rearms_then_proves __________________
+
+world = (<trader.core.journal.Journal object at 0x7f4a0e7fd790>, <tests.test_kernel_boot_recovery.RecordingVenue object at 0x7f4a0e7fea50>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4a0e7fc4d0>
+
+    def test_matrix_missing_stop_rearms_then_proves(world, monkeypatch):
+        journal, venue = world
+        _protected(journal, venue)
+        venue.stops = []
+        k, sent, _ = _kernel(journal, venue, monkeypatch)
+>       k.boot()
+
+tests/test_kernel_boot_recovery.py:375:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x7f4a0e7ffce0>
+
+    def boot(self) -> None:
+        log.info(f"LUFFY BOOT | market={self.market_type.value} "
+                 f"state={self.state_machine.state.value} "
+                 f"population={len(self.population)}")
+>       self.feed.initialize_markets()
+        ^^^^^^^^^
+E       AttributeError: 'Kernel' object has no attribute 'feed'
+
+trader/kernel.py:352: AttributeError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+_____________________ test_matrix_orphan_stop_is_cancelled _____________________
+
+world = (<trader.core.journal.Journal object at 0x7f4a0e7e8f50>, <tests.test_kernel_boot_recovery.RecordingVenue object at 0x7f4a0e7e9be0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4a0e7e6ab0>
+
+    def test_matrix_orphan_stop_is_cancelled(world, monkeypatch):
+        journal, venue = world
+        _protected(journal, venue)
+        venue.stops.append(dict(_stop(algo_id="7009"), symbol="ETHUSDT"))
+        k, _, _ = _kernel(journal, venue, monkeypatch)
+>       k.boot()
+
+tests/test_kernel_boot_recovery.py:388:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x7f4a0e7e7d40>
+
+    def boot(self) -> None:
+        log.info(f"LUFFY BOOT | market={self.market_type.value} "
+                 f"state={self.state_machine.state.value} "
+                 f"population={len(self.population)}")
+>       self.feed.initialize_markets()
+        ^^^^^^^^^
+E       AttributeError: 'Kernel' object has no attribute 'feed'
+
+trader/kernel.py:352: AttributeError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+___________ test_matrix_journal_venue_id_mismatch_cancels_and_rearms ___________
+
+world = (<trader.core.journal.Journal object at 0x7f4a0e7dda00>, <tests.test_kernel_boot_recovery.RecordingVenue object at 0x7f4a0e8a70e0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4a0e7f2660>
+
+    def test_matrix_journal_venue_id_mismatch_cancels_and_rearms(world, monkeypatch):
+        journal, venue = world
+        journal.add_trade(_trade(sl_order_id="6999"))
+        venue.positions = [{"symbol": "BTC/USDT", "contracts": 1, "side": "long",
+                            "entryPrice": 100, "markPrice": 100}]
+        venue.stops = [_stop(algo_id="7010")]
+        k, _, _ = _kernel(journal, venue, monkeypatch)
+>       k.boot()
+
+tests/test_kernel_boot_recovery.py:400:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x7f4a0e7fc890>
+
+    def boot(self) -> None:
+        log.info(f"LUFFY BOOT | market={self.market_type.value} "
+                 f"state={self.state_machine.state.value} "
+                 f"population={len(self.population)}")
+>       self.feed.initialize_markets()
+        ^^^^^^^^^
+E       AttributeError: 'Kernel' object has no attribute 'feed'
+
+trader/kernel.py:352: AttributeError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+_________________ test_matrix_incomplete_listing_never_sweeps __________________
+
+world = (<trader.core.journal.Journal object at 0x7f4a0e7fc9b0>, <tests.test_kernel_boot_recovery.RecordingVenue object at 0x7f4a0e7ffec0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7f4a0e7fcda0>
+
+    def test_matrix_incomplete_listing_never_sweeps(world, monkeypatch):
+        journal, venue = world
+        _protected(journal, venue)
+        venue.stops.append(dict(_stop(algo_id="7009"), symbol="ETHUSDT"))
+        venue.algo_listing_invalid = True
+        k, sent, started = _kernel(journal, venue, monkeypatch)
+>       k.boot()
+
+tests/test_kernel_boot_recovery.py:413:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x7f4a0e8b7680>
+
+    def boot(self) -> None:
+        log.info(f"LUFFY BOOT | market={self.market_type.value} "
+                 f"state={self.state_machine.state.value} "
+                 f"population={len(self.population)}")
+>       self.feed.initialize_markets()
+        ^^^^^^^^^
+E       AttributeError: 'Kernel' object has no attribute 'feed'
+
+trader/kernel.py:352: AttributeError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 1000.0
+=========================== short test summary info ============================
+FAILED tests/test_kernel_boot_recovery.py::test_a_clean_boot_proves_and_activates_without_venue_mutation
+FAILED tests/test_kernel_boot_recovery.py::test_b_venue_timeout_contains_notifies_and_boots
+FAILED tests/test_kernel_boot_recovery.py::test_c_pending_entry_with_unreadable_order_status
+FAILED tests/test_kernel_boot_recovery.py::test_d_wrong_side_stop_is_not_protection
+FAILED tests/test_kernel_boot_recovery.py::test_e_loosened_stop_requires_owner_without_mutation
+FAILED tests/test_kernel_boot_recovery.py::test_f_owner_frozen_is_never_appropriated
+FAILED tests/test_kernel_boot_recovery.py::test_g_repeated_boot_after_persisted_recovery_then_owner_resume
+FAILED tests/test_kernel_boot_recovery.py::test_g_repeated_boot_with_fault_persisting_stays_contained
+FAILED tests/test_kernel_boot_recovery.py::test_matrix_missing_stop_rearms_then_proves
+FAILED tests/test_kernel_boot_recovery.py::test_matrix_orphan_stop_is_cancelled
+FAILED tests/test_kernel_boot_recovery.py::test_matrix_journal_venue_id_mismatch_cancels_and_rearms
+FAILED tests/test_kernel_boot_recovery.py::test_matrix_incomplete_listing_never_sweeps
+12 failed, 119 passed in 26.00s

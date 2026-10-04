@@ -1,0 +1,51 @@
+FF                                                                       [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+__ test_qualified_freeze_preserves_exact_receipts_and_reader_does_not_mutate ___
+
+population = (PosixPath('/tmp/pytest-of-sarmad/pytest-541/test_qualified_freeze_preserve0/investigation.db'), PosixPath('/tmp/pytes...t_id":"update_f3a66d68b418f08e"}', provenance_hash='90b109545172a12591e96790a28b5256266db3f9104d10853710a0b06e90199a'))
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-541/test_qualified_freeze_preserve0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70744232b500>
+
+    def test_qualified_freeze_preserves_exact_receipts_and_reader_does_not_mutate(population,tmp_path,monkeypatch):
+        _,_,source,created,later,s=population
+        qualify(source)
+        monkeypatch.setattr('trader.data.feed.time.time',lambda:later/1000)
+        h=P.propose(s,'volume_breakout_context.v1',created)
+        experiment=E.translate(h,source,CFG,later)
+        original=DataFeed(exchange=NoExchange(),db_path=source).cached_ohlcv(DISCOVERY[0],'4h')
+        assert original is not None and len(original)==1800
+        target=tmp_path/'frozen.db'
+        E.freeze_candles(source,target,experiment)
+        initial=hashlib.sha256(target.read_bytes()).hexdigest()
+        frozen=DataFeed(exchange=NoExchange(),db_path=target).cached_ohlcv(DISCOVERY[0],'4h')
+>       assert frozen is not None
+E       assert None is not None
+
+tests/test_final_audit_research_snapshot.py:25: AssertionError
+__ test_legacy_unqualified_projection_stays_unknown_without_mutating_snapshot __
+
+population = (PosixPath('/tmp/pytest-of-sarmad/pytest-541/test_legacy_unqualified_projec0/investigation.db'), PosixPath('/tmp/pytes...t_id":"update_2d7c39a054c6a289"}', provenance_hash='00c99de80149e58f4ef627e6dfaf583acbba7e93c39605372e7e101d263718be'))
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-541/test_legacy_unqualified_projec0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70744069c1d0>
+
+    def test_legacy_unqualified_projection_stays_unknown_without_mutating_snapshot(population,tmp_path,monkeypatch):
+        _,_,source,created,later,s=population
+        monkeypatch.setattr('trader.data.feed.time.time',lambda:later/1000)
+        experiment=E.translate(P.propose(s,'volume_breakout_context.v1',created),source,CFG,later)
+        target=tmp_path/'legacy-frozen.db';E.freeze_candles(source,target,experiment)
+        initial=hashlib.sha256(target.read_bytes()).hexdigest()
+        assert DataFeed(exchange=NoExchange(),db_path=target).cached_ohlcv(DISCOVERY[0],'4h') is None
+>       assert hashlib.sha256(target.read_bytes()).hexdigest()==initial
+E       AssertionError: assert 'd1eaa6e704d8...887491cef17cf' == 'da8525c1661f...df3ad76d7662d'
+E
+E         - da8525c1661fa987d1c3277fc07224cfb82837900c22c7698b9df3ad76d7662d
+E         + d1eaa6e704d863277790a6d014f45590d61cfb7bd6b13db8f6c887491cef17cf
+
+tests/test_final_audit_research_snapshot.py:41: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_final_audit_research_snapshot.py::test_qualified_freeze_preserves_exact_receipts_and_reader_does_not_mutate
+FAILED tests/test_final_audit_research_snapshot.py::test_legacy_unqualified_projection_stays_unknown_without_mutating_snapshot
+2 failed in 12.35s

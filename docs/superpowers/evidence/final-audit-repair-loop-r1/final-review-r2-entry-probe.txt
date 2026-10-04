@@ -1,0 +1,4 @@
+risk baseline initialized at equity 10000.0
+partial close failed ETH/USDT: partial executed then response lost
+{"probe": "partial intent appears between durable entry reservation and submission", "returned_position": true, "new_exposure_orders": 1, "partial_pending": true, "skip_reason": ""}
+OFFLINE GUARD: 0 network/store attempts

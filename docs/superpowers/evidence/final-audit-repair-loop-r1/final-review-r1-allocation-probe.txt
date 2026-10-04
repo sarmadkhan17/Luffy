@@ -1,0 +1,2 @@
+{"probe": "Portfolio.attach_learning historical normal input", "as_of": 1500, "applied_at": 1800000001000, "future_revision_changed_input": true, "before_size": "3", "after_size": "UNAVAILABLE"}
+OFFLINE GUARD: 0 network/store attempts

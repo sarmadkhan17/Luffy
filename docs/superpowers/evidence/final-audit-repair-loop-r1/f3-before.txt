@@ -1,0 +1,49 @@
+FF                                                                       [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+_________ test_future_applied_revision_cannot_change_historical_world __________
+
+isolated = (<trader.core.journal.Journal object at 0x7b4dd9bf6d50>, {'risk': {'bar_minutes': 60, 'funding_rate_8h': 0.0001, 'real...'r1', 'spec_hash': '326e988be12c4ae772bd0d29cc0b3999c9c048f34d29470ed5827fe471e317c4', 'parent_version_id': None, ...})
+
+    def test_future_applied_revision_cannot_change_historical_world(isolated):
+        j,cfg,ev,o,_ = isolated
+        cut = max(1800000000000,o.observed_ms)+1000
+        model,ctx,event = claimed(cut)
+        assert view(j,model).effective_confidence == .6
+        apply(j,cfg,ev,cut+86400000,L.Target.WORLD,ctx,{'confidence':.9})
+        assert T.read(j,L.Target.WORLD,ctx)['value']['confidence'] == .9  # latest remains adaptive
+>       assert view(j,model).effective_confidence == .6
+E       AssertionError: assert 0.9 == 0.6
+E        +  where 0.9 = EffectiveClaim(claim=WorldClaim(coordinate=ClaimCoordinate(scope=Scope(level=<ScopeLevel.INSTRUMENT: 'INSTRUMENT'>, id...9fffc9ecadc353ee5dff3d5015a616cfee8dd34d45f3fc18a2bb', 'value': {'confidence': 0.9}}, reason='LEARNED_OVERLAY_APPLIED').effective_confidence
+E        +    where EffectiveClaim(claim=WorldClaim(coordinate=ClaimCoordinate(scope=Scope(level=<ScopeLevel.INSTRUMENT: 'INSTRUMENT'>, id...9fffc9ecadc353ee5dff3d5015a616cfee8dd34d45f3fc18a2bb', 'value': {'confidence': 0.9}}, reason='LEARNED_OVERLAY_APPLIED') = view(<trader.core.journal.Journal object at 0x7b4dd9bf6d50>, WorldModel(as_of_ms=1800000001000, nodes=(HierarchyNode(scope=Scope(level=<ScopeLevel.ASSET_CLASS: 'ASSET_CLASS'>, ide...a9baf5984d4edbd21b206'),)), model_id='world.model.v1:6f526c02bc8340d4f10342e375526c0524173b18efb7fd4efce7a34b33cce6fc'))
+
+tests/test_final_audit_learning_time.py:41: AssertionError
+_________ test_exact_cut_multiple_revisions_capture_replay_and_reopen __________
+
+isolated = (<trader.core.journal.Journal object at 0x7b4dd8fd9550>, {'risk': {'bar_minutes': 60, 'funding_rate_8h': 0.0001, 'real...'r1', 'spec_hash': '326e988be12c4ae772bd0d29cc0b3999c9c048f34d29470ed5827fe471e317c4', 'parent_version_id': None, ...})
+
+    def test_exact_cut_multiple_revisions_capture_replay_and_reopen(isolated):
+        j,cfg,ev,o,_ = isolated
+        cut = max(1800000000000,o.observed_ms)+1000
+        model,ctx,event = claimed(cut)
+        apply(j,cfg,ev,cut-1,L.Target.WORLD,ctx,{'confidence':.7})
+        apply(j,cfg,ev,cut,L.Target.WORLD,ctx,{'confidence':.8})
+        exact = view(j,model)
+        assert exact.effective_confidence == .8 and exact.learned['revision'] == 2
+        captured = world_producer.evaluate(event,model=model,learning_journal=j)
+        frozen = captured['governed_world_claim_state']
+        apply(j,cfg,ev,cut+1,L.Target.WORLD,ctx,{'confidence':.9})
+>       assert view(Journal(j.db_path),model).effective_confidence == .8
+E       AssertionError: assert 0.9 == 0.8
+E        +  where 0.9 = EffectiveClaim(claim=WorldClaim(coordinate=ClaimCoordinate(scope=Scope(level=<ScopeLevel.INSTRUMENT: 'INSTRUMENT'>, id...cf5bb22a0827f481360abfbc171001a393cbab3178196e6adb47', 'value': {'confidence': 0.9}}, reason='LEARNED_OVERLAY_APPLIED').effective_confidence
+E        +    where EffectiveClaim(claim=WorldClaim(coordinate=ClaimCoordinate(scope=Scope(level=<ScopeLevel.INSTRUMENT: 'INSTRUMENT'>, id...cf5bb22a0827f481360abfbc171001a393cbab3178196e6adb47', 'value': {'confidence': 0.9}}, reason='LEARNED_OVERLAY_APPLIED') = view(<trader.core.journal.Journal object at 0x7b4dd773e600>, WorldModel(as_of_ms=1800000001000, nodes=(HierarchyNode(scope=Scope(level=<ScopeLevel.ASSET_CLASS: 'ASSET_CLASS'>, ide...1976854ad539f18a9cf55'),)), model_id='world.model.v1:fb158ba566555db74bbc4de06f0d211a02199a930288b5b8698d751241f958c4'))
+E        +      where <trader.core.journal.Journal object at 0x7b4dd773e600> = Journal(PosixPath('/tmp/pytest-of-sarmad/pytest-488/test_exact_cut_multiple_revisi0/luffy.db'))
+E        +        where PosixPath('/tmp/pytest-of-sarmad/pytest-488/test_exact_cut_multiple_revisi0/luffy.db') = <trader.core.journal.Journal object at 0x7b4dd8fd9550>.db_path
+
+tests/test_final_audit_learning_time.py:59: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_final_audit_learning_time.py::test_future_applied_revision_cannot_change_historical_world
+FAILED tests/test_final_audit_learning_time.py::test_exact_cut_multiple_revisions_capture_replay_and_reopen
+2 failed in 4.50s

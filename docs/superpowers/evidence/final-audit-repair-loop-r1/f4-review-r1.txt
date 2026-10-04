@@ -1,0 +1,2 @@
+partial close failed BTC/USDT: executed then response lost
+{'review': 'FAIL', 'actual_caller': 'Kernel.cycle/Supervisor -> Executor.recover_entries', 'tp1_done': 0, 'venue_quantity': 5.0, 'submission_count': 1, 'entry_recovery_barrier': False, 'failure': 'Normal recovery caller does not reconcile durable partial intent or block entry while UNKNOWN.'}

@@ -1,0 +1,8 @@
+.............................................................            [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+61 passed in 25.19s
+PYTEST RETURNED 0
+THREAD MainThread False 137939800694912
+  File "<stdin>", line 7, in <module>

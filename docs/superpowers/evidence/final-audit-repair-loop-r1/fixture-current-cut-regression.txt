@@ -1,0 +1,40 @@
+......F                                                                  [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+_______ test_world_model_learned_confidence_is_a_separate_exact_overlay ________
+
+isolated = (<trader.core.journal.Journal object at 0x7acacfb1f3b0>, {'risk': {'bar_minutes': 60, 'funding_rate_8h': 0.0001, 'real...'r1', 'spec_hash': '326e988be12c4ae772bd0d29cc0b3999c9c048f34d29470ed5827fe471e317c4', 'parent_version_id': None, ...})
+
+    def test_world_model_learned_confidence_is_a_separate_exact_overlay(isolated):
+        j, cfg, ev, o, v = isolated
+>       model, btc, eth, horizon = world_fixture(as_of=o.observed_ms)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_normal_learning_loop_closure.py:662:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests/test_normal_learning_loop_closure.py:656: in world_fixture
+    model = WorldModel(as_of, nodes, (WorldState('BTC', as_of, (obs,)),), tuple(Horizon), claims=ClaimCollection(as_of, claims))
+                                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<string>:5: in __init__
+    ???
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = ClaimCollection(as_of_ms=1714867200001, claims=(WorldClaim(coordinate=ClaimCoordinate(scope=Scope(level=<ScopeLevel.IN...version='world.claim.v1', claim_id='world.claim.v1:a4e392c6ac3a13edd3e6ce0bc019a918e3c644a689e0ab7d938ca2e088e38398')))
+
+    def __post_init__(self) -> None:
+        _timestamp(self.as_of_ms, "as_of_ms")
+        if isinstance(self.claims, (str, bytes)) or not isinstance(self.claims, Iterable):
+            raise TypeError("claims must be an iterable of WorldClaim")
+        items = tuple(self.claims)
+        if any(not isinstance(item, WorldClaim) for item in items):
+            raise TypeError("claims must contain only WorldClaim")
+        if any(item.as_of_ms != self.as_of_ms for item in items):
+>           raise ValueError("claim cut does not match collection cut")
+E           ValueError: claim cut does not match collection cut
+
+trader/world/claim.py:186: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_normal_learning_loop_closure.py::test_world_model_learned_confidence_is_a_separate_exact_overlay
+1 failed, 6 passed in 41.92s

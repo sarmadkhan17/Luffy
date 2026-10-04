@@ -183,16 +183,32 @@ class Supervisor:
             yield getattr(risk, "reason", None) or "risk_release_unproven", None
             return
         with self._held(risk.verify, risk) as held:
-            # The existing Risk/control fence still owns activation. Serialize
-            # its last health observation with independent outage publication.
+            if held[0]:
+                yield held
+                return
             from ..observability.safety import SafetyHealth, health_path
             from contextlib import nullcontext
-            safety = SafetyHealth(health_path(self.journal)) if hasattr(self.journal, 'db_path') else None
-            with safety.locked() if safety else nullcontext():
-                if safety and safety.active_reasons():
-                    yield 'critical_storage_or_heartbeat_unavailable', None
-                else:
-                    yield held
+            from . import partial_intent
+            # Risk normally supplies its held write transaction. A verifier
+            # without a connection still needs one: partial reservation and
+            # ACTIVE publication must serialize across processes in SQLite.
+            with nullcontext(held[1]) if held[1] is not None else self.journal._tx() as conn:
+                if held[1] is None:
+                    conn.execute('BEGIN IMMEDIATE')
+                safety = SafetyHealth(health_path(self.journal)) if hasattr(self.journal, 'db_path') else None
+                with safety.locked() if safety else nullcontext():
+                    if safety and safety.active_reasons():
+                        yield 'critical_storage_or_heartbeat_unavailable', None
+                        return
+                    try:
+                        unresolved = self.executor.recovery.pending() or partial_intent.pending(self.journal)
+                    except Exception:
+                        yield 'critical_recovery_state_unreadable', None
+                        return
+                    if unresolved:
+                        yield 'execution_recovery_pending', None
+                    else:
+                        yield None, conn
 
     @contextmanager
     def _held(self, verifier, risk):
@@ -328,28 +344,36 @@ class Supervisor:
 
         reasons = safety.active_reasons() if safety else []
         checks = {"venue_positions": False, "reconciliation": False,
-                  "entry_intent_resolved": False, "venue_protection": False,
+                  "entry_intent_resolved": False, "execution_intents_resolved": False,
+                  "venue_protection": False,
                   "entries_safe": False}
         if prior and "supervisor_status_unreadable" in prior.get("reasons", []):
             reasons.append("supervisor_status_unreadable")
         intent = None
+        partials = []
         ledger_readable = True
         if state != ControlState.HALTED:
             try:
                 intent = self.executor.recovery.pending()
+                from . import partial_intent
+                partials = partial_intent.pending(self.journal)
             except Exception:
                 ledger_readable = False
                 reasons.append("critical_recovery_state_unreadable")
-            if (ledger_readable and intent and advance_entry
+            if (ledger_readable and (intent or partials) and advance_entry
                     and self.state_machine.refresh() != ControlState.HALTED):
                 try:
                     self.executor.recover_entries()
                     actions["entry_recovery_tick"] = True
                     intent = self.executor.recovery.pending()
+                    partials = partial_intent.pending(self.journal)
                 except Exception:
                     ledger_readable = False
                     reasons.append("critical_recovery_state_unreadable")
             checks["entry_intent_resolved"] = ledger_readable and intent is None
+            checks["execution_intents_resolved"] = ledger_readable and intent is None and not partials
+            if partials:
+                reasons.append("partial_exit_recovery_pending")
             if intent:
                 reasons.append("entry_recovery_pending")
                 actions["entry_reason"] = intent.get("reason", "pending")
@@ -377,7 +401,7 @@ class Supervisor:
             if excluded:
                 reasons.append("entry_owned_exposure_pending")
         checks["entries_safe"] = all((checks["venue_positions"], checks["reconciliation"],
-                                      checks["entry_intent_resolved"],
+                                      checks["entry_intent_resolved"], checks["execution_intents_resolved"],
                                       checks["venue_protection"])) and not reasons
         serious = bool(set(reasons) & {
             "venue_state_unreadable", "critical_recovery_state_unreadable",
@@ -438,6 +462,8 @@ class Supervisor:
                 # still ours; the next pass asks Risk afresh.
                 current = self.state_machine.refresh()
                 checks["risk_release"] = False
+                if transition.refused in ("execution_recovery_pending", "critical_recovery_state_unreadable"):
+                    checks["execution_intents_resolved"] = False
                 actions["risk_release_at_cas"] = transition.refused
                 reasons.append(transition.refused)
                 safe = False

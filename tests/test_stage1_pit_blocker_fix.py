@@ -83,7 +83,7 @@ def test_failed_refresh_does_not_rewrite_identity(universe):
     assert u._last_scan == timestamp == U2/1000
     assert u._selection_receipt == receipt
     assert receipt['available_at_ms'] == receipt['observed_at_ms'] == U2
-    assert receipt['volume_receipts']['ALT/USDT']['instrument_id'] == 'binanceusdm:futures:ALTUSDT'
+    assert receipt['volume_receipts']['ALT/USDT']['instrument_id'] == 'binance_usdm:futures:ALTUSDT'
     assert receipt['listing_receipts']['ALT/USDT']['available_at_ms'] == U2
     assert receipt['revision_id'] == P.digest({k:v for k,v in receipt.items() if k != 'revision_id'})
 
@@ -133,7 +133,7 @@ def test_attention_rejects_future_membership_even_with_eligible_candles(universe
     u, _, _ = universe
     df = P.annotate(pd.DataFrame(dict(ts=pd.to_datetime([0],unit='ms',utc=True),
         open=[10], high=[11], low=[9], close=[10], volume=[1])),
-        instrument_id='binanceusdm:futures:ALTUSDT', source='fixture',
+        instrument_id='binance_usdm:futures:ALTUSDT', source='fixture',
         kind='candle', timeframe='15m', received_ms=U1)
     event = capture({'ALT/USDT': {'15m': df}}, ['ALT/USDT'], 's', settings({}),
         U1, membership_receipts={'ALT/USDT': u._selection_receipt})
@@ -206,7 +206,7 @@ def test_real_basis_path_component_provenance_and_pit(basis_feed, no_connections
     row = df.iloc[0]
     raw = json.loads(row.raw_json)
     components = raw['components']
-    assert {c['instrument_id'] for c in components} == {'binance:spot:BTCUSDT', 'binanceusdm:futures:BTCUSDT'}
+    assert {c['instrument_id'] for c in components} == {'binance:spot:BTCUSDT', 'binance_usdm:futures:BTCUSDT'}
     assert {c['source'] for c in components} == {FAPI+'/fapi/v1/klines', SAPI+'/api/v3/klines'}
     assert [c['available_at_ms'] for c in components] == [T1, T2]
     assert [c['observed_at_ms'] for c in components] == [T1, T2]

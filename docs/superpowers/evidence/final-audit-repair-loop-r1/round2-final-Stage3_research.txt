@@ -1,0 +1,87 @@
+........................................................................ [ 26%]
+........................................................................ [ 53%]
+.....................................................F.................. [ 80%]
+.............FF....................................                      [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+___________ test_registry_readers_are_offline_research_modules_only ____________
+
+    def test_registry_readers_are_offline_research_modules_only():
+        root = ROOT / "trader"
+        pat = re.compile(r"research_sources\b")
+        callers = sorted(str(p.relative_to(root)) for p in root.rglob("*.py")
+                         if p.name != "research_sources.py"
+                         and pat.search(p.read_text(errors="ignore")))
+>       assert callers == ["cognition/_research_shadow_child.py",  # existing read-only registry pinning
+                           "cognition/research_evidence.py",
+                           "cognition/research_plan.py",
+                           # offline unreadable-health plan (read-only pin check)
+                           "cognition/research_unreadable_plan.py"]
+E       AssertionError: assert ['cognition/_...able_plan.py'] == ['cognition/_...able_plan.py']
+E
+E         At index 1 diff: 'cognition/external_sources.py' != 'cognition/research_evidence.py'
+E         Left contains one more item: 'cognition/research_unreadable_plan.py'
+E         Use -v to get more diff
+
+tests/test_research_evidence_source_binding.py:425: AssertionError
+___ test_snapshot_scores_exclude_generation_and_search_cannot_read_protected ___
+
+population = (PosixPath('/tmp/pytest-of-sarmad/pytest-534/test_snapshot_scores_exclude_g0/investigation.db'), PosixPath('/tmp/pytes...t_id":"update_4a1e581a3ee24a5c"}', provenance_hash='e3a5eb7dd41e1eb406f52ae11ee1e61e669e1f0fd68dbc551023989968051de9'))
+
+    def test_snapshot_scores_exclude_generation_and_search_cannot_read_protected(population):
+        _,_,candles,created,later,s=population
+        h=P.propose(s,'volume_breakout_context.v1',created)
+        ex=E.translate(h,candles,CFG,later)
+        cfg=deepcopy(CFG);cfg['research']['predictive_split']=ex['split']
+        copy=candles.parent/'copy.db'
+        E.freeze_candles(candles,copy,ex)
+        from trader.research.evaluate import load_bundle
+        discovery=load_bundle('4h',DISCOVERY,cfg,requires=('ohlcv',),heldout_symbols=HELDOUT,paths={'candles':str(copy)})
+>       assert discovery.frames
+E       AssertionError: assert {}
+E        +  where {} = Bundle(tf='4h', frames={}, sym_frames={}, universe={}, btc=None, market=None, derivs={}, risk={'risk_per_trade_pct': 0...tes': 240}, cut=1809306720000, heldout_bars={'a': {}, 'b': {}}, equity=2000.0, risk_pct=0.5, max_open=8, first_bars={}).frames
+
+tests/test_predictive_research_bridge.py:237: AssertionError
+______ test_normal_path_actual_numerical_jobs_no_direct_planner_injection ______
+
+population = (PosixPath('/tmp/pytest-of-sarmad/pytest-534/test_normal_path_actual_numeri0/investigation.db'), PosixPath('/tmp/pytes...t_id":"update_24fbc19539e7a6c3"}', provenance_hash='75d7dfaa2b97bb9c2551c4a6ebe8459dec6df544ee28136f2396a7a9b5af301a'))
+
+    def test_normal_path_actual_numerical_jobs_no_direct_planner_injection(population):
+        _,bank,_,created,later,_=population
+        calls=[]
+        def numerical(fn,payload,**_):
+            calls.append(fn.__name__)
+            return ChildResult(ok=True,value=fn(payload),elapsed_s=0)
+        consume(population,numerical,created)
+        for _ in range(4):
+>           consume(population,numerical,later)
+
+tests/test_predictive_research_bridge.py:259:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests/test_predictive_research_bridge.py:99: in consume
+    return B.cycle(source,bank,candles,CFG,now_ms=now,run=fake,**kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/research/predictive_bridge.py:359: in cycle
+    append(db,'bridge_snapshots',ex['experiment_id'],snapshot)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+db = <sqlite3.Connection object at 0x7aa20909c4f0>, table = 'bridge_snapshots'
+key = '28771519a381b888177c293907cb93fed8c0653eb9a629007e27616bc8dcf777'
+body = {'experiment_id': '28771519a381b888177c293907cb93fed8c0653eb9a629007e27616bc8dcf777', 'candle_sha256': 'd1eaa6e704d863277790a6d014f45590d61cfb7bd6b13db8f6c887491cef17cf'}
+
+    def append(db, table, key, body):
+        text = P.canonical(body)
+        old = db.execute(f'SELECT payload FROM {table} WHERE id=?', (key,)).fetchone()
+        if old:
+            if old[0] != text:
+>               raise ValueError('checkpoint_conflict')
+E               ValueError: checkpoint_conflict
+
+trader/research/predictive_bridge.py:57: ValueError
+=========================== short test summary info ============================
+FAILED tests/test_research_evidence_source_binding.py::test_registry_readers_are_offline_research_modules_only
+FAILED tests/test_predictive_research_bridge.py::test_snapshot_scores_exclude_generation_and_search_cannot_read_protected
+FAILED tests/test_predictive_research_bridge.py::test_normal_path_actual_numerical_jobs_no_direct_planner_injection
+3 failed, 264 passed in 76.39s (0:01:16)

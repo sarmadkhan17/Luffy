@@ -1,0 +1,111 @@
+FFFFF                                                                    [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+_ test_lost_response_restart_reconciles_exact_intent_without_second_reduction __
+
+book = (<tests.test_final_audit_partial_intent.Venue object at 0x7de05a276060>, <trader.core.journal.Journal object at 0x7de05cd53350>, <trader.engine.executor.Executor object at 0x7de05ae27980>)
+
+    def test_lost_response_restart_reconciles_exact_intent_without_second_reduction(book):
+        venue,j,e=book
+        assert e.close_partial(row(j),5,110,'tp1') is False
+        assert venue.quantity==5 and row(j)['amount']==10
+        reopened=Executor(venue,Journal(j.db_path),load_config(),MarketType.FUTURES);reopened.fill_retry_s=0
+>       assert reopened.close_partial(row(j),5,110,'tp1') is True
+E       AssertionError: assert False is True
+E        +  where False = close_partial({'id': 'trade', 'decision_id': '', 'symbol': 'BTC/USDT', 'side': 'long', ...}, 5, 110, 'tp1')
+E        +    where close_partial = <trader.engine.executor.Executor object at 0x7de05a276150>.close_partial
+E        +    and   {'id': 'trade', 'decision_id': '', 'symbol': 'BTC/USDT', 'side': 'long', ...} = row(<trader.core.journal.Journal object at 0x7de05cd53350>)
+
+tests/test_final_audit_partial_intent.py:55: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    trader.engine.executor:executor.py:507 partial close failed BTC/USDT: executed then response lost
+ERROR    trader.engine.executor:executor.py:507 partial close failed BTC/USDT: executed then response lost
+______ test_position_reduction_alone_does_not_resolve_unknown_exact_order ______
+
+book = (<tests.test_final_audit_partial_intent.Venue object at 0x7de05a1ee9f0>, <trader.core.journal.Journal object at 0x7de05a1ee690>, <trader.engine.executor.Executor object at 0x7de05d0040b0>)
+
+    def test_position_reduction_alone_does_not_resolve_unknown_exact_order(book):
+        venue,j,e=book
+        assert e.close_partial(row(j),5) is False
+        venue.unavailable=True
+        for _ in range(2): assert e.close_partial(row(j),5) is False
+>       assert len(venue.calls)==1 and row(j)['tp1_done']==0
+E       AssertionError: assert (3 == 1)
+E        +  where 3 = len([(5.0, {'reduceOnly': True}), (5.0, {'reduceOnly': True}), (5.0, {'reduceOnly': True})])
+E        +    where [(5.0, {'reduceOnly': True}), (5.0, {'reduceOnly': True}), (5.0, {'reduceOnly': True})] = <tests.test_final_audit_partial_intent.Venue object at 0x7de05a1ee9f0>.calls
+
+tests/test_final_audit_partial_intent.py:72: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    trader.engine.executor:executor.py:507 partial close failed BTC/USDT: executed then response lost
+ERROR    trader.engine.executor:executor.py:507 partial close failed BTC/USDT: executed then response lost
+ERROR    trader.engine.executor:executor.py:507 partial close failed BTC/USDT: executed then response lost
+__ test_live_partial_order_is_not_repeated_and_terminal_partial_consumes_once __
+
+book = (<tests.test_final_audit_partial_intent.Venue object at 0x7de05a1efd10>, <trader.core.journal.Journal object at 0x7de05a1ef920>, <trader.engine.executor.Executor object at 0x7de05a094a10>)
+
+    def test_live_partial_order_is_not_repeated_and_terminal_partial_consumes_once(book):
+        venue,j,e=book;venue.filled=2;venue.status='open'
+        assert e.close_partial(row(j),5) is False
+        assert e.close_partial(row(j),5) is False
+>       assert row(j)['amount']==10 and len(venue.calls)==1
+E       AssertionError: assert (10.0 == 10 and 2 == 1)
+E        +  where 2 = len([(5.0, {'reduceOnly': True}), (5.0, {'reduceOnly': True})])
+E        +    where [(5.0, {'reduceOnly': True}), (5.0, {'reduceOnly': True})] = <tests.test_final_audit_partial_intent.Venue object at 0x7de05a1efd10>.calls
+
+tests/test_final_audit_partial_intent.py:82: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    trader.engine.executor:executor.py:507 partial close failed BTC/USDT: executed then response lost
+ERROR    trader.engine.executor:executor.py:507 partial close failed BTC/USDT: executed then response lost
+_______ test_success_and_acknowledgement_write_failure_are_restart_safe ________
+
+book = (<tests.test_final_audit_partial_intent.Venue object at 0x7de05a095be0>, <trader.core.journal.Journal object at 0x7de05a0944d0>, <trader.engine.executor.Executor object at 0x7de05a0843e0>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7de05a0857c0>
+
+    def test_success_and_acknowledgement_write_failure_are_restart_safe(book,monkeypatch):
+>       from trader.engine import partial_intent as P
+E       ImportError: cannot import name 'partial_intent' from 'trader.engine' (/mnt/luffy-data/luffy/production/trader/engine/__init__.py)
+
+tests/test_final_audit_partial_intent.py:91: ImportError
+__________ test_concurrent_executors_share_one_durable_partial_intent __________
+
+book = (<tests.test_final_audit_partial_intent.Venue object at 0x7de05a085490>, <trader.core.journal.Journal object at 0x7de05a086c00>, <trader.engine.executor.Executor object at 0x7de05b9380e0>)
+
+    def test_concurrent_executors_share_one_durable_partial_intent(book):
+        venue,j,e=book
+        started=threading.Event();release=threading.Event()
+        original=venue.create_order
+        def slow(*a,**kw):
+            started.set();assert release.wait(10)
+            return original(*a,**kw)
+        venue.create_order=slow
+        worker=threading.Thread(target=lambda:e.close_partial(row(j),5))
+        worker.start();assert started.wait(10)
+        try:
+            other=Executor(venue,Journal(j.db_path),load_config(),MarketType.FUTURES);other.fill_retry_s=0
+            assert other.close_partial(row(j),5) is False
+        finally:
+            release.set();worker.join(10)
+>       assert not worker.is_alive() and len(venue.calls)==1
+E       assert (not False and 0 == 1)
+E        +  where False = is_alive()
+E        +    where is_alive = <Thread(Thread-1 (<lambda>), stopped 138402536556224)>.is_alive
+E        +  and   0 = len([])
+E        +    where [] = <tests.test_final_audit_partial_intent.Venue object at 0x7de05a085490>.calls
+
+tests/test_final_audit_partial_intent.py:118: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    trader.engine.executor:executor.py:507 partial close failed BTC/USDT: assert False
+ +  where False = wait(10)
+ +    where wait = <threading.Event at 0x7de05ca19b20: unset>.wait
+ERROR    trader.engine.executor:executor.py:507 partial close failed BTC/USDT: assert False
+ +  where False = wait(10)
+ +    where wait = <threading.Event at 0x7de05ca19b20: unset>.wait
+=========================== short test summary info ============================
+FAILED tests/test_final_audit_partial_intent.py::test_lost_response_restart_reconciles_exact_intent_without_second_reduction
+FAILED tests/test_final_audit_partial_intent.py::test_position_reduction_alone_does_not_resolve_unknown_exact_order
+FAILED tests/test_final_audit_partial_intent.py::test_live_partial_order_is_not_repeated_and_terminal_partial_consumes_once
+FAILED tests/test_final_audit_partial_intent.py::test_success_and_acknowledgement_write_failure_are_restart_safe
+FAILED tests/test_final_audit_partial_intent.py::test_concurrent_executors_share_one_durable_partial_intent
+5 failed in 11.38s

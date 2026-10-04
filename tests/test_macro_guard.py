@@ -46,6 +46,7 @@ def _isolate_calendar_cache(tmp_path, monkeypatch):
     calendar leaks into the next one's and into the real data/ directory."""
     from trader.agents import macro_guard as mg
     monkeypatch.setattr(mg, "_CACHE_PATH", tmp_path / "macro_calendar.json")
+    monkeypatch.delenv("FINNHUB_API_KEY", raising=False)  # explicit synthetic key configuration
 
 
 class TestMacroGuardDisabled:
@@ -59,7 +60,9 @@ class TestMacroGuardDisabled:
 class TestMacroGuardNoToken:
     def test_no_token_clears(self):
         mg = MacroGuard(_cfg(token=""))
-        result = mg.check()
+        with patch("requests.get", side_effect=OSError("offline fixture")) as source:
+            result = mg.check()
+        assert source.call_count == 1  # the free source is attempted without a token
         assert result["active"] is False
 
 

@@ -1,0 +1,3657 @@
+........................................................................ [ 26%]
+........................................................................ [ 53%]
+........................................................................ [ 80%]
+..............EEEEEEEEEEEEEEEEEE....EE.FFEEEEEEEEEE                      [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+==================================== ERRORS ====================================
+_ ERROR at setup of test_normal_path_actual_numerical_jobs_no_direct_planner_injection _
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b91791891c0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1181: in execute
+    fixturedef = request._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1181: in execute
+    fixturedef = request._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_normal_path_actual_numeri', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_normal_path_actual_numeri in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_____ ERROR at setup of test_crash_after_spent_look_recovers_global_budget _____
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b917487c9a0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1181: in execute
+    fixturedef = request._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1181: in execute
+    fixturedef = request._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_crash_after_spent_look_re', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_crash_after_spent_look_re in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_ ERROR at setup of test_source_alias_budget_and_immutable_checkpoint_refused __
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b917487c720>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1181: in execute
+    fixturedef = request._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1181: in execute
+    fixturedef = request._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_source_alias_budget_and_i', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_source_alias_budget_and_i in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_______ ERROR at setup of test_global_existing_error_budget_is_inherited _______
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b9176512200>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1181: in execute
+    fixturedef = request._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1181: in execute
+    fixturedef = request._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_global_existing_error_bud', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_global_existing_error_bud in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+___ ERROR at setup of test_malformed_stored_bank_refused_by_normal_consumer ____
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b9176511bc0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1181: in execute
+    fixturedef = request._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1181: in execute
+    fixturedef = request._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_malformed_stored_bank_ref', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_malformed_stored_bank_ref in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_ ERROR at setup of test_rehashed_experiment_cannot_remove_registered_null_or_leakage_guard _
+
+paths = (PosixPath('/tmp/pytest-of-sarmad/pytest-560/test_rehashed_experiment_canno0/attention.db'), PosixPath('/tmp/pytest-of-sarmad/pytest-560/test_rehashed_experiment_canno0/investigation.db'), 1791072060000)
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-560/test_rehashed_experiment_canno0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b9173b07bc0>
+
+    @pytest.fixture
+    def population(paths, tmp_path, monkeypatch):
+        from trader.research.ledger import Ledger
+>       Ledger(Journal(tmp_path/'luffy.db')).ensure()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_predictive_research_bridge.py:38:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.core.journal.Journal object at 0x7b9173b07bf0>
+db_path = PosixPath('/tmp/pytest-of-sarmad/pytest-560/test_rehashed_experiment_canno0/luffy.db')
+
+    def __init__(self, db_path: str | Path):
+        self.db_path = Path(db_path)
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._local = threading.local()
+        self._write_lock = threading.Lock()
+        with self._conn() as c:
+>           c.executescript(SCHEMA)
+E           sqlite3.OperationalError: database or disk is full
+
+trader/core/journal.py:560: OperationalError
+____________ ERROR at setup of test_a_disabled_search_does_nothing _____________
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b91791891c0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_a_disabled_search_does_no', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_disabled_search_does_no in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_______ ERROR at setup of test_a_slow_trade_cycle_stands_the_search_down _______
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b9176510360>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_a_slow_trade_cycle_stands', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_slow_trade_cycle_stands in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_________ ERROR at setup of test_a_normal_cycle_does_not_stand_it_down _________
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b91765100e0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_a_normal_cycle_does_not_s', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_normal_cycle_does_not_s in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+__ ERROR at setup of test_the_first_step_measures_and_records_the_thresholds ___
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b91765111c0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_the_first_step_measures_a', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_the_first_step_measures_a in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+____ ERROR at setup of test_results_are_written_with_a_verdict_and_a_reason ____
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b9176510cc0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_results_are_written_with_', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_results_are_written_with_ in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_ ERROR at setup of test_a_successful_evaluate_step_separates_skipped_from_deferred _
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b9176510a40>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_a_successful_evaluate_ste', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_successful_evaluate_ste in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+___ ERROR at setup of test_a_stood_down_step_exposes_only_the_reason_string ____
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b9176510220>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_a_stood_down_step_exposes', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_stood_down_step_exposes in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+______ ERROR at setup of test_a_control_batch_records_the_window_s_power _______
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b9176510ea0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_a_control_batch_records_t', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_control_batch_records_t in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_ ERROR at setup of test_a_child_timeout_marks_the_batch_failed_and_raises_nothing _
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b9176510c20>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_a_child_timeout_marks_the', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_child_timeout_marks_the in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_________ ERROR at setup of test_a_child_crash_is_recorded_not_raised __________
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b917487c720>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_a_child_crash_is_recorded', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_child_crash_is_recorded in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_ ERROR at setup of test_the_batch_carries_the_horizon_s_symbols_to_the_child __
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b9176511d00>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_the_batch_carries_the_hor', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_the_batch_carries_the_hor in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+____ ERROR at setup of test_a_control_batch_runs_on_the_incumbent_universe _____
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b91765100e0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_a_control_batch_runs_on_t', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_control_batch_runs_on_t in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_ ERROR at setup of test_discovery_null_draws_is_clamped_to_the_null_baseline_floor _
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b91791891c0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_discovery_null_draws_is_c', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_discovery_null_draws_is_c in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_ ERROR at setup of test_symbols_returns_nothing_when_coverage_is_unavailable __
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b917988f240>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_symbols_returns_nothing_w', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_symbols_returns_nothing_w in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_ ERROR at setup of test_a_batch_is_refused_when_the_bundle_loaded_too_few_symbols _
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b917988fba0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_a_batch_is_refused_when_t', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_batch_is_refused_when_t in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_ ERROR at setup of test_a_control_answers_to_the_control_floor_not_the_discovery_floor _
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b917988fec0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_a_control_answers_to_the_', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_control_answers_to_the_ in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+___ ERROR at setup of test_the_label_gate_uses_the_configured_control_max_p ____
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b917988cfe0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_the_label_gate_uses_the_c', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_the_label_gate_uses_the_c in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_ ERROR at setup of test_discovery_null_draws_at_or_above_the_floor_passes_through _
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b917988c4a0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_discovery_null_draws_at_o', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_discovery_null_draws_at_o in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+______ ERROR at setup of test_survivors_are_queued_and_twins_cost_nothing ______
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b917988c860>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_survivors_are_queued_and_', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_survivors_are_queued_and_ in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_ ERROR at setup of test_a_candidate_that_clears_both_gates_is_referee_passed __
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b917988c720>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_a_candidate_that_clears_b', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_candidate_that_clears_b in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+__ ERROR at setup of test_gate1_fail_and_gate3_fail_are_recorded_with_reasons __
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b9174fa5f80>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_gate1_fail_and_gate3_fail', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_gate1_fail_and_gate3_fail in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+________ ERROR at setup of test_a_crashing_look_retries_then_is_charged ________
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b9176507240>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_a_crashing_look_retries_t', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_crashing_look_retries_t in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+_ ERROR at setup of test_a_level_the_draws_cannot_resolve_defers_without_spending _
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b9176510ea0>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_a_level_the_draws_cannot_', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_a_level_the_draws_cannot_ in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+____________ ERROR at setup of test_the_referee_can_be_switched_off ____________
+
+cls = <class '_pytest.runner.CallInfo'>
+func = <function call_and_report.<locals>.<lambda> at 0x7b9176511d00>
+when = 'setup'
+reraise = (<class '_pytest.outcomes.Exit'>, <class 'KeyboardInterrupt'>)
+
+    @classmethod
+    def from_call(
+        cls,
+        func: Callable[[], TResult],
+        when: Literal["collect", "setup", "call", "teardown"],
+        reraise: type[BaseException] | tuple[type[BaseException], ...] | None = None,
+    ) -> CallInfo[TResult]:
+        """Call func, wrapping the result in a CallInfo.
+
+        :param func:
+            The function to call. Called without arguments.
+        :type func: Callable[[], _pytest.runner.TResult]
+        :param when:
+            The phase in which the function is called.
+        :param reraise:
+            Exception or exceptions that shall propagate if raised by the
+            function, instead of being wrapped in the CallInfo.
+        """
+        excinfo = None
+        instant = timing.Instant()
+        try:
+>           result: TResult | None = func()
+                                     ^^^^^^
+
+venv/lib/python3.12/site-packages/_pytest/runner.py:361:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+venv/lib/python3.12/site-packages/_pytest/runner.py:250: in <lambda>
+    lambda: runtest_hook(item=item, **kwds),
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/logging.py:858: in pytest_runtest_setup
+    yield
+venv/lib/python3.12/site-packages/_pytest/capture.py:895: in pytest_runtest_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/runner.py:170: in pytest_runtest_setup
+    item.session._setupstate.setup(item)
+venv/lib/python3.12/site-packages/_pytest/runner.py:536: in setup
+    col.setup()
+venv/lib/python3.12/site-packages/_pytest/python.py:1710: in setup
+    self._request._fillfixtures()
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:806: in _fillfixtures
+    item.funcargs[argname] = self.getfixturevalue(argname)
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:630: in getfixturevalue
+    fixturedef = self._get_active_fixturedef(argname)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:726: in _get_active_fixturedef
+    fixturedef.execute(request=subrequest)
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1232: in execute
+    result: FixtureValue = ihook.pytest_fixture_setup(
+venv/lib/python3.12/site-packages/pluggy/_hooks.py:512: in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_manager.py:120: in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:53: in run_old_style_hookwrapper
+    return result.get_result()
+           ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/pluggy/_callers.py:38: in run_old_style_hookwrapper
+    res = yield
+          ^^^^^
+venv/lib/python3.12/site-packages/_pytest/setuponly.py:36: in pytest_fixture_setup
+    return (yield)
+            ^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:1328: in pytest_fixture_setup
+    result = call_fixture_func(fixturefunc, request, kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/fixtures.py:998: in call_fixture_func
+    fixture_result = next(generator)
+                     ^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:300: in tmp_path
+    path = _mk_tmp(request, tmp_path_factory)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:287: in _mk_tmp
+    return factory.mktemp(name, numbered=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.12/site-packages/_pytest/tmpdir.py:141: in mktemp
+    p = make_numbered_dir(root=self.getbasetemp(), prefix=basename, mode=0o700)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+root = PosixPath('/tmp/pytest-of-sarmad/pytest-560')
+prefix = 'test_the_referee_can_be_switch', mode = 448
+
+    def make_numbered_dir(root: Path, prefix: str, mode: int = 0o700) -> Path:
+        """Create a directory with an increased number as suffix for the given prefix."""
+        for i in range(10):
+            # try up to 10 times to create the directory
+            max_existing = max(map(parse_num, find_suffixes(root, prefix)), default=-1)
+            new_number = max_existing + 1
+            new_path = root.joinpath(f"{prefix}{new_number}")
+            try:
+                new_path.mkdir(mode=mode)
+            except Exception:
+                pass
+            else:
+                _force_symlink(root, prefix + "current", new_path)
+                return new_path
+        else:
+>           raise OSError(
+                "could not create numbered dir with prefix "
+                f"{prefix} in {root} after 10 tries"
+            )
+E           OSError: could not create numbered dir with prefix test_the_referee_can_be_switch in /tmp/pytest-of-sarmad/pytest-560 after 10 tries
+
+venv/lib/python3.12/site-packages/_pytest/pathlib.py:239: OSError
+=================================== FAILURES ===================================
+_____________ test_an_empty_control_is_left_uncontrolled_for_retry _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-560/test_an_empty_control_is_left_0')
+
+    def test_an_empty_control_is_left_uncontrolled_for_retry(tmp_path):
+>       r, _ = _runner(tmp_path, _control_result("empty"))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_research_runner.py:307:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests/test_research_runner.py:34: in _runner
+    j = Journal(tmp_path / "j.db")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.core.journal.Journal object at 0x7b9175a6d550>
+db_path = PosixPath('/tmp/pytest-of-sarmad/pytest-560/test_an_empty_control_is_left_0/j.db')
+
+    def __init__(self, db_path: str | Path):
+        self.db_path = Path(db_path)
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._local = threading.local()
+        self._write_lock = threading.Lock()
+        with self._conn() as c:
+>           c.executescript(SCHEMA)
+E           sqlite3.OperationalError: database or disk is full
+
+trader/core/journal.py:560: OperationalError
+_________ test_an_untestable_control_is_recorded_under_its_own_status __________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-560/test_an_untestable_control_is_0')
+
+    def test_an_untestable_control_is_recorded_under_its_own_status(tmp_path):
+>       r, _ = _runner(tmp_path, _control_result("untestable"))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_research_runner.py:314:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests/test_research_runner.py:34: in _runner
+    j = Journal(tmp_path / "j.db")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.core.journal.Journal object at 0x7b9175a6d5b0>
+db_path = PosixPath('/tmp/pytest-of-sarmad/pytest-560/test_an_untestable_control_is_0/j.db')
+
+    def __init__(self, db_path: str | Path):
+        self.db_path = Path(db_path)
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._local = threading.local()
+        self._write_lock = threading.Lock()
+        with self._conn() as c:
+>           c.executescript(SCHEMA)
+E           sqlite3.OperationalError: database or disk is full
+
+trader/core/journal.py:560: OperationalError
+=========================== short test summary info ============================
+FAILED tests/test_research_runner.py::test_an_empty_control_is_left_uncontrolled_for_retry
+FAILED tests/test_research_runner.py::test_an_untestable_control_is_recorded_under_its_own_status
+ERROR tests/test_predictive_research_bridge.py::test_normal_path_actual_numerical_jobs_no_direct_planner_injection
+ERROR tests/test_predictive_research_bridge.py::test_crash_after_spent_look_recovers_global_budget
+ERROR tests/test_predictive_research_bridge.py::test_source_alias_budget_and_immutable_checkpoint_refused
+ERROR tests/test_predictive_research_bridge.py::test_global_existing_error_budget_is_inherited
+ERROR tests/test_predictive_research_bridge.py::test_malformed_stored_bank_refused_by_normal_consumer
+ERROR tests/test_predictive_research_bridge.py::test_rehashed_experiment_cannot_remove_registered_null_or_leakage_guard
+ERROR tests/test_research_runner.py::test_a_disabled_search_does_nothing - OS...
+ERROR tests/test_research_runner.py::test_a_slow_trade_cycle_stands_the_search_down
+ERROR tests/test_research_runner.py::test_a_normal_cycle_does_not_stand_it_down
+ERROR tests/test_research_runner.py::test_the_first_step_measures_and_records_the_thresholds
+ERROR tests/test_research_runner.py::test_results_are_written_with_a_verdict_and_a_reason
+ERROR tests/test_research_runner.py::test_a_successful_evaluate_step_separates_skipped_from_deferred
+ERROR tests/test_research_runner.py::test_a_stood_down_step_exposes_only_the_reason_string
+ERROR tests/test_research_runner.py::test_a_control_batch_records_the_window_s_power
+ERROR tests/test_research_runner.py::test_a_child_timeout_marks_the_batch_failed_and_raises_nothing
+ERROR tests/test_research_runner.py::test_a_child_crash_is_recorded_not_raised
+ERROR tests/test_research_runner.py::test_the_batch_carries_the_horizon_s_symbols_to_the_child
+ERROR tests/test_research_runner.py::test_a_control_batch_runs_on_the_incumbent_universe
+ERROR tests/test_research_runner.py::test_discovery_null_draws_is_clamped_to_the_null_baseline_floor
+ERROR tests/test_research_runner.py::test_symbols_returns_nothing_when_coverage_is_unavailable
+ERROR tests/test_research_runner.py::test_a_batch_is_refused_when_the_bundle_loaded_too_few_symbols
+ERROR tests/test_research_runner.py::test_a_control_answers_to_the_control_floor_not_the_discovery_floor
+ERROR tests/test_research_runner.py::test_the_label_gate_uses_the_configured_control_max_p
+ERROR tests/test_research_runner.py::test_discovery_null_draws_at_or_above_the_floor_passes_through
+ERROR tests/test_research_runner.py::test_survivors_are_queued_and_twins_cost_nothing
+ERROR tests/test_research_runner.py::test_a_candidate_that_clears_both_gates_is_referee_passed
+ERROR tests/test_research_runner.py::test_gate1_fail_and_gate3_fail_are_recorded_with_reasons
+ERROR tests/test_research_runner.py::test_a_crashing_look_retries_then_is_charged
+ERROR tests/test_research_runner.py::test_a_level_the_draws_cannot_resolve_defers_without_spending
+ERROR tests/test_research_runner.py::test_the_referee_can_be_switched_off - O...
+2 failed, 235 passed, 30 errors in 290.91s (0:04:50)

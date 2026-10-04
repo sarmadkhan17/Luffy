@@ -1,0 +1,52 @@
+.....................................................................F.. [ 67%]
+...................................                                      [100%]
+OFFLINE GUARD: 11 network attempts denied; campaign invalid. Callers: {(('test_owner_interface_boundary.py', 'test_negative_control_review_counterexamples_are_caught'), ('test_owner_interface_boundary.py', '_run_check'), ('test_owner_interface.py', 'test_w8_failure_after_delivery_is_outcome_unknown'), ('test_owner_interface_boundary.py', 'call'), ('stage1_pit_offline_plugin.py', '_deny')), (('test_owner_interface_boundary.py', 'test_negative_control_review_counterexamples_are_caught'), ('test_owner_interface_boundary.py', '_run_check'), ('test_owner_interface.py', 'test_w3_channel_is_authenticated_not_asserted'), ('test_owner_interface.py', '_raw'), ('stage1_pit_offline_plugin.py', '_deny')), (('test_owner_interface_boundary.py', 'test_negative_control_review_counterexamples_are_caught'), ('test_owner_interface_boundary.py', '_run_check'), ('test_owner_interface.py', 'test_w7_ipc_class_slots_reserve_containment'), ('stage1_pit_offline_plugin.py', '_deny')), (('test_owner_interface.py', '<lambda>'), ('stage1_pit_offline_plugin.py', '_deny'))}
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+______________ test_only_owner_service_executes_owner_transitions ______________
+
+    def test_only_owner_service_executes_owner_transitions():
+        """Outside trader/engine and the kernel's own risk/panic/macro paths, the
+        only module that applies a control transition is trader/owner/service.py."""
+        hits = []
+        for path in (ROOT / "trader").rglob("*.py"):
+            rel = str(path.relative_to(ROOT))
+            if rel.startswith("trader/engine/") or rel == "trader/kernel.py":
+                continue
+            for node in ast.walk(ast.parse(path.read_text())):
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and \
+                        node.func.attr in ("apply", "set", "set_if_current") and \
+                        any("ControlState." in ast.unparse(a) for a in node.args):
+                    hits.append(rel)
+>       assert sorted(set(hits)) == ["trader/owner/service.py", "trader/persistence/backup.py"], hits
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: ['trader/owner/service.py', 'trader/owner/service.py', 'trader/owner/service.py', 'trader/owner/service.py', 'trader/persistence/backup.py', 'trader/persistence/backup.py']
+E       assert ['trader/owne...ce/backup.py'] == ['trader/owner/service.py']
+E
+E         Left contains one more item: 'trader/persistence/backup.py'
+E         Use -v to get more diff
+
+/home/sarmad/trader/tests/test_owner_interface_boundary.py:192: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_owner_interface_boundary.py::test_only_owner_service_executes_owner_transitions
+1 failed, 106 passed in 21.83s
+PYTEST_RETURN 1
+THREAD <_MainThread(MainThread, started 131346704289920)>
+  File "<stdin>", line 7, in <module>
+THREAD <Thread(Thread-1 (swallow), started 131346286855872)>
+  File "/usr/lib/python3.12/threading.py", line 1030, in _bootstrap
+    self._bootstrap_inner()
+  File "/usr/lib/python3.12/threading.py", line 1073, in _bootstrap_inner
+    self.run()
+  File "/usr/lib/python3.12/threading.py", line 1010, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/sarmad/trader/tests/test_owner_interface.py", line 726, in swallow
+    conn, _ = fake.accept()
+  File "/usr/lib/python3.12/socket.py", line 295, in accept
+    fd, addr = self._accept()
+Exception ignored in: <module 'threading' from '/usr/lib/python3.12/threading.py'>
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/threading.py", line 1622, in _shutdown
+    lock.acquire()
+KeyboardInterrupt:

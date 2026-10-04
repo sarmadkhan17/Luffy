@@ -365,6 +365,9 @@ def test_kernel_boot_uses_supervisor_without_real_services(system, monkeypatch):
     k.journal = journal
     k.state_machine = state
     k.population = []
+    from trader.data.feed import DataFeed
+    public = SimpleNamespace(load_markets=Mock(return_value={}))
+    k.feed = DataFeed(exchange=public, db_path=journal.db_path.with_name("candles.db"))
     k._filter_universe_to_venue = Mock()
     k.supervisor = supervisor
     k.notifier = SimpleNamespace(send=Mock())
@@ -375,6 +378,7 @@ def test_kernel_boot_uses_supervisor_without_real_services(system, monkeypatch):
     monkeypatch.setattr("trader.kernel.threading.Thread",
                         lambda *a, **kw: SimpleNamespace(start=lambda: None))
     k.boot()
+    public.load_markets.assert_called_once_with()
     assert state.refresh() == ControlState.ACTIVE
     assert _transitions(journal)[-1] == ("RECOVERY", "ACTIVE")
     assert json.loads(journal.kv_get(KEY))["safe_to_activate"] is True

@@ -508,9 +508,16 @@ def test_adapter_has_no_network_store_collector_or_kernel_imports():
                 or m.startswith(FORBIDDEN_TRADER)]
 
 
-def test_journal_does_not_import_observability():
-    assert not {m for m in _imports(ROOT / "trader/core/journal.py")
-                if "observability" in m or "registry_selector" in m}
+def test_journal_imports_only_required_storage_safety_not_attention():
+    path=ROOT / "trader/core/journal.py"
+    imports={m for m in _imports(path) if "observability" in m or "registry_selector" in m}
+    # MI-7 already requires fail-closed storage failure reporting at the
+    # audited starting HEAD. Journal still cannot consume Attention/selection.
+    assert imports=={'..observability.safety'}
+    for node in ast.walk(ast.parse(path.read_text())):
+        if isinstance(node,ast.ImportFrom) and node.module=='observability.safety':
+            assert node.level==2
+            assert {n.name for n in node.names}=={'journal_failure','is_storage_error'}
 
 
 def test_no_kernel_wiring():

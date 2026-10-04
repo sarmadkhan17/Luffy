@@ -1,0 +1,5 @@
+.....                                                                    [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 16 denied attempts; campaign invalid: ['derivs.db']
+
+5 passed in 229.51s (0:03:49)

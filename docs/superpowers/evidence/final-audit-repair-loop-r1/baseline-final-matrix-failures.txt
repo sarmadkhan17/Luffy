@@ -1,0 +1,376 @@
+FFFFFFFFFFFFF                                                            [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+_ test_world_component_is_the_existing_volume_component_and_changes_no_ranking _
+
+paths = (PosixPath('/tmp/pytest-of-sarmad/pytest-540/test_world_component_is_the_ex0/attention.db'), PosixPath('/tmp/pytest-of-sarmad/pytest-540/test_world_component_is_the_ex0/investigation.db'), 1791072060000)
+
+    def test_world_component_is_the_existing_volume_component_and_changes_no_ranking(paths):  # noqa: F811
+        src, _dest, now = paths
+        publish(src, now, spikes=(0, 1, 2), cfg=WORLD)
+        world = scan_of(src)
+        legacy_src = src.with_name("legacy.db")
+        publish(legacy_src, now, spikes=(0, 1, 2), cfg=LEGACY)
+        legacy = scan_of(legacy_src)
+        assert "world_model" not in legacy
+        for r in world["rows"]:
+            if r.get("eligible"):
+                assert r["world_model"]["status"] == "ok"
+                assert r["components"]["world_volume_anomaly"] == r["components"]["volume_anomaly"]
+        # Rank, selection, reason, salience and dominant family are unchanged.
+        assert strip_world(world["rows"]) == legacy["rows"]
+>       assert world["market"] == legacy["market"] and world["observations"] == legacy["observations"]
+E       AssertionError: assert ({'breadth_up'...25145179, ...} == {'breadth_up'...25145179, ...}
+E
+E         Omitting 9 identical items, use -vv to show
+E         Use -v to get more diff and [{'as_of_ms':...00, ...}, ...] == [{'as_of_ms':...00, ...}, ...]
+E
+E         At index 0 diff: {'as_of_ms': 1791072060000, 'available_ms': 1791072060000, 'detail': {'anchor_open_ms': 1791057600000, 'first_open_ms': 1790697600000, 'need': 26}, 'event_ms': 1791072000000, 'kind': 'candle_window', 'obs_id': 'obs_a347abd8160bddfa', 'schema_version': 'cognition.v1', 'source': 'offline:attention|instrument=offline:futures:S0USDT|revision=074abe58bceaec6765a5987db40e60109869ff6baaee0b00f7e786b544b6b9b6,offline:attention|instrument=offline:futures:S0USDT|revision=0d0b0d21560ca824ff1addd15d5a480b94133b2cea7dffba76f36bea9f482ae5,offline:attention|instrument...
+E
+E         ...Full output truncated (2 lines hidden), use '-vv' to show)
+
+tests/test_intelligence_spine.py:123: AssertionError
+________ test_attention_world_evaluation_failure_keeps_the_legacy_scan _________
+
+event = {'kind': 'scan', 'schema_version': 'attention.telemetry.v1', 'scan_id': 's1', 'as_of_ms': 1791072060000, ...}
+model = WorldModel(as_of_ms=1791072060000, nodes=(HierarchyNode(scope=Scope(level=<ScopeLevel.ASSET_CLASS: 'ASSET_CLASS'>, ide...ionships=None, claims=None, model_id='world.model.v1:fa921b8d1fc71063da92d060bc01cf28c742f6f7f643d8a3505c80dcc03354de')
+learning_journal = None
+
+    def evaluate(event, *, model=None, learning_journal=None):
+        """Attention payload through the existing WorldModel seam, plus receipt.
+
+        `model` is injectable for tests (e.g. a stale cut); by default it is
+        produced from the event. A refused model yields the legacy payload."""
+        from trader.observability.attention import evaluate_snapshot
+        if model is None:
+            model, rec = produce(event)
+        else:
+            rec = receipt(OK, None, event["as_of_ms"], WorldModelRecord.from_model(model),
+                          _counts(model))
+        if model is None:
+            return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=rec)
+        if model.as_of_ms != event["as_of_ms"]:
+            stale = receipt(REFUSED, "world_model_cut_mismatch", event["as_of_ms"])
+            stale.update(model_id=model.model_id, refused_as_of_ms=model.as_of_ms)
+            return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=stale)
+        try:
+>           return dict(evaluate_snapshot(event, model, learning_journal), world_model=rec)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: test_attention_world_evaluation_failure_keeps_the_legacy_scan.<locals>.broken() takes from 1 to 2 positional arguments but 3 were given
+
+trader/observability/world_producer.py:187: TypeError
+
+During handling of the above exception, another exception occurred:
+
+paths = (PosixPath('/tmp/pytest-of-sarmad/pytest-540/test_attention_world_evaluatio0/attention.db'), PosixPath('/tmp/pytest-of-sarmad/pytest-540/test_attention_world_evaluatio0/investigation.db'), 1791072060000)
+
+    def test_attention_world_evaluation_failure_keeps_the_legacy_scan(paths):  # noqa: F811
+        _src, _dest, now = paths
+        event = A.capture(frames(6, now), [f"S{j}/USDT" for j in range(6)], "s1", WORLD, now)
+        real = A.evaluate_snapshot
+
+        def broken(ev, world_model=None):
+            if world_model is not None:
+                raise KeyError("boom")
+            return real(ev)
+        with patch.object(A, "evaluate_snapshot", broken):
+>           payload = W.evaluate(event)
+                      ^^^^^^^^^^^^^^^^^
+
+tests/test_intelligence_spine.py:195:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+event = {'kind': 'scan', 'schema_version': 'attention.telemetry.v1', 'scan_id': 's1', 'as_of_ms': 1791072060000, ...}
+model = WorldModel(as_of_ms=1791072060000, nodes=(HierarchyNode(scope=Scope(level=<ScopeLevel.ASSET_CLASS: 'ASSET_CLASS'>, ide...ionships=None, claims=None, model_id='world.model.v1:fa921b8d1fc71063da92d060bc01cf28c742f6f7f643d8a3505c80dcc03354de')
+learning_journal = None
+
+    def evaluate(event, *, model=None, learning_journal=None):
+        """Attention payload through the existing WorldModel seam, plus receipt.
+
+        `model` is injectable for tests (e.g. a stale cut); by default it is
+        produced from the event. A refused model yields the legacy payload."""
+        from trader.observability.attention import evaluate_snapshot
+        if model is None:
+            model, rec = produce(event)
+        else:
+            rec = receipt(OK, None, event["as_of_ms"], WorldModelRecord.from_model(model),
+                          _counts(model))
+        if model is None:
+            return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=rec)
+        if model.as_of_ms != event["as_of_ms"]:
+            stale = receipt(REFUSED, "world_model_cut_mismatch", event["as_of_ms"])
+            stale.update(model_id=model.model_id, refused_as_of_ms=model.as_of_ms)
+            return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=stale)
+        try:
+            return dict(evaluate_snapshot(event, model, learning_journal), world_model=rec)
+        except Exception as exc:        # never lose the scan to the shadow input
+            failed = receipt(REFUSED, "attention_world_evaluation_failed:" + type(exc).__name__,
+                             event["as_of_ms"])
+            failed.update(model_id=model.model_id)
+>           return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=failed)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: test_attention_world_evaluation_failure_keeps_the_legacy_scan.<locals>.broken() got an unexpected keyword argument 'learning_journal'
+
+trader/observability/world_producer.py:192: TypeError
+___________ test_registry_readers_are_offline_research_modules_only ____________
+
+    def test_registry_readers_are_offline_research_modules_only():
+        root = ROOT / "trader"
+        pat = re.compile(r"research_sources\b")
+        callers = sorted(str(p.relative_to(root)) for p in root.rglob("*.py")
+                         if p.name != "research_sources.py"
+                         and pat.search(p.read_text(errors="ignore")))
+>       assert callers == ["cognition/_research_shadow_child.py",  # existing read-only registry pinning
+                           "cognition/research_evidence.py",
+                           "cognition/research_plan.py",
+                           # offline unreadable-health plan (read-only pin check)
+                           "cognition/research_unreadable_plan.py"]
+E       AssertionError: assert ['cognition/_...able_plan.py'] == ['cognition/_...able_plan.py']
+E
+E         At index 1 diff: 'cognition/external_sources.py' != 'cognition/research_evidence.py'
+E         Left contains one more item: 'cognition/research_unreadable_plan.py'
+E         Use -v to get more diff
+
+tests/test_research_evidence_source_binding.py:425: AssertionError
+___ test_snapshot_scores_exclude_generation_and_search_cannot_read_protected ___
+
+population = (PosixPath('/tmp/pytest-of-sarmad/pytest-540/test_snapshot_scores_exclude_g0/investigation.db'), PosixPath('/tmp/pytes...t_id":"update_6278a8346c85db2b"}', provenance_hash='c1b0d394517a3e856cbddde144829e0e946554a0a258e82d68e2664e9913c8ee'))
+
+    def test_snapshot_scores_exclude_generation_and_search_cannot_read_protected(population):
+        _,_,candles,created,later,s=population
+        h=P.propose(s,'volume_breakout_context.v1',created)
+        ex=E.translate(h,candles,CFG,later)
+        cfg=deepcopy(CFG);cfg['research']['predictive_split']=ex['split']
+        copy=candles.parent/'copy.db'
+        E.freeze_candles(candles,copy,ex)
+        from trader.research.evaluate import load_bundle
+        discovery=load_bundle('4h',DISCOVERY,cfg,requires=('ohlcv',),heldout_symbols=HELDOUT,paths={'candles':str(copy)})
+>       assert discovery.frames
+E       AssertionError: assert {}
+E        +  where {} = Bundle(tf='4h', frames={}, sym_frames={}, universe={}, btc=None, market=None, derivs={}, risk={'risk_per_trade_pct': 0...tes': 240}, cut=1809306720000, heldout_bars={'a': {}, 'b': {}}, equity=2000.0, risk_pct=0.5, max_open=8, first_bars={}).frames
+
+tests/test_predictive_research_bridge.py:237: AssertionError
+______ test_normal_path_actual_numerical_jobs_no_direct_planner_injection ______
+
+population = (PosixPath('/tmp/pytest-of-sarmad/pytest-540/test_normal_path_actual_numeri0/investigation.db'), PosixPath('/tmp/pytes...t_id":"update_a01aef0bf41a4b68"}', provenance_hash='7dbf511b3316ef98fc41f2ccf450504dfcefa940517ec161d45e68e328a6455b'))
+
+    def test_normal_path_actual_numerical_jobs_no_direct_planner_injection(population):
+        _,bank,_,created,later,_=population
+        calls=[]
+        def numerical(fn,payload,**_):
+            calls.append(fn.__name__)
+            return ChildResult(ok=True,value=fn(payload),elapsed_s=0)
+        consume(population,numerical,created)
+        for _ in range(4):
+>           consume(population,numerical,later)
+
+tests/test_predictive_research_bridge.py:259:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+tests/test_predictive_research_bridge.py:99: in consume
+    return B.cycle(source,bank,candles,CFG,now_ms=now,run=fake,**kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/research/predictive_bridge.py:359: in cycle
+    append(db,'bridge_snapshots',ex['experiment_id'],snapshot)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+db = <sqlite3.Connection object at 0x76bd1af356c0>, table = 'bridge_snapshots'
+key = '55f7cf81ca3e0c1d06a5afa7d6aa60f6d085e4adb00f836c5463383cfc892e12'
+body = {'experiment_id': '55f7cf81ca3e0c1d06a5afa7d6aa60f6d085e4adb00f836c5463383cfc892e12', 'candle_sha256': 'd1eaa6e704d863277790a6d014f45590d61cfb7bd6b13db8f6c887491cef17cf'}
+
+    def append(db, table, key, body):
+        text = P.canonical(body)
+        old = db.execute(f'SELECT payload FROM {table} WHERE id=?', (key,)).fetchone()
+        if old:
+            if old[0] != text:
+>               raise ValueError('checkpoint_conflict')
+E               ValueError: checkpoint_conflict
+
+trader/research/predictive_bridge.py:57: ValueError
+_________________ test_held_out_a_is_only_bars_before_the_cut __________________
+
+store = '/tmp/pytest-of-sarmad/pytest-540/test_held_out_a_is_only_bars_b0/candles.db'
+
+    def test_held_out_a_is_only_bars_before_the_cut(store):
+        cut = CUT_BAR * TF_MS
+        b = rf.load_heldout("4h", "a", ["A1/USDT", "A2/USDT", "LATE/USDT"], cut,
+                            CFG, paths={"candles": store})
+>       assert set(b.frames) == {"A1/USDT", "A2/USDT"}      # LATE has no A era
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert set() == {'A1/USDT', 'A2/USDT'}
+E
+E         Extra items in the right set:
+E         'A1/USDT'
+E         'A2/USDT'
+E         Use -v to get more diff
+
+tests/test_research_referee.py:53: AssertionError
+________ test_held_out_b_trades_from_the_cut_with_warmup_from_before_it ________
+
+store = '/tmp/pytest-of-sarmad/pytest-540/test_held_out_b_trades_from_th0/candles.db'
+
+    def test_held_out_b_trades_from_the_cut_with_warmup_from_before_it(store):
+        cut = CUT_BAR * TF_MS
+        b = rf.load_heldout("4h", "b", ["A1/USDT", "D1/USDT", "LATE/USDT"], cut,
+                            CFG, paths={"candles": store})
+        # LATE listed after the cut: no context before it, so no B reading
+>       assert set(b.frames) == {"A1/USDT", "D1/USDT"}
+E       AssertionError: assert set() == {'A1/USDT', 'D1/USDT'}
+E
+E         Extra items in the right set:
+E         'A1/USDT'
+E         'D1/USDT'
+E         Use -v to get more diff
+
+tests/test_research_referee.py:64: AssertionError
+_________________ test_examine_runs_end_to_end_on_a_real_store _________________
+
+store = '/tmp/pytest-of-sarmad/pytest-540/test_examine_runs_end_to_end_o0/candles.db'
+
+    def test_examine_runs_end_to_end_on_a_real_store(store):
+        """No mocks: load both held-out slices, both gates, and the book."""
+        from trader.research.combo import Combination
+        from trader.research.vocab import Part
+        donch = Part("ev:donch20", "event", "ev:donch20",
+                     "close > donchian_hi(20)", "close < donchian_lo(20)")
+        c = Combination((donch,), "4h", "trail")
+        out = rf.examine(c, {
+            "cfg": {**CFG, "research": {"equity": 2000.0}},
+            "paths": {"candles": store}, "cut_ms": CUT_BAR * TF_MS,
+            "discovery_symbols": ["D1/USDT"],
+            "heldout_symbols": ["A1/USDT", "A2/USDT", "LATE/USDT"],
+            "draws": 19, "seed": 3, "book": []})
+        assert out["looked"] is True
+        assert out["cut_ms"] >= CUT_BAR * TF_MS
+        assert "p" in out["gate1"] and out["gate1"]["p"] == 1.0   # 2-3 symbols
+        assert "untestable" in out["gate1"]["reason"]
+>       assert set(out["gate3"]) >= {"passed", "reason", "with", "without"}
+E       AssertionError: assert {'book', 'passed', 'reason'} >= {'passed', 'r...h', 'without'}
+E
+E         Extra items in the right set:
+E         'without'
+E         'with'
+
+tests/test_research_referee.py:181: AssertionError
+__________________ test_known_good_the_planted_edge_is_found ___________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-540/test_known_good_the_planted_ed0')
+
+    def test_known_good_the_planted_edge_is_found(tmp_path):
+        db = _store(tmp_path, "good")
+        c = Combination((BREAK,), "4h", "trail")
+        r = _run(db, [c])[c.hash]
+>       assert r["verdict"] == "scored", r
+E       AssertionError: {'hash': '264262c3b16f22bf', 'tf': '4h', 'geo': 'trail', 'k': 1, ...}
+E       assert 'empty' == 'scored'
+E
+E         - scored
+E         + empty
+
+tests/test_research_calibration.py:80: AssertionError
+_________________ test_known_bad_a_random_walk_yields_no_edge __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-540/test_known_bad_a_random_walk_y0')
+
+    def test_known_bad_a_random_walk_yields_no_edge(tmp_path):
+        """Twenty-four rules on pure noise. consistency_p's measured
+        false-positive rate is 0.1-0.4%, so one survivor is bad luck and three
+        would be a broken gate."""
+        db = _store(tmp_path, "bad")
+        combos = []
+        for n in (10, 20, 30, 40, 50, 60):
+            for op, key in ((">", "hi"), ("<", "lo")):
+                p = Part(f"ev:d{n}{key}", "event", f"ev:d{n}{key}",
+                         f"close {op} donchian_{'hi' if op == '>' else 'lo'}({n})",
+                         f"close {'<' if op == '>' else '>'} "
+                         f"donchian_{'lo' if op == '>' else 'hi'}({n})")
+                combos.append(Combination((p,), "4h", "trail"))
+                combos.append(Combination((p, TREND), "4h", "trail"))
+        res = _run(db, combos, draws=25)
+        scored = [r for r in res.values() if r["verdict"] == "scored"]
+>       assert scored, "nothing was scoreable at all — that is a harness fault"
+E       AssertionError: nothing was scoreable at all — that is a harness fault
+E       assert []
+
+tests/test_research_calibration.py:111: AssertionError
+__________ test_known_bad_the_median_noise_rule_sits_at_the_coin_flip __________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-540/test_known_bad_the_median_nois0')
+
+    def test_known_bad_the_median_noise_rule_sits_at_the_coin_flip(tmp_path):
+        db = _store(tmp_path, "bad")
+        combos = [Combination((Part(f"ev:d{n}", "event", f"ev:d{n}",
+                                    f"close > donchian_hi({n})",
+                                    f"close < donchian_lo({n})"),),
+                              "4h", "trail")
+                  for n in (20, 30, 40, 50)]
+        res = _run(db, combos, draws=25)
+        import statistics as st
+        pcts = [v["null_pctile"] for r in res.values()
+                for v in r["symbols"].values() if v.get("null_pctile") is not None]
+>       assert pcts, "no percentiles at all"
+E       AssertionError: no percentiles at all
+E       assert []
+
+tests/test_research_calibration.py:130: AssertionError
+________ test_factory_writes_no_trading_state_and_has_no_trading_caller ________
+
+    def test_factory_writes_no_trading_state_and_has_no_trading_caller():
+        src = pathlib.Path("trader/strategy/factory_handoff.py").read_text()
+        code = src.split('"""', 2)[2]
+        writes = set(re.findall(r"\b(?:INSERT\s+(?:OR\s+\w+\s+)?INTO|UPDATE|"
+                                r"DELETE\s+FROM)\s+(\w+)", code, re.I))
+        assert writes - {"ON","OF","strategies"} <= set(F._TABLES), writes
+        assert set(re.findall(r'_insert\(c, "(\w+)"', code)) <= set(F._TABLES)
+        for bad in ("upsert_spec", "state_kv", "control_events", "set_control",
+                    "create_order", "executor", "orchestrator", "notifier"):
+            assert bad not in code, bad
+        # the executor reads only the paper/live fence predicate
+        for f in pathlib.Path("trader").rglob("*.py"):
+            if f not in (pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
+>               assert "factory_handoff" not in f.read_text(), f
+E               AssertionError: PosixPath('trader/engine/entry_authority.py')
+E               assert 'factory_handoff' not in '"""Final de...s, binding\n'
+E
+E                 'factory_handoff' is contained here:
+E                   gy import factory_handoff
+E                       from .recovery import KEY
+E                       from ..observability.safety import entry_refusal
+E                       refusal = entry_refusal(executor.journal)
+E                       if refusal:...
+E
+E                 ...Full output truncated (65 lines hidden), use '-vv' to show
+
+tests/test_strategy_factory_handoff.py:950: AssertionError
+____________ test_existing_attention_correlation_is_basket_context _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-540/test_existing_attention_correl0')
+
+    def test_existing_attention_correlation_is_basket_context(tmp_path):
+        from tests._corr_synth import publish, NOW, SYM
+        from trader.observability.investigation import source_snapshot
+        path = publish(tmp_path)
+        scan,bars,_ = source_snapshot(path)
+        source = Source.freeze('attention-test',dict(schema='attention-relationship-input.v1',scan=scan,bars=bars,valid_until_ms=NOW+1000))
+        rows = C.attention_measurements(source,NOW,{'positions':[{'instrument':'binance_usdm:futures:S1USDT'}]})
+>       assert len(rows) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests/test_portfolio_common_factor.py:229: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_intelligence_spine.py::test_world_component_is_the_existing_volume_component_and_changes_no_ranking
+FAILED tests/test_intelligence_spine.py::test_attention_world_evaluation_failure_keeps_the_legacy_scan
+FAILED tests/test_research_evidence_source_binding.py::test_registry_readers_are_offline_research_modules_only
+FAILED tests/test_predictive_research_bridge.py::test_snapshot_scores_exclude_generation_and_search_cannot_read_protected
+FAILED tests/test_predictive_research_bridge.py::test_normal_path_actual_numerical_jobs_no_direct_planner_injection
+FAILED tests/test_research_referee.py::test_held_out_a_is_only_bars_before_the_cut
+FAILED tests/test_research_referee.py::test_held_out_b_trades_from_the_cut_with_warmup_from_before_it
+FAILED tests/test_research_referee.py::test_examine_runs_end_to_end_on_a_real_store
+FAILED tests/test_research_calibration.py::test_known_good_the_planted_edge_is_found
+FAILED tests/test_research_calibration.py::test_known_bad_a_random_walk_yields_no_edge
+FAILED tests/test_research_calibration.py::test_known_bad_the_median_noise_rule_sits_at_the_coin_flip
+FAILED tests/test_strategy_factory_handoff.py::test_factory_writes_no_trading_state_and_has_no_trading_caller
+FAILED tests/test_portfolio_common_factor.py::test_existing_attention_correlation_is_basket_context
+13 failed, 178 deselected in 11.54s

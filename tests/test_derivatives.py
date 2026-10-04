@@ -17,7 +17,7 @@ def _df(start="2026-08-01", n=10, freq="15min", val=None):
         "ts": pd.date_range(start, periods=n, freq=freq, tz="UTC"),
         "value": list(range(n)) if val is None else [val] * n})
     from trader.data.market_provenance import annotate, ms
-    return annotate(df, instrument_id='binanceusdm:futures:BTCUSDT',
+    return annotate(df, instrument_id='binance_usdm:futures:BTCUSDT',
                     source='offline:derivative-fixture', kind='derivative',
                     received_ms=int(ms(df['ts'])[-1])+1)
 

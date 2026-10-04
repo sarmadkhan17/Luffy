@@ -1,0 +1,50 @@
+FF                                                                       [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+__________ test_fresh_publication_cannot_hide_stale_successful_cycles __________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-495/test_fresh_publication_cannot_0')
+
+    def test_fresh_publication_cannot_hide_stale_successful_cycles(tmp_path):
+        now=[1.]
+        beat=Heartbeat(path=tmp_path/'heartbeat.json',clock=lambda:now[0])
+        beat.beat({'last_successful_cycle_at':1.})
+        health=SafetyHealth(tmp_path/'health.json',clock=lambda:now[0],sink=lambda _:None)
+        observer=SafetyObserver(health,clock=lambda:now[0])
+        policy=HeartbeatPolicy(10,'injected-policy')
+        assert observer.heartbeat(beat.path,'luffy',policy)['status']=='FRESH'
+        now[0]=1000.
+        for _ in range(3):
+            beat.beat({'last_successful_cycle_at':1.})
+>           assert observer.heartbeat(beat.path,'luffy',policy)['status']=='STALE'
+E           AssertionError: assert 'FRESH' == 'STALE'
+E
+E             - STALE
+E             + FRESH
+
+tests/test_final_audit_heartbeat_age.py:16: AssertionError
+__________________ test_exact_age_cut_and_unconfigured_policy __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-495/test_exact_age_cut_and_unconfi0')
+
+    def test_exact_age_cut_and_unconfigured_policy(tmp_path):
+        now=[1.]
+        beat=Heartbeat(path=tmp_path/'heartbeat.json',clock=lambda:now[0])
+        now[0]=11.;beat.beat({'last_successful_cycle_at':1.})
+        health=SafetyHealth(tmp_path/'health.json',clock=lambda:now[0],sink=lambda _:None)
+        observer=SafetyObserver(health,clock=lambda:now[0])
+        assert observer.heartbeat(beat.path,'luffy',HeartbeatPolicy(10))['status']=='FRESH'
+        now[0]+=0.001;beat.beat({'last_successful_cycle_at':1.})
+>       assert observer.heartbeat(beat.path,'luffy',HeartbeatPolicy(10))['status']=='STALE'
+E       AssertionError: assert 'FRESH' == 'STALE'
+E
+E         - STALE
+E         + FRESH
+
+tests/test_final_audit_heartbeat_age.py:33: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_final_audit_heartbeat_age.py::test_fresh_publication_cannot_hide_stale_successful_cycles
+FAILED tests/test_final_audit_heartbeat_age.py::test_exact_age_cut_and_unconfigured_policy
+2 failed in 0.18s

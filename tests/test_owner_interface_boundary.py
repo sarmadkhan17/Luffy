@@ -189,7 +189,14 @@ def test_only_owner_service_executes_owner_transitions():
                     node.func.attr in ("apply", "set", "set_if_current") and \
                     any("ControlState." in ast.unparse(a) for a in node.args):
                 hits.append(rel)
-    assert sorted(set(hits)) == ["trader/owner/service.py"], hits
+    assert sorted(set(hits)) == ["trader/owner/service.py", "trader/persistence/backup.py"], hits
+    # An isolated staged restore can only remove execution authority.
+    restore = ast.parse((ROOT / 'trader/persistence/backup.py').read_text())
+    calls = [n for n in ast.walk(restore) if isinstance(n, ast.Call)
+             and isinstance(n.func, ast.Attribute) and n.func.attr == 'set'
+             and any('ControlState.' in ast.unparse(a) for a in n.args)]
+    assert {ast.unparse(n.args[0]) for n in calls} == {'ControlState.FROZEN', 'ControlState.RECOVERY'}
+    assert all(ast.literal_eval(n.args[1]) == 'supervisor' for n in calls)
     src = (ROOT / "trader" / "owner" / "service.py").read_text()
     assert "ControlState.ACTIVE" not in src           # activation only via the Supervisor
 

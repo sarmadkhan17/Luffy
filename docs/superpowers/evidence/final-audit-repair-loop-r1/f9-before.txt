@@ -1,0 +1,139 @@
+FFFFFFF                                                                  [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+_______________ test_one_remaining_token_never_sends_4000[False] _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-506/test_one_remaining_token_never0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70a2a2e9ef60>
+tools = False
+
+    @pytest.mark.parametrize('tools',[False,True])
+    def test_one_remaining_token_never_sends_4000(tmp_path,monkeypatch,tools):
+        sent=[]
+        b=brain(tmp_path,monkeypatch,client=lambda **kw:sent.append(kw) or response(20))
+        b._spend(599,'research')
+        invoke(b,tools)
+>       assert not sent or sent[0]['max_tokens']<=1
+E       AssertionError: assert (not [{'model': 'f', 'messages': [{'role': 'user', 'content': 'p'}], 'max_tokens': 4000, 'response_format': None, ...}] or 4000 <= 1)
+
+tests/test_final_audit_llm_reservation.py:36: AssertionError
+_______________ test_one_remaining_token_never_sends_4000[True] ________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-506/test_one_remaining_token_never1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70a2a0e39370>
+tools = True
+
+    @pytest.mark.parametrize('tools',[False,True])
+    def test_one_remaining_token_never_sends_4000(tmp_path,monkeypatch,tools):
+        sent=[]
+        b=brain(tmp_path,monkeypatch,client=lambda **kw:sent.append(kw) or response(20))
+        b._spend(599,'research')
+        invoke(b,tools)
+>       assert not sent or sent[0]['max_tokens']<=1
+E       AssertionError: assert (not [{'model': 'f', 'messages': [{'role': 'user', 'content': 'p'}], 'tools': [], 'max_tokens': 4000, ...}] or 4000 <= 1)
+
+tests/test_final_audit_llm_reservation.py:36: AssertionError
+________ test_limited_admission_and_truthful_under_or_over_usage[False] ________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-506/test_limited_admission_and_tru0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70a2a0e396d0>
+tools = False
+
+    @pytest.mark.parametrize('tools',[False,True])
+    def test_limited_admission_and_truthful_under_or_over_usage(tmp_path,monkeypatch,tools):
+        sent=[];actual=[20,700]
+        b=brain(tmp_path,monkeypatch,client=lambda **kw:sent.append(kw) or response(actual.pop(0)))
+        assert invoke(b,tools) is not None
+>       assert 0<sent[0]['max_tokens']<600
+E       assert 4000 < 600
+
+tests/test_final_audit_llm_reservation.py:46: AssertionError
+________ test_limited_admission_and_truthful_under_or_over_usage[True] _________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-506/test_limited_admission_and_tru1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70a2a0e3a0c0>
+tools = True
+
+    @pytest.mark.parametrize('tools',[False,True])
+    def test_limited_admission_and_truthful_under_or_over_usage(tmp_path,monkeypatch,tools):
+        sent=[];actual=[20,700]
+        b=brain(tmp_path,monkeypatch,client=lambda **kw:sent.append(kw) or response(actual.pop(0)))
+        assert invoke(b,tools) is not None
+>       assert 0<sent[0]['max_tokens']<600
+E       assert 4000 < 600
+
+tests/test_final_audit_llm_reservation.py:46: AssertionError
+________________ test_concurrent_instances_reserve_before_send _________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-506/test_concurrent_instances_rese0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70a2a0e3aae0>
+
+    def test_concurrent_instances_reserve_before_send(tmp_path,monkeypatch):
+        entered,release=Event(),Event();sent=[]
+        def provider(**kw):
+            sent.append(kw);entered.set();assert release.wait(5);return response(20)
+        first=brain(tmp_path,monkeypatch,client=provider)
+        second=brain(tmp_path,monkeypatch,client=provider)
+        with ThreadPoolExecutor(2) as pool:
+            future=pool.submit(invoke,first)
+            assert entered.wait(5)
+            try:
+                assert invoke(second,True) is None
+>               assert len(sent)==1
+E               AssertionError: assert 2 == 1
+E                +  where 2 = len([{'model': 'f', 'messages': [{'role': 'user', 'content': 'p'}], 'max_tokens': 4000, 'response_format': None, ...}, {'model': 'f', 'messages': [{'role': 'user', 'content': 'p'}], 'tools': [], 'max_tokens': 4000, ...}])
+
+tests/test_final_audit_llm_reservation.py:65: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.brain.llm:llm.py:137 brain tool call failed: assert False
+ +  where False = wait(5)
+ +    where wait = <threading.Event at 0x70a2a0e3aab0: unset>.wait
+WARNING  trader.brain.llm:llm.py:113 brain call failed: assert False
+ +  where False = wait(5)
+ +    where wait = <threading.Event at 0x70a2a0e3aab0: set>.wait
+___________ test_unknown_provider_outcome_remains_reserved_on_reopen ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-506/test_unknown_provider_outcome_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70a2a0e3ba10>
+
+    def test_unknown_provider_outcome_remains_reserved_on_reopen(tmp_path,monkeypatch):
+        sent=[]
+        def provider(**kw):
+            sent.append(kw);raise TimeoutError('provider may have billed')
+        b=brain(tmp_path,monkeypatch,client=provider)
+        assert invoke(b) is None
+        reopened=brain(tmp_path,monkeypatch,client=provider)
+        assert invoke(reopened,True) is None
+>       assert len(sent)==1 and reopened.budget_left('research')==0
+E       AssertionError: assert (2 == 1)
+E        +  where 2 = len([{'model': 'f', 'messages': [{'role': 'user', 'content': 'p'}], 'max_tokens': 4000, 'response_format': None, ...}, {'model': 'f', 'messages': [{'role': 'user', 'content': 'p'}], 'tools': [], 'max_tokens': 4000, ...}])
+
+tests/test_final_audit_llm_reservation.py:79: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.brain.llm:llm.py:113 brain call failed: provider may have billed
+WARNING  trader.brain.llm:llm.py:137 brain tool call failed: provider may have billed
+__________________ test_invalid_ledger_cannot_reset_admission __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-506/test_invalid_ledger_cannot_res0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70a2a0e90170>
+
+    def test_invalid_ledger_cannot_reset_admission(tmp_path,monkeypatch):
+        sent=[]
+        b=brain(tmp_path,monkeypatch,client=lambda **kw:sent.append(kw) or response(20))
+        b._usage_path.write_text('{broken')
+>       assert invoke(b) is None and not sent
+E       AssertionError: assert ('ok' is None)
+E        +  where 'ok' = invoke(<trader.brain.llm.BrainLLM object at 0x70a2a0e39820>)
+
+tests/test_final_audit_llm_reservation.py:87: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_final_audit_llm_reservation.py::test_one_remaining_token_never_sends_4000[False]
+FAILED tests/test_final_audit_llm_reservation.py::test_one_remaining_token_never_sends_4000[True]
+FAILED tests/test_final_audit_llm_reservation.py::test_limited_admission_and_truthful_under_or_over_usage[False]
+FAILED tests/test_final_audit_llm_reservation.py::test_limited_admission_and_truthful_under_or_over_usage[True]
+FAILED tests/test_final_audit_llm_reservation.py::test_concurrent_instances_reserve_before_send
+FAILED tests/test_final_audit_llm_reservation.py::test_unknown_provider_outcome_remains_reserved_on_reopen
+FAILED tests/test_final_audit_llm_reservation.py::test_invalid_ledger_cannot_reset_admission
+7 failed in 9.15s

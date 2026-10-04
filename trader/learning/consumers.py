@@ -112,14 +112,14 @@ def research_order(journal, items, subject_for=lambda item:item):
                             lambda item:research_context(subject_for(item)))
 
 
-def allocation_observations(journal, candidates):
+def allocation_observations(journal, candidates, *, as_of_ms=None):
     result = {}
     for candidate in candidates:
         try:
             context = allocation_context(candidate)
         except ValueError:
             continue # Unknown horizon/identity receives no learned adjustment.
-        result[candidate.candidate_id] = T.observation(journal,L.Target.ALLOCATION,context)
+        result[candidate.candidate_id] = T.observation(journal,L.Target.ALLOCATION,context,as_of_ms=as_of_ms)
     return result
 
 
@@ -149,17 +149,18 @@ class WorldQueryReader:
         self.frozen = frozen
         self.states = {}
 
-    def query(self, sql, params=()):
-        if self.frozen is None and self.journal is not None:
-            rows = self.journal.query(sql, params)
-            if params and rows:
-                body = json.loads(rows[0]['payload'])
-                self.states[params[1]] = dict(body, state_hash=rows[0]['sha256'])
-            return rows
-        if not params:
-            return [{'present': 1}] if self.frozen else []
-        state = (self.frozen or {}).get(params[1])
+    def read_target(self, target, context, *, as_of_ms=None):
+        if as_of_ms is None:
+            raise ValueError('world_query_requires_temporal_cut')
+        if self.frozen is None:
+            state = T.read(self.journal, target, context, as_of_ms=as_of_ms) if self.journal is not None else None
+        else:
+            state = self.frozen.get(context.identity)
         if state is None:
-            return []
-        body = {k:v for k,v in state.items() if k != 'state_hash'}
-        return [dict(payload=L.canonical(body), sha256=state['state_hash'], revision=state['revision'])]
+            body = dict(schema=T.SCHEMA, target=target.value, context=__import__('dataclasses').asdict(context),
+                        revision=0, value=None, previous_hash=None)
+            state = dict(body, state_hash=L.digest(body))
+        T.temporal_state(state, target, context, as_of_ms)
+        if state['value'] is not None:
+            self.states[context.identity] = state
+        return state

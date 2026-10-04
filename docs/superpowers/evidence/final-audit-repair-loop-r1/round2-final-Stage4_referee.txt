@@ -1,0 +1,139 @@
+FF.........F................F.FF                                         [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+_________________ test_held_out_a_is_only_bars_before_the_cut __________________
+
+store = '/tmp/pytest-of-sarmad/pytest-535/test_held_out_a_is_only_bars_b0/candles.db'
+
+    def test_held_out_a_is_only_bars_before_the_cut(store):
+        cut = CUT_BAR * TF_MS
+        b = rf.load_heldout("4h", "a", ["A1/USDT", "A2/USDT", "LATE/USDT"], cut,
+                            CFG, paths={"candles": store})
+>       assert set(b.frames) == {"A1/USDT", "A2/USDT"}      # LATE has no A era
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AssertionError: assert set() == {'A1/USDT', 'A2/USDT'}
+E
+E         Extra items in the right set:
+E         'A1/USDT'
+E         'A2/USDT'
+E         Use -v to get more diff
+
+/home/sarmad/trader/tests/test_research_referee.py:53: AssertionError
+________ test_held_out_b_trades_from_the_cut_with_warmup_from_before_it ________
+
+store = '/tmp/pytest-of-sarmad/pytest-535/test_held_out_b_trades_from_th0/candles.db'
+
+    def test_held_out_b_trades_from_the_cut_with_warmup_from_before_it(store):
+        cut = CUT_BAR * TF_MS
+        b = rf.load_heldout("4h", "b", ["A1/USDT", "D1/USDT", "LATE/USDT"], cut,
+                            CFG, paths={"candles": store})
+        # LATE listed after the cut: no context before it, so no B reading
+>       assert set(b.frames) == {"A1/USDT", "D1/USDT"}
+E       AssertionError: assert set() == {'A1/USDT', 'D1/USDT'}
+E
+E         Extra items in the right set:
+E         'A1/USDT'
+E         'D1/USDT'
+E         Use -v to get more diff
+
+/home/sarmad/trader/tests/test_research_referee.py:64: AssertionError
+_________________ test_examine_runs_end_to_end_on_a_real_store _________________
+
+store = '/tmp/pytest-of-sarmad/pytest-535/test_examine_runs_end_to_end_o0/candles.db'
+
+    def test_examine_runs_end_to_end_on_a_real_store(store):
+        """No mocks: load both held-out slices, both gates, and the book."""
+        from trader.research.combo import Combination
+        from trader.research.vocab import Part
+        donch = Part("ev:donch20", "event", "ev:donch20",
+                     "close > donchian_hi(20)", "close < donchian_lo(20)")
+        c = Combination((donch,), "4h", "trail")
+        out = rf.examine(c, {
+            "cfg": {**CFG, "research": {"equity": 2000.0}},
+            "paths": {"candles": store}, "cut_ms": CUT_BAR * TF_MS,
+            "discovery_symbols": ["D1/USDT"],
+            "heldout_symbols": ["A1/USDT", "A2/USDT", "LATE/USDT"],
+            "draws": 19, "seed": 3, "book": []})
+        assert out["looked"] is True
+        assert out["cut_ms"] >= CUT_BAR * TF_MS
+        assert "p" in out["gate1"] and out["gate1"]["p"] == 1.0   # 2-3 symbols
+        assert "untestable" in out["gate1"]["reason"]
+>       assert set(out["gate3"]) >= {"passed", "reason", "with", "without"}
+E       AssertionError: assert {'book', 'passed', 'reason'} >= {'passed', 'r...h', 'without'}
+E
+E         Extra items in the right set:
+E         'without'
+E         'with'
+
+/home/sarmad/trader/tests/test_research_referee.py:181: AssertionError
+__________________ test_known_good_the_planted_edge_is_found ___________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-535/test_known_good_the_planted_ed0')
+
+    def test_known_good_the_planted_edge_is_found(tmp_path):
+        db = _store(tmp_path, "good")
+        c = Combination((BREAK,), "4h", "trail")
+        r = _run(db, [c])[c.hash]
+>       assert r["verdict"] == "scored", r
+E       AssertionError: {'hash': '264262c3b16f22bf', 'tf': '4h', 'geo': 'trail', 'k': 1, ...}
+E       assert 'empty' == 'scored'
+E
+E         - scored
+E         + empty
+
+/home/sarmad/trader/tests/test_research_calibration.py:80: AssertionError
+_________________ test_known_bad_a_random_walk_yields_no_edge __________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-535/test_known_bad_a_random_walk_y0')
+
+    def test_known_bad_a_random_walk_yields_no_edge(tmp_path):
+        """Twenty-four rules on pure noise. consistency_p's measured
+        false-positive rate is 0.1-0.4%, so one survivor is bad luck and three
+        would be a broken gate."""
+        db = _store(tmp_path, "bad")
+        combos = []
+        for n in (10, 20, 30, 40, 50, 60):
+            for op, key in ((">", "hi"), ("<", "lo")):
+                p = Part(f"ev:d{n}{key}", "event", f"ev:d{n}{key}",
+                         f"close {op} donchian_{'hi' if op == '>' else 'lo'}({n})",
+                         f"close {'<' if op == '>' else '>'} "
+                         f"donchian_{'lo' if op == '>' else 'hi'}({n})")
+                combos.append(Combination((p,), "4h", "trail"))
+                combos.append(Combination((p, TREND), "4h", "trail"))
+        res = _run(db, combos, draws=25)
+        scored = [r for r in res.values() if r["verdict"] == "scored"]
+>       assert scored, "nothing was scoreable at all — that is a harness fault"
+E       AssertionError: nothing was scoreable at all — that is a harness fault
+E       assert []
+
+/home/sarmad/trader/tests/test_research_calibration.py:111: AssertionError
+__________ test_known_bad_the_median_noise_rule_sits_at_the_coin_flip __________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-535/test_known_bad_the_median_nois0')
+
+    def test_known_bad_the_median_noise_rule_sits_at_the_coin_flip(tmp_path):
+        db = _store(tmp_path, "bad")
+        combos = [Combination((Part(f"ev:d{n}", "event", f"ev:d{n}",
+                                    f"close > donchian_hi({n})",
+                                    f"close < donchian_lo({n})"),),
+                              "4h", "trail")
+                  for n in (20, 30, 40, 50)]
+        res = _run(db, combos, draws=25)
+        import statistics as st
+        pcts = [v["null_pctile"] for r in res.values()
+                for v in r["symbols"].values() if v.get("null_pctile") is not None]
+>       assert pcts, "no percentiles at all"
+E       AssertionError: no percentiles at all
+E       assert []
+
+/home/sarmad/trader/tests/test_research_calibration.py:130: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_research_referee.py::test_held_out_a_is_only_bars_before_the_cut
+FAILED tests/test_research_referee.py::test_held_out_b_trades_from_the_cut_with_warmup_from_before_it
+FAILED tests/test_research_referee.py::test_examine_runs_end_to_end_on_a_real_store
+FAILED tests/test_research_calibration.py::test_known_good_the_planted_edge_is_found
+FAILED tests/test_research_calibration.py::test_known_bad_a_random_walk_yields_no_edge
+FAILED tests/test_research_calibration.py::test_known_bad_the_median_noise_rule_sits_at_the_coin_flip
+6 failed, 26 passed in 3.19s

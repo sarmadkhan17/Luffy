@@ -75,6 +75,11 @@ def publish(tmp_path, data=None, name="attention.db", mutate=None):
 
     path = tmp_path / name
     data = universe() if data is None else data
+    from trader.data import market_provenance as P
+    data = {sym: {tf: P.annotate(df, instrument_id='offline:futures:'+sym.replace('/',''),
+                              source='offline:correlation-fixture', kind='candle',
+                              received_ms=NOW, timeframe=tf, request_started_ms=NOW)
+                  for tf, df in frames.items()} for sym, frames in data.items()}
     ev = A.capture(data, list(data), "r1", A.settings(), NOW)
     if mutate:
         mutate(ev)

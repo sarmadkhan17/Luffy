@@ -1,0 +1,16 @@
+{
+  "reason": "root filesystem full, workspace has 62GB available",
+  "removed_task_owned_completed_roots": [
+    "/tmp/pytest-of-sarmad/pytest-533",
+    "/tmp/pytest-of-sarmad/pytest-534",
+    "/tmp/pytest-of-sarmad/pytest-535",
+    "/tmp/pytest-of-sarmad/pytest-537",
+    "/tmp/pytest-of-sarmad/pytest-540",
+    "/tmp/pytest-of-sarmad/pytest-541",
+    "/tmp/pytest-of-sarmad/pytest-549",
+    "/tmp/pytest-of-sarmad/pytest-560",
+    "/tmp/pytest-of-sarmad/pytest-564",
+    "/tmp/pytest-of-sarmad/pytest-565"
+  ],
+  "production_processes_affected": false
+}

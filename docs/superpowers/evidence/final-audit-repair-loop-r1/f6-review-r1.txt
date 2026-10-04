@@ -1,0 +1,1 @@
+{'review': 'FAIL', 'variant': 'successful source returns a confirmed empty calendar', 'state': {'active': False, 'event': '', 'until': None, 'why': 'no active event window', 'checked_at': 1000.0, 'received_at': None, 'request_started_at': None}, 'failure': 'Published quiet assessment loses truthful acquisition/receipt evidence.'}

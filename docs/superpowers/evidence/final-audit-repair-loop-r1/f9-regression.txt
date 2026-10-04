@@ -1,0 +1,20 @@
+........................................................................ [ 56%]
+..................................................F.....                 [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+_________________ test_normal_risk_execution_modules_unchanged _________________
+
+    def test_normal_risk_execution_modules_unchanged():
+        import subprocess
+        out=subprocess.check_output(['git','diff','--name-only','--','trader/engine/risk.py','trader/engine/executor.py','trader/engine/risk_intent.py'],text=True)
+>       assert out==''
+E       AssertionError: assert 'trader/engine/executor.py\n' == ''
+E
+E         + trader/engine/executor.py
+
+tests/test_stage8_owner_os.py:278: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_stage8_owner_os.py::test_normal_risk_execution_modules_unchanged
+1 failed, 127 passed in 41.93s

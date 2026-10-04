@@ -57,7 +57,10 @@ def consumer_case(target,j,monkeypatch,tmp_path):
         c=candidate()
         i=inputs(c)
         def consume():
-            result=json.loads(allocate(attach_learning(i,j)).result_json)
+            # This case exercises a current adaptive consumer, while the
+            # economic fixture keeps its independent original validity cut.
+            # Historical-cut rejection has its own dedicated regression test.
+            result=json.loads(allocate(attach_learning(replace(i,as_of_ms=int(time.time()*1000)),j)).result_json)
             return result['candidates'][0].get('governed_allocation_context')
         return C.allocation_context(c),{'max_share':0},consume
     if target==L.Target.ATTENTION:

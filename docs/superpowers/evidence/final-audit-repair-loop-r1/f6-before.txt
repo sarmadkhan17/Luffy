@@ -1,0 +1,96 @@
+FFFFF                                                                    [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+_____ test_future_calendar_failed_refresh_never_uses_future_receipt[True] ______
+
+guard = (<trader.agents.macro_guard.MacroGuard object at 0x70414bc6ad80>, [1000.0], [])
+disk = True
+
+    @pytest.mark.parametrize('disk',[True,False])
+    def test_future_calendar_failed_refresh_never_uses_future_receipt(guard,disk):
+        g,now,calls=guard
+        if disk:
+            g._cache_path.write_text(json.dumps({'fetched':2000,'events':[dict(event='macro-event',when=event()['when'].isoformat())]}))
+        else:
+            g._calendar=[event()];g._cal_fetched=2000;g._sources_ok=True
+        state=g.check()
+>       assert calls and not state['active']
+E       assert ([])
+
+tests/test_final_audit_macro_time.py:32: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.agents.macro_guard:macro_guard.py:331 MACRO FREEZE: macro-event until 1970-01-01T02:16:40+00:00
+_____ test_future_calendar_failed_refresh_never_uses_future_receipt[False] _____
+
+guard = (<trader.agents.macro_guard.MacroGuard object at 0x70414bc6a840>, [1000.0], [])
+disk = False
+
+    @pytest.mark.parametrize('disk',[True,False])
+    def test_future_calendar_failed_refresh_never_uses_future_receipt(guard,disk):
+        g,now,calls=guard
+        if disk:
+            g._cache_path.write_text(json.dumps({'fetched':2000,'events':[dict(event='macro-event',when=event()['when'].isoformat())]}))
+        else:
+            g._calendar=[event()];g._cal_fetched=2000;g._sources_ok=True
+        state=g.check()
+>       assert calls and not state['active']
+E       assert ([])
+
+tests/test_final_audit_macro_time.py:32: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.agents.macro_guard:macro_guard.py:331 MACRO FREEZE: macro-event until 1970-01-01T02:16:40+00:00
+__________________ test_future_assessment_cache_is_recomputed __________________
+
+guard = (<trader.agents.macro_guard.MacroGuard object at 0x70414bb1f170>, [1000.0], [])
+
+    def test_future_assessment_cache_is_recomputed(guard):
+        g,now,calls=guard
+        g._state.update(active=True,event='future-assessment',until='later',why='cached',checked=2000)
+>       assert not g.check()['active']
+E       assert not True
+
+tests/test_final_audit_macro_time.py:41: AssertionError
+_____ test_valid_calendar_and_state_keep_original_receipt_when_republished _____
+
+guard = (<trader.agents.macro_guard.MacroGuard object at 0x70414bc6a510>, [1000.0], [])
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-500/test_valid_calendar_and_state_0')
+
+    def test_valid_calendar_and_state_keep_original_receipt_when_republished(guard,tmp_path):
+        from trader.kernel import Kernel
+        from trader.core.journal import Journal
+        from trader.core.types import ControlState
+        g,now,calls=guard
+        g._calendar=[event()];g._cal_fetched=900;g._sources_ok=True
+        state=g.check()
+>       assert state['active'] and calls==[] and state['received_at']==900
+                                                 ^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'received_at'
+
+tests/test_final_audit_macro_time.py:52: KeyError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.agents.macro_guard:macro_guard.py:331 MACRO FREEZE: macro-event until 1970-01-01T02:16:40+00:00
+___ test_clock_rollback_during_successful_refresh_does_not_publish_calendar ____
+
+guard = (<trader.agents.macro_guard.MacroGuard object at 0x70413acaa7b0>, [999.0], [])
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70413acab560>
+
+    def test_clock_rollback_during_successful_refresh_does_not_publish_calendar(guard,monkeypatch):
+        g,now,calls=guard
+        def rollback():now[0]=999.;g._sources_ok=True;return [event()]
+        monkeypatch.setattr(g,'_from_forexfactory',rollback)
+        state=g.check()
+>       assert not state['active'] and state['received_at'] is None
+E       assert (not True)
+
+tests/test_final_audit_macro_time.py:69: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  trader.agents.macro_guard:macro_guard.py:331 MACRO FREEZE: macro-event until 1970-01-01T02:16:40+00:00
+=========================== short test summary info ============================
+FAILED tests/test_final_audit_macro_time.py::test_future_calendar_failed_refresh_never_uses_future_receipt[True]
+FAILED tests/test_final_audit_macro_time.py::test_future_calendar_failed_refresh_never_uses_future_receipt[False]
+FAILED tests/test_final_audit_macro_time.py::test_future_assessment_cache_is_recomputed
+FAILED tests/test_final_audit_macro_time.py::test_valid_calendar_and_state_keep_original_receipt_when_republished
+FAILED tests/test_final_audit_macro_time.py::test_clock_rollback_during_successful_refresh_does_not_publish_calendar
+5 failed in 1.14s

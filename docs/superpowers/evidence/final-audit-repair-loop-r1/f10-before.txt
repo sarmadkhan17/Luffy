@@ -1,0 +1,50 @@
+FF                                                                       [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+_________ test_attention_future_revision_exact_cut_replay_and_restart __________
+
+isolated = (<trader.core.journal.Journal object at 0x74e4f8a03d40>, {'risk': {'bar_minutes': 60, 'funding_rate_8h': 0.0001, 'real...'r1', 'spec_hash': '326e988be12c4ae772bd0d29cc0b3999c9c048f34d29470ed5827fe471e317c4', 'parent_version_id': None, ...})
+
+    def test_attention_future_revision_exact_cut_replay_and_restart(isolated):
+        j,cfg,ev,o,_=isolated
+        cut=max(1800000000000,o.observed_ms)+1000
+        ctx=C.attention_context('S5/USDT','14400000');e=scan(cut)
+        before=evaluate_snapshot(e,learning_journal=j)
+        apply(j,cfg,ev,cut+1,L.Target.ATTENTION,ctx,{'priority':'HIGH'})
+>       assert evaluate_snapshot(e,learning_journal=j)['rows']==before['rows']
+E       AssertionError: assert [{'symbol': '...lected', ...}] == [{'symbol': '..._top_k', ...}]
+E
+E         At index 0 diff: {'symbol': 'S0/USDT', 'status': 'ok', 'eligible': True, 'reason': 'selected', 'salience': 348.427622345, 'dominant': 'volume_anomaly', 'components': {'volume_anomaly': 348.427622345, 'volatility_transition': -0.287315186878, 'relative_return_divergence': 0.773758192369, 'correlation_change': None}, 'evidence': ['obs_eced2852201ba1fb', 'obs_4d3b0bfffaaab763', 'obs_499584b7c5048446', 'obs_ea12fac05489ed08', 'obs_4b487595ad7cbbf1', 'obs_cc46ed58459994fb'], 'correlation': {'status': 'warmup', 'r_baseline': None, 'r_recent': None, 'signed_fisher_scaled_chang...
+E
+E         ...Full output truncated (2 lines hidden), use '-vv' to show
+
+tests/test_final_audit_attention_allocation_time.py:27: AssertionError
+_____ test_allocation_future_revision_and_frozen_replay_are_cut_qualified ______
+
+isolated = (<trader.core.journal.Journal object at 0x74e4f9ef9790>, {'risk': {'bar_minutes': 60, 'funding_rate_8h': 0.0001, 'real...'r1', 'spec_hash': '326e988be12c4ae772bd0d29cc0b3999c9c048f34d29470ed5827fe471e317c4', 'parent_version_id': None, ...})
+
+    def test_allocation_future_revision_and_frozen_replay_are_cut_qualified(isolated):
+        j,cfg,ev,o,_=isolated
+        original=inputs(candidate());ctx=C.allocation_context(original.candidates[0])
+        before=allocate(attach_learning(original,j))
+        cut=max(1800000000000,o.observed_ms)+1000
+        apply(j,cfg,ev,cut,L.Target.ALLOCATION,ctx,{'max_share':0})
+>       assert allocate(attach_learning(original,j))==before
+E       AssertionError: assert Proposal(prop...ALLOCATOR-R2') == Proposal(prop...ALLOCATOR-R2')
+E
+E         Omitting 1 identical items, use -vv to show
+E         Differing attributes:
+E         ['proposal_id', 'inputs_json', 'result_json']
+E
+E         Drill down into differing attribute proposal_id:
+E           proposal_id: '8642b20e19658b601da9d83d67003f1fe78177a2697c30ef685af1b42fab6e54' != '8c5dda1f43a2d2851600aeed6a0e27ac3ca6aa9e5fb7ea2c430c06ab6e923e08'...
+E
+E         ...Full output truncated (16 lines hidden), use '-vv' to show
+
+tests/test_final_audit_attention_allocation_time.py:45: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_final_audit_attention_allocation_time.py::test_attention_future_revision_exact_cut_replay_and_restart
+FAILED tests/test_final_audit_attention_allocation_time.py::test_allocation_future_revision_and_frozen_replay_are_cut_qualified
+2 failed in 2.63s

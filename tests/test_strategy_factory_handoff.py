@@ -946,8 +946,11 @@ def test_factory_writes_no_trading_state_and_has_no_trading_caller():
         assert bad not in code, bad
     # the executor reads only the paper/live fence predicate
     for f in pathlib.Path("trader").rglob("*.py"):
-        if f not in (pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
+        if f not in (pathlib.Path('trader/engine/entry_authority.py'), pathlib.Path('trader/owner/queries.py'), pathlib.Path('trader/owner/approvals.py'), pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py'), pathlib.Path('trader/learning/runtime.py'), pathlib.Path('trader/brain/analyst.py'), pathlib.Path('trader/portfolio/current.py'), pathlib.Path('trader/research/predictive_bridge.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py", "legacy_authority.py", "stage5_activation.py"):
             assert "factory_handoff" not in f.read_text(), f
+    # Final admission reads only the same immutable live-entry fence as Executor.
+    admission = pathlib.Path('trader/engine/entry_authority.py').read_text()
+    assert set(re.findall(r"\bfactory_handoff\.(\w+)", admission)) == {"live_entry_block"}
     # Stage8 may read exact versions and record an authenticated exact owner
     # decision. It cannot create/install/activate/govern a strategy version.
     for path in ('trader/owner/queries.py', 'trader/owner/approvals.py'):

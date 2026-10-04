@@ -1,0 +1,45 @@
+FF                                                                       [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+_ test_unknown_partial_blocks_supervisor_activation_then_exact_recovery_after_restart _
+
+book = (<tests.test_final_audit_partial_intent.Venue object at 0x712d6ff929c0>, <trader.core.journal.Journal object at 0x712d71b645c0>, <trader.engine.executor.Executor object at 0x712d6f572480>)
+
+    def test_unknown_partial_blocks_supervisor_activation_then_exact_recovery_after_restart(book):
+        venue,j,e=protected(book);state,s=supervisor(venue,j,e)
+        result=s.pass_once(boot=True)
+>       assert not result.safe_to_activate and state.refresh()!=ControlState.ACTIVE
+E       AssertionError: assert (not True)
+E        +  where True = RecoveryResult(control_state_observed='ACTIVE', outcome='SAFE', stage='COMPLETE', safe_to_activate=True, needs_owner=F...one}, 'activated': True}, started_at='2026-10-04T00:45:07.616016+00:00', updated_at='2026-10-04T00:45:07.625946+00:00').safe_to_activate
+
+tests/test_final_audit_supervisor_partial.py:35: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    trader.engine.executor:executor.py:516 partial close failed BTC/USDT: executed then response lost
+WARNING  trader.engine.state:state.py:199 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:199 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+WARNING  trader.engine.state:state.py:199 CONTROL STATE RECOVERY → ACTIVE (by supervisor) all recovery safety checks proved
+______ test_partial_ledger_read_failure_never_qualifies_as_safe_recovery _______
+
+book = (<tests.test_final_audit_partial_intent.Venue object at 0x712d6f5729c0>, <trader.core.journal.Journal object at 0x712d60f2efc0>, <trader.engine.executor.Executor object at 0x712d6f5de120>)
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x712d61020a70>
+
+    def test_partial_ledger_read_failure_never_qualifies_as_safe_recovery(book,monkeypatch):
+        venue,j,e=protected(book);state,s=supervisor(venue,j,e)
+        monkeypatch.setattr(e,'recovery_pending',lambda:(_ for _ in ()).throw(OSError('unreadable ledger')))
+        result=s.pass_once(boot=True)
+>       assert not result.safe_to_activate and state.refresh()!=ControlState.ACTIVE
+E       AssertionError: assert (not True)
+E        +  where True = RecoveryResult(control_state_observed='ACTIVE', outcome='SAFE', stage='COMPLETE', safe_to_activate=True, needs_owner=F...one}, 'activated': True}, started_at='2026-10-04T00:45:07.949426+00:00', updated_at='2026-10-04T00:45:07.965273+00:00').safe_to_activate
+
+tests/test_final_audit_supervisor_partial.py:55: AssertionError
+------------------------------ Captured log call -------------------------------
+ERROR    trader.engine.executor:executor.py:516 partial close failed BTC/USDT: executed then response lost
+WARNING  trader.engine.state:state.py:199 CONTROL STATE ACTIVE → FROZEN (by supervisor) boot_safety_verification
+WARNING  trader.engine.state:state.py:199 CONTROL STATE FROZEN → RECOVERY (by supervisor) supervisor-owned containment
+WARNING  trader.engine.state:state.py:199 CONTROL STATE RECOVERY → ACTIVE (by supervisor) all recovery safety checks proved
+=========================== short test summary info ============================
+FAILED tests/test_final_audit_supervisor_partial.py::test_unknown_partial_blocks_supervisor_activation_then_exact_recovery_after_restart
+FAILED tests/test_final_audit_supervisor_partial.py::test_partial_ledger_read_failure_never_qualifies_as_safe_recovery
+2 failed in 1.60s

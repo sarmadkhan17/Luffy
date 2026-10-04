@@ -394,20 +394,15 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
                     key=lambda s: (-rows[s]["salience"], s))
     from trader.learning import targets as learned_targets, consumers as learned_consumers, foundation as learning
     priorities = dict(frozen_priorities or {})
-    if learning_journal is not None:
+    if learning_journal is not None and frozen_priorities is None:
         priorities = {symbol:learned_targets.read(learning_journal, learning.Target.ATTENTION,
-            learned_consumers.attention_context(symbol,str(ds.tf_ms))) for symbol in ranked}
+            learned_consumers.attention_context(symbol,str(ds.tf_ms)), as_of_ms=as_of) for symbol in ranked}
         priorities = {symbol:state for symbol,state in priorities.items() if state['value'] is not None}
     if priorities:
-        from dataclasses import asdict
         preference = {'HIGH':0,'NORMAL':1,'LOW':2}
         for symbol,state in priorities.items():
-            body = {k:v for k,v in state.items() if k != 'state_hash'}
-            if (learning.digest(body) != state['state_hash']
-                    or state['context'] != asdict(learned_consumers.attention_context(symbol,str(ds.tf_ms)))
-                    or state['target'] != learning.Target.ATTENTION.value):
-                raise ValueError('governed_attention_state_mismatch')
-            learned_targets.typed(learning.Target.ATTENTION,state['value'])
+            learned_targets.temporal_state(state, learning.Target.ATTENTION,
+                learned_consumers.attention_context(symbol,str(ds.tf_ms)), as_of)
         ranked = sorted(ranked,key=lambda symbol:preference[
             priorities[symbol]['value']['priority']] if symbol in priorities else preference['NORMAL'])
         for symbol in ranked:

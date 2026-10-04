@@ -96,7 +96,8 @@ class Executor:
         if self.market_type != MarketType.FUTURES:
             return False
         try:
-            return bool(self.recovery.pending())
+            from .partial_intent import pending
+            return bool(self.recovery.pending() or pending(self.journal))
         except Exception:
             log.exception("recovery ledger unreadable; new entries blocked")
             return True
@@ -112,6 +113,11 @@ class Executor:
                 except Exception:
                     # Recovery storage failures must not prevent existing exits.
                     log.exception("entry recovery unavailable; new entries remain blocked")
+                try:
+                    from .partial_intent import recover
+                    recover(self)
+                except Exception:
+                    log.exception("partial recovery unavailable; new entries remain blocked")
 
     def _lock_for(self, symbol: str) -> threading.Lock:
         with self._reg:
@@ -454,12 +460,22 @@ class Executor:
             log.info(f"partial skipped {sym}: below one lot")
             return False
         try:
-            requested = amount
-            submitted_ms = int(time.time() * 1000)
+            from . import partial_intent as partial
+            intent, submit = partial.reserve(self, trade, amount)
+            partial.validate(self, intent)
+            if intent['state'] == 'CONSUMED':
+                current = self.journal.query('SELECT * FROM trades WHERE id=?',(trade['id'],))[0]
+                trade.update(amount=current['amount'],notional_usdt=current['notional_usdt'],tp1_done=1)
+                return True
+            requested = intent['requested_quantity']
+            submitted_ms = intent['created_ms']
             sent_ms = submitted_ms - 60_000
-            order = self.ex.create_order(sym, "market", side_close, amount,
-                                         params={"reduceOnly": True})
-            submitted_ms = getattr(self.ex,'submitted_ms',None) or submitted_ms
+            if submit:
+                order = self.ex.create_order(sym, "market", side_close, requested,
+                    params={"reduceOnly": True,"newClientOrderId":intent['client_order_id']})
+                intent = partial.acknowledge(self,intent,order)
+            else:
+                order = partial.resolve(self,intent)
             fills = self._order_fills(sym, str(order.get("id") or ""), sent_ms)
             if fills:
                 # this leg's own fills; the entry commission is settled when
@@ -483,22 +499,15 @@ class Executor:
                 fees = self.taker_fee * (amount * fill + amount * float(trade["entry_price"]))
                 pnl = gross - fees
                 self._book_estimate(trade, "venue fills unavailable at partial")
-            new_amt = float(trade["amount"]) - amount
-            # notional must shrink with the position. It did not, so a
-            # half-closed trade still charged its FULL size against the 15%
-            # heat cap — starving a book whose return comes from breadth —
-            # and close() then billed entry fees on twice the size that was
-            # actually left, understating the PnL of every trade that took
-            # a partial.
-            new_notional = round(new_amt * float(trade["entry_price"]), 2)
+            if amount < requested and str(order.get('status','')).lower() not in partial.TERMINAL:
+                return False  # a still-working partial order must be reconciled first
+            new_amt = intent['before_quantity'] - amount
+            new_notional = round(new_amt * intent['entry_price'], 2)
             evidence = order_evidence(trade, order, fills, amount, sent_ms,
                                       "venue_order_fills" if fills else "estimated_order_booking")
             evidence.update(purpose="partial_exit", requested_quantity=requested,
                             reference=_hint_reference(price_hint, submitted_ms, trade.get('_execution_reference')))
-            self.journal.align_trade_amount(trade["id"], new_amt, new_notional,
-                                            pnl_delta=round(pnl, 8), accounting=evidence, tp1_done=True)
-            trade["amount"] = round(new_amt, 8)
-            trade["notional_usdt"] = new_notional
+            partial.consume(self,intent,trade,amount,pnl,evidence)
             log.info(f"PARTIAL {sym}: -{amount} @{fill:.4g} {reason} "
                      f"pnl={pnl:+.2f} remaining={new_amt} "
                      f"notional={new_notional}")

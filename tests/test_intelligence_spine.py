@@ -31,7 +31,7 @@ WORLD = A.settings({"world_model": True})
 LEGACY = A.settings()
 
 
-def publish(path, now, sid="s1", spikes=(0,), cfg=WORLD, data=None):
+def publish(path, now, sid="s1", spikes=(0,), cfg=WORLD, data=None, prepared_event=None):
     """Persist one scan through the real Store (what the worker child runs)."""
     data = frames(6, now) if data is None else data
     for j in spikes:
@@ -39,7 +39,9 @@ def publish(path, now, sid="s1", spikes=(0,), cfg=WORLD, data=None):
     store = Store(path, cfg)
     with patch("trader.observability.store.time", SimpleNamespace(time=lambda: now / 1000)):
         ident = dict(schema="attention-scan-identity.v1", instance_id="1" * 32, seq=now)
-        event = A.capture(data, list(data), sid, cfg, now)
+        from copy import deepcopy
+        event = A.capture(data, list(data), sid, cfg, now) if prepared_event is None else deepcopy(prepared_event)
+        event['capture_settings'] = dict(cfg)
         store.write(dict(event, identity=ident))
         store.write({"kind": "causes", "scan_id": sid, "as_of_ms": now, "identity": ident,
                      "items": [{"symbol": s, "decision_id": "d_" + s} for s in data]})
@@ -108,10 +110,10 @@ def test_producer_builds_exact_point_in_time_model_with_provenance(paths):  # no
 
 def test_world_component_is_the_existing_volume_component_and_changes_no_ranking(paths):  # noqa: F811
     src, _dest, now = paths
-    publish(src, now, spikes=(0, 1, 2), cfg=WORLD)
+    captured = publish(src, now, spikes=(0, 1, 2), cfg=WORLD)
     world = scan_of(src)
     legacy_src = src.with_name("legacy.db")
-    publish(legacy_src, now, spikes=(0, 1, 2), cfg=LEGACY)
+    publish(legacy_src, now, spikes=(0, 1, 2), cfg=LEGACY, prepared_event=captured)
     legacy = scan_of(legacy_src)
     assert "world_model" not in legacy
     for r in world["rows"]:
@@ -187,10 +189,10 @@ def test_attention_world_evaluation_failure_keeps_the_legacy_scan(paths):  # noq
     event = A.capture(frames(6, now), [f"S{j}/USDT" for j in range(6)], "s1", WORLD, now)
     real = A.evaluate_snapshot
 
-    def broken(ev, world_model=None):
+    def broken(ev, world_model=None, learning_journal=None):
         if world_model is not None:
             raise KeyError("boom")
-        return real(ev)
+        return real(ev, learning_journal=learning_journal)
     with patch.object(A, "evaluate_snapshot", broken):
         payload = W.evaluate(event)
     assert payload["world_model"]["status"] == W.REFUSED

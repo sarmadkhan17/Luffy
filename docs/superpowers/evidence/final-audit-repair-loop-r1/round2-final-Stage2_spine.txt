@@ -1,0 +1,122 @@
+..F.......F............................................................. [ 39%]
+........................................................................ [ 78%]
+.......................................                                  [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+_ test_world_component_is_the_existing_volume_component_and_changes_no_ranking _
+
+paths = (PosixPath('/tmp/pytest-of-sarmad/pytest-533/test_world_component_is_the_ex0/attention.db'), PosixPath('/tmp/pytest-of-sarmad/pytest-533/test_world_component_is_the_ex0/investigation.db'), 1791072060000)
+
+    def test_world_component_is_the_existing_volume_component_and_changes_no_ranking(paths):  # noqa: F811
+        src, _dest, now = paths
+        publish(src, now, spikes=(0, 1, 2), cfg=WORLD)
+        world = scan_of(src)
+        legacy_src = src.with_name("legacy.db")
+        publish(legacy_src, now, spikes=(0, 1, 2), cfg=LEGACY)
+        legacy = scan_of(legacy_src)
+        assert "world_model" not in legacy
+        for r in world["rows"]:
+            if r.get("eligible"):
+                assert r["world_model"]["status"] == "ok"
+                assert r["components"]["world_volume_anomaly"] == r["components"]["volume_anomaly"]
+        # Rank, selection, reason, salience and dominant family are unchanged.
+        assert strip_world(world["rows"]) == legacy["rows"]
+>       assert world["market"] == legacy["market"] and world["observations"] == legacy["observations"]
+E       AssertionError: assert ({'breadth_up'...25145179, ...} == {'breadth_up'...25145179, ...}
+E
+E         Omitting 9 identical items, use -vv to show
+E         Use -v to get more diff and [{'as_of_ms':...00, ...}, ...] == [{'as_of_ms':...00, ...}, ...]
+E
+E         At index 0 diff: {'as_of_ms': 1791072060000, 'available_ms': 1791072060000, 'detail': {'anchor_open_ms': 1791057600000, 'first_open_ms': 1790697600000, 'need': 26}, 'event_ms': 1791072000000, 'kind': 'candle_window', 'obs_id': 'obs_a347abd8160bddfa', 'schema_version': 'cognition.v1', 'source': 'offline:attention|instrument=offline:futures:S0USDT|revision=0479af7f203df4b211b9710218a603787fec89d0299cac2daff8885d414043ee,offline:attention|instrument=offline:futures:S0USDT|revision=097f08d24125111a908285c8988622b82c048902f248dbb71bd9e6ee39c30002,offline:attention|instrument...
+E
+E         ...Full output truncated (2 lines hidden), use '-vv' to show)
+
+tests/test_intelligence_spine.py:123: AssertionError
+________ test_attention_world_evaluation_failure_keeps_the_legacy_scan _________
+
+event = {'kind': 'scan', 'schema_version': 'attention.telemetry.v1', 'scan_id': 's1', 'as_of_ms': 1791072060000, ...}
+model = WorldModel(as_of_ms=1791072060000, nodes=(HierarchyNode(scope=Scope(level=<ScopeLevel.ASSET_CLASS: 'ASSET_CLASS'>, ide...ionships=None, claims=None, model_id='world.model.v1:aff8ab5f5ee6f44efb58b105812a7d92638f202a8bf3d871af2389d9e3a6fb61')
+learning_journal = None
+
+    def evaluate(event, *, model=None, learning_journal=None):
+        """Attention payload through the existing WorldModel seam, plus receipt.
+
+        `model` is injectable for tests (e.g. a stale cut); by default it is
+        produced from the event. A refused model yields the legacy payload."""
+        from trader.observability.attention import evaluate_snapshot
+        if model is None:
+            model, rec = produce(event)
+        else:
+            rec = receipt(OK, None, event["as_of_ms"], WorldModelRecord.from_model(model),
+                          _counts(model))
+        if model is None:
+            return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=rec)
+        if model.as_of_ms != event["as_of_ms"]:
+            stale = receipt(REFUSED, "world_model_cut_mismatch", event["as_of_ms"])
+            stale.update(model_id=model.model_id, refused_as_of_ms=model.as_of_ms)
+            return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=stale)
+        try:
+>           return dict(evaluate_snapshot(event, model, learning_journal), world_model=rec)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: test_attention_world_evaluation_failure_keeps_the_legacy_scan.<locals>.broken() takes from 1 to 2 positional arguments but 3 were given
+
+trader/observability/world_producer.py:187: TypeError
+
+During handling of the above exception, another exception occurred:
+
+paths = (PosixPath('/tmp/pytest-of-sarmad/pytest-533/test_attention_world_evaluatio0/attention.db'), PosixPath('/tmp/pytest-of-sarmad/pytest-533/test_attention_world_evaluatio0/investigation.db'), 1791072060000)
+
+    def test_attention_world_evaluation_failure_keeps_the_legacy_scan(paths):  # noqa: F811
+        _src, _dest, now = paths
+        event = A.capture(frames(6, now), [f"S{j}/USDT" for j in range(6)], "s1", WORLD, now)
+        real = A.evaluate_snapshot
+
+        def broken(ev, world_model=None):
+            if world_model is not None:
+                raise KeyError("boom")
+            return real(ev)
+        with patch.object(A, "evaluate_snapshot", broken):
+>           payload = W.evaluate(event)
+                      ^^^^^^^^^^^^^^^^^
+
+tests/test_intelligence_spine.py:195:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+event = {'kind': 'scan', 'schema_version': 'attention.telemetry.v1', 'scan_id': 's1', 'as_of_ms': 1791072060000, ...}
+model = WorldModel(as_of_ms=1791072060000, nodes=(HierarchyNode(scope=Scope(level=<ScopeLevel.ASSET_CLASS: 'ASSET_CLASS'>, ide...ionships=None, claims=None, model_id='world.model.v1:aff8ab5f5ee6f44efb58b105812a7d92638f202a8bf3d871af2389d9e3a6fb61')
+learning_journal = None
+
+    def evaluate(event, *, model=None, learning_journal=None):
+        """Attention payload through the existing WorldModel seam, plus receipt.
+
+        `model` is injectable for tests (e.g. a stale cut); by default it is
+        produced from the event. A refused model yields the legacy payload."""
+        from trader.observability.attention import evaluate_snapshot
+        if model is None:
+            model, rec = produce(event)
+        else:
+            rec = receipt(OK, None, event["as_of_ms"], WorldModelRecord.from_model(model),
+                          _counts(model))
+        if model is None:
+            return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=rec)
+        if model.as_of_ms != event["as_of_ms"]:
+            stale = receipt(REFUSED, "world_model_cut_mismatch", event["as_of_ms"])
+            stale.update(model_id=model.model_id, refused_as_of_ms=model.as_of_ms)
+            return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=stale)
+        try:
+            return dict(evaluate_snapshot(event, model, learning_journal), world_model=rec)
+        except Exception as exc:        # never lose the scan to the shadow input
+            failed = receipt(REFUSED, "attention_world_evaluation_failed:" + type(exc).__name__,
+                             event["as_of_ms"])
+            failed.update(model_id=model.model_id)
+>           return dict(evaluate_snapshot(event, learning_journal=learning_journal), world_model=failed)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E           TypeError: test_attention_world_evaluation_failure_keeps_the_legacy_scan.<locals>.broken() got an unexpected keyword argument 'learning_journal'
+
+trader/observability/world_producer.py:192: TypeError
+=========================== short test summary info ============================
+FAILED tests/test_intelligence_spine.py::test_world_component_is_the_existing_volume_component_and_changes_no_ranking
+FAILED tests/test_intelligence_spine.py::test_attention_world_evaluation_failure_keeps_the_legacy_scan
+2 failed, 181 passed in 353.75s (0:05:53)

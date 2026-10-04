@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import re
 import time
@@ -70,6 +71,7 @@ class MacroGuard:
                              "why": "", "checked": 0.0}
         self._calendar: list[dict] = []
         self._cal_fetched: float = 0.0
+        self._cal_started: float | None = None
         #: both sources dead → don't retry until this timestamp
         self._retry_after = 0.0
         #: did any source actually answer? An empty calendar means "quiet
@@ -90,14 +92,20 @@ class MacroGuard:
         Both sources are normalised to `{"event": str, "when": aware UTC}` so
         the window check never has to know which one answered.
         """
-        now = time.time()
-        if now - self._cal_fetched < self._cal_ttl and self._calendar:
+        now = self._now().timestamp()
+        if self._cal_fetched > now:
+            self._calendar = []
+            self._cal_fetched = 0.0
+            self._cal_started = None
+            self._sources_ok = False
+            self._retry_after = 0.0
+        if 0 <= now - self._cal_fetched < self._cal_ttl and self._calendar:
             return self._calendar
         if now < self._retry_after:
             return self._calendar
         if not self._calendar:
             self._load_cached()
-            if now - self._cal_fetched < self._cal_ttl and self._calendar:
+            if 0 <= now - self._cal_fetched < self._cal_ttl and self._calendar:
                 return self._calendar
 
         events = []
@@ -106,11 +114,19 @@ class MacroGuard:
             events = self._from_finnhub()
         if not events:
             events = self._from_forexfactory()
-        if events:
+        received = self._now().timestamp()
+        if received < now:
+            events = []
+            self._calendar = []
+            self._sources_ok = False
+            self._cal_fetched = 0.0
+            self._cal_started = None
+        if events or self._sources_ok:
             self._calendar = events
-            self._cal_fetched = now
+            self._cal_started = now
+            self._cal_fetched = received
             self._retry_after = 0.0
-            self._save_cached(events, now)
+            self._save_cached(events, received)
             log.debug(f"macro_guard: {len(events)} high-impact US events")
         else:
             # Both sources are down. Back off rather than hammering them on
@@ -124,7 +140,7 @@ class MacroGuard:
         try:
             self._cache_path.parent.mkdir(parents=True, exist_ok=True)
             self._cache_path.write_text(json.dumps({
-                "fetched": fetched,
+                "fetched": fetched, "request_started_at": self._cal_started,
                 "events": [{"event": e["event"], "when": e["when"].isoformat()}
                            for e in events]}))
         except Exception as e:
@@ -135,14 +151,20 @@ class MacroGuard:
         except a fresh one, and everything beats no guard at all."""
         try:
             raw = json.loads(self._cache_path.read_text())
+            if type(raw["fetched"]) not in (int, float):
+                return
             fetched = float(raw["fetched"])
+            started = raw.get('request_started_at')
+            if not math.isfinite(fetched) or (started is not None and
+                    (type(started) not in (int,float) or not math.isfinite(started) or started > fetched)):
+                return
         except Exception:
             return
         # One clock: both reads go through _now(), so the guard (and a test
         # that pins it) never measures the cache against a different time.
         now = self._now()
         age = now.timestamp() - fetched
-        if age > _CACHE_MAX_AGE:
+        if not 0 <= age <= _CACHE_MAX_AGE:
             return
         # A cache whose every event is already behind us guards nothing.
         # Treating it as a live source would report "quiet week" while the
@@ -161,6 +183,7 @@ class MacroGuard:
             return
         self._calendar = events
         self._cal_fetched = fetched
+        self._cal_started = started
         self._sources_ok = True
         if age > _CACHE_STALE:
             log.warning("macro_guard: using a %.1f-hour-old cached calendar; "
@@ -268,10 +291,11 @@ class MacroGuard:
 
     def _find_active_event(self) -> dict | None:
         """Return the first calendar event within the freeze window, or None."""
+        calendar = self._fetch_calendar()
         now = self._now()
         pre = timedelta(minutes=self.pre_min)
         post = timedelta(minutes=self.post_min)
-        for e in self._fetch_calendar():
+        for e in calendar:
             ev_utc = e.get("when")
             if ev_utc is None:
                 continue
@@ -285,6 +309,12 @@ class MacroGuard:
 
     # ── public interface ──────────────────────────────────────────────────
 
+    def _assessment(self):
+        return {**{k:self._state[k] for k in ('active','event','until','why')},
+                'checked_at':self._state['checked'],
+                'received_at':self._cal_fetched if self._cal_fetched else None,
+                'request_started_at':self._cal_started}
+
     def check(self) -> dict:
         """Return {"active": bool, "event": str, "until": str|None, "why": str}.
 
@@ -293,10 +323,11 @@ class MacroGuard:
         if not self.enabled:
             return {"active": False, "event": "", "until": None,
                     "why": "disabled"}
-        now = time.time()
-        if now - self._state["checked"] < self._refresh_s:
-            return {k: self._state[k]
-                    for k in ("active", "event", "until", "why")}
+        now = self._now().timestamp()
+        if self._cal_fetched > now:
+            self._state['checked'] = 0.0
+        if 0 <= now - self._state["checked"] < self._refresh_s:
+            return self._assessment()
         self._state["checked"] = now
         try:
             hit = self._find_active_event()
@@ -314,8 +345,8 @@ class MacroGuard:
                 active=False, event="", until=None,
                 why=f"no calendar source reachable ({detail}"
                     f"forexfactory unavailable)")
-            return {k: self._state[k]
-                    for k in ("active", "event", "until", "why")}
+            self._state["checked"] = self._now().timestamp()
+            return self._assessment()
         was_active = self._state["active"]
         if hit:
             self._state.update(active=True, event=hit["event"],
@@ -340,5 +371,5 @@ class MacroGuard:
                             timezone.utc).isoformat()})
                 except Exception:
                     pass
-        return {k: self._state[k]
-                for k in ("active", "event", "until", "why")}
+        self._state["checked"] = self._now().timestamp()
+        return self._assessment()

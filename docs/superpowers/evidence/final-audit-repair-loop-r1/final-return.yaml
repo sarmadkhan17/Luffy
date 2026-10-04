@@ -1,0 +1,374 @@
+LUFFY_FINAL_AUDIT_REPAIR_LOOP_R1: PASS
+ITERATIONS: 15
+FINAL_HEAD: UNCOMMITTED
+DEFECTS:
+  F1: CLOSED
+  F2: CLOSED
+  F3: CLOSED
+  F4: CLOSED
+  F5: CLOSED
+  F6: CLOSED
+  F7: CLOSED
+  F9: CLOSED
+NEW_DEFECTS_FOUND_DURING_LOOP:
+- id: F10
+  path_function: trader/cognition/attention.py:evaluate priority read; trader/learning/consumers.py:allocation_observations;
+    trader/portfolio/allocator.py:attach_learning/allocate
+  violation: 'SDD 6.2/19.3/21: historical selection/allocation consumes only adaptations
+    applied by its explicit cut; frozen replay must prove temporal eligibility'
+  status: CLOSED
+- id: F11
+  path_function: trader/engine/supervisor.py:Supervisor._pass_once recovery checks
+  violation: 'SDD 24.1: uncertain execution outcome cannot qualify as proved safe
+    recovery/ACTIVE'
+  status: CLOSED
+- id: F12
+  path_function: trader/engine/entry_authority.py:submit second durable hold
+  violation: 'SDD 17/18/24.1: unresolved execution outcomes block new exposure at
+    the final held submission boundary'
+  status: CLOSED
+- id: F13
+  path_function: trader/research/predictive_experiment.py:freeze_candles; trader/research/predictive_bridge.py:cycle
+    snapshot consumer
+  violation: 'SDD 6.2/19.3: frozen numerical research must retain qualified input
+    provenance and immutable replay identity across actual readers'
+  status: CLOSED
+REGRESSIONS_INTRODUCED_DURING_LOOP:
+- 'R1: explicit independent feed initialization revealed 12 Kernel boot fixture failures:
+  fixture omitted the production DataFeed dependency (f4-r2-regression.txt).'
+- 'R2: additional Supervisor boot fixture lacked explicit public DataFeed; three source-mutant
+  tests targeted the superseded publication-only predicate or did not remove the new
+  parallel work-age check (f5-regression first run).'
+- id: R3
+  failure: Stage8 package-local git diff guard asserts entire Executor remains untouched
+    despite expressly authorized F4 repair; f9-regression.txt initial 127 passed,
+    one scope assertion failed.
+  fix: Retain exact audited baseline equality for Risk/RiskIntent and AST equality
+    for every Executor method except three authorized partial/recovery methods; existing
+    behavioral authority tests remain unchanged.
+  status: FIXED
+- 'R4 / F11: durable partial intent integrated into Executor entry barrier but not
+  Supervisor safe activation proof; exact offline normal boot reproduction.'
+- 'R5: F3 correctly rejects a future revision that an older latest-overlay test applied
+  to a WorldModel cut of 200; fixture needs a current cut, while new regressions preserve
+  future rejection.'
+- 'R6 / F12: durable partial intent was not included at the final held entry admission/submission
+  boundary after the early Executor barrier.'
+REGRESSIONS_FIXED_DURING_LOOP:
+- 'F1: original installed-CCXT cold-feed regression repaired.'
+- 'R1: boot fixture now supplies a distinct real DataFeed around an offline recording
+  exchange; all original recovery/protection assertions preserved.'
+- 'R2: supplied public feed and asserted its boot initialization; stale mutant now
+  removes both ages, chronology mutant removes both validation/age layers. Normal
+  malformed/chronology assertions unchanged.'
+- 'R3: frozen Stage8 guard now verifies exact Risk/RiskIntent bytes and every unchanged
+  Executor authority method against starting HEAD; 128-test rerun passed.'
+- 'R4 / F11: Supervisor activation now proves and holds resolution of every durable
+  execution intent through the ACTIVE CAS; original and late-reservation variants
+  pass.'
+- 'R5: current overlay fixture now uses a coherent application cut for WorldModel,
+  WorldState and every claim; historical rejection/exact-cut/reopen tests remain separate
+  and pass (current-and-historical-world-regression.txt: 3 passed).'
+- 'R6 / F12: both held admission/submission transactions revalidate partial intent
+  state; known never-submitted reservations are durably refused/cleared (135 affected
+  and 14 read-only tests passed).'
+AUTHORITY_BYPASS_FOUND: 'NO'
+PIT_OR_REPLAY_LEAK_FOUND: 'NO'
+DUPLICATE_NEW_EXPOSURE_PATH_FOUND: 'NO'
+RECOVERY_BYPASS_FOUND: 'NO'
+LIVE_LLM_DEPENDENCY: ZERO
+BUILD_IMPLEMENTATION_REVIEW: PASS
+PRE_START_ENGINEERING_BLOCKERS:
+- NONE
+F8_RUNTIME_HANDOFF: PENDING
+READY_FOR_RUNTIME_HANDOFF: 'YES'
+READY_FOR_FIRST_CONTROLLED_STARTUP: 'NO'
+FILES_CHANGED:
+- NEXT.yaml
+- STATE.yaml
+- docs/superpowers/evidence/final-audit-repair-loop-r1/attention-fixture-update.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/baseline-attention-fixtures.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/baseline-final-matrix-failures.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/baseline-results.json
+- docs/superpowers/evidence/final-audit-repair-loop-r1/baseline_probes.py
+- docs/superpowers/evidence/final-audit-repair-loop-r1/current-and-historical-world-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/defect-ledger.json
+- docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage1_data.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage1_entry.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage1_exit_accounting.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage2_spine.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage3_research.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage4_referee.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage5_authority.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage6_portfolio.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/diskfull-final-Stage7_learning.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/engineering-closure.json
+- docs/superpowers/evidence/final-audit-repair-loop-r1/entry_gap_probe.py
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f1-before.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f1-graphify.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f1-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f1-review.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f10-before.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f10-focused.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f10-r3-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f10-regression-r2.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f10-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f10-review.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f11-before.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f11-r2-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f11-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f11-review-r1.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f11-review-r2.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f11-risk-cas-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f12-before.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f12-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f12-review.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f13-before.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f13-consumer-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f13-final-review-r2.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f13-final-review.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f13-r2-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f13-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f13-review-r2.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f13-review.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f13-wide-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f14-before.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f14-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f2-before.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f2-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f2-review.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f3-before.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f3-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f3-review.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f4-before.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f4-r2-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f4-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f4-review-r1.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f4-review-r2.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f5-before.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f5-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f5-review.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f6-before.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f6-r2-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f6-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f6-review-r1.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f6-review-r2.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f7-before.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f7-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f7-review.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f9-before.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f9-regression-r2.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f9-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f9-review-r2.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/f9-review.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/files-changed.json
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage1_data.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage1_entry.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage1_exit_accounting.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage2_spine.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage3_research-r5.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage3_research.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage4_referee.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage5_authority.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage6_portfolio.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage7_learning.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage8_owner.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-caller-audit.json
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-exit-variant-review.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-frontend-typecheck.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-graphify-update-r2.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-graphify-update.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-installed-ccxt-contract.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-matrix-progress.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-matrix-run.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-original-and-safety-r2.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-original-and-safety-r3.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-original-and-safety-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-original-probes.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-regression-matrix.json
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-return.yaml
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r1-allocation-probe.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r1-probes.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r1-recovery-probe.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r2-entry-probe.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r4-source.json
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r5-source.json
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-source.json
+- docs/superpowers/evidence/final-audit-repair-loop-r1/final-verification.json
+- docs/superpowers/evidence/final-audit-repair-loop-r1/finalize.py
+- docs/superpowers/evidence/final-audit-repair-loop-r1/fixture-current-cut-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/owner-boundary-thread-diagnostic.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/owner-local-ipc-regression.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/owner-test-thread-diagnostic.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage1_data.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage1_entry.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage1_exit_accounting.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage2_spine.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage3_research.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage4_referee.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage5_authority.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage6_portfolio.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage7_learning.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-Stage8_owner.txt
+- docs/superpowers/evidence/final-audit-repair-loop-r1/round2-final-regression-matrix.json
+- docs/superpowers/evidence/final-audit-repair-loop-r1/run_final_matrix.py
+- docs/superpowers/evidence/final-audit-repair-loop-r1/superseded-stage3-guard-result.json
+- docs/superpowers/evidence/final-audit-repair-loop-r1/test-temp-relocation.json
+- docs/superpowers/reports/2026-10-04-final-audit-repair-loop-r1.md
+- graphify-out/.graphify_labels.json
+- graphify-out/.graphify_labels.json.sig
+- graphify-out/.graphify_root
+- graphify-out/2026-10-04/.graphify_labels.json
+- graphify-out/2026-10-04/GRAPH_REPORT.md
+- graphify-out/2026-10-04/graph.json
+- graphify-out/2026-10-04/manifest.json
+- graphify-out/GRAPH_REPORT.md
+- graphify-out/cache/ast/v0.9.63-s3/00f471049983427bcbd3ee1961a79d2553a1f0dfc991af48d6a333103bff7faa.json
+- graphify-out/cache/ast/v0.9.63-s3/01de1e21b3025c201703ce5ed4ba31f02a1f1930ba8865db86d486b858c63bdd.json
+- graphify-out/cache/ast/v0.9.63-s3/077e6ad1bf2e64634e06507a1d113c3fe48fd2a0c75de3f0b699a05f0e888928.json
+- graphify-out/cache/ast/v0.9.63-s3/105f4d9d730925eee03b596001cbee09722a8ba23420836262dcaa548ea54dcd.json
+- graphify-out/cache/ast/v0.9.63-s3/16e548d3161bd9f8a6d26e07c397a5aae5f8b7b49cbc6879129319f286d59e45.json
+- graphify-out/cache/ast/v0.9.63-s3/1977b0d61e70344df9fde9c989fc5a551867a5950acc740cf66c1f193c709506.json
+- graphify-out/cache/ast/v0.9.63-s3/1b8a4a77298840b66d3736c4a355229767038e3cfe6a025dd8917363298ef897.json
+- graphify-out/cache/ast/v0.9.63-s3/247255e3baca8dca39d727c82c0490e90ce4441358a4ea31d95cbe588b329b98.json
+- graphify-out/cache/ast/v0.9.63-s3/24b60b69e8947ddee9c5175cdf90ce57c2dea459d81b7e7d5bf77d701768d61b.json
+- graphify-out/cache/ast/v0.9.63-s3/24b7ef777428ea5f08647fc26275f686fe98269a5b2cf8fa83890d74070f0b60.json
+- graphify-out/cache/ast/v0.9.63-s3/2e1dc3f017bdf66c750353b299cb0074728410b0461be77be72075c6070d3af4.json
+- graphify-out/cache/ast/v0.9.63-s3/2e394ad6ff4e2c0aa66e5d8714f464c517aa9ed6f0ca01479ad4d3c8245ed003.json
+- graphify-out/cache/ast/v0.9.63-s3/2e3a0f57464e0c5d801853f666999270b5d32a70991218d09da79e5c0c7ee5b6.json
+- graphify-out/cache/ast/v0.9.63-s3/32e7cf61f0ef20eaf8b7fc4c35c17dcb997b8ec566c413fae01a17279fa87323.json
+- graphify-out/cache/ast/v0.9.63-s3/349f6b872ac26859260df659487514895f73c781edf73d674468891554a494e4.json
+- graphify-out/cache/ast/v0.9.63-s3/34bd3ce9154375fc2efbb3456dff46f2c383b28325e70cc0434d8acb3e47635f.json
+- graphify-out/cache/ast/v0.9.63-s3/35886f841f89cf80ae5724cad1f0ca0e78c4636453c72dffc142dc6e9112bb5c.json
+- graphify-out/cache/ast/v0.9.63-s3/37220ebfbf25826d1b37405a782eae4c0b5112d5b9981e377c1bada9e01aab87.json
+- graphify-out/cache/ast/v0.9.63-s3/3cf4e25cca9fb33165c807f3bbbafe7d31564c3086f03f80d321243ee62320d1.json
+- graphify-out/cache/ast/v0.9.63-s3/3f3da107ec973e2f03d08092b4dd9c15c4ddcd3ce10f56b2a352aa58e9d7baea.json
+- graphify-out/cache/ast/v0.9.63-s3/4612666f494e9d3e9246e0e58951af6e284d857b0d4bd3c841d928efbb8f8cca.json
+- graphify-out/cache/ast/v0.9.63-s3/482958558683bbf4883032d6e98a112aadcdc908d662f5153c3f870e80635b24.json
+- graphify-out/cache/ast/v0.9.63-s3/52c2b19cfd69c26a896291884c976195fcb7fb35979841d1db4abc2c54493613.json
+- graphify-out/cache/ast/v0.9.63-s3/5ae7ba582f2f8bce26437ddc2dfdcb034c9ae8141c3b99bbea8bb46308af8404.json
+- graphify-out/cache/ast/v0.9.63-s3/5b9e63308ad5a75878e18195a8bcdc69f52ba246da8400efe20941fb166750e4.json
+- graphify-out/cache/ast/v0.9.63-s3/5c008d261a895691cc7d50f3429560b86664c5fbf81d14541f4f9899b49143d6.json
+- graphify-out/cache/ast/v0.9.63-s3/5e4758f4d79265f1ee288f86f633552699d02fa125179e332f348db26f617ef8.json
+- graphify-out/cache/ast/v0.9.63-s3/60bcfeb871cc5cf611b018d2dcd8caa0b94ab105b3febac74daf9707d784dfab.json
+- graphify-out/cache/ast/v0.9.63-s3/62f37ce8d99b8c4201cf88caa14c064f3e4a8dc87ea37fd9c80aeda92cae9abd.json
+- graphify-out/cache/ast/v0.9.63-s3/702f49500de957a88ef72891b9aaeb0b5458e6759a841a550ba4ab08e9d0e924.json
+- graphify-out/cache/ast/v0.9.63-s3/70644716002e47a24b944940ed053303f143c93324c35b8bc11e5bd406398d09.json
+- graphify-out/cache/ast/v0.9.63-s3/70e7dd2b8a26bf35c6c0d2fa2c39ae5b9000e7864f51b14080c2344aaf749652.json
+- graphify-out/cache/ast/v0.9.63-s3/7b5d3d6e1a756e2dae5c7f8e93bd0e84b25319274f056bec562ced26a60eefa7.json
+- graphify-out/cache/ast/v0.9.63-s3/835ce45d6724ade113d51b4c6eba2b8cb5a08c3e12f3745f432c0e73934a1f79.json
+- graphify-out/cache/ast/v0.9.63-s3/87ce7c7b21305400ee1edf7e25d571e68fe7c7cf4ff6ecc92db5ef5cabd4b2e8.json
+- graphify-out/cache/ast/v0.9.63-s3/9551dba96776894b9333b6ee4659354c7da7f8dd733da1fc828ab6bb2e05ccf5.json
+- graphify-out/cache/ast/v0.9.63-s3/9ab7425570a0663f27c6b86e20d409ece8283a6c6313671454309c3aac81d7bf.json
+- graphify-out/cache/ast/v0.9.63-s3/9f27ce3bb46a45918c8fae0b484da1dfa71bcac3016a8dfb3b28d22822892a0c.json
+- graphify-out/cache/ast/v0.9.63-s3/a07a10d9ef7daf4b85a662981a34536373a5c18be5d9bae52fe28b09656529b0.json
+- graphify-out/cache/ast/v0.9.63-s3/a3065abf250203eb072e51e7769b8bc67176c45d6d95e1c397da399dfeb44e67.json
+- graphify-out/cache/ast/v0.9.63-s3/a8b353e0c9a43e02a061c742b940cb548d59b8580f3c00db1164ae46a8777a93.json
+- graphify-out/cache/ast/v0.9.63-s3/aa311bb9fed467fb5475fccb793b36be600594da695df92e66fadbc6181a0c22.json
+- graphify-out/cache/ast/v0.9.63-s3/ab350aea0c2f4882a7e7c57f448a199c5613e4b4c8cfd23515302aa912413774.json
+- graphify-out/cache/ast/v0.9.63-s3/ad3c46962b65b19112e248fc33365718d33b895d4d00b0dba44d0d87e3d49fb3.json
+- graphify-out/cache/ast/v0.9.63-s3/b264adda79b943c37fb1312a17311ebc40efd8a1e95a1e3e474eb36dd8b719b1.json
+- graphify-out/cache/ast/v0.9.63-s3/b346e7035ba198062e3f02e836e6e3379da0fd92ac46ddf32c21750033558800.json
+- graphify-out/cache/ast/v0.9.63-s3/b4f7f4a868ba7ddc512dc8011317cd230e79fbf4b0993bd51b229d55f1a6f56d.json
+- graphify-out/cache/ast/v0.9.63-s3/b64950cc5920674e2c1c79f84be5fadf719b53c1bc8a3c94438b2aa2ae63fedf.json
+- graphify-out/cache/ast/v0.9.63-s3/bd4b2d738e1653522d34276ee27251f8be6960e1e4d3a8a458259d673900866f.json
+- graphify-out/cache/ast/v0.9.63-s3/cb821605168396b45cdc22cd83f94f0c02fa266736f57cfbc08cee8a27b7986a.json
+- graphify-out/cache/ast/v0.9.63-s3/cc46357de7d2549eeaa06ed4b3ce084022e5ef9696848fb5501d1e7cce37b01e.json
+- graphify-out/cache/ast/v0.9.63-s3/cf4be13b6582e9f65cdaa2ba7670d723c0544c39fb85584e4891f55996aef01b.json
+- graphify-out/cache/ast/v0.9.63-s3/d38626083f624d636af236f43973689200a1068f5e635e157360304fd5366977.json
+- graphify-out/cache/ast/v0.9.63-s3/d67ebe076f402d293268f78cbd58dfd44d7af33d92e03c2221eeb66851d299d3.json
+- graphify-out/cache/ast/v0.9.63-s3/dd6312bf69820910e3f6730a74cce0859beda95150d7e5cb3d6612a44c433bce.json
+- graphify-out/cache/ast/v0.9.63-s3/ddbd369a482882e1ac240cba1b511802e02a35844528c9059e123f4b2efedce7.json
+- graphify-out/cache/ast/v0.9.63-s3/debe18779cc68c15b2e386c239412c8f9c57a73758de3951175b12ca92cfd4b6.json
+- graphify-out/cache/ast/v0.9.63-s3/e5b577ed8771b4a363e9c63dd694ef762b69b34d306c2167fa51a8bcc2e2e254.json
+- graphify-out/cache/ast/v0.9.63-s3/e935cf54412fa71111c76955fadb0598b06e0a2b22e3b0a803dde4686623886e.json
+- graphify-out/cache/ast/v0.9.63-s3/e940ab579e1c6f41583605b454130fd4fa5c291e6bbe452e7c4a2c992ef25d0c.json
+- graphify-out/cache/ast/v0.9.63-s3/eadf534ee78e36b359d3a0cdbf9ccdcc703d8d0d5d4d9746990deff70a2fe745.json
+- graphify-out/cache/ast/v0.9.63-s3/f3d1d9d41214d888da58006a156e68fd02afcf2a608d0459c3783c5be41ab399.json
+- graphify-out/cache/ast/v0.9.63-s3/f513d7e3795f875bb26dbd416e89cbd3865ffd80b492aed7169ada2a5454de58.json
+- graphify-out/cache/ast/v0.9.63-s3/f759e3485ba2de2fb9657c92eccfa9a9b24cb51f219f1890e55fd5af0f891351.json
+- graphify-out/cache/ast/v0.9.63-s3/f9a729bce79632e583c3b1e3c02e90a00e73fb127979666881914b22d5e46b3e.json
+- graphify-out/cache/ast/v0.9.63-s3/f9f794bee109ba35a2a1ce40482f48c8428ced62f548cdc960a81e52f6f1dcd8.json
+- graphify-out/cache/ast/v0.9.63-s3/fadf1a15920dc54e70784c9eaa4f266384a419b2159f70f54974faf6da2056c5.json
+- graphify-out/cache/last_query_stamp
+- graphify-out/cache/stat-index.json
+- graphify-out/graph.html
+- graphify-out/graph.json
+- graphify-out/manifest.json
+- tests/_corr_synth.py
+- tests/retained_candle_fixtures.py
+- tests/stage1_pit_offline_plugin.py
+- tests/test_attention_selection_persistence.py
+- tests/test_attention_telemetry.py
+- tests/test_derivatives.py
+- tests/test_final_audit_attention_allocation_time.py
+- tests/test_final_audit_backup_input.py
+- tests/test_final_audit_entry_partial_barrier.py
+- tests/test_final_audit_feed_identity.py
+- tests/test_final_audit_heartbeat_age.py
+- tests/test_final_audit_learning_time.py
+- tests/test_final_audit_llm_reservation.py
+- tests/test_final_audit_macro_time.py
+- tests/test_final_audit_partial_ack.py
+- tests/test_final_audit_partial_intent.py
+- tests/test_final_audit_research_snapshot.py
+- tests/test_final_audit_supervisor_partial.py
+- tests/test_intelligence_spine.py
+- tests/test_kernel_boot_recovery.py
+- tests/test_macro_guard.py
+- tests/test_normal_learning_loop_closure.py
+- tests/test_owner_interface_boundary.py
+- tests/test_predictive_research_bridge.py
+- tests/test_real_learning_integration.py
+- tests/test_research_calibration.py
+- tests/test_research_evidence_source_binding.py
+- tests/test_research_referee.py
+- tests/test_spec_signals_on_closed_bars.py
+- tests/test_stage1_data_provenance_pit.py
+- tests/test_stage1_pit_blocker_fix.py
+- tests/test_stage1_recovery_monitoring.py
+- tests/test_stage8_owner_os.py
+- tests/test_strategy_factory_handoff.py
+- tests/test_supervisor.py
+- trader/agents/macro_guard.py
+- trader/brain/llm.py
+- trader/cognition/attention.py
+- trader/core/instrument_registry.py
+- trader/core/journal.py
+- trader/data/feed.py
+- trader/data/market_provenance.py
+- trader/engine/entry_authority.py
+- trader/engine/executor.py
+- trader/engine/partial_intent.py
+- trader/engine/supervisor.py
+- trader/engine/watchdog.py
+- trader/kernel.py
+- trader/learning/consumers.py
+- trader/learning/targets.py
+- trader/observability/attention.py
+- trader/observability/safety.py
+- trader/persistence/backup.py
+- trader/portfolio/allocator.py
+- trader/research/predictive_experiment.py
+- trader/world/model.py
+TESTS:
+- Stage1_data: 100 passed in 99.50s (0:01:39)
+- Stage1_entry: 83 passed in 87.80s (0:01:27)
+- Stage1_exit_accounting: 71 passed in 27.51s
+- Stage2_spine: 183 passed in 509.01s (0:08:29)
+- Stage3_research: 267 passed in 470.65s (0:07:50)
+- Stage4_referee: 32 passed in 93.67s (0:01:33)
+- Stage5_authority: 53 passed in 58.56s
+- Stage6_portfolio: 145 passed in 124.46s (0:02:04)
+- Stage7_learning: 122 passed in 727.07s (0:12:07)
+- Stage8_owner: 208 passed in 143.29s (0:02:23)
+- Original_and_safety: 209 passed; zero network/production-store attempts
+- F13_final_read_only_research: 5 passed; zero network/production-store attempts
+- Frontend_typecheck: PASS
+- Installed_CCXT_contract: PASS; zero network calls
+- Source_hashes_and_control_plane: PASS
+- git_diff_check: PASS
+- Graphify_AST_update: PASS; no API/semantic extraction
+STATE_UPDATED: 'YES'
+NEXT_UPDATED: 'YES'
+NEXT_PACKAGE: LUFFY-PRESTART-RUNTIME-HANDOFF-R1

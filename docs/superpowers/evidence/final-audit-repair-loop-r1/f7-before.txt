@@ -1,0 +1,50 @@
+FFF                                                                      [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+___________ test_default_inventory_restores_exact_consumed_ewa_input ___________
+
+backup = (PosixPath('/tmp/pytest-of-sarmad/pytest-504/test_default_inventory_restore0/source'), <trader.core.journal.Journal object at 0x76386813c5c0>, <trader.persistence.backup.BackupSets object at 0x7638682dce60>)
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-504/test_default_inventory_restore0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7638688d9220>
+
+    def test_default_inventory_restores_exact_consumed_ewa_input(backup,tmp_path,monkeypatch):
+        root,j,old=backup
+        path,raw=retained(root)
+        monkeypatch.setattr(weights_online,'PATH',path)
+        expected=weights_online.blended_weights({'structure':.5,'flow':.5})
+        inventory=critical_inventory(root)
+>       assert any(a.path=='data/ewa_state.json' for a in inventory.assets)
+E       assert False
+E        +  where False = any(<generator object test_default_inventory_restores_exact_consumed_ewa_input.<locals>.<genexpr> at 0x763865db76b0>)
+
+tests/test_final_audit_backup_input.py:22: AssertionError
+__________ test_absent_consumed_retained_input_refuses_default_backup __________
+
+backup = (PosixPath('/tmp/pytest-of-sarmad/pytest-504/test_absent_consumed_retained_0/source'), <trader.core.journal.Journal object at 0x763865b57230>, <trader.persistence.backup.BackupSets object at 0x763865b56ff0>)
+
+    def test_absent_consumed_retained_input_refuses_default_backup(backup):
+        root,_,_=backup
+        path,_=retained(root);path.unlink()
+>       with pytest.raises(Refused,match='retained.*missing'):
+E       Failed: DID NOT RAISE Refused
+
+tests/test_final_audit_backup_input.py:39: Failed
+_______ test_manual_or_later_inventory_omission_cannot_bypass_dependency _______
+
+backup = (PosixPath('/tmp/pytest-of-sarmad/pytest-504/test_manual_or_later_inventory0/source'), <trader.core.journal.Journal object at 0x763865b57a10>, <trader.persistence.backup.BackupSets object at 0x763865c5e5a0>)
+
+    def test_manual_or_later_inventory_omission_cannot_bypass_dependency(backup):
+        root,_,old=backup;retained(root)
+        inventory=critical_inventory(root)
+        reduced=Inventory(tuple(a for a in inventory.assets if a.path!='data/ewa_state.json'))
+>       with pytest.raises(Refused,match='critical_inventory_incomplete'):
+E       Failed: DID NOT RAISE Refused
+
+tests/test_final_audit_backup_input.py:47: Failed
+=========================== short test summary info ============================
+FAILED tests/test_final_audit_backup_input.py::test_default_inventory_restores_exact_consumed_ewa_input
+FAILED tests/test_final_audit_backup_input.py::test_absent_consumed_retained_input_refuses_default_backup
+FAILED tests/test_final_audit_backup_input.py::test_manual_or_later_inventory_omission_cannot_bypass_dependency
+3 failed in 1.25s

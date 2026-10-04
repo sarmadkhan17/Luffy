@@ -1,0 +1,14 @@
+{
+  "installed_ccxt": "4.5.75",
+  "exact_client_query_supported": true,
+  "parsed_terminal_order": {
+    "id": "123",
+    "clientOrderId": "lp_test",
+    "symbol": "BTC/USDT:USDT",
+    "side": "sell",
+    "status": "closed",
+    "filled": 5.0,
+    "reduceOnly": true
+  },
+  "network_calls": 0
+}

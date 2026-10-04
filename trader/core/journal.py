@@ -765,7 +765,8 @@ class Journal:
     def align_trade_amount(self, trade_id: str, amount: float,
                            notional: float, pnl_delta: float = 0.0,
                            pnl_total: float | None = None,
-                           accounting: dict | None = None, tp1_done: bool = False) -> None:
+                           accounting: dict | None = None, tp1_done: bool = False,
+                           _connection=None) -> None:
         """Pull an open trade's size back to what the venue actually holds.
 
         Used when the venue closed part of a position without us — a stop or
@@ -777,7 +778,8 @@ class Journal:
         whatever the journal already banked. Never both — the total already
         contains every leg, so adding to it double-counts the partial.
         """
-        with self._tx() as c:
+        from contextlib import nullcontext
+        with (nullcontext(_connection) if _connection is not None else self._tx()) as c:
             from ..engine.booking import persist, snapshot
             before = snapshot(c.execute('SELECT * FROM trades WHERE id=?', (trade_id,)).fetchone())
             if before is None or before['status'] == 'closed':

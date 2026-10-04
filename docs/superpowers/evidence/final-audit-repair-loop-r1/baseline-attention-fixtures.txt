@@ -1,0 +1,2992 @@
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF                                        [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+___ test_real_kernel_cycle_keeps_entry_exit_behavior[False-ACTIVE-disabled] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e0')
+mode = 'disabled', state_name = 'ACTIVE', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x7720011f8d40>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[False-ACTIVE-normal] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e1')
+mode = 'normal', state_name = 'ACTIVE', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x772000c13170>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+_____ test_real_kernel_cycle_keeps_entry_exit_behavior[False-ACTIVE-full] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e2')
+mode = 'full', state_name = 'ACTIVE', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x772000b32000>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[False-ACTIVE-broken] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e3')
+mode = 'broken', state_name = 'ACTIVE', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x772000c136e0>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+___ test_real_kernel_cycle_keeps_entry_exit_behavior[False-FROZEN-disabled] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e4')
+mode = 'disabled', state_name = 'FROZEN', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe94b650>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[False-FROZEN-normal] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e5')
+mode = 'normal', state_name = 'FROZEN', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe962d20>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+_____ test_real_kernel_cycle_keeps_entry_exit_behavior[False-FROZEN-full] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e6')
+mode = 'full', state_name = 'FROZEN', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe962ab0>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[False-FROZEN-broken] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e7')
+mode = 'broken', state_name = 'FROZEN', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe962fc0>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+___ test_real_kernel_cycle_keeps_entry_exit_behavior[False-HALTED-disabled] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e8')
+mode = 'disabled', state_name = 'HALTED', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe961880>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[False-HALTED-normal] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e9')
+mode = 'normal', state_name = 'HALTED', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe94a750>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+_____ test_real_kernel_cycle_keeps_entry_exit_behavior[False-HALTED-full] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e10')
+mode = 'full', state_name = 'HALTED', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe979970>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[False-HALTED-broken] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e11')
+mode = 'broken', state_name = 'HALTED', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x77200d34c440>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+__ test_real_kernel_cycle_keeps_entry_exit_behavior[False-RECOVERY-disabled] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e12')
+mode = 'disabled', state_name = 'RECOVERY', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe94a9c0>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+___ test_real_kernel_cycle_keeps_entry_exit_behavior[False-RECOVERY-normal] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e13')
+mode = 'normal', state_name = 'RECOVERY', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe960bc0>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[False-RECOVERY-full] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e14')
+mode = 'full', state_name = 'RECOVERY', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe979580>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+___ test_real_kernel_cycle_keeps_entry_exit_behavior[False-RECOVERY-broken] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e15')
+mode = 'broken', state_name = 'RECOVERY', recovery_pending = False
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe948da0>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-ACTIVE-disabled] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e16')
+mode = 'disabled', state_name = 'ACTIVE', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe962f30>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+_____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-ACTIVE-normal] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e17')
+mode = 'normal', state_name = 'ACTIVE', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe961be0>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+______ test_real_kernel_cycle_keeps_entry_exit_behavior[True-ACTIVE-full] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e18')
+mode = 'full', state_name = 'ACTIVE', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe9789e0>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+_____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-ACTIVE-broken] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e19')
+mode = 'broken', state_name = 'ACTIVE', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x772000b448c0>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-FROZEN-disabled] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e20')
+mode = 'disabled', state_name = 'FROZEN', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe978830>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+_____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-FROZEN-normal] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e21')
+mode = 'normal', state_name = 'FROZEN', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe94b3e0>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+______ test_real_kernel_cycle_keeps_entry_exit_behavior[True-FROZEN-full] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e22')
+mode = 'full', state_name = 'FROZEN', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe960e90>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+_____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-FROZEN-broken] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e23')
+mode = 'broken', state_name = 'FROZEN', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x772000b32000>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-HALTED-disabled] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e24')
+mode = 'disabled', state_name = 'HALTED', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe979a00>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+_____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-HALTED-normal] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e25')
+mode = 'normal', state_name = 'HALTED', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe979dc0>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+______ test_real_kernel_cycle_keeps_entry_exit_behavior[True-HALTED-full] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e26')
+mode = 'full', state_name = 'HALTED', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe9a3e30>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+_____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-HALTED-broken] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e27')
+mode = 'broken', state_name = 'HALTED', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe97bcb0>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+___ test_real_kernel_cycle_keeps_entry_exit_behavior[True-RECOVERY-disabled] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e28')
+mode = 'disabled', state_name = 'RECOVERY', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe978ec0>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-RECOVERY-normal] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e29')
+mode = 'normal', state_name = 'RECOVERY', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe962990>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+_____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-RECOVERY-full] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e30')
+mode = 'full', state_name = 'RECOVERY', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffe9a3f50>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+____ test_real_kernel_cycle_keeps_entry_exit_behavior[True-RECOVERY-broken] ____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-519/test_real_kernel_cycle_keeps_e31')
+mode = 'broken', state_name = 'RECOVERY', recovery_pending = True
+
+    @pytest.mark.parametrize('mode', ['disabled','normal','full','broken'])
+    @pytest.mark.parametrize('state_name', ['ACTIVE','FROZEN','HALTED','RECOVERY'])
+    @pytest.mark.parametrize('recovery_pending', [False, True])
+    def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name, recovery_pending):
+        from trader.kernel import Kernel
+        from trader.core.types import Decision, Action, MarketType, ControlState
+        state=ControlState(state_name)
+        k=object.__new__(Kernel)
+        k.cfg={'timeframes':{'execution':'15m'}}
+        k.population=[]
+        k.state_machine=NS(refresh=lambda:state)
+        k._fetch_balance_fresh=lambda:1000
+        k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
+                  daily_loss_block=.05)
+        k._drain_close_requests=lambda:0
+        k.journal=NS(kv_get=lambda key, default=None:default, kv_set=lambda *a:None,
+                     query=lambda *a:[{'n':0}], update_decision_outcome=Mock(),
+                     open_trades=lambda:[{'symbol':'S0/USDT'}],log_equity=Mock())
+        k.macro_guard=k.news_guard=NS(check=lambda:{'active':False})
+        k.market_type=MarketType.SPOT
+        if recovery_pending:
+            k.market_type=MarketType.FUTURES
+        k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
+        k._funding_map=k._oi_map=lambda:{}
+        k._refresh_btc_context=lambda:None
+        k._scan_symbols=lambda:['S0/USDT','missing']
+        data=frames(2)
+        k._universe_frames=lambda _:data
+        k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
+        k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
+        k._order_book=lambda _:{}
+        d=Decision('d','c','S0/USDT',Action.BUY,.7,.2,.8,[],[],skip_reason='' if state==ControlState.ACTIVE else 'blocked')
+        k.orchestrator=NS(decide=lambda *a,**kw:d,journalize=Mock())
+        def enter(*a): d.executed=True; return True
+        k._try_enter=Mock(side_effect=enter)
+        k._detect_exchange_exits=Mock(return_value=0)
+        k._manages_exits=lambda:state!=ControlState.HALTED
+        k._manage_one=Mock(return_value=None)
+        k._manage_orphan_positions=Mock(return_value=1)
+        k._maybe_resolve_outcomes=Mock()
+        k.heartbeat=NS(beat=Mock())
+        k.notifier=NS(send=Mock())
+        if mode!='disabled':
+            k._attention=Collector(tmp_path,{'queue_size':1 if mode=='full' else 16},start=False)
+            if mode=='full': k._attention._put({'occupied':True})
+            if mode=='broken':
+                k._attention.begin=Mock(side_effect=OSError('SECRET'))
+                k._attention.causes=Mock(side_effect=OSError('SECRET'))
+>       result=k.cycle()
+               ^^^^^^^^^
+
+tests/test_attention_telemetry.py:288:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <trader.kernel.Kernel object at 0x771ffef791c0>
+
+    def cycle(self) -> dict:
+        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+                 "skips": 0, "exits_detected": 0}
+        self._portfolio_market = {}
+        supervisor = getattr(self, 'supervisor', None)
+        if supervisor is not None:
+            supervisor.cycle()
+        self.state_machine.refresh()
+        balance, status = self._risk_step()
+
+        stats["manual_closed"] = self._drain_close_requests()
+
+        n = self._drain_panic()
+        if n is not None:
+            stats["panic_closed"] = n
+
+        self._macro_step(self.macro_guard.check())
+
+        state = self.state_machine.refresh()
+        supervisor = getattr(self, "supervisor", None)
+        if (supervisor is not None and self.market_type == MarketType.FUTURES
+                and state == ControlState.ACTIVE and self.executor.recovery_pending()):
+            supervisor.trigger("entry_recovery_pending")
+            state = self.state_machine.refresh()
+        if self.market_type == MarketType.FUTURES and state != ControlState.HALTED:
+            self.executor.recover_entries()
+>       entry_allowed = self.state_machine.can_enter()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: 'types.SimpleNamespace' object has no attribute 'can_enter'
+
+trader/kernel.py:1104: AttributeError
+__________________ test_journal_does_not_import_observability __________________
+
+    def test_journal_does_not_import_observability():
+>       assert not {m for m in _imports(ROOT / "trader/core/journal.py")
+                    if "observability" in m or "registry_selector" in m}
+E       AssertionError: assert not {'..observability.safety'}
+
+tests/test_attention_selection_persistence.py:512: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-ACTIVE-disabled]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-ACTIVE-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-ACTIVE-full]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-ACTIVE-broken]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-FROZEN-disabled]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-FROZEN-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-FROZEN-full]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-FROZEN-broken]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-HALTED-disabled]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-HALTED-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-HALTED-full]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-HALTED-broken]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-RECOVERY-disabled]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-RECOVERY-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-RECOVERY-full]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[False-RECOVERY-broken]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-ACTIVE-disabled]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-ACTIVE-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-ACTIVE-full]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-ACTIVE-broken]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-FROZEN-disabled]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-FROZEN-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-FROZEN-full]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-FROZEN-broken]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-HALTED-disabled]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-HALTED-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-HALTED-full]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-HALTED-broken]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-RECOVERY-disabled]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-RECOVERY-normal]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-RECOVERY-full]
+FAILED tests/test_attention_telemetry.py::test_real_kernel_cycle_keeps_entry_exit_behavior[True-RECOVERY-broken]
+FAILED tests/test_attention_selection_persistence.py::test_journal_does_not_import_observability
+33 failed, 75 deselected in 8.00s

@@ -1,0 +1,5 @@
+..                                                                       [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+2 passed in 2.85s

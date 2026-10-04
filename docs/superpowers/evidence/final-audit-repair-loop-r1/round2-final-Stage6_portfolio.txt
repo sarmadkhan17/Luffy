@@ -1,0 +1,26 @@
+.............................................F.......................... [ 49%]
+........................................................................ [ 99%]
+.                                                                        [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+____________ test_existing_attention_correlation_is_basket_context _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-537/test_existing_attention_correl0')
+
+    def test_existing_attention_correlation_is_basket_context(tmp_path):
+        from tests._corr_synth import publish, NOW, SYM
+        from trader.observability.investigation import source_snapshot
+        path = publish(tmp_path)
+        scan,bars,_ = source_snapshot(path)
+        source = Source.freeze('attention-test',dict(schema='attention-relationship-input.v1',scan=scan,bars=bars,valid_until_ms=NOW+1000))
+        rows = C.attention_measurements(source,NOW,{'positions':[{'instrument':'binance_usdm:futures:S1USDT'}]})
+>       assert len(rows) == 1
+E       assert 0 == 1
+E        +  where 0 = len([])
+
+tests/test_portfolio_common_factor.py:229: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_portfolio_common_factor.py::test_existing_attention_correlation_is_basket_context
+1 failed, 144 passed in 92.75s (0:01:32)

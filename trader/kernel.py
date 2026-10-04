@@ -349,6 +349,7 @@ class Kernel:
         log.info(f"LUFFY BOOT | market={self.market_type.value} "
                  f"state={self.state_machine.state.value} "
                  f"population={len(self.population)}")
+        self.feed.initialize_markets()
         self._filter_universe_to_venue()
         from .observability.stage5_activation import start
         start(self)
@@ -2251,6 +2252,10 @@ class Kernel:
             "active": bool(macro.get("active")),
             "event": macro.get("event", ""),
             "until": macro.get("until"),
+            "why": macro.get("why", ""),
+            "received_at": macro.get("received_at"),
+            "request_started_at": macro.get("request_started_at"),
+            "checked_at": macro.get("checked_at"),
             "ts": dt.datetime.now(dt.timezone.utc).isoformat()}))
 
     def _macro_release(self) -> None:

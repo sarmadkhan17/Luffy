@@ -1,0 +1,47 @@
+F                                                                        [100%]
+OFFLINE GUARD: 0 network attempts.
+PRODUCTION STORE GUARD: 0 attempts.
+
+=================================== FAILURES ===================================
+____________ test_provenance_registry_kernel_snapshot_one_identity _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-485/test_provenance_registry_kerne0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7aed36ca28a0>
+
+    def test_provenance_registry_kernel_snapshot_one_identity(tmp_path, monkeypatch):
+        import json
+        from trader.core.config import load_config
+        from trader.core.journal import Journal
+        from trader.core.instrument_registry import InstrumentId, is_canonical_instrument_id
+        from tests.entry_authority_fixtures import bind
+        from trader.data.binance_usdm_registry import from_binance_usdm_responses
+        from tests.registry_observation_fixtures import _symbol
+        import trader.kernel as module
+        monkeypatch.setattr(module.time, 'time', lambda: NOW/1000)
+        feed, calls = cold_feed(tmp_path, monkeypatch)
+        journal = Journal(tmp_path/'journal.db')
+        _, capability = bind(journal, feed.ex, load_config())
+        registry = from_binance_usdm_responses(exchange_info={'symbols':[_symbol()]},
+            as_of_ms=NOW, account_scope='offline')
+        iid = registry.records[0].instrument_id
+        assert iid.value == capability['record']['instrument_id']['venue']+':futures:BTCUSDT'
+        df = feed.fetch_ohlcv('BTC/USDT', limit=1, min_bars=1)
+        feed.fetch_multi = lambda *a:{'15m':df}
+        original_fetch = feed.fetch_ohlcv
+        feed.fetch_ohlcv = lambda *a, **kw:None  # no auxiliary BTC frame in this snapshot
+        k = Kernel.__new__(Kernel)
+        k.feed, k.journal = feed, journal
+        k.cfg = {'timeframes': {'context':[], 'execution':'15m'}}
+        k.market_type = MarketType.FUTURES
+        k.universe = SimpleNamespace()
+        k._derivs_for = lambda *a, **kw:None
+        k._market_for = lambda **kw:None
+        snapshot = k._snapshot_for('BTC/USDT')
+>       assert snapshot is not None, 'canonical Registry binding rejected its own data identity'
+E       AssertionError: canonical Registry binding rejected its own data identity
+E       assert None is not None
+
+tests/test_final_audit_feed_identity.py:113: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_final_audit_feed_identity.py::test_provenance_registry_kernel_snapshot_one_identity
+1 failed in 1.50s

@@ -7,8 +7,10 @@ authority:
   target: SDD.md
   current_state: STATE.yaml
   immediate_work: NEXT.yaml
-  reviewed_branch: luffy-stage8-owner-os-closure-r1
-  reviewed_head: 57ad32332a98518c083b750f9df9d43596d0d531
+  reviewed_branch: luffy-final-audit-repair-loop-r1
+  reviewed_head: UNCOMMITTED
+  reviewed_base_head: 53e7c8567c259b2326315a0acdd4b838af030998
+  reviewed_source_manifest: docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r5-source.json
   production_main_head: 1bed3958740ec2d0d575aabc817978086d31d390
   stage8_reviewed_base_head: f5e5156b8a294cd53db277e8d46cb30645611a61
   stage8_review_id: STAGE8_INDEPENDENT_REVIEW_R2
@@ -36,12 +38,14 @@ stage_status:
     proven_facts:
     - SDD.md v3.2 is the sole architecture authority.
     - STATE.yaml is reconciled to the reviewed Stage5-8 architecture.
-    - Stage3 formal closure is COMPLETE; STAGE8_INDEPENDENT_REVIEW_R2 is PASS with no blocking defects. Stage1 MI-1 through MI-7 are independently reviewed and CLOSED; build_complete remains false pending formal Stage1 closure R2.
+    - Stage3 formal closure is COMPLETE; STAGE8_INDEPENDENT_REVIEW_R2 is PASS with no blocking defects. Stage1 MI-1 through MI-7 remain CLOSED; final engineering repair/review passes with F1-F7/F9 and F10-F13 CLOSED. F8 runtime handoff remains pending.
     gaps: []
 
   stage_1_safety_and_truth:
     state: TESTED
-    build_complete: false
+    build_complete: true
+    latest_build_review: LUFFY-FINAL-AUDIT-REPAIR-LOOP-R1
+    build_implementation_review: PASS
     runtime_maturity: NOT_PROVEN
     evidence:
     - trader/core/instrument_registry.py
@@ -127,8 +131,8 @@ stage_status:
         independent_review: PASS
     closed_audit_gaps: [MI-1, MI-2, MI-3, MI-4, MI-5, MI-6, MI-7]
     gaps: []
-    formal_closure: AWAITING_R2
-    pre_start_closure: AWAITING_FORMAL_STAGE1_CLOSURE_R2
+    formal_closure: FINAL_ENGINEERING_REVIEW_PASS
+    pre_start_closure: F8_OPERATIONAL_HANDOFF_PENDING
     latest_independent_review: STAGE1_RECOVERY_MONITORING_INDEPENDENT_REVIEW_R2
     independent_review: PASS
     regression_found: false
@@ -198,13 +202,12 @@ stage_status:
       - trader/world/relationship.py
       - trader/world/claim.py
       - trader/world/replay.py
-      - tests/test_world_observation.py
-      - tests/test_world_state.py
-      - tests/test_world_perception.py
-      - tests/test_world_model.py
-      - tests/test_world_relationship.py
-      - tests/test_world_claim.py
-      - tests/test_world_replay.py
+      - tests/test_intelligence_spine.py
+      - tests/test_cognition_attention.py
+      - tests/test_cognition_replay.py
+      - tests/test_stage7_replay_world_closure_r2.py
+      - tests/test_final_audit_learning_time.py
+      - docs/superpowers/evidence/final-audit-repair-loop-r1/final-regression-matrix.json
     proven_facts:
       - immutable point-in-time observations and WorldState exist.
       - hierarchical multi-horizon WorldModel and cross-market relationship state are tested.
@@ -1072,3 +1075,52 @@ completed_stage1_recovery_monitoring_blocker_fix_r1:
   authority_regression: false
   safe_to_review: true
   next_recommended_package: LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R2
+
+final_audit_repair_loop_r1:
+  package: LUFFY-FINAL-AUDIT-REPAIR-LOOP-R1
+  result: PASS
+  iterations: 15
+  branch: luffy-final-audit-repair-loop-r1
+  base_head: 53e7c8567c259b2326315a0acdd4b838af030998
+  reviewed_code_head: UNCOMMITTED
+  review_mode: ADVERSARIAL_SELF_REVIEW_READ_ONLY
+  source_manifest: docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r5-source.json
+  caller_audit: docs/superpowers/evidence/final-audit-repair-loop-r1/final-caller-audit.json
+  defect_ledger: docs/superpowers/evidence/final-audit-repair-loop-r1/defect-ledger.json
+  original_defects:
+    F1: CLOSED
+    F2: CLOSED
+    F3: CLOSED
+    F4: CLOSED
+    F5: CLOSED
+    F6: CLOSED
+    F7: CLOSED
+    F9: CLOSED
+  new_defects:
+    F10: CLOSED
+    F11: CLOSED
+    F12: CLOSED
+    F13: CLOSED
+  regression_matrix: CLEAN
+  regression_evidence: docs/superpowers/evidence/final-audit-repair-loop-r1/final-regression-matrix.json
+  final_flags:
+    NEW_P0_FINDINGS: NONE
+    NEW_P1_FINDINGS: NONE
+    REGRESSION_FOUND: 'NO'
+    AUTHORITY_BYPASS_FOUND: 'NO'
+    PIT_OR_REPLAY_LEAK_FOUND: 'NO'
+    DUPLICATE_NEW_EXPOSURE_PATH_FOUND: 'NO'
+    RECOVERY_BYPASS_FOUND: 'NO'
+    LIVE_LLM_DEPENDENCY: ZERO
+    BUILD_IMPLEMENTATION_REVIEW: PASS
+  F8: OPERATIONAL_HANDOFF_PENDING
+  ready_for_runtime_handoff: true
+  ready_for_first_controlled_startup: false
+  luffy_started_on_audited_revision: false
+  existing_production_processes_untouched: true
+  uncommitted: true
+  undeployed: true
+  venue_requests: 0
+  order_submissions: 0
+  paid_calls: 0
+  next_package: LUFFY-PRESTART-RUNTIME-HANDOFF-R1

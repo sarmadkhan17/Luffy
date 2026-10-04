@@ -1,0 +1,651 @@
+{
+  "package": "LUFFY-FINAL-AUDIT-REPAIR-LOOP-R1",
+  "baseline_head": "53e7c8567c259b2326315a0acdd4b838af030998",
+  "branch": "luffy-final-audit-repair-loop-r1",
+  "audit_source": "Complete LUFFY-FINAL-PRESTART-WHOLE-SYSTEM-AUDIT-R1 pasted by owner in this session",
+  "iterations": 15,
+  "F8": "OPERATIONAL_HANDOFF_PENDING",
+  "defects": {
+    "F1": {
+      "status": "CLOSED",
+      "path_function": "trader/data/feed.py:DataFeed.fetch_ohlcv; trader/data/market_provenance.py:venue_identity; trader/kernel.py:Kernel.boot/cycle",
+      "violated_invariant": "SDD 4.2/5.5/24: FROZEN observation, exits and successful cycle remain functional",
+      "current_reproduction": "Installed CCXT ExchangeError before normal fetch; f1-before.txt: cold retrieval and real FROZEN cycle both fail",
+      "origin": "REGRESSION fcfe9e0",
+      "reviews": [
+        {
+          "result": "PASS",
+          "mode": "READ_ONLY",
+          "actual_callers": "Kernel.boot -> independent DataFeed; Kernel.cycle -> _refresh_btc_context -> exits/orphans -> heartbeat",
+          "original_and_variant": "f1-review.txt: real CCXT cold fetch and initialization-failure variant; FROZEN cycle exits/heartbeat; prior PIT persistence/reopen"
+        }
+      ],
+      "fix": "Contain real CCXT ExchangeError as unknown identity and initialize feed public markets explicitly at Kernel boot.",
+      "TOUCHED_COMPONENTS": [
+        "Stage1 Safety"
+      ],
+      "PREVIOUS_INVARIANTS_RERUN": "73 passed: feed/PIT/provenance/blocker suites; 4 passed read-only original and nearby failure/reopen probes",
+      "REGRESSION_FOUND": false
+    },
+    "F2": {
+      "status": "CLOSED",
+      "path_function": "trader/data/market_provenance.py:venue_identity; trader/data/binance_usdm_registry.py:from_binance_usdm_responses; trader/kernel.py:Kernel._snapshot_for",
+      "violated_invariant": "SDD 6/7/35: one canonical instrument identity end to end",
+      "current_reproduction": "baseline-results.json: binanceusdm versus binance_usdm",
+      "origin": "INTEGRATION_DEFECT fcfe9e0",
+      "reviews": [
+        {
+          "result": "PASS",
+          "mode": "READ_ONLY",
+          "actual_callers": "Provenance InstrumentId -> Registry capability -> Kernel snapshot; derivative receipts use same type; Risk/Execution/Accounting/Reconcile retain native adapter and exact capability checks",
+          "original_and_variant": "f2-review.txt: loaded metadata crossing provenance/Registry/Kernel; unloaded CCXT Registry binding, another symbol/venue rejection"
+        }
+      ],
+      "fix": "Registry InstrumentId owns adapter venue normalization; feed binding comparisons use that shared contract.",
+      "TOUCHED_COMPONENTS": [
+        "Stage1 Safety",
+        "Stage2 WorldModel",
+        "Stage5 Strategy authority"
+      ],
+      "PREVIOUS_INVARIANTS_RERUN": "154 passed identity/PIT/entry/derivatives/spec suites; 104 passed read-only original/variant/OpportunityContext/accounting/reconciliation",
+      "REGRESSION_FOUND": false
+    },
+    "F3": {
+      "status": "CLOSED",
+      "path_function": "trader/world/model.py:effective_claims/_overlay; trader/learning/targets.py:read; trader/learning/consumers.py:WorldQueryReader",
+      "violated_invariant": "SDD 6.2/19.3/21: future revision cannot affect historical decision/replay",
+      "current_reproduction": "f3-before.txt: actual APPLIED future revision changes historical .6 to .9; later revision changes previous exact-cut .8 to .9 on reopen",
+      "origin": "LATENT_DEFECT b56682e",
+      "reviews": [
+        {
+          "result": "PASS",
+          "mode": "READ_ONLY",
+          "actual_callers": "World producer -> Attention -> WorldQueryReader -> WorldModel effective_claims -> time-qualified targets.read; frozen replay validates exact same receipt",
+          "original_and_variant": "f3-review.txt: future-only and multiple revisions, exact cut, reopen, captured replay and forged future frozen state refusal"
+        }
+      ],
+      "fix": "WorldModel cut qualifies revision selection through immutable application receipts; captured/frozen states retain and validate the application proof. Latest target reads remain unchanged.",
+      "TOUCHED_COMPONENTS": [
+        "Stage2 WorldModel",
+        "Stage7 Learning",
+        "Stage3 Attention/research"
+      ],
+      "PREVIOUS_INVARIANTS_RERUN": "33 passed actual learning/Stage7 replay integration; 2 passed read-only original/nearby/reopen/exact-cut/multiple/replay tests",
+      "REGRESSION_FOUND": false
+    },
+    "F4": {
+      "status": "CLOSED",
+      "path_function": "trader/engine/executor.py:Executor.close_partial; trader/engine/exits.py:ExitEngine",
+      "violated_invariant": "SDD 18/27: UNKNOWN intended execution reconciled before repetition",
+      "current_reproduction": "baseline-results.json: reduce 5 twice after executed-then-timeout, venue 10 to 0",
+      "origin": "LATENT_DEFECT ff4bf18",
+      "reviews": [
+        {
+          "result": "FAIL",
+          "mode": "READ_ONLY",
+          "iteration": 4,
+          "failure": "f4-review-r1.txt: Kernel/Supervisor recover_entries does not reconcile the new durable partial intent; UNKNOWN partial absent from entry recovery barrier. Original retry safely deduplicates, normal recovery incomplete."
+        },
+        {
+          "result": "PASS",
+          "mode": "READ_ONLY",
+          "iteration": 5,
+          "actual_callers": "Kernel/Supervisor recover_entries -> partial recovery; ExitEngine TP1 -> durable close_partial; successful booking and consumption share transaction",
+          "original_and_variant": "f4-review-r2.txt: 10->5 lost response/reopen no repeat; failed order lookup; working partial order; lost acknowledgement write; concurrent Executors; normal recovery; existing reconciliation alignment without duplicate P&L"
+        }
+      ],
+      "fix": "Single durable TP1 intent/client id reserved before submit; UNKNOWN resolved from exact terminal reduce-only order plus venue position; atomic intent consumption/booking; existing Kernel/Supervisor recovery and entry barrier cover pending partials.",
+      "TOUCHED_COMPONENTS": [
+        "Stage1 Safety",
+        "Stage7 Learning/accounting"
+      ],
+      "PREVIOUS_INVARIANTS_RERUN": "92 passed initial affected regressions; 119 passed with 12 boot fixture incompatibilities found and fixed; 43 passed second review/boot/control/identity/regression proofs",
+      "REGRESSION_FOUND": false
+    },
+    "F5": {
+      "status": "CLOSED",
+      "path_function": "trader/observability/safety.py:SafetyObserver.heartbeat; trader/engine/watchdog.py:Heartbeat.age_seconds",
+      "violated_invariant": "SDD 24: health represents successful work freshness as well as publication",
+      "current_reproduction": "baseline-results.json: fresh publication, work age 998, threshold 10 returns FRESH without safety block",
+      "origin": "UNKNOWN_ORIGIN combined MI-7 53e7c85",
+      "reviews": [
+        {
+          "result": "PASS",
+          "mode": "READ_ONLY",
+          "actual_callers": "scripts.monitor/watchdog -> SafetyObserver; Kernel stall monitor/status -> Heartbeat.age_seconds; independent outage latch blocks entries and only verified Supervisor releases",
+          "original_and_variant": "f5-review.txt: repeated fresh sequence/publication stale successful work; exact threshold; unconfigured policy; malformed/chronology/restart mutants"
+        }
+      ],
+      "fix": "Both independent observer and Kernel age diagnostic use the older of publication and successful-cycle evidence; existing injected/configured threshold and chronology checks unchanged.",
+      "TOUCHED_COMPONENTS": [
+        "Stage1 Safety",
+        "Stage8 Owner OS health"
+      ],
+      "PREVIOUS_INVARIANTS_RERUN": "133 passed recovery/monitoring/Supervisor; read-only heartbeat/chronology/malformed-context/age-boundary review",
+      "REGRESSION_FOUND": false
+    },
+    "F6": {
+      "status": "CLOSED",
+      "path_function": "trader/agents/macro_guard.py:_load_cached/_fetch_calendar/check; trader/kernel.py:_macro_step",
+      "violated_invariant": "SDD 6.2: receipt time gates acquisition eligibility",
+      "current_reproduction": "baseline-results.json: receipt 2000 observed at 1000, refresh suppressed, active future-acquired calendar",
+      "origin": "LATENT_DEFECT 79926de/f06bf34",
+      "reviews": [
+        {
+          "result": "FAIL",
+          "mode": "READ_ONLY",
+          "iteration": 7,
+          "failure": "f6-review-r1.txt: successful empty-calendar acquisition reports confirmed quiet but receipt/start timestamps are absent; preserve acquisition evidence for valid quiet cache too."
+        },
+        {
+          "result": "PASS",
+          "mode": "READ_ONLY",
+          "iteration": 8,
+          "actual_callers": "Kernel.cycle -> MacroGuard.check -> _fetch/_load calendar -> _macro_step journal publication and guarded state transition",
+          "original_and_variant": "future disk/in-memory/assessment cache failed refresh; rollback during successful retrieval; valid cached event and successful empty-calendar timestamps; Kernel publication"
+        }
+      ],
+      "fix": "Reject negative acquisition/assessment cache ages and receipt-before-request rollback; carry acquisition/start/assessment timestamps through Kernel macro state, including confirmed quiet observations.",
+      "TOUCHED_COMPONENTS": [
+        "Stage1 Safety/data",
+        "Stage2 PIT",
+        "Stage8 Owner OS macro state"
+      ],
+      "PREVIOUS_INVARIANTS_RERUN": "97 then 98 passed macro/control/Supervisor regressions; focused original/nearby read-only review f6-review-r2.txt",
+      "REGRESSION_FOUND": false
+    },
+    "F7": {
+      "status": "CLOSED",
+      "path_function": "trader/persistence/backup.py:critical_inventory; trader/engine/orchestrator.py:reload_weights; trader/agents/weights_online.py:blended_weights",
+      "violated_invariant": "SDD 27/19.3: restore retains consumed decision inputs with integrity",
+      "current_reproduction": "baseline-results.json: retained ewa_state file absent from default inventory",
+      "origin": "INTEGRATION_DEFECT 53e7c85",
+      "reviews": [
+        {
+          "result": "PASS",
+          "mode": "READ_ONLY",
+          "actual_callers": "Kernel hourly reload -> Orchestrator.reload_weights -> weights_online.blended_weights; default critical_inventory -> BackupSets.capture/verify/restore",
+          "original_and_variant": "f7-review.txt: exact retained bytes/hash/weights after staged restore with RECOVERY; absence and manual/post-construction inventory omission refuse"
+        }
+      ],
+      "fix": "Mandatory narrowly identified retained EWA decision input in trusted default inventory; exact manifest hash and staged restoration; missing or later omitted input refused.",
+      "TOUCHED_COMPONENTS": [
+        "Stage1 Safety",
+        "Stage7 Learning"
+      ],
+      "PREVIOUS_INVARIANTS_RERUN": "85 passed backup/PIT/recovery/monitoring/historical learning; 29 passed read-only backup/inventory/restore/PIT review",
+      "REGRESSION_FOUND": false
+    },
+    "F9": {
+      "status": "CLOSED",
+      "path_function": "trader/brain/llm.py:BrainLLM.chat/chat_tools",
+      "violated_invariant": "SDD 22.4: purpose budget bounds calls before sending and usage is truthful",
+      "current_reproduction": "f9-before.txt: seven provider-boundary failures across chat/chat_tools near-limit, concurrency, unknown/reopen and corrupt-ledger reset",
+      "origin": "LATENT_DEFECT b20dd85/e79235e",
+      "reviews": [
+        {
+          "result": "PASS",
+          "mode": "READ_ONLY",
+          "actual_callers": "ChatAgent.chat_tools(purpose=chat); Brain research/conversation callers -> chat_json/chat -> shared _call; normal Kernel trading has no LLM dependency",
+          "original_and_variant": "Both call methods: one remaining token and exhausted budget, concurrent independent clients, timeout/reopen, provider under/over/missing actual usage, large input, corrupt ledger, hidden retry configuration."
+        }
+      ],
+      "fix": "One durable file-locked budget admission/reservation shared by chat and chat_tools; bound output after conservative input allowance, actual billed settlement, unknown outcome retained across restart, hidden SDK retries disabled.",
+      "TOUCHED_COMPONENTS": [
+        "Stage3 Research",
+        "Stage8 Owner conversation"
+      ],
+      "PREVIOUS_INVARIANTS_RERUN": "128 passed shared admission/chat/research/Stage8; 30 passed original and variants before frozen-authority compatibility follow-up; f9-review-r2.txt final read-only review",
+      "REGRESSION_FOUND": false
+    },
+    "F10": {
+      "status": "CLOSED",
+      "severity": "P1",
+      "path_function": "trader/cognition/attention.py:evaluate priority read; trader/learning/consumers.py:allocation_observations; trader/portfolio/allocator.py:attach_learning/allocate",
+      "violated_invariant": "SDD 6.2/19.3/21: historical selection/allocation consumes only adaptations applied by its explicit cut; frozen replay must prove temporal eligibility",
+      "current_reproduction": "final-review-r1-probes.txt: future HIGH S5 changes historical top3; final-review-r1-allocation-probe.txt: future max_share=0 changes valid historical size 3 to UNAVAILABLE",
+      "origin": "LATENT_DEFECT: prior latest-state consumers introduced with governed contextual learning, not caused by F3 world-only repair",
+      "actual_normal_caller": "Attention Store.write -> evaluate_snapshot -> cognition.evaluate; Kernel Portfolio checkpoint -> current.freeze -> attach_learning -> allocator.allocate",
+      "reviews": [
+        {
+          "result": "PASS",
+          "mode": "READ_ONLY",
+          "original_and_variant": "Historical future HIGH/reduction limit refused, exact-cut current application, multiple revisions, reopen, future frozen proof rejected, tampered projection refused, captured replay precedence and empty captured learning state.",
+          "actual_callers": "Attention Store.write -> evaluate_snapshot -> cognition.evaluate; Kernel Portfolio checkpoint -> current.freeze -> attach_learning -> allocator.allocate"
+        }
+      ],
+      "fix": "Qualify Attention selection and Portfolio allocation reads at their explicit cut; validate full immutable application proof in frozen consumption; frozen Attention state (including empty capture) takes precedence over live journal.",
+      "TOUCHED_COMPONENTS": [
+        "Stage2 WorldModel/Attention",
+        "Stage6 Portfolio",
+        "Stage7 Learning"
+      ],
+      "PREVIOUS_INVARIANTS_RERUN": "103 passed cognition/Portfolio/current integration/actual governed applications; 112 passed Attention telemetry/persistence and temporal consumers after exact-baseline fixture repairs; f10-review.txt original/variant/replay read-only.",
+      "REGRESSION_FOUND": false
+    },
+    "F11": {
+      "status": "CLOSED",
+      "severity": "P1",
+      "path_function": "trader/engine/supervisor.py:Supervisor._pass_once recovery checks",
+      "violated_invariant": "SDD 24.1: uncertain execution outcome cannot qualify as proved safe recovery/ACTIVE",
+      "current_reproduction": "final-review-r1-recovery-probe.txt: unresolved partial intent, safe_to_activate=true, ACTIVE and pending=true",
+      "origin": "REGRESSION introduced by F4 new durable partial intent integration; Supervisor still inspects entry ledger only",
+      "actual_normal_caller": "Kernel.boot/cycle and owner resume -> Supervisor.pass_once -> recovery safety proof / ACTIVE CAS",
+      "reviews": [
+        {
+          "result": "FAIL",
+          "mode": "READ_ONLY",
+          "iteration": 12,
+          "failure": "f11-review-r1.txt: new partial reservation during Risk release appears after initial recovery check, yet ACTIVE CAS succeeds while pending.",
+          "next_fix": "Revalidate execution intents inside the held SQLite transaction at final ACTIVE CAS; same lock serializes durable partial reservations."
+        },
+        {
+          "result": "PASS",
+          "mode": "READ_ONLY",
+          "iteration": 13,
+          "actual_callers": "Kernel.boot/cycle and owner resume -> Supervisor.pass_once -> recovery safety proof / ACTIVE CAS",
+          "original_and_variant": "f11-review-r2.txt: unknown partial boot/reopen remains contained, exact resolution permits recovery without second reduction; unreadable partial ledger fails closed; intent appearing during Risk release refuses ACTIVE CAS."
+        }
+      ],
+      "fix": "Supervisor proofs include pending partial exits, normal recovery advances them, and the final ACTIVE CAS revalidates all durable execution intents inside a held SQLite write transaction.",
+      "TOUCHED_COMPONENTS": [
+        "Stage1 Safety/Recovery",
+        "Stage5 Entry authority",
+        "Stage8 Owner recovery"
+      ],
+      "PREVIOUS_INVARIANTS_RERUN": "262 passed execution/Supervisor/owner recovery/monitoring/boot; 178 passed Risk activation/CAS invariants and negative controls; 41 passed read-only original, race and unreadable variant/concurrency.",
+      "REGRESSION_FOUND": false
+    },
+    "F12": {
+      "status": "CLOSED",
+      "severity": "P1",
+      "path_function": "trader/engine/entry_authority.py:submit second durable hold",
+      "violated_invariant": "SDD 17/18/24.1: unresolved execution outcomes block new exposure at the final held submission boundary",
+      "current_reproduction": "final-review-r2-entry-probe.txt: real Executor.open / process-issued Risk permission; partial reservation between durable holds; one new-exposure order despite partial_pending=true",
+      "origin": "INTEGRATION_DEFECT: new F4 partial intent barrier was not propagated into the existing final entry submission hold",
+      "actual_normal_caller": "Kernel._try_enter -> Executor.open -> entry_authority.submit; ExitEngine -> Executor.close_partial -> durable reservation",
+      "reviews": [
+        {
+          "result": "PASS",
+          "mode": "READ_ONLY",
+          "actual_callers": "Kernel._try_enter -> Executor.open -> entry_authority.submit; ExitEngine -> Executor.close_partial -> durable reservation",
+          "original_and_variant": "f12-review.txt: real Risk-authorized entry with partial appearing before each held boundary; no new-exposure orders, exact refusal and no ambiguous unsubmitted entry; existing entry/PIT gates."
+        }
+      ],
+      "fix": "Both held final entry admission/submission transactions check durable partial intents; a known unattempted reserved entry is durably refused and cleared rather than manufacturing an unknown entry outcome.",
+      "TOUCHED_COMPONENTS": [
+        "Stage1 Safety/Execution",
+        "Stage5 Strategy authority",
+        "Stage8 Owner authority"
+      ],
+      "PREVIOUS_INVARIANTS_RERUN": "135 passed entry/partial/Supervisor/owner authority; 14 passed read-only original and both held-boundary variants plus PIT entry gates.",
+      "REGRESSION_FOUND": false
+    },
+    "F13": {
+      "status": "CLOSED",
+      "severity": "P1",
+      "path_function": "trader/research/predictive_experiment.py:freeze_candles; trader/research/predictive_bridge.py:cycle snapshot consumer",
+      "violated_invariant": "SDD 6.2/19.3: frozen numerical research must retain qualified input provenance and immutable replay identity across actual readers",
+      "current_reproduction": "f13-before.txt: qualified 1800-bar source replay becomes None after freeze; unqualified snapshot hash changes when DataFeed initializes missing provenance tables, causing repeated bridge checkpoint_conflict",
+      "origin": "INTEGRATION_DEFECT retained through fcfe9e0: predictive freezer still copies only pre-PIT candle projection",
+      "actual_normal_caller": "ResearchRunner predictive experiment -> predictive_bridge.cycle -> freeze_candles -> load_bundle/load_heldout -> DataFeed cached/replay read",
+      "reviews": [
+        {
+          "result": "PASS",
+          "mode": "READ_ONLY",
+          "actual_callers": "ResearchRunner predictive experiment -> predictive_bridge.cycle -> freeze_candles -> load_bundle/load_heldout -> DataFeed cached/replay read",
+          "original_and_variant": "f13-final-review-r2.txt: exact qualified receipt retention and identical frame; future revisions excluded; legacy projection remains UNKNOWN without reader hash mutation; old schema reuse refuses; actual measure/evaluate job and discovery/protected boundaries pass."
+        }
+      ],
+      "fix": "Frozen predictive candles retain the exact eligible market_revision records and complete immutable-reader schema from one source SQLite snapshot. No historical receipt is inferred; older incomplete frozen snapshots refuse reuse without mutation.",
+      "TOUCHED_COMPONENTS": [
+        "Stage1 Data/provenance/PIT",
+        "Stage3 predictive research",
+        "Stage4 Referee"
+      ],
+      "PREVIOUS_INVARIANTS_RERUN": "67 passed PIT/snapshot regressions; final original+Safety 209 passed; f13-final-review-r2.txt: 5 passed against qualified/legacy/future receipt variants and actual numerical ResearchRunner/heldout reader, zero guard attempts.",
+      "REGRESSION_FOUND": false
+    }
+  },
+  "new_defects": [
+    {
+      "id": "F10",
+      "severity": "P1",
+      "path_function": "trader/cognition/attention.py:evaluate priority read; trader/learning/consumers.py:allocation_observations; trader/portfolio/allocator.py:attach_learning/allocate",
+      "violated_invariant": "SDD 6.2/19.3/21: historical selection/allocation consumes only adaptations applied by its explicit cut; frozen replay must prove temporal eligibility",
+      "current_reproduction": "final-review-r1-probes.txt: future HIGH S5 changes historical top3; final-review-r1-allocation-probe.txt: future max_share=0 changes valid historical size 3 to UNAVAILABLE",
+      "origin": "LATENT_DEFECT: prior latest-state consumers introduced with governed contextual learning, not caused by F3 world-only repair",
+      "actual_normal_caller": "Attention Store.write -> evaluate_snapshot -> cognition.evaluate; Kernel Portfolio checkpoint -> current.freeze -> attach_learning -> allocator.allocate"
+    },
+    {
+      "id": "F11",
+      "severity": "P1",
+      "path_function": "trader/engine/supervisor.py:Supervisor._pass_once recovery checks",
+      "violated_invariant": "SDD 24.1: uncertain execution outcome cannot qualify as proved safe recovery/ACTIVE",
+      "current_reproduction": "final-review-r1-recovery-probe.txt: unresolved partial intent, safe_to_activate=true, ACTIVE and pending=true",
+      "origin": "REGRESSION introduced by F4 new durable partial intent integration; Supervisor still inspects entry ledger only",
+      "actual_normal_caller": "Kernel.boot/cycle and owner resume -> Supervisor.pass_once -> recovery safety proof / ACTIVE CAS"
+    },
+    {
+      "id": "F12",
+      "severity": "P1",
+      "path_function": "trader/engine/entry_authority.py:submit second durable hold",
+      "violated_invariant": "SDD 17/18/24.1: unresolved execution outcomes block new exposure at the final held submission boundary",
+      "current_reproduction": "final-review-r2-entry-probe.txt: real Executor.open / process-issued Risk permission; partial reservation between durable holds; one new-exposure order despite partial_pending=true",
+      "origin": "INTEGRATION_DEFECT: new F4 partial intent barrier was not propagated into the existing final entry submission hold",
+      "actual_normal_caller": "Kernel._try_enter -> Executor.open -> entry_authority.submit; ExitEngine -> Executor.close_partial -> durable reservation"
+    },
+    {
+      "id": "F13",
+      "severity": "P1",
+      "path_function": "trader/research/predictive_experiment.py:freeze_candles; trader/research/predictive_bridge.py:cycle snapshot consumer",
+      "violated_invariant": "SDD 6.2/19.3: frozen numerical research must retain qualified input provenance and immutable replay identity across actual readers",
+      "current_reproduction": "f13-before.txt: qualified 1800-bar source replay becomes None after freeze; unqualified snapshot hash changes when DataFeed initializes missing provenance tables, causing repeated bridge checkpoint_conflict",
+      "origin": "INTEGRATION_DEFECT retained through fcfe9e0: predictive freezer still copies only pre-PIT candle projection",
+      "actual_normal_caller": "ResearchRunner predictive experiment -> predictive_bridge.cycle -> freeze_candles -> load_bundle/load_heldout -> DataFeed cached/replay read"
+    }
+  ],
+  "regressions_introduced": [
+    "R1: explicit independent feed initialization revealed 12 Kernel boot fixture failures: fixture omitted the production DataFeed dependency (f4-r2-regression.txt).",
+    "R2: additional Supervisor boot fixture lacked explicit public DataFeed; three source-mutant tests targeted the superseded publication-only predicate or did not remove the new parallel work-age check (f5-regression first run).",
+    {
+      "id": "R3",
+      "failure": "Stage8 package-local git diff guard asserts entire Executor remains untouched despite expressly authorized F4 repair; f9-regression.txt initial 127 passed, one scope assertion failed.",
+      "fix": "Retain exact audited baseline equality for Risk/RiskIntent and AST equality for every Executor method except three authorized partial/recovery methods; existing behavioral authority tests remain unchanged.",
+      "status": "FIXED"
+    },
+    "R4 / F11: durable partial intent integrated into Executor entry barrier but not Supervisor safe activation proof; exact offline normal boot reproduction.",
+    "R5: F3 correctly rejects a future revision that an older latest-overlay test applied to a WorldModel cut of 200; fixture needs a current cut, while new regressions preserve future rejection.",
+    "R6 / F12: durable partial intent was not included at the final held entry admission/submission boundary after the early Executor barrier."
+  ],
+  "regressions_fixed": [
+    "R1: boot fixture now supplies a distinct real DataFeed around an offline recording exchange; all original recovery/protection assertions preserved.",
+    "R2: supplied public feed and asserted its boot initialization; stale mutant now removes both ages, chronology mutant removes both validation/age layers. Normal malformed/chronology assertions unchanged.",
+    "R3: frozen Stage8 guard now verifies exact Risk/RiskIntent bytes and every unchanged Executor authority method against starting HEAD; 128-test rerun passed.",
+    "R4 / F11: Supervisor activation now proves and holds resolution of every durable execution intent through the ACTIVE CAS; original and late-reservation variants pass.",
+    "R5: current overlay fixture now uses a coherent application cut for WorldModel, WorldState and every claim; historical rejection/exact-cut/reopen tests remain separate and pass (current-and-historical-world-regression.txt: 3 passed).",
+    "R6 / F12: both held admission/submission transactions revalidate partial intent state; known never-submitted reservations are durably refused/cleared (135 affected and 14 read-only tests passed)."
+  ],
+  "final_review": "PASS_READ_ONLY_R5",
+  "baseline_test_methodology_findings": [
+    {
+      "reproduction": "baseline-attention-fixtures.txt: 33 failures reproduced on exact starting HEAD (32 missing can_enter fixture method; one AST prohibition conflicting with existing MI-7 storage safety).",
+      "repair": "Complete state fixture with current can_enter semantics; preserve all 32 entry/exit assertions. Restrict Journal imports to exact existing fail-closed storage safety helpers; Attention/selection import boundary remains prohibited.",
+      "product_defect": false
+    },
+    {
+      "reproduction": "baseline-final-matrix-failures.txt: 13 wider Stage2/3/4/5/6 failures repeat on starting HEAD.",
+      "classification": "Qualified-research snapshot loss/hash mutation is separately F13; remaining failures involve obsolete module inventories, changed receipt identities in separately generated comparisons, missing synthetic receipts/clock, stale correlation history fixture.",
+      "product_defect": "F13 only after qualified production-consumer probe."
+    },
+    {
+      "repair": "Synthetic historical research candles retain explicitly generated first-close receipts and simulated observation clock; comparisons share one exact captured input; current callback and audited module inventories retain all behavioral assertions; synthetic correlation input carries receipt metadata. Backup restore caller is constrained to supervisor FROZEN/RECOVERY, entry caller to live_entry_block.",
+      "production_invariants_weakened": false
+    }
+  ],
+  "test_environment_findings": [
+    "Combined 440-test invocation hit inherited 1024-file-descriptor process limit due accumulated test Journal connections; split unchanged suites into 262 and 178-test processes, both passed. No production resource policy changed.",
+    "Owner boundary Unix IPC was blocked by an IP network guard, stranding a test server. Permit only AF_UNIX paths under the OS temporary directory; IP/HTTP/production IPC remain blocked. Only the owned hung test child was terminated; production processes unchanged. owner-local-ipc-regression.txt: 208 passed, zero guard attempts.",
+    "Fixture missing-token branch inherited FINNHUB_API_KEY from prior config loading; isolate environment in test fixture, preserve exact one free-source assertion.",
+    "Predictive direct-reader fixture omitted its optional derivatives path, triggering denied production reads after synthetic candles became usable. Explicit temporary derivative store supplied; invalid guard campaigns not counted as PASS.",
+    "Synthetic PIT revisions exceeded available root filesystem space. Invalid ENOSPC campaigns retained separately; canceled only owned offline test jobs, removed exact task-owned completed pytest roots, relocated --basetemp to production/.audit-tmp on the available workspace filesystem and clean each group after capture. No production file/process was removed.",
+    "The synthetic predictive CFG also inherited real_funding=true, whose optional funding_for reader defaults to production retained funding. Fixture has no synthetic funding input: explicitly select existing real_funding=false policy, matching other numerical fixtures; unchanged flat-cost fallback and numerical assertions. This is test configuration, not production policy."
+  ],
+  "rejected_audit_candidates": [
+    {
+      "candidate": "Acknowledged working partial could be consumed prematurely",
+      "result": "NOT_REPRODUCED",
+      "evidence": "f14-before.txt: 2 passed against the existing F4 quantity/terminal guard; no fix required",
+      "review_probe": "tests/test_final_audit_partial_ack.py",
+      "source_changed": "Temporary four-line candidate guard was removed after before-probe passed; final source equals prior frozen F4 implementation. R4 source manifest begins a new read-only review."
+    }
+  ],
+  "final_flags": {
+    "NEW_P0_FINDINGS": "NONE",
+    "NEW_P1_FINDINGS": "NONE",
+    "REGRESSION_FOUND": "NO",
+    "AUTHORITY_BYPASS_FOUND": "NO",
+    "PIT_OR_REPLAY_LEAK_FOUND": "NO",
+    "DUPLICATE_NEW_EXPOSURE_PATH_FOUND": "NO",
+    "RECOVERY_BYPASS_FOUND": "NO",
+    "LIVE_LLM_DEPENDENCY": "ZERO",
+    "BUILD_IMPLEMENTATION_REVIEW": "PASS"
+  },
+  "final_regression_matrix": [
+    {
+      "group": "Stage1_data",
+      "command": [
+        "/mnt/luffy-data/luffy/production/venv/bin/python",
+        "-m",
+        "pytest",
+        "--basetemp",
+        "/mnt/luffy-data/luffy/production/.audit-tmp/Stage1_data",
+        "-p",
+        "tests.stage1_pit_offline_plugin",
+        "tests/test_stage1_data_provenance_pit.py",
+        "tests/test_stage1_pit_blocker_fix.py",
+        "tests/test_stage1_pit_engine_gates.py",
+        "tests/test_derivatives.py",
+        "tests/test_feed_pagination.py",
+        "tests/test_spec_signals_on_closed_bars.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "summary": "100 passed in 99.50s (0:01:39)",
+      "elapsed_s": 102.69,
+      "evidence": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage1_data.txt",
+      "network_guard_zero": true,
+      "production_store_guard_zero": true
+    },
+    {
+      "group": "Stage1_entry",
+      "command": [
+        "/mnt/luffy-data/luffy/production/venv/bin/python",
+        "-m",
+        "pytest",
+        "--basetemp",
+        "/mnt/luffy-data/luffy/production/.audit-tmp/Stage1_entry",
+        "-p",
+        "tests.stage1_pit_offline_plugin",
+        "tests/test_stage1_entry_authority.py",
+        "tests/test_entry_recovery.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "summary": "83 passed in 87.80s (0:01:27)",
+      "elapsed_s": 89.87,
+      "evidence": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage1_entry.txt",
+      "network_guard_zero": true,
+      "production_store_guard_zero": true
+    },
+    {
+      "group": "Stage1_exit_accounting",
+      "command": [
+        "/mnt/luffy-data/luffy/production/venv/bin/python",
+        "-m",
+        "pytest",
+        "--basetemp",
+        "/mnt/luffy-data/luffy/production/.audit-tmp/Stage1_exit_accounting",
+        "-p",
+        "tests.stage1_pit_offline_plugin",
+        "tests/test_execution_accounting.py",
+        "tests/test_reconcile.py",
+        "tests/test_reconcile_alignment_commits.py",
+        "tests/test_protective_stops.py",
+        "tests/test_exits.py",
+        "tests/test_spec_exits_are_honoured.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "summary": "71 passed in 27.51s",
+      "elapsed_s": 29.43,
+      "evidence": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage1_exit_accounting.txt",
+      "network_guard_zero": true,
+      "production_store_guard_zero": true
+    },
+    {
+      "group": "Stage2_spine",
+      "command": [
+        "/mnt/luffy-data/luffy/production/venv/bin/python",
+        "-m",
+        "pytest",
+        "--basetemp",
+        "/mnt/luffy-data/luffy/production/.audit-tmp/Stage2_spine",
+        "-p",
+        "tests.stage1_pit_offline_plugin",
+        "tests/test_intelligence_spine.py",
+        "tests/test_opportunity_context.py",
+        "tests/test_cognition_attention.py",
+        "tests/test_cognition_replay.py",
+        "tests/test_decision_sources.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "summary": "183 passed in 509.01s (0:08:29)",
+      "elapsed_s": 531.5,
+      "evidence": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage2_spine.txt",
+      "network_guard_zero": true,
+      "production_store_guard_zero": true
+    },
+    {
+      "group": "Stage3_research",
+      "command": [
+        "/mnt/luffy-data/luffy/production/venv/bin/python",
+        "-m",
+        "pytest",
+        "--basetemp",
+        ".audit-tmp/Stage3_research_r5",
+        "-p",
+        "tests.stage1_pit_offline_plugin",
+        "tests/test_external_research_router.py",
+        "tests/test_research_source_registry.py",
+        "tests/test_investigation_research_family.py",
+        "tests/test_research_evidence_source_binding.py",
+        "tests/test_research_control.py",
+        "tests/test_predictive_research_bridge.py",
+        "tests/test_research_runner.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "summary": "267 passed in 470.65s (0:07:50)",
+      "evidence": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage3_research-r5.txt",
+      "network_guard_zero": true,
+      "production_store_guard_zero": true
+    },
+    {
+      "group": "Stage4_referee",
+      "command": [
+        "/mnt/luffy-data/luffy/production/venv/bin/python",
+        "-m",
+        "pytest",
+        "--basetemp",
+        "/mnt/luffy-data/luffy/production/.audit-tmp/Stage4_referee",
+        "-p",
+        "tests.stage1_pit_offline_plugin",
+        "tests/test_research_referee.py",
+        "tests/test_research_fdr.py",
+        "tests/test_research_slices.py",
+        "tests/test_research_calibration.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "summary": "32 passed in 93.67s (0:01:33)",
+      "elapsed_s": 94.91,
+      "evidence": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage4_referee.txt",
+      "network_guard_zero": true,
+      "production_store_guard_zero": true
+    },
+    {
+      "group": "Stage5_authority",
+      "command": [
+        "/mnt/luffy-data/luffy/production/venv/bin/python",
+        "-m",
+        "pytest",
+        "--basetemp",
+        "/mnt/luffy-data/luffy/production/.audit-tmp/Stage5_authority",
+        "-p",
+        "tests.stage1_pit_offline_plugin",
+        "tests/test_strategy_factory_handoff.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "summary": "53 passed in 58.56s",
+      "elapsed_s": 61.68,
+      "evidence": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage5_authority.txt",
+      "network_guard_zero": true,
+      "production_store_guard_zero": true
+    },
+    {
+      "group": "Stage6_portfolio",
+      "command": [
+        "/mnt/luffy-data/luffy/production/venv/bin/python",
+        "-m",
+        "pytest",
+        "--basetemp",
+        "/mnt/luffy-data/luffy/production/.audit-tmp/Stage6_portfolio",
+        "-p",
+        "tests.stage1_pit_offline_plugin",
+        "tests/test_portfolio_allocator.py",
+        "tests/test_portfolio_common_factor.py",
+        "tests/test_stage6_closure.py",
+        "tests/test_stage6_normal_sources.py",
+        "tests/test_runtime_portfolio_integration.py",
+        "tests/test_opportunity_live_integration.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "summary": "145 passed in 124.46s (0:02:04)",
+      "elapsed_s": 126.03,
+      "evidence": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage6_portfolio.txt",
+      "network_guard_zero": true,
+      "production_store_guard_zero": true
+    },
+    {
+      "group": "Stage7_learning",
+      "command": [
+        "/mnt/luffy-data/luffy/production/venv/bin/python",
+        "-m",
+        "pytest",
+        "--basetemp",
+        "/mnt/luffy-data/luffy/production/.audit-tmp/Stage7_learning",
+        "-p",
+        "tests.stage1_pit_offline_plugin",
+        "tests/test_learning_application.py",
+        "tests/test_normal_learning_loop_closure.py",
+        "tests/test_stage7_replay_world_closure_r2.py",
+        "tests/test_historical_outcome_capture.py",
+        "tests/test_legacy_learning_replay_gate.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "summary": "122 passed in 727.07s (0:12:07)",
+      "elapsed_s": 755.89,
+      "evidence": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage7_learning.txt",
+      "network_guard_zero": true,
+      "production_store_guard_zero": true
+    },
+    {
+      "group": "Stage8_owner",
+      "command": [
+        "/mnt/luffy-data/luffy/production/venv/bin/python",
+        "-m",
+        "pytest",
+        "--basetemp",
+        "/mnt/luffy-data/luffy/production/.audit-tmp/Stage8_owner",
+        "-p",
+        "tests.stage1_pit_offline_plugin",
+        "tests/test_stage8_owner_os.py",
+        "tests/test_owner_interface_boundary.py",
+        "tests/test_owner_reads_m2.py",
+        "tests/test_owner_frontend_api.py",
+        "-q"
+      ],
+      "exit_code": 0,
+      "summary": "208 passed in 143.29s (0:02:23)",
+      "elapsed_s": 147.54,
+      "evidence": "docs/superpowers/evidence/final-audit-repair-loop-r1/final-Stage8_owner.txt",
+      "network_guard_zero": true,
+      "production_store_guard_zero": true
+    }
+  ]
+}

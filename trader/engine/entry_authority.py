@@ -431,6 +431,7 @@ def submit(executor, permission, decision, amount, atr, stop, target,
     from ccxt import InvalidOrder, InsufficientFunds
     from ..strategy import factory_handoff
     from .recovery import KEY
+    from . import partial_intent
     from ..observability.safety import entry_refusal
     refusal = entry_refusal(executor.journal)
     if refusal:
@@ -464,7 +465,7 @@ def submit(executor, permission, decision, amount, atr, stop, target,
             if conn.execute('SELECT 1 FROM execution_requests WHERE logical_id=? OR decision_id=?',
                             (logical_id, decision.id)).fetchone():
                 raise ValueError('logical_action_already_reserved')
-            if executor.recovery.pending():
+            if executor.recovery.pending() or partial_intent.pending(executor.journal):
                 raise ValueError('execution_recovery_pending')
             raw = validate(executor, permission, decision, amount, atr, stop, target,
                            strategy_id, identity, reference, conn)
@@ -478,24 +479,36 @@ def submit(executor, permission, decision, amount, atr, stop, target,
         # Reservation is committed. A crash from here onward must reconcile.
         submitted_ms = int(time.time()*1000)
         order = error = None
+        deferred = False
         with manager._durable_hold() as conn:
-            validate(executor, permission, decision, amount, atr, stop, target,
-                     strategy_id, identity, reference, conn)
-            if factory_handoff.live_entry_block(executor.journal, strategy_id):
-                raise ValueError('version_not_live_authorized')
-            try:
-                order = executor.ex.create_order(decision.symbol, 'market',
-                    'buy' if decision.action == Action.BUY else 'sell', amount,
-                    params={'reduceOnly':False, 'newClientOrderId':client_id})
-            except Exception as exc:
-                error = exc
-                if isinstance(exc, (InvalidOrder, InsufficientFunds)):
-                    executor.recovery.save(recovery, 'entry_submission_rejected', conn=conn)
-                    conn.execute("UPDATE execution_requests SET state='REFUSED' WHERE logical_id=?",(logical_id,))
-                    conn.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES (?, 'null')",(KEY,))
-                else:
-                    executor.recovery.save(recovery, 'entry_submission_ambiguous', conn=conn)
+            if partial_intent.pending(executor.journal):
+                # No submission has been attempted in this call. Record that
+                # exact refusal durably; do not manufacture an ambiguous entry
+                # alongside the genuinely unresolved partial exit.
+                deferred = True
+                conn.execute("UPDATE execution_requests SET state='REFUSED',result_json=? WHERE logical_id=?",
+                    (canonical(dict(reason='execution_recovery_pending', submitted=False)), logical_id))
+                conn.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES (?, 'null')", (KEY,))
             else:
-                recovery['order_id'] = str(order.get('id') or '')
-                executor.recovery.save(recovery, 'entry_submitted', conn=conn)
+                validate(executor, permission, decision, amount, atr, stop, target,
+                         strategy_id, identity, reference, conn)
+                if factory_handoff.live_entry_block(executor.journal, strategy_id):
+                    raise ValueError('version_not_live_authorized')
+                try:
+                    order = executor.ex.create_order(decision.symbol, 'market',
+                        'buy' if decision.action == Action.BUY else 'sell', amount,
+                        params={'reduceOnly':False, 'newClientOrderId':client_id})
+                except Exception as exc:
+                    error = exc
+                    if isinstance(exc, (InvalidOrder, InsufficientFunds)):
+                        executor.recovery.save(recovery, 'entry_submission_rejected', conn=conn)
+                        conn.execute("UPDATE execution_requests SET state='REFUSED' WHERE logical_id=?",(logical_id,))
+                        conn.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES (?, 'null')",(KEY,))
+                    else:
+                        executor.recovery.save(recovery, 'entry_submission_ambiguous', conn=conn)
+                else:
+                    recovery['order_id'] = str(order.get('id') or '')
+                    executor.recovery.save(recovery, 'entry_submitted', conn=conn)
+        if deferred:
+            raise ValueError('execution_recovery_pending')
         return order, recovery, error, submitted_ms, binding

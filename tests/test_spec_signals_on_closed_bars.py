@@ -64,7 +64,7 @@ def _snap(df: pd.DataFrame) -> Snapshot:
     from trader.data.market_provenance import annotate
     at=1_780_000_000_000
     snap.ts=pd.Timestamp(at,unit='ms',tz='UTC').isoformat()
-    snap.dfs['4h']=annotate(df,instrument_id='binanceusdm:futures:UNIUSDT',
+    snap.dfs['4h']=annotate(df,instrument_id='binance_usdm:futures:UNIUSDT',
                           source='offline:closed-bar-fixture',kind='candle',
                           received_ms=at,timeframe='4h')
     return snap

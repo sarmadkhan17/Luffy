@@ -115,6 +115,7 @@ FILES = {
     'NEXT.yaml': 'work_authority', 'config.yaml': 'versioned_runtime_config',
     'org.yaml': 'component_configuration', 'data/doctrine.json': 'frozen_doctrine',
     'data/agent_weights.json': 'retained_analyst_weights',
+    'data/ewa_state.json': 'retained_analyst_ewa_decision_input',
     'data/stage5-activation.json': 'owner_activation_window',
     'data/safety_health.json': 'safety_outage_audit_state',
     'data/attention_health.json': 'attention_capture_health_evidence',
@@ -125,6 +126,8 @@ FILES = {
 
 def critical_inventory(root, *, registered=()):
     root = Path(root)
+    if not safe_path(root, 'data/ewa_state.json').is_file():
+        raise Refused('retained_decision_input_missing:data/ewa_state.json')
     assets = [Asset(p, r, 'sqlite', metadata(safe_path(root, p))) for p, r in STORES.items()
               if p == 'data/luffy.db' or (root / p).exists()]
     assets += [Asset(p, r) for p, r in FILES.items()
@@ -274,7 +277,8 @@ class BackupSets:
             raise Refused('destination_must_be_outside_source_runtime_tree')
         self.inventory = inventory
         inventory.validate(self.source)
-        required = {'data/luffy.db', 'SDD.md', 'STATE.yaml', 'NEXT.yaml', 'config.yaml'}
+        required = {'data/luffy.db', 'SDD.md', 'STATE.yaml', 'NEXT.yaml', 'config.yaml',
+                    'data/ewa_state.json'}
         if not required.issubset({a.path for a in inventory.assets}):
             raise Refused('critical_inventory_incomplete')
         for a in inventory.assets:
@@ -416,6 +420,11 @@ class BackupSets:
                 raise Refused('pit_dependency_identity_mismatch')
 
     def _verify_references(self, root):
+        retained = next((a for a in self.inventory.assets if a.path == 'data/ewa_state.json'), None)
+        if retained is None or retained.role != FILES['data/ewa_state.json'] or retained.kind != 'file':
+            raise Refused('retained_decision_input_inventory_incomplete')
+        if not safe_path(root, retained.path).is_file():
+            raise Refused('retained_decision_input_missing:' + retained.path)
         self._verify_pit_dependencies(root)
         queue = root / 'data/accounting-worker/queue.db'
         if not queue.exists():

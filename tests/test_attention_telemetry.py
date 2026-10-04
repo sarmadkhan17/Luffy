@@ -247,7 +247,7 @@ def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name,
     k=object.__new__(Kernel)
     k.cfg={'timeframes':{'execution':'15m'}}
     k.population=[]
-    k.state_machine=NS(refresh=lambda:state)
+    k.state_machine=NS(refresh=lambda:state,can_enter=lambda:state==ControlState.ACTIVE)
     k._fetch_balance_fresh=lambda:1000
     k.risk=NS(update_equity=lambda *_a, **_k: {'equity':1000,'drawdown_pct':0,'risk_state':'ok'},
               daily_loss_block=.05)
