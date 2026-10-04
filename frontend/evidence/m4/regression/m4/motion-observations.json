@@ -1,0 +1,23 @@
+{
+  "idle": "true",
+  "pending": "pending",
+  "responding": "responding",
+  "reply": 2,
+  "error": "false",
+  "path": "Aggressor Flow → Absorption Test\n\ntyped · supports\n\nConnection kt-150e6cfb908d9c05 · Evidence vault:10 Theories/Mechanisms/Aggressor Flow.md#relations.supports",
+  "highlightedEdges": 1,
+  "observed": {
+    "state": "fresh",
+    "animation": "evidence-arrival"
+  },
+  "declared": {
+    "state": null,
+    "animation": "none"
+  },
+  "tradeStages": 8,
+  "routeTransition": "m4-reveal",
+  "reduced": {
+    "core": "false",
+    "headingDuration": "1e-05s"
+  }
+}

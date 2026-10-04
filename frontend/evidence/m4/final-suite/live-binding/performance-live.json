@@ -1,0 +1,89 @@
+{
+  "environment": {
+    "note": "Live-contract test server (tests/owner_frontend_server.py): real FastAPI app, fixture journal, fake Owner Interface/chat. Not production.",
+    "browser": "151.0.7922.34",
+    "viewport": {
+      "width": 1440,
+      "height": 1080
+    }
+  },
+  "cold": [
+    {
+      "usableNavigationMs": 308,
+      "usefulOverviewMs": 473,
+      "chartMs": 662
+    },
+    {
+      "usableNavigationMs": 340,
+      "usefulOverviewMs": 508,
+      "chartMs": 608
+    },
+    {
+      "usableNavigationMs": 333,
+      "usefulOverviewMs": 497,
+      "chartMs": 529
+    }
+  ],
+  "firstVisitMs": {
+    "knowledge": 570,
+    "liveSystem": 977,
+    "operations": 360,
+    "luffy": 406
+  },
+  "cachedRouteMs": {
+    "min": 62,
+    "max": 213,
+    "samples": [
+      159,
+      93,
+      62,
+      207,
+      114,
+      112,
+      134,
+      91,
+      69,
+      213,
+      96,
+      64,
+      110,
+      116,
+      64
+    ]
+  },
+  "whileGraphLoading": {
+    "navigateAwayMs": 417,
+    "typeFiveCharsMs": 106,
+    "chatReplyMs": 225
+  },
+  "memory": {
+    "browser": {
+      "overviewBefore": {
+        "heapMiB": 4,
+        "nodes": 1219,
+        "listeners": 202
+      },
+      "overviewAfterChurn": {
+        "heapMiB": 8.73,
+        "nodes": 1652,
+        "listeners": 209
+      },
+      "knowledge": {
+        "heapMiB": 8.66,
+        "nodes": 1282,
+        "listeners": 377
+      },
+      "liveSystem": {
+        "heapMiB": 9.06,
+        "nodes": 1989,
+        "listeners": 262
+      },
+      "routeChanges": 108
+    },
+    "serverRssMiB": {
+      "afterBoot": 111.3,
+      "after400ApiReadsAndChurn": 112
+    },
+    "websockets": []
+  }
+}

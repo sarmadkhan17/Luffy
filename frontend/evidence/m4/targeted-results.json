@@ -1,0 +1,200 @@
+{
+  "config": {
+    "argv": [
+      "/home/sarmad/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+      "/home/sarmad/trader/frontend/node_modules/.bin/playwright",
+      "test",
+      "v2.spec.ts",
+      "v21.spec.ts",
+      "-g",
+      "V2 all nine desktop and mobile surfaces|V2.1 visual corrections"
+    ],
+    "configFile": "/home/sarmad/trader/frontend/playwright.config.ts",
+    "rootDir": "/home/sarmad/trader/frontend/tests/browser",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/sarmad/trader/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/sarmad/trader/frontend/tests/browser",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "evidence/m4/targeted-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "v2.spec.ts",
+      "file": "v2.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "V2 all nine desktop and mobile surfaces, accessibility and screenshots",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 28337,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-29T23:04:27.247Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f5cea1cd63f4d778102-1dfe34a9cc079e3bad67",
+          "file": "v2.spec.ts",
+          "line": 29,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "v21.spec.ts",
+      "file": "v21.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "V2.1 visual corrections and diagnostic availability match the health contract",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 4003,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m11\u001b[39m\nReceived:    \u001b[31m10\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m11\u001b[39m\nReceived:    \u001b[31m10\u001b[39m\n    at /home/sarmad/trader/frontend/tests/browser/v21.spec.ts:274:7",
+                    "location": {
+                      "file": "/home/sarmad/trader/frontend/tests/browser/v21.spec.ts",
+                      "column": 7,
+                      "line": 274
+                    },
+                    "snippet": "  272 |     expect(\n  273 |       await badge.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)),\n> 274 |     ).toBeGreaterThanOrEqual(11);\n      |       ^\n  275 | });\n  276 |\n  277 | test(\"V2.1 Owner Interface telemetry cannot turn stale or invalid observation times into healthy state\", async ({"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/sarmad/trader/frontend/tests/browser/v21.spec.ts",
+                        "column": 7,
+                        "line": 274
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m11\u001b[39m\nReceived:    \u001b[31m10\u001b[39m\n\n  272 |     expect(\n  273 |       await badge.evaluate((el) => parseFloat(getComputedStyle(el).fontSize)),\n> 274 |     ).toBeGreaterThanOrEqual(11);\n      |       ^\n  275 | });\n  276 |\n  277 | test(\"V2.1 Owner Interface telemetry cannot turn stale or invalid observation times into healthy state\", async ({\n    at /home/sarmad/trader/frontend/tests/browser/v21.spec.ts:274:7"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-09-29T23:04:55.869Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/sarmad/trader/frontend/test-results/v21-V2-1-visual-correction-d8e5e-y-match-the-health-contract/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/sarmad/trader/frontend/test-results/v21-V2-1-visual-correction-d8e5e-y-match-the-health-contract/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/sarmad/trader/frontend/tests/browser/v21.spec.ts",
+                    "column": 7,
+                    "line": 274
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "222bf8a540ad2853b0c8-0a6fe2b1f16985d4bc5a",
+          "file": "v21.spec.ts",
+          "line": 240,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-29T23:04:17.944Z",
+    "duration": 42400.031,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

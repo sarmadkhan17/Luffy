@@ -7,14 +7,13 @@ export default function Avatar({ state }: { state: RequestState }) {
   const reduced = useMotionPreference(),
     visible = useVisible(),
     id = useId().replaceAll(":", "");
-  const active =
-    visible && !reduced && (state === "pending" || state === "responding");
+  const animateCore = visible && !reduced && state !== "error";
   return (
     <MotionConfig reducedMotion="user">
       <div
         className={`mechanical-avatar ${state}`}
         data-state={state}
-        data-animating={active}
+        data-animating={animateCore}
         role="img"
         aria-label={`LUFFY mechanical core: ${state}`}
       >
@@ -56,11 +55,11 @@ export default function Avatar({ state }: { state: RequestState }) {
           />
           <motion.g
             style={{ transformOrigin: "160px 160px" }}
-            animate={{ transform: active ? "rotate(360deg)" : "rotate(0deg)" }}
+            animate={{ transform: animateCore ? "rotate(360deg)" : "rotate(0deg)" }}
             transition={
-              active
+              animateCore
                 ? {
-                    duration: state === "pending" ? 16 : 10,
+                    duration: state === "idle" ? 90 : state === "pending" ? 16 : 10,
                     repeat: Infinity,
                     ease: "linear",
                   }
@@ -100,6 +99,11 @@ export default function Avatar({ state }: { state: RequestState }) {
               </g>
             ))}
           </motion.g>
+          <motion.g
+            style={{ transformOrigin: "160px 160px" }}
+            animate={{ scale: state === "pending" ? 0.88 : state === "responding" ? 1.04 : 1 }}
+            transition={{ duration: 0.24, ease: "easeOut" }}
+          >
           <circle
             cx="160"
             cy="160"
@@ -154,6 +158,7 @@ export default function Avatar({ state }: { state: RequestState }) {
             stroke="#b3dcd5"
             strokeOpacity=".6"
           />
+          </motion.g>
         </svg>
         <span className="core-caption">
           {state === "idle" ? "READY FOR YOUR MESSAGE" : state.toUpperCase()}

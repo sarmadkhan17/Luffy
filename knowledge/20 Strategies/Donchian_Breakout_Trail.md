@@ -1,6 +1,6 @@
 ---
 type: strategy
-state: retired
+state: paper
 family: spec
 origin: measured
 author: Strategist
@@ -34,9 +34,9 @@ time:   max 500 bars
 
 
 ## Live record
-- closed trades: 13 · wins: 0
-- realized P&L: -94.30 USDT
-- state: **retired**
+- closed trades: 16 · wins: 4
+- realized P&L: +90.42 USDT
+- state: **paper**
 
 Related: [[Regime Playbook]], [[MOC]]
 

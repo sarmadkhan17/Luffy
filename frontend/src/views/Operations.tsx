@@ -145,6 +145,7 @@ export default function Operations() {
   return (
     <div className="workspace-stack">
       {decision && <DecisionDetail key={decision} id={decision} />}
+      <OperationsActivity />
       <div className="operations">
         <Panel
           title="Owner Interface"
@@ -303,7 +304,6 @@ export default function Operations() {
           </p>
         </Panel>
       </div>
-      <OperationsActivity />
       <RuntimeStatus compact />
       <Decisions compact />
       <Investigations />

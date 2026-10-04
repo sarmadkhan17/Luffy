@@ -1,0 +1,30 @@
+{
+  "slow_decisions_s": 2,
+  "overview": {
+    "ready_ms": 335
+  },
+  "trades": {
+    "ready_ms": 473
+  },
+  "research": {
+    "ready_ms": 278
+  },
+  "strategies": {
+    "ready_ms": 109
+  },
+  "luffy": {
+    "ready_ms": 468
+  },
+  "operations": {
+    "ready_ms": 2883
+  },
+  "live-system": {
+    "ready_ms": 557
+  },
+  "knowledge": {
+    "ready_ms": 228
+  },
+  "diagnostics": {
+    "ready_ms": 2651
+  }
+}

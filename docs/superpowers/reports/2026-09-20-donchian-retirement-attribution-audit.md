@@ -441,3 +441,24 @@ behaviour only for a spec declaring an `arm_at_r` other than 1.0.
   `trader/data/feed.py:236`, `trader/agents/indicators.py` (ATR, period 14),
   `trader/engine/exits.py` (`:60` SpecExit, `:97` ExitConfig, `:172` trail)
 - `config.yaml` — `timeframes.execution: 15m`, `scan_interval_seconds: 60`
+
+---
+
+## 12. Addendum 2026-09-23 — owner reinstatement to paper
+
+The owner directed that the spec return to `paper`: the retirement came from the
+wrong lifecycle path (§1, §6) and the defect under discussion is the exit
+mechanism (§3b, §11), not the entry thesis.
+
+- `strategies.state`: `retired` → `paper` (guarded `WHERE state='retired'`);
+  `retire_reason` now carries the reinstatement provenance.
+- `brain_events` kind `owner_reinstated` records the before-row and the basis.
+- `stats_json` (monitoring blob, frozen at retirement at 6 trades) refreshed via
+  `promotion._stats_for`: **8 closed, 1 win, −79.52 USDT, PF 0.157**. Five
+  positions remain open and are excluded from that figure, as in §5.
+- Governance: `promotion.evaluate_population` is `observe_only` for
+  `kind='spec'` (refreshes stats, never transitions state); retirement remains
+  solely `analyst.review_deployed → rolling.has_decayed`, which may still
+  retire it on its own pooled 4h evidence.
+- This is an owner decision, not admission evidence; no gate, threshold, exit,
+  risk or referee/handoff setting was changed.

@@ -232,42 +232,70 @@ function TradeBook() {
   );
 }
 
+/** The forensic chain every trade story walks, in order. Labels only. */
+const TRADE_CHAIN = [
+  "Opportunity",
+  "Decision",
+  "Signals",
+  "Strategy",
+  "Execution",
+  "Accounting",
+  "Outcome",
+];
 function Trades() {
   const trade = useRouteParam("trade");
   return (
-    <div className="workspace-stack">
+    <div className="workspace-stack trades-desk">
+      <ol className="desk-chain" aria-label="Trade story chain" tabIndex={0}>
+        {TRADE_CHAIN.map((step, i) => (
+          <li key={step}>
+            <span className="desk-chain-num" aria-hidden="true">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            {step}
+          </li>
+        ))}
+      </ol>
       {trade && (
-        <LinkedPanel
-          title={`Trade story · ${trade}`}
-          back="#trades"
-          testid="trade-story"
-        >
-          <p className="quiet">
-            Opportunity → decision → signals → strategy → execution → accounting
-            → outcome, from the ids the journal recorded. Steps the stores do
-            not record are marked UNAVAILABLE.
-          </p>
-          <TradeLineage key={trade} id={trade} story />
-        </LinkedPanel>
+        <div className="desk-dossier">
+          <LinkedPanel
+            title={`Trade story · ${trade}`}
+            back="#trades"
+            testid="trade-story"
+          >
+            <p className="quiet">
+              Opportunity → decision → signals → strategy → execution →
+              accounting → outcome, from the ids the journal recorded. Steps the
+              stores do not record are marked UNAVAILABLE.
+            </p>
+            <TradeLineage key={trade} id={trade} story />
+          </LinkedPanel>
+        </div>
       )}
-      <TradeBook />
-      <Decisions />
-      <div className="workspace-grid">
-        <Panel title="Execution lineage">
-          <p>
-            Inspect a trade for its recorded decision, strategy, accounting
-            receipts and outcome. Links are the ids the journal stored; nothing
-            is joined by inference, and what was not recorded is marked
-            UNAVAILABLE.
-          </p>
-        </Panel>
-        <Panel title="Open position protection">
-          <p>
-            Overview binds journal-open positions to the Supervisor’s
-            timestamped venue reconciliation and optional price estimates.
-          </p>
-          <a href="#overview">Inspect positions and protection ↗</a>
-        </Panel>
+      <div className="desk-floor">
+        <div className="desk-book">
+          <TradeBook />
+        </div>
+        <div className="desk-rail">
+          <Panel title="Execution lineage">
+            <p>
+              Inspect a trade for its recorded decision, strategy, accounting
+              receipts and outcome. Links are the ids the journal stored;
+              nothing is joined by inference, and what was not recorded is
+              marked UNAVAILABLE.
+            </p>
+          </Panel>
+          <Panel title="Open position protection">
+            <p>
+              Overview binds journal-open positions to the Supervisor’s
+              timestamped venue reconciliation and optional price estimates.
+            </p>
+            <a href="#overview">Inspect positions and protection ↗</a>
+          </Panel>
+        </div>
+      </div>
+      <div className="desk-decisions">
+        <Decisions />
       </div>
     </div>
   );
@@ -315,6 +343,23 @@ function Strategies() {
               note="Up to 200 strategies; registry state does not establish admission."
             />
             <Families rows={q.data.rows} active={family} />
+            <div className="strategy-map" aria-label="Recorded strategy identities">
+              {q.data.rows
+                .filter((r) => typeof r.id === "string" && (!family || r.kind === family))
+                .map((r, i) => (
+                  <a
+                    key={String(r.id)}
+                    href={`#strategies?id=${encodeURIComponent(String(r.id))}`}
+                    className={`strategy-map-item state-${String(r.state ?? "unknown").toLowerCase()}`}
+                    aria-label={`Open ${value(r.name)} strategy workspace`}
+                  >
+                    <span className="strategy-map-index">{String(i + 1).padStart(2, "0")}</span>
+                    <strong>{value(r.name)}</strong>
+                    <span>{value(r.kind)} · {value(r.origin)}</span>
+                    <small>{value(r.state)} · generation {value(r.generation)}</small>
+                  </a>
+                ))}
+            </div>
             <RecordTable
               key={family ?? "all"}
               title="Strategies"

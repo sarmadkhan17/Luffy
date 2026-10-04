@@ -1,0 +1,42 @@
+{
+  "scope": "Seeded local LIVE-contract test server; historical M3 run versus final M4 full-suite run. Machine load and test timing may differ; values are not production latency.",
+  "m3": {
+    "cold_navigation_median_ms": 205,
+    "cold_useful_overview_median_ms": 321,
+    "cold_chart_median_ms": 375,
+    "cached_route_median_ms": 74,
+    "first_visit_ms": {
+      "knowledge": 493,
+      "liveSystem": 855,
+      "operations": 360,
+      "luffy": 408
+    },
+    "while_graph_loading_ms": {
+      "navigateAwayMs": 358,
+      "typeFiveCharsMs": 71,
+      "chatReplyMs": 108
+    },
+    "heap_after_churn_mib": 8.76,
+    "server_rss_after_mib": 110.7
+  },
+  "m4": {
+    "cold_navigation_median_ms": 333,
+    "cold_useful_overview_median_ms": 497,
+    "cold_chart_median_ms": 608,
+    "cached_route_median_ms": 110,
+    "first_visit_ms": {
+      "knowledge": 570,
+      "liveSystem": 977,
+      "operations": 360,
+      "luffy": 406
+    },
+    "while_graph_loading_ms": {
+      "navigateAwayMs": 417,
+      "typeFiveCharsMs": 106,
+      "chatReplyMs": 225
+    },
+    "heap_after_churn_mib": 8.73,
+    "server_rss_after_mib": 112
+  },
+  "verdict": "Observed cold and cached latency regression in this comparison; M1 concurrency and 104/104 browser tests passed."
+}

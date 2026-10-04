@@ -1,0 +1,13 @@
+{
+  "slow_decisions_s": 2,
+  "fast_ms": {
+    "/assets/index-DyadYdWV.js": 50,
+    "/assets/jsx-runtime-D3jfb0Ew.js": 10,
+    "/assets/index-BwOsWfob.css": 10,
+    "research": 8,
+    "trades page": 11,
+    "bootstrap": 6
+  },
+  "fastDone": 108,
+  "slowDone": 2055
+}

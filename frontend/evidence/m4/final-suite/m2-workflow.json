@@ -1,0 +1,9 @@
+{
+  "hops": [
+    "decision:dec_fixture01 → #operations?decision=dec_fixture01",
+    "trade:pos_fixture01 → #trades?trade=pos_fixture01",
+    "strategy:spec_fixture_trend → #strategies?id=spec_fixture_trend",
+    "research:a1b2c3d4e5f60718 → #research?combo=a1b2c3d4e5f60718",
+    "note → trade:pos_fixture01"
+  ]
+}

@@ -6,7 +6,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { usePreview } from "../context";
-import { Badge, Panel, QueryState } from "../components/ui";
+import { Badge, Panel, QueryState, useMotionPreference, useVisible } from "../components/ui";
 import { SourceStrip, timestamp, value } from "../components/workspace";
 import {
   Fields,
@@ -917,6 +917,8 @@ const windowLabel = (v: unknown) =>
  * class — observed records, none in the window, or an unavailable read. */
 export function SystemObserved() {
   const q = useRead("system/observed", 30000);
+  const visible = useVisible();
+  const reduced = useMotionPreference();
   return (
     <Panel
       title="Observed data movement"
@@ -945,7 +947,7 @@ export function SystemObserved() {
                 <i className="swatch declared" /> declared, no proving record
               </span>
               <span className="quiet">
-                Static: nothing here is animated or implies throughput.
+                Only fresh observed records receive a single arrival accent; it does not imply throughput.
               </span>
             </div>
             <h4>
@@ -962,8 +964,15 @@ export function SystemObserved() {
                       : r.status === "observed"
                         ? "observed"
                         : "none";
+                  const newest = typeof r.newest_at === "string" ? Date.parse(r.newest_at) : NaN;
+                  const read = typeof d.generated_at === "string" ? Date.parse(d.generated_at) : NaN;
+                  const fresh = cls === "observed" && visible && !reduced &&
+                    Number.isFinite(newest) && Number.isFinite(read) &&
+                    typeof r.window_s === "number" && r.window_s > 0 &&
+                    newest <= read && read - newest <= Math.min(r.window_s * 1000, 300000) &&
+                    Date.now() - read >= 0 && Date.now() - read <= 60000;
                   return (
-                    <li key={i} className={`flow-lane lane-${cls}`}>
+                    <li key={i} className={`flow-lane lane-${cls}`} data-flow={fresh ? "fresh" : "static"}>
                       <span className="lane-end">{String(r.source)}</span>
                       <span className="lane-track">
                         <span className="lane-record">{value(r.record)}</span>

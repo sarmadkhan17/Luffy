@@ -1,0 +1,44 @@
+{
+  "overview": {
+    "ready_ms": 638
+  },
+  "trades": {
+    "ready_ms": 404
+  },
+  "research": {
+    "ready_ms": 127
+  },
+  "strategies": {
+    "ready_ms": 83
+  },
+  "luffy": {
+    "ready_ms": 416
+  },
+  "operations": {
+    "ready_ms": 949
+  },
+  "live-system": {
+    "ready_ms": 485
+  },
+  "knowledge": {
+    "ready_ms": 177
+  },
+  "diagnostics": {
+    "ready_ms": 205
+  },
+  "trade-story": {
+    "ready_ms": 117
+  },
+  "decision": {
+    "ready_ms": 60
+  },
+  "strategy-workspace": {
+    "ready_ms": 54
+  },
+  "strategy-child": {
+    "ready_ms": 61
+  },
+  "research-item": {
+    "ready_ms": 47
+  }
+}

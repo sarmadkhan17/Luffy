@@ -1,4 +1,5 @@
 import { timestamp as utc } from "./time";
+import horizon from "./assets/luffy-horizon.webp";
 import { lazyChunk, ChunkLoadError, retryFailedChunks } from "./lazyChunk";
 import { Suspense, useEffect, useState } from "react";
 import {
@@ -196,6 +197,9 @@ export default function Shell() {
         </header>
         <main id="content" tabIndex={-1}>
           <div className="page-heading">
+            {(["overview", "trades", "luffy", "knowledge", "live-system"] as string[]).includes(route) && (
+              <img className="heading-atmosphere" src={horizon} alt="" aria-hidden="true" loading="lazy" decoding="async" />
+            )}
             <div>
               <div className="eyebrow">
                 OWNER / {title.toUpperCase()}

@@ -1,0 +1,65 @@
+{
+  "overview": {
+    "readyMs": 811,
+    "viewport": [
+      1440,
+      1000
+    ]
+  },
+  "trades": {
+    "readyMs": 738,
+    "viewport": [
+      1440,
+      1000
+    ]
+  },
+  "research": {
+    "readyMs": 422,
+    "viewport": [
+      1440,
+      1000
+    ]
+  },
+  "strategies": {
+    "readyMs": 522,
+    "viewport": [
+      1440,
+      1000
+    ]
+  },
+  "luffy": {
+    "readyMs": 920,
+    "viewport": [
+      1440,
+      1000
+    ]
+  },
+  "operations": {
+    "readyMs": 699,
+    "viewport": [
+      1440,
+      1000
+    ]
+  },
+  "live-system": {
+    "readyMs": 718,
+    "viewport": [
+      1440,
+      1000
+    ]
+  },
+  "knowledge": {
+    "readyMs": 422,
+    "viewport": [
+      1440,
+      1000
+    ]
+  },
+  "diagnostics": {
+    "readyMs": 434,
+    "viewport": [
+      1440,
+      1000
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "overview": {
+    "ready_ms": 630
+  },
+  "trades": {
+    "ready_ms": 417
+  },
+  "research": {
+    "ready_ms": 250
+  },
+  "strategies": {
+    "ready_ms": 90
+  },
+  "luffy": {
+    "ready_ms": 458
+  },
+  "operations": {
+    "ready_ms": 502
+  },
+  "live-system": {
+    "ready_ms": 495
+  },
+  "knowledge": {
+    "ready_ms": 301
+  },
+  "diagnostics": {
+    "ready_ms": 223
+  }
+}
