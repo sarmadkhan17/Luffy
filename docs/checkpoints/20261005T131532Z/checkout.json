@@ -1,0 +1,17 @@
+{
+  "status": "UNVERIFIED",
+  "checkout": "/mnt/luffy-data/luffy/workspaces/stage7-normal-learning-loop-closure-r1",
+  "original_branch": "refs/heads/luffy-stage7-normal-learning-loop-closure-r1",
+  "original_head": "50a4545484798207e4b126a0b7a0547ea9b0ec79",
+  "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-normal-learning-loop-closure-r1",
+  "captured_files": [
+    "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/files-changed.txt",
+    "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/full-suite-failures-base-3bf9f87.txt",
+    "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/full-suite-failures-this-branch.txt",
+    "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/full-suite-summary.txt",
+    "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/real-shadow.json"
+  ],
+  "tests": "Existing results only. No new tests or independent assessment. Historical results do not prove this combined dirty variant.",
+  "excluded_files": "Remain local; database/runtime/environment/cache/raw-log/full-payload updates excluded.",
+  "control_plane": "STATE.yaml/NEXT.yaml preserved verbatim where present; no reconciliation performed."
+}
