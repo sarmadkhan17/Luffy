@@ -422,7 +422,10 @@ def test_registry_readers_are_offline_research_modules_only():
     callers = sorted(str(p.relative_to(root)) for p in root.rglob("*.py")
                      if p.name != "research_sources.py"
                      and pat.search(p.read_text(errors="ignore")))
-    assert callers == ["cognition/research_evidence.py",
+    # the offline research shadow child only NAMES it in its exact import
+    # allow-list (research_evidence imports it); it reads no registry entry
+    assert callers == ["cognition/_research_shadow_child.py",
+                       "cognition/research_evidence.py",
                        "cognition/research_plan.py",
                        # offline unreadable-health plan (read-only pin check)
                        "cognition/research_unreadable_plan.py"]

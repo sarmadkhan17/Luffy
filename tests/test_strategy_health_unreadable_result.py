@@ -507,8 +507,11 @@ def test_nothing_calls_the_new_module():
     # the journal owns the storage primitive (and names the module only in
     # its schema comment); only the offline unreadable runner and the
     # offline unreadable bank filer, guarded by their own tests, import the
-    # contract
-    assert callers == ["cognition/research_unreadable_bank.py",
+    # contract; the offline research shadow child runs it through the
+    # unreadable runner and names it in its exact import allow-list
+    # (tests/test_research_shadow_*)
+    assert callers == ["cognition/_research_shadow_child.py",
+                       "cognition/research_unreadable_bank.py",
                        "cognition/research_unreadable_run.py",
                        "core/journal.py"]
     assert "research_unreadable_result import" not in \

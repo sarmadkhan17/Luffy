@@ -1,0 +1,180 @@
+{
+  "query_plans": [
+    {
+      "sql": "SELECT * FROM equity ORDER BY ts DESC LIMIT 2",
+      "plan": [
+        [
+          5,
+          0,
+          0,
+          "SCAN equity USING INDEX sqlite_autoindex_equity_1"
+        ]
+      ]
+    },
+    {
+      "sql": "SELECT * FROM trades WHERE status='open'",
+      "plan": [
+        [
+          3,
+          0,
+          0,
+          "SEARCH trades USING INDEX idx_trades_status (status=?)"
+        ]
+      ]
+    },
+    {
+      "sql": "SELECT * FROM trades WHERE status='open'",
+      "plan": [
+        [
+          3,
+          0,
+          0,
+          "SEARCH trades USING INDEX idx_trades_status (status=?)"
+        ]
+      ]
+    },
+    {
+      "sql": "SELECT COALESCE(NULLIF(strategy_name,''),'orchestrator') sname, ROUND(SUM(realized_pnl),2) pnl, COUNT(*) n FROM trades WHERE status='closed' GROUP BY sname HAVING COUNT(*)>0 ORDER BY pnl",
+      "plan": [
+        [
+          8,
+          0,
+          0,
+          "SEARCH trades USING INDEX idx_trades_status (status=?)"
+        ],
+        [
+          13,
+          0,
+          0,
+          "USE TEMP B-TREE FOR GROUP BY"
+        ],
+        [
+          66,
+          0,
+          0,
+          "USE TEMP B-TREE FOR ORDER BY"
+        ]
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) n, SUM(realized_pnl>0) wins FROM trades WHERE status='closed'",
+      "plan": [
+        [
+          4,
+          0,
+          0,
+          "SEARCH trades USING INDEX idx_trades_status (status=?)"
+        ]
+      ]
+    },
+    {
+      "sql": "\n            SELECT v.agent, v.side, v.conviction, v.confidence, v.ts,\n                   c.regime FROM votes v JOIN cycles c ON c.id=v.cycle_id\n            WHERE v.ts > datetime('now','-15 minutes')\n              AND v.rowid IN (SELECT MAX(rowid) FROM votes\n                              GROUP BY agent) ORDER BY v.ts DESC LIMIT 6",
+      "plan": [
+        [
+          6,
+          0,
+          0,
+          "SEARCH v USING INTEGER PRIMARY KEY (rowid=?)"
+        ],
+        [
+          10,
+          0,
+          0,
+          "LIST SUBQUERY 1"
+        ],
+        [
+          16,
+          10,
+          0,
+          "SCAN votes USING COVERING INDEX idx_votes_agent"
+        ],
+        [
+          56,
+          0,
+          0,
+          "SEARCH c USING INDEX sqlite_autoindex_cycles_1 (id=?)"
+        ],
+        [
+          78,
+          0,
+          0,
+          "USE TEMP B-TREE FOR ORDER BY"
+        ]
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) n FROM decisions WHERE executed=1 AND ts LIKE ?",
+      "plan": [
+        [
+          4,
+          0,
+          0,
+          "SEARCH decisions USING INDEX idx_decisions_exec (executed=?)"
+        ]
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) n FROM decisions WHERE executed=0 AND action!='HOLD' AND ts LIKE ?",
+      "plan": [
+        [
+          4,
+          0,
+          0,
+          "SEARCH decisions USING INDEX idx_decisions_exec (executed=?)"
+        ]
+      ]
+    },
+    {
+      "sql": "SELECT COALESCE(SUM(realized_pnl),0) s FROM trades WHERE closed_at LIKE ?",
+      "plan": [
+        [
+          3,
+          0,
+          0,
+          "SCAN trades"
+        ]
+      ]
+    },
+    {
+      "sql": "SELECT COUNT(*) n FROM decisions WHERE action='HOLD' AND ts LIKE ?",
+      "plan": [
+        [
+          3,
+          0,
+          0,
+          "SCAN decisions"
+        ]
+      ]
+    }
+  ],
+  "list_25_samples_ms": [
+    3.6085209576413035,
+    2.984510036185384,
+    3.6172380205243826,
+    3.5382950445637107,
+    3.140924032777548,
+    3.5252090310677886,
+    2.8797569684684277,
+    3.025960992090404,
+    3.105966025032103,
+    3.0516800470650196,
+    3.125463961623609,
+    3.077120054513216,
+    3.0591050162911415,
+    2.9970949981361628,
+    3.0510290525853634,
+    3.0257999897003174,
+    3.069475991651416,
+    3.0602769693359733,
+    3.1533980509266257,
+    3.1514540314674377,
+    3.0283459927886724,
+    3.9785188855603337,
+    3.7045469507575035,
+    3.4449229715391994,
+    3.6726149264723063
+  ],
+  "wal_read_while_writer_ms": 0.0764880096539855,
+  "journal_initialization_with_250ms_writer_ms": 335.5999808991328,
+  "condition": "isolated fixture; Journal __init__ performs DDL/migrations/backfill statements; no production DB; OS caches warm"
+}

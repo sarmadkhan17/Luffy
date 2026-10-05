@@ -447,8 +447,11 @@ def test_only_offline_research_modules_read_the_registry():
                      if p.name != "research_sources.py"
                      and pat.search(p.read_text(errors="ignore")))
     # no Kernel, Attention, Analyst, Risk, Execution or journal caller;
-    # research_evidence.py binds collected sources to the registry
-    assert callers == ["cognition/research_evidence.py",
+    # research_evidence.py binds collected sources to the registry; the
+    # offline research shadow child only NAMES it in its exact import
+    # allow-list (research_evidence imports it) and reads no entry
+    assert callers == ["cognition/_research_shadow_child.py",
+                       "cognition/research_evidence.py",
                        "cognition/research_plan.py",
                        # offline unreadable-health plan: read-only
                        # descriptor/pin check of its sibling routing mapping

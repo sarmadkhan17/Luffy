@@ -16,7 +16,7 @@ from tests.test_research_source_registry import _fixture, _plans_now
 from tests.test_strategy_decay_research_plan import CF, D, EF, W, _FullHist
 from tests.test_strategy_health_unreadable_question import (COMPLETE,
                                                             NO_FRAME,
-                                                            _journal)
+                                                            _journal, pinned)
 from trader.cognition import research_plan as rp
 from trader.cognition import research_question as rq
 from trader.cognition import research_sources as rs
@@ -402,7 +402,8 @@ def _at_base(path):
     "trader/cognition/research_question.py",
     "trader/cognition/research_unreadable_question.py"])
 def test_upstream_modules_are_byte_identical(path):
-    assert (ROOT / path).read_text() == _at_base(path)
+    assert pinned(path, (ROOT / path).read_text()) == \
+        pinned(path, _at_base(path))
 
 
 def test_source_registry_bytes_and_hash_unchanged(tmp_path):

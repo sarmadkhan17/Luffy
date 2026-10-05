@@ -1,6 +1,6 @@
 ---
 type: org-chart
-updated: 2026-09-20
+updated: 2026-09-25
 ---
 # Company
 

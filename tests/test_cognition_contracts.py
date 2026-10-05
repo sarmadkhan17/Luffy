@@ -174,8 +174,28 @@ ALLOWED_IMPORTS = {"base64", "zlib", "datetime", "__future__", "argparse", "data
                    "trader.cognition.hypotheses"}
 
 
+#: the offline research shadow harness (SDD stage 3), per file and nothing
+#: wider: SQLite for the shadow store / read-only source attach, process
+#: control for the parent launcher only, and the Journal class the store
+#: subclasses. No network, LLM, Kernel, engine execution/Risk or Attention
+#: module; tests/test_research_shadow_isolation.py guards the child's
+#: runtime import closure.
+HARNESS_IMPORTS = {
+    "research_shadow.py": {"ctypes", "fcntl", "os", "signal", "sqlite3",
+                           "subprocess"},
+    "_research_shadow_child.py": {"os", "sqlite3", "time"},
+    "research_shadow_store.py": {"contextlib", "os", "sqlite3", "tempfile",
+                                 "threading",
+                                 "trader.core", "trader.core.journal"},
+    "research_shadow_report.py": {"sqlite3"},
+    "research_shadow_contract.py": set(),
+    "research_families.py": set(),
+}
+
+
 def test_cognition_imports_only_stdlib_and_itself():
     for path in sorted(PKG.glob("*.py")):
+        allowed = ALLOWED_IMPORTS | HARNESS_IMPORTS.get(path.name, set())
         for node in ast.walk(ast.parse(path.read_text())):
             if isinstance(node, ast.Import):
                 names = [a.name for a in node.names]
@@ -184,7 +204,7 @@ def test_cognition_imports_only_stdlib_and_itself():
             else:
                 continue
             for name in names:
-                assert name in ALLOWED_IMPORTS, f"{path.name} imports {name}"
+                assert name in allowed, f"{path.name} imports {name}"
 
 
 def test_importing_replay_loads_no_runtime_or_network_modules():

@@ -1,0 +1,289 @@
+{
+  "fixture": {
+    "provenance": "SYNTHETIC; no production copy; shape representative, production distribution unverified",
+    "votes": 100000,
+    "decisions": 100000,
+    "trades": 10000
+  },
+  "measurements": [
+    {
+      "kind": "cold",
+      "wall_ms": 1049.723522970453,
+      "cpu_ms": 81.44554500000001,
+      "event_loop_delay_ms": 1049.8500699177384,
+      "payload_bytes": 1398,
+      "queries": [
+        {
+          "sql": "SELECT * FROM equity ORDER BY ts DESC LIMIT 2",
+          "ms": 0.05917099770158529,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT * FROM trades WHERE status='open'",
+          "ms": 0.06331899203360081,
+          "rows": 0
+        },
+        {
+          "sql": "SELECT * FROM trades WHERE status='open'",
+          "ms": 0.06419001147150993,
+          "rows": 0
+        },
+        {
+          "sql": "SELECT COALESCE(NULLIF(strategy_name,''),'orchestrator') sname, ROUND(SUM(realized_pnl),2) pnl, COUNT(*) n FROM trades WHERE status='closed' GROUP BY sname HAVING COUNT(*)>0 ORDER BY pnl",
+          "ms": 9.462211048230529,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n, SUM(realized_pnl>0) wins FROM trades WHERE status='closed'",
+          "ms": 2.774830092675984,
+          "rows": 1
+        },
+        {
+          "sql": "\n            SELECT v.agent, v.side, v.conviction, v.confidence, v.ts,\n                   c.regime FROM votes v JOIN cycles c ON c.id=v.cycle_id\n            WHERE v.ts > datetime('now','-15 minutes')\n              AND v.rowid IN (SELECT MAX(rowid) FROM votes\n                              GROUP BY agent) ORDER BY v.ts DESC LIMIT 6",
+          "ms": 21.16907702293247,
+          "rows": 6
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE executed=1 AND ts LIKE ?",
+          "ms": 0.12942194007337093,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE executed=0 AND action!='HOLD' AND ts LIKE ?",
+          "ms": 22.938354057259858,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COALESCE(SUM(realized_pnl),0) s FROM trades WHERE closed_at LIKE ?",
+          "ms": 2.5553880259394646,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE action='HOLD' AND ts LIKE ?",
+          "ms": 21.921626990661025,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "kind": "warm",
+      "wall_ms": 69.384346017614,
+      "cpu_ms": 69.18726600000014,
+      "event_loop_delay_ms": 69.50504204723984,
+      "payload_bytes": 1398,
+      "queries": [
+        {
+          "sql": "SELECT * FROM equity ORDER BY ts DESC LIMIT 2",
+          "ms": 0.04067597910761833,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT * FROM trades WHERE status='open'",
+          "ms": 0.021359999664127827,
+          "rows": 0
+        },
+        {
+          "sql": "SELECT COALESCE(NULLIF(strategy_name,''),'orchestrator') sname, ROUND(SUM(realized_pnl),2) pnl, COUNT(*) n FROM trades WHERE status='closed' GROUP BY sname HAVING COUNT(*)>0 ORDER BY pnl",
+          "ms": 6.752263056114316,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n, SUM(realized_pnl>0) wins FROM trades WHERE status='closed'",
+          "ms": 2.374298986978829,
+          "rows": 1
+        },
+        {
+          "sql": "\n            SELECT v.agent, v.side, v.conviction, v.confidence, v.ts,\n                   c.regime FROM votes v JOIN cycles c ON c.id=v.cycle_id\n            WHERE v.ts > datetime('now','-15 minutes')\n              AND v.rowid IN (SELECT MAX(rowid) FROM votes\n                              GROUP BY agent) ORDER BY v.ts DESC LIMIT 6",
+          "ms": 17.1077469130978,
+          "rows": 6
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE executed=1 AND ts LIKE ?",
+          "ms": 0.09765301365405321,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE executed=0 AND action!='HOLD' AND ts LIKE ?",
+          "ms": 19.852902041748166,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COALESCE(SUM(realized_pnl),0) s FROM trades WHERE closed_at LIKE ?",
+          "ms": 2.4344719713553786,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE action='HOLD' AND ts LIKE ?",
+          "ms": 20.440032007172704,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "kind": "warm",
+      "wall_ms": 67.53279699478298,
+      "cpu_ms": 67.56137299999997,
+      "event_loop_delay_ms": 67.63602001592517,
+      "payload_bytes": 1398,
+      "queries": [
+        {
+          "sql": "SELECT * FROM equity ORDER BY ts DESC LIMIT 2",
+          "ms": 0.033332034945487976,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT * FROM trades WHERE status='open'",
+          "ms": 0.024415901862084866,
+          "rows": 0
+        },
+        {
+          "sql": "SELECT COALESCE(NULLIF(strategy_name,''),'orchestrator') sname, ROUND(SUM(realized_pnl),2) pnl, COUNT(*) n FROM trades WHERE status='closed' GROUP BY sname HAVING COUNT(*)>0 ORDER BY pnl",
+          "ms": 6.652636104263365,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n, SUM(realized_pnl>0) wins FROM trades WHERE status='closed'",
+          "ms": 2.4237720062956214,
+          "rows": 1
+        },
+        {
+          "sql": "\n            SELECT v.agent, v.side, v.conviction, v.confidence, v.ts,\n                   c.regime FROM votes v JOIN cycles c ON c.id=v.cycle_id\n            WHERE v.ts > datetime('now','-15 minutes')\n              AND v.rowid IN (SELECT MAX(rowid) FROM votes\n                              GROUP BY agent) ORDER BY v.ts DESC LIMIT 6",
+          "ms": 17.263039015233517,
+          "rows": 6
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE executed=1 AND ts LIKE ?",
+          "ms": 0.08457805961370468,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE executed=0 AND action!='HOLD' AND ts LIKE ?",
+          "ms": 18.728024093434215,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COALESCE(SUM(realized_pnl),0) s FROM trades WHERE closed_at LIKE ?",
+          "ms": 2.0976910600438714,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE action='HOLD' AND ts LIKE ?",
+          "ms": 19.897354999557137,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "kind": "warm",
+      "wall_ms": 68.39545408729464,
+      "cpu_ms": 68.350154,
+      "event_loop_delay_ms": 68.49832599982619,
+      "payload_bytes": 1398,
+      "queries": [
+        {
+          "sql": "SELECT * FROM equity ORDER BY ts DESC LIMIT 2",
+          "ms": 0.03443507011979818,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT * FROM trades WHERE status='open'",
+          "ms": 0.020117033272981644,
+          "rows": 0
+        },
+        {
+          "sql": "SELECT COALESCE(NULLIF(strategy_name,''),'orchestrator') sname, ROUND(SUM(realized_pnl),2) pnl, COUNT(*) n FROM trades WHERE status='closed' GROUP BY sname HAVING COUNT(*)>0 ORDER BY pnl",
+          "ms": 6.415711948648095,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n, SUM(realized_pnl>0) wins FROM trades WHERE status='closed'",
+          "ms": 2.4115389678627253,
+          "rows": 1
+        },
+        {
+          "sql": "\n            SELECT v.agent, v.side, v.conviction, v.confidence, v.ts,\n                   c.regime FROM votes v JOIN cycles c ON c.id=v.cycle_id\n            WHERE v.ts > datetime('now','-15 minutes')\n              AND v.rowid IN (SELECT MAX(rowid) FROM votes\n                              GROUP BY agent) ORDER BY v.ts DESC LIMIT 6",
+          "ms": 18.775151926092803,
+          "rows": 6
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE executed=1 AND ts LIKE ?",
+          "ms": 0.0987049425020814,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE executed=0 AND action!='HOLD' AND ts LIKE ?",
+          "ms": 18.628306919708848,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COALESCE(SUM(realized_pnl),0) s FROM trades WHERE closed_at LIKE ?",
+          "ms": 2.088414039462805,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE action='HOLD' AND ts LIKE ?",
+          "ms": 19.670380046591163,
+          "rows": 1
+        }
+      ]
+    },
+    {
+      "kind": "warm",
+      "wall_ms": 67.41274206433445,
+      "cpu_ms": 67.25078900000003,
+      "event_loop_delay_ms": 67.5149830058217,
+      "payload_bytes": 1398,
+      "queries": [
+        {
+          "sql": "SELECT * FROM equity ORDER BY ts DESC LIMIT 2",
+          "ms": 0.03525603096932173,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT * FROM trades WHERE status='open'",
+          "ms": 0.01967698335647583,
+          "rows": 0
+        },
+        {
+          "sql": "SELECT COALESCE(NULLIF(strategy_name,''),'orchestrator') sname, ROUND(SUM(realized_pnl),2) pnl, COUNT(*) n FROM trades WHERE status='closed' GROUP BY sname HAVING COUNT(*)>0 ORDER BY pnl",
+          "ms": 6.61391403991729,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n, SUM(realized_pnl>0) wins FROM trades WHERE status='closed'",
+          "ms": 2.388003980740905,
+          "rows": 1
+        },
+        {
+          "sql": "\n            SELECT v.agent, v.side, v.conviction, v.confidence, v.ts,\n                   c.regime FROM votes v JOIN cycles c ON c.id=v.cycle_id\n            WHERE v.ts > datetime('now','-15 minutes')\n              AND v.rowid IN (SELECT MAX(rowid) FROM votes\n                              GROUP BY agent) ORDER BY v.ts DESC LIMIT 6",
+          "ms": 17.24601606838405,
+          "rows": 6
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE executed=1 AND ts LIKE ?",
+          "ms": 0.09677093476057053,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE executed=0 AND action!='HOLD' AND ts LIKE ?",
+          "ms": 18.456455087289214,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COALESCE(SUM(realized_pnl),0) s FROM trades WHERE closed_at LIKE ?",
+          "ms": 2.253061975352466,
+          "rows": 1
+        },
+        {
+          "sql": "SELECT COUNT(*) n FROM decisions WHERE action='HOLD' AND ts LIKE ?",
+          "ms": 20.047084894031286,
+          "rows": 1
+        }
+      ]
+    }
+  ],
+  "wal_writer_read_ms": 0.0740179093554616,
+  "max_rss_kib": 109856,
+  "store_bytes": 66719744,
+  "network_model": "12 serialized calls at simulated 80ms each, never real venue calls"
+}

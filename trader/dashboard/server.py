@@ -94,7 +94,10 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         return _nocache(JSONResponse(result))
 
     @app.get("/api/summary", dependencies=[])
-    async def summary():
+    def summary():
+        # SQLite and the legacy snapshot/price adapters are synchronous.
+        # FastAPI runs a synchronous handler in its worker pool, keeping
+        # navigation, chat and other requests off these blocking waits.
         eq = journal.query(
             "SELECT * FROM equity ORDER BY ts DESC LIMIT 2")
         opens = journal.open_trades()

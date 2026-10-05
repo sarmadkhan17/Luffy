@@ -1,0 +1,22 @@
+{
+  "base_head": "1eb00e151113d0add6033ef809ccdf6e30623003",
+  "scope": "isolated baseline only; original server loaded from git show; no frontend replacement",
+  "artifacts": {
+    "fixture_profile.py": "4f5009beb4b76e7cbc84d196ff0ed04e97a0bcabac6ab629e337de7d2ffafb03",
+    "browser_server.py": "b2aefec0d9bc0d88c2d768683c249038e6613f85fb799494d1aa20082b9077ce",
+    "baseline-80ms.json": "4326084087c0cf3e1cc79f027b837c30b389a288397b52450aa22fc6e3837cb3",
+    "api_profile.py": "6713a93ce5cb09aef55dbbac2d56994e29815abc243a5bdbee2b81cecf1cb24a",
+    "browser_profile.py": "f70dd3fc3580c444f1648d4efcda569aef6a84e27eaab0c7b5224b94bd7c4add",
+    "baseline.json": "c06651277872092ea3dec63389fb92df3b0164129ecb18542e87de3baa2bbb53",
+    "browser-server-events.jsonl": "06d3858c2996b13bc267f83677678727773ea4ae0f3af10720d9f78587002958",
+    "cold_offline_dependencies.png": "2c866097eb96b70357ad967eaa689f3d6a3e22ed12a91497c744543806cec0ec",
+    "slow_serial_network.png": "d9e61ee5a3762bc3be1ae5617e446dd3e76a3a719a0ce9264385ef00bec21ae5",
+    "browser-results.json": "d67cfe51a80fd1b98f95ca30ccffceac615b724c52ab68c0202ca5603a6e0398",
+    "api-results.json": "186680414a572f1fd7bf70006bc2d832355babb05b4071ff89cb9bd870f30218",
+    "sql_profile.py": "334e790b1907790189e11b56654f646fbb824ba7327b8a065de8a0ec01995729",
+    "warm_browser.png": "2c866097eb96b70357ad967eaa689f3d6a3e22ed12a91497c744543806cec0ec",
+    "sql-results.json": "e5f1785353fb737e8d091e923da6d27a77a7f64f98263c9e0e5728baa59656a2",
+    "server-events.jsonl": "7aec8ec024616a7bedad4ec82541ed04ecab872706ddf2bd0b0a59fb14fea6c4",
+    "delayed_parser_script.png": "2c866097eb96b70357ad967eaa689f3d6a3e22ed12a91497c744543806cec0ec"
+  }
+}
