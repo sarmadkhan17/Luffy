@@ -1,0 +1,16 @@
+{
+  "at": 1791204427.0557046,
+  "sha": "958c9eb2f0b10993ad240b85f88c626b8d0e2ee6",
+  "controls": {
+    "control_state": "FROZEN",
+    "execution_recovery": "null",
+    "macro_guard_operator_hold": "1"
+  },
+  "provider_ledger_sha": "edcceae68033121e27a97b3c5a4de09211cbfa22fed36895d57bf7d1d41a5ee0",
+  "kernel_or_dashboard_processes": "",
+  "watchdog_off": true,
+  "timers": {
+    "luffy-frozen-safety-observer.timer": "inactive",
+    "luffy-frozen-heartbeat-observer.timer": "inactive"
+  }
+}

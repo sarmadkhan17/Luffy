@@ -1,0 +1,239 @@
+{
+  "status": "BLOCKED",
+  "sha": "958c9eb2f0b10993ad240b85f88c626b8d0e2ee6",
+  "observation_duration_s": 305.5438883304596,
+  "first_cycle_s": 266.7,
+  "cold_start_s": 298.5340850353241,
+  "shutdown_gap_s": 139.50267481803894,
+  "provider_attempts": 0,
+  "observer": {
+    "live": {
+      "window_samples": 10,
+      "process_elapsed_range_s": [
+        1.0440189719956834,
+        2.4868087360082427
+      ],
+      "import_range_s": [
+        0.8950833069975488,
+        2.197303159002331
+      ],
+      "window_cpu_s": 20.796466692,
+      "all_samples": 14,
+      "all_cpu_s": 25.206473845,
+      "write_elapsed_range_s": [
+        0.004039038001792505,
+        0.07129781199910212
+      ],
+      "committed_writes": 10,
+      "sqlite_failures": []
+    },
+    "heartbeat": {
+      "window_samples": 24,
+      "process_elapsed_range_s": [
+        0.9077502220025053,
+        2.1927847850020044
+      ],
+      "import_range_s": [
+        0.8132810269889887,
+        1.922095066998736
+      ],
+      "window_cpu_s": 49.367825855,
+      "all_samples": 36,
+      "all_cpu_s": 62.652393979,
+      "write_elapsed_range_s": null,
+      "committed_writes": 0,
+      "sqlite_failures": []
+    }
+  },
+  "attention": {
+    "scan_id": "scan_ff5de8fb66fe4d8d8b01619fcf0482fd",
+    "as_of_ms": 1791203403789,
+    "logical_bytes": 16530480,
+    "causes_complete": true,
+    "row_reasons": [
+      {
+        "symbol": "AAVE/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "AVAX/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "BNB/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "BTC/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "DOGE/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "ETH/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "FIL/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "HYPE/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "LINK/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "MOVR/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "NEAR/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "QNT/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "SOL/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "SUI/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "TAO/USDT",
+        "reason": "warmup"
+      },
+      {
+        "symbol": "UNI/USDT",
+        "reason": "warmup"
+      }
+    ],
+    "refusal_counts": {
+      "warmup": 16
+    },
+    "selected_opportunities": 0,
+    "incomplete_shutdown_scan": "scan_ccf5408cc0d141e5bbd696675c7d1de8",
+    "shutdown_worker_alive": false,
+    "shutdown_queue_depth": 2
+  },
+  "activity": {
+    "cycles": {
+      "new_rows": 38,
+      "retained_count": 772770
+    },
+    "decisions": {
+      "new_rows": 38,
+      "retained_count": 772757
+    },
+    "votes": {
+      "new_rows": 266,
+      "retained_count": 5398139
+    },
+    "brain_events": {
+      "new_rows": 43,
+      "retained_count": 5825
+    },
+    "outcomes": {
+      "new_rows": 0,
+      "retained_count": 729
+    },
+    "control_events": {
+      "new_rows": 4,
+      "retained_count": 13160
+    },
+    "learning_capture_failures": {
+      "new_rows": 0,
+      "retained_count": 11
+    },
+    "learning_registrations": {
+      "new_rows": 38,
+      "retained_count": 4025
+    },
+    "learning_outcome_captures": {
+      "new_rows": 38,
+      "retained_count": 4025
+    },
+    "learning_actions": {
+      "new_rows": 38,
+      "retained_count": 4028
+    },
+    "learning_decision_source_manifests": {
+      "new_rows": 38,
+      "retained_count": 4025
+    },
+    "learning_source_blobs": {
+      "new_rows": 229,
+      "retained_count": 17539
+    },
+    "research_questions": {
+      "new_rows": 0,
+      "retained_count": 0
+    },
+    "research_plans": {
+      "new_rows": 0,
+      "retained_count": 0
+    },
+    "research_results": {
+      "new_rows": 0,
+      "retained_count": 0
+    },
+    "research_runs": {
+      "new_rows": 0,
+      "retained_count": 0
+    },
+    "attention_selections": {
+      "new_rows": 0,
+      "retained_count": 0
+    },
+    "execution_requests": {
+      "new_rows": 0,
+      "retained_count": 0
+    },
+    "brain_event_kinds": [
+      {
+        "kind": "harvest_cycle",
+        "n": 1
+      },
+      {
+        "kind": "harvest_idea",
+        "n": 4
+      },
+      {
+        "kind": "market_provenance",
+        "n": 38
+      }
+    ],
+    "decision_actions": [
+      {
+        "action": "HOLD",
+        "n": 38
+      }
+    ],
+    "new_capture_refusals": [],
+    "original_nan_refusals": [
+      {
+        "event_key": "decision:dec_d72a24cda3",
+        "reason": "ValueError:Out of range float values are not JSON compliant: nan"
+      },
+      {
+        "event_key": "decision:dec_fc07d32f87",
+        "reason": "ValueError:Out of range float values are not JSON compliant: nan"
+      }
+    ]
+  },
+  "active_conditions": {
+    "observed_cycle:luffy": "SUCCESSFUL_CYCLE_THRESHOLD_EXCEEDED"
+  },
+  "recovery_required": true,
+  "services_running": false,
+  "continuing_observer": false,
+  "blocker": "first successful cycle 266.7s exceeded unchanged 240s threshold; one-hour session contained"
+}

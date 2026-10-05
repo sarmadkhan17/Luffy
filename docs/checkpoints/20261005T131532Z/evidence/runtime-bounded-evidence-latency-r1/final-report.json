@@ -1,0 +1,1070 @@
+{
+  "BOUNDED_EVIDENCE_LATENCY": "PASS",
+  "ROOT_CAUSE_WITH_TIMING_EVIDENCE": {
+    "original_cycle_s": 792.1,
+    "measured_causes": [
+      "Repeated source/history serialization, per-chunk decoding/hash/SQLite/native scheduling crossings under configured background CPU competition: main evidence storage 127.018 wall/1.857 CPU seconds before diagnostic overlap. Retained 23,081,567-byte detail under two bounded offline CPU competitors: original cold 16.094/repeat 10.705 seconds, fixed 2.478/.182, exact equality.",
+      "Repeated multi-year reference receipt validation/serialization: original 128 rows 61.284 wall/61.077 CPU, fixed 2.728/2.716; full observed 3,232 rows fixed 6.105/6.040, exact retained rows/revisions.",
+      "Unindexed vote outcome join over 5,391,377 votes: 35.206 wall/34.814 CPU seconds; exact indexed results .090 CPU (cold offline 12.182 wall). Latest-32 decisions sort over 771,791 rows: 1.323/1.093 to .000331/.000330.",
+      "Too many database crossings inside receipt transaction: 3,232-row original 74.165 wall/1.001 CPU, bounded statements 3.612/.157 with identical rowids/ancestry. Derivative DELETE writer owned by derivs-recorder 14.704 wall/1.711 CPU, reader locked; WAL preserves committed reader snapshots.",
+      "Attention pipe scheduling wait: 802 writes transferred only 3,284,992 bytes, 8.199 seconds in writes, ten-second worker timed out. Same child/JSON through private seekable input descriptor 2.624 wall/.192 CPU under same offline contention.",
+      "Portfolio ledger repeated full previous/current contexts: checkpoint 102.346 wall/85.083 CPU; 1,282,465,792 allocated bytes in four cycles. Retained exact evaluation processing 85.090/62.126 to 29.544/26.661; installed lossless packets retain full logical content.",
+      "Bounded compression/decompression scheduling: 512 actual retained chunks, 33,801,315 expanded bytes, old compression 8.562/.449 to 1.403/.393; old decode 14.109/.176 to .277/.071; all 3,404 retained blobs byte/hash/length compatible.",
+      "Source SQL row-by-row crossings exhausted unchanged five-second deadline under contention (cold 7.655 seconds). Bounded cases/latest-updates SQL aggregates: cold 2.403 seconds, all 32 cases/updates exact, inventory SHA ff3fc91366500794933b694f7443808a7a8756de5c572f29d1a66b5fb7817544.",
+      "Attention initialization under actual held Portfolio snapshot: old auto_vacuum PRAGMA SQLITE_BUSY after .053668 wall/.000670 CPU. Existing-store WAL producer 1.224 seconds, transaction .483; exact seven-table identity/content proofs.",
+      "Completion prune committed before new complete marker: real large producer/Portfolio reader originally sees scan_id=None. Atomic completion/prune reproduces previous-source-before/new-source-after without changing headroom. Original assertion fails 4.26 seconds; fixed integration passes 5.64 seconds."
+    ],
+    "timing_scope": "Wall-minus-thread-CPU includes scheduling and I/O; not an exact blocked-time measurement. Exclusive nested timings add only within one thread. Parallel background elapsed is separate. Child processing CPU is sampled separately and reproduced offline."
+  },
+  "OVERSIZED_SOURCE_ID_ROLE_AND_SIZE": {
+    "store": "/mnt/luffy-data/luffy/production/data/attention.db",
+    "table": "scans",
+    "record_id": "scan_c771018d25de4ace80bfba0639db5a0f",
+    "rowid": 24026,
+    "as_of_ms": 1791143998872,
+    "role": "Current Attention source at original refusal; historical retained clone/backup evidence now, production shutdown fences collector.",
+    "serialized_bytes": 16226290,
+    "limit_bytes": 2097152,
+    "logical_sha256": "3e3d96a5c1b4bde723df1dc9cd0bdbfc1fb52fdf5e93a55be5f82778818f05e9",
+    "responsible_fields": "membership_receipts embed repeated Universe selection receipts (~2,246,028 bytes each) including full volume_receipts/ticker population; not every membership repeats a complete receipt.",
+    "producer": "Universe._rescan -> membership_receipts -> Attention.capture -> Store.write",
+    "consumer": "actual Portfolio capture source reader; current supported source requires exact verification, optional absent/stale Attention stays explicitly unavailable and does not become invented required evidence."
+  },
+  "FIX": "Lossless immutable source/ledger packets; bounded verified hash/decode memos and SQL/bulk crossings; exact current derivative revision selection with conservative predecessor/frontier; exact join/latest indexes; existing-store WAL based on measured ownership/locks; same disposable Attention worker with seekable input; atomic completed-source replacement. Full owner/replay reconstruction remains available. No payload/reader/heartbeat threshold raised, evidence truncated, required context omitted, new service/thread/retry, history reset, recovery or automatic ACTIVE transition.",
+  "DEPLOYED_SHA": "b880e52cf319451307261ee7728d1f0bfd7014c4",
+  "COLD_START_SECONDS": {
+    "initialization": 0.15607946899399394,
+    "boot": 25.081090102998132,
+    "startup_cycle": 228.70170335400326,
+    "process_to_first_success": 255.41406226158142
+  },
+  "NORMAL_CYCLE_SECONDS": {
+    "normal": [
+      189.76619204699819,
+      188.08155573000113,
+      208.9489281299975,
+      198.16020043400204,
+      202.89646473599714
+    ],
+    "dashboard": [
+      205.4549725350007,
+      195.5310676020017,
+      189.3549697540002
+    ],
+    "main_thread_cpu": [
+      77.60130078300001,
+      77.83220769799999,
+      82.96499781700001,
+      79.69134802500002,
+      80.73020296700003,
+      79.557136899,
+      79.21501145899992,
+      78.22452069199994
+    ]
+  },
+  "SUCCESSFUL_HEARTBEAT_GAPS": {
+    "normal_and_dashboard": [
+      190.8187437057495,
+      189.12544798851013,
+      210.03189945220947,
+      199.16619491577148,
+      203.94809651374817,
+      206.48841547966003,
+      196.5556914806366,
+      190.37225699424744
+    ],
+    "first_restart_gap_including_intentional_stop": 1337.3268835544586,
+    "completion_stage_seconds": [
+      0.04874339099478675,
+      0.06259682700328995,
+      0.04428477699548239,
+      0.0713438570019207,
+      0.044212246997631155,
+      0.04235355299897492,
+      0.05297356899973238,
+      0.057953168005042244
+    ],
+    "threshold_seconds": 240
+  },
+  "TOP_STAGE_COSTS": {
+    "mean_main_exclusive": [
+      {
+        "stage": "network.wait",
+        "mean_exclusive_wall_s": 25.625127851891193,
+        "mean_exclusive_cpu_s": 0.2328341165000154,
+        "total_calls": 612
+      },
+      {
+        "stage": "market.load",
+        "mean_exclusive_wall_s": 18.105799832766024,
+        "mean_exclusive_cpu_s": 3.154749710249911,
+        "total_calls": 648
+      },
+      {
+        "stage": "evidence.store",
+        "mean_exclusive_wall_s": 13.26221863894989,
+        "mean_exclusive_cpu_s": 3.1853248052515166,
+        "total_calls": 160
+      },
+      {
+        "stage": "trader.learning.capture.snapshot",
+        "mean_exclusive_wall_s": 12.846967121922717,
+        "mean_exclusive_cpu_s": 0.28772904549925116,
+        "total_calls": 6808
+      },
+      {
+        "stage": "market.eligible_frame",
+        "mean_exclusive_wall_s": 12.221141913164502,
+        "mean_exclusive_cpu_s": 8.293719121000157,
+        "total_calls": 15598
+      },
+      {
+        "stage": "portfolio.event_evaluate",
+        "mean_exclusive_wall_s": 11.829174073895047,
+        "mean_exclusive_cpu_s": 11.157071820499894,
+        "total_calls": 24
+      },
+      {
+        "stage": "trader.portfolio.current.checkpoint",
+        "mean_exclusive_wall_s": 11.286951807625883,
+        "mean_exclusive_cpu_s": 10.00037496487486,
+        "total_calls": 8
+      },
+      {
+        "stage": "trader.portfolio.current.freeze",
+        "mean_exclusive_wall_s": 10.294543181377776,
+        "mean_exclusive_cpu_s": 9.208006046749945,
+        "total_calls": 8
+      },
+      {
+        "stage": "portfolio.serialize",
+        "mean_exclusive_wall_s": 10.244801100484437,
+        "mean_exclusive_cpu_s": 9.946621609500086,
+        "total_calls": 1388
+      },
+      {
+        "stage": "kernel.cycle",
+        "mean_exclusive_wall_s": 9.307444455357654,
+        "mean_exclusive_cpu_s": 2.2486845261252704,
+        "total_calls": 8
+      },
+      {
+        "stage": "evidence.hash",
+        "mean_exclusive_wall_s": 6.251329377982074,
+        "mean_exclusive_cpu_s": 0.2300668417491707,
+        "total_calls": 20392
+      },
+      {
+        "stage": "portfolio.evaluate_store",
+        "mean_exclusive_wall_s": 5.808722156762087,
+        "mean_exclusive_cpu_s": 5.426196423500009,
+        "total_calls": 8
+      },
+      {
+        "stage": "Journal.query",
+        "mean_exclusive_wall_s": 4.570561844995609,
+        "mean_exclusive_cpu_s": 0.10922347224965456,
+        "total_calls": 2362
+      },
+      {
+        "stage": "evidence.decode",
+        "mean_exclusive_wall_s": 4.097791813116601,
+        "mean_exclusive_cpu_s": 2.0382109241227226,
+        "total_calls": 86182
+      },
+      {
+        "stage": "Universe.membership_receipts",
+        "mean_exclusive_wall_s": 3.604824047875809,
+        "mean_exclusive_cpu_s": 1.6483157351249904,
+        "total_calls": 25
+      }
+    ],
+    "per_cycle_and_background": "atomic-window-measurements.json; original stages.jsonl includes completion/failure and long-running research-loop shutdown. Parallel/background wall time is not added to cycle elapsed."
+  },
+  "EXPANDED_BYTES_AND_DECODE_COUNTS": {
+    "per_cycle": [
+      {
+        "sequence": 2,
+        "phase": "NORMAL",
+        "blob_decodes": 10750,
+        "blob_resolutions": 18681,
+        "decoded_bytes": 710997481,
+        "expanded_bytes_including_repeated": 1234608241,
+        "market_detail_rows_decoded": 4372
+      },
+      {
+        "sequence": 3,
+        "phase": "NORMAL",
+        "blob_decodes": 10841,
+        "blob_resolutions": 18772,
+        "decoded_bytes": 717038680,
+        "expanded_bytes_including_repeated": 1240649440,
+        "market_detail_rows_decoded": 4390
+      },
+      {
+        "sequence": 4,
+        "phase": "NORMAL",
+        "blob_decodes": 10750,
+        "blob_resolutions": 18681,
+        "decoded_bytes": 710997467,
+        "expanded_bytes_including_repeated": 1234608227,
+        "market_detail_rows_decoded": 5488
+      },
+      {
+        "sequence": 5,
+        "phase": "NORMAL",
+        "blob_decodes": 10750,
+        "blob_resolutions": 18681,
+        "decoded_bytes": 710997520,
+        "expanded_bytes_including_repeated": 1234608280,
+        "market_detail_rows_decoded": 4390
+      },
+      {
+        "sequence": 6,
+        "phase": "NORMAL",
+        "blob_decodes": 10750,
+        "blob_resolutions": 18681,
+        "decoded_bytes": 711000231,
+        "expanded_bytes_including_repeated": 1234628671,
+        "market_detail_rows_decoded": 4408
+      },
+      {
+        "sequence": 7,
+        "phase": "DASHBOARD",
+        "blob_decodes": 10841,
+        "blob_resolutions": 18772,
+        "decoded_bytes": 717041434,
+        "expanded_bytes_including_repeated": 1240669874,
+        "market_detail_rows_decoded": 5524
+      },
+      {
+        "sequence": 8,
+        "phase": "DASHBOARD",
+        "blob_decodes": 10750,
+        "blob_resolutions": 18681,
+        "decoded_bytes": 711000235,
+        "expanded_bytes_including_repeated": 1234628675,
+        "market_detail_rows_decoded": 4426
+      },
+      {
+        "sequence": 9,
+        "phase": "DASHBOARD",
+        "blob_decodes": 10750,
+        "blob_resolutions": 18681,
+        "decoded_bytes": 711000230,
+        "expanded_bytes_including_repeated": 1234628670,
+        "market_detail_rows_decoded": 4426
+      }
+    ],
+    "totals": {
+      "blob_decodes": 86182,
+      "blob_resolutions": 149630,
+      "decoded_bytes": 5700073278,
+      "expanded_bytes_including_repeated": 9889030078,
+      "market_detail_rows_decoded": 37424
+    },
+    "metadata_candidates": [
+      {
+        "sequence": 1,
+        "reads": 191,
+        "index_prefix_candidates": 209668,
+        "rank_input_candidates": 198715,
+        "details_decoded": 8620
+      },
+      {
+        "sequence": 2,
+        "reads": 107,
+        "index_prefix_candidates": 194703,
+        "rank_input_candidates": 177829,
+        "details_decoded": 4372
+      },
+      {
+        "sequence": 3,
+        "reads": 72,
+        "index_prefix_candidates": 180317,
+        "rank_input_candidates": 178045,
+        "details_decoded": 4390
+      },
+      {
+        "sequence": 4,
+        "reads": 108,
+        "index_prefix_candidates": 191905,
+        "rank_input_candidates": 188753,
+        "details_decoded": 5488
+      },
+      {
+        "sequence": 5,
+        "reads": 72,
+        "index_prefix_candidates": 180749,
+        "rank_input_candidates": 178441,
+        "details_decoded": 4390
+      },
+      {
+        "sequence": 6,
+        "reads": 72,
+        "index_prefix_candidates": 180983,
+        "rank_input_candidates": 178657,
+        "details_decoded": 4408
+      },
+      {
+        "sequence": 7,
+        "reads": 108,
+        "index_prefix_candidates": 192805,
+        "rank_input_candidates": 189581,
+        "details_decoded": 5524
+      },
+      {
+        "sequence": 8,
+        "reads": 72,
+        "index_prefix_candidates": 181433,
+        "rank_input_candidates": 179071,
+        "details_decoded": 4426
+      },
+      {
+        "sequence": 9,
+        "reads": 72,
+        "index_prefix_candidates": 181649,
+        "rank_input_candidates": 179269,
+        "details_decoded": 4426
+      }
+    ],
+    "candidate_scope": "Offline retained metadata at each recorded cut after shutdown. Counts are qualifying index-prefix/ranking candidates, not SQLite physical-page visits. SQL inspects metadata fields; only selected details cross into Python/codec decoding. No candidate-count query ran during observed cycles."
+  },
+  "DERIVATIVE_LOCK_WAITS": {
+    "before": "derivs-recorder owned 14.704 wall/1.711 CPU transaction in DELETE mode, actual reader database_locked",
+    "final_transaction": [
+      {
+        "at": 1791166526.9722211,
+        "body_s": 17.098821407998912,
+        "commit_or_cleanup_s": 0.5605066520001856,
+        "cpu_s": 1.2650185759999992,
+        "elapsed_s": 17.659328059999098,
+        "in_transaction": false,
+        "label": "derivative receipt",
+        "native_id": 508102,
+        "pid": 507830,
+        "stage": "data.transaction.end",
+        "thread": "derivs-recorder"
+      }
+    ],
+    "interpretation": "Transaction interval is an upper bound on writer-lock ownership, not a measured OS-lock blocked duration. Final WAL receipt 17.659 wall/1.265 CPU, .561 commit/cleanup; zero database-locked stage failures or retries. Separate WAL snapshots show committed/checkpointed frames."
+  },
+  "PORTFOLIO_SOURCE_PATH": {
+    "original_refusal": "scripts.opportunity_context_shadow.capture -> source read -> _json -> SOURCE_PAYLOAD_BOUND_EXCEEDED on Attention scans payload",
+    "fixed": "same actual capture -> scan_source latest/read immutable packet -> bounded physical chunk lookup/decode/hash/full-root verification -> exact source identity -> Source.freeze -> existing Portfolio/Risk replay",
+    "original_retained_capture_seconds": 2.599295104002522,
+    "packet_bytes": 16685,
+    "actual_window_source_reader_seconds": [
+      1.5969087689954904,
+      1.0036543199967127,
+      1.5460528259936837,
+      1.6347123390005436,
+      2.056562179001048,
+      1.078818705995218,
+      1.507873420996475,
+      1.5792643319946364
+    ],
+    "reader_deadline_seconds": 5,
+    "refusals": 0,
+    "installed_consumer_and_replay": {
+      "records": [
+        {
+          "sequence": 1,
+          "cut_id": "5a8df60afde089ddf15246d49d017648c1c5be2756a529bce158adc896f1dae3",
+          "packet_bytes": 436575,
+          "logical_bytes": 431307150,
+          "logical_sha": "e1d68fa85da4263ce721d8ee5a1807c1eeb0aae9c93f3e374109f00df99fa8af",
+          "references": 6514,
+          "unique_chunks": 3674
+        },
+        {
+          "sequence": 2,
+          "cut_id": "c4b060c384a8dadc6a083146edc57eed3736977d9fe078e2873c703c187d01ba",
+          "packet_bytes": 436575,
+          "logical_bytes": 431301126,
+          "logical_sha": "5b31849be46ccf0b2fc9cae90067c17b090a686ee6613fd4541d58b120848e1c",
+          "references": 6514,
+          "unique_chunks": 2047
+        },
+        {
+          "sequence": 3,
+          "cut_id": "3e682b971c0aa7e36a15d694e1b5156abac18830db2f35822018725187aa3e31",
+          "packet_bytes": 436575,
+          "logical_bytes": 431301087,
+          "logical_sha": "2508a8c11735b60cfde2d98abb00320195f218c1b35dad0f44d93a269e654d82",
+          "references": 6514,
+          "unique_chunks": 1974
+        },
+        {
+          "sequence": 4,
+          "cut_id": "6b7300ad36db2c024d63de0476ea563d188bcb3b1bb1eb4b950e0b484a4533f3",
+          "packet_bytes": 436575,
+          "logical_bytes": 431301129,
+          "logical_sha": "25e57af404fbbabca0f2e4d71c02f81d1b431abba5e02b78530a369cfc0d8f25",
+          "references": 6514,
+          "unique_chunks": 2047
+        },
+        {
+          "sequence": 5,
+          "cut_id": "26c995be94bba39a6d503f197d5b6219f0a4f341061f8c15fa8d479c125e6086",
+          "packet_bytes": 436575,
+          "logical_bytes": 431301164,
+          "logical_sha": "30fd2b1df5af32e1d907fba023bb8f13dc360ab9407730b024a42409c757a3e4",
+          "references": 6514,
+          "unique_chunks": 2047
+        },
+        {
+          "sequence": 6,
+          "cut_id": "5ae0a0619e00fd5d9dc5852ece454b265c653a5516258272d83f300fbcd4b51e",
+          "packet_bytes": 436575,
+          "logical_bytes": 431301135,
+          "logical_sha": "a75af194b518cc6fd8c387b865c23e7e24e36bbd5ad1779d4a7e479317b43355",
+          "references": 6514,
+          "unique_chunks": 2047
+        },
+        {
+          "sequence": 7,
+          "cut_id": "4a59476ed5319acc098df924d85e77e689363a14fe5e381da78d47c680dcb4ce",
+          "packet_bytes": 436575,
+          "logical_bytes": 431301148,
+          "logical_sha": "2531404522b8add3508584b3b18781af1d2a81e52bf3bc9dc60ec9e104c5624b",
+          "references": 6514,
+          "unique_chunks": 1974
+        },
+        {
+          "sequence": 8,
+          "cut_id": "36188cbb78261a22f679a3539cdd00168e55345e931644b845c3da5132581319",
+          "packet_bytes": 436575,
+          "logical_bytes": 431301157,
+          "logical_sha": "f10406d5bc1459ee838e6b3fe44e596c708d2d0fbfff66a38ac43421fc1a01df",
+          "references": 6514,
+          "unique_chunks": 2047
+        },
+        {
+          "sequence": 9,
+          "cut_id": "627cfbf2501a06c2d11c7430f6a97fc7f71fd81433a62bcf7bacfcbc7a76f35b",
+          "packet_bytes": 436575,
+          "logical_bytes": 431301143,
+          "logical_sha": "d4da7de7de93a4dc4e5af318617c125dbdb0ef9183bace3e50b0b5a1047c2277",
+          "references": 6514,
+          "unique_chunks": 2047
+        }
+      ],
+      "union_chunks": 4324,
+      "union_compressed_payload_bytes": 33324389,
+      "owner_view": {
+        "bytes": 431301143,
+        "sha256": "d4da7de7de93a4dc4e5af318617c125dbdb0ef9183bace3e50b0b5a1047c2277",
+        "elapsed_s": 14.416331020998769
+      },
+      "normal_selected_reader_s": 5.456181180998101,
+      "exact_runtime_risk_replay_s": 19.069951083001797,
+      "replay": "PASS",
+      "scope": "Read-only actual deployed installed SQL decoder, exact selected Consumer.evaluation and existing Portfolio/Risk replay after shutdown. No other evaluation reconstructed; no production rows changed. Union compressed bytes cover these evaluation roots, not all previous states or SQLite index/page overhead."
+    }
+  },
+  "SCAN_COVERAGE": {
+    "each_cycle": "18 candidates; 18 successful snapshots/datafeed inputs; 18 scanned; zero skips; 557 tradable USDT markets from 740 loaded venue markets; selected universe 14 after one venue-unavailable symbol removed; exits/protection remain included.",
+    "cycles": 8,
+    "startup_same_full_scan": true,
+    "coverage_reduction": false
+  },
+  "EXIT_PROTECTION_SERVICING": {
+    "each_cycle": "18 exchange-exit detections; 20 manages-exits checks; two manage-one retained positions; one orphan-service pass and venue-position observation; zero stage failures; zero exits triggered.",
+    "before_and_after": "Signed read-only demo snapshots: SOL long 5.77 and AVAX long 77, both matched protective stops; ordinary orders empty.",
+    "account_after": "/mnt/luffy-recovery/recovery/runtime-bounded-evidence-latency-r1/evidence/account-after-atomic-window.json"
+  },
+  "TOTAL_RETAINED_STORAGE_GROWTH": {
+    "observation_before_startup_to_graceful_shutdown": {
+      "before_total_allocated": 11175485440,
+      "after_total_allocated": 11253821440,
+      "total_allocated_delta": 78336000,
+      "nonwal_allocated_delta": 78217216,
+      "wal_allocated_delta": 118784,
+      "per_file_changes": {
+        "data/attention.db": {
+          "allocated_delta": -28672,
+          "logical_file_size_delta": -28672,
+          "wal": false
+        },
+        "data/attention.db-wal": {
+          "allocated_delta": 118784,
+          "logical_file_size_delta": 119480,
+          "wal": true
+        },
+        "data/attention_health.json": {
+          "allocated_delta": 0,
+          "logical_file_size_delta": 3,
+          "wal": false
+        },
+        "data/candles.db": {
+          "allocated_delta": 12197888,
+          "logical_file_size_delta": 12197888,
+          "wal": false
+        },
+        "data/derivs.db": {
+          "allocated_delta": 6717440,
+          "logical_file_size_delta": 6717440,
+          "wal": false
+        },
+        "data/heartbeat_luffy.json": {
+          "allocated_delta": 0,
+          "logical_file_size_delta": 4,
+          "wal": false
+        },
+        "data/luffy.db": {
+          "allocated_delta": 59326464,
+          "logical_file_size_delta": 59326464,
+          "wal": false
+        },
+        "logs/luffy.log": {
+          "allocated_delta": 4096,
+          "logical_file_size_delta": 3920,
+          "wal": false
+        }
+      },
+      "per_boundary": [
+        {
+          "at": 1791166438.085195,
+          "all_allocated": 11175485440,
+          "nonwal_allocated": 10923888640,
+          "wal_allocated": 251596800
+        },
+        {
+          "at": 1791166694.9399848,
+          "all_allocated": 11207270400,
+          "nonwal_allocated": 10949038080,
+          "wal_allocated": 258232320
+        },
+        {
+          "at": 1791166885.5633569,
+          "all_allocated": 11235827712,
+          "nonwal_allocated": 10956275712,
+          "wal_allocated": 279552000
+        },
+        {
+          "at": 1791167074.8421302,
+          "all_allocated": 11262701568,
+          "nonwal_allocated": 10983153664,
+          "wal_allocated": 279547904
+        },
+        {
+          "at": 1791167284.864053,
+          "all_allocated": 11269722112,
+          "nonwal_allocated": 10990170112,
+          "wal_allocated": 279552000
+        },
+        {
+          "at": 1791167483.9500659,
+          "all_allocated": 11255394304,
+          "nonwal_allocated": 10975854592,
+          "wal_allocated": 279539712
+        },
+        {
+          "at": 1791167688.0845752,
+          "all_allocated": 11261800448,
+          "nonwal_allocated": 10982260736,
+          "wal_allocated": 279539712
+        },
+        {
+          "at": 1791167894.518055,
+          "all_allocated": 11289772032,
+          "nonwal_allocated": 11010224128,
+          "wal_allocated": 279547904
+        },
+        {
+          "at": 1791168091.1372068,
+          "all_allocated": 11275558912,
+          "nonwal_allocated": 10996015104,
+          "wal_allocated": 279543808
+        },
+        {
+          "at": 1791168281.3026183,
+          "all_allocated": 11281723392,
+          "nonwal_allocated": 11002171392,
+          "wal_allocated": 279552000
+        },
+        {
+          "at": 1791168282.050842,
+          "all_allocated": 11281723392,
+          "nonwal_allocated": 11002171392,
+          "wal_allocated": 279552000
+        },
+        {
+          "at": 1791168283.9207754,
+          "all_allocated": 11253821440,
+          "nonwal_allocated": 11002105856,
+          "wal_allocated": 251715584
+        }
+      ],
+      "wal_activity": {
+        "data/luffy.db-wal": [
+          {
+            "at": 1791166438.085195,
+            "allocated": 178151424,
+            "mtime_ns": 1791165287340407493,
+            "size": 178144712,
+            "wal": true,
+            "wal_checkpointed_frames": 0,
+            "wal_committed_frames": 624,
+            "wal_generation": "97cdc71cf8a3a6dd",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791166694.9399848,
+            "allocated": 178151424,
+            "mtime_ns": 1791166604848110101,
+            "size": 178144712,
+            "wal": true,
+            "wal_checkpointed_frames": 0,
+            "wal_committed_frames": 862,
+            "wal_generation": "97cdc71f105b77e5",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791166885.5633569,
+            "allocated": 178151424,
+            "mtime_ns": 1791166817269975872,
+            "size": 178144712,
+            "wal": true,
+            "wal_checkpointed_frames": 0,
+            "wal_committed_frames": 358,
+            "wal_generation": "97cdc72239886e10",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167074.8421302,
+            "allocated": 178151424,
+            "mtime_ns": 1791167008897471499,
+            "size": 178144712,
+            "wal": true,
+            "wal_checkpointed_frames": 0,
+            "wal_committed_frames": 588,
+            "wal_generation": "97cdc7243cb319b3",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167284.864053,
+            "allocated": 178151424,
+            "mtime_ns": 1791167213894234613,
+            "size": 178144712,
+            "wal": true,
+            "wal_checkpointed_frames": 0,
+            "wal_committed_frames": 882,
+            "wal_generation": "97cdc72639db2b2f",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167483.9500659,
+            "allocated": 178151424,
+            "mtime_ns": 1791167416767150324,
+            "size": 178144712,
+            "wal": true,
+            "wal_checkpointed_frames": 0,
+            "wal_committed_frames": 583,
+            "wal_generation": "97cdc729e3ac4485",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167688.0845752,
+            "allocated": 178151424,
+            "mtime_ns": 1791167618045164860,
+            "size": 178144712,
+            "wal": true,
+            "wal_checkpointed_frames": 0,
+            "wal_committed_frames": 606,
+            "wal_generation": "97cdc72bdf05a3f9",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167894.518055,
+            "allocated": 178151424,
+            "mtime_ns": 1791167827434295419,
+            "size": 178144712,
+            "wal": true,
+            "wal_checkpointed_frames": 0,
+            "wal_committed_frames": 886,
+            "wal_generation": "97cdc72d54d0ade3",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791168091.1372068,
+            "allocated": 178151424,
+            "mtime_ns": 1791168022051392559,
+            "size": 178144712,
+            "wal": true,
+            "wal_checkpointed_frames": 0,
+            "wal_committed_frames": 638,
+            "wal_generation": "97cdc7308d53c46d",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791168281.3026183,
+            "allocated": 178151424,
+            "mtime_ns": 1791168217438524466,
+            "size": 178144712,
+            "wal": true,
+            "wal_checkpointed_frames": 0,
+            "wal_committed_frames": 654,
+            "wal_generation": "97cdc7323f4a69a8",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791168282.050842,
+            "allocated": 178151424,
+            "mtime_ns": 1791168217438524466,
+            "size": 178144712,
+            "wal": true,
+            "wal_checkpointed_frames": 0,
+            "wal_committed_frames": 654,
+            "wal_generation": "97cdc7323f4a69a8",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791168283.9207754,
+            "allocated": 178151424,
+            "mtime_ns": 1791168217438524466,
+            "size": 178144712,
+            "wal": true,
+            "wal_checkpointed_frames": 0,
+            "wal_committed_frames": 654,
+            "wal_generation": "97cdc7323f4a69a8",
+            "wal_index_consistent": true
+          }
+        ],
+        "data/attention.db-wal": [
+          {
+            "at": 1791166438.085195,
+            "allocated": 21200896,
+            "mtime_ns": 1791165287188404612,
+            "size": 21197432,
+            "wal": true,
+            "wal_checkpointed_frames": 0,
+            "wal_committed_frames": 32,
+            "wal_generation": "be6553de25ebac41",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791166694.9399848,
+            "allocated": 0,
+            "mtime_ns": 1791166605069111808,
+            "size": 0,
+            "wal": true,
+            "wal_checkpointed_frames": 0,
+            "wal_committed_frames": 0,
+            "wal_generation": "0000000000000000",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791166885.5633569,
+            "allocated": 21319680,
+            "mtime_ns": 1791166817127975604,
+            "size": 21316912,
+            "wal": true,
+            "wal_checkpointed_frames": 5174,
+            "wal_committed_frames": 5174,
+            "wal_generation": "9918b7b8a2c99f6a",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167074.8421302,
+            "allocated": 21315584,
+            "mtime_ns": 1791167009007471852,
+            "size": 21312792,
+            "wal": true,
+            "wal_checkpointed_frames": 1,
+            "wal_committed_frames": 5173,
+            "wal_generation": "9178ddb768159903",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167284.864053,
+            "allocated": 21319680,
+            "mtime_ns": 1791167213898764835,
+            "size": 21316912,
+            "wal": true,
+            "wal_checkpointed_frames": 1,
+            "wal_committed_frames": 5174,
+            "wal_generation": "e3d27ac7c452fd84",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167483.9500659,
+            "allocated": 21307392,
+            "mtime_ns": 1791167416732150156,
+            "size": 21304552,
+            "wal": true,
+            "wal_checkpointed_frames": 5171,
+            "wal_committed_frames": 5171,
+            "wal_generation": "45905cb894626797",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167688.0845752,
+            "allocated": 21307392,
+            "mtime_ns": 1791167617830163734,
+            "size": 21304552,
+            "wal": true,
+            "wal_checkpointed_frames": 5171,
+            "wal_committed_frames": 5171,
+            "wal_generation": "dfe43031cb1261b1",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167894.518055,
+            "allocated": 21315584,
+            "mtime_ns": 1791167827461295568,
+            "size": 21312792,
+            "wal": true,
+            "wal_checkpointed_frames": 1,
+            "wal_committed_frames": 5173,
+            "wal_generation": "b03ff3215fadb270",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791168091.1372068,
+            "allocated": 21311488,
+            "mtime_ns": 1791168022002392279,
+            "size": 21308672,
+            "wal": true,
+            "wal_checkpointed_frames": 5172,
+            "wal_committed_frames": 5172,
+            "wal_generation": "de6f8498b74255d2",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791168281.3026183,
+            "allocated": 21319680,
+            "mtime_ns": 1791168217461524600,
+            "size": 21316912,
+            "wal": true,
+            "wal_checkpointed_frames": 5174,
+            "wal_committed_frames": 5174,
+            "wal_generation": "8fe133e41024f705",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791168282.050842,
+            "allocated": 21319680,
+            "mtime_ns": 1791168217461524600,
+            "size": 21316912,
+            "wal": true,
+            "wal_checkpointed_frames": 5174,
+            "wal_committed_frames": 5174,
+            "wal_generation": "8fe133e41024f705",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791168283.9207754,
+            "allocated": 21319680,
+            "mtime_ns": 1791168217461524600,
+            "size": 21316912,
+            "wal": true,
+            "wal_checkpointed_frames": 5174,
+            "wal_committed_frames": 5174,
+            "wal_generation": "8fe133e41024f705",
+            "wal_index_consistent": true
+          }
+        ],
+        "data/derivs.db-wal": [
+          {
+            "at": 1791166438.085195,
+            "allocated": 0,
+            "size": 0,
+            "absent": true
+          },
+          {
+            "at": 1791166694.9399848,
+            "allocated": 27836416,
+            "mtime_ns": 1791166526430498600,
+            "size": 27834752,
+            "wal": true,
+            "wal_checkpointed_frames": 6756,
+            "wal_committed_frames": 6756,
+            "wal_generation": "63d8a56e92d9603c",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791166885.5633569,
+            "allocated": 27836416,
+            "mtime_ns": 1791166526430498600,
+            "size": 27834752,
+            "wal": true,
+            "wal_checkpointed_frames": 6756,
+            "wal_committed_frames": 6756,
+            "wal_generation": "63d8a56e92d9603c",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167074.8421302,
+            "allocated": 27836416,
+            "mtime_ns": 1791166526430498600,
+            "size": 27834752,
+            "wal": true,
+            "wal_checkpointed_frames": 6756,
+            "wal_committed_frames": 6756,
+            "wal_generation": "63d8a56e92d9603c",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167284.864053,
+            "allocated": 27836416,
+            "mtime_ns": 1791166526430498600,
+            "size": 27834752,
+            "wal": true,
+            "wal_checkpointed_frames": 6756,
+            "wal_committed_frames": 6756,
+            "wal_generation": "63d8a56e92d9603c",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167483.9500659,
+            "allocated": 27836416,
+            "mtime_ns": 1791166526430498600,
+            "size": 27834752,
+            "wal": true,
+            "wal_checkpointed_frames": 6756,
+            "wal_committed_frames": 6756,
+            "wal_generation": "63d8a56e92d9603c",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167688.0845752,
+            "allocated": 27836416,
+            "mtime_ns": 1791166526430498600,
+            "size": 27834752,
+            "wal": true,
+            "wal_checkpointed_frames": 6756,
+            "wal_committed_frames": 6756,
+            "wal_generation": "63d8a56e92d9603c",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791167894.518055,
+            "allocated": 27836416,
+            "mtime_ns": 1791166526430498600,
+            "size": 27834752,
+            "wal": true,
+            "wal_checkpointed_frames": 6756,
+            "wal_committed_frames": 6756,
+            "wal_generation": "63d8a56e92d9603c",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791168091.1372068,
+            "allocated": 27836416,
+            "mtime_ns": 1791166526430498600,
+            "size": 27834752,
+            "wal": true,
+            "wal_checkpointed_frames": 6756,
+            "wal_committed_frames": 6756,
+            "wal_generation": "63d8a56e92d9603c",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791168281.3026183,
+            "allocated": 27836416,
+            "mtime_ns": 1791166526430498600,
+            "size": 27834752,
+            "wal": true,
+            "wal_checkpointed_frames": 6756,
+            "wal_committed_frames": 6756,
+            "wal_generation": "63d8a56e92d9603c",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791168282.050842,
+            "allocated": 27836416,
+            "mtime_ns": 1791166526430498600,
+            "size": 27834752,
+            "wal": true,
+            "wal_checkpointed_frames": 6756,
+            "wal_committed_frames": 6756,
+            "wal_generation": "63d8a56e92d9603c",
+            "wal_index_consistent": true
+          },
+          {
+            "at": 1791168283.9207754,
+            "allocated": 0,
+            "size": 0,
+            "absent": true
+          }
+        ]
+      }
+    },
+    "post_shutdown_readonly_proof_shm_allocated_delta": 32768,
+    "final_before_startup_to_after_readonly_proofs_allocated_delta": 78368768,
+    "whole_task_before_first_profile_to_final_allocated_delta": 2995052544,
+    "whole_task_includes_rejected_windows": true,
+    "external_preservation_and_fixture_allocated_totals": {
+      "/mnt/luffy-recovery/recovery/runtime-bounded-evidence-latency-r1/evidence": {
+        "allocated_bytes": 14225698816,
+        "files": 364
+      },
+      "/mnt/luffy-data/luffy/workspaces/runtime-bounded-evidence-latency-r1": {
+        "allocated_bytes": 5049094144,
+        "files": 16050
+      }
+    },
+    "portfolio_observation_allocated_delta": 0,
+    "portfolio_evaluation_union_compressed_bytes": 33324389,
+    "note": "Existing Portfolio freelist absorbs new compressed rows; flat allocated size does not mean zero logical growth. All earlier inflated rows/history and pristine active/backup snapshots retained. No vacuum/history reset. External artifact totals are current task-directory allocation, not measured baseline growth."
+  },
+  "WAL_ACTIVITY": {
+    "net_observation_allocated_delta": 118784,
+    "active_peak_allocations": {
+      "data/luffy.db-wal": 178151424,
+      "data/attention.db-wal": 21319680,
+      "data/derivs.db-wal": 27836416
+    },
+    "boundaries": "atomic-window-measurements.json includes every WAL allocation, size, mtime, consistent committed/checkpointed frame count and generation. Reused allocation is not zero writes; no exact total bytes-written claim."
+  },
+  "PROVIDER_ATTEMPTS": {
+    "attempts": 0,
+    "admissions": 0,
+    "brain_enabled": false,
+    "ledger_sha256": "edcceae68033121e27a97b3c5a4de09211cbfa22fed36895d57bf7d1d41a5ee0",
+    "unchanged": true,
+    "disabled_provider_regression": "test_disabled_provider_makes_zero_attempts_and_leaves_ledger_exact passed in 863-test selection"
+  },
+  "REGRESSION_RESULTS": {
+    "targeted_passed": 863,
+    "groups": [
+      201,
+      223,
+      439
+    ],
+    "proofs": "Observed-scale real producer/worker/source-reader, original retained refusal/equality, installed decoder/normal consumer/owner view, exact Portfolio/Risk replay, retry/no duplicate/no growth, physical corruption/missing/wrong identity refusal, historical late/tied revisions and ancestry, write rollback, disabled-provider zero attempts, exit/protection/authority/recovery.",
+    "additional_readonly_production_replay": "PASS",
+    "baseline_limitations": "Unrelated pre-existing legacy trade-provenance fixtures, ref fixtures missing required as_of_ms, and unqualified legacy candle symbol fixture failures were reproduced on unchanged baselines and documented in repository report. This is not a claim that every repository test passes."
+  },
+  "ACTIVE_SAFETY_CONDITIONS": {
+    "persisted_active_conditions": {},
+    "control": "FROZEN",
+    "operator_hold": "1",
+    "recovery_required": true,
+    "watchdog_off": true,
+    "expected_limitations": [
+      "Insufficient research control coverage remains insufficient; no large backfill or paid provider was launched.",
+      "Learning validation/calibration/weights/meta refits retain replay_complete_learning_authority_required refusals.",
+      "Attention capture exceeds existing advisory 50ms producer capture budget (all nine over_budget); no capture loss, queue drop, worker error or timeout. Observed ordinary producer capture remained ~0.7\u20131.4s, included in cycle timings."
+    ]
+  },
+  "KERNEL_PID": null,
+  "DASHBOARD_PID": null,
+  "F8_RUNTIME_HANDOFF": "FROZEN bounded-runtime verification complete; ACTIVE/real-money operational handoff remains pending. No activation or recovery performed.",
+  "READY_FOR_FROZEN_OBSERVATION": "YES \u2014 required five normal plus three Dashboard cycles already completed; processes stopped after proof.",
+  "BLOCKERS": [],
+  "DIAGNOSTIC_DISCLOSURES": [
+    "All workers enabled in final window. No worker-disabled run claimed as proof.",
+    "Initial missing multiprocessing spawn guard launched a second FROZEN Kernel; both stopped. Overlapped 953.950/611.612-second cycles excluded; pre-overlap attribution retained.",
+    "Other prior windows stopped after measured source-deadline/lock/pipe/storage/native-scheduling/source-availability blockers. One earlier cycle overlapped an offline CPU test; excluded. No cycle from an earlier window substituted into final consecutive proof.",
+    "Initial Dashboard localhost probe did not match LAN binding. A later unauthenticated LAN probe caused an erroneous stop after five normal plus one Dashboard cycle; corrected authenticated fresh window, original result retained.",
+    "Fast source metadata originally suppressed a .025591-second no-source read and carried a previous diagnostic flag. That window excluded; every source load now emits metadata and controller resets flag at cycle begin. Actual atomic-prune fault reproduced and fixed before final window.",
+    "Eight final measured cycles plus separate startup warmup all fresh verified sources, no stage failures/source refusals/worker errors/timeouts, zero provider admissions; only this final complete configured window is acceptance evidence.",
+    "Final read-only exact evaluation reader 5.456 seconds and owner inspection 14.416 seconds concern retained ledger replay, not the Portfolio source loader deadline. Actual source loading was 1.004\u20132.057 seconds within unchanged five-second boundary."
+  ],
+  "EVIDENCE_DIRECTORY": "/mnt/luffy-recovery/recovery/runtime-bounded-evidence-latency-r1/evidence",
+  "REPOSITORY_CHANGE_REPORT": "/mnt/luffy-data/luffy/production/docs/superpowers/reports/2026-10-05-runtime-bounded-evidence-latency-r1.md",
+  "GENERATED_AT_UNIX": 1791196187.8048828
+}

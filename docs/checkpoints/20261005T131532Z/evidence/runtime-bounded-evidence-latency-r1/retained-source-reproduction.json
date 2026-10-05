@@ -1,0 +1,13 @@
+{
+  "source_id": "scan_c771018d25de4ace80bfba0639db5a0f",
+  "serialized_bytes": 16226290,
+  "limit": 2097152,
+  "sha256": "3e3d96a5c1b4bde723df1dc9cd0bdbfc1fb52fdf5e93a55be5f82778818f05e9",
+  "fixture_isolation": "original completion flag restored only in offline clone",
+  "original_refusal": "SOURCE_PAYLOAD_BOUND_EXCEEDED",
+  "fixed_capture_seconds": 2.599295104002522,
+  "manifest_bytes": 16685,
+  "fixed_read": "PASS",
+  "logical_scan_equal": true,
+  "control": "FROZEN"
+}

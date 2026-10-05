@@ -1,0 +1,24 @@
+[
+  {
+    "decision_id": "dec_d72a24cda3",
+    "original_error": "ValueError:nonfinite_target_metadata",
+    "fixed_path": "engine.outcomes.resolve_pending -> capture.safely -> capture_runtime.forward",
+    "elapsed_s": 1.6980395849968772,
+    "original_refusal_history_unchanged": true,
+    "logical_retry_duplicate": false,
+    "outcome_id": "2bf63c8d6f0baca2537f8a96c9feb4194b19939cd2a159f570a9b95fad643cfe",
+    "replay_status": "COMPLETE",
+    "replay_faults": []
+  },
+  {
+    "decision_id": "dec_fc07d32f87",
+    "original_error": "ValueError:nonfinite_target_metadata",
+    "fixed_path": "engine.outcomes.resolve_pending -> capture.safely -> capture_runtime.forward",
+    "elapsed_s": 5.488570966990665,
+    "original_refusal_history_unchanged": true,
+    "logical_retry_duplicate": false,
+    "outcome_id": "d29946324bdfe798257fa28cddf43ff601e5299ca0a0ac87c442ed87ba082ee9",
+    "replay_status": "COMPLETE",
+    "replay_faults": []
+  }
+]

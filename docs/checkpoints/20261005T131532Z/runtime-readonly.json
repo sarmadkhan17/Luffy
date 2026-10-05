@@ -1,0 +1,131 @@
+{
+  "at": 1791205911.3766878,
+  "watchdog_off": true,
+  "controls": {
+    "control_state": "FROZEN",
+    "execution_recovery": "null",
+    "macro_guard_operator_hold": "1"
+  },
+  "recovery_required": true,
+  "active_conditions": {
+    "heartbeat:luffy": {
+      "condition": "heartbeat:luffy",
+      "context": {
+        "policy": "existing_kernel_scan_interval_times_four",
+        "record": {
+          "context": {
+            "attention": {
+              "acknowledged_producer": 0,
+              "boot_id": "25068072-fb4b-4598-a2a0-b9f3571b2454",
+              "capture_budget_ms": 50,
+              "capture_errors": 0,
+              "capture_ms": 1067.984819994308,
+              "causes_capture_ms": 0.689074004185386,
+              "certificate": null,
+              "details_lost": 0,
+              "dropped": 0,
+              "dropped_cause_symbols": 0,
+              "enabled": true,
+              "errors": 0,
+              "failure_generation": 0,
+              "fence_seq": 0,
+              "first_error_ms": null,
+              "health_schema": "attention-collector-health.v2",
+              "health_write_errors": 0,
+              "instance_id": "f207b87b30874a72acefca81ab53e792",
+              "kernel_error": null,
+              "last_attempt_ms": 1791203403456,
+              "last_complete": null,
+              "last_error": null,
+              "last_error_ms": null,
+              "last_scan_id": "scan_ff5de8fb66fe4d8d8b01619fcf0482fd",
+              "last_success_ms": 1791203411369,
+              "max_capture_ms": 1067.984819994308,
+              "max_producer_ms": 1068.6738939984934,
+              "over_budget": 1,
+              "process_started_ms": 1791203320250,
+              "processed": 1,
+              "producer_ms": 1068.6738939984934,
+              "queue_depth": 1,
+              "recent_errors": [],
+              "status": "waiting",
+              "submitted": 2,
+              "timeouts": 0,
+              "updated_ms": 1791203572694,
+              "worker_alive": true,
+              "worker_errors": 0
+            },
+            "decisions": 19,
+            "entries": 0,
+            "equity": 5243.79,
+            "exits_detected": 0,
+            "last_successful_cycle_at": 1791203613.9428577,
+            "learning_application": [],
+            "learning_dispatch": [],
+            "manual_closed": 0,
+            "orphans_managed": 0,
+            "portfolio_runtime": {
+              "execution_routed": false,
+              "portfolio_cut_id": "f69a37cd884a126f5a19ba38efb0b6e62b8fcdd831bdc293580476498d4b195b",
+              "risk_decisions": 0,
+              "status": "PASS",
+              "trade_intents": 0,
+              "triggered": false
+            },
+            "scan_boundaries": {
+              "execution_datafeed_available": 19,
+              "loaded_venue_markets": 740,
+              "scan_candidates": 19,
+              "selected_universe": 13,
+              "snapshots_constructed": 19,
+              "tradable_usdt_markets": 557,
+              "universe_after_filter": 13,
+              "universe_before_filter": 15
+            },
+            "scanned": 19,
+            "skips": 0,
+            "state": "FROZEN"
+          },
+          "instance_id": "611d882aa570469fbac4f4a8b07b18ae",
+          "producer": "luffy",
+          "schema": "luffy-heartbeat.v1",
+          "sequence": 1,
+          "started_at": 1791203319.8593671,
+          "timestamp": 1791203613.9428673
+        }
+      },
+      "detected_at": 1791197504.010595,
+      "incident_id": "dc3375928de84891a7a7ea363d2de6a9",
+      "reason": "PRODUCER_RESTART_REQUIRES_RECOVERY",
+      "resolved_at": 1791203619.3360445,
+      "status": "RESOLVED"
+    },
+    "journal_write": {
+      "condition": "journal_write",
+      "context": {},
+      "detected_at": 1791198455.1222882,
+      "incident_id": "26e98763cd23428c9335cdf22a010aea",
+      "reason": "OperationalError",
+      "resolved_at": 1791203214.8665125,
+      "status": "RESOLVED"
+    },
+    "observed_cycle:luffy": {
+      "condition": "observed_cycle:luffy",
+      "context": {
+        "cold_start_s": 298.5340850353241,
+        "contained": true,
+        "cycle_sequence": 1,
+        "deployed_sha": "958c9eb2f0b10993ad240b85f88c626b8d0e2ee6",
+        "elapsed_s": 266.7,
+        "limit_s": 240.0,
+        "source": "retained Kernel completion log and genuine heartbeat",
+        "successful_heartbeat_at": 1791203613.9428673
+      },
+      "detected_at": 1791203961.5081162,
+      "incident_id": "7b9043295028464a8db26338e01af0b9",
+      "reason": "SUCCESSFUL_CYCLE_THRESHOLD_EXCEEDED",
+      "status": "ACTIVE"
+    }
+  },
+  "processes": []
+}

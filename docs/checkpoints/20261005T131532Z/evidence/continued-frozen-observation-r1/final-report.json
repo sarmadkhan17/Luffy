@@ -1,0 +1,827 @@
+{
+  "CONTINUED_FROZEN_OBSERVATION": "BLOCKED",
+  "DEPLOYED_SHA": "b880e52cf319451307261ee7728d1f0bfd7014c4",
+  "KERNEL_PID": null,
+  "DASHBOARD_PID": null,
+  "CONTROL_STATE": {
+    "control": "FROZEN",
+    "operator_hold": "1",
+    "recovery_required": true,
+    "watchdog_off": true,
+    "research_referee": false,
+    "research_handoff": false,
+    "provider_admission_enabled": false
+  },
+  "COLD_START_TO_FIRST_HEARTBEAT": {
+    "seconds": 235.10446405410767,
+    "basis": "Actual new-instance heartbeat timestamp minus controlled startup request; prior instance heartbeat was not restamped.",
+    "preflight_existing_integrity_pass_seconds_approx": 501,
+    "preflight_basis": "Existing safety-only stdout file creation-to-completion timestamps; preflight ran before startup and is not included in Kernel cold-start delay."
+  },
+  "OBSERVATION_DURATION": {
+    "requested_seconds": 3600,
+    "actual_until_containment_seconds": 940.2810564041138,
+    "start_requested_at": 1791197520.2501402,
+    "containment_requested_at": 1791198460.531196,
+    "last_completed_shutdown_cycle_at": 1791198557.9874578,
+    "one_hour_completed": false,
+    "reason": "active_safety_failure:journal_write"
+  },
+  "CYCLES_COMPLETED": {
+    "before_containment": 6,
+    "additional_in_flight_cycle_completed_during_shutdown": 1,
+    "total": 7
+  },
+  "CYCLE_AND_HEARTBEAT_RANGE": {
+    "before_containment_cycles_seconds": [
+      206.7,
+      137.1,
+      115.8,
+      131.3,
+      122.6,
+      166.5
+    ],
+    "cycle_range": [
+      115.8,
+      206.7
+    ],
+    "actual_successful_heartbeat_gaps_seconds": [
+      138.12859916687012,
+      116.7685477733612,
+      132.29434490203857,
+      123.61826944351196,
+      167.490061044693
+    ],
+    "gap_range": [
+      116.7685477733612,
+      167.490061044693
+    ],
+    "shutdown_cycle_seconds": 123.3,
+    "shutdown_successful_gap_seconds": 124.3330328464508,
+    "successful_cycle_threshold_seconds": 240,
+    "first_restart_gap": 29474.88648867607,
+    "first_restart_gap_includes_intentional_downtime": true
+  },
+  "SCAN_COVERAGE": {
+    "each_completed_cycle": {
+      "candidates": 19,
+      "snapshots": 19,
+      "decisions": 19,
+      "scanned": 19,
+      "skips": 0,
+      "venue_markets": 740,
+      "tradable_usdt": 557,
+      "selected_universe_after_venue_filter": 13,
+      "selected_universe_before_filter": 15
+    },
+    "all_decisions_action": "HOLD",
+    "before_containment_decisions": 114,
+    "total_including_shutdown": 133,
+    "venue_filter_removed": [
+      "BTW/USDT",
+      "BZ/USDT"
+    ]
+  },
+  "STORAGE_GROWTH": {
+    "scope": "All files under production data/ and logs/, allocated blocks; external evidence files separate.",
+    "before_startup_to_final_stopped_allocated": -75980800,
+    "nonwal_allocated_growth": 69357568,
+    "wal_allocated_change": -145338368,
+    "per_file_changes": {
+      "logs/luffy.log": {
+        "allocated_delta": 4096,
+        "logical_size_delta": 3890,
+        "wal": false
+      },
+      "data/safety-incidents/dc3375928de84891a7a7ea363d2de6a9-ACTIVE.json": {
+        "allocated_delta": 4096,
+        "logical_size_delta": 185,
+        "wal": false
+      },
+      "data/derivs.db-shm": {
+        "allocated_delta": -32768,
+        "logical_size_delta": -32768,
+        "wal": false
+      },
+      "data/candles.db": {
+        "allocated_delta": 14061568,
+        "logical_size_delta": 14061568,
+        "wal": false
+      },
+      "data/attention.db-shm": {
+        "allocated_delta": -32768,
+        "logical_size_delta": -32768,
+        "wal": false
+      },
+      "data/derivs.db": {
+        "allocated_delta": 6721536,
+        "logical_size_delta": 6721536,
+        "wal": false
+      },
+      "data/safety-incidents/26e98763cd23428c9335cdf22a010aea-ACTIVE.json": {
+        "allocated_delta": 4096,
+        "logical_size_delta": 166,
+        "wal": false
+      },
+      "data/luffy.db": {
+        "allocated_delta": 48451584,
+        "logical_size_delta": 48451584,
+        "wal": false
+      },
+      "data/luffy.db-wal": {
+        "allocated_delta": -124100608,
+        "logical_size_delta": -124098520,
+        "wal": true
+      },
+      "data/heartbeat_luffy.json": {
+        "allocated_delta": 0,
+        "logical_size_delta": 1049,
+        "wal": false
+      },
+      "data/attention.db": {
+        "allocated_delta": 172032,
+        "logical_size_delta": 172032,
+        "wal": false
+      },
+      "data/safety_health.json": {
+        "allocated_delta": 4096,
+        "logical_size_delta": 3534,
+        "wal": false
+      },
+      "data/attention_health.json": {
+        "allocated_delta": 0,
+        "logical_size_delta": 1047,
+        "wal": false
+      },
+      "data/attention.db-wal": {
+        "allocated_delta": -21237760,
+        "logical_size_delta": -21238600,
+        "wal": true
+      }
+    },
+    "wal_activity": {
+      "data/derivs.db-wal": [
+        {
+          "at": 1791197003.5025582,
+          "allocated": 0,
+          "mtime_ns": 1791195769062447576,
+          "size": 0,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 0,
+          "wal_generation": "0000000000000000",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791197757.1941473,
+          "allocated": 28246016,
+          "mtime_ns": 1791197618930996863,
+          "size": 28242632,
+          "wal": true,
+          "wal_checkpointed_frames": 6855,
+          "wal_committed_frames": 6855,
+          "wal_generation": "743d065531a26ad3",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791197898.6108766,
+          "allocated": 28246016,
+          "mtime_ns": 1791197618930996863,
+          "size": 28242632,
+          "wal": true,
+          "wal_checkpointed_frames": 6855,
+          "wal_committed_frames": 6855,
+          "wal_generation": "743d065531a26ad3",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198015.046843,
+          "allocated": 28246016,
+          "mtime_ns": 1791197618930996863,
+          "size": 28242632,
+          "wal": true,
+          "wal_checkpointed_frames": 6855,
+          "wal_committed_frames": 6855,
+          "wal_generation": "743d065531a26ad3",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198146.4948304,
+          "allocated": 28246016,
+          "mtime_ns": 1791197618930996863,
+          "size": 28242632,
+          "wal": true,
+          "wal_checkpointed_frames": 6855,
+          "wal_committed_frames": 6855,
+          "wal_generation": "743d065531a26ad3",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198267.9688878,
+          "allocated": 28246016,
+          "mtime_ns": 1791197618930996863,
+          "size": 28242632,
+          "wal": true,
+          "wal_checkpointed_frames": 6855,
+          "wal_committed_frames": 6855,
+          "wal_generation": "743d065531a26ad3",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198439.5281255,
+          "allocated": 28246016,
+          "mtime_ns": 1791197618930996863,
+          "size": 28242632,
+          "wal": true,
+          "wal_checkpointed_frames": 6855,
+          "wal_committed_frames": 6855,
+          "wal_generation": "743d065531a26ad3",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198460.4583423,
+          "allocated": 28246016,
+          "mtime_ns": 1791197618930996863,
+          "size": 28242632,
+          "wal": true,
+          "wal_checkpointed_frames": 6855,
+          "wal_committed_frames": 6855,
+          "wal_generation": "743d065531a26ad3",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198684.5609813,
+          "allocated": 0,
+          "size": 0,
+          "absent": true
+        },
+        {
+          "at": 1791198890.8484147,
+          "allocated": 0,
+          "size": 0,
+          "absent": true
+        }
+      ],
+      "data/luffy.db-wal": [
+        {
+          "at": 1791197003.5025582,
+          "allocated": 178151424,
+          "mtime_ns": 1791168217438524466,
+          "size": 178144712,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 654,
+          "wal_generation": "97cdc7323f4a69a8",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791197757.1941473,
+          "allocated": 5791744,
+          "mtime_ns": 1791197725781768938,
+          "size": 5784512,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 23,
+          "wal_generation": "908b14ef934280e8",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791197898.6108766,
+          "allocated": 7143424,
+          "mtime_ns": 1791197896777392185,
+          "size": 7135872,
+          "wal": true,
+          "wal_checkpointed_frames": 508,
+          "wal_committed_frames": 1745,
+          "wal_generation": "908b14f06a2d9e45",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198015.046843,
+          "allocated": 17477632,
+          "mtime_ns": 1791198013434648496,
+          "size": 17472952,
+          "wal": true,
+          "wal_checkpointed_frames": 508,
+          "wal_committed_frames": 4249,
+          "wal_generation": "908b14f06a2d9e45",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198146.4948304,
+          "allocated": 28631040,
+          "mtime_ns": 1791198145489410546,
+          "size": 28625792,
+          "wal": true,
+          "wal_checkpointed_frames": 508,
+          "wal_committed_frames": 6948,
+          "wal_generation": "908b14f06a2d9e45",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198267.9688878,
+          "allocated": 39231488,
+          "mtime_ns": 1791198253569537144,
+          "size": 39226552,
+          "wal": true,
+          "wal_checkpointed_frames": 508,
+          "wal_committed_frames": 9531,
+          "wal_generation": "908b14f06a2d9e45",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198439.5281255,
+          "allocated": 53444608,
+          "mtime_ns": 1791198438579964792,
+          "size": 53436432,
+          "wal": true,
+          "wal_checkpointed_frames": 508,
+          "wal_committed_frames": 12983,
+          "wal_generation": "908b14f06a2d9e45",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198460.4583423,
+          "allocated": 54050816,
+          "mtime_ns": 1791198457799705657,
+          "size": 54046192,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 308,
+          "wal_generation": "908b14f124df51be",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198684.5609813,
+          "allocated": 54050816,
+          "mtime_ns": 1791198547577426757,
+          "size": 54046192,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 451,
+          "wal_generation": "908b14f3c2a7d22d",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198890.8484147,
+          "allocated": 54050816,
+          "mtime_ns": 1791198547577426757,
+          "size": 54046192,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 451,
+          "wal_generation": "908b14f3c2a7d22d",
+          "wal_index_consistent": true
+        }
+      ],
+      "data/attention.db-wal": [
+        {
+          "at": 1791197003.5025582,
+          "allocated": 21319680,
+          "mtime_ns": 1791168217461524600,
+          "size": 21316912,
+          "wal": true,
+          "wal_checkpointed_frames": 5174,
+          "wal_committed_frames": 5174,
+          "wal_generation": "8fe133e41024f705",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791197757.1941473,
+          "allocated": 21385216,
+          "mtime_ns": 1791197725874771394,
+          "size": 21382832,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 5190,
+          "wal_generation": "8fe133e41024f705",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791197898.6108766,
+          "allocated": 21389312,
+          "mtime_ns": 1791197883445024763,
+          "size": 21386952,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 15,
+          "wal_generation": "8fe133e580154642",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198015.046843,
+          "allocated": 0,
+          "mtime_ns": 1791198000314278816,
+          "size": 0,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 0,
+          "wal_generation": "0000000000000000",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198146.4948304,
+          "allocated": 73728,
+          "mtime_ns": 1791198131750015908,
+          "size": 70072,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 17,
+          "wal_generation": "e80283b2a5d59c4c",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198267.9688878,
+          "allocated": 0,
+          "mtime_ns": 1791198253715541392,
+          "size": 0,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 0,
+          "wal_generation": "0000000000000000",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198439.5281255,
+          "allocated": 81920,
+          "mtime_ns": 1791198421846470606,
+          "size": 78312,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 19,
+          "wal_generation": "66683783d8230a68",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198460.4583423,
+          "allocated": 81920,
+          "mtime_ns": 1791198421846470606,
+          "size": 78312,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 19,
+          "wal_generation": "66683783d8230a68",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198684.5609813,
+          "allocated": 81920,
+          "mtime_ns": 1791198421846470606,
+          "size": 78312,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 19,
+          "wal_generation": "66683783d8230a68",
+          "wal_index_consistent": true
+        },
+        {
+          "at": 1791198890.8484147,
+          "allocated": 81920,
+          "mtime_ns": 1791198421846470606,
+          "size": 78312,
+          "wal": true,
+          "wal_checkpointed_frames": 0,
+          "wal_committed_frames": 19,
+          "wal_generation": "66683783d8230a68",
+          "wal_index_consistent": true
+        }
+      ]
+    },
+    "interpretation": "Negative net allocation reflects normal WAL checkpoint/release, not zero retained growth. No manual history reset, migration or vacuum; existing runtime retention remains active. Before startup, cycle boundaries, failed-window end and graceful shutdown were all measured."
+  },
+  "PROVIDER_ATTEMPTS": {
+    "paid_model_attempts": 0,
+    "provider_admission_disabled": true,
+    "brain_enabled": false,
+    "usage_ledger_unchanged": true,
+    "ledger_sha256": "edcceae68033121e27a97b3c5a4de09211cbfa22fed36895d57bf7d1d41a5ee0",
+    "spec_writer_refusal": "no LLM available",
+    "data_source_limitation": "Existing macro-calendar request received HTTP 403 and used its configured free-feed fallback; public/data-source requests are not counted as paid-model admission attempts."
+  },
+  "ACTIVE_SAFETY_CONDITIONS": {
+    "actual_failure": {
+      "condition": "journal_write",
+      "status": "ACTIVE",
+      "reason": "OperationalError",
+      "detected_at": 1791198455.1222882,
+      "incident_id": "26e98763cd23428c9335cdf22a010aea",
+      "observer_component_status": "WRITE_UNAVAILABLE",
+      "meaning": "Existing integrity/read check completed; existing writable-durability probe refused. SQLite extended code/message is not exposed by this observer, so underlying cause is not asserted."
+    },
+    "expected_restart_condition": {
+      "condition": "heartbeat:luffy",
+      "reason": "PRODUCER_RESTART_REQUIRES_RECOVERY",
+      "status": "ACTIVE",
+      "classification": "Controlled new producer instance; recovery latch deliberately retained. Not a stale-current-heartbeat failure."
+    },
+    "prior_resolved_incidents": [
+      "heartbeat:luffy",
+      "journal_write"
+    ],
+    "no_recovery_or_incident_clear_performed": true
+  },
+  "CAPTURE_OVERRUNS_AND_IMPACT": {
+    "budget_ms": 50,
+    "before_containment_overruns": 6,
+    "total_including_shutdown": 7,
+    "before_containment_capture_ms": [
+      833.8255700073205,
+      1261.7622199904872,
+      1158.6343139933888,
+      1163.9905360061675,
+      1174.4037150056101,
+      1021.6679930017563
+    ],
+    "min_ms": 833.8255700073205,
+    "max_ms": 1261.7622199904872,
+    "scan_phase_errors_before_containment": 6,
+    "scan_phase_errors_including_shutdown": 7,
+    "error_class": "ValueError",
+    "timeouts": 0,
+    "dropped": 0,
+    "source_impact": "No Attention row selected; each scan failed explicitly and Portfolio remained untriggered. Faster cycles do not prove healthy full intelligence processing."
+  },
+  "ATTENTION_RESEARCH_PORTFOLIO_LEARNING_ACTIVITY": {
+    "attention": {
+      "selected_rows": 0,
+      "reason": "Scan-phase ValueError in every cycle; metadata retained without full snapshot dump. Exact ValueError cause was not investigated or repaired under this observation-only task."
+    },
+    "source_harvest": {
+      "scraped": 417,
+      "new": 272,
+      "queued_strategy": 4,
+      "queued_research": 0,
+      "screened_out": 247
+    },
+    "crawler": {
+      "pages": 0,
+      "docs": 0,
+      "passages": 0,
+      "mined": 0,
+      "queued": 0
+    },
+    "strategy_mechanism": {
+      "ideas_used": 1,
+      "added": 0,
+      "retired": 0,
+      "spec_write_failed": 1,
+      "reason": "no LLM available"
+    },
+    "research": {
+      "new_questions": 0,
+      "new_next_questions": 0,
+      "new_batches": 0,
+      "new_candidates": 0,
+      "new_results": 0,
+      "new_runs": 0,
+      "hypotheses_or_experiments": 0,
+      "explanation": "Referee/handoff disabled. Research is scheduled, but completed cycles all exceed the existing 45-second busy gate, which stands discovery down. No work completion was inferred from merely enabling its thread. Watchdog-driven question/investigation consumers remain suppressed."
+    },
+    "portfolio": {
+      "evaluations_passed": 7,
+      "triggered": 0,
+      "proposals": 0,
+      "trade_intents": 0,
+      "risk_decisions": 0,
+      "execution_routed": false,
+      "explanation": "Unavailable failed Attention sources yielded untriggered checkpoint results; PASS is not successful Attention processing or a proposal."
+    },
+    "learning": {
+      "registrations": 133,
+      "decision_source_manifests": 133,
+      "outcome_captures": 133,
+      "capture_kind": "SKIPPED_CASH",
+      "actions_registered": 133,
+      "updates_applied": 0,
+      "dispatch_proposals": 0,
+      "additional_capture_refusals": 2,
+      "refusal_reason": "ValueError:Out of range float values are not JSON compliant: nan",
+      "new_market_outcome_rows": 0,
+      "explanation": "Recorded captures and dependencies are not calibrated market outcomes or applied updates. Agent validation/calibration/weights/meta refits also refuse replay_complete_learning_authority_required."
+    },
+    "persisted_activity_counts": {
+      "brain_events": {
+        "new_rows": 142,
+        "groups": {
+          "kind": [
+            [
+              "crawl_cycle",
+              1
+            ],
+            [
+              "harvest_cycle",
+              1
+            ],
+            [
+              "harvest_idea",
+              4
+            ],
+            [
+              "idea_consumed",
+              1
+            ],
+            [
+              "market_provenance",
+              133
+            ],
+            [
+              "postmortem",
+              1
+            ],
+            [
+              "spec_write_failed",
+              1
+            ]
+          ]
+        }
+      },
+      "decisions": {
+        "new_rows": 133,
+        "groups": {
+          "skip_reason": [
+            [
+              "",
+              133
+            ]
+          ],
+          "action": [
+            [
+              "HOLD",
+              133
+            ]
+          ]
+        }
+      },
+      "learning_actions": {
+        "new_rows": 133,
+        "groups": {}
+      },
+      "learning_capture_failures": {
+        "new_rows": 2,
+        "groups": {
+          "reason": [
+            [
+              "ValueError:Out of range float values are not JSON compliant: nan",
+              2
+            ]
+          ]
+        }
+      },
+      "learning_decision_source_manifests": {
+        "new_rows": 133,
+        "groups": {}
+      },
+      "learning_outcome_captures": {
+        "new_rows": 133,
+        "groups": {}
+      },
+      "learning_registrations": {
+        "new_rows": 133,
+        "groups": {}
+      },
+      "learning_source_blobs": {
+        "new_rows": 684,
+        "groups": {}
+      },
+      "outcomes": {
+        "new_rows": 0,
+        "groups": {}
+      },
+      "research_batches": {
+        "new_rows": 0,
+        "groups": {}
+      },
+      "research_candidates": {
+        "new_rows": 0,
+        "groups": {}
+      },
+      "research_next_questions": {
+        "new_rows": 0,
+        "groups": {}
+      },
+      "research_questions": {
+        "new_rows": 0,
+        "groups": {}
+      },
+      "research_results": {
+        "new_rows": 0,
+        "groups": {}
+      },
+      "research_runs": {
+        "new_rows": 0,
+        "groups": {}
+      },
+      "votes": {
+        "new_rows": 931,
+        "groups": {}
+      }
+    }
+  },
+  "WORKERS_RUNNING_OR_INTENTIONALLY_DISABLED": {
+    "observed_completed_or_attempted": [
+      "Kernel main loop and existing exit management",
+      "Dashboard authenticated HTTP 200 on all six recorded boundaries",
+      "Attention worker (scan failures; causes jobs do not prove scan success)",
+      "reference recorder: 19 sources refreshed",
+      "scraper: harvest completed",
+      "crawler: completed with zero work",
+      "strategy mechanism: consumed one idea, added none",
+      "agent validation/calibration/weights/meta updates: explicit authority refusals",
+      "stall monitor: inherited stopped-heartbeat messages during startup",
+      "owner interface: existing socket listening",
+      "independent existing safety-only observer: one scheduled runtime pass, 13:57:03\u201314:07:35, 59.154 CPU seconds, 1.6G memory peak; write refused"
+    ],
+    "boot_scheduled_without_completed_work_evidence": [
+      "derivatives recorder/backfill (existing configured behavior, no completion logged before shutdown)",
+      "research (busy gate)",
+      "rent check"
+    ],
+    "intentionally_suppressed_by_watchdog_off": [
+      "watchdog automatic restarts",
+      "watchdog-declared population job",
+      "watchdog Attention-learning consumer",
+      "watchdog investigation consumer",
+      "watchdog accounting consumer"
+    ],
+    "intentionally_disabled_capabilities": [
+      "paid model provider admission",
+      "research.referee",
+      "research.handoff"
+    ],
+    "expired_existing_window": "Stage-5 public activation window was already expired; no additional capabilities enabled."
+  },
+  "POSITIONS_AND_PROTECTION": {
+    "environment": "demo",
+    "positions": [
+      {
+        "symbol": "SOL/USDT:USDT",
+        "side": "long",
+        "quantity": 5.77,
+        "protected": true,
+        "reasons": [
+          "matched"
+        ]
+      },
+      {
+        "symbol": "AVAX/USDT:USDT",
+        "side": "long",
+        "quantity": 77.0,
+        "protected": true,
+        "reasons": [
+          "matched"
+        ]
+      }
+    ],
+    "all_protected": true,
+    "ordinary_open_orders": [],
+    "unresolved_entry_recovery": null,
+    "unresolved_partial_exits": 0,
+    "execution_requests": 0,
+    "new_entries": 0,
+    "exits_detected": 0,
+    "evidence": "Signed read-only venue observations before startup, ~15 minutes, after containment and final stopped state; boot reconciliation zero naked/ghost/adopted/rearmed; full seven cycle stats show no exits detected. No claim that an exit trigger occurred.",
+    "last_existing_venue_observation": {
+      "supervisor": {
+        "outcome": "DEGRADED",
+        "stage": "DETECT",
+        "control_state_observed": "FROZEN",
+        "safe_to_activate": false,
+        "needs_owner": false,
+        "reasons": [
+          "critical_storage_or_heartbeat_recovery",
+          "heartbeat:luffy:PRODUCER_RESTART_REQUIRES_RECOVERY"
+        ],
+        "updated_at": "2026-10-05T11:07:14.937287+00:00"
+      },
+      "check_names": [],
+      "action_names": [],
+      "venue_observation": {
+        "observed_at_ms": 1791198547563,
+        "received_at_ms": 1791198547563,
+        "request_start_ms": 1791198547290,
+        "environment": "demo",
+        "market_type": "futures",
+        "completeness": "COMPLETE",
+        "snapshot_id": "8640a6eda2cb6c157399ba69d27a205fc709bec1e80809a474e41149a915126e"
+      },
+      "observed_positions": 2
+    }
+  },
+  "ONGOING_OBSERVER": {
+    "active": false,
+    "timer": "luffy-frozen-safety-observer.timer",
+    "timer_state": "inactive",
+    "automatic_restarts": false,
+    "reason": "Stopped with containment. No monitoring is promised after this session."
+  },
+  "SERVICES_LEFT_RUNNING": false,
+  "ACTUAL_BEHAVIOR_REQUIRING_ACTION": [
+    "Independent safety-only observer reports journal WRITE_UNAVAILABLE/OperationalError; one-hour verification cannot complete. Preserve and address in a separate authorized task; no repair/restart performed here.",
+    "Attention scan ValueError in all seven cycles, no selected rows; untriggered Portfolio PASS and shorter cycles must not be mistaken for healthy intelligence.",
+    "Two learning captures explicitly refuse NaN serialization; zero learned updates.",
+    "Existing integrity observer took about 10m32s for the runtime pass; timer completion cadence is longer than its five-minute scheduling delay. No observer check/policy was weakened."
+  ],
+  "EVIDENCE_DIRECTORY": "/mnt/luffy-recovery/recovery/continued-frozen-observation-r1/evidence",
+  "CODE_CHANGED": false,
+  "GENERATED_AT": 1791199074.2561612
+}

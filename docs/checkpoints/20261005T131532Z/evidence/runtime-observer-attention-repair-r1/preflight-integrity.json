@@ -1,0 +1,9 @@
+{
+  "component": "journal",
+  "verification": "full_quick_check",
+  "status": "VERIFIED",
+  "observed_at": 1791202471.9595113,
+  "elapsed_s": 369.69185146299424,
+  "cpu_s": 48.428548443,
+  "sqlite_error": null
+}

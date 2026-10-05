@@ -1,0 +1,194 @@
+{
+  "deployed_zero_timeout": {
+    "sqlite_errorcode": 5,
+    "sqlite_errorname": "SQLITE_BUSY",
+    "phase": "write",
+    "elapsed_s": 0.00046580999332945794,
+    "competing_writer_pid": 849163,
+    "competing_writer_transaction": "BEGIN IMMEDIATE",
+    "committed": false
+  },
+  "persistent_busy": {
+    "component": "journal",
+    "status": "WRITE_UNAVAILABLE",
+    "verification": "live_read_and_committed_write",
+    "committed": false,
+    "sqlite_error": {
+      "reason": "SQLITE_BUSY_WRITABILITY_UNRESOLVED",
+      "sqlite_errorcode": 5,
+      "sqlite_errorname": "SQLITE_BUSY",
+      "error_class": "OperationalError",
+      "phase": "begin",
+      "in_transaction": false,
+      "sanitized_message": "SQLITE_BUSY_WRITABILITY_UNRESOLVED",
+      "pid": 849163,
+      "connection_id": "a5d912649f804e9bbe8b19c787423f53",
+      "observed_at": 1791202197.6997597,
+      "elapsed_s": 5.081032563000917,
+      "cpu_s": 0.0031984409999999963
+    },
+    "pid": 849163,
+    "connection_id": "a5d912649f804e9bbe8b19c787423f53",
+    "observed_at": 1791202197.704614,
+    "elapsed_s": 5.085887163004372,
+    "cpu_s": 0.005478620999999989,
+    "stages": [
+      {
+        "stage": "connect",
+        "elapsed_s": 0.0002443350094836205,
+        "cpu_s": 0.00024527099999999136
+      },
+      {
+        "stage": "read",
+        "elapsed_s": 0.00014633899263571948,
+        "cpu_s": 0.0001471160000000027
+      },
+      {
+        "stage": "begin",
+        "elapsed_s": 5.080093013995793,
+        "cpu_s": 0.002275157
+      }
+    ]
+  },
+  "full": {
+    "component": "journal",
+    "status": "WRITE_UNAVAILABLE",
+    "verification": "live_read_and_committed_write",
+    "committed": false,
+    "sqlite_error": {
+      "reason": "SQLITE_FULL",
+      "sqlite_errorcode": 13,
+      "sqlite_errorname": "SQLITE_FULL",
+      "error_class": "OperationalError",
+      "phase": "write",
+      "in_transaction": true,
+      "sanitized_message": "SQLITE_FULL",
+      "pid": 849163,
+      "connection_id": "f7b63c5c41fd452ab3dde5c2dcb8f6d7",
+      "observed_at": 1791202197.713583,
+      "elapsed_s": 0.0015347629960160702,
+      "cpu_s": 0.001533329
+    },
+    "pid": 849163,
+    "connection_id": "f7b63c5c41fd452ab3dde5c2dcb8f6d7",
+    "observed_at": 1791202197.7179585,
+    "elapsed_s": 0.0059113729948876426,
+    "cpu_s": 0.003327174000000002,
+    "stages": [
+      {
+        "stage": "connect",
+        "elapsed_s": 0.0008838619978632778,
+        "cpu_s": 0.0008847219999999906
+      },
+      {
+        "stage": "read",
+        "elapsed_s": 6.120601028669626e-05,
+        "cpu_s": 6.169599999999997e-05
+      },
+      {
+        "stage": "begin",
+        "elapsed_s": 4.621798871085048e-05,
+        "cpu_s": 4.584600000000216e-05
+      },
+      {
+        "stage": "write",
+        "elapsed_s": 0.00011814499157480896,
+        "cpu_s": 0.00011967499999999964
+      }
+    ]
+  },
+  "readonly": {
+    "component": "journal",
+    "status": "WRITE_UNAVAILABLE",
+    "verification": "live_read_and_committed_write",
+    "committed": false,
+    "sqlite_error": {
+      "reason": "SQLITE_READONLY",
+      "sqlite_errorcode": 8,
+      "sqlite_errorname": "SQLITE_READONLY",
+      "error_class": "OperationalError",
+      "phase": "begin",
+      "in_transaction": false,
+      "sanitized_message": "SQLITE_READONLY",
+      "pid": 849163,
+      "connection_id": "20e89c3cb6d24e86a8c6cac610ede664",
+      "observed_at": 1791202197.725572,
+      "elapsed_s": 0.0013970399886602536,
+      "cpu_s": 0.0013940990000000097
+    },
+    "pid": 849163,
+    "connection_id": "20e89c3cb6d24e86a8c6cac610ede664",
+    "observed_at": 1791202197.7297099,
+    "elapsed_s": 0.005535451986361295,
+    "cpu_s": 0.0031038980000000077,
+    "stages": [
+      {
+        "stage": "connect",
+        "elapsed_s": 0.0004670189955504611,
+        "cpu_s": 0.00047477099999999883
+      },
+      {
+        "stage": "read",
+        "elapsed_s": 0.0003861659934045747,
+        "cpu_s": 0.00038749700000000054
+      },
+      {
+        "stage": "begin",
+        "elapsed_s": 4.177899973001331e-05,
+        "cpu_s": 4.090700000000669e-05
+      }
+    ]
+  },
+  "ioerr": {
+    "component": "journal",
+    "status": "WRITE_UNAVAILABLE",
+    "verification": "live_read_and_committed_write",
+    "committed": false,
+    "sqlite_error": {
+      "reason": "SQLITE_IOERR",
+      "sqlite_errorcode": 778,
+      "sqlite_errorname": "SQLITE_IOERR_WRITE",
+      "error_class": "OperationalError",
+      "phase": "commit",
+      "in_transaction": false,
+      "sanitized_message": "SQLITE_IOERR",
+      "pid": 849209,
+      "connection_id": "cab0bfced55d413498adcc2256f37b16",
+      "observed_at": 1791202197.8497808,
+      "elapsed_s": 0.001771303010173142,
+      "cpu_s": 0.001769052000000007
+    },
+    "pid": 849209,
+    "connection_id": "cab0bfced55d413498adcc2256f37b16",
+    "observed_at": 1791202197.8541079,
+    "elapsed_s": 0.006098714002291672,
+    "cpu_s": 0.003545971000000009,
+    "stages": [
+      {
+        "stage": "connect",
+        "elapsed_s": 0.0006077769940020517,
+        "cpu_s": 0.0006092439999999949
+      },
+      {
+        "stage": "read",
+        "elapsed_s": 0.0004096000047866255,
+        "cpu_s": 0.00041093200000000274
+      },
+      {
+        "stage": "begin",
+        "elapsed_s": 4.6478002332150936e-05,
+        "cpu_s": 4.709799999999542e-05
+      },
+      {
+        "stage": "write",
+        "elapsed_s": 8.260700269602239e-05,
+        "cpu_s": 8.273500000000045e-05
+      },
+      {
+        "stage": "commit",
+        "elapsed_s": 7.687599281780422e-05,
+        "cpu_s": 7.762599999999731e-05
+      }
+    ]
+  }
+}

@@ -1,0 +1,71 @@
+[
+  {
+    "group": 1,
+    "command": [
+      "/mnt/luffy-data/luffy/workspaces/runtime-observer-attention-repair-r1/venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_evidence_zlib.py",
+      "tests/test_bounded_evidence_latency.py",
+      "tests/test_portfolio_allocator.py",
+      "tests/test_portfolio_allocator_shadow.py",
+      "tests/test_portfolio_evidence.py",
+      "tests/test_portfolio_common_factor.py",
+      "tests/test_portfolio_common_factor_shadow.py",
+      "tests/test_runtime_portfolio_integration.py",
+      "tests/test_opportunity_context.py",
+      "tests/test_opportunity_live_integration.py",
+      "--basetemp=.pytest-native-group-1"
+    ],
+    "exit": 0
+  },
+  {
+    "group": 2,
+    "command": [
+      "/mnt/luffy-data/luffy/workspaces/runtime-observer-attention-repair-r1/venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_candle_store_transaction_safety.py",
+      "tests/test_candle_cache_reuse.py",
+      "tests/test_derivatives.py",
+      "tests/test_reference_store.py",
+      "tests/test_ref_live.py",
+      "tests/test_ref_sources.py",
+      "tests/test_ref_recorder.py",
+      "tests/test_stage1_data_provenance_pit.py",
+      "tests/test_stage1_entry_authority.py",
+      "tests/test_stage1_pit_engine_gates.py",
+      "tests/test_stage1_pit_blocker_fix.py",
+      "tests/test_journal_evidence_repair.py",
+      "--basetemp=.pytest-native-group-2"
+    ],
+    "exit": 0
+  },
+  {
+    "group": 3,
+    "command": [
+      "/mnt/luffy-data/luffy/workspaces/runtime-observer-attention-repair-r1/venv/bin/python",
+      "-m",
+      "pytest",
+      "-q",
+      "tests/test_exits.py",
+      "tests/test_protective_stops.py",
+      "tests/test_protection_snapshot.py",
+      "tests/test_native_exit_provenance.py",
+      "tests/test_exchange_exit_is_size_aware.py",
+      "tests/test_exit_books_the_fill.py",
+      "tests/test_spec_exits_are_honoured.py",
+      "tests/test_attention_telemetry.py",
+      "tests/test_attention_kernel_wiring.py",
+      "tests/test_attention_selection_persistence.py",
+      "tests/test_attention_learning.py",
+      "tests/test_stage1_recovery_monitoring.py",
+      "tests/test_historical_outcome_capture.py",
+      "tests/test_observer_attention_repair.py",
+      "--basetemp=.pytest-native-group-3"
+    ],
+    "exit": 0
+  }
+]

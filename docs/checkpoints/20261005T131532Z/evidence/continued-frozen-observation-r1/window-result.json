@@ -1,0 +1,15 @@
+{
+  "start_requested_at": 1791197520.2501402,
+  "finished_at": 1791198460.531196,
+  "duration_s": 940.2810564041138,
+  "cycles": 6,
+  "failure": "active_safety_failure:journal_write",
+  "ongoing_observer": "luffy-frozen-safety-observer.timer",
+  "pids": {
+    "kernel": 803743,
+    "dashboard": 803766,
+    "start_requested_at": 1791197520.2501402,
+    "sha": "b880e52cf319451307261ee7728d1f0bfd7014c4"
+  },
+  "containment": "SIGTERM sent; control remains FROZEN, no restart/recovery"
+}

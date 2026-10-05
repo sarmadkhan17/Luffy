@@ -1,0 +1,56 @@
+[
+  {
+    "decision_id": "dec_d72a24cda3",
+    "event_key": "decision:dec_d72a24cda3",
+    "measured_ms": 1791197713906,
+    "target_metadata": {
+      "1h": {
+        "revision_id": "b3e1b11e2608a9756ba30620732bafeb83bdffb87ee081cfe4a041d0cb9c7c77",
+        "event_time_ms": 1791166800000,
+        "nonfinite_fields": [
+          "supersedes"
+        ],
+        "nullable_field_semantics": {
+          "supersedes": "no predecessor revision"
+        }
+      },
+      "4h": {
+        "revision_id": "bbbb8395941eb482fdcbe653136fd135d680aa7e832f1664615ee8409f7e3eb8",
+        "event_time_ms": 1791177600000,
+        "nonfinite_fields": [
+          "supersedes"
+        ],
+        "nullable_field_semantics": {
+          "supersedes": "no predecessor revision"
+        }
+      }
+    }
+  },
+  {
+    "decision_id": "dec_fc07d32f87",
+    "event_key": "decision:dec_fc07d32f87",
+    "measured_ms": 1791197719648,
+    "target_metadata": {
+      "1h": {
+        "revision_id": "f24a29a6ede5d4ad9efe2736065e9a83c66cb8c009a46046e23e33cc90ff2e4a",
+        "event_time_ms": 1791167100000,
+        "nonfinite_fields": [
+          "supersedes"
+        ],
+        "nullable_field_semantics": {
+          "supersedes": "no predecessor revision"
+        }
+      },
+      "4h": {
+        "revision_id": "5835f59ce61093343e2abaf0d5f853a9d69deafa0badb0ed07498979f1350ae2",
+        "event_time_ms": 1791177900000,
+        "nonfinite_fields": [
+          "supersedes"
+        ],
+        "nullable_field_semantics": {
+          "supersedes": "no predecessor revision"
+        }
+      }
+    }
+  }
+]

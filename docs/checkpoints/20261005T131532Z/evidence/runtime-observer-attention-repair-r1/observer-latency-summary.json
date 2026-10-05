@@ -1,0 +1,39 @@
+{
+  "live": {
+    "window_samples": 10,
+    "process_elapsed_range_s": [
+      1.0440189719956834,
+      2.4868087360082427
+    ],
+    "import_range_s": [
+      0.8950833069975488,
+      2.197303159002331
+    ],
+    "window_cpu_s": 20.796466692,
+    "all_samples": 14,
+    "all_cpu_s": 25.206473845,
+    "write_elapsed_range_s": [
+      0.004039038001792505,
+      0.07129781199910212
+    ],
+    "committed_writes": 10,
+    "sqlite_failures": []
+  },
+  "heartbeat": {
+    "window_samples": 24,
+    "process_elapsed_range_s": [
+      0.9077502220025053,
+      2.1927847850020044
+    ],
+    "import_range_s": [
+      0.8132810269889887,
+      1.922095066998736
+    ],
+    "window_cpu_s": 49.367825855,
+    "all_samples": 36,
+    "all_cpu_s": 62.652393979,
+    "write_elapsed_range_s": null,
+    "committed_writes": 0,
+    "sqlite_failures": []
+  }
+}

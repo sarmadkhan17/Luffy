@@ -1,0 +1,212 @@
+[
+  {
+    "scan_id": "scan_2d2cebf4cd6a43389a4f1daa2dcbbcd7",
+    "seq": 1,
+    "retained_decision": "dec_3b089e8932",
+    "source_sha256": "f48e0107a85b0e7051e7b63c0cabce5813747f22945834ddf5e569024f84045b",
+    "replay_cut_ms": 1791197600818,
+    "original_event_retained": false,
+    "frame_members": 19,
+    "candles": 208,
+    "capture_ms": 891.7317960003857,
+    "transport_failure": "Out of range float values are not JSON compliant: nan",
+    "nonfinite_count": 20,
+    "nonfinite_field_patterns": [
+      "supersedes"
+    ],
+    "example_paths": [
+      ".input.candles[12].source_receipt.supersedes",
+      ".input.candles[25].source_receipt.supersedes",
+      ".input.candles[38].source_receipt.supersedes",
+      ".input.candles[51].source_receipt.supersedes",
+      ".input.candles[64].source_receipt.supersedes",
+      ".input.candles[77].source_receipt.supersedes",
+      ".input.candles[90].source_receipt.supersedes",
+      ".input.candles[103].source_receipt.supersedes",
+      ".input.candles[116].source_receipt.supersedes",
+      ".input.candles[125].source_receipt.supersedes",
+      ".input.candles[126].source_receipt.supersedes",
+      ".input.candles[127].source_receipt.supersedes"
+    ]
+  },
+  {
+    "scan_id": "scan_254501527e8241d79ddc47de74ed9a83",
+    "seq": 2,
+    "retained_decision": "dec_bbc56b9912",
+    "source_sha256": "1a5930378f9fd5d4728979f5cb25f9b834e634899b86ec90c0d6de2f4a5a8ab8",
+    "replay_cut_ms": 1791197790152,
+    "original_event_retained": false,
+    "frame_members": 19,
+    "candles": 208,
+    "capture_ms": 219.61962401110213,
+    "transport_failure": "Out of range float values are not JSON compliant: nan",
+    "nonfinite_count": 20,
+    "nonfinite_field_patterns": [
+      "supersedes"
+    ],
+    "example_paths": [
+      ".input.candles[12].source_receipt.supersedes",
+      ".input.candles[25].source_receipt.supersedes",
+      ".input.candles[38].source_receipt.supersedes",
+      ".input.candles[51].source_receipt.supersedes",
+      ".input.candles[64].source_receipt.supersedes",
+      ".input.candles[77].source_receipt.supersedes",
+      ".input.candles[90].source_receipt.supersedes",
+      ".input.candles[103].source_receipt.supersedes",
+      ".input.candles[116].source_receipt.supersedes",
+      ".input.candles[125].source_receipt.supersedes",
+      ".input.candles[126].source_receipt.supersedes",
+      ".input.candles[127].source_receipt.supersedes"
+    ]
+  },
+  {
+    "scan_id": "scan_31e070f9c7eb419a9d98b208fe554b66",
+    "seq": 3,
+    "retained_decision": "dec_d38947e0b5",
+    "source_sha256": "fdb653c89d41d18a51c5cf03af2cd013fc5a225191e131202d3e928b3c7464ce",
+    "replay_cut_ms": 1791197908711,
+    "original_event_retained": false,
+    "frame_members": 19,
+    "candles": 208,
+    "capture_ms": 210.54770400223788,
+    "transport_failure": "Out of range float values are not JSON compliant: nan",
+    "nonfinite_count": 20,
+    "nonfinite_field_patterns": [
+      "supersedes"
+    ],
+    "example_paths": [
+      ".input.candles[12].source_receipt.supersedes",
+      ".input.candles[25].source_receipt.supersedes",
+      ".input.candles[38].source_receipt.supersedes",
+      ".input.candles[51].source_receipt.supersedes",
+      ".input.candles[64].source_receipt.supersedes",
+      ".input.candles[77].source_receipt.supersedes",
+      ".input.candles[90].source_receipt.supersedes",
+      ".input.candles[103].source_receipt.supersedes",
+      ".input.candles[116].source_receipt.supersedes",
+      ".input.candles[125].source_receipt.supersedes",
+      ".input.candles[126].source_receipt.supersedes",
+      ".input.candles[127].source_receipt.supersedes"
+    ]
+  },
+  {
+    "scan_id": "scan_38e33161374e4d4cb72163ae4ee1a5eb",
+    "seq": 4,
+    "retained_decision": "dec_b93218d5a2",
+    "source_sha256": "ed776eaf65da288781b97e5f33a438b7eeb9cdb2d3c784a7bb9e143100b312b1",
+    "replay_cut_ms": 1791198038688,
+    "original_event_retained": false,
+    "frame_members": 19,
+    "candles": 208,
+    "capture_ms": 195.2831119997427,
+    "transport_failure": "Out of range float values are not JSON compliant: nan",
+    "nonfinite_count": 20,
+    "nonfinite_field_patterns": [
+      "supersedes"
+    ],
+    "example_paths": [
+      ".input.candles[12].source_receipt.supersedes",
+      ".input.candles[25].source_receipt.supersedes",
+      ".input.candles[38].source_receipt.supersedes",
+      ".input.candles[51].source_receipt.supersedes",
+      ".input.candles[64].source_receipt.supersedes",
+      ".input.candles[77].source_receipt.supersedes",
+      ".input.candles[90].source_receipt.supersedes",
+      ".input.candles[103].source_receipt.supersedes",
+      ".input.candles[116].source_receipt.supersedes",
+      ".input.candles[125].source_receipt.supersedes",
+      ".input.candles[126].source_receipt.supersedes",
+      ".input.candles[127].source_receipt.supersedes"
+    ]
+  },
+  {
+    "scan_id": "scan_1522a8ce903547b98f7899a26a6cb584",
+    "seq": 5,
+    "retained_decision": "dec_05a27d2a9d",
+    "source_sha256": "8ad29494d3dd64dd09f53706f9bd97e0db0af8e6784a9868ce1ba574a11f040f",
+    "replay_cut_ms": 1791198164111,
+    "original_event_retained": false,
+    "frame_members": 19,
+    "candles": 208,
+    "capture_ms": 207.18880200001877,
+    "transport_failure": "Out of range float values are not JSON compliant: nan",
+    "nonfinite_count": 20,
+    "nonfinite_field_patterns": [
+      "supersedes"
+    ],
+    "example_paths": [
+      ".input.candles[12].source_receipt.supersedes",
+      ".input.candles[25].source_receipt.supersedes",
+      ".input.candles[38].source_receipt.supersedes",
+      ".input.candles[51].source_receipt.supersedes",
+      ".input.candles[64].source_receipt.supersedes",
+      ".input.candles[77].source_receipt.supersedes",
+      ".input.candles[90].source_receipt.supersedes",
+      ".input.candles[103].source_receipt.supersedes",
+      ".input.candles[116].source_receipt.supersedes",
+      ".input.candles[125].source_receipt.supersedes",
+      ".input.candles[126].source_receipt.supersedes",
+      ".input.candles[127].source_receipt.supersedes"
+    ]
+  },
+  {
+    "scan_id": "scan_4f440bd304bc48e2b793bbfe85dd12dc",
+    "seq": 6,
+    "retained_decision": "dec_f801712f9e",
+    "source_sha256": "af7aa1757d6a3cc157c36a00032f290f3e24a7f1195aa86a9d5aaf8021d6f641",
+    "replay_cut_ms": 1791198292552,
+    "original_event_retained": false,
+    "frame_members": 19,
+    "candles": 208,
+    "capture_ms": 233.2030169927748,
+    "transport_failure": "Out of range float values are not JSON compliant: nan",
+    "nonfinite_count": 20,
+    "nonfinite_field_patterns": [
+      "supersedes"
+    ],
+    "example_paths": [
+      ".input.candles[12].source_receipt.supersedes",
+      ".input.candles[25].source_receipt.supersedes",
+      ".input.candles[38].source_receipt.supersedes",
+      ".input.candles[51].source_receipt.supersedes",
+      ".input.candles[64].source_receipt.supersedes",
+      ".input.candles[77].source_receipt.supersedes",
+      ".input.candles[90].source_receipt.supersedes",
+      ".input.candles[103].source_receipt.supersedes",
+      ".input.candles[116].source_receipt.supersedes",
+      ".input.candles[125].source_receipt.supersedes",
+      ".input.candles[126].source_receipt.supersedes",
+      ".input.candles[127].source_receipt.supersedes"
+    ]
+  },
+  {
+    "scan_id": "scan_fe91914750af4471b350c8f1ec13c834",
+    "seq": 7,
+    "retained_decision": "dec_e56e645db5",
+    "source_sha256": "396856cd6d33ff38fe02b70bf54a9bb9a7ff52425e9a172b5358bf384e1736d9",
+    "replay_cut_ms": 1791198454566,
+    "original_event_retained": false,
+    "frame_members": 19,
+    "candles": 208,
+    "capture_ms": 207.2190319886431,
+    "transport_failure": "Out of range float values are not JSON compliant: nan",
+    "nonfinite_count": 20,
+    "nonfinite_field_patterns": [
+      "supersedes"
+    ],
+    "example_paths": [
+      ".input.candles[12].source_receipt.supersedes",
+      ".input.candles[25].source_receipt.supersedes",
+      ".input.candles[38].source_receipt.supersedes",
+      ".input.candles[51].source_receipt.supersedes",
+      ".input.candles[64].source_receipt.supersedes",
+      ".input.candles[77].source_receipt.supersedes",
+      ".input.candles[90].source_receipt.supersedes",
+      ".input.candles[103].source_receipt.supersedes",
+      ".input.candles[116].source_receipt.supersedes",
+      ".input.candles[125].source_receipt.supersedes",
+      ".input.candles[126].source_receipt.supersedes",
+      ".input.candles[127].source_receipt.supersedes"
+    ]
+  }
+]

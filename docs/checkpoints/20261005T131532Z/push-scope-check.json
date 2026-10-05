@@ -1,0 +1,8 @@
+{
+  "git_hooks": "sample-only; no configured hooksPath",
+  "production_workflows_present": false,
+  "push_scope": "new refs/heads/luffy-checkpoint-* only; main untouched",
+  "host_deployment_policy": "no deployment/service commands authorized or invoked",
+  "github_workflows": [],
+  "github_count": 0
+}

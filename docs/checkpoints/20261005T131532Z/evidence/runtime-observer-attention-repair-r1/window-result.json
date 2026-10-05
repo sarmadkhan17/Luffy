@@ -1,0 +1,19 @@
+{
+  "start_requested_at": 1791203315.4087822,
+  "finished_at": 1791203620.9526696,
+  "duration_s": 305.5438883304596,
+  "cycles": 1,
+  "failure": "cycle_exceeded_240",
+  "ongoing_observer": [
+    "luffy-frozen-safety-observer.timer",
+    "luffy-frozen-heartbeat-observer.timer"
+  ],
+  "pids": {
+    "kernel": 860437,
+    "dashboard": 860460,
+    "start_requested_at": 1791203315.4087822,
+    "sha": "958c9eb2f0b10993ad240b85f88c626b8d0e2ee6",
+    "provider_ledger_sha": "edcceae68033121e27a97b3c5a4de09211cbfa22fed36895d57bf7d1d41a5ee0"
+  },
+  "containment": "SIGTERM sent; control remains FROZEN, no restart/recovery"
+}

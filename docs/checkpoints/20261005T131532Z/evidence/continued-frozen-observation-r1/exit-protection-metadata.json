@@ -1,0 +1,26 @@
+{
+  "supervisor": {
+    "outcome": "DEGRADED",
+    "stage": "DETECT",
+    "control_state_observed": "FROZEN",
+    "safe_to_activate": false,
+    "needs_owner": false,
+    "reasons": [
+      "critical_storage_or_heartbeat_recovery",
+      "heartbeat:luffy:PRODUCER_RESTART_REQUIRES_RECOVERY"
+    ],
+    "updated_at": "2026-10-05T11:07:14.937287+00:00"
+  },
+  "check_names": [],
+  "action_names": [],
+  "venue_observation": {
+    "observed_at_ms": 1791198547563,
+    "received_at_ms": 1791198547563,
+    "request_start_ms": 1791198547290,
+    "environment": "demo",
+    "market_type": "futures",
+    "completeness": "COMPLETE",
+    "snapshot_id": "8640a6eda2cb6c157399ba69d27a205fc709bec1e80809a474e41149a915126e"
+  },
+  "observed_positions": 2
+}

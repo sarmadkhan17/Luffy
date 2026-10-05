@@ -1,0 +1,3660 @@
+{
+  "checkpoint_branch": "luffy-checkpoint-20261005T131532Z",
+  "original_primary_head": "958c9eb2f0b10993ad240b85f88c626b8d0e2ee6",
+  "remote_main_at_start": "958c9eb2f0b10993ad240b85f88c626b8d0e2ee6",
+  "coordination": "No live team sub-agents. Other host Codex sessions were not killed/interrupted; pause requested through user channel; source hashes and HEADs verified.",
+  "status": "CHECKPOINT_ONLY; no independent engineering PASS",
+  "in_progress": [
+    "One-hour FROZEN observation blocked after first 266.7s cycle exceeded existing 240s threshold.",
+    "Original journal-write SQLite cause remains UNCONFIRMED.",
+    "First-cycle cost not fully attributed; capture-budget overruns persist.",
+    "Historical dirty checkout variants UNVERIFIED; no full tests rerun."
+  ],
+  "control_plane_discrepancies": [
+    "Production STATE.yaml still records production_main_head=1bed3958740ec2d0d575aabc817978086d31d390 and reviewed_head=UNCOMMITTED.",
+    "STATE/NEXT retain undeployed/startup-not-performed/first-startup-pending claims predating deployed 958c9eb and attempted observation.",
+    "STATE/NEXT contain historical closure claims and prior BLOCKED entries; preserved unchanged, not independently reconciled.",
+    "Older checkout STATE/NEXT versions differ; captured on own branches verbatim, not merged."
+  ],
+  "test_identity": {
+    "repair_source_commit": "958c9eb2f0b10993ad240b85f88c626b8d0e2ee6",
+    "reported_focused_tests": 906,
+    "qualification": "Retained repair report attributes focused tests to final repair sources. Tests predate this evidence-only checkpoint. No independent PASS or new test run. Older dirty variants remain UNVERIFIED; retained historical tests may predate their final changes."
+  },
+  "additional_checkpoints": [
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-trader-boot-recovery-fix",
+      "sha": "968fd2d41a128eb15924cf4888f9295cac14aa94",
+      "base": "d46d045af38497712ae5fbcfcc9b3bdeb78feee5",
+      "checkout": "/home/sarmad/trader-boot-recovery-fix",
+      "files": [
+        "trader/kernel.py",
+        "docs/superpowers/reports/2026-09-27-kernel-boot-recovery-fix-v1.md",
+        "tests/test_kernel_boot_recovery.py",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-trader-chat-safety",
+      "sha": "9aea9c61bdb36e2304b8a58e4624285650b33b59",
+      "base": "9aea9c61bdb36e2304b8a58e4624285650b33b59",
+      "checkout": "/home/sarmad/trader-chat-safety",
+      "files": [],
+      "new_commit": false
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-trader-collector-rollback",
+      "sha": "610ee31d672fec1600ee5cd2d7f0e85bd9cb1536",
+      "base": "610ee31d672fec1600ee5cd2d7f0e85bd9cb1536",
+      "checkout": "/home/sarmad/trader-collector-rollback",
+      "files": [],
+      "new_commit": false
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-trader-dashboard-integration",
+      "sha": "5dc0b888e753d1c89b8bee541502180cb5639bad",
+      "base": "5dc0b888e753d1c89b8bee541502180cb5639bad",
+      "checkout": "/home/sarmad/trader-dashboard-integration",
+      "files": [],
+      "new_commit": false
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-trader-dashboard-performance",
+      "sha": "4a548db7dbf848c663e4707a410453b2dd70b5c7",
+      "base": "4a548db7dbf848c663e4707a410453b2dd70b5c7",
+      "checkout": "/home/sarmad/trader-dashboard-performance",
+      "files": [],
+      "new_commit": false
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-trader-health-prod-candidate",
+      "sha": "b600a4832a65c536f673b81d67d1fd0e9b7da025",
+      "base": "b600a4832a65c536f673b81d67d1fd0e9b7da025",
+      "checkout": "/home/sarmad/trader-health-prod-candidate",
+      "files": [],
+      "new_commit": false
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-trader-owner-frontend",
+      "sha": "fe6cd0dc2225ac6a85d1ebefaf99d706cea9b68e",
+      "base": "3f42acf56108e65a29d57e445879ff6649051618",
+      "checkout": "/home/sarmad/trader-owner-frontend",
+      "files": [
+        "LUFFY-approved-visual-references/README.txt",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-trader-owner-recovery",
+      "sha": "fc394a5e575d043753981aa73ccc777e26635f97",
+      "base": "fc394a5e575d043753981aa73ccc777e26635f97",
+      "checkout": "/home/sarmad/trader-owner-recovery",
+      "files": [],
+      "new_commit": false
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-trader-population-rollback",
+      "sha": "28e03d715d3a0039e9c2994e53669b6ff17fad32",
+      "base": "28e03d715d3a0039e9c2994e53669b6ff17fad32",
+      "checkout": "/home/sarmad/trader-population-rollback",
+      "files": [],
+      "new_commit": false
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-trader-world",
+      "sha": "642b72e03f6252529c62fe3eaa5bb4a2dbc960ab",
+      "base": "1eb00e151113d0add6033ef809ccdf6e30623003",
+      "checkout": "/home/sarmad/trader-world",
+      "files": [
+        "knowledge/00 Company/Company.md",
+        "knowledge/00 Company/Manager.md",
+        "knowledge/00 Company/Theorist.md",
+        "knowledge/MOC.md",
+        "tests/test_cognition_contracts.py",
+        "tests/test_research_evidence_source_binding.py",
+        "tests/test_research_source_registry.py",
+        "tests/test_strategy_decay_research_evidence.py",
+        "tests/test_strategy_decay_research_plan.py",
+        "tests/test_strategy_decay_research_result.py",
+        "tests/test_strategy_health_unreadable_plan.py",
+        "tests/test_strategy_health_unreadable_result.py",
+        "trader/dashboard/server.py",
+        "OWNER-FRONTEND-V1.md",
+        "docs/superpowers/reports/2026-09-27-owner-frontend-baseline.md",
+        "docs/superpowers/reports/owner-frontend-baseline-20260927/api-results.json",
+        "docs/superpowers/reports/owner-frontend-baseline-20260927/api_profile.py",
+        "docs/superpowers/reports/owner-frontend-baseline-20260927/baseline-80ms.json",
+        "docs/superpowers/reports/owner-frontend-baseline-20260927/baseline.json",
+        "docs/superpowers/reports/owner-frontend-baseline-20260927/browser-results.json",
+        "docs/superpowers/reports/owner-frontend-baseline-20260927/browser_profile.py",
+        "docs/superpowers/reports/owner-frontend-baseline-20260927/browser_server.py",
+        "docs/superpowers/reports/owner-frontend-baseline-20260927/fixture_profile.py",
+        "docs/superpowers/reports/owner-frontend-baseline-20260927/manifest.json",
+        "docs/superpowers/reports/owner-frontend-baseline-20260927/sql-results.json",
+        "docs/superpowers/reports/owner-frontend-baseline-20260927/sql_profile.py",
+        "tests/test_dashboard_summary_responsiveness.py",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 2
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-claude-md-refresh",
+      "sha": "9fbaf820a2561129182b218dfd8866de2504e064",
+      "base": "d3b640c473175a127d9eef1b2c9ac95a04b475ba",
+      "checkout": "/home/sarmad/trader/.claude/worktrees/claude-md-refresh",
+      "files": [
+        "knowledge/00 Company/Company.md",
+        "knowledge/00 Company/Manager.md",
+        "knowledge/00 Company/Theorist.md",
+        "knowledge/MOC.md",
+        ".mcp.json",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding",
+      "sha": "055c2a5f97f93e9be9aeae0476fb2612663a4abc",
+      "base": "dc78d233b1e47003b0496d1ee3ed654c721a3773",
+      "checkout": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding",
+      "files": [
+        "frontend/evidence/live-binding/performance-live.json",
+        "frontend/evidence/m1-concurrency.json",
+        "frontend/evidence/m1-routes.json",
+        "frontend/evidence/performance.json",
+        "frontend/evidence/scale-performance.json",
+        "knowledge/00 Company/Company.md",
+        "knowledge/00 Company/Manager.md",
+        "knowledge/00 Company/Theorist.md",
+        "knowledge/MOC.md",
+        "evidence/live-binding/performance-live.json",
+        "evidence/performance.json",
+        "evidence/scale-performance.json",
+        "frontend/evidence/evidence/performance.json",
+        "frontend/evidence/evidence/scale-performance.json",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-owner-interface-gateway",
+      "sha": "24ca9a80af402205c9dfef719d471c19fc41fa8d",
+      "base": "24ca9a80af402205c9dfef719d471c19fc41fa8d",
+      "checkout": "/home/sarmad/trader/.claude/worktrees/owner-interface-gateway",
+      "files": [],
+      "new_commit": false
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-application-r1",
+      "sha": "ad16ecf6bcbd53490056e4be812cc9ac4c358771",
+      "base": "481b8323f040fd8daf960f844815847fcafd2d5f",
+      "checkout": "/mnt/luffy-data/luffy/stage7-learning-application-r1",
+      "files": [
+        "docs/superpowers/evidence/stage7-learning-application-integration-r1/real-shadow.json",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1",
+      "sha": "60cfd0d41a76ae5356feba1d1a11585fff8cc812",
+      "base": "b35a4bcca29d7a0eda0ebcebc25bd9d6067b1cb9",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/capacity-evidence-capture-r1",
+      "files": [
+        "NEXT.yaml",
+        "STATE.yaml",
+        "trader/kernel.py",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-opportunity-context-live-integration-r1",
+      "sha": "c7df74b043b0f1e60361f9bcdc8f0635df9280bd",
+      "base": "6bb99e541e9d9ce583cc4a283f7db685f9235b96",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/opportunity-context-live-integration-r1",
+      "files": [
+        "docs/superpowers/evidence/opportunity-context-live-integration-r1/real-shadow-final/shadow-1790873502257.json",
+        "docs/superpowers/evidence/opportunity-context-live-integration-r1/real-shadow/shadow-1790873294670.json",
+        "docs/superpowers/evidence/opportunity-context-live-integration-r1/restart-replay.json",
+        "docs/superpowers/evidence/stage6-candidate-bridge-r1/real-shadow/shadow-1790874217158.json",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-paper-execution-cost-calibration-r1",
+      "sha": "f2b84248f77377773ff04c97cd0fb4946e95ecec",
+      "base": "be2bf1860b0c66957d7d3af8c32d6a0e2a55d209",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/paper-execution-cost-calibration-r1",
+      "files": [
+        "NEXT.yaml",
+        "STATE.yaml",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-predictive-research-bridge-r1",
+      "sha": "bf6f1d76fb3e8fc615bf7acf975bb1630c8854df",
+      "base": "3bf9f87cf5b41e714a863715d0fa042a899af472",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/predictive-research-bridge-r1",
+      "files": [
+        "docs/superpowers/evidence/predictive-research-bridge-r1/baseline-coverage.txt",
+        "docs/superpowers/evidence/predictive-research-bridge-r1/bridge-tests.txt",
+        "docs/superpowers/evidence/predictive-research-bridge-r1/files-changed.txt",
+        "docs/superpowers/evidence/predictive-research-bridge-r1/real-shadow.json",
+        "docs/superpowers/evidence/predictive-research-bridge-r1/regression-tests.txt",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 2
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-stage5-evidence-activation-r1",
+      "sha": "7e5aedde46b2ae4cdeaa6c97f1b471455a57198f",
+      "base": "7e5aedde46b2ae4cdeaa6c97f1b471455a57198f",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/stage5-evidence-activation-r1",
+      "files": [],
+      "new_commit": false
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-stage6-implementation-closure-r1",
+      "sha": "483e1449e45456299052fb4166f61f530d386fe1",
+      "base": "d256bfb4d6c6b2f7d9d7c950bd6f0c7aff0049f9",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/stage6-implementation-closure-r1",
+      "files": [
+        "docs/superpowers/evidence/stage6-implementation-closure-r1/final-shadow-result.json",
+        "docs/superpowers/evidence/stage6-implementation-closure-r1/final-shadow/book-chain/candidate-chain/shadow-1790878438130.json",
+        "docs/superpowers/evidence/stage6-implementation-closure-r1/final-shadow/book-chain/shadow-1790878438130.json",
+        "docs/superpowers/evidence/stage6-implementation-closure-r1/real-shadow-result.json",
+        "docs/superpowers/evidence/stage6-implementation-closure-r1/real-shadow/book-chain/candidate-chain/shadow-1790878137628.json",
+        "docs/superpowers/evidence/stage6-implementation-closure-r1/real-shadow/book-chain/candidate-chain/shadow-1790878382650.json",
+        "docs/superpowers/evidence/stage6-implementation-closure-r1/real-shadow/book-chain/shadow-1790878382650.json",
+        "docs/superpowers/evidence/stage6-implementation-closure-r1/real-source-status.json",
+        "docs/superpowers/evidence/stage6-implementation-closure-r1/restart-replay.json",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-stage6-runtime-portfolio-integration-r1",
+      "sha": "e6c4c38e3d43af891a9f0380c247c464a361920d",
+      "base": "640a5f20a8f78bf9ac68f1ac26d5c6c0de6977c3",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/stage6-runtime-portfolio-integration-r1",
+      "files": [
+        "docs/superpowers/evidence/stage6-normal-source-integration-r1/real-shadow-summary.json",
+        "docs/superpowers/evidence/stage6-runtime-portfolio-integration-r1/real-shadow/shadow-1790899725305.json",
+        "docs/superpowers/evidence/stage6-runtime-portfolio-integration-r1/real-shadow/shadow-1790899919255.json",
+        "docs/superpowers/evidence/stage6-runtime-portfolio-integration-r1/real-shadow/shadow-1790900101439.json",
+        "docs/superpowers/evidence/stage6-runtime-portfolio-integration-r1/verified-shadow-summary.json",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-stage7-decision-replay-source-integration-r1",
+      "sha": "9efbab7cd6f8e9dc915200a70f3b05d4c98b6131",
+      "base": "1c77fdbbdd141dcf68a6b12bb2c85670ed667f6d",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/stage7-decision-replay-source-integration-r1",
+      "files": [
+        "docs/superpowers/evidence/stage7-decision-replay-source-integration-r1/real-shadow.json",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
+      "sha": "fc30d77a746fbb5771a5587f60246523f67af472",
+      "base": "9d31fbd61ed4c4b8c697248ac32dfd0451b537e4",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/stage7-historical-outcome-capture-r1",
+      "files": [
+        "NEXT.yaml",
+        "STATE.yaml",
+        "tests/test_learning_foundation.py",
+        "tests/test_strategy_health_unreadable_bank.py",
+        "trader/kernel.py",
+        "trader/learning/foundation.py",
+        "docs/superpowers/reports/2026-10-01-stage7-historical-outcome-capture-r1.md",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-stage7-implementation-closure-r1",
+      "sha": "63ab1a3283d3bdb198e36f2a1f9f0195f5dc7978",
+      "base": "9d2a1b895b93c9abaf23ab258e47d8535c916bb0",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/stage7-implementation-closure-r1",
+      "files": [
+        "docs/superpowers/evidence/stage7-implementation-closure-r1/real-shadow.json",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-closed-loop-foundation-r1",
+      "sha": "fb6ca8be5f3f08e6327d90bed69bed832428f90e",
+      "base": "9d31fbd61ed4c4b8c697248ac32dfd0451b537e4",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/stage7-learning-closed-loop-foundation-r1",
+      "files": [
+        "docs/superpowers/evidence/stage7-learning-foundation-r1/final-shadow/replay-verification.json",
+        "docs/superpowers/evidence/stage7-learning-foundation-r1/final-shadow/summary.json",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1",
+      "sha": "8f5c7781c74196bde1d45ca4f984342be35ff6aa",
+      "base": "9d2a1b895b93c9abaf23ab258e47d8535c916bb0",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/stage7-learning-target-authority-framework-r1",
+      "files": [
+        "NEXT.yaml",
+        "STATE.yaml",
+        "tests/test_learning_application.py",
+        "tests/test_strategy_factory_handoff.py",
+        "trader/learning/application.py",
+        "trader/learning/foundation.py",
+        "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/acceptance.json",
+        "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/authority-receipt-final-tests.txt",
+        "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/factory-boundary-followup.txt",
+        "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/files-changed.txt",
+        "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/inherited-regression.txt",
+        "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/target-final-tests.txt",
+        "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/tests.txt",
+        "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/validation-summary.txt",
+        "docs/superpowers/reports/2026-10-02-stage7-learning-target-authority-framework-r1.md",
+        "tests/test_learning_target_authority.py",
+        "trader/learning/authority.py",
+        "trader/learning/dispatch.py",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 2
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-stage7-normal-learning-loop-closure-r1",
+      "sha": "9d22ae837a3848d08deb791a212cf3492d1fcf56",
+      "base": "50a4545484798207e4b126a0b7a0547ea9b0ec79",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/stage7-normal-learning-loop-closure-r1",
+      "files": [
+        "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/files-changed.txt",
+        "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/full-suite-failures-base-3bf9f87.txt",
+        "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/full-suite-failures-this-branch.txt",
+        "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/full-suite-summary.txt",
+        "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/real-shadow.json",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-stage7-real-learning-authority-consumer-integration-r1",
+      "sha": "43e04cb62c87268910eaf56ada0f765d099bb94e",
+      "base": "b56682e936fe9907f023900a0daacf0aad5ac07e",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/stage7-real-learning-authority-consumer-integration-r1",
+      "files": [
+        "docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/real-shadow.json",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-stage7-verified-outcome-producer-integration-r1",
+      "sha": "fff91989e08c9e0d836e339c1d1290d864e46275",
+      "base": "503d93c4c83d134899b8067f567b995f329ea6a1",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/stage7-verified-outcome-producer-integration-r1",
+      "files": [
+        "docs/superpowers/evidence/stage7-verified-outcome-producer-integration-r1/implementation-files.json",
+        "docs/superpowers/evidence/stage7-verified-outcome-producer-integration-r1/real-shadow.json",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    },
+    {
+      "branch": "luffy-checkpoint-20261005T131532Z-strategy-capacity-r1",
+      "sha": "dc0e49e0b1a8cb23824c9b7b84336d72a5a6a74d",
+      "base": "6b7f0f7f434fbe6b7c227595a43d4a325dc849e6",
+      "checkout": "/mnt/luffy-data/luffy/workspaces/strategy-capacity-r1",
+      "files": [
+        "NEXT.yaml",
+        "STATE.yaml",
+        "knowledge/00 Company/Manager.md",
+        "knowledge/00 Company/Theorist.md",
+        "knowledge/MOC.md",
+        "docs/checkpoints/20261005T131532Z/checkout.json"
+      ],
+      "new_commit": true,
+      "whitespace_check_exit": 0
+    }
+  ],
+  "evidence": [
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/final-report.md",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/final-report.md",
+      "sha256": "b960d875f0b5fa838256441dc563eecdcb10f0f22c40bd4317004bfc61f5edea",
+      "bytes": 11439
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/final-report.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/final-report.json",
+      "sha256": "d4e17a5c08da3f7042015bc4e99e81d97fbbe56c3430f53a039492a53eb5dbea",
+      "bytes": 13061
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/measured-summary.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/measured-summary.json",
+      "sha256": "8d1f8c7e29be0b4ca082e969962496e9ae588b763316c5033da978d0c96ad09c",
+      "bytes": 5309
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/native-regressions.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/native-regressions.json",
+      "sha256": "98649e18b9fe0cd9ed2eb6b3e9466ebc6d6f0bd8d755a912ec0d087d56c76242",
+      "bytes": 2336
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/native-regressions-1.txt",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/native-regressions-1.txt",
+      "sha256": "0e9d9281682a8dd53bedb32f7fdfeb5e1dcd70a558b35647881c2d9e4d9eaf0d",
+      "bytes": 272
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/native-regressions-2.txt",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/native-regressions-2.txt",
+      "sha256": "f0f5401d26c2ed4f9ee4bcba89e385bc80ec274a9db53517d7ce3c4799d39a34",
+      "bytes": 352
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/native-regressions-3.txt",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/native-regressions-3.txt",
+      "sha256": "826b1b889afb66ebbcc41495366cd4632d43f19b5eb838394fce9b416dd6fde5",
+      "bytes": 592
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/observer-latency-summary.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/observer-latency-summary.json",
+      "sha256": "011e5b19ebd709cd759339d1b1377f2228ea555dff3c10e05d984ef43e672611",
+      "bytes": 847
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/storage-growth-summary.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/storage-growth-summary.json",
+      "sha256": "97c3511dbf4ad4faadb99c9d3b62a377613d11553cc03f3acd2325896215f98b",
+      "bytes": 2814
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/storage-failure-reproductions.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/storage-failure-reproductions.json",
+      "sha256": "eb7eaf9f2892dc58f3830eef1005e06aaec46a5f33a85e74428c04b74ee420cb",
+      "bytes": 5574
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/attention-original-reproductions.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/attention-original-reproductions.json",
+      "sha256": "5b4ca228da557d4e1ebf445b89e43bad11215d5a6bac44cc8d7d63fcc22f8f1c",
+      "bytes": 8524
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/attention-fixed-reproductions.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/attention-fixed-reproductions.json",
+      "sha256": "72036f93662ed32cca696d583006e68a8e2a96e7c6d5afde1c66d740d834525b",
+      "bytes": 5381
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/forward-fixed-reproductions.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/forward-fixed-reproductions.json",
+      "sha256": "10273c012bade6aacbb8ce7743295c63e2a4ad64d61d191c26c54a5decf5950b",
+      "bytes": 945
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/nan-target-reproduction.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/nan-target-reproduction.json",
+      "sha256": "dbc23d3c8c405e769ef9346819d096b31412ef42f8b38029c73561178d6e86c3",
+      "bytes": 1574
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/final-source-reader-proof.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/final-source-reader-proof.json",
+      "sha256": "f36a5331032ead770fe926653467c0e5d7b7267c3cf337a91650193a6b84deaf",
+      "bytes": 247
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/final-verification.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/final-verification.json",
+      "sha256": "717fc3886209b2aa0196d9605a1b0b89d62e4b7285647ac8f5c701b6d501192e",
+      "bytes": 491
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/preflight-integrity.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/preflight-integrity.json",
+      "sha256": "852ef0a11eff38a27541e13db5481df1d27a18ce5981720f60a19f20357168c5",
+      "bytes": 211
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/window-result.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/window-result.json",
+      "sha256": "f58f99274e21a542f2c29390ae81879fb39f3d120270adaa2a584be26b5c26f0",
+      "bytes": 620
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/observer_tick.py",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/observer_tick.py",
+      "sha256": "368f9aeee9798ac4c4ac1137b9cd798ef733a035a12727ef26298cab61782f75",
+      "bytes": 1795
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/storage_faults.py",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/storage_faults.py",
+      "sha256": "0800ec9ea462cbeef21f21a6d536189a966ce1f5a35b3d3e9cc5dfe90224af1b",
+      "bytes": 2857
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/io_fault.c",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/io_fault.c",
+      "sha256": "84e8bcbc3efeba5d84941e9ea62f48a2cc7205aa15a90064fd419cf7ff89175d",
+      "bytes": 718
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/reproduce_attention_fixed.py",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/reproduce_attention_fixed.py",
+      "sha256": "23362f0e49203e891ba76a226f08d87d85096bbcaa2252ff94aa0fc63a2aff11",
+      "bytes": 4703
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/reproduce_forward_fixed.py",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/reproduce_forward_fixed.py",
+      "sha256": "d46954747d840895bae39d0a3c3e635ec2756e6b63bb8304cfd82a7b041f6729",
+      "bytes": 3036
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/collect_window.py",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/collect_window.py",
+      "sha256": "11f91eb0d390d21a4893cc8d87b699000fc8214cec9efc7600ff0c999fedf7f6",
+      "bytes": 6199
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/run_native_regressions.py",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/run_native_regressions.py",
+      "sha256": "70c9a8f933dc8b039d891b4f22de0be522a73e91d164b73499af35b944b254fe",
+      "bytes": 1457
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-bounded-evidence-latency-r1/evidence/final-report.md",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-bounded-evidence-latency-r1/final-report.md",
+      "sha256": "677df1acb08a87ea28b6555f083c9766f445ffe11ae00c0d9d56f47c9196fb49",
+      "bytes": 10659
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-bounded-evidence-latency-r1/evidence/final-report.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-bounded-evidence-latency-r1/final-report.json",
+      "sha256": "a56a5d43d4e418f370b735edd938556c54a4e941aa7c14a973c0b0f71b2e3697",
+      "bytes": 42936
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-bounded-evidence-latency-r1/evidence/native-regressions.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-bounded-evidence-latency-r1/native-regressions.json",
+      "sha256": "83226b0760181dd86f06b99079a1a361b5e22fa95accd06eb486b59ab1250dbc",
+      "bytes": 2234
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-bounded-evidence-latency-r1/evidence/native-regressions-1.txt",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-bounded-evidence-latency-r1/native-regressions-1.txt",
+      "sha256": "e10ad304fe994aba449091e9afca570c6805af4fb243f99b2d8d0bb53ad540c3",
+      "bytes": 272
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-bounded-evidence-latency-r1/evidence/native-regressions-2.txt",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-bounded-evidence-latency-r1/native-regressions-2.txt",
+      "sha256": "f13e80cf5c8ca55904e8b79e7482c3a8c22cd22ac9f11c7f005d5fce12b29891",
+      "bytes": 351
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-bounded-evidence-latency-r1/evidence/native-regressions-3.txt",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-bounded-evidence-latency-r1/native-regressions-3.txt",
+      "sha256": "b700a0c759a83503b2b10f45e9acae7acb889113f187fc37f88e4dce1349035a",
+      "bytes": 581
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-bounded-evidence-latency-r1/evidence/retained-source-reproduction.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-bounded-evidence-latency-r1/retained-source-reproduction.json",
+      "sha256": "47bd844e881a4c57db36dbdc79c15e210a70fd4a2fb301d0349d7b10a366596a",
+      "bytes": 477
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-bounded-evidence-latency-r1/evidence/retained-source-final.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-bounded-evidence-latency-r1/retained-source-final.json",
+      "sha256": "96c9a50b424b5a8683135105c07ac6ff888ee8ba3522c67ec51364d644e37f46",
+      "bytes": 130
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-bounded-evidence-latency-r1/evidence/installed-consumer-final-proof.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-bounded-evidence-latency-r1/installed-consumer-final-proof.json",
+      "sha256": "f57c4c8e1bf0ec536f1ede713fc793b510fc029be70ab279876701521613d9ed",
+      "bytes": 3623
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/runtime-bounded-evidence-latency-r1/evidence/disabled-provider-final.txt",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/runtime-bounded-evidence-latency-r1/disabled-provider-final.txt",
+      "sha256": "e9a69317298d851702d8aa064a4f981910770b5be9c9ca4bf62678343f1057df",
+      "bytes": 100
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/continued-frozen-observation-r1/evidence/final-report.md",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/continued-frozen-observation-r1/final-report.md",
+      "sha256": "631e4b0e7bc1b0da13f7df05a4cf433c7aa27a739b72c129b5982043c60ce887",
+      "bytes": 7166
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/continued-frozen-observation-r1/evidence/final-report.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/continued-frozen-observation-r1/final-report.json",
+      "sha256": "ec2b989e191f8f86c0d371844352b9b55b71948fe2c737c3b21fb964a8d55101",
+      "bytes": 26646
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/continued-frozen-observation-r1/evidence/window-result.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/continued-frozen-observation-r1/window-result.json",
+      "sha256": "c0141eb1f78ad157c55a33bec040a577a0a6f96dd2372de83652b1065e51ec98",
+      "bytes": 486
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/continued-frozen-observation-r1/evidence/session-safety-incidents.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/continued-frozen-observation-r1/session-safety-incidents.json",
+      "sha256": "1f0de1eeb7b3d2063cfdfcf574212b519ae7bef424d139769240d61d4734795b",
+      "bytes": 196
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/continued-frozen-observation-r1/evidence/exit-protection-metadata.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/evidence/continued-frozen-observation-r1/exit-protection-metadata.json",
+      "sha256": "2b61543d4ab63aa9d87a78f54bae254b344351d60befaafd7e0bd6e726d9a378",
+      "bytes": 744
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/current-work-remote-checkpoint-r1/runtime-readonly.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/runtime-readonly.json",
+      "sha256": "f9e1c09737ac55f64a21d26e9146afd48894bc3181e5ea2df16dc4f483577f2e",
+      "bytes": 4634
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/current-work-remote-checkpoint-r1/push-scope-check.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/push-scope-check.json",
+      "sha256": "473b0d98004f504976ee8c64725754b714c7cea353b190aa3d685ea75f0b51b6",
+      "bytes": 303
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/current-work-remote-checkpoint-r1/candidate-secret-scan.json",
+      "captured_path": "docs/checkpoints/20261005T131532Z/candidate-secret-scan.json",
+      "sha256": "205d11e3742078ece66c56338a6b3d420e15dbaed0da37ee6d27263a4b6df862",
+      "bytes": 137
+    },
+    {
+      "source": "/mnt/luffy-recovery/recovery/current-work-remote-checkpoint-r1/capture_checkpoint.py",
+      "captured_path": "docs/checkpoints/20261005T131532Z/capture_checkpoint.py",
+      "sha256": "d45b64b82109c4d26e1a258c67cbd41aa1a43fcf9574c443889408eb8836db31",
+      "bytes": 12621
+    }
+  ],
+  "worktrees": [
+    {
+      "path": "/mnt/luffy-data/luffy/production",
+      "original_head": "958c9eb2f0b10993ad240b85f88c626b8d0e2ee6",
+      "original_branch": "refs/heads/main",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 464
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json"
+      ]
+    },
+    {
+      "path": "/home/sarmad/trader-boot-recovery-fix",
+      "original_head": "d46d045af38497712ae5fbcfcc9b3bdeb78feee5",
+      "original_branch": "refs/heads/kernel-boot-recovery-fix-v1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": " M",
+          "file": "trader/kernel.py",
+          "bytes": 81015,
+          "sha256": "77b2acbacf2d2d1cc01ed1e47d504f5347f1318d3a2d1bb93e2dd13b2adb4556",
+          "blob": "dfe53a072bc75d6d299eb631764f6c96995775f9",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-boot-recovery-fix"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/2026-09-27-kernel-boot-recovery-fix-v1.md",
+          "bytes": 10845,
+          "sha256": "c4bd8d77ad69afd3db7a952d7911b0c33aa650bfdf3e0c64e970f98876205f04",
+          "blob": "c1146649495dafc919872efe9e1c90a478e6cc89",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-boot-recovery-fix"
+        },
+        {
+          "status": "??",
+          "file": "tests/test_kernel_boot_recovery.py",
+          "bytes": 17731,
+          "sha256": "0ae8c640d42700af9038a5f73830e69a46b1132c3214f06cb3903bb9888d3afd",
+          "blob": "eebdf17454f4aa9e3528446d9d5678822a04830a",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-boot-recovery-fix"
+        }
+      ],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/home/sarmad/trader-chat-safety",
+      "original_head": "9aea9c61bdb36e2304b8a58e4624285650b33b59",
+      "original_branch": "refs/heads/chat-control-separation-v1",
+      "exists": true,
+      "head_already_remote": false,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/home/sarmad/trader-collector-recovery",
+      "original_head": "e344a65675acbf86061b793417046603db795eaf",
+      "original_branch": "refs/heads/fix/collector-recovery-20260918",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/home/sarmad/trader-collector-rollback",
+      "original_head": "610ee31d672fec1600ee5cd2d7f0e85bd9cb1536",
+      "original_branch": "refs/heads/rollback/collector-recovery-20260918",
+      "exists": true,
+      "head_already_remote": false,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/home/sarmad/trader-dashboard-integration",
+      "original_head": "5dc0b888e753d1c89b8bee541502180cb5639bad",
+      "original_branch": "refs/heads/dashboard-integration-v1",
+      "exists": true,
+      "head_already_remote": false,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/home/sarmad/trader-dashboard-performance",
+      "original_head": "4a548db7dbf848c663e4707a410453b2dd70b5c7",
+      "original_branch": "refs/heads/dashboard-performance-v1",
+      "exists": true,
+      "head_already_remote": false,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 1,
+        "accidental terminal-output artifact, not source": 1
+      },
+      "excluded_examples": [
+        "graphify-out/cache/last_query_stamp",
+        "t \"$(git diff --cached --name-only | wc -l)\" -eq 37 &&"
+      ]
+    },
+    {
+      "path": "/home/sarmad/trader-health-prod-candidate",
+      "original_head": "b600a4832a65c536f673b81d67d1fd0e9b7da025",
+      "original_branch": "refs/heads/health-observation-prod-candidate",
+      "exists": true,
+      "head_already_remote": false,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/home/sarmad/trader-owner-frontend",
+      "original_head": "3f42acf56108e65a29d57e445879ff6649051618",
+      "original_branch": "refs/heads/owner-frontend-v1",
+      "exists": true,
+      "head_already_remote": false,
+      "staged": [],
+      "changes": [
+        {
+          "status": "??",
+          "file": "LUFFY-approved-visual-references/README.txt",
+          "bytes": 1418,
+          "sha256": "fc40baef8aa378d9c8715f9ab4964c5bdc11d0dee99c972cb6c09ecadabb6a4c",
+          "blob": "01ffe94f3465c7c7908acfd7f05076de456d5eff",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-owner-frontend"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 7
+      },
+      "excluded_examples": [
+        "LUFFY-approved-visual-references.zip",
+        "LUFFY-approved-visual-references/01-luffy-approved-reference.png",
+        "LUFFY-approved-visual-references/02-knowledge-approved-reference.png",
+        "LUFFY-approved-visual-references/03-live-system-approved-reference.png",
+        "frontend/mid-1440.png"
+      ]
+    },
+    {
+      "path": "/home/sarmad/trader-owner-recovery",
+      "original_head": "fc394a5e575d043753981aa73ccc777e26635f97",
+      "original_branch": "refs/heads/owner-recovery-recheck-v1",
+      "exists": true,
+      "head_already_remote": false,
+      "staged": [],
+      "changes": [
+        {
+          "status": "??",
+          "file": "ACTIVE",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "FROZEN",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "RECOVERY",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "classification": "ALREADY_REMOTE"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 1
+      },
+      "excluded_examples": [
+        "graphify-out/cache/last_query_stamp"
+      ]
+    },
+    {
+      "path": "/home/sarmad/trader-population",
+      "original_head": "51101d0778d3cfc2993b62e24ff219db9dde9f35",
+      "original_branch": "refs/heads/fix/declared-population-20260918",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/home/sarmad/trader-population-rollback",
+      "original_head": "28e03d715d3a0039e9c2994e53669b6ff17fad32",
+      "original_branch": "refs/heads/rollback/declared-population-20260918",
+      "exists": true,
+      "head_already_remote": false,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/home/sarmad/trader-population-window",
+      "original_head": "234e9b2030b1321ca446258f50085012964707c3",
+      "original_branch": "refs/heads/fix/population-window-rollforward-20260918",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/home/sarmad/trader-recovery",
+      "original_head": "5d586f4ccdd58e4502b208ed1dfb9c1290af0317",
+      "original_branch": "refs/heads/recovery-state-plumbing",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/home/sarmad/trader-world",
+      "original_head": "1eb00e151113d0add6033ef809ccdf6e30623003",
+      "original_branch": "refs/heads/world-model-foundation",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": " M",
+          "file": "knowledge/00 Company/Company.md",
+          "bytes": 1591,
+          "sha256": "6e3aac33a350cec92d7d50b1bf099c240cb8d17b18fe130f75dd91cf60e6b7e6",
+          "blob": "301f59d67bf7943f1cc0e007eee8c552688babac",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": " M",
+          "file": "knowledge/00 Company/Manager.md",
+          "bytes": 280,
+          "sha256": "f940cf56db71c636ff03932edcce19dab1ba0640976981b40b1865e7a355b2b0",
+          "blob": "eb9f594c72c53ff7d2ec3c0c12dc34e57dd87bd4",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": " M",
+          "file": "knowledge/00 Company/Theorist.md",
+          "bytes": 316,
+          "sha256": "4d4ed3cef304347e9551f098f27accda39143dbbcbefab52ee9068ac1ec74cbf",
+          "blob": "f6beb0f6500428cb2fbefe8a9b24ed2557d1ef18",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": " M",
+          "file": "knowledge/MOC.md",
+          "bytes": 1559,
+          "sha256": "1628963857bdcb603c1a70a094e23814ba8a0d15883b817c67d56188c4b8032f",
+          "blob": "2c505ccff128bd9c704f9ce3ae30f5abc5d2dee2",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_cognition_contracts.py",
+          "bytes": 9445,
+          "sha256": "6dbd9d166ef1936997d5428b54b0215d39558c5ca79d86df8de1e8e0b8dde5dd",
+          "blob": "23ccb888e624afecc2d11565426396c92b4f4faa",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_research_evidence_source_binding.py",
+          "bytes": 18850,
+          "sha256": "5977b61dba04626ee8626f85bfae0d0a00eeacdc8fb9101aa24fbe7fd29aec26",
+          "blob": "74179586b257dc73b7db626ea964ce231a74496e",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_research_source_registry.py",
+          "bytes": 21713,
+          "sha256": "93efc3d18f1fb34e45f5e17b07b4cedefd2dbde8ada2277b7b72d3764bf57911",
+          "blob": "a8ecb61e14f2d53ccf043a200d95681534b0eebf",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_strategy_decay_research_evidence.py",
+          "bytes": 36672,
+          "sha256": "b58a7048ae8ab7d4291dd1e77f913e2a7e75de8947f529b97c77345024940c23",
+          "blob": "9e76eac71a3187fb7a18a34048288a46b59f0799",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_strategy_decay_research_plan.py",
+          "bytes": 31190,
+          "sha256": "1df679075b6e546e33953a5001908b2f13ff37887adf998d4c348572d0bc4e79",
+          "blob": "445609bf9a6ac97814bfcd8dd68863b15aec6bc1",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_strategy_decay_research_result.py",
+          "bytes": 22118,
+          "sha256": "d52237fe0573f9505deb91ae76a0deece6119a39c3beb2b9fceb828c886813bc",
+          "blob": "e35d55ea614cf63dd4fd8efa924382e4c87d889a",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_strategy_health_unreadable_plan.py",
+          "bytes": 22417,
+          "sha256": "007bdf3616642b5657c696c67b7f91939736d3678fe496fa000834306ef63b0c",
+          "blob": "ace6e6ec396dfe26e00332dd708a0006f5968bd7",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_strategy_health_unreadable_result.py",
+          "bytes": 23338,
+          "sha256": "bdd460bc3c9381331cf12d6bd3639d862b004a16763e32d4a4fb93560b843887",
+          "blob": "fe773f49a13157f03f4914f8d83077329f19913f",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": " M",
+          "file": "trader/dashboard/server.py",
+          "bytes": 40821,
+          "sha256": "29530c49853ea83b6e21aac4e7715ec9b9b39f7e29595555b0401fd6811dc3b4",
+          "blob": "15a1b508cf8b8b19f7c5806b4fd39df5f969b49e",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "OWNER-FRONTEND-V1.md",
+          "bytes": 13757,
+          "sha256": "cd4d4ac685080792d53d5cda6fb757e093213394f3f88afb695b1f5344a2b7ac",
+          "blob": "8013acec2940fa6e9692ab35813399a32a35beea",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "Offline",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "bounded-work",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "can",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "content.",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/2026-09-27-owner-frontend-baseline.md",
+          "bytes": 12724,
+          "sha256": "ce561cf9dbb9e4e7fec80671f118dc0fa99356a549d46f38ccf897da35ea29be",
+          "blob": "843b9be7052d2702e804164663fa40c39ada9b90",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/owner-frontend-baseline-20260927/api-results.json",
+          "bytes": 16244,
+          "sha256": "186680414a572f1fd7bf70006bc2d832355babb05b4071ff89cb9bd870f30218",
+          "blob": "6f56e9d95e64e9f66054ebf28f9c32b8d24f675d",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/owner-frontend-baseline-20260927/api_profile.py",
+          "bytes": 3460,
+          "sha256": "6713a93ce5cb09aef55dbbac2d56994e29815abc243a5bdbee2b81cecf1cb24a",
+          "blob": "e3878f2186a953e3ddf1f6fcae34f31648c09cc5",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/owner-frontend-baseline-20260927/baseline-80ms.json",
+          "bytes": 10833,
+          "sha256": "4326084087c0cf3e1cc79f027b837c30b389a288397b52450aa22fc6e3837cb3",
+          "blob": "fd21a11eb4bf98685edb7f3565dfe31abc69cf9b",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/owner-frontend-baseline-20260927/baseline.json",
+          "bytes": 2608,
+          "sha256": "c06651277872092ea3dec63389fb92df3b0164129ecb18542e87de3baa2bbb53",
+          "blob": "fdd49576025f15c23d235471ca34ebc7b3a53ec1",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/owner-frontend-baseline-20260927/browser-results.json",
+          "bytes": 103086,
+          "sha256": "d67cfe51a80fd1b98f95ca30ccffceac615b724c52ab68c0202ca5603a6e0398",
+          "blob": "fb6687166d661064c9eb0a8eab5fab515b8880f4",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/owner-frontend-baseline-20260927/browser_profile.py",
+          "bytes": 6741,
+          "sha256": "f70dd3fc3580c444f1648d4efcda569aef6a84e27eaab0c7b5224b94bd7c4add",
+          "blob": "2e8d1566867b131f6e4f6b4c755292d412ea188e",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/owner-frontend-baseline-20260927/browser_server.py",
+          "bytes": 4836,
+          "sha256": "b2aefec0d9bc0d88c2d768683c249038e6613f85fb799494d1aa20082b9077ce",
+          "blob": "ed058d8ea06590d1aac73607bf7976ffbc7ec1dd",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/owner-frontend-baseline-20260927/fixture_profile.py",
+          "bytes": 4949,
+          "sha256": "4f5009beb4b76e7cbc84d196ff0ed04e97a0bcabac6ab629e337de7d2ffafb03",
+          "blob": "353ab0e9ef38c8cc3c0747e83aaa96fd6298eece",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/owner-frontend-baseline-20260927/manifest.json",
+          "bytes": 1701,
+          "sha256": "dacf1d9919e217162dfd763d22a6c4804daee5cb6a494d1749fd00dc81ddceef",
+          "blob": "7a7175237e55234f7866f21026d9adc8b3f01171",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/owner-frontend-baseline-20260927/sql-results.json",
+          "bytes": 4263,
+          "sha256": "e5f1785353fb737e8d091e923da6d27a77a7f64f98263c9e0e5728baa59656a2",
+          "blob": "44a45f0027020a0ac9df1ccf0e76f719d3fbd285",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/owner-frontend-baseline-20260927/sql_profile.py",
+          "bytes": 1764,
+          "sha256": "334e790b1907790189e11b56654f646fbb824ba7327b8a065de8a0ec01995729",
+          "blob": "2581af1ec5e99d6b7b428ca85e5534cd928570f0",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "or",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "provenance.",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "remains",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "requires",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "retained",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "revalidation",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "tests/test_dashboard_summary_responsiveness.py",
+          "bytes": 1471,
+          "sha256": "5f49008cb2c65ef3db4ec554f0314d92d6d0d40f64ebb10babbf74d4eed26aab",
+          "blob": "853978911552e852cd9e679ab7841626113cc164",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-trader-world"
+        },
+        {
+          "status": "??",
+          "file": "validity",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+          "classification": "ALREADY_REMOTE"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 123,
+        "unsanitized raw log; bounded sanitized results captured instead": 2
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json"
+      ]
+    },
+    {
+      "path": "/home/sarmad/trader/.claude/worktrees/candle-txn-safety",
+      "original_head": "97ccebd399551956e6df1294da23940867d79bd4",
+      "original_branch": "refs/heads/candle-txn-safety-v1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 65
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json"
+      ]
+    },
+    {
+      "path": "/home/sarmad/trader/.claude/worktrees/claude-md-refresh",
+      "original_head": "d3b640c473175a127d9eef1b2c9ac95a04b475ba",
+      "original_branch": "refs/heads/docs/claude-md-refresh",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": " M",
+          "file": "knowledge/00 Company/Company.md",
+          "bytes": 1591,
+          "sha256": "08e41048d40d5fb94a9b2803d8ecade7881bc11b8349251b0b24ee2c502d389d",
+          "blob": "7334accde7780758211f206c286ae7c1400cf25a",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-claude-md-refresh"
+        },
+        {
+          "status": " M",
+          "file": "knowledge/00 Company/Manager.md",
+          "bytes": 433,
+          "sha256": "e4eebf6c67121bf0160f645c268e7d94eb6dbcb61f2979746b8f17416d09c3bd",
+          "blob": "df9e7f10e55f3a7607b31a3ce9852c1bef443c5c",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-claude-md-refresh"
+        },
+        {
+          "status": " M",
+          "file": "knowledge/00 Company/Theorist.md",
+          "bytes": 1663,
+          "sha256": "fba2d5c9d52634d740811c4e7a77c9074cc894b31ad7d5d217ad824b1c831fc5",
+          "blob": "dd789a91aaef4e2ce58993e38433c3716f6a533b",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-claude-md-refresh"
+        },
+        {
+          "status": " M",
+          "file": "knowledge/MOC.md",
+          "bytes": 1625,
+          "sha256": "dbd5f5d1dbdb28fa8e8d47d1319ece48fbb49a314b2bc26a3b8be6c0bc27ed42",
+          "blob": "38b84dbfa92d74e97ac24ac486be54010ee5f185",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-claude-md-refresh"
+        },
+        {
+          "status": "??",
+          "file": ".mcp.json",
+          "bytes": 298,
+          "sha256": "e7fc95aa72ef5862f9c0ffe444d7dd0568ad27b50cc055e65b264dc5284dcad0",
+          "blob": "4c938544972ddd2b060830aa48d09ca06cb02ce9",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-claude-md-refresh"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 3479,
+        "generated runtime knowledge; not engineering source": 53
+      },
+      "excluded_examples": [
+        ".superpowers/brainstorm/77678-1787971200/state/server.log",
+        ".superpowers/brainstorm/77678-1787971200/state/server.pid",
+        ".superpowers/brainstorm/83657-1787972597/state/server.log",
+        ".superpowers/brainstorm/83657-1787972597/state/server.pid",
+        "data/pine/ana_breakout_retest_16807/fold1.pine"
+      ]
+    },
+    {
+      "path": "/home/sarmad/trader/.claude/worktrees/current-truth-r1",
+      "original_head": "87b9e4ba4bcbc8a9fa4f1ee8472abb7143d43a72",
+      "original_branch": "refs/heads/current-truth-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding",
+      "original_head": "dc78d233b1e47003b0496d1ee3ed654c721a3773",
+      "original_branch": "refs/heads/owner-frontend-live-binding-v1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": " M",
+          "file": "frontend/evidence/live-binding/performance-live.json",
+          "bytes": 1648,
+          "sha256": "f31c52a385226d682af4b2066e018ceaa3570abbd2880883b4f0e4b8ab45db7c",
+          "blob": "605b14b0adbb1874a494b376eb08654d90920794",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding"
+        },
+        {
+          "status": " M",
+          "file": "frontend/evidence/m1-concurrency.json",
+          "bytes": 265,
+          "sha256": "357ea5f314f6822a607d41001d17d066238ea9d388969749bc7546da658ce49f",
+          "blob": "fadf04da0237fa4e80b19d8148149b3f43f8c954",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding"
+        },
+        {
+          "status": " M",
+          "file": "frontend/evidence/m1-routes.json",
+          "bytes": 403,
+          "sha256": "8dba14442afcdfbab2d76ed263c98e76419fefde7a41f8ba8f4f13fc4a019d0c",
+          "blob": "9d021bf049982b21f79a784c576cae0afdb36708",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding"
+        },
+        {
+          "status": " M",
+          "file": "frontend/evidence/performance.json",
+          "bytes": 11670,
+          "sha256": "c6b8d9a98911bb024e6059cbe45883d7172b399b26b44f38be86cac6e19e50b8",
+          "blob": "7c188f7fd0fde07113aac04cb20b6a7529a275cb",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding"
+        },
+        {
+          "status": " M",
+          "file": "frontend/evidence/scale-performance.json",
+          "bytes": 620,
+          "sha256": "41c33fa5d585b6b275459c9e3ca5e0723f07ea43d304fb043fe2e0cff99ed754",
+          "blob": "3e2121952a46199b348ce70855a5466f78d99d34",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding"
+        },
+        {
+          "status": " M",
+          "file": "knowledge/00 Company/Company.md",
+          "bytes": 1591,
+          "sha256": "2aafa77aef631dab9f4c85a2c260f2748ca5b280ea78b592c934a14bd428545a",
+          "blob": "5f9c78a1ea5158d65a456da30ea8645f2b68e2c6",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding"
+        },
+        {
+          "status": " M",
+          "file": "knowledge/00 Company/Manager.md",
+          "bytes": 263,
+          "sha256": "1982e559ff78fcc372c5f27389c25b96a541b948aad17e363a1a47803a611341",
+          "blob": "57627f26c4116f7613121b736221a06eef75285c",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding"
+        },
+        {
+          "status": " M",
+          "file": "knowledge/00 Company/Theorist.md",
+          "bytes": 316,
+          "sha256": "4d4ed3cef304347e9551f098f27accda39143dbbcbefab52ee9068ac1ec74cbf",
+          "blob": "f6beb0f6500428cb2fbefe8a9b24ed2557d1ef18",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding"
+        },
+        {
+          "status": " M",
+          "file": "knowledge/MOC.md",
+          "bytes": 1542,
+          "sha256": "1f455a9ec430d67594d8e0430c728e1bb12a206d4cfe6650341a54c911f1555c",
+          "blob": "af206579c8752858dc1bcf36b0412eaf960f2cab",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding"
+        },
+        {
+          "status": "??",
+          "file": "evidence/accessibility.json",
+          "bytes": 91,
+          "sha256": "247f841fae413634da671e36db522c7276c7838f869002c0273517e3829cc691",
+          "blob": "f595ab4d05ecbc936c628fc1b2211ac2b4a4df20",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "evidence/live-binding/performance-live.json",
+          "bytes": 1646,
+          "sha256": "b09643c26046d1d1807f24d10a110cdb469ca193ac7c3206a67a89be5edf539f",
+          "blob": "148dee73269a40c66640dbf18cead3053f1c83c6",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding"
+        },
+        {
+          "status": "??",
+          "file": "evidence/performance.json",
+          "bytes": 11733,
+          "sha256": "7fbc7c0b3c9c585e9f7c21c9f611d1bf645940c72fd4a663bbd5f13a5a76c138",
+          "blob": "e7ac30078b181e125fd31b61ec63c3d6ab422ebe",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding"
+        },
+        {
+          "status": "??",
+          "file": "evidence/scale-performance.json",
+          "bytes": 619,
+          "sha256": "4fddfb98deca80b416dea091fc3558593e1ee167a5325d21c42fcd6154689ecc",
+          "blob": "a21cbfc8ef4cf282785a8e48d2141b6bb8fbad78",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding"
+        },
+        {
+          "status": "??",
+          "file": "evidence/topology-regression.json",
+          "bytes": 10669,
+          "sha256": "1380d02ae2c305fb29a1bdbcc277bfbdeafb09f3ac9e37541b41d268088806f5",
+          "blob": "8fb8c850b411a4757e865d34aee801601667379a",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "evidence/v2/accessibility.json",
+          "bytes": 473,
+          "sha256": "b9c298f7a110b9dd42fbe24bc538a4a7a152a831577513c020eb98e3cb24e988",
+          "blob": "152da3c936e4200c5c7e8c76427a374b82475228",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/accessibility.json",
+          "bytes": 91,
+          "sha256": "247f841fae413634da671e36db522c7276c7838f869002c0273517e3829cc691",
+          "blob": "f595ab4d05ecbc936c628fc1b2211ac2b4a4df20",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/baseline-performance.json",
+          "bytes": 10410,
+          "sha256": "70bda42effcdd20ba3430d755ad7d3fd406f1ec3479c87bb057258b32f6fb7f6",
+          "blob": "9b1c994e2939944861d454dd6c5cf1b55210c77e",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/baseline-source-sha256.json",
+          "bytes": 2255,
+          "sha256": "cc7b2fca9e28318df4be7865010bf11945ec97acd5642ecfa0df1c22db828261",
+          "blob": "feba47d2c18b21aae2b4fb4616d0cbb8b500ef76",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/browser-results.json",
+          "bytes": 19181,
+          "sha256": "a31ba94d8fad9bb0e625f67fa20d56d5544db47ea56b6516559bdad2016c1f02",
+          "blob": "37751fc8bb8108d2338401e70327e55cdb86a11d",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/bundle.json",
+          "bytes": 621,
+          "sha256": "b287428c9522a71e2d0aba8eb41b1ff5251875786644aa0b143a91b3fc7f5267",
+          "blob": "eeabd1ef42805d88545f416c4833eb7533fcfc5e",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/capture-check.txt",
+          "bytes": 1894,
+          "sha256": "3ba73562c4b20695f654bd4f958f3c5ee28da27c3e1f09e76e91cfb20ef7e224",
+          "blob": "87402ff99094574cac2c120ebd810c63877a4186",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/changed-files.txt",
+          "bytes": 2433,
+          "sha256": "b0eb7d9ea9ec99e7b7553dfb312a9283d244ade17c74ffb588d0400102c6d753",
+          "blob": "c6937728f2026f461ca4cd7cd2d72b17dea18384",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/dependency-audit.json",
+          "bytes": 365,
+          "sha256": "8a0071035d60d9228690136c8b89c18d2bc988680d89f7112d5551e6aeda773e",
+          "blob": "601d905a6795d84a9df90294d1a437d041da904b",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/live-binding/browser-results-all.json",
+          "bytes": 41409,
+          "sha256": "0544449f09a44289226e9589fafc5478c56b5b6fc0076f4bc8d9e209acce2864",
+          "blob": "6339d99b6de3cd0f167684234b4763da0764e74c",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/live-binding/demo-regression/accessibility.json",
+          "bytes": 91,
+          "sha256": "247f841fae413634da671e36db522c7276c7838f869002c0273517e3829cc691",
+          "blob": "f595ab4d05ecbc936c628fc1b2211ac2b4a4df20",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/live-binding/demo-regression/browser-results.json",
+          "bytes": 3269,
+          "sha256": "58a13d51ef759e3ebd1a59454a6229950964c67b7564ecb0b1cc85a88434f270",
+          "blob": "7ad27dddcfb98924f2ef5e69d68522e008715bec",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/live-binding/demo-regression/performance.json",
+          "bytes": 11577,
+          "sha256": "0da1512de8a0b7429119e8fc8c4742fe48219992bc69738c7aa8a3aeed7c166e",
+          "blob": "b749a4235e35db77e6614bec16380a70086564a4",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/live-binding/demo-regression/scale-performance.json",
+          "bytes": 594,
+          "sha256": "785ec023905146369dbea81f704073a5bb7e65a9b586c99099623e99938a8ee1",
+          "blob": "0a213c74abafe3bdf60819fa5aa0e24a2229347c",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/live-binding/demo-regression/topology-regression.json",
+          "bytes": 10669,
+          "sha256": "1380d02ae2c305fb29a1bdbcc277bfbdeafb09f3ac9e37541b41d268088806f5",
+          "blob": "8fb8c850b411a4757e865d34aee801601667379a",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/live-binding/live-results.json",
+          "bytes": 18651,
+          "sha256": "f0d92dcda74120872aad9961a429744ec11714536e2b03843391d4d928f7640d",
+          "blob": "ccf95850ced16d0cdd023fa53442bb5cd8f97aa6",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/live-binding/perf-results.json",
+          "bytes": 35409,
+          "sha256": "c26c4fc3158a5fefa128255212cd15a2b88e731150628abfa6e8ce070edff547",
+          "blob": "19520415d440eb4fe8007e9ff198b988513043d3",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/live-binding/performance-live.json",
+          "bytes": 1642,
+          "sha256": "254452894635bd7b378836d7dd82f24c39e8247cc5909666e3adc9b13f09afa0",
+          "blob": "6968b9735926dcb26a6c659d5c32fddfb45cb09f",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/live-binding/server-rss.json",
+          "bytes": 489,
+          "sha256": "511ac24cd660c4146bf37245bee36cb44b38510d1ec8bbb4db34e87d64e8ac79",
+          "blob": "088ad171b887f9e6fedb74ae59de5a44445b6fd0",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/performance.json",
+          "bytes": 11590,
+          "sha256": "97a11af179ea4ffe39bdea55f23f2a1b8d2146da9d69e2d104e7d4872a6a75d4",
+          "blob": "db508d7f8883c1fe491e03ed91222d0f041066a1",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/pre-routing-bundle.json",
+          "bytes": 621,
+          "sha256": "9bec543210c12e34137801ae2459515cf881a2626726cc7b4735b3c0cd5e3727",
+          "blob": "658f2afed4bda4c2dbf456a284d140287ac5e045",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/pre-routing-performance.json",
+          "bytes": 11682,
+          "sha256": "6330346bbb169b8aa885a463fb2dd62a90b0767e7a7e51da7872c2c5b878011a",
+          "blob": "14223440da3f50f535c5de004a09303a3fa231bd",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/pre-routing-source-sha256.json",
+          "bytes": 3039,
+          "sha256": "b20796e9877da5806338c245a296266634fb71b41a65b689ef7ac86f2b069e1b",
+          "blob": "aa31819f53cdb0dba0e62f9c42ba2225ae91c42a",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/protection-snapshot-r1/browser-results-full.json",
+          "bytes": 72277,
+          "sha256": "7ea6505215c2a6a83f972fee0e9142f42a6dce40a17ee4f65ac0ffcd4147aa4f",
+          "blob": "5e1a1747015fa0ee5106d296c4b9bdb1ec525b1b",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/protection-snapshot-r1/browser-results-r1.json",
+          "bytes": 7362,
+          "sha256": "46d37cbd1e4e96df6da01b8073969913a40e07b4b336f04ea5def41fb830a000",
+          "blob": "515323e434b2ba3b4e0cc3d61155a8d89612790d",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/protection-snapshot-r1/browser-results.json",
+          "bytes": 36631,
+          "sha256": "6db53bbf965045667312fde372d846841d9b3a664c295b7d3a9c4fa2b9b73d3c",
+          "blob": "2c3e292e6078df145ca6bb92675e110c159f69ae",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/scale-performance.json",
+          "bytes": 589,
+          "sha256": "fb624ec3b5b653ef4aae201cc60f2506064b896769427565d9fde4ab6c50ebfe",
+          "blob": "a309a79b5259927a1815576e0c6391e32b072df1",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/source-sha256.json",
+          "bytes": 3039,
+          "sha256": "69d77abbd77bd3a6860f995854cb527e00e0bbe38ae5239a0fb360990751d274",
+          "blob": "33119f6db1cdf5ad992d9a09d33b33450a6c6553",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/topology-regression.json",
+          "bytes": 10669,
+          "sha256": "1380d02ae2c305fb29a1bdbcc277bfbdeafb09f3ac9e37541b41d268088806f5",
+          "blob": "8fb8c850b411a4757e865d34aee801601667379a",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/unrelated-preservation.json",
+          "bytes": 936,
+          "sha256": "161227e23632966432337d1dc4d76841594003d79d885f02299a85dabc839fbf",
+          "blob": "d47c4cf539cd176a9941538b270d36bb71900eda",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/README.md",
+          "bytes": 2389,
+          "sha256": "85406dcfe84e6738b09156cf235adea2847c2ed38280936f415c6e5df752860d",
+          "blob": "8a099b4e88166438bcfa44d0edd88c4ad2e0d784",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/accessibility.json",
+          "bytes": 473,
+          "sha256": "b9c298f7a110b9dd42fbe24bc538a4a7a152a831577513c020eb98e3cb24e988",
+          "blob": "152da3c936e4200c5c7e8c76427a374b82475228",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/artifact-files.txt",
+          "bytes": 2264,
+          "sha256": "1515f35f30017a05d9151c00f9117bf58fb6a8740538c4194b9656b35c8f1441",
+          "blob": "948de6908cb3ff7e501f2eac7be782776acddbc8",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/backend-tests.txt",
+          "bytes": 99,
+          "sha256": "0b3cf0e5b01f23df5c5cfdaaf85022bbc7b38846208e7b453d13dc736dbb0e50",
+          "blob": "817b7d994f8155a938a4ffdb4137cec068ed8ea9",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/baseline-sha256.json",
+          "bytes": 42142,
+          "sha256": "9b05e66b0d3f1da3f085279a9e62856c08ff8794f966a1ad6d2a9ecdcd3df716",
+          "blob": "39a7d5041ed5e5b15812d252e2f32b9468955d05",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/browser-results.json",
+          "bytes": 66933,
+          "sha256": "8adcdd9d2d62274daf8e20dbffa70dab3b898561b0d3372b063a83daee5b169e",
+          "blob": "7bb673f4b2c633de1a673b144e65768cf3af3443",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/build-audit.json",
+          "bytes": 1289,
+          "sha256": "3f94376aac94c484a4795b9ff91e091fb5a9adaa25a9c46c130c7d264edd4576",
+          "blob": "af0103a54d9a86af5f460cd7e66243c2987a8daf",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/changed-files.txt",
+          "bytes": 939,
+          "sha256": "6ea44cd796246d5b2a9c7fcb167f2e36cafb5b403b06c992cb05118ba631e480",
+          "blob": "1a91bf0946cf9b432e362078ac0e97f1f9a3d8be",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/component-tests.txt",
+          "bytes": 607,
+          "sha256": "9607d6391b51b70a4cd726b44b32e6cf310bcc3eac167ad1250d27024710ff3e",
+          "blob": "c5b07a1c3b452715d2837378456f8cfbc693dabf",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/delta.patch",
+          "bytes": 87805,
+          "sha256": "bf914300a10e65096d64dfeede4cd88739681bc79c77e29124ac3720d68f2b13",
+          "blob": "e380e9e9c2c67a5bdbf27fa697e602452010f272",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/evidence-preservation.json",
+          "bytes": 739,
+          "sha256": "06db26dd6c32687d0b949bfcfd11b1127cfcc4945e1e9aedf45670c1bd8e1af9",
+          "blob": "ebec17b3d0c31a301abfe50d0f762efdc0431756",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/knowledge-cache-performance.json",
+          "bytes": 763,
+          "sha256": "c3786fc67261821ddf5d8052481be3d3ef3c87c0082bb33d964b0f609500d4c3",
+          "blob": "4eac750bfb26cecea9829391fcc741cc67ff25b7",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/performance-before-v2.json",
+          "bytes": 1642,
+          "sha256": "67ee3fd2b775d5de8e73a24a6f795a05793072f090f736afd0eaab4d0f8edeb2",
+          "blob": "ff5cc45df35f451c2eec3e743be10c086477b3b7",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/performance-live.json",
+          "bytes": 1645,
+          "sha256": "6f3919c97939f3019a9da69ffdd1754707cb2951ee63810cb7f51648e14eecc9",
+          "blob": "5b72df9ad23490ee9b2bde869d8966fed56bc9f0",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/prior-suite-output/performance.json",
+          "bytes": 11679,
+          "sha256": "29769372b07ce0e8706e381852be73ee9e49a5d89911d63b490f473d1526c99d",
+          "blob": "febc7e6cdc5d85ee747283e58edc14a7a37230ed",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/prior-suite-output/scale-performance.json",
+          "bytes": 627,
+          "sha256": "03596243d7b12f96b6c65f952c927b5ab334206e052dfbeb961b9e3760611bd9",
+          "blob": "5c72ac875415cbd426abeb48d7ba2edff4063986",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/source-sha256.json",
+          "bytes": 3132,
+          "sha256": "12f0e3887516c881b5820754573d800720d44bd4773cb5f510348cd7c78e2cd7",
+          "blob": "042c98a81d45bf7cc6006b4bcef210124b18abf2",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2.1/typecheck.txt",
+          "bytes": 64,
+          "sha256": "98823253a153bfff542073fa7a51a8c81fb45848961bbfc30cf17617497a190b",
+          "blob": "3a76845eb167c14fb255586ec59d24151180f681",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/README.md",
+          "bytes": 1840,
+          "sha256": "6ec878e1819bef8464adab245c0eb9c25e65ecd4b6ae8697634ae7b486b119de",
+          "blob": "3880203fa7dc9fbf2f272b7a55d82fd3aa9fd239",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/accessibility.json",
+          "bytes": 473,
+          "sha256": "b9c298f7a110b9dd42fbe24bc538a4a7a152a831577513c020eb98e3cb24e988",
+          "blob": "152da3c936e4200c5c7e8c76427a374b82475228",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/baseline-sha256.json",
+          "bytes": 4714,
+          "sha256": "298308180212f34d54d0f2ea53c0509be4993fdf262258e236dfde5190ef1259",
+          "blob": "c5423144c9dc1bf4cb948c2f82a2289372f0c029",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/browser-results-final.json",
+          "bytes": 49002,
+          "sha256": "e9ed7071797a4c0779fb08b738affb529728135de02528dc692d2c8e1d0780d5",
+          "blob": "98edae804cfe654c2c1367c4b183a8e6550dd23f",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/browser-results.json",
+          "bytes": 34903,
+          "sha256": "4794cd50fd0d3b240fd5f3273c8c42e7611944ba859ab697707296f08b7a9fe6",
+          "blob": "6ec78b2d07361153abfbe5c0018d904f7a2bd2ae",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/build-check.json",
+          "bytes": 317,
+          "sha256": "276aad0cd46ff6217e79b3aa230cf0036f664389c61ff1c4b3c713280111cc3d",
+          "blob": "94243195adac7292927d860913d48a4b6fe06618",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/changed-files.txt",
+          "bytes": 2722,
+          "sha256": "f7f4920cabad9a5a5ddebe55ffef4b37af0513cc587c05987ce26c67a35b703b",
+          "blob": "6c9674ad4d0c8db63d71c050c2e9267b23f90b92",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/checks.json",
+          "bytes": 957,
+          "sha256": "077166c39164c3fcfce80d4e3b7794bcdcb5a3aaeed8aa6bfdc5a89d93a2b26a",
+          "blob": "f99c4bb1e203c1e741d1a25a16b8c2093394ea19",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/demo-regression/accessibility.json",
+          "bytes": 91,
+          "sha256": "247f841fae413634da671e36db522c7276c7838f869002c0273517e3829cc691",
+          "blob": "f595ab4d05ecbc936c628fc1b2211ac2b4a4df20",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/demo-regression/performance.json",
+          "bytes": 11432,
+          "sha256": "74b6e7b0751c34075668c7c8dba32d0e314d4191c876194fdbe899fe1eb27070",
+          "blob": "671cf42c6d833cf859031e477181a874af6e2e78",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/demo-regression/scale-performance.json",
+          "bytes": 588,
+          "sha256": "73924a0ff59ee9833bc46dab4f8c12422776d1645050548c5b55bff3f69877d2",
+          "blob": "555330ca6439e67298be3d243ba476b769c4c61b",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/demo-regression/topology-regression.json",
+          "bytes": 10669,
+          "sha256": "1380d02ae2c305fb29a1bdbcc277bfbdeafb09f3ac9e37541b41d268088806f5",
+          "blob": "8fb8c850b411a4757e865d34aee801601667379a",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/final-visual-controls.json",
+          "bytes": 14053,
+          "sha256": "e37c89348d837946d232149bd96fd0faca7ef7baf2482ec75e17e9c9b1fc7508",
+          "blob": "53e7535bf076a9b743f173a78cbc716d3f1cb2f6",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/path-capture.json",
+          "bytes": 3219,
+          "sha256": "7b96cb1ce39cfebb4617a01ccf0a3fa47f1d445829750af964543bfad664aa3e",
+          "blob": "44d4152fc5099837364fa0a6844978fa14c4e39f",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/performance-live.json",
+          "bytes": 1642,
+          "sha256": "67ee3fd2b775d5de8e73a24a6f795a05793072f090f736afd0eaab4d0f8edeb2",
+          "blob": "ff5cc45df35f451c2eec3e743be10c086477b3b7",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/preservation.json",
+          "bytes": 489,
+          "sha256": "56d6fb7aeaaa8e565661db3adc758172ff53516739b929b78cb25354a7b831db",
+          "blob": "9479c0e534c46bb64edceda389ef15887454a8bb",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "frontend/evidence/evidence/v2/source-sha256.json",
+          "bytes": 7519,
+          "sha256": "b0af2e3dd166828cdc03240ee8169e7e61af0d35f587ab414104de6af43ea537",
+          "blob": "6575b79770a338af91fe14a69a3802cc5ad014ce",
+          "classification": "ALREADY_REMOTE"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 296,
+        "accidental terminal-output artifact, not source": 1,
+        "generated test/build temporary artifacts": 1
+      },
+      "excluded_examples": [
+        "frontend/evidence/knowledge.png",
+        "frontend/evidence/live-system-2x.png",
+        "frontend/evidence/live-system.png",
+        "frontend/evidence/luffy.png",
+        "frontend/evidence/mobile-knowledge.png"
+      ]
+    },
+    {
+      "path": "/home/sarmad/trader/.claude/worktrees/owner-frontend-m3",
+      "original_head": "b86d772c016d3d4480adc43b49b5765e9877d83f",
+      "original_branch": "refs/heads/owner-frontend-m3-v1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {
+        "generated test/build temporary artifacts": 1
+      },
+      "excluded_examples": [
+        "frontend/tsconfig.tsbuildinfo"
+      ]
+    },
+    {
+      "path": "/home/sarmad/trader/.claude/worktrees/owner-interface-gateway",
+      "original_head": "24ca9a80af402205c9dfef719d471c19fc41fa8d",
+      "original_branch": "refs/heads/owner-interface-gateway-v1",
+      "exists": true,
+      "head_already_remote": false,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/home/sarmad/trader/.claude/worktrees/owner-interface-tg-binding",
+      "original_head": "7840965d2a9003d2a80cbc2b0f3306e737dd4a7c",
+      "original_branch": "refs/heads/owner-interface-tg-binding",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/cost-evidence-r1",
+      "original_head": "be2bf1860b0c66957d7d3af8c32d6a0e2a55d209",
+      "original_branch": "refs/heads/luffy-versioned-paper-cost-evidence-protocol-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 351
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/stat-index.json",
+        "graphify-out/graph.html"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/stage7-learning-application-r1",
+      "original_head": "481b8323f040fd8daf960f844815847fcafd2d5f",
+      "original_branch": "refs/heads/luffy-stage7-learning-application-integration-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-learning-application-integration-r1/real-shadow.json",
+          "bytes": 561,
+          "sha256": "f8b6a6b71189f88f47dbadad2594b98c83a2d510ac1f2b760436685983bebe95",
+          "blob": "40b879a8cb1005d33437ad80e7aabca054ec32ad",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-application-r1"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 423
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/stat-index.json",
+        "graphify-out/graph.html"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/stage7-r2",
+      "original_head": "f5e5156b8a294cd53db277e8d46cb30645611a61",
+      "original_branch": "refs/heads/luffy-stage7-normal-replay-world-consumer-closure-r2",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 403
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/admitted-exit-semantic-parity-r1",
+      "original_head": "1ab0da0cb9cb3a3c290488d7c75edf09788b6462",
+      "original_branch": "refs/heads/luffy-admitted-exit-semantic-parity-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 341
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/capacity-evidence-capture-r1",
+      "original_head": "b35a4bcca29d7a0eda0ebcebc25bd9d6067b1cb9",
+      "original_branch": "refs/heads/luffy-capacity-evidence-capture-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": " M",
+          "file": "NEXT.yaml",
+          "bytes": 43096,
+          "sha256": "b4a92ed6d7665ac7a5fad4aa076287d778f39b291763f11afb22fd034ee9024a",
+          "blob": "073a5bc4872cfc3a602da67bcfa289fb51b883b8",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1"
+        },
+        {
+          "status": " M",
+          "file": "STATE.yaml",
+          "bytes": 340515,
+          "sha256": "99c36fbcd870dd411dc5ffd304a99f280fccb032034594d01170f4545609a235",
+          "blob": "4fa836a5011cd436a415ddb14ff91f28536dbb24",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_strategy_capacity.py",
+          "bytes": 27682,
+          "sha256": "0ff8e59bbbda4b83c624734c3afdd0c0b8bbfd84e363c6b32c3e3dcc79ec4387",
+          "blob": "c5f498acc47dddeb38e9070b83d9bc76d1371a24",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": " M",
+          "file": "trader/core/instrument_registry.py",
+          "bytes": 7901,
+          "sha256": "f9706be77e6f02ab4eaccc09d6111ae94888c5060b88b09fa9868b9e598f199e",
+          "blob": "46a79073a1ec3fd54464713fcb4cb06e0906a0da",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": " M",
+          "file": "trader/data/binance_usdm_registry.py",
+          "bytes": 7722,
+          "sha256": "82a327f66fa6d318919439e0a9b6f00f4922d6a4917ff166170bce0f6ab7b743",
+          "blob": "6c45550a204705f02cd96c834f599d16d8cee071",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": " M",
+          "file": "trader/kernel.py",
+          "bytes": 138934,
+          "sha256": "3a372000ba1ca77dadab36db302a4dc99cb7e74ecd7811683ea06376a80fef64",
+          "blob": "d88aac5ca49c6a200221c736040627f97d2190e5",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1"
+        },
+        {
+          "status": " M",
+          "file": "trader/strategy/capacity.py",
+          "bytes": 44705,
+          "sha256": "a1e9771b6f55512826c8571382226186be9d0a0f40eab74c23c485cf8c63e7ca",
+          "blob": "813f0e57e02158c6d3bf5ed21ce1ac14bd688e24",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/2026-10-01-capacity-evidence-capture-r1.md",
+          "bytes": 9530,
+          "sha256": "98787cc37f63a804776554f20018cfa475229e188ded71de7d201698537b3b54",
+          "blob": "10f7669172eec681d13756aa9ec7573cfe6d84e2",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "scripts/capacity_depth_shadow.py",
+          "bytes": 8218,
+          "sha256": "5729d5c423708a058adb79a8e556512cb7c178d7f8d6f5141bfd525aa2d1158f",
+          "blob": "4299a08f32c56cb8a6e2ae50f2be8ff8c047d880",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "tests/test_capacity_evidence_capture.py",
+          "bytes": 25418,
+          "sha256": "9f43e13cc41b9a3136f820757e1df958d970ec84f4cdc7f4e305416ce8d7c918",
+          "blob": "d4ad0ba1b9f5a4ed82dbb08a4b8411383912496d",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "trader/engine/evidence_capture.py",
+          "bytes": 13580,
+          "sha256": "db4cae3ed5dae00d59bf60af49d3481fa46e2be95512fda314f509ab36c09c40",
+          "blob": "ed01fc8d15b55d9e5766e16d82d8e92f43c8261b",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "trader/engine/execution_evidence.py",
+          "bytes": 8249,
+          "sha256": "3af6e9e59b1e91884a0e60ef33a55c63f90a9bd7b9647fb6df61a8038e97d9fc",
+          "blob": "c3e2ba3b6b79d4f7c76896cd582437a965ae1fc7",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "trader/observability/depth_evidence.py",
+          "bytes": 9158,
+          "sha256": "6d3ed472614faff7c2f08e7c5c70a0f59d8d04fcb7a5561eb3d184fc49c92704",
+          "blob": "4283a763eca1c0b36b13d5639f9bf328aea940f1",
+          "classification": "ALREADY_REMOTE"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 322
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/stat-index.json",
+        "graphify-out/graph.html"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/capacity-evidence-integration-r1",
+      "original_head": "e60e04540dde4668f12bcfc6caf5992f6580928b",
+      "original_branch": "refs/heads/luffy-capacity-evidence-integration-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/expected-net-economics-r1-clean",
+      "original_head": "b471b9e2170c8c5d1da3f3b5e06bc25e58613a65",
+      "original_branch": "refs/heads/luffy-expected-net-economics-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/intelligence-spine-r1",
+      "original_head": "a2d44dcf0535664d02f91a17f3526892d2fae84b",
+      "original_branch": "refs/heads/intelligence-spine-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/luffy-integrated-core-r1",
+      "original_head": "548ebb727e81d2bd82a9cd23cb8e72445d0517c2",
+      "original_branch": "refs/heads/luffy-integrated-core-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/opportunity-context-live-integration-r1",
+      "original_head": "6bb99e541e9d9ce583cc4a283f7db685f9235b96",
+      "original_branch": "refs/heads/luffy-opportunity-context-live-integration-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/opportunity-context-live-integration-r1/real-shadow-final/shadow-1790873502257.json",
+          "bytes": 3632,
+          "sha256": "424eb18657b7973df37b4dd1f4f2ac6f5bbd05b57682c2dafeb8fce5a3b28333",
+          "blob": "0fadf879127730f5a70c218db22664601c391b9f",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-opportunity-context-live-integration-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/opportunity-context-live-integration-r1/real-shadow/shadow-1790873294670.json",
+          "bytes": 3602,
+          "sha256": "bd383992534a863eea4447341cdffc1c40c64a98cb3486067bd4c66a9b6b09bd",
+          "blob": "bc27c92831e37ec15e7a06e1a380d8091da9188a",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-opportunity-context-live-integration-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/opportunity-context-live-integration-r1/restart-replay.json",
+          "bytes": 1843,
+          "sha256": "a31b950a62787298164f1245af0ab918c535254cbb77f4e703b0f06868c0eb40",
+          "blob": "328bce5187b9a82e6c3271195d036e164a902fc4",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-opportunity-context-live-integration-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-candidate-bridge-r1/real-shadow/shadow-1790874217158.json",
+          "bytes": 3536,
+          "sha256": "b7f79583a5240fcb6932d830049bc207bd952bc1fafe60a2b54c202c856ddb2a",
+          "blob": "9df44b4489f762f6a8b7d4cedfeb5b52a6705e94",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-opportunity-context-live-integration-r1"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 390,
+        "full evidence payload artifact; bounded reports retained": 12,
+        "large temporary/full evidence artifact; bounded summaries captured instead": 3
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/paper-execution-cost-calibration-r1",
+      "original_head": "be2bf1860b0c66957d7d3af8c32d6a0e2a55d209",
+      "original_branch": "refs/heads/luffy-paper-execution-cost-evidence-calibration-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": " M",
+          "file": "NEXT.yaml",
+          "bytes": 45168,
+          "sha256": "5d05df3dad8b1acd7edcc33f34752a234bb57f9f22375ffd4eff05db1cd4bde2",
+          "blob": "fec7dad4edb9948e697fb86706479bd43df2e383",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-paper-execution-cost-calibration-r1"
+        },
+        {
+          "status": " M",
+          "file": "STATE.yaml",
+          "bytes": 360748,
+          "sha256": "237466c483e66a4764ac43f5d66a24847d2dc1ff5bf3b7f4ea35eb45cb96bb85",
+          "blob": "6379a7169c2d58e1cd31b52f04a068d65dc16057",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-paper-execution-cost-calibration-r1"
+        },
+        {
+          "status": " M",
+          "file": "trader/engine/paper_cost_evidence.py",
+          "bytes": 15688,
+          "sha256": "ecf83c39adf07b45b73e59408eb06d42e43dadb6f0de10760a09c5231e7557e4",
+          "blob": "6b762f90ba837c091203fd95899ff91f237cbdd6",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/execution-cost-calibration-r1/funding-public-observation.json",
+          "bytes": 4563,
+          "sha256": "a3966d202d507813b865cb46b02c704b6ef90c0c4e5182701157ad59231cdea2",
+          "blob": "68427b9594c72654498c351e536f4f44c0d3eaf8",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/execution-cost-calibration-r1/inventory.json",
+          "bytes": 41979,
+          "sha256": "cdc5667bd62299b0083d5e939a2fe3d8191bbfc2febf1a7281438b30d4eaf408",
+          "blob": "4a1773202721a07002f4f9aa763ff4415d7bcdcd",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/2026-10-01-paper-execution-cost-calibration-r1.md",
+          "bytes": 9875,
+          "sha256": "416bcd9d8979d357173c5389f97796f5464ed69fb140a04e7821307cc0fa8555",
+          "blob": "ffe98d713c0a6985658009a91a84fd017a7f5b3d",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "scripts/execution_cost_inventory.py",
+          "bytes": 3887,
+          "sha256": "aa38cfcf75575cad636387e65f2ca4b6911568940fff25792a5b8b9d5012673a",
+          "blob": "a4d8a4bcfc6a6bb80a38c1a195f0b40e8268a201",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "tests/test_execution_cost_calibration.py",
+          "bytes": 8824,
+          "sha256": "9d7a181d4ae550a625037da560491f010fc1cd06ad66c5754d8fcdfd9cd4fc6d",
+          "blob": "e2c880780387d593251473e124afe069761bf0af",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "trader/observability/execution_calibration.py",
+          "bytes": 7403,
+          "sha256": "0569e1d48e419eed311f9295ae598280c616f94601bc57aaef909e4f46ee851e",
+          "blob": "d522cd8c2e357e21889c528ec823ec196d5c507d",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "trader/observability/execution_shadow.py",
+          "bytes": 2296,
+          "sha256": "f8580adc8a32bb83b32f995bd1452eec3c9d7e1a8cb917f8fe042618e348475a",
+          "blob": "49411b691b2e4e49c3902aebfa1eec4632d4a7b7",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "trader/observability/funding_events.py",
+          "bytes": 7858,
+          "sha256": "d5ee216bde5e82111caa5aea7706b3736a9f9bcb00e7adca78e1748bd769dad8",
+          "blob": "c5436a646011f7c06450d85cd4fd3cfec7bcf8f9",
+          "classification": "ALREADY_REMOTE"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 359
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/portfolio-allocator-r1-clean",
+      "original_head": "a4432ba244a474ec48f7a9f0cc59fb6f7833aa61",
+      "original_branch": "refs/heads/luffy-portfolio-allocator-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/predictive-research-bridge-r1",
+      "original_head": "3bf9f87cf5b41e714a863715d0fa042a899af472",
+      "original_branch": "refs/heads/luffy-predictive-research-bridge-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/predictive-research-bridge-r1/baseline-coverage.txt",
+          "bytes": 256,
+          "sha256": "48e4253e613ccbf4b49bc6c9a5a7ea446e77f7c7dc6c495745aaff57ece25b04",
+          "blob": "10bbc00a1149e6bfee339c0e970cf3a30b338daf",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-predictive-research-bridge-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/predictive-research-bridge-r1/bridge-tests.txt",
+          "bytes": 100,
+          "sha256": "61e4cef7b06f08b13265e83ef2bc89c4b3d29707160e679f0405af52938d06b9",
+          "blob": "1ef215f980a7a4def7cdeb63c13e987def356d1b",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-predictive-research-bridge-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/predictive-research-bridge-r1/files-changed.txt",
+          "bytes": 38382,
+          "sha256": "66b332bbd09e08de41992839623c8b4495a6c8a70866b9770f38494922b3afe8",
+          "blob": "1e40f3afd7d6f84e205804f9f06d623c792a589b",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-predictive-research-bridge-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/predictive-research-bridge-r1/real-shadow.json",
+          "bytes": 1230,
+          "sha256": "e2d1c59758615c0590f67531857267677faee0b1b1964b55532ef785cbf5e923",
+          "blob": "a39184f6b9456ce9180a5ec9ce1921e5c3de5bff",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-predictive-research-bridge-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/predictive-research-bridge-r1/regression-tests.txt",
+          "bytes": 2914,
+          "sha256": "068df466f451a540bc24f8cd0c254dbabdd4425b81d77aea5b11b5b6e16b0782",
+          "blob": "231c8a4a939711663c2b13a700932182167e2799",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-predictive-research-bridge-r1"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 361,
+        "generated graphify output": 1
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/runtime-bounded-evidence-latency-r1",
+      "original_head": "b880e52cf319451307261ee7728d1f0bfd7014c4",
+      "original_branch": "refs/heads/fix/runtime-bounded-evidence-latency-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 846,
+        "generated test/build temporary artifacts": 4505
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/runtime-observer-attention-repair-r1",
+      "original_head": "958c9eb2f0b10993ad240b85f88c626b8d0e2ee6",
+      "original_branch": "refs/heads/fix/runtime-observer-attention-repair-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 582,
+        "generated test/build temporary artifacts": 1285
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/stat-index.json",
+        "graphify-out/graph.html"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/stage5-closure-evidence-flow-r1",
+      "original_head": "0b23ab3f645efe4301ceabf9399405ab60d38e56",
+      "original_branch": "refs/heads/luffy-stage5-closure-evidence-flow-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 358
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/stat-index.json",
+        "graphify-out/graph.html"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/stage5-evidence-activation-r1",
+      "original_head": "7e5aedde46b2ae4cdeaa6c97f1b471455a57198f",
+      "original_branch": "refs/heads/luffy-stage5-evidence-activation-r1",
+      "exists": true,
+      "head_already_remote": false,
+      "staged": [],
+      "changes": [
+        {
+          "status": " M",
+          "file": "trader/dashboard/owner_reads.py",
+          "bytes": 82211,
+          "sha256": "36f9f1d64ec193e56866d8dc940803775bffc466cffbae2fdf6da020fa86aa3b",
+          "blob": "f94cc4de87776c83dba5069201f70d3f3fea5198",
+          "classification": "ALREADY_REMOTE"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 205
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/stat-index.json",
+        "graphify-out/graph.html"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/stage6-common-factor-concentration-r1",
+      "original_head": "8ebc7113c0d3566facf64b47786c6efcc6339726",
+      "original_branch": "refs/heads/luffy-stage6-portfolio-common-factor-concentration-authority-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 378
+      },
+      "excluded_examples": [
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json",
+        "graphify-out/graph.json",
+        "graphify-out/manifest.json",
+        "graphify-out/2026-10-01/.graphify_analysis.json"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/stage6-implementation-closure-r1",
+      "original_head": "d256bfb4d6c6b2f7d9d7c950bd6f0c7aff0049f9",
+      "original_branch": "refs/heads/luffy-stage6-implementation-closure-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-implementation-closure-r1/final-shadow-result.json",
+          "bytes": 649,
+          "sha256": "d37abb901b174aa2509ffd6481ac5e1943506ad6c0befd24bc161e142acbfcc3",
+          "blob": "74a2c63a4643c56fc4302598bf5baa9301c59735",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-implementation-closure-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-implementation-closure-r1/final-shadow/book-chain/candidate-chain/shadow-1790878438130.json",
+          "bytes": 3671,
+          "sha256": "8326369608e9d128e47e823608af1057fc7429e6b262bc7b28397b7139ae6542",
+          "blob": "457130049cbb6ce316e5947cfe2261b8ecd2a5a1",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-implementation-closure-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-implementation-closure-r1/final-shadow/book-chain/shadow-1790878438130.json",
+          "bytes": 13517,
+          "sha256": "998737d3aaa794e5b2b74fc3cf8db2b1799456a6c33b8f62713a5d1b424dec8a",
+          "blob": "99bbe41c0f14d9e5478b81fe89eda82875bd6c1e",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-implementation-closure-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-implementation-closure-r1/real-shadow-result.json",
+          "bytes": 648,
+          "sha256": "aa8ddab593eecf1409db8cde2707f60cebcd06dc14c21c559def947821b7ff3a",
+          "blob": "085a575045c5d22d68392eedf69cb32e86e16676",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-implementation-closure-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-implementation-closure-r1/real-shadow/book-chain/candidate-chain/shadow-1790878137628.json",
+          "bytes": 3659,
+          "sha256": "73dad57474b1f150b03f0ba942762b7032816e1226543ac8bfb523124da9b07f",
+          "blob": "ff44e0008d715ef7cabd20f753643e01feb4ccc7",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-implementation-closure-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-implementation-closure-r1/real-shadow/book-chain/candidate-chain/shadow-1790878382650.json",
+          "bytes": 3666,
+          "sha256": "5cf4c4ca491e7e2736252e06de3d15f8268ffa45ee806217857e263eeb1820f7",
+          "blob": "a969b1bd412cb0ffef9946c7a47f04dca1d913b5",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-implementation-closure-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-implementation-closure-r1/real-shadow/book-chain/shadow-1790878382650.json",
+          "bytes": 13516,
+          "sha256": "f6367bc406f90df39132a823591c1723c939e20b3a0693d3691a56c419da2ca1",
+          "blob": "547c9a8c90c5b051a72081e10dfd7ee34bc62fe8",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-implementation-closure-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-implementation-closure-r1/real-source-status.json",
+          "bytes": 553,
+          "sha256": "b99bb9dbb6bbc8d30f2b13c2aa54a4469082680fdcfec6fa077a8666a775fbf6",
+          "blob": "355007f10bba760511fd60a12d7e8d85d56950e1",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-implementation-closure-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-implementation-closure-r1/restart-replay.json",
+          "bytes": 130,
+          "sha256": "5b6721877e986e7108455931dae67578fa8ff3e190eeea6f39d923dd14da6cb0",
+          "blob": "2cfb1c2e2d73afc06d17e31bfd7d510f51a2e0c3",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-implementation-closure-r1"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 387,
+        "full evidence payload artifact; bounded reports retained": 12,
+        "large temporary/full evidence artifact; bounded summaries captured instead": 7
+      },
+      "excluded_examples": [
+        "graphify-out/cache/stat-index.json",
+        "graphify-out/graph.json",
+        "graphify-out/manifest.json",
+        "docs/superpowers/evidence/stage6-implementation-closure-r1/final-shadow/book-chain/candidate-chain/contexts/528550d2e3c99096411279f5e3b3eb482b5fbfb16bbcdfa83b5f4ed0254926f7.json",
+        "docs/superpowers/evidence/stage6-implementation-closure-r1/final-shadow/book-chain/candidate-chain/contexts/53d6afe8bd4b083ba5f2e8aaa85a7916bc603a9e433d93bdd98ca336aee019b7.json"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/stage6-runtime-portfolio-integration-r1",
+      "original_head": "640a5f20a8f78bf9ac68f1ac26d5c6c0de6977c3",
+      "original_branch": "refs/heads/luffy-stage6-runtime-portfolio-integration-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-normal-source-integration-r1/real-shadow-summary.json",
+          "bytes": 973,
+          "sha256": "3991c5b5ca8376244666e731568183c4e528bbb9acfb10b2abb719f3bb60f959",
+          "blob": "a45c2816c574380cb793ddb7a9904fd346d1c26b",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-runtime-portfolio-integration-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-runtime-portfolio-integration-r1/real-shadow/shadow-1790899725305.json",
+          "bytes": 5595,
+          "sha256": "dc28c466d01ee4179115c92a24a937ce2590b735bf5535b7c663060d6d55b50f",
+          "blob": "bc618481982333f2bbff362844ff623290563e68",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-runtime-portfolio-integration-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-runtime-portfolio-integration-r1/real-shadow/shadow-1790899919255.json",
+          "bytes": 5610,
+          "sha256": "d02c9354dce1d36d10a860bf95cdfa99d67ef6fcfd8cd9529c06daf4ec4c3f3c",
+          "blob": "efc8b68e6597acfa86dac5bff45acd71dfbd5a73",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-runtime-portfolio-integration-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-runtime-portfolio-integration-r1/real-shadow/shadow-1790900101439.json",
+          "bytes": 5611,
+          "sha256": "b75eb1bca264df38c2de8a21a84b395034dc17d24b75f410d9f99e46c785ef2c",
+          "blob": "42902be4f04e12aaae79be53e697ea30cda4033d",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-runtime-portfolio-integration-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage6-runtime-portfolio-integration-r1/verified-shadow-summary.json",
+          "bytes": 1982,
+          "sha256": "7dbfb555b6ba58bf42f6d55642aada3e6f5ba1fa077cedc394e03e2cb96ebcc3",
+          "blob": "eb401ecf43c2d3d00573e587956e33c70ee44bcf",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-runtime-portfolio-integration-r1"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 275,
+        "generated graphify output": 2,
+        "large temporary/full evidence artifact; bounded summaries captured instead": 5
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/stage7-decision-replay-source-integration-r1",
+      "original_head": "1c77fdbbdd141dcf68a6b12bb2c85670ed667f6d",
+      "original_branch": "refs/heads/luffy-stage7-decision-replay-source-integration-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-decision-replay-source-integration-r1/real-shadow.json",
+          "bytes": 36563,
+          "sha256": "0e13704cfc8a4817a218c385a9279b5c28ccd8cec8e7f21580b4b6d82534f7f1",
+          "blob": "8f3fcfbf46430c335d70e776d769083d2ed6e29c",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-decision-replay-source-integration-r1"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 416,
+        "generated graphify output": 1
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/stat-index.json",
+        "graphify-out/graph.html"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/stage7-historical-outcome-capture-r1",
+      "original_head": "9d31fbd61ed4c4b8c697248ac32dfd0451b537e4",
+      "original_branch": "refs/heads/luffy-stage7-historical-outcome-capture-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": " M",
+          "file": "NEXT.yaml",
+          "bytes": 47164,
+          "sha256": "9581d8027af9b2e17d1bc0a08bcb8f84ec586659116b01d297443726691c83f2",
+          "blob": "bf51ce906fad60113d9e25a1d37dc99349b4de75",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1"
+        },
+        {
+          "status": " M",
+          "file": "STATE.yaml",
+          "bytes": 383148,
+          "sha256": "2630845b3637135669bac250d1f59f6a31e6437476ee781565c8eb5ba3ef0ce2",
+          "blob": "34c607636370fdc7662c0f82d57f1afbf8320659",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_learning_foundation.py",
+          "bytes": 15745,
+          "sha256": "6b208a7bf212904edddbc8e88d825388549608bf893407ce5c041f93ff161497",
+          "blob": "dd48e2a7ef5b72329fcc4a98ba728d94e94e69a4",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_strategy_decay_research_bank.py",
+          "bytes": 30223,
+          "sha256": "517b591cb0365be5c8206182c4947841d87cb6003a4cd22abf25503137219eca",
+          "blob": "f16b5ca31d57e7e3b85665c1842eeef9180b422f",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_strategy_factory_handoff.py",
+          "bytes": 52536,
+          "sha256": "6c2fc4aa4032676545b4a1547b288a7f76f20bd93f94b9848a9a4f8224bf010c",
+          "blob": "10092d76108258f7c8df88634f4c1172ad0e1f02",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_strategy_health_unreadable_bank.py",
+          "bytes": 39744,
+          "sha256": "4f81fd8341e72a2dce358ac00a71a0536159ffa503d1179b9263ae8b50e75830",
+          "blob": "74e0688ed05cc5f5e4f919be9044ba32ab87fed3",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_trade_provenance.py",
+          "bytes": 52697,
+          "sha256": "16104947a2713225a963e036f6e78a7b983c26641c2d5e8f6671beff20353850",
+          "blob": "8b8ab9e514914d78bca921ea2ba5534ea419758d",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": " M",
+          "file": "trader/core/journal.py",
+          "bytes": 92999,
+          "sha256": "7bafe879568f01055e8e954785595b4faac2969f2c33f2396765e96563706b0b",
+          "blob": "bdd166c581907413ae0750d3e20656aa39e9b1fc",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": " M",
+          "file": "trader/engine/booking.py",
+          "bytes": 9116,
+          "sha256": "3dbadf3bf9560fe0621437f22b8f27c89593d87542c662aa1ef9653c315c58bc",
+          "blob": "e6d77bc0b40a5f21a605cae3e488e245f4ae7000",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": " M",
+          "file": "trader/engine/outcomes.py",
+          "bytes": 5557,
+          "sha256": "f8e26ba8b4d2068ce6047aa37668cceba003335ccfd9bd45e286dd5c62d88de0",
+          "blob": "59a184fc4149fca31cbcdc147e2f0b47d4c13bd2",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": " M",
+          "file": "trader/engine/paper_cost_evidence.py",
+          "bytes": 15921,
+          "sha256": "9449a59b46dcef945a7d97b1e775cdda6df31af8dd12bb6bf25f36ecf53d8305",
+          "blob": "48b6271cce41ca154fc7e5c89d9511a8fc02ebca",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": " M",
+          "file": "trader/kernel.py",
+          "bytes": 148957,
+          "sha256": "113917ee482daa1463249a57ca1ac8609a3dd47fa652a25358d427b994fa5cf6",
+          "blob": "4e13835efd1c49d94bd750f242c2444a1c966605",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1"
+        },
+        {
+          "status": " M",
+          "file": "trader/learning/foundation.py",
+          "bytes": 24365,
+          "sha256": "cef560d321eb3f98f62966decad86443d7a55e7acbb1bca38dff2cd8f1aad5a8",
+          "blob": "157e118e5110cad50a7f807e6fe75c5e35689e3e",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1"
+        },
+        {
+          "status": " M",
+          "file": "trader/observability/investigation_research.py",
+          "bytes": 33836,
+          "sha256": "49c335fa04d694c434fe8b44f4cacbfc4aa87add3cf9daae877218aeaeceaa0c",
+          "blob": "5ef4df5bd3058cccc473d2a884b1cf7bdf8b2983",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": " M",
+          "file": "trader/observability/learning.py",
+          "bytes": 18669,
+          "sha256": "e77aa7f18dfb5418faf04d956cd511b9d458f14a798ea785cec04756ff74e29f",
+          "blob": "e9965420691155a314e5cc317175e26c83478687",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-historical-outcome-capture-r1/final-capture-tests.txt",
+          "bytes": 181,
+          "sha256": "939592ada09089f519992cd8895ed8352c57cce17bba735c07f9ff173bf1289a",
+          "blob": "26ad9f8e49b0f9499a73114269946124a23004e3",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-historical-outcome-capture-r1/graphify-update.txt",
+          "bytes": 1770,
+          "sha256": "ebcea782e1a2cfef4c8c32ad21877ab0919d404875543d45257c1d7c5eaeaa74",
+          "blob": "7bf07cf276e7fe430d4f55e90782c3cc4d45387a",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-historical-outcome-capture-r1/inventory-summary.json",
+          "bytes": 774,
+          "sha256": "9bf4c436af3991a5fa1c82c5b00bdfefe4955f0a35addf025c3251709b13fb24",
+          "blob": "0f0bfaa77e94616f46f05a9c97dbcf93c5e15cf8",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-historical-outcome-capture-r1/risk-boundary-tests.txt",
+          "bytes": 99,
+          "sha256": "dc6c34f93dd36dbfeaf967dd436aad2128dbcd53cb12a06809f443270c5b7690",
+          "blob": "9678491188df6ff6773767aac0b9525e43682321",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-historical-outcome-capture-r1/tests.txt",
+          "bytes": 341,
+          "sha256": "3a92813bcdfed3adc18349e88f1d3d640096cc49833a6187adf238459628e285",
+          "blob": "84f5e85693fd632557803c7b669bfb8b97a8fef2",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/2026-10-01-stage7-historical-outcome-capture-r1.md",
+          "bytes": 9538,
+          "sha256": "7683de4d82cc39eb5b2dd966deb793bdb94130957a5a558fc068185fe24d1c7f",
+          "blob": "dffe4679a2889dd4121bfe1017782a1271a7d216",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1"
+        },
+        {
+          "status": "??",
+          "file": "scripts/learning_capture_inventory.py",
+          "bytes": 3412,
+          "sha256": "cfd7a98f179a3cb4c148203dc265c6ca1ae07136541f29f8528dd23f2bbbaaf0",
+          "blob": "b582929e3f21d063c9eb964faa98205312561763",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "tests/test_historical_outcome_capture.py",
+          "bytes": 22680,
+          "sha256": "3ee9622f24a8b4275fb08f081d1f74f1f308c905cefc610143efd64d990f6ef9",
+          "blob": "86b9d85ff2d44b7993ac072af4f3dd65b73cc49b",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "trader/learning/capture.py",
+          "bytes": 32738,
+          "sha256": "c4ffad4e988a0742e667d3d263b5cae256da0bf45a4ee5fe311890834adb0a71",
+          "blob": "e647787950dcfebf6db951f70c5c079d621d66db",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": "??",
+          "file": "trader/learning/capture_runtime.py",
+          "bytes": 25529,
+          "sha256": "e057d8a9e1bb20db2a7461f7592336d30d5f0557f949b7c881bf690542a51122",
+          "blob": "a16a3dc5cec5b62dd674f03b661f5810159a9322",
+          "classification": "ALREADY_REMOTE"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 409
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/stage7-implementation-closure-r1",
+      "original_head": "9d2a1b895b93c9abaf23ab258e47d8535c916bb0",
+      "original_branch": "refs/heads/luffy-stage7-implementation-closure-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-implementation-closure-r1/real-shadow.json",
+          "bytes": 561,
+          "sha256": "f8b6a6b71189f88f47dbadad2594b98c83a2d510ac1f2b760436685983bebe95",
+          "blob": "40b879a8cb1005d33437ad80e7aabca054ec32ad",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-implementation-closure-r1"
+        }
+      ],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/stage7-learning-closed-loop-foundation-r1",
+      "original_head": "9d31fbd61ed4c4b8c697248ac32dfd0451b537e4",
+      "original_branch": "refs/heads/luffy-stage7-learning-closed-loop-foundation-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-learning-foundation-r1/final-shadow/replay-verification.json",
+          "bytes": 124,
+          "sha256": "795b93af2ee76299ecf85d74b4db64cde649b3363de6f22c48b431538a4b064c",
+          "blob": "ec5fb4f948751ec4346117b6921a4ea47297f063",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-closed-loop-foundation-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-learning-foundation-r1/final-shadow/summary.json",
+          "bytes": 1081,
+          "sha256": "bc1f1d1cef4587dc0b85adb3476f5fd36b9f2252ad5da070fd747b6b133d95b3",
+          "blob": "ce9dc97a382fc029542f969e6c3bcab05f9626c1",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-closed-loop-foundation-r1"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 398,
+        "large temporary/full evidence artifact; bounded summaries captured instead": 1,
+        "generated graphify output": 1
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/stat-index.json",
+        "graphify-out/graph.html"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/stage7-learning-target-authority-framework-r1",
+      "original_head": "9d2a1b895b93c9abaf23ab258e47d8535c916bb0",
+      "original_branch": "refs/heads/luffy-stage7-learning-target-authority-framework-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": " M",
+          "file": "NEXT.yaml",
+          "bytes": 46130,
+          "sha256": "fc3bd1cc5fe316907110993c7e78b51778594e28f8ac1373d677055b3fcbef44",
+          "blob": "71a9019a53ab252239a946b1f2e7cc24684edaaf",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": " M",
+          "file": "STATE.yaml",
+          "bytes": 399784,
+          "sha256": "5dc8bc0d604d3ac07fb7a4cefc45529aa31d5b6e1d30fbeb8f81738a260611c7",
+          "blob": "9e48061cec165737b380df3f709a6180ba2e1055",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_learning_application.py",
+          "bytes": 15955,
+          "sha256": "291c140c70c0dc5929c33138584179f9fe1fde2f61df2f2c1b9c67a8d5e13b9e",
+          "blob": "9232092a9689ce3125e9f8dbd9ad8cf5bbd00d3c",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": " M",
+          "file": "tests/test_strategy_factory_handoff.py",
+          "bytes": 52995,
+          "sha256": "fd116740f0e288a5e601bcbb7dd1131e2981162d25d51fededae2bba10833b46",
+          "blob": "048e5b37f32520268cbf11b9f710645ea29d3980",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": " M",
+          "file": "trader/learning/application.py",
+          "bytes": 14851,
+          "sha256": "1d1a5ec5dc568f9284eddcdc7ab54ce40b8ab3fc976720eeb7ed4f3eea24678b",
+          "blob": "7428341343f27bdaa36d99d8792f18a39df32fa8",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": " M",
+          "file": "trader/learning/foundation.py",
+          "bytes": 28378,
+          "sha256": "18fd7e20defc791489d368df519aa84629e4ca515d687282b5ef03343676fc61",
+          "blob": "660cfd530eed3e742b4d8020f221912bea216a9f",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/acceptance.json",
+          "bytes": 1583,
+          "sha256": "6a7e25dcc8883cb00b821e705bebe41f3886c77ca24c74e02121f957bcee2a62",
+          "blob": "155c3ab9ed3eb8c2c1773c1b5543ef6907dc95c7",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/authority-receipt-final-tests.txt",
+          "bytes": 100,
+          "sha256": "c320f0d8e8047acf470a0523fd1e095ab108866d5f366c69411e16f4ada51ba5",
+          "blob": "03105867b78c9ca392793634313688b88b2a6ba4",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/factory-boundary-followup.txt",
+          "bytes": 98,
+          "sha256": "21a96a691c92fe45e75034007f207c9a0cf98e14fff2d1e56a2a0ba5eff07377",
+          "blob": "9b9bebbf6e077e47a8e807d0d200d8e1844ddae5",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/files-changed.txt",
+          "bytes": 45383,
+          "sha256": "86ec3728a8d86fd9d667831b17635e08367953034c8134bc9f0efa1279cc0f3d",
+          "blob": "b5ff693b69ea14467f484cee08ff6da96d260cca",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/inherited-regression.txt",
+          "bytes": 2152,
+          "sha256": "6c34c510087e1538412f580860aa13154300931900831297f0d2d74e6e63950a",
+          "blob": "21c0644116f440fb3c64dc32d7a3436c09ea91eb",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/target-final-tests.txt",
+          "bytes": 100,
+          "sha256": "9b361eb3581b647e0bf4a39fe39ce8d47c1bb88efc8751ff2f2132419f4235fd",
+          "blob": "5a3f380da7ed3975049daef91124823e0c1c6628",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/tests.txt",
+          "bytes": 2581,
+          "sha256": "7951589e61b6855dd0935943371a6c40ef269454b79d70b0d2c5fe34ce19a66a",
+          "blob": "3e5c2c0ee4018816fa31dbade3bb693bf1083748",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/validation-summary.txt",
+          "bytes": 562,
+          "sha256": "4677fbfd1ded5de1f568d9b3981f6f8af94772b4baf7e391c85843be28fd01ab",
+          "blob": "5e342d170447bbe2416d6e06c60bae533180ab30",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/reports/2026-10-02-stage7-learning-target-authority-framework-r1.md",
+          "bytes": 8543,
+          "sha256": "d8eb43803a6be243752f0649a6d60c52c76a6839329af478e89128e2103ea84b",
+          "blob": "f8d6f623674dba5ac2cdf44c8283a416694351b1",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": "??",
+          "file": "tests/test_learning_target_authority.py",
+          "bytes": 16626,
+          "sha256": "87e17ad3bc75c6cbb0657dda9e619cab548782c41d19f0ccef673ca77c0d75bd",
+          "blob": "ca0f15c83faa6958ed0027198f9fbb6810415560",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": "??",
+          "file": "trader/learning/authority.py",
+          "bytes": 13836,
+          "sha256": "57ef0d55ca4a7ddb980a858513a137ef89bf8d1f1532799facf2e4f9beeb9d81",
+          "blob": "0226d2ae617aa0ee00e7a71f313d9aa106415f16",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        },
+        {
+          "status": "??",
+          "file": "trader/learning/dispatch.py",
+          "bytes": 5382,
+          "sha256": "82cf13e100e9e1e81d28857d4c3df5f435d431de12ba46eca5382dee19e4024c",
+          "blob": "5777879251880c990bb84cbe00308e99f5318ed4",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 432,
+        "generated graphify output": 2
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/stat-index.json",
+        "graphify-out/graph.html"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/stage7-normal-learning-loop-closure-r1",
+      "original_head": "50a4545484798207e4b126a0b7a0547ea9b0ec79",
+      "original_branch": "refs/heads/luffy-stage7-normal-learning-loop-closure-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/files-changed.txt",
+          "bytes": 620,
+          "sha256": "aedaca9dade18c29f3b6efd47a421853002eafecfc487f3b6e8285c3fdf5e4a9",
+          "blob": "58f410dcca5fe156f6dabd675bba73a0ef01ed29",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-normal-learning-loop-closure-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/full-suite-failures-base-3bf9f87.txt",
+          "bytes": 12939,
+          "sha256": "1baade9016af97d15c2b1682f488e3a2af14cc82346a06350ddf2c4a2f27881d",
+          "blob": "6deb26724accc3eaec15b747542d9e6352f477f3",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-normal-learning-loop-closure-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/full-suite-failures-this-branch.txt",
+          "bytes": 13228,
+          "sha256": "638f81305cb85b8049c0bc82503940ec127f18d313d76138cdf01c595d32d4d1",
+          "blob": "99c3fa5ec1da3e55e9aeea87b2f21c6bbf76ae28",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-normal-learning-loop-closure-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/full-suite-summary.txt",
+          "bytes": 80,
+          "sha256": "d0b22c41fd9ed15f123c60a8a1198d956b70f6d13887dcfa9afadaa56a6f775a",
+          "blob": "845b849859acb3e7583f413aa19cf59634cba1e9",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-normal-learning-loop-closure-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-normal-learning-loop-closure-r1/real-shadow.json",
+          "bytes": 956,
+          "sha256": "98c8c2103f9a6c4478f8b267c68838f19ee8b9b4188a8bbf2bde05848db246df",
+          "blob": "873a79e9c63a94fcaf14d4d9a96d95e27b0624e0",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-normal-learning-loop-closure-r1"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 366,
+        "generated graphify output": 1
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/stage7-outcome-capture-recovery-r1",
+      "original_head": "d400394e0472da4e8b0d7f9220ad419c2a4d4244",
+      "original_branch": "refs/heads/luffy-stage7-outcome-capture-recovery-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/stage7-real-learning-authority-consumer-integration-r1",
+      "original_head": "b56682e936fe9907f023900a0daacf0aad5ac07e",
+      "original_branch": "refs/heads/luffy-stage7-real-learning-authority-consumer-integration-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-real-learning-authority-consumer-integration-r1/real-shadow.json",
+          "bytes": 584,
+          "sha256": "4673281d800a5e46e9606580f257d9a5af7e55ec10a047b489748b3c0a3b91c9",
+          "blob": "77ab81ef1b77623aa63ce30146aa962388ccb4b6",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-real-learning-authority-consumer-integration-r1"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 349
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/stat-index.json",
+        "graphify-out/graph.html"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/stage7-verified-outcome-producer-integration-r1",
+      "original_head": "503d93c4c83d134899b8067f567b995f329ea6a1",
+      "original_branch": "refs/heads/luffy-stage7-verified-outcome-producer-integration-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-verified-outcome-producer-integration-r1/implementation-files.json",
+          "bytes": 836,
+          "sha256": "4372e99000dacea80f197605165b0b0521d25cca9f15349518964eaf0fa78735",
+          "blob": "794a704d14087b85c5e41e76cbb835338ba4be75",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-verified-outcome-producer-integration-r1"
+        },
+        {
+          "status": "??",
+          "file": "docs/superpowers/evidence/stage7-verified-outcome-producer-integration-r1/real-shadow.json",
+          "bytes": 482,
+          "sha256": "3a9e4f8b49fda84034b492cab346110c28c1e4f874ffd51aaf929d498525d5f2",
+          "blob": "5de5334818d1accd3412c512525731aaf266337b",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-verified-outcome-producer-integration-r1"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 12,
+        "generated graphify output": 1
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/stat-index.json",
+        "graphify-out/graph.html"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/strategy-capacity-r1",
+      "original_head": "6b7f0f7f434fbe6b7c227595a43d4a325dc849e6",
+      "original_branch": "refs/heads/luffy-strategy-capacity-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [
+        {
+          "status": " M",
+          "file": "NEXT.yaml",
+          "bytes": 42738,
+          "sha256": "bde2ed57a9b36fa09cc380702b10e00147f513bfc5e9f6b8f9db5a71e8f551b5",
+          "blob": "917e1d5570937e9ba1a9d331b9383497c35feb42",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-strategy-capacity-r1"
+        },
+        {
+          "status": " M",
+          "file": "STATE.yaml",
+          "bytes": 339964,
+          "sha256": "c15e5c272f7dbb4acd4f6bc1f37c661848ca261492dec060b12101b9bec7fb8b",
+          "blob": "ea5168b71deff22c3ed1db546d1115bdfce2ff64",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-strategy-capacity-r1"
+        },
+        {
+          "status": " M",
+          "file": "knowledge/00 Company/Company.md",
+          "bytes": 1591,
+          "sha256": "c2288971d032130b36789e6f7e40f916f16dc3a4c9fc6a5830ba774b2a64c764",
+          "blob": "5d6088859252eafdfd9522a1da66cd51b0b90715",
+          "classification": "ALREADY_REMOTE"
+        },
+        {
+          "status": " M",
+          "file": "knowledge/00 Company/Manager.md",
+          "bytes": 246,
+          "sha256": "25abe1ffa984b84ea56d4e13979fd78b77ac22a2e5d63bf36e166eab6b878cb0",
+          "blob": "af62ca564b8cf7812355d9340771b7309b63c517",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-strategy-capacity-r1"
+        },
+        {
+          "status": " M",
+          "file": "knowledge/00 Company/Theorist.md",
+          "bytes": 316,
+          "sha256": "4d4ed3cef304347e9551f098f27accda39143dbbcbefab52ee9068ac1ec74cbf",
+          "blob": "f6beb0f6500428cb2fbefe8a9b24ed2557d1ef18",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-strategy-capacity-r1"
+        },
+        {
+          "status": " M",
+          "file": "knowledge/MOC.md",
+          "bytes": 1525,
+          "sha256": "fcc54f33bd70ea330498b5274b827b0fa487d116e24757e7270bd81736a48b80",
+          "blob": "d0ee7f73316427d9723fa85c99f7652fe7b0ef2e",
+          "classification": "CAPTURED",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-strategy-capacity-r1"
+        }
+      ],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 314
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/strategy-factory-r1",
+      "original_head": "a883313b9d8f3748f487fcea2ceefb2afcec4ae0",
+      "original_branch": "refs/heads/strategy-factory-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 208
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/stat-index.json",
+        "graphify-out/graph.html"
+      ]
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/trade-provenance-r1",
+      "original_head": "54aefc56fe2c4d02e9589a9d4aedc41ac2d17b63",
+      "original_branch": "refs/heads/trade-provenance-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {},
+      "excluded_examples": []
+    },
+    {
+      "path": "/mnt/luffy-data/luffy/workspaces/versioned-paper-execution-r1",
+      "original_head": "d4de42adcef0a9a7d905febe90712113fd68253f",
+      "original_branch": "refs/heads/luffy-versioned-paper-execution-r1",
+      "exists": true,
+      "head_already_remote": true,
+      "staged": [],
+      "changes": [],
+      "excluded_counts": {
+        "runtime/database/environment/generated-cache/browser/binary artifact": 337
+      },
+      "excluded_examples": [
+        "graphify-out/.graphify_labels.json",
+        "graphify-out/.graphify_labels.json.sig",
+        "graphify-out/GRAPH_REPORT.md",
+        "graphify-out/cache/last_query_stamp",
+        "graphify-out/cache/stat-index.json"
+      ]
+    }
+  ]
+}

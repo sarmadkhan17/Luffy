@@ -1,0 +1,123 @@
+{
+  "before": {
+    "allocated": 11124355072,
+    "wal_allocated": 52326400,
+    "nonwal_allocated": 11072028672
+  },
+  "after": {
+    "allocated": 11199397888,
+    "wal_allocated": 74194944,
+    "nonwal_allocated": 11125202944
+  },
+  "delta": {
+    "allocated": 75042816,
+    "wal_allocated": 21868544,
+    "nonwal_allocated": 53174272
+  },
+  "top_growth": [
+    {
+      "path": "data/attention.db-wal",
+      "allocated_growth": 21868544
+    },
+    {
+      "path": "data/luffy.db",
+      "allocated_growth": 20783104
+    },
+    {
+      "path": "data/attention.db",
+      "allocated_growth": 17403904
+    },
+    {
+      "path": "data/candles.db",
+      "allocated_growth": 8298496
+    },
+    {
+      "path": "data/derivs.db",
+      "allocated_growth": 6643712
+    },
+    {
+      "path": "data/attention.db-shm",
+      "allocated_growth": 32768
+    },
+    {
+      "path": "logs/luffy.log",
+      "allocated_growth": 4096
+    },
+    {
+      "path": "data/safety-incidents/dc3375928de84891a7a7ea363d2de6a9-RESOLVED.json",
+      "allocated_growth": 4096
+    },
+    {
+      "path": "data/safety-incidents/7b9043295028464a8db26338e01af0b9-ACTIVE.json",
+      "allocated_growth": 4096
+    },
+    {
+      "path": "logs/watchdog.log",
+      "allocated_growth": 0
+    },
+    {
+      "path": "logs/tv_fail_1787854449.png",
+      "allocated_growth": 0
+    },
+    {
+      "path": "logs/tv_fail_1787744352.png",
+      "allocated_growth": 0
+    }
+  ],
+  "samples": [
+    {
+      "file": "storage-cycle-1.json",
+      "at": 1791203619.996358,
+      "totals": {
+        "allocated": 11225767936,
+        "wal_allocated": 108814336,
+        "nonwal_allocated": 11116953600
+      }
+    },
+    {
+      "file": "storage-containment-in-progress.json",
+      "at": 1791203689.9022408,
+      "totals": {
+        "allocated": 11232346112,
+        "wal_allocated": 109383680,
+        "nonwal_allocated": 11122962432
+      }
+    },
+    {
+      "file": "storage-final-stopped.json",
+      "at": 1791203962.1020932,
+      "totals": {
+        "allocated": 11199397888,
+        "wal_allocated": 74194944,
+        "nonwal_allocated": 11125202944
+      }
+    },
+    {
+      "file": "storage-before-startup.json",
+      "at": 1791203312.2516763,
+      "totals": {
+        "allocated": 11124355072,
+        "wal_allocated": 52326400,
+        "nonwal_allocated": 11072028672
+      }
+    },
+    {
+      "file": "storage-after-graceful-shutdown.json",
+      "at": 1791203836.117193,
+      "totals": {
+        "allocated": 11199361024,
+        "wal_allocated": 74194944,
+        "nonwal_allocated": 11125166080
+      }
+    },
+    {
+      "file": "storage-window-end.json",
+      "at": 1791203620.8817062,
+      "totals": {
+        "allocated": 11225772032,
+        "wal_allocated": 108814336,
+        "nonwal_allocated": 11116957696
+      }
+    }
+  ]
+}

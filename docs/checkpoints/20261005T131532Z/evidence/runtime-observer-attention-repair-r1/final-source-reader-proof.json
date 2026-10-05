@@ -1,0 +1,9 @@
+{
+  "scan_id": "scan_ff5de8fb66fe4d8d8b01619fcf0482fd",
+  "logical_bytes": 16530480,
+  "manifest_bytes": 17422,
+  "source_reader_limit": 2097152,
+  "elapsed_s": 0.26683748299547005,
+  "logical_hash_verified": true,
+  "decoded_source_equal": true
+}

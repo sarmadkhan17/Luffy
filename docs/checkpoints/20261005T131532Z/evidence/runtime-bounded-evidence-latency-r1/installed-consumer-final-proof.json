@@ -1,0 +1,96 @@
+{
+  "records": [
+    {
+      "sequence": 1,
+      "cut_id": "5a8df60afde089ddf15246d49d017648c1c5be2756a529bce158adc896f1dae3",
+      "packet_bytes": 436575,
+      "logical_bytes": 431307150,
+      "logical_sha": "e1d68fa85da4263ce721d8ee5a1807c1eeb0aae9c93f3e374109f00df99fa8af",
+      "references": 6514,
+      "unique_chunks": 3674
+    },
+    {
+      "sequence": 2,
+      "cut_id": "c4b060c384a8dadc6a083146edc57eed3736977d9fe078e2873c703c187d01ba",
+      "packet_bytes": 436575,
+      "logical_bytes": 431301126,
+      "logical_sha": "5b31849be46ccf0b2fc9cae90067c17b090a686ee6613fd4541d58b120848e1c",
+      "references": 6514,
+      "unique_chunks": 2047
+    },
+    {
+      "sequence": 3,
+      "cut_id": "3e682b971c0aa7e36a15d694e1b5156abac18830db2f35822018725187aa3e31",
+      "packet_bytes": 436575,
+      "logical_bytes": 431301087,
+      "logical_sha": "2508a8c11735b60cfde2d98abb00320195f218c1b35dad0f44d93a269e654d82",
+      "references": 6514,
+      "unique_chunks": 1974
+    },
+    {
+      "sequence": 4,
+      "cut_id": "6b7300ad36db2c024d63de0476ea563d188bcb3b1bb1eb4b950e0b484a4533f3",
+      "packet_bytes": 436575,
+      "logical_bytes": 431301129,
+      "logical_sha": "25e57af404fbbabca0f2e4d71c02f81d1b431abba5e02b78530a369cfc0d8f25",
+      "references": 6514,
+      "unique_chunks": 2047
+    },
+    {
+      "sequence": 5,
+      "cut_id": "26c995be94bba39a6d503f197d5b6219f0a4f341061f8c15fa8d479c125e6086",
+      "packet_bytes": 436575,
+      "logical_bytes": 431301164,
+      "logical_sha": "30fd2b1df5af32e1d907fba023bb8f13dc360ab9407730b024a42409c757a3e4",
+      "references": 6514,
+      "unique_chunks": 2047
+    },
+    {
+      "sequence": 6,
+      "cut_id": "5ae0a0619e00fd5d9dc5852ece454b265c653a5516258272d83f300fbcd4b51e",
+      "packet_bytes": 436575,
+      "logical_bytes": 431301135,
+      "logical_sha": "a75af194b518cc6fd8c387b865c23e7e24e36bbd5ad1779d4a7e479317b43355",
+      "references": 6514,
+      "unique_chunks": 2047
+    },
+    {
+      "sequence": 7,
+      "cut_id": "4a59476ed5319acc098df924d85e77e689363a14fe5e381da78d47c680dcb4ce",
+      "packet_bytes": 436575,
+      "logical_bytes": 431301148,
+      "logical_sha": "2531404522b8add3508584b3b18781af1d2a81e52bf3bc9dc60ec9e104c5624b",
+      "references": 6514,
+      "unique_chunks": 1974
+    },
+    {
+      "sequence": 8,
+      "cut_id": "36188cbb78261a22f679a3539cdd00168e55345e931644b845c3da5132581319",
+      "packet_bytes": 436575,
+      "logical_bytes": 431301157,
+      "logical_sha": "f10406d5bc1459ee838e6b3fe44e596c708d2d0fbfff66a38ac43421fc1a01df",
+      "references": 6514,
+      "unique_chunks": 2047
+    },
+    {
+      "sequence": 9,
+      "cut_id": "627cfbf2501a06c2d11c7430f6a97fc7f71fd81433a62bcf7bacfcbc7a76f35b",
+      "packet_bytes": 436575,
+      "logical_bytes": 431301143,
+      "logical_sha": "d4da7de7de93a4dc4e5af318617c125dbdb0ef9183bace3e50b0b5a1047c2277",
+      "references": 6514,
+      "unique_chunks": 2047
+    }
+  ],
+  "union_chunks": 4324,
+  "union_compressed_payload_bytes": 33324389,
+  "owner_view": {
+    "bytes": 431301143,
+    "sha256": "d4da7de7de93a4dc4e5af318617c125dbdb0ef9183bace3e50b0b5a1047c2277",
+    "elapsed_s": 14.416331020998769
+  },
+  "normal_selected_reader_s": 5.456181180998101,
+  "exact_runtime_risk_replay_s": 19.069951083001797,
+  "replay": "PASS",
+  "scope": "Read-only actual deployed installed SQL decoder, exact selected Consumer.evaluation and existing Portfolio/Risk replay after shutdown. No other evaluation reconstructed; no production rows changed. Union compressed bytes cover these evaluation roots, not all previous states or SQLite index/page overhead."
+}
