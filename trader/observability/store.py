@@ -60,7 +60,10 @@ class Store:
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA foreign_keys=ON")
         self.db.execute("PRAGMA auto_vacuum=FULL")
-        self.db.execute("PRAGMA journal_mode=DELETE")
+        # Portfolio reads a verified snapshot while the disposable worker
+        # publishes/prunes. WAL preserves that snapshot without making the
+        # existing 50 ms writer deadline fail during initialization/commit.
+        self.db.execute("PRAGMA journal_mode=WAL")
         self.db.executescript("""
           CREATE TABLE IF NOT EXISTS scans (
             scan_id TEXT PRIMARY KEY, as_of_ms INTEGER NOT NULL, payload TEXT, causes_complete INTEGER DEFAULT 0);

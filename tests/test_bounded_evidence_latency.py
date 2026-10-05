@@ -32,6 +32,21 @@ class Venue:
         return [[1, 10, 11, 9, 10, 5]]
 
 
+def test_worker_sqlite_diagnostics_retain_codes_without_messages(tmp_path,monkeypatch):
+    import subprocess
+    from trader.observability.collector import Collector,WorkerError
+    child=Collector(tmp_path,start=False)
+    data=dict(ok=False,error_type='OperationalError',sqlite_errorcode=5,
+              sqlite_errorname='SQLITE_BUSY',message='private evidence must not be retained')
+    monkeypatch.setattr(subprocess,'run',lambda *a,**k:subprocess.CompletedProcess(a,1,json.dumps(data),''))
+    with pytest.raises(WorkerError) as failed:child._run(dict(kind='scan',scan_id='metadata-only'))
+    assert str(failed.value)=='OperationalError'
+    assert failed.value.sqlite_errorcode==5 and failed.value.sqlite_errorname=='SQLITE_BUSY'
+    data.update(sqlite_errorcode='private',sqlite_errorname='private message')
+    with pytest.raises(WorkerError) as failed:child._run(dict(kind='scan',scan_id='metadata-only'))
+    assert failed.value.sqlite_errorcode is None and failed.value.sqlite_errorname is None
+
+
 def test_portfolio_bounded_cases_keep_exact_latest_updates(tmp_path):
     j=Journal(tmp_path/'luffy.db')
     j.kv_set('venue_position_snapshot',json.dumps(snapshot(side=None,cut=int(time.time()*1000))))
@@ -81,7 +96,7 @@ def test_real_producer_reader_large_source_retry_replay_growth(tmp_path, monkeyp
     event=capture(data,members,'observed-scale',cfg,at,
         membership_receipts=u.membership_receipts(as_of_ms=at))
     from trader.observability.collector import Collector
-    child=Collector(tmp_path/'disposable',cfg,start=False)
+    child=Collector(tmp_path,cfg,start=False)
     assert child._run(event)['present']
     store=Store(tmp_path/'attention.db',cfg);store.write(event)
     store.write(dict(kind='causes',scan_id=event['scan_id'],as_of_ms=at,items=[]))
@@ -101,7 +116,21 @@ def test_real_producer_reader_large_source_retry_replay_growth(tmp_path, monkeyp
     ensure(j)
     import trader.core.config as C
     config=C.load_config();config['attention']['stale_seconds']=300
-    requests,_,control,inventory,detail=portfolio_capture(j.db_path,store.path,tmp_path/'absent.db',config)
+    # Publish an exact retry through the real disposable worker while the
+    # actual Portfolio reader holds its Attention snapshot. The old DELETE
+    # store failed with SQLITE_BUSY at its unchanged 50 ms boundary.
+    from trader.portfolio import allocator as A
+    freeze=A.Source.freeze.__func__;during=[]
+    def frozen(cls,*args,**kwargs):
+        if args[0]=='current-shadow-inventory':
+            during.append(child._run(event))
+        return freeze(cls,*args,**kwargs)
+    with monkeypatch.context() as patch:
+        patch.setattr(A.Source,'freeze',classmethod(frozen))
+        requests,_,control,inventory,detail=portfolio_capture(j.db_path,store.path,tmp_path/'absent.db',config)
+    assert store.db.execute('PRAGMA journal_mode').fetchone()[0]=='wal'
+    assert len(during)==1 and during[0]['present'] and during[0]['causes_complete']
+    assert store.db.execute('SELECT count(*),sum(length(payload)) FROM journal_evidence_blobs_v1').fetchone()==before
     assert control=='FROZEN' and detail['scan_id']=='observed-scale' and requests
     retained_scan=json.loads(inventory.payload_json)['scan']
     assert retained_scan==json.loads(original)

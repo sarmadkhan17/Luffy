@@ -257,7 +257,9 @@ class Collector:
         if not isinstance(data,dict) or result.returncode or not data.get('ok'):
             name=data.get('error_type','worker_failed') if isinstance(data,dict) else 'worker_failed'
             if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]{0,47}',str(name)): name='worker_failed'
-            raise WorkerError(name,result.returncode,'child_error')
+            raise WorkerError(name,result.returncode,'child_error',
+                              data.get('sqlite_errorcode') if isinstance(data,dict) else None,
+                              data.get('sqlite_errorname') if isinstance(data,dict) else None)
         if data.get('code_hash') != self.manifest:
             raise WorkerError('code_mismatch',result.returncode,'code_mismatch')
         return data.get('proof')
@@ -303,6 +305,8 @@ class Collector:
                          phase='timeout' if timeout else getattr(exc,'phase',event.get('kind','unknown')),
                          error_class='worker_timeout' if timeout else str(exc) if isinstance(exc,WorkerError) else type(exc).__name__,
                          returncode=getattr(exc,'returncode',None))
+                if getattr(exc,'sqlite_errorcode',None) is not None:
+                    rec.update(sqlite_errorcode=exc.sqlite_errorcode,sqlite_errorname=exc.sqlite_errorname)
                 if timeout:
                     rec['row_present_after_timeout']=self._timeout_row(event.get('scan_id'))
                 self._incident(rec)
@@ -323,6 +327,8 @@ class Collector:
 
 class WorkerError(Exception):
     """Allowlisted class/reason only; never stores stderr or arbitrary messages."""
-    def __init__(self, reason, returncode=None, phase='worker'):
+    def __init__(self, reason, returncode=None, phase='worker', sqlite_errorcode=None, sqlite_errorname=None):
         super().__init__(reason)
         self.returncode, self.phase = returncode, phase
+        self.sqlite_errorcode = sqlite_errorcode if type(sqlite_errorcode) is int and 0 <= sqlite_errorcode <= 65535 else None
+        self.sqlite_errorname = sqlite_errorname if isinstance(sqlite_errorname,str) and re.fullmatch(r'SQLITE_[A-Z_]{1,48}',sqlite_errorname) else None
