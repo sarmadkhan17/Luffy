@@ -48,9 +48,11 @@ work_package:
     requires OPEN. Actual diagnostic engineering result is BLOCKED below.
   result: BLOCKED
   mode: DIAGNOSIS_ONLY
-  purpose: Causal comparison remains blocked after the single additional r3 attempt.
-  objective: Owner-supplied or separately approved causal evidence fixing scan/source cuts and triggering Portfolio
-    event workload with uncontaminated timing. No retry or further runtime implicitly authorized.
+  purpose: Retained reconstruction rejects additional Portfolio trigger count as historical cause; equivalent common-symbol/input
+    timing remains UNKNOWN.
+  objective: "The later historical cycle\u2019s MainThread elapsed cost for exactly the baseline common-symbol/input\
+    \ workload, with the two extra symbols and their induced pre-scan/evidence work excluded. Baseline per-symbol\
+    \ identities/bounds are absent, so this equivalent-work cost cannot be reconstructed from retained records."
   implementation_started: false
   code_fix_selected: false
   diagnostic_execution_completed: true
@@ -65,10 +67,11 @@ work_package:
   observed_runtime_revision: 25cc7d0021435ea5f1182f1b459ad2c04cf6a272
   evidence:
   - docs/tracker/evidence/2026-10-06-perf01-r3-terminal-report.yaml
-  evidence_scope: 223.759s successful first cycle matched20-symbol scan but had no triggering Portfolio new-context
-    events; insufficient causal or sustained evidence.
+  - docs/tracker/evidence/2026-10-06-perf01-retained-reconstruction.yaml
+  evidence_scope: Retained stages and exact checkpoint events only; both historical cycles have four triggers and
+    Portfolio wall decreased17.264559s. Outside-Portfolio48.339113s is unmatched, not normalized regression.
   allowed_actions:
-  - Read retained exact PERF-01 evidence; no further runtime authority remains.
+  - Read retained exact PERF-01 evidence only; no services, APIs, optimization or runtime retry.
   acceptance:
   - Preserve original PERF-01 closing condition.
   - Require source/workload/event-matched causal evidence before correction; preserve240s and all safety/coverage/provenance.

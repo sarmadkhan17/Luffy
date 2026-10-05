@@ -52,14 +52,22 @@ current_runtime_status:
   provider_admissions: 0
   usage_ledger: VERIFIED_UNCHANGED
   unresolved:
-  - Both historical228.702/259.776 and r2 cuts contain four triggering NEW_OPPORTUNITY_CONTEXT events; r3 contains
-    none. Historical scan18 versus20 and shutdown-overlapping259/r2 prevent a full-workload matched causal comparison.
-    Lower timing is not a proven correction.
-  - No smallest evidence-supported correction; no sustained recurring-cycle distribution.
+  - "The later historical cycle\u2019s MainThread elapsed cost for exactly the baseline common-symbol/input workload,\
+    \ with the two extra symbols and their induced pre-scan/evidence work excluded. Baseline per-symbol identities/bounds\
+    \ are absent, so this equivalent-work cost cannot be reconstructed from retained records."
+  - No smallest evidence-supported correction or sustained recurring-cycle distribution.
   full_runtime_maturity: NOT_PROVEN
   real_money_ready: false
   trading_activation_authorized: false
-
+  causal_reconstruction:
+    evidence: docs/tracker/evidence/2026-10-06-perf01-retained-reconstruction.yaml
+    result: UNKNOWN
+    portfolio_envelope_delta_seconds: -17.264559309995093
+    outside_portfolio_unmatched_delta_seconds: 48.33911259199522
+    single_missing_causal_fact: "The later historical cycle\u2019s MainThread elapsed cost for exactly the baseline\
+      \ common-symbol/input workload, with the two extra symbols and their induced pre-scan/evidence work excluded.\
+      \ Baseline per-symbol identities/bounds are absent, so this equivalent-work cost cannot be reconstructed from\
+      \ retained records."
 historical_runtime_observation_9385f792:
   implementation_baseline: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
   observed_runtime_revision: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
@@ -784,8 +792,10 @@ current_active_work:
   trading_activation_authorized: false
   evidence:
   - docs/tracker/evidence/2026-10-06-perf01-r3-terminal-report.yaml
-  external_dependency: Owner-supplied or separately approved causal evidence fixing scan/source cuts and triggering
-    Portfolio event workload with uncontaminated timing. No retry or further runtime implicitly authorized.
+  - docs/tracker/evidence/2026-10-06-perf01-retained-reconstruction.yaml
+  external_dependency: "The later historical cycle\u2019s MainThread elapsed cost for exactly the baseline common-symbol/input\
+    \ workload, with the two extra symbols and their induced pre-scan/evidence work excluded. Baseline per-symbol\
+    \ identities/bounds are absent, so this equivalent-work cost cannot be reconstructed from retained records."
 historical_stage1_recovery_monitoring_finalization:
   id: LUFFY-STAGE1-RECOVERY-MONITORING-FINALIZE-R1
   type: PACKAGE_FINALIZATION

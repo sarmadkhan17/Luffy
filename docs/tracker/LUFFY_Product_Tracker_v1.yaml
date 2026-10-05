@@ -29,7 +29,7 @@ metadata:
   workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged and
     excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
-  latest_perf01_result_source: docs/tracker/evidence/2026-10-06-perf01-r3-terminal-report.yaml
+  latest_perf01_result_source: docs/tracker/evidence/2026-10-06-perf01-retained-reconstruction.yaml
   publication_note: Owner explicitly accepted adoption and read-only Tracker navigation. OPEN-09 closes with this
     control-plane reconciliation; implementation verification is distinct from deployed/browser proof.
   current_runtime_item: PERF-01
@@ -6654,10 +6654,10 @@ items:
   implementation_evidence: SEE_EVIDENCE
   runtime_evidence: MEASURED_DIAGNOSTIC_ONLY; perf01-owner-measurement-r3; not full-workload comparable
   visual_approval: NOT_APPLICABLE
-  latest_evidence: r3:223.759107s first cycle,60.669567s thread CPU,20/20 scan, zero skips/entries, no shutdown
-    overlap,52 stage records. Portfolio triggered false versus four NEW_OPPORTUNITY_CONTEXT triggers in historical
-    baselines and r2.42 static tests pass; safety/containment/source invariants retained. Engineering result BLOCKED;
-    no correction selected.
+  latest_evidence: 'Retained reconstruction: both historical cycles processed four NEW_OPPORTUNITY_CONTEXT triggers.
+    Portfolio checkpoint89.546540s to72.281981s (-17.264559s); outside-Portfolio observed slice139.155163s to187.494276s
+    (+48.339113s).18/20 symbol work and shutdown qualification prevent normalization. Baseline symbol identities/whole-loop
+    bounds absent; engineering result BLOCKED, causal result UNKNOWN.'
   source_ids:
   - S05
   - S06
@@ -6665,8 +6665,10 @@ items:
   - S11
   - S16
   source_sections: 'Parent requirement(s): RUN-03'
-  next_proof: Owner-supplied or separately approved causal evidence fixing scan/source cuts and triggering Portfolio
-    event workload with uncontaminated timing. No retry or further runtime implicitly authorized.
+  next_proof: "Retained-evidence gap: The later historical cycle\u2019s MainThread elapsed cost for exactly the\
+    \ baseline common-symbol/input workload, with the two extra symbols and their induced pre-scan/evidence work\
+    \ excluded. Baseline per-symbol identities/bounds are absent, so this equivalent-work cost cannot be reconstructed\
+    \ from retained records. No generic runtime retry is requested or authorized."
   acceptance_basis: Existing requirement/observed incident; not a new feature.
   acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
   priority: NEXT_AFTER_CURRENT
@@ -6685,9 +6687,13 @@ items:
   engineering_result: BLOCKED
   diagnostic_attempts_completed: 2
   additional_owner_attempt_consumed: true
-  required_external_evidence: Owner-supplied or separately approved causal evidence fixing scan/source cuts and
-    triggering Portfolio event workload with uncontaminated timing. No retry or further runtime implicitly authorized.
+  required_external_evidence: "The later historical cycle\u2019s MainThread elapsed cost for exactly the baseline\
+    \ common-symbol/input workload, with the two extra symbols and their induced pre-scan/evidence work excluded.\
+    \ Baseline per-symbol identities/bounds are absent, so this equivalent-work cost cannot be reconstructed from\
+    \ retained records."
   diagnostic_evidence: docs/tracker/evidence/2026-10-06-perf01-r3-terminal-report.yaml
+  causal_reconstruction_evidence: docs/tracker/evidence/2026-10-06-perf01-retained-reconstruction.yaml
+  causal_result: UNKNOWN
 - id: PERF-02
   area: Observed issues
   stage: Cross-cutting

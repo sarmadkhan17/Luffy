@@ -1,0 +1,41 @@
+item: PERF-01
+engineering_result: BLOCKED
+analysis_mode: RETAINED_EVIDENCE_ONLY; no services/APIs/runtime replay/optimization
+analysis_revision: 68eb04c931de22d8cba4aa48e0c238c0f330bf7e
+external_report: /home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-retained-reconstruction-r1/reconstruction.json
+external_report_sha256: 11a73c936d2ad7fbf7925a2a663bd706bc014afd69a6cd40148059157f0896df
+readable_report: /home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-retained-reconstruction-r1/REPORT.md
+causal_result: UNKNOWN
+historical_observed_delta_seconds: 31.074553282000124
+portfolio_envelope_delta_seconds: -17.264559309995093
+outside_portfolio_unmatched_delta_seconds: 48.33911259199522
+trigger_counts:
+  historical228: 4
+  historical259: 4
+  r2: 4
+  r3: 0
+portfolio_wall_seconds:
+  historical228: 89.54654040199966
+  historical259: 72.28198109200457
+  r2: UNKNOWN
+  r3: 30.363177981998888
+workload_normalized_wall_seconds: UNKNOWN for each run; no invented symbol or trigger factors
+portfolio_count_hypothesis: 'Additional triggering Portfolio events do not explain the historical increase: both
+  historical runs have four and whole Portfolio wall/CPU decreased.'
+residual: 48.339113s outside Portfolio is descriptive and unmatched, not proven causal regression. Removing1.225744s
+  later post-Portfolio post-stop span still leaves47.113368s unmatched.
+single_missing_causal_fact: "The later historical cycle\u2019s MainThread elapsed cost for exactly the baseline\
+  \ common-symbol/input workload, with the two extra symbols and their induced pre-scan/evidence work excluded.\
+  \ Baseline per-symbol identities/bounds are absent, so this equivalent-work cost cannot be reconstructed from\
+  \ retained records."
+per_event_timing: UNKNOWN; event processed_at is a shared batch stamp, not start/end; gate.evaluate timed three
+  whole-batch invocations, not four individual triggers.
+shutdown_scope: Historical259 andr2 complete during shutdown; r3 completes before stop with different Portfolio
+  event branch.
+normalization_scope: Whole Portfolio exclusion is a disjoint observed envelope, not pure marginal trigger work.
+  Baseline18 versus later20 cannot be normalized from unidentified baseline whole-symbol spans.
+closing_condition_preserved: true
+closure_claim: false
+production_correction: null
+next_runtime_authorized: false
+next_item_selected: null
