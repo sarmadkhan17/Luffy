@@ -1,0 +1,40 @@
+{
+  "package": "LUFFY-STAGE6-NORMAL-SOURCE-INTEGRATION-R1",
+  "status": "PASS",
+  "decision": "NO_ALLOCATION",
+  "candidate_count": 0,
+  "source_counts": {
+    "strategy_capacity_receipts": 0,
+    "strategy_probation_receipts": 0,
+    "strategy_versions": 0
+  },
+  "source_delivery": {
+    "registered_authorities": {
+      "allocation": 0,
+      "cost_scope": 0,
+      "gross": 0,
+      "uncertainty": 0
+    },
+    "stores": {
+      "contexts": {
+        "path": "/mnt/luffy-data/luffy/production/data/contexts",
+        "present": false,
+        "publication_count": 0
+      },
+      "economics": {
+        "path": "/mnt/luffy-data/luffy/production/data/economics",
+        "present": false,
+        "publication_count": 0
+      }
+    }
+  },
+  "missing_metrics": [
+    "actual_margin_utilization_pct",
+    "gross_exposure",
+    "per_instrument_exposure"
+  ],
+  "real_order_submissions": 0,
+  "authenticated_requests": 0,
+  "production_mutations": 0,
+  "replay": "PASS"
+}

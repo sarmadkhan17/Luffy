@@ -1,0 +1,74 @@
+{
+  "status": "PASS",
+  "real_shadow_result": "NO_ALLOCATION",
+  "trade_intents": 0,
+  "risk_approvals": 0,
+  "real_order_submissions": 0,
+  "authenticated_requests": 0,
+  "production_mutations": 0,
+  "replay": "PASS",
+  "trading_behavior_changed": "NO_NEW_EXECUTION_AUTHORITY",
+  "evidence": "docs/superpowers/evidence/stage6-runtime-portfolio-integration-r1/verified-real-shadow/shadow-1790900816378.json",
+  "holdings": 3,
+  "control_state": "FROZEN",
+  "versions": 0,
+  "metrics": {
+    "account_equity": {
+      "status": "ESTABLISHED",
+      "value": "5249.91907199",
+      "reason": null
+    },
+    "actual_margin_utilization_pct": {
+      "status": "UNAVAILABLE",
+      "value": null,
+      "reason": "ACCOUNT_MARGIN_FIELD_STALE_OR_UNAVAILABLE"
+    },
+    "gross_exposure": {
+      "status": "UNAVAILABLE",
+      "value": null,
+      "reason": "CURRENT_MARK_UNAVAILABLE"
+    },
+    "open_position_count": {
+      "status": "ESTABLISHED",
+      "value": 3,
+      "reason": null
+    },
+    "per_instrument_exposure": {
+      "status": "UNAVAILABLE",
+      "value": {
+        "binance_usdm:futures:AVAXUSDT": null,
+        "binance_usdm:futures:LINKUSDT": null,
+        "binance_usdm:futures:SOLUSDT": null
+      },
+      "reason": "CURRENT_MARK_UNAVAILABLE"
+    },
+    "per_symbol_risk_pct": {
+      "status": "ESTABLISHED",
+      "value": {
+        "AVAX/USDT": 2.699115037890675,
+        "LINK/USDT": 0.05715905677790479,
+        "SOL/USDT": 0.47354013797302336
+      },
+      "reason": null
+    },
+    "position_margin_pct": {
+      "status": "ESTABLISHED",
+      "value": {
+        "AVAX/USDT": 2.4285326735840944,
+        "LINK/USDT": 1.7588842558100275,
+        "SOL/USDT": 2.447618682077939
+      },
+      "reason": null
+    },
+    "risk_heat_pct": {
+      "status": "ESTABLISHED",
+      "value": 3.2298142326416026,
+      "reason": null
+    },
+    "total_margin_pct": {
+      "status": "ESTABLISHED",
+      "value": 6.635035611472061,
+      "reason": null
+    }
+  }
+}
