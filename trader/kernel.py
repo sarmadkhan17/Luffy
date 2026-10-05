@@ -1719,6 +1719,7 @@ class Kernel:
                 pass  # unverified response never replaces the last good cut
             else:
                 self.position_observation = observation
+                self._position_rows = position_rows   # the rows it was built from
             ex_amt = {norm_symbol(p["symbol"]): float(p.get("contracts") or 0)
                       for p in position_rows
                       if float(p.get("contracts") or 0) > 0}
@@ -1919,6 +1920,7 @@ class Kernel:
             fresh = None                # a malformed read is no read
         balance = fresh if fresh is not None else self._last_equity_fallback()
         self._record_account_observation(attempted, raw, fresh, balance)
+        self._record_capacity_evidence()
         status = self.risk.update_equity(balance, authoritative=fresh is not None)
         if status.get("halt_breached"):
             self.state_machine.set(ControlState.HALTED, "risk_engine",
@@ -2031,6 +2033,7 @@ class Kernel:
 
     def _fetch_balance_fresh(self) -> float | None:
         """Equity read from the venue now, or None. Never a stored value."""
+        self._account_response = None
         try:
             import hashlib, hmac as _hmac
             import requests
@@ -2040,11 +2043,21 @@ class Kernel:
             sig = _hmac.new(secret.encode(), q.encode(), hashlib.sha256).hexdigest()
             base = self.exchange.urls.get("api", {}).get("fapiPrivate",
                    "https://demo-fapi.binance.com/fapi/v1").rsplit("/", 1)[0]
-            r = requests.get(
-                f"{base}/fapi/v3/account" if "/v1" in base
-                else f"{base}/v3/account",
-                params=q + f"&signature={sig}",
-                headers={"X-MBX-APIKEY": key}, timeout=10)
+            url = (f"{base}/fapi/v3/account" if "/v1" in base
+                   else f"{base}/v3/account")
+            sent_ms = time.time_ns() // 1_000_000
+            r = requests.get(url, params=q + f"&signature={sig}",
+                             headers={"X-MBX-APIKEY": key}, timeout=10)
+            # capacity evidence only: the same response's bytes, the unsigned
+            # URL and its timing (never the query, signature or key). Isolated:
+            # it can never change the equity read below.
+            try:
+                self._account_response = {
+                    "body": getattr(r, "content", None), "request_url": url,
+                    "request_start_ms": sent_ms,
+                    "received_ms": time.time_ns() // 1_000_000}
+            except Exception:
+                self._account_response = None
             tmb = float(r.json().get("totalMarginBalance") or 0)
             if tmb > 0:
                 self._balance_read = {"basis": "venue_total_margin_balance",
@@ -2210,6 +2223,31 @@ class Kernel:
             self.journal.kv_set(self.ACCOUNT_OBS_KEY, json.dumps(obs, allow_nan=False))
         except Exception as e:                       # observation must never gate
             log.debug(f"account observation not recorded: {e}")
+
+    def _record_capacity_evidence(self) -> None:
+        """Persist what this cycle's existing reads already observed: the
+        account response's available balance and the latest verified venue
+        position observation. No request is made here; a failure is logged
+        and ignored — observation never gates anything."""
+        from .engine import evidence_capture as ce
+        try:
+            resp = getattr(self, "_account_response", None) or {}
+            ce.record_margin(self.journal, ce.margin_observation(
+                resp.get("body"), request_url=resp.get("request_url"),
+                request_start_ms=resp.get("request_start_ms"),
+                received_ms=resp.get("received_ms")))
+        except Exception as e:
+            log.debug(f"margin observation not recorded: {e}")
+        try:
+            obs = getattr(self, "position_observation", None)
+            if obs is not None and obs.observation_id != getattr(
+                    self, "_position_snapshot_of", None):
+                ce.record_snapshot(self.journal, ce.position_snapshot(
+                    obs, getattr(self, "_position_rows", None)),
+                    at_ms=time.time_ns() // 1_000_000)
+                self._position_snapshot_of = obs.observation_id
+        except Exception as e:
+            log.debug(f"venue position snapshot not recorded: {e}")
 
     def _equity_provenance(self, value) -> dict | None:
         """Provenance for the equity row this cycle writes: the account

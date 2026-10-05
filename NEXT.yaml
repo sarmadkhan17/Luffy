@@ -2,6 +2,24 @@ project: LUFFY
 sdd_version: '3.2'
 
 work_package:
+  id: LUFFY-PORTFOLIO-ALLOCATOR-R1
+  status: SELECTED_NOT_STARTED
+  note: Named by the owner as the next package (Stage 6). Scope, acceptance and constraints come from the owner's package brief; none are invented here.
+  preconditions_recorded:
+    - effective strategy capacity is UNAVAILABLE (no registered liquidity model, leverage brackets, account eligibility); an allocator must not treat any capacity number as established
+    - deterministic Risk remains the sizing authority; research.referee=false and research.handoff=false unchanged
+  last_completed:
+    id: LUFFY-CAPACITY-EVIDENCE-CAPTURE-R1
+    verdict: PASS
+    state: TESTED
+    branch: luffy-capacity-evidence-capture-r1 (base luffy-strategy-capacity-r1 b35a4bc; uncommitted)
+    report: docs/superpowers/reports/2026-10-01-capacity-evidence-capture-r1.md
+    record: STATE.yaml completed_capacity_evidence_capture_r1
+    runtime_deployment: NOT_DEPLOYED
+  running_shadows:
+    - LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1, PID 2949543 (record below)
+
+intelligence_spine_shadow_package:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
   type: SHADOW_OPERATION
   priority: HIGH

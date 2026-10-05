@@ -4185,6 +4185,45 @@ completed_strategy_capacity_r1:
   trading_behavior_changed: NO (no Kernel/engine import of capacity; no order, Risk limit, leverage, control-state or config change)
   runtime_deployment: NOT_DEPLOYED
 
+completed_capacity_evidence_capture_r1:
+  id: LUFFY-CAPACITY-EVIDENCE-CAPTURE-R1
+  verdict: PASS
+  state: TESTED
+  branch: luffy-capacity-evidence-capture-r1 (base luffy-strategy-capacity-r1 b35a4bc; uncommitted)
+  report: docs/superpowers/reports/2026-10-01-capacity-evidence-capture-r1.md
+  evidence:
+    - trader/engine/evidence_capture.py (new; account-margin-observation.v1, venue-position-snapshot.v1, immutable venue_position_snapshots)
+    - trader/engine/execution_evidence.py (new; execution-evidence.v1 read model)
+    - trader/observability/depth_evidence.py, scripts/capacity_depth_shadow.py (new; depth-observation.v1 public shadow collector)
+    - trader/core/instrument_registry.py, trader/data/binance_usdm_registry.py (LOT_SIZE maxQty, MARKET_LOT_SIZE min/max/step)
+    - trader/kernel.py (persist the existing account response's availableBalance and the existing reconciliation position observation; no new request; failure-isolated)
+    - trader/strategy/capacity.py (consumes funding, persisted snapshot, venue maxima)
+    - tests/test_capacity_evidence_capture.py (33 passed); tests/test_strategy_capacity.py updated
+    - full suite failure/error node-ID sets identical to base b35a4bc (75 failed, 16 errors, pre-existing)
+  results:
+    available_margin: TESTED from the same /fapi/v3/account response as Risk equity; absent field -> UNAVAILABLE NOT_PRESENT_IN_EXISTING_AUTHORIZED_ACCOUNT_EVIDENCE; production presence UNVERIFIED (not deployed)
+    venue_filters: TESTED - min/max qty, step, market-order min/max/step, min notional, tick, status, contract type from public exchangeInfo; max notional NOT_PUBLISHED_IN_EXCHANGEINFO
+    leverage_brackets: UNAVAILABLE - ccxt retains only [notionalFloor, maintMarginRatio]; no existing authorized path keeps initialLeverage/notionalCap
+    account_eligibility: UNKNOWN (preserved)
+    venue_position_snapshot: TESTED - persisted, immutable history on book change, replayable into capacity receipts; not the journal
+    order_book_depth: TESTED; public shadow collector ran 12 cycles then STOPPED by owner request (optional; see running_shadows)
+    slippage_evidence: TESTED read model; production journal has 0 trade_legs/trade_fills rows, so 0 measurements yet
+    liquidity_capacity_model: UNAVAILABLE (NO_REGISTERED_LIQUIDITY_CAPACITY_MODEL)
+    effective_capacity: UNAVAILABLE (missing liquidity model, leverage brackets, account eligibility)
+  storage_measured: depth-20 snapshot 1621 B on disk; 23040/day at 16 symbols x 60 s; ~37 MB/day, ~112 MB per 72 h, ~1.12 GB per 30 days (projection, not a retention policy)
+  trading_behavior_changed: NO
+  runtime_deployment: NOT_DEPLOYED (Kernel changes not deployed)
+
+running_shadows:
+  - id: LUFFY-CAPACITY-EVIDENCE-CAPTURE-R1 depth collector
+    status: STOPPED (owner request 2026-10-01, optional collector; stop_file after 12 cycles, 192 snapshots, 0 rejections, 299008 B; restartable with the same command)
+    started: '2026-10-01T02:30 local; PID 2979764; 16 symbols (latest production Attention scan, frozen), depth 20, 60 s; stops after 72 h, 4400 cycles, 2 GiB or <shadow-dir>/STOP'
+    shadow_dir: /mnt/luffy-data/luffy/shadow/capacity-evidence-r1-20261001
+    boundary: public GET /fapi/v1/depth on fapi.binance.com only; no credentials; reads production attention.db read-only once at start; writes only the shadow dir; not in the Kernel
+    evidence: 12 cycles, 192/192 accepted, 0 rejections
+  - id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
+    status: SHADOW_RUNNING (see current_active_work history; PID 2949543)
+
 current_active_work:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
   status: SHADOW_RUNNING
@@ -4257,7 +4296,7 @@ delivery_progress:
   capability_coverage_formula: capabilities at TESTED or better / 17 capabilities in STATE.capabilities (10/17); accounting_and_truth IMPLEMENTED -> TESTED on the integrated baseline (current-truth + trade-provenance tests); previously 9/17
   current_milestone: Stage 3 intelligence spine (WorldModel -> Attention -> Investigation -> Research) in shadow
   code_baseline: luffy-integrated-core-r1
-  last_completed: LUFFY-STRATEGY-CAPACITY-R1 (PASS; TESTED; NOT_DEPLOYED; branch luffy-strategy-capacity-r1, uncommitted); previously LUFFY-CORE-LINEAGE-INTEGRATION-R1 (PASS; TESTED; NOT_DEPLOYED), LUFFY-EXACT-VERSION-PAPER-PROBATION-R1, LUFFY-STRATEGY-FACTORY-HANDOFF-R1, LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
+  last_completed: LUFFY-CAPACITY-EVIDENCE-CAPTURE-R1 (PASS; TESTED; NOT_DEPLOYED; optional depth shadow stopped); previously LUFFY-STRATEGY-CAPACITY-R1 (PASS; TESTED; NOT_DEPLOYED); previously LUFFY-CORE-LINEAGE-INTEGRATION-R1 (PASS; TESTED; NOT_DEPLOYED), LUFFY-EXACT-VERSION-PAPER-PROBATION-R1, LUFFY-STRATEGY-FACTORY-HANDOFF-R1, LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
   stage_5_handoff_edges: 7/7 TESTED on a fixture candidate (candidate, referee pass, version, receipt, probation, approval, eligibility); exact-version paper install and per-trade-identity probation TESTED through the real Trade Provenance identity path on the integrated baseline; capacity contract TESTED (strategy-capacity-receipt.v1, required by first-live eligibility) with effective capacity UNAVAILABLE; no real probation has run; degradation/retirement not wired to analyst.review_deployed; Stage 5 not PROVEN/ACTIVE
   stages:
     source_observation: LINKED

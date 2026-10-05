@@ -1,0 +1,15 @@
+{
+  "status": "UNVERIFIED",
+  "checkout": "/mnt/luffy-data/luffy/workspaces/capacity-evidence-capture-r1",
+  "original_branch": "refs/heads/luffy-capacity-evidence-capture-r1",
+  "original_head": "b35a4bcca29d7a0eda0ebcebc25bd9d6067b1cb9",
+  "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1",
+  "captured_files": [
+    "NEXT.yaml",
+    "STATE.yaml",
+    "trader/kernel.py"
+  ],
+  "tests": "Existing results only. No new tests or independent assessment. Historical results do not prove this combined dirty variant.",
+  "excluded_files": "Remain local; database/runtime/environment/cache/raw-log/full-payload updates excluded.",
+  "control_plane": "STATE.yaml/NEXT.yaml preserved verbatim where present; no reconciliation performed."
+}
