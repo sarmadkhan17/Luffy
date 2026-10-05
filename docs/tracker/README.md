@@ -1,22 +1,19 @@
 # LUFFY product tracker
 
-## Purpose and authority
+SDD.md is the target authority. STATE.yaml summarizes current evidence and NEXT.yaml selects one engineering package. `LUFFY_Product_Tracker_v1.yaml` is the canonical detailed evidence/work ledger, not a replacement SDD.
 
-Track required product behaviour, Dashboard GUI, observed defects, reasons, dependencies and exact closure conditions in one detailed register. SDD.md remains the target authority. STATE.yaml remains the current summary and NEXT.yaml selects exactly one authorized work package. The tracker is a derived ledger, not a competing architecture specification.
+## Representation and adoption
 
-## Installation status
+The owner approved the read-only Dashboard **Tracker** tab as the primary working view. It reads validated canonical YAML and NEXT through the authenticated Owner API. Markdown is an optional generated/readable reference. The existing XLSX is **DEPRECATED / NON-AUTHORITATIVE historical material**, preserved unchanged and excluded from synchronization, parity and adoption requirements. No spreadsheet library or installation is needed.
 
-**Full tracker artifact import is pending.** This bootstrap commit contains the Dots handoff, the latest owner-reported observation and the artifact manifest. Import the accompanying verified bundle from the conversation into this directory before claiming the tracker is installed.
+OPEN-09 is CLOSED for control-plane adoption. All 176 existing IDs, 29 original GUI rows and every row closing condition are preserved. The owner-approved tenth Tracker route is documented in SDD section 25.3; original nine-workspace row acceptance scope is not silently rewritten. EVIDENCE_TO_MAP means evidence mapping remains, not missing or broken implementation. Adoption is not product-wide acceptance or deployed/browser proof.
 
-Required artifact files:
-- LUFFY_Product_Tracker_v1.yaml — canonical detailed dataset.
-- LUFFY_Product_Tracker_v1.md — human-readable export of that dataset.
-- LUFFY_Product_Tracker_v1.xlsx — workbook export, including GUI and issue views.
+Engineering owns YAML changes and optional Markdown regeneration, with document and read-contract validation. The Dashboard is read-only: no row closure, condition edit, ID creation, NEXT mutation or runtime/trading action exists. Any future GUI mutation requires a separately approved typed and audited contract.
 
-The prepared v1.1 snapshot retains all 176 IDs and 29 GUI rows. Publication is owner-approved; EVIDENCE_TO_MAP and draft verification details are not missing-code findings or blanket implementation authority. Do not independently edit status in all three representations. Update YAML, then regenerate and verify its exports; no automatic synchronization is installed.
+## Current state and next package
 
-## Current handoff
+WORK-01 remains BLOCKED. The latest owner-reported runtime revision is 9385f792f32277bb0b826dba83247b8f5ccf1f8a: first cycle 259.776s against the unchanged 240s limit, stop at 240.033s, zero completed window cycles and one shutdown-overlapping first cycle. Dashboard never launched; Kernel and observers stopped. Runtime source/config were reported unchanged. Exact external artifacts remain unverified.
 
-Read DOTS_HANDOFF.md and evidence/2026-10-05-instrumented-observation-owner-report.yaml. WORK-01 ended BLOCKED after the first cycle exceeded the existing 240-second limit. Harness conflicts were reported fixed; this does not establish stable runtime operation. OPEN-09 covers tracker import and local-access setup. The next diagnostic candidate is PERF-01: attribute evidence-store waits and repeated market/evidence work using the retained run before choosing a change.
+PERF-01 is the single selected NEXT item: SELECTED_NOT_STARTED / DIAGNOSIS_ONLY. Attribute the retained first-cycle cost before any implementation choice. No code fix, runtime execution, new observation, threshold change, workload reduction, provider enablement or trading activation is authorized by this selection.
 
-No service restart, trading activation, threshold change, destructive operation or paid-provider enablement is authorized by this directory. Do not recreate the current observation as a new untracked repair. Record new findings under existing parent requirements and keep prior outcomes.
+See DOTS_HANDOFF.md and evidence/2026-10-05-instrumented-observation-owner-report.yaml. The manifest binds current YAML/Markdown hashes and the unchanged historical XLSX hash with explicit roles.

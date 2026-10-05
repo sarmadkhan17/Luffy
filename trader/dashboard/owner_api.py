@@ -729,6 +729,8 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
     """Mount /owner-api/v1 and the React owner frontend at / (both behind the
     dashboard's auth Guard, installed by the caller)."""
     from ..owner.authz import Authorizer
+    from .tracker import install as install_tracker
+    install_tracker(app, root=root)
     version = backend_version(root)
     vault = vault or (root / "knowledge")          # caller supplies the runtime vault
     dist = dist or (root / "frontend" / "dist")

@@ -11,12 +11,75 @@ authority:
   reviewed_head: UNCOMMITTED
   reviewed_base_head: 53e7c8567c259b2326315a0acdd4b838af030998
   reviewed_source_manifest: docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r5-source.json
-  production_main_head: 958c9eb2f0b10993ad240b85f88c626b8d0e2ee6
+  production_main_head: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
   stage8_reviewed_base_head: f5e5156b8a294cd53db277e8d46cb30645611a61
   stage8_review_id: STAGE8_INDEPENDENT_REVIEW_R2
   review_scope: Historical package identities; no independent review of current main is established here.
 
 current_runtime_status:
+  implementation_baseline: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
+  observed_runtime_revision: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
+  evidence:
+  - docs/tracker/evidence/2026-10-05-instrumented-observation-owner-report.yaml
+  evidence_scope: ATTRIBUTED_OWNER_REPORT_ONLY; exact external run/patch/hashes not independently inspected; not
+    fresh venue or host verification.
+  last_deployment_and_observation:
+    run_id: scheduling-observation-prep-r1-idi3eex0-kernel-1012489
+    deployed_sha: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
+    sustained_one_hour_observation: BLOCKED
+    requested_seconds: 3600
+    actual_seconds: 240.033
+    stop_requested_seconds: 240.033
+    completed_window_cycles: 0
+    shutdown_overlapping_first_cycles: 1
+    first_cycle_seconds: 259.776
+    first_cycle_thread_cpu_seconds: 79.281
+    existing_limit_seconds: 240
+    recurring_cycle_seconds: null
+    successful_heartbeat_gaps: null
+    dashboard: NEVER_LAUNCHED
+    services_after_containment: Owner reports Kernel cleanly stopped and task observers stopped; no fresh operational
+      verification.
+    last_recorded_control: FROZEN
+    recovery_latch: RETAINED
+    operator_hold: 1
+    watchdog_off: PRESENT
+  exclusive_stage_wall_seconds:
+    network.wait: 41.12
+    evidence.store: 30.747
+    market.load: 21.668
+    Journal.query: 17.117
+    learning.capture.snapshot: 15.109
+  unattributed_exclusive_seconds: 13.13
+  attention:
+    capture_ms: 535.604
+    advisory_budget_ms: 50
+    completion_proofs: REPORTED
+  research:
+    initial_wake_seconds: 300
+    initial_wake_reached: false
+    busy_gate_refusal_observed: false
+    qualification: Older busy-gate refusals remain historical, not observations from this attempt.
+  provider_attempts: 0
+  provider_admissions: 0
+  usage_ledger: REPORTED_UNCHANGED
+  scan:
+    candidates: 20
+    snapshots: 20
+    HOLD_decisions: 20
+    entries: 0
+  source_and_configuration: REPORTED_UNCHANGED_FOR_OBSERVATION; this later engineering commit does not change that
+    historical claim.
+  unresolved:
+  - First cycle exceeded unchanged 240s limit; no recurring distribution or successful-heartbeat gaps.
+  - Timing attribution remains incomplete; stage duration does not prove database/GIL/CPU cause.
+  - Attention capture exceeded unchanged advisory 50ms budget.
+  - Exact external harness artifacts and adverse-case fixture proofs remain unverified.
+  full_runtime_maturity: NOT_PROVEN
+  real_money_ready: false
+  trading_activation_authorized: false
+
+historical_runtime_observation_958c9eb:
   implementation_baseline: 958c9eb2f0b10993ad240b85f88c626b8d0e2ee6
   evidence_checkpoint: 6da5ad9a895ddb0f5fed9d75904e9639cc731b44
   evidence:
@@ -62,6 +125,24 @@ current_runtime_status:
   full_runtime_maturity: NOT_PROVEN
   real_money_ready: false
   trading_activation_authorized: false
+
+tracker_adoption:
+  status: ADOPTED
+  item: OPEN-09
+  canonical: docs/tracker/LUFFY_Product_Tracker_v1.yaml
+  primary_view: Dashboard Tracker (read-only)
+  markdown: Optional generated reference
+  xlsx: DEPRECATED_NON_AUTHORITATIVE_HISTORY
+  owner_acceptance: EXPLICIT_2026_10_05
+  sync_owner: Engineering updates YAML and regenerates optional Markdown; Dashboard reads validated YAML/NEXT.
+  mapping_scope: Latest observation mapped to existing rows with explicit unverified evidence limits; EVIDENCE_TO_MAP
+    is not missing/broken implementation.
+  control_baseline_revision: 5e464d59ea4db9f227f919d5bbbad6702ac09473
+  control_revision_resolution: The enclosing Git commit containing this reconciliation; resolve with git log -1
+    -- STATE.yaml NEXT.yaml docs/tracker. Not the observed runtime revision.
+  observed_runtime_revision: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
+  dashboard_verification_scope: In-process contract and focused frontend tests/build only; no deployment, browser
+    session or service launch.
 
 progress_method:
   rule: Progress is acceptance-evidence based, not code-volume based.
@@ -499,7 +580,7 @@ cross_cutting:
     state: DEPLOYED_OBSERVATION_BLOCKED
     latest_reviewed_head: 57ad32332a98518c083b750f9df9d43596d0d531
     review_scope: Historical Stage8 review; does not independently review current main.
-    production_main_head: 958c9eb2f0b10993ad240b85f88c626b8d0e2ee6
+    production_main_head: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
     facts:
     - Deployment, old-process replacement and startup occurred; sustained observation remains BLOCKED.
     - Last recorded control was FROZEN with recovery latch retained; owner reports no Kernel/Dashboard matches and watchdog.off present.
@@ -645,10 +726,18 @@ completed_stage3_4_pre_stage8_closure_audit_r1:
     - predictive research bridge and final Stage5-7 lineage.
 
 current_active_work:
-  id: LUFFY-RUNTIME-SCHEDULING-AND-OBSERVATION-R1
-  status: RECOMMENDED_NOT_STARTED
-  purpose: Measure startup/observer scheduling costs and clarify intended FROZEN workload before repeating bounded observation.
-  execution_authorized_by_this_documentation_task: false
+  id: PERF-01
+  status: SELECTED_NOT_STARTED
+  mode: DIAGNOSIS_ONLY
+  purpose: Attribute the latest 259.776-second first-cycle cost before any implementation choice.
+  implementation_started: false
+  code_fix_selected: false
+  runtime_execution_authorized: false
+  new_observation_authorized: false
+  threshold_change_authorized: false
+  workload_reduction_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
 
 historical_stage1_recovery_monitoring_finalization:
   id: LUFFY-STAGE1-RECOVERY-MONITORING-FINALIZE-R1

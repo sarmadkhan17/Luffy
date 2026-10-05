@@ -42,6 +42,48 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
+  id: PERF-01
+  status: SELECTED_NOT_STARTED
+  mode: DIAGNOSIS_ONLY
+  purpose: Attribute the latest 259.776-second first-cycle cost before any implementation choice.
+  implementation_started: false
+  code_fix_selected: false
+  runtime_execution_authorized: false
+  new_observation_authorized: false
+  threshold_change_authorized: false
+  workload_reduction_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  tracker_source: docs/tracker/LUFFY_Product_Tracker_v1.yaml
+  objective: Attribute the latest 259.776-second first-cycle cost before any implementation choice.
+  observed_runtime_revision: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
+  control_baseline_revision: 5e464d59ea4db9f227f919d5bbbad6702ac09473
+  control_revision_resolution: Enclosing control-plane commit, not the observed runtime revision.
+  evidence:
+  - docs/tracker/evidence/2026-10-05-instrumented-observation-owner-report.yaml
+  evidence_scope: Owner-reported retained observation; first verify exact external artifact identities. No new observation.
+  allowed_actions:
+  - Read-only attribution of retained stage timings and exact existing code/data boundaries.
+  - Record measured limitations and dependencies before any implementation selection.
+  acceptance:
+  - Separate startup/first/shutdown costs from unmeasured recurring timing.
+  - Attribute evidence-store and repeated market/evidence work without inferring causality from wall-minus-CPU.
+  - Preserve existing safety limits, workload, provider restrictions and containment.
+  completed_predecessor:
+    id: WORK-01
+    result: BLOCKED
+    execution: PERFORMED_OWNER_REPORTED
+    first_cycle_seconds: 259.776
+    stop_requested_seconds: 240.033
+    completed_window_cycles: 0
+    shutdown_overlapping_first_cycles: 1
+  constraints:
+  - No code fix selected or authorized by this next package.
+  - No runtime execution, new observation, threshold change, workload reduction, provider enablement or trading
+    activation.
+
+historical_recommendation_note: The following recommendation predates the executed blocked WORK-01 attempt; its not-started fields are historical only.
+historical_pre_execution_recommendation:
   id: LUFFY-RUNTIME-SCHEDULING-AND-OBSERVATION-R1
   type: RUNTIME_SCHEDULING_AND_OBSERVATION
   status: RECOMMENDED_NOT_STARTED
@@ -72,6 +114,7 @@ work_package:
   - No trading activation is authorized; current venue exposure and safety health are not freshly verified.
   - Full runtime maturity and real-money readiness remain unproven.
   - Original historical journal-write failure cause remains UNCONFIRMED.
+
 
 completed_stage8_owner_os_closure_r1:
   result: PASS

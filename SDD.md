@@ -1760,7 +1760,7 @@ Responses must be grounded in journal/research/memory records, not invented narr
 
 Primary operator navigation target:
 
-`Overview | Trades | Research | Strategies | LUFFY | Operations | Live System | Knowledge | Diagnostics`
+`Overview | Trades | Research | Strategies | LUFFY | Operations | Live System | Knowledge | Diagnostics | Tracker`
 
 **Needs You** appears on Overview whenever owner action is pending. Full approval discussion/evidence lives in LUFFY; serious incidents and owner-decision alerts are also sent through Telegram when configured. LUFFY chat stays concise by default and links to evidence/details rather than dumping them into conversation: **LUFFY speaks; the dashboard proves.**
 
@@ -1801,7 +1801,7 @@ Cinematic visuals are browser work. Three.js/WebGL runs on the user's browser/ho
 
 Authoritative navigation:
 
-`Overview | Trades | Research | Strategies | LUFFY | Operations | Live System | Knowledge | Diagnostics`
+`Overview | Trades | Research | Strategies | LUFFY | Operations | Live System | Knowledge | Diagnostics | Tracker`
 
 ### Overview
 Account/equity/P&L, exposure, positions, risk/control state, highest-priority global signals, and **Needs You**. Overview is not a wall of every internal metric.
@@ -1835,6 +1835,11 @@ The UI should be able to trace:
 
 ### Diagnostics
 Health/failures/resource/data/API/storage/recovery diagnostics. Raw internals are advanced detail, not the normal owner interface.
+
+### Tracker
+Read-only engineering/control-plane working view of `docs/tracker/LUFFY_Product_Tracker_v1.yaml`, with the single selected package linked from `NEXT.yaml`. Show requirements, exact closing conditions, evidence limits, workflow status and readiness gates. The YAML is the canonical detailed ledger; SDD remains target authority and STATE the current evidence summary. Counts are workflow counts, never completion percentages or trading readiness. `EVIDENCE_TO_MAP` does not mean missing/broken implementation; `CLOSED` applies only to that row's exact narrow contract.
+
+The owner-approved Tracker route is the tenth navigation tab. Existing XLSX is deprecated/non-authoritative historical material, excluded from adoption and synchronization; Markdown is an optional generated reference. The initial Tracker API/UI permits reads only. Row, condition, ID and NEXT mutations remain engineering/control-plane actions until a separate typed, audited GUI mutation contract is owner-approved. Tracker selection or closure never grants runtime, provider or trading authority.
 
 ## 25.4 Needs You / approvals
 

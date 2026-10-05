@@ -1,0 +1,15 @@
+.tracker-source code { overflow-wrap: anywhere; }
+.tracker-counts { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1rem 0; }
+.tracker-counts > div { display: grid; gap: .4rem; min-width: 9rem; }
+.tracker-counts strong { font-size: 1.5rem; }
+.tracker-gates details, .tracker-view details { margin: .75rem 0; }
+.tracker-view summary { cursor: pointer; }
+.tracker-filters { flex-wrap: wrap; gap: .8rem; }
+.tracker-filters label { display: grid; gap: .3rem; }
+.tracker-table-scroll { overflow: auto; max-height: 65vh; }
+.tracker-table-scroll table { min-width: 1800px; border-collapse: collapse; }
+.tracker-table-scroll th { position: sticky; top: 0; background: var(--panel, #121b22); z-index: 1; text-align: left; }
+.tracker-table-scroll td, .tracker-table-scroll th { padding: .65rem; vertical-align: top; max-width: 24rem; border-bottom: 1px solid var(--border, #30404b); }
+.tracker-detail > div { padding: .5rem 0; }
+.tracker-detail dt { font-weight: 600; }
+.tracker-detail dd { margin: .25rem 0; white-space: pre-wrap; overflow-wrap: anywhere; }

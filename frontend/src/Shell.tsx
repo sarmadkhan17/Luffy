@@ -13,6 +13,7 @@ import {
   Network,
   Waypoints,
   Stethoscope,
+  ListChecks,
   type LucideIcon,
 } from "lucide-react";
 import { usePreview } from "./context";
@@ -22,6 +23,7 @@ import Overview from "./views/Overview";
 const Luffy = lazyChunk(() => import("./views/Luffy"));
 const GraphView = lazyChunk(() => import("./views/GraphView"));
 const Operations = lazyChunk(() => import("./views/Operations"));
+const Tracker = lazyChunk(() => import("./views/Tracker"));
 const Routes = lazyChunk(() => import("./views/Routes"));
 const SystemObserved = lazyChunk(() =>
   import("./views/Evidence").then((m) => ({ default: m.SystemObserved })),
@@ -36,6 +38,7 @@ export const routes = [
   "Live System",
   "Knowledge",
   "Diagnostics",
+  "Tracker",
 ];
 /** Rail grouping: what the owner acts on, who speaks, how the machine runs. */
 const RAIL: { group: string; items: [string, LucideIcon][] }[] = [
@@ -56,6 +59,7 @@ const RAIL: { group: string; items: [string, LucideIcon][] }[] = [
       ["Live System", Network],
       ["Knowledge", Waypoints],
       ["Diagnostics", Stethoscope],
+      ["Tracker", ListChecks],
     ],
   },
 ];
@@ -69,6 +73,7 @@ const SUBTITLE: Record<string, string> = {
   "live-system": "Declared architecture beside what the records observe.",
   knowledge: "The vault as a clustered graph; relations as written.",
   diagnostics: "Stores, probes, collectors, watchdog and recovery evidence.",
+  tracker: "Requirements, narrow closure evidence and the single selected engineering package.",
 };
 const slug = (s: string) => s.toLowerCase().replaceAll(" ", "-");
 
@@ -254,7 +259,9 @@ export default function Shell() {
                 </div>
               }
             >
-              {route === "overview" ? (
+              {route === "tracker" ? (
+                <Tracker />
+              ) : route === "overview" ? (
                 <Overview />
               ) : route === "luffy" ? (
                 <Luffy />

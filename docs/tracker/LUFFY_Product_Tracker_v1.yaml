@@ -1,22 +1,23 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.1-repository-import
+  version: 1.3-dashboard-tracker-adoption
   created_date: '2026-10-05'
   title: LUFFY — Product, Behaviour & GUI Tracker
-  state: OWNER_APPROVED_PUBLICATION_PENDING_FULL_IMPORT_AND_EVIDENCE_MAPPING
+  state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
   scope: SDD v3.2 §§1–37 at pinned revision + owner tracker/GUI requirements + provided historical/runtime reports.
   baseline_commit: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
   evidence_checkpoint: 6da5ad9a895ddb0f5fed9d75904e9639cc731b44
   fresh_runtime_verified: false
-  repository_modified: false
+  repository_modified: true
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
     prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
-  current_active_item: OPEN-09
-  current_active_result: TRACKER_PUBLICATION_AND_DOTS_SETUP
+  current_active_item: PERF-01
+  current_active_result: SELECTED_NOT_STARTED_DIAGNOSIS_ONLY
   row_count: 176
-  authority: SDD is target authority; STATE is current summary and NEXT selects one authorized package. This YAML
-    is the canonical detailed tracking dataset; XLSX/Markdown are derived views, not parallel editable authorities.
-  pending_adoption: OPEN-09
+  authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
+    is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown is an
+    optional generated reference.
+  pending_adoption: null
   status_counts:
     EVIDENCE_TO_MAP: 130
     AWAITING_EVIDENCE: 15
@@ -24,17 +25,27 @@ metadata:
     DEFERRED: 2
     BLOCKED: 1
     OPEN: 6
-    CLOSED: 7
-    IN_PROGRESS: 1
-  workbook_view_note: YAML is canonical after import. XLSX/Markdown are synchronized export snapshots. Do not edit
-    statuses independently in the three files.
+    CLOSED: 8
+  workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged and
+    excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
-  publication_note: Owner approved repository addition and Dots handoff. Full artifact import must be verified; row-level
-    draft criteria and evidence are not blanket-approved by publication.
+  publication_note: Owner explicitly accepted adoption and read-only Tracker navigation. OPEN-09 closes with this
+    control-plane reconciliation; implementation verification is distinct from deployed/browser proof.
   current_runtime_item: WORK-01
   current_runtime_result: BLOCKED
   next_diagnostic_item: PERF-01
   next_runtime_execution_authorized: false
+  owner_representation_decision:
+    date: '2026-10-05'
+    canonical: docs/tracker/LUFFY_Product_Tracker_v1.yaml
+    primary_view: Dashboard Tracker (read-only)
+    markdown: Optional generated reference
+    xlsx: DEPRECATED / NON-AUTHORITATIVE; preserved history
+    mutation_contract: No Tracker mutation API/UI; engineering/control-plane changes only until a separate typed,
+      audited GUI mutation contract is approved.
+    navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope; the
+      owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product row
+      is silently reopened or added.
 status_definitions:
 - status: EVIDENCE_TO_MAP
   meaning: Existing requirement recorded; exact row-level evidence has not yet been linked. This is NOT a finding
@@ -59,11 +70,13 @@ operating_rules:
   detail: SDD.md defines the target. STATE/NEXT remain the current summary and single selected work package. This
     is their detailed derived ledger, not another architecture authority.
 - rule: One data set
-  detail: Maintain the YAML as the canonical detailed item dataset. Regenerate XLSX/Markdown from it; never independently
-    edit three competing status copies. Exports carry the same revision and item IDs.
+  detail: Maintain this YAML as canonical detailed data. Dashboard Tracker reads validated YAML and NEXT. Markdown
+    is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization
+    and adoption checks.
 - rule: Current work
-  detail: OPEN-09 is the single active documentation/import/setup item. WORK-01 ended BLOCKED; next diagnostic is
-    PERF-01 after evidence verification. No runtime execution is newly authorized.
+  detail: OPEN-09 adoption is closed by the control-plane reconciliation. PERF-01 is the single selected next item
+    in DIAGNOSIS_ONLY / NOT_STARTED state; this selection authorizes no code change, restart, observation, provider
+    use or trading activation.
 - rule: Activation
   detail: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers,
     a restart or a scope expansion.
@@ -71,8 +84,8 @@ operating_rules:
   detail: A new finding needs ID, parent requirement, why, source or exact violated invariant, evidence/reproducer,
     impact, dependencies and closure condition. Unknown origin stays unknown.
 - rule: No moving goalposts
-  detail: Keep the acceptance version that the work started under. Change it only with an explicit reason/owner decision.
-    A different requirement is a linked item, not a silent edit.
+  detail: Keep the acceptance version that the work started under. Change it only with an explicit reason/owner
+    decision. A different requirement is a linked item, not a silent edit.
 - rule: Closure
   detail: Link exact test/run/config/code identity; verify normal caller, relevant failure/restart cases and touched
     frozen invariants. Mark only the demonstrated proof level.
@@ -95,17 +108,19 @@ operating_rules:
   detail: Summary counts are tracker workflow counts, NOT percent complete, weighted product progress or readiness.
     No fixed profitability/sample/retention thresholds are invented.
 - rule: Updates
-  detail: 'After each completed package: attach result, update affected IDs, add new issues, record history and select
-    exactly one approved next ID in NEXT.'
+  detail: 'After each completed package: attach result, update affected IDs, add new issues, record history and
+    select exactly one approved next ID in NEXT.'
 - rule: Data
-  detail: Identical immutable payloads may share storage. Distinct observation times/identities remain. Backups are
-    intentional redundancy; retention/deletion requires a proved dependency boundary.
+  detail: Identical immutable payloads may share storage. Distinct observation times/identities remain. Backups
+    are intentional redundancy; retention/deletion requires a proved dependency boundary.
 - rule: Known status limit
-  detail: 'Latest S16 is owner-reported: first cycle 259.776s, stop at 240.033s, no recurring cycles; Kernel and task
-    observers stopped, Dashboard not launched. Reverify VM before operational claims.'
+  detail: Latest observed runtime revision is 9385f792…; latest corrected-harness attempt stopped at 240.033s with
+    first cycle 259.776s and zero completed window cycles. Repository-control commits after that are documentation/tracker
+    changes and must not be represented as observed runtime.
 - rule: Adoption
-  detail: Owner approved repository publication/Dots handoff (S17). Complete artifact import and STATE/NEXT pointers
-    must be verified locally; evidence-to-map rows are not missing-code findings.
+  detail: Owner accepted representation and the read-only Tracker navigation. OPEN-09 closes through linked SDD/STATE/NEXT
+    and explicit engineering ownership of YAML/optional Markdown synchronization. Product-wide EVIDENCE_TO_MAP does
+    not prevent adoption.
 - rule: Safety exception
   detail: An immediate observed safety incident may require containment under existing authority; record the issue
     and outcome promptly. A tracker queue never overrides safety.
@@ -121,8 +136,9 @@ readiness_gates:
   - OPEN-09
   closure: One accepted tracker linked to SDD/STATE/NEXT; existing evidence mapped; one authorized item. No contradictory
     current status.
-  current: Repository publication approved; exact artifact import, STATE/NEXT linkage and full row evidence mapping
-    still pending.
+  current: Tracker adopted as detailed evidence ledger; owner representation accepted; STATE/NEXT reconciliation
+    selects one diagnosis-only next item. Row-level EVIDENCE_TO_MAP remains normal mapping work, not a blocker to
+    using the tracker.
   limit: Not a new architecture review.
 - id: M1
   title: Stable controlled observation
@@ -137,10 +153,10 @@ readiness_gates:
   - DATA-12
   - LLM-02
   - WORK-01
-  closure: Approved instrumented FROZEN window completes on fixed code with correct startup/shutdown, unchanged safety
-    boundaries and measured all-store growth.
-  current: 'S16 BLOCKED: stop at 240.033s; first cycle completed during shutdown at 259.776s; zero complete window
-    cycles; no steady-state or one-hour proof.'
+  closure: Approved instrumented FROZEN window completes on fixed code with correct startup/shutdown, unchanged
+    safety boundaries and measured all-store growth.
+  current: 'Latest corrected-harness attempt blocked: first cycle 259.776s > 240s, zero completed window cycles.
+    PERF-01 is selected for diagnosis before any code change.'
   limit: Does not establish research, profitable edge or real-money readiness.
 - id: M2
   title: Supported autonomous research
@@ -220,8 +236,8 @@ readiness_gates:
   - REL-02
   - REL-03
   - REL-04
-  closure: Owner-defined evaluation establishes actual net economics, uncertainty and operating cost; expansion earns
-    its complexity through approved evidence.
+  closure: Owner-defined evaluation establishes actual net economics, uncertainty and operating cost; expansion
+    earns its complexity through approved evidence.
   current: Not established; no profitability guarantee or arbitrary quota.
   limit: An honest negative result is evidence, not proof of profitable completion.
 items:
@@ -455,8 +471,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Preserve exact code/config/run identity and safe branch provenance.
   why_needed: Ensures evidence applies to the deployed system rather than an old checkout.
-  closure_condition: Source and evidence artifacts identify revision, configuration, run/process and timestamps; deployment
-    records match remote/local code.
+  closure_condition: Source and evidence artifacts identify revision, configuration, run/process and timestamps;
+    deployment records match remote/local code.
   failure_regression_proof: Dirty variants remain labelled unverified; no automatic merge of historical checkpoint
     branches.
   dependencies:
@@ -530,9 +546,10 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Do not allow runtime self-rewriting of production architecture.
   why_needed: Preserves deterministic ownership and safe engineering control.
-  closure_condition: Capability gaps produce evidence and owner-facing requests; code/design changes go through approved
-    engineering.
-  failure_regression_proof: LLM, scraper, UI and research cannot write production code or silently change target architecture.
+  closure_condition: Capability gaps produce evidence and owner-facing requests; code/design changes go through
+    approved engineering.
+  failure_regression_proof: LLM, scraper, UI and research cannot write production code or silently change target
+    architecture.
   dependencies:
   - GOV-01
   owner_role: Owner + engineering coordinator
@@ -569,7 +586,8 @@ items:
   why_needed: Keeps the product aimed at economic value rather than activity counts.
   closure_condition: Versioned reports reconcile net trading contribution and approved operating costs over an owner-defined
     period, distinguishing estimates and unknowns.
-  failure_regression_proof: No trade quota, risk increase or fabricated profitability to meet an operating-cost target.
+  failure_regression_proof: No trade quota, risk increase or fabricated profitability to meet an operating-cost
+    target.
   dependencies:
   - ACC-01
   - ACC-03
@@ -606,8 +624,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Start and stop one identifiable Kernel and compatible Dashboard safely.
   why_needed: Prevents duplicate processes and startup on the wrong code.
-  closure_condition: Fresh identity/preflight checks, ordered boot, truthful new-instance heartbeat and graceful shutdown
-    are demonstrated on the intended revision.
+  closure_condition: Fresh identity/preflight checks, ordered boot, truthful new-instance heartbeat and graceful
+    shutdown are demonstrated on the intended revision.
   failure_regression_proof: Boot failure or shutdown timeout cannot create a second Kernel or remove needed observation.
   dependencies:
   - GOV-07
@@ -658,8 +676,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -688,9 +706,10 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Keep the live cycle within the approved operational envelope.
   why_needed: Protects observation, exits and response timeliness.
-  closure_condition: On one identified representative run, agreed startup and recurring timing criteria are met with
-    real successful-heartbeat gaps, full declared coverage and disclosed workload.
-  failure_regression_proof: No increased threshold, fabricated heartbeat or silent workload reduction to obtain PASS.
+  closure_condition: On one identified representative run, agreed startup and recurring timing criteria are met
+    with real successful-heartbeat gaps, full declared coverage and disclosed workload.
+  failure_regression_proof: No increased threshold, fabricated heartbeat or silent workload reduction to obtain
+    PASS.
   dependencies:
   - RUN-01
   - MON-01
@@ -699,9 +718,9 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'S16: first cycle exceeded 240s; no completed window cycles or steady-state proof. Historical stage/package
-    build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not
-    reopen prior closures.'
+  latest_evidence: 'S16: first cycle exceeded 240s; no completed window cycles or steady-state proof. Historical
+    stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding
+    and does not reopen prior closures.'
   source_ids:
   - S01
   - S02
@@ -743,8 +762,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -773,8 +792,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Preserve observation and protection during provider/network outages.
   why_needed: LLM availability must not control normal live operation.
-  closure_condition: Provider-disabled/outage tests and bounded runtime show deterministic observation, Risk and protection
-    still functioning.
+  closure_condition: Provider-disabled/outage tests and bounded runtime show deterministic observation, Risk and
+    protection still functioning.
   failure_regression_proof: Provider timeout/outage cannot become permission or silently block all required safety
     servicing.
   dependencies:
@@ -785,8 +804,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -815,8 +834,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Respect measured local CPU/RAM/storage bounds and background contention.
   why_needed: Prevents another storage or scheduling collapse.
-  closure_condition: Per-stage and per-writer measurements identify pressure, enforce existing resource policies and
-    expose throttled work on the target VM.
+  closure_condition: Per-stage and per-writer measurements identify pressure, enforce existing resource policies
+    and expose throttled work on the target VM.
   failure_regression_proof: No unbounded buffers, backlog, storage growth or expensive work in critical write locks
     without evidence and bounds.
   dependencies:
@@ -827,8 +846,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -859,7 +878,8 @@ items:
   why_needed: Graphify or development tools must not stop runtime safety.
   closure_condition: Normal runtime works without Graphify, engineering CLI login or AI coding access; tooling remains
     engineering-only.
-  failure_regression_proof: Missing engineering tooling does not disable deterministic runtime or trigger a paid fallback.
+  failure_regression_proof: Missing engineering tooling does not disable deterministic runtime or trigger a paid
+    fallback.
   dependencies:
   - GOV-09
   owner_role: Runtime & safety owner
@@ -867,8 +887,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -908,8 +928,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -949,8 +969,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -979,8 +999,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Separate live health checks from full integrity maintenance.
   why_needed: A multi-minute inspection must not block immediate health detection.
-  closure_condition: Independent heartbeat checks remain timely while configured integrity maintenance and live probes
-    report distinct status and cost.
+  closure_condition: Independent heartbeat checks remain timely while configured integrity maintenance and live
+    probes report distinct status and cost.
   failure_regression_proof: A lightweight probe cannot claim full integrity; a slow store must not block heartbeat
     observation.
   dependencies:
@@ -991,8 +1011,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -1021,10 +1041,10 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Publish bounded deduplicated alerts even when the Journal fails.
   why_needed: The failed component cannot be the sole alert destination.
-  closure_condition: Out-of-band alert and retained incident identity distinguish onset, persistence, resolution and
-    later recurrence; recovery latch follows authority.
-  failure_regression_proof: Failed Journal plus failed notifier still produces a truthful detectable failure; no alert
-    storm or manual latch clearing.
+  closure_condition: Out-of-band alert and retained incident identity distinguish onset, persistence, resolution
+    and later recurrence; recovery latch follows authority.
+  failure_regression_proof: Failed Journal plus failed notifier still produces a truthful detectable failure; no
+    alert storm or manual latch clearing.
   dependencies:
   - MON-02
   owner_role: Runtime & safety owner
@@ -1032,8 +1052,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -1062,8 +1082,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Attribute latency, storage, source and provider cost to exact operations.
   why_needed: Makes incidents diagnosable instead of emitting only BLOCKED.
-  closure_condition: Run/cycle/worker IDs link bounded phase timings, row/byte growth, waits, provider attempts and
-    failures; measurement overhead is disclosed.
+  closure_condition: Run/cycle/worker IDs link bounded phase timings, row/byte growth, waits, provider attempts
+    and failures; measurement overhead is disclosed.
   failure_regression_proof: Logs do not embed giant payloads, leak secrets or equate WAL writes with permanent retained
     growth.
   dependencies:
@@ -1115,8 +1135,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -1156,8 +1176,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -1199,8 +1219,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -1229,8 +1249,8 @@ items:
   status: AWAITING_OWNER
   required_behavior: Demonstrate configured off-host recovery and restore drills.
   why_needed: A second VMDK on the same physical drive is not off-host protection.
-  closure_condition: Owner-approved destination/cadence/retention and an actual integrity-checked restore drill establish
-    the stated recovery capability.
+  closure_condition: Owner-approved destination/cadence/retention and an actual integrity-checked restore drill
+    establish the stated recovery capability.
   failure_regression_proof: Filesystem path or a same-drive copy alone cannot be labelled physically off-host.
   dependencies:
   - BKP-01
@@ -1306,8 +1326,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Retain event, receipt, availability, transform and quality provenance.
   why_needed: Decisions and replay need to know what was actually available.
-  closure_condition: Every required input carries relevant clocks, source/schema/transform identity and explicit quality;
-    receipts survive durable replay.
+  closure_condition: Every required input carries relevant clocks, source/schema/transform identity and explicit
+    quality; receipts survive durable replay.
   failure_regression_proof: Missing/stale/suspect/unsupported or NaN input is never silently zero or CURRENT.
   dependencies:
   - DATA-01
@@ -1422,8 +1442,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Preserve append-only revisions and distinguish latest from as-of.
   why_needed: Later correction must not rewrite what an earlier decision knew.
-  closure_condition: Latest views and historical revision selection return the correct source at each cut; hash and
-    lineage reconstruction match.
+  closure_condition: Latest views and historical revision selection return the correct source at each cut; hash
+    and lineage reconstruction match.
   failure_regression_proof: Revisions applied later do not change earlier replay; old data is not rebased to current
     truth.
   dependencies:
@@ -1539,8 +1559,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Make retries idempotent at the logical event boundary.
   why_needed: Payload sharing alone can still append duplicate event records.
-  closure_condition: Retrying one event creates no second logical event; distinct observations retain identities even
-    when payload bytes are identical.
+  closure_condition: Retrying one event creates no second logical event; distinct observations retain identities
+    even when payload bytes are identical.
   failure_regression_proof: Crash/retry/concurrent delivery does not double-count votes/evidence/outcomes.
   dependencies:
   - DATA-07
@@ -1748,8 +1768,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -1788,8 +1808,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -1817,8 +1837,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Maintain hierarchical, multi-horizon WorldModel state.
   why_needed: Avoids a single contradictory global market label.
-  closure_condition: Global, asset-class, group, instrument and relationship states preserve relevant horizons, dimensions
-    and conflicts through a stable query.
+  closure_condition: Global, asset-class, group, instrument and relationship states preserve relevant horizons,
+    dimensions and conflicts through a stable query.
   failure_regression_proof: Short- and long-horizon disagreement is not collapsed or filled by narrative.
   dependencies:
   - DATA-02
@@ -1828,8 +1848,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -1866,8 +1886,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -1906,8 +1926,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -1946,8 +1966,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -1988,8 +2008,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2017,8 +2037,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Choose where to investigate from eligible universe and real triggers.
   why_needed: Autonomy starts with deciding what deserves compute.
-  closure_condition: A supported normal event creates ranked investigation candidates with instrument, reasons, urgency/cost
-    and source identity.
+  closure_condition: A supported normal event creates ranked investigation candidates with instrument, reasons,
+    urgency/cost and source identity.
   failure_regression_proof: Zero eligible candidates is distinct from failed/incomplete capture; no trade/size authority.
   dependencies:
   - DATA-06
@@ -2028,8 +2048,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2058,8 +2078,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Complete scan/cause capture through the real worker and source reader.
   why_needed: Broken telemetry cannot be reported as no interesting market.
-  closure_condition: Normal capture→transport→store→evaluator→bound completion proof works at observed scale and within
-    existing bounds.
+  closure_condition: Normal capture→transport→store→evaluator→bound completion proof works at observed scale and
+    within existing bounds.
   failure_regression_proof: Malformed metadata, corrupt/missing receipts, partial shutdown and future cuts refuse
     explicitly.
   dependencies:
@@ -2113,8 +2133,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2145,7 +2165,8 @@ items:
   why_needed: A website scraper alone is not autonomous research.
   closure_condition: An anomaly/loss/decay/contradiction/owner question produces a typed question with lineage through
     the normal producer.
-  failure_regression_proof: No always-busy question fabrication or manual registration needed for the supported path.
+  failure_regression_proof: No always-busy question fabrication or manual registration needed for the supported
+    path.
   dependencies:
   - ATT-01
   owner_role: Attention & research owner
@@ -2153,8 +2174,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2194,8 +2215,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2235,8 +2256,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2276,8 +2297,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2306,8 +2327,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Retain structured Research Bank results and next questions.
   why_needed: Bookmarks and logs alone cannot close the research loop.
-  closure_condition: Question, sources, claims, support/contradiction, experiment, conclusion, limitations, cost and
-    next question are linked in normal persistence.
+  closure_condition: Question, sources, claims, support/contradiction, experiment, conclusion, limitations, cost
+    and next question are linked in normal persistence.
   failure_regression_proof: Refuted/inconclusive results are first-class; missing source is not fabricated support.
   dependencies:
   - RES-04
@@ -2316,8 +2337,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2357,8 +2378,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2399,8 +2420,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2429,8 +2450,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Connect hypotheses to protected experiments and exact result feedback.
   why_needed: Closes the research-to-test-to-next-question cycle.
-  closure_condition: Normal bridge binds hypothesis/experiment/measurement/referee/Bank IDs; unsupported shapes and
-    insufficient data stay explicit.
+  closure_condition: Normal bridge binds hypothesis/experiment/measurement/referee/Bank IDs; unsupported shapes
+    and insufficient data stay explicit.
   failure_regression_proof: Later inspected data cannot be relabelled untouched; duplicate submission/restart preserves
     identity.
   dependencies:
@@ -2441,8 +2462,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2482,8 +2503,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2523,8 +2544,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2552,8 +2573,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Test justified nulls and controls for the claimed mechanism.
   why_needed: Distinguishes timing edge from drift and chance.
-  closure_condition: Predeclared mechanism-appropriate controls preserve irrelevant structure; positive/no-edge controls
-    and finite-draw p-values are reproduced.
+  closure_condition: Predeclared mechanism-appropriate controls preserve irrelevant structure; positive/no-edge
+    controls and finite-draw p-values are reproduced.
   failure_regression_proof: Independent symbol shuffles cannot replace common dependence controls without justification.
   dependencies:
   - QNT-01
@@ -2562,8 +2583,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2602,8 +2623,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2641,8 +2662,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2681,8 +2702,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2720,8 +2741,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2760,8 +2781,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2801,8 +2822,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2841,8 +2862,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2873,8 +2894,8 @@ items:
   why_needed: A valid spec must be evaluated, not silently skipped.
   closure_condition: Compiler executes declared data/world dependencies and scope with reproducible parity and explicit
     unsupported/missing errors.
-  failure_regression_proof: Read-only array/quality filters, required frame absence and version mismatch do not bypass
-    or silently corrupt evaluation.
+  failure_regression_proof: Read-only array/quality filters, required frame absence and version mismatch do not
+    bypass or silently corrupt evaluation.
   dependencies:
   - STR-01
   - WRLD-05
@@ -2883,8 +2904,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2925,8 +2946,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -2965,8 +2986,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3006,8 +3027,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3049,8 +3070,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3090,8 +3111,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3120,8 +3141,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Represent one account position per instrument and preserve conflicting strategies.
   why_needed: Avoids accidental stacked exposure and duplicated confidence.
-  closure_condition: Agreeing strategies support one position/approved exit plan; opposing evidence is retained; strategy
-    lineage does not multiply independence.
+  closure_condition: Agreeing strategies support one position/approved exit plan; opposing evidence is retained;
+    strategy lineage does not multiply independence.
   failure_regression_proof: Changing analyst confidence cannot continuously resize/rewrite the live plan.
   dependencies:
   - DEC-02
@@ -3131,8 +3152,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3171,8 +3192,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3212,8 +3233,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3253,8 +3274,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3283,8 +3304,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Expose confidence components and contextual reliability.
   why_needed: A single opaque score hides data/execution uncertainty.
-  closure_condition: Evidence strength, data quality, strategy reliability, regime fit and execution confidence remain
-    inspectable and replayable.
+  closure_condition: Evidence strength, data quality, strategy reliability, regime fit and execution confidence
+    remain inspectable and replayable.
   failure_regression_proof: No uncalibrated confidence update from one win/loss or irrelevant context.
   dependencies:
   - DEC-01
@@ -3294,8 +3315,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3336,8 +3357,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3366,8 +3387,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Respect capacity, funding, margin and venue-size bounds.
   why_needed: Scaling must not destroy edge or exceed verified allowance.
-  closure_condition: Existing authoritative capacity/depth/cost/account receipts constrain actual proposed size under
-    exact current context.
+  closure_condition: Existing authoritative capacity/depth/cost/account receipts constrain actual proposed size
+    under exact current context.
   failure_regression_proof: No desired leverage, static symbol string or missing receipt becomes permission.
   dependencies:
   - PORT-02
@@ -3377,8 +3398,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3418,8 +3439,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3460,8 +3481,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3490,8 +3511,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Deliver exact TradeIntent identity through Risk and future execution lineage.
   why_needed: Avoids invented HOLD/allocation identities and orphan outcomes.
-  closure_condition: Proposal, intention, Risk allow/refusal and outcome bind the original decision and terminal registration;
-    normal adapters are exercised.
+  closure_condition: Proposal, intention, Risk allow/refusal and outcome bind the original decision and terminal
+    registration; normal adapters are exercised.
   failure_regression_proof: Failed delivery cannot fall back to an unrelated scan registration or route unapproved
     execution.
   dependencies:
@@ -3503,8 +3524,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3544,8 +3565,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3574,8 +3595,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Validate numeric, leverage, margin and order feasibility from authority.
   why_needed: NaN, desired leverage or unknown allowance cannot authorize exposure.
-  closure_condition: Finite positive quantity/price/equity, venue precision/minimums, verified leverage/brackets and
-    stop feasibility constrain admission.
+  closure_condition: Finite positive quantity/price/equity, venue precision/minimums, verified leverage/brackets
+    and stop feasibility constrain admission.
   failure_regression_proof: NaN/Infinity/negative input, wrong capability or unverified leverage fails closed.
   dependencies:
   - RISK-01
@@ -3584,8 +3605,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3625,8 +3646,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3665,8 +3686,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3706,8 +3727,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3737,8 +3758,10 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Reconcile unknown outcomes before reissuing an action.
   why_needed: A request may reach the venue even without a local acknowledgement.
-  closure_condition: UNKNOWN actions stay explicit and resolve by exact venue/order/fill evidence under recovery authority.
-  failure_regression_proof: Missing acknowledgement or lookup failure cannot become permission to submit a fresh order.
+  closure_condition: UNKNOWN actions stay explicit and resolve by exact venue/order/fill evidence under recovery
+    authority.
+  failure_regression_proof: Missing acknowledgement or lookup failure cannot become permission to submit a fresh
+    order.
   dependencies:
   - EXE-01
   - ACC-01
@@ -3747,8 +3770,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3788,8 +3811,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3819,8 +3842,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Preserve approved exit-plan authority.
   why_needed: Confidence updates must not silently alter live trade geometry.
-  closure_condition: Native stop, trail, partial, invalidation and permitted scale-in follow the exact strategy version/plan
-    or explicit safety authority.
+  closure_condition: Native stop, trail, partial, invalidation and permitted scale-in follow the exact strategy
+    version/plan or explicit safety authority.
   failure_regression_proof: Wrong strategy version or confidence-only resizing is refused.
   dependencies:
   - STR-01
@@ -3830,8 +3853,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3873,8 +3896,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3917,8 +3940,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3948,8 +3971,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Record execution-quality timing and actual venue costs.
   why_needed: Execution evidence must improve future cost/capacity analysis.
-  closure_condition: Signal/decision/submission/fill times, reference/fill prices, spread, size/depth, fees and rejects/partials
-    bind exact action IDs.
+  closure_condition: Signal/decision/submission/fill times, reference/fill prices, spread, size/depth, fees and
+    rejects/partials bind exact action IDs.
   failure_regression_proof: Missing actual fees remain unavailable/estimated, never zero or verified money.
   dependencies:
   - EXE-01
@@ -3959,8 +3982,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -3992,7 +4015,8 @@ items:
   why_needed: Journal records and venue truth must remain distinguishable.
   closure_condition: Reconciliation retains raw receipts, field source and explicit discrepancy/corrective action;
     local estimates remain labelled.
-  failure_regression_proof: No silent overwrite of history, symbol-only identity substitution or invented actual exposure.
+  failure_regression_proof: No silent overwrite of history, symbol-only identity substitution or invented actual
+    exposure.
   dependencies:
   - DATA-01
   owner_role: Accounting & outcomes owner
@@ -4000,8 +4024,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4033,8 +4057,8 @@ items:
   why_needed: Enables actual net P&L and reliable downstream learning.
   closure_condition: Order/fill/booked legs, trades, costs and financing bind original requests/decisions and their
     available receipts.
-  failure_regression_proof: Retry or partial accounting cannot double-book money; missing entry/exit identities stay
-    unbound.
+  failure_regression_proof: Retry or partial accounting cannot double-book money; missing entry/exit identities
+    stay unbound.
   dependencies:
   - ACC-01
   - EXE-01
@@ -4043,8 +4067,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4085,8 +4109,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4128,8 +4152,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4170,8 +4194,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4214,8 +4238,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4257,8 +4281,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4299,8 +4323,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4341,8 +4365,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4383,8 +4407,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4425,8 +4449,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4466,8 +4490,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4497,8 +4521,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Connect all permitted learning targets to future normal consumers.
   why_needed: Stored updates are not learning until behaviour uses them.
-  closure_condition: Confidence, allocation, Attention/research priority, evidence weights, WorldModel learning and
-    lifecycle each have owner/writer/normal-consumer proof under approved rules.
+  closure_condition: Confidence, allocation, Attention/research priority, evidence weights, WorldModel learning
+    and lifecycle each have owner/writer/normal-consumer proof under approved rules.
   failure_regression_proof: API-only overlays, missing callers and legacy isolated adaptation cannot count as normal
     loop closure.
   dependencies:
@@ -4509,8 +4533,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4542,7 +4566,8 @@ items:
   why_needed: Infrastructure tests do not create safe profitable production rules.
   closure_condition: Each adopted policy has predeclared evidence/sufficiency/bounds and quantitative validation,
     then prospective owner-consumer proof.
-  failure_regression_proof: Empty registry is POLICY_NOT_CONFIGURED, not implied readiness; no arbitrary learned thresholds.
+  failure_regression_proof: Empty registry is POLICY_NOT_CONFIGURED, not implied readiness; no arbitrary learned
+    thresholds.
   dependencies:
   - LRN-04
   - QNT-08
@@ -4551,8 +4576,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4582,8 +4607,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Demonstrate bounded changed behaviour on independent prospective evidence.
   why_needed: The product exit requires learning effects, not only tests.
-  closure_condition: A real supported evidence chain produces an eligible update whose attributable later normal behaviour
-    differs within bounds; unavailable rules remain explicit.
+  closure_condition: A real supported evidence chain produces an eligible update whose attributable later normal
+    behaviour differs within bounds; unavailable rules remain explicit.
   failure_regression_proof: No forced update, synthetic evidence presented as real, future information leak or causal
     claim from one outcome.
   dependencies:
@@ -4594,8 +4619,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4635,8 +4660,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4674,8 +4699,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4714,8 +4739,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4744,8 +4769,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Attribute provider calls, token usage and verified costs.
   why_needed: The owner must know which work consumed paid resources.
-  closure_condition: Each attempted/failed/unknown call records caller/task/run/model/prompt version and usage; pricing/billing
-    evidence determines monetary truth.
+  closure_condition: Each attempted/failed/unknown call records caller/task/run/model/prompt version and usage;
+    pricing/billing evidence determines monetary truth.
   failure_regression_proof: No API-key logging, payload sprawl, unverified exact charge or unlogged fallback.
   dependencies:
   - LLM-03
@@ -4755,8 +4780,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4795,8 +4820,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4835,8 +4860,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4876,8 +4901,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4918,8 +4943,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4959,8 +4984,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -4999,8 +5024,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -5029,9 +5054,10 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Surface approval-required actions without requesting approval for ordinary autonomy.
   why_needed: Avoids both unsafe activation and constant permission loops.
-  closure_condition: First-live, new scope/access/spend, hard limits, serious recovery and architecture changes surface;
-    ordinary approved decisions remain autonomous.
-  failure_regression_proof: A no-trade/research question does not require new blanket approval; first-live stays gated.
+  closure_condition: First-live, new scope/access/spend, hard limits, serious recovery and architecture changes
+    surface; ordinary approved decisions remain autonomous.
+  failure_regression_proof: A no-trade/research question does not require new blanket approval; first-live stays
+    gated.
   dependencies:
   - OWN-02
   owner_role: Owner interface owner
@@ -5039,8 +5065,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -5081,8 +5107,8 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
-    finding and does not reopen prior closures.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures.
   source_ids:
   - S01
   - S02
@@ -5111,8 +5137,8 @@ items:
   status: AWAITING_EVIDENCE
   required_behavior: 'Overview: Account/equity/P&L, exposure, current control, global signals and Needs You.'
   why_needed: The first screen must make status and required owner action understandable.
-  closure_condition: Observed figures have source/freshness/quality, unavailable values stay unknown, and Needs You
-    opens the exact evidence/action. Functional and runtime proof are separate from owner visual approval.
+  closure_condition: Observed figures have source/freshness/quality, unavailable values stay unknown, and Needs
+    You opens the exact evidence/action. Functional and runtime proof are separate from owner visual approval.
   failure_regression_proof: Stale, disconnected, zero/unknown and pending approval are distinct; no fake live values.
   dependencies:
   - ACC-03
@@ -5347,13 +5373,14 @@ items:
   item_type: REQUIREMENT
   release_scope: BASELINE
   status: AWAITING_EVIDENCE
-  required_behavior: 'Strategies: Show families, exact versions/hashes, evidence, lifecycle, economics, capacity and
-    approval.'
+  required_behavior: 'Strategies: Show families, exact versions/hashes, evidence, lifecycle, economics, capacity
+    and approval.'
   why_needed: A strategy label must reflect its actual authority and support.
-  closure_condition: Selecting a version shows its exact receipts/state and allowed actions; approval staleness and
-    Governor history agree with authoritative records. Functional and runtime proof are separate from owner visual
-    approval.
-  failure_regression_proof: Changed spec/evidence/capability invalidates stale approval; no UI direct activation bypass.
+  closure_condition: Selecting a version shows its exact receipts/state and allowed actions; approval staleness
+    and Governor history agree with authoritative records. Functional and runtime proof are separate from owner
+    visual approval.
+  failure_regression_proof: Changed spec/evidence/capability invalidates stale approval; no UI direct activation
+    bypass.
   dependencies:
   - STR-03
   - STR-04
@@ -5586,8 +5613,8 @@ items:
   status: AWAITING_EVIDENCE
   required_behavior: 'Live System: Visualize actual runtime components, links, data movement and health.'
   why_needed: Owner should see observed topology, not a fictional brain.
-  closure_condition: Configured topology is separated from observed nodes/flows, health and update age; advanced raw
-    internals are optional detail. Functional and runtime proof are separate from owner visual approval.
+  closure_condition: Configured topology is separated from observed nodes/flows, health and update age; advanced
+    raw internals are optional detail. Functional and runtime proof are separate from owner visual approval.
   failure_regression_proof: Stopped processes/absent telemetry cannot show live flow; visual failure cannot impact
     backend.
   dependencies:
@@ -5665,8 +5692,8 @@ items:
   why_needed: Knowledge must remain inspectable back to exact evidence.
   closure_condition: Search, selection and links trace observation→hypothesis→experiment→evidence→conclusion→strategy/decision→outcome→learning.
     Functional and runtime proof are separate from owner visual approval.
-  failure_regression_proof: Missing, inferred, truncated and exact matches are labelled distinctly; no arbitrary semantic
-    causality.
+  failure_regression_proof: Missing, inferred, truncated and exact matches are labelled distinctly; no arbitrary
+    semantic causality.
   dependencies:
   - MEM-01
   - MEM-02
@@ -5742,8 +5769,8 @@ items:
   status: AWAITING_EVIDENCE
   required_behavior: 'Diagnostics: Expose health, latency, resource, data/API/storage and recovery evidence.'
   why_needed: The owner needs actionable diagnosis rather than red indicators.
-  closure_condition: Errors show bounded reason, phase, time, affected source and evidence; advanced details are separate
-    from normal owner surfaces. Functional and runtime proof are separate from owner visual approval.
+  closure_condition: Errors show bounded reason, phase, time, affected source and evidence; advanced details are
+    separate from normal owner surfaces. Functional and runtime proof are separate from owner visual approval.
   failure_regression_proof: Unknown SQLite cause cannot display confirmed disk corruption; stale snapshots do not
     show current recovery proof.
   dependencies:
@@ -5860,7 +5887,8 @@ items:
   why_needed: No data and failed data retrieval are different facts.
   closure_condition: Each screen's main request states render distinctly with freshness and appropriate retry/permissions;
     LIVE never substitutes demo fixtures.
-  failure_regression_proof: Disconnected API, partial payload, 403/404 and slow response cannot fabricate fresh data.
+  failure_regression_proof: Disconnected API, partial payload, 403/404 and slow response cannot fabricate fresh
+    data.
   dependencies:
   - OWN-04
   owner_role: Frontend + owner-interface owner
@@ -5934,8 +5962,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Handle live updates and reconnect without duplicate or regressed state.
   why_needed: Streaming UI must remain truthful through connection changes.
-  closure_condition: Version/timestamp-aware updates, reconnect and stale warnings keep consistent current state and
-    retained context.
+  closure_condition: Version/timestamp-aware updates, reconnect and stale warnings keep consistent current state
+    and retained context.
   failure_regression_proof: Out-of-order events, repeated reconnect or request race cannot present older state as
     newer.
   dependencies:
@@ -5972,8 +6000,8 @@ items:
   status: EVIDENCE_TO_MAP
   required_behavior: Make controls clear and safe across retries, stale state and loss of connection.
   why_needed: A click is not proof that an action completed.
-  closure_condition: Pending/accepted/refused/failed/completed states match typed audit records; stale/duplicate clicks
-    cannot duplicate authority.
+  closure_condition: Pending/accepted/refused/failed/completed states match typed audit records; stale/duplicate
+    clicks cannot duplicate authority.
   failure_regression_proof: No optimistic UI success for an uncommitted change; unauthorized controls refuse.
   dependencies:
   - OWN-02
@@ -6411,16 +6439,16 @@ items:
   implementation_evidence: Harness fixture claim only; original patch/hashes await local verification.
   runtime_evidence: OWNER_REPORTED_BLOCKED_RUN; scheduling-observation-prep-r1-idi3eex0-kernel-1012489
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'S16 owner report: four harness conflicts fixed; 12 pre-run and 13 post-cleanup fixture scenarios.
-    Stop requested at 240.033s; first cycle completed during shutdown at 259.776s. Zero complete window cycles; no
-    ordinary recurring sample; all task services stopped.'
+  latest_evidence: 'S16: corrected harness passed reported fixtures; stop requested at 240.033s; first cycle completed
+    during shutdown at 259.776s; zero completed observation-window cycles; Dashboard never launched; Kernel and
+    observers stopped cleanly; no provider attempts; production source/config unchanged.'
   source_ids:
   - S11
   - S15
   - S16
   source_sections: 'Parent requirement(s): RUN-01,RUN-03,GOV-06'
-  next_proof: Preserve the blocked attempt. After OPEN-09, use PERF-01 to attribute evidence-store waits and repeated
-    market/evidence work from the retained run. No automatic restart or optimization.
+  next_proof: No further execution under WORK-01. Preserve the blocked attempt; PERF-01 owns diagnosis of the 259.776s
+    cycle before any implementation choice.
   acceptance_basis: Existing requirement/observed incident; not a new feature.
   acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
   priority: BLOCKED
@@ -6459,7 +6487,9 @@ items:
   implementation_evidence: SEE_EVIDENCE
   runtime_evidence: SEE_SCOPE_AND_EVIDENCE
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Reported in PREPARED_HARNESS_CONFLICT; included in running WORK-01. Final fix evidence not supplied.
+  latest_evidence: S16 reports machine-readable preflight gating was corrected and integrated fixture scenarios
+    passed. Exact external harness artifacts were not independently inspected in the tracker-mapping step; keep
+    AWAITING_EVIDENCE.
   source_ids:
   - S11
   - S15
@@ -6498,7 +6528,9 @@ items:
   implementation_evidence: SEE_EVIDENCE
   runtime_evidence: SEE_SCOPE_AND_EVIDENCE
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Reported in PREPARED_HARNESS_CONFLICT; included in running WORK-01. Final fix evidence not supplied.
+  latest_evidence: S16 reports Dashboard launch is now gated behind the new Kernel boot/health evidence. In the
+    latest attempt Dashboard never launched because the first cycle exceeded the safety limit. Complete adverse-case
+    proof remains to be inspected.
   source_ids:
   - S11
   - S15
@@ -6537,7 +6569,9 @@ items:
   implementation_evidence: SEE_EVIDENCE
   runtime_evidence: SEE_SCOPE_AND_EVIDENCE
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Reported in PREPARED_HARNESS_CONFLICT; included in running WORK-01. Final fix evidence not supplied.
+  latest_evidence: 'S16 reports the observation clock is bound to first-cycle start and separates shutdown-overlapping
+    cycles. Latest attempt: 240.033s window, zero completed window cycles, first cycle finished at 259.776s during
+    shutdown. Exact monotonic-boundary artifact remains to be inspected.'
   source_ids:
   - S11
   - S15
@@ -6576,7 +6610,9 @@ items:
   implementation_evidence: SEE_EVIDENCE
   runtime_evidence: SEE_SCOPE_AND_EVIDENCE
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Reported in PREPARED_HARNESS_CONFLICT; included in running WORK-01. Final fix evidence not supplied.
+  latest_evidence: S16 reports observers are retained through unconfirmed shutdown and the final cleanup case was
+    fixture-tested after a transient already-unloaded heartbeat-service condition. Latest real shutdown was clean;
+    timeout-retention branch remains AWAITING_EVIDENCE.
   source_ids:
   - S11
   - S15
@@ -6605,7 +6641,8 @@ items:
   release_scope: BASELINE
   status: OPEN
   required_behavior: Establish first-cycle and sustained timing under existing 240s contract.
-  why_needed: Latest retained 266.7s first cycle blocked the one-hour run; shutdown cycle is not a normal distribution.
+  why_needed: Latest observed first cycle was 259.776s against the unchanged 240s limit; prior 266.7s evidence remains
+    historical. No ordinary recurring-cycle distribution exists for the latest attempt.
   closure_condition: Approved instrumented run distinguishes boot/first/recurring/shutdown and establishes agreed
     safety envelope with unchanged workload and complete gaps, or records precise remaining failure.
   failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed
@@ -6616,9 +6653,10 @@ items:
   implementation_evidence: SEE_EVIDENCE
   runtime_evidence: OWNER_REPORTED_FAILED_FIRST_CYCLE; scheduling-observation-prep-r1-idi3eex0-kernel-1012489
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'S16: first cycle 259.776s, stop requested at 240.033s, 79.281 thread-CPU seconds; 13.13s unattributed
-    exclusive time. evidence.store 30.747s, market.load 21.668s, Journal.query 17.117s, learning.capture.snapshot
-    15.109s. Recurring timing is NOT_MEASURED.'
+  latest_evidence: 'S16 latest: first cycle 259.776s; stop requested at 240.033s; 79.281 thread-CPU seconds; zero
+    completed window cycles; 13.13s unattributed exclusive time. Measured exclusive costs: network.wait 41.120s,
+    evidence.store 30.747s, market.load 21.668s, Journal.query 17.117s, learning.capture.snapshot 15.109s. No single
+    cost is established as root cause.'
   source_ids:
   - S05
   - S06
@@ -6626,9 +6664,9 @@ items:
   - S11
   - S16
   source_sections: 'Parent requirement(s): RUN-03'
-  next_proof: Dots first verifies local artifact identities, then attributes existing evidence-store waits/repeated
-    work in a read-only diagnosis. Name one justified change and its closing proof; do not infer CPU/GIL or database-wait
-    causality from wall-minus-CPU.
+  next_proof: 'Diagnosis only: attribute repeated market/evidence/Journal/capture work and remaining exclusive time
+    from retained evidence before selecting any code change. No threshold change or new observation is authorized
+    by selection.'
   acceptance_basis: Existing requirement/observed incident; not a new feature.
   acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
   priority: NEXT_AFTER_CURRENT
@@ -6661,9 +6699,8 @@ items:
   implementation_evidence: REPORTED_FIXED
   runtime_evidence: SEE_SCOPE_AND_EVIDENCE
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 34 tests reported; median wall import 1.354227s → 0.073787s; exact two-file commit 9385f792…; effect
-    on Kernel remains NOT_YET_MEASURED. S16 observer median imports heartbeat 0.050s/storage 0.049s; total observer
-    CPU 4.627s. No Kernel speedup is causally attributed.
+  latest_evidence: Closed narrow observer-import contract remains intact. Latest observation reports heartbeat/storage
+    observer median import about 0.050s/0.049s. No Kernel latency improvement is inferred.
   source_ids:
   - S07
   - S06
@@ -6693,8 +6730,8 @@ items:
   status: OPEN
   required_behavior: Bring Attention producer capture within its approved budget or resolve the contract explicitly.
   why_needed: Capture measured ~1,068ms and ~865ms against 50ms advisory budget; substage cause unattributed.
-  closure_condition: Measured dominant capture work corrected with provenance/coverage unchanged; actual capture costs
-    meet approved contract. Any policy change needs explicit owner decision, not silent widening.
+  closure_condition: Measured dominant capture work corrected with provenance/coverage unchanged; actual capture
+    costs meet approved contract. Any policy change needs explicit owner decision, not silent widening.
   failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed
     boundaries without reopening unrelated work.
   dependencies: []
@@ -6703,8 +6740,8 @@ items:
   implementation_evidence: SEE_EVIDENCE
   runtime_evidence: SEE_SCOPE_AND_EVIDENCE
   visual_approval: NOT_APPLICABLE
-  latest_evidence: S16 capture 535.604ms versus existing 50ms advisory budget; scan and causes proofs recorded. Substage/overhead
-    attribution incomplete; no threshold change approved.
+  latest_evidence: 'S16 latest Attention capture: 535.604ms against the unchanged 50ms advisory budget. Dominant
+    internal capture work remains unattributed; no budget widening is authorized.'
   source_ids:
   - S05
   - S06
@@ -6733,7 +6770,8 @@ items:
   release_scope: BASELINE
   status: CLOSED
   required_behavior: Use bounded informative committed-write probes; separate integrity.
-  why_needed: Zero-timeout probe collapsed SQLite errors and could treat legitimate writer contention as generic failure.
+  why_needed: Zero-timeout probe collapsed SQLite errors and could treat legitimate writer contention as generic
+    failure.
   closure_condition: Bounded actual write commit, phase/code diagnostics, independent heartbeat and separate integrity
     pass real BUSY/FULL/READONLY/IOERR tests; original historical cause remains unknown.
   failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed
@@ -6761,8 +6799,8 @@ items:
   - MON-02
   - MON-03
   related_items: []
-  closure_evidence: 958c9eb… reported 906 focused checks; 10 runtime committed probes with no SQLite failure in that
-    window. Historical original error was not recoverable.
+  closure_evidence: 958c9eb… reported 906 focused checks; 10 runtime committed probes with no SQLite failure in
+    that window. Historical original error was not recoverable.
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -6813,8 +6851,8 @@ items:
   status: CLOSED
   required_behavior: Normalize optional nullable target metadata without coercing required NaN.
   why_needed: Two forward captures refused absent supersedes represented as NaN.
-  closure_condition: Exact retained target paths replay COMPLETE in isolated fixtures without duplicate retries; required
-    non-finite values still refuse; production historical refusals are preserved.
+  closure_condition: Exact retained target paths replay COMPLETE in isolated fixtures without duplicate retries;
+    required non-finite values still refuse; production historical refusals are preserved.
   failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed
     boundaries without reopening unrelated work.
   dependencies: []
@@ -6851,8 +6889,8 @@ items:
   status: CLOSED
   required_behavior: Eliminate multiplied universe/provenance evidence storage.
   why_needed: brain_events occupied 65.123GB; a cycle wrote ~637MB repeated detail and filled the volume.
-  closure_condition: Lossless exact references/readers preserve all events and historical hashes; representative and
-    multi-cycle storage grow by unique evidence/reference metadata, not repeated histories.
+  closure_condition: Lossless exact references/readers preserve all events and historical hashes; representative
+    and multi-cycle storage grow by unique evidence/reference metadata, not repeated histories.
   failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed
     boundaries without reopening unrelated work.
   dependencies: []
@@ -6879,8 +6917,8 @@ items:
   - DATA-07
   - DATA-12
   related_items: []
-  closure_evidence: 4,696 events preserved; compact candidate ~2.89GB; installed later; bounded runtime storage observation
-    improved. All-writer long-term retention remains separate.
+  closure_evidence: 4,696 events preserved; compact candidate ~2.89GB; installed later; bounded runtime storage
+    observation improved. All-writer long-term retention remains separate.
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -6930,7 +6968,8 @@ items:
   release_scope: BASELINE
   status: CLOSED
   required_behavior: Enforce brain.enabled=false at the actual provider admission boundary.
-  why_needed: A successful DeepSeek request contradicted the claimed disabled state; original admission ignored enabled.
+  why_needed: A successful DeepSeek request contradicted the claimed disabled state; original admission ignored
+    enabled.
   closure_condition: All relevant shared call paths make zero fake/real attempts while disabled; budgets/usage preserved;
     actual caller attribution handled separately.
   failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed
@@ -6941,7 +6980,8 @@ items:
   implementation_evidence: REPORTED_FIXED
   runtime_evidence: SEE_SCOPE_AND_EVIDENCE
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Patched disablement test passed; subsequent bounded windows reported zero attempts/unchanged ledger.
+  latest_evidence: S16 latest controlled attempt again recorded zero provider attempts/admissions with unchanged
+    ledger; no regression of the narrow disabled-provider closure is demonstrated.
   source_ids:
   - S13
   - S05
@@ -6958,7 +6998,8 @@ items:
   parent_ids:
   - LLM-02
   related_items: []
-  closure_evidence: Patched disablement test passed; subsequent bounded windows reported zero attempts/unchanged ledger.
+  closure_evidence: Patched disablement test passed; subsequent bounded windows reported zero attempts/unchanged
+    ledger.
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -6980,9 +7021,9 @@ items:
   implementation_evidence: SEE_EVIDENCE
   runtime_evidence: SEE_SCOPE_AND_EVIDENCE
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'Retained worker map: 300s startup delay, 60s checks, 45s busy gate; no experiment output observed.
-    Latest S16 task ended before research''s 300s initial wake: no busy-gate refusal was observed in that attempt.
-    Earlier gate observations remain historical.'
+  latest_evidence: S16 latest attempt stopped at 240.033s before the quant-research worker's initial 300s wake.
+    Therefore no new busy-gate refusal or research progress evidence was produced; older starvation evidence remains
+    historical.
   source_ids:
   - S05
   - S06
@@ -7093,8 +7134,8 @@ items:
   status: OPEN
   required_behavior: Add exact journal logical retry idempotency where still absent.
   why_needed: Compacted identical append retry reuses payload but adds another event reference.
-  closure_condition: Measured actual writer distinguishes retry identity from a distinct observation; retry adds no
-    second event and reconstruction/legacy behavior stay valid.
+  closure_condition: Measured actual writer distinguishes retry identity from a distinct observation; retry adds
+    no second event and reconstruction/legacy behavior stay valid.
   failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed
     boundaries without reopening unrelated work.
   dependencies: []
@@ -7141,8 +7182,8 @@ items:
   implementation_evidence: SEE_EVIDENCE
   runtime_evidence: SEE_SCOPE_AND_EVIDENCE
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Inventory is historical/partial; logical repeated bytes are not guaranteed physical savings; all
-    audited blobs referenced.
+  latest_evidence: Inventory is historical/partial; logical repeated bytes are not guaranteed physical savings;
+    all audited blobs referenced.
   source_ids:
   - S08
   source_sections: 'Parent requirement(s): DATA-07'
@@ -7219,8 +7260,8 @@ items:
   implementation_evidence: SEE_EVIDENCE
   runtime_evidence: SEE_SCOPE_AND_EVIDENCE
   visual_approval: NOT_APPLICABLE
-  latest_evidence: S08 historical inventory; later NaN fix proves two isolated paths, not all prospective learning
-    maturity.
+  latest_evidence: 'S16: 20 candidates, 20 snapshots and 20 HOLD decisions plus replay-authority refusals. This
+    does not establish a new eligible terminal decision→outcome→learning chain.'
   source_ids:
   - S08
   - S05
@@ -7260,7 +7301,8 @@ items:
   implementation_evidence: SEE_EVIDENCE
   runtime_evidence: SEE_SCOPE_AND_EVIDENCE
   visual_approval: NOT_APPLICABLE
-  latest_evidence: S08 and storage incident. Provider currently disabled, so no new paid collection is authorized.
+  latest_evidence: 'S16: zero provider attempts/admissions and unchanged provider ledger. This supports disabled-provider
+    behavior but does not establish per-call identity/usage/cost attribution.'
   source_ids:
   - S08
   - S13
@@ -7285,7 +7327,7 @@ items:
   stage: Cross-cutting
   item_type: DEFECT
   release_scope: BASELINE
-  status: IN_PROGRESS
+  status: CLOSED
   required_behavior: Adopt and reconcile the tracker without creating duplicate authorities.
   why_needed: The new file must become a maintained plan, not another stale report.
   closure_condition: Owner accepts verification details/representation; row-level evidence is mapped; SDD remains
@@ -7295,24 +7337,26 @@ items:
   dependencies: []
   owner_role: Assigned local engineering session
   engineering_assignee: ChatGPT prepares import; owner/local Dots completes exact-file import and handoff
-  implementation_evidence: SEE_EVIDENCE
-  runtime_evidence: SEE_SCOPE_AND_EVIDENCE
+  implementation_evidence: CONTROL_PLANE_RECONCILIATION_AND_READ_ONLY_TRACKER
+  runtime_evidence: NOT_APPLICABLE_TO_ADOPTION; Dashboard deployment and browser verification not performed.
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'S17: owner explicitly requested all three files in repository and Dots action/VM setup. Publication
-    is authorized; complete evidence mapping and individual draft criteria are not established by that request.'
+  latest_evidence: Owner explicitly accepted YAML as canonical, Dashboard Tracker as primary read-only view and
+    Markdown as optional generated reference. Existing XLSX is deprecated/non-authoritative and preserved. The approved
+    observation mapping and STATE/NEXT reconciliation select only PERF-01, SELECTED_NOT_STARTED / DIAGNOSIS_ONLY.
+    Exact external runtime artifacts remain unverified; adoption is not product acceptance.
   source_ids:
   - S01
   - S09
   - S10
   - S17
   source_sections: 'Parent requirement(s): GOV-01,GOV-02,GUX-11'
-  next_proof: Import the three matched artifact files, verify hashes and current 176 IDs, link STATE/NEXT without
-    competing authority, and verify local Dots reads. No runtime restart or paid provider action.
+  next_proof: Maintain canonical YAML through engineering changes; validate the read-only Tracker contract and optional
+    Markdown when changed. No runtime or trading authorization.
   acceptance_basis: Existing requirement/observed incident; not a new feature.
-  acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
-  priority: ACTIVE
+  acceptance_status: RECORDED_NARROW_CLOSURE
+  priority: CLOSED_SCOPE
   resolution_at_commit: ''
-  work_authorized: true
+  work_authorized: false
   updated: '2026-10-05'
   legacy_ids: ''
   parent_ids:
@@ -7320,10 +7364,14 @@ items:
   - GOV-02
   - GUX-11
   related_items: []
-  closure_evidence: ''
+  closure_evidence: Owner-approved representation; mapped observation and explicit evidence limits; SDD target /
+    STATE evidence summary / NEXT single PERF-01 selection linked. Engineering owns canonical YAML and optional
+    Markdown generation; Dashboard reads validated files. XLSX excluded by explicit owner representation decision.
+    Focused parser/API/UI verification belongs to this enclosing implementation commit; no deployed/browser proof
+    claimed.
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
-  owner_approval_needed: PUBLICATION_APPROVED; individual draft verification details require their own acceptance
+  owner_approval_needed: OWNER_ACCEPTED_REPRESENTATION_AND_READ_ONLY_NAVIGATION
 sources:
 - id: S01
   title: SDD v3.2 — target architecture
@@ -7404,8 +7452,8 @@ sources:
   identity: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
   location: 'Current conversation: PREPARED_HARNESS_CONFLICT; correction + fixtures + one observation authorized.'
   scope: Preflight enforcement; Dashboard after boot; window from first cycle; observers survive shutdown timeout.
-  qualification: Historical pre-run harness conflict. Superseded for latest attempt by S16; do not keep waiting for
-    a result.
+  qualification: Historical pre-run harness conflict. Superseded for latest attempt by S16; do not keep waiting
+    for a result.
 - id: S12
   title: Historical final audit and repair-loop verdicts
   kind: Owner-pasted historical evidence
@@ -7451,8 +7499,8 @@ sources:
   identity: Current conversation, 2026-10-05
   location: Owner requested tracker files in repository, Dots handoff and step-by-step VM configuration.
   scope: Documentation/artifact publication and local-access setup; sequential tracker-based work.
-  qualification: Not authorization for real-money activation, new paid providers, destructive cleanup, changing thresholds
-    or starting all queued items.
+  qualification: Not authorization for real-money activation, new paid providers, destructive cleanup, changing
+    thresholds or starting all queued items.
 historical_defects:
 - legacy_id: F1
   parent: RUN-01
@@ -7574,6 +7622,12 @@ change_log:
   reason: Owner requested repository files and Dots setup. No blanket acceptance of draft criteria or runtime activation.
   evidence: S17
   actor: Owner instruction
+- date: '2026-10-05'
+  item: OPEN-09; representation policy
+  before: XLSX active synchronization requirement; nine-workspace navigation
+  after: Canonical YAML; read-only Dashboard Tracker primary; Markdown optional; XLSX deprecated unchanged. Tenth
+    navigation route owner-approved. All 176 row closing conditions preserved.
+  reason: Explicit owner decision; no trading or runtime authority.
 sdd_section_coverage:
 - section: 1
   title: Mission / end goal
@@ -7581,8 +7635,8 @@ sdd_section_coverage:
   - REL-04
   - GOV-10
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 2
   title: Owner decisions
@@ -7595,8 +7649,8 @@ sdd_section_coverage:
   - REL-01
   - REL-02
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 3
   title: Simplicity / complexity
@@ -7607,8 +7661,8 @@ sdd_section_coverage:
   - DATA-11
   - REL-03
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 4
   title: Architecture and authority map
@@ -7618,8 +7672,8 @@ sdd_section_coverage:
   - RISK-01
   - LLM-01
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 5
   title: Runtime / infrastructure
@@ -7631,8 +7685,8 @@ sdd_section_coverage:
   - RUN-06
   - RUN-07
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 6
   title: Core data architecture
@@ -7647,8 +7701,8 @@ sdd_section_coverage:
   - DATA-11
   - EXE-06
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 7
   title: Market perception
@@ -7658,8 +7712,8 @@ sdd_section_coverage:
   - WRLD-07
   - DATA-04
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 8
   title: Attention
@@ -7669,8 +7723,8 @@ sdd_section_coverage:
   - ATT-03
   - RES-09
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 9
   title: Hierarchical WorldModel
@@ -7681,8 +7735,8 @@ sdd_section_coverage:
   - WRLD-06
   - WRLD-07
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 10
   title: Hypotheses
@@ -7690,8 +7744,8 @@ sdd_section_coverage:
   - RES-07
   - RES-08
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 11
   title: Critic / falsification
@@ -7703,8 +7757,8 @@ sdd_section_coverage:
   - QNT-06
   - QNT-07
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 12
   title: Autonomous research
@@ -7717,8 +7771,8 @@ sdd_section_coverage:
   - RES-06
   - RES-09
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 13
   title: Quant framework
@@ -7731,8 +7785,8 @@ sdd_section_coverage:
   - QNT-06
   - QNT-07
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 14
   title: Strategy architecture
@@ -7744,8 +7798,8 @@ sdd_section_coverage:
   - STR-05
   - DEC-03
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 15
   title: Opportunity / decision
@@ -7758,8 +7812,8 @@ sdd_section_coverage:
   - PORT-03
   - WRLD-01
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 16
   title: Global Portfolio
@@ -7773,8 +7827,8 @@ sdd_section_coverage:
   - PORT-07
   - PORT-08
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 17
   title: Deterministic Risk
@@ -7784,8 +7838,8 @@ sdd_section_coverage:
   - RISK-03
   - RISK-04
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 18
   title: Execution / accounting
@@ -7801,8 +7855,8 @@ sdd_section_coverage:
   - ACC-02
   - ACC-03
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 19
   title: Outcomes / attribution / replay
@@ -7812,8 +7866,8 @@ sdd_section_coverage:
   - OUT-03
   - OUT-04
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 20
   title: Memory
@@ -7823,8 +7877,8 @@ sdd_section_coverage:
   - RES-06
   - DATA-09
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 21
   title: Learning
@@ -7837,8 +7891,8 @@ sdd_section_coverage:
   - LRN-06
   - WRLD-06
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 22
   title: LLM architecture
@@ -7848,8 +7902,8 @@ sdd_section_coverage:
   - LLM-03
   - LLM-04
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 23
   title: External systems / tools
@@ -7860,8 +7914,8 @@ sdd_section_coverage:
   - SEC-02
   - REL-02
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 24
   title: Monitoring / Supervisor
@@ -7874,8 +7928,8 @@ sdd_section_coverage:
   - MON-06
   - EXE-06
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 25
   title: Dashboard / Owner OS
@@ -7914,8 +7968,8 @@ sdd_section_coverage:
   - GUX-10
   - GUX-11
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 26
   title: Security
@@ -7926,8 +7980,8 @@ sdd_section_coverage:
   - SEC-04
   - GUX-10
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 27
   title: Backup / recovery
@@ -7938,8 +7992,8 @@ sdd_section_coverage:
   - EXE-06
   - GOV-07
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 28
   title: Tests / validation
@@ -7953,8 +8007,8 @@ sdd_section_coverage:
   - MON-02
   - QNT-08
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 29
   title: Capability maturity
@@ -7962,8 +8016,8 @@ sdd_section_coverage:
   - GOV-04
   - GUX-11
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 30
   title: Delivery stages
@@ -7974,8 +8028,8 @@ sdd_section_coverage:
   - REL-02
   - REL-03
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 31
   title: Engineering operating loop
@@ -7985,8 +8039,8 @@ sdd_section_coverage:
   - GOV-05
   - GOV-06
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 32
   title: Three-file control plane
@@ -7995,8 +8049,8 @@ sdd_section_coverage:
   - GOV-07
   - OPEN-09
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 33
   title: Acceptance gates
@@ -8012,8 +8066,8 @@ sdd_section_coverage:
   - LRN-06
   - OWN-01
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 34
   title: Repository vs target
@@ -8022,8 +8076,8 @@ sdd_section_coverage:
   - GOV-04
   - GOV-07
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 35
   title: Component contracts
@@ -8041,8 +8095,8 @@ sdd_section_coverage:
   - LRN-03
   - OWN-02
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 36
   title: Completion behaviours
@@ -8055,8 +8109,8 @@ sdd_section_coverage:
   - LRN-06
   - OWN-01
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 - section: 37
   title: Authority / revision
@@ -8066,14 +8120,14 @@ sdd_section_coverage:
   - GOV-09
   - OPEN-09
   status: SECTION_MAPPED_DETAIL_NOT_CERTIFIED
-  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still needs
-    mapping.
+  note: Section-level mapping only. Examples/conditional methods stay conditional; existing item evidence still
+    needs mapping.
   source: https://github.com/sarmadkhan17/Luffy/blob/9385f792f32277bb0b826dba83247b8f5ccf1f8a/SDD.md
 latest_observation:
   schema: luffy-tracker-owner-report.v1
   source: Owner-pasted result in this conversation, 2026-10-05
-  verification: ATTRIBUTED_REPORT_ONLY; VM files, exact harness hashes and result bytes have not been inspected in
-    this chat.
+  verification: ATTRIBUTED_REPORT_ONLY; VM files, exact harness hashes and result bytes have not been inspected
+    in this chat.
   result: BLOCKED
   run_id: scheduling-observation-prep-r1-idi3eex0-kernel-1012489
   deployed_sha: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
@@ -8204,8 +8258,8 @@ latest_observation:
   - Exact observer dispatch times
   - Recurring cycle distribution
   stop_reason: inflight_cycle_exceeded_existing_240_second_limit
-  next_supported_action: Read-only attribution of evidence-store waits and repeated market/evidence work before choosing
-    a change.
+  next_supported_action: Read-only attribution of evidence-store waits and repeated market/evidence work before
+    choosing a change.
   source_and_configuration: unchanged; reported HEAD/index unchanged
   external_artifacts_not_inspected:
     final_result: /mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/run/final-result.json

@@ -7,10 +7,7 @@ Read SDD.md, STATE.yaml and NEXT.yaml first, then this directory's README, the
 canonical tracker YAML and the latest attributed observation. SDD remains the
 only architecture authority. The tracker is its detailed evidence/work ledger.
 
-Full YAML/Markdown/XLSX artifact import is pending until verified against
-bundle-manifest.json. Do not claim all three files are in Git just because this
-handoff exists. Owner approved importing those files and configuring local access.
-Publication does not approve every draft verification detail or all future work.
+OPEN-09 control-plane adoption is CLOSED with explicit owner acceptance. YAML is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown is optional generated reference. Existing XLSX is DEPRECATED / NON-AUTHORITATIVE history, preserved unchanged and excluded from adoption/synchronization checks. Engineering owns YAML and optional Markdown updates. No Tracker mutation API/UI is approved.
 
 ## Latest result, not a new run
 
@@ -32,8 +29,8 @@ details as independently verified. The small attributed summary is in evidence/.
 
 ## One active item and the next candidate
 
-Current item: OPEN-09 — repository import and local Dots setup.
-Next diagnostic candidate: PERF-01 — attribute evidence-store waits and repeated
+Single selected NEXT item: PERF-01 — SELECTED_NOT_STARTED / DIAGNOSIS_ONLY.
+Attribute evidence-store waits and repeated
 market/evidence work from the retained run before choosing one coherent change.
 PERF-02 stays narrowly CLOSED: observer imports are light. This does not prove
 Kernel latency improved. PERF-03 stays OPEN: Attention capture took 535.604 ms
@@ -45,26 +42,13 @@ Do not repeat an earlier busy-gate refusal as an observation from this run.
 Do not start all OPEN or EVIDENCE_TO_MAP items. Those statuses are neither
 missing-code findings nor execution permissions.
 
-## Initial local task
+## Adoption and next-task boundary
 
-1. Confirm the task is executing on the intended Ubuntu VM, as the normal owner
-   user, not on the cloud computer or Windows host. Record hostname, uid, exact
-   worktree path, branch/HEAD and Git status. Do not print environment secrets.
-2. Keep other engineering writers paused. Detect existing services and observers
-   without changing them. Preserve untracked checkpoints and Graphify changes.
-3. Import only the three tracker files from the owner-provided bundle after
-   verifying every byte count/hash in bundle-manifest.json. Do not replace a
-   differing existing tracker silently. Stage explicitly; no git add -A.
-4. Verify YAML has 176 unique IDs, 29 GUI items, one IN_PROGRESS item (OPEN-09),
-   WORK-01 BLOCKED, and unchanged narrow closures. Verify matching exports.
-5. In a docs-only change, link the tracker from STATE/NEXT without rewriting
-   historical verdicts. Preserve the latest blocked result and label it
-   owner-reported until local source artifacts are checked. Record which exact
-   evidence was independently read.
-6. Commit/push only the coherent tracker/doc changes. No force push, historical
-   branch merge, automatic deployment or runtime-state changes.
-7. Report the commit, file hashes, current/next item and all limitations. Local
-   access and artifact publication do not mean the product is complete.
+The approved tracker mapping is adopted without changing any of the 176 IDs or row closing conditions. STATE preserves the older 958c9eb/266.7s attempt as historical and records the latest owner-reported 9385f792/259.776s attempt separately. Repository control changes do not establish a later observed runtime revision.
+
+The Dashboard Tracker adds the owner-approved tenth route through the existing authenticated Owner API, reading fixed repository YAML/NEXT paths only. Missing/malformed/duplicate-ID/unsupported-status or inconsistent NEXT data produces an explicit error; no fabricated or empty successful ledger. Focused in-process/API/frontend tests and build are implementation evidence only. No service startup, deployment or browser observation is claimed.
+
+PERF-01 remains OPEN in the tracker and SELECTED_NOT_STARTED / DIAGNOSIS_ONLY in NEXT. No implementation fix is selected. No runtime execution, new observation, threshold change, workload reduction, provider enablement or trading activation follows from adoption. Do not use this handoff to start services.
 
 ## Engineering discipline after import
 
@@ -73,9 +57,7 @@ revision, allowed files/actions and closing condition. New findings receive
 linked IDs with evidence and an origin classification; unknown origin stays
 unknown. Preserve prior closure and acceptance versions.
 
-Update the canonical YAML first. Markdown and Excel are export snapshots, not
-separate writable authorities. Regenerate and verify views, or mark them stale
-explicitly until synchronized. Do not silently let three status copies diverge.
+Update canonical YAML through engineering/control-plane changes. Dashboard Tracker reads it directly; regenerate optional Markdown when maintained. Historical XLSX is deprecated/non-authoritative and must not be treated as another writable or synchronized authority.
 
 Use existing reports/tests before re-running reviews. Separate implementation,
 fixture tests, real runtime evidence and owner GUI approval. A valid empty or
