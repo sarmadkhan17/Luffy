@@ -4154,7 +4154,7 @@ completed_strategy_capacity_r1:
   id: LUFFY-STRATEGY-CAPACITY-R1
   verdict: PASS
   state: TESTED
-  branch: luffy-strategy-capacity-r1 (base luffy-integrated-core-r1 548ebb7; uncommitted)
+  branch: luffy-strategy-capacity-r1 (base luffy-integrated-core-r1 548ebb7; committed b35a4bc)
   report: docs/superpowers/reports/2026-10-01-strategy-capacity-r1.md
   evidence:
     - trader/strategy/capacity.py (new)
@@ -4185,9 +4185,30 @@ completed_strategy_capacity_r1:
   trading_behavior_changed: NO (no Kernel/engine import of capacity; no order, Risk limit, leverage, control-state or config change)
   runtime_deployment: NOT_DEPLOYED
 
+completed_cross_stage_authority_fix_r1:
+  id: LUFFY-CROSS-STAGE-AUTHORITY-FIX-R1
+  state: TESTED
+  branch: luffy-strategy-capacity-r1 on b35a4bc (uncommitted working tree)
+  evidence:
+    - tests/test_cross_stage_authority.py (F1-F4, P2-A regressions through Kernel._research_handoff/_load_population/_try_enter, the real Executor over a fake venue, factory_handoff)
+  fixes:
+    F1: factory_handoff.live_entry_block - every versioned strategy (SHADOW/probation, awaiting approval, approved without ESTABLISHED capacity, approved with it - no activation record exists) is fenced from the real order path in Kernel._try_enter and again in Executor.open; read failure blocks; non-versioned strategies unaffected. Executor.open refuses exec_mode != live (it has no paper path). Consequence - no paper execution path exists, so a versioned strategy currently accrues no probation trades
+    F2: probation counts only closed exact-version trades with trades.exec_mode = paper inside the install window; live excluded (not_paper_execution); missing/unknown mode -> INCOMPLETE_TRADE_IDENTITY
+    F3: the referee's gate1 look records research-evaluated-candidate.v1 (rendered parts with numeric thresholds); create_version builds the spec from it, refuses validation_reconstruction_drift when current gauges render anything else, refuses looks without it (referee_evaluated_candidate_unbound); receipt evidence carries evaluated_sha256; verify_validation requires the version's entries to equal the evaluated ones
+    F4: versioned SpecExit.frozen_levels computes stop and target with the vector backtest's own distance functions; global take_profit_atr_mult no longer reaches a version; unsupported frozen stop/target kinds (swing) refuse the exact install before probation
+    P2-A: new version records carry no capacity; a stored record differing only by a capacity field is a duplicate on retry
+  remaining_gaps:
+    - runtime exit ladder beyond entry stop/target (TP1 partial at config tp1_r_mult, score flip exit, time stop gated on r<0.5, spec signal_exit) still differs from the vector backtest for every spec; fenced from live for versions by F1, not fixed here
+    - no paper execution path exists; versioned probation cannot accrue trades until one is built
+  trading_behavior_changed: NO (fence blocks only factory versions, none exist in production; research.referee/handoff false)
+  runtime_deployment: NOT_DEPLOYED
+
 current_active_work:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
-  status: SHADOW_RUNNING
+  status: AUTHORIZATION_PENDING
+  authorization: PENDING - NEXT.yaml owner_decision_required (values, duration, stop conditions) is unresolved and no owner authorization record exists; the earlier "SHADOW_RUNNING / authorized" wording was not supported by a recorded authorization
+  capability_state: TESTED (not SHADOW; observation from an unauthorized run does not promote maturity)
+  process_observed: runner PID 2949543 alive at 2026-10-01T03:12+03:00 (scripts/intelligence_spine_shadow.py --interval-s 900 --max-hours 72 --research-max-cases 8); left running, not stopped
   started: '2026-09-30T23:00 local; runner PID 2949543; 15-minute cycles; stops after 72 h, 400 cycles or <shadow-dir>/STOP'
   shadow_dir: /mnt/luffy-data/luffy/shadow/intelligence-spine-r1-20260930
   runner: scripts/intelligence_spine_shadow.py at 49951d6 (branch intelligence-spine-r1)
@@ -4257,7 +4278,7 @@ delivery_progress:
   capability_coverage_formula: capabilities at TESTED or better / 17 capabilities in STATE.capabilities (10/17); accounting_and_truth IMPLEMENTED -> TESTED on the integrated baseline (current-truth + trade-provenance tests); previously 9/17
   current_milestone: Stage 3 intelligence spine (WorldModel -> Attention -> Investigation -> Research) in shadow
   code_baseline: luffy-integrated-core-r1
-  last_completed: LUFFY-STRATEGY-CAPACITY-R1 (PASS; TESTED; NOT_DEPLOYED; branch luffy-strategy-capacity-r1, uncommitted); previously LUFFY-CORE-LINEAGE-INTEGRATION-R1 (PASS; TESTED; NOT_DEPLOYED), LUFFY-EXACT-VERSION-PAPER-PROBATION-R1, LUFFY-STRATEGY-FACTORY-HANDOFF-R1, LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
+  last_completed: LUFFY-CROSS-STAGE-AUTHORITY-FIX-R1 (TESTED; NOT_DEPLOYED; uncommitted on luffy-strategy-capacity-r1); previously LUFFY-STRATEGY-CAPACITY-R1 (PASS; TESTED; NOT_DEPLOYED; committed b35a4bc); previously LUFFY-CORE-LINEAGE-INTEGRATION-R1 (PASS; TESTED; NOT_DEPLOYED), LUFFY-EXACT-VERSION-PAPER-PROBATION-R1, LUFFY-STRATEGY-FACTORY-HANDOFF-R1, LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1
   stage_5_handoff_edges: 7/7 TESTED on a fixture candidate (candidate, referee pass, version, receipt, probation, approval, eligibility); exact-version paper install and per-trade-identity probation TESTED through the real Trade Provenance identity path on the integrated baseline; capacity contract TESTED (strategy-capacity-receipt.v1, required by first-live eligibility) with effective capacity UNAVAILABLE; no real probation has run; degradation/retirement not wired to analyst.review_deployed; Stage 5 not PROVEN/ACTIVE
   stages:
     source_observation: LINKED
