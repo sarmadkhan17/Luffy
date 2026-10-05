@@ -1,0 +1,30 @@
+{
+  "schema": "luffy-tracker-import-manifest.v1",
+  "snapshot_version": "1.1-repository-import",
+  "implementation_baseline": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
+  "row_count": 176,
+  "gui_rows": 29,
+  "full_artifact_import": "PENDING_LOCAL_VERIFICATION",
+  "files": [
+    {
+      "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
+      "bytes": 343575,
+      "sha256": "6710a05a0a78f57c727c09a9e892c148a1c4b70f3174ec8afd4f0bd740f0c18d",
+      "git_blob_sha1": "d8b4eac85a7ab5adb682638fd3cf111e1a54b8f8"
+    },
+    {
+      "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
+      "bytes": 247081,
+      "sha256": "b167a6c533fa24139516516e430b7e22f89e78b7cbb169af38a494804ae5aa48",
+      "git_blob_sha1": "a031259aa41ffabb9cf1041ee432b9221fda5d25"
+    },
+    {
+      "path": "docs/tracker/LUFFY_Product_Tracker_v1.xlsx",
+      "bytes": 94341,
+      "sha256": "0a0d0cadfe730e8fff6e92b3b9181d250780b37bdde4e14c508ec7201b4b5284",
+      "git_blob_sha1": "8c88868d41dac5ad7a3b39e4aa747b8faae04efd"
+    }
+  ],
+  "verify": "Copy exact bytes; reject unexpected overwrite. Verify hashes and IDs before commit. Never upload DBs, secrets, caches or raw runtime logs.",
+  "source": "Updated current-conversation tracker artifacts; latest observation is owner-reported S16."
+}

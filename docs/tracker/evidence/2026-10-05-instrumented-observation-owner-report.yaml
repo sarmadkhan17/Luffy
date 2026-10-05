@@ -1,0 +1,142 @@
+schema: luffy-tracker-owner-report.v1
+source: Owner-pasted result in this conversation, 2026-10-05
+verification: ATTRIBUTED_REPORT_ONLY; VM files, exact harness hashes and result bytes have not been inspected in this
+  chat.
+result: BLOCKED
+run_id: scheduling-observation-prep-r1-idi3eex0-kernel-1012489
+deployed_sha: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
+harness_conflicts_fixed:
+  preflight_enforced: true
+  dashboard_waits_for_boot: true
+  window_starts_at_first_cycle: true
+  observers_survive_shutdown_timeout: true
+harness_fixture_scenarios:
+  before_execution: 12
+  after_cleanup_correction: 13
+  qualification: Final cleanup-only correction was tested after this execution; no observation retry occurred.
+first_cycle:
+  wall_seconds: 259.776
+  thread_cpu_seconds: 79.281
+  graceful_stop_requested_seconds: 240.033
+  existing_limit_seconds: 240
+  completed_inside_window: false
+  completed_during_shutdown: true
+observation:
+  target_seconds: 3600
+  actual_seconds: 240.033
+  completed_window_cycles: 0
+  shutdown_cycles: 1
+  recurring_cycle_seconds: null
+  successful_heartbeat_gaps: null
+startup:
+  launch_to_first_event_s: 0.057
+  kernel_import_wall_cpu_s:
+  - 1.439
+  - 1.117
+  instrumentation_wall_cpu_s:
+  - 0.323
+  - 0.13
+  construction_wall_thread_cpu_s:
+  - 0.136
+  - 0.056
+  boot_wall_thread_cpu_s:
+  - 27.09
+  - 1.621
+exclusive_stage_wall_s:
+  network.wait: 41.12
+  evidence.store: 30.747
+  market.load: 21.668
+  Journal.query: 17.117
+  learning.capture.snapshot: 15.109
+observers:
+  heartbeat:
+    invocations: 28
+    total_wall_cpu_s:
+    - 3.572
+    - 3.381
+    median_wall_cpu_import_s:
+    - 0.128
+    - 0.119
+    - 0.05
+  storage:
+    invocations: 10
+    total_wall_cpu_s:
+    - 1.907
+    - 1.246
+    median_wall_cpu_import_s:
+    - 0.135
+    - 0.124
+    - 0.049
+  median_completion_intervals_s:
+  - 10.994
+  - 30.992
+  settings:
+    initial_delay_s: 2
+    heartbeat_after_completion_s: 10
+    storage_after_completion_s: 30
+    accuracy_s: 1
+    restart: false
+    timeout_s: 20
+attention:
+  scan_and_causes_completion_proofs_recorded: true
+  capture_ms: 535.604
+  advisory_budget_ms: 50
+research:
+  initial_wake_s: 300
+  initial_wake_reached: false
+  busy_gate_refusal_observed: false
+  replay_authority_refusals_recorded: true
+  disabled_and_watchdog_suppressed_workload: unchanged
+scan:
+  candidates: 20
+  snapshots: 20
+  HOLD_decisions: 20
+  entries: 0
+storage:
+  allocated_growth_mib: 15.645
+  non_wal_growth_mib: 11.926
+  wal_growth_mib: 3.719
+  qualification: Allocated growth is not semantic retained growth; WAL generations/checkpoints changed.
+providers:
+  attempts_recorded: 0
+  admissions_recorded: 0
+  usage_ledger: unchanged
+last_reported_state:
+  kernel: stopped cleanly
+  dashboard: never launched
+  task_observers: stopped; timers/services verified absent
+  control: FROZEN
+  operator_hold: retained
+  recovery_latch: retained
+  watchdog_off: present
+  safety_conditions: Historical cycle overrun and producer-restart recovery condition retained.
+  fresh_host_verification_in_this_chat: false
+venue_report:
+  environment: existing demo account; historical report only
+  positions:
+  - instrument: SOL
+    side: long
+    quantity: 5.77
+  - instrument: AVAX
+    side: long
+    quantity: 77
+  native_protection: matching; unchanged final identities/quantities
+  ordinary_orders: 0
+  pending_execution: 0
+  recorded_venue_actions: none
+measurement_gaps:
+- 13.13s unattributed exclusive cycle-wrapper time
+- Instrumentation overhead
+- Exact database/GIL/scheduler waits
+- Child-process internal phases
+- Exact observer dispatch times
+- Recurring cycle distribution
+stop_reason: inflight_cycle_exceeded_existing_240_second_limit
+next_supported_action: Read-only attribution of evidence-store waits and repeated market/evidence work before choosing
+  a change.
+source_and_configuration: unchanged; reported HEAD/index unchanged
+external_artifacts_not_inspected:
+  final_result: /mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/run/final-result.json
+  harness_patch: /mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/correction.patch
+  executed_harness_hashes: /mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/executed-harness-hashes.json
+  final_fixtures: /mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/integrated-validation.json
