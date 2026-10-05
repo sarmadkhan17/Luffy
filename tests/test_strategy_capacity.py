@@ -302,15 +302,21 @@ def test_venue_bound_and_venue_max_is_not_capacity(world, cfg):
     assert m["minimum_order_notional_at_price"] == max(
         100.0, 0.001 * d["strategy.stop_geometry"]["price"])
     assert d["venue.instrument_status"]["venue_allows_order"] is True
-    # exchangeInfo carried maxQty 1000 / MARKET_LOT_SIZE 120: not captured,
-    # never promoted into a bound, and never into effective capacity
-    assert d["venue.maximums"]["reason"] == "VENUE_MAXIMUM_NOT_CAPTURED"
-    assert "max_quantity" not in d["venue.maximums"]
+    # exchangeInfo carried LOT_SIZE maxQty 1000 / MARKET_LOT_SIZE maxQty 120:
+    # Luffy sends market orders, so 120 is the venue's per-order cap — a
+    # venue limit, never a liquidity capacity; no max notional is published
+    mx = d["venue.maximums"]
+    assert mx["status"] == "ESTABLISHED" and mx["max_quantity"] == 120.0
+    assert (mx["market_order_maximum_quantity"], mx["limit_order_maximum_quantity"]) \
+        == ("120", "1000")
+    assert mx["maximum_notional"] == "NOT_PUBLISHED_IN_EXCHANGEINFO"
     assert d["venue.leverage"]["status"] == "UNAVAILABLE"
     assert d["venue.account_eligibility"]["reason"] == "ACCOUNT_SYMBOL_ELIGIBILITY_UNKNOWN"
     assert res["effective"]["status"] == "UNAVAILABLE"
     assert "max_quantity" not in res["effective"]
-    assert "venue.maximums:VENUE_MAXIMUM_NOT_CAPTURED" in res["effective"]["missing"]
+    assert not any(m.startswith("venue.maximums") for m in res["effective"]["missing"])
+    assert "liquidity.liquidity_capacity_model:NO_REGISTERED_LIQUIDITY_CAPACITY_MODEL" \
+        in res["effective"]["missing"]
 
     halted = _dims(C.compute(_inputs(j, cfg, v, registry=_registry(status="SETTLING"))))
     assert halted["venue.instrument_status"]["venue_allows_order"] is False

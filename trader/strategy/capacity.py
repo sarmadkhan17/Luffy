@@ -11,12 +11,20 @@ kept separate, never substituted for another:
              and the configured one. No sizing arithmetic is re-typed here.
 - ACCOUNT    equity from `state_kv.account_observation` via
              `current_truth.read_account` (FRESH / VENUE_FALLBACK and
-             authoritative only). Available margin is not recorded anywhere,
-             so "the account can fund it" is UNAVAILABLE.
+             authoritative only). Funding: the venue's availableBalance from
+             `state_kv.account_margin_observation`
+             (`account-margin-observation.v1`, the same /fapi/v3/account
+             response Risk's equity comes from), ESTABLISHED only when its
+             identity verifies, it is fresh, and its totalMarginBalance is
+             the equity the account dimension uses. Recorded as a margin
+             bound only: turning it into a quantity needs the venue's
+             per-symbol leverage setting, which is not captured.
 - PORTFOLIO  the journal open-trade book Risk sizes against, used only when a
              complete, fresh venue position observation
              (`portfolio.observation.v1`) confirms it instrument by
              instrument under reconcile's 1% size rule. Unconfirmed = UNKNOWN.
+             The observation is the one supplied, else the persisted
+             `venue-position-snapshot.v1` (`state_kv.venue_position_snapshot`).
 - STRATEGY   the exact version's own stop geometry (`SpecExit.from_spec`):
              ATR multiple on the spec's declared timeframe, or a percent stop;
              ATR over fully closed bars with `indicators.atr`, the 0.4% venue
@@ -25,9 +33,12 @@ kept separate, never substituted for another:
              Price basis: close of the last closed spec-timeframe bar (the
              backtest close-fill basis) — not an achievable live fill.
 - VENUE      the instrument registry record: status, minimum quantity, step,
-             minimum notional. Venue maxima (MARKET_LOT_SIZE / max notional),
-             leverage brackets and per-symbol account eligibility are not
-             captured by the registry, so those sub-bounds are UNAVAILABLE.
+             minimum notional, and the MARKET_LOT_SIZE maxQty that bounds the
+             market orders the executor sends (LOT_SIZE maxQty recorded
+             beside it). exchangeInfo has no maximum-notional filter; leverage
+             brackets (initialLeverage / notionalCap) are read by no existing
+             path, and per-symbol account eligibility has no authoritative
+             source, so those sub-bounds are UNAVAILABLE / UNKNOWN.
 - LIQUIDITY  no registered liquidity / market-impact capacity model exists.
              Volume, a backtest slippage charge or a slippage reference are
              evidence, not a model: supplied evidence is recorded and ignored.
@@ -197,7 +208,8 @@ class _KV:
         return []
 
 
-KV_KEYS = ("account_observation", "risk_assessment", "risk_state")
+KV_KEYS = ("account_observation", "risk_assessment", "risk_state",
+           "account_margin_observation", "venue_position_snapshot")
 
 
 def _account(raw_kv: dict, at_ms: int) -> dict:
@@ -464,14 +476,28 @@ def _venue(reg: dict | None, price: float | None) -> dict:
             m["minimum_order_notional_at_price"] = max(
                 float(mn), float(Decimal(mq) * Decimal(str(price))))
         out["minimums"] = _dim(ESTABLISHED, None, **m)
-    out["maximums"] = _dim(
-        UNAVAILABLE, "VENUE_MAXIMUM_NOT_CAPTURED",
-        detail="the instrument registry records LOT_SIZE minimum/step and "
-               "MIN_NOTIONAL only; MARKET_LOT_SIZE maxQty and max notional "
-               "are not captured")
+    mx, lmx = c.get("market_maximum_quantity"), c.get("maximum_quantity")
+    if mx is None:
+        out["maximums"] = _dim(
+            UNAVAILABLE, "VENUE_MAXIMUM_NOT_CAPTURED",
+            detail="the registry record carries no MARKET_LOT_SIZE maxQty "
+                   "(the market-order maximum)",
+            limit_order_maximum_quantity=lmx)
+    else:
+        out["maximums"] = _dim(
+            ESTABLISHED, None, max_quantity=float(Decimal(mx)),
+            market_order_maximum_quantity=mx,
+            limit_order_maximum_quantity=lmx,
+            market_quantity_step=c.get("market_quantity_step"),
+            market_minimum_quantity=c.get("market_minimum_quantity"),
+            maximum_notional="NOT_PUBLISHED_IN_EXCHANGEINFO",
+            basis="exchangeInfo MARKET_LOT_SIZE maxQty: the per-order "
+                  "quantity cap for the market orders Luffy sends; a "
+                  "venue order limit, not liquidity capacity")
     out["leverage"] = _dim(
         UNAVAILABLE, "VENUE_LEVERAGE_BRACKET_NOT_CAPTURED",
-        leverage_bracket_presence=rec["leverage_bracket"])
+        leverage_bracket_presence=rec["leverage_bracket"],
+        detail=LEVERAGE_BRACKET_UNAVAILABLE)
     elig = rec["account_eligibility"]
     out["account_eligibility"] = (
         _dim(ESTABLISHED, None if elig == "ELIGIBLE" else "ACCOUNT_INELIGIBLE",
@@ -494,10 +520,55 @@ def _group(subs: dict) -> str:
         PARTIAL if any(s == ESTABLISHED for s in st) else UNAVAILABLE
 
 
+LEVERAGE_BRACKET_UNAVAILABLE = (
+    "no existing authorized read path keeps leverage brackets: ccxt calls "
+    "/fapi/v1/leverageBracket inside fetch_positions but retains only "
+    "[notionalFloor, maintMarginRatio] per tier (initialLeverage and "
+    "notionalCap are discarded), and no Luffy code reads the raw response")
+
+
 def _funding(inputs: dict) -> dict:
-    return _dim(UNAVAILABLE, "NO_RECORDED_AVAILABLE_MARGIN_OBSERVATION",
-                detail="account_observation records totalMarginBalance "
-                       "(equity) only; available balance is not recorded")
+    """The venue's available balance from the same account response as the
+    equity in use. Never derived from equity, wallet balance or margin."""
+    from ..engine import evidence_capture as ce
+    kv = inputs["state_kv"]
+    raw = kv.get(ce.MARGIN_KV)
+    if raw is None:
+        return _dim(UNAVAILABLE, "NO_RECORDED_AVAILABLE_MARGIN_OBSERVATION",
+                    detail="no account-margin-observation.v1 is recorded")
+    rec = ce.verify_margin(ce.load_json(raw))
+    if rec is None:
+        return _dim(UNAVAILABLE, "AVAILABLE_MARGIN_OBSERVATION_CORRUPT")
+    ident = {"observation_id": rec["observation_id"],
+             "response_sha256": rec["response_sha256"],
+             "environment": rec["environment"], "endpoint": rec["endpoint"]}
+    if rec["status"] != ce.AVAILABLE:
+        return _dim(UNAVAILABLE, rec["reason"], **ident)
+    obs = rec["observed_at_ms"]
+    age = inputs["as_of_ms"] - obs
+    if age < 0:
+        return _dim(UNAVAILABLE, "AVAILABLE_MARGIN_AFTER_AS_OF", **ident)
+    if age > inputs["bounds"]["account_stale_s"] * 1000:
+        return _dim(UNAVAILABLE, "AVAILABLE_MARGIN_STALE", age_ms=age, **ident)
+    account = _account(kv, inputs["as_of_ms"])
+    eq = rec["equity_value_text"]
+    if account["status"] != ESTABLISHED or eq is None or \
+            float(Decimal(eq)) != account["equity_usdt"]:
+        return _dim(UNAVAILABLE, "AVAILABLE_MARGIN_NOT_FROM_THE_EQUITY_READ",
+                    detail="its response's totalMarginBalance is not the equity "
+                           "the account dimension uses", **ident)
+    value = _finite_pos(rec["value"])
+    if value is None and rec["value"] != 0:
+        return _dim(UNAVAILABLE, "AVAILABLE_MARGIN_NOT_A_BALANCE", **ident)
+    return _dim(ESTABLISHED, None, available_margin_usdt=rec["value"],
+                max_margin_usdt=rec["value"], value_text=rec["value_text"],
+                asset=rec["asset"], denomination=rec["denomination"],
+                observed_at_ms=obs, age_ms=age,
+                quantity_bound="UNAVAILABLE: converting margin to quantity "
+                               "needs the venue's per-symbol leverage setting, "
+                               "which is not captured",
+                source="state_kv.account_margin_observation "
+                       "(account-margin-observation.v1)", **ident)
 
 
 def _liquidity(inputs: dict) -> dict:
@@ -588,6 +659,18 @@ def _positions_input(obs):
     return d
 
 
+def _persisted_positions(state_kv: dict, as_of_ms: int):
+    """The persisted venue-position-snapshot.v1's observation, as the same
+    input shape a supplied observation has. Unverifiable = not observed."""
+    from ..engine import evidence_capture as ce
+    snap = ce.verify_snapshot(ce.load_json(state_kv.get(ce.SNAPSHOT_KV)))
+    if snap is None or snap["observation"]["as_of_ms"] > as_of_ms:
+        return None
+    d = dict(snap["observation"])
+    d["snapshot_id"] = snap["snapshot_id"]
+    return d
+
+
 BOOK_KEYS = ("id", "symbol", "side", "amount", "entry_price", "notional_usdt",
              "leverage", "stop_loss", "market_type")
 
@@ -645,8 +728,13 @@ def gather(journal, cfg: dict, version: dict, *, instrument_id: str,
                  "close": b["close"]} for b in (market.get("bars") or [])]
         bars = {"timeframe": market.get("timeframe"),
                 "source": market.get("source"), "bars": rows[-BARS_KEPT:]}
-    if positions is not None and positions.as_of_ms > as_of_ms:
-        _refuse("venue_positions_after_as_of")
+    state_kv = {k: journal.kv_get(k) for k in KV_KEYS}
+    if positions is not None:
+        if positions.as_of_ms > as_of_ms:
+            _refuse("venue_positions_after_as_of")
+        venue_positions = _positions_input(positions)
+    else:
+        venue_positions = _persisted_positions(state_kv, as_of_ms)
     return {
         "as_of_ms": as_of_ms, "instrument_id": instrument_id,
         "market_type": market_type, "symbol": symbol,
@@ -657,10 +745,10 @@ def gather(journal, cfg: dict, version: dict, *, instrument_id: str,
                         "effective": policy["effective"],
                         "source": "config.yaml risk via "
                                   "engine.risk.policy_from_config"},
-        "state_kv": {k: journal.kv_get(k) for k in KV_KEYS},
+        "state_kv": state_kv,
         "book": book, "closed_trades_count": closed,
         "book_source": "journal trades status='open' (Kernel check_entry book)",
-        "venue_positions": _positions_input(positions),
+        "venue_positions": venue_positions,
         "instrument": None if registry is None else reg,
         "market": bars,
         "liquidity_evidence": [_plain(x) for x in liquidity_evidence],

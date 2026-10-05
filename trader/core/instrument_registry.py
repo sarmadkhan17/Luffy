@@ -102,6 +102,13 @@ class OrderConstraints:
     minimum_notional: str | None = None
     price_precision: int | None = None
     amount_precision: int | None = None
+    # exchangeInfo LOT_SIZE maxQty (limit orders) and MARKET_LOT_SIZE (market
+    # orders), exactly as the venue publishes them; None = not published.
+    # exchangeInfo carries no maximum-notional filter.
+    maximum_quantity: str | None = None
+    market_minimum_quantity: str | None = None
+    market_maximum_quantity: str | None = None
+    market_quantity_step: str | None = None
 
 
 @dataclass(frozen=True)

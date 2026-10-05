@@ -114,6 +114,7 @@ def from_binance_usdm_responses(
         lot = filters.get("LOT_SIZE", {})
         price = filters.get("PRICE_FILTER", {})
         minimum = filters.get("MIN_NOTIONAL", {})
+        market_lot = filters.get("MARKET_LOT_SIZE", {})
         ccxt_limits = market.get("limits") or {}
         amount_limits = ccxt_limits.get("amount") or {}
         cost_limits = ccxt_limits.get("cost") or {}
@@ -124,6 +125,10 @@ def from_binance_usdm_responses(
             minimum_notional=_decimal(minimum.get("notional", minimum.get("minNotional", cost_limits.get("min")))),
             price_precision=_precision(symbol.get("pricePrecision")),
             amount_precision=_precision(symbol.get("quantityPrecision")),
+            maximum_quantity=_decimal(lot.get("maxQty")),
+            market_minimum_quantity=_decimal(market_lot.get("minQty")),
+            market_maximum_quantity=_decimal(market_lot.get("maxQty")),
+            market_quantity_step=_decimal(market_lot.get("stepSize")),
         )
         evidence = ["exchangeInfo"]
         if market:
