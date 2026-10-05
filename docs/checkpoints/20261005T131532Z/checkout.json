@@ -1,0 +1,17 @@
+{
+  "status": "UNVERIFIED",
+  "checkout": "/home/sarmad/trader/.claude/worktrees/claude-md-refresh",
+  "original_branch": "refs/heads/docs/claude-md-refresh",
+  "original_head": "d3b640c473175a127d9eef1b2c9ac95a04b475ba",
+  "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-claude-md-refresh",
+  "captured_files": [
+    "knowledge/00 Company/Company.md",
+    "knowledge/00 Company/Manager.md",
+    "knowledge/00 Company/Theorist.md",
+    "knowledge/MOC.md",
+    ".mcp.json"
+  ],
+  "tests": "Existing results only. No new tests or independent assessment. Historical results do not prove this combined dirty variant.",
+  "excluded_files": "Remain local; database/runtime/environment/cache/raw-log/full-payload updates excluded.",
+  "control_plane": "STATE.yaml/NEXT.yaml preserved verbatim where present; no reconciliation performed."
+}

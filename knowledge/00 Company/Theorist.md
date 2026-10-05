@@ -5,12 +5,13 @@ reports_to: Manager
 ---
 # Theorist
 
-> Autopsies losing clusters and edge decay into doctrine.
+> Checks every live strategy against the envelope it was admitted on — data only, no LLM.
 
 Reports to [[Manager]].
 
 ## Wraps
-- `trader.brain.theorist`
+- `trader.brain.postmortem`
+- `trader.brain.doctrine`
 
 ## Files here
 - [[20260824-2032 ZEC duplicate-entry crash-loop]]

@@ -10,7 +10,6 @@ reports_to: —
 ## Wraps
 - `trader.kernel`
 - `trader.engine.orchestrator`
-- `trader.brain.judge`
 
 ## Files here
 - [[2026-08-24]]
@@ -23,5 +22,7 @@ reports_to: —
 - [[2026-08-31]]
 - [[2026-09-01]]
 - [[2026-09-02]]
+- [[2026-09-13]]
+- [[2026-09-14]]
 
 Related: [[Company]], [[MOC]]
