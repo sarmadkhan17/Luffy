@@ -90,12 +90,20 @@ def capture(journal, attention, investigation, config, max_contexts=4):
             inv = _read(stack, investigation, deadline)
             tables = _tables(inv)
             if 'cases' in tables:
-                cases = [_json(r[0]) for r in inv.execute('SELECT payload FROM cases ORDER BY created_ms DESC LIMIT 32')]
-            if 'updates' in tables:
-                for case in cases:
-                    update = inv.execute('SELECT payload FROM updates WHERE case_id=? ORDER BY observed_ms DESC,rowid DESC LIMIT 1', (case['investigation_id'],)).fetchone()
-                    if update:
-                        updates[case['investigation_id']] = _json(update[0])
+                # Bound the same ordered current rows, avoiding a scheduling
+                # handoff for each SQLite cursor row under background load.
+                payloads = json.loads(inv.execute('SELECT json_group_array(payload) FROM '
+                    '(SELECT payload FROM cases ORDER BY created_ms DESC LIMIT 32)').fetchone()[0])
+                cases = [_json(payload) for payload in payloads]
+            if 'updates' in tables and cases:
+                # Choose each case's exact latest revision, including rowid
+                # ties, in one bounded statement instead of 32 separate reads.
+                ids = json.dumps([case['investigation_id'] for case in cases])
+                rows = json.loads(inv.execute('SELECT json_group_array(json_array(case_id,payload)) '
+                    'FROM updates WHERE rowid IN (SELECT (SELECT u.rowid FROM updates u '
+                    'WHERE u.case_id=ids.value ORDER BY u.observed_ms DESC,u.rowid DESC LIMIT 1) '
+                    'FROM json_each(?) AS ids)', (ids,)).fetchone()[0])
+                updates = {cid: _json(payload) for cid, payload in rows}
             if 'allocation_decisions' in tables and scan:
                 allocations = [_json(r[0]) for r in inv.execute('SELECT payload FROM allocation_decisions WHERE scan_id=? LIMIT 2', (scan['scan_id'],))]
         else:

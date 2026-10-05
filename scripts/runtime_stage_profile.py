@@ -45,7 +45,7 @@ def main():
      except Exception:rec['metadata_error']=True
     with lock:
      key=(threading.current_thread().name,label);t=totals.setdefault(key,dict(calls=0,elapsed=0,cpu=0,exclusive_elapsed=0,exclusive_cpu=0,failures=0));t['calls']+=1;t['elapsed']+=elapsed;t['cpu']+=cpu;t['exclusive_elapsed']+=rec['exclusive_elapsed_s'];t['exclusive_cpu']+=rec['exclusive_cpu_s'];t['failures']+=int(error is not None)
-    if label!='evidence.blob' and (elapsed>=.05 or error or name in ('cycle','boot','__init__','beat')):emit(rec)
+    if label!='evidence.blob' and (elapsed>=.05 or error or label=='market.load' or name in ('cycle','boot','__init__','beat')):emit(rec)
     if label=='kernel.cycle':
      with lock:
       summary=dict(stage='cycle.summary',stats=result,timings=[dict(thread=k[0],stage=k[1],**v) for k,v in totals.items()],counters=dict(counters))
@@ -85,10 +85,16 @@ def main():
    counters['blob_decodes']=counters.get('blob_decodes',0)+1;counters['decoded_bytes']=counters.get('decoded_bytes',0)+(len(result) if result else 0)
   return {}
  wrap(E,'_decode_blob','evidence.decode',decodemeta)
- wrap(E.zlib,'compress','evidence.compress',lambda a,k,r:dict(expanded_bytes=len(a[0]),compressed_bytes=len(r)))
+ wrap(E.evidence_zlib,'compress','evidence.compress',lambda a,k,r:dict(expanded_bytes=len(a[0]),compressed_bytes=len(r),native=E.evidence_zlib.NATIVE))
  for name in ('store','resolve'):
   wrap(E,name,'evidence.'+name,lambda a,k,r:dict(output_bytes=len(r.encode()) if isinstance(r,str) else 0))
- for name in ('load','append','eligible_frame','usable_current'):
+ def loadmeta(a,k,r):
+  rows=len(r) if r is not None else 0
+  with lock:
+   counters['market_detail_rows_decoded']=counters.get('market_detail_rows_decoded',0)+rows
+  return dict(series_key=a[1],rows_returned=rows,read_selection={key:value for key,value in k.items() if key in ('as_of_ms','limit','replay_tf','include_partial','revision_stream','instrument_id','source','window_start_ms')})
+ wrap(M,'load','market.load',loadmeta)
+ for name in ('append','eligible_frame','usable_current'):
   wrap(M,name,'market.'+name,lambda a,k,r:dict(rows_returned=len(r) if r is not None else 0))
  from trader.portfolio import current as P
  from trader.portfolio import allocator as A

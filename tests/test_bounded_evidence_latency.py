@@ -32,6 +32,43 @@ class Venue:
         return [[1, 10, 11, 9, 10, 5]]
 
 
+def test_portfolio_bounded_cases_keep_exact_latest_updates(tmp_path):
+    j=Journal(tmp_path/'luffy.db')
+    j.kv_set('venue_position_snapshot',json.dumps(snapshot(side=None,cut=int(time.time()*1000))))
+    j.kv_set('control_state','FROZEN')
+    inv=tmp_path/'investigation.db'
+    with sqlite3.connect(inv) as db:
+        db.executescript('CREATE TABLE cases(payload TEXT,created_ms INTEGER);'
+                        'CREATE TABLE updates(case_id TEXT,payload TEXT,observed_ms INTEGER);')
+        for i in range(40):
+            cid='case-'+str(i)
+            db.execute('INSERT INTO cases VALUES (?,?)',(json.dumps(dict(investigation_id=cid,context=[i])),i//2))
+            # An irrelevant older oversized update must never be decoded.
+            db.execute('INSERT INTO updates VALUES (?,?,?)',(cid,'x'*(2*1024**2+1),0))
+            db.execute('INSERT INTO updates VALUES (?,?,?)',(cid,json.dumps(dict(revision=1)),10))
+            if i != 39:
+                db.execute('INSERT INTO updates VALUES (?,?,?)',(cid,json.dumps(dict(revision=2,context=[i])),10))
+        db.execute("DELETE FROM updates WHERE case_id='case-38'")
+        expected_cases=[json.loads(r[0]) for r in db.execute('SELECT payload FROM cases ORDER BY created_ms DESC LIMIT 32')]
+        expected_updates={}
+        for c in expected_cases:
+            row=db.execute('SELECT payload FROM updates WHERE case_id=? ORDER BY observed_ms DESC,rowid DESC LIMIT 1',(c['investigation_id'],)).fetchone()
+            if row:expected_updates[c['investigation_id']]=json.loads(row[0])
+    config={'attention':{'enabled':False}}
+    result=portfolio_capture(j.db_path,tmp_path/'absent-attention.db',inv,config)
+    actual=json.loads(result[3].payload_json)
+    assert actual['cases']==expected_cases and actual['updates']==expected_updates
+    assert 'case-38' not in actual['updates']
+    with sqlite3.connect(inv) as db:
+        db.execute('INSERT INTO updates VALUES (?,?,?)',('case-39','x'*(2*1024**2+1),11))
+    with pytest.raises(ValueError,match='SOURCE_PAYLOAD_BOUND_EXCEEDED'):
+        portfolio_capture(j.db_path,tmp_path/'absent-attention.db',inv,config)
+    with sqlite3.connect(inv) as db:
+        db.execute('UPDATE updates SET payload=? WHERE observed_ms=11',('{corrupt',))
+    with pytest.raises(json.JSONDecodeError):
+        portfolio_capture(j.db_path,tmp_path/'absent-attention.db',inv,config)
+
+
 def test_real_producer_reader_large_source_retry_replay_growth(tmp_path, monkeypatch):
     import trader.data.feed as F
     ex=Venue();monkeypatch.setattr(F,'make_exchange',lambda *a,**k: ex)

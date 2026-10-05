@@ -15,6 +15,7 @@ import time
 import threading
 from collections import OrderedDict
 from dataclasses import dataclass
+from trader.core import evidence_zlib
 
 PREFIX = '!luffy-journal-detail.v1!'
 BLOCK = 64 * 1024
@@ -117,7 +118,7 @@ def store(conn, detail):
         for sha, data in pending.items():
             row = found.get(sha)
             if row is None:
-                inserts.append((sha, len(data), 'zlib.v1', zlib.compress(data, 6)))
+                inserts.append((sha, len(data), 'zlib.v1', evidence_zlib.compress(data, 6)))
             elif _blob(row, sha) != data:
                 raise EvidenceError('evidence_hash_collision')
         conn.executemany('INSERT INTO journal_evidence_blobs_v1 VALUES (?,?,?,?)', inserts)
@@ -245,10 +246,7 @@ def _decode_blob(row, sha):
         length, codec, payload = row
         if codec != 'zlib.v1' or type(length) is not int or not 0 <= length <= 16 * BLOCK:
             raise EvidenceError('evidence_blob_metadata_invalid:' + sha)
-        decoder = zlib.decompressobj()
-        data = decoder.decompress(payload, length + 1)
-        if not decoder.eof or decoder.unused_data or decoder.unconsumed_tail or len(data) != length:
-            raise EvidenceError('evidence_blob_length_invalid:' + sha)
+        data = evidence_zlib.decompress(payload, length)
         if _chunk_sha(data) != sha:
             raise EvidenceError('evidence_blob_hash_mismatch:' + sha)
         return data
