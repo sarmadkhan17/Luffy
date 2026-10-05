@@ -1,30 +1,30 @@
 {
   "slow_decisions_s": 2,
   "overview": {
-    "ready_ms": 235
+    "ready_ms": 335
   },
   "trades": {
-    "ready_ms": 461
+    "ready_ms": 479
   },
   "research": {
-    "ready_ms": 246
+    "ready_ms": 197
   },
   "strategies": {
-    "ready_ms": 112
+    "ready_ms": 73
   },
   "luffy": {
-    "ready_ms": 408
+    "ready_ms": 407
   },
   "operations": {
-    "ready_ms": 2850
+    "ready_ms": 2860
   },
   "live-system": {
-    "ready_ms": 441
+    "ready_ms": 980
   },
   "knowledge": {
-    "ready_ms": 125
+    "ready_ms": 156
   },
   "diagnostics": {
-    "ready_ms": 171
+    "ready_ms": 2619
   }
 }

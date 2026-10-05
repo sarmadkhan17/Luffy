@@ -1,0 +1,26 @@
+{
+  "status": "UNVERIFIED",
+  "checkout": "/home/sarmad/trader/.claude/worktrees/owner-frontend-live-binding",
+  "original_branch": "refs/heads/owner-frontend-live-binding-v1",
+  "original_head": "dc78d233b1e47003b0496d1ee3ed654c721a3773",
+  "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding",
+  "captured_files": [
+    "frontend/evidence/live-binding/performance-live.json",
+    "frontend/evidence/m1-concurrency.json",
+    "frontend/evidence/m1-routes.json",
+    "frontend/evidence/performance.json",
+    "frontend/evidence/scale-performance.json",
+    "knowledge/00 Company/Company.md",
+    "knowledge/00 Company/Manager.md",
+    "knowledge/00 Company/Theorist.md",
+    "knowledge/MOC.md",
+    "evidence/live-binding/performance-live.json",
+    "evidence/performance.json",
+    "evidence/scale-performance.json",
+    "frontend/evidence/evidence/performance.json",
+    "frontend/evidence/evidence/scale-performance.json"
+  ],
+  "tests": "Existing results only. No new tests or independent assessment. Historical results do not prove this combined dirty variant.",
+  "excluded_files": "Remain local; database/runtime/environment/cache/raw-log/full-payload updates excluded.",
+  "control_plane": "STATE.yaml/NEXT.yaml preserved verbatim where present; no reconciliation performed."
+}

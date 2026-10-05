@@ -1,13 +1,13 @@
 {
   "slow_decisions_s": 2,
   "fast_ms": {
-    "/assets/index-jMKIeQ8c.js": 35,
-    "/assets/jsx-runtime-D3jfb0Ew.js": 4,
-    "/assets/index-oHHc7hhS.css": 5,
-    "research": 4,
-    "trades page": 7,
-    "bootstrap": 3
+    "/assets/index-B3L28MNt.js": 57,
+    "/assets/jsx-runtime-D3jfb0Ew.js": 11,
+    "/assets/index-3Lisoeti.css": 10,
+    "research": 8,
+    "trades page": 14,
+    "bootstrap": 7
   },
-  "fastDone": 63,
-  "slowDone": 2037
+  "fastDone": 118,
+  "slowDone": 2063
 }

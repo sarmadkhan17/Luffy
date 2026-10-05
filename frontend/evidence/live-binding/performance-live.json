@@ -9,80 +9,80 @@
   },
   "cold": [
     {
-      "usableNavigationMs": 196,
-      "usefulOverviewMs": 272,
-      "chartMs": 298
+      "usableNavigationMs": 279,
+      "usefulOverviewMs": 390,
+      "chartMs": 420
     },
     {
-      "usableNavigationMs": 158,
-      "usefulOverviewMs": 217,
-      "chartMs": 241
+      "usableNavigationMs": 302,
+      "usefulOverviewMs": 347,
+      "chartMs": 367
     },
     {
-      "usableNavigationMs": 185,
-      "usefulOverviewMs": 280,
-      "chartMs": 305
+      "usableNavigationMs": 267,
+      "usefulOverviewMs": 336,
+      "chartMs": 352
     }
   ],
   "firstVisitMs": {
-    "knowledge": 461,
-    "liveSystem": 81,
-    "operations": 355,
-    "luffy": 364
+    "knowledge": 450,
+    "liveSystem": 894,
+    "operations": 385,
+    "luffy": 407
   },
   "cachedRouteMs": {
-    "min": 34,
-    "max": 101,
+    "min": 47,
+    "max": 173,
     "samples": [
-      80,
-      57,
-      34,
-      86,
-      38,
-      40,
-      74,
-      49,
-      41,
-      90,
-      48,
-      36,
+      129,
       101,
-      76,
-      45
+      47,
+      173,
+      71,
+      79,
+      119,
+      56,
+      70,
+      162,
+      63,
+      97,
+      157,
+      90,
+      73
     ]
   },
   "whileGraphLoading": {
-    "navigateAwayMs": 348,
-    "typeFiveCharsMs": 67,
-    "chatReplyMs": 80
+    "navigateAwayMs": 396,
+    "typeFiveCharsMs": 86,
+    "chatReplyMs": 161
   },
   "memory": {
     "browser": {
       "overviewBefore": {
         "heapMiB": 4.3,
-        "nodes": 1058,
-        "listeners": 203
+        "nodes": 937,
+        "listeners": 200
       },
       "overviewAfterChurn": {
-        "heapMiB": 7.89,
-        "nodes": 1130,
+        "heapMiB": 8.57,
+        "nodes": 1360,
         "listeners": 207
       },
       "knowledge": {
-        "heapMiB": 7.77,
-        "nodes": 911,
-        "listeners": 228
+        "heapMiB": 8.27,
+        "nodes": 921,
+        "listeners": 229
       },
       "liveSystem": {
-        "heapMiB": 8.12,
-        "nodes": 1186,
-        "listeners": 257
+        "heapMiB": 8.55,
+        "nodes": 1545,
+        "listeners": 258
       },
       "routeChanges": 108
     },
     "serverRssMiB": {
-      "afterBoot": 108.8,
-      "after400ApiReadsAndChurn": 109.1
+      "afterBoot": 110.9,
+      "after400ApiReadsAndChurn": 111.6
     },
     "websockets": []
   }
