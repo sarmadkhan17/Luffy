@@ -1,10 +1,176 @@
 """Live monitoring separates committed durability, contention and maintenance."""
 import json
+import os
+from pathlib import Path
 import sqlite3
+import subprocess
+import sys
+import textwrap
 import threading
 import time
 import pytest
 from trader.observability.safety import SafetyHealth, SafetyObserver
+
+
+def fresh_monitor(tmp_path, body):
+    """Real imports in a fresh interpreter, with fixture-only I/O and no egress."""
+    production = Path(__file__).resolve().parents[1]
+    guard = f'''
+import os, sys
+from pathlib import Path
+root = Path({str(tmp_path)!r}).resolve()
+production = Path({str(production)!r}).resolve()
+def check_path(path, writing=False):
+    if isinstance(path, int):
+        return
+    path = Path(os.fsdecode(path)).resolve()
+    if path.name == '.env' or any(p == production / part for part in ('data', 'logs') for p in (path, *path.parents)):
+        raise RuntimeError('production or credential access forbidden')
+    if writing and root not in (path, *path.parents):
+        raise RuntimeError('write outside fixture forbidden')
+def audit(event, args):
+    if event.startswith('socket.') or event == 'os.system':
+        raise RuntimeError('network forbidden')
+    if event == 'open':
+        path, mode, flags = args
+        writing = (isinstance(mode, str) and any(c in mode for c in 'wax+')) or (isinstance(flags, int) and flags & (os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND))
+        check_path(path, writing)
+    if event == 'sqlite3.connect':
+        check_path(args[0], True)
+    if event in ('os.mkdir', 'os.remove', 'os.rmdir'):
+        check_path(args[0], True)
+    if event == 'os.rename':
+        check_path(args[0], True); check_path(args[1], True)
+sys.addaudithook(audit)
+sys.path.insert(0, str(production))
+'''
+    result = subprocess.run([sys.executable, '-B', '-c', guard + textwrap.dedent(body)],
+        cwd=tmp_path, env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1'},
+        capture_output=True, text=True, timeout=30)
+    assert result.returncode == 0, result.stdout + result.stderr
+    return result
+
+
+@pytest.mark.parametrize('flags', [[], ['--safety-only'], ['--heartbeat-only'],
+                                   ['--integrity-only'], ['--heartbeat-only', '--integrity-only']])
+@pytest.mark.parametrize('heartbeat', ['fresh', 'stale', 'malformed', 'latched'])
+def test_fresh_monitor_safety_cli_dependencies_and_semantics(tmp_path, flags, heartbeat):
+    fresh_monitor(tmp_path, f'''
+        import contextlib, io, json, sqlite3, time
+        import scripts.monitor as monitor
+        from trader.core import config
+        from trader.observability.safety import SafetyHealth
+        from trader.engine.watchdog import Heartbeat
+        cfg = {{'timeframes': {{'scan_interval_seconds': 60}}, 'brain': {{'enabled': False}}}}
+        config.ROOT = root
+        monitor.load_config = lambda: cfg
+        path = root / 'data' / 'heartbeat_luffy.json'
+        path.parent.mkdir()
+        health = SafetyHealth(root / 'data' / 'safety_health.json', sink=lambda event: None)
+        if {heartbeat!r} == 'latched':
+            health.observe('heartbeat:luffy', 'MISSING')
+            incident = health.read()['conditions']['heartbeat:luffy']['incident_id']
+        if {heartbeat!r} == 'malformed':
+            path.write_text('{{}}')
+        else:
+            now = time.time() - (300 if {heartbeat!r} == 'stale' else 0)
+            Heartbeat(path=path, clock=lambda: now).beat({{'last_successful_cycle_at': now}})
+        if '--heartbeat-only' not in {flags!r}:
+            with sqlite3.connect(root / 'data' / 'luffy.db') as db:
+                db.execute('CREATE TABLE state_kv(key TEXT PRIMARY KEY,value TEXT)')
+        else:
+            def no_sqlite(event, args):
+                if event == 'sqlite3.connect':
+                    raise AssertionError('heartbeat-only opened SQLite')
+            sys.addaudithook(no_sqlite)
+        if {flags!r}:
+            sys.argv = ['monitor', *{flags!r}]
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                code = monitor.main()
+            result = json.loads(output.getvalue())
+            assert code == int({heartbeat!r} != 'fresh')
+        else:
+            result = monitor.safety_check(root, cfg)
+        assert result['schema'] == 'luffy-safety-observation.v1'
+        expected = 'STALE' if {heartbeat!r} == 'stale' else 'UNAVAILABLE' if {heartbeat!r} == 'malformed' else 'FRESH'
+        assert result['components'][0]['status'] == expected
+        assert result['health']['recovery_required'] == ({heartbeat!r} != 'fresh')
+        if {heartbeat!r} == 'latched':
+            condition = result['health']['conditions']['heartbeat:luffy']
+            assert condition['incident_id'] == incident and condition['status'] == 'RESOLVED'
+        if '--heartbeat-only' in {flags!r}:
+            assert len(result['components']) == 1
+        elif '--integrity-only' in {flags!r}:
+            assert result['components'][1]['verification'] == 'full_quick_check'
+            assert result['health']['integrity']['journal']['status'] == 'VERIFIED'
+        else:
+            assert result['components'][1]['committed']
+            assert not result['health'].get('integrity')
+        forbidden = ('pandas', 'numpy', 'ccxt', 'trader.data.feed', 'trader.strategy.compile',
+                     'trader.strategy.dsl', 'trader.strategy.features', 'trader.brain.llm')
+        assert not [name for name in sys.modules if any(name == prefix or name.startswith(prefix + '.') for prefix in forbidden)]
+    ''')
+
+
+@pytest.mark.parametrize('populated', [False, True])
+def test_fresh_full_monitor_resolves_real_dependencies_and_cli_result(tmp_path, populated):
+    result = fresh_monitor(tmp_path, f'''
+        from trader.core import config
+        config.Env.get = classmethod(lambda cls, key, default='': default)
+        from trader.core.journal import Journal
+        from trader.data import feed
+        from tests.test_rolling import _spec, _frame
+        import scripts.monitor as monitor
+        journal = Journal(root / 'journal.db')
+        if {populated!r}:
+            journal.upsert_spec(_spec(universe={{'include': ['BTC/USDT']}},
+                provenance={{'expected_winrate': 0.5}}))
+        class Venue:
+            id = 'fixture'
+            def fetch_positions(self): return []
+            def fetch_open_orders(self, symbol=None): return []
+        class FixtureFeed:
+            def cached_ohlcv(self, *args, **kwargs): return _frame(140)
+        venue = Venue()
+        assert monitor.protection(journal, venue) == []
+        assert monitor.reach(journal, FixtureFeed()) == ([] if {populated!r} else ['book is empty — nothing can trade'])
+        assert monitor.health(journal) == []
+        assert monitor.gate(journal) == []
+        monitor.DB = str(root / 'journal.db')
+        monitor.load_config = lambda: {{'exchange': {{'demo': True}}}}
+        def exchange(market_type, *, demo, with_keys):
+            assert (market_type, demo, with_keys) == ('futures', True, True)
+            return venue
+        feed.make_exchange = exchange
+        feed.DataFeed = FixtureFeed
+        sys.argv = ['monitor']
+        assert monitor.main() == (0 if {populated!r} else 1)
+        assert 'trader.strategy.compile' in sys.modules
+        assert 'trader.strategy.health' in sys.modules
+        assert 'trader.engine.protective' in sys.modules
+    ''')
+    assert 'VERDICT' in result.stdout
+    assert ('nothing needs attention' if populated else 'book is empty') in result.stdout
+
+
+def test_disabled_provider_zero_attempts_in_fresh_fixture(tmp_path):
+    fresh_monitor(tmp_path, '''
+        from trader.core import config
+        config.Env.deepseek_key = classmethod(lambda cls: 'fixture-key')
+        from trader.brain.llm import BrainLLM
+        brain = BrainLLM({'brain': {'enabled': False, 'model_fast': 'fixture',
+            'model_deep': 'fixture', 'max_tokens_per_call': 10, 'daily_token_budget': 10}})
+        attempts = []
+        def forbidden(*args, **kwargs):
+            attempts.append(True)
+            raise AssertionError('disabled provider attempted admission')
+        brain._admit = forbidden
+        assert brain.chat('fixture') is None
+        assert brain.chat_json('fixture') is None
+        assert attempts == [] and brain._client is None
+        assert not (root / 'data' / 'brain_usage.json').exists()
+    ''')
 
 
 def database(path):

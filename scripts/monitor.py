@@ -24,16 +24,16 @@ from __future__ import annotations
 import sys
 import warnings
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 warnings.filterwarnings("ignore")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from trader.core.config import load_config          # noqa: E402
-from trader.core.journal import Journal             # noqa: E402
-from trader.data.feed import DataFeed, make_exchange  # noqa: E402
-from trader.engine import protective as P           # noqa: E402
-from trader.strategy.compile import compile_spec    # noqa: E402
-from trader.strategy.health import assess_health    # noqa: E402
+
+if TYPE_CHECKING:
+    from trader.core.journal import Journal
+    from trader.data.feed import DataFeed
 
 DB = "data/luffy.db"
 
@@ -44,6 +44,8 @@ def _rule(title: str) -> None:
 
 # ── 1. protection ────────────────────────────────────────────────────────
 def protection(j: Journal, ex) -> list[str]:
+    from trader.engine import protective as P
+
     _rule("1. PROTECTION — every position, one correctly sized stop")
     alarms: list[str] = []
     try:
@@ -87,6 +89,8 @@ def protection(j: Journal, ex) -> list[str]:
 
 # ── 2. reach ─────────────────────────────────────────────────────────────
 def reach(j: Journal, feed: DataFeed) -> list[str]:
+    from trader.strategy.compile import compile_spec
+
     _rule("2. REACH — is the book evaluated, and how close is it to firing?")
     alarms: list[str] = []
     specs = [sp for _r, sp in j.list_specs(["paper", "active"])]
@@ -132,6 +136,8 @@ def reach(j: Journal, feed: DataFeed) -> list[str]:
 
 # ── 3. health ────────────────────────────────────────────────────────────
 def health(j: Journal) -> list[str]:
+    from trader.strategy.health import assess_health
+
     _rule("3. HEALTH — is the live record inside the validated envelope?")
     alarms: list[str] = []
     for row, spec in j.list_specs(["paper", "active"]):
@@ -211,6 +217,9 @@ def main() -> int:
                               heartbeat_only='--heartbeat-only' in sys.argv, integrity_only='--integrity-only' in sys.argv)
         print(json.dumps(result, sort_keys=True))
         return int(bool(result['health']['recovery_required']))
+    from trader.core.journal import Journal
+    from trader.data.feed import DataFeed, make_exchange
+
     j = Journal(DB)
     ex = make_exchange("futures",
                        demo=bool(cfg.get("exchange", {}).get("demo", True)),
