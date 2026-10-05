@@ -232,9 +232,22 @@ def trade_lineage(journal, trade_id: str) -> dict | None:
             missing.append(_unavailable("strategy", "strategy_id is not in the registry"))
     else:
         missing.append(_unavailable("strategy", "trade row records no strategy_id"))
-    missing.append(_unavailable("strategy_version_at_entry",
-                                "the trade records the strategy id only; no version or spec "
-                                "hash was stored when it opened"))
+    from ..engine import trade_provenance
+    provenance = trade_provenance.read(lambda q, a=(): _rows(journal, q, a), trade_id)
+    trade.pop("entry_identity_json", None)
+    identity = provenance["strategy_entry_identity"]
+    if identity.get("status") != trade_provenance.VERIFIED:
+        missing.append(_unavailable(
+            "strategy_version_at_entry",
+            "the trade records the strategy id only; no version or spec hash was stored "
+            "when it opened" if "schema_version" not in identity else
+            f"entry identity recorded as {identity.get('status')}: {identity.get('reason')}"))
+    terminal = provenance["terminal_close"]
+    if terminal["status"] not in (trade_provenance.VERIFIED, "NOT_APPLICABLE"):
+        missing.append(_unavailable(
+            "terminal_close_provenance",
+            f"terminal close recorded as {terminal['status']}: "
+            f"{terminal.get('reason') or ', '.join(terminal.get('gaps') or [])}"))
 
     receipts, booked = [], 0
     if _table_exists(journal, "trade_accounting_bookings"):
@@ -324,7 +337,7 @@ def trade_lineage(journal, trade_id: str) -> dict | None:
                 "verified_legs": verified_legs,
                 "replay": ("trader.engine.booking.export(db, trade_id) re-verifies every "
                            "receipt's sha256 and assessment") if receipts else None},
-            "outcome": outcome, "unavailable": missing,
+            "outcome": outcome, "provenance": provenance, "unavailable": missing,
             "source": "journal trades/decisions/cycles/votes/strategies/outcomes and "
                       "trade_accounting_bookings (joins only by recorded ids)"}
 

@@ -1,0 +1,12 @@
+{
+  "status": "UNVERIFIED",
+  "checkout": "/mnt/luffy-data/luffy/workspaces/stage5-evidence-activation-r1",
+  "original_head": "7e5aedde46b2ae4cdeaa6c97f1b471455a57198f",
+  "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage5-evidence-activation-r1",
+  "unique_files": [],
+  "already_remote_context_files": [
+    "trader/dashboard/owner_reads.py"
+  ],
+  "reason": "Existing remote source blobs are included only as required context for the actual local variant. No remote implementation history duplicated or merged.",
+  "tests": "No new tests; old results do not independently verify this variant."
+}
