@@ -251,32 +251,116 @@ class SafetyObserver:
         return dict(component=producer, status=reason or 'FRESH', record=record)
 
     def store(self, path, role, *, journal=False):
-        reason = None
+        """Bounded live read and committed write, never a full integrity scan."""
+        from trader.data.sqlite_tx import BUSY_TIMEOUT_S
+        started, cpu = time.monotonic(), time.thread_time()
+        deadline = started + BUSY_TIMEOUT_S
+        phase, reason, error, db = 'connect', None, None, None
+        connection_id = uuid4().hex
+        stages = []
+        def operation(name, fn):
+            nonlocal phase
+            phase = name
+            begin, work = time.monotonic(), time.thread_time()
+            succeeded = False
+            try:
+                if db is not None:
+                    remaining = max(0, deadline - begin)
+                    if remaining <= 0:
+                        exc = sqlite3.OperationalError('bounded_operation_deadline')
+                        exc.sqlite_errorcode, exc.sqlite_errorname = sqlite3.SQLITE_BUSY, 'SQLITE_BUSY'
+                        raise exc
+                    db.execute('PRAGMA busy_timeout=' + str(int(remaining * 1000)))
+                result = fn()
+                succeeded = True
+                return result
+            finally:
+                stages.append(dict(stage=name, status='COMPLETE' if succeeded else 'FAILED', elapsed_s=time.monotonic()-begin,
+                                   cpu_s=time.thread_time()-work))
         try:
-            with closing(sqlite3.connect(Path(path).resolve().as_uri() + '?mode=rw', uri=True, timeout=0)) as db:
-                if db.execute('PRAGMA quick_check').fetchall() != [('ok',)]:
-                    raise sqlite3.DatabaseError('integrity')
-                if journal:
-                    db.execute('SELECT key,value FROM state_kv LIMIT 1').fetchall()
-                self.health.observe(role + '_read', None)
-                try:
-                    if journal:
-                        db.execute('INSERT OR REPLACE INTO state_kv(key,value) VALUES (?,?)',
-                                   ('__critical_storage_probe__', uuid4().hex))
-                    else:
-                        # Write the existing version header without schema/data
-                        # changes. Successful commit proves writable durability.
-                        version = int(db.execute('PRAGMA user_version').fetchone()[0])
-                        db.execute('PRAGMA user_version=' + str(version))
-                    db.commit()
-                    self.health.observe(role + '_write', None)
-                except sqlite3.Error as exc:
-                    reason = 'WRITE_UNAVAILABLE'
-                    self.health.observe(role + '_write', type(exc).__name__)
+            db = operation('connect', lambda: sqlite3.connect(
+                Path(path).resolve().as_uri() + '?mode=rw', uri=True, timeout=BUSY_TIMEOUT_S))
+            operation('read', lambda: db.execute('SELECT key,value FROM state_kv LIMIT 1').fetchall()
+                      if journal else db.execute('PRAGMA user_version').fetchone())
+            self.health.observe(role + '_read', None)
+            operation('begin', lambda: db.execute('BEGIN IMMEDIATE'))
+            if journal:
+                operation('write', lambda: db.execute(
+                    'INSERT OR REPLACE INTO state_kv(key,value) VALUES (?,?)',
+                    ('__critical_storage_probe__', uuid4().hex)))
+            else:
+                version = db.execute('PRAGMA user_version').fetchone()[0]
+                operation('write', lambda: db.execute('PRAGMA user_version=' + str(int(version))))
+            operation('commit', db.commit)
+            # Only actual commit success resolves an old write incident.
+            self.health.observe(role + '_write', None)
         except (sqlite3.Error, OSError) as exc:
-            reason = 'READ_UNAVAILABLE'
-            self.health.observe(role + '_read', type(exc).__name__)
-        return dict(component=role, status=reason or 'AVAILABLE')
+            reason = 'READ_UNAVAILABLE' if phase in ('connect', 'read') else 'WRITE_UNAVAILABLE'
+            error = sqlite_failure(exc, phase, db)
+            error.update(pid=os.getpid(), connection_id=connection_id, observed_at=self.clock(),
+                         elapsed_s=time.monotonic()-started, cpu_s=time.thread_time()-cpu)
+            self.health.observe(role + ('_read' if reason == 'READ_UNAVAILABLE' else '_write'),
+                                error['reason'], context=error)
+        finally:
+            if db is not None:
+                try:
+                    if db.in_transaction:
+                        db.rollback()
+                except sqlite3.Error as cleanup:
+                    stages.append(dict(stage='rollback', sqlite_error=sqlite_failure(cleanup, 'rollback', db)))
+                finally:
+                    try:
+                        db.close()
+                    except sqlite3.Error as cleanup:
+                        stages.append(dict(stage='close', sqlite_error=sqlite_failure(cleanup, 'close')))
+        return dict(component=role, status=reason or 'AVAILABLE',
+                    verification='live_read_and_committed_write', committed=reason is None,
+                    sqlite_error=error, pid=os.getpid(), connection_id=connection_id, observed_at=self.clock(),
+                    elapsed_s=time.monotonic()-started, cpu_s=time.thread_time()-cpu, stages=stages)
+
+    def integrity(self, path, role):
+        """Explicit maintenance command; status persists independently of live probes."""
+        started, cpu = time.monotonic(), time.thread_time()
+        status, error = 'VERIFIED', None
+        try:
+            with closing(sqlite3.connect(Path(path).resolve().as_uri() + '?mode=ro',
+                                         uri=True, timeout=5.0)) as db:
+                if db.execute('PRAGMA quick_check').fetchall() != [('ok',)]:
+                    status = 'FAILED'
+                    error = dict(reason='INTEGRITY_FAILED', phase='quick_check')
+        except (sqlite3.Error, OSError) as exc:
+            status, error = 'UNAVAILABLE', sqlite_failure(exc, 'quick_check')
+        result = dict(component=role, verification='full_quick_check', status=status,
+                      observed_at=self.clock(), elapsed_s=time.monotonic()-started,
+                      cpu_s=time.thread_time()-cpu, sqlite_error=error)
+        self.health.observe(role + '_integrity', None if status == 'VERIFIED' else error['reason'], context=result)
+        with self.health.locked():
+            v = self.health.read()
+            v.setdefault('integrity', {})[role] = result
+            v.update(revision=v['revision']+1, observed_at=self.clock())
+            publish(self.health.path, v)
+        return result
+
+
+def sqlite_failure(exc, phase, db=None):
+    """Bounded code and public classification; arbitrary exception text is private."""
+    code = getattr(exc, 'sqlite_errorcode', None)
+    name = getattr(exc, 'sqlite_errorname', None)
+    import re
+    if type(code) is not int or not 0 <= code <= 65535:
+        code = None
+    if not isinstance(name, str) or not re.fullmatch(r'SQLITE_[A-Z0-9_]{1,48}', name):
+        name = None
+    primary = code & 255 if code is not None else None
+    reason = {sqlite3.SQLITE_BUSY:'SQLITE_BUSY_WRITABILITY_UNRESOLVED',
+              sqlite3.SQLITE_LOCKED:'SQLITE_LOCKED_WRITABILITY_UNRESOLVED',
+              sqlite3.SQLITE_FULL:'SQLITE_FULL', sqlite3.SQLITE_READONLY:'SQLITE_READONLY',
+              sqlite3.SQLITE_IOERR:'SQLITE_IOERR', sqlite3.SQLITE_CORRUPT:'SQLITE_CORRUPT',
+              sqlite3.SQLITE_NOTADB:'SQLITE_NOTADB'}.get(primary, 'SQLITE_OPERATION_FAILED' if isinstance(exc, sqlite3.Error) else 'FILESYSTEM_OPERATION_FAILED')
+    return dict(reason=reason, sqlite_errorcode=code, sqlite_errorname=name,
+                error_class=type(exc).__name__, phase=phase,
+                in_transaction=bool(db.in_transaction) if db is not None else None,
+                sanitized_message=reason)
 
 
 def is_storage_error(exc):

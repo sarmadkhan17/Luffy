@@ -76,6 +76,9 @@ def resolve_pending(journal: Journal, feed, now_ms: int | None = None) -> int:
             if target.empty:
                 upd[col], upd[ok_col] = None, None
                 continue
+            # Pandas turns absent optional receipt metadata (notably the
+            # predecessor revision) into NaN in mixed revision frames. Restore
+            # the producer's nullable contract before authoritative JSON.
             capture_targets[label] = {k:(v.isoformat() if hasattr(v,'isoformat') else v.item() if hasattr(v,'item') else v)
                                      for k,v in target.iloc[0].to_dict().items()}
             px = float(target.iloc[0]["close"])
@@ -107,6 +110,24 @@ def resolve_pending(journal: Journal, feed, now_ms: int | None = None) -> int:
     if resolved:
         log.info(f"outcomes updated: {resolved}")
     return resolved
+
+
+def target_bar(row):
+    import math
+    import pandas as pd
+    from trader.data.market_provenance import META, VALUES, receipt_metadata
+    metadata = receipt_metadata(row) if all(k in row for k in META) else {}
+    result = {}
+    for key, value in row.items():
+        if key in metadata:
+            value = metadata[key]
+        elif key in VALUES and key not in ('open','high','low','close','volume') and pd.isna(value):
+            value = None  # existing optional value contract, not fabricated zero
+        elif isinstance(value, float) and not math.isfinite(value):
+            raise ValueError('forward_target_nonfinite_required_value')
+        result[key] = (value.isoformat() if hasattr(value,'isoformat') else
+                       value.item() if hasattr(value,'item') else value)
+    return result
 
 
 # ── helpers ──────────────────────────────────────────────────────────────

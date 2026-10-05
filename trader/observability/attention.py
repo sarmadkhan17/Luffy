@@ -172,9 +172,9 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
                 rows.append({"symbol": symbol, "open_ms": ms,
                              **dict(zip(FIELDS, map(_number, values))),
                              "available_ms": int(available), "source": source_ref})
-                from trader.data.market_provenance import META
+                from trader.data.market_provenance import receipt_metadata
                 receipt = retained[index]
-                rows[-1]['source_receipt'] = {key:receipt[key] for key in META}
+                rows[-1]['source_receipt'] = receipt_metadata(receipt)
             candles.extend(rows[-need:])
         except (ValueError, TypeError, KeyError, AttributeError, OverflowError):
             issues.append({"symbol": symbol, "reason": "invalid_frame"})
@@ -265,7 +265,7 @@ def code_manifest():
              "data/registry_provider.py", "data/binance_usdm_registry.py",
              "core/instrument_registry.py", "observability/registry_selector.py",
              "observability/selection_persistence.py", "core/journal.py",
-             "observability/store.py",
+             "observability/store.py", "data/market_provenance.py",
              "observability/collector.py", "observability/worker.py",
              "observability/declared.py",
              "cognition/attention.py", "cognition/contracts.py",

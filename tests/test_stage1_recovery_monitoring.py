@@ -303,7 +303,8 @@ def test_critical_store_unavailable_and_monitor_without_journal(tmp_path, monito
     hb.beat({'last_successful_cycle_at': hb.clock()})
     result = safety_check(tmp_path, {'timeframes': {'scan_interval_seconds': 5}},
                           clock=lambda: now[0], sink=events.append)
-    assert result['components'][0]['status'] == 'READ_UNAVAILABLE'
+    assert result['components'][0]['status'] == 'FRESH'
+    assert result['components'][1]['status'] == 'READ_UNAVAILABLE'
     assert result['health']['conditions']['journal_read']['status'] == 'ACTIVE'
 
 

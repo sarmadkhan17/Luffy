@@ -28,6 +28,23 @@ META = ('instrument_id', 'source', 'kind', 'event_time_ms', 'observed_at_ms',
 VALUES = ('open', 'high', 'low', 'close', 'volume', 'taker_buy', 'value')
 
 
+def receipt_metadata(row):
+    optional = {'supersedes', 'transform_version', 'max_age_ms', 'request_started_ms'}
+    result = {}
+    for key in META:
+        value = row[key]
+        if pd.isna(value):
+            if key not in optional:
+                raise ValueError('required_receipt_metadata_unavailable')
+            value = None
+        if key in ('event_time_ms','observed_at_ms','available_at_ms','max_age_ms','request_started_ms') and value is not None:
+            if not math.isfinite(float(value)) or int(value) != value:
+                raise ValueError('receipt_clock_invalid')
+            value = int(value)
+        result[key] = value
+    return result
+
+
 def encode(obj):
     return json.dumps(obj, sort_keys=True, separators=(',', ':'), allow_nan=False)
 

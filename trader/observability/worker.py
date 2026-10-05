@@ -9,6 +9,11 @@ from .store import Store
 from .collector_health import code_hash
 
 
+REASONS = frozenset(('invalid_identity','identity_conflict','declared_observation_clock',
+    'snapshot exceeds storage budget','SOURCE_PAYLOAD_BOUND_EXCEEDED','SCAN_SOURCE_IDENTITY_CHANGED',
+    'unknown event kind','required_receipt_metadata_unavailable','receipt_clock_invalid'))
+
+
 def main():
     store = None
     try:
@@ -20,6 +25,8 @@ def main():
     except Exception as exc:
         # Never echo arbitrary exception messages, input or credentials.
         error = {"ok": False, "error_type": type(exc).__name__}
+        if isinstance(exc, ValueError) and str(exc) in REASONS:
+            error['reason_code'] = str(exc)
         if isinstance(exc, sqlite3.Error):
             error['sqlite_errorcode'] = getattr(exc, 'sqlite_errorcode', None)
             error['sqlite_errorname'] = getattr(exc, 'sqlite_errorname', None)

@@ -21,7 +21,7 @@ def code_hash():
     root = Path(__file__).resolve().parents[1]
     names = ('observability/collector.py', 'observability/collector_health.py',
              'observability/attention.py', 'observability/store.py', 'observability/worker.py',
-             'cognition/attention.py', 'cognition/contracts.py')
+             'cognition/attention.py', 'cognition/contracts.py', 'data/market_provenance.py')
     return hashlib.sha256(b''.join(name.encode()+b'\0'+(root/name).read_bytes() for name in names)).hexdigest()
 
 

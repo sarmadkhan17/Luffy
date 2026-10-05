@@ -226,6 +226,8 @@ def booking(db, trade_id, receipt):
 
 
 def forward(db, original, updates, targets, now_ms):
+    from trader.engine.outcomes import target_bar
+    targets = {label:target_bar(bar) for label,bar in targets.items()}
     root_event='decision:'+original['decision_id']
     event=C.forward_event(db,original['decision_id'],now_ms)
     _,reg=C.registration(db,event)

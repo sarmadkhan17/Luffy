@@ -231,8 +231,11 @@ class Collector:
         self._stop.set()  # never join/wait on the trading or exit thread
 
     def _job(self, event):
-        return json.dumps({"path": str(self.path), "settings": self.cfg, "event": event},
-                          allow_nan=False, separators=(",", ":"))
+        try:
+            return json.dumps({"path": str(self.path), "settings": self.cfg, "event": event},
+                              allow_nan=False, separators=(",", ":"))
+        except ValueError:
+            raise WorkerError('TRANSPORT_ENCODING_INVALID', phase='transport') from None
 
     def _run(self, event):
         job = self._job(event)
@@ -259,7 +262,8 @@ class Collector:
             if not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]{0,47}',str(name)): name='worker_failed'
             raise WorkerError(name,result.returncode,'child_error',
                               data.get('sqlite_errorcode') if isinstance(data,dict) else None,
-                              data.get('sqlite_errorname') if isinstance(data,dict) else None)
+                              data.get('sqlite_errorname') if isinstance(data,dict) else None,
+                              data.get('reason_code') if isinstance(data,dict) else None)
         if data.get('code_hash') != self.manifest:
             raise WorkerError('code_mismatch',result.returncode,'code_mismatch')
         return data.get('proof')
@@ -307,6 +311,8 @@ class Collector:
                          returncode=getattr(exc,'returncode',None))
                 if getattr(exc,'sqlite_errorcode',None) is not None:
                     rec.update(sqlite_errorcode=exc.sqlite_errorcode,sqlite_errorname=exc.sqlite_errorname)
+                if getattr(exc,'reason_code',None):
+                    rec['reason_code']=exc.reason_code
                 if timeout:
                     rec['row_present_after_timeout']=self._timeout_row(event.get('scan_id'))
                 self._incident(rec)
@@ -327,8 +333,10 @@ class Collector:
 
 class WorkerError(Exception):
     """Allowlisted class/reason only; never stores stderr or arbitrary messages."""
-    def __init__(self, reason, returncode=None, phase='worker', sqlite_errorcode=None, sqlite_errorname=None):
+    def __init__(self, reason, returncode=None, phase='worker', sqlite_errorcode=None, sqlite_errorname=None, reason_code=None):
         super().__init__(reason)
+        from .worker import REASONS
+        self.reason_code = reason_code if isinstance(reason_code,str) and reason_code in REASONS else None
         self.returncode, self.phase = returncode, phase
         self.sqlite_errorcode = sqlite_errorcode if type(sqlite_errorcode) is int and 0 <= sqlite_errorcode <= 65535 else None
         self.sqlite_errorname = sqlite_errorname if isinstance(sqlite_errorname,str) and re.fullmatch(r'SQLITE_[A-Z_]{1,48}',sqlite_errorname) else None
