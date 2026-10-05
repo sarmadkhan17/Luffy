@@ -1,0 +1,3 @@
+Unmodified b56682e ResearchRunner without a production candle store:
+{'skipped': 'underpowered_universe', 'tf': '4h', 'discovery_symbols': 0}
+Runner tests now use a deterministic registered-universe metadata fixture; production coverage code is unchanged.

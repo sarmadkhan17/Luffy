@@ -1,0 +1,17 @@
+{
+  "status": "UNVERIFIED",
+  "checkout": "/mnt/luffy-data/luffy/workspaces/predictive-research-bridge-r1",
+  "original_branch": "refs/heads/luffy-predictive-research-bridge-r1",
+  "original_head": "3bf9f87cf5b41e714a863715d0fa042a899af472",
+  "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-predictive-research-bridge-r1",
+  "captured_files": [
+    "docs/superpowers/evidence/predictive-research-bridge-r1/baseline-coverage.txt",
+    "docs/superpowers/evidence/predictive-research-bridge-r1/bridge-tests.txt",
+    "docs/superpowers/evidence/predictive-research-bridge-r1/files-changed.txt",
+    "docs/superpowers/evidence/predictive-research-bridge-r1/real-shadow.json",
+    "docs/superpowers/evidence/predictive-research-bridge-r1/regression-tests.txt"
+  ],
+  "tests": "Existing results only. No new tests or independent assessment. Historical results do not prove this combined dirty variant.",
+  "excluded_files": "Remain local; database/runtime/environment/cache/raw-log/full-payload updates excluded.",
+  "control_plane": "STATE.yaml/NEXT.yaml preserved verbatim where present; no reconciliation performed."
+}
