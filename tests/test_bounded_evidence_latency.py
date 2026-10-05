@@ -84,6 +84,46 @@ def test_portfolio_bounded_cases_keep_exact_latest_updates(tmp_path):
         portfolio_capture(j.db_path,tmp_path/'absent-attention.db',inv,config)
 
 
+def test_completed_large_source_survives_completion_prune_boundary(tmp_path,monkeypatch):
+    import trader.data.feed as F
+    ex=Venue();monkeypatch.setattr(F,'make_exchange',lambda *a,**k:ex)
+    u=Universe({'universe':{'majors':['S0/USDT','S1/USDT','S2/USDT'],
+        'auto_scan':dict(top_n=10,min_volume_usdt=1,min_price=1,min_age_days=0)}},ex)
+    u._rescan();members=u.symbols();at=int(time.time()*1000)
+    data=dict(zip(members,frames(len(members),at).values()))
+    cfg=settings({'max_symbols':16,'max_bytes':64*1024**2})
+    event=capture(data,members,'before',cfg,at,membership_receipts=u.membership_receipts(as_of_ms=at))
+    store=Store(tmp_path/'attention.db',cfg);store.write(event)
+    store.write(dict(kind='causes',scan_id='before',as_of_ms=at,items=[]))
+    raw=store.db.execute("SELECT payload FROM scans WHERE scan_id='before'").fetchone()[0]
+    assert len(raw.encode())>=16_226_290
+    next_event=dict(event,scan_id='after',as_of_ms=at+1)
+    store.write(next_event)
+    assert store.db.execute('PRAGMA page_count').fetchone()[0]*4096>cfg['max_bytes']//2
+    j=Journal(tmp_path/'luffy.db');j.kv_set('venue_position_snapshot',json.dumps(snapshot(side=None,cut=at)))
+    j.kv_set('control_state','FROZEN');config={'attention':{'max_bytes':64*1024**2}}
+    original=store.db;reads=[]
+    class Observed:
+        def __getattr__(self,name):return getattr(original,name)
+        def __enter__(self):original.__enter__();return self
+        def __exit__(self,*args):return original.__exit__(*args)
+        def execute(self,sql,*args):
+            if sql.startswith('INSERT OR IGNORE INTO scans'):
+                # Begin a real source read after any preallocation commit but
+                # before the completion marker. It must still see 'before'.
+                result=portfolio_capture(j.db_path,store.path,tmp_path/'absent.db',config)
+                reads.append(result[4]['scan_id'])
+            return original.execute(sql,*args)
+    store.db=Observed()
+    store.write(dict(kind='causes',scan_id='after',as_of_ms=at+1,items=[]))
+    assert reads==['before']
+    result=portfolio_capture(j.db_path,store.path,tmp_path/'absent.db',config)
+    assert result[4]['scan_id']=='after'
+    assert store.db.execute('PRAGMA page_count').fetchone()[0]*4096<=cfg['max_bytes']//2
+    assert S.latest(store.db,time.monotonic()+5)['scan_id']=='after'
+    store.close()
+
+
 def test_real_producer_reader_large_source_retry_replay_growth(tmp_path, monkeypatch):
     import trader.data.feed as F
     ex=Venue();monkeypatch.setattr(F,'make_exchange',lambda *a,**k: ex)

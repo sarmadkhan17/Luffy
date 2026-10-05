@@ -45,7 +45,7 @@ def main():
      except Exception:rec['metadata_error']=True
     with lock:
      key=(threading.current_thread().name,label);t=totals.setdefault(key,dict(calls=0,elapsed=0,cpu=0,exclusive_elapsed=0,exclusive_cpu=0,failures=0));t['calls']+=1;t['elapsed']+=elapsed;t['cpu']+=cpu;t['exclusive_elapsed']+=rec['exclusive_elapsed_s'];t['exclusive_cpu']+=rec['exclusive_cpu_s'];t['failures']+=int(error is not None)
-    if label!='evidence.blob' and (elapsed>=.05 or error or label=='market.load' or name in ('cycle','boot','__init__','beat')):emit(rec)
+    if label!='evidence.blob' and (elapsed>=.05 or error or label in ('market.load','portfolio.sources_load') or name in ('cycle','boot','__init__','beat')):emit(rec)
     if label=='kernel.cycle':
      with lock:
       summary=dict(stage='cycle.summary',stats=result,timings=[dict(thread=k[0],stage=k[1],**v) for k,v in totals.items()],counters=dict(counters))

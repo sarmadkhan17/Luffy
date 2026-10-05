@@ -110,22 +110,21 @@ class Store:
         ident = _identity(event)
         if len(encode(event)) > self.cfg["max_bytes"] // 2:
             raise ValueError("snapshot exceeds storage budget")
-        # Prune before allocation so a full store can recover on the next job.
-        with self.db:
-            self._prune(now_ms, reserve=int(not self.db.execute(
-                "SELECT 1 FROM scans WHERE scan_id=?", (scan_id,)).fetchone()))
-            # Leave headroom for a whole snapshot and SQLite indexes.
-            while self.db.execute("PRAGMA page_count").fetchone()[0] * self.db.execute(
-                    "PRAGMA page_size").fetchone()[0] > self.cfg["max_bytes"] // 2:
-                oldest = self.db.execute("SELECT scan_id FROM scans ORDER BY as_of_ms "
-                                         "LIMIT 1").fetchone()
-                if not oldest:
-                    break
-                self.db.execute("DELETE FROM scans WHERE scan_id=?", (oldest[0],))
-                self.db.execute("DELETE FROM versions WHERE id NOT IN "
-                                "(SELECT version_id FROM scan_versions)")
-                # File pages shrink at commit (FULL auto-vacuum).
-                self.db.commit()
+        # New snapshots need allocation headroom. Completion instead prunes
+        # atomically with its marker, so readers retain the previous completed
+        # source until the replacement is completed and committed.
+        if event['kind'] != 'causes':
+            with self.db:
+                self._prune(now_ms, reserve=int(not self.db.execute(
+                    "SELECT 1 FROM scans WHERE scan_id=?", (scan_id,)).fetchone()))
+                while self.db.execute("PRAGMA page_count").fetchone()[0] * self.db.execute(
+                        "PRAGMA page_size").fetchone()[0] > self.cfg["max_bytes"] // 2:
+                    oldest = self.db.execute("SELECT scan_id FROM scans ORDER BY as_of_ms LIMIT 1").fetchone()
+                    if not oldest:
+                        break
+                    self.db.execute("DELETE FROM scans WHERE scan_id=?", (oldest[0],))
+                    self.db.execute("DELETE FROM versions WHERE id NOT IN (SELECT version_id FROM scan_versions)")
+                    self.db.commit()
         with self.db:
             self.db.execute("INSERT OR IGNORE INTO scans (scan_id,as_of_ms,payload) VALUES (?,?,NULL)",
                             (scan_id, event["as_of_ms"]))
@@ -202,6 +201,18 @@ class Store:
             else:
                 raise ValueError("unknown event kind")
             self._prune(now_ms)
+            if event['kind'] == 'causes':
+                # FULL auto-vacuum shrinks at commit. Account for freed pages
+                # while retaining a single transaction and the same half-size
+                # headroom policy and chronological deletion order.
+                while (self.db.execute('PRAGMA page_count').fetchone()[0] -
+                       self.db.execute('PRAGMA freelist_count').fetchone()[0]) * self.db.execute(
+                           'PRAGMA page_size').fetchone()[0] > self.cfg['max_bytes'] // 2:
+                    oldest = self.db.execute('SELECT scan_id FROM scans ORDER BY as_of_ms LIMIT 1').fetchone()
+                    if not oldest:
+                        break
+                    self.db.execute('DELETE FROM scans WHERE scan_id=?',(oldest[0],))
+                    self._prune(now_ms)
         return _proof(self.db,scan_id,event["kind"])
 
 
