@@ -1,0 +1,14 @@
+{
+  "status": "UNVERIFIED",
+  "checkout": "/mnt/luffy-data/luffy/workspaces/stage7-verified-outcome-producer-integration-r1",
+  "original_branch": "refs/heads/luffy-stage7-verified-outcome-producer-integration-r1",
+  "original_head": "503d93c4c83d134899b8067f567b995f329ea6a1",
+  "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-verified-outcome-producer-integration-r1",
+  "captured_files": [
+    "docs/superpowers/evidence/stage7-verified-outcome-producer-integration-r1/implementation-files.json",
+    "docs/superpowers/evidence/stage7-verified-outcome-producer-integration-r1/real-shadow.json"
+  ],
+  "tests": "Existing results only. No new tests or independent assessment. Historical results do not prove this combined dirty variant.",
+  "excluded_files": "Remain local; database/runtime/environment/cache/raw-log/full-payload updates excluded.",
+  "control_plane": "STATE.yaml/NEXT.yaml preserved verbatim where present; no reconciliation performed."
+}
