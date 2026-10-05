@@ -285,7 +285,7 @@ class Kernel:
         if any(report.get(k) for k in ("adopted", "ghosts")):
             self.notifier.send(f"🔧 boot reconciliation: {report}")
         if recovery is not None and recovery.reasons:
-            self.notifier.send(f"🔒 recovery {recovery.status}: {', '.join(recovery.reasons)}")
+            self.notifier.send(f"🔒 recovery {recovery.outcome}: {', '.join(recovery.reasons)}")
         start_stall_monitor(
             self.heartbeat,
             stale_after=float(self.cfg["timeframes"]["scan_interval_seconds"]) * 4)
