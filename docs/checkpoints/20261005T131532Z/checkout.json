@@ -1,19 +1,33 @@
 {
   "status": "UNVERIFIED",
   "checkout": "/mnt/luffy-data/luffy/workspaces/stage7-historical-outcome-capture-r1",
-  "original_branch": "refs/heads/luffy-stage7-historical-outcome-capture-r1",
   "original_head": "9d31fbd61ed4c4b8c697248ac32dfd0451b537e4",
   "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
-  "captured_files": [
+  "unique_files": [
     "NEXT.yaml",
     "STATE.yaml",
     "tests/test_learning_foundation.py",
     "tests/test_strategy_health_unreadable_bank.py",
     "trader/kernel.py",
     "trader/learning/foundation.py",
-    "docs/superpowers/reports/2026-10-01-stage7-historical-outcome-capture-r1.md"
+    "docs/superpowers/reports/2026-10-01-stage7-historical-outcome-capture-r1.md",
+    "docs/checkpoints/20261005T131532Z/checkout.json"
   ],
-  "tests": "Existing results only. No new tests or independent assessment. Historical results do not prove this combined dirty variant.",
-  "excluded_files": "Remain local; database/runtime/environment/cache/raw-log/full-payload updates excluded.",
-  "control_plane": "STATE.yaml/NEXT.yaml preserved verbatim where present; no reconciliation performed."
+  "already_remote_context_files": [
+    "tests/test_strategy_decay_research_bank.py",
+    "tests/test_strategy_factory_handoff.py",
+    "tests/test_trade_provenance.py",
+    "trader/core/journal.py",
+    "trader/engine/booking.py",
+    "trader/engine/outcomes.py",
+    "trader/engine/paper_cost_evidence.py",
+    "trader/observability/investigation_research.py",
+    "trader/observability/learning.py",
+    "scripts/learning_capture_inventory.py",
+    "tests/test_historical_outcome_capture.py",
+    "trader/learning/capture.py",
+    "trader/learning/capture_runtime.py"
+  ],
+  "reason": "Existing remote source blobs are included only as required context for the actual local variant. No remote implementation history duplicated or merged.",
+  "tests": "No new tests; old results do not independently verify this variant."
 }

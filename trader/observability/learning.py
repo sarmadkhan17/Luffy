@@ -168,6 +168,11 @@ def step(attention_path, ledger_path, now_ms=None, population_config=None):
                         raw['source_receipts'] = {phase: json.loads(payload) for phase, payload in db.execute(
                             'SELECT phase,payload FROM forecast_sources WHERE episode_id=?', (raw['id'],))}
                         pop.update(raw['id'], raw['symbol'], raw['created_ms'], '', raw, terminal=True)
+                    from trader.learning import capture as lc, capture_runtime as lr
+                    episode=dict(db.execute('SELECT * FROM episodes WHERE id=?',(row['id'],)).fetchone())
+                    episode['prediction']=json.loads(episode['prediction'])
+                    episode['outcome']=json.loads(episode['outcome'])
+                    lc.safely(db, 'forecast:'+row['id'], lr.forecast_result, episode)
                     resolved += 1
                 available = PROTOCOL["max_episodes"]-db.execute("SELECT COUNT(*) FROM episodes").fetchone()[0]
                 for row in scan["rows"]:
@@ -217,6 +222,9 @@ def step(attention_path, ledger_path, now_ms=None, population_config=None):
                     if cur.rowcount:
                         db.execute("INSERT INTO forecast_sources VALUES (?,'registration',?)",
                                    (eid,encode([{'scan_id':scan['scan_id'],'bar':b} for b in window])))
+                    if cur.rowcount:
+                        from trader.learning import capture as lc, capture_runtime as lr
+                        lc.safely(db, 'forecast:'+eid, lr.forecast_registration, eid, prediction, symbol)
                     current['registration_reason'] = 'registered' if cur.rowcount else 'duplicate_episode'
                     current['episode_id'] = eid
                     if pop and cur.rowcount:

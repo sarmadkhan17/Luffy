@@ -657,7 +657,7 @@ class Journal:
                 "INSERT INTO votes(cycle_id,ts,symbol,agent,side,conviction,"
                 "confidence,rationale,meta) VALUES (?,?,?,?,?,?,?,?,?)", rows)
 
-    def log_decision(self, d: Decision) -> None:
+    def log_decision(self, d: Decision, *, capture_inputs=None) -> None:
         strat_ids = ",".join(s.get("strategy_id", "")
                              for s in d.strategy_signals or [])
         signals = json.dumps(d.strategy_signals or [])
@@ -674,6 +674,12 @@ class Journal:
                  d.meta_p if d.meta_p else None, getattr(d, "scan_id", None),
                  *self._reason_codes_cols(getattr(d, "reason_codes", None))))
 
+            from ..learning import capture as lc, capture_runtime as lr
+            captured_row = dict(c.execute('SELECT * FROM decisions WHERE id=?', (d.id,)).fetchone())
+            cycle = c.execute('SELECT * FROM cycles WHERE id=?', (d.cycle_id,)).fetchone()
+            lc.safely(c, 'decision:'+d.id, lr.decision, captured_row, dict(cycle) if cycle else None,
+                      capture_inputs or getattr(d, 'learning_inputs', None))
+
     def update_decision_outcome(self, decision_id: str, executed: bool,
                                 size_usdt: float = 0.0,
                                 skip_reason: str = "",
@@ -687,6 +693,12 @@ class Journal:
                       "WHERE id=?",
                       (int(executed), size_usdt, skip_reason,
                        *self._reason_codes_cols(reason_codes), decision_id))
+
+            from ..learning import capture as lc, capture_runtime as lr
+            row = c.execute('SELECT * FROM decisions WHERE id=?', (decision_id,)).fetchone()
+            if row is not None:
+                from ..cognition.outcomes import timestamp
+                lc.safely(c, 'decision:'+decision_id, lr.action, dict(row), timestamp(now_utc().isoformat()))
 
     @staticmethod
     def _reason_codes_cols(codes) -> tuple:
@@ -823,9 +835,14 @@ class Journal:
 
     def log_brain_event(self, kind: str, subject: str, detail: Any) -> None:
         with self._tx() as c:
-            c.execute("INSERT INTO brain_events(ts,kind,subject,detail) VALUES (?,?,?,?)",
+            cursor = c.execute("INSERT INTO brain_events(ts,kind,subject,detail) VALUES (?,?,?,?)",
                       (now_utc().isoformat(), kind, subject,
                        detail if isinstance(detail, str) else json.dumps(detail)))
+            if kind in ('execution_incident', 'data_quality_incident', 'execution_error', 'data_error'):
+                from ..learning import capture as lc, capture_runtime as lr
+                from ..cognition.outcomes import timestamp
+                lc.safely(c, 'incident:'+str(cursor.lastrowid), lr.incident, cursor.lastrowid,
+                          timestamp(now_utc().isoformat()), subject, detail)
 
     # -- control state ----------------------------------------------------
     def kv_get(self, key: str, default: str | None = None) -> str | None:
@@ -857,6 +874,11 @@ class Journal:
                 "(decision_id,cycle_id,symbol,ts,action,entry_price) "
                 "VALUES (?,?,?,?,?,?)",
                 (decision_id, cycle_id, symbol, ts, action, entry_price))
+
+            from ..learning import capture as lc
+            from ..cognition.outcomes import timestamp
+            declared=dict(decision_id=decision_id,cycle_id=cycle_id,symbol=symbol,ts=ts,action=action,entry_price=entry_price)
+            lc.safely(c,'decision:'+decision_id,lc.record_action,'decision:'+decision_id,dict(prediction=declared),timestamp(now_utc().isoformat()))
 
     # -- Attention selection: primitives only; the Selection adapter is
     # observability/selection_persistence.py --------------------------------
@@ -978,7 +1000,7 @@ class Journal:
 
     def _record_registered(self, table: str, columns: tuple, id_key: str,
                            dup_where: str, dup_args: tuple, row: dict,
-                           recorded_at_ms: int) -> str:
+                           recorded_at_ms: int, *, on_insert=None) -> str:
         """Insert one row and, only when it is inserted, its
         research-registration.v1 receipt (record_type = row["schema"], the
         same recorded_at_ms) in the same transaction. An identical or
@@ -1008,6 +1030,8 @@ class Journal:
                 if not self._register(c, row["schema"], row[id_key],
                                       row["canonical_json"], recorded_at_ms):
                     raise self._RegistrationConflict
+                if on_insert is not None:
+                    on_insert(c)
         except self._RegistrationConflict:
             return "conflict"
         return "inserted"
@@ -1265,6 +1289,8 @@ class Journal:
                       f"recorded_at_ms) VALUES "
                       f"({','.join('?' * (len(values) + 1))})",
                       values + (recorded_at_ms,))
+            from ..learning import capture as lc, capture_runtime as lr
+            lc.safely(c, 'research-bank:'+row['bank_object_id'], lr.research_bank, row, recorded_at_ms, self)
         return "inserted"
 
     def research_bank_objects(self, run_id: str | None = None) -> list[dict]:
@@ -1602,12 +1628,15 @@ class Journal:
         An insert writes its research-registration.v1 receipt in the same
         transaction; a duplicate or conflict never registers. Nothing is
         written unless "inserted"."""
+        from ..learning import capture as lc, capture_runtime as lr
         return self._record_registered(
             "research_unreadable_bank_objects", self._UNREADABLE_BANK_COLUMNS,
             "bank_object_id",
             "bank_object_id=? OR (run_id=? AND result_id=?)",
             (row["bank_object_id"], row["run_id"], row["result_id"]),
-            row, recorded_at_ms)
+            row, recorded_at_ms,
+            on_insert=lambda c: lc.safely(c, 'research-bank:'+row['bank_object_id'], lr.research_bank,
+                row, recorded_at_ms, self, unreadable=True))
 
     def research_unreadable_bank_objects(self, run_id: str | None = None
                                          ) -> list[dict]:

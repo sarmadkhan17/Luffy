@@ -491,6 +491,10 @@ def run(ledger_path, investigation_id, *, recorded_at_ms: int) -> dict:
             for name, rec, key in (("question", q, iid), ("plan", p, iid), ("evidence", e, uid),
                                    ("result", r, uid), ("run", rn, uid), ("bank", b, uid)):
                 outcomes[name] = _store(db, rec, iid, key, recorded_at_ms)
+            if outcomes['bank']=='inserted':
+                from trader.learning import capture as lc, capture_runtime as lr
+                lc.safely(db, 'research-bank:'+b['bank_object_id'], lr.investigation_research,
+                    dict(question=q,plan=p,evidence=e,result=r,receipt=rn),b,recorded_at_ms)
             db.commit()
         except BaseException as exc:
             db.rollback()
