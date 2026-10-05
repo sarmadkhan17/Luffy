@@ -1,14 +1,21 @@
 {
   "status": "UNVERIFIED",
   "checkout": "/mnt/luffy-data/luffy/workspaces/paper-execution-cost-calibration-r1",
-  "original_branch": "refs/heads/luffy-paper-execution-cost-evidence-calibration-r1",
   "original_head": "be2bf1860b0c66957d7d3af8c32d6a0e2a55d209",
   "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-paper-execution-cost-calibration-r1",
-  "captured_files": [
+  "unique_files": [
     "NEXT.yaml",
-    "STATE.yaml"
+    "STATE.yaml",
+    "docs/checkpoints/20261005T131532Z/checkout.json"
   ],
-  "tests": "Existing results only. No new tests or independent assessment. Historical results do not prove this combined dirty variant.",
-  "excluded_files": "Remain local; database/runtime/environment/cache/raw-log/full-payload updates excluded.",
-  "control_plane": "STATE.yaml/NEXT.yaml preserved verbatim where present; no reconciliation performed."
+  "already_remote_context_files": [
+    "trader/engine/paper_cost_evidence.py",
+    "scripts/execution_cost_inventory.py",
+    "tests/test_execution_cost_calibration.py",
+    "trader/observability/execution_calibration.py",
+    "trader/observability/execution_shadow.py",
+    "trader/observability/funding_events.py"
+  ],
+  "reason": "Existing remote source blobs are included only as required context for the actual local variant. No remote implementation history duplicated or merged.",
+  "tests": "No new tests; old results do not independently verify this variant."
 }

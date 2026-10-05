@@ -1,8 +1,8 @@
 """Immutable paper economic evidence, never a synthetic cost model.
 
-Source validators are code-owned adapters, not config switches. None is currently
-registered: account fill fees do not prove hypothetical paper fees and reference
-fills do not prove execution costs. Tests alone register fixture authorities.
+Source validators are code-owned adapters, not config switches. Only a public
+no-funding-crossing adapter is registered. Account fill fees do not prove
+hypothetical paper fees; reference fills do not prove execution costs. Tests alone register fixture authorities.
 Digests prove frozen internal consistency, not external venue authenticity.
 """
 from datetime import datetime
@@ -11,13 +11,14 @@ import math
 import sqlite3
 
 from .paper_exit_evidence import canonical, digest
+from trader.observability.funding_events import METHOD as FUNDING_METHOD, validate_no_crossing
 
 SCHEMA = 'versioned-paper-cost-receipt.v1'
 TABLE = 'versioned_paper_cost_receipts'
 SOURCES = 'versioned_paper_cost_sources'
 # A future adapter must validate source authority/time scope; execution adapters
 # must also establish an already validated method, size coverage and freshness.
-SOURCE_VALIDATORS = {}
+SOURCE_VALIDATORS = {FUNDING_METHOD: validate_no_crossing}
 WIN_RATE_POLICY = {'basis': 'NET', 'source':
     'versioned probation _assess at 1ab0da0; versioned-paper-probation-truth-fix-r1'}
 
@@ -70,6 +71,8 @@ def binding(trade, version, install):
     return dict(trade_id=trade['id'], **exact, exit_semantics_id=semantics,
                 entry_identity_sha256=digest(trade['entry_identity_json']),
                 instrument=trade['symbol'], market_type=trade.get('market_type'),
+                **({'venue_environment': trade['venue_environment']}
+                   if trade.get('venue_environment') is not None else {}),
                 side=trade['side'], entry=dict(time_ms=opened, quantity=qty,
                     reference=trade.get('reference_price'), fill=entry,
                     fill_basis=trade.get('fill_basis')),
