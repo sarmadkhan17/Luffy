@@ -1,0 +1,18 @@
+{
+  "as_of_ms": 1790878226115,
+  "authenticated_requests": 0,
+  "control_state": "FROZEN",
+  "limitation": "RETAINED_STALE_BOOK_NOT_CURRENT_PORTFOLIO_TRUTH",
+  "observed_at_ms": 1790877998903,
+  "production_mutations": 0,
+  "read_only": true,
+  "retained_holdings_count": 3,
+  "retained_instruments": [
+    "binance_usdm:futures:AVAXUSDT",
+    "binance_usdm:futures:LINKUSDT",
+    "binance_usdm:futures:SOLUSDT"
+  ],
+  "snapshot_id": "f2b7b7e406669905773a4fc4a5c0d3ec390a361399d4569d19f86ce905806a9d",
+  "stale_after_ms": 120000,
+  "version_count": 0
+}

@@ -1,0 +1,21 @@
+{
+  "status": "UNVERIFIED",
+  "checkout": "/mnt/luffy-data/luffy/workspaces/stage6-implementation-closure-r1",
+  "original_branch": "refs/heads/luffy-stage6-implementation-closure-r1",
+  "original_head": "d256bfb4d6c6b2f7d9d7c950bd6f0c7aff0049f9",
+  "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage6-implementation-closure-r1",
+  "captured_files": [
+    "docs/superpowers/evidence/stage6-implementation-closure-r1/final-shadow-result.json",
+    "docs/superpowers/evidence/stage6-implementation-closure-r1/final-shadow/book-chain/candidate-chain/shadow-1790878438130.json",
+    "docs/superpowers/evidence/stage6-implementation-closure-r1/final-shadow/book-chain/shadow-1790878438130.json",
+    "docs/superpowers/evidence/stage6-implementation-closure-r1/real-shadow-result.json",
+    "docs/superpowers/evidence/stage6-implementation-closure-r1/real-shadow/book-chain/candidate-chain/shadow-1790878137628.json",
+    "docs/superpowers/evidence/stage6-implementation-closure-r1/real-shadow/book-chain/candidate-chain/shadow-1790878382650.json",
+    "docs/superpowers/evidence/stage6-implementation-closure-r1/real-shadow/book-chain/shadow-1790878382650.json",
+    "docs/superpowers/evidence/stage6-implementation-closure-r1/real-source-status.json",
+    "docs/superpowers/evidence/stage6-implementation-closure-r1/restart-replay.json"
+  ],
+  "tests": "Existing results only. No new tests or independent assessment. Historical results do not prove this combined dirty variant.",
+  "excluded_files": "Remain local; database/runtime/environment/cache/raw-log/full-payload updates excluded.",
+  "control_plane": "STATE.yaml/NEXT.yaml preserved verbatim where present; no reconciliation performed."
+}
