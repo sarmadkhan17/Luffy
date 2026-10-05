@@ -1,0 +1,16 @@
+{
+  "status": "UNVERIFIED",
+  "checkout": "/mnt/luffy-data/luffy/workspaces/opportunity-context-live-integration-r1",
+  "original_branch": "refs/heads/luffy-opportunity-context-live-integration-r1",
+  "original_head": "6bb99e541e9d9ce583cc4a283f7db685f9235b96",
+  "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-opportunity-context-live-integration-r1",
+  "captured_files": [
+    "docs/superpowers/evidence/opportunity-context-live-integration-r1/real-shadow-final/shadow-1790873502257.json",
+    "docs/superpowers/evidence/opportunity-context-live-integration-r1/real-shadow/shadow-1790873294670.json",
+    "docs/superpowers/evidence/opportunity-context-live-integration-r1/restart-replay.json",
+    "docs/superpowers/evidence/stage6-candidate-bridge-r1/real-shadow/shadow-1790874217158.json"
+  ],
+  "tests": "Existing results only. No new tests or independent assessment. Historical results do not prove this combined dirty variant.",
+  "excluded_files": "Remain local; database/runtime/environment/cache/raw-log/full-payload updates excluded.",
+  "control_plane": "STATE.yaml/NEXT.yaml preserved verbatim where present; no reconciliation performed."
+}
