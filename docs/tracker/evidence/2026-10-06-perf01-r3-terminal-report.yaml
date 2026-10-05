@@ -1,0 +1,78 @@
+item: PERF-01
+engineering_result: BLOCKED
+observed_runtime_revision: 25cc7d0021435ea5f1182f1b459ad2c04cf6a272
+owner_authorization: Current owner update authorizes exactly one additional bounded
+  diagnostic attempt; consumed once.
+attempt: perf01-owner-measurement-r3
+external_report: /home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/perf01-owner-report.json
+external_report_sha256: 2e069c03a8b50549bf644af981fb4760bedbbc0627529b80a933b507bb91ad40
+static_tests:
+  passed: 42
+  compiled_files: 16
+  deadline_controller: byte-identical to accepted r2
+runtime:
+  first_cycle_seconds: 223.75910745200235
+  thread_cpu_seconds: 60.669566675999995
+  stop_reason: single_cycle_complete
+  stop_requested_seconds: 223.75986985000782
+  sigterm_seconds: 223.76013101800345
+  existing_limit_seconds: 240
+  completed_window_cycles: 1
+  shutdown_overlapping_cycles: 0
+  scanned: 20
+  snapshots: 20
+  decisions: 20
+  skips: 0
+  entries: 0
+  symbol_identity_order_matches_r2: true
+  stage_records: 52
+  coarse_post_symbol_seconds:
+    protection: 0.019271262994152494
+    outcomes: 13.478901203998248
+    publication: 0.19112583599053323
+    portfolio: 30.363177981998888
+    learning_dispatch: 1.6831255719880573
+    learning_application: 0.027332740995916538
+    completion: 0.04113567199965473
+  portfolio_triggered: false
+  recurring_distribution: null
+  successful_heartbeat_gaps: null
+causal_gap: Both historical228.702/259.776 and r2 cuts contain four triggering NEW_OPPORTUNITY_CONTEXT
+  events; r3 contains none. Historical scan18 versus20 and shutdown-overlapping259/r2
+  prevent a full-workload matched causal comparison. Lower timing is not a proven
+  correction.
+external_dependency: Owner-supplied or separately approved causal evidence fixing
+  scan/source cuts and triggering Portfolio event workload with uncontaminated timing.
+  No retry or further runtime implicitly authorized.
+safety:
+  control: FROZEN
+  operator_hold: 1
+  recovery_required: retained true
+  watchdog_off: present
+  all_positions_protected: true
+  positions: SOL long5.77 and AVAX long77 unchanged
+  ordinary_orders: []
+  pending_partials: 0
+  execution_requests: 0
+  kernel: stopped
+  observers: stopped
+  dashboard: existing1154108/startticks11639528 unchanged; no launch/HTTP/signals
+  config: unchanged
+  provider_ledger: unchanged
+  production_source: unchanged
+  protective_maintenance: Existing FROZEN authority sent one POST and one DELETE algoOrder;
+    zero entries.
+closing_condition_changed: false
+closure_claim: false
+production_correction: null
+expected_savings: null
+workflow_constraint: Existing trader/dashboard/tracker.py read contract requires selected
+  NEXT SELECTED_NOT_STARTED to correspond to tracker OPEN. Selected workflow slot
+  retained OPEN; explicit engineering_result/result and STATE outcome BLOCKED. No
+  production reader change for this reconciliation.
+evidence_paths:
+  attribution: /home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/attribution-report.json
+  gate_events: /home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/portfolio-gate-summary.json
+  containment: /home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/launch-result.json
+  source_safety_proof: /home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/production-final-proof.json
+  hashes: /home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/evidence-hashes.json

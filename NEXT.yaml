@@ -1,6 +1,6 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-10-05'
+updated_at: '2026-10-06'
 
 repository_checkpoint:
   branch: main
@@ -44,10 +44,17 @@ completed_pre_stage8_audit:
 work_package:
   id: PERF-01
   status: SELECTED_NOT_STARTED
+  status_scope: Selected implementation workflow slot; no production correction started. Existing Tracker read contract
+    requires OPEN. Actual diagnostic engineering result is BLOCKED below.
+  result: BLOCKED
   mode: DIAGNOSIS_ONLY
-  purpose: Attribute the latest 259.776-second first-cycle cost before any implementation choice.
+  purpose: Causal comparison remains blocked after the single additional r3 attempt.
+  objective: Owner-supplied or separately approved causal evidence fixing scan/source cuts and triggering Portfolio
+    event workload with uncontaminated timing. No retry or further runtime implicitly authorized.
   implementation_started: false
   code_fix_selected: false
+  diagnostic_execution_completed: true
+  additional_owner_attempt_consumed: true
   runtime_execution_authorized: false
   new_observation_authorized: false
   threshold_change_authorized: false
@@ -55,33 +62,19 @@ work_package:
   provider_enablement_authorized: false
   trading_activation_authorized: false
   tracker_source: docs/tracker/LUFFY_Product_Tracker_v1.yaml
-  objective: Attribute the latest 259.776-second first-cycle cost before any implementation choice.
-  observed_runtime_revision: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
-  control_baseline_revision: 5e464d59ea4db9f227f919d5bbbad6702ac09473
-  control_revision_resolution: Enclosing control-plane commit, not the observed runtime revision.
+  observed_runtime_revision: 25cc7d0021435ea5f1182f1b459ad2c04cf6a272
   evidence:
-  - docs/tracker/evidence/2026-10-05-instrumented-observation-owner-report.yaml
-  evidence_scope: Owner-reported retained observation; first verify exact external artifact identities. No new observation.
+  - docs/tracker/evidence/2026-10-06-perf01-r3-terminal-report.yaml
+  evidence_scope: 223.759s successful first cycle matched20-symbol scan but had no triggering Portfolio new-context
+    events; insufficient causal or sustained evidence.
   allowed_actions:
-  - Read-only attribution of retained stage timings and exact existing code/data boundaries.
-  - Record measured limitations and dependencies before any implementation selection.
+  - Read retained exact PERF-01 evidence; no further runtime authority remains.
   acceptance:
-  - Separate startup/first/shutdown costs from unmeasured recurring timing.
-  - Attribute evidence-store and repeated market/evidence work without inferring causality from wall-minus-CPU.
-  - Preserve existing safety limits, workload, provider restrictions and containment.
-  completed_predecessor:
-    id: WORK-01
-    result: BLOCKED
-    execution: PERFORMED_OWNER_REPORTED
-    first_cycle_seconds: 259.776
-    stop_requested_seconds: 240.033
-    completed_window_cycles: 0
-    shutdown_overlapping_first_cycles: 1
+  - Preserve original PERF-01 closing condition.
+  - Require source/workload/event-matched causal evidence before correction; preserve240s and all safety/coverage/provenance.
   constraints:
-  - No code fix selected or authorized by this next package.
-  - No runtime execution, new observation, threshold change, workload reduction, provider enablement or trading
-    activation.
-
+  - No automatic retry, speculative optimization, trading activation, recovery clearing or provider enablement.
+  next_item_selected: null
 historical_recommendation_note: The following recommendation predates the executed blocked WORK-01 attempt; its not-started fields are historical only.
 historical_pre_execution_recommendation:
   id: LUFFY-RUNTIME-SCHEDULING-AND-OBSERVATION-R1

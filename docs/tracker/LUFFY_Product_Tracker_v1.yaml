@@ -12,7 +12,7 @@ metadata:
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
     prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
   current_active_item: PERF-01
-  current_active_result: SELECTED_NOT_STARTED_DIAGNOSIS_ONLY
+  current_active_result: BLOCKED_CAUSAL_EVIDENCE_GAP
   row_count: 176
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
     is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown is an
@@ -29,9 +29,10 @@ metadata:
   workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged and
     excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
+  latest_perf01_result_source: docs/tracker/evidence/2026-10-06-perf01-r3-terminal-report.yaml
   publication_note: Owner explicitly accepted adoption and read-only Tracker navigation. OPEN-09 closes with this
     control-plane reconciliation; implementation verification is distinct from deployed/browser proof.
-  current_runtime_item: WORK-01
+  current_runtime_item: PERF-01
   current_runtime_result: BLOCKED
   next_diagnostic_item: PERF-01
   next_runtime_execution_authorized: false
@@ -6641,8 +6642,8 @@ items:
   release_scope: BASELINE
   status: OPEN
   required_behavior: Establish first-cycle and sustained timing under existing 240s contract.
-  why_needed: Latest observed first cycle was 259.776s against the unchanged 240s limit; prior 266.7s evidence remains
-    historical. No ordinary recurring-cycle distribution exists for the latest attempt.
+  why_needed: Latest diagnostic first cycle223.759s completed before stop, but Portfolio did not trigger. Historical31.075s
+    difference remains unproven; full-workload matched causal evidence and sustained timing are absent.
   closure_condition: Approved instrumented run distinguishes boot/first/recurring/shutdown and establishes agreed
     safety envelope with unchanged workload and complete gaps, or records precise remaining failure.
   failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed
@@ -6651,12 +6652,12 @@ items:
   owner_role: Assigned local engineering session
   engineering_assignee: Dots (after local access and item claim); one writer only
   implementation_evidence: SEE_EVIDENCE
-  runtime_evidence: OWNER_REPORTED_FAILED_FIRST_CYCLE; scheduling-observation-prep-r1-idi3eex0-kernel-1012489
+  runtime_evidence: MEASURED_DIAGNOSTIC_ONLY; perf01-owner-measurement-r3; not full-workload comparable
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'S16 latest: first cycle 259.776s; stop requested at 240.033s; 79.281 thread-CPU seconds; zero
-    completed window cycles; 13.13s unattributed exclusive time. Measured exclusive costs: network.wait 41.120s,
-    evidence.store 30.747s, market.load 21.668s, Journal.query 17.117s, learning.capture.snapshot 15.109s. No single
-    cost is established as root cause.'
+  latest_evidence: r3:223.759107s first cycle,60.669567s thread CPU,20/20 scan, zero skips/entries, no shutdown
+    overlap,52 stage records. Portfolio triggered false versus four NEW_OPPORTUNITY_CONTEXT triggers in historical
+    baselines and r2.42 static tests pass; safety/containment/source invariants retained. Engineering result BLOCKED;
+    no correction selected.
   source_ids:
   - S05
   - S06
@@ -6664,23 +6665,29 @@ items:
   - S11
   - S16
   source_sections: 'Parent requirement(s): RUN-03'
-  next_proof: 'Diagnosis only: attribute repeated market/evidence/Journal/capture work and remaining exclusive time
-    from retained evidence before selecting any code change. No threshold change or new observation is authorized
-    by selection.'
+  next_proof: Owner-supplied or separately approved causal evidence fixing scan/source cuts and triggering Portfolio
+    event workload with uncontaminated timing. No retry or further runtime implicitly authorized.
   acceptance_basis: Existing requirement/observed incident; not a new feature.
   acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
   priority: NEXT_AFTER_CURRENT
   resolution_at_commit: ''
   work_authorized: false
-  updated: '2026-10-05'
+  updated: '2026-10-06'
   legacy_ids: ''
   parent_ids:
   - RUN-03
   related_items: []
   closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  evidence_validity: Exact r3 revision/config/harness hashes pinned; scan matched but Portfolio event branch differed.
+    No root-cause, savings, recurring distribution or readiness claim.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  engineering_result: BLOCKED
+  diagnostic_attempts_completed: 2
+  additional_owner_attempt_consumed: true
+  required_external_evidence: Owner-supplied or separately approved causal evidence fixing scan/source cuts and
+    triggering Portfolio event workload with uncontaminated timing. No retry or further runtime implicitly authorized.
+  diagnostic_evidence: docs/tracker/evidence/2026-10-06-perf01-r3-terminal-report.yaml
 - id: PERF-02
   area: Observed issues
   stage: Cross-cutting
