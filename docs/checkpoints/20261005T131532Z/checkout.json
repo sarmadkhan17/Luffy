@@ -1,0 +1,30 @@
+{
+  "status": "UNVERIFIED",
+  "checkout": "/mnt/luffy-data/luffy/workspaces/stage7-learning-target-authority-framework-r1",
+  "original_branch": "refs/heads/luffy-stage7-learning-target-authority-framework-r1",
+  "original_head": "9d2a1b895b93c9abaf23ab258e47d8535c916bb0",
+  "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1",
+  "captured_files": [
+    "NEXT.yaml",
+    "STATE.yaml",
+    "tests/test_learning_application.py",
+    "tests/test_strategy_factory_handoff.py",
+    "trader/learning/application.py",
+    "trader/learning/foundation.py",
+    "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/acceptance.json",
+    "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/authority-receipt-final-tests.txt",
+    "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/factory-boundary-followup.txt",
+    "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/files-changed.txt",
+    "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/inherited-regression.txt",
+    "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/target-final-tests.txt",
+    "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/tests.txt",
+    "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/validation-summary.txt",
+    "docs/superpowers/reports/2026-10-02-stage7-learning-target-authority-framework-r1.md",
+    "tests/test_learning_target_authority.py",
+    "trader/learning/authority.py",
+    "trader/learning/dispatch.py"
+  ],
+  "tests": "Existing results only. No new tests or independent assessment. Historical results do not prove this combined dirty variant.",
+  "excluded_files": "Remain local; database/runtime/environment/cache/raw-log/full-payload updates excluded.",
+  "control_plane": "STATE.yaml/NEXT.yaml preserved verbatim where present; no reconciliation performed."
+}

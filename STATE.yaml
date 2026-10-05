@@ -5167,12 +5167,11 @@ completed_stage7_learning_application_integration_r1:
   - docs/superpowers/evidence/stage7-learning-application-integration-r1/final-graphify-update.txt
   next_recommended_package: LUFFY-STAGE7-IMPLEMENTATION-CLOSURE-R1
 
-OVERALL_BUILD_PROGRESS: INCOMPLETE; Stage 6 build closed, Stage 7 target authority
-  framework missing; no percentage claim
-STAGE_7_BUILD: INCOMPLETE
+OVERALL_BUILD_PROGRESS: INCOMPLETE; Stages 6 and 7 build complete; Stage 8 pending; no percentage claim
+STAGE_7_BUILD: COMPLETE
 STAGE_7_REAL_WORLD_MATURITY: REAL_EVIDENCE_BLOCKED
-CURRENT_STAGE: Stage 7
-NEXT_STAGE: 'Stage 7: LUFFY-STAGE7-LEARNING-TARGET-AUTHORITY-FRAMEWORK-R1'
+CURRENT_STAGE: Stage 8
+NEXT_STAGE: 'Stage 8: LUFFY-STAGE8-EXPLAINABILITY-OWNER-CONTROL-FOUNDATION-R1'
 
 completed_stage7_implementation_closure_r1:
   package: LUFFY-STAGE7-IMPLEMENTATION-CLOSURE-R1
@@ -5229,5 +5228,74 @@ completed_stage7_implementation_closure_r1:
   validation: 384 passed; 1 inherited historical source-comparison failure; YAML and whitespace checks PASS
   real_shadow_summary: docs/superpowers/reports/2026-10-02-stage7-implementation-closure-r1.md
 
-STAGE7_BUILD_COMPLETE: false
+STAGE7_BUILD_COMPLETE: true
 STAGE7_REAL_WORLD_MATURE: false
+
+completed_stage7_learning_target_authority_framework_r1:
+  package: LUFFY-STAGE7-LEARNING-TARGET-AUTHORITY-FRAMEWORK-R1
+  verdict: PASS
+  base_commit: 9d2a1b8
+  branch: luffy-stage7-learning-target-authority-framework-r1
+  worktree: /mnt/luffy-data/luffy/workspaces/stage7-learning-target-authority-framework-r1
+  report: docs/superpowers/reports/2026-10-02-stage7-learning-target-authority-framework-r1.md
+  state: TESTED_NOT_DEPLOYED
+  requirements:
+    A_realized_outcomes: TESTED
+    B_rejected_risk_blocked_outcomes: TESTED
+    C_missed_skipped_cash_outcomes: TESTED
+    D_research_outcomes: TESTED
+    E_execution_data_quality_outcomes: TESTED
+    F_exact_attribution: TESTED
+    G_historical_digital_twin_replay: TESTED
+    H_immutable_learning_evidence: TESTED
+    I_deterministic_update_proposals: TESTED
+    J_registered_rule_only_application: TESTED
+    K_strategy_governor_integration: TESTED
+    L_failed_inconclusive_research_memory: TESTED
+    M_replay_idempotency_provenance: TESTED
+    N_no_autonomous_risk_expansion: TESTED
+    O_no_architecture_self_modification: TESTED
+  target_authorities:
+    confidence_calibration: 'AgentCalibration: POLICY_UNAVAILABLE; UNREGISTERED_RULE'
+    strategy_allocation: 'PortfolioAllocator: POLICY_UNAVAILABLE; UNREGISTERED_RULE'
+    attention_priority: 'Attention: POLICY_UNAVAILABLE; UNREGISTERED_RULE'
+    research_priority: 'ResearchScheduler: POLICY_UNAVAILABLE; UNREGISTERED_RULE'
+    evidence_weights: 'ContextualEvidenceWeights: POLICY_UNAVAILABLE; UNREGISTERED_RULE'
+    world_model_probabilities: 'WorldModel: TARGET_NOT_SUPPORTED; UNREGISTERED_RULE'
+    strategy_lifecycle: 'StrategyGovernor: existing-recent-decay.v1 -> RETIRED; TESTED'
+  rule_dispatch: EXACT_RULE_ID_VERSION_CATEGORY; compiled non-lifecycle extensions empty
+  compare_and_apply: TESTED; owner reads/version/policy compare, scoped mutation and postcondition checks
+  authority_receipts: Frozen common receipt; existing append-only transaction/hash/idempotency store
+  lifecycle_regression: PASS
+  risk_boundary: PASS
+  strategyspec_boundary: PASS
+  replay: PASS
+  missing_implementation: []
+  calibration_or_policy_blocked:
+  - No registered calibrated rules for confidence_calibration, strategy_allocation, attention_priority,
+    research_priority, evidence_weights or world_model_probabilities.
+  - No approved adaptive mutation policy for those six targets; legacy validity bounds are not learning
+    policy.
+  - WorldModel has no mutable probabilistic field.
+  - No registered failed-research suppression/no-repeat policy; Bank recall remains context only.
+  - Existing registered sample/coverage/replay requirements still apply.
+  real_evidence_blocked:
+  - Prerequisite retained captured population lacked replay-complete applicable updates; no new real evidence
+    is asserted.
+  - Prospective integrations remain TESTED_NOT_DEPLOYED; normal Kernel WorldModel/context sources remain
+    unavailable.
+  stage7_build_complete: true
+  stage7_real_world_mature: false
+  trading_behavior_changed: false
+  production_target_mutations: 0
+  new_production_rules: 0
+  llm_calls: 0
+  commit: NONE
+  deploy_or_restart: NONE
+  validation: 72 final authority/lifecycle tests passed; 335 broad regression tests passed and the relocated authority import assertion passed on follow-up; 87 inherited recall tests passed with 1 unchanged historical source-snapshot failure. Compilation, YAML and whitespace checks PASS.
+  evidence:
+  - docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/tests.txt
+  - docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/authority-receipt-final-tests.txt
+  - docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/inherited-regression.txt
+  - docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/graphify-final-update.txt
+  next_recommended_package: LUFFY-STAGE8-EXPLAINABILITY-OWNER-CONTROL-FOUNDATION-R1

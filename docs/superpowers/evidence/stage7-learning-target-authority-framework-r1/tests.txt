@@ -1,0 +1,38 @@
+........................................................................ [ 21%]
+........................................................................ [ 42%]
+........................................................................ [ 64%]
+........................................................................ [ 85%]
+.............................................F..                         [100%]
+=================================== FAILURES ===================================
+________ test_factory_writes_no_trading_state_and_has_no_trading_caller ________
+
+    def test_factory_writes_no_trading_state_and_has_no_trading_caller():
+        src = pathlib.Path("trader/strategy/factory_handoff.py").read_text()
+        code = src.split('"""', 2)[2]
+        writes = set(re.findall(r"\b(?:INSERT\s+(?:OR\s+\w+\s+)?INTO|UPDATE|"
+                                r"DELETE\s+FROM)\s+(\w+)", code, re.I))
+        assert writes - {"ON"} <= set(F._TABLES), writes
+        assert set(re.findall(r'_insert\(c, "(\w+)"', code)) <= set(F._TABLES)
+        for bad in ("upsert_spec", "state_kv", "control_events", "set_control",
+                    "create_order", "executor", "orchestrator", "notifier"):
+            assert bad not in code, bad
+        # the executor reads only the paper/live fence predicate
+        for f in pathlib.Path("trader").rglob("*.py"):
+            if f not in (pathlib.Path('trader/learning/foundation.py'), pathlib.Path('trader/learning/capture.py'), pathlib.Path('trader/learning/application.py')) and f.name not in ("factory_handoff.py", "kernel.py", "executor.py", "paper.py", "versioned_exits.py", "exits.py", "journal.py", "opportunity_live.py", "candidate_bridge.py"):
+>               assert "factory_handoff" not in f.read_text(), f
+E               AssertionError: PosixPath('trader/learning/authority.py')
+E               assert 'factory_handoff' not in '"""Learning...target_id)\n'
+E                 
+E                 'factory_handoff' is contained here:
+E                   gy import factory_handoff as F
+E                   
+E                   
+E                   class Refused(ValueError):
+E                       def __init__(self, result, reason):...
+E                 
+E                 ...Full output truncated (285 lines hidden), use '-vv' to show
+
+tests/test_strategy_factory_handoff.py:942: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_strategy_factory_handoff.py::test_factory_writes_no_trading_state_and_has_no_trading_caller
+1 failed, 335 passed in 564.69s (0:09:24)

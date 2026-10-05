@@ -1,0 +1,35 @@
+........................................................................ [ 81%]
+............F...                                                         [100%]
+=================================== FAILURES ===================================
+___________________ test_decay_journal_readers_are_unchanged ___________________
+
+    def test_decay_journal_readers_are_unchanged():
+        src = (ROOT / "trader/core/journal.py").read_text()
+        base = subprocess.run(["git", "show", f"{BASE}:trader/core/journal.py"],
+                              cwd=ROOT, capture_output=True, text=True,
+                              check=True).stdout
+        defs = lambda s: set(re.findall(r"\n    def (\w+)\(", s))
+        assert defs(src) - defs(base) == {"research_unreadable_bank_registrations"}
+        assert defs(base) <= defs(src)
+        for name in ("research_bank_registrations", "research_registration",
+                     "research_unreadable_bank_objects", "_record_registered",
+                     "_register"):
+            body = lambda s: re.split(r"\n    (?:def |class |# --)",
+                                      s.split(f"def {name}(", 1)[1], 1)[0]
+>           assert body(src) == body(base), name
+E           AssertionError: _record_registered
+E           assert 'self, table:... "inserted"\n' == 'self, table:... "inserted"\n'
+E             
+E             Skipping 154 identical leading characters in diff, use -v to show
+E             - at_ms: int) -> str:
+E             + at_ms: int, *, on_insert=None) -> str:
+E                       """Insert one row and, only when it is inserted, its
+E                       research-registration.v1 receipt (record_type = row["schema"], the
+E                       same recorded_at_ms) in the same transaction. An identical or...
+E             
+E             ...Full output truncated (31 lines hidden), use '-vv' to show
+
+tests/test_strategy_health_unreadable_recall.py:659: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_strategy_health_unreadable_recall.py::test_decay_journal_readers_are_unchanged
+1 failed, 87 passed in 51.96s

@@ -1,0 +1,41 @@
+{
+  "package": "LUFFY-STAGE7-LEARNING-TARGET-AUTHORITY-FRAMEWORK-R1",
+  "verdict": "PASS",
+  "base_commit": "9d2a1b8",
+  "missing_implementation": [],
+  "stage7_build_complete": true,
+  "trading_behavior_changed": false,
+  "production_rules": [
+    "existing-recent-decay.v1"
+  ],
+  "production_extension_rules": 0,
+  "authorities": {
+    "CONFIDENCE_CALIBRATION": "AgentCalibration",
+    "STRATEGY_ALLOCATION": "PortfolioAllocator",
+    "ATTENTION_PRIORITY": "Attention",
+    "RESEARCH_PRIORITY": "ResearchScheduler",
+    "EVIDENCE_WEIGHTS": "ContextualEvidenceWeights",
+    "WORLD_MODEL_PROBABILITIES": "WorldModel",
+    "STRATEGY_LIFECYCLE_STATE": "StrategyGovernor"
+  },
+  "final_focused_tests": 72,
+  "distinct_passed_checks": 425,
+  "inherited_failure": "test_strategy_health_unreadable_recall.py::test_decay_journal_readers_are_unchanged",
+  "protected_sources_unchanged": [
+    "trader/engine/risk.py",
+    "trader/strategy/spec.py",
+    "trader/strategy/factory_handoff.py",
+    "trader/portfolio/allocator.py",
+    "trader/engine/executor.py",
+    "trader/kernel.py",
+    "config.yaml"
+  ],
+  "code_sha256": {
+    "trader/learning/authority.py": "57ef0d55ca4a7ddb980a858513a137ef89bf8d1f1532799facf2e4f9beeb9d81",
+    "trader/learning/dispatch.py": "82cf13e100e9e1e81d28857d4c3df5f435d431de12ba46eca5382dee19e4024c",
+    "trader/learning/application.py": "1d1a5ec5dc568f9284eddcdc7ab54ce40b8ab3fc976720eeb7ed4f3eea24678b",
+    "trader/learning/foundation.py": "18fd7e20defc791489d368df519aa84629e4ca515d687282b5ef03343676fc61"
+  },
+  "commit": "NONE",
+  "deploy": "NONE"
+}

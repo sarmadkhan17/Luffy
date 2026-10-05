@@ -5,40 +5,35 @@ updated_at: '2026-10-02'
 active_package: NO_ACTIVE_PACKAGE
 
 work_package:
-  id: LUFFY-STAGE7-LEARNING-TARGET-AUTHORITY-FRAMEWORK-R1
-  type: STAGE7_TARGET_AUTHORITY_FRAMEWORK
+  id: LUFFY-STAGE8-EXPLAINABILITY-OWNER-CONTROL-FOUNDATION-R1
+  type: STAGE8_EXPLAINABILITY_OWNER_CONTROL_FOUNDATION
   status: RECOMMENDED_NOT_AUTHORIZED_FOR_RUNTIME_DEPLOYMENT
-  last_completed_package: LUFFY-STAGE7-IMPLEMENTATION-CLOSURE-R1
-  prerequisite_commit: 481b832
+  last_completed_package: LUFFY-STAGE7-LEARNING-TARGET-AUTHORITY-FRAMEWORK-R1
+  prerequisite_commit: 9d2a1b8 (framework changes remain uncommitted)
   preserved_authority:
     PAPER_COST_PROTOCOL: TESTED
-    EXECUTION_COST_CALIBRATION: INSUFFICIENT_EVIDENCE
     PRODUCTION_ECONOMIC_PROBATION: INCOMPLETE
+    STAGE7_BUILD: COMPLETE
+    STAGE7_REAL_WORLD_MATURITY: REAL_EVIDENCE_BLOCKED
+    EXECUTION_COST_CALIBRATION: INSUFFICIENT_EVIDENCE
     CAPACITY: UNAVAILABLE
     FIRST_LIVE: BLOCKED
-  objective: Complete the existing LearningApplication target framework for the six
-    approved non-lifecycle categories. Add authority adapters and registered evaluator
-    dispatch without creating or registering any new statistical/calibration rule.
-    Empty registries must continue to fail closed.
+  objective: Build grounded owner queries and approval surfaces using typed internal evidence and authority
+    receipts.
   next_steps:
   - step: 1
-    action: Implement typed target identity/value/history and bounds, target-specific
-      evidence eligibility, registered evaluator dispatch and owning-authority compare-and-apply
-      with immutable provenance receipts. Verify future consumers can read the applied
-      value. Preserve the existing decay rule and Governor behavior; use isolated
-      test adapters, not production calibration rules.
+    action: Inspect existing typed owner-read contracts and decision/research/portfolio provenance. Define
+      the Stage-8 query and approval boundaries before implementation; never grant trading or learning
+      policy through conversation.
   evidence:
-  - docs/superpowers/reports/2026-10-02-stage7-implementation-closure-r1.md
-  - trader/learning/application.py
-  - trader/learning/foundation.py
-  - tests/test_learning_application.py
+  - docs/superpowers/reports/2026-10-02-stage7-learning-target-authority-framework-r1.md
+  - trader/learning/authority.py
+  - trader/learning/dispatch.py
+  - tests/test_learning_target_authority.py
   execution_constraints:
-  - No new learning rule, confidence formula, weights, sample threshold or calibrated
-    policy.
-  - No StrategySpec/Risk/catastrophe/control/capacity/approval mutation, orders, production
-    writes, deployment or restart.
-  - Real-evidence and calibration blocks do not justify additional rules or fabricated
-    evidence.
+  - No deployment, restart, orders, Risk/StrategySpec/capacity/approval mutation.
+  - No new calibrated learning rule, confidence formula, weighting or adaptation policy.
+  - Stage-7 software closure grants no production learning or trading permission.
 
 intelligence_spine_shadow_package:
   id: LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1
@@ -274,16 +269,17 @@ after_completion:
   - LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1 (BLOCKED) was unblocked by LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 (PASS, TESTED, NOT_DEPLOYED). The independent intelligence shadow package remains LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1, awaiting owner authorization; LUFFY-PORTFOLIO-ALLOCATOR-R1 is now TESTED; LUFFY-EXPECTED-NET-ECONOMICS-R1 is TESTED_CONTRACT with INSUFFICIENT_EVIDENCE for real economics; LUFFY-OPPORTUNITY-CONTEXT-LIVE-INTEGRATION-R1 reuses v1 and is TESTED_LIVE_INTEGRATION; LUFFY-STAGE6-CANDIDATE-FEASIBILITY-BRIDGE-R1 is recommended without trading authority.
   - Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged.
 
-next_recommended_package: LUFFY-STAGE7-LEARNING-TARGET-AUTHORITY-FRAMEWORK-R1
+next_recommended_package: LUFFY-STAGE8-EXPLAINABILITY-OWNER-CONTROL-FOUNDATION-R1
 next_recommended_package_status: RECOMMENDED_NOT_AUTHORIZED
 stage6_build_complete: true
 stage6_real_world_mature: false
 
-OVERALL_BUILD_PROGRESS: INCOMPLETE; Stage 6 build closed, Stage 7 target authority
-  framework missing; no percentage claim
-STAGE_7_BUILD: INCOMPLETE
+OVERALL_BUILD_PROGRESS: INCOMPLETE; Stages 6 and 7 build complete; Stage 8 pending; no percentage claim
+STAGE_7_BUILD: COMPLETE
 STAGE_7_REAL_WORLD_MATURITY: REAL_EVIDENCE_BLOCKED
-CURRENT_STAGE: Stage 7
-NEXT_STAGE: 'Stage 7: LUFFY-STAGE7-LEARNING-TARGET-AUTHORITY-FRAMEWORK-R1'
-STAGE7_BUILD_COMPLETE: false
+CURRENT_STAGE: Stage 8
+NEXT_STAGE: 'Stage 8: LUFFY-STAGE8-EXPLAINABILITY-OWNER-CONTROL-FOUNDATION-R1'
+STAGE7_BUILD_COMPLETE: true
 STAGE7_REAL_WORLD_MATURE: false
+
+stage7_framework_report: docs/superpowers/reports/2026-10-02-stage7-learning-target-authority-framework-r1.md

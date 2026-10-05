@@ -12,6 +12,7 @@ from pathlib import Path
 from types import MappingProxyType
 
 from . import foundation as L
+from . import authority as T, dispatch as D
 from trader.strategy import factory_handoff as F
 
 SCHEMA = 'learning-application-receipt.v1'
@@ -28,6 +29,8 @@ class Result(str, Enum):
     CONFLICT = 'CONFLICT'
     UNREGISTERED = 'UNREGISTERED_RULE'
     INCOMPLETE = 'INCOMPLETE_REPLAY'
+    POLICY_UNAVAILABLE = 'POLICY_UNAVAILABLE'
+    TARGET_NOT_SUPPORTED = 'TARGET_NOT_SUPPORTED'
 
 
 @dataclass(frozen=True)
@@ -45,10 +48,13 @@ class Request:
 def source_versions(cfg):
     # Exact current evaluator and policies, not mutable 'latest' references.
     return dict(rule_version=L.digest(L.code_manifest()), risk_config=L.digest(cfg),
-                application_authority=hashlib.sha256(Path(__file__).read_bytes()).hexdigest())
+                application_authority=L.digest({p.name: hashlib.sha256(p.read_bytes()).hexdigest()
+                    for p in (Path(__file__), Path(T.__file__), Path(D.__file__))}))
 
 
 def request(evidence, proposal, target, versions):
+    if isinstance(target, T.LearningTargetRef):
+        target = json.loads(target.current_json) if target.target_category == L.Target.LIFECYCLE else target.to_dict()
     return Request(evidence.evidence_id, proposal.proposal_id,
                    L.canonical(target), L.canonical(versions))
 
@@ -72,7 +78,7 @@ def ensure(journal):
 
 
 class _BoundJournal:
-    """All Governor reads use the same locked transaction as the receipt."""
+    """All owner reads use the same locked transaction as the receipt."""
     def __init__(self, connection):
         self.connection = connection
 
@@ -106,9 +112,13 @@ def _decision(journal, cfg, ev, proposal, req, at_ms):
     def finish(result, reason):
         return json.loads(L.canonical(dict(body, result=result.value, reason=reason)))
 
-    rule = L.REGISTERED_RULES.get(proposal.rule)
-    if rule is None or proposal.target not in TARGET_REGISTRY or rule.target != proposal.target:
-        return finish(Result.UNREGISTERED, 'exact rule/target is not registered')
+    try:
+        D.resolve(proposal.rule, proposal.rule_version, proposal.target)
+    except T.Refused as refusal:
+        return finish(Result.UNREGISTERED, refusal.reason)
+    if proposal.target != L.Target.LIFECYCLE:
+        return _target_decision(journal, cfg, ev, proposal, req, at_ms, body)
+    rule = L.REGISTERED_RULES[proposal.rule]
     if req.evidence_id != ev.evidence_id or req.proposal_id != proposal.proposal_id:
         return finish(Result.CONFLICT, 'request evidence/proposal binding differs')
     if ev.quality != 'VERIFIED_REPLAY' or not L.verified_history(ev):
@@ -160,6 +170,57 @@ def _decision(journal, cfg, ev, proposal, req, at_ms):
     return finish(Result.APPLIED, proposal.reason)
 
 
+AuthorityReceipt = T.AuthorityReceipt
+
+def _with_authority_receipt(body):
+    if 'authority_receipt' in body:
+        return body
+    category = body['target_type']
+    previous, resulting = body['previous'], body['resulting']
+    lifecycle = category == L.Target.LIFECYCLE
+    target_id = previous.get('version_id') if lifecycle else previous.get('target_id')
+    prior_version = previous.get('history_sha256') if lifecycle else previous.get('state_version')
+    resulting_version = resulting.get('history_sha256') if lifecycle else resulting.get('state_version')
+    requested = body['requested']
+    if lifecycle and isinstance(requested, dict):
+        requested = asdict(T.Mutation(T.MutationShape.RETIRE, 'state', L.canonical(requested.get('state'))))
+    receipt = AuthorityReceipt(body['application_id'], category, target_id,
+        T.OWNERS.get(category), L.canonical(previous), prior_version,
+        L.canonical(requested), L.canonical(resulting), resulting_version,
+        body['rule_id'], body['rule_version'], body['learning_evidence_id'],
+        body['applied_at'], L.canonical(body['source_hashes']))
+    body['authority_receipt'] = asdict(receipt)
+    body['target_id'] = target_id
+    return body
+
+
+def _target_decision(journal, cfg, ev, proposal, req, at_ms, body):
+    def finish(result, reason):
+        return json.loads(L.canonical(dict(body, result=result, reason=reason)))
+    try:
+        if req.evidence_id != ev.evidence_id or req.proposal_id != proposal.proposal_id:
+            raise T.Refused('CONFLICT', 'request evidence/proposal binding differs')
+        target = T.LearningTargetRef.from_dict(json.loads(req.target_json))
+        if target.target_category != proposal.target:
+            raise T.Refused('CONFLICT', 'request target category differs')
+        if proposal.proposed_json is None:
+            return finish(proposal.status.value, proposal.reason)
+        mutation = T.Mutation.from_dict(json.loads(proposal.proposed_json))
+        D.verify_proposal(ev, proposal, target, mutation, at_ms)
+        versions = json.loads(req.source_versions_json)
+        history = json.loads(ev.historical_json)
+        if versions != source_versions(cfg) or versions['risk_config'] != L.digest(history.get('risk_config')):
+            raise T.Refused('STALE', 'current source versions/policy differ')
+        adapter = T.AUTHORITIES[proposal.target]
+        adapter.verify_precondition(journal, cfg, target)
+        adapter.validate_request(target, mutation)
+        return finish('APPLIED', proposal.reason)
+    except T.Refused as refusal:
+        return finish(refusal.result, refusal.reason)
+    except (ValueError, TypeError, KeyError):
+        return finish('CONFLICT', 'invalid typed target or mutation')
+
+
 def apply(journal, cfg, evidence, proposal, req, *, at_ms, shadow=False):
     """Compare-and-apply; Governor event and immutable receipt commit together.
 
@@ -167,7 +228,7 @@ def apply(journal, cfg, evidence, proposal, req, *, at_ms, shadow=False):
     Failed gates may persist explanatory receipts but cannot mutate a target.
     """
     if shadow:
-        return _decision(journal, cfg, evidence, proposal, req, at_ms)
+        return _with_authority_receipt(_decision(journal, cfg, evidence, proposal, req, at_ms))
     ensure(journal)
     with journal._tx() as c:
         F._begin(c)
@@ -181,11 +242,23 @@ def apply(journal, cfg, evidence, proposal, req, *, at_ms, shadow=False):
         receipt = _decision(bound, cfg, evidence, proposal, req, at_ms)
         if receipt['result'] == Result.APPLIED.value:
             target = json.loads(req.target_json)
-            transition = F.govern_version(bound, cfg, target['version_id'], F.RETIRED,
-                actor='strategy_governor', reason_code=req.application_id, at_ms=at_ms,
-                expected_target=target, _connection=c)
-            receipt['governor_transition_receipt'] = transition
-            receipt['resulting'] = F.lifecycle_target(bound, target['version_id'])
+            if proposal.target == L.Target.LIFECYCLE:
+                expected = T.read_target(bound, cfg, proposal.target, target['version_id'])
+                mutation = T.Mutation(T.MutationShape.RETIRE, 'state', L.canonical(F.RETIRED))
+            else:
+                expected = T.LearningTargetRef.from_dict(target)
+                mutation = T.Mutation.from_dict(json.loads(proposal.proposed_json))
+            applied = T.AUTHORITIES[proposal.target].compare_and_apply(
+                bound, cfg, expected, mutation, evidence=evidence, proposal=proposal,
+                at_ms=at_ms, application_id=req.application_id, connection=c,
+                application_gate=T._APPLICATION_GATE, provenance_json=L.canonical(receipt['source_hashes']))
+            resulting = applied.resulting
+            owner_receipt = json.loads(applied.owner_receipt_json)
+            receipt['authority_receipt'] = asdict(applied.receipt)
+            receipt['target_id'] = resulting.target_id
+            receipt['governor_transition_receipt'] = owner_receipt if proposal.target == L.Target.LIFECYCLE else None
+            receipt['resulting'] = json.loads(resulting.current_json) if proposal.target == L.Target.LIFECYCLE else resulting.to_dict()
+        receipt = _with_authority_receipt(receipt)
         c.execute(f'INSERT INTO {TABLE} VALUES(?,?,?,?,?)',
                   (req.application_id, proposal.proposal_id, receipt['result'],
                    L.canonical(receipt), L.digest(receipt)))

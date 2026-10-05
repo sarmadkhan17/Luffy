@@ -369,7 +369,13 @@ class LearningUpdateProposal:
         return digest(asdict(self))
 
 
-def propose(ev, target, current, *, rule=None, conflicting=False):
+def propose(ev, target, current, *, rule=None, rule_version=None, conflicting=False):
+    from .authority import LearningTargetRef
+    if isinstance(current, LearningTargetRef):
+        from . import dispatch
+        if target != current.target_category:
+            raise ValueError("target_category_binding_differs")
+        return dispatch.propose(ev, current, rule_id=rule, rule_version=rule_version)
     if not isinstance(target, Target):
         raise ValueError('unapproved_update_target')
     status, proposed, why = Status.UNREGISTERED, None, 'no registered deterministic rule for target'

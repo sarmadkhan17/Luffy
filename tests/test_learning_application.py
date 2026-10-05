@@ -305,7 +305,12 @@ def test_application_never_writes_lifecycle_spec_risk_or_order_state_directly():
     banned={'_transition','retire_version','upsert_spec','set_control','create_order','execute_order','activate'}
     calls=[node.func.attr for node in ast.walk(tree) if isinstance(node,ast.Call) and isinstance(node.func,ast.Attribute)]
     assert not banned.intersection(calls)
-    assert 'govern_version' in calls
+    assert 'compare_and_apply' in calls
+    from trader.learning import authority
+    owner_tree=ast.parse(Path(authority.__file__).read_text())
+    owner_calls=[n.func.attr for n in ast.walk(owner_tree) if isinstance(n,ast.Call) and isinstance(n.func,ast.Attribute)]
+    assert 'govern_version' in owner_calls
+    assert not banned.intersection(owner_calls)
     writes=[]
     for node in ast.walk(tree):
         if isinstance(node,ast.Call) and isinstance(node.func,ast.Attribute) and node.func.attr=='execute':
