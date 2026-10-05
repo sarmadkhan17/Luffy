@@ -4910,3 +4910,73 @@ completed_stage7_learning_foundation_r1:
   tests: 243 focused regression tests passed; final 20 foundation tests passed
   artifact_replay: 564 event chains verified; unique outcome identities
   next_recommended_package: LUFFY-STAGE7-HISTORICAL-OUTCOME-CAPTURE-R1
+
+completed_stage7_historical_outcome_capture_r1:
+  package: LUFFY-STAGE7-HISTORICAL-OUTCOME-CAPTURE-R1
+  verdict: PASS
+  base_commit: 9d31fbd61ed4c4b8c697248ac32dfd0451b537e4
+  branch: luffy-stage7-historical-outcome-capture-r1
+  PROSPECTIVE_OUTCOME_CAPTURE: TESTED
+  REPLAY_MANIFEST: TESTED
+  DIGITAL_TWIN_REPLAY: TESTED_PROSPECTIVE
+  LEARNING_GATE: TESTED_CANONICAL_EVIDENCE_AND_PROPOSAL_PATH
+  stage7_complete: false
+  runtime_deployment: NOT_DEPLOYED
+  trading_behavior_changed: false
+  learning_application: NONE
+  next_event_capture_ready: true
+  next_real_event_replay_complete: NOT_ESTABLISHED
+  readiness_meaning: Tested capture plumbing for the reviewed code; missing original
+    producer sources remain explicitly unavailable. Production has not been changed.
+  real_inventory:
+    status: PASS
+    scope: Union of latest, executed and resolved decisions; limit 256 per stratum;
+      immutable prospective captures inventoried separately when present.
+    as_of_ms: 1790883370932
+    total: 564
+    complete: 0
+    partial: 251
+    incomplete: 259
+    unassessable: 54
+    applicable_updates: 0
+    prospective_captures: 0
+    production_mutations: 0
+  proven_facts:
+  - Original decision registration, source blobs, actions and outcomes are append-only;
+    content-addressed source frames deduplicate exact values without decimal rounding.
+  - Exact immutable references are permitted only for registered protected tables;
+    mutable or unprotected producer sources are snapshotted; no latest resolver exists.
+  - Rejected, missed, skipped and Risk-blocked measurements remain counterfactual and
+    unrealized; post-decision evidence cannot replace original context or lineage.
+  - Existing booking and paper cost/funding producers are captured without changing
+    their actions. Bookings alone never establish realized P&L; whole-trade venue
+    reconciliation remains off-path and has a tested verified receipt adapter.
+  - All three existing Research Bank families retain exact Q/P/E/result/run/bank
+    chains; forecasts with missing plan/result/Bank protocol remain non-authoritative.
+  - Complete synthetic cash/rejection/Risk-block, research and exact reconciled-trade
+    paths produce VERIFIED_REPLAY evidence and deterministic bounded proposals.
+    No confidence rule was invented; applicable learning is never executed here.
+  - Tampering, missing historical versions, source clocks and incomplete dependencies
+    fail closed in canonical learning evidence/proposals; restart and repeated source
+    receipt imports retain the first captured outcome rather than duplicating events.
+  evidence:
+  - trader/learning/capture.py
+  - trader/learning/capture_runtime.py
+  - scripts/learning_capture_inventory.py
+  - tests/test_historical_outcome_capture.py
+  - docs/superpowers/reports/2026-10-01-stage7-historical-outcome-capture-r1.md
+  - docs/superpowers/evidence/stage7-historical-outcome-capture-r1/tests.txt
+  - docs/superpowers/evidence/stage7-historical-outcome-capture-r1/inventory-summary.json
+  gaps:
+  - Normal trading decisions do not yet carry their exact producer-owned WorldModel
+    and Opportunity Context cut; automatic capture truthfully reports UNAVAILABLE.
+  - Complete whole-trade realized accounting remains an offline producer, not an
+    automatic booking closure source. Missing derivative environment, cost authority,
+    funding-event position/notional basis and legacy exit bindings remain unavailable.
+  - The canonical Stage7 evidence/proposal gate is tested. Legacy direct statistical
+    consumers are unchanged by this capture-only package and are not certified as
+    authoritative Stage7 learning; their integration with canonical authority remains
+    a separate implementation gap. No cached legacy calibration is reclassified.
+  - Legacy histories remain partial/incomplete/unassessable; no retrospective capture,
+    source provenance, claim equivalence, sufficiency rule or causal effect was invented.
+  next_recommended_package: LUFFY-STAGE7-DECISION-REPLAY-SOURCE-INTEGRATION-R1

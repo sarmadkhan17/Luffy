@@ -186,6 +186,9 @@ class Replay:
 
 def replay(outcome, retained):
     """Reconstruct exact referenced snapshots; never substitute current state."""
+    if any(s.role == 'capture_manifest' for s in outcome.sources):
+        from trader.learning.capture import replay_manifest
+        return replay_manifest(outcome, retained)
     faults, snapshots = [], {}
     refs = {s.role: s for s in outcome.sources}
     for role in tuple(dict.fromkeys(REQUIRED + tuple(refs))):

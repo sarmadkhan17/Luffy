@@ -3,39 +3,47 @@ sdd_version: '3.2'
 updated_at: '2026-10-01'
 
 work_package:
-  id: LUFFY-STAGE7-HISTORICAL-OUTCOME-CAPTURE-R1
-  type: STAGE7_HISTORICAL_SOURCE_CAPTURE
+  id: LUFFY-STAGE7-DECISION-REPLAY-SOURCE-INTEGRATION-R1
+  type: STAGE7_EXACT_ORIGINAL_DECISION_SOURCE_INTEGRATION
   status: RECOMMENDED_NOT_AUTHORIZED_FOR_RUNTIME_DEPLOYMENT
-  last_completed_package: LUFFY-STAGE7-LEARNING-CLOSED-LOOP-FOUNDATION-R1
-  objective: Implement the single missing historical-source capture/adaptation path
-    from decision/rejection/trade/research receipts into the canonical learning outcome
-    and detached replay. Retain exact original data, WorldModel, Opportunity Context,
-    StrategyVersion, Risk/config, portfolio/proposal/intent, reasons/action and post-decision
-    outcome evidence. Missing past sources stay INCOMPLETE; never reconstruct from
-    latest.
+  last_completed_package: LUFFY-STAGE7-HISTORICAL-OUTCOME-CAPTURE-R1
+  objective: Close the single original-decision source integration gap. Carry the
+    exact producer-owned WorldModel and Opportunity Context cut into the normal
+    trading decision's existing prospective capture inputs, with their original
+    source clocks and hashes. Verify the actual producer path without orders or
+    activation. A missing or unused cut must remain UNAVAILABLE; do not construct
+    it later from latest state or claim that an observational cut caused a decision.
   completed_prerequisites:
   - Immutable contracts, descriptive attribution, proposals and deterministic replay
     are TESTED; domain replay remains PARTIAL.
   - Existing recent-decay rule and Strategy Governor retirement are TESTED in an isolated
     in-memory journal only.
-  - 'Bounded real read-only shadow: 564 outcomes, all replay-incomplete; zero applicable
-    updates.'
+  - 'Bounded read-only inventory: 564 chains; 0 complete, 251 partial, 259 incomplete,
+    54 unassessable; zero application and no legacy source backfill.'
+  - Append-only prospective capture and mechanically verified manifests are TESTED;
+    dataframes retain full float and timestamp precision; complete synthetic decision,
+    counterfactual, Risk-block, research and reconciled accounting paths are TESTED.
   - Exact Research Bank and structured-context recall remain context-only; no suppression
     policy or claim identity was invented.
   next_steps:
   - step: 1
-    action: Build the exact retained-source outcome adapter/capture path and test
-      the detached learning shadow; preserve refusal for missing historical sources.
+    action: Bind the actual original WorldModel/context producer inputs to the
+      normal decision registration and demonstrate complete replay through that
+      producer path. Keep absence explicit and leave legacy history unchanged.
   evidence:
   - docs/superpowers/reports/2026-10-01-stage7-learning-foundation-r1.md
   - docs/superpowers/evidence/stage7-learning-foundation-r1/final-shadow/summary.json
+  - docs/superpowers/reports/2026-10-01-stage7-historical-outcome-capture-r1.md
+  - docs/superpowers/evidence/stage7-historical-outcome-capture-r1/inventory-summary.json
+  - tests/test_historical_outcome_capture.py
   execution_constraints:
   - No orders, activation, production learning application, deploy/restart, Risk expansion,
     StrategySpec mutation or normal-learning LLM.
   - No new reward, confidence, allocation, attention priority, sufficiency threshold
     or generic profit/loss rule.
-  - Stage 7 remains incomplete; real outcome replay capture is an implementation gap,
-    not an evidence-only closure.
+  - Stage 7 remains incomplete. Capture plumbing is TESTED, NOT_DEPLOYED;
+    completeness is conditional on actual exact source availability. The normal
+    decision producer currently supplies no WorldModel/context cut.
   preserved_authority:
     PAPER_COST_PROTOCOL: TESTED
     EXECUTION_COST_CALIBRATION: INSUFFICIENT_EVIDENCE
@@ -278,7 +286,7 @@ after_completion:
   - LUFFY-INTELLIGENCE-SPINE-LIVE-INTEGRATION-R1 (BLOCKED) was unblocked by LUFFY-INVESTIGATION-RESEARCH-FAMILY-R1 (PASS, TESTED, NOT_DEPLOYED). The independent intelligence shadow package remains LUFFY-INTELLIGENCE-SPINE-SHADOW-ACTIVATION-R1, awaiting owner authorization; LUFFY-PORTFOLIO-ALLOCATOR-R1 is now TESTED; LUFFY-EXPECTED-NET-ECONOMICS-R1 is TESTED_CONTRACT with INSUFFICIENT_EVIDENCE for real economics; LUFFY-OPPORTUNITY-CONTEXT-LIVE-INTEGRATION-R1 reuses v1 and is TESTED_LIVE_INTEGRATION; LUFFY-STAGE6-CANDIDATE-FEASIBILITY-BRIDGE-R1 is recommended without trading authority.
   - Preserve all parked boundaries: usefulness feedback, Attention storage-capacity guard, operator storage policy, event-payload retention, downstream dispatch, forced liquidation, Scheme-D and portfolio magnitude. Attention overall remains IMPLEMENTED; Risk/Execution/live trading readiness is unchanged.
 
-next_recommended_package: LUFFY-STAGE7-HISTORICAL-OUTCOME-CAPTURE-R1
+next_recommended_package: LUFFY-STAGE7-DECISION-REPLAY-SOURCE-INTEGRATION-R1
 next_recommended_package_status: RECOMMENDED_NOT_AUTHORIZED
 stage6_build_complete: true
 stage6_real_world_mature: false

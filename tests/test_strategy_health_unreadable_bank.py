@@ -849,7 +849,9 @@ def test_nothing_calls_the_new_module():
                        "cognition/research_shadow.py",
                        "cognition/research_shadow_report.py",
                        "cognition/research_unreadable_recall.py",
-                       "core/journal.py"]
+                       "core/journal.py",
+                       "learning/capture.py",
+                       "learning/capture_runtime.py"]
     assert "research_unreadable_bank import" not in \
         (root / "core/journal.py").read_text()
 
