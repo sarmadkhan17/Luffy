@@ -1,6 +1,6 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-10-04'
+updated_at: '2026-10-05'
 status: EVIDENCE_BASED
 
 authority:
@@ -11,9 +11,57 @@ authority:
   reviewed_head: UNCOMMITTED
   reviewed_base_head: 53e7c8567c259b2326315a0acdd4b838af030998
   reviewed_source_manifest: docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r5-source.json
-  production_main_head: 1bed3958740ec2d0d575aabc817978086d31d390
+  production_main_head: 958c9eb2f0b10993ad240b85f88c626b8d0e2ee6
   stage8_reviewed_base_head: f5e5156b8a294cd53db277e8d46cb30645611a61
   stage8_review_id: STAGE8_INDEPENDENT_REVIEW_R2
+  review_scope: Historical package identities; no independent review of current main is established here.
+
+current_runtime_status:
+  implementation_baseline: 958c9eb2f0b10993ad240b85f88c626b8d0e2ee6
+  evidence_checkpoint: 6da5ad9a895ddb0f5fed9d75904e9639cc731b44
+  evidence:
+  - docs/checkpoints/20261005T131532Z/REPORT.md
+  - docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/final-report.md
+  evidence_scope: Exact checkpoint blobs; retained claims, not fresh runtime verification or independent assessment.
+  last_deployment_and_observation:
+    source: Retained runtime evidence at the evidence checkpoint.
+    deployed_sha: 958c9eb2f0b10993ad240b85f88c626b8d0e2ee6
+    deployment_performed: true
+    startup_performed: true
+    old_process_replacement: COMPLETE
+    sustained_one_hour_observation: BLOCKED
+    requested_seconds: 3600
+    actual_seconds: 305.5438883304596
+    completed_window_cycles: 1
+    first_cycle_seconds: 266.7
+    existing_limit_seconds: 240
+    services_after_containment: Kernel and Dashboard stopped gracefully; observer timers stopped.
+    last_recorded_control: FROZEN
+    recovery_latch: RETAINED
+    operator_hold: 1
+    watchdog_off: PRESENT
+    venue_evidence: Demo exposure/protection receipts are historical; current venue exposure and safety health are not freshly verified.
+  present_process_observation:
+    source: Owner-supplied latest checks in this task; not independently rerun.
+    kernel_dashboard_matches: NONE
+    watchdog_off: PRESENT
+  implemented_tested_and_deployed:
+  - Bounded committed write probes and separate integrity checking; live probes do not establish integrity.
+  - Nullable metadata correction for Attention and forward learning captures; required non-finite values still refuse.
+  - Compact evidence reader/writer and source delivery with retained logical hash and decoded-source equality proof.
+  - Disabled provider admission; retained observation reports zero attempts and unchanged ledger.
+  evidence_qualifications:
+  - Retained report claims 906 focused regressions, seven Attention reproductions and two forward capture cases PASS; not rerun here.
+  - One Attention scan completed with 16 warmup refusals and zero selections; queued shutdown scan remains incomplete.
+  unresolved:
+  - First observation cycle took 266.7 seconds against the unchanged 240-second limit; sustained observation did not complete.
+  - Additional first-cycle cost is not fully attributed; observer import/process overhead was measured, not proven the sole cause.
+  - Attention capture exceeded its advisory 50 ms budget (1067.98 ms in-window and 864.79 ms at shutdown).
+  - Research cycle-busy gate (45 seconds) exceeded in both cycles; referee/handoff and watchdog-launched workers were intentionally disabled.
+  original_historical_journal_write_failure_cause: UNCONFIRMED
+  full_runtime_maturity: NOT_PROVEN
+  real_money_ready: false
+  trading_activation_authorized: false
 
 progress_method:
   rule: Progress is acceptance-evidence based, not code-volume based.
@@ -38,7 +86,7 @@ stage_status:
     proven_facts:
     - SDD.md v3.2 is the sole architecture authority.
     - STATE.yaml is reconciled to the reviewed Stage5-8 architecture.
-    - Stage3 formal closure is COMPLETE; STAGE8_INDEPENDENT_REVIEW_R2 is PASS with no blocking defects. Stage1 MI-1 through MI-7 remain CLOSED; final engineering repair/review passes with F1-F7/F9 and F10-F13 CLOSED. F8 runtime handoff remains pending.
+    - Stage3 formal closure is COMPLETE; STAGE8_INDEPENDENT_REVIEW_R2 is PASS with no blocking defects. Stage1 MI-1 through MI-7 remain CLOSED; final engineering repair/review passes with F1-F7/F9 and F10-F13 CLOSED. Old-process replacement and startup have occurred; sustained observation remains BLOCKED (see current_runtime_status).
     gaps: []
 
   stage_1_safety_and_truth:
@@ -132,11 +180,12 @@ stage_status:
     closed_audit_gaps: [MI-1, MI-2, MI-3, MI-4, MI-5, MI-6, MI-7]
     gaps: []
     formal_closure: FINAL_ENGINEERING_REVIEW_PASS
-    pre_start_closure: F8_OPERATIONAL_HANDOFF_PENDING
+    pre_start_closure: OLD_PROCESS_REPLACEMENT_COMPLETE_SUSTAINED_OBSERVATION_BLOCKED
     latest_independent_review: STAGE1_RECOVERY_MONITORING_INDEPENDENT_REVIEW_R2
     independent_review: PASS
     regression_found: false
     authority_regression: false
+    historical_closure_scope: The following deployment/startup fields describe the original pre-start package, not current runtime.
     undeployed: true
     startup_performed: false
     closure_mode: FINAL_STAGE1_PRE_START_SAFETY_IMPLEMENTATION
@@ -174,8 +223,8 @@ stage_status:
       facts.'
     - 'VE-2: Actual balances, positions/orders/fills, monetary completeness, protection, reconciliation/unknown outcomes
       and read-key permissions.'
-    deployment_not_performed:
-    - 'DP-1: Latest completed-system architecture not deployed/started for first controlled startup.'
+    deployment_evidence:
+    - Deployment and startup occurred at the current implementation baseline; sustained observation remains BLOCKED.
     latest_completed_implementation: LUFFY-STAGE1-RECOVERY-MONITORING-BLOCKER-FIX-R1
     latest_implementation_report: docs/superpowers/reports/2026-10-04-stage1-recovery-monitoring-blocker-fix-r1.md
     next_recommended_package: LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R2
@@ -358,13 +407,13 @@ stage_status:
       - no production non-lifecycle adaptive rules are registered.
       - no production WorldClaim emitter/observed real overlay use.
       - no live Portfolio-intent-routed execution evidence.
-      - latest architecture is not deployed to production.
+      - deployed baseline has not completed sustained observation; production learning maturity remains unproven.
 
   stage_8_owner_os:
     state: TESTED
     build_complete: true
     formal_closure: COMPLETE
-    runtime_maturity: PARTIAL_UNDEPLOYED
+    runtime_maturity: PARTIAL_OBSERVATION_BLOCKED
     package: LUFFY-STAGE8-OWNER-OS-CLOSURE-R1
     evidence:
     - trader/dashboard/owner_api.py
@@ -400,7 +449,7 @@ stage_status:
     closure_status: COMPLETE
     review_defects: []
     gaps:
-    - DEPLOYMENT_BLOCKED - latest reviewed architecture remains UNDEPLOYED; no service was restarted.
+    - OBSERVATION_BLOCKED - deployment/startup occurred; sustained observation is incomplete and services were contained.
     - REAL_EVIDENCE_BLOCKED - latest exact production trading/research/portfolio/learning chains and current venue usefulness
       are not established.
     - SECURITY_MATURITY_BLOCKED - accepted same-UID V1 boundary does not establish separate OS users/process secrets; copied
@@ -415,7 +464,7 @@ stage_status:
     maturity_limitations:
     - POLICY_BLOCKED
     - REAL_EVIDENCE_BLOCKED
-    - DEPLOYMENT_BLOCKED
+    - OBSERVATION_BLOCKED
     - SECURITY_MATURITY_BLOCKED
     - OWNER_VISUAL_APPROVAL_PENDING
 
@@ -447,17 +496,18 @@ stage_status:
 
 cross_cutting:
   production_deployment:
-    state: BLOCKED
+    state: DEPLOYED_OBSERVATION_BLOCKED
     latest_reviewed_head: 57ad32332a98518c083b750f9df9d43596d0d531
-    production_main_head: 1bed3958740ec2d0d575aabc817978086d31d390
+    review_scope: Historical Stage8 review; does not independently review current main.
+    production_main_head: 958c9eb2f0b10993ad240b85f88c626b8d0e2ee6
     facts:
-    - latest reviewed Stage5-8 architecture remains UNDEPLOYED.
-    - production remains intentionally FROZEN.
-    - Architecture/test closure makes no real-money readiness claim.
-    latest_architecture: UNDEPLOYED
-    production_state: FROZEN
+    - Deployment, old-process replacement and startup occurred; sustained observation remains BLOCKED.
+    - Last recorded control was FROZEN with recovery latch retained; owner reports no Kernel/Dashboard matches and watchdog.off present.
+    - Architecture/test closure makes no real-money readiness claim; current safety health is not freshly verified.
+    latest_architecture: DEPLOYED
+    last_recorded_production_state: FROZEN
     real_money_ready: false
-    latest_independent_review: STAGE8_INDEPENDENT_REVIEW_R2
+    historical_independent_review: STAGE8_INDEPENDENT_REVIEW_R2
   data_and_evidence:
     state: IMPLEMENTED
     maturity: PARTIAL
@@ -508,10 +558,10 @@ cross_cutting:
   owner_os_and_frontend:
     state: TESTED
     build_complete: true
-    maturity: PARTIAL_UNDEPLOYED
+    maturity: PARTIAL_OBSERVATION_BLOCKED
     gaps:
-    - Architecture is complete and independently reviewed. Deployment, real evidence, security maturity, policy and owner
-      visual approval remain separate limitations.
+    - Historical architecture review passed; deployment/startup occurred. Sustained observation, real evidence, security
+      maturity, policy and owner visual approval remain separate limitations.
     independent_review: PASS
     architecture_frozen: true
   llm_runtime:
@@ -595,6 +645,12 @@ completed_stage3_4_pre_stage8_closure_audit_r1:
     - predictive research bridge and final Stage5-7 lineage.
 
 current_active_work:
+  id: LUFFY-RUNTIME-SCHEDULING-AND-OBSERVATION-R1
+  status: RECOMMENDED_NOT_STARTED
+  purpose: Measure startup/observer scheduling costs and clarify intended FROZEN workload before repeating bounded observation.
+  execution_authorized_by_this_documentation_task: false
+
+historical_stage1_recovery_monitoring_finalization:
   id: LUFFY-STAGE1-RECOVERY-MONITORING-FINALIZE-R1
   type: PACKAGE_FINALIZATION
   status: COMPLETE_COMMITTED_UNDEPLOYED
@@ -1077,6 +1133,7 @@ completed_stage1_recovery_monitoring_blocker_fix_r1:
   next_recommended_package: LUFFY-STAGE1-SAFETY-TRUTH-CLOSURE-R2
 
 final_audit_repair_loop_r1:
+  scope: Historical pre-start audit snapshot; current deployment/observation is recorded in current_runtime_status.
   package: LUFFY-FINAL-AUDIT-REPAIR-LOOP-R1
   result: PASS
   iterations: 15

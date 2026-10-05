@@ -1,13 +1,17 @@
 project: LUFFY
 sdd_version: '3.2'
-updated_at: '2026-10-04'
+updated_at: '2026-10-05'
 
 repository_checkpoint:
-  branch: luffy-final-audit-repair-loop-r1
+  branch: main
+  implementation_baseline: 958c9eb2f0b10993ad240b85f88c626b8d0e2ee6
+  evidence_checkpoint: 6da5ad9a895ddb0f5fed9d75904e9639cc731b44
+  historical_review_branch: luffy-final-audit-repair-loop-r1
   working_tree_base_head: 53e7c8567c259b2326315a0acdd4b838af030998
   reviewed_code_head: UNCOMMITTED
   reviewed_source_manifest: docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r5-source.json
-  production_main_head: 1bed3958740ec2d0d575aabc817978086d31d390
+  production_main_head: 958c9eb2f0b10993ad240b85f88c626b8d0e2ee6
+  review_scope: Historical package identities; current main is not independently reviewed by those records.
 
 completed_architecture_freeze:
   stages:
@@ -38,31 +42,36 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
-  id: LUFFY-PRESTART-RUNTIME-HANDOFF-R1
-  type: OPERATIONAL_RUNTIME_HANDOFF
-  status: SELECTED_NOT_STARTED
-  mode: CONTROLLED_RUNTIME_HANDOFF
+  id: LUFFY-RUNTIME-SCHEDULING-AND-OBSERVATION-R1
+  type: RUNTIME_SCHEDULING_AND_OBSERVATION
+  status: RECOMMENDED_NOT_STARTED
+  mode: FROZEN_BOUNDED_OBSERVATION
   implementation_started: false
-  purpose: Resolve F8 by establishing one controlled handoff from older production
-    processes while preserving FROZEN containment.
-  engineering_package: LUFFY-FINAL-AUDIT-REPAIR-LOOP-R1
-  engineering_review: PASS
-  engineering_evidence: docs/superpowers/evidence/final-audit-repair-loop-r1/final-review-r5-source.json
-  F8: OPERATIONAL_HANDOFF_PENDING
-  blocking_engineering_defects: []
-  ready_for_runtime_handoff: true
-  ready_for_first_controlled_startup: false
+  objective: Measure and address evidenced startup/observer scheduling costs, clarify
+    the intended FROZEN observation workload, then repeat bounded observation.
+  prior_runtime_status: Deployment, startup and old-process replacement completed;
+    sustained one-hour observation remains BLOCKED after 266.7 seconds against the 240-second limit.
+  evidence:
+  - docs/checkpoints/20261005T131532Z/REPORT.md
+  - docs/checkpoints/20261005T131532Z/evidence/runtime-observer-attention-repair-r1/final-report.md
+  evidence_scope: Read at the exact repository_checkpoint.evidence_checkpoint; retained evidence, not fresh verification.
+  present_process_observation: Owner-supplied latest checks found no Kernel/Dashboard matches and watchdog.off PRESENT.
+  last_recorded_control: FROZEN with recovery latch retained.
+  unresolved: Additional first-cycle cost is not fully attributed; observer import/process
+    overhead is measured but not proven the sole cause; Attention capture exceeded its advisory budget.
   acceptance:
-  - Establish one controlled handoff from the existing older runtime; do not launch
-    a second kernel alongside it.
-  - Preserve FROZEN containment and verify intended code revision, producer identity
-    and successful-cycle chronology.
-  - Close F8 separately before considering controlled-startup readiness.
+  - Distinguish cold-start and recurring costs.
+  - Attribute observer and capture overhead before changing code.
+  - Document running, intentionally disabled and execution-starved workers, including the research busy gate.
+  - Preserve safety thresholds, provenance, provider restrictions and FROZEN containment with recovery latch retained.
+  - Require actual observation evidence; no forced research or trading activity.
   execution_in_this_package: NOT_PERFORMED
+  execution_authorized_by_this_documentation_task: false
   constraints:
-  - This selection does not perform a deployment, shutdown, replacement or LUFFY startup.
-  - Do not claim venue exposure, operational maturity or real-money readiness from
-    offline engineering evidence.
+  - This recommendation does not authorize execution of the next package.
+  - No trading activation is authorized; current venue exposure and safety health are not freshly verified.
+  - Full runtime maturity and real-money readiness remain unproven.
+  - Original historical journal-write failure cause remains UNCONFIRMED.
 
 completed_stage8_owner_os_closure_r1:
   result: PASS
