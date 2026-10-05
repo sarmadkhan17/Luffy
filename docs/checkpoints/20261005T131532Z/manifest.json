@@ -2,7 +2,7 @@
   "checkpoint_branch": "luffy-checkpoint-20261005T131532Z",
   "original_primary_head": "958c9eb2f0b10993ad240b85f88c626b8d0e2ee6",
   "remote_main_at_start": "958c9eb2f0b10993ad240b85f88c626b8d0e2ee6",
-  "coordination": "No live team sub-agents. Other host Codex sessions were not killed/interrupted; pause requested through user channel; source hashes and HEADs verified.",
+  "coordination": "User confirmed other host sessions are on hold and have made no edits since last night. No agents/processes interrupted. Source hashes and original HEADs verified unchanged.",
   "status": "CHECKPOINT_ONLY; no independent engineering PASS",
   "in_progress": [
     "One-hour FROZEN observation blocked after first 266.7s cycle exceeded existing 240s threshold.",
@@ -205,17 +205,37 @@
     },
     {
       "branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1",
-      "sha": "60cfd0d41a76ae5356feba1d1a11585fff8cc812",
+      "sha": "0a20aad470e59b6ea9530f32a560d8473b65c98e",
       "base": "b35a4bcca29d7a0eda0ebcebc25bd9d6067b1cb9",
       "checkout": "/mnt/luffy-data/luffy/workspaces/capacity-evidence-capture-r1",
       "files": [
         "NEXT.yaml",
         "STATE.yaml",
         "trader/kernel.py",
-        "docs/checkpoints/20261005T131532Z/checkout.json"
+        "docs/checkpoints/20261005T131532Z/checkout.json",
+        "tests/test_strategy_capacity.py",
+        "trader/core/instrument_registry.py",
+        "trader/data/binance_usdm_registry.py",
+        "trader/strategy/capacity.py",
+        "scripts/capacity_depth_shadow.py",
+        "tests/test_capacity_evidence_capture.py",
+        "trader/engine/evidence_capture.py",
+        "trader/engine/execution_evidence.py",
+        "trader/observability/depth_evidence.py"
       ],
       "new_commit": true,
-      "whitespace_check_exit": 0
+      "whitespace_check_exit": 0,
+      "context_files": [
+        "tests/test_strategy_capacity.py",
+        "trader/core/instrument_registry.py",
+        "trader/data/binance_usdm_registry.py",
+        "trader/strategy/capacity.py",
+        "scripts/capacity_depth_shadow.py",
+        "tests/test_capacity_evidence_capture.py",
+        "trader/engine/evidence_capture.py",
+        "trader/engine/execution_evidence.py",
+        "trader/observability/depth_evidence.py"
+      ]
     },
     {
       "branch": "luffy-checkpoint-20261005T131532Z-opportunity-context-live-integration-r1",
@@ -234,16 +254,30 @@
     },
     {
       "branch": "luffy-checkpoint-20261005T131532Z-paper-execution-cost-calibration-r1",
-      "sha": "f2b84248f77377773ff04c97cd0fb4946e95ecec",
+      "sha": "91268ea97c4ddd289e0541d7d0796243beedfdee",
       "base": "be2bf1860b0c66957d7d3af8c32d6a0e2a55d209",
       "checkout": "/mnt/luffy-data/luffy/workspaces/paper-execution-cost-calibration-r1",
       "files": [
         "NEXT.yaml",
         "STATE.yaml",
-        "docs/checkpoints/20261005T131532Z/checkout.json"
+        "docs/checkpoints/20261005T131532Z/checkout.json",
+        "trader/engine/paper_cost_evidence.py",
+        "scripts/execution_cost_inventory.py",
+        "tests/test_execution_cost_calibration.py",
+        "trader/observability/execution_calibration.py",
+        "trader/observability/execution_shadow.py",
+        "trader/observability/funding_events.py"
       ],
       "new_commit": true,
-      "whitespace_check_exit": 0
+      "whitespace_check_exit": 0,
+      "context_files": [
+        "trader/engine/paper_cost_evidence.py",
+        "scripts/execution_cost_inventory.py",
+        "tests/test_execution_cost_calibration.py",
+        "trader/observability/execution_calibration.py",
+        "trader/observability/execution_shadow.py",
+        "trader/observability/funding_events.py"
+      ]
     },
     {
       "branch": "luffy-checkpoint-20261005T131532Z-predictive-research-bridge-r1",
@@ -263,11 +297,17 @@
     },
     {
       "branch": "luffy-checkpoint-20261005T131532Z-stage5-evidence-activation-r1",
-      "sha": "7e5aedde46b2ae4cdeaa6c97f1b471455a57198f",
+      "sha": "232392e4697bacebe146a3ce664fdd82c2174c80",
       "base": "7e5aedde46b2ae4cdeaa6c97f1b471455a57198f",
       "checkout": "/mnt/luffy-data/luffy/workspaces/stage5-evidence-activation-r1",
-      "files": [],
-      "new_commit": false
+      "files": [
+        "trader/dashboard/owner_reads.py"
+      ],
+      "new_commit": true,
+      "context_files": [
+        "trader/dashboard/owner_reads.py"
+      ],
+      "whitespace_check_exit": 0
     },
     {
       "branch": "luffy-checkpoint-20261005T131532Z-stage6-implementation-closure-r1",
@@ -319,7 +359,7 @@
     },
     {
       "branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
-      "sha": "fc30d77a746fbb5771a5587f60246523f67af472",
+      "sha": "095764401953e166b634d1ef602dd8c34733f273",
       "base": "9d31fbd61ed4c4b8c697248ac32dfd0451b537e4",
       "checkout": "/mnt/luffy-data/luffy/workspaces/stage7-historical-outcome-capture-r1",
       "files": [
@@ -330,10 +370,38 @@
         "trader/kernel.py",
         "trader/learning/foundation.py",
         "docs/superpowers/reports/2026-10-01-stage7-historical-outcome-capture-r1.md",
-        "docs/checkpoints/20261005T131532Z/checkout.json"
+        "docs/checkpoints/20261005T131532Z/checkout.json",
+        "tests/test_strategy_decay_research_bank.py",
+        "tests/test_strategy_factory_handoff.py",
+        "tests/test_trade_provenance.py",
+        "trader/core/journal.py",
+        "trader/engine/booking.py",
+        "trader/engine/outcomes.py",
+        "trader/engine/paper_cost_evidence.py",
+        "trader/observability/investigation_research.py",
+        "trader/observability/learning.py",
+        "scripts/learning_capture_inventory.py",
+        "tests/test_historical_outcome_capture.py",
+        "trader/learning/capture.py",
+        "trader/learning/capture_runtime.py"
       ],
       "new_commit": true,
-      "whitespace_check_exit": 0
+      "whitespace_check_exit": 0,
+      "context_files": [
+        "tests/test_strategy_decay_research_bank.py",
+        "tests/test_strategy_factory_handoff.py",
+        "tests/test_trade_provenance.py",
+        "trader/core/journal.py",
+        "trader/engine/booking.py",
+        "trader/engine/outcomes.py",
+        "trader/engine/paper_cost_evidence.py",
+        "trader/observability/investigation_research.py",
+        "trader/observability/learning.py",
+        "scripts/learning_capture_inventory.py",
+        "tests/test_historical_outcome_capture.py",
+        "trader/learning/capture.py",
+        "trader/learning/capture_runtime.py"
+      ]
     },
     {
       "branch": "luffy-checkpoint-20261005T131532Z-stage7-implementation-closure-r1",
@@ -432,7 +500,7 @@
     },
     {
       "branch": "luffy-checkpoint-20261005T131532Z-strategy-capacity-r1",
-      "sha": "dc0e49e0b1a8cb23824c9b7b84336d72a5a6a74d",
+      "sha": "4178dbb752c751cdcaf0ee82981929c09e74bd61",
       "base": "6b7f0f7f434fbe6b7c227595a43d4a325dc849e6",
       "checkout": "/mnt/luffy-data/luffy/workspaces/strategy-capacity-r1",
       "files": [
@@ -441,10 +509,14 @@
         "knowledge/00 Company/Manager.md",
         "knowledge/00 Company/Theorist.md",
         "knowledge/MOC.md",
-        "docs/checkpoints/20261005T131532Z/checkout.json"
+        "docs/checkpoints/20261005T131532Z/checkout.json",
+        "knowledge/00 Company/Company.md"
       ],
       "new_commit": true,
-      "whitespace_check_exit": 0
+      "whitespace_check_exit": 0,
+      "context_files": [
+        "knowledge/00 Company/Company.md"
+      ]
     }
   ],
   "evidence": [
@@ -2228,7 +2300,9 @@
           "bytes": 27682,
           "sha256": "0ff8e59bbbda4b83c624734c3afdd0c0b8bbfd84e363c6b32c3e3dcc79ec4387",
           "blob": "c5f498acc47dddeb38e9070b83d9bc76d1371a24",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1",
+          "included_as_context": true
         },
         {
           "status": " M",
@@ -2236,7 +2310,9 @@
           "bytes": 7901,
           "sha256": "f9706be77e6f02ab4eaccc09d6111ae94888c5060b88b09fa9868b9e598f199e",
           "blob": "46a79073a1ec3fd54464713fcb4cb06e0906a0da",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1",
+          "included_as_context": true
         },
         {
           "status": " M",
@@ -2244,7 +2320,9 @@
           "bytes": 7722,
           "sha256": "82a327f66fa6d318919439e0a9b6f00f4922d6a4917ff166170bce0f6ab7b743",
           "blob": "6c45550a204705f02cd96c834f599d16d8cee071",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1",
+          "included_as_context": true
         },
         {
           "status": " M",
@@ -2261,7 +2339,9 @@
           "bytes": 44705,
           "sha256": "a1e9771b6f55512826c8571382226186be9d0a0f40eab74c23c485cf8c63e7ca",
           "blob": "813f0e57e02158c6d3bf5ed21ce1ac14bd688e24",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1",
+          "included_as_context": true
         },
         {
           "status": "??",
@@ -2277,7 +2357,9 @@
           "bytes": 8218,
           "sha256": "5729d5c423708a058adb79a8e556512cb7c178d7f8d6f5141bfd525aa2d1158f",
           "blob": "4299a08f32c56cb8a6e2ae50f2be8ff8c047d880",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1",
+          "included_as_context": true
         },
         {
           "status": "??",
@@ -2285,7 +2367,9 @@
           "bytes": 25418,
           "sha256": "9f43e13cc41b9a3136f820757e1df958d970ec84f4cdc7f4e305416ce8d7c918",
           "blob": "d4ad0ba1b9f5a4ed82dbb08a4b8411383912496d",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1",
+          "included_as_context": true
         },
         {
           "status": "??",
@@ -2293,7 +2377,9 @@
           "bytes": 13580,
           "sha256": "db4cae3ed5dae00d59bf60af49d3481fa46e2be95512fda314f509ab36c09c40",
           "blob": "ed01fc8d15b55d9e5766e16d82d8e92f43c8261b",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1",
+          "included_as_context": true
         },
         {
           "status": "??",
@@ -2301,7 +2387,9 @@
           "bytes": 8249,
           "sha256": "3af6e9e59b1e91884a0e60ef33a55c63f90a9bd7b9647fb6df61a8038e97d9fc",
           "blob": "c3e2ba3b6b79d4f7c76896cd582437a965ae1fc7",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1",
+          "included_as_context": true
         },
         {
           "status": "??",
@@ -2309,7 +2397,9 @@
           "bytes": 9158,
           "sha256": "6d3ed472614faff7c2f08e7c5c70a0f59d8d04fcb7a5561eb3d184fc49c92704",
           "blob": "4283a763eca1c0b36b13d5639f9bf328aea940f1",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1",
+          "included_as_context": true
         }
       ],
       "excluded_counts": {
@@ -2457,7 +2547,9 @@
           "bytes": 15688,
           "sha256": "ecf83c39adf07b45b73e59408eb06d42e43dadb6f0de10760a09c5231e7557e4",
           "blob": "6b762f90ba837c091203fd95899ff91f237cbdd6",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-paper-execution-cost-calibration-r1",
+          "included_as_context": true
         },
         {
           "status": "??",
@@ -2489,7 +2581,9 @@
           "bytes": 3887,
           "sha256": "aa38cfcf75575cad636387e65f2ca4b6911568940fff25792a5b8b9d5012673a",
           "blob": "a4d8a4bcfc6a6bb80a38c1a195f0b40e8268a201",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-paper-execution-cost-calibration-r1",
+          "included_as_context": true
         },
         {
           "status": "??",
@@ -2497,7 +2591,9 @@
           "bytes": 8824,
           "sha256": "9d7a181d4ae550a625037da560491f010fc1cd06ad66c5754d8fcdfd9cd4fc6d",
           "blob": "e2c880780387d593251473e124afe069761bf0af",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-paper-execution-cost-calibration-r1",
+          "included_as_context": true
         },
         {
           "status": "??",
@@ -2505,7 +2601,9 @@
           "bytes": 7403,
           "sha256": "0569e1d48e419eed311f9295ae598280c616f94601bc57aaef909e4f46ee851e",
           "blob": "d522cd8c2e357e21889c528ec823ec196d5c507d",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-paper-execution-cost-calibration-r1",
+          "included_as_context": true
         },
         {
           "status": "??",
@@ -2513,7 +2611,9 @@
           "bytes": 2296,
           "sha256": "f8580adc8a32bb83b32f995bd1452eec3c9d7e1a8cb917f8fe042618e348475a",
           "blob": "49411b691b2e4e49c3902aebfa1eec4632d4a7b7",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-paper-execution-cost-calibration-r1",
+          "included_as_context": true
         },
         {
           "status": "??",
@@ -2521,7 +2621,9 @@
           "bytes": 7858,
           "sha256": "d5ee216bde5e82111caa5aea7706b3736a9f9bcb00e7adca78e1748bd769dad8",
           "blob": "c5436a646011f7c06450d85cd4fd3cfec7bcf8f9",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-paper-execution-cost-calibration-r1",
+          "included_as_context": true
         }
       ],
       "excluded_counts": {
@@ -2685,7 +2787,9 @@
           "bytes": 82211,
           "sha256": "36f9f1d64ec193e56866d8dc940803775bffc466cffbae2fdf6da020fa86aa3b",
           "blob": "f94cc4de87776c83dba5069201f70d3f3fea5198",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage5-evidence-activation-r1",
+          "included_as_context": true
         }
       ],
       "excluded_counts": {
@@ -2959,7 +3063,9 @@
           "bytes": 30223,
           "sha256": "517b591cb0365be5c8206182c4947841d87cb6003a4cd22abf25503137219eca",
           "blob": "f16b5ca31d57e7e3b85665c1842eeef9180b422f",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
+          "included_as_context": true
         },
         {
           "status": " M",
@@ -2967,7 +3073,9 @@
           "bytes": 52536,
           "sha256": "6c2fc4aa4032676545b4a1547b288a7f76f20bd93f94b9848a9a4f8224bf010c",
           "blob": "10092d76108258f7c8df88634f4c1172ad0e1f02",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
+          "included_as_context": true
         },
         {
           "status": " M",
@@ -2984,7 +3092,9 @@
           "bytes": 52697,
           "sha256": "16104947a2713225a963e036f6e78a7b983c26641c2d5e8f6671beff20353850",
           "blob": "8b8ab9e514914d78bca921ea2ba5534ea419758d",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
+          "included_as_context": true
         },
         {
           "status": " M",
@@ -2992,7 +3102,9 @@
           "bytes": 92999,
           "sha256": "7bafe879568f01055e8e954785595b4faac2969f2c33f2396765e96563706b0b",
           "blob": "bdd166c581907413ae0750d3e20656aa39e9b1fc",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
+          "included_as_context": true
         },
         {
           "status": " M",
@@ -3000,7 +3112,9 @@
           "bytes": 9116,
           "sha256": "3dbadf3bf9560fe0621437f22b8f27c89593d87542c662aa1ef9653c315c58bc",
           "blob": "e6d77bc0b40a5f21a605cae3e488e245f4ae7000",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
+          "included_as_context": true
         },
         {
           "status": " M",
@@ -3008,7 +3122,9 @@
           "bytes": 5557,
           "sha256": "f8e26ba8b4d2068ce6047aa37668cceba003335ccfd9bd45e286dd5c62d88de0",
           "blob": "59a184fc4149fca31cbcdc147e2f0b47d4c13bd2",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
+          "included_as_context": true
         },
         {
           "status": " M",
@@ -3016,7 +3132,9 @@
           "bytes": 15921,
           "sha256": "9449a59b46dcef945a7d97b1e775cdda6df31af8dd12bb6bf25f36ecf53d8305",
           "blob": "48b6271cce41ca154fc7e5c89d9511a8fc02ebca",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
+          "included_as_context": true
         },
         {
           "status": " M",
@@ -3042,7 +3160,9 @@
           "bytes": 33836,
           "sha256": "49c335fa04d694c434fe8b44f4cacbfc4aa87add3cf9daae877218aeaeceaa0c",
           "blob": "5ef4df5bd3058cccc473d2a884b1cf7bdf8b2983",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
+          "included_as_context": true
         },
         {
           "status": " M",
@@ -3050,7 +3170,9 @@
           "bytes": 18669,
           "sha256": "e77aa7f18dfb5418faf04d956cd511b9d458f14a798ea785cec04756ff74e29f",
           "blob": "e9965420691155a314e5cc317175e26c83478687",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
+          "included_as_context": true
         },
         {
           "status": "??",
@@ -3107,7 +3229,9 @@
           "bytes": 3412,
           "sha256": "cfd7a98f179a3cb4c148203dc265c6ca1ae07136541f29f8528dd23f2bbbaaf0",
           "blob": "b582929e3f21d063c9eb964faa98205312561763",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
+          "included_as_context": true
         },
         {
           "status": "??",
@@ -3115,7 +3239,9 @@
           "bytes": 22680,
           "sha256": "3ee9622f24a8b4275fb08f081d1f74f1f308c905cefc610143efd64d990f6ef9",
           "blob": "86b9d85ff2d44b7993ac072af4f3dd65b73cc49b",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
+          "included_as_context": true
         },
         {
           "status": "??",
@@ -3123,7 +3249,9 @@
           "bytes": 32738,
           "sha256": "c4ffad4e988a0742e667d3d263b5cae256da0bf45a4ee5fe311890834adb0a71",
           "blob": "e647787950dcfebf6db951f70c5c079d621d66db",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
+          "included_as_context": true
         },
         {
           "status": "??",
@@ -3131,7 +3259,9 @@
           "bytes": 25529,
           "sha256": "e057d8a9e1bb20db2a7461f7592336d30d5f0557f949b7c881bf690542a51122",
           "blob": "a16a3dc5cec5b62dd674f03b661f5810159a9322",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1",
+          "included_as_context": true
         }
       ],
       "excluded_counts": {
@@ -3566,7 +3696,9 @@
           "bytes": 1591,
           "sha256": "c2288971d032130b36789e6f7e40f916f16dc3a4c9fc6a5830ba774b2a64c764",
           "blob": "5d6088859252eafdfd9522a1da66cd51b0b90715",
-          "classification": "ALREADY_REMOTE"
+          "classification": "ALREADY_REMOTE",
+          "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-strategy-capacity-r1",
+          "included_as_context": true
         },
         {
           "status": " M",
@@ -3656,5 +3788,68 @@
         "graphify-out/cache/stat-index.json"
       ]
     }
-  ]
+  ],
+  "recorded_remote_heads": [
+    "87b9e4ba4bcbc8a9fa4f1ee8472abb7143d43a72\trefs/heads/current-truth-r1",
+    "a2d44dcf0535664d02f91a17f3526892d2fae84b\trefs/heads/intelligence-spine-r1",
+    "1ab0da0cb9cb3a3c290488d7c75edf09788b6462\trefs/heads/luffy-admitted-exit-semantic-parity-r1",
+    "e60e04540dde4668f12bcfc6caf5992f6580928b\trefs/heads/luffy-capacity-evidence-integration-r1",
+    "b471b9e2170c8c5d1da3f3b5e06bc25e58613a65\trefs/heads/luffy-expected-net-economics-r1",
+    "f9e168e6d952f290b394ac49d5d134bf7927639a\trefs/heads/luffy-final-audit-repair-loop-r1",
+    "548ebb727e81d2bd82a9cd23cb8e72445d0517c2\trefs/heads/luffy-integrated-core-r1",
+    "6bb99e541e9d9ce583cc4a283f7db685f9235b96\trefs/heads/luffy-opportunity-context-live-integration-r1",
+    "a4432ba244a474ec48f7a9f0cc59fb6f7833aa61\trefs/heads/luffy-portfolio-allocator-r1",
+    "3bf9f87cf5b41e714a863715d0fa042a899af472\trefs/heads/luffy-predictive-research-bridge-r1",
+    "fcfe9e0359874b18d65a0b1e1ccfd156d18115e1\trefs/heads/luffy-stage1-data-provenance-pit-r1",
+    "8d49c6976dc7359aed9451c4b3fd5c9bf55b0198\trefs/heads/luffy-stage1-entry-authority-idempotency-r1",
+    "53e7c8567c259b2326315a0acdd4b838af030998\trefs/heads/luffy-stage1-recovery-monitoring-foundation-r1",
+    "f571c988b866fdeaa27957d2d950625aa292ebd9\trefs/heads/luffy-stage1-safety-truth-closure-r1",
+    "0b23ab3f645efe4301ceabf9399405ab60d38e56\trefs/heads/luffy-stage5-closure-evidence-flow-r1",
+    "d256bfb4d6c6b2f7d9d7c950bd6f0c7aff0049f9\trefs/heads/luffy-stage6-implementation-closure-r1",
+    "8ebc7113c0d3566facf64b47786c6efcc6339726\trefs/heads/luffy-stage6-portfolio-common-factor-concentration-authority-r1",
+    "640a5f20a8f78bf9ac68f1ac26d5c6c0de6977c3\trefs/heads/luffy-stage6-runtime-portfolio-integration-r1",
+    "1c77fdbbdd141dcf68a6b12bb2c85670ed667f6d\trefs/heads/luffy-stage7-decision-replay-source-integration-r1",
+    "9d2a1b895b93c9abaf23ab258e47d8535c916bb0\trefs/heads/luffy-stage7-implementation-closure-r1",
+    "481b8323f040fd8daf960f844815847fcafd2d5f\trefs/heads/luffy-stage7-learning-application-integration-r1",
+    "9d31fbd61ed4c4b8c697248ac32dfd0451b537e4\trefs/heads/luffy-stage7-learning-closed-loop-foundation-r1",
+    "50a4545484798207e4b126a0b7a0547ea9b0ec79\trefs/heads/luffy-stage7-normal-learning-loop-closure-r1",
+    "f5e5156b8a294cd53db277e8d46cb30645611a61\trefs/heads/luffy-stage7-normal-replay-world-consumer-closure-r2",
+    "d400394e0472da4e8b0d7f9220ad419c2a4d4244\trefs/heads/luffy-stage7-outcome-capture-recovery-r1",
+    "b56682e936fe9907f023900a0daacf0aad5ac07e\trefs/heads/luffy-stage7-real-learning-authority-consumer-integration-r1",
+    "503d93c4c83d134899b8067f567b995f329ea6a1\trefs/heads/luffy-stage7-verified-outcome-producer-integration-r1",
+    "52aac90e004662610de006fd5c4eb8cdcf39bb7a\trefs/heads/luffy-stage8-owner-os-closure-r1",
+    "6b7f0f7f434fbe6b7c227595a43d4a325dc849e6\trefs/heads/luffy-strategy-capacity-r1",
+    "be2bf1860b0c66957d7d3af8c32d6a0e2a55d209\trefs/heads/luffy-versioned-paper-cost-evidence-protocol-r1",
+    "d4de42adcef0a9a7d905febe90712113fd68253f\trefs/heads/luffy-versioned-paper-execution-r1",
+    "958c9eb2f0b10993ad240b85f88c626b8d0e2ee6\trefs/heads/main",
+    "dc78d233b1e47003b0496d1ee3ed654c721a3773\trefs/heads/owner-frontend-live-binding-v1",
+    "b86d772c016d3d4480adc43b49b5765e9877d83f\trefs/heads/owner-frontend-m3-v1",
+    "428b315d8849f2016a47d0990f513e12f2305a7a\trefs/heads/production-local-preserve-final-20261004",
+    "5d586f4ccdd58e4502b208ed1dfb9c1290af0317\trefs/heads/recovery-state-plumbing",
+    "a883313b9d8f3748f487fcea2ceefb2afcec4ae0\trefs/heads/strategy-factory-r1",
+    "54aefc56fe2c4d02e9589a9d4aedc41ac2d17b63\trefs/heads/trade-provenance-r1",
+    "8020faf4dc1f64bc14c9b263ab1c635afd7a00f3\trefs/heads/world-model-foundation"
+  ],
+  "source_changed_during_checkpoint": false,
+  "whitespace_findings": {
+    "whitespace-predictive-research-bridge-r1.txt": "docs/superpowers/evidence/predictive-research-bridge-r1/regression-tests.txt:24: trailing whitespace.\n+E                 \ndocs/superpowers/evidence/predictive-research-bridge-r1/regression-tests.txt:31: trailing whitespace.\n+E                 \n",
+    "whitespace-stage7-learning-target-authority-framework-r1.txt": "docs/superpowers/evidence/stage7-learning-target-authority-framework-r1/inherited-regression.txt:22: trailing whitespace.\n+E             \ndocs/superpowers/evidence/stage7-learning-target-authority-framework-r1/inherited-regression.txt:29: trailing whitespace.\n+E             \ndocs/superpowers/evidence/stage7-learning-target-authority-framework-r1/tests.txt:25: trailing whitespace.\n+E                 \ndocs/superpowers/evidence/stage7-learning-target-authority-framework-r1/tests.txt:28: trailing whitespace.\n+E                   \ndocs/superpowers/evidence/stage7-learning-target-authority-framework-r1/tests.txt:29: trailing whitespace.\n+E                   \ndocs/superpowers/evidence/stage7-learning-target-authority-framework-r1/tests.txt:32: trailing whitespace.\n+E                 \n",
+    "whitespace-trader-world.txt": "OWNER-FRONTEND-V1.md:7: trailing whitespace.\n+**Package:** SDD-STAGE-8-OWNER-FRONTEND-V1  \nOWNER-FRONTEND-V1.md:8: trailing whitespace.\n+**Implementer:** Astra  \nOWNER-FRONTEND-V1.md:9: trailing whitespace.\n+**Independent reviewer:** Opus  \n"
+  },
+  "verification": {
+    "candidate_secret_scan_findings": 0,
+    "new_history_secret_scan": {
+      "counts": {
+        "blobs": 296,
+        "bytes": 7007784
+      },
+      "findings": []
+    },
+    "new_history_scope": {
+      "prohibited_paths": [],
+      "objects": 586
+    },
+    "scope": "Explicit pathspecs, temporary indexes; actual checkout indexes and source untouched. Existing whitespace reported without edits."
+  },
+  "already_remote_policy": "Existing remote implementation commits are not recommitted merely to duplicate them. Required existing remote source blobs are included as context only when preserving a distinct local checkpoint variant; mappings remain ALREADY_REMOTE."
 }
