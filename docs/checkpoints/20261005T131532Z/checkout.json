@@ -1,0 +1,13 @@
+{
+  "status": "UNVERIFIED",
+  "checkout": "/mnt/luffy-data/luffy/workspaces/stage7-implementation-closure-r1",
+  "original_branch": "refs/heads/luffy-stage7-implementation-closure-r1",
+  "original_head": "9d2a1b895b93c9abaf23ab258e47d8535c916bb0",
+  "checkpoint_branch": "luffy-checkpoint-20261005T131532Z-stage7-implementation-closure-r1",
+  "captured_files": [
+    "docs/superpowers/evidence/stage7-implementation-closure-r1/real-shadow.json"
+  ],
+  "tests": "Existing results only. No new tests or independent assessment. Historical results do not prove this combined dirty variant.",
+  "excluded_files": "Remain local; database/runtime/environment/cache/raw-log/full-payload updates excluded.",
+  "control_plane": "STATE.yaml/NEXT.yaml preserved verbatim where present; no reconciliation performed."
+}
