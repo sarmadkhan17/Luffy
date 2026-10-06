@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 397056,
-      "sha256": "00af4d19149b824466bd4d6b9331cf9fdf3f8c9498252469983e7368d3bfb5c8",
+      "bytes": 397469,
+      "sha256": "de41893f65c347d8dc5c13f4e074eb48c638ba78de14238791c46c78b316d65b",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 385153,
-      "sha256": "674e76169701a4bb2bbc852368930c2a8519f836d841d7a956ed4b1acaa91ef7",
+      "bytes": 385562,
+      "sha256": "42b0383ec2a78d5d2db0afe9cf25aa87a161c79c7ef23730daa38d4273eb1441",
       "synchronization_required": false
     },
     {
@@ -393,6 +393,28 @@
     },
     "wrld03_dependency_satisfied": true,
     "wrld03_status_changed": false,
+    "control_plane_reconciliation_pending": false
+  },
+  "wrld03_canonical_reconciliation": {
+    "item": "WRLD-03",
+    "canonical_status": "CLOSED",
+    "engineering_evidence_commit": "9e49c712bf90eaa37249962c5bc2639e71742a47",
+    "wrld01_canonical_commit": "903262cb553930a4b14f505f75012d441e2f8464",
+    "reviewed_main_revision": "91fab989705e0bb93c14d8b8735753a0ceeb771b",
+    "evidence": "docs/tracker/evidence/wrld03-map-sol2/RECONCILIATION.md",
+    "evidence_scope": "Existing 9 synthetic contract checks and 147 consumer regressions reused; contract source bytes unchanged; no implementation or runtime rerun.",
+    "dependency_status": {
+      "DATA-02": "CLOSED",
+      "WRLD-01": "CLOSED"
+    },
+    "remaining_gap": "NONE",
+    "att01_dependency_status": {
+      "WRLD-03": "CLOSED",
+      "DATA-06": "EVIDENCE_TO_MAP"
+    },
+    "wrld05_engineering_eligible": true,
+    "data05_closure_reused": "fc16e078a56a19b01b85a8a9c7edac368183904d; canonical DATA-05 reconciliation remains uncommitted and is outside WRLD-03 scope.",
+    "unrelated_tracker_rows_changed": false,
     "control_plane_reconciliation_pending": false
   }
 }

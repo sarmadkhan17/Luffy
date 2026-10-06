@@ -1484,30 +1484,30 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 2
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Avoids a single contradictory global market label.
 - **closure_condition**: Global, asset-class, group, instrument and relationship states preserve relevant horizons, dimensions and conflicts through a stable query.
 - **failure_regression_proof**: Short- and long-horizon disagreement is not collapsed or filled by narrative.
 - **dependencies**: DATA-02, WRLD-01
 - **owner_role**: Perception & WorldModel owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2
+- **implementation_evidence**: 9e49c71: typed hierarchy/scope/horizon/conflict/relationship queries and exact retained-record reconstruction; 9 synthetic contract checks and 147 consumer regressions reused.
+- **runtime_evidence**: OFFLINE_SYNTHETIC_PROOF_REUSED; no production runtime or calibration claim.
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: WRLD-01 canonically CLOSED at 903262c; DATA-02 CLOSED at cae1128. WRLD-03 contract sources unchanged since 9e49c71. No remaining exact closure gap.
 - **source_ids**: S01, S02, S12
 - **source_sections**: §§9,33.3
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for WRLD-03. ATT-01 retains independent DATA-06 gate; WRLD-05 normal strategy/research integration remains its own work.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 9e49c712bf90eaa37249962c5bc2639e71742a47
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/wrld03-map-sol2/RECONCILIATION.md
+- **evidence_validity**: Existing synthetic engineering proofs reused at 9e49c71; contract source bytes unchanged on current main; WRLD-01 prerequisite resolved at 903262c. No runtime rerun.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 

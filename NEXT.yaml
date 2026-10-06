@@ -955,3 +955,25 @@ wrld01_canonical_reconciliation:
   wrld03_dependency_satisfied: true
   wrld03_status_changed: false
   control_plane_reconciliation_pending: false
+
+wrld03_canonical_reconciliation:
+  item: WRLD-03
+  canonical_status: CLOSED
+  engineering_evidence_commit: 9e49c712bf90eaa37249962c5bc2639e71742a47
+  wrld01_canonical_commit: 903262cb553930a4b14f505f75012d441e2f8464
+  reviewed_main_revision: 91fab989705e0bb93c14d8b8735753a0ceeb771b
+  evidence: docs/tracker/evidence/wrld03-map-sol2/RECONCILIATION.md
+  evidence_scope: Existing 9 synthetic contract checks and 147 consumer regressions reused; contract source
+    bytes unchanged; no implementation or runtime rerun.
+  dependency_status:
+    DATA-02: CLOSED
+    WRLD-01: CLOSED
+  remaining_gap: NONE
+  att01_dependency_status:
+    WRLD-03: CLOSED
+    DATA-06: EVIDENCE_TO_MAP
+  wrld05_engineering_eligible: true
+  data05_closure_reused: fc16e078a56a19b01b85a8a9c7edac368183904d; canonical DATA-05 reconciliation remains
+    uncommitted and is outside WRLD-03 scope.
+  unrelated_tracker_rows_changed: false
+  control_plane_reconciliation_pending: false
