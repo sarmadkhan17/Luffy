@@ -39,6 +39,14 @@ class BrainLLM:
     def available(self) -> bool:
         return self._brain_config.get("enabled", True) is True and bool(self._key)
 
+    def _disabled(self, purpose: str) -> bool:
+        if self._brain_config.get("enabled", True) is True:
+            return False
+        log.warning("provider admission refused: brain_disabled", extra={
+            "event": "provider_admission_refused", "reason_code": "brain_disabled",
+            "purpose": purpose, "provider_attempts": 0})
+        return True
+
     def _usage(self) -> dict:
         try:
             data = json.loads(self._usage_path.read_text())
@@ -129,7 +137,7 @@ class BrainLLM:
             return 0  # An unreadable ledger is never an empty budget ledger.
 
     def _admit(self, request, deep, purpose):
-        if self._brain_config.get("enabled", True) is not True:
+        if self._disabled(purpose):
             return None
         # Reserve input as UTF-8 request bytes (a conservative tokenizer-independent
         # estimate) plus the admitted output ceiling. Actual billed usage remains
@@ -155,7 +163,7 @@ class BrainLLM:
             self._write_usage(data)
 
     def _call(self, request, deep, purpose):
-        if self._brain_config.get("enabled", True) is not True or not self.available or self.budget_left(purpose) <= 0:
+        if self._disabled(purpose) or not self.available or self.budget_left(purpose) <= 0:
             return None
         try:
             admitted = self._admit(request, deep, purpose)
