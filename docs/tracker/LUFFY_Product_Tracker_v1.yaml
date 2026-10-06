@@ -1,43 +1,41 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.28-dec01-chain-sol1
+  version: 1.29-att03-warmup-sol2
   created_date: '2026-10-05'
-  title: LUFFY — Product, Behaviour & GUI Tracker
+  title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
-  scope: SDD v3.2 baseline plus v3.3 owner-adopted Attention admission; retained evidence and owner tracker
-    requirements.
+  scope: SDD v3.2 baseline plus v3.3 owner-adopted Attention admission; retained evidence and owner tracker requirements.
   baseline_commit: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
   evidence_checkpoint: 6da5ad9a895ddb0f5fed9d75904e9639cc731b44
   fresh_runtime_verified: false
   repository_modified: true
-  coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness
-    or full prior-chat reconciliation. No functionality or evidence has been independently retested by creating
-    this tracker.
-  current_active_item: DEC-01
-  current_active_result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+  coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
+    prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
+  current_active_item: ATT-03
+  current_active_result: BLOCKED_CALIBRATION_EVIDENCE
   row_count: 178
-  authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This
-    YAML is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown
-    is an optional generated reference.
+  authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
+    is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown is an
+    optional generated reference.
   pending_adoption: null
   status_counts:
     CLOSED: 38
-    EVIDENCE_TO_MAP: 99
+    EVIDENCE_TO_MAP: 98
     DEFERRED: 7
     AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14
-    BLOCKED: 7
+    BLOCKED: 8
     OPEN: 4
-  workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged
-    and excluded from adoption, synchronization and parity requirements.
+  workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged and
+    excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
   latest_perf01_result_source: docs/tracker/evidence/2026-10-06-perf01-retained-reconstruction.yaml
-  publication_note: Owner explicitly accepted adoption and read-only Tracker navigation. OPEN-09 closes with
-    this control-plane reconciliation; implementation verification is distinct from deployed/browser proof.
+  publication_note: Owner explicitly accepted adoption and read-only Tracker navigation. OPEN-09 closes with this
+    control-plane reconciliation; implementation verification is distinct from deployed/browser proof.
   current_runtime_item: PERF-01
   current_runtime_result: BLOCKED
   next_diagnostic_item: null
-  next_recommended_item: WRLD-03
+  next_recommended_item: null
   next_runtime_execution_authorized: false
   owner_representation_decision:
     date: '2026-10-05'
@@ -45,14 +43,14 @@ metadata:
     primary_view: Dashboard Tracker (read-only)
     markdown: Optional generated reference
     xlsx: DEPRECATED / NON-AUTHORITATIVE; preserved history
-    mutation_contract: No Tracker mutation API/UI; engineering/control-plane changes only until a separate
-      typed, audited GUI mutation contract is approved.
-    navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope;
-      the owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product
-      row is silently reopened or added.
-  last_terminal_item: DEC-01
-  last_terminal_result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
-  last_terminal_evidence: docs/tracker/evidence/dec01-chain-sol1/REPORT.md
+    mutation_contract: No Tracker mutation API/UI; engineering/control-plane changes only until a separate typed,
+      audited GUI mutation contract is approved.
+    navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope; the
+      owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product row
+      is silently reopened or added.
+  last_terminal_item: ATT-03
+  last_terminal_result: BLOCKED_CALIBRATION_EVIDENCE
+  last_terminal_evidence: docs/tracker/evidence/att03-warmup-sol2/REPORT.md
   control_snapshot:
     id: gov07-identity-sol-2026-10-06
     repository_revision: 82431136ac68ff72325af301bac43b19b7d3ecd6
@@ -66,8 +64,8 @@ metadata:
     ledger_path: docs/tracker/LUFFY_Product_Tracker_v1.yaml
     state_path: STATE.yaml
     next_path: NEXT.yaml
-    runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime
-      UNKNOWN; no runtime freshness inferred from this control snapshot.
+    runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime UNKNOWN;
+      no runtime freshness inferred from this control snapshot.
     captured_at_utc: '2026-10-06T03:52:49.947649+00:00'
     identity_evidence: docs/tracker/evidence/gov07-identity-sol/identity-map.json
   current_identity_assessment:
@@ -101,8 +99,9 @@ metadata:
     ledger_path: docs/tracker/LUFFY_Product_Tracker_v1.yaml
     state_path: STATE.yaml
     next_path: NEXT.yaml
-    runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime
-      UNKNOWN; no runtime freshness inferred from this control snapshot.
+    runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime UNKNOWN;
+      no runtime freshness inferred from this control snapshot.
+
 status_definitions:
 - status: EVIDENCE_TO_MAP
   meaning: Existing requirement recorded; exact row-level evidence has not yet been linked. This is NOT a finding
@@ -2279,7 +2278,7 @@ items:
   stage: '3'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: BLOCKED
   required_behavior: Distinguish warm-up from errors and prioritize without invented salience.
   why_needed: Insufficient eligible history must not become a negative signal.
   closure_condition: Warm-up evidence states required history/availability and becomes eligible only through valid
@@ -2289,32 +2288,36 @@ items:
   - ATT-01
   - DATA-04
   owner_role: Attention & research owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
+  engineering_assignee: SOL-2
+  implementation_evidence: Explicit source-cut history and null warm-up diagnostics propagated through existing admission/candidates
+    at 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c.
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: Warm-up/availability, no date-only eligibility, null components and deterministic replay/restart
+    mapped; 287 passes and 35 independently reproduced baseline failures. Exact calibrated-ranking evidence remains
+    unestablished; see docs/tracker/evidence/att03-warmup-sol2/REPORT.md.
   source_ids:
   - S01
   - S02
   - S06
   - S14
   source_sections: §§8.2,6.2
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: Establish approved calibration evidence for existing ranking components/scales/thresholds without inventing
+    weights or a second scoring system.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
   resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
   closure_evidence: ''
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  evidence_mapping: docs/tracker/evidence/att03-warmup-sol2/REPORT.md
+
 - id: ATT-04
   area: Attention & research
   stage: '3'
@@ -8921,6 +8924,7 @@ current_build_selection:
   - OUT-01
   - STR-02
   - DEC-01
+  - ATT-03
   next_recommended_item: null
   eligible_items:
   - DATA-08
@@ -8937,11 +8941,10 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: 'SOL-1 checkpoint only: DEC-01/OUT-01/OUT-03 remain BLOCKED. Later committed WorldModel and
-    DATA-05 closures preserved; STR-01/STR-02, analyst Context binding, DEC-04 and OUT-01 execution proof remain.
-    No successor selected.'
-  last_terminal_item: DEC-01
-  last_terminal_result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+  selection_reason: ATT-03 warm-up reporting gap fixed; original calibrated-ranking evidence gate remains unmet.
+    Dependencies ATT-01/DATA-04 CLOSED; no successor or runtime selected.
+  last_terminal_item: ATT-03
+  last_terminal_result: BLOCKED_CALIBRATION_EVIDENCE
 
 own02_authority_closure:
   id: OWN-02
@@ -9289,3 +9292,59 @@ data04_canonical_reconciliation:
   att03_selected: false
   att03_acceptance_remaining: Independent warm-up/valid-acquisition and approved calibrated-ranking proof; ATT-03
     row unchanged.
+
+att03_previous_terminal_selection:
+  state:
+    id: DEC-01
+    status: BLOCKED
+    result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+    mode: ENGINEERING_ONLY
+    scope: ARCHITECTURE_OFFLINE
+    objective: Map DEC-01 dependency chain and fix only demonstrated compiler version binding gap; preserve original
+      WorldModel/analyst contracts and gates.
+    evidence:
+    - docs/tracker/evidence/dec01-chain-sol1/REPORT.md
+    implementation_commit: f55ec97c4a2bef04712abc45832e6d3f44f01162
+    runtime_execution_authorized: false
+    provider_enablement_authorized: false
+    trading_activation_authorized: false
+    successor_selected: false
+  next:
+    id: DEC-01
+    status: BLOCKED
+    result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+    mode: ENGINEERING_ONLY
+    scope: ARCHITECTURE_OFFLINE
+    objective: Map DEC-01 dependency chain and fix only demonstrated compiler version binding gap; preserve original
+      WorldModel/analyst contracts and gates.
+    evidence:
+    - docs/tracker/evidence/dec01-chain-sol1/REPORT.md
+    implementation_commit: f55ec97c4a2bef04712abc45832e6d3f44f01162
+    runtime_execution_authorized: false
+    provider_enablement_authorized: false
+    trading_activation_authorized: false
+    successor_selected: false
+att03_warmup_terminal:
+  item: ATT-03
+  status: BLOCKED
+  result: BLOCKED_CALIBRATION_EVIDENCE
+  scope: ARCHITECTURE_OFFLINE
+  implementation_commit: 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c
+  evidence: docs/tracker/evidence/att03-warmup-sol2/REPORT.md
+  dependencies:
+    ATT-01: CLOSED
+    DATA-04: CLOSED
+  fixed_gap: Explicit null scores/components and required/eligible history were missing from warm-up rows and investigation
+    candidates.
+  remaining_gap: Approved calibrated-ranking evidence for the exact existing components/scales/thresholds is not
+    established.
+  tests:
+    new_passed: 8
+    regression_passed: 279
+    baseline_reproduced_failures: 35
+    distinct_passed: 287
+  conditions_and_dependency_edges_changed: false
+  scoring_system_changed: false
+  successor_selected: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false

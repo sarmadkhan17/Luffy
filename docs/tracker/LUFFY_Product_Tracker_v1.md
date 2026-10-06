@@ -1725,32 +1725,34 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 3
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: BLOCKED
 - **why_needed**: Insufficient eligible history must not become a negative signal.
 - **closure_condition**: Warm-up evidence states required history/availability and becomes eligible only through valid acquisition; ranking uses approved calibrated components.
 - **failure_regression_proof**: No clock rewrite, forced selection, arbitrary new weights or historical date-only eligibility.
 - **dependencies**: ATT-01, DATA-04
 - **owner_role**: Attention & research owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
+- **engineering_assignee**: SOL-2
+- **implementation_evidence**: Explicit source-cut history and null warm-up diagnostics propagated through existing admission/candidates at 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c.
 - **runtime_evidence**: NOT_MAPPED
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Warm-up/availability, no date-only eligibility, null components and deterministic replay/restart mapped; 287 passes and 35 independently reproduced baseline failures. Exact calibrated-ranking evidence remains unestablished; see docs/tracker/evidence/att03-warmup-sol2/REPORT.md.
 - **source_ids**: S01, S02, S06, S14
 - **source_sections**: §§8.2,6.2
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: Establish approved calibration evidence for existing ranking components/scales/thresholds without inventing weights or a second scoring system.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
 - **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
 - **closure_evidence**:
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+
+- **evidence_mapping**: docs/tracker/evidence/att03-warmup-sol2/REPORT.md
 
 ### ATT-04 — Hierarchical deterministic crypto admission before expensive discretionary processing; independent safety/exposure service.
 

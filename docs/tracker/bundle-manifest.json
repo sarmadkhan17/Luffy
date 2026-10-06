@@ -1,6 +1,6 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.28-dec01-chain-sol1",
+  "snapshot_version": "1.29-att03-warmup-sol2",
   "control_baseline_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 413646,
-      "sha256": "0ff4cca356075bd7eaddb04a09ed140e7aa91672283c70610fbc2aeb35e0fd29",
+      "bytes": 416026,
+      "sha256": "8c7368ee2436d27986af9e28e94ca764f5218d702bc2ed75c929aec355fa1e8e",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 393470,
-      "sha256": "837f00736fd87fceea384194a189b0bb4ab1e59577edb5dede3cf0bcde491cd3",
+      "bytes": 393807,
+      "sha256": "b501f53b687d165ad7a07d9813d4f6aac53f2c01eec3a2841619a79d24f287ff",
       "synchronization_required": false
     },
     {
@@ -120,7 +120,8 @@
       "GUI-02",
       "OUT-01",
       "STR-02",
-      "DEC-01"
+      "DEC-01",
+      "ATT-03"
     ],
     "next_recommended_item": null,
     "eligible_items": [
@@ -138,9 +139,9 @@
     "next_item_selected": false,
     "runtime_execution_authorized": false,
     "selection_status": "NO_ACTIVE_PACKAGE",
-    "selection_reason": "SOL-1 checkpoint only: DEC-01/OUT-01/OUT-03 remain BLOCKED. Later committed WorldModel and DATA-05 closures preserved; STR-01/STR-02, analyst Context binding, DEC-04 and OUT-01 execution proof remain. No successor selected.",
-    "last_terminal_item": "DEC-01",
-    "last_terminal_result": "BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT"
+    "selection_reason": "ATT-03 warm-up reporting gap fixed; original calibrated-ranking evidence gate remains unmet. Dependencies ATT-01/DATA-04 CLOSED; no successor or runtime selected.",
+    "last_terminal_item": "ATT-03",
+    "last_terminal_result": "BLOCKED_CALIBRATION_EVIDENCE"
   },
   "control_snapshot": {
     "id": "gov07-identity-sol-2026-10-06",
@@ -736,5 +737,64 @@
     "att03_now_eligible": true,
     "att03_selected": false,
     "att03_acceptance_remaining": "Independent warm-up/valid-acquisition and approved calibrated-ranking proof; ATT-03 row unchanged."
+  },
+  "att03_previous_terminal_selection": {
+    "state": {
+      "id": "DEC-01",
+      "status": "BLOCKED",
+      "result": "BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT",
+      "mode": "ENGINEERING_ONLY",
+      "scope": "ARCHITECTURE_OFFLINE",
+      "objective": "Map DEC-01 dependency chain and fix only demonstrated compiler version binding gap; preserve original WorldModel/analyst contracts and gates.",
+      "evidence": [
+        "docs/tracker/evidence/dec01-chain-sol1/REPORT.md"
+      ],
+      "implementation_commit": "f55ec97c4a2bef04712abc45832e6d3f44f01162",
+      "runtime_execution_authorized": false,
+      "provider_enablement_authorized": false,
+      "trading_activation_authorized": false,
+      "successor_selected": false
+    },
+    "next": {
+      "id": "DEC-01",
+      "status": "BLOCKED",
+      "result": "BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT",
+      "mode": "ENGINEERING_ONLY",
+      "scope": "ARCHITECTURE_OFFLINE",
+      "objective": "Map DEC-01 dependency chain and fix only demonstrated compiler version binding gap; preserve original WorldModel/analyst contracts and gates.",
+      "evidence": [
+        "docs/tracker/evidence/dec01-chain-sol1/REPORT.md"
+      ],
+      "implementation_commit": "f55ec97c4a2bef04712abc45832e6d3f44f01162",
+      "runtime_execution_authorized": false,
+      "provider_enablement_authorized": false,
+      "trading_activation_authorized": false,
+      "successor_selected": false
+    }
+  },
+  "att03_warmup_terminal": {
+    "item": "ATT-03",
+    "status": "BLOCKED",
+    "result": "BLOCKED_CALIBRATION_EVIDENCE",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "implementation_commit": "5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c",
+    "evidence": "docs/tracker/evidence/att03-warmup-sol2/REPORT.md",
+    "dependencies": {
+      "ATT-01": "CLOSED",
+      "DATA-04": "CLOSED"
+    },
+    "fixed_gap": "Explicit null scores/components and required/eligible history were missing from warm-up rows and investigation candidates.",
+    "remaining_gap": "Approved calibrated-ranking evidence for the exact existing components/scales/thresholds is not established.",
+    "tests": {
+      "new_passed": 8,
+      "regression_passed": 279,
+      "baseline_reproduced_failures": 35,
+      "distinct_passed": 287
+    },
+    "conditions_and_dependency_edges_changed": false,
+    "scoring_system_changed": false,
+    "successor_selected": false,
+    "runtime_execution_authorized": false,
+    "trading_activation_authorized": false
   }
 }

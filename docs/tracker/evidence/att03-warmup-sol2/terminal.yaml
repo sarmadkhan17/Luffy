@@ -1,0 +1,22 @@
+item: ATT-03
+status: BLOCKED
+result: BLOCKED_CALIBRATION_EVIDENCE
+scope: ARCHITECTURE_OFFLINE
+implementation_commit: 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c
+evidence: docs/tracker/evidence/att03-warmup-sol2/REPORT.md
+dependencies:
+  ATT-01: CLOSED
+  DATA-04: CLOSED
+fixed_gap: Explicit null scores/components and required/eligible history were missing from warm-up rows and investigation
+  candidates.
+remaining_gap: Approved calibrated-ranking evidence for the exact existing components/scales/thresholds is not established.
+tests:
+  new_passed: 8
+  regression_passed: 279
+  baseline_reproduced_failures: 35
+  distinct_passed: 287
+conditions_and_dependency_edges_changed: false
+scoring_system_changed: false
+successor_selected: false
+runtime_execution_authorized: false
+trading_activation_authorized: false

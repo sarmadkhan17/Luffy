@@ -1358,16 +1358,16 @@ perf03_capture_r1:
   trading_activated: false
   perf01: UNCHANGED; BLOCKED/UNKNOWN
 current_active_work:
-  id: DEC-01
+  id: ATT-03
   status: BLOCKED
-  result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+  result: BLOCKED_CALIBRATION_EVIDENCE
   mode: ENGINEERING_ONLY
   scope: ARCHITECTURE_OFFLINE
-  objective: Map DEC-01 dependency chain and fix only demonstrated compiler version binding gap; preserve original
-    WorldModel/analyst contracts and gates.
+  objective: Prove warm-up and existing ranking semantics without invented salience; retain unresolved calibration
+    gate.
+  implementation_commit: 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c
   evidence:
-  - docs/tracker/evidence/dec01-chain-sol1/REPORT.md
-  implementation_commit: f55ec97c4a2bef04712abc45832e6d3f44f01162
+  - docs/tracker/evidence/att03-warmup-sol2/REPORT.md
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
@@ -1621,6 +1621,7 @@ current_build_selection:
   - OUT-01
   - STR-02
   - DEC-01
+  - ATT-03
   next_recommended_item: null
   eligible_items:
   - DATA-08
@@ -1637,11 +1638,10 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: 'SOL-1 checkpoint only: DEC-01/OUT-01/OUT-03 remain BLOCKED. Later committed WorldModel and
-    DATA-05 closures preserved; STR-01/STR-02, analyst Context binding, DEC-04 and OUT-01 execution proof remain.
-    No successor selected.'
-  last_terminal_item: DEC-01
-  last_terminal_result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+  selection_reason: ATT-03 warm-up reporting gap fixed; original calibrated-ranking evidence gate remains unmet.
+    Dependencies ATT-01/DATA-04 CLOSED; no successor or runtime selected.
+  last_terminal_item: ATT-03
+  last_terminal_result: BLOCKED_CALIBRATION_EVIDENCE
 
 data01_canonical_identity:
   id: DATA-01
@@ -2412,3 +2412,59 @@ data04_canonical_reconciliation:
   att03_selected: false
   att03_acceptance_remaining: Independent warm-up/valid-acquisition and approved calibrated-ranking proof; ATT-03
     row unchanged.
+
+att03_previous_terminal_selection:
+  state:
+    id: DEC-01
+    status: BLOCKED
+    result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+    mode: ENGINEERING_ONLY
+    scope: ARCHITECTURE_OFFLINE
+    objective: Map DEC-01 dependency chain and fix only demonstrated compiler version binding gap; preserve original
+      WorldModel/analyst contracts and gates.
+    evidence:
+    - docs/tracker/evidence/dec01-chain-sol1/REPORT.md
+    implementation_commit: f55ec97c4a2bef04712abc45832e6d3f44f01162
+    runtime_execution_authorized: false
+    provider_enablement_authorized: false
+    trading_activation_authorized: false
+    successor_selected: false
+  next:
+    id: DEC-01
+    status: BLOCKED
+    result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+    mode: ENGINEERING_ONLY
+    scope: ARCHITECTURE_OFFLINE
+    objective: Map DEC-01 dependency chain and fix only demonstrated compiler version binding gap; preserve original
+      WorldModel/analyst contracts and gates.
+    evidence:
+    - docs/tracker/evidence/dec01-chain-sol1/REPORT.md
+    implementation_commit: f55ec97c4a2bef04712abc45832e6d3f44f01162
+    runtime_execution_authorized: false
+    provider_enablement_authorized: false
+    trading_activation_authorized: false
+    successor_selected: false
+att03_warmup_terminal:
+  item: ATT-03
+  status: BLOCKED
+  result: BLOCKED_CALIBRATION_EVIDENCE
+  scope: ARCHITECTURE_OFFLINE
+  implementation_commit: 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c
+  evidence: docs/tracker/evidence/att03-warmup-sol2/REPORT.md
+  dependencies:
+    ATT-01: CLOSED
+    DATA-04: CLOSED
+  fixed_gap: Explicit null scores/components and required/eligible history were missing from warm-up rows and investigation
+    candidates.
+  remaining_gap: Approved calibrated-ranking evidence for the exact existing components/scales/thresholds is not
+    established.
+  tests:
+    new_passed: 8
+    regression_passed: 279
+    baseline_reproduced_failures: 35
+    distinct_passed: 287
+  conditions_and_dependency_edges_changed: false
+  scoring_system_changed: false
+  successor_selected: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false

@@ -1,0 +1,106 @@
+FFFF.F.                                                                  [100%]
+=================================== FAILURES ===================================
+________ test_warmup_exposes_null_components_and_exact_required_history ________
+
+    def test_warmup_exposes_null_components_and_exact_required_history():
+        _, result = evaluate(inputs(short=True))
+        for row in result['rows']:
+            assert row['status'] == 'warmup' and not row['eligible']
+>           assert row['salience'] is None
+                   ^^^^^^^^^^^^^^^
+E           KeyError: 'salience'
+
+tests/test_att03_warmup.py:51: KeyError
+________ test_late_leading_history_eligible_only_at_actual_receipt_cut _________
+
+    def test_late_leading_history_eligible_only_at_actual_receipt_cut():
+        data = inputs()
+        for f in data.values():
+            # Exactly the first five required bars arrive one millisecond later.
+            df = f['4h']
+            df.loc[df.index[-26:-21], ['available_at_ms', 'observed_at_ms']] = CUT + 1
+        original = deepcopy(data)
+        _, before = evaluate(data)
+        _, after = evaluate(data, CUT + 1)
+        assert all(r['status'] == 'warmup' and not r['eligible'] for r in before['rows'])
+>       assert all(r['eligible'] and r['history']['eligible_at_ms'] == CUT + 1 for r in after['rows'])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_att03_warmup.py:71: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <list_iterator object at 0x784c8b830820>
+
+>   assert all(r['eligible'] and r['history']['eligible_at_ms'] == CUT + 1 for r in after['rows'])
+                                 ^^^^^^^^^^^^
+E   KeyError: 'history'
+
+tests/test_att03_warmup.py:71: KeyError
+_______ test_date_advance_cannot_invent_history_or_finalize_partial_bar ________
+
+    def test_date_advance_cannot_invent_history_or_finalize_partial_bar():
+        data = inputs(short=True)
+        for f in data.values():
+            f['4h'].loc[f['4h'].index[-1], 'bar_state'] = 'PARTIAL'
+        _, before = evaluate(data)
+        _, later = evaluate(data, CUT + TF)
+>       assert all(not r['eligible'] and r['salience'] is None for r in before['rows'] + later['rows'])
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_att03_warmup.py:84: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <list_iterator object at 0x784c8b5767d0>
+
+>   assert all(not r['eligible'] and r['salience'] is None for r in before['rows'] + later['rows'])
+                                     ^^^^^^^^^^^^^
+E   KeyError: 'salience'
+
+tests/test_att03_warmup.py:84: KeyError
+_____________ test_invalid_missing_inputs_are_distinct_from_warmup _____________
+
+    def test_invalid_missing_inputs_are_distinct_from_warmup():
+        data = inputs(short=True)
+        data['S00/USDT'] = {}
+        data['S01/USDT']['4h'].loc[:, 'close'] = float('nan')
+        _, r = evaluate(data)
+        rows = {x['symbol']: x for x in r['rows']}
+        assert rows['S00/USDT']['status'] == rows['S01/USDT']['status'] == 'missing'
+        assert rows['S02/USDT']['status'] == 'warmup'
+        assert r['issues'] and r['rejected_inputs']
+>       assert all(x['salience'] is None and not x['eligible'] for x in rows.values())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_att03_warmup.py:97: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <dict_valueiterator object at 0x784c8b424450>
+
+>   assert all(x['salience'] is None and not x['eligible'] for x in rows.values())
+               ^^^^^^^^^^^^^
+E   KeyError: 'salience'
+
+tests/test_att03_warmup.py:97: KeyError
+__________ test_history_reaches_receipt_candidates_and_exact_restart ___________
+
+tmp_path = PosixPath('/mnt/luffy-data/att03-baseline-20261006/test_history_reaches_receipt_c0')
+
+    def test_history_reaches_receipt_candidates_and_exact_restart(tmp_path):
+        obs = frozen_observation(inputs(short=True))
+        policy = A.AdmissionPolicy(12, 2, 2, 0)
+        j = Journal(tmp_path / 'attention.db')
+        receipt = A.persist(j, obs, policy)
+        assert not receipt['roles']['event'] and not receipt['tie_break_order']
+        for row in receipt['rows']:
+>           assert row['score'] is None and row['history']['eligible_at_ms'] is None
+                                            ^^^^^^^^^^^^^^
+E           KeyError: 'history'
+
+tests/test_att03_warmup.py:122: KeyError
+=========================== short test summary info ============================
+FAILED tests/test_att03_warmup.py::test_warmup_exposes_null_components_and_exact_required_history
+FAILED tests/test_att03_warmup.py::test_late_leading_history_eligible_only_at_actual_receipt_cut
+FAILED tests/test_att03_warmup.py::test_date_advance_cannot_invent_history_or_finalize_partial_bar
+FAILED tests/test_att03_warmup.py::test_invalid_missing_inputs_are_distinct_from_warmup
+FAILED tests/test_att03_warmup.py::test_history_reaches_receipt_candidates_and_exact_restart
+5 failed, 2 passed in 2.23s

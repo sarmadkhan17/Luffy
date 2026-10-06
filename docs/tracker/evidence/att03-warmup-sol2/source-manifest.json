@@ -1,0 +1,14 @@
+{
+  "implementation_commit": "5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c",
+  "files": {
+    "trader/cognition/attention.py": "4b7245c48e0765fdb46f561120a36fd2d5c4fab85abdcfed457fc3acaa1f7edd",
+    "trader/attention_admission.py": "1475e3424a4f53db93e94cd571eb02497421f098769e13f6d094d464d3f70077",
+    "trader/data/broad_crypto.py": "2bcf278a5cb2bb01707291a9159cbc4904fc17bd881efd82f563605434dbbc14",
+    "trader/observability/attention.py": "212aa27db4dce3d4257fce28474df24133c34c6e6f39576616d1129a1c5395e3",
+    "trader/cognition/contracts.py": "218a386b9f396b0e8d69e5d32a83f33e4162dc7e73092e455d104e1097ceb968",
+    "trader/kernel.py": "9e910c7c0589c3542c97b0895e6b931aa81e0b76bc679bb5163e5c3030cea7f7",
+    "tests/test_att03_warmup.py": "c944fededb6906793967d2dbe2dd8de2f04040da597f037e32e698a72679bb2c",
+    "SDD.md": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28",
+    "docs/superpowers/specs/2026-09-15-cognition-offline.md": "32d73ec9ae1e2f00c62c58cac66bef80f67a80fbe84f62c40104dea7e742dd79"
+  }
+}

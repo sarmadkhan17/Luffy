@@ -1,0 +1,14 @@
+{
+  "result": "PASS",
+  "checks": {
+    "only_att03_row_changed": true,
+    "all_original_conditions_preserved": true,
+    "terminal_parity": true,
+    "counts_exact": true,
+    "bundle_hashes_exact": true,
+    "tracker_available": true,
+    "current_build_selection_parity": true,
+    "att03_previous_terminal_selection_parity": true,
+    "att03_warmup_terminal_parity": true
+  }
+}
