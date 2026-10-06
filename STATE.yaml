@@ -1,5 +1,5 @@
 project: LUFFY
-sdd_version: '3.2'
+sdd_version: '3.3'
 updated_at: '2026-10-06'
 status: EVIDENCE_BASED
 
@@ -1327,3 +1327,10 @@ final_audit_repair_loop_r1:
   order_submissions: 0
   paid_calls: 0
   next_package: LUFFY-PRESTART-RUNTIME-HANDOFF-R1
+
+attention_admission_r1:
+  tracker_id: ATT-04
+  status: IN_PROGRESS
+  owner_adopted: true
+  runtime_authorized: false
+  evidence: docs/tracker/evidence/attention-admission-r1/intake.yaml

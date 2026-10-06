@@ -1,0 +1,105 @@
+package: ATT-04
+head: f29fe973dd713182dd0e7173678feed5d54fcddc
+branch: main
+owner_authorization: 2026-10-06 current owner request; implementation/tests/commits
+  authorized; runtime forbidden
+claude_execution: 'Unavailable: Not logged in; local execution under owner instruction'
+untouched:
+- graphify-out/**
+- docs/checkpoints/**
+perf01:
+  id: PERF-01
+  area: Observed issues
+  stage: Cross-cutting
+  item_type: DEFECT
+  release_scope: BASELINE
+  status: OPEN
+  required_behavior: Establish first-cycle and sustained timing under existing 240s
+    contract.
+  why_needed: Latest diagnostic first cycle223.759s completed before stop, but Portfolio
+    did not trigger. Historical31.075s difference remains unproven; full-workload
+    matched causal evidence and sustained timing are absent.
+  closure_condition: Approved instrumented run distinguishes boot/first/recurring/shutdown
+    and establishes agreed safety envelope with unchanged workload and complete gaps,
+    or records precise remaining failure.
+  failure_regression_proof: Repeat the exact original failure and a nearby adverse
+    variant; verify affected already-closed boundaries without reopening unrelated
+    work.
+  dependencies: []
+  owner_role: Assigned local engineering session
+  engineering_assignee: Dots (after local access and item claim); one writer only
+  implementation_evidence: SEE_EVIDENCE
+  runtime_evidence: MEASURED_DIAGNOSTIC_ONLY; perf01-owner-measurement-r3; not full-workload
+    comparable
+  visual_approval: NOT_APPLICABLE
+  latest_evidence: 'Retained reconstruction: both historical cycles processed four
+    NEW_OPPORTUNITY_CONTEXT triggers. Portfolio checkpoint89.546540s to72.281981s
+    (-17.264559s); outside-Portfolio observed slice139.155163s to187.494276s (+48.339113s).18/20
+    symbol work and shutdown qualification prevent normalization. Baseline symbol
+    identities/whole-loop bounds absent; engineering result BLOCKED, causal result
+    UNKNOWN.'
+  source_ids:
+  - S05
+  - S06
+  - S07
+  - S11
+  - S16
+  source_sections: 'Parent requirement(s): RUN-03'
+  next_proof: "Retained-evidence gap: The later historical cycle\u2019s MainThread\
+    \ elapsed cost for exactly the baseline common-symbol/input workload, with the\
+    \ two extra symbols and their induced pre-scan/evidence work excluded. Baseline\
+    \ per-symbol identities/bounds are absent, so this equivalent-work cost cannot\
+    \ be reconstructed from retained records. No generic runtime retry is requested\
+    \ or authorized."
+  acceptance_basis: Existing requirement/observed incident; not a new feature.
+  acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
+  priority: NEXT_AFTER_CURRENT
+  resolution_at_commit: ''
+  work_authorized: false
+  updated: '2026-10-06'
+  legacy_ids: ''
+  parent_ids:
+  - RUN-03
+  related_items: []
+  closure_evidence: ''
+  evidence_validity: Exact r3 revision/config/harness hashes pinned; scan matched
+    but Portfolio event branch differed. No root-cause, savings, recurring distribution
+    or readiness claim.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand
+    this row.
+  owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  engineering_result: BLOCKED
+  diagnostic_attempts_completed: 2
+  additional_owner_attempt_consumed: true
+  required_external_evidence: "The later historical cycle\u2019s MainThread elapsed\
+    \ cost for exactly the baseline common-symbol/input workload, with the two extra\
+    \ symbols and their induced pre-scan/evidence work excluded. Baseline per-symbol\
+    \ identities/bounds are absent, so this equivalent-work cost cannot be reconstructed\
+    \ from retained records."
+  diagnostic_evidence: docs/tracker/evidence/2026-10-06-perf01-r3-terminal-report.yaml
+  causal_reconstruction_evidence: docs/tracker/evidence/2026-10-06-perf01-retained-reconstruction.yaml
+  causal_result: UNKNOWN
+likely_files:
+- SDD.md
+- config.yaml
+- trader/cognition/admission.py
+- trader/data/broad_crypto.py
+- trader/kernel.py
+- trader/core/types.py
+- trader/learning/capture_runtime.py
+- trader/portfolio/current.py
+- trader/dashboard/server.py
+- frontend/src/views/LiveReads.tsx
+- tests/test_hierarchical_admission.py
+protected_suites:
+- test_cognition_attention
+- test_attention_telemetry
+- test_declared_universe_is_traded
+- test_universe_frames_timeframes
+- test_feature_ctx_universe
+- test_orphan_positions
+- test_protection_snapshot
+- test_reconcile
+- test_runtime_portfolio_integration
+- test_normal_learning_loop_closure
+- test_stage1_entry_authority

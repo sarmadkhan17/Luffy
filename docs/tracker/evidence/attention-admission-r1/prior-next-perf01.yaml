@@ -1,0 +1,37 @@
+work_package:
+  id: PERF-01
+  status: SELECTED_NOT_STARTED
+  status_scope: Selected implementation workflow slot; no production correction started. Existing Tracker read contract
+    requires OPEN. Actual diagnostic engineering result is BLOCKED below.
+  result: BLOCKED
+  mode: DIAGNOSIS_ONLY
+  purpose: Retained reconstruction rejects additional Portfolio trigger count as historical cause; equivalent common-symbol/input
+    timing remains UNKNOWN.
+  objective: "The later historical cycle\u2019s MainThread elapsed cost for exactly the baseline common-symbol/input\
+    \ workload, with the two extra symbols and their induced pre-scan/evidence work excluded. Baseline per-symbol\
+    \ identities/bounds are absent, so this equivalent-work cost cannot be reconstructed from retained records."
+  implementation_started: false
+  code_fix_selected: false
+  diagnostic_execution_completed: true
+  additional_owner_attempt_consumed: true
+  runtime_execution_authorized: false
+  new_observation_authorized: false
+  threshold_change_authorized: false
+  workload_reduction_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  tracker_source: docs/tracker/LUFFY_Product_Tracker_v1.yaml
+  observed_runtime_revision: 25cc7d0021435ea5f1182f1b459ad2c04cf6a272
+  evidence:
+  - docs/tracker/evidence/2026-10-06-perf01-r3-terminal-report.yaml
+  - docs/tracker/evidence/2026-10-06-perf01-retained-reconstruction.yaml
+  evidence_scope: Retained stages and exact checkpoint events only; both historical cycles have four triggers and
+    Portfolio wall decreased17.264559s. Outside-Portfolio48.339113s is unmatched, not normalized regression.
+  allowed_actions:
+  - Read retained exact PERF-01 evidence only; no services, APIs, optimization or runtime retry.
+  acceptance:
+  - Preserve original PERF-01 closing condition.
+  - Require source/workload/event-matched causal evidence before correction; preserve240s and all safety/coverage/provenance.
+  constraints:
+  - No automatic retry, speculative optimization, trading activation, recovery clearing or provider enablement.
+  next_item_selected: null

@@ -11,14 +11,15 @@ metadata:
   repository_modified: true
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
     prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
-  current_active_item: PERF-01
-  current_active_result: BLOCKED_CAUSAL_EVIDENCE_GAP
-  row_count: 176
+  current_active_item: ATT-04
+  current_active_result: OWNER_APPROVED_IMPLEMENTATION
+  row_count: 177
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
     is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown is an
     optional generated reference.
   pending_adoption: null
   status_counts:
+    IN_PROGRESS: 1
     EVIDENCE_TO_MAP: 130
     AWAITING_EVIDENCE: 15
     AWAITING_OWNER: 14
@@ -75,9 +76,8 @@ operating_rules:
     is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization
     and adoption checks.
 - rule: Current work
-  detail: OPEN-09 adoption is closed by the control-plane reconciliation. PERF-01 is the single selected next item
-    in DIAGNOSIS_ONLY / NOT_STARTED state; this selection authorizes no code change, restart, observation, provider
-    use or trading activation.
+  detail: ATT-04 is the single owner-authorized ENGINEERING_ONLY implementation package. PERF-01 remains
+    unchanged and BLOCKED/UNKNOWN. No restart, runtime observation, provider enablement or trading activation is authorized.
 - rule: Activation
   detail: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers,
     a restart or a scope expansion.
@@ -2156,6 +2156,48 @@ items:
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- id: ATT-04
+  area: Attention & research
+  stage: '3'
+  item_type: ARCHITECTURE_IMPLEMENTATION
+  release_scope: BASELINE
+  status: IN_PROGRESS
+  required_behavior: Hierarchical deterministic crypto admission before expensive discretionary processing; independent
+    safety/exposure service.
+  why_needed: Retained scan 78513e8e processed 20 symbols despite only one salience selection, 15 warmup refusals
+    and four uncaptured members.
+  impact: Bound discretionary deep processing without redefining crypto eligibility, peer populations or whole-book
+    exposure.
+  closure_condition: Versioned owner policy and normal caller enforce 0..12 discretionary slots, at most two event
+    and two persisted rotating exploration slots; offline integration, replay, corruption and adjacent regressions
+    prove independent exposure/protection and peer, strategy, Portfolio, learning and UI semantics. Closure is implementation/test
+    level; no runtime or performance claim.
+  failure_regression_proof: Cap 12 to 1 does not drop mandatory exposure service; missing/corrupt receipts and exploration
+    state refuse; admitted-only peer mutant detected.
+  dependencies:
+  - DATA-06
+  - ATT-02
+  - ATT-03
+  parent_ids:
+  - ATT-01
+  related_items:
+  - PERF-01
+  - PERF-03
+  owner_role: Owner-approved local engineering
+  engineering_assignee: Codex
+  implementation_evidence: IN_PROGRESS
+  runtime_evidence: NOT_AUTHORIZED
+  visual_approval: NOT_APPLICABLE
+  latest_evidence: docs/tracker/evidence/attention-admission-r1/intake.yaml; owner adopted policy in current session.
+  source_ids:
+  - S01
+  source_sections: "SDD \xA7\xA72.2,6.8,8,28,35.1; current owner adoption"
+  next_proof: Implement and verify exact closure contract without runtime.
+  acceptance_basis: Explicit owner-adopted architecture 2026-10-06
+  acceptance_status: OWNER_APPROVED
+  priority: CURRENT
+  work_authorized: true
+  updated: '2026-10-06'
 - id: RES-01
   area: Attention & research
   stage: '3'

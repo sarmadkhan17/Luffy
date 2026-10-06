@@ -1,4 +1,4 @@
-# LUFFY Official Solution Design (SDD) v3.2
+# LUFFY Official Solution Design (SDD) v3.3
 
 **Status:** AUTHORITATIVE TARGET ARCHITECTURE  
 **Purpose:** Complete single build authority for human and AI development agents  
@@ -12,6 +12,10 @@
 > If code, an old document, an agent suggestion, or a new technology conflicts with this SDD, the SDD wins until the owner explicitly approves a versioned SDD revision. Do not silently reopen or redesign a locked decision.
 
 ---
+
+## v3.3 owner-adopted Attention admission
+
+2026-10-06: The owner adopts hierarchical deterministic crypto Attention admission. This revision changes compute admission, not Risk, execution permission, provider policy or runtime scheduling. Twelve is an initial bounded policy to validate, not a mathematical optimum.
 
 ## v3.2 reconciliation scope
 
@@ -691,6 +695,28 @@ Weights must be calibrated; the formula is a design template, not a permanently 
 ## 8.3 Cost control
 
 Low-value research may be paused when LLM/data/compute cost rises.
+
+---
+
+## 8.4 Crypto observation and deep admission (owner adoption 2026-10-06)
+
+The eligible crypto cohort is discovered from connected venue metadata and deterministic account/data constraints. Non-crypto and unknown asset classification cannot enter discretionary trading candidates; external indices, FX/rates and commodities remain context only. Public venue eligibility does not imply account permission; Risk retains its existing authoritative checks.
+
+Cheap broad observation precedes deep admission. Explicit typed boundaries distinguish the broad eligible crypto cohort, cross-sectional peer cohort, discretionary admissions, context anchors, exposure-required symbols, and event/exploration admissions. They must never be treated as interchangeable lists.
+
+The canonical policy lives in config.yaml attention.admission: minimum zero, maximum 12 discretionary deep slots, with up to two event/anomaly slots and two deterministic exploration slots inside that maximum. Reserved capacity need not be filled. Remaining ranked/relevant capacity uses existing salience meanings and thresholds. Salience is unusualness, not expected profit. Missing history remains warm-up/unknown; a recorded rotating strategy-relevance fallback uses valid ticker information without fabricating scores. Learned priority cannot override the salience threshold, event/exploration reservations or independent rotation.
+
+BTC and ETH are context anchors; anchor status alone never forces deep admission. Open positions, protection, reconciliation, unresolved execution, orphan handling and required exit observations are serviced independently of discretionary admission and cannot be truncated by slot limits.
+
+Strategy include/exclude defines strategy-specific eligibility/relevance, not unconditional per-cycle deep processing. Approved specs retain their declared universe and all eligibility gates. A future explicit required-evaluation contract must name its requirement; it consumes discretionary capacity and records a deferral when exhausted, never enlarges the budget. Exposure servicing is independent.
+
+Admission uses point-in-time bulk tickers and cached closed candles, with no full order book, multi-timeframe network snapshot, strategy evaluation or learning capture before admission. Cross-sectional peers retain the independently defined strategy population; cached peer data is loaded independently of admitted members, with missing/stale peer data explicit and never replaced by the admitted set. Attention salience/breadth/correlation uses the broad crypto observation population (versioned broad-cohort semantics replacing the former first-16 subset). No pre-admission per-symbol candle acquisition is required. Strategies requiring unavailable peer data remain unassessable under existing missing-data rules.
+
+A durable admission receipt records policy/schema, exact source cut and retained inputs, universe and peer identities, features/statuses, scores/relevance, event/exploration/category reasons, anchors/exposure, tie ordering, admissions/rejections/deferrals, capacity and degraded state. Persist exploration progress atomically with the receipt before acquisition, advancing even after acquisition failure. Corrupt or unavailable provenance/state refuses discretionary admission; mandatory safety work continues. Replay uses only the frozen input and prior state.
+
+Rejected and explored observations remain evidence for selection-bias/missed-mover review; they are not fabricated decisions or profitable opportunities. Portfolio holdings come from whole-book venue truth independently of admissions. GUI/report counters identify broad observations, peer population, deep admission, decisions and mandatory exposure service separately.
+
+Closure requires offline normal-path, restart/replay, failure/corruption and safety negative controls. Runtime performance and sustained operation require separately authorized observation; reduced workload never closes or normalizes PERF-01.
 
 ---
 
