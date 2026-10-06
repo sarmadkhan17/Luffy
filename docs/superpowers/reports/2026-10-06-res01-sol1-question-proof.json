@@ -1,0 +1,248 @@
+{
+  "question": {
+    "context": {
+      "attention": {
+        "allocation_decision_id": "a6d498d4448c4efcb07581f3bdf2725702bc29d5640e3bdb43c3b00d25a3e951",
+        "scan_id": "s1",
+        "scan_sha256": "00915107f580952eb2c6d8c73da8016b8e7d450b39a7bbe4c7418b0c24cdb59f"
+      },
+      "world_model": {
+        "model_id": "world.model.v1:553acb7ad47f2f734d9a6237017c2888d051d98814145b4936c5fbb55b49c3ef",
+        "reason": null,
+        "record_id": "world.replay.record.v1:c29fd1373074e2aca6c5605d5d5dfb4819ce31da0b80543e73e75738d5fe6af3",
+        "status": "AVAILABLE"
+      }
+    },
+    "protocol": {
+      "alternatives": [
+        {
+          "invalidator": "Invalidated when signed score < threshold",
+          "name": "same_direction",
+          "prediction": "signed score >= frozen threshold"
+        },
+        {
+          "invalidator": "Invalidated when absolute score >= threshold",
+          "name": "normalization",
+          "prediction": "-threshold < signed score < threshold"
+        },
+        {
+          "invalidator": "Invalidated when signed score > -threshold",
+          "name": "opposite_direction",
+          "prediction": "signed score <= -frozen threshold"
+        }
+      ],
+      "baseline_bars": 20,
+      "catalog_id": "catalog_9777745b96669be5",
+      "horizon_bars": 5,
+      "sign": 1,
+      "target_keys": [
+        [
+          "S0/USDT",
+          1791316800000
+        ],
+        [
+          "S0/USDT",
+          1791331200000
+        ],
+        [
+          "S0/USDT",
+          1791345600000
+        ],
+        [
+          "S0/USDT",
+          1791360000000
+        ],
+        [
+          "S0/USDT",
+          1791374400000
+        ]
+      ],
+      "threshold": 2.0
+    },
+    "question": "Does unusual volume persist, return toward baseline, or reverse?",
+    "question_id": "ed479d53dd90e5595897fba12d9a398bd828899166b2056d48277d042f46d5ef",
+    "question_kind": "investigation_volume_anomaly",
+    "schema": "investigation-volume-anomaly-question.v1",
+    "scope": {
+      "investigation_id": "investigation_e9555dd74660bff0",
+      "kind": "investigation",
+      "symbol": "S0/USDT"
+    },
+    "semantics": "investigation-sourced research question; the case's own observable question verbatim; not a profitability, trade or causal question; no direction, score, probability, rank, salience or trading authority",
+    "source": {
+      "case_payload_sha256": "7eb81fa33f2b09a15e5badc5844c067f39b915ff5b6c1e60105b677661e45962",
+      "catalog_id": "catalog_9777745b96669be5",
+      "episode_id": "episode_8f9ef890fc1e594e",
+      "investigation_id": "investigation_e9555dd74660bff0",
+      "registered_ms": 1791302460000,
+      "registration_context_id": "opportunity-context.v1:fe30c559896a6cc6480ab55505c8f09e4e2c2cd3aa6a41ef3416d69479c75a6f",
+      "registration_context_sha256": "20908139184c0ecfa928839cf883591be33047b590d1fe4e35e856ec5396fb27",
+      "registration_update_id": "update_2f0fce183a07444c",
+      "registration_update_sha256": "f79c155ecc29ec727ea81e1d20d56248320d372b5884ae90731f93d5593b0d76",
+      "state_id": "state_8468ee88a57c7ab5",
+      "trace_id": "intelligence-trace.v1:d88ec5bd08b6d8c15e0e6b4671c04cb0aba2f7355ec45a2b5fabb139f2c62ee7"
+    },
+    "source_family": "volume_anomaly"
+  },
+  "restart_health": {
+    "activated_ms": 1791302460000,
+    "active": 1,
+    "allocation": {
+      "active_skipped": [],
+      "decision_id": "a6d498d4448c4efcb07581f3bdf2725702bc29d5640e3bdb43c3b00d25a3e951",
+      "execution": "execution_closed",
+      "legacy_selected": [
+        "S0/USDT"
+      ],
+      "mode": "investigation-state-feedback.v1",
+      "refusal": null,
+      "reused": true,
+      "selected": [
+        "S0/USDT"
+      ]
+    },
+    "cases": 1,
+    "catalog_id": "catalog_9777745b96669be5",
+    "collector_evidence": {
+      "accepted": true,
+      "certificate": null,
+      "details_lost": 0,
+      "errors": 0,
+      "failure_generation": 0,
+      "fence_seq": 0,
+      "first_error_ms": null,
+      "health_published_ms": 1791302460000,
+      "health_read_ms": 1791302460001,
+      "health_rechecked_ms": 1791302460001,
+      "health_schema": "attention-collector-health.v2",
+      "instance_id": "11111111111111111111111111111111",
+      "last_complete": {
+        "scan_id": "s1",
+        "seq": 1791302460000
+      },
+      "last_error_ms": null,
+      "snapshot_observed_ms": 1791302460001
+    },
+    "consumer_code_hash": "7cecb2a9059add86394004f4a0fe81765f1e078cb8cadc4497aaf59c04f90cde",
+    "counterfactuals": {
+      "added": 0,
+      "expired": [],
+      "retry": []
+    },
+    "deferred_updates": 0,
+    "elapsed_ms": 83.058,
+    "failed_invocations": 0,
+    "intelligence_trace": {
+      "duplicate": 0,
+      "refused": {},
+      "written": 0
+    },
+    "last_successful_ms": 1791302460001,
+    "last_successful_scan_id": "s1",
+    "limits": {
+      "active": 32,
+      "alternatives": 3,
+      "cases": 256,
+      "db_bytes": 33554432,
+      "diagnostic_rows": 512,
+      "next_actions": 1,
+      "runtime_ms": 20000,
+      "terminal_retention_ms": 2592000000,
+      "updates_per_case": 64,
+      "updates_per_invocation": 32
+    },
+    "memory": {
+      "added": 0,
+      "assessed": {
+        "added": 0,
+        "refused": []
+      },
+      "refused": [],
+      "unassessable": {
+        "added": 0,
+        "refused": []
+      }
+    },
+    "opportunity_context": {
+      "duplicate": 0,
+      "refused": {},
+      "written": 0
+    },
+    "reason": "forward_scan_processed",
+    "registered": 0,
+    "research": {
+      "attempted": 0,
+      "ok": 0,
+      "refused": {}
+    },
+    "resource_receipts": {
+      "accounting_scope": "investigation_step_case_local",
+      "attributed_cpu_ns": 5051126,
+      "attributed_wall_ns": 5215598,
+      "coverage": "committed_case_local_investigation_work",
+      "duplicates_ignored": 0,
+      "execution_id": "e166d842392f434dba274228e2e4397b",
+      "not_covered": [
+        "total_research_cost",
+        "total_attempted_cost",
+        "failed_or_rolled_back_attempt_cost",
+        "end_to_end_step_duration_attributable_to_cases"
+      ],
+      "pass_cpu_ns": 75006612,
+      "pass_wall_ns": 82946684,
+      "resource_compliance": "UNKNOWN",
+      "schema_version": "investigation-resource-receipt.v1",
+      "unattributed_cpu_ns": 69955486,
+      "unattributed_wall_ns": 77731086,
+      "uncommitted_attempt_cost": "UNKNOWN",
+      "unknown_receipts": 0,
+      "unknown_units": {},
+      "written": 1
+    },
+    "skipped": {},
+    "source_scan_id": "s1",
+    "status": "ok",
+    "typed_outcomes": {
+      "added": 0,
+      "evicted_total": 0,
+      "refused": [],
+      "retry": []
+    },
+    "updated": 0,
+    "updated_ms": 1791302460001
+  },
+  "retained_records": [
+    {
+      "id": "ed479d53dd90e5595897fba12d9a398bd828899166b2056d48277d042f46d5ef",
+      "schema": "investigation-volume-anomaly-question.v1",
+      "sha256": "3c16240e4bfe55a5f36d35dbc1092222d1cc364e9546934af2df8b51548fb070"
+    },
+    {
+      "id": "012afa760d96061772d4bee09318bfb70378e75597e4171e696df85862f1838a",
+      "schema": "investigation-volume-anomaly-plan.v1",
+      "sha256": "dc6d903ddd4ee09fc8fdac6111d72b3c9841e9005b428ec5307c7cb5cd98adb9"
+    },
+    {
+      "id": "bc2ef9994f7be7d128e1bb2084fc9a297369d59629b0bbe812be2f38958fedcf",
+      "schema": "investigation-volume-anomaly-evidence.v1",
+      "sha256": "e31a0a8f03b31efb0aa588bcdcd77fc7372473b12069b2e5a3cd01d9fa72c2cf"
+    },
+    {
+      "id": "95a5fe4f28354c4444b48f4ba6ac947365657be1fb3856d2cf27df21dd9487f6",
+      "schema": "investigation-volume-anomaly-result.v1",
+      "sha256": "e67714a62e368987eba56a869146eec24dd8230cd5cc4438d1375e575d5dae2f"
+    },
+    {
+      "id": "13e17b87f1c742cbbfa21b1ea61fffa7dd268903697972033bf2f5c9065d1d92",
+      "schema": "investigation-volume-anomaly-run.v1",
+      "sha256": "c313d8d7ed3be84c7fa916ee85e02148210f9e2aa287f1b307baa682239a9091"
+    },
+    {
+      "id": "e4e31007c14a4515e9d291b5f8ebd4c7f206fe67cc2b84934fbab8334b617f85",
+      "schema": "investigation-volume-anomaly-bank-object.v1",
+      "sha256": "a80e1f7807a1092dcf2074f3c4a9cb53ff3a01b78dcb1128bdbd7577b941f01d"
+    }
+  ],
+  "schema": "res01-offline-producer-proof.v1",
+  "scope": "Synthetic provenance-annotated candles; unmocked bounded producer; no live-market claim"
+}
