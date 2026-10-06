@@ -66,7 +66,8 @@ def test_the_sequence_survives_a_restart(tmp_path):
     t, a = led.next_alpha(0.10, 0.05)
     assert t == 1
     assert led.record_test("h1", "4h", "trail", "gate1", a / 2, a, False, {})
-    led.record_test("h2", "4h", "trail", "gate1", 0.9, 0.01, False, {})
+    _t2, a2 = led.next_alpha(0.10, 0.05)
+    led.record_test("h2", "4h", "trail", "gate1", 0.9, a2, False, {})
     again = Ledger(Journal(db))
     t3, a3 = again.next_alpha(0.10, 0.05)
     assert t3 == 3

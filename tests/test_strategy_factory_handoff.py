@@ -56,7 +56,9 @@ def _candidate(j, state="referee_passed", p=0.001, alpha=0.0025,
                        "portfolio": {"total_pct": 40.0, "max_dd_pct": 20.0},
                        "testable": True, "verdict": "scored"},
                       "survivor", "r", {})
-    if look:
+    # a queued/deferred candidate has not been looked at: a spent held-out
+    # can never be in those states (ledger refuses to restore it)
+    if look and state not in ("queued", "deferred"):
         led.record_test(c.hash, "4h", "fixed", "gate1", p, alpha, False,
                         {"t": 1, "evaluated": evaluated_record(c)})
     led.set_candidate(

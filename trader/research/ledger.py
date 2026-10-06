@@ -108,6 +108,15 @@ CREATE TABLE IF NOT EXISTS research_tests (
     at TEXT
 );
 
+-- the error budget's own parameters, fixed by the first look; config cannot
+-- re-parameterise a sequence that has already spent
+CREATE TABLE IF NOT EXISTS research_budget (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    alpha REAL NOT NULL,
+    w0 REAL NOT NULL,
+    registered_at TEXT
+);
+
 -- what the referee did with each survivor
 CREATE TABLE IF NOT EXISTS research_candidates (
     hash TEXT PRIMARY KEY,
@@ -366,10 +375,34 @@ class Ledger:
         """(t, alpha_t) for the next look — the sequence survives restarts
         because it IS the table."""
         from . import fdr
+        alpha, w0 = self.register_budget(alpha, w0)
         rows = self.tests()
         t = len(rows) + 1
         rej = [i for i, r in enumerate(rows, start=1) if r["rejected"]]
         return t, fdr.alpha_at(t, rej, alpha, w0) * float(brake)
+
+    def register_budget(self, alpha: float, w0: float) -> tuple[float, float]:
+        """Fix (alpha, w0) at the first look; afterwards the registered
+        values win over whatever the config now says."""
+        with self.journal._tx() as c:
+            c.execute("INSERT OR IGNORE INTO research_budget "
+                      "(id, alpha, w0, registered_at) VALUES (1,?,?,?)",
+                      (float(alpha), float(w0), now_utc().isoformat()))
+        r = self.journal.query(
+            "SELECT alpha, w0 FROM research_budget WHERE id=1")[0]
+        if (abs(r["alpha"] - float(alpha)) > 1e-12
+                or abs(r["w0"] - float(w0)) > 1e-12):
+            log.warning(f"research budget: config alpha/w0 ({alpha}, {w0}) "
+                        f"differ from registered ({r['alpha']}, {r['w0']}); "
+                        f"registered values apply")
+        return float(r["alpha"]), float(r["w0"])
+
+    def _registered_or_default(self) -> tuple[float, float]:
+        r = self.journal.query(
+            "SELECT alpha, w0 FROM research_budget WHERE id=1")
+        if not r:                   # the runner registers via next_alpha first
+            return 0.10, 0.05
+        return float(r[0]["alpha"]), float(r[0]["w0"])
 
     def spent(self, h: str, gate: str = "gate1") -> dict | None:
         """The look that already read held-out prices for this rule, if any."""
@@ -398,6 +431,11 @@ class Ledger:
                     alpha_t: float, braked: bool, detail: dict) -> bool:
         if self.spent(h, gate):
             raise ValueError("holdout_already_spent")
+        # the level must be the registered sequence's (a brake may only
+        # lower it): no caller-chosen threshold can reject a test
+        t, ceiling = self.next_alpha(*self._registered_or_default())
+        if float(alpha_t) > ceiling + 1e-12:
+            raise ValueError("unregistered_alpha")
         rejected = p is not None and float(p) <= float(alpha_t)
         with self.journal._tx() as c:
             c.execute(

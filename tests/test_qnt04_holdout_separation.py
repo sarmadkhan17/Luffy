@@ -116,7 +116,8 @@ def test_missing_heldout_evidence_yields_no_frames(tmp_path):
 
 # ── spent held-out is permanent ──────────────────────────────────────────
 def _spend(led, h="h1", cut=1000, tf="4h"):
-    return led.record_test(h, tf, "fixed", "gate1", 0.5, 0.01, False,
+    _t, a = led.next_alpha(0.10, 0.05)
+    return led.record_test(h, tf, "fixed", "gate1", 0.5, a, False,
                            {"cut_ms": cut})
 
 
