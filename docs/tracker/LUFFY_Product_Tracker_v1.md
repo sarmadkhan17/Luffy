@@ -1,3 +1,5 @@
+> Current [SOL-2][RES-05]: BLOCKED. Collector result semantics corrected; complete refuted-result/next-question proof remains open. [Evidence](evidence/res05-bank-persistence-sol2/REPORT.md). RES-06/RES-07 unchanged. Earlier summaries below are historical.
+
 > Current [SOL-2][RES-04]: CLOSED at architecture/offline scope. Versioned rendered-content dedup, relevant bounded passages and semantically verified provenance/limits; 83 combined and 11 final focused checks passed. Zero live provider/LLM calls. RES-05 eligible, unselected; original condition unchanged. [Evidence](evidence/res04-preprocessing-sol2/REPORT.md). Earlier summaries below are historical.
 
 > Current SOL-2 reconciliation: QNT-06 CLOSED at architecture/offline scope. Insufficient evidence returns UNTESTED with required/observed sufficiency, distinct from FAIL/PASS. QNT-08 remains blocked on QNT-03 (via WRLD-07) and QNT-05 (via QNT-04); no successor selected. [Evidence](evidence/qnt06-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
@@ -1984,26 +1986,26 @@ future_calibration:
 - **stage**: 3
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: BLOCKED
 - **why_needed**: Bookmarks and logs alone cannot close the research loop.
 - **closure_condition**: Question, sources, claims, support/contradiction, experiment, conclusion, limitations, cost and next question are linked in normal persistence.
 - **failure_regression_proof**: Refuted/inconclusive results are first-class; missing source is not fabricated support.
 - **dependencies**: RES-04
 - **owner_role**: Attention & research owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2
+- **implementation_evidence**: MAPPED_COLLECTOR_RESULT_SEMANTICS_CORRECTED
+- **runtime_evidence**: OFFLINE_SYNTHETIC_ONLY
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: External worker persists structured INCONCLUSIVE records; seven forged semantics/outcome/cost cases corrected. Investigation Bank retains refuted alternatives but has no own next question; standalone REFUTED result chain not demonstrated. Evidence: docs/tracker/evidence/res05-bank-persistence-sol2/REPORT.md.
 - **source_ids**: S01, S02, S06, S14
 - **source_sections**: §12.6
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: Complete a registered first-class refuted-result persistence path with a linked next question; preserve original immutable records and source/evaluation authority.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
 - **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
 - **closure_evidence**:

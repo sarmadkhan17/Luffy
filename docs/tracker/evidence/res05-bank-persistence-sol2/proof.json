@@ -1,0 +1,35 @@
+{
+  "item": "RES-05",
+  "status": "BLOCKED",
+  "scope": "ARCHITECTURE_OFFLINE",
+  "implementation_commit": "2e3c43ea931893a44835f409572c200a3d31dc1f",
+  "source_sha256": {
+    "trader/research/external_research.py": "8e5808a3fab1fd336d87741b26aae744fb1a7e760bbc2976937076557923c601",
+    "tests/test_res05_bank_persistence.py": "26035415a51a1d58e901957a8c3e012b69b4bcce4d7c5f45fb494f26fce23ead",
+    "trader/observability/investigation_research.py": "e4242aeb8563b101498c174457afd149c3e72475c47a99e0e9eafe0748b707a5",
+    "trader/cognition/research_bank.py": "85ef8f15f8f4fe47f5058160be52aba03fa3dd19e9344260f2f2fd4a114344f2",
+    "trader/cognition/predictive_bank.py": "6e5156d46a3ea643c871af99a7f3ac389ac3498fcb3ba76378df7ee24b8e761f",
+    "trader/research/predictive_bridge.py": "b90803335119d7a64cb2ac7d99ba245e1e84ac3e2ece2b33fb4b20794e424af3",
+    "tests/test_res04_preprocessing.py": "71e604f45d939608921d952934e9acaa2b0abdd99ff2a2f248ac9384fb2c4fba",
+    "tests/test_external_research_router.py": "697547dd95779a3898666f7f76901c48fe443e246650b58568e228c5d3f703ab",
+    "tests/test_generated_question_handoff_negative_memory.py": "91fc652adce68911045ab992792d85489d8bd86184f34754428847ca88b29053",
+    "tests/test_investigation_research_family.py": "aa9ba8f600fac1d99733a06bb6a03c811a23efcaf21d84876385b303f53dbf6f",
+    "tests/test_strategy_decay_research_bank.py": "beae454dd20fb902a2b081ba690fde546e6e602b5846c5b7f42f6a3e81d530ef"
+  },
+  "baseline_failures": 7,
+  "focused_passed": 12,
+  "initial_subset_passed": 60,
+  "combined_result": "161 passed in 137.89s",
+  "provider_calls": 0,
+  "llm_calls": 0,
+  "paid_spend": 0,
+  "actual_gap": "Collector replay accepted fabricated/missing result semantics; completed investigation records with refuted alternatives still lack a linked next question.",
+  "change": "Validate collector fixed result fields; rederive collection disposition and reconcile declared current-pass receipt costs.",
+  "remaining_gap": "Full completed/refuted/inconclusive result-to-next-question closure proof remains incomplete.",
+  "downstream": {
+    "RES-06": "UNCHANGED; RES-05 remains unmet",
+    "RES-07": "UNCHANGED; RES-05 remains unmet"
+  },
+  "successor_selected": false,
+  "combined_passed": 161
+}

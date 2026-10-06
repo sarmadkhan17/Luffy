@@ -3137,3 +3137,14 @@ res04_preprocessing_closure:
     AWAITING_OWNER: 14
     BLOCKED: 7
     OPEN: 4
+
+res05_persistence_result:
+  item: RES-05
+  status: BLOCKED
+  scope: ARCHITECTURE_OFFLINE
+  evidence: docs/tracker/evidence/res05-bank-persistence-sol2/REPORT.md
+  actual_gap: 'External worker persists structured INCONCLUSIVE records; seven forged semantics/outcome/cost cases
+    corrected. Investigation Bank retains refuted alternatives but has no own next question; standalone REFUTED
+    result chain not demonstrated. Evidence: docs/tracker/evidence/res05-bank-persistence-sol2/REPORT.md.'
+  real_provider_calls: 0
+  successor_selected: false

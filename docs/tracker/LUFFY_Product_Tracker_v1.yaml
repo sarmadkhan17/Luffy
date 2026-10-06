@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.40-res04-preprocessing-sol2
+  version: 1.41-res05-persistence-sol2
   created_date: '2026-10-05'
   title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -11,8 +11,8 @@ metadata:
   repository_modified: true
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
     prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
-  current_active_item: RES-04
-  current_active_result: CLOSED_ARCHITECTURE_OFFLINE_PREPROCESSING
+  current_active_item: RES-05
+  current_active_result: BLOCKED_REFUTED_RESULT_NEXT_QUESTION_PROOF
   row_count: 178
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
     is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown is an
@@ -20,11 +20,11 @@ metadata:
   pending_adoption: null
   status_counts:
     CLOSED: 48
-    EVIDENCE_TO_MAP: 89
+    EVIDENCE_TO_MAP: 88
     DEFERRED: 7
     AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14
-    BLOCKED: 7
+    BLOCKED: 8
     OPEN: 4
   workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged and
     excluded from adoption, synchronization and parity requirements.
@@ -2594,7 +2594,7 @@ items:
   stage: '3'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: BLOCKED
   required_behavior: Retain structured Research Bank results and next questions.
   why_needed: Bookmarks and logs alone cannot close the research loop.
   closure_condition: Question, sources, claims, support/contradiction, experiment, conclusion, limitations, cost
@@ -2603,26 +2603,27 @@ items:
   dependencies:
   - RES-04
   owner_role: Attention & research owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: SOL-2
+  implementation_evidence: MAPPED_COLLECTOR_RESULT_SEMANTICS_CORRECTED
+  runtime_evidence: OFFLINE_SYNTHETIC_ONLY
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 'External worker persists structured INCONCLUSIVE records; seven forged semantics/outcome/cost
+    cases corrected. Investigation Bank retains refuted alternatives but has no own next question; standalone REFUTED
+    result chain not demonstrated. Evidence: docs/tracker/evidence/res05-bank-persistence-sol2/REPORT.md.'
   source_ids:
   - S01
   - S02
   - S06
   - S14
   source_sections: §12.6
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: Complete a registered first-class refuted-result persistence path with a linked next question; preserve
+    original immutable records and source/evaluation authority.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
   resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
   closure_evidence: ''

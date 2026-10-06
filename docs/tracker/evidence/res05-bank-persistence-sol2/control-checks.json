@@ -1,0 +1,30 @@
+{
+  "status": "AVAILABLE",
+  "selected": {
+    "id": "RES-05",
+    "status": "BLOCKED",
+    "mode": "ENGINEERING_ONLY",
+    "objective": "Retain structured Research Bank results and linked next questions; preserve source and evaluation authority.",
+    "result": "BLOCKED_REFUTED_RESULT_NEXT_QUESTION_PROOF",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "evidence": [
+      "docs/tracker/evidence/res05-bank-persistence-sol2/REPORT.md"
+    ],
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false,
+    "successor_selected": false
+  },
+  "counts": {
+    "EVIDENCE_TO_MAP": 88,
+    "OPEN": 4,
+    "IN_PROGRESS": 0,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "CLOSED": 48,
+    "DEFERRED": 7,
+    "BLOCKED": 8
+  },
+  "unrelated_rows_unchanged": 177,
+  "original_condition_and_dependencies_preserved": true
+}

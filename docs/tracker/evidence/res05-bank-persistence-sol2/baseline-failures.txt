@@ -1,0 +1,205 @@
+FFFFFFF                                                                  [100%]
+=================================== FAILURES ===================================
+_ test_rehashed_registered_result_cannot_invent_or_drop_truth[extracted_claims-value0] _
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-58/test_rehashed_registered_resul0')
+field = 'extracted_claims'
+value = {'status': 'EXTRACTED', 'claims': ['invented edge']}
+
+    @pytest.mark.parametrize("field,value", [
+        ("extracted_claims", {"status": "EXTRACTED", "claims": ["invented edge"]}),
+        ("supporting_evidence", {"status": "SUPPORTED", "source": "missing"}),
+        ("contradictory_evidence", {"status": "REFUTED", "source": "missing"}),
+        ("experiments", [{"status": "PASSED", "experiment_id": "invented"}]),
+        ("next_questions", []),
+        ("collection_status", "EMPTY"),
+        ("cost", dict(scope="current_pass", network_attempts=0, received_bytes=0,
+                      paid_cost_usd=0, llm_calls=0, total_operating_cost="NOT_MEASURED")),
+    ])
+    def test_rehashed_registered_result_cannot_invent_or_drop_truth(tmp_path, field, value):
+        j = registered(tmp_path)
+        child = FakeChild(failure=ChildResult(ok=False, error="source unavailable")) if field in (
+            "extracted_claims", "supporting_evidence", "contradictory_evidence") else FakeChild()
+        bank = R.research_pass(j, child=child)["results"][0]["bank"]
+        forged = copy.deepcopy(bank)
+        forged[field] = value
+        row = rewrite_fixture(j, bank, forged)
+>       with pytest.raises(ValueError, match="external_bank_(result_semantics|outcome_cost_binding)"):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_res05_bank_persistence.py:58: Failed
+_ test_rehashed_registered_result_cannot_invent_or_drop_truth[supporting_evidence-value1] _
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-58/test_rehashed_registered_resul1')
+field = 'supporting_evidence'
+value = {'status': 'SUPPORTED', 'source': 'missing'}
+
+    @pytest.mark.parametrize("field,value", [
+        ("extracted_claims", {"status": "EXTRACTED", "claims": ["invented edge"]}),
+        ("supporting_evidence", {"status": "SUPPORTED", "source": "missing"}),
+        ("contradictory_evidence", {"status": "REFUTED", "source": "missing"}),
+        ("experiments", [{"status": "PASSED", "experiment_id": "invented"}]),
+        ("next_questions", []),
+        ("collection_status", "EMPTY"),
+        ("cost", dict(scope="current_pass", network_attempts=0, received_bytes=0,
+                      paid_cost_usd=0, llm_calls=0, total_operating_cost="NOT_MEASURED")),
+    ])
+    def test_rehashed_registered_result_cannot_invent_or_drop_truth(tmp_path, field, value):
+        j = registered(tmp_path)
+        child = FakeChild(failure=ChildResult(ok=False, error="source unavailable")) if field in (
+            "extracted_claims", "supporting_evidence", "contradictory_evidence") else FakeChild()
+        bank = R.research_pass(j, child=child)["results"][0]["bank"]
+        forged = copy.deepcopy(bank)
+        forged[field] = value
+        row = rewrite_fixture(j, bank, forged)
+>       with pytest.raises(ValueError, match="external_bank_(result_semantics|outcome_cost_binding)"):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_res05_bank_persistence.py:58: Failed
+_ test_rehashed_registered_result_cannot_invent_or_drop_truth[contradictory_evidence-value2] _
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-58/test_rehashed_registered_resul2')
+field = 'contradictory_evidence'
+value = {'status': 'REFUTED', 'source': 'missing'}
+
+    @pytest.mark.parametrize("field,value", [
+        ("extracted_claims", {"status": "EXTRACTED", "claims": ["invented edge"]}),
+        ("supporting_evidence", {"status": "SUPPORTED", "source": "missing"}),
+        ("contradictory_evidence", {"status": "REFUTED", "source": "missing"}),
+        ("experiments", [{"status": "PASSED", "experiment_id": "invented"}]),
+        ("next_questions", []),
+        ("collection_status", "EMPTY"),
+        ("cost", dict(scope="current_pass", network_attempts=0, received_bytes=0,
+                      paid_cost_usd=0, llm_calls=0, total_operating_cost="NOT_MEASURED")),
+    ])
+    def test_rehashed_registered_result_cannot_invent_or_drop_truth(tmp_path, field, value):
+        j = registered(tmp_path)
+        child = FakeChild(failure=ChildResult(ok=False, error="source unavailable")) if field in (
+            "extracted_claims", "supporting_evidence", "contradictory_evidence") else FakeChild()
+        bank = R.research_pass(j, child=child)["results"][0]["bank"]
+        forged = copy.deepcopy(bank)
+        forged[field] = value
+        row = rewrite_fixture(j, bank, forged)
+>       with pytest.raises(ValueError, match="external_bank_(result_semantics|outcome_cost_binding)"):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_res05_bank_persistence.py:58: Failed
+_ test_rehashed_registered_result_cannot_invent_or_drop_truth[experiments-value3] _
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-58/test_rehashed_registered_resul3')
+field = 'experiments'
+value = [{'status': 'PASSED', 'experiment_id': 'invented'}]
+
+    @pytest.mark.parametrize("field,value", [
+        ("extracted_claims", {"status": "EXTRACTED", "claims": ["invented edge"]}),
+        ("supporting_evidence", {"status": "SUPPORTED", "source": "missing"}),
+        ("contradictory_evidence", {"status": "REFUTED", "source": "missing"}),
+        ("experiments", [{"status": "PASSED", "experiment_id": "invented"}]),
+        ("next_questions", []),
+        ("collection_status", "EMPTY"),
+        ("cost", dict(scope="current_pass", network_attempts=0, received_bytes=0,
+                      paid_cost_usd=0, llm_calls=0, total_operating_cost="NOT_MEASURED")),
+    ])
+    def test_rehashed_registered_result_cannot_invent_or_drop_truth(tmp_path, field, value):
+        j = registered(tmp_path)
+        child = FakeChild(failure=ChildResult(ok=False, error="source unavailable")) if field in (
+            "extracted_claims", "supporting_evidence", "contradictory_evidence") else FakeChild()
+        bank = R.research_pass(j, child=child)["results"][0]["bank"]
+        forged = copy.deepcopy(bank)
+        forged[field] = value
+        row = rewrite_fixture(j, bank, forged)
+>       with pytest.raises(ValueError, match="external_bank_(result_semantics|outcome_cost_binding)"):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_res05_bank_persistence.py:58: Failed
+_ test_rehashed_registered_result_cannot_invent_or_drop_truth[next_questions-value4] _
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-58/test_rehashed_registered_resul4')
+field = 'next_questions', value = []
+
+    @pytest.mark.parametrize("field,value", [
+        ("extracted_claims", {"status": "EXTRACTED", "claims": ["invented edge"]}),
+        ("supporting_evidence", {"status": "SUPPORTED", "source": "missing"}),
+        ("contradictory_evidence", {"status": "REFUTED", "source": "missing"}),
+        ("experiments", [{"status": "PASSED", "experiment_id": "invented"}]),
+        ("next_questions", []),
+        ("collection_status", "EMPTY"),
+        ("cost", dict(scope="current_pass", network_attempts=0, received_bytes=0,
+                      paid_cost_usd=0, llm_calls=0, total_operating_cost="NOT_MEASURED")),
+    ])
+    def test_rehashed_registered_result_cannot_invent_or_drop_truth(tmp_path, field, value):
+        j = registered(tmp_path)
+        child = FakeChild(failure=ChildResult(ok=False, error="source unavailable")) if field in (
+            "extracted_claims", "supporting_evidence", "contradictory_evidence") else FakeChild()
+        bank = R.research_pass(j, child=child)["results"][0]["bank"]
+        forged = copy.deepcopy(bank)
+        forged[field] = value
+        row = rewrite_fixture(j, bank, forged)
+>       with pytest.raises(ValueError, match="external_bank_(result_semantics|outcome_cost_binding)"):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_res05_bank_persistence.py:58: Failed
+_ test_rehashed_registered_result_cannot_invent_or_drop_truth[collection_status-EMPTY] _
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-58/test_rehashed_registered_resul5')
+field = 'collection_status', value = 'EMPTY'
+
+    @pytest.mark.parametrize("field,value", [
+        ("extracted_claims", {"status": "EXTRACTED", "claims": ["invented edge"]}),
+        ("supporting_evidence", {"status": "SUPPORTED", "source": "missing"}),
+        ("contradictory_evidence", {"status": "REFUTED", "source": "missing"}),
+        ("experiments", [{"status": "PASSED", "experiment_id": "invented"}]),
+        ("next_questions", []),
+        ("collection_status", "EMPTY"),
+        ("cost", dict(scope="current_pass", network_attempts=0, received_bytes=0,
+                      paid_cost_usd=0, llm_calls=0, total_operating_cost="NOT_MEASURED")),
+    ])
+    def test_rehashed_registered_result_cannot_invent_or_drop_truth(tmp_path, field, value):
+        j = registered(tmp_path)
+        child = FakeChild(failure=ChildResult(ok=False, error="source unavailable")) if field in (
+            "extracted_claims", "supporting_evidence", "contradictory_evidence") else FakeChild()
+        bank = R.research_pass(j, child=child)["results"][0]["bank"]
+        forged = copy.deepcopy(bank)
+        forged[field] = value
+        row = rewrite_fixture(j, bank, forged)
+>       with pytest.raises(ValueError, match="external_bank_(result_semantics|outcome_cost_binding)"):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_res05_bank_persistence.py:58: Failed
+___ test_rehashed_registered_result_cannot_invent_or_drop_truth[cost-value6] ___
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-58/test_rehashed_registered_resul6')
+field = 'cost'
+value = {'scope': 'current_pass', 'network_attempts': 0, 'received_bytes': 0, 'paid_cost_usd': 0, ...}
+
+    @pytest.mark.parametrize("field,value", [
+        ("extracted_claims", {"status": "EXTRACTED", "claims": ["invented edge"]}),
+        ("supporting_evidence", {"status": "SUPPORTED", "source": "missing"}),
+        ("contradictory_evidence", {"status": "REFUTED", "source": "missing"}),
+        ("experiments", [{"status": "PASSED", "experiment_id": "invented"}]),
+        ("next_questions", []),
+        ("collection_status", "EMPTY"),
+        ("cost", dict(scope="current_pass", network_attempts=0, received_bytes=0,
+                      paid_cost_usd=0, llm_calls=0, total_operating_cost="NOT_MEASURED")),
+    ])
+    def test_rehashed_registered_result_cannot_invent_or_drop_truth(tmp_path, field, value):
+        j = registered(tmp_path)
+        child = FakeChild(failure=ChildResult(ok=False, error="source unavailable")) if field in (
+            "extracted_claims", "supporting_evidence", "contradictory_evidence") else FakeChild()
+        bank = R.research_pass(j, child=child)["results"][0]["bank"]
+        forged = copy.deepcopy(bank)
+        forged[field] = value
+        row = rewrite_fixture(j, bank, forged)
+>       with pytest.raises(ValueError, match="external_bank_(result_semantics|outcome_cost_binding)"):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_res05_bank_persistence.py:58: Failed
+=========================== short test summary info ============================
+FAILED tests/test_res05_bank_persistence.py::test_rehashed_registered_result_cannot_invent_or_drop_truth[extracted_claims-value0]
+FAILED tests/test_res05_bank_persistence.py::test_rehashed_registered_result_cannot_invent_or_drop_truth[supporting_evidence-value1]
+FAILED tests/test_res05_bank_persistence.py::test_rehashed_registered_result_cannot_invent_or_drop_truth[contradictory_evidence-value2]
+FAILED tests/test_res05_bank_persistence.py::test_rehashed_registered_result_cannot_invent_or_drop_truth[experiments-value3]
+FAILED tests/test_res05_bank_persistence.py::test_rehashed_registered_result_cannot_invent_or_drop_truth[next_questions-value4]
+FAILED tests/test_res05_bank_persistence.py::test_rehashed_registered_result_cannot_invent_or_drop_truth[collection_status-EMPTY]
+FAILED tests/test_res05_bank_persistence.py::test_rehashed_registered_result_cannot_invent_or_drop_truth[cost-value6]
+7 failed, 5 deselected in 6.82s

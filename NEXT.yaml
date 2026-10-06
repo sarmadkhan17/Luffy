@@ -42,16 +42,14 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
-  id: RES-04
-  status: CLOSED
-  result: CLOSED_ARCHITECTURE_OFFLINE_PREPROCESSING
+  id: RES-05
+  status: BLOCKED
+  result: BLOCKED_REFUTED_RESULT_NEXT_QUESTION_PROOF
   mode: ENGINEERING_ONLY
   scope: ARCHITECTURE_OFFLINE
-  objective: Search/filter/deduplicate/extract before expensive reasoning; prove supported question path offline.
-  implementation_commit: 283d581421d18f18fff1834f7cbd1b6fd922737f
+  objective: Retain structured Research Bank results and linked next questions; preserve source and evaluation authority.
   evidence:
-  - docs/tracker/evidence/res04-preprocessing-sol2/closure.json
-  - docs/tracker/evidence/res04-preprocessing-sol2/REPORT.md
+  - docs/tracker/evidence/res05-bank-persistence-sol2/REPORT.md
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
