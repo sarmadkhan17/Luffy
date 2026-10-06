@@ -1,7 +1,7 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.37-llm02-reconciled-sol1",
-  "control_baseline_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
+  "snapshot_version": "1.38-res03-governed-sol2",
+  "control_baseline_revision": "126a8a52674a186c15cc555d6f51b735981029db",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
   "gui_rows": 29,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 457916,
-      "sha256": "cc88f696a26c7b5b7fae0f91c12cbda9d344810270be8ec4c3fd6cd71ac4fce3",
+      "bytes": 461540,
+      "sha256": "5b50416162061b3a1d2bd1c3ebfc9a6b881d1892e933fad820366ff324b8492c",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 407634,
-      "sha256": "b14e719ef00300f07af7ebabaf3997ed96cba0c70080c9dd350f0d34598ab1b6",
+      "bytes": 408850,
+      "sha256": "85e3c6a2dc9ea38b92234da60bfc472aaeeba1252e355ae1727011a0c99f5946",
       "synchronization_required": false
     },
     {
@@ -1265,6 +1265,54 @@
       "AWAITING_OWNER": 14,
       "BLOCKED": 7,
       "OPEN": 4
+    }
+  },
+  "res03_governance_closure": {
+    "item": "RES-03",
+    "canonical_status": "CLOSED",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "engineering_closure_commit": "126a8a52674a186c15cc555d6f51b735981029db",
+    "evidence": "docs/tracker/evidence/res03-governance-sol2/closure.json",
+    "actual_gap": "Durable discovery and governed source catalog adoption were absent; metadata and free-only source routing already existed.",
+    "change": "Offline content-addressed discovery/adoption ledger and read-only catalog; source selector enforces the same scope/class/access/cost policy.",
+    "closure_condition_satisfied": true,
+    "dependency_status": {
+      "RES-02": "CLOSED",
+      "SEC-01": "DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE; future live dependency preserved"
+    },
+    "tests": "210 registry/governance/router/binding tests and 20 RES-02 generated-routing regressions passed offline",
+    "real_provider_calls": 0,
+    "application_code_changed": true,
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false,
+    "successor_selected": false,
+    "downstream": {
+      "RES-04": "ELIGIBLE for architecture/offline work; RES-03 and LLM-02 CLOSED. Original row condition/dependencies unchanged; unselected."
+    },
+    "future_live_gap": "SEC-01 credential/least-privilege and provider access verification remains mandatory for future live access. Paid adoption requires trusted OWNER approval plus SDD 2.7 cost/value justification; no paid issuer or spend capability exists here. Unknown depth/quotas/cost remain explicitly unmeasured where applicable.",
+    "original_condition_and_edges_preserved": true,
+    "control_plane_reconciliation_pending": false,
+    "status_counts_after": {
+      "CLOSED": 46,
+      "EVIDENCE_TO_MAP": 91,
+      "DEFERRED": 7,
+      "AWAITING_EVIDENCE": 9,
+      "AWAITING_OWNER": 14,
+      "BLOCKED": 7,
+      "OPEN": 4
+    },
+    "source_sha256": {
+      "trader/cognition/research_sources.py": "8ebb48759dbc34cdb0a0f8d56d906be0fb9f36267fec6cf75cb42df480d86728",
+      "trader/cognition/external_sources.py": "e5c56982e09a7e236cfba93d1f3b76dd450e682852a9d8c49b8fa717589358d0",
+      "trader/cognition/source_governance.py": "e493641ffbb2d22fbe7ec1e5d18b4d1c1e2d1acf2048c25f55e172673c4ff27a",
+      "trader/research/external_research.py": "7ff110c66216a3289e05385ac79299cb4710c2e79f7d597462eff5ac33377cce",
+      "tests/test_res03_source_governance.py": "ec2d76679b62a035f7ca0979d8b8b85e93a2e5bad54845418c4e5d584fe391c1",
+      "tests/test_external_research_router.py": "697547dd95779a3898666f7f76901c48fe443e246650b58568e228c5d3f703ab",
+      "tests/test_research_source_registry.py": "a511087d8f8b51ce8a9ba32e420d89542b7587b07471a818f0085b7f9d0b1252",
+      "tests/test_research_evidence_source_binding.py": "8af9d38e92f3a9acae799689180929a3cbc85acc1d9d5106f631ba74b024eeef",
+      "tests/test_res02_question_routing.py": "2c265ac7349ffd8bcc5f0033975f06b77708e7abe6e0f661366bf8cc83a83b98",
+      "tests/test_generated_question_handoff_negative_memory.py": "91fc652adce68911045ab992792d85489d8bd86184f34754428847ca88b29053"
     }
   }
 }

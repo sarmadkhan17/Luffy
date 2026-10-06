@@ -1,3 +1,5 @@
+> Current [SOL-2][RES-03]: CLOSED at architecture/offline scope. Existing metadata and source boundaries mapped first; durable governed discovery/catalog adoption added. 230 offline tests passed; no live provider calls. RES-04 now dependency-eligible (LLM-02 CLOSED), unselected. SEC-01 remains DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE with future live requirements preserved. [Evidence](evidence/res03-governance-sol2/REPORT.md). Earlier summaries below are historical.
+
 > Current SOL-1 reconciliation: LLM-02 CLOSED at architecture/offline scope. Disabled shared admission and actual callers make zero provider attempts; explicit refusal telemetry verified in fixtures. No provider enablement or successor selection. [Evidence](evidence/llm02-reconciliation-sol1/reconciliation.json). Earlier summaries below are historical.
 
 > Current SOL-2 reconciliation: QNT-02 CLOSED at architecture/offline scope. QNT-06 is now dependency-eligible; its declared-experiment power and UNTESTED/FAIL/PASS proof remains its own work. No successor selected. [Evidence](evidence/qnt02-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
@@ -1910,32 +1912,33 @@ future_calibration:
 - **stage**: 3
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Sources differ in trust, cost, history and rate limits.
 - **closure_condition**: Registry records source/access/credibility/cost/depth/rate limits/weaknesses; new sources follow scope and paid-approval rules.
 - **failure_regression_proof**: An external claim or credential cannot confer trading or spending authority.
 - **dependencies**: RES-02, SEC-01
 - **owner_role**: Attention & research owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2 (offline source governance)
+- **implementation_evidence**: 126a8a52674a186c15cc555d6f51b735981029db; trader/cognition/source_governance.py; existing research_sources/external_sources metadata and worker boundaries; tests/test_res03_source_governance.py
+- **runtime_evidence**: NOT_PERFORMED; durable fixture journals and actual selector/worker refusals tested offline
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Mapped existing registry facts and free-only routing first. Closed durable discovery/adoption gap; 230 offline tests pass. Scope/class/access/cost gates, content-bound reopened catalog, paid owner approval requirements and claims/credentials authority refusal verified. Explicit unknown metadata preserved; no live provider calls.
 - **source_ids**: S01, S02, S06, S14
 - **source_sections**: §§12.4,23.2–23.3
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for RES-03 at architecture/offline scope. SEC-01 remains deferred and mandatory before future live access; paid adoption needs trusted owner approval and cost/value justification.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 126a8a52674a186c15cc555d6f51b735981029db
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/res03-governance-sol2/closure.json
+- **evidence_validity**: Pinned implementation/test hashes and offline fixture results only; no current provider coverage, quota, credential readiness or live activation proof.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### RES-04 — Search/filter/deduplicate/extract before expensive reasoning.
 

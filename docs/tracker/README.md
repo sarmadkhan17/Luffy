@@ -1,3 +1,5 @@
+> Current [SOL-2][RES-03]: CLOSED at architecture/offline scope. Existing metadata and source boundaries mapped first; durable governed discovery/catalog adoption added. 230 offline tests passed; no live provider calls. RES-04 now dependency-eligible (LLM-02 CLOSED), unselected. SEC-01 remains DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE with future live requirements preserved. [Evidence](evidence/res03-governance-sol2/REPORT.md). Earlier summaries below are historical.
+
 > Current SOL-1 reconciliation: LLM-02 CLOSED at architecture/offline scope. Disabled shared admission and actual callers make zero provider attempts; explicit refusal telemetry verified in fixtures. No provider enablement or successor selection. [Evidence](evidence/llm02-reconciliation-sol1/reconciliation.json). Earlier summaries below are historical.
 
 > Current SOL-2 reconciliation: QNT-02 CLOSED at architecture/offline scope. QNT-06 is now dependency-eligible; its declared-experiment power and UNTESTED/FAIL/PASS proof remains its own work. No successor selected. [Evidence](evidence/qnt02-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.

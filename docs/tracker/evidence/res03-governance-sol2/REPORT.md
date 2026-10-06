@@ -68,3 +68,10 @@ access verification, measured coverage/quotas/cost where needed, explicit adapte
 registration for new retrieval, and trusted owner approval plus cost/value
 justification before paid adoption. None of those live capabilities is asserted
 by catalog adoption or this offline closure.
+
+Canonical reconciliation is retained in `closure.json` and `control-checks.json`:
+the read-only Tracker/NEXT contract is AVAILABLE with RES-03 CLOSED, all 178 IDs
+and 177 unrelated rows unchanged, original closure conditions/dependencies
+preserved, bundle/source hashes verified, and duplicate YAML keys rejected.
+SEC-01 and RES-02 rows are unchanged. RES-04 eligibility is recorded without
+changing its row or selecting it.
