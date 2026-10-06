@@ -1,0 +1,49 @@
+{
+  "item": "QNT-06",
+  "canonical_status": "CLOSED",
+  "scope": "ARCHITECTURE_OFFLINE_ENGINEERING",
+  "engineering_closure_commit": "126a8a52674a186c15cc555d6f51b735981029db",
+  "evidence": "docs/tracker/evidence/qnt06-reconciliation-sol2/reconciliation.json",
+  "closure_condition": "Controls demonstrate the power required by the declared experiment; insufficient cases return UNTESTED with reasons.",
+  "closure_condition_satisfied": true,
+  "dependency_status": {
+    "QNT-02": "CLOSED; reconciled at 797971f"
+  },
+  "closing_condition_proof": [
+    "Declared sufficiency: the experiment's own configured minimum (select_min_trades / gauntlet_min_test_trades, or the research control's control_max_p and MIN_CONTROL_SYMBOLS) is the requirement; no threshold was added or changed.",
+    "Insufficient evidence returns outcome=UNTESTED with untested_code=insufficient_trades, required_trades, observed_trades and a reason from both selection gates (recent_verdict, run_gauntlet); an empty sample is UNTESTED, never FAIL or PASS. The legacy untested flag (missing data) is unchanged.",
+    "Adequate samples are judged: a powered positive control reads PASS and an impossible-PF no-edge control reads FAIL, never UNTESTED. In the research path an unpowered window labels a negative underpowered, never no_edge; empty/untested/untestable/error verdicts pass through unlabelled; powered(None) is False.",
+    "Retry/restart: outcomes are pure functions of inputs and config (identical on repeat and on deep-copied inputs); the research control status (measured/untestable) is persisted in the ledger and an empty/error control is deliberately left uncontrolled for retry. Idle decay is not decay."
+  ],
+  "limits": "Architecture/offline proof on synthetic fixtures. analyst.admit refuses via reason text and does not yet pass outcome through; no real-data calibration, held-out look or admission is claimed.",
+  "fresh_validation": "62 passed: tests/test_qnt06_untested_power.py, test_rolling.py, test_research_control.py, test_spec_evidence.py, test_null_baseline.py; source bytes unchanged since the engineering commit. tests/test_analyst.py has 3 failures predating this work (_Journal lacks query), unrelated.",
+  "original_condition_and_edges_preserved": true,
+  "application_code_changed": true,
+  "runtime_execution_authorized": false,
+  "trading_activation_authorized": false,
+  "control_plane_reconciliation_pending": false,
+  "successor_selected": false,
+  "downstream": {
+    "QNT-08": "Still BLOCKED/unsatisfied: QNT-06 is now CLOSED but QNT-03 (needs WRLD-07) and QNT-05 (needs QNT-04) remain EVIDENCE_TO_MAP. Row unchanged and unselected.",
+    "QNT-03": "Unchanged; blocked only by WRLD-07 (EVIDENCE_TO_MAP; its sole dependency WRLD-03 is CLOSED).",
+    "QNT-05": "Unchanged; blocked only by QNT-04 (EVIDENCE_TO_MAP; its sole dependency QNT-01 is CLOSED)."
+  },
+  "source_sha256": {
+    "trader/strategy/rolling.py": "e935f8b0dd73bb1bd304840e7a9dcad8179cab01b574ad05df0e1ee0b1fc2b4b",
+    "trader/strategy/spec_evidence.py": "87055c24e6342122878a7d388d10606a712a49fa9573af3c819892a36dce5b4b",
+    "trader/research/control.py": "3f3128454e193222ea727f50fdab7bc4f857c80ee97a6e1724b228a61390ea55",
+    "tests/test_qnt06_untested_power.py": "334229c9553e3f342750400a84680f15ace8041b8fae9016f0e4ab846459074b",
+    "tests/test_spec_evidence.py": "a067ebe25ee4fbc2f19577df7485acf1952f0145c3036c3756ebcabf6c9b0e34",
+    "tests/test_rolling.py": "54113bd3ed84693f08bd8370bf7fde7628de0bb77334ab69497f6b650eaec67a",
+    "tests/test_research_control.py": "63ed3896757320583091b380ecd912b6f5540aa7fc0a88106cd746d0c9f25696"
+  },
+  "status_counts_after": {
+    "CLOSED": 47,
+    "EVIDENCE_TO_MAP": 90,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 7,
+    "OPEN": 4
+  }
+}

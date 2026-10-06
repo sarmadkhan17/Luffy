@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.38-res03-governed-sol2
+  version: 1.39-qnt06-reconciled-sol2
   created_date: '2026-10-05'
   title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -11,16 +11,16 @@ metadata:
   repository_modified: true
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
     prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
-  current_active_item: RES-03
-  current_active_result: CLOSED_ARCHITECTURE_OFFLINE_SOURCE_GOVERNANCE
+  current_active_item: QNT-06
+  current_active_result: CLOSED_ARCHITECTURE_OFFLINE_UNTESTED_DISTINCT
   row_count: 178
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
     is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown is an
     optional generated reference.
   pending_adoption: null
   status_counts:
-    CLOSED: 46
-    EVIDENCE_TO_MAP: 91
+    CLOSED: 47
+    EVIDENCE_TO_MAP: 90
     DEFERRED: 7
     AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14
@@ -102,9 +102,9 @@ metadata:
     runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime UNKNOWN;
       no runtime freshness inferred from this control snapshot.
   latest_control_reconciliation:
-    item: LLM-02
-    evidence: docs/tracker/evidence/llm02-reconciliation-sol1/reconciliation.json
-    engineering_closure_commit: b97aaf6408194bcc37f2b27fba8242012ee9d5e2
+    item: QNT-06
+    evidence: docs/tracker/evidence/qnt06-reconciliation-sol2/reconciliation.json
+    engineering_closure_commit: 126a8a52674a186c15cc555d6f51b735981029db
 status_definitions:
 - status: EVIDENCE_TO_MAP
   meaning: Existing requirement recorded; exact row-level evidence has not yet been linked. This is NOT a finding
@@ -3002,7 +3002,7 @@ items:
   stage: '4'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Keep underpowered UNTESTED distinct from FAIL and PASS.
   why_needed: Insufficient evidence is not no-edge or success.
   closure_condition: Controls demonstrate the power required by the declared experiment; insufficient cases return
@@ -3011,31 +3011,30 @@ items:
   dependencies:
   - QNT-02
   owner_role: Quant validation owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: SOL-2 (demonstrated gap fixed; closure reconciled)
+  implementation_evidence: 126a8a5; trader/strategy/rolling.py, trader/strategy/spec_evidence.py; tests/test_qnt06_untested_power.py; existing research.control power/label contract
+  runtime_evidence: NOT_PERFORMED; offline engineering proof only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 'Original condition satisfied at architecture/offline scope: insufficient evidence returns outcome UNTESTED with required/observed sufficiency and reason; null/empty never FAIL or PASS; adequate positive/no-edge controls read PASS/FAIL; research controls label underpowered, never no_edge; outcomes recompute identically on retry. No threshold invented. Limit: synthetic offline proof; analyst.admit does not yet pass outcome through.'
   source_ids:
   - S01
   - S02
   - S14
   source_sections: §13.11
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: None for QNT-06 at architecture/offline engineering scope; dependent rows retain their own closing conditions.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: 126a8a52674a186c15cc555d6f51b735981029db
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: docs/tracker/evidence/qnt06-reconciliation-sol2/reconciliation.json
+  evidence_validity: Pinned engineering closure and scoped offline checks; no deployment/runtime proof inferred.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  closure_scope: ARCHITECTURE_OFFLINE
 - id: QNT-07
   area: Quant validation
   stage: '4'
@@ -8336,6 +8335,14 @@ change_log:
     and 77 focused checks pass. Original condition and dependencies preserved.
   evidence: docs/tracker/evidence/llm02-reconciliation-sol1/reconciliation.json
   actor: SOL-1
+- date: '2026-10-06'
+  event: QNT06_CANONICAL_RECONCILIATION
+  item: QNT-06
+  before: EVIDENCE_TO_MAP
+  after: CLOSED_ARCHITECTURE_OFFLINE
+  reason: Demonstrated gap fixed in 126a8a5 (selection gates conflated insufficient evidence with FAIL); original closing condition and dependency edges preserved.
+  evidence: docs/tracker/evidence/qnt06-reconciliation-sol2/reconciliation.json
+  actor: SOL-2
 sdd_section_coverage:
 - section: 1
   title: Mission / end goal
@@ -10050,3 +10057,60 @@ res03_governance_closure:
     tests/test_research_evidence_source_binding.py: 8af9d38e92f3a9acae799689180929a3cbc85acc1d9d5106f631ba74b024eeef
     tests/test_res02_question_routing.py: 2c265ac7349ffd8bcc5f0033975f06b77708e7abe6e0f661366bf8cc83a83b98
     tests/test_generated_question_handoff_negative_memory.py: 91fc652adce68911045ab992792d85489d8bd86184f34754428847ca88b29053
+
+qnt06_canonical_reconciliation:
+  item: QNT-06
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE_ENGINEERING
+  engineering_closure_commit: 126a8a52674a186c15cc555d6f51b735981029db
+  evidence: docs/tracker/evidence/qnt06-reconciliation-sol2/reconciliation.json
+  closure_condition: Controls demonstrate the power required by the declared experiment; insufficient cases return
+    UNTESTED with reasons.
+  closure_condition_satisfied: true
+  dependency_status:
+    QNT-02: CLOSED; reconciled at 797971f
+  closing_condition_proof:
+  - 'Declared sufficiency: the experiment''s own configured minimum (select_min_trades / gauntlet_min_test_trades,
+    or the research control''s control_max_p and MIN_CONTROL_SYMBOLS) is the requirement; no threshold was added or
+    changed.'
+  - Insufficient evidence returns outcome=UNTESTED with untested_code=insufficient_trades, required_trades, observed_trades
+    and a reason from both selection gates (recent_verdict, run_gauntlet); an empty sample is UNTESTED, never FAIL
+    or PASS. The legacy untested flag (missing data) is unchanged.
+  - 'Adequate samples are judged: a powered positive control reads PASS and an impossible-PF no-edge control reads
+    FAIL, never UNTESTED. In the research path an unpowered window labels a negative underpowered, never no_edge;
+    empty/untested/untestable/error verdicts pass through unlabelled; powered(None) is False.'
+  - 'Retry/restart: outcomes are pure functions of inputs and config (identical on repeat and on deep-copied inputs);
+    the research control status (measured/untestable) is persisted in the ledger and an empty/error control is deliberately
+    left uncontrolled for retry. Idle decay is not decay.'
+  limits: Architecture/offline proof on synthetic fixtures. analyst.admit refuses via reason text and does not yet
+    pass outcome through; no real-data calibration, held-out look or admission is claimed.
+  fresh_validation: '62 passed: tests/test_qnt06_untested_power.py, test_rolling.py, test_research_control.py, test_spec_evidence.py,
+    test_null_baseline.py; source bytes unchanged since the engineering commit. tests/test_analyst.py has 3 failures
+    predating this work (_Journal lacks query), unrelated.'
+  original_condition_and_edges_preserved: true
+  application_code_changed: true
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+  control_plane_reconciliation_pending: false
+  successor_selected: false
+  downstream:
+    QNT-08: 'Still BLOCKED/unsatisfied: QNT-06 is now CLOSED but QNT-03 (needs WRLD-07) and QNT-05 (needs QNT-04)
+      remain EVIDENCE_TO_MAP. Row unchanged and unselected.'
+    QNT-03: Unchanged; blocked only by WRLD-07 (EVIDENCE_TO_MAP; its sole dependency WRLD-03 is CLOSED).
+    QNT-05: Unchanged; blocked only by QNT-04 (EVIDENCE_TO_MAP; its sole dependency QNT-01 is CLOSED).
+  source_sha256:
+    trader/strategy/rolling.py: e935f8b0dd73bb1bd304840e7a9dcad8179cab01b574ad05df0e1ee0b1fc2b4b
+    trader/strategy/spec_evidence.py: 87055c24e6342122878a7d388d10606a712a49fa9573af3c819892a36dce5b4b
+    trader/research/control.py: 3f3128454e193222ea727f50fdab7bc4f857c80ee97a6e1724b228a61390ea55
+    tests/test_qnt06_untested_power.py: 334229c9553e3f342750400a84680f15ace8041b8fae9016f0e4ab846459074b
+    tests/test_spec_evidence.py: a067ebe25ee4fbc2f19577df7485acf1952f0145c3036c3756ebcabf6c9b0e34
+    tests/test_rolling.py: 54113bd3ed84693f08bd8370bf7fde7628de0bb77334ab69497f6b650eaec67a
+    tests/test_research_control.py: 63ed3896757320583091b380ecd912b6f5540aa7fc0a88106cd746d0c9f25696
+  status_counts_after:
+    CLOSED: 47
+    EVIDENCE_TO_MAP: 90
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 7
+    OPEN: 4

@@ -1,3 +1,5 @@
+> Current SOL-2 reconciliation: QNT-06 CLOSED at architecture/offline scope. Insufficient evidence returns UNTESTED with required/observed sufficiency, distinct from FAIL/PASS. QNT-08 remains blocked on QNT-03 (via WRLD-07) and QNT-05 (via QNT-04); no successor selected. [Evidence](evidence/qnt06-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
+
 > Current [SOL-2][RES-03]: CLOSED at architecture/offline scope. Existing metadata and source boundaries mapped first; durable governed discovery/catalog adoption added. 230 offline tests passed; no live provider calls. RES-04 now dependency-eligible (LLM-02 CLOSED), unselected. SEC-01 remains DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE with future live requirements preserved. [Evidence](evidence/res03-governance-sol2/REPORT.md). Earlier summaries below are historical.
 
 > Current SOL-1 reconciliation: LLM-02 CLOSED at architecture/offline scope. Disabled shared admission and actual callers make zero provider attempts; explicit refusal telemetry verified in fixtures. No provider enablement or successor selection. [Evidence](evidence/llm02-reconciliation-sol1/reconciliation.json). Earlier summaries below are historical.
@@ -2311,32 +2313,33 @@ future_calibration:
 - **stage**: 4
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Insufficient evidence is not no-edge or success.
 - **closure_condition**: Controls demonstrate the power required by the declared experiment; insufficient cases return UNTESTED with reasons.
 - **failure_regression_proof**: No coercion of null/empty sample to failed or admitted.
 - **dependencies**: QNT-02
 - **owner_role**: Quant validation owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2 (demonstrated gap fixed; closure reconciled)
+- **implementation_evidence**: 126a8a5; trader/strategy/rolling.py, trader/strategy/spec_evidence.py; tests/test_qnt06_untested_power.py; existing research.control power/label contract
+- **runtime_evidence**: NOT_PERFORMED; offline engineering proof only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Original condition satisfied at architecture/offline scope: insufficient evidence returns outcome UNTESTED with required/observed sufficiency and reason; null/empty never FAIL or PASS; adequate positive/no-edge controls read PASS/FAIL; research controls label underpowered, never no_edge; outcomes recompute identically on retry. No threshold invented. Limit: synthetic offline proof; analyst.admit does not yet pass outcome through.
 - **source_ids**: S01, S02, S14
 - **source_sections**: §13.11
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for QNT-06 at architecture/offline engineering scope; dependent rows retain their own closing conditions.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 126a8a52674a186c15cc555d6f51b735981029db
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/qnt06-reconciliation-sol2/reconciliation.json
+- **evidence_validity**: Pinned engineering closure and scoped offline checks; no deployment/runtime proof inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### QNT-07 — Test incremental value with ablation and sensitivity.
 
