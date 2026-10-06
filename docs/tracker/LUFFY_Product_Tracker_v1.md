@@ -1125,30 +1125,30 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 1
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Open/partial bars must not masquerade as closed history.
 - **closure_condition**: Native/aggregated HTF, partial and missing bars preserve explicit eligibility and correct historical alignment.
 - **failure_regression_proof**: Aggregation/backfill/feature paths cannot silently use unfinished or future-available bars.
 - **dependencies**: DATA-03
 - **owner_role**: Data & storage owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2
+- **implementation_evidence**: Retained engineering closure 31fc0578ddd6e61d77a3744b41166cdaddec06df; original condition mapped in docs/tracker/evidence/data04-htf-availability/reconciliation.json.
 - **runtime_evidence**: NOT_MAPPED
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: No item-level evidence mapping completed in this tracker.
+- **latest_evidence**: Original closing condition satisfied at architecture/offline scope. Native HTF partial/final receipts and later backfills retain original eligibility and revision identity at exact cuts and after restart. Declared child timeframe, complete timestamp grid and FINAL constituent states are required; missing or partial children cannot become FINAL by time alone. Aggregate availability/observation maxima fence HTF features; sparse frame builders use declared intervals and late corrections cannot repair earlier replay.
 - **source_ids**: S01, S08, S13
 - **source_sections**: §§6.2,7,28.4
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for DATA-04 at architecture/offline engineering scope. Dependent rows retain their own acceptance conditions.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 31fc0578ddd6e61d77a3744b41166cdaddec06df
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/data04-htf-availability/reconciliation.json
+- **evidence_validity**: Pinned engineering closure and current focused offline checks; no runtime or deployed proof inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 

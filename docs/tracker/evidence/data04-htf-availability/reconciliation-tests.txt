@@ -1,0 +1,2 @@
+./venv/bin/python -m pytest -q --basetemp=/mnt/luffy-data/sol2-data04-reconciliation-20261006 tests/test_data04_htf_availability.py
+16 passed in 2.04s

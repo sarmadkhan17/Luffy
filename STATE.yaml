@@ -2373,3 +2373,42 @@ data03_canonical_reconciliation:
   control_plane_reconciliation_pending: false
   historical_pending_notes: Original closure report pending statements describe the engineering checkpoint; this
     record completes canonical reconciliation.
+
+data04_canonical_reconciliation:
+  item: DATA-04
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE_ENGINEERING
+  engineering_closure_commit: 31fc0578ddd6e61d77a3744b41166cdaddec06df
+  reconciliation_base_revision: c4e8fbd9a69a8b58f35096867d328986cf0b9f37
+  evidence: docs/tracker/evidence/data04-htf-availability/closure.md
+  validation: docs/tracker/evidence/data04-htf-availability/validation.md
+  closure_condition: Native/aggregated HTF, partial and missing bars preserve explicit eligibility and correct historical
+    alignment.
+  closure_condition_satisfied: true
+  dependency_status:
+    DATA-03: CLOSED
+  closing_condition_proof:
+  - Native HTF partial/final receipts and later backfills retain original eligibility and revision identity at exact
+    cuts and after restart.
+  - Declared child timeframe, complete timestamp grid and FINAL constituent states are required; missing or partial
+    children cannot become FINAL by time alone.
+  - Aggregate availability/observation maxima fence HTF features; sparse frame builders use declared intervals and
+    late corrections cannot repair earlier replay.
+  retained_validation: 308 passing checks across two distinct final batches, including 16 DATA-04 regression cases
+    and synthetic engine equivalence/benchmark gates.
+  fresh_validation: 16 DATA-04 regression cases passed in 2.04s; exact log retained in reconciliation-tests.txt.
+  original_condition_and_edges_preserved: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+  control_plane_reconciliation_pending: false
+  historical_pending_notes: Original closure report pending statements describe the engineering checkpoint; this
+    record completes canonical reconciliation.
+  data03_reconciliation_commit: c4e8fbd9a69a8b58f35096867d328986cf0b9f37
+  att03_dependency_status:
+    ATT-01: CLOSED
+    DATA-04: CLOSED
+  att03_now_eligible: true
+  att03_selected: false
+  att03_acceptance_remaining: Independent warm-up/valid-acquisition and approved calibrated-ranking proof; ATT-03
+    row unchanged.

@@ -1,0 +1,32 @@
+{
+  "docs/tracker/evidence/data04-htf-availability/closure.md": {
+    "sha256": "cafc7f880b7bcde1f7b70c0a3838dbd9c9c32ac45f0c4bc6d11c18578be34c4e",
+    "engineering_sha256": "cafc7f880b7bcde1f7b70c0a3838dbd9c9c32ac45f0c4bc6d11c18578be34c4e",
+    "unchanged_since_engineering": true
+  },
+  "docs/tracker/evidence/data04-htf-availability/validation.md": {
+    "sha256": "d6f5e7c9ea833980bac372df3199e2998a60c12d0bab702c8c016461cafb9e6f",
+    "engineering_sha256": "d6f5e7c9ea833980bac372df3199e2998a60c12d0bab702c8c016461cafb9e6f",
+    "unchanged_since_engineering": true
+  },
+  "tests/test_data04_htf_availability.py": {
+    "sha256": "edd42028b08280fd43daafe49fe009ed55cd98ade1dd3672f6592343e7c9d4f5",
+    "engineering_sha256": "edd42028b08280fd43daafe49fe009ed55cd98ade1dd3672f6592343e7c9d4f5",
+    "unchanged_since_engineering": true
+  },
+  "trader/data/feed.py": {
+    "sha256": "ef7f0b5d7ccce086d2c5178947d5563643c2064607d3ceaa3d97c3fa0ddc3f75",
+    "engineering_sha256": "aabe444362bec6779b3217e00dcabdc185ee4453cc8dbe87c9607caa495b959f",
+    "unchanged_since_engineering": false
+  },
+  "trader/strategy/backtest.py": {
+    "sha256": "db905c4244d7d434f20abc0cffc57a2dacf75c8c5f5c93b4f06c885fe0b6083e",
+    "engineering_sha256": "db905c4244d7d434f20abc0cffc57a2dacf75c8c5f5c93b4f06c885fe0b6083e",
+    "unchanged_since_engineering": true
+  },
+  "trader/strategy/spec_evidence.py": {
+    "sha256": "9271cae99dbce0eff3cab530caeb91d0bf950e2b19c924338e3424c06af33bf0",
+    "engineering_sha256": "a0c6dbe5a9e0e1fcab496a9d23bd1e3f7cdb45989a96d3e47392757fa4eecfbb",
+    "unchanged_since_engineering": false
+  }
+}
