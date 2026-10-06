@@ -276,6 +276,35 @@ def latest(journal):
         return verify_receipt(json.loads(E.resolve(db,row[0]))) if row else None
 
 
+def candidates(receipt):
+    """Ranked investigation candidates projected from a verified receipt.
+
+    Pure and replay-derived: rank is the policy's own admission order (no new
+    weights); urgency carries only observed ages/kinds; wall cost is
+    NOT_MEASURED rather than invented. A candidate is permission to
+    investigate only, never to trade or size.
+    """
+    receipt = verify_receipt(receipt)
+    obs, rows = receipt['observation'], {x['symbol']: x for x in receipt['rows']}
+    kinds = dict(event='new_event', strategy_required='required_by_strategy', ranked='standing_salience',
+                 relevant='rotating_relevance', warmup_relevant='rotating_relevance', exploration='rotating_exploration')
+    out = []
+    for rank, sym in enumerate(receipt['admitted_symbols'], 1):
+        r = rows[sym]
+        scored = r['score'] is not None and r['category'] in ('event', 'ranked')
+        reasons = [r['reason']] + [x for x in (r['event_reason'], r['exploration_reason']) if x] + list(r['missing_reasons'])
+        out.append(dict(rank=rank, symbol=sym, category=r['category'], reasons=reasons,
+            score=r['score'], score_status=r['score_status'],
+            strategy_relevance=r['strategy_relevance'], required_by_strategy=r['required_by_strategy'],
+            urgency=dict(kind=kinds[r['category']],
+                         signal_age_ms=receipt['source_cut_ms'] - obs['salience_anchor_ms'] if scored else None),
+            cost=dict(deep_slots=1, of_capacity=receipt['policy']['max_deep_slots'],
+                      wall_time=dict(status='NOT_MEASURED', reason='no_admission_cost_telemetry_contract')),
+            source_identity=receipt['source_identity'], source_cut_ms=receipt['source_cut_ms'],
+            receipt_id=receipt['receipt_id'], authority='INVESTIGATE_ONLY'))
+    return out
+
+
 def owner_view(journal, *, now_ms, stale_seconds):
     """Bounded semantic summary, distinct from legacy investigation telemetry."""
     try:
