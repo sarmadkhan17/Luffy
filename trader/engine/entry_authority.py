@@ -13,7 +13,7 @@ import math
 import time
 import weakref
 
-from ..core.instrument_registry import RegistrySnapshot, Eligibility, AccountTrading, Capability, Presence
+from ..core.instrument_registry import RegistrySnapshot, Eligibility, AccountTrading, Capability, Presence, SCHEMA_VERSION as REGISTRY_SCHEMA
 from ..core.types import Action, ControlState
 from .control_fence import control_fence, persisted_state, entry_block, latest_intent_event_id
 
@@ -127,6 +127,9 @@ def capability(journal, symbol, now_ms, leverage, direction):
     from ..observability.attention import MAX_SNAPSHOT_AGE_MS
     from ..dashboard.current_truth import ACCOUNT_STALE_S
     reg = raw['registry']; r = raw['record']
+    if (raw.get('schema') != 'entry-capability.v1' or reg.get('schema_version') != REGISTRY_SCHEMA
+            or r.get('schema_version') != REGISTRY_SCHEMA):
+        raise ValueError('capability_revision_incompatible')
     if (digest(reg) != raw['snapshot_id'] or r not in reg['records']
             or raw['execution_symbol'] != symbol or raw['account_scope'] != reg['account_scope']
             or raw['observed_at_ms'] != reg['as_of_ms']
