@@ -7,19 +7,22 @@ and whether recent movement is impulsive (worth joining) or corrective
 from __future__ import annotations
 
 from .base import Analyst
-from .indicators import adx, anchored_vwap, ema, rsi, zscore
+from .indicators import adx, anchored_vwap, ema, rsi, zscore_series
 from ..core.types import Snapshot, Vote
 
 
 class MomentumAnalyst(Analyst):
     name = "momentum"
     evidence_timeframe = "15m"
+    frame_inputs = (('15m', ('close','high','low'), 210),)
+    uses_btc_context = True
+    measurement_limitations = ('EMA/ADX/RSI measure trend; they do not establish an entry or a calibrated edge.',)
     regime_affinity = ("TRENDING_UP", "TRENDING_DOWN")
 
     def evaluate(self, snap: Snapshot) -> Vote:
         df = snap.df("15m")
         if df is None or len(df) < 210:
-            return self._vote(self.name, snap, 0.0, 0.2, "no data")
+            return self._vote(self.name, snap, None, None, "no data")
         c = df["close"]
         price = float(c.iloc[-1])
         e20, e50, e200 = float(ema(c, 20).iloc[-1]), float(ema(c, 50).iloc[-1]), float(ema(c, 200).iloc[-1])
@@ -67,15 +70,21 @@ class ValueAnalyst(Analyst):
     """Stat-arb view: extremes vs anchored VWAP revert absent trend regime."""
     name = "value"
     evidence_timeframe = "15m"
+    frame_inputs = (('15m', ('close','high','low','volume'), 106),)
+    uses_btc_context = True
+    measurement_limitations = ('VWAP deviation depends on the anchor/window; zero variance leaves z-score undefined.',)
     regime_affinity = ("RANGING",)
 
     def evaluate(self, snap: Snapshot) -> Vote:
         df = snap.df("15m")
         if df is None or len(df) < 106:
-            return self._vote(self.name, snap, 0.0, 0.2, "no data")
+            return self._vote(self.name, snap, None, None, "no data")
         vw = anchored_vwap(df, 96)
         dev_series = (df["close"] - vw) / vw
-        z = zscore(dev_series, 96)
+        z = float(zscore_series(dev_series, 96, fill=None).iloc[-1])
+        import math
+        if not math.isfinite(z):
+            return self._vote(self.name, snap, None, None, 'VWAP z-score undefined')
         if abs(z) < 1.8:
             return self._vote(self.name, snap, 0.0, 0.35,
                               f"near fair value (z={z:+.2f})")
@@ -84,7 +93,7 @@ class ValueAnalyst(Analyst):
         conf = min(0.3 + 0.08 * (abs(z) - 1.8), 0.7)
         btc = snap.btc_ctx or {}
         ret=btc.get('ret_1h')
-        if ret is not None and abs(ret) > 0.01:
+        if ret is not None and math.isfinite(ret) and abs(ret) > 0.01:
             conv *= 0.6                                    # never fade a live BTC impulse
             conf *= 0.85
             return self._vote(self.name, snap, conv, conf,
@@ -100,13 +109,15 @@ class RotationAnalyst(Analyst):
     """Cross-asset cascade: BTC impulse drags lagging alts within hours."""
     name = "rotation"
     evidence_timeframe = "1h"
+    frame_inputs = (('1h', ('close',), 24), ('BTC_1h', ('close',), 24))
+    measurement_limitations = ('Relative return lag does not establish causality or a future catch-up.',)
     regime_affinity = ("TRENDING_UP", "TRENDING_DOWN")
 
     def evaluate(self, snap: Snapshot) -> Vote:
         btc = snap.dfs.get("BTC_1h")
         me = snap.df("1h")
         if btc is None or me is None or len(btc) < 24 or len(me) < 24:
-            return self._vote(self.name, snap, 0.0, 0.2, "no cross data")
+            return self._vote(self.name, snap, None, None, "no cross data")
         btc_ret = float(btc["close"].iloc[-1] / btc["close"].iloc[-4] - 1)
         my_ret = float(me["close"].iloc[-1] / me["close"].iloc[-4] - 1)
         beta_note = ""

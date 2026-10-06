@@ -9,6 +9,7 @@ is short-covering — it exhausts fast.
 Contrarian at extremes, mildly confirmatory when balanced-but-building.
 """
 from __future__ import annotations
+import math
 
 from .base import Analyst
 from ..core.types import Snapshot, Vote
@@ -20,10 +21,14 @@ EXTREME = 0.00100          # violent disagreement — strongest fade
 class PositioningAnalyst(Analyst):
     name = "positioning"
     evidence_timeframe = "1h"
+    frame_inputs = (('1h', ('close',), 25),)
+    optional_frame_inputs = ('1h',)
+    context_inputs = ('funding', 'open_interest')
+    measurement_limitations = ('Injected funding/OI have no established event or availability clock; OI may be missing.',)
     regime_affinity = ("TRENDING_UP", "TRENDING_DOWN", "RANGING", "VOLATILE")
 
     def __init__(self, exchange=None):
-        self.exchange = exchange
+        # Keep the constructor compatible, but never retain execution capability.
         self._ctx = (None, None, None)
 
     def set_context(self, symbol: str, funding_rate: float | None,
@@ -32,9 +37,17 @@ class PositioningAnalyst(Analyst):
         self._ctx = (symbol, funding_rate, oi)
 
     def evaluate(self, snap: Snapshot) -> Vote:
-        _, funding, oi = self._ctx
+        symbol, funding, oi = self._ctx
+        if symbol != snap.symbol:
+            funding, oi = None, None
+        if funding is not None and not math.isfinite(funding):
+            funding = None
+        if oi:
+            oi = {k: v if type(v) in (float,int) and math.isfinite(v) else None for k,v in oi.items()}
+            if oi.get('now') is None or oi.get('chg_24h') is None:
+                oi = None
         if funding is None and not oi:
-            return self._vote(self.name, snap, 0.0, 0.25, "no positioning data")
+            return self._vote(self.name, snap, None, None, "no positioning data")
         conv, conf, notes = 0.0, 0.3, []
         fr = float(funding) if funding is not None else float("nan")
         if funding is None:
@@ -85,6 +98,8 @@ class PositioningAnalyst(Analyst):
                         else "long liquidation flush")
                 notes.append(f"OI −{abs(oi_chg):.0%} — {note}, weak hands driving")
 
+        if funding is None and conv == 0:
+            return self._vote(self.name, snap, None, None, 'positioning measurement unavailable')
         return self._vote(self.name, snap, max(-0.7, min(0.7, conv)),
                           min(conf, 0.85), "; ".join(notes) or "positioning quiet",
                           funding=funding, oi_chg=oi_chg)

@@ -1,0 +1,102 @@
+[SOL-1][WRLD-01] evidence map and bounded repair — 2026-10-06
+
+Scope: WRLD-01 only. DATA-02 CLOSED is the supplied dependency state.
+No Kernel/provider launch. No tracker, STATE, NEXT, or manifest edits.
+WRLD-03 and WRLD-05 were not implemented or reconciled by this work.
+
+EVIDENCE MAPPED BEFORE REPAIR
+Initial inspection baseline: 31fc057. Seven perception analysts are declared
+in trader/kernel.py:AGENTS and constructed in Kernel.__init__: structure,
+momentum, flow, value, rotation, positioning, depth. News/Macro guards and
+brain/analyst.py (strategy evaluation/admission) are separate roles.
+
+Existing producer boundary: trader/agents/base.py:Analyst.evaluate/_vote,
+returning core.types.Vote. Votes carried a signed mechanism contribution,
+confidence, rationale and arbitrary metadata, with no order/size/action or
+strategy activation interface. Six analysts already declared a timeframe;
+Depth intentionally had no bar horizon. Individual absent-input branches
+used a zero conviction and positive confidence as legacy abstentions.
+
+Existing consumer: trader/engine/orchestrator.py:Orchestrator.decide collects
+analysts, governs reliability/context and computes its own Decision. Config
+scouts.require_strategy_signal=true and strategy_leads=true separate analyst
+measurements from strategy entry proposals. Risk/execution remain downstream.
+Existing persistence: Orchestrator.journalize -> Journal.log_votes stores meta
+JSON; learning/capture_runtime.py:decision freezes the original vote rows in
+the reasons dependency. Existing exact-source replay/restart negatives are
+in tests/test_decision_sources.py; none requires new current-state backfill.
+world/observation.py already supplies Quality and immutable JSON primitives,
+but the actual enabled analyst path did not produce Observation packets.
+
+ACTUAL GAPS
+1. Vote/meta had no complete typed measurement declarations or strict replay
+   decoder. Decision consumed independent Vote fields and accepted untyped
+   analyst output; source refs, quality, uncertainty and limitations were
+   not a complete normal-path contract.
+2. Value used the scalar zscore fallback: a constant/undefined window became
+   zero and was reported as near fair value. Absent input branches projected
+   positive confidence despite no measurement. Nonfinite required inputs
+   could reach heuristic calculations rather than a null measurement.
+3. Positioning retained the injected trading exchange even though evaluation
+   never needed it. Positioning/Depth ignored injected context symbol identity.
+
+CHANGE
+Immutable analyst.measurement.v1 packets are carried inside the established
+Vote metadata wire; Vote.measurement returns the typed packet. This preserves
+the journal/capture schema. Each enabled analyst declares required/optional
+inputs, a horizon (explicit None for current Depth), and mechanism limitations.
+Input digests bind supplied frame/context representations, including available upstream
+metadata, without inventing a provider or historical publication clock.
+Finite supplied inputs have UNKNOWN source quality and SUSPECT measurement
+quality because this bridge does not independently verify provider clocks.
+Confidence is declared heuristic reliability, not a profit probability.
+Missing/invalid/unsupported measurements carry null strength and confidence;
+zero remains only the legacy abstention projection. Missing optional inputs
+retain their own status/reason/ref rather than becoming neutral observations.
+Value leaves undefined z-score null. Positioning discards exchange capability
+and ignores wrong-symbol/nonfinite contexts; Depth validates book identity.
+Decision strictly decodes packets, checks analyst/instrument/capture identity,
+and derives scoring projections from the typed packet. Untyped/invalid output
+is refused and logged, never synthesized. Historical untyped votes remain
+untyped. Packet reload requires every wire field and validates source refs.
+
+TESTS
+tests/test_wrld01_measurements.py: 30 passed on the final contract. Covers the
+actual roster without importing/booting Kernel, every producer declaration,
+immutable packets, null/missing/nonfinite/unsupported inputs, optional-source
+absence, undefined Value, source revision identity, wrong instrument contexts,
+no execution object/import/call/activation capability, Decision consumption
+despite forged legacy fields, refusal of untyped output, and exact original
+packet retention in the frozen reasons dependency and separate process restart.
+The new suite denies network connections and uses only synthetic data/temp DBs.
+
+Fast regressions: 99 passed, 3 deselected (30 WRLD-01 tests plus 69 existing
+scout/abstention/agreement/strategy-signal/feature checks).
+Broader initial integration run: 104 existing/new checks passed; 3 new checks
+failed on NumPy scalar wire typing, corrected by explicit finite float
+conversion and revalidated in the final WRLD-01 suite.
+Exact-source/context integration: 62 passed in 215.56s (29 WRLD-01 checks at
+collection time, two normal governed/contextual analyst consumption checks,
+and all 31 tests/test_decision_sources.py checks). Final WRLD-01 contract has
+30 passing checks, including the added nonfinite-context/source-revision test.
+Frame identity uses round-trippable CSV float representations; the final test
+proves a 1e-12 input revision changes its source identity instead of aliasing
+under pandas JSON decimal rounding.
+git diff --check passed for scoped source/tests.
+
+Baseline failures left unchanged: tests/test_scout_upgrades.py calibration
+refit is forbidden by existing replay-complete learning authority, crowded-long
+expects <= -0.3 but existing output is -0.17, and short-covering uses minute
+timestamps instead of hourly cadence. Archived unchanged source reproduces
+exactly these three failures (16 pass). Baseline test/base/positioning bytes
+were checked equal to 31fc057. Updated only fixtures newly incompatible with
+the typed contract: test-only Stub input declarations and Depth wall symbol.
+
+The required local Claude execution check returned 'Not logged in'; repairs
+were executed locally in this authorized SOL turn. Shared Graphify update was
+deferred because it writes graph/manifest artifacts, forbidden in this session.
+
+WRLD-03 eligibility: YES once this WRLD-01 closure is reconciled alongside the
+already supplied DATA-02 closure. This is dependency eligibility, not WRLD-03
+closure or implementation evidence.
+CONTROL-PLANE RECONCILIATION PENDING: YES

@@ -146,7 +146,7 @@ def test_depth_wall_bonus():
             "asks": []}
     book = {"bids": [[1999.9, 500], [1999.0, 3], [1998.5, 4], [1998.0, 5]],
             "asks": [[2000.1, 3], [2000.6, 4], [2001.1, 5]]}
-    d.set_context("X/USDT", book)
+    d.set_context("ETH/USDT", book)
     v = d.evaluate(_snap(price=2000.0))
     assert "bid wall" in v.rationale
 
@@ -218,6 +218,9 @@ def test_value_suppressed_by_btc_impulse():
 # ── 5. HTF veto ───────────────────────────────────────────────────────────
 class Stub(Analyst):
     name = "stub"
+    frame_inputs = (('15m', ('close',), 1),)
+    evidence_timeframe = '15m'
+    measurement_limitations = ('Synthetic test-only measurement.',)
 
     def __init__(self, conv):
         self.conv = conv

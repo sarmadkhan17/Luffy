@@ -19,12 +19,15 @@ from ..core.types import Snapshot, Vote
 class StructureAnalyst(Analyst):
     name = "structure"
     evidence_timeframe = "15m"
+    frame_inputs = (('15m', ('high','low','close','volume'), 80),)
+    uses_btc_context = True
+    measurement_limitations = ('Pivot and volume patterns are heuristic auction measurements.',)
     regime_affinity = ("TRENDING_UP", "TRENDING_DOWN", "RANGING")
 
     def evaluate(self, snap: Snapshot) -> Vote:
         df = snap.df("15m")
         if df is None or len(df) < 80:
-            return self._vote(self.name, snap, 0.0, 0.2, "no data", )
+            return self._vote(self.name, snap, None, None, "no data")
 
         h, l, c, v = df["high"].values, df["low"].values, df["close"].values, df["volume"].values
         ph, pl = swing_highs_lows(df)

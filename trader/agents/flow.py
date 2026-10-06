@@ -17,17 +17,20 @@ from ..core.types import Snapshot, Vote
 class FlowAnalyst(Analyst):
     name = "flow"
     evidence_timeframe = "15m"
+    frame_inputs = (('15m', ('volume','taker_buy'), 30),)
+    uses_btc_context = True
+    measurement_limitations = ('Kline taker share measures realized flow; it supplies no historical order book.',)
     regime_affinity = ("TRENDING_UP", "TRENDING_DOWN", "RANGING", "VOLATILE")
 
     def evaluate(self, snap: Snapshot) -> Vote:
         df = snap.df("15m")
         if df is None or len(df) < 30 or "taker_buy" not in df.columns:
-            return self._vote(self.name, snap, 0.0, 0.2, "no data")
+            return self._vote(self.name, snap, None, None, "no data")
         taker=df['taker_buy'].tail(12)
         volume=df['volume'].tail(12)
         if (not np.isfinite(taker).all() or not np.isfinite(volume).all() or
                 not (taker.ge(0) & taker.le(volume)).all() or volume.sum()<=0):
-            return self._vote(self.name,snap,0.0,0.2,'flow unavailable',quality='UNKNOWN')
+            return self._vote(self.name,snap,None,None,'flow unavailable',quality='UNKNOWN')
         tb = taker.sum()
         tot = volume.sum()
         buy_ratio = tb / tot                          # 0.5 = balanced

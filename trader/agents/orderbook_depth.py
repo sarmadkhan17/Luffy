@@ -18,6 +18,8 @@ from ..core.types import Snapshot, Vote
 
 class DepthScout(Analyst):
     name = "depth"
+    context_inputs = ('order_book',)
+    measurement_limitations = ('Current book snapshot is transient and cannot establish historical microstructure.',)
     regime_affinity = ("TRENDING_UP", "TRENDING_DOWN", "RANGING", "VOLATILE")
 
     def __init__(self, band_frac: float = 0.01):
@@ -30,7 +32,7 @@ class DepthScout(Analyst):
     def evaluate(self, snap: Snapshot) -> Vote:
         _, book = self._ctx
         if not book or not book.get("bids") or not book.get("asks"):
-            return self._vote(self.name, snap, 0.0, 0.25, "no book data")
+            return self._vote(self.name, snap, None, None, "no book data")
         bids = [(float(p), float(q)) for p, q in book["bids"]]
         asks = [(float(p), float(q)) for p, q in book["asks"]]
         mid = (bids[0][0] + asks[0][0]) / 2
@@ -40,7 +42,7 @@ class DepthScout(Analyst):
         bid_d = sum(p * q for p, q in bids if p >= lo)
         ask_d = sum(p * q for p, q in asks if p <= hi)
         if bid_d + ask_d <= 0:
-            return self._vote(self.name, snap, 0.0, 0.25, "empty band")
+            return self._vote(self.name, snap, None, None, "empty band")
         imb = (bid_d - ask_d) / (bid_d + ask_d)          # -1..+1
 
         conv, conf, notes = 0.45 * math.tanh(1.8 * imb), 0.30 + 0.25 * abs(imb), []

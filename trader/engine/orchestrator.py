@@ -372,6 +372,18 @@ class Orchestrator:
             if v is None:
                 receipts.add("analyst", name, "returned_none")
                 continue
+            try:
+                packet = v.measurement
+                if packet is None or (packet.analyst, packet.instrument, packet.observed_at) != (name, snap.symbol, snap.ts):
+                    raise ValueError('typed analyst evidence missing or identity mismatch')
+                # Decision consumes the packet, never an independent legacy opinion.
+                v.conviction = packet.strength if packet.strength is not None else 0.0
+                v.confidence = packet.uncertainty['confidence'] if packet.strength is not None else 0.0
+                v.side = Side.LONG if v.conviction > .05 else Side.SHORT if v.conviction < -.05 else Side.FLAT
+            except (ValueError, TypeError, KeyError, AttributeError) as exc:
+                receipts.add('analyst', name, 'typed_evidence_unavailable', exc)
+                log.warning('analyst %s has unavailable typed evidence on %s', name, snap.symbol)
+                continue
             receipts.add("analyst", name, "emitted_vote")
             measured = (self.measured_fit.get(v.agent) or {}).get(snap.regime)
             v.meta["regime_fit"] = measured if measured is not None else \

@@ -63,7 +63,7 @@ class StrategyState(str, Enum):
 
 @dataclass
 class Vote:
-    """An analyst agent's opinion. Never a veto — always a scored contribution."""
+    """Legacy scoring projection; enabled analysts also carry typed measurements."""
     agent: str
     symbol: str
     side: Side                 # LONG / SHORT / FLAT
@@ -72,6 +72,13 @@ class Vote:
     rationale: str
     meta: dict = field(default_factory=dict)
     ts: str = field(default_factory=lambda: now_utc().isoformat())
+
+    @property
+    def measurement(self):
+        """Historical votes without a packet remain explicitly untyped."""
+        from ..agents.measurement import Measurement
+        record = self.meta.get('measurement')
+        return None if record is None else Measurement.from_dict(record)
 
     def as_dict(self) -> dict:
         return {

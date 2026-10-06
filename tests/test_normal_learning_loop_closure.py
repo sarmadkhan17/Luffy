@@ -67,6 +67,8 @@ def analyst_orchestrator(journal, timeframe='15m'):
     class Stub(Analyst):
         name = 'stub'
         evidence_timeframe = timeframe
+        frame_inputs = (('15m', ('close',), 1),)
+        measurement_limitations = ('Synthetic test-only measurement.',)
 
         def evaluate(self, snap):
             return self._vote(self.name, snap, 0.8, 0.8, 'stub')
