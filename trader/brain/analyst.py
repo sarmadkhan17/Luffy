@@ -324,21 +324,7 @@ class Analyst:
 
     @staticmethod
     def _with_null_evidence(ev: dict, per_symbol_pct: dict) -> dict:
-        """Attach the rotation-null result to an admission record.
-
-        The PF gate cannot separate a mechanism from a market direction —
-        it is the same arithmetic that scores ALWAYS-LONG at PF 1.28 on
-        drift. This one can: under no edge a spec's per-symbol null
-        percentiles are UNIFORM, so their spread across independent markets
-        is a test with a distribution, not a threshold someone chose.
-
-        An earlier version recorded a median and a count and deliberately
-        did not gate, because any cut that split the specs seen so far would
-        have been fitted to them. `consistency_p` is not fitted: it is the
-        binomial tail probability of the observed spread. On real specs it
-        separates cleanly — Donchian at 3.5e-04, a screen candidate that
-        died out of sample at 0.27.
-        """
+        """Keep percentile summaries as diagnostics, never admission authority."""
         import statistics as _st
         from ..strategy import null_baseline
         vals = [v for v in per_symbol_pct.values() if v is not None]
@@ -347,7 +333,9 @@ class Analyst:
                                            if vals else None),
                 "null_beats_90pct_on":
                     f"{sum(1 for v in vals if v >= 0.90)}/{len(vals)}",
-                "null_consistency_p": null_baseline.consistency_p(vals),
+                "null_consistency_p_raw": null_baseline.consistency_p(vals),
+                "null_consistency_p": None,
+                "null_percentiles": dict(per_symbol_pct),
                 "null_symbols": len(vals)}
 
     def admit(self, spec: StrategySpec, book: list) -> tuple[bool, dict]:
@@ -362,25 +350,65 @@ class Analyst:
         if overlap > MAX_SIGNAL_OVERLAP:
             return False, {**ev, "reason": f"signal overlap {overlap:.2f} with "
                                            f"{twin} (> {MAX_SIGNAL_OVERLAP})"}
-        ev = self._with_null_evidence(ev, self._null_percentiles(spec, tf))
-        # A spec that cannot beat a rotation of its OWN entries across
-        # independent symbols has no edge, whatever its profit factor says.
-        # Too few symbols to run that test used to be "silence", and silence
-        # did not block: on 2026-09-11 that admitted a spec on 20 trades with
-        # the null run on 0 symbols. Untestable is now a refusal.
-        p = ev.get("null_consistency_p")
-        if p is None:
-            from ..strategy import null_baseline
+        joint = self._null_evidence(spec, tf)
+        ev = self._with_null_evidence(ev, joint.get("percentiles", {}))
+        ev["null_dependence"] = joint
+        ev["null_consistency_p"] = joint.get("consistency_p_dep")
+        ps = (ev["null_consistency_p"], joint.get("common_rotation", {}).get("p"))
+        if any(p is None or not np.isfinite(p) for p in ps):
             return False, {**ev, "untestable": True, "reason":
-                           f"untestable: the rotation null ran on "
-                           f"{ev['null_symbols']} symbols, fewer than the "
-                           f"{null_baseline.MIN_SYMBOLS} needed to judge it"}
+                           "untestable: dependence-aware rotation evidence unavailable: "
+                           + joint.get("reason", "insufficient joint null evidence")}
+        p = max(ps)
         if p > self.null_max_p:
             return False, {**ev, "reason":
-                           f"beats its own rotation no more often than chance "
-                           f"across {ev['null_symbols']} symbols "
-                           f"(p={p:.2g} > {self.null_max_p})"}
+                           f"dependence-aware rotation fails across {ev['null_symbols']} "
+                           f"symbols (p={p:.2g} > {self.null_max_p})"}
         return True, ev
+
+    def _null_evidence(self, spec: StrategySpec, tf: str) -> dict:
+        """One timing hypothesis, one common-calendar joint control receipt."""
+        from ..research import portfolio_null as pn
+        from ..research.dependence import assess_joint
+        from ..research.evaluate import _clock
+        from ..strategy.vector_backtest import warm_window
+        from ..world.context import load_context
+        try:
+            probe = StrategySpec.from_dict({**spec.to_dict(), "timeframe": tf})
+            compiled = compile_spec(probe)
+            frames, btc, derivs_for, risk = self._ctx(tf, probe)
+            universe = {s: {tf: f} for s, f in frames.items()
+                        if not s.startswith("_") and f is not None}
+            if not universe:
+                return {"reason": "no symbol frames"}
+            clocks = [_clock(v[tf]) for v in universe.values()]
+            if any(not np.array_equal(c, clocks[0]) for c in clocks):
+                return {"reason": "unaligned symbol calendars; common offsets unavailable"}
+            cut = int(len(clocks[0]) * 0.7)
+            sl, first = warm_window(cut, len(clocks[0]))
+            world = load_context(as_of_ms=int(clocks[0][-1]) * 1000)
+            legs = []
+            sources = {"btc": btc, "market": frames.get("_market"),
+                       "universe": universe, "derivatives": {}}
+            for sym in sorted(universe):
+                sf = spec_evidence.frames_for(frames[sym], tf)
+                derivs = derivs_for(sym)
+                sources["derivatives"][sym] = derivs
+                lo, sh = compiled.entries(sf, btc=btc, derivs=derivs,
+                    universe=universe, market=frames.get("_market"), symbol=sym,
+                    world=world)
+                fund = funding_for(sym, sf[tf], risk)
+                legs.append(pn.Leg(sym, lo[sl], sh[sl],
+                    sf[tf].iloc[sl].reset_index(drop=True),
+                    None if fund is None else np.asarray(fund)[sl], first))
+            return assess_joint(legs, compiled.spec.exit, risk, tf,
+                hypothesis=probe.to_dict(), world=world, sources=sources,
+                equity=2000.0, risk_pct=float(risk.get("risk_per_trade_pct", .5)),
+                max_open=int(risk.get("max_open_trades", 8)),
+                rotation_draws=pn.draws_for(self.null_max_p, 10000) or 0)
+        except Exception as e:
+            log.warning(f"joint null unavailable for {spec.id}: {e}")
+            return {"reason": "joint null unavailable: " + str(e)}
 
     def _null_percentiles(self, spec: StrategySpec, tf: str) -> dict:
         """{symbol: share of its own rotations this spec beats}, best effort."""

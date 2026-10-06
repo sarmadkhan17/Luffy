@@ -55,7 +55,7 @@ def test_a_spec_that_declares_nothing_asks_for_nothing_extra(monkeypatch):
 
 
 # ── the gate itself ────────────────────────────────────────────────────
-def _admit_with(monkeypatch, percentiles):
+def _admit_with(monkeypatch, percentiles, rho=0.0, common_p=0.001):
     a = Analyst.__new__(Analyst)
     a.null_max_p = 0.01
     monkeypatch.setattr(Analyst, "evaluate",
@@ -63,8 +63,11 @@ def _admit_with(monkeypatch, percentiles):
     monkeypatch.setattr(Analyst, "redundancy",
                         lambda self, spec, tf, book: (0.1, ""))
     monkeypatch.setattr(Analyst, "persistence", lambda self, spec, tf: {})
-    monkeypatch.setattr(Analyst, "_null_percentiles",
-                        lambda self, spec, tf: percentiles)
+    from trader.strategy import null_baseline as nb
+    monkeypatch.setattr(Analyst, "_null_evidence",
+        lambda self, spec, tf: {"percentiles": percentiles,
+            "consistency_p_dep": nb.consistency_p_dependent(percentiles.values(), rho),
+            "common_rotation": {"p": common_p}})
     return a.admit(_spec([]), [])
 
 
@@ -72,7 +75,7 @@ DONCHIAN = dict(enumerate([0.60, 0.88, 0.82, 0.90, 0.90, 0.92, 0.60, 0.97,
                            0.88, 0.73, 0.92, 0.48, 0.95, 0.78, 0.90]))
 
 
-def test_a_spec_that_beats_its_own_rotation_is_admitted(monkeypatch):
+def test_independent_spec_with_common_control_is_admitted(monkeypatch):
     ok, ev = _admit_with(monkeypatch, DONCHIAN)
     assert ok is True
     assert ev["null_consistency_p"] < 0.01
@@ -110,3 +113,22 @@ def test_the_record_keeps_the_readable_summary_too(monkeypatch):
     _, ev = _admit_with(monkeypatch, DONCHIAN)
     assert ev["null_median_percentile"] == pytest.approx(0.88)
     assert ev["null_beats_90pct_on"] == "7/15"
+
+
+def test_correlated_votes_do_not_pass_admission(monkeypatch):
+    ok, ev = _admit_with(monkeypatch, DONCHIAN, rho=0.9)
+    assert not ok
+    assert ev["null_consistency_p_raw"] < .01
+    assert ev["null_consistency_p"] > .01
+
+
+def test_independent_votes_cannot_replace_common_control(monkeypatch):
+    ok, ev = _admit_with(monkeypatch, DONCHIAN, common_p=None)
+    assert not ok and ev["untestable"]
+    ok, ev = _admit_with(monkeypatch, DONCHIAN, common_p=.25)
+    assert not ok and 'p=0.25' in ev['reason']
+
+
+def test_missing_dependence_has_no_independence_fallback(monkeypatch):
+    ok, ev = _admit_with(monkeypatch, DONCHIAN, rho=None)
+    assert not ok and ev["untestable"]

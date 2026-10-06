@@ -166,6 +166,13 @@ def null_dependence(legs, risk: dict, draws: int = DEPENDENCE_DRAWS,
     legs = [l for l in legs if getattr(l, "table", None) is not None]
     if len(legs) < 2:
         return {"rho_bar": None, "pairs": 0, "draws": 0}
+    # Equal array offsets are common calendar offsets only on equal grids.
+    from .evaluate import _clock
+    clocks = [_clock(l.df) for l in legs]
+    if any(not np.array_equal(c, clocks[0]) or l.first_bar != legs[0].first_bar
+           for c, l in zip(clocks, legs)):
+        return {"rho_bar": None, "pairs": 0, "draws": 0,
+                "reason": "unaligned symbol calendars"}
     n = min(len(l.df) - l.first_bar for l in legs)
     lo_off, hi_off = WARMUP + 1, n - WARMUP - 1
     if hi_off <= lo_off:
@@ -188,8 +195,9 @@ def null_dependence(legs, risk: dict, draws: int = DEPENDENCE_DRAWS,
     iu = np.triu_indices(len(legs), 1)
     vals = c[iu]
     vals = vals[np.isfinite(vals)]
-    if not len(vals):
-        return {"rho_bar": None, "pairs": 0, "draws": len(offs)}
+    if len(vals) != len(legs) * (len(legs) - 1) // 2:
+        return {"rho_bar": None, "pairs": int(len(vals)), "draws": len(offs),
+                "reason": "incomplete pairwise null dependence"}
     return {"rho_bar": round(float(vals.mean()), 4), "pairs": int(len(vals)),
             "draws": int(len(offs))}
 
@@ -202,6 +210,17 @@ def consistency(legs, exit_spec, risk: dict, tf: str,
     each leg's `first_bar` (a rotation is taken, THEN masked). Walks the
     legs' trade tables, so the null costs a walk per draw, not an engine
     run."""
+    from .dependence import contributor
+    lineage = [contributor(l) for l in legs]
+    unique = {}
+    for l, ref in zip(legs, lineage):
+        unique.setdefault(ref["evidence_id"], l)
+    legs = list(unique.values())
+    if not legs or len({r["symbol"] for r in lineage}) != len(lineage):
+        return {"consistency_p": None, "consistency_p_dep": None,
+                "rho_bar": None, "n_eff": None, "scored_symbols": 0,
+                "trades": 0, "symbols": {}, "contributors": lineage,
+                "reason": "no evidence or duplicate contributor symbols"}
     pn._prepare(legs, exit_spec, risk, tf)
     pcts, trades, per, scored = [], 0, {}, []
     for l in legs:
@@ -243,6 +262,7 @@ def consistency(legs, exit_spec, risk: dict, tf: str,
             "rho_bar": rho,
             "n_eff": round(null_baseline.effective_n(len(pcts), rho), 2)
             if rho is not None else None,
+            "contributors": lineage,
             "scored_symbols": len(pcts), "trades": trades,
             "median_pf": round(st.median(pfs), 3) if pfs else 0.0,
             "symbols": per}
