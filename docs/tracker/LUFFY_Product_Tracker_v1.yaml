@@ -19,8 +19,8 @@ metadata:
     optional generated reference.
   pending_adoption: null
   status_counts:
-    CLOSED: 34
-    EVIDENCE_TO_MAP: 107
+    CLOSED: 35
+    EVIDENCE_TO_MAP: 106
     DEFERRED: 7
     AWAITING_EVIDENCE: 10
     AWAITING_OWNER: 14
@@ -1606,7 +1606,7 @@ items:
   stage: '1'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Discover eligible instruments from connected account/venue truth.
   why_needed: Attention focus is not the tradable universe.
   closure_condition: Registry refresh records market capabilities, eligibility/version history and explicit exclusions;
@@ -1615,30 +1615,31 @@ items:
   dependencies:
   - DATA-01
   owner_role: Data & storage owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: NOT_MAPPED
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: 'OPUS (existing engineering closure reconciled only)'
+  implementation_evidence: 'a186b16; 91fab98; trader/data/registry_store.py, trader/data/feed.py Universe history, trader/data/registry_provider.py recorder hook; tests/test_data06_universe_truth.py'
+  runtime_evidence: 'NOT_PERFORMED; offline engineering evidence only, no runtime or provider call'
   visual_approval: NOT_APPLICABLE
-  latest_evidence: No item-level evidence mapping completed in this tracker.
+  latest_evidence: 'Current-build closure with account eligibility explicitly UNKNOWN (owner decision). Durable append-only registry snapshot/refresh history, universe revisions with explicit exclusion reason codes, restart-safe per-environment untradeable state; environment identity preserved; majors observable but absence never implies tradable; Attention subset distinct from tradable authority; entry capability/Risk remain fail-closed. 17 DATA-06 tests and 268 related offline passes recorded; two pre-existing HEAD failures excluded.'
   source_ids:
   - S01
   - S08
   - S13
   source_sections: §§2.2,6.8,33.1
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: 'None for DATA-06 at current build scope. Future ACTIVE trading still requires a private account eligibility + leverage/bracket producer (per-symbol permission, account trading enabled, observe_leverage, fresh entry-capability receipt); live permission proof is deferred.'
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: '91fab98'
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: 'docs/tracker/evidence/data06-registry-history/closure.md'
+  evidence_validity: 'Pinned a186b16/91fab98 offline tests reused; no runtime, provider, live account or deployment proof inferred.'
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  closure_scope: ARCHITECTURE_OFFLINE
+  future_live_gap: 'Private per-account eligibility and leverage/bracket producer required before ACTIVE trading; UNKNOWN never authorizes exposure.'
 - id: DATA-07
   area: Data & storage
   stage: '1'
