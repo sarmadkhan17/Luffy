@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.12-obs05-first-boot-corrected
+  version: 1.13-obs05-first-boot-diagnostics
   created_date: '2026-10-05'
   title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -14,7 +14,7 @@ metadata:
     or full prior-chat reconciliation. No functionality or evidence has been independently retested by creating
     this tracker.
   current_active_item: OBS-05
-  current_active_result: CLOSED_ENGINEERING_ONLY_FIRST_BOOT_CORRECTED
+  current_active_result: CLOSED_ENGINEERING_ONLY_DIAGNOSTICS
   row_count: 178
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This
     YAML is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown
@@ -53,7 +53,7 @@ metadata:
       row is silently reopened or added.
   last_terminal_item: OBS-05
   last_terminal_result: CLOSED
-  last_terminal_evidence: docs/tracker/evidence/obs05-first-boot-correction/closure.yaml
+  last_terminal_evidence: docs/tracker/evidence/obs05-first-boot-diagnostics/closure.yaml
 status_definitions:
 - status: EVIDENCE_TO_MAP
   meaning: Existing requirement recorded; exact row-level evidence has not yet been linked. This is NOT a finding
@@ -7110,38 +7110,41 @@ items:
   item_type: DEFECT
   release_scope: BASELINE
   status: CLOSED
-  required_behavior: Permit evidence-producing contained cold startup without requiring stopped-producer live
-    facts before launch.
+  required_behavior: Permit evidence-producing contained cold startup without requiring stopped-producer
+    live facts before launch.
   why_needed: 'Owner RUN-01 live proof exposed an OBS-01 deadlock: stopped Kernel has active observed_cycle:luffy/no
     heartbeat and unavailable fresh protection, so its evidence producers cannot start.'
-  closure_condition: Offline normal-path and negative fixtures prove static/persisted Phase A admission, a
-    durable entry/recovery fence, exact-revision single-child launch, bounded instance-bound Phase B with
-    fresh protection/reconciliation, and observer retention plus graceful containment on failure; no generic
-    bypass or ACTIVE transition.
-  failure_regression_proof: Reproduce the stopped-producer conflict; reject missing/unreadable static facts,
-    stale/prior-instance readiness, missing fresh protection/reconciliation, failed or late readiness and
-    unconfirmed stop; prove zero retry/duplicate launch and unchanged historical tracker closing conditions.
+  closure_condition: Offline normal-path and negative fixtures prove static/persisted Phase A admission,
+    a durable entry/recovery fence, exact-revision single-child launch, bounded instance-bound Phase B
+    with fresh protection/reconciliation, and observer retention plus graceful containment on failure;
+    no generic bypass or ACTIVE transition.
+  failure_regression_proof: Reproduce the stopped-producer conflict; reject missing/unreadable static
+    facts, stale/prior-instance readiness, missing fresh protection/reconciliation, failed or late readiness
+    and unconfirmed stop; prove zero retry/duplicate launch and unchanged historical tracker closing conditions.
   dependencies: []
   owner_role: Runtime & safety owner
   engineering_assignee: Codex local engineering session
-  implementation_evidence: b562728606bd8694d6bafa9f6573be2d0e776451; trader/observability/preflight.py; trader/observability/first_boot.py;
-    tests/test_first_boot_admission.py; original two-phase implementation 774990b49a171ee3f92d888fc2f6cc9387574c89
-  runtime_evidence: NOT_PERFORMED; fake signed HTTP transport, temporary stores and fixture lock holders only
+  implementation_evidence: 4d5f21b7371201780248bfa374bc1d7e4fecfb97; trader/observability/first_boot.py;
+    trader/observability/preflight.py; trader/engine/venue_reads.py; tests/test_first_boot_diagnostics.py;
+    prior first-boot correction b562728606bd8694d6bafa9f6573be2d0e776451
+  runtime_evidence: NOT_PERFORMED; fake signed HTTP transport, temporary stores and fixture lock holders
+    only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'OBS-05 first-boot correction: 561 combined offline tests passed, including 54 first-boot
-    cases. Existing valid receipt path preserved. Absent/empty well-formed receipt schema requires fresh signed
-    GET-only account-wide proof of zero positions/orders plus clear execution and journal/control facts. Invalid
-    receipts, unknown/stale/malformed account truth and any exposure refuse. No synthetic receipt or trading
-    authority; Phase B and containment code unchanged. No live Kernel/Dashboard or venue/provider calls.'
+  latest_evidence: 'OBS-05 diagnostics: 598 combined offline tests passed, including 37 focused reason-code
+    cases. Fixed non-secret credential/separation, authentication/permission, network/timeout, malformed
+    response, nonzero positions/orders, ledger, snapshot and unexpected codes. Every refusal remains FAIL
+    with zero launches and no trading authority. Prior receipt/first-boot and Phase B semantics retained.
+    Actual earlier refusal cause remains UNKNOWN; no live venue/provider calls or Kernel/Dashboard launches.'
   source_ids:
   - S18
   source_sections: 'Parents: OBS-01/RUN-01; control and observation impacts OBS-02/OBS-04/RUN-02/MON-01'
-  next_proof: 'None for this offline implementation defect. RUN-01 remains BLOCKED: an owner-authorized controlled
-    launch and graceful stop on a named exact final revision must provide its unchanged live closing proof.'
+  next_proof: 'None for this offline implementation defect. RUN-01 remains BLOCKED: an owner-authorized
+    controlled launch and graceful stop on a named exact final revision must provide its unchanged live
+    closing proof.'
   acceptance_basis: Explicit current owner two-phase bootstrap contract and reported P0 conflict.
   acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
   priority: P0
-  resolution_at_commit: b562728606bd8694d6bafa9f6573be2d0e776451
+  resolution_at_commit: 4d5f21b7371201780248bfa374bc1d7e4fecfb97
   work_authorized: true
   updated: '2026-10-06'
   parent_ids:
@@ -7152,9 +7155,10 @@ items:
   - OBS-04
   - RUN-02
   - MON-01
-  closure_evidence: docs/tracker/evidence/obs05-first-boot-correction/closure.yaml
-  evidence_validity: Pinned first-boot correction and offline negative/regression proof only; previous OBS-05
-    evidence retained. No current live account or host readiness claim.
+  - SEC-01
+  closure_evidence: docs/tracker/evidence/obs05-first-boot-diagnostics/closure.yaml
+  evidence_validity: Pinned offline diagnostics/regression proof only; all prior OBS-05 evidence retained.
+    No live read-permission, account or host readiness claim.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: Separate exact-revision owner authorization still required for RUN-01 live proof;
     no launch authority granted here.
@@ -7744,6 +7748,15 @@ historical_defects:
   closure_scope: Historical repair loop reported closed.
   evidence: S12
 change_log:
+- date: '2026-10-06'
+  event: OBS05_FIRST_BOOT_BOUNDED_DIAGNOSTICS
+  item: OBS-05
+  before: Phase-A first-boot refusal collapsed to protection_unreadable_or_unverified; actual cause UNKNOWN.
+  after: CLOSED_ENGINEERING_ONLY_DIAGNOSTICS
+  reason: Explicit owner OBS-05-only diagnostic correction; no gate relaxation, runtime/venue calls or
+    new tracker IDs.
+  evidence: docs/tracker/evidence/obs05-first-boot-diagnostics/closure.yaml
+  actor: Codex local engineering session
 - date: '2026-10-06'
   event: OBS05_FIRST_BOOT_NO_RECEIPT_CORRECTED
   item: OBS-05

@@ -1360,6 +1360,43 @@ perf03_capture_r1:
 current_active_work:
   id: OBS-05
   status: CLOSED
+  result: CLOSED_ENGINEERING_ONLY_DIAGNOSTICS
+  mode: ENGINEERING_ONLY
+  objective: Emit bounded non-secret first-boot refusal reason codes without changing OBS-05 admission
+    or Phase B safety.
+  implementation_started: true
+  implementation_complete: true
+  implementation_commit: 4d5f21b7371201780248bfa374bc1d7e4fecfb97
+  tracker_source: docs/tracker/LUFFY_Product_Tracker_v1.yaml
+  evidence:
+  - docs/tracker/evidence/obs05-first-boot-diagnostics/intake.yaml
+  - docs/tracker/evidence/obs05-first-boot-diagnostics/closure.yaml
+  - docs/tracker/evidence/obs05-first-boot-diagnostics/REPORT.md
+  tests: 598 combined offline regressions passed, including 37 focused diagnostic cases.
+  kernel_launched: false
+  dashboard_launched: false
+  live_venue_reads: 0
+  provider_calls: 0
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  run01_status: "BLOCKED \u2014 IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING"
+  run01_live_proof_contract_possible: true
+  run01_live_proof_performed: false
+  run01_live_proof_authorization: Separate owner authorization naming the full intended final revision
+    and one controlled Kernel launch/SIGTERM graceful stop with retained Phase A/Phase B and unchanged
+    RUN-01 proof.
+  next_recommended_item: RUN-01
+  another_run01_fix_selected: false
+  next_item_selected: false
+  next_item_started: false
+  related_tracker_item: SEC-01 (EVIDENCE_TO_MAP; actual read-permission readiness unverified)
+  run01_retry_now_diagnosable: true
+  actual_previous_refusal_cause: UNKNOWN; no live venue calls authorized
+
+obs05_first_boot_correction:
+  id: OBS-05
+  status: CLOSED
   result: CLOSED_ENGINEERING_ONLY_FIRST_BOOT_CORRECTED
   mode: ENGINEERING_ONLY
   objective: Correct OBS-05 first-boot/no-receipt admission using fresh authoritative read-only zero-account
@@ -1383,9 +1420,9 @@ current_active_work:
   run01_status: "BLOCKED \u2014 IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING"
   run01_live_proof_contract_possible: true
   run01_live_proof_performed: false
-  run01_live_proof_authorization: Separate owner authorization naming the full intended final revision and
-    one controlled Kernel launch/SIGTERM graceful stop with retained Phase A/Phase B and unchanged RUN-01
-    proof.
+  run01_live_proof_authorization: Separate owner authorization naming the full intended final revision
+    and one controlled Kernel launch/SIGTERM graceful stop with retained Phase A/Phase B and unchanged
+    RUN-01 proof.
   next_recommended_item: RUN-01
   another_run01_fix_selected: false
   next_item_selected: false

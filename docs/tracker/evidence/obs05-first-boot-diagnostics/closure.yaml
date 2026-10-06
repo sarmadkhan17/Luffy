@@ -1,0 +1,50 @@
+tracker_id: OBS-05
+status: CLOSED
+result: CLOSED_ENGINEERING_ONLY_DIAGNOSTICS
+implementation_commit: 4d5f21b7371201780248bfa374bc1d7e4fecfb97
+prior_implementation: b562728606bd8694d6bafa9f6573be2d0e776451
+prior_evidence: docs/tracker/evidence/obs05-first-boot-correction/closure.yaml
+origin: docs/tracker/evidence/obs05-first-boot-diagnostics/intake.yaml
+report: docs/tracker/evidence/obs05-first-boot-diagnostics/REPORT.md
+reason_codes:
+- first_boot_static_facts_not_pass
+- first_boot_unexpected_failure
+- local_execution_ledger_not_clear
+- read_credentials_missing
+- read_credentials_separation_violation
+- read_credentials_unusable
+- snapshot_stale_or_unverifiable
+- venue_authentication_or_permission_failure
+- venue_orders_nonzero
+- venue_positions_nonzero
+- venue_response_malformed
+- venue_timeout_or_network_failure
+tests:
+  combined: 598 passed
+  diagnostic_cases: 37
+  evidence: docs/tracker/evidence/obs05-first-boot-diagnostics/tests.txt
+new_tracker_ids: 0
+all_178_closing_conditions_preserved: true
+other_177_rows_unchanged: true
+kernel_launched: false
+dashboard_launched: false
+live_venue_reads: 0
+provider_calls: 0
+phase_b_implementation_unchanged: true
+run01_status: BLOCKED / LIVE_PROOF_PENDING
+run01_retry_now_diagnosable: true
+actual_previous_refusal_cause: UNKNOWN; no live reads authorized
+related_tracker_item:
+  id: SEC-01
+  status: EVIDENCE_TO_MAP
+  scope: Credential locations/scopes, account mode, least privilege and privileged boundaries; actual
+    read permission readiness remains unverified.
+  item_changed: false
+cross_tracker_impact:
+  OBS-01: Admission outcomes remain fail closed; existing receipt/running path preserved.
+  OBS-02: Bound-instance heartbeat and health proof unchanged.
+  OBS-04: Observer retention and SIGTERM-only containment unchanged.
+  OBS-05: Only diagnostic specificity improved; bounded codes replace swallowed first-boot errors.
+  RUN-01: Every refusal still yields zero launches; live closing proof unchanged and BLOCKED.
+  RUN-02: No new entry authority or hold/recovery clear.
+  MON-01: Heartbeat chronology and observation unchanged.

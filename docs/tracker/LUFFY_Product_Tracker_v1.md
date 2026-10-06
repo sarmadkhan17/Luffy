@@ -1,10 +1,10 @@
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.12-obs05-first-boot-corrected
+Version: 1.13-obs05-first-boot-diagnostics
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
-Terminal NEXT: **OBS-05 — CLOSED_ENGINEERING_ONLY_FIRST_BOOT_CORRECTED**. No-receipt startup requires fresh authoritative read-only zero-account proof; RUN-01 remains BLOCKED / LIVE_PROOF_PENDING. No next fix selected or runtime/trading authority granted.
+Terminal NEXT: **OBS-05 — CLOSED_ENGINEERING_ONLY_DIAGNOSTICS**. Bounded refusal reasons are offline-proven; RUN-01 remains BLOCKED / LIVE_PROOF_PENDING. No runtime/trading authority granted.
 
 ## Status definitions
 
@@ -5722,23 +5722,23 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **dependencies**: None
 - **owner_role**: Runtime & safety owner
 - **engineering_assignee**: Codex local engineering session
-- **implementation_evidence**: b562728606bd8694d6bafa9f6573be2d0e776451; trader/observability/preflight.py; trader/observability/first_boot.py; tests/test_first_boot_admission.py; original two-phase implementation 774990b49a171ee3f92d888fc2f6cc9387574c89
+- **implementation_evidence**: 4d5f21b7371201780248bfa374bc1d7e4fecfb97; trader/observability/first_boot.py; trader/observability/preflight.py; trader/engine/venue_reads.py; tests/test_first_boot_diagnostics.py; prior first-boot correction b562728606bd8694d6bafa9f6573be2d0e776451
 - **runtime_evidence**: NOT_PERFORMED; fake signed HTTP transport, temporary stores and fixture lock holders only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: OBS-05 first-boot correction: 561 combined offline tests passed, including 54 first-boot cases. Existing valid receipt path preserved. Absent/empty well-formed receipt schema requires fresh signed GET-only account-wide proof of zero positions/orders plus clear execution and journal/control facts. Invalid receipts, unknown/stale/malformed account truth and any exposure refuse. No synthetic receipt or trading authority; Phase B and containment code unchanged. No live Kernel/Dashboard or venue/provider calls.
+- **latest_evidence**: OBS-05 diagnostics: 598 combined offline tests passed, including 37 focused reason-code cases. Fixed non-secret credential/separation, authentication/permission, network/timeout, malformed response, nonzero positions/orders, ledger, snapshot and unexpected codes. Every refusal remains FAIL with zero launches and no trading authority. Prior receipt/first-boot and Phase B semantics retained. Actual earlier refusal cause remains UNKNOWN; no live venue/provider calls or Kernel/Dashboard launches.
 - **source_ids**: S18
 - **source_sections**: Parents: OBS-01/RUN-01; control and observation impacts OBS-02/OBS-04/RUN-02/MON-01
 - **next_proof**: None for this offline implementation defect. RUN-01 remains BLOCKED: an owner-authorized controlled launch and graceful stop on a named exact final revision must provide its unchanged live closing proof.
 - **acceptance_basis**: Explicit current owner two-phase bootstrap contract and reported P0 conflict.
 - **acceptance_status**: OWNER_CONTRACT_OR_REPORTED_FAILURE
 - **priority**: P0
-- **resolution_at_commit**: b562728606bd8694d6bafa9f6573be2d0e776451
+- **resolution_at_commit**: 4d5f21b7371201780248bfa374bc1d7e4fecfb97
 - **work_authorized**: True
 - **updated**: 2026-10-06
 - **parent_ids**: OBS-01, RUN-01
-- **related_items**: OBS-02, OBS-04, RUN-02, MON-01
-- **closure_evidence**: docs/tracker/evidence/obs05-first-boot-correction/closure.yaml
-- **evidence_validity**: Pinned first-boot correction and offline negative/regression proof only; previous OBS-05 evidence retained. No current live account or host readiness claim.
+- **related_items**: OBS-02, OBS-04, RUN-02, MON-01, SEC-01
+- **closure_evidence**: docs/tracker/evidence/obs05-first-boot-diagnostics/closure.yaml
+- **evidence_validity**: Pinned offline diagnostics/regression proof only; all prior OBS-05 evidence retained. No live read-permission, account or host readiness claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: Separate exact-revision owner authorization still required for RUN-01 live proof; no launch authority granted here.
 
@@ -6050,7 +6050,7 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 
 ## Terminal update (2026-10-06)
 
-OBS-05: CLOSED at corrected first-boot implementation/offline scope; 561 combined tests passed. Existing receipt path preserved; absent receipt requires fresh signed zero-account proof. RUN-01 remains BLOCKED / LIVE_PROOF_PENDING, requiring separately owner-authorized exact-revision live proof. [Correction evidence](evidence/obs05-first-boot-correction/closure.yaml); [initial evidence](evidence/obs05-contained-bootstrap/closure.yaml).
+OBS-05: CLOSED at offline diagnostic scope; 598 combined tests and 37 diagnostic cases passed. All refusals remain blocking with zero launches; SEC-01 credential readiness remains unverified. RUN-01 remains BLOCKED / LIVE_PROOF_PENDING. [Diagnostics evidence](evidence/obs05-first-boot-diagnostics/closure.yaml); prior correction/initial evidence retained.
 
 ## Historical terminal update (PERF-03, 2026-10-06)
 
@@ -6283,6 +6283,15 @@ PERF-03: BLOCKED with tested narrow correction; original actual-cost closing con
 ## Change Log
 
 ```yaml
+- date: '2026-10-06'
+  event: OBS05_FIRST_BOOT_BOUNDED_DIAGNOSTICS
+  item: OBS-05
+  before: Phase-A first-boot refusal collapsed to protection_unreadable_or_unverified; actual cause UNKNOWN.
+  after: CLOSED_ENGINEERING_ONLY_DIAGNOSTICS
+  reason: Explicit owner OBS-05-only diagnostic correction; no gate relaxation, runtime/venue calls or
+    new tracker IDs.
+  evidence: docs/tracker/evidence/obs05-first-boot-diagnostics/closure.yaml
+  actor: Codex local engineering session
 - date: '2026-10-06'
   event: OBS05_FIRST_BOOT_NO_RECEIPT_CORRECTED
   item: OBS-05

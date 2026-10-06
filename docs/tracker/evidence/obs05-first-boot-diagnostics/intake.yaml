@@ -1,0 +1,17 @@
+tracker_id: OBS-05
+origin: NARROW_EXISTING_DIAGNOSTIC_CORRECTION
+source: Current owner instruction, 2026-10-06; RUN-01 Phase-A refusal exposed only protection_unreadable_or_unverified.
+evidence_qualification: Owner-reported live refusal; cause remains UNKNOWN. No venue/account or runtime
+  investigation performed.
+ownership:
+  existing_id: OBS-05
+  new_ids: 0
+  closing_condition_changed: false
+  related_item: SEC-01
+  related_status: EVIDENCE_TO_MAP
+  basis: SEC-01 owns least-privilege credential scope and access boundaries; diagnostics do not verify
+    actual permission readiness.
+kernel_launched: false
+dashboard_launched: false
+live_venue_reads: 0
+provider_calls: 0

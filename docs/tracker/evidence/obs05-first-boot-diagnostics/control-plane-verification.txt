@@ -1,0 +1,7 @@
+PASS: 178 tracker IDs and closing conditions preserved.
+PASS: Other 177 tracker rows exactly unchanged, including SEC-01 and RUN-01.
+PASS: STATE/NEXT prior fields preserved; previous OBS-05 selection archived.
+PASS: Bootstrap, safety, Dashboard readiness, shutdown, Kernel, identity and restart source byte-identical to 7a0ac0e.
+PASS: Prior OBS-05 evidence directories unchanged.
+PASS: Source and bundle manifest byte counts/SHA-256 verified.
+PASS: Read-only tracker parser AVAILABLE; selected OBS-05 CLOSED. No services launched.

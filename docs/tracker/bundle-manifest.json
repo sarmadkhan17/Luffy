@@ -1,7 +1,7 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.12-obs05-first-boot-corrected",
-  "control_baseline_revision": "b562728606bd8694d6bafa9f6573be2d0e776451",
+  "snapshot_version": "1.13-obs05-first-boot-diagnostics",
+  "control_baseline_revision": "4d5f21b7371201780248bfa374bc1d7e4fecfb97",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
   "gui_rows": 29,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 362089,
-      "sha256": "ce9531affb8f4829c2c32433a27d00d2ad263967bf5798666f1745d0fdc11e96",
+      "bytes": 362583,
+      "sha256": "d1a9325793b9dbbe40b8a9607610f9134e0ae9bebe4c1c36f5c8f798f68e8f7e",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 368924,
-      "sha256": "44a37a06452ec482c296cbd9b5a8ebfa4a9dc2b10d238f2fa22b7859452596a2",
+      "bytes": 369265,
+      "sha256": "93a56db48c82befebf58252555f00bee49ec25c119c1ed6247d89883cd52732e",
       "synchronization_required": false
     },
     {

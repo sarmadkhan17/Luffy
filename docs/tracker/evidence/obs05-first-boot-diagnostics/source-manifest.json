@@ -1,0 +1,78 @@
+{
+  "implementation_commit": "4d5f21b7371201780248bfa374bc1d7e4fecfb97",
+  "scope": "Offline bounded diagnostics only; no live readiness claim.",
+  "files": {
+    "trader/observability/first_boot.py": {
+      "bytes": 8074,
+      "sha256": "e54b04c5999a22a51d72d93357c530c220dcfee9e5dd9e236ea071e6494e4c86"
+    },
+    "trader/observability/preflight.py": {
+      "bytes": 20054,
+      "sha256": "5a0e1f0091044a2f54f8892f47c27d98b69225a68a30af81987515bf5b0a71e5"
+    },
+    "trader/engine/venue_reads.py": {
+      "bytes": 14792,
+      "sha256": "c05713d9d1a1b6d2b107dfb7f7a1b88171696bc63fb6a0ee7e5f0ad65ad0a2f7"
+    },
+    "tests/test_first_boot_diagnostics.py": {
+      "bytes": 7118,
+      "sha256": "cb16209315bf0381dbb22c5c583d70d23d5272ddb69b41d12bd94758c0b86c75"
+    },
+    "trader/observability/bootstrap.py": {
+      "bytes": 11086,
+      "sha256": "2e8b23d6d410a664338402638bc6692807522de3fcfc5ae1b5ebd3050184ba27"
+    },
+    "trader/observability/safety.py": {
+      "bytes": 18863,
+      "sha256": "0dec2a0b7a9eb950f101757ef7434abfaa7b3b13e90d33459d3b4953464fec61"
+    },
+    "trader/observability/dashboard_readiness.py": {
+      "bytes": 6973,
+      "sha256": "99c75a0a4339222c68c0018f21b84e32c4f026af80bf2f339012d79592420c83"
+    },
+    "trader/observability/shutdown.py": {
+      "bytes": 902,
+      "sha256": "debb211c82500c1549fbb082f7564df6be756b6db4044958a79f9763641250c6"
+    },
+    "trader/kernel.py": {
+      "bytes": 172317,
+      "sha256": "5f85019090631a9ea197804788d742cd7c907503b9a4650d5234bce938506c03"
+    },
+    "trader/runtime_identity.py": {
+      "bytes": 9646,
+      "sha256": "7eb62da6392645b06380c96a79fe9b42cccf5c93ca53795056bcfd13dda13ffb"
+    },
+    "restart.sh": {
+      "bytes": 3722,
+      "sha256": "f47f92c63ce617e231724defc2d394f64e2ba88b4f3aa9dcb496e072d1902f05"
+    },
+    "docs/tracker/evidence/obs05-first-boot-diagnostics/closure.yaml": {
+      "bytes": 2098,
+      "sha256": "9127ee08ff5e36b4c911a02bd8f24d6bda8362fb94faff849b8bc2d2425ffaaa"
+    },
+    "docs/tracker/evidence/obs05-first-boot-diagnostics/tests.txt": {
+      "bytes": 751,
+      "sha256": "cf99cb108df8e1f7395db6a4dd0c41409a74e4442666b597dc93aebb920115fd"
+    },
+    "docs/tracker/evidence/obs05-first-boot-diagnostics/graphify-update.txt": {
+      "bytes": 4001,
+      "sha256": "e43b9de7a5279a3abc56af47937d3aecfde9b9884b42b0b9945f1bd5505cef1c"
+    },
+    "docs/tracker/evidence/obs05-first-boot-diagnostics/intake.yaml": {
+      "bytes": 677,
+      "sha256": "f1343aa832957542c153eed0960b0c36883efc7847e6a3d36074288654d60736"
+    },
+    "docs/tracker/evidence/obs05-first-boot-diagnostics/REPORT.md": {
+      "bytes": 3760,
+      "sha256": "82650f4b64ea2f72dd01ada3a4e64c35b43d8fb3d6cbcc3301a8d9cf233ce2d3"
+    },
+    "docs/tracker/evidence/obs05-first-boot-diagnostics/focused-tests.txt": {
+      "bytes": 99,
+      "sha256": "f4dd49adbf30194e512f2d177ccde10d8d3abae947acfc6465d26cb380396947"
+    },
+    "docs/tracker/evidence/obs05-first-boot-diagnostics/control-plane-verification.txt": {
+      "bytes": 531,
+      "sha256": "74edbebe4ca7223159fa4629d379f51679b8dfc706234dae8c5a9f4cff368913"
+    }
+  }
+}
