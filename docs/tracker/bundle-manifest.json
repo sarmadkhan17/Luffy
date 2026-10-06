@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 397469,
-      "sha256": "de41893f65c347d8dc5c13f4e074eb48c638ba78de14238791c46c78b316d65b",
+      "bytes": 398481,
+      "sha256": "b764f7cd37360c311975516a29612e23253978b24d96590a624f02fb51b59a2d",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 385562,
-      "sha256": "42b0383ec2a78d5d2db0afe9cf25aa87a161c79c7ef23730daa38d4273eb1441",
+      "bytes": 386558,
+      "sha256": "c8595e105043ecdf00ea783e08da12bde0c6ccf1520928f730bf304351a2956e",
       "synchronization_required": false
     },
     {
@@ -416,5 +416,31 @@
     "data05_closure_reused": "fc16e078a56a19b01b85a8a9c7edac368183904d; canonical DATA-05 reconciliation remains uncommitted and is outside WRLD-03 scope.",
     "unrelated_tracker_rows_changed": false,
     "control_plane_reconciliation_pending": false
+  },
+  "data05_canonical_reconciliation": {
+    "item": "DATA-05",
+    "canonical_status": "CLOSED",
+    "engineering_closure_commit": "fc16e078a56a19b01b85a8a9c7edac368183904d",
+    "evidence": "docs/tracker/evidence/data05-revision-truth/closure.md",
+    "closure_condition_satisfied": true,
+    "evidence_scope": "Existing fc16e07 engineering evidence reused: 208 offline passes, including 33 new DATA-05 checks. No implementation or test/runtime rerun.",
+    "closing_condition_proof": [
+      "Latest and explicit historical cuts select original/same-value/corrected/future revisions only when knowable.",
+      "Append-only originals and supersedes identities survive later corrections.",
+      "Hash, indexed identity/clocks and exact lineage reconstruct or fail closed on corruption/missing/future sources.",
+      "Database reopen preserves earlier as-of selection, latest selection, original bar-close replay and reconstructed metadata."
+    ],
+    "dependency_status": {
+      "DATA-02": "CLOSED"
+    },
+    "wrld05_dependency_status": {
+      "WRLD-03": "CLOSED",
+      "DATA-05": "CLOSED"
+    },
+    "wrld05_now_fully_eligible": true,
+    "wrld05_row_status_changed": false,
+    "remaining_wrld05_work": "Normal typed WorldModel strategy/research integration and its original closing proof remain separate.",
+    "control_plane_reconciliation_pending": false,
+    "historical_pending_notes": "Earlier DATA-05 reconciliation-pending statements in retained engineering/WRLD-03 records describe their pinned checkpoints; this record completes canonical reconciliation."
   }
 }

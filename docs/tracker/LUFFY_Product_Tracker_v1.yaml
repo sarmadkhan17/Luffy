@@ -19,8 +19,8 @@ metadata:
     optional generated reference.
   pending_adoption: null
   status_counts:
-    CLOSED: 31
-    EVIDENCE_TO_MAP: 110
+    CLOSED: 33
+    EVIDENCE_TO_MAP: 108
     DEFERRED: 7
     AWAITING_EVIDENCE: 10
     AWAITING_OWNER: 14
@@ -1560,40 +1560,47 @@ items:
   stage: '1'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Preserve append-only revisions and distinguish latest from as-of.
   why_needed: Later correction must not rewrite what an earlier decision knew.
-  closure_condition: Latest views and historical revision selection return the correct source at each cut; hash
-    and lineage reconstruction match.
-  failure_regression_proof: Revisions applied later do not change earlier replay; old data is not rebased to current
-    truth.
+  closure_condition: Latest views and historical revision selection return the correct source at each cut;
+    hash and lineage reconstruction match.
+  failure_regression_proof: Revisions applied later do not change earlier replay; old data is not rebased to
+    current truth.
   dependencies:
   - DATA-02
   owner_role: Data & storage owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: NOT_MAPPED
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: SOL-1 (existing engineering closure reconciled only)
+  implementation_evidence: fc16e07; trader/data/market_provenance.py indexed identity/clock verification; tests/test_data05_revision_truth.py;
+    retained closing-condition report and 208 offline passes reused.
+  runtime_evidence: NOT_PERFORMED; pinned offline engineering evidence reused, no runtime rerun
   visual_approval: NOT_APPLICABLE
-  latest_evidence: No item-level evidence mapping completed in this tracker.
+  latest_evidence: 'Original closing condition satisfied by retained fc16e07 proof: append-only revision retention;
+    exact latest/as-of/bar-close selection; original hashes/source/lineage reconstruction; index-clock corruption
+    and missing/future/tampered originals fail closed; database reopen preserves earlier historical and newest
+    latest selection. 208 recorded offline passes include 33 new DATA-05 tests. Retained report, shared revision-reader
+    and DATA-05 test bytes match fc16e07. No implementation added or tests repeated in this reconciliation.'
   source_ids:
   - S01
   - S08
   - S13
   source_sections: §§6.2,6.5,19.3
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: None for DATA-05 at architecture/offline engineering scope. WRLD-03 and DATA-05 now satisfy WRLD-05
+    dependencies; its normal consumer integration remains separate.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: fc16e078a56a19b01b85a8a9c7edac368183904d
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: docs/tracker/evidence/data05-revision-truth/closure.md
+  evidence_validity: Pinned retained fc16e07 offline tests and closing-condition proof reused; no later runtime
+    or deployment proof inferred.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  closure_scope: ARCHITECTURE_OFFLINE
 - id: DATA-06
   area: Data & storage
   stage: '1'
