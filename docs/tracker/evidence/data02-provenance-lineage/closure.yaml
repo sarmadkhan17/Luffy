@@ -1,0 +1,19 @@
+id: DATA-02
+result: CLOSED_ENGINEERING_ONLY
+boundary_map:
+  market_ohlcv: PROVEN  # mp.annotate stamps event/observed/available/request clocks, source, instrument_id, quality, bar_state, transform_version; market_revisions append-only; tests/test_stage1_data_provenance_pit.py (64 pass)
+  derivatives_funding_oi: PROVEN  # derivs.db uses mp.init/append/load; test_derivative_revisions_quality_and_pit, test_funding_cost_reader_respects_revision_availability
+  reference_context: PROVEN  # refs use mp revisions; test_reference_revisions_reopen_and_stale_quality; btc_context carries transform_version btc_context.v1 + source_revisions
+  order_book: PROVEN  # kernel._retain_market_input validates finite/sorted book, rejects future/stale (45s), test_auxiliary_stale_and_future_book_fail_closed
+  registry_capability_binding: PROVEN  # DATA-01 closure (capability digest + schema/revision check)
+  attention_broad_deep_admission: PROVEN  # _candidate_snapshot_for attaches receipt_id/policy_version/source_cut_ms to lineage; tests/test_hierarchical_admission.py
+  portfolio_inputs: PROVEN_BY_CODE_READ  # source_adapter/candidate_bridge: as_of_ms<=cut, valid_until_ms, exact-cut replay, no rebinding; live.replay
+  risk_inputs: PROVEN  # DATA-01 boundary (authorize rereads capability); lineage gate in kernel._snapshot_for refuses non-VALID/identity-mixed frames
+  execution_accounting_receipts: PROVEN_BY_CODE_READ  # executor books venue_order_fills vs labelled estimated_order_booking; DATA-01 execution_binding
+  decision_lineage_reconstruction: ACTUAL_GAP  # journal 'market_provenance' stored revision ids only; nothing resolved them back to retained receipts or refused a missing/future/non-VALID/transform-mismatched one
+actual_gap: decision lineage ids were not verifiably reconstructible from the durable stores.
+change: trader/data/market_provenance.py resolve_lineage(conns, lineage, transforms=None) (read-only; refuses, never defaults).
+tests: tests/test_data02_decision_lineage.py (12 pass): restart+durable reconstruction, ATT-04 admission preserved through journal, missing receipt, future, NaN, STALE/SUSPECT/UNSUPPORTED/MISSING/INCOMPLETE/UNKNOWN, transform/schema mismatch, foreign instrument, tamper.
+baseline_failures_identical_on_base: 40 (test_attention_telemetry real-kernel-cycle x32, test_hierarchical_admission actual-cycle x6, test_journal_evidence_repair migration x2)
+limits: resolve_lineage is not yet wired into a production caller (library + proof); universe_*_receipts acquisition records are separate frozen journal blobs, not market_revisions, and are not resolved by it; plain candle transform_version is null by design (identity transform). No runtime/venue/provider calls.
+tracker_note: tracker/NEXT/STATE rows NOT edited; those files carry another session's uncommitted GOV-07 edits.

@@ -370,3 +370,61 @@ def usable_current(df, tf, as_of_ms, ttl_s):
         out.loc[:, [k for k in VALUES if k in out]] = np.nan
         out.attrs['quality'] = Quality.STALE.value
     return out
+
+
+def resolve_lineage(conns, lineage, *, transforms=None):
+    """Rebuild every retained receipt a journaled decision lineage names.
+
+    The decision journal stores revision identities only. This reads the
+    durable revision stores back (``conns``: every market store that may hold
+    them) and refuses, never defaults, when an input cannot be proven: a
+    missing or corrupt revision, one not yet available/observed at the
+    decision cut, a quality state other than VALID, a foreign instrument, or
+    a schema/transform identity different from the one the decision recorded.
+    Returns ``{revision_id: receipt metadata}`` for audit and replay.
+    """
+    if lineage.get('schema_version') != SCHEMA:
+        raise ValueError('lineage_schema_incompatible')
+    at = cut(lineage.get('as_of_ms'))
+    iid = lineage.get('instrument_id')
+    expected = dict(transforms or {})
+    wanted = []  # (revision_id, check instrument?)
+    for group in ('frames', 'derivs', 'references'):
+        for ids in (lineage.get(group) or {}).values():
+            wanted += [(r, group != 'references') for r in ids]
+    for frames in (lineage.get('universe') or {}).values():
+        for ids in frames.values():
+            wanted += [(r, False) for r in ids]
+    btc = lineage.get('btc_context')
+    if btc:
+        if btc.get('transform_version') != expected.get('btc_context', 'btc_context.v1'):
+            raise ValueError('lineage_transform_mismatch')
+        wanted += [(r, False) for r in btc['source_revisions']]
+    out = {}
+    for rid, same_instrument in wanted:
+        if rid in out:
+            continue
+        row = None
+        for conn in conns:
+            row = conn.execute('SELECT record_json FROM market_revisions WHERE revision_id=?', (rid,)).fetchone()
+            if row:
+                break
+        if not row:
+            raise ValueError('lineage_receipt_missing')
+        r = json.loads(row[0])
+        value = {k: r[k] for k in VALUES if k in r}
+        body = {k: r[k] for k in META if k not in ('revision_id', 'supersedes')}
+        if (r['revision_id'] != rid or r['content_hash'] != digest({'raw': json.loads(r['raw_json']), 'value': value})
+                or rid != digest(body)):
+            raise ValueError('market_revision_content_corrupt')
+        if r['available_at_ms'] is None or r['available_at_ms'] > at or r['observed_at_ms'] > at:
+            raise ValueError('lineage_receipt_not_yet_available')
+        if r['quality'] != Quality.VALID.value:
+            raise ValueError('lineage_receipt_quality_not_valid')
+        if same_instrument and iid and r['instrument_id'] != iid:
+            raise ValueError('lineage_instrument_mismatch')
+        want = expected.get(r['kind'])
+        if want is not None and r.get('transform_version') != want:
+            raise ValueError('lineage_transform_mismatch')
+        out[rid] = receipt_metadata({**r, **{k: r.get(k) for k in META}})
+    return out
