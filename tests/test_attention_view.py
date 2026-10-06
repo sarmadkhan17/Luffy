@@ -58,3 +58,23 @@ def test_recovery_visibility_is_authenticated_and_read_only(server, tmp_path):
     journal.kv_set(KEY, '{}')
     result = client.get('/api/attention/latest?token=fixture-token').json()['execution_recovery']
     assert result['reason'] == 'recovery_ledger_unreadable'
+
+
+def test_admission_counts_independent_of_investigation_worker(server,tmp_path,monkeypatch):
+    from trader import attention_admission as A
+    from trader.core.journal import Journal
+    from tests.test_hierarchical_admission import observation,CUT
+    j=Journal(tmp_path/'data/luffy.db')
+    receipt=A.persist(j,observation(),A.AdmissionPolicy(12,2,2,0))
+    before=j.query('SELECT key,value FROM state_kv ORDER BY key')
+    monkeypatch.setattr(server.time,'time',lambda:CUT/1000)
+    client=TestClient(server.create_app({'attention':{'enabled':True}}))
+    got=client.get('/api/attention/latest?token=fixture-token').json()
+    assert got['status']=='waiting'
+    assert got['admission']['status']=='current'
+    assert got['admission']['broad_observed']==30
+    assert got['admission']['deep_admitted']==12
+    assert got['admission']['peer_cohort']==30
+    assert got['admission']['exposure_required']==1
+    assert got['admission']['receipt_id']==receipt['receipt_id']
+    assert j.query('SELECT key,value FROM state_kv ORDER BY key')==before

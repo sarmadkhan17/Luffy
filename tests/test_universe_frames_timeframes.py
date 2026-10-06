@@ -32,6 +32,8 @@ class _Feed:
 def _kernel(tfs):
     k = object.__new__(Kernel)
     k.feed = _Feed()
+    from types import SimpleNamespace
+    k.journal = SimpleNamespace(kv_get=lambda *args: "null")
     k.cfg = {"timeframes": {"execution": "15m", "context": ["1h", "4h"]}}
     k._scan_timeframes = tfs
     return k

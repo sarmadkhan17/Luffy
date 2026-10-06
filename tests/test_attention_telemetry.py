@@ -260,10 +260,11 @@ def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name,
     if recovery_pending:
         k.market_type=MarketType.FUTURES
     k.executor=NS(recovery_pending=lambda:recovery_pending, recover_entries=Mock())
-    k._funding_map=k._oi_map=lambda:{}
+    k._funding_map=k._oi_map=lambda *a, **kw:{}
     k._refresh_btc_context=lambda:None
-    k._scan_symbols=lambda:['S0/USDT','missing']
     data=frames(2)
+    from tests.admission_cycle_fixture import install
+    install(k,['S0/USDT','missing'],data)
     k._universe_frames=lambda _:data
     k._snapshot_for=lambda s,**kw: NS(symbol=s,price=100) if s!='missing' else None
     k.positioning_agent=k.depth_agent=NS(set_context=lambda *a:None)
@@ -275,7 +276,7 @@ def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name,
     k._detect_exchange_exits=Mock(return_value=0)
     k._manages_exits=lambda:state!=ControlState.HALTED
     k._manage_one=Mock(return_value=None)
-    k._manage_orphan_positions=Mock(return_value=1)
+    k._service_exposure=Mock(return_value=1)
     k._maybe_resolve_outcomes=Mock()
     k.heartbeat=NS(beat=Mock())
     k.notifier=NS(send=Mock())
@@ -286,13 +287,13 @@ def test_real_kernel_cycle_keeps_entry_exit_behavior(tmp_path, mode, state_name,
             k._attention.begin=Mock(side_effect=OSError('SECRET'))
             k._attention.causes=Mock(side_effect=OSError('SECRET'))
     result=k.cycle()
-    assert result['scanned']==result['decisions']==1
+    assert result['deep_processed']==result['decisions']==1
     assert result['entries']==int(state==ControlState.ACTIVE and not recovery_pending)
     assert k._try_enter.call_count==int(state==ControlState.ACTIVE and not recovery_pending)
     assert k.executor.recover_entries.call_count==int(recovery_pending and state!=ControlState.HALTED)
     assert k._manage_one.call_count==int(state!=ControlState.HALTED)
     k._detect_exchange_exits.assert_called_once_with('S0/USDT')
-    k._manage_orphan_positions.assert_called_once_with({'S0/USDT'})
+    k._service_exposure.assert_called_once_with({'S0/USDT'},data)
     k._maybe_resolve_outcomes.assert_called_once()
     if mode=='normal':
         assert d.scan_id

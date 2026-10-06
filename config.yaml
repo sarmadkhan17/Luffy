@@ -473,12 +473,17 @@ rent:                            # Luffy pays rent. See
 logging:
   level: INFO
 
-# Forward-only shadow diagnostics; no influence on trading decisions.
-# Enable during a coordinated demo rollout of kernel AND dashboard.
+# Owner-adopted deterministic compute admission plus investigation diagnostics.
+# Admission never replaces Risk permission or mandatory exposure service.
 attention:
+  admission:
+    max_deep_slots: 12
+    event_reserve: 2
+    exploration_reserve: 2
+    minimum_slots: 0
   enabled: true
   timeframe: 4h
-  max_symbols: 16               # subset cap, not venue-wide coverage
+  max_symbols: 16               # legacy investigation capture cap; not admission/broad coverage
   max_causes: 64                # evaluator receipts per symbol
   queue_size: 16
   timeout_seconds: 10

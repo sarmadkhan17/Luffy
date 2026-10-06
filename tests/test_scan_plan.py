@@ -13,6 +13,7 @@ live, so removing a strategy narrows the scan by itself.
 import pytest
 
 from trader.strategy.scan_plan import ScanPlan, plan_scan
+from trader.core.types import norm_symbol
 
 
 class _Spec:
@@ -29,7 +30,7 @@ CANDIDATES = list(VOL)
 
 def test_a_spec_with_no_preferences_gets_the_liquid_candidates():
     p = plan_scan([_Spec("s")], CANDIDATES, VOL)
-    assert set(p.symbols) == set(CANDIDATES)
+    assert set(p.symbols) == {norm_symbol(s) for s in CANDIDATES}
 
 
 def test_min_volume_filters_the_illiquid_out():
@@ -61,7 +62,7 @@ def test_the_plan_is_the_UNION_across_strategies():
     gold = _Spec("gold", include=["XAU/USDT:USDT"], min_vol=1e12)
     major = _Spec("major", min_vol=1e9)
     p = plan_scan([gold, major], CANDIDATES, VOL)
-    assert "XAU/USDT:USDT" in p.symbols and "BTC/USDT" in p.symbols
+    assert "XAU/USDT" in p.symbols and "BTC/USDT" in p.symbols
 
 
 def test_one_specs_exclusion_does_not_veto_another_specs_symbol():

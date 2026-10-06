@@ -99,6 +99,8 @@ class Snapshot:
     derivs: dict | None = None        # {series: obs frame} for funding/OI/taker specs
     market: dict | None = None        # {ref key: frame} for ref() specs
 
+    anchor_frames: dict | None = None  # market context; never discretionary members
+    admission_context: dict | None = None  # candidate admission or independent exposure role
     instrument_binding_json: str | None = None  # exact registry capability at proposal cut
     market_provenance_json: str | None = None  # exact market revisions at the decision cut
     market_provenance_parts: dict | None = None

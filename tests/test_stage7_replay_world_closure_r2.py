@@ -90,7 +90,9 @@ def test_normal_hold_and_risk_block_to_learning(publications,tmp_path,monkeypatc
     # With no original opportunity a SCAN hold cannot require one. Astra's
     # portfolio HOLD failure is reproduced by the unfixed root selection.
     assert C.registration(j._conn(),'decision:normal-setup')[1]['lineage']['opportunity_id'] is None
-    result,detail=current.checkpoint(j.db_path,cfg,ledger=tmp_path/'runtime.db',market_snapshots={'normal-setup':market},available_inputs={'ohlcv'})
+    from tests.admission_cycle_fixture import bind_market
+    admission_receipt=bind_market(market,cfg,cut)
+    result,detail=current.checkpoint(j.db_path,cfg,ledger=tmp_path/'runtime.db',market_snapshots={'normal-setup':market},available_inputs={'ohlcv'},admission_receipt=admission_receipt)
     assert result['real_order_submissions']==0 and not result['execution_routed']
     event,=detail['learning_source_delivery']
     assert not j.query("SELECT * FROM learning_capture_failures WHERE event_key LIKE '%normal-setup%' OR event_key LIKE 'portfolio:%'")

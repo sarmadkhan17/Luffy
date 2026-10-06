@@ -206,6 +206,9 @@ def symbol_allows(genome, symbol: str) -> bool:
     filter fell into, where `regime_filter: []` silently stopped the book
     from trading at all.
     """
+    explicit = getattr(genome, 'eligible_symbols', None)
+    if explicit is not None:
+        return _base_pair(symbol) in {_base_pair(s) for s in explicit}
     want = getattr(genome, "symbols", None)
     if not want:
         return True

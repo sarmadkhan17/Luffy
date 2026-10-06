@@ -63,12 +63,13 @@ def test_frozen_kernel_cycle_reaches_exit_and_successful_heartbeat(tmp_path, mon
     k._macro_step = lambda _:None
     k._publish_news_guard = lambda _:None
     k._record_risk_assessment = lambda *a:None
-    k._funding_map = k._oi_map = lambda:{}
-    k._scan_symbols = lambda:[]
+    k._funding_map = k._oi_map = lambda *a, **kw:{}
+    from tests.admission_cycle_fixture import install
+    install(k, [])
     k._universe_frames = lambda _:{}
     k._attention_call = lambda *a:None
     exits = []
-    k._manage_orphan_positions = lambda scanned:exits.append('managed') or 1
+    k._service_exposure = lambda scanned, peers:exits.append('managed') or 1
     k._maybe_resolve_outcomes = k._record_excursions = lambda:None
     k._equity_provenance = lambda _:{}
     k._portfolio_checkpoint = lambda:{}

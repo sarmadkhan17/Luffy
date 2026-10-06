@@ -10,6 +10,7 @@ import asyncio
 import json
 import logging
 import os
+import time
 from typing import Optional
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -86,6 +87,8 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             acfg = settings(raw)
         except ValueError:
             return _nocache(JSONResponse({"status": "configuration_error", "scan": None, "causes": []}))
+        from ..attention_admission import owner_view as admission_view
+        admission = admission_view(journal,now_ms=int(time.time()*1000),stale_seconds=acfg['stale_seconds'])
         healths = []
         for filename, field in (("attention_health.json", None), ("heartbeat_luffy.json", "attention")):
             try:
@@ -98,6 +101,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
         health = max(healths, key=lambda h: h.get("updated_ms", 0), default={})
         result = read_latest(ROOT / "data" / "attention.db", health=health,
                              stale_seconds=acfg["stale_seconds"])
+        result["admission"] = admission
         if (cfg.get("attention_learning") or {}).get("enabled"):
             from ..observability.learning import read_health
             result["learning"] = read_health(ROOT / "data" / "attention_learning_health.json")

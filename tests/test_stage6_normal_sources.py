@@ -81,8 +81,10 @@ def publications(tmp_path, cfg, monkeypatch):
 
 def read(p):
     j,cfg,_,_,_,market,_=p
+    from tests.admission_cycle_fixture import bind_market
+    receipt=bind_market(market,cfg,int(__import__('datetime').datetime.fromisoformat(market.ts).timestamp()*1000))
     return current.freeze(j.db_path,j.db_path.parent/'attention.db',j.db_path.parent/'investigation.db',cfg,
-                          market_snapshots={'normal-setup':market})
+                          market_snapshots={'normal-setup':market},admission_receipt=receipt)
 
 
 def test_complete_normal_path_to_risk_and_restart(publications,tmp_path):
@@ -173,8 +175,10 @@ def test_journal_decision_without_expiry_normal_checkpoint(publications,tmp_path
     j.log_cycle(market,'journal-cycle','paper')
     j.log_decision(Decision('normal-decision','journal-cycle',SYMBOL,Action.BUY,1.,.5,.8,[],
                            strategy_signals=[sig],ts=market.ts))
+    from tests.admission_cycle_fixture import bind_market
+    admission_receipt=bind_market(market,cfg,NOW)
     result,detail=current.checkpoint(j.db_path,cfg,ledger=tmp_path/'checkpoint.db',
-                                    market_snapshots={'normal-decision':market})
+                                    market_snapshots={'normal-decision':market},admission_receipt=admission_receipt)
     assert detail['normal_persisted_contexts']==0 and detail['candidate_count']==1
     assert result['proposal']['result']['decision']=='NO_ALLOCATION'
     c=result['proposal']['inputs']['candidates'][0]
@@ -195,3 +199,20 @@ def test_lineage_refuses_mixed_cut_and_source_identity(publications):
     body['candidate_cut']['context_id']='wrong'
     forged=A.Source.freeze('strategy-lineage:'+A.digest(body),body)
     with pytest.raises(ValueError,match='CANDIDATE_CUT_DIFFERS'):B.replay_lineage(forged,NOW)
+
+
+def test_admission_omission_preserves_whole_book_holdings(publications):
+    j,cfg,_,_,_,market,_=publications
+    for path in (j.db_path.parent/'contexts').glob('*.json'):
+        path.unlink()  # remove the obsolete TEST-ONLY zero-holding publication
+    book=snapshot('long',NOW)
+    record_snapshot(j,book,at_ms=NOW)
+    inputs,detail=current.freeze(j.db_path,j.db_path.parent/'attention.db',
+        j.db_path.parent/'investigation.db',cfg,market_snapshots={},
+        holdings_market_snapshots={market.symbol:market},admission_receipt=None)
+    assert inputs.candidates==()
+    assert len(inputs.portfolio.positions)==1
+    assert inputs.portfolio.positions[0].instrument==IID
+    assert detail['holdings_count']==1
+    assert market.symbol in detail['holdings_market_observations']
+    assert any(s.source_id=='held-market-observations' for s in inputs.sources)

@@ -314,12 +314,13 @@ def _cycle_kernel(journal, venue, monkeypatch, market):
     k._drain_close_requests = lambda: 0
     k.macro_guard = NS(check=lambda: {"active": False})
     k.news_guard = NS(check=lambda: {"active": False})
-    k._funding_map = k._oi_map = lambda: {}
+    k._funding_map = k._oi_map = lambda *a, **kw: {}
     k._refresh_btc_context = lambda: None
-    k._scan_symbols = lambda: []
+    from tests.admission_cycle_fixture import install
+    install(k, [])
     k._universe_frames = lambda _s: {}
     k._attention_call = lambda *a, **kw: None
-    k._manage_orphan_positions = lambda _s: 0
+    k._service_exposure = lambda _s, _p: 0
     k._maybe_resolve_outcomes = lambda: None
     k._record_excursions = lambda: None
     k.heartbeat = NS(beat=lambda *_a: None)

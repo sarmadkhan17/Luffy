@@ -37,6 +37,8 @@ def frame_chunks(db, snap, cut):
         raw = exact_frame(value)
         dep = freeze(db, 'data', raw, cut, 'existing Snapshot DataFrame; raw observed values')
         return dep['sha256']
+    chunks['anchors'] = {symbol:{k:frame(v) for k,v in frames.items()}
+                         for symbol,frames in (getattr(snap,'anchor_frames',None) or {}).items()}
     chunks['dfs'] = {k: frame(v) for k,v in snap.dfs.items()}
     chunks['derivs'] = {k:frame(v) for k,v in (snap.derivs or {}).items()}
     chunks['market'] = {k:frame(v) for k,v in (snap.market or {}).items()}
@@ -44,6 +46,7 @@ def frame_chunks(db, snap, cut):
                           for symbol,frames in (snap.universe or {}).items()}
     return dict(format='snapshot-frame-chunks.v1', chunks=chunks, cutoff_ms=cut,
                 original_snapshot_ts=snap.ts,
+                admission_context=getattr(snap,'admission_context',None),
                 symbol=snap.symbol, market_type=snap.market_type, price=snap.price,
                 btc_context=snap.btc_ctx,regime=snap.regime,adx=snap.adx,btc_trend=snap.btc_trend,
                 macro_note=snap.macro_note,semantics='raw values available at snapshot cut; no final-bar claim')
@@ -338,12 +341,14 @@ def runtime_inputs(journal, snap, config, *, cut_ms, additional_original_inputs=
     return result
 
 
-def missed_snapshot(db,scan_id,symbol,at_ms):
+def missed_snapshot(db,scan_id,symbol,at_ms,admission_context=None):
     """Capture an actually observed skip, without inventing an opportunity."""
     key='missed-snapshot:'+L.digest([scan_id,symbol,at_ms])
     lineage=asdict(L.Lineage(scan_id,None,None))
+    reasons={'symbol':symbol,'reason':'missing_snapshot'}
+    if admission_context is not None: reasons['admission']=admission_context
     deps=[C.unavailable('data','SNAPSHOT_PRODUCER_RETURNED_NONE'),
-          freeze(db,'reasons',{'symbol':symbol,'reason':'missing_snapshot'},at_ms,'Kernel scan skip')]
+          freeze(db,'reasons',reasons,at_ms,'Kernel admitted snapshot skip')]
     C.register(db,key,L.Kind.DATA.value,lineage,at_ms,deps)
     action=C.record_action(db,key,{'action':'SKIPPED','symbol':symbol},at_ms)
     observation={'reason':'no_original_snapshot_or_registered_future_measurement','market_conclusion':'NOT_APPLICABLE'}

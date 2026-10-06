@@ -82,7 +82,7 @@ perf01:
 likely_files:
 - SDD.md
 - config.yaml
-- trader/cognition/admission.py
+- trader/attention_admission.py
 - trader/data/broad_crypto.py
 - trader/kernel.py
 - trader/core/types.py

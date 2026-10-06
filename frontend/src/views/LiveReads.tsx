@@ -813,7 +813,7 @@ function AttentionScan() {
   if (!adapter.attention) return null;
   return (
     <Panel
-      title="Attention scan"
+      title="Attention admission and investigation observations"
       aside={<Badge tone="amber">{value(q.data?.status)}</Badge>}
     >
       <QueryState
@@ -824,6 +824,20 @@ function AttentionScan() {
       {q.data && !q.error && (
         <>
           <Fields
+            row={rec(q.data.admission) ?? {}}
+            keys={[
+              ["status", "Admission receipt"],
+              ["broad_observed", "Broad crypto observed"],
+              ["peer_cohort", "Strategy peer cohort"],
+              ["deep_admitted", "Discretionary deep admitted"],
+              ["event_admitted", "Event admitted"],
+              ["exploration_admitted", "Exploration admitted"],
+              ["exposure_required", "Exposure required (outside budget)"],
+              ["unused_capacity", "Unused deep capacity"],
+              ["degraded_state", "Admission data state"],
+            ]}
+          />
+          <Fields
             row={{
               ...(rec(q.data.scan) ?? {}),
               causes: Array.isArray(q.data.causes)
@@ -833,16 +847,16 @@ function AttentionScan() {
               collector_status: q.data.collector_status,
             }}
             keys={[
-              ["scan_id", "Scan id"],
+              ["scan_id", "Investigation observation id"],
               ["as_of_ms", "As of (ms)"],
               ["age_seconds", "Age (s)"],
-              ["causes", "Candidate causes"],
+              ["causes", "Captured decision causes"],
               ["collector_status", "Collector"],
             ]}
           />
           <p className="quiet">
             Source: /api/attention/latest. A status of disabled or waiting means
-            no current scan is recorded.
+            no current investigation capture is recorded. Admission has its own retained receipt; holdings and protection are independent of deep slots.
           </p>
         </>
       )}

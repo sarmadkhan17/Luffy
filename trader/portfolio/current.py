@@ -16,13 +16,42 @@ def receipt_sources(receipt):
     return tuple(Source(**s) for s in json.loads(receipt.payload_json)['sources'])
 
 
-def freeze(journal, attention, investigation, config, available_inputs=None, market_snapshots=None):
+def admitted_requests(requests, market_snapshots, receipt):
+    """Candidate omission cannot touch the independent venue holdings source."""
+    if receipt is None: return []
+    from trader.attention_admission import verify_receipt
+    verify_receipt(receipt)
+    out=[]
+    for request in requests:
+        market=next((snap for did,snap in market_snapshots.items()
+                     if request['candidate_id']==did or request['candidate_id'].startswith(did+':')),None)
+        context=getattr(market,'admission_context',None)
+        if (market is not None and context and market.symbol in receipt['admitted_symbols']
+                and context.get('receipt_id')==receipt['receipt_id']):
+            out.append(request)
+    return out
+
+
+def freeze(journal, attention, investigation, config, available_inputs=None, market_snapshots=None, holdings_market_snapshots=None, admission_receipt=None):
     requests, snap, control, inventory, detail = capture(Path(journal),Path(attention),Path(investigation),config)
     # A persisted cut must still be current under the venue's own contract.
     common_factor.snapshot(Source.freeze('venue_position_snapshot',snap),
                            detail.get('read_at_ms',detail['as_of_ms']))
     candidates, sources, lineages, contexts, entry_contexts = [], [inventory], [], [], []
     market_snapshots = market_snapshots or {}
+    holdings_market_snapshots = holdings_market_snapshots or {}
+    if config.get('attention',{}).get('admission'):
+        from trader.attention_admission import verify_receipt
+        if admission_receipt is not None:
+            verify_receipt(admission_receipt)
+            sources.append(Source.freeze('attention-admission',dict(
+                receipt_id=admission_receipt['receipt_id'],policy_version=admission_receipt['policy_version'],
+                source_cut_ms=admission_receipt['source_cut_ms'],roles=admission_receipt['roles'],
+                peer_cohort_id=admission_receipt['peer_cohort_id'])))
+        # Missing admission means no new candidates. Whole-book truth remains
+        # independently captured, so candidate omission cannot erase holdings.
+        requests = admitted_requests(requests,market_snapshots,admission_receipt)
+
     with ExitStack() as stack:
         db = _read(stack,Path(journal),time.monotonic()+5)
         kv = dict(db.execute("SELECT key,value FROM state_kv WHERE key IN "
@@ -137,13 +166,21 @@ def freeze(journal, attention, investigation, config, available_inputs=None, mar
     with retained(journal) as learned:
         if learned is not None:
             inputs = attach_learning(inputs, learned)
-    detail.update(context_count=len(contexts),candidate_count=len(candidates),
+    holding_observations = {symbol:dict(symbol=symbol,ts=market.ts,price=market.price,
+        category='exposure_required',admission_context=getattr(market,'admission_context',None))
+        for symbol,market in holdings_market_snapshots.items()}
+    if holding_observations:
+        holding_source=Source.freeze('held-market-observations',holding_observations)
+        inputs=replace(inputs,sources=inputs.sources+(holding_source,))
+    detail.update(holdings_market_observations=holding_observations,
+        admission_receipt_id=admission_receipt.get('receipt_id') if admission_receipt else None,
+        context_count=len(contexts),candidate_count=len(candidates),
         holdings_count=len(snap['positions']),portfolio_snapshot_id=snap['snapshot_id'],
         common_factor=json.loads(context.result_json), economics='UNAVAILABLE' if not candidates else 'SEE_EXACT_RECEIPTS')
     return inputs,detail
 
 
-def checkpoint(journal, config, ledger=None, available_inputs=None, market_snapshots=None):
+def checkpoint(journal, config, ledger=None, available_inputs=None, market_snapshots=None, holdings_market_snapshots=None, admission_receipt=None):
     """The normal Kernel checkpoint, after the current cycle's observations.
 
     No refresh/new request and no recurring allocation: the exact event gate
@@ -151,7 +188,7 @@ def checkpoint(journal, config, ledger=None, available_inputs=None, market_snaps
     """
     from .runtime import Consumer
     source=Path(journal)
-    inputs,detail=freeze(source,source.parent/'attention.db',source.parent/'investigation.db',config,available_inputs,market_snapshots)
+    inputs,detail=freeze(source,source.parent/'attention.db',source.parent/'investigation.db',config,available_inputs,market_snapshots,holdings_market_snapshots,admission_receipt)
     ledger=Path(ledger) if ledger else source.parent/'runtime-portfolio.db'
     if ledger.resolve()==source.resolve():
         raise ValueError('PROPOSAL_LEDGER_MUST_BE_SEPARATE')

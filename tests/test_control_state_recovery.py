@@ -162,9 +162,10 @@ def test_kernel_cycle_in_recovery_blocks_entries_but_manages_exits(macro_active)
     k.market_type = MarketType.FUTURES
     k.executor = NS(recovery_pending=lambda: False, recover_entries=Mock())
     k.supervisor = NS(cycle=Mock())
-    k._funding_map = k._oi_map = lambda: {}
+    k._funding_map = k._oi_map = lambda *a, **kw: {}
     k._refresh_btc_context = lambda: None
-    k._scan_symbols = lambda: ["S0/USDT"]
+    from tests.admission_cycle_fixture import install
+    install(k, ["S0/USDT"])
     k._universe_frames = lambda _: {}
     k._snapshot_for = lambda s, **kw: NS(symbol=s, price=100)
     k.positioning_agent = k.depth_agent = NS(set_context=lambda *a: None)

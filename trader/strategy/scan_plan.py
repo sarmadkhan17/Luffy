@@ -1,4 +1,9 @@
-"""Which markets get scanned is a question the strategies answer.
+"""Strategy declarations define eligibility and relevance, not deep-slot entitlement.
+
+The Kernel admission policy chooses which eligible symbols receive expensive
+processing. This plan remains the independent strategy eligibility/peer plan.
+
+Which markets get scanned is a question the strategies answer.
 
 The cycle scanned three majors plus the top alts by quote volume, at one
 fixed execution timeframe, whatever the book happened to contain. Every spec
@@ -33,6 +38,7 @@ SKHYNIX.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from trader.core.types import norm_symbol
 
 
 @dataclass(frozen=True)
@@ -49,7 +55,7 @@ class ScanPlan:
         A strategy must never be evaluated on a market it refused: the scan
         is a union, so it contains symbols that some OTHER strategy wanted.
         """
-        return symbol in self.by_strategy.get(strategy_id, frozenset())
+        return norm_symbol(symbol) in self.by_strategy.get(strategy_id, frozenset())
 
 
 def _universe_of(spec) -> dict:
@@ -64,13 +70,15 @@ def plan_scan(specs, candidates, volumes: dict) -> ScanPlan:
     NOT pass a liquidity floor — absent data is not evidence of depth, the
     same rule the feature layer applies to NaN.
     """
+    candidates = tuple(dict.fromkeys(norm_symbol(s) for s in candidates))
+    volumes = {norm_symbol(s):v for s,v in volumes.items()}
     symbols: set = set()
     tfs: set = set()
     by_strategy: dict = {}
     for spec in specs:
         u = _universe_of(spec)
-        include = set(u.get("include") or ())
-        exclude = set(u.get("exclude") or ())
+        include = {norm_symbol(s) for s in (u.get("include") or ())}
+        exclude = {norm_symbol(s) for s in (u.get("exclude") or ())}
         floor = float(u.get("min_volume_usdt") or 0.0)
         liquid = {s for s in candidates
                   if float(volumes.get(s, 0.0) or 0.0) >= floor

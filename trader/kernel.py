@@ -941,6 +941,7 @@ class Kernel:
                         ts=dt.datetime.fromtimestamp(as_of/1000, dt.timezone.utc).isoformat(),
                         price=price, dfs=dfs, market_type=self.market_type.value,
                         btc_ctx=btc_ctx, universe=safe_universe, derivs=derivs, market=market,
+                        anchor_frames=getattr(self,'_context_anchor_frames',{}),
                         instrument_binding_json=instrument_binding,
                         market_provenance_parts=lineage)
 
@@ -955,10 +956,26 @@ class Kernel:
         if any(frame is None or not len(frame) or frame['quality'].iloc[-1] != 'VALID'
                for frame in (b15, b1h)):
             self._btc_ctx, self._btc_ctx_receipt = {}, None
+            self.__dict__.setdefault('_context_anchor_frames', {}).pop('BTC/USDT',None)
             return
+        self.__dict__.setdefault('_context_anchor_frames', {})['BTC/USDT'] = {'15m':b15,'1h':b1h}
         self._btc_ctx = btc_context(b15, b1h)
         self._btc_ctx_receipt = dict(as_of_ms=at, transform_version='btc_context.v1',
                                     source_revisions=b15['revision_id'].tolist()+b1h['revision_id'].tolist())
+
+    def _refresh_context_anchors(self):
+        """ETH context stays available even when it earns no deep slot."""
+        from .data import market_provenance as mp
+        frames = self.__dict__.setdefault('_context_anchor_frames', {})
+        try:
+            frame = self.feed.fetch_ohlcv('ETH/USDT','1h')
+            at = int(time.time()*1000)
+            frame = mp.usable_current(frame,'1h',at,self.feed.ttl.get('1h',600))
+            if frame is not None and len(frame) and frame['quality'].eq('VALID').all():
+                frames['ETH/USDT'] = {'1h':frame}
+            else: frames.pop('ETH/USDT',None)
+        except Exception:
+            frames.pop('ETH/USDT',None)
 
     def _retain_market_input(self, symbol, exchange, kind, raw, value, *, received_ms, attempt_ms):
         """Retain an auxiliary read in the existing Journal, before using it.
@@ -1031,17 +1048,16 @@ class Kernel:
         except Exception:
             return None
 
-    def _funding_map(self) -> dict[str, float]:
+    def _funding_map(self, symbols=None) -> dict[str, float]:
         import math
         now = int(time.time()*1000)
-        cached = self._funding_cache
-        if cached is not None:
-            return {sym: value for sym, value in cached.items()
-                    if (r := getattr(self, '_market_aux', {}).get('funding:'+sym))
-                    and 0 <= now-r['available_at_ms'] <= self._DERIVS_TTL*1000}
-        out = {}
+        cached = self._funding_cache or {}
+        out = {sym:value for sym,value in cached.items()
+               if (r := getattr(self,'_market_aux',{}).get('funding:'+sym))
+               and 0 <= now-r['available_at_ms'] <= self._DERIVS_TTL*1000}
+        targets = self.universe.symbols() if symbols is None else symbols
         if self.market_type == MarketType.FUTURES:
-            for sym in self.universe.symbols():
+            for sym in (s for s in targets if s not in out):
                 try:
                     attempt = int(time.time()*1000)
                     raw = self.exchange.fetch_funding_rate(sym)
@@ -1054,20 +1070,20 @@ class Kernel:
                 except Exception:
                     continue
         self._funding_cache = out
-        return out
+        return {s:out[s] for s in targets if s in out}
 
-    def _oi_map(self, ttl: float = 900.0) -> dict[str, dict]:
+    def _oi_map(self, ttl: float = 900.0, *, symbols=None) -> dict[str, dict]:
         import math
         now = time.time()
-        if 0 <= now-self._oi_cache[0] < ttl:
-            return {sym: value for sym, value in self._oi_cache[1].items()
-                    if (r := getattr(self, '_market_aux', {}).get('open_interest:'+sym))
-                    and 0 <= int(now*1000)-r['available_at_ms'] <= ttl*1000}
-        out = {}
+        out = {sym:value for sym,value in self._oi_cache[1].items()
+               if (r := getattr(self,'_market_aux',{}).get('open_interest:'+sym))
+               and 0 <= int(now*1000)-r['available_at_ms'] <= ttl*1000}
+        targets = self.universe.symbols() if symbols is None else symbols
+        if not targets: return {}
         try:
             if getattr(self, '_oi_ex', None) is None:
                 self._oi_ex = make_exchange('futures', demo=False, with_keys=False)
-            for sym in self.universe.symbols():
+            for sym in (s for s in targets if s not in out):
                 try:
                     attempt = int(time.time()*1000)
                     hist = self._oi_ex.fetch_open_interest_history(sym, timeframe='1h', limit=25) or []
@@ -1095,13 +1111,14 @@ class Kernel:
         except Exception as e:
             log.warning(f'OI map unavailable: {type(e).__name__}')
         self._oi_cache = (time.time(),out)
-        return out
+        return {s:out[s] for s in targets if s in out}
 
     # ── main loop ─────────────────────────────────────────────────────────
     def cycle(self) -> dict:
-        stats = {"scanned": 0, "decisions": 0, "entries": 0,
+        stats = {"deep_processed": 0, "decisions": 0, "entries": 0,
                  "skips": 0, "exits_detected": 0}
         self._portfolio_market = {}
+        self._portfolio_holdings_market = {}
         supervisor = getattr(self, 'supervisor', None)
         if supervisor is not None:
             supervisor.cycle()
@@ -1138,9 +1155,9 @@ class Kernel:
             blocked = f"daily breaker {status['daily_pnl_pct']:.1f}%"
         self._record_risk_assessment(state, status, entry_allowed, blocked)
 
-        funding = self._funding_map() if self.market_type == MarketType.FUTURES else {}
-        oi = self._oi_map() if self.market_type == MarketType.FUTURES else {}
         self._refresh_btc_context()
+        if self.cfg.get('attention',{}).get('admission'):
+            self._refresh_context_anchors()
         news = self.news_guard.check()
         self._publish_news_guard(news)
         if news.get("active"):
@@ -1149,141 +1166,149 @@ class Kernel:
             "SELECT COUNT(*) AS n FROM trades WHERE status='closed'")[0]["n"])
 
         exec_tf = self.cfg["timeframes"]["execution"]
-        # What to scan is a question the strategies answer. The plan can only
-        # narrow the venue candidates (a spec's exclude or liquidity floor) or
-        # add a symbol a spec explicitly named, so the scan tracks the book
-        # instead of a list hardcoded beside it.
-        scan_symbols = self._scan_symbols()
-        boundaries = dict(getattr(self, '_venue_universe_counts', {}),
-            selected_universe=getattr(self, '_scan_universe_count', None),
-            scan_candidates=len(scan_symbols), execution_datafeed_available=0,
-            snapshots_constructed=0)
-        stats['scan_boundaries'] = boundaries
-        universe_frames = self._universe_frames(scan_symbols)
-        scan_id = self._attention_call("begin", universe_frames, scan_symbols)
+        receipt, broad_frames = self._admission_plan()
+        roles = self._symbol_roles
+        deep_symbols = list(roles.deep)
+        if receipt and receipt.get('required_deferred'):
+            entry_allowed = False
+            blocked = 'required_strategy_evaluation_deferred'
+        stats['admission'] = dict(receipt_id=receipt.get('receipt_id') if receipt else None,
+            status=receipt.get('degraded_state') if receipt else 'REFUSED',
+            broad_observed=len(roles.broad_crypto), peer_cohort=len(roles.peers),
+            deep_admitted=len(roles.deep), event_admitted=len(roles.event),
+            exploration_admitted=len(roles.exploration), exposure_required=len(roles.exposure),
+            context_anchors=list(roles.anchors))
+        boundaries = dict(broad_crypto=len(roles.broad_crypto),peer_cohort=len(roles.peers),
+            discretionary_deep_admitted=len(deep_symbols),exposure_required=len(roles.exposure),
+            execution_datafeed_available=0,snapshots_constructed=0)
+        stats['processing_boundaries'] = boundaries
+        # Peer population is independent; these are cache-only reads and never
+        # network candle refreshes for rejected candidates.
+        universe_frames = self._peer_frames(roles.peers)
+        funding = self._funding_map(deep_symbols) if self.market_type == MarketType.FUTURES else {}
+        oi = self._oi_map(symbols=deep_symbols) if self.market_type == MarketType.FUTURES else {}
+        # Legacy investigation telemetry remains bounded and asynchronous;
+        # it does not choose deep members or stand in for broad admission.
+        scan_id = self._attention_call("begin", broad_frames, list(roles.broad_crypto))
         attention_causes = []
         # Bound producer work even if the trading universe is much larger.
         attention_cap = getattr(getattr(self, "_attention", None), "cfg", {}).get("max_symbols", 0)
 
         scanned: set = set()
-        for symbol in scan_symbols:
-            if (entry_allowed and self.market_type == MarketType.FUTURES
-                    and self.executor.recovery_pending()):
-                entry_allowed = False
-                blocked = "execution_recovery_pending"
-            snap = self._snapshot_for(symbol, universe=universe_frames)
-            boundaries['execution_datafeed_available'] += int(getattr(self, '_last_snapshot_feed_available', False))
-            if snap is None:
+        try:
+            for symbol in deep_symbols:
+                if (entry_allowed and self.market_type == MarketType.FUTURES
+                        and self.executor.recovery_pending()):
+                    entry_allowed = False
+                    blocked = "execution_recovery_pending"
+                snap = self._candidate_snapshot_for(symbol, receipt, universe_frames)
+                boundaries['execution_datafeed_available'] += int(getattr(self, '_last_snapshot_feed_available', False))
+                if snap is None:
+                    try:
+                        from .learning import capture as lc, capture_runtime as lr
+                        with self.journal._tx() as capture_db:
+                            lc.safely(capture_db, 'missed-snapshot:'+symbol, lr.missed_snapshot,
+                                scan_id, symbol, int(time.time()*1000),
+                                admission_context=dict(receipt_id=receipt['receipt_id'],
+                                    category=next(r['category'] for r in receipt['rows'] if r['symbol']==symbol),
+                                    acquisition='FAILED_SNAPSHOT'))
+                    except Exception:
+                        pass
+                    if scan_id and len(attention_causes) < attention_cap:
+                        attention_causes.append({"symbol": symbol, "decision_id": None,
+                                                 "reason": "missing_snapshot"})
+                    continue
+                stats["deep_processed"] += 1
+                boundaries['snapshots_constructed'] += 1
                 try:
-                    from .learning import capture as lc, capture_runtime as lr
-                    with self.journal._tx() as capture_db:
-                        lc.safely(capture_db, 'missed-snapshot:'+symbol, lr.missed_snapshot,
-                            scan_id, symbol, int(time.time()*1000))
+                    self._manage_paper(snap)
+                except Exception as e:
+                    log.warning("paper exits refused %s: %s", symbol, e)
+                self.positioning_agent.set_context(symbol, funding.get(symbol),
+                                                   oi.get(symbol))
+                original_order_book = self._order_book(symbol)
+                self.depth_agent.set_context(symbol, original_order_book)
+                lineage = getattr(snap, 'market_provenance_parts', None)
+                if lineage is None and getattr(snap, 'market_provenance_json', None):
+                    lineage = json.loads(snap.market_provenance_json)
+                if lineage is not None:
+                    cut = int(time.time()*1000)
+                    if cut < lineage['as_of_ms']:
+                        stats['skips'] += 1
+                        continue
+                    auxiliary = {kind: receipt for kind in ('order_book','funding','open_interest')
+                                 if (receipt := getattr(self, '_market_aux', {}).get(kind+':'+symbol))
+                                 and receipt['available_at_ms'] <= cut}
+                    lineage.update(as_of_ms=cut, auxiliary=auxiliary)
+                    snap.ts = dt.datetime.fromtimestamp(cut/1000, dt.timezone.utc).isoformat()
+                    snap.market_provenance_parts = lineage
+                from .learning.capture_runtime import runtime_inputs
+                try:
+                    learning_inputs = runtime_inputs(self.journal, snap, self.cfg,
+                        cut_ms=int(time.time()*1000),control_state=state,additional_original_inputs=dict(
+                            order_book=original_order_book,positioning_funding=funding.get(symbol),
+                            positioning_open_interest=oi.get(symbol),
+                            admission=snap.admission_context))
                 except Exception:
-                    pass
+                    learning_inputs = None
+                d = self.orchestrator.decide(snap, self.population,
+                                             entry_allowed=entry_allowed,
+                                             blocked_reason=blocked)
+                if learning_inputs is not None:
+                    from copy import deepcopy
+                    learning_inputs['snapshot'] = deepcopy(snap)
+                d.scan_id = scan_id
+                d.learning_inputs = learning_inputs
+                self.orchestrator.journalize(snap, d, self.market_type.value,
+                                             mode="live")
+                stats["decisions"] += 1
+                self._portfolio_market[d.id] = snap
+
+                if d.action != Action.HOLD:
+                    if d.skip_reason:
+                        stats["skips"] += 1
+                        log.info(f"SKIP {symbol} {d.action} score={d.score:+.3f} "
+                                 f"| {d.skip_reason}")
+                    elif entry_allowed:
+                        try:
+                            ok = self._try_enter(d, snap, balance, closed_count)
+                        except RiskError as e:
+                            self.state_machine.set(ControlState.HALTED,
+                                                   "risk_engine", str(e))
+                            d.skip_reason = f"risk halt: {e}"
+                            ok = False
+                            entry_allowed = False
+                            blocked = "state=HALTED"
+                            log.error(f"RISK HALT {d.symbol}: {e}")
+                        self.journal.update_decision_outcome(
+                            d.id, d.executed, d.size_usdt, d.skip_reason)
+                        if ok:
+                            stats["entries"] += 1
+                            self.notifier.send(
+                                f"🎯 <b>{d.action}</b> {symbol} @ {snap.price:.4g} "
+                                f"score {d.score:+.2f} conf {d.confidence:.0%}")
+
                 if scan_id and len(attention_causes) < attention_cap:
-                    attention_causes.append({"symbol": symbol, "decision_id": None,
-                                             "reason": "missing_snapshot"})
-                continue
-            stats["scanned"] += 1
-            boundaries['snapshots_constructed'] += 1
-            try:
-                self._manage_paper(snap)
-            except Exception as e:
-                log.warning("paper exits refused %s: %s", symbol, e)
-            self.positioning_agent.set_context(symbol, funding.get(symbol),
-                                               oi.get(symbol))
-            original_order_book = self._order_book(symbol)
-            self.depth_agent.set_context(symbol, original_order_book)
-            lineage = getattr(snap, 'market_provenance_parts', None)
-            if lineage is None and getattr(snap, 'market_provenance_json', None):
-                lineage = json.loads(snap.market_provenance_json)
-            if lineage is not None:
-                cut = int(time.time()*1000)
-                if cut < lineage['as_of_ms']:
-                    stats['skips'] += 1
-                    continue
-                auxiliary = {kind: receipt for kind in ('order_book','funding','open_interest')
-                             if (receipt := getattr(self, '_market_aux', {}).get(kind+':'+symbol))
-                             and receipt['available_at_ms'] <= cut}
-                lineage.update(as_of_ms=cut, auxiliary=auxiliary)
-                snap.ts = dt.datetime.fromtimestamp(cut/1000, dt.timezone.utc).isoformat()
-                snap.market_provenance_parts = lineage
-            from .learning.capture_runtime import runtime_inputs
-            try:
-                learning_inputs = runtime_inputs(self.journal, snap, self.cfg,
-                    cut_ms=int(time.time()*1000),control_state=state,additional_original_inputs=dict(
-                        order_book=original_order_book,positioning_funding=funding.get(symbol),
-                        positioning_open_interest=oi.get(symbol)))
-            except Exception:
-                learning_inputs = None
-            d = self.orchestrator.decide(snap, self.population,
-                                         entry_allowed=entry_allowed,
-                                         blocked_reason=blocked)
-            if learning_inputs is not None:
-                from copy import deepcopy
-                learning_inputs['snapshot'] = deepcopy(snap)
-            d.scan_id = scan_id
-            d.learning_inputs = learning_inputs
-            self.orchestrator.journalize(snap, d, self.market_type.value,
-                                         mode="live")
-            stats["decisions"] += 1
-            self._portfolio_market[d.id] = snap
+                    attention_causes.append({"symbol": symbol, "decision_id": d.id,
+                        "cycle_id": d.cycle_id, "action": d.action.value,
+                        "executed": d.executed, "entry_allowed": entry_allowed,
+                        "blocked": bool(d.skip_reason),
+                        "reason": "decision_recorded", "decision_detail": "see decisions.skip_reason",
+                        "evaluations": d.evaluation_causes, "omitted_causes": d.omitted_causes})
+                stats["exits_detected"] += self._detect_exchange_exits(symbol)
+                for t in self.journal.open_trades():
+                    if t["symbol"] != symbol:
+                        continue
+                    score = d.score if d.symbol == symbol else None
+                    if self._manages_exits():
+                        r = self._manage_one(t, snap, score)
+                        if r:
+                            stats["exit_action"] = r
 
-            if d.action != Action.HOLD:
-                if d.skip_reason:
-                    stats["skips"] += 1
-                    log.info(f"SKIP {symbol} {d.action} score={d.score:+.3f} "
-                             f"| {d.skip_reason}")
-                elif entry_allowed:
-                    try:
-                        ok = self._try_enter(d, snap, balance, closed_count)
-                    except RiskError as e:
-                        self.state_machine.set(ControlState.HALTED,
-                                               "risk_engine", str(e))
-                        d.skip_reason = f"risk halt: {e}"
-                        ok = False
-                        entry_allowed = False
-                        blocked = "state=HALTED"
-                        log.error(f"RISK HALT {d.symbol}: {e}")
-                    self.journal.update_decision_outcome(
-                        d.id, d.executed, d.size_usdt, d.skip_reason)
-                    if ok:
-                        stats["entries"] += 1
-                        self.notifier.send(
-                            f"🎯 <b>{d.action}</b> {symbol} @ {snap.price:.4g} "
-                            f"score {d.score:+.2f} conf {d.confidence:.0%}")
+                scanned.add(symbol)
 
-            if scan_id and len(attention_causes) < attention_cap:
-                attention_causes.append({"symbol": symbol, "decision_id": d.id,
-                    "cycle_id": d.cycle_id, "action": d.action.value,
-                    "executed": d.executed, "entry_allowed": entry_allowed,
-                    "blocked": bool(d.skip_reason),
-                    "reason": "decision_recorded", "decision_detail": "see decisions.skip_reason",
-                    "evaluations": d.evaluation_causes, "omitted_causes": d.omitted_causes})
-            stats["exits_detected"] += self._detect_exchange_exits(symbol)
-            scanned.add(symbol)
-            for t in self.journal.open_trades():
-                if t["symbol"] != symbol:
-                    continue
-                score = d.score if d.symbol == symbol else None
-                if self._manages_exits():
-                    r = self._manage_one(t, snap, score)
-                    if r:
-                        stats["exit_action"] = r
-
-        # Positions whose symbol has left the universe are still positions.
-        # Both calls above live inside the scan loop, so before this pass a
-        # rotated-out symbol got no trail, no time exit and no fill detection.
-        stats["orphans_managed"] = self._manage_orphan_positions(scanned)
-        if hasattr(self, "_paper"):
-            for symbol in {p["symbol"] for p in self._paper.open_positions()} - scanned:
-                snap = self._snapshot_for(symbol, universe=universe_frames)
-                if snap is not None:
-                    try:
-                        self._manage_paper(snap)
-                    except Exception as e:
-                        log.warning("paper orphan exits refused %s: %s", symbol, e)
+        finally:
+            stats['exposure_serviced'] = self._service_exposure(scanned, universe_frames)
 
         self._maybe_resolve_outcomes()
         self._record_excursions()
@@ -1331,7 +1356,9 @@ class Kernel:
                 self._observe_venue_positions()
                 self._record_capacity_evidence()
             result, detail = checkpoint(self.journal.db_path, self.cfg,
-                market_snapshots=getattr(self, '_portfolio_market', {}))
+                market_snapshots=getattr(self, '_portfolio_market', {}),
+                holdings_market_snapshots=getattr(self,'_portfolio_holdings_market',{}),
+                admission_receipt=getattr(self,'_admission_receipt',None))
             return dict(status='PASS', triggered=result['triggered'],
                         portfolio_cut_id=result['portfolio_cut_id'],
                         trade_intents=len(result['trade_intents']),
@@ -1732,6 +1759,144 @@ class Kernel:
                         notional_usdt=float(t["notional_usdt"] or 0),
                         leverage=int(t.get("leverage") or 1),
                         stop_loss=float(t.get("stop_loss") or 0))
+
+    def _exposure_symbols(self):
+        """Union actual holdings, paper holdings and unresolved execution.
+
+        No admission/candidate list participates in this boundary. Venue truth
+        remains independently refreshed by Supervisor/Portfolio.
+        """
+        from .core.types import norm_symbol
+        out = {norm_symbol(t['symbol']) for t in self.journal.open_trades()}
+        if hasattr(self, '_paper'):
+            out.update(norm_symbol(p['symbol']) for p in self._paper.open_positions())
+        raw = self.journal.kv_get('venue_position_snapshot', 'null')
+        venue = json.loads(raw or 'null')
+        if venue:
+            markets = getattr(self.exchange, 'markets', {})
+            by_id = {m.get('id'):norm_symbol(sym) for sym,m in markets.items()}
+            for p in venue.get('positions', []):
+                symbol = by_id.get(p['instrument_id'].split(':')[-1])
+                if symbol is None:
+                    # Use the observed venue identifier, never invent a base
+                    # asset from its spelling. Acquisition may refuse it;
+                    # Supervisor's whole-book protection remains independent.
+                    symbol=p['instrument_id'].split(':')[-1]
+                out.add(symbol)
+        recovery = json.loads(self.journal.kv_get('execution_recovery', 'null') or 'null')
+        if recovery: out.add(norm_symbol(recovery['symbol']))
+        tables = {r['name'] for r in self.journal.query("SELECT name FROM sqlite_master WHERE type='table'")}
+        if 'partial_exit_intents' in tables:
+            for row in self.journal.query("SELECT payload FROM partial_exit_intents WHERE state!='CONSUMED'"):
+                out.add(norm_symbol(json.loads(row['payload'])['symbol']))
+        if 'execution_requests' in tables:
+            for row in self.journal.query("SELECT recovery_json FROM execution_requests WHERE state!='TERMINAL' AND recovery_json IS NOT NULL"):
+                out.add(norm_symbol(json.loads(row['recovery_json'])['symbol']))
+        return tuple(sorted(out))
+
+    def _admission_plan(self):
+        from . import attention_admission as A
+        from .data.broad_crypto import observe, ANCHORS
+        # A malformed exposure ledger is not permission for discretionary
+        # trading. Existing supervisor/recovery/protection still runs.
+        exposure = ()
+        try:
+            exposure = self._exposure_symbols()
+            observation, frames, memberships = observe(self, exposure)
+            policy = A.AdmissionPolicy.from_config(self.cfg)
+            receipt = A.persist(self.journal, observation, policy)
+            A.verify_receipt(receipt)
+            self._scan_membership_receipts = memberships
+            # Empty explicit eligibility must mean NONE here, unlike legacy
+            # genomes whose missing/empty symbols historically means ALL.
+            spec_ids={sp.id for _row,sp in getattr(self,'_spec_rows',[])}
+            for st,genome in self.population:
+                if st.id in spec_ids:
+                    genome.eligible_symbols=frozenset(s for s,ids in observation['strategy_relevance'].items() if st.id in ids)
+            self._symbol_roles = A.SymbolRoles(**{k:tuple(v) for k,v in receipt['roles'].items()})
+            self._admission_receipt = receipt
+            self._admission_error = None
+            return receipt, frames
+        except Exception as exc:
+            self._symbol_roles = A.SymbolRoles((),(),(),ANCHORS,tuple(exposure),(),())
+            self._admission_receipt = None
+            self._admission_error = type(exc).__name__
+            log.warning('discretionary admission refused: %s', self._admission_error)
+            try:
+                self.journal.log_brain_event('attention_admission_refused','attention',dict(
+                    reason=self._admission_error,discretionary_deep_admitted=0,
+                    mandatory_exposure_independent=True))
+            except Exception:
+                pass  # a storage failure cannot obstruct mandatory protection
+            return None, {}
+
+    def _peer_frames(self, peers):
+        """Independent strategy peer population: cached PIT data only."""
+        at = self._admission_receipt['source_cut_ms'] if self._admission_receipt else int(time.time()*1000)
+        tfs = list(dict.fromkeys([self.cfg['timeframes']['execution'],*getattr(self,'_scan_timeframes',())]))
+        out = {}
+        for sym in peers:
+            frames = {}
+            for tf in tfs:
+                try:
+                    frame = self.feed.cached_ohlcv(sym,tf,limit=400,as_of_ms=at)  # existing snapshot window
+                    if frame is not None and len(frame): frames[tf] = frame
+                except Exception:
+                    pass  # unavailable peer data remains missing, never admitted-only
+            out[sym] = frames
+        return out
+
+    def _candidate_snapshot_for(self, symbol, receipt, peers):
+        from .attention_admission import verify_receipt
+        verify_receipt(receipt)
+        if symbol not in receipt['admitted_symbols']:
+            raise ValueError('symbol_not_deep_admitted')
+        snap = self._snapshot_for(symbol, universe=peers)
+        if snap is not None:
+            row = next(r for r in receipt['rows'] if r['symbol']==symbol)
+            snap.admission_context = dict(receipt_id=receipt['receipt_id'],schema=receipt['schema'],
+                policy_version=receipt['policy_version'],source_cut_ms=receipt['source_cut_ms'],
+                category=row['category'],reason=row['reason'],peer_cohort_id=receipt['peer_cohort_id'])
+            if getattr(snap,'market_provenance_parts',None) is not None:
+                snap.market_provenance_parts['attention_admission'] = snap.admission_context
+        return snap
+
+    def _service_exposure(self, serviced, peers):
+        """Safety data and held-position marks never spend a deep slot.
+
+        Re-read holdings at this boundary; one failed symbol cannot prevent
+        reconciliation/protection of the rest. All trades sharing a symbol
+        receive exit evaluation, unlike the historical first-orphan shortcut.
+        """
+        serviced = set(serviced)
+        trades = self.journal.open_trades()
+        paper = self._paper.open_positions() if hasattr(self,'_paper') else []
+        required = set(t['symbol'] for t in trades) | set(p['symbol'] for p in paper)
+        try:
+            required.update(self._exposure_symbols())
+        except Exception as exc:
+            log.warning('mandatory exposure inventory incomplete: %s',type(exc).__name__)
+        count = 0
+        for symbol in sorted(required-serviced):
+            # Exit detection is independent even when snapshot acquisition fails.
+            try: self._detect_exchange_exits(symbol)
+            except Exception as exc: log.warning('exposure reconciliation %s: %s',symbol,type(exc).__name__)
+            try:
+                snap = self._snapshot_for(symbol,universe=peers)
+                if snap is None: continue
+                snap.admission_context = dict(category='exposure_required',discretionary_slot=False)
+                self._portfolio_holdings_market[symbol] = snap
+                if any(p['symbol']==symbol for p in paper): self._manage_paper(snap)
+                for t in trades:
+                    if t['symbol']==symbol and self._manages_exits(): self._manage_one(t,snap,None)
+                count += 1
+            except Exception as exc:
+                log.warning('mandatory exposure service %s: %s',symbol,type(exc).__name__)
+        # Admitted held symbols already ran exit handling; their marks must
+        # still enter holdings observations independently of candidate identity.
+        for snap in self._portfolio_market.values():
+            if snap.symbol in required: self._portfolio_holdings_market[snap.symbol] = snap
+        return count
 
     def _universe_frames(self, symbols: list[str]) -> dict:
         """{symbol: {tf: df}} for cross-sectional features.
@@ -2964,7 +3129,7 @@ class Kernel:
                 info = self.cycle()
                 dur = time.time() - t0
                 bits = [f"cycle #{n}",
-                        f"{info['scanned']} symbols",
+                        f"{info['deep_processed']} deep candidates",
                         f"{info['decisions']} decisions"]
                 if info.get("entries"):
                     bits.append(f"{info['entries']} ENTRIES")
