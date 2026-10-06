@@ -1,0 +1,55 @@
+{
+  "schema": "obs04-closure.v1",
+  "tracker_id": "OBS-04",
+  "lane": "SOL",
+  "result": "CLOSED",
+  "closing_condition": "A service-stop timeout retains real observer timers and process identities; only verified terminated services permit cleanup.",
+  "implementation_commit": "d623f548814efb504304c15507fef0f5940d7797",
+  "scope": "Corrected prepared controller plus real user-systemd safety timers and owned fixture child; no operational Kernel/Dashboard run",
+  "root_cause": "Original unconditional finally cleanup after timeout; retained correction also conflated identity mismatch with verified death.",
+  "verified_exit_basis": "Owned Popen poll exit confirmation, with bound PID; missing proc, unreaped zombie and start-tick mismatch remain UNKNOWN.",
+  "tests": {
+    "focused_regressions": "297 passed in 163.32s",
+    "final_shutdown_suite": "15 passed in 6.80s",
+    "real_timer_evidence": "docs/tracker/evidence/obs04-shutdown-sol/real-timer-fixture.json"
+  },
+  "external_prepared_launcher_corrected": true,
+  "original_and_executed_harness_preserved": true,
+  "kernel_launched": false,
+  "dashboard_launched": false,
+  "fixture_children_and_timers_started": true,
+  "sigkill_used": false,
+  "production_provider_calls": 0,
+  "trading_authority_changed": false,
+  "unrelated_tracker_rows_unchanged": true,
+  "cross_tracker": {
+    "RUN-01": {
+      "status": "EVIDENCE_TO_MAP",
+      "closed_by_this_package": false,
+      "row_changed": false
+    },
+    "OBS-02": {
+      "status": "AWAITING_EVIDENCE",
+      "closed_by_this_package": false,
+      "row_changed": false
+    },
+    "MON-01": {
+      "status": "EVIDENCE_TO_MAP",
+      "closed_by_this_package": false,
+      "row_changed": false
+    },
+    "MON-02": {
+      "status": "EVIDENCE_TO_MAP",
+      "closed_by_this_package": false,
+      "row_changed": false
+    },
+    "MON-03": {
+      "status": "EVIDENCE_TO_MAP",
+      "closed_by_this_package": false,
+      "row_changed": false
+    }
+  },
+  "run01_overlap": "Prepared Host.alive/signal_services/timers_stop and retention result fields only. Preserve UNKNOWN-as-pending cleanup behavior; RUN-01 retains launch identity, ordered boot and graceful shutdown ownership. restart.sh and watchdog.sh unchanged.",
+  "next_recommended_p0": "OBS-02",
+  "next_selected": false
+}

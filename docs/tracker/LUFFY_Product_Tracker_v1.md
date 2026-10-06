@@ -1,10 +1,10 @@
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.6-obs01-launch-gate-closed
+Version: 1.7-obs04-shutdown-closed
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
-Terminal NEXT: **OBS-01 — CLOSED_ENGINEERING_ONLY**. OBS-04 is recommended only; no next item is selected or started. PERF-01/PERF-03 remain BLOCKED; no runtime or trading authority follows.
+Terminal NEXT: **OBS-04 — CLOSED_ENGINEERING_ONLY**. OBS-02 is recommended only; no next item is selected or started. PERF-01/PERF-03 remain BLOCKED; no runtime or trading authority follows.
 
 ## Status definitions
 
@@ -30,7 +30,7 @@ Terminal NEXT: **OBS-01 — CLOSED_ENGINEERING_ONLY**. OBS-04 is recommended onl
 
 **One data set**: Maintain this YAML as canonical detailed data. Dashboard Tracker reads validated YAML and NEXT. Markdown is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization and adoption checks.
 
-**Current work**: OBS-01 is terminal CLOSED with a repository-native preflight launch gate and isolated fixture proof. No successor is selected; OBS-04 is recommended only. PERF-01 and PERF-03 remain unchanged and BLOCKED. No runtime, provider or trading activation is authorized.
+**Current work**: OBS-04 is terminal CLOSED with verified-exit observer retention and real fixture-timer proof. No successor is selected; OBS-02 is recommended only. PERF-01 and PERF-03 remain unchanged and BLOCKED. No runtime, provider or trading activation is authorized.
 
 **Activation**: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers, a restart or a scope expansion.
 
@@ -5363,32 +5363,32 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: Cross-cutting
 - **item_type**: DEFECT
 - **release_scope**: BASELINE
-- **status**: AWAITING_EVIDENCE
+- **status**: CLOSED
 - **why_needed**: The prepared launcher stopped observers even on service-stop timeout.
 - **closure_condition**: A service-stop timeout retains real observer timers and process identities; only verified terminated services permit cleanup.
 - **failure_regression_proof**: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed boundaries without reopening unrelated work.
 - **dependencies**: None
 - **owner_role**: Assigned local engineering session
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: SEE_EVIDENCE
-- **runtime_evidence**: SEE_SCOPE_AND_EVIDENCE
+- **engineering_assignee**: SOL
+- **implementation_evidence**: d623f548814efb504304c15507fef0f5940d7797; trader/observability/shutdown.py; docs/tracker/evidence/obs04-shutdown-sol/prepared-launcher.patch
+- **runtime_evidence**: docs/tracker/evidence/obs04-shutdown-sol/real-timer-fixture.json; real user timers and owned fixture child only; no Kernel/Dashboard launch
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: S16 reports observers are retained through unconfirmed shutdown and the final cleanup case was fixture-tested after a transient already-unloaded heartbeat-service condition. Latest real shutdown was clean; timeout-retention branch remains AWAITING_EVIDENCE.
+- **latest_evidence**: 297 focused regressions passed; final 15 shutdown cases passed. Real heartbeat/storage timers continued truthful observations after SIGTERM, timeout and identity uncertainty; only owned-child exit confirmation permitted cleanup. Original unsafe finally and predecessor mismatch cleanup reproduced with inert seams.
 - **source_ids**: S11, S15
 - **source_sections**: Parent requirement(s): MON-01,RUN-01
-- **next_proof**: Resolve within the linked parent/active task; capture exact evidence before closure.
+- **next_proof**: Closed at corrected prepared-controller and real fixture-timer scope; no operational readiness or Kernel shutdown maturity claim.
 - **acceptance_basis**: Existing requirement/observed incident; not a new feature.
 - **acceptance_status**: OWNER_CONTRACT_OR_REPORTED_FAILURE
 - **priority**: CURRENT
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: d623f548814efb504304c15507fef0f5940d7797
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **legacy_ids**:
 - **parent_work**: WORK-01
 - **parent_ids**: MON-01, RUN-01
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/obs04-shutdown-sol/closure.json
+- **evidence_validity**: Pinned corrected source and real timer fixture evidence; production Kernel/Dashboard were not launched.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 

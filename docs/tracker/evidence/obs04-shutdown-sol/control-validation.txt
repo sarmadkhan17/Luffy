@@ -1,0 +1,4 @@
+177 rows retained; only OBS-04 changed. Every closing condition preserved.
+RUN-01/OBS-02/MON-01/MON-02/MON-03 and PERF-01/PERF-03/ATT-04 unchanged.
+STATE/NEXT are terminal OBS-04 CLOSED, ENGINEERING_ONLY; OBS-02 recommended, not selected.
+Kernel/Dashboard runtime, provider and trading authority remain false.

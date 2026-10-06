@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.6-obs01-launch-gate-closed
+  version: 1.7-obs04-shutdown-closed
   created_date: '2026-10-05'
   title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -13,7 +13,7 @@ metadata:
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness
     or full prior-chat reconciliation. No functionality or evidence has been independently retested by creating
     this tracker.
-  current_active_item: OBS-01
+  current_active_item: OBS-04
   current_active_result: CLOSED_ENGINEERING_ONLY
   row_count: 177
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This
@@ -23,12 +23,12 @@ metadata:
   status_counts:
     IN_PROGRESS: 0
     EVIDENCE_TO_MAP: 130
-    AWAITING_EVIDENCE: 14
+    AWAITING_EVIDENCE: 13
     AWAITING_OWNER: 14
     DEFERRED: 2
     BLOCKED: 2
     OPEN: 5
-    CLOSED: 10
+    CLOSED: 11
   workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged
     and excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
@@ -38,7 +38,7 @@ metadata:
   current_runtime_item: PERF-01
   current_runtime_result: BLOCKED
   next_diagnostic_item: null
-  next_recommended_item: OBS-04
+  next_recommended_item: OBS-02
   next_runtime_execution_authorized: false
   owner_representation_decision:
     date: '2026-10-05'
@@ -51,9 +51,9 @@ metadata:
     navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope;
       the owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product
       row is silently reopened or added.
-  last_terminal_item: OBS-01
+  last_terminal_item: OBS-04
   last_terminal_result: CLOSED
-  last_terminal_evidence: docs/tracker/evidence/obs01-launch-preflight-sol/closure.json
+  last_terminal_evidence: docs/tracker/evidence/obs04-shutdown-sol/closure.json
 status_definitions:
 - status: EVIDENCE_TO_MAP
   meaning: Existing requirement recorded; exact row-level evidence has not yet been linked. This is NOT a finding
@@ -82,8 +82,8 @@ operating_rules:
     is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization
     and adoption checks.
 - rule: Current work
-  detail: OBS-01 is terminal CLOSED with a repository-native preflight launch gate and isolated fixture proof.
-    No successor is selected; OBS-04 is recommended only. PERF-01 and PERF-03 remain unchanged and BLOCKED.
+  detail: OBS-04 is terminal CLOSED with verified-exit observer retention and real fixture-timer proof.
+    No successor is selected; OBS-02 is recommended only. PERF-01 and PERF-03 remain unchanged and BLOCKED.
     No runtime, provider or trading activation is authorized.
 - rule: Activation
   detail: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers,
@@ -6656,7 +6656,7 @@ items:
   stage: Cross-cutting
   item_type: DEFECT
   release_scope: BASELINE
-  status: AWAITING_EVIDENCE
+  status: CLOSED
   required_behavior: Keep required observers active through unconfirmed shutdown.
   why_needed: The prepared launcher stopped observers even on service-stop timeout.
   closure_condition: A service-stop timeout retains real observer timers and process identities; only verified terminated
@@ -6665,32 +6665,35 @@ items:
     boundaries without reopening unrelated work.
   dependencies: []
   owner_role: Assigned local engineering session
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: SEE_EVIDENCE
-  runtime_evidence: SEE_SCOPE_AND_EVIDENCE
+  engineering_assignee: SOL
+  implementation_evidence: d623f548814efb504304c15507fef0f5940d7797; trader/observability/shutdown.py; docs/tracker/evidence/obs04-shutdown-sol/prepared-launcher.patch
+  runtime_evidence: docs/tracker/evidence/obs04-shutdown-sol/real-timer-fixture.json; real user timers and owned
+    fixture child only; no Kernel/Dashboard launch
   visual_approval: NOT_APPLICABLE
-  latest_evidence: S16 reports observers are retained through unconfirmed shutdown and the final cleanup case was
-    fixture-tested after a transient already-unloaded heartbeat-service condition. Latest real shutdown was clean;
-    timeout-retention branch remains AWAITING_EVIDENCE.
+  latest_evidence: 297 focused regressions passed; final 15 shutdown cases passed. Real heartbeat/storage timers
+    continued truthful observations after SIGTERM, timeout and identity uncertainty; only owned-child exit confirmation
+    permitted cleanup. Original unsafe finally and predecessor mismatch cleanup reproduced with inert seams.
   source_ids:
   - S11
   - S15
   source_sections: 'Parent requirement(s): MON-01,RUN-01'
-  next_proof: Resolve within the linked parent/active task; capture exact evidence before closure.
+  next_proof: Closed at corrected prepared-controller and real fixture-timer scope; no operational readiness or
+    Kernel shutdown maturity claim.
   acceptance_basis: Existing requirement/observed incident; not a new feature.
   acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
   priority: CURRENT
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: d623f548814efb504304c15507fef0f5940d7797
+  work_authorized: true
+  updated: '2026-10-06'
   legacy_ids: ''
   parent_work: WORK-01
   parent_ids:
   - MON-01
   - RUN-01
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: docs/tracker/evidence/obs04-shutdown-sol/closure.json
+  evidence_validity: Pinned corrected source and real timer fixture evidence; production Kernel/Dashboard were not
+    launched.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 - id: PERF-01
@@ -7726,6 +7729,14 @@ change_log:
   reason: Explicit SOL scope; 247 isolated gate/safety/protection tests pass. Other rows unchanged; OBS-04
     recommended only.
   evidence: docs/tracker/evidence/obs01-launch-preflight-sol/closure.json
+  actor: SOL / Codex local engineering session
+- date: '2026-10-06'
+  event: OBS04_VERIFIED_EXIT_OBSERVER_RETENTION_CLOSED
+  item: OBS-04
+  before: AWAITING_EVIDENCE; timeout and identity uncertainty cleanup unproven
+  after: CLOSED; real fixture timers retained until verified owned-child exit
+  reason: Explicit SOL OBS-04 scope only; all other tracker rows and closing conditions unchanged.
+  evidence: docs/tracker/evidence/obs04-shutdown-sol/closure.json
   actor: SOL / Codex local engineering session
 sdd_section_coverage:
 - section: 1
