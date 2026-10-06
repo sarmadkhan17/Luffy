@@ -1,0 +1,16 @@
+{
+  "external_harness": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0",
+  "baseline_main": "c6d49413590c7cf740a053aa9e00a3d892830982",
+  "before_sha256": "f916233e2ce9aced2454d3382a2364de50aad280dd51bfa7dbf49d342a27a8a4",
+  "after_sha256": "5b23a673d0e39088c6729787b5ad45c7fdbca58bf8a3679cbee4615e89a0bdb1",
+  "original_unsafe_sha256": "69d0d483cce71ce199e2b3b943c878607adf2e0474ecd801f6fb0e6e9d9ffa55",
+  "retained_files": {
+    "original-unsafe-launcher.py": "69d0d483cce71ce199e2b3b943c878607adf2e0474ecd801f6fb0e6e9d9ffa55",
+    "metadata.py": "f7ab5f7fc89dfd40d99d92638635bbc32edf1bb2284b224f8aedd7f8e1e2d658",
+    "collect_prepared.py": "70e83f283732c40ff181f4003ba3cf9ef5a3d46dcf1d4b193d44e5e649c13c90",
+    "before-launch_once.py": "f916233e2ce9aced2454d3382a2364de50aad280dd51bfa7dbf49d342a27a8a4",
+    "launch_once.py": "5b23a673d0e39088c6729787b5ad45c7fdbca58bf8a3679cbee4615e89a0bdb1"
+  },
+  "external_executed_harness_preserved": true,
+  "external_launcher_executed": false
+}

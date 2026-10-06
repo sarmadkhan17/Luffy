@@ -1,0 +1,55 @@
+--- a/launch_once.py
++++ b/launch_once.py
+@@ -14,6 +14,8 @@
+ 
+ P=Path('/mnt/luffy-data/luffy/production')
+ HERE=Path(__file__).parent
++sys.path.insert(0, str(P))
++from trader.observability.shutdown import service_state
+ 
+ 
+ class Host:
+@@ -60,7 +62,11 @@
+ 
+     def start_dashboard(self): self.start('dashboard')
+     def alive(self,role):
+-        return self.processes[role].poll() is None and collector.same_process(self.pids[role])
++        # UNKNOWN must keep the drain/retention loops and observers alive.
++        return self.shutdown_state(role) != 'TERMINATED'
++
++    def shutdown_state(self,role):
++        return service_state(self.processes[role], self.pids[role])
+ 
+     def sample(self):
+         sys.path.insert(0,str(P))
+@@ -90,10 +96,12 @@
+ 
+     def signal_services(self):
+         for role in ('dashboard','kernel'):
+-            if role in self.pids and self.alive(role): self.processes[role].send_signal(signal.SIGTERM)
++            if role in self.pids and self.shutdown_state(role) == 'LIVE':
++                self.processes[role].send_signal(signal.SIGTERM)
+ 
+     def timers_stop(self):
+-        assert not any(self.alive(role) for role in self.pids)
++        if any(self.alive(role) for role in self.pids):
++            raise RuntimeError('shutdown_unconfirmed_observers_retained')
+         for unit in self.units:
+             # systemd may garbage-collect a completed transient oneshot already.
+             subprocess.run(['systemctl','--user','stop',unit+'.timer'],check=True)
+@@ -127,6 +135,7 @@
+         if remaining:
+             result['still_running']=remaining
+             result['remaining_process_identities']={r:host.pids[r] for r in remaining}
++            result['shutdown_states']={r:host.shutdown_state(r) for r in remaining}
+             result['observers_retained']=True
+             (host.directory/'launch-result.json').write_text(json.dumps(result,indent=2)+'\n')
+             # Existing collector remains host-side and alive, timers are NOT cleaned up.
+@@ -140,6 +149,7 @@
+             host.timers_stop()
+             result['observers_stopped']=True
+         result['final_still_running']=remaining
++        result['final_shutdown_states']={r:host.shutdown_state(r) for r in host.pids}
+         (host.directory/'launch-result.json').write_text(json.dumps(result,indent=2)+'\n')
+     return result
+ 

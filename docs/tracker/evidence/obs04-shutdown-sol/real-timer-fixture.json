@@ -1,0 +1,237 @@
+{
+  "result": {
+    "exact_stop_reason": "graceful_shutdown_timeout",
+    "still_running": [
+      "kernel"
+    ],
+    "remaining_process_identities": {
+      "kernel": {
+        "pid": 1358661,
+        "start_ticks": "mismatch"
+      }
+    },
+    "shutdown_states": {
+      "kernel": "UNKNOWN"
+    },
+    "observers_retained": true,
+    "final_account_exit_code": 0,
+    "observers_stopped": true,
+    "final_still_running": [],
+    "final_shutdown_states": {
+      "kernel": "TERMINATED"
+    }
+  },
+  "marks": {
+    "timeout_at": 1791249822.5405037,
+    "bound_child_identity": {
+      "pid": 1358661,
+      "start_ticks": "13500884"
+    },
+    "counts": {
+      "heartbeat": 1,
+      "storage": 1
+    },
+    "release_at": 1791249824.9203966
+  },
+  "child_identity": {
+    "pid": 1358661,
+    "start_ticks": "13500884"
+  },
+  "units": [
+    "luffy-obs04-fixture-468e145056b74d3bb197ff0406e2e128",
+    "luffy-obs04-fixture-53a8724766c44a0d8f73aea0b0ef8ea0"
+  ],
+  "observations": {
+    "heartbeat": [
+      {
+        "at": 1791249822.1954014,
+        "pid": 1358650,
+        "start_ticks": "13500856",
+        "result": {
+          "component": "luffy",
+          "status": "MISSING",
+          "record": null
+        }
+      },
+      {
+        "at": 1791249823.4637542,
+        "pid": 1358688,
+        "start_ticks": "13500985",
+        "result": {
+          "component": "luffy",
+          "status": "MISSING",
+          "record": null
+        }
+      },
+      {
+        "at": 1791249824.9120867,
+        "pid": 1358717,
+        "start_ticks": "13501111",
+        "result": {
+          "component": "luffy",
+          "status": "MISSING",
+          "record": null
+        }
+      }
+    ],
+    "storage": [
+      {
+        "at": 1791249822.1455758,
+        "pid": 1358651,
+        "start_ticks": "13500858",
+        "result": {
+          "component": "journal",
+          "status": "AVAILABLE",
+          "verification": "live_read_and_committed_write",
+          "committed": true,
+          "sqlite_error": null,
+          "pid": 1358651,
+          "connection_id": "2ff22790bb0e4582968404945301c2f4",
+          "observed_at": 1791249822.1449862,
+          "elapsed_s": 0.005521190003491938,
+          "cpu_s": 0.0035670989999999902,
+          "stages": [
+            {
+              "stage": "connect",
+              "status": "COMPLETE",
+              "elapsed_s": 0.00042719600605778396,
+              "cpu_s": 0.0004289050000000072
+            },
+            {
+              "stage": "read",
+              "status": "COMPLETE",
+              "elapsed_s": 0.0004170270112808794,
+              "cpu_s": 0.00041855600000001436
+            },
+            {
+              "stage": "begin",
+              "status": "COMPLETE",
+              "elapsed_s": 6.788800237700343e-05,
+              "cpu_s": 6.755700000002363e-05
+            },
+            {
+              "stage": "write",
+              "status": "COMPLETE",
+              "elapsed_s": 0.0002753899898380041,
+              "cpu_s": 0.0002766499999999894
+            },
+            {
+              "stage": "commit",
+              "status": "COMPLETE",
+              "elapsed_s": 0.0028963960066903383,
+              "cpu_s": 0.0009454159999999767
+            }
+          ]
+        }
+      },
+      {
+        "at": 1791249823.390305,
+        "pid": 1358680,
+        "start_ticks": "13500980",
+        "result": {
+          "component": "journal",
+          "status": "AVAILABLE",
+          "verification": "live_read_and_committed_write",
+          "committed": true,
+          "sqlite_error": null,
+          "pid": 1358680,
+          "connection_id": "2f8b3ece172f489d98caa9be80fa5cfe",
+          "observed_at": 1791249823.3896534,
+          "elapsed_s": 0.004930055001750588,
+          "cpu_s": 0.003057582000000003,
+          "stages": [
+            {
+              "stage": "connect",
+              "status": "COMPLETE",
+              "elapsed_s": 0.00042437101365067065,
+              "cpu_s": 0.00042605000000001114
+            },
+            {
+              "stage": "read",
+              "status": "COMPLETE",
+              "elapsed_s": 0.00030077798874117434,
+              "cpu_s": 0.00030209700000000117
+            },
+            {
+              "stage": "begin",
+              "status": "COMPLETE",
+              "elapsed_s": 6.177599425427616e-05,
+              "cpu_s": 6.130499999998373e-05
+            },
+            {
+              "stage": "write",
+              "status": "COMPLETE",
+              "elapsed_s": 0.0002624749904498458,
+              "cpu_s": 0.00026347499999998525
+            },
+            {
+              "stage": "commit",
+              "status": "COMPLETE",
+              "elapsed_s": 0.0026946470024995506,
+              "cpu_s": 0.0008269129999999847
+            }
+          ]
+        }
+      },
+      {
+        "at": 1791249824.8884673,
+        "pid": 1358715,
+        "start_ticks": "13501105",
+        "result": {
+          "component": "journal",
+          "status": "AVAILABLE",
+          "verification": "live_read_and_committed_write",
+          "committed": true,
+          "sqlite_error": null,
+          "pid": 1358715,
+          "connection_id": "d9b183ea69934fd0abfea34d2e1d37f0",
+          "observed_at": 1791249824.886227,
+          "elapsed_s": 0.2897757019964047,
+          "cpu_s": 0.09119598,
+          "stages": [
+            {
+              "stage": "connect",
+              "status": "COMPLETE",
+              "elapsed_s": 0.00033433097996748984,
+              "cpu_s": 0.0003358809999999962
+            },
+            {
+              "stage": "read",
+              "status": "COMPLETE",
+              "elapsed_s": 0.000393346999771893,
+              "cpu_s": 0.0003711510000000001
+            },
+            {
+              "stage": "begin",
+              "status": "COMPLETE",
+              "elapsed_s": 5.462300032377243e-05,
+              "cpu_s": 5.433199999999028e-05
+            },
+            {
+              "stage": "write",
+              "status": "COMPLETE",
+              "elapsed_s": 0.0002998160198330879,
+              "cpu_s": 0.00030085500000000265
+            },
+            {
+              "stage": "commit",
+              "status": "COMPLETE",
+              "elapsed_s": 0.2849082770117093,
+              "cpu_s": 0.088446767
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "cleanup_counts": {
+    "heartbeat": 3,
+    "storage": 3
+  },
+  "events": [
+    "storage-before-startup",
+    "storage-timeout-continuing",
+    "storage-after-delayed-termination",
+    "storage-final-stopped"
+  ]
+}
