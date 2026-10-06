@@ -1,0 +1,13 @@
+result: CLOSED_ARCHITECTURE_OFFLINE
+review_revision: 29d093d5e5467c645b8ea13a3699451b6a7d85d6
+items:
+- ACC-01
+- ACC-02
+dependency_order:
+- DATA-01
+- EXE-01
+- ACC-01
+- ACC-02
+tests: 107 passed; tests.txt
+kernel_launched: false
+provider_calls: 0

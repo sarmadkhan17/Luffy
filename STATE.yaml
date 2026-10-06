@@ -1893,3 +1893,13 @@ future_live_activation_requirements:
   runtime_proof_complete: false
   activation_authorized: false
   scope_decision_evidence: docs/tracker/evidence/own04-phase-scope-review/decision.yaml
+
+acc02_lineage_closure:
+  status: CLOSED
+  scope: ARCHITECTURE_OFFLINE
+  items:
+  - ACC-01
+  - ACC-02
+  evidence: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
+  tests: 107 passed
+  provider_calls: 0

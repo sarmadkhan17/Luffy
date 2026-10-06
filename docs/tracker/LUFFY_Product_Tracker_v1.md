@@ -1,3 +1,5 @@
+> Current ACC-01/ACC-02 update: CLOSED at architecture/offline scope; 107 offline tests. ACC-03 remains pending. [Evidence](evidence/acc02-lineage-sol/REPORT.md). Earlier queue statements are historical.
+
 > Current phase-scope decision: OWN-04 CLOSED for architecture/offline GUI; MON-01/MON-05 DEFERRED for this phase and mandatory, unproven before future activation. All substantive conditions/dependency edges retained. GUI-01 eligible for functional evidence work; ACC-03 remains. [Scope decision](evidence/own04-phase-scope-review/REPORT.md). Earlier blocked queue statements are historical.
 
 > Current OWN-04 update (2026-10-06): BLOCKED on unchanged MON-01/MON-05 dependency evidence after verified display fixes. [State evidence](evidence/own04-state-sol/REPORT.md). GUI-01 still needs ACC-03 and OWN-04; ACC-03 is the next independent evidence recommendation, unselected. Earlier queue statements below are historical.

@@ -1,40 +1,37 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.21-own04-phase-scope-review
+  version: 1.22-acc02-lineage-sol
   created_date: '2026-10-05'
-  title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
+  title: LUFFY — Product, Behaviour & GUI Tracker
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
-  scope: SDD v3.2 baseline plus v3.3 owner-adopted Attention admission; retained evidence and owner tracker
-    requirements.
+  scope: SDD v3.2 baseline plus v3.3 owner-adopted Attention admission; retained evidence and owner tracker requirements.
   baseline_commit: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
   evidence_checkpoint: 6da5ad9a895ddb0f5fed9d75904e9639cc731b44
   fresh_runtime_verified: false
   repository_modified: true
-  coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness
-    or full prior-chat reconciliation. No functionality or evidence has been independently retested by creating
-    this tracker.
+  coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
+    prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
   current_active_item: OBS-05
   current_active_result: CLOSED_ENGINEERING_ONLY_DIAGNOSTICS
   row_count: 178
-  authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This
-    YAML is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown
-    is an optional generated reference.
+  authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
+    is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown is an
+    optional generated reference.
   pending_adoption: null
   status_counts:
-    IN_PROGRESS: 0
-    EVIDENCE_TO_MAP: 117
+    CLOSED: 26
+    EVIDENCE_TO_MAP: 114
+    DEFERRED: 7
     AWAITING_EVIDENCE: 11
     AWAITING_OWNER: 14
-    DEFERRED: 7
     BLOCKED: 2
     OPEN: 4
-    CLOSED: 23
-  workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged
-    and excluded from adoption, synchronization and parity requirements.
+  workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged and
+    excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
   latest_perf01_result_source: docs/tracker/evidence/2026-10-06-perf01-retained-reconstruction.yaml
-  publication_note: Owner explicitly accepted adoption and read-only Tracker navigation. OPEN-09 closes with
-    this control-plane reconciliation; implementation verification is distinct from deployed/browser proof.
+  publication_note: Owner explicitly accepted adoption and read-only Tracker navigation. OPEN-09 closes with this
+    control-plane reconciliation; implementation verification is distinct from deployed/browser proof.
   current_runtime_item: PERF-01
   current_runtime_result: BLOCKED
   next_diagnostic_item: null
@@ -46,11 +43,11 @@ metadata:
     primary_view: Dashboard Tracker (read-only)
     markdown: Optional generated reference
     xlsx: DEPRECATED / NON-AUTHORITATIVE; preserved history
-    mutation_contract: No Tracker mutation API/UI; engineering/control-plane changes only until a separate
-      typed, audited GUI mutation contract is approved.
-    navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope;
-      the owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product
-      row is silently reopened or added.
+    mutation_contract: No Tracker mutation API/UI; engineering/control-plane changes only until a separate typed,
+      audited GUI mutation contract is approved.
+    navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope; the
+      owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product row
+      is silently reopened or added.
   last_terminal_item: OWN-04
   last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
   last_terminal_evidence: docs/tracker/evidence/own04-phase-scope-review/decision.yaml
@@ -67,8 +64,8 @@ metadata:
     ledger_path: docs/tracker/LUFFY_Product_Tracker_v1.yaml
     state_path: STATE.yaml
     next_path: NEXT.yaml
-    runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime
-      UNKNOWN; no runtime freshness inferred from this control snapshot.
+    runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime UNKNOWN;
+      no runtime freshness inferred from this control snapshot.
     captured_at_utc: '2026-10-06T03:52:49.947649+00:00'
     identity_evidence: docs/tracker/evidence/gov07-identity-sol/identity-map.json
   current_identity_assessment:
@@ -102,8 +99,8 @@ metadata:
     ledger_path: docs/tracker/LUFFY_Product_Tracker_v1.yaml
     state_path: STATE.yaml
     next_path: NEXT.yaml
-    runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime
-      UNKNOWN; no runtime freshness inferred from this control snapshot.
+    runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime UNKNOWN;
+      no runtime freshness inferred from this control snapshot.
 status_definitions:
 - status: EVIDENCE_TO_MAP
   meaning: Existing requirement recorded; exact row-level evidence has not yet been linked. This is NOT a finding
@@ -133,9 +130,9 @@ operating_rules:
     and adoption checks.
 - rule: Current work
   detail: OWN-04 CLOSED for current architecture/offline GUI scope. MON-01/MON-05 deferred full runtime/readiness
-    obligations remain mandatory before future activation; original conditions/gaps preserved. GUI-01 eligible
-    for functional evidence mapping; ACC-03 unresolved. Existing SEC-01/RUN-01/GOV-07 deferrals retained, loaded
-    deployment UNKNOWN, no activation authorized.
+    obligations remain mandatory before future activation; original conditions/gaps preserved. GUI-01 eligible for
+    functional evidence mapping; ACC-03 unresolved. Existing SEC-01/RUN-01/GOV-07 deferrals retained, loaded deployment
+    UNKNOWN, no activation authorized.
 - rule: Activation
   detail: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers,
     a restart or a scope expansion.
@@ -308,8 +305,8 @@ items:
   status: CLOSED
   required_behavior: Keep one authoritative target, evidence ledger and active task.
   why_needed: Prevents different agents following incompatible definitions of current or done.
-  closure_condition: A fresh agent resolves target from SDD, status from the adopted tracker/STATE and exactly
-    one active ID from NEXT; all reference the same baseline.
+  closure_condition: A fresh agent resolves target from SDD, status from the adopted tracker/STATE and exactly one
+    active ID from NEXT; all reference the same baseline.
   failure_regression_proof: Conflicting/stale deployment claims are exposed, not silently reconciled.
   dependencies: []
   owner_role: Owner + engineering coordinator
@@ -319,12 +316,12 @@ items:
   visual_approval: NOT_APPLICABLE
   latest_evidence: SDD v3.3 authority mapped; common hashed control snapshot added to tracker/STATE/NEXT/manifest.
     GOV-07 is the single selected unstarted successor. Existing read_tracker contract verifies IDs/counts/dependencies/selection
-    and refuses malformed or conflicting documents. Dated runtime observations remain historical, not current
-    deployment proof.
+    and refuses malformed or conflicting documents. Dated runtime observations remain historical, not current deployment
+    proof.
   source_ids:
   - S01
   - S09
-  source_sections: "\xA7\xA730\u201332,37"
+  source_sections: §§30–32,37
   next_proof: None for GOV-01 at this pinned offline control snapshot; GOV-07 requires separate code/config/run/deployment
     lineage mapping.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
@@ -544,19 +541,18 @@ items:
   implementation_evidence: MAPPED_EXISTING_REVISION_PROCESS_AND_ARTIFACT_BINDING
   runtime_evidence: HISTORICAL_R3_IDENTITY_VERIFIED_CURRENT_DEPLOYMENT_UNVERIFIED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Exact identity map at local main 82431136ac68ff72325af301bac43b19b7d3ecd6; whole checkout
-    dirty UNVERIFIED, scoped tracked runtime/config clean. Remote main 25cc7d00 differs. Historical r3 30 run
-    artifact and 22 preparation hashes match; config hash matches its Git revision. Existing Dashboard PID/start
-    ticks match, but loaded revision/config UNKNOWN. No demonstrated application defect. Owner subsequently
-    deferred GOV-07 for current architecture/GUI build; deployment/runtime identity remains UNPROVEN. Exact
-    closing condition and mapped evidence preserved; required before future deployment/live activation claims.
+  latest_evidence: Exact identity map at local main 82431136ac68ff72325af301bac43b19b7d3ecd6; whole checkout dirty
+    UNVERIFIED, scoped tracked runtime/config clean. Remote main 25cc7d00 differs. Historical r3 30 run artifact
+    and 22 preparation hashes match; config hash matches its Git revision. Existing Dashboard PID/start ticks match,
+    but loaded revision/config UNKNOWN. No demonstrated application defect. Owner subsequently deferred GOV-07 for
+    current architecture/GUI build; deployment/runtime identity remains UNPROVEN. Exact closing condition and mapped
+    evidence preserved; required before future deployment/live activation claims.
   source_ids:
   - S01
   - S09
-  source_sections: "\xA7\xA76.5,27,31"
+  source_sections: §§6.5,27,31
   next_proof: Before future deployment/live activation claims, satisfy the unchanged exact source/config/run/process/timestamp
-    and local/remote/deployed consistency closing condition. Current architecture/GUI work excludes GOV-07
-    transitively.
+    and local/remote/deployed consistency closing condition. Current architecture/GUI work excludes GOV-07 transitively.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
@@ -695,8 +691,7 @@ items:
   why_needed: Prevents duplicate processes and startup on the wrong code.
   closure_condition: Fresh identity/preflight checks, ordered boot, truthful new-instance heartbeat and graceful
     shutdown are demonstrated on the intended revision.
-  failure_regression_proof: Boot failure or shutdown timeout cannot create a second Kernel or remove needed
-    observation.
+  failure_regression_proof: Boot failure or shutdown timeout cannot create a second Kernel or remove needed observation.
   dependencies:
   - GOV-07
   owner_role: Runtime & safety owner
@@ -708,19 +703,18 @@ items:
   latest_evidence: 'IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING. Identity/single-instance/graceful-stop
     implementation integrated. Owner-reported validation: 307 combined tests passed before merge; 153 production-main
     regressions passed after merge. OBS-01/02/03/04 protections remain intact. Requirement tradeoffs: No SIGKILL:
-    a hung Kernel requires owner intervention. Safety-over-availability is intentional. Watchdog may block
-    during graceful stop. OBS-01 preflight may refuse recovery. Revision binding is required for the controlled
-    proof.'
+    a hung Kernel requires owner intervention. Safety-over-availability is intentional. Watchdog may block during
+    graceful stop. OBS-01 preflight may refuse recovery. Revision binding is required for the controlled proof.'
   source_ids:
   - S01
   - S02
   - S05
   - S15
   - S16
-  source_sections: "\xA7\xA75.5,27"
-  next_proof: One owner-authorized controlled launch + graceful stop on the intended exact revision proving
-    preflight PASS, exact revision, verified PID/start ticks, heartbeat instance binding, single-instance
-    behavior, SIGTERM graceful exit, lock release and no duplicate Kernel.
+  source_sections: §§5.5,27
+  next_proof: One owner-authorized controlled launch + graceful stop on the intended exact revision proving preflight
+    PASS, exact revision, verified PID/start ticks, heartbeat instance binding, single-instance behavior, SIGTERM
+    graceful exit, lock release and no duplicate Kernel.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
@@ -730,13 +724,11 @@ items:
   parent_ids: []
   related_items: []
   closure_evidence: ''
-  evidence_validity: Integrated implementation and offline proof only; no controlled live proof on intended
-    revision.
+  evidence_validity: Integrated implementation and offline proof only; no controlled live proof on intended revision.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
-  owner_approval_needed: Explicitly authorize one controlled Kernel launch and SIGTERM graceful stop on a
-    named full intended revision, with revision binding required and retained proof of every listed check;
-    Dashboard launch, provider calls and trading activation require separate explicit scope and are not authorized
-    by this reconciliation.
+  owner_approval_needed: Explicitly authorize one controlled Kernel launch and SIGTERM graceful stop on a named
+    full intended revision, with revision binding required and retained proof of every listed check; Dashboard launch,
+    provider calls and trading activation require separate explicit scope and are not authorized by this reconciliation.
   previous_status: BLOCKED
   blocks_current_release: false
   critical_path_eligible: false
@@ -1013,10 +1005,10 @@ items:
   implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
   runtime_evidence: LIVE_RUNTIME_DEPLOYMENT_PROOF_PENDING; not completed by owner scope decision
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not
-    a missing-implementation finding and does not reopen prior closures. Owner phase-scope decision defers
-    the full runtime/readiness obligation for current architecture/offline/GUI work; all retained gaps remain,
-    mandatory before future live activation. See docs/tracker/evidence/own04-phase-scope-review/decision.yaml.
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
+    missing-implementation finding and does not reopen prior closures. Owner phase-scope decision defers the full
+    runtime/readiness obligation for current architecture/offline/GUI work; all retained gaps remain, mandatory
+    before future live activation. See docs/tracker/evidence/own04-phase-scope-review/decision.yaml.
   source_ids:
   - S01
   - S02
@@ -1187,8 +1179,8 @@ items:
   why_needed: Makes incidents diagnosable instead of emitting only BLOCKED.
   closure_condition: Run/cycle/worker IDs link bounded phase timings, row/byte growth, waits, provider attempts
     and failures; measurement overhead is disclosed.
-  failure_regression_proof: Logs do not embed giant payloads, leak secrets or equate WAL writes with permanent
-    retained growth.
+  failure_regression_proof: Logs do not embed giant payloads, leak secrets or equate WAL writes with permanent retained
+    growth.
   dependencies:
   - GOV-07
   owner_role: Runtime & safety owner
@@ -1197,10 +1189,10 @@ items:
   runtime_evidence: LIVE_RUNTIME_DEPLOYMENT_PROOF_PENDING; not completed by owner scope decision
   visual_approval: NOT_APPLICABLE
   latest_evidence: 'S16: several stage and observer costs measured; 13.13s unattributed time plus database/GIL/scheduler/child/overhead
-    gaps remain. Historical stage/package build claims exist; not yet mapped to this exact row. This is not
-    a missing-implementation finding and does not reopen prior closures. Owner phase-scope decision defers
-    the full runtime/readiness obligation for current architecture/offline/GUI work; all retained gaps remain,
-    mandatory before future live activation. See docs/tracker/evidence/own04-phase-scope-review/decision.yaml.'
+    gaps remain. Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation
+    finding and does not reopen prior closures. Owner phase-scope decision defers the full runtime/readiness obligation
+    for current architecture/offline/GUI work; all retained gaps remain, mandatory before future live activation.
+    See docs/tracker/evidence/own04-phase-scope-review/decision.yaml.'
   source_ids:
   - S01
   - S02
@@ -1419,7 +1411,10 @@ items:
   implementation_evidence: 18a5edf; trader/engine/entry_authority.py; tests/test_data01_canonical_identity.py
   runtime_evidence: NOT_PERFORMED; offline tests only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'Boundaries mapped acquisition to accounting, restart and reconcile; all PROVEN by existing tests. One gap fixed: capability() accepted a digest-valid receipt of another schema/registry revision, now refused (capability_revision_incompatible). 10 new tests (3 fail on base); 411 adjacent pass. 25 pre-existing failures in test_trade_provenance/test_final_audit_feed_identity are identical on base (stale fixtures).'
+  latest_evidence: 'Boundaries mapped acquisition to accounting, restart and reconcile; all PROVEN by existing tests.
+    One gap fixed: capability() accepted a digest-valid receipt of another schema/registry revision, now refused
+    (capability_revision_incompatible). 10 new tests (3 fail on base); 411 adjacent pass. 25 pre-existing failures
+    in test_trade_provenance/test_final_audit_feed_identity are identical on base (stale fixtures).'
   source_ids:
   - S01
   - S08
@@ -1453,10 +1448,17 @@ items:
   - DATA-01
   owner_role: Data & storage owner
   engineering_assignee: Claude local engineering session
-  implementation_evidence: ccef7e8; cae1128; trader/data/market_provenance.py resolve_lineage; trader/dashboard/owner_reads.py market_inputs; tests/test_data02_decision_lineage.py
+  implementation_evidence: ccef7e8; cae1128; trader/data/market_provenance.py resolve_lineage; trader/dashboard/owner_reads.py
+    market_inputs; tests/test_data02_decision_lineage.py
   runtime_evidence: NOT_PERFORMED; offline tests only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'Candles, derivatives, references, order book, registry capability, Attention admission, Portfolio and execution/accounting receipts mapped; clocks/source/quality/transform retention PROVEN by existing tests (Portfolio and execution by code read). One gap fixed: journaled decision lineage held revision ids that nothing resolved or verified; resolve_lineage now rebuilds exact receipts and refuses missing/future/non-VALID/tampered/schema- or transform-mismatched lineage, wired into the owner decision read (fails closed into unavailable). 21 new tests. Limits: owner/queries.py path passes no stores; universe_* acquisition receipts not resolved; no runtime proof.'
+  latest_evidence: 'Candles, derivatives, references, order book, registry capability, Attention admission, Portfolio
+    and execution/accounting receipts mapped; clocks/source/quality/transform retention PROVEN by existing tests
+    (Portfolio and execution by code read). One gap fixed: journaled decision lineage held revision ids that nothing
+    resolved or verified; resolve_lineage now rebuilds exact receipts and refuses missing/future/non-VALID/tampered/schema-
+    or transform-mismatched lineage, wired into the owner decision read (fails closed into unavailable). 21 new
+    tests. Limits: owner/queries.py path passes no stores; universe_* acquisition receipts not resolved; no runtime
+    proof.'
   source_ids:
   - S01
   - S08
@@ -1650,7 +1652,8 @@ items:
   implementation_evidence: NOT_MAPPED
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'No item-level evidence mapping completed in this tracker. Two compact_journal migration tests fail on base and fix alike (10GiB HEADROOM vs ~3.4GiB free on /); environment-dependent, owned here.'
+  latest_evidence: No item-level evidence mapping completed in this tracker. Two compact_journal migration tests
+    fail on base and fix alike (10GiB HEADROOM vs ~3.4GiB free on /); environment-dependent, owned here.
   source_ids:
   - S01
   - S08
@@ -1688,7 +1691,8 @@ items:
   implementation_evidence: NOT_MAPPED
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'No item-level evidence mapping completed in this tracker. OPEN-04 (c07c05b) closed the market_provenance journal retry path; vote/outcome/learning paths still to map.'
+  latest_evidence: No item-level evidence mapping completed in this tracker. OPEN-04 (c07c05b) closed the market_provenance
+    journal retry path; vote/outcome/learning paths still to map.
   source_ids:
   - S01
   - S08
@@ -2310,7 +2314,7 @@ items:
     failures reproduced at untouched f29fe97; no runtime/performance claim.
   source_ids:
   - S01
-  source_sections: "SDD \xA7\xA72.2,6.8,8,28,35.1; current owner adoption"
+  source_sections: SDD §§2.2,6.8,8,28,35.1; current owner adoption
   next_proof: Separately authorized operational observation; implementation closure complete. PERF-01 unchanged.
   acceptance_basis: Explicit owner-adopted architecture 2026-10-06
   acceptance_status: OWNER_APPROVED
@@ -3728,10 +3732,16 @@ items:
   - DATA-02
   owner_role: Risk owner
   engineering_assignee: Claude local engineering session
-  implementation_evidence: trader/engine/entry_authority.py authorize/validate/submit (existing, unchanged); d0de3d5; tests/test_risk01_entry_binding.py
+  implementation_evidence: trader/engine/entry_authority.py authorize/validate/submit (existing, unchanged); d0de3d5;
+    tests/test_risk01_entry_binding.py
   runtime_evidence: NOT_PERFORMED; offline tests only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'Every entry caller mapped: one reduceOnly=False order site (submit), reached only via Kernel authorize_entry -> Executor.open(risk_permission); recovery/reconcile/exits/protective are reduceOnly; owner/dashboard open no exposure. Existing code binds intent/instrument/direction/quantity/policy/account+book/capability/freshness/control watermark. No code defect found. Added 19 negative/mutant tests (foreign issuer, stale proof, expired capability, instrument/direction/quantity/geometry, retry after rejection/ambiguity, guard-removal mutants, closed caller set) and repaired a pre-existing in-flight fence test harness. Offline only.'
+  latest_evidence: 'Every entry caller mapped: one reduceOnly=False order site (submit), reached only via Kernel
+    authorize_entry -> Executor.open(risk_permission); recovery/reconcile/exits/protective are reduceOnly; owner/dashboard
+    open no exposure. Existing code binds intent/instrument/direction/quantity/policy/account+book/capability/freshness/control
+    watermark. No code defect found. Added 19 negative/mutant tests (foreign issuer, stale proof, expired capability,
+    instrument/direction/quantity/geometry, retry after rejection/ambiguity, guard-removal mutants, closed caller
+    set) and repaired a pre-existing in-flight fence test harness. Offline only.'
   source_ids:
   - S01
   - S02
@@ -3766,10 +3776,14 @@ items:
   - RISK-01
   owner_role: Risk owner
   engineering_assignee: Claude local engineering session
-  implementation_evidence: trader/engine/entry_authority.py positive/capability/check_bracket/authorize/validate (existing, unchanged); 0dd15ee; tests/test_risk02_exposure_feasibility.py
+  implementation_evidence: trader/engine/entry_authority.py positive/capability/check_bracket/authorize/validate
+    (existing, unchanged); 0dd15ee; tests/test_risk02_exposure_feasibility.py
   runtime_evidence: NOT_PERFORMED; offline tests only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'Guards mapped: finite-positive numeric gate, stop geometry, capability compatibility, replayed venue leverage/bracket receipts with freshness and actual==desired, verified fresh margin vs equity and availableBalance, venue step/min/max/min-notional re-checked before the order. No production defect. Added 64 offline negative proofs and 4 guard-removal mutants; redundant stop/leverage-freshness layers documented. Offline only.'
+  latest_evidence: 'Guards mapped: finite-positive numeric gate, stop geometry, capability compatibility, replayed
+    venue leverage/bracket receipts with freshness and actual==desired, verified fresh margin vs equity and availableBalance,
+    venue step/min/max/min-notional re-checked before the order. No production defect. Added 64 offline negative
+    proofs and 4 guard-removal mutants; redundant stop/leverage-freshness layers documented. Offline only.'
   source_ids:
   - S01
   - S02
@@ -3886,10 +3900,15 @@ items:
   - RISK-01
   owner_role: Execution & recovery owner
   engineering_assignee: Claude local engineering session
-  implementation_evidence: trader/engine/entry_authority.py submit/execution_requests, trader/engine/recovery.py (existing, unchanged); a980039; tests/test_exe01_duplicate_entry.py
+  implementation_evidence: trader/engine/entry_authority.py submit/execution_requests, trader/engine/recovery.py
+    (existing, unchanged); a980039; tests/test_exe01_duplicate_entry.py
   runtime_evidence: NOT_PERFORMED; offline tests only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'Mapped: durable execution_requests reservation committed before the venue call (logical_id/decision_id/client_order_id unique), deterministic client order ID, UNKNOWN_OUTCOME for lost responses, REFUSED/TERMINAL retention across reopen. No production defect. Added 8 offline negative proofs (same-permission retry while ambiguous, retry after recovery, refusal retry across restart, post-venue crash, id cross-collisions, client-id collision, distinct action) and a dedup-guard mutant. Offline only.'
+  latest_evidence: 'Mapped: durable execution_requests reservation committed before the venue call (logical_id/decision_id/client_order_id
+    unique), deterministic client order ID, UNKNOWN_OUTCOME for lost responses, REFUSED/TERMINAL retention across
+    reopen. No production defect. Added 8 offline negative proofs (same-permission retry while ambiguous, retry
+    after recovery, refusal retry across restart, post-venue crash, id cross-collisions, client-id collision, distinct
+    action) and a dedup-guard mutant. Offline only.'
   source_ids:
   - S01
   - S02
@@ -4170,7 +4189,7 @@ items:
   stage: '7'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Make venue receipts authoritative for monetary and exposure facts.
   why_needed: Journal records and venue truth must remain distinguishable.
   closure_condition: Reconciliation retains raw receipts, field source and explicit discrepancy/corrective action;
@@ -4180,12 +4199,18 @@ items:
   dependencies:
   - DATA-01
   owner_role: Accounting & outcomes owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: SOL
+  implementation_evidence: trader/engine/booking.py; trader/engine/trade_accounting.py; trader/engine/accounting.py;
+    seven offline suites (107 passed)
+  runtime_evidence: NOT_PERFORMED; synthetic offline fixtures only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 'ACC-01: engine/booking.py retains immutable before/after snapshots and original evidence with
+    sha256; assess/replay refuse missing fees, currency conversions and rewritten assessments. engine/reconcile.py
+    and engine/trade_accounting.py distinguish venue order fills from estimates, retain history/pages/raw receipts
+    and explicit discrepancies/retry reasons. test_trade_booking covers native/ghost/panic estimates, absent fees,
+    transaction rollback and legacy source-free export. test_reconcile and test_reconcile_alignment_commits cover
+    venue alignment without substituting symbol-only trade ownership. DATA-01 canonical identity tests establish
+    versioned market binding.'
   source_ids:
   - S01
   - S02
@@ -4193,26 +4218,26 @@ items:
   - S12
   - S14
   source_sections: §§18.1,18.6
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: None for this row at architecture/offline scope; dependent rows remain separate.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: 29d093d5e5467c645b8ea13a3699451b6a7d85d6
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
+  closure_evidence: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  closure_scope: ARCHITECTURE_OFFLINE
 - id: ACC-02
   area: Accounting & outcomes
   stage: '7'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Preserve exact entry/exit/partial/funding/fee lineage.
   why_needed: Enables actual net P&L and reliable downstream learning.
   closure_condition: Order/fill/booked legs, trades, costs and financing bind original requests/decisions and their
@@ -4223,12 +4248,17 @@ items:
   - ACC-01
   - EXE-01
   owner_role: Accounting & outcomes owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: SOL
+  implementation_evidence: trader/engine/booking.py; trader/engine/trade_accounting.py; trader/engine/accounting.py;
+    seven offline suites (107 passed)
+  runtime_evidence: NOT_PERFORMED; synthetic offline fixtures only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 'ACC-02: engine/entry_authority.py retains original logical action/decision/client order ids.
+    engine/booking.py records trade-bound entry, align_delta and close legs transactionally; repeated fill delivery
+    and callbacks cannot double-reduce or double-book. engine/trade_accounting.py legs/history_rows/assess binds
+    exact order/fill ids to booking snapshots and signed financing; incomplete/overlapping/reused identities, non-USDT
+    fees and incomplete history remain retry-required. execution_accounting preserves recovery closes across restart
+    with archive/release in one transaction. Whole-trade import is idempotent and replays source-free.'
   source_ids:
   - S01
   - S02
@@ -4236,20 +4266,20 @@ items:
   - S12
   - S14
   source_sections: §§18.4,18.6,19.2
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: None for this row at architecture/offline scope; dependent rows remain separate.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: 29d093d5e5467c645b8ea13a3699451b6a7d85d6
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
+  closure_evidence: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  closure_scope: ARCHITECTURE_OFFLINE
 - id: ACC-03
   area: Accounting & outcomes
   stage: '7'
@@ -4970,8 +5000,8 @@ items:
   status: DEFERRED
   required_behavior: Keep credentials outside repository with least-privilege access.
   why_needed: A UI/research compromise must not expose venue capability.
-  closure_condition: Verified credential locations/scopes, account mode and privileged boundaries match the
-    accepted deployment scope; migration gaps are explicit.
+  closure_condition: Verified credential locations/scopes, account mode and privileged boundaries match the accepted
+    deployment scope; migration gaps are explicit.
   failure_regression_proof: No secrets in Git, logs, backups, browser/remote gateway or unrestricted LLM tool.
   dependencies:
   - GOV-07
@@ -4979,25 +5009,25 @@ items:
   engineering_assignee: SOL
   implementation_evidence: b353237 / 4d5f21b; trader/engine/venue_reads.py; trader/observability/first_boot.py;
     293 focused offline regressions
-  runtime_evidence: Owner-reported -2015 on positionRisk/openOrders/openAlgoOrders; fresh venue permission
-    proof unavailable
+  runtime_evidence: Owner-reported -2015 on positionRisk/openOrders/openAlgoOrders; fresh venue permission proof
+    unavailable
   visual_approval: NOT_APPLICABLE
   latest_evidence: 'SEC-01 audit: production read pair is present, trimmed, distinct, without process overrides;
-    demo routing resolves correctly under CCXT 4.5.75. No local request/config defect demonstrated. Binance
-    key validity, demo-account binding, IP restriction and read permissions remain externally unverified. Current-credential
-    scan: 3882 tracked files and 24 logs, zero matches; historical backups/privileged boundary proof remains
-    unmapped. 293 offline regressions passed; no venue/provider calls or service launch.'
+    demo routing resolves correctly under CCXT 4.5.75. No local request/config defect demonstrated. Binance key
+    validity, demo-account binding, IP restriction and read permissions remain externally unverified. Current-credential
+    scan: 3882 tracked files and 24 logs, zero matches; historical backups/privileged boundary proof remains unmapped.
+    293 offline regressions passed; no venue/provider calls or service launch.'
   source_ids:
   - S01
   - S02
   - S08
   - S13
-  source_sections: "\xA726"
+  source_sections: §26
   next_proof: Owner must verify/recreate a separate same-account USD-M demo key with Enable Reading and required
     USER_DATA access, no mutation permissions; correct the actual outbound-IP allowlist if restricted, privately
-    install the matching read pair, then retain fresh bounded GET-only proof for all three listings. Resolve
-    accepted external secret storage and remaining Git-history/backups/browser/gateway/LLM evidence gaps to
-    satisfy the unchanged full SEC-01 condition.
+    install the matching read pair, then retain fresh bounded GET-only proof for all three listings. Resolve accepted
+    external secret storage and remaining Git-history/backups/browser/gateway/LLM evidence gaps to satisfy the unchanged
+    full SEC-01 condition.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
@@ -5218,9 +5248,9 @@ items:
   - S02
   - S10
   - S14
-  source_sections: "\xA7\xA725.4,35.14"
-  next_proof: None for OWN-02 at pinned architecture/offline scope. Current loaded deployment remains unproven
-    under deferred GOV-07; no live Kernel/provider/trading proof required for this build closure.
+  source_sections: §§25.4,35.14
+  next_proof: None for OWN-02 at pinned architecture/offline scope. Current loaded deployment remains unproven under
+    deferred GOV-07; no live Kernel/provider/trading proof required for this build closure.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: EXACT_ROW_OFFLINE_EVIDENCE_MAPPED
   priority: NORMAL
@@ -5244,8 +5274,8 @@ items:
   why_needed: Avoids both unsafe activation and constant permission loops.
   closure_condition: First-live, new scope/access/spend, hard limits, serious recovery and architecture changes
     surface; ordinary approved decisions remain autonomous.
-  failure_regression_proof: A no-trade/research question does not require new blanket approval; first-live
-    stays gated.
+  failure_regression_proof: A no-trade/research question does not require new blanket approval; first-live stays
+    gated.
   dependencies:
   - OWN-02
   owner_role: Owner interface owner
@@ -5253,8 +5283,8 @@ items:
   implementation_evidence: EXACT_APPROVAL_BOUNDARY_MAPPED_OFFLINE
   runtime_evidence: OFFLINE_APPROVAL_AND_AUTONOMY_REGRESSIONS; LIVE_DEPLOYMENT_NOT_CLAIMED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Existing six approval classes, exact first-live consumer, guarded recovery and ordinary
-    autonomy mapped. Seven new loop/expiry/rejection regressions; no product implementation gap. See docs/tracker/evidence/own03-boundary-sol/REPORT.md
+  latest_evidence: Existing six approval classes, exact first-live consumer, guarded recovery and ordinary autonomy
+    mapped. Seven new loop/expiry/rejection regressions; no product implementation gap. See docs/tracker/evidence/own03-boundary-sol/REPORT.md
     and closure.yaml.
   source_ids:
   - S01
@@ -5273,8 +5303,8 @@ items:
   parent_ids: []
   related_items: []
   closure_evidence: docs/tracker/evidence/own03-boundary-sol/closure.yaml
-  evidence_validity: Pinned source/test evidence at architecture/offline scope; no loaded runtime or visual
-    acceptance inferred.
+  evidence_validity: Pinned source/test evidence at architecture/offline scope; no loaded runtime or visual acceptance
+    inferred.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 - id: OWN-04
@@ -5287,8 +5317,8 @@ items:
   why_needed: An architecture diagram or stored ACTIVE value is not runtime truth.
   closure_condition: Current processes, source age, observed work, control and unavailable telemetry are distinct
     from configured/declared state.
-  failure_regression_proof: Stopped, waiting, failed or intentionally disabled workers cannot display active
-    fabricated activity.
+  failure_regression_proof: Stopped, waiting, failed or intentionally disabled workers cannot display active fabricated
+    activity.
   dependencies:
   - MON-01
   - MON-05
@@ -5297,19 +5327,19 @@ items:
   implementation_evidence: EXACT_SOURCE_AND_OFFLINE_API_FRONTEND_BROWSER
   runtime_evidence: OFFLINE_FIXTURE_ONLY; loaded deployment UNKNOWN
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Current-phase closure from existing exact source/API/owner-read/frontend/browser proof at
-    0cc582e. Owner scope decision separates truthful consumption of available evidence from future MON-01/MON-05
-    runtime observation/deployment proof. Full monitoring conditions, dependencies and gaps retained; runtime
-    proof remains unproven.
+  latest_evidence: Current-phase closure from existing exact source/API/owner-read/frontend/browser proof at 0cc582e.
+    Owner scope decision separates truthful consumption of available evidence from future MON-01/MON-05 runtime
+    observation/deployment proof. Full monitoring conditions, dependencies and gaps retained; runtime proof remains
+    unproven.
   source_ids:
   - S01
   - S02
   - S10
   - S14
   source_sections: §25.3
-  next_proof: No additional current-phase OWN-04 functional proof required at the pinned evidence revision.
-    Before future live activation satisfy original MON-01/MON-05 conditions, including RUN-01/GOV-07 dependencies
-    and retained MON-05 attribution gaps; independently prove deployment/runtime identity.
+  next_proof: No additional current-phase OWN-04 functional proof required at the pinned evidence revision. Before
+    future live activation satisfy original MON-01/MON-05 conditions, including RUN-01/GOV-07 dependencies and retained
+    MON-05 attribution gaps; independently prove deployment/runtime identity.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: CURRENT_PHASE_VERIFIED_FUTURE_ACTIVATION_PROOF_PENDING
   priority: NORMAL
@@ -5344,8 +5374,8 @@ items:
       must_satisfy_original_conditions_before_activation: true
       closure_now_does_not_authorize_activation: true
   dependency_scope:
-    current_build_phase: MON-01/MON-05 existing source/offline evidence informs truthful rendering; absence
-      of runtime telemetry is rendered UNKNOWN/stale/unavailable, not a current GUI blocker.
+    current_build_phase: MON-01/MON-05 existing source/offline evidence informs truthful rendering; absence of runtime
+      telemetry is rendered UNKNOWN/stale/unavailable, not a current GUI blocker.
     future_live_activation:
     - MON-01
     - MON-05
@@ -5360,8 +5390,7 @@ items:
   why_needed: The first screen must make status and required owner action understandable.
   closure_condition: Observed figures have source/freshness/quality, unavailable values stay unknown, and Needs
     You opens the exact evidence/action. Functional and runtime proof are separate from owner visual approval.
-  failure_regression_proof: Stale, disconnected, zero/unknown and pending approval are distinct; no fake live
-    values.
+  failure_regression_proof: Stale, disconnected, zero/unknown and pending approval are distinct; no fake live values.
   dependencies:
   - ACC-03
   - OWN-03
@@ -5372,17 +5401,16 @@ items:
   runtime_evidence: NOT_PROVEN_FOR_THIS_SCREEN
   visual_approval: TRACKED_SEPARATELY
   latest_evidence: Stage8 GUI/API tests were reported historically. Per-screen current functional/runtime evidence
-    is not mapped here; no visual approval inferred. OWN-04 is now CLOSED for current architecture/offline
-    GUI scope using retained exact state proofs; OWN-03 is CLOSED. ACC-03 remains unresolved. MON-01/MON-05
-    runtime readiness remains mandatory before future activation, independent of current screen functional
-    closure.
+    is not mapped here; no visual approval inferred. OWN-04 is now CLOSED for current architecture/offline GUI scope
+    using retained exact state proofs; OWN-03 is CLOSED. ACC-03 remains unresolved. MON-01/MON-05 runtime readiness
+    remains mandatory before future activation, independent of current screen functional closure.
   source_ids:
   - S01
   - S10
   - S14
   source_sections: §25.3
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's
-    closure condition.
+  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
+    condition.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: SDD_DEFINED_TEST_DETAIL_DRAFT
   priority: NORMAL
@@ -6721,8 +6749,8 @@ items:
   why_needed: The prepared preflight recorded active safety conditions but did not enforce refusal.
   closure_condition: Machine-readable preflight outcome gates launch; active/unreadable required storage/protection/environment
     facts yield zero launches.
-  failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected
-    already-closed boundaries without reopening unrelated work.
+  failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed
+    boundaries without reopening unrelated work.
   dependencies: []
   owner_role: Assigned local engineering session
   engineering_assignee: SOL / Codex local engineering session
@@ -6754,8 +6782,8 @@ items:
     claim.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
-  selection_basis: User explicitly authorized SOL OBS-01 only; terminal CLOSED. OBS-04 is a recommendation,
-    not selected or started.
+  selection_basis: User explicitly authorized SOL OBS-01 only; terminal CLOSED. OBS-04 is a recommendation, not
+    selected or started.
 - id: OBS-02
   area: Observed issues
   stage: Cross-cutting
@@ -6920,10 +6948,10 @@ items:
   - S11
   - S16
   source_sections: 'Parent requirement(s): RUN-03'
-  next_proof: "Retained-evidence gap: The later historical cycle\u2019s MainThread elapsed cost for exactly the\
-    \ baseline common-symbol/input workload, with the two extra symbols and their induced pre-scan/evidence work\
-    \ excluded. Baseline per-symbol identities/bounds are absent, so this equivalent-work cost cannot be reconstructed\
-    \ from retained records. No generic runtime retry is requested or authorized."
+  next_proof: 'Retained-evidence gap: The later historical cycle’s MainThread elapsed cost for exactly the baseline
+    common-symbol/input workload, with the two extra symbols and their induced pre-scan/evidence work excluded.
+    Baseline per-symbol identities/bounds are absent, so this equivalent-work cost cannot be reconstructed from
+    retained records. No generic runtime retry is requested or authorized.'
   acceptance_basis: Existing requirement/observed incident; not a new feature.
   acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
   priority: NEXT_AFTER_CURRENT
@@ -6942,10 +6970,9 @@ items:
   engineering_result: BLOCKED
   diagnostic_attempts_completed: 2
   additional_owner_attempt_consumed: true
-  required_external_evidence: "The later historical cycle\u2019s MainThread elapsed cost for exactly the baseline\
-    \ common-symbol/input workload, with the two extra symbols and their induced pre-scan/evidence work excluded.\
-    \ Baseline per-symbol identities/bounds are absent, so this equivalent-work cost cannot be reconstructed from\
-    \ retained records."
+  required_external_evidence: The later historical cycle’s MainThread elapsed cost for exactly the baseline common-symbol/input
+    workload, with the two extra symbols and their induced pre-scan/evidence work excluded. Baseline per-symbol
+    identities/bounds are absent, so this equivalent-work cost cannot be reconstructed from retained records.
   diagnostic_evidence: docs/tracker/evidence/2026-10-06-perf01-r3-terminal-report.yaml
   causal_reconstruction_evidence: docs/tracker/evidence/2026-10-06-perf01-retained-reconstruction.yaml
   causal_result: UNKNOWN
@@ -7000,27 +7027,27 @@ items:
   why_needed: Capture measured ~1,068ms and ~865ms against 50ms advisory budget; substage cause unattributed.
   closure_condition: Measured dominant capture work corrected with provenance/coverage unchanged; actual capture
     costs meet approved contract. Any policy change needs explicit owner decision, not silent widening.
-  failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected
-    already-closed boundaries without reopening unrelated work.
+  failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed
+    boundaries without reopening unrelated work.
   dependencies: []
   owner_role: Assigned local engineering session
   engineering_assignee: Codex local engineering session
-  implementation_evidence: a799e6c365074cab5597a80261bbdb9c3dda3b12; trader/observability/attention.py; narrow
-    frame-copy correction only
+  implementation_evidence: a799e6c365074cab5597a80261bbdb9c3dda3b12; trader/observability/attention.py; narrow frame-copy
+    correction only
   runtime_evidence: NOT_OBSERVED_ON_CURRENT_SOURCE; offline reconstructed capture only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: "Retained reconstruction reproduces historical overrun. Repeated full membership deepcopy\
-    \ dominates the historical profile. Narrow pandas-copy correction preserves exact captured payloads in\
-    \ seven cases; compact ATT-04 membership shape measures 41.5\u201347.3ms offline. Legacy membership still\
-    \ exceeds 50ms. Original producer packet unavailable; unchanged closing condition not satisfied."
+  latest_evidence: Retained reconstruction reproduces historical overrun. Repeated full membership deepcopy dominates
+    the historical profile. Narrow pandas-copy correction preserves exact captured payloads in seven cases; compact
+    ATT-04 membership shape measures 41.5–47.3ms offline. Legacy membership still exceeds 50ms. Original producer
+    packet unavailable; unchanged closing condition not satisfied.
   source_ids:
   - S05
   - S06
   - S16
   source_sections: 'Parent requirement(s): ATT-02,RUN-06'
   next_proof: 'Owner/external dependency: supply exact original pre-capture frames/membership packet, or separately
-    authorize a bounded post-ATT-04 FROZEN observation retaining actual producer inputs/timings and nearby
-    adverse case. Preserve 50ms budget, coverage/provenance and PERF-01 BLOCKED/UNKNOWN; no automatic observation.'
+    authorize a bounded post-ATT-04 FROZEN observation retaining actual producer inputs/timings and nearby adverse
+    case. Preserve 50ms budget, coverage/provenance and PERF-01 BLOCKED/UNKNOWN; no automatic observation.'
   acceptance_basis: Existing requirement/observed incident; not a new feature.
   acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
   priority: CURRENT
@@ -7038,8 +7065,8 @@ items:
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
   terminal_evidence: docs/tracker/evidence/perf03-capture-r1/terminal.yaml
   engineering_result: BLOCKED
-  blocking_dependency: Exact original producer packet is not retained; current-source actual producer cost
-    evidence requires separately authorized observation.
+  blocking_dependency: Exact original producer packet is not retained; current-source actual producer cost evidence
+    requires separately authorized observation.
   partial_implementation_commit: a799e6c365074cab5597a80261bbdb9c3dda3b12
 - id: FIX-01
   area: Observed issues
@@ -7287,37 +7314,33 @@ items:
   item_type: DEFECT
   release_scope: BASELINE
   status: CLOSED
-  required_behavior: Permit evidence-producing contained cold startup without requiring stopped-producer
-    live facts before launch.
+  required_behavior: Permit evidence-producing contained cold startup without requiring stopped-producer live facts
+    before launch.
   why_needed: 'Owner RUN-01 live proof exposed an OBS-01 deadlock: stopped Kernel has active observed_cycle:luffy/no
     heartbeat and unavailable fresh protection, so its evidence producers cannot start.'
-  closure_condition: Offline normal-path and negative fixtures prove static/persisted Phase A admission,
-    a durable entry/recovery fence, exact-revision single-child launch, bounded instance-bound Phase B
-    with fresh protection/reconciliation, and observer retention plus graceful containment on failure;
-    no generic bypass or ACTIVE transition.
-  failure_regression_proof: Reproduce the stopped-producer conflict; reject missing/unreadable static
-    facts, stale/prior-instance readiness, missing fresh protection/reconciliation, failed or late readiness
-    and unconfirmed stop; prove zero retry/duplicate launch and unchanged historical tracker closing conditions.
+  closure_condition: Offline normal-path and negative fixtures prove static/persisted Phase A admission, a durable
+    entry/recovery fence, exact-revision single-child launch, bounded instance-bound Phase B with fresh protection/reconciliation,
+    and observer retention plus graceful containment on failure; no generic bypass or ACTIVE transition.
+  failure_regression_proof: Reproduce the stopped-producer conflict; reject missing/unreadable static facts, stale/prior-instance
+    readiness, missing fresh protection/reconciliation, failed or late readiness and unconfirmed stop; prove zero
+    retry/duplicate launch and unchanged historical tracker closing conditions.
   dependencies: []
   owner_role: Runtime & safety owner
   engineering_assignee: Codex local engineering session
-  implementation_evidence: 4d5f21b7371201780248bfa374bc1d7e4fecfb97; trader/observability/first_boot.py;
-    trader/observability/preflight.py; trader/engine/venue_reads.py; tests/test_first_boot_diagnostics.py;
-    prior first-boot correction b562728606bd8694d6bafa9f6573be2d0e776451
-  runtime_evidence: NOT_PERFORMED; fake signed HTTP transport, temporary stores and fixture lock holders
-    only
+  implementation_evidence: 4d5f21b7371201780248bfa374bc1d7e4fecfb97; trader/observability/first_boot.py; trader/observability/preflight.py;
+    trader/engine/venue_reads.py; tests/test_first_boot_diagnostics.py; prior first-boot correction b562728606bd8694d6bafa9f6573be2d0e776451
+  runtime_evidence: NOT_PERFORMED; fake signed HTTP transport, temporary stores and fixture lock holders only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'OBS-05 diagnostics: 598 combined offline tests passed, including 37 focused reason-code
-    cases. Fixed non-secret credential/separation, authentication/permission, network/timeout, malformed
-    response, nonzero positions/orders, ledger, snapshot and unexpected codes. Every refusal remains FAIL
-    with zero launches and no trading authority. Prior receipt/first-boot and Phase B semantics retained.
-    Actual earlier refusal cause remains UNKNOWN; no live venue/provider calls or Kernel/Dashboard launches.'
+  latest_evidence: 'OBS-05 diagnostics: 598 combined offline tests passed, including 37 focused reason-code cases.
+    Fixed non-secret credential/separation, authentication/permission, network/timeout, malformed response, nonzero
+    positions/orders, ledger, snapshot and unexpected codes. Every refusal remains FAIL with zero launches and no
+    trading authority. Prior receipt/first-boot and Phase B semantics retained. Actual earlier refusal cause remains
+    UNKNOWN; no live venue/provider calls or Kernel/Dashboard launches.'
   source_ids:
   - S18
   source_sections: 'Parents: OBS-01/RUN-01; control and observation impacts OBS-02/OBS-04/RUN-02/MON-01'
-  next_proof: 'None for this offline implementation defect. RUN-01 remains BLOCKED: an owner-authorized
-    controlled launch and graceful stop on a named exact final revision must provide its unchanged live
-    closing proof.'
+  next_proof: 'None for this offline implementation defect. RUN-01 remains BLOCKED: an owner-authorized controlled
+    launch and graceful stop on a named exact final revision must provide its unchanged live closing proof.'
   acceptance_basis: Explicit current owner two-phase bootstrap contract and reported P0 conflict.
   acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
   priority: P0
@@ -7334,11 +7357,11 @@ items:
   - MON-01
   - SEC-01
   closure_evidence: docs/tracker/evidence/obs05-first-boot-diagnostics/closure.yaml
-  evidence_validity: Pinned offline diagnostics/regression proof only; all prior OBS-05 evidence retained.
-    No live read-permission, account or host readiness claim.
+  evidence_validity: Pinned offline diagnostics/regression proof only; all prior OBS-05 evidence retained. No live
+    read-permission, account or host readiness claim.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
-  owner_approval_needed: Separate exact-revision owner authorization still required for RUN-01 live proof;
-    no launch authority granted here.
+  owner_approval_needed: Separate exact-revision owner authorization still required for RUN-01 live proof; no launch
+    authority granted here.
 - id: OPEN-01
   area: Observed issues
   stage: Cross-cutting
@@ -7480,10 +7503,10 @@ items:
   implementation_evidence: c07c05b; trader/core/journal.py; tests/test_journal_evidence_repair.py
   runtime_evidence: NOT_PERFORMED; offline tests only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'market_provenance append is idempotent on exact logical retry (same subject + manifest
-    in newest 256 rows); distinct decision_id/subject and other kinds still append. New test fails on base,
-    passes on fix; latency 14 passed. Two compact_journal migration tests fail identically on untouched base
-    (10GiB headroom check) and are recorded against DATA-07.'
+  latest_evidence: market_provenance append is idempotent on exact logical retry (same subject + manifest in newest
+    256 rows); distinct decision_id/subject and other kinds still append. New test fails on base, passes on fix;
+    latency 14 passed. Two compact_journal migration tests fail identically on untouched base (10GiB headroom check)
+    and are recorded against DATA-07.
   source_ids:
   - S08
   source_sections: 'Parent requirement(s): DATA-08'
@@ -7932,18 +7955,18 @@ change_log:
   item: OBS-05
   before: Phase-A first-boot refusal collapsed to protection_unreadable_or_unverified; actual cause UNKNOWN.
   after: CLOSED_ENGINEERING_ONLY_DIAGNOSTICS
-  reason: Explicit owner OBS-05-only diagnostic correction; no gate relaxation, runtime/venue calls or
-    new tracker IDs.
+  reason: Explicit owner OBS-05-only diagnostic correction; no gate relaxation, runtime/venue calls or new tracker
+    IDs.
   evidence: docs/tracker/evidence/obs05-first-boot-diagnostics/closure.yaml
   actor: Codex local engineering session
 - date: '2026-10-06'
   event: OBS05_FIRST_BOOT_NO_RECEIPT_CORRECTED
   item: OBS-05
   before: Contained Phase A required a receipt that this first installation has never produced.
-  after: CLOSED_ENGINEERING_ONLY; fresh authoritative read-only zero-account inventory admits contained first
-    boot only.
-  reason: Explicit owner continuation of OBS-05. Preserve its existing closing condition and receipt path;
-    do not infer zero venue exposure from journal absence or add a generic bypass.
+  after: CLOSED_ENGINEERING_ONLY; fresh authoritative read-only zero-account inventory admits contained first boot
+    only.
+  reason: Explicit owner continuation of OBS-05. Preserve its existing closing condition and receipt path; do not
+    infer zero venue exposure from journal absence or add a generic bypass.
   evidence: docs/tracker/evidence/obs05-first-boot-correction/closure.yaml
   actor: Codex local engineering session
 - date: '2026-10-06'
@@ -8007,8 +8030,8 @@ change_log:
   item: PERF-03; OBS-01
   before: PERF-03 OPEN / SELECTED_NOT_STARTED / DIAGNOSIS_ONLY
   after: PERF-03 BLOCKED with narrow tested offline correction; OBS-01 selected diagnosis-only, not started
-  reason: Unchanged actual capture closing condition remains unproven. Rank eligible safe-runtime blockers;
-    preflight launch gate is the smallest P0 evidence package.
+  reason: Unchanged actual capture closing condition remains unproven. Rank eligible safe-runtime blockers; preflight
+    launch gate is the smallest P0 evidence package.
   evidence: docs/tracker/evidence/perf03-capture-r1/terminal.yaml
   actor: Codex local engineering session
 - date: '2026-10-06'
@@ -8016,8 +8039,8 @@ change_log:
   item: OBS-01
   before: OPEN; no production launch gate
   after: CLOSED; required machine-readable preflight before stop/start
-  reason: Explicit SOL scope; 247 isolated gate/safety/protection tests pass. Other rows unchanged; OBS-04
-    recommended only.
+  reason: Explicit SOL scope; 247 isolated gate/safety/protection tests pass. Other rows unchanged; OBS-04 recommended
+    only.
   evidence: docs/tracker/evidence/obs01-launch-preflight-sol/closure.json
   actor: SOL / Codex local engineering session
 - date: '2026-10-06'
@@ -8050,7 +8073,8 @@ change_log:
   item: RISK-01
   before: EVIDENCE_TO_MAP; stage-level history only
   after: CLOSED at offline engineering scope; no code defect, negative/mutant proofs retained
-  reason: Explicit RISK-01 package only; no services/providers launched; DATA-01/02, ATT-04, SEC-01/RUN-01 deferral untouched; every other row and closing condition preserved.
+  reason: Explicit RISK-01 package only; no services/providers launched; DATA-01/02, ATT-04, SEC-01/RUN-01 deferral
+    untouched; every other row and closing condition preserved.
   evidence: docs/tracker/evidence/risk01-entry-permission/closure.yaml
   actor: Claude local engineering session
 - date: '2026-10-06'
@@ -8707,7 +8731,6 @@ latest_observation:
     harness_patch: /mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/correction.patch
     executed_harness_hashes: /mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/executed-harness-hashes.json
     final_fixtures: /mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/integrated-validation.json
-
 current_release_deferral:
   decision_date: '2026-10-06'
   authority: 'Explicit owner decision: SEC-01 and RUN-01 are not required for the current LUFFY build phase.'
@@ -8731,16 +8754,16 @@ current_release_deferral:
   - GOV-07
   - MON-01
   - MON-05
-  dependency_policy: Preserve recorded dependency/readiness-gate membership as future requirements. Exclude
-    SEC-01, RUN-01 and GOV-07 transitively from current architecture/GUI build-phase blocker evaluation and
-    critical-path selection. Explicit owner phase-scope review additionally excludes MON-01/MON-05 full runtime/readiness
-    obligations from current architecture/offline/GUI blockers, retaining them as mandatory future activation
-    gates with original conditions and gaps.
+  dependency_policy: Preserve recorded dependency/readiness-gate membership as future requirements. Exclude SEC-01,
+    RUN-01 and GOV-07 transitively from current architecture/GUI build-phase blocker evaluation and critical-path
+    selection. Explicit owner phase-scope review additionally excludes MON-01/MON-05 full runtime/readiness obligations
+    from current architecture/offline/GUI blockers, retaining them as mandatory future activation gates with original
+    conditions and gaps.
   revisit_before: Any future production/live activation requiring their guarantees; revisit unresolved findings
     and satisfy the existing closing conditions before that activation.
   preservation: Existing evidence, unresolved findings, closing conditions and completed implementation retained.
-    No deferred item is CLOSED. GOV-07 deployment/runtime identity remains UNPROVEN and is required before
-    future deployment/live activation claims.
+    No deferred item is CLOSED. GOV-07 deployment/runtime identity remains UNPROVEN and is required before future
+    deployment/live activation claims.
   activation_authorized: false
   additional_owner_decisions:
   - id: GOV-07
@@ -8749,8 +8772,8 @@ current_release_deferral:
       build phase.'
     status: DEFERRED
     release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
-    reason: 'Remaining gate is live deployment identity: Dashboard loaded revision/config UNKNOWN, local main
-      differs from remote main, no application defect demonstrated.'
+    reason: 'Remaining gate is live deployment identity: Dashboard loaded revision/config UNKNOWN, local main differs
+      from remote main, no application defect demonstrated.'
     blocks_current_release: false
     non_blocking_for:
     - architecture work
@@ -8759,12 +8782,12 @@ current_release_deferral:
     - other tracker items
     dependency_policy: Exclude GOV-07 transitively from current architecture/GUI build-phase blockers; preserve
       its original requirement/dependency membership as a future gate.
-    required_before: Any future deployment/live activation claims; exact source/config/run/process/timestamp
-      and local/remote/deployed consistency closing condition must then be proven.
+    required_before: Any future deployment/live activation claims; exact source/config/run/process/timestamp and
+      local/remote/deployed consistency closing condition must then be proven.
     runtime_deployment_identity: UNPROVEN
     mapped_evidence_preserved: true
-    closing_condition_preserved: Source and evidence artifacts identify revision, configuration, run/process
-      and timestamps; deployment records match remote/local code.
+    closing_condition_preserved: Source and evidence artifacts identify revision, configuration, run/process and
+      timestamps; deployment records match remote/local code.
     historical_terminal_evidence: docs/tracker/evidence/gov07-identity-sol/terminal.yaml
     activation_authorized: false
   phase_scope_review:
@@ -8780,10 +8803,9 @@ current_release_deferral:
     substantive_conditions_unchanged: true
     runtime_proof_complete: false
     current_ui_truthfulness_still_required: true
-    policy: Original OWN-04 dependency edges are retained as future activation gates. Current consumer closure
-      requires honest use of available evidence, not fabricated telemetry or completion of deferred producer/deployment
-      guarantees. Missing MON-05 measurements remain visible gaps, never inferred proof.
-
+    policy: Original OWN-04 dependency edges are retained as future activation gates. Current consumer closure requires
+      honest use of available evidence, not fabricated telemetry or completion of deferred producer/deployment guarantees.
+      Missing MON-05 measurements remain visible gaps, never inferred proof.
 current_build_selection:
   active_items: []
   last_completed_item: OWN-04
@@ -8809,20 +8831,17 @@ current_build_selection:
   - GUI-07
   - GUI-08
   - GUI-09
-  eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and
-    GOV-07 are excluded transitively from current build blockers. Other dependencies and owner visual approvals
-    apply.
+  eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and GOV-07
+    are excluded transitively from current build blockers. Other dependencies and owner visual approvals apply.
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: Owner phase-scope review closes OWN-04 for current architecture/offline GUI truthfulness
-    using retained exact proof. MON-01/MON-05 full runtime/readiness obligations are deferred for this phase
-    and mandatory before future live activation; all original conditions remain. GUI-01 eligible for functional
-    evidence work, ACC-03 prerequisite still unresolved. ACC-03 remains recommendation only; no activation
-    authorized.
+  selection_reason: Owner phase-scope review closes OWN-04 for current architecture/offline GUI truthfulness using
+    retained exact proof. MON-01/MON-05 full runtime/readiness obligations are deferred for this phase and mandatory
+    before future live activation; all original conditions remain. GUI-01 eligible for functional evidence work,
+    ACC-03 prerequisite still unresolved. ACC-03 remains recommendation only; no activation authorized.
   last_terminal_item: OWN-04
   last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
-
 own02_authority_closure:
   id: OWN-02
   status: CLOSED
@@ -8834,7 +8853,6 @@ own02_authority_closure:
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
-
 own03_boundary_closure:
   id: OWN-03
   status: CLOSED
@@ -8846,7 +8864,6 @@ own03_boundary_closure:
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
-
 own04_state_terminal:
   id: OWN-04
   status: CLOSED
@@ -8881,8 +8898,6 @@ own04_state_terminal:
       evidence_state: LIVE_RUNTIME_DEPLOYMENT_PROOF_PENDING
       must_satisfy_original_conditions_before_activation: true
       closure_now_does_not_authorize_activation: true
-
-
 future_live_activation_requirements:
   requirements:
   - MON-01
