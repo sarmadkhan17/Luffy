@@ -1551,32 +1551,34 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 2
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: A test-only API does not establish normal-path integration.
 - **closure_condition**: Normal strategy and research consumers use stable WorldModel queries; exact historical context reconstructs from retained sources.
 - **failure_regression_proof**: No scraping arbitrary internals or claiming historical support for a live-only dependency.
 - **dependencies**: WRLD-03, DATA-05
 - **owner_role**: Perception & WorldModel owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2 engineering closure; SOL-1 canonical reconciliation
+- **implementation_evidence**: e7ed354; trader/world/context.py shared WorldContext/ObservationQuery; observability.store.read_world_history; normal strategy/research caller integration; tests/test_wrld05_normal_context.py and retained closing-condition evidence.
+- **runtime_evidence**: NOT_PERFORMED; pinned offline/synthetic normal-caller and restart evidence reused
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Original closing condition satisfied at e7ed354: normal compiled strategy and research consumers use the same shared typed WorldModel queries and verified retained receipt context. Exact cuts/model identities/source bytes survive restart; missing/unsupported/future/stale/conflicting/corrupt history remains explicit UNKNOWN/NaN/UNTESTED, without latest/live substitution. Retained proof: 29 new checks, 125 focused passes and 155 regression passes with 53 overlapping DSL checks (227 distinct); two reproduced baseline research-job failures excluded. No new implementation, test rerun or runtime launch in reconciliation.
 - **source_ids**: S01, S02, S12
 - **source_sections**: §§9.3,14.4,30 Stage 2
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for WRLD-05 at architecture/offline engineering scope. DEC-01 WorldModel dependency satisfied; its other prerequisites and required/optional analyst Opportunity Context binding remain separate.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: e7ed35447e768ba33e626e33b6dc4ed99fd8fefc
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/wrld05-normal-context-sol2/REPORT.md
+- **evidence_validity**: Pinned e7ed354 offline architecture/engineering proof reused; source/test/report bytes verified at reconciliation. No deployment, real historical coverage or calibration claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **evidence_mapping**: docs/tracker/evidence/wrld05-normal-context-sol2/REPORT.md
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### WRLD-06 — Read only learning revisions available at the historical query cut.
 

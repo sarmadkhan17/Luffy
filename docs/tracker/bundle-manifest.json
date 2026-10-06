@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 398481,
-      "sha256": "b764f7cd37360c311975516a29612e23253978b24d96590a624f02fb51b59a2d",
+      "bytes": 399712,
+      "sha256": "916d4452097421171e591b7101541035575bb430d61bc8743dbac5f02ea8152f",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 386558,
-      "sha256": "c8595e105043ecdf00ea783e08da12bde0c6ccf1520928f730bf304351a2956e",
+      "bytes": 387769,
+      "sha256": "d3df2d8294cf7491472232934227d4a98b9c7eca5dc60d1ae8134552f56396d7",
       "synchronization_required": false
     },
     {
@@ -442,5 +442,28 @@
     "remaining_wrld05_work": "Normal typed WorldModel strategy/research integration and its original closing proof remain separate.",
     "control_plane_reconciliation_pending": false,
     "historical_pending_notes": "Earlier DATA-05 reconciliation-pending statements in retained engineering/WRLD-03 records describe their pinned checkpoints; this record completes canonical reconciliation."
+  },
+  "wrld05_canonical_reconciliation": {
+    "item": "WRLD-05",
+    "canonical_status": "CLOSED",
+    "engineering_closure_commit": "e7ed35447e768ba33e626e33b6dc4ed99fd8fefc",
+    "evidence": "docs/tracker/evidence/wrld05-normal-context-sol2/REPORT.md",
+    "closure_condition_satisfied": true,
+    "evidence_scope": "Existing e7ed354 offline architecture/engineering closure reused: 125 focused and 155 regression passes, 227 distinct checks; two reproduced baseline research-job failures excluded. No implementation or test/runtime rerun.",
+    "dependency_status": {
+      "WRLD-03": "CLOSED",
+      "DATA-05": "CLOSED"
+    },
+    "closing_condition_proof": [
+      "Normal compiled strategy and research loader/evaluation/threshold/referee/portfolio-null callers use shared immutable WorldContext and public exact-cut queries.",
+      "Retained Store receipts reconstruct verified model identities, canonical bytes and original cuts; restart/frozen context preserves current/historical parity.",
+      "Missing/future/wrong-scope/horizon/stale/conflicting/nonnumeric/corrupt/ambiguous history remains UNKNOWN/NaN/UNTESTED; no latest or live-only historical substitute."
+    ],
+    "dec01_world_model_dependency_satisfied": true,
+    "dec01_row_status_changed": false,
+    "dec01_overall_unblocked": false,
+    "remaining_dec01_work": "STR-02 retains STR-01 prerequisites; DEC-01 required/optional analyst and supporting/opposing coherent Opportunity Context binding still needs its own proof.",
+    "control_plane_reconciliation_pending": false,
+    "historical_pending_notes": "Earlier WRLD-05 gap/reconciliation-pending statements describe pinned prior checkpoints; this record completes canonical reconciliation."
   }
 }
