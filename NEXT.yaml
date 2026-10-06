@@ -993,3 +993,712 @@ out03_replay_dependency_map:
   dependency_reconciliation_evidence: docs/tracker/evidence/wrld06-reconciliation-sol2/reconciliation.json
   original_intake_evidence_preserved: true
 
+out03_intake_previous_work_package:
+  id: ACC-03
+  status: CLOSED
+  result: CLOSED_ACCOUNTING_TRUTH_FOLLOWUP
+  mode: ENGINEERING_ONLY
+  scope: ARCHITECTURE_FUNCTIONAL_OFFLINE
+  objective: Reconcile ACC-01 correction evidence, preserve accounting classification in ACC-03 consumers and
+    revalidate GUI-01 before GUI-02.
+  implementation_commit: 37c8d43ced2d65fb2418e87435b178318832301b
+  evidence:
+  - docs/tracker/evidence/accounting-truth-followup-sol/closure.yaml
+  impact_check:
+  - ACC-01
+  - ACC-03
+  - GUI-01
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  successor_selected: false
+
+out01_intake_previous_work_package:
+  id: OUT-03
+  status: BLOCKED
+  result: BLOCKED_DEPENDENCY_MAPPING
+  mode: ENGINEERING_ONLY
+  scope: OFFLINE_EVIDENCE_MAPPING
+  objective: Map OUT-03 replay evidence before GUI-02; retain unmet OUT-01/DATA-03/WRLD-06 dependencies and
+    OWN-01 gate.
+  evidence:
+  - docs/tracker/evidence/out03-replay-map-sol/REPORT.md
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  successor_selected: false
+
+out01_identity_evidence_map:
+  id: OUT-01
+  status: BLOCKED
+  result: BLOCKED_DEPENDENCY_AND_EXECUTION_EVIDENCE
+  scope: ARCHITECTURE_OFFLINE_EVIDENCE_MAPPING
+  evidence: docs/tracker/evidence/out01-identity-map-sol/REPORT.md
+  base_revision: 61716877fdd717a65ffe967fdb75084b66515b67
+  dependencies:
+    DEC-04: EVIDENCE_TO_MAP
+    DATA-02: CLOSED
+  classification:
+    PROVEN:
+    - normal scan source manifest
+    - allocation original identity and registration
+    - HOLD and Risk refusal normal forward outcome
+    - failed delivery and parent/source mismatch refusal
+    - exact intent resolver
+    IMPLEMENTED_BUT_UNMAPPED:
+    - full normal execution delivery without manual priming
+    ACTUAL_GAP: []
+  tests:
+    fresh_pytest_passed: 3
+    reused_prior_distinct_cases: 82
+    root_mismatch_checks: PASS
+  actual_gap: NONE_DEMONSTRATED
+  application_code_changed: false
+  commits_created: []
+  out03_remaining_dependencies:
+  - OUT-01
+  - DATA-03
+  - WRLD-06
+  impact_policy: OUT-03 and GUI-02 rows unchanged; outcome/learning rows supporting evidence only; DATA-03
+    untouched
+  next_item: DEC-04 dependency mapping, including DEC-01 gate; then OUT-01 full normal execution acceptance
+  successor_selected: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+
+dec01_intake_previous_work_package:
+  id: OUT-01
+  status: BLOCKED
+  result: BLOCKED_DEPENDENCY_AND_EXECUTION_EVIDENCE
+  mode: ENGINEERING_ONLY
+  scope: ARCHITECTURE_OFFLINE_EVIDENCE_MAPPING
+  objective: Map only OUT-01 original decision/terminal/outcome identity; preserve DEC-04 gate and explicit
+    execution proof gap.
+  evidence:
+  - docs/tracker/evidence/out01-identity-map-sol/REPORT.md
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  successor_selected: false
+
+dec01_dependency_chain_map:
+  id: DEC-01
+  status: BLOCKED
+  result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+  scope: ARCHITECTURE_OFFLINE
+  evidence: docs/tracker/evidence/dec01-chain-sol1/REPORT.md
+  base_revision: 50edba5c4d72d014d9515b4823a4b39fd7098a2f
+  compiler_fix_commit: f55ec97c4a2bef04712abc45832e6d3f44f01162
+  data05_reused_engineering_commit: fc16e078a56a19b01b85a8a9c7edac368183904d
+  classification:
+    STR-02: SUPPORTED_FEATURE_PATH_PROVEN; COMPILED_SPEC_MUTABILITY_GAP_FIXED; STR-01_AND_WRLD-05_UNMET
+    WRLD-05: STANDALONE_API_IMPLEMENTED_BUT_UNMAPPED; ACTUAL_NORMAL_STRATEGY_RESEARCH_INTEGRATION_GAP; WRLD-03_UNMET
+    DATA-05: OWNER_CONFIRMED_ENGINEERING_CLOSURE_REUSED_AND_RECONCILED; NO_REDO
+    DEC-01: PARTIAL_CONTEXT_CLAUSES_PROVEN; REQUIRED_OPTIONAL_ANALYST_BINDING_GAP; DEPENDENCIES_UNMET
+  actual_gaps:
+    fixed:
+    - compiler mutable spec/hash/AST binding
+    remaining:
+    - WRLD-05 normal typed current/historical WorldModel strategy/research integration
+    - DEC-01 required/optional analysts and supporting/opposing evidence binding
+  unmet_upstream_gates:
+    STR-02:
+    - STR-01
+    - WRLD-05
+    WRLD-05:
+    - WRLD-03
+  tests:
+    focused_passed: 53
+    regression_passed: 71
+    distinct_passed: 124
+    new_regression_cases: 4
+    baseline_new_cases_failed: 3
+    data05_tests_repeated: 0
+  commits:
+  - f55ec97c4a2bef04712abc45832e6d3f44f01162
+  out01_now_unblocked: false
+  dec04_started: false
+  next_item: WRLD-03 / WRLD-01 prerequisite mapping, then WRLD-05 normal integration and STR-01 gate; DEC-01
+    analyst binding before closure
+  successor_selected: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+
+wrld01_canonical_reconciliation:
+  item: WRLD-01
+  canonical_status: CLOSED
+  engineering_closure_commit: 3dc16013e43667b622fd478e6a77b746740c6dc8
+  evidence: docs/superpowers/reports/2026-10-06-wrld01-sol1-evidence.txt
+  evidence_scope: Offline engineering/test closure at 3dc1601; existing evidence reused, no implementation
+    or runtime rerun.
+  dependency_status:
+    DATA-02: CLOSED
+  wrld03_dependency_satisfied: true
+  wrld03_status_changed: false
+  control_plane_reconciliation_pending: false
+
+wrld03_canonical_reconciliation:
+  item: WRLD-03
+  canonical_status: CLOSED
+  engineering_evidence_commit: 9e49c712bf90eaa37249962c5bc2639e71742a47
+  wrld01_canonical_commit: 903262cb553930a4b14f505f75012d441e2f8464
+  reviewed_main_revision: 91fab989705e0bb93c14d8b8735753a0ceeb771b
+  evidence: docs/tracker/evidence/wrld03-map-sol2/RECONCILIATION.md
+  evidence_scope: Existing 9 synthetic contract checks and 147 consumer regressions reused; contract source
+    bytes unchanged; no implementation or runtime rerun.
+  dependency_status:
+    DATA-02: CLOSED
+    WRLD-01: CLOSED
+  remaining_gap: NONE
+  att01_dependency_status:
+    WRLD-03: CLOSED
+    DATA-06: EVIDENCE_TO_MAP
+  wrld05_engineering_eligible: true
+  data05_closure_reused: fc16e078a56a19b01b85a8a9c7edac368183904d; canonical DATA-05 reconciliation remains
+    uncommitted and is outside WRLD-03 scope.
+  unrelated_tracker_rows_changed: false
+  control_plane_reconciliation_pending: false
+
+data05_canonical_reconciliation:
+  item: DATA-05
+  canonical_status: CLOSED
+  engineering_closure_commit: fc16e078a56a19b01b85a8a9c7edac368183904d
+  evidence: docs/tracker/evidence/data05-revision-truth/closure.md
+  closure_condition_satisfied: true
+  evidence_scope: 'Existing fc16e07 engineering evidence reused: 208 offline passes, including 33 new DATA-05
+    checks. No implementation or test/runtime rerun.'
+  closing_condition_proof:
+  - Latest and explicit historical cuts select original/same-value/corrected/future revisions only when knowable.
+  - Append-only originals and supersedes identities survive later corrections.
+  - Hash, indexed identity/clocks and exact lineage reconstruct or fail closed on corruption/missing/future
+    sources.
+  - Database reopen preserves earlier as-of selection, latest selection, original bar-close replay and reconstructed
+    metadata.
+  dependency_status:
+    DATA-02: CLOSED
+  wrld05_dependency_status:
+    WRLD-03: CLOSED
+    DATA-05: CLOSED
+  wrld05_now_fully_eligible: true
+  wrld05_row_status_changed: false
+  remaining_wrld05_work: Normal typed WorldModel strategy/research integration and its original closing proof
+    remain separate.
+  control_plane_reconciliation_pending: false
+  historical_pending_notes: Earlier DATA-05 reconciliation-pending statements in retained engineering/WRLD-03
+    records describe their pinned checkpoints; this record completes canonical reconciliation.
+
+wrld05_canonical_reconciliation:
+  item: WRLD-05
+  canonical_status: CLOSED
+  engineering_closure_commit: e7ed35447e768ba33e626e33b6dc4ed99fd8fefc
+  evidence: docs/tracker/evidence/wrld05-normal-context-sol2/REPORT.md
+  closure_condition_satisfied: true
+  evidence_scope: 'Existing e7ed354 offline architecture/engineering closure reused: 125 focused and 155 regression
+    passes, 227 distinct checks; two reproduced baseline research-job failures excluded. No implementation
+    or test/runtime rerun.'
+  dependency_status:
+    WRLD-03: CLOSED
+    DATA-05: CLOSED
+  closing_condition_proof:
+  - Normal compiled strategy and research loader/evaluation/threshold/referee/portfolio-null callers use shared
+    immutable WorldContext and public exact-cut queries.
+  - Retained Store receipts reconstruct verified model identities, canonical bytes and original cuts; restart/frozen
+    context preserves current/historical parity.
+  - Missing/future/wrong-scope/horizon/stale/conflicting/nonnumeric/corrupt/ambiguous history remains UNKNOWN/NaN/UNTESTED;
+    no latest or live-only historical substitute.
+  dec01_world_model_dependency_satisfied: true
+  dec01_row_status_changed: false
+  dec01_overall_unblocked: false
+  remaining_dec01_work: STR-02 retains STR-01 prerequisites; DEC-01 required/optional analyst and supporting/opposing
+    coherent Opportunity Context binding still needs its own proof.
+  control_plane_reconciliation_pending: false
+  historical_pending_notes: Earlier WRLD-05 gap/reconciliation-pending statements describe pinned prior checkpoints;
+    this record completes canonical reconciliation.
+
+data06_canonical_reconciliation:
+  item: 'DATA-06'
+  canonical_status: 'CLOSED'
+  current_build_scope: 'ARCHITECTURE_OFFLINE'
+  engineering_closure_commits:
+  - 'a186b16'
+  - '91fab98'
+  evidence: 'docs/tracker/evidence/data06-registry-history/closure.md'
+  closure_condition_satisfied: true
+  account_eligibility: 'UNKNOWN recorded explicitly; never authorizes trading or exposure'
+  closing_condition_proof:
+  - 'Durable append-only registry snapshot/refresh history, byte-exact and hash-verified, environment-scoped.'
+  - 'Universe revisions persist members, explicit exclusion reason codes, config and revision identity.'
+  - 'Venue-refused (untradeable) symbols persist per environment across restart.'
+  - 'Majors remain observable; absence from venue truth never implies tradable; Attention subset distinct from tradable authority.'
+  - 'Entry capability/Risk unchanged and fail closed.'
+  dependency_status:
+    DATA-01: 'CLOSED'
+  att01_dependency_status:
+    DATA-06: 'CLOSED'
+    WRLD-03: 'CLOSED'
+  att01_now_fully_eligible: true
+  att01_row_status_changed: false
+  future_live_gap: 'Private per-account eligibility + leverage/bracket producer (per-symbol ACCOUNT_SYMBOL_PERMISSION, account_trading ENABLED, observe_leverage, fresh entry-capability receipt) required before any ACTIVE trading.'
+  not_wired: 'No kernel code constructs BinanceUsdmRegistryProvider yet; store and recorder hook are tested.'
+  unrelated_tracker_rows_changed: false
+  control_plane_reconciliation_pending: false
+
+sol1_control_plane_checkpoint:
+  scope: DEC-01 / OUT-01 / OUT-03 control-plane checkpoint only
+  base_revision: c4c08c1c952e40a39a6b1eb98395c97a431a8dbc
+  statuses:
+    DEC-01: BLOCKED
+    OUT-01: BLOCKED
+    OUT-03: BLOCKED
+  later_closures_preserved:
+  - WRLD-01
+  - WRLD-03
+  - WRLD-05
+  - DATA-05
+  historical_intake_policy: Original reports, terminal records, source manifests and validations are immutable dated
+    intake evidence; superseded WorldModel findings are not current gaps. Current row summaries and committed reconciliation
+    records govern.
+  closing_conditions_changed: false
+  att01_changed: false
+  successor_selected: false
+  runtime_execution_authorized: false
+
+att01_canonical_reconciliation:
+  item: 'ATT-01'
+  canonical_status: 'CLOSED'
+  current_build_scope: 'ARCHITECTURE_OFFLINE'
+  engineering_closure_commits:
+  - 'c4c08c1'
+  - '84b3080'
+  evidence: 'docs/tracker/evidence/att01-investigation-candidates/closure.md'
+  closure_condition_satisfied: true
+  closing_condition_proof:
+  - 'Pure candidates(receipt) projects ranked typed candidates (instrument, rank, reasons, urgency, bounded cost, source identity, INVESTIGATE_ONLY) from a verified ATT-04 receipt; receipt format and replay unchanged.'
+  - 'Normal Kernel deep-scan path delivers the candidate in admission_context[investigation]; persisted/replayed receipt to downstream consumer proven identical end to end.'
+  - 'Zero candidates distinct from refused/incomplete capture; missing receipt is unavailable; no trade or size authority.'
+  tests: 'tests/test_att01_candidates.py 9 passed; 143 passed with attention kernel wiring, selection persistence and cognition attention suites.'
+  dependency_status:
+    DATA-06: 'CLOSED'
+    WRLD-03: 'CLOSED'
+  downstream_dependency_status:
+    ATT-02: 'EVIDENCE_TO_MAP; ATT-01 satisfied, DATA-07 EVIDENCE_TO_MAP'
+    ATT-03: 'EVIDENCE_TO_MAP; ATT-01 satisfied, DATA-04 EVIDENCE_TO_MAP (DATA-03 EVIDENCE_TO_MAP)'
+    RES-01: 'EVIDENCE_TO_MAP; sole listed dependency ATT-01 now satisfied'
+  att03_now_eligible: false
+  implementation_changed: false
+  unrelated_tracker_rows_changed: false
+  successor_selected: false
+  runtime_execution_authorized: false
+  control_plane_reconciliation_pending: false
+
+data03_canonical_reconciliation:
+  item: DATA-03
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE_ENGINEERING
+  engineering_closure_commit: 61716877fdd717a65ffe967fdb75084b66515b67
+  reconciliation_base_revision: c8dfea702de0f2e5cbc4c9d2bf759589e7a4e0bb
+  evidence: docs/tracker/evidence/data03-consumer-cuts/closure.md
+  validation: docs/tracker/evidence/data03-consumer-cuts/validation.md
+  closure_condition: All normal/replay consumers enforce availability at the requested cut for candles, universe,
+    derivatives, references, features and learning.
+  closure_condition_satisfied: true
+  dependency_status:
+    DATA-02: CLOSED
+  closing_condition_proof:
+  - Normal/replay candles, membership, derivatives, references and features use source-cut-qualified shared readers;
+    future cache and later revisions cannot be rebased.
+  - Admission rollback and metadata acquisition clocks are enforced; historical current-spec membership refuses
+    without retained ancestry.
+  - Learning capture, main/parent replay, analyst leader and outcome/backfill boundaries requalify inner receipt
+    clocks; restart preserves exact bytes.
+  retained_validation: 304 distinct final recovery/focused passes; earlier batches overlap and resource-exhausted
+    runs are excluded.
+  fresh_validation: 36 DATA-03 regression cases passed in 3.83s.
+  original_condition_and_edges_preserved: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+  control_plane_reconciliation_pending: false
+  historical_pending_notes: Original closure report pending statements describe the engineering checkpoint; this
+    record completes canonical reconciliation.
+
+data04_canonical_reconciliation:
+  item: DATA-04
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE_ENGINEERING
+  engineering_closure_commit: 31fc0578ddd6e61d77a3744b41166cdaddec06df
+  reconciliation_base_revision: c4e8fbd9a69a8b58f35096867d328986cf0b9f37
+  evidence: docs/tracker/evidence/data04-htf-availability/closure.md
+  validation: docs/tracker/evidence/data04-htf-availability/validation.md
+  closure_condition: Native/aggregated HTF, partial and missing bars preserve explicit eligibility and correct historical
+    alignment.
+  closure_condition_satisfied: true
+  dependency_status:
+    DATA-03: CLOSED
+  closing_condition_proof:
+  - Native HTF partial/final receipts and later backfills retain original eligibility and revision identity at exact
+    cuts and after restart.
+  - Declared child timeframe, complete timestamp grid and FINAL constituent states are required; missing or partial
+    children cannot become FINAL by time alone.
+  - Aggregate availability/observation maxima fence HTF features; sparse frame builders use declared intervals and
+    late corrections cannot repair earlier replay.
+  retained_validation: 308 passing checks across two distinct final batches, including 16 DATA-04 regression cases
+    and synthetic engine equivalence/benchmark gates.
+  fresh_validation: 16 DATA-04 regression cases passed in 2.04s; exact log retained in reconciliation-tests.txt.
+  original_condition_and_edges_preserved: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+  control_plane_reconciliation_pending: false
+  historical_pending_notes: Original closure report pending statements describe the engineering checkpoint; this
+    record completes canonical reconciliation.
+  data03_reconciliation_commit: c4e8fbd9a69a8b58f35096867d328986cf0b9f37
+  att03_dependency_status:
+    ATT-01: CLOSED
+    DATA-04: CLOSED
+  att03_now_eligible: true
+  att03_selected: false
+  att03_acceptance_remaining: Independent warm-up/valid-acquisition and approved calibrated-ranking proof; ATT-03
+    row unchanged.
+
+att03_previous_terminal_selection:
+  state:
+    id: DEC-01
+    status: BLOCKED
+    result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+    mode: ENGINEERING_ONLY
+    scope: ARCHITECTURE_OFFLINE
+    objective: Map DEC-01 dependency chain and fix only demonstrated compiler version binding gap; preserve original
+      WorldModel/analyst contracts and gates.
+    evidence:
+    - docs/tracker/evidence/dec01-chain-sol1/REPORT.md
+    implementation_commit: f55ec97c4a2bef04712abc45832e6d3f44f01162
+    runtime_execution_authorized: false
+    provider_enablement_authorized: false
+    trading_activation_authorized: false
+    successor_selected: false
+  next:
+    id: DEC-01
+    status: BLOCKED
+    result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+    mode: ENGINEERING_ONLY
+    scope: ARCHITECTURE_OFFLINE
+    objective: Map DEC-01 dependency chain and fix only demonstrated compiler version binding gap; preserve original
+      WorldModel/analyst contracts and gates.
+    evidence:
+    - docs/tracker/evidence/dec01-chain-sol1/REPORT.md
+    implementation_commit: f55ec97c4a2bef04712abc45832e6d3f44f01162
+    runtime_execution_authorized: false
+    provider_enablement_authorized: false
+    trading_activation_authorized: false
+    successor_selected: false
+att03_warmup_terminal:
+  item: ATT-03
+  status: BLOCKED
+  result: BLOCKED_CALIBRATION_EVIDENCE
+  scope: ARCHITECTURE_OFFLINE
+  implementation_commit: 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c
+  evidence: docs/tracker/evidence/att03-warmup-sol2/REPORT.md
+  dependencies:
+    ATT-01: CLOSED
+    DATA-04: CLOSED
+  fixed_gap: Explicit null scores/components and required/eligible history were missing from warm-up rows and investigation
+    candidates.
+  remaining_gap: Approved calibrated-ranking evidence for the exact existing components/scales/thresholds is not
+    established.
+  tests:
+    new_passed: 8
+    regression_passed: 279
+    baseline_reproduced_failures: 35
+    distinct_passed: 287
+  conditions_and_dependency_edges_changed: false
+  scoring_system_changed: false
+  successor_selected: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+
+att03_calibration_terminal:
+  item: ATT-03
+  status: BLOCKED
+  result: BLOCKED_UNSUPPORTED_CALIBRATION_VALUES
+  scope: RETAINED_AND_SYNTHETIC_OFFLINE_CALIBRATION_REVIEW
+  evidence: docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+  component_inventory: docs/tracker/evidence/att03-calibration-sol2/component-inventory.json
+  results: docs/tracker/evidence/att03-calibration-sol2/results.json
+  protocol: docs/tracker/evidence/att03-calibration-sol2/protocol.json
+  dependencies:
+    ATT-01: CLOSED
+    DATA-04: CLOSED
+  calibrated_operational_values: []
+  conditional_support: IID Gaussian predictive volume/positioning references and IID Fisher scaling; not operational
+    real-market calibration.
+  unsupported_values:
+  - shared salience cutoff 2 and maximum/cohort interpretation
+  - window 20 / short 5 / min cohort 4
+  - positioning reference 20 / max of two / cadence slack tolerance
+  - correlation baseline 120 / recent 30 / peer floor 4
+  - supporting breadth 1.5 and 0.75 / divergence 2 / persistence 1 / participation 0.05 when calibration claimed
+  retained_validation:
+    scans: 59
+    symbol_rows: 944
+    eligible_rows: 929
+    score_eligibility_ranking_replays: 59
+    independent_labels: 0
+    real_false_trigger_rate: null
+    real_missed_trigger_rate: null
+  synthetic_validation:
+    null_trials: 800
+    planted_trials: 1000
+    current_broad_null_symbol_cutoff_rate_iid: 0.231875
+    current_broad_null_symbol_cutoff_rate_ar1_phi_0_6: 0.515625
+    scope: Fixed model conditional diagnostics, not crypto-market error rates or acceptance.
+  tests:
+    preservation_passed: 68
+    evidence_checks_passed: 11
+  owner_decision_required: true
+  owner_decision: Define investigate-worthy events, allowed false/missed triggers, component profile/universe and
+    an untouched validation plan for unchanged values. No implicit retuning or condition revision.
+  application_source_and_config_changed: false
+  conditions_changed: false
+  successor_selected: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+
+att03_owner_scope_decision:
+  item: ATT-03
+  decision_date: '2026-10-06'
+  review_revision: eb9c8b6ba9c854c646f5ac535966b93b71deaeb0
+  authority: Explicit current-session owner scope decision
+  owner_decision: Current Attention thresholds/components are accepted for the current architecture/offline build
+    only as UNCALIBRATED_HEURISTIC / INVESTIGATE_ONLY. They are NOT validated economic signals and must never authorize
+    trade/size/exposure. Do NOT change any thresholds, windows or weights. Calibration against labelled evidence
+    is mandatory before claiming validated Attention quality/profitability.
+  status: CLOSED
+  result: CURRENT_BUILD_CLOSED_UNCALIBRATED_HEURISTIC_INVESTIGATE_ONLY
+  scope: ARCHITECTURE_OFFLINE_INVESTIGATION_ONLY
+  evidence: docs/tracker/evidence/att03-scope-decision-sol2/REPORT.md
+  original_closure_condition: Warm-up evidence states required history/availability and becomes eligible only through
+    valid acquisition; ranking uses approved calibrated components.
+  original_condition_text_preserved: true
+  current_build_acceptance: Warm-up/null/availability and deterministic investigation prioritization are proven.
+    Owner accepts existing components as uncalibrated investigation heuristics for this build; calibration clause
+    remains a mandatory future proof obligation.
+  proof_state:
+    current_build_phase:
+      scope: ARCHITECTURE_OFFLINE_INVESTIGATION_ONLY
+      status: PROVEN
+      classification: UNCALIBRATED_HEURISTIC
+      authority: INVESTIGATE_ONLY
+      evidence:
+      - docs/tracker/evidence/att03-warmup-sol2/REPORT.md
+      - docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+      implementation_commit: 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c
+      obligation: Explicit required/eligible history and valid acquisition; WARM_UP and unavailable/None preserved;
+        deterministic replay/ranking; no forced selection or clock/date-only eligibility.
+    future_calibration:
+      status: DEFERRED
+      proof_status: UNPROVEN
+      blocks_current_build: false
+      required_before: Any claim of validated Attention quality or profitability
+      mandatory: true
+      evidence: docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+      original_calibration_obligation: ranking uses approved calibrated components
+      required_evidence: Owner-approved event labels, false/missed-trigger acceptance limits, component profile/universe
+        and untouched confirmation plan; labelled retained point-in-time data with acquisition/revision/membership
+        ancestry.
+      owner_acceptance_is_calibration: false
+      heuristics_authorize_trade_size_exposure: false
+  dependencies:
+    ATT-01: CLOSED
+    DATA-04: CLOSED
+  permitted_use:
+  - Investigation prioritization only
+  forbidden_authority:
+  - trade
+  - size
+  - exposure
+  calibrated_operational_values: []
+  thresholds_windows_weights_changed: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  successor_selected: false
+  downstream_impact:
+    direct_consumer: ATT-04
+    direct_consumer_status: CLOSED
+    att03_current_build_dependency_satisfied: true
+    newly_unblocked_items: []
+    ATT-02: Unchanged EVIDENCE_TO_MAP; DATA-07 remains unresolved; no ATT-03 dependency.
+    research: RES-01 already dependency-eligible via ATT-01; calibration decision is not research/referee admission.
+    strategy: STR-01 still needs RES-08/QNT-08 mapping; STR-02 remains BLOCKED.
+    decision: DEC-01 remains BLOCKED by STR-01/STR-02 and analyst Context proof; no Attention economic authority
+      granted.
+  historical_records: att03_warmup_terminal and att03_calibration_terminal are immutable prior checkpoints, superseded
+    only for current-build scope by this owner decision. Their calibration findings remain true.
+
+res01_canonical_reconciliation:
+  item: RES-01
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE_ENGINEERING
+  engineering_closure_commit: df4a65269a09e8e273560f13e806389d0dbb9036
+  reconciliation_base_revision: f353b9fa6e880404a076efd2528b000276327a5b
+  evidence: docs/tracker/evidence/res01-reconciliation-sol2/reconciliation.json
+  closure_condition: An anomaly/loss/decay/contradiction/owner question produces a typed question with lineage through
+    the normal producer.
+  closure_condition_satisfied: true
+  dependency_status:
+    ATT-01: CLOSED
+  closing_condition_proof:
+  - Supported volume_anomaly passes through the unmocked bounded investigation.main producer into a typed question
+    with exact case/episode/scan/WorldModel/source hashes and frozen protocol; no manual registration or URL priming.
+  - Fresh-interpreter restart preserves canonical question and records and attempts zero duplicate work.
+  - Quiet, missing-source, missing-health, absent-context and disabled cases create no fabricated question and preserve
+    refusal/degraded reasons; missing outcome remains INCONCLUSIVE/NOT_ASSESSED.
+  retained_validation: 'df4a652 report: 71 scoped offline tests passed; broader 82 passed / 2 pre-existing failures
+    retained explicitly (capacity recovery and source-bound reason spelling), outside this supported fresh-event
+    closing proof.'
+  fresh_validation: 6 RES-01 normal-producer acceptance tests passed in 8.51s; exact source/test/report bytes match
+    df4a652.
+  original_condition_and_edges_preserved: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+  control_plane_reconciliation_pending: false
+  successor_selected: false
+  downstream:
+    RES-02: ELIGIBLE; sole dependency RES-01 now CLOSED; routing proof independent; unselected
+  source_sha256:
+    docs/superpowers/reports/2026-10-06-res01-sol1.md: 351cf52a40c919ba1d50b901145c73f568fa6c984f52d7aea30eb99452dc11e2
+    docs/superpowers/reports/2026-10-06-res01-sol1-question-proof.json: bd0dd7dd3d4a0271c34c123f9770a39c4d62799fc10c48b4648ec83e55c3caa1
+    tests/test_res01_question_producer.py: 2ba36c90c51a94db030f198bf0d6ab0236079e829c8ea9ee784c16c470382b07
+    tests/test_investigation_research_family.py: aa9ba8f600fac1d99733a06bb6a03c811a23efcaf21d84876385b303f53dbf6f
+    trader/observability/investigation.py: 7cecb2a9059add86394004f4a0fe81765f1e078cb8cadc4497aaf59c04f90cde
+    trader/observability/investigation_research.py: e4242aeb8563b101498c174457afd149c3e72475c47a99e0e9eafe0748b707a5
+  status_counts_after:
+    CLOSED: 40
+    EVIDENCE_TO_MAP: 97
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 7
+    OPEN: 4
+
+qnt01_canonical_reconciliation:
+  item: QNT-01
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE_ENGINEERING
+  engineering_closure_commit: 9065cf694992a4baad1eff95107518976ac6c26b
+  reconciliation_base_revision: f86699625e67bcd1dc8c32c9248aad63e8df4e92
+  evidence: docs/tracker/evidence/qnt01-reconciliation-sol2/reconciliation.json
+  closure_condition: Pinned input/code/config reproduce returns, costs, expectancy/drawdown and evaluator/backtest
+    behaviour; labels and cost assumptions are explicit.
+  closure_condition_satisfied: true
+  dependency_status:
+    DATA-03: CLOSED
+    DATA-05: CLOSED
+  closing_condition_proof:
+  - quant-contract.v1 defines entry/exit labels, return, fees, slippage, funding, expectancy and closed-trade drawdown;
+    run_gauntlet emits the definitions, ESTIMATED_MODEL cost basis and input/spec/config/engine digests.
+  - Pinned identical data/code/config reproduce identical train/test results and identity; data, config or spec
+    changes change identity. Fees/slippage reduce net P&L; zero-trade expectancy is None; explicit closed-equity
+    drawdown matches simulation.
+  - Signal prefix tests reject future-bar effects; exited trade labels/P&L reproduce after truncation at exit. walk_table/simulate
+    match exact trades and R; legacy evaluator engine-equivalence test is nonvacuous and passes.
+  - Existing evidence admission retains required data/coverage, minimum OOS trade count, worst-symbol PF and configured
+    robustness checks; missing derivative inputs stay UNTESTED. No PF-only gate or estimated-to-actual relabelling
+    introduced. Existing DATA-03/DATA-05 source-cut semantics remain unchanged.
+  retained_validation: 9065cf6 engineering commit and its exact source/test bytes reused; additive contract metadata
+    only, with no changed fill, cost or admission verdict. No standalone prior runtime result is inferred.
+  fresh_validation: '37 tests passed in 66.75s: tests/test_qnt01_quant_contract.py, tests/test_vector_backtest.py
+    and tests/test_spec_evidence.py; source/test bytes match 9065cf6.'
+  original_condition_and_edges_preserved: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+  control_plane_reconciliation_pending: false
+  successor_selected: false
+  downstream:
+    QNT-02: ELIGIBLE; sole dependency QNT-01 now CLOSED; null/control closure independent; active-agent artifacts
+      not adopted
+  source_sha256:
+    trader/strategy/quant_contract.py: d49abcd976a58e20b7420264a8307124f97ca54bf72fd44d6d247965fb733ea5
+    trader/strategy/spec_evidence.py: fbf40990dd4248706e33acfb9cf4f2f3196a39f7a26273a9aa5ec568b757ff03
+    tests/test_qnt01_quant_contract.py: c3f1689dc08d7d35aa368e99e92ab6efef4d76317dbf790ef35b12c14268dc2b
+    trader/strategy/vector_backtest.py: 4e1bcb25b024f96d78b5f0d38bada958bd632e3f3f4aad29780f2594d11aea67
+    tests/test_vector_backtest.py: e946de765cb94bd7933d78b7253c2a8890728a6dc8fae0360b67b17cca95a60a
+    tests/test_spec_evidence.py: f4466c9f3995b01da14d4e0e54a895feddfa0b674abe4b35258849c7cc573813
+  status_counts_after:
+    CLOSED: 41
+    EVIDENCE_TO_MAP: 96
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 7
+    OPEN: 4
+
+wrld06_canonical_reconciliation:
+  item: WRLD-06
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE_ENGINEERING
+  engineering_closure_commit: f353b9fa6e880404a076efd2528b000276327a5b
+  reconciliation_base_revision: 1b9b020ea6ff6a88b549f82cd69f36c2d6efa97b
+  evidence: docs/tracker/evidence/wrld06-reconciliation-sol2/reconciliation.json
+  closure_condition: Exact-cut, future, multiple-revision and restart queries select the correct applied revision;
+    immutable base claims remain unchanged.
+  closure_condition_satisfied: true
+  dependency_status:
+    WRLD-04: ENGINEERING_CLOSED at 91ae9f4 per authorized session; canonical row reconciliation still pending and
+      unchanged
+    DATA-05: CLOSED
+  closing_condition_proof:
+  - The retained real WorldModel application test applies revisions at T-1, T and T+1; exact WorldModel cuts select
+    .7, .8/revision 2 and .9. A later application remains visible to latest but cannot affect WorldModel/Attention
+    at T.
+  - Journal reopen preserves historical revision selection; frozen governed-state replay reproduces original Attention
+    rows after newer learning. Injected future applied state into earlier replay raises ValueError.
+  - WRLD-04 tests retain model JSON, embedded observations, base values/qualities and both evidence polarities across
+    two real applications, revision history, archival reconstruction and restart; UNKNOWN/null is not rewritten
+    by confidence.
+  - Fresh adjacent Attention and Portfolio tests qualify learned state at the original cut, preserve selection after
+    reopen and frozen replay, and refuse future/tampered projections. Existing DATA-05 inclusive availability-cut
+    semantics and learning applied_at qualification are reused; no new clock model.
+  retained_validation: 'f353b9f pinned proof: 43 passed in 12.38s (2 WorldModel temporal, 8 WRLD-04 immutable/history,
+    33 DATA-05 cases). Exact retained source and test bytes match f353b9f; no unnecessary repeat of that passing
+    run.'
+  fresh_validation: 2 adjacent historical Attention/Portfolio future-revision/restart/replay cases passed in 5.10s
+    from tests/test_final_audit_attention_allocation_time.py.
+  original_condition_and_edges_preserved: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+  control_plane_reconciliation_pending: false
+  successor_selected: false
+  downstream:
+    OUT-03: CLOSER, NOT ELIGIBLE; DATA-03 CLOSED and WRLD-06 now CLOSED; remaining direct blocker OUT-01 BLOCKED,
+      with DEC-04 and full normal execution delivery proof unresolved
+    WRLD-04: No status change; engineering-closed prerequisite pinned to 91ae9f4 as explicitly supplied; canonical
+      mapping separate
+  source_sha256:
+    docs/superpowers/reports/2026-10-06-wrld06-historical-learning-sol2.md: 0fca7de4d7baacc296b5f5706fd1a201a8939151281aa97db2f78d9001bb43d5
+    docs/superpowers/reports/2026-10-06-wrld04-claim-history-sol2.md: 457b4405a971b0309503cfb0848d54e0917c556722a3910b6451b5e099d3ff1d
+    trader/world/model.py: 8163c0ec6467c44eab25590b0a1aaf3d9d95ed00a4e8ddd96faa041033408574
+    trader/world/replay.py: 57ec8b2649564cfd41d4d5c9896f7a26c7705bf4d0e3c2661b032c85227a4588
+    trader/learning/targets.py: c0c59f471b3601a4cdf3c101880eebb022ab0a5ea1b3db38832c8904b9d313f1
+    trader/learning/consumers.py: 2b4e1bb2a373120eba0d24773a997d5417845a397e58d5033f2e3b61ef3b254b
+    trader/observability/world_producer.py: 63a2febf04b3a732146618ea2667f5931f95da61975d74c8fa092d7cdcd97aae
+    trader/observability/attention.py: 212aa27db4dce3d4257fce28474df24133c34c6e6f39576616d1129a1c5395e3
+    trader/cognition/attention.py: 4b7245c48e0765fdb46f561120a36fd2d5c4fab85abdcfed457fc3acaa1f7edd
+    tests/test_final_audit_learning_time.py: d2626bf24c233125bdf26dc7fbbb9adc2b9fc8ac9d8eb9a4f6d27e24872fd361
+    tests/test_wrld04_claim_history.py: 01f9f9368fab998c6b81cc9502d4c092b5e930ef3a078134c14b5c624f69044c
+    tests/test_data05_revision_truth.py: 4ae7452393436b1fab1abbc4572816b9dfd4f55868dadad025b64c1e90714776
+    tests/test_final_audit_attention_allocation_time.py: ace9634591afdb5d75e2f42b238836656fdcbdafe5a6b07d63a1cad7d502145e
+  status_counts_after:
+    CLOSED: 42
+    EVIDENCE_TO_MAP: 95
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 7
+    OPEN: 4

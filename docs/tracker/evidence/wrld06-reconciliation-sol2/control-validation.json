@@ -47,5 +47,7 @@
     "OUT-01"
   ],
   "out03_status": "BLOCKED",
-  "state_next_other_content_preserved_except_out03_dependency_summary": true
+  "state_next_other_content_preserved_except_out03_dependency_summary": true,
+  "all_unrelated_top_level_records_restored_and_preserved": true,
+  "full_semantic_diff_checked_against_preceding_reconciliation": true
 }
