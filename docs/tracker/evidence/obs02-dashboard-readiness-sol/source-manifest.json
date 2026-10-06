@@ -1,0 +1,25 @@
+{
+  "baseline_main": "28e00add0ea445a1f133f365427fd01dd7e374c1",
+  "run01_source_commit": "0ecaad895153015adfec13dc34b1ce797c453fb6",
+  "run01_module_reused_verbatim": true,
+  "run01_branch_merged": false,
+  "run01_module_sha256": "7eb62da6392645b06380c96a79fe9b42cccf5c93ca53795056bcfd13dda13ffb",
+  "external_harness": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0",
+  "external_before_sha256": "5b23a673d0e39088c6729787b5ad45c7fdbca58bf8a3679cbee4615e89a0bdb1",
+  "external_after_sha256": "2a0eaafb8f8cb38a6f3c09ab6d558946a14843ddac3a7407e08a2c52b6b66b12",
+  "obs04_methods_unchanged": [
+    "alive",
+    "shutdown_state",
+    "signal_services",
+    "timers_stop",
+    "execute"
+  ],
+  "retained_files": {
+    "metadata.py": "f7ab5f7fc89dfd40d99d92638635bbc32edf1bb2284b224f8aedd7f8e1e2d658",
+    "collect_prepared.py": "70e83f283732c40ff181f4003ba3cf9ef5a3d46dcf1d4b193d44e5e649c13c90",
+    "before-launch_once.py": "5b23a673d0e39088c6729787b5ad45c7fdbca58bf8a3679cbee4615e89a0bdb1",
+    "launch_once.py": "2a0eaafb8f8cb38a6f3c09ab6d558946a14843ddac3a7407e08a2c52b6b66b12"
+  },
+  "original_and_executed_harness_preserved": true,
+  "kernel_dashboard_live_launches": 0
+}

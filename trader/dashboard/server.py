@@ -1089,6 +1089,12 @@ def build_company(journal, cfg: dict) -> dict:
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
     cfg = load_config()
+    # Also guard direct module entry before app/Journal/IPC attachment or listen.
+    from ..observability.dashboard_readiness import check
+    readiness = check(ROOT, cfg)
+    if readiness['allow'] is not True:
+        print(json.dumps(readiness, sort_keys=True))
+        raise SystemExit(1)
     app = create_app(cfg)
     import uvicorn
     host = cfg["dashboard"]["host"]

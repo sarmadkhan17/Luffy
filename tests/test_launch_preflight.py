@@ -261,6 +261,9 @@ def shell_fixture(tmp_path, facts):
     events = tmp_path / 'events'
     shim = '#!' + sys.executable + '\n' + '''import json,os,sys
 sys.path.insert(0, os.environ['TEST_REPO'])
+if sys.argv[2] == 'trader.observability.dashboard_readiness':
+    print(json.dumps(dict(allow=True, result='PASS')))
+    raise SystemExit(0)  # OBS-01 isolates its preflight boundary; OBS-02 tests readiness.
 from trader.observability import preflight as p
 p.collect_facts=lambda *a, **k: json.load(open(os.environ['TEST_FACTS']))
 raise SystemExit(p.main(sys.argv[3:]))

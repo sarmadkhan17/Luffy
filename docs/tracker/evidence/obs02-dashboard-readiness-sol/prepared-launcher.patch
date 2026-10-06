@@ -1,0 +1,11 @@
+--- a/launch_once.py
++++ b/launch_once.py
+@@ -49,0 +50,8 @@
++        if role == 'dashboard':
++            from trader.core.config import load_config
++            from trader.observability.dashboard_readiness import check
++            readiness = check(P, load_config(str(P/'config.yaml')),
++                              expected_identity=self.pids.get('kernel') or {})
++            append(self.directory/'controller-events.jsonl',dict(event='dashboard_readiness',**readiness))
++            if readiness['allow'] is not True:
++                raise RuntimeError('dashboard_current_kernel_not_ready')

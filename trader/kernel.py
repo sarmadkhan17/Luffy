@@ -347,6 +347,7 @@ class Kernel:
         return out
 
     def boot(self) -> None:
+        self._boot_complete = False
         log.info(f"LUFFY BOOT | market={self.market_type.value} "
                  f"state={self.state_machine.state.value} "
                  f"population={len(self.population)}")
@@ -391,6 +392,7 @@ class Kernel:
         if (self.cfg.get("research", {}) or {}).get("enabled", False):
             threading.Thread(target=self._research_loop, daemon=True,
                              name="research").start()
+        self._boot_complete = True
 
     def _filter_universe_to_venue(self) -> None:
         """Universe comes from production data; drop symbols the trading
@@ -1341,8 +1343,11 @@ class Kernel:
                 at_ms=now_ms,max_work=8)
         except (ValueError, KeyError, AttributeError, __import__('sqlite3').OperationalError) as exc:
             log.info('learning checkpoint refused: %s', exc)
-        self.heartbeat.beat({"equity": round(balance, 2), "state": state.value,
-                             "last_successful_cycle_at": time.time(), **stats})
+        self.heartbeat.beat({"equity": round(balance, 2),
+                             "last_successful_cycle_at": time.time(), **stats,
+                             "state": self.state_machine.state.value,
+                             "boot_complete": getattr(self, '_boot_complete', False),
+                             "stopping": getattr(self, '_stop', True)})
         return {**stats, "equity": status["equity"],
                 "dd_pct": status["drawdown_pct"]}
 
@@ -3161,6 +3166,9 @@ def main() -> None:
     ap.add_argument("--config", default=None)
     ap.add_argument("--status", action="store_true")
     ap.add_argument("--panic", action="store_true")
+    ap.add_argument("--expect-revision", default=None,
+                    help="refuse to start unless the checkout is exactly this "
+                         "git revision with clean runtime code")
     args = ap.parse_args()
     cfg = load_config(args.config)
     setup_logging(cfg)
@@ -3171,7 +3179,26 @@ def main() -> None:
         r = call("panic", cfg)
         print(json.dumps(r.to_wire(), indent=2, default=str))
         sys.exit(0 if r.status in ("ACCEPTED", "ALREADY_SET") else 1)
+    instance = None
+    if not args.status:
+        # One kernel per account: take the lock BEFORE any state is touched, so
+        # a duplicate or wrong-revision launch exits without side effects.
+        from .runtime_identity import (AlreadyRunning, KernelInstance, WrongRevision,
+                                       EXIT_ALREADY_RUNNING, EXIT_WRONG_REVISION)
+        instance = KernelInstance()
+        try:
+            rec = instance.acquire(args.expect_revision)
+        except AlreadyRunning as e:
+            log.critical(f"kernel start refused: {e.reason} {e.detail}")
+            sys.exit(EXIT_ALREADY_RUNNING)
+        except WrongRevision as e:
+            log.critical(f"kernel start refused: {e}")
+            sys.exit(EXIT_WRONG_REVISION)
+        log.info(f"kernel instance {rec['instance_id']} pid={rec['pid']} "
+                 f"revision={rec['revision']} dirty_code={rec['dirty_code']}")
     k = Kernel(cfg)
+    if instance is not None:
+        instance.bind_heartbeat(k.heartbeat.instance_id)
     if args.status:
         print(json.dumps({
             "control_state": k.state_machine.state.value,
@@ -3181,7 +3208,10 @@ def main() -> None:
             "strategies": len(k.population),
         }, indent=2))
         return
-    k.run()
+    try:
+        k.run()
+    finally:
+        instance.release()
 
 
 if __name__ == "__main__":

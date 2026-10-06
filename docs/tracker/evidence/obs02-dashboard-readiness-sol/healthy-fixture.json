@@ -1,0 +1,75 @@
+{
+  "schema": "luffy-dashboard-readiness.v1",
+  "allow": true,
+  "result": "PASS",
+  "reasons": [],
+  "facts": {
+    "identity": {
+      "state": "RUNNING",
+      "record": {
+        "dirty_code": false,
+        "heartbeat_instance_id": "1d234666971c4c499988b53209e6a504",
+        "instance_id": "398d0b989a594affb65a2ae474f63cdd",
+        "pid": 1372545,
+        "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "schema": "luffy-kernel-instance.v1",
+        "start_ticks": 13654236,
+        "started_at": 1791251357.9186058
+      },
+      "verified": true,
+      "heartbeat_belongs_to_instance": true,
+      "legacy_pids": []
+    },
+    "heartbeat": {
+      "context": {
+        "boot_complete": true,
+        "last_successful_cycle_at": 1791251358.9186058,
+        "state": "FROZEN",
+        "stopping": false
+      },
+      "instance_id": "1d234666971c4c499988b53209e6a504",
+      "producer": "luffy",
+      "schema": "luffy-heartbeat.v1",
+      "sequence": 1,
+      "started_at": 1791251358.9186058,
+      "timestamp": 1791251358.9186058
+    },
+    "health": {
+      "conditions": {
+        "fixture_recovery": {
+          "condition": "fixture_recovery",
+          "context": {},
+          "detected_at": 1791251358.9186058,
+          "incident_id": "5d6e05285c514f79b152c244274cc3c6",
+          "reason": "FIXTURE_CONTAINMENT",
+          "resolved_at": 1791251358.9186058,
+          "status": "RESOLVED"
+        }
+      },
+      "heartbeats": {
+        "luffy": {
+          "context": {
+            "boot_complete": true,
+            "last_successful_cycle_at": 1791251358.9186058,
+            "state": "FROZEN",
+            "stopping": false
+          },
+          "instance_id": "1d234666971c4c499988b53209e6a504",
+          "producer": "luffy",
+          "schema": "luffy-heartbeat.v1",
+          "sequence": 1,
+          "started_at": 1791251358.9186058,
+          "timestamp": 1791251358.9186058
+        }
+      },
+      "observed_at": 1791251358.9186058,
+      "recovery_required": true,
+      "revision": 3,
+      "schema": "luffy-safety-health.v1"
+    },
+    "controls": {
+      "control_state": "FROZEN",
+      "macro_guard_operator_hold": "1"
+    }
+  }
+}

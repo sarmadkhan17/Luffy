@@ -17,7 +17,11 @@ SCHEMA = 'luffy-heartbeat.v1'
 
 
 def read_heartbeat(path, producer, now):
-    value = json.loads(Path(path).read_text())
+    return validate_heartbeat(json.loads(Path(path).read_text()), producer, now)
+
+
+def validate_heartbeat(value, producer, now):
+    """Shared contract for producer files and independent observer receipts."""
     if (not isinstance(value, dict) or not isinstance(producer, str) or not producer.strip()
             or value.get('schema') != SCHEMA or value.get('producer') != producer
             or not isinstance(value.get('instance_id'), str) or not value['instance_id'].strip()

@@ -15,6 +15,14 @@ if ! (cd "$DIR" && ./venv/bin/python -m trader.observability.preflight --root "$
   exit 1
 fi
 
+# OBS-02: a Dashboard attaches only to a verified current boot/health instance.
+if [ "$TARGET" = dashboard ]; then
+  if ! (cd "$DIR" && ./venv/bin/python -m trader.observability.dashboard_readiness --root "$DIR"); then
+    echo '{"schema":"luffy-dashboard-readiness.v1","allow":false,"result":"FAIL","reasons":["readiness_command_failed"]}'
+    exit 1
+  fi
+fi
+
 SELF=$$
 for PID in $(pgrep -f "$MOD"); do
   [ "$PID" = "$SELF" ] && continue

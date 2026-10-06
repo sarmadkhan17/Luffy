@@ -1,0 +1,30 @@
+{"case": "prior_instance", "allow": false, "reasons": ["heartbeat_instance_unbound", "heartbeat_prior_instance", "health_prior_instance", "heartbeat_sequence_restamped", "kernel_changed_during_check"], "dashboard_app_created": false}
+{"case": "stale", "allow": false, "reasons": ["heartbeat_stale", "health_observation_stale", "independent_heartbeat_observation_stale"], "dashboard_app_created": false}
+{"case": "stale_work", "allow": false, "reasons": ["heartbeat_stale", "health_observation_stale", "independent_heartbeat_observation_stale", "heartbeat_sequence_restamped"], "dashboard_app_created": false}
+{"case": "start_tick_mismatch", "allow": false, "reasons": ["kernel_identity_unverified", "kernel_changed_during_check"], "dashboard_app_created": false}
+{"case": "pid_only", "allow": false, "reasons": ["heartbeat_instance_unbound", "heartbeat_prior_instance", "kernel_changed_during_check"], "dashboard_app_created": false}
+{"case": "unlocked_pid_only", "allow": false, "reasons": ["kernel_identity_missing", "required_readiness_unreadable:ValueError"], "dashboard_app_created": false}
+{"case": "wrong_revision", "allow": false, "reasons": ["kernel_revision_not_intended"], "dashboard_app_created": false}
+{"case": "dirty_identity", "allow": false, "reasons": ["kernel_revision_not_intended"], "dashboard_app_created": false}
+{"case": "boot_incomplete", "allow": false, "reasons": ["kernel_boot_incomplete", "heartbeat_sequence_restamped"], "dashboard_app_created": false}
+{"case": "boot_unknown", "allow": false, "reasons": ["kernel_boot_incomplete", "heartbeat_sequence_restamped"], "dashboard_app_created": false}
+{"case": "stopping", "allow": false, "reasons": ["kernel_stopping_or_unknown", "heartbeat_sequence_restamped"], "dashboard_app_created": false}
+{"case": "blocking_health", "allow": false, "reasons": ["blocking_health:journal_write"], "dashboard_app_created": false}
+{"case": "unknown_health", "allow": false, "reasons": ["required_readiness_unreadable:ValueError"], "dashboard_app_created": false}
+{"case": "health_unreadable", "allow": false, "reasons": ["required_readiness_unreadable:JSONDecodeError"], "dashboard_app_created": false}
+{"case": "health_missing", "allow": false, "reasons": ["required_readiness_unreadable:FileNotFoundError"], "dashboard_app_created": false}
+{"case": "health_prior_instance", "allow": false, "reasons": ["health_prior_instance", "heartbeat_sequence_restamped"], "dashboard_app_created": false}
+{"case": "health_missing_receipt", "allow": false, "reasons": ["required_readiness_unreadable:KeyError"], "dashboard_app_created": false}
+{"case": "health_time_unknown", "allow": false, "reasons": ["health_observation_time_unknown", "health_receipt_predates_heartbeat"], "dashboard_app_created": false}
+{"case": "health_time_future", "allow": false, "reasons": ["health_observation_time_unknown"], "dashboard_app_created": false}
+{"case": "health_boot_unconfirmed", "allow": false, "reasons": ["health_boot_control_unconfirmed", "heartbeat_sequence_restamped"], "dashboard_app_created": false}
+{"case": "invalid_sequence", "allow": false, "reasons": ["required_readiness_unreadable:ValueError"], "dashboard_app_created": false}
+{"case": "boolean_sequence", "allow": false, "reasons": ["required_readiness_unreadable:ValueError"], "dashboard_app_created": false}
+{"case": "sequence_regression", "allow": false, "reasons": ["heartbeat_chronology_regression"], "dashboard_app_created": false}
+{"case": "restamped_sequence", "allow": false, "reasons": ["heartbeat_sequence_restamped"], "dashboard_app_created": false}
+{"case": "future_heartbeat", "allow": false, "reasons": ["required_readiness_unreadable:ValueError"], "dashboard_app_created": false}
+{"case": "invalid_work_time", "allow": false, "reasons": ["required_readiness_unreadable:ValueError"], "dashboard_app_created": false}
+{"case": "heartbeat_before_identity", "allow": false, "reasons": ["heartbeat_predates_kernel"], "dashboard_app_created": false}
+{"case": "heartbeat_control_active", "allow": false, "reasons": ["heartbeat_control_not_frozen", "heartbeat_sequence_restamped"], "dashboard_app_created": false}
+{"case": "current_control_active", "allow": false, "reasons": ["current_control_not_frozen_held"], "dashboard_app_created": false}
+{"case": "hold_missing", "allow": false, "reasons": ["current_control_not_frozen_held"], "dashboard_app_created": false}

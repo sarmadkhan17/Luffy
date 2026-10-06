@@ -749,12 +749,12 @@ def test_mutant_removing_cycle_context_chronology_detected(monitor, monkeypatch,
     now, _, _, observer, hb = monitor
     hb.beat({'last_successful_cycle_at': now[0]})
     raw = json.loads(hb.path.read_text()); raw['context'] = context; hb.path.write_text(json.dumps(raw))
-    source = textwrap.dedent(inspect.getsource(W.read_heartbeat))
+    source = textwrap.dedent(inspect.getsource(W.validate_heartbeat))
     start = source.index("    cycle = value['context']")
     end = source.index('    return value', start)
-    namespace = dict(W.read_heartbeat.__globals__)
+    namespace = dict(W.validate_heartbeat.__globals__)
     exec(source[:start] + source[end:], namespace)
-    monkeypatch.setattr(W, 'read_heartbeat', namespace['read_heartbeat'])
+    monkeypatch.setattr(W, 'validate_heartbeat', namespace['validate_heartbeat'])
     # Remove the parallel successful-work age read too: otherwise missing/None
     # contexts are still refused by the independent observer's numeric operation.
     mutated_method(observer, 'heartbeat', "now - record['context']['last_successful_cycle_at']", '0')
