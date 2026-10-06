@@ -1,0 +1,56 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_generated_decay_question_enters_normal_worker_router_and_restarts[EMPTY] _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-D6mJcef8vbaP/base/test_generated_decay_question_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79561b6eef00>
+capsys = <_pytest.capture.CaptureFixture object at 0x79560c458440>
+collection = 'EMPTY'
+
+    @pytest.mark.parametrize("collection", ["COLLECTED", "EMPTY", "UNAVAILABLE"])
+    def test_generated_decay_question_enters_normal_worker_router_and_restarts(
+            tmp_path, monkeypatch, capsys, collection):
+>       source, reader, worker = produced(tmp_path)
+                                 ^^^^^^^^^^^^^^^^^^
+
+capsys     = <_pytest.capture.CaptureFixture object at 0x79560c458440>
+collection = 'EMPTY'
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79561b6eef00>
+tmp_path   = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-D6mJcef8vbaP/base/test_generated_decay_question_0')
+
+tests/test_res02_question_routing.py:108: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-D6mJcef8vbaP/base/test_generated_decay_question_0')
+verdicts = ('still_working', 'decayed')
+
+    def produced(tmp_path, verdicts=(W, D)):
+        source = Journal(tmp_path / "events.db")
+        # Only health events are supplied. The actual subprocess producer generates
+        # and registers questions; this test never calls a question registration API.
+        for row in _FullHist().seq("s1", verdicts).rows:
+            source.log_brain_event(row["kind"], row["subject"], row["detail"])
+        assert source.research_questions() == []
+        shadow_path = tmp_path / "shadow.db"
+        result = research_shadow.invoke(source_db=source.db_path, shadow_db=shadow_path,
+            max_sources=8, wall_clock_deadline_s=30, invocation_key="generated-e2e",
+            recorded_at_ms=int(time.time()*1000), _python=sys.executable)
+        assert result["status"] == "recorded", result
+>       assert result["receipt"]["outcome"] == "OK", result
+E       AssertionError: {'status': 'recorded', 'invocation_id': '0384613dd652676927f1b1dc77cec7920d6537b03f9a08f25a11ce93fa1df8a0', 'receipt':..., 'cursor_after': 0, ...}, 'canonical_sha256': 'd90e71613ec9cf5cb28e3ab7255a2b4410f4611d9b9cc7ad58faeafe5aac6b63', ...}
+E       assert 'FAILED' == 'OK'
+E         
+E         - OK
+E         + FAILED
+
+result     = {'status': 'recorded', 'invocation_id': '0384613dd652676927f1b1dc77cec7920d6537b03f9a08f25a11ce93fa1df8a0', 'receipt':..., 'cursor_after': 0, ...}, 'canonical_sha256': 'd90e71613ec9cf5cb28e3ab7255a2b4410f4611d9b9cc7ad58faeafe5aac6b63', ...}
+row        = {'id': 4, 'ts': '2026-09-25T00:04:00+00:00', 'kind': 'strategy_health_sweep', 'subject': 'sw020', ...}
+shadow_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-D6mJcef8vbaP/base/test_generated_decay_question_0/shadow.db')
+source     = <trader.core.journal.Journal object at 0x79560c4583e0>
+tmp_path   = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-D6mJcef8vbaP/base/test_generated_decay_question_0')
+verdicts   = ('still_working', 'decayed')
+
+tests/test_generated_question_handoff_negative_memory.py:30: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_res02_question_routing.py::test_generated_decay_question_enters_normal_worker_router_and_restarts[EMPTY]
+1 failed in 7.26s

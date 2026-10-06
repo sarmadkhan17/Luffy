@@ -1,0 +1,29 @@
+Re-extracting code files in . (no LLM needed)...
+[graphify watch] 142 file(s) not classified (no supported extension or shebang), skipped: .gitignore, .graphify_labels.json.sig, .graphify_root, .graphify_semantic_marker, .graphify_version, .graphifyignore (+136 more)
+  AST extraction: 100/1702 uncached files (5%) [4 workers]
+  AST extraction: 200/1702 uncached files (11%) [4 workers]
+  AST extraction: 300/1702 uncached files (17%) [4 workers]
+  AST extraction: 400/1702 uncached files (23%) [4 workers]
+  AST extraction: 500/1702 uncached files (29%) [4 workers]
+  AST extraction: 600/1702 uncached files (35%) [4 workers]
+  AST extraction: 700/1702 uncached files (41%) [4 workers]
+  AST extraction: 800/1702 uncached files (47%) [4 workers]
+  AST extraction: 900/1702 uncached files (52%) [4 workers]
+  AST extraction: 1000/1702 uncached files (58%) [4 workers]
+  AST extraction: 1100/1702 uncached files (64%) [4 workers]
+  AST extraction: 1200/1702 uncached files (70%) [4 workers]
+  AST extraction: 1300/1702 uncached files (76%) [4 workers]
+  AST extraction: 1400/1702 uncached files (82%) [4 workers]
+  AST extraction: 1500/1702 uncached files (88%) [4 workers]
+  AST extraction: 1600/1702 uncached files (94%) [4 workers]
+  AST extraction: 1700/1702 uncached files (99%) [4 workers]
+  AST extraction: 1702/1702 uncached files (100%) [4 workers]
+[graphify watch] community set changed since labeling (1277 saved labels, 1230 communities now; renamed 399 community(ies) by their hub). Run `graphify label` to refresh names with the LLM.
+[graphify] backed up curated graph (5 files) -> 2026-10-06/
+Graph has 25276 nodes (above 5000 limit). Building aggregated community view...
+graph.html written (aggregated: 1230 community nodes, 4851 cross-community edges)
+Tip: run with --obsidian for full node-level detail.
+[graphify watch] Rebuilt: 25276 nodes, 63931 edges, 1230 communities
+[graphify watch] graph.json, graph.html and GRAPH_REPORT.md updated in graphify-out
+Code graph updated. For doc/paper/image changes run /graphify --update in your AI assistant.
+Tip: set GEMINI_API_KEY or GOOGLE_API_KEY to use Gemini for semantic extraction.

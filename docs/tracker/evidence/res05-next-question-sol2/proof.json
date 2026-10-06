@@ -1,0 +1,81 @@
+{
+  "item": "RES-05",
+  "engineering_status": "CLOSED",
+  "scope": "ARCHITECTURE_OFFLINE",
+  "implementation_commit": "f8cb1a2",
+  "canonical_status": "BLOCKED",
+  "canonical_reconciliation_pending": true,
+  "dependency_status": {
+    "WRLD-05": "CLOSED",
+    "RES-04": "CLOSED",
+    "RES-05": "BLOCKED"
+  },
+  "actual_gap": "Completed investigation Bank did not retain the result-to-next-question relationship.",
+  "change": "Existing QUESTION_SCHEMA and identity/store contracts reused for bounded QUESTION_ONLY follow-ups; exact question/result lineage; v2 Bank links; atomic insert/conflict rollback; strict replay; immutable v1 compatibility.",
+  "tests": {
+    "mandatory_runner": "/home/sarmad/.local/bin/luffy-pytest",
+    "focused": {
+      "passed": 52,
+      "failed": 3,
+      "failure_reason": "environment_not_sanitized:TEMP,TMP,TMPDIR in untouched strategy-decay shadow before research",
+      "seconds": 111.09
+    },
+    "research_consumers": {
+      "passed": 21,
+      "failed": 0,
+      "seconds": 382.21
+    },
+    "prior_linkage_suite": {
+      "passed": 14,
+      "failed": 0
+    },
+    "baseline_linkage_failures": 5,
+    "earlier_broad_run": {
+      "passed": 34,
+      "failed": 1,
+      "errors": 37,
+      "resource_failure": "database or disk is full; temporary-directory setup failures"
+    },
+    "prior_and_current_isolated_portfolio_case": "both passed"
+  },
+  "root_free_before": "8.2G",
+  "root_free_after": "8.2G",
+  "provider_calls": 0,
+  "llm_calls": 0,
+  "paid_spend": 0,
+  "tracker_state_next_manifest_modified": false,
+  "successor_selected": false,
+  "downstream": {
+    "RES-06": "Engineering dependency satisfied; canonical reconciliation pending; unchanged/unselected",
+    "RES-07": "Engineering dependencies satisfied (RES-05 + WRLD-05); canonical reconciliation pending; unchanged/unselected"
+  },
+  "source_sha256": {
+    "trader/observability/investigation_research.py": "b8a25a64a9f620c9d66b8aedc9834bd6dad0908fe6a49ccb1f1abf4425aaa843",
+    "trader/cognition/predictive.py": "20c52884ed2927ba6ec93be4b9ce091dc3482e9f2c403c5dcd38739d4c3b1b5e",
+    "trader/learning/capture.py": "3430f79a6c4b4ce88740b4b03ddbf6316538d42e33ed55899862f19302c55c04",
+    "tests/test_res05_next_question_link.py": "a9264b014fb6c79f10d5d14388350a7d1220077e231f1f5e4ad6f6b233e0db8a",
+    "tests/test_res05_bank_persistence.py": "1c9ebd4eaf9b5a1632e00b6fa97ccd715fab4c26a47f036c89aa358f11734839",
+    "tests/test_res01_question_producer.py": "2ba36c90c51a94db030f198bf0d6ab0236079e829c8ea9ee784c16c470382b07",
+    "tests/test_res02_question_routing.py": "2c265ac7349ffd8bcc5f0033975f06b77708e7abe6e0f661366bf8cc83a83b98",
+    "tests/test_investigation_research_family.py": "aa9ba8f600fac1d99733a06bb6a03c811a23efcaf21d84876385b303f53dbf6f",
+    "tests/test_predictive_research_bridge.py": "9835fb00f2d94295d057dfae745e92be7ec26d4c080a8299a52a624f7457d7a1"
+  },
+  "evidence_sha256": {
+    "REPORT.md": "1c1a21aa64e06851041c16f69aa860a9f6a35ac8400dddff08fd9d4435cae42e",
+    "baseline-failures.txt": "90bd8a46757b2d814d71c283ec972dbba7bb953d683d843543add424f3f111c0",
+    "graph-update-final.txt": "a2703eca89f6974416828b1f31791cd942fdc1c8ca05b24e48e6372d24934824",
+    "graph-update.txt": "38aa92ba2dd71cff5f6daabad1b95af735a319cc388a514a7569cfaa6c7a1031",
+    "root-free-after.txt": "e0fd509609c33368b7fbe43a4b631e0fcb0b5fe463602ce775a6ce9478d02d72",
+    "routing-diagnosis.txt": "87849c71de200e211bdfcf26cf093f894673882283d6c4e93b143c4f7f860659",
+    "tests-consumers.txt": "371ee59e6d8d23b377a960281b388f97c09aba174db6ed94f72b191f4bac4025",
+    "tests-focused-final.txt": "1be9efe09cef55c965845f9fd7eac9f70719ba57036ae2b5053b638830f08ed2",
+    "tests-focused.txt": "57b1b2410af82204861881375ffa5372273b9296f397a9650b275cd3bcec163a",
+    "tests-legacy-consumer.txt": "e0b40d2e9aed79bfee129d3135e750c0f4573040ad413eb4068055b1c6e56c2d",
+    "tests-link-final.txt": "9525e3f000b659c3bdb8ceb3ce0bd198afcf5cf58aeabb30391e7687aaf74de8",
+    "tests-research-consumers-final.txt": "03a77fc8fe616a35134e8c35e252aace6bea37480f6891a20d745ace74e35464",
+    "tests-wrapper-consumers.txt": "868919cae8ec52023ba6f8a1728632047186ecfc3eb151f8fef19a6f3d9225b0",
+    "tests-wrapper-focused.txt": "57abc64ae1a0de0be11e4265c79616fd75bc76b96af20ccf1a2d41ccc36ad3da",
+    "unrelated-baseline.txt": "1fb0346703f7642d5f84b5c5ae6f9229e8b41ed1b7e5f3b56a3eabaf00b3a314",
+    "unrelated-current.txt": "b4fbe14ed1a76a3401a6704955c2d0de373be71e00d3480475fa8ef9ed5f8b2a"
+  }
+}

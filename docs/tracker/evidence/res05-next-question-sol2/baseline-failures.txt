@@ -1,0 +1,141 @@
+FFFFF                                                                    [100%]
+=================================== FAILURES ===================================
+_ test_completed_refuted_alternatives_have_typed_followups_and_idempotent_retry[same_direction] _
+
+paths = (PosixPath('/tmp/pytest-of-sarmad/pytest-72/test_completed_refuted_alterna0/attention.db'), PosixPath('/tmp/pytest-of-sarmad/pytest-72/test_completed_refuted_alterna0/investigation.db'), 1791316860000)
+path = 'same_direction'
+
+    @pytest.mark.parametrize('path', R.PATHS)
+    def test_completed_refuted_alternatives_have_typed_followups_and_idempotent_retry(paths, path):
+        _, dest, _ = paths
+        iid, end = measured(paths, path)
+        first = R.run(dest, iid, recorded_at_ms=end + 2)
+        chain = R.chain(dest, iid)
+>       assert_links(chain)
+
+tests/test_res05_next_question_link.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chain = {'question': {'context': {'attention': {'allocation_decision_id': 'af1db20d67bb2c510911cff7d1b597c35b9d951e98fbd86aba8...6b3e6', 'run_kind': 'investigation_volume_anomaly', 'runner_id': 'investigation-volume-anomaly-runner.v1', ...}, ...}]}
+
+    def assert_links(chain):
+        q = chain['question']
+        for run in chain['runs']:
+>           nexts = run['next_questions']
+                    ^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'next_questions'
+
+tests/test_res05_next_question_link.py:19: KeyError
+_ test_completed_refuted_alternatives_have_typed_followups_and_idempotent_retry[normalization] _
+
+paths = (PosixPath('/tmp/pytest-of-sarmad/pytest-72/test_completed_refuted_alterna1/attention.db'), PosixPath('/tmp/pytest-of-sarmad/pytest-72/test_completed_refuted_alterna1/investigation.db'), 1791316860000)
+path = 'normalization'
+
+    @pytest.mark.parametrize('path', R.PATHS)
+    def test_completed_refuted_alternatives_have_typed_followups_and_idempotent_retry(paths, path):
+        _, dest, _ = paths
+        iid, end = measured(paths, path)
+        first = R.run(dest, iid, recorded_at_ms=end + 2)
+        chain = R.chain(dest, iid)
+>       assert_links(chain)
+
+tests/test_res05_next_question_link.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chain = {'question': {'context': {'attention': {'allocation_decision_id': '303a2f75b66529f71513a58072d5af07ecb1459c313ab9d1f27...03876', 'run_kind': 'investigation_volume_anomaly', 'runner_id': 'investigation-volume-anomaly-runner.v1', ...}, ...}]}
+
+    def assert_links(chain):
+        q = chain['question']
+        for run in chain['runs']:
+>           nexts = run['next_questions']
+                    ^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'next_questions'
+
+tests/test_res05_next_question_link.py:19: KeyError
+_ test_completed_refuted_alternatives_have_typed_followups_and_idempotent_retry[opposite_direction] _
+
+paths = (PosixPath('/tmp/pytest-of-sarmad/pytest-72/test_completed_refuted_alterna2/attention.db'), PosixPath('/tmp/pytest-of-sarmad/pytest-72/test_completed_refuted_alterna2/investigation.db'), 1791316860000)
+path = 'opposite_direction'
+
+    @pytest.mark.parametrize('path', R.PATHS)
+    def test_completed_refuted_alternatives_have_typed_followups_and_idempotent_retry(paths, path):
+        _, dest, _ = paths
+        iid, end = measured(paths, path)
+        first = R.run(dest, iid, recorded_at_ms=end + 2)
+        chain = R.chain(dest, iid)
+>       assert_links(chain)
+
+tests/test_res05_next_question_link.py:55: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+chain = {'question': {'context': {'attention': {'allocation_decision_id': '9820feead51f89d802f87aef318f9cbaeeca7ab1b16a076efe5...0bec3', 'run_kind': 'investigation_volume_anomaly', 'runner_id': 'investigation-volume-anomaly-runner.v1', ...}, ...}]}
+
+    def assert_links(chain):
+        q = chain['question']
+        for run in chain['runs']:
+>           nexts = run['next_questions']
+                    ^^^^^^^^^^^^^^^^^^^^^
+E           KeyError: 'next_questions'
+
+tests/test_res05_next_question_link.py:19: KeyError
+_____ test_investigation_terminal_record_has_linked_next_questions[False] ______
+
+paths = (PosixPath('/tmp/pytest-of-sarmad/pytest-72/test_investigation_terminal_re0/attention.db'), PosixPath('/tmp/pytest-of-sarmad/pytest-72/test_investigation_terminal_re0/investigation.db'), 1791316860000)
+completed = False
+
+    @pytest.mark.parametrize("completed", [False, True])
+    def test_investigation_terminal_record_has_linked_next_questions(paths, completed):
+        _, dest, now = paths
+        iid, cut = measured(paths, "same_direction") if completed else (investigation_registered(paths)[0], now)
+        IR.run(dest, iid, recorded_at_ms=cut + 2)
+        chain = IR.chain(dest, iid)
+        last = chain["runs"][-1]
+        bank = last["bank"]
+        assert bank["links"]["question"]["id"] == chain["question"]["question_id"]
+        assert bank["links"]["result"]["id"] == last["result"]["result_id"]
+        assert bank["result_status"] == ("SUPPORTED" if completed else "INCONCLUSIVE")
+        if completed:
+            assert len(bank["contradictory_evidence"]["items"]) == 2
+            assert all(i["status"] == "REFUTED" for i in bank["contradictory_evidence"]["items"])
+>       assert bank["next_questions"]["status"] == "AVAILABLE"
+E       AssertionError: assert 'NOT_AVAILABLE' == 'AVAILABLE'
+E         
+E         - AVAILABLE
+E         + NOT_AVAILABLE
+E         ? ++++
+
+tests/test_res05_bank_persistence.py:108: AssertionError
+______ test_investigation_terminal_record_has_linked_next_questions[True] ______
+
+paths = (PosixPath('/tmp/pytest-of-sarmad/pytest-72/test_investigation_terminal_re1/attention.db'), PosixPath('/tmp/pytest-of-sarmad/pytest-72/test_investigation_terminal_re1/investigation.db'), 1791316860000)
+completed = True
+
+    @pytest.mark.parametrize("completed", [False, True])
+    def test_investigation_terminal_record_has_linked_next_questions(paths, completed):
+        _, dest, now = paths
+        iid, cut = measured(paths, "same_direction") if completed else (investigation_registered(paths)[0], now)
+        IR.run(dest, iid, recorded_at_ms=cut + 2)
+        chain = IR.chain(dest, iid)
+        last = chain["runs"][-1]
+        bank = last["bank"]
+        assert bank["links"]["question"]["id"] == chain["question"]["question_id"]
+        assert bank["links"]["result"]["id"] == last["result"]["result_id"]
+        assert bank["result_status"] == ("SUPPORTED" if completed else "INCONCLUSIVE")
+        if completed:
+            assert len(bank["contradictory_evidence"]["items"]) == 2
+            assert all(i["status"] == "REFUTED" for i in bank["contradictory_evidence"]["items"])
+>       assert bank["next_questions"]["status"] == "AVAILABLE"
+E       AssertionError: assert 'NOT_AVAILABLE' == 'AVAILABLE'
+E         
+E         - AVAILABLE
+E         + NOT_AVAILABLE
+E         ? ++++
+
+tests/test_res05_bank_persistence.py:108: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_res05_next_question_link.py::test_completed_refuted_alternatives_have_typed_followups_and_idempotent_retry[same_direction]
+FAILED tests/test_res05_next_question_link.py::test_completed_refuted_alternatives_have_typed_followups_and_idempotent_retry[normalization]
+FAILED tests/test_res05_next_question_link.py::test_completed_refuted_alternatives_have_typed_followups_and_idempotent_retry[opposite_direction]
+FAILED tests/test_res05_bank_persistence.py::test_investigation_terminal_record_has_linked_next_questions[False]
+FAILED tests/test_res05_bank_persistence.py::test_investigation_terminal_record_has_linked_next_questions[True]
+5 failed, 19 deselected in 7.56s

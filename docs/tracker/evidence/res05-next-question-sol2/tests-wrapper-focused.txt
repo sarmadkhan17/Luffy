@@ -1,0 +1,124 @@
+.......................FFF.............................                  [100%]
+=================================== FAILURES ===================================
+_ test_generated_decay_question_enters_normal_worker_router_and_restarts[COLLECTED] _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-CAeDyWSAM2EQ/base/test_generated_decay_question_0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7dba82180a10>
+capsys = <_pytest.capture.CaptureFixture object at 0x7dba821837d0>
+collection = 'COLLECTED'
+
+    @pytest.mark.parametrize("collection", ["COLLECTED", "EMPTY", "UNAVAILABLE"])
+    def test_generated_decay_question_enters_normal_worker_router_and_restarts(
+            tmp_path, monkeypatch, capsys, collection):
+>       source, reader, worker = produced(tmp_path)
+                                 ^^^^^^^^^^^^^^^^^^
+
+tests/test_res02_question_routing.py:108: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-CAeDyWSAM2EQ/base/test_generated_decay_question_0')
+verdicts = ('still_working', 'decayed')
+
+    def produced(tmp_path, verdicts=(W, D)):
+        source = Journal(tmp_path / "events.db")
+        # Only health events are supplied. The actual subprocess producer generates
+        # and registers questions; this test never calls a question registration API.
+        for row in _FullHist().seq("s1", verdicts).rows:
+            source.log_brain_event(row["kind"], row["subject"], row["detail"])
+        assert source.research_questions() == []
+        shadow_path = tmp_path / "shadow.db"
+        result = research_shadow.invoke(source_db=source.db_path, shadow_db=shadow_path,
+            max_sources=8, wall_clock_deadline_s=30, invocation_key="generated-e2e",
+            recorded_at_ms=int(time.time()*1000), _python=sys.executable)
+        assert result["status"] == "recorded", result
+>       assert result["receipt"]["outcome"] == "OK", result
+E       AssertionError: {'status': 'recorded', 'invocation_id': '9e9eb2556bd08bfcf3139a82a182945c1edd04fb22e9bd06811e994f15f9b859', 'receipt':..., 'cursor_after': 0, ...}, 'canonical_sha256': '9bfc173dd7f318b7ebd500021c8ac907d02291f394ef21a1c95f8a65476efc3f', ...}
+E       assert 'FAILED' == 'OK'
+E         
+E         - OK
+E         + FAILED
+
+tests/test_generated_question_handoff_negative_memory.py:30: AssertionError
+_ test_generated_decay_question_enters_normal_worker_router_and_restarts[EMPTY] _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-CAeDyWSAM2EQ/base/test_generated_decay_question_1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7dba82180b30>
+capsys = <_pytest.capture.CaptureFixture object at 0x7dba820d3bf0>
+collection = 'EMPTY'
+
+    @pytest.mark.parametrize("collection", ["COLLECTED", "EMPTY", "UNAVAILABLE"])
+    def test_generated_decay_question_enters_normal_worker_router_and_restarts(
+            tmp_path, monkeypatch, capsys, collection):
+>       source, reader, worker = produced(tmp_path)
+                                 ^^^^^^^^^^^^^^^^^^
+
+tests/test_res02_question_routing.py:108: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-CAeDyWSAM2EQ/base/test_generated_decay_question_1')
+verdicts = ('still_working', 'decayed')
+
+    def produced(tmp_path, verdicts=(W, D)):
+        source = Journal(tmp_path / "events.db")
+        # Only health events are supplied. The actual subprocess producer generates
+        # and registers questions; this test never calls a question registration API.
+        for row in _FullHist().seq("s1", verdicts).rows:
+            source.log_brain_event(row["kind"], row["subject"], row["detail"])
+        assert source.research_questions() == []
+        shadow_path = tmp_path / "shadow.db"
+        result = research_shadow.invoke(source_db=source.db_path, shadow_db=shadow_path,
+            max_sources=8, wall_clock_deadline_s=30, invocation_key="generated-e2e",
+            recorded_at_ms=int(time.time()*1000), _python=sys.executable)
+        assert result["status"] == "recorded", result
+>       assert result["receipt"]["outcome"] == "OK", result
+E       AssertionError: {'status': 'recorded', 'invocation_id': 'aba5befc96cf41b74bc514a9ee99bf9998125cdb9b125d4223f4aff92bb7d1c0', 'receipt':..., 'cursor_after': 0, ...}, 'canonical_sha256': '59df52acbd8fdba80f6e72052aef615c0e753f98be8098ca1d221cfba1ae7422', ...}
+E       assert 'FAILED' == 'OK'
+E         
+E         - OK
+E         + FAILED
+
+tests/test_generated_question_handoff_negative_memory.py:30: AssertionError
+_ test_generated_decay_question_enters_normal_worker_router_and_restarts[UNAVAILABLE] _
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-CAeDyWSAM2EQ/base/test_generated_decay_question_2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7dba82094290>
+capsys = <_pytest.capture.CaptureFixture object at 0x7dba82095940>
+collection = 'UNAVAILABLE'
+
+    @pytest.mark.parametrize("collection", ["COLLECTED", "EMPTY", "UNAVAILABLE"])
+    def test_generated_decay_question_enters_normal_worker_router_and_restarts(
+            tmp_path, monkeypatch, capsys, collection):
+>       source, reader, worker = produced(tmp_path)
+                                 ^^^^^^^^^^^^^^^^^^
+
+tests/test_res02_question_routing.py:108: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+tmp_path = PosixPath('/mnt/luffy-data/test-tmp/sarmad/pytest-run-CAeDyWSAM2EQ/base/test_generated_decay_question_2')
+verdicts = ('still_working', 'decayed')
+
+    def produced(tmp_path, verdicts=(W, D)):
+        source = Journal(tmp_path / "events.db")
+        # Only health events are supplied. The actual subprocess producer generates
+        # and registers questions; this test never calls a question registration API.
+        for row in _FullHist().seq("s1", verdicts).rows:
+            source.log_brain_event(row["kind"], row["subject"], row["detail"])
+        assert source.research_questions() == []
+        shadow_path = tmp_path / "shadow.db"
+        result = research_shadow.invoke(source_db=source.db_path, shadow_db=shadow_path,
+            max_sources=8, wall_clock_deadline_s=30, invocation_key="generated-e2e",
+            recorded_at_ms=int(time.time()*1000), _python=sys.executable)
+        assert result["status"] == "recorded", result
+>       assert result["receipt"]["outcome"] == "OK", result
+E       AssertionError: {'status': 'recorded', 'invocation_id': '09f55dfacfa05481fe81fef49dc45cfabbab76dbbb3a68eaf0fa1743357e18f8', 'receipt':..., 'cursor_after': 0, ...}, 'canonical_sha256': 'c7eaccbb31095924220b5c5f76cb2a6b056d08178d8809332d9846403a326d5e', ...}
+E       assert 'FAILED' == 'OK'
+E         
+E         - OK
+E         + FAILED
+
+tests/test_generated_question_handoff_negative_memory.py:30: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_res02_question_routing.py::test_generated_decay_question_enters_normal_worker_router_and_restarts[COLLECTED]
+FAILED tests/test_res02_question_routing.py::test_generated_decay_question_enters_normal_worker_router_and_restarts[EMPTY]
+FAILED tests/test_res02_question_routing.py::test_generated_decay_question_enters_normal_worker_router_and_restarts[UNAVAILABLE]
+3 failed, 52 passed in 111.09s (0:01:51)
