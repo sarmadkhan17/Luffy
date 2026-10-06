@@ -72,7 +72,8 @@ class Bundle:
 
 
 def load_bundle(tf: str, symbols, cfg: dict, requires=(),
-                heldout_symbols=(), paths: dict | None = None) -> Bundle:
+                heldout_symbols=(), paths: dict | None = None,
+                cap_ms: int | None = None) -> Bundle:
     """Read the stores, cut at the discovery boundary, build the context."""
     from ..data.derivatives import DerivFeed
     from ..data.feed import DataFeed
@@ -100,6 +101,8 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
         full = {s: slices.before(slices.after(d, split['start_ms']), split['end_ms'] + 1)
                 for s, d in full.items()}
     cut = int(split['cut_ms']) if split else (slices.cut_ms(full) or 0)
+    if cap_ms:      # a spent held-out look read bars from here on
+        cut = min(cut, int(cap_ms))
     disc = slices.discovery(full, cut)
 
     # held-out BAR COUNTS only — never their prices. The projection needs to

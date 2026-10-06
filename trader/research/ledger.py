@@ -186,6 +186,11 @@ class Ledger:
 
     # ── where the cut fell, and how much room each slice has ─────────────
     def record_slices(self, tf: str, cut_ms: int, counts: dict) -> None:
+        # once a held-out look has been spent the cut is frozen at it: a
+        # later measure may not move it forward past bars that look read
+        frozen = self.spent_cut(tf)
+        if frozen is not None:
+            cut_ms = min(int(cut_ms), frozen) if cut_ms else frozen
         with self.journal._tx() as c:
             c.execute(
                 "INSERT OR REPLACE INTO research_slices "
@@ -366,8 +371,33 @@ class Ledger:
         rej = [i for i, r in enumerate(rows, start=1) if r["rejected"]]
         return t, fdr.alpha_at(t, rej, alpha, w0) * float(brake)
 
+    def spent(self, h: str, gate: str = "gate1") -> dict | None:
+        """The look that already read held-out prices for this rule, if any."""
+        rows = self.journal.query(
+            "SELECT * FROM research_tests WHERE hash=? AND gate=? "
+            "ORDER BY seq LIMIT 1", (h, gate))
+        return dict(rows[0]) if rows else None
+
+    def spent_cut(self, tf: str) -> int | None:
+        """The earliest cut at which a held-out look on `tf` was spent.
+
+        Held-out B began there; discovery may never again see a bar at or
+        after it, however far the store has grown since."""
+        cuts = []
+        for r in self.journal.query(
+                "SELECT detail FROM research_tests WHERE tf=?", (tf,)):
+            try:
+                c = (json.loads(r["detail"] or "{}") or {}).get("cut_ms")
+            except ValueError:
+                continue
+            if c:
+                cuts.append(int(c))
+        return min(cuts) if cuts else None
+
     def record_test(self, h: str, tf: str, geo: str, gate: str, p: float,
                     alpha_t: float, braked: bool, detail: dict) -> bool:
+        if self.spent(h, gate):
+            raise ValueError("holdout_already_spent")
         rejected = p is not None and float(p) <= float(alpha_t)
         with self.journal._tx() as c:
             c.execute(
@@ -397,6 +427,10 @@ class Ledger:
     def set_candidate(self, h: str, tf: str, geo: str, state: str,
                       **fields) -> None:
         cur = self.candidate(h) or {}
+        if state in ("queued", "deferred") and self.spent(h):
+            log.warning(f"research candidate {h}: held-out already spent; "
+                        f"not restoring state {state!r}")
+            return
         row = {"twin_of": cur.get("twin_of"), "rank": cur.get("rank"),
                "gate1": cur.get("gate1"), "gate3": cur.get("gate3"),
                "entries": cur.get("entries"), "reason": cur.get("reason")}

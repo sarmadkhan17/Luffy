@@ -474,8 +474,13 @@ def examine(c, payload: dict) -> dict:
     from ..strategy.spec import StrategySpec
     cfg, paths, tf = payload["cfg"], payload.get("paths"), c.tf
     split = (cfg.get('research') or {}).get('predictive_split')
-    cut = (int(split['cut_ms']) if split else current_cut(tf, payload["discovery_symbols"], paths,
-                      int(payload["cut_ms"])))
+    if split:
+        cut = int(split['cut_ms'])
+    elif payload.get('spent_cut_ms'):
+        cut = int(payload['spent_cut_ms'])      # frozen by the first look
+    else:
+        cut = current_cut(tf, payload["discovery_symbols"], paths,
+                          int(payload["cut_ms"]))
     out = {"hash": c.hash, "looked": False}
     compiled = compile_spec(c.to_spec())
     risk = cfg.get("risk") or {}

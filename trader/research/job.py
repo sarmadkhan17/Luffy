@@ -43,7 +43,8 @@ def measure_job(payload: dict) -> dict:
                        requires=tuple(payload.get("requires") or ("ohlcv",)),
                        heldout_symbols=tuple(
                            payload.get("heldout_symbols") or ()),
-                       paths=payload.get("paths"))
+                       paths=payload.get("paths"),
+                       cap_ms=payload.get("spent_cut_ms"))
     exprs = payload.get("exprs")
     if not exprs:
         from .vocab import expressions
@@ -79,7 +80,8 @@ def evaluate_job(payload: dict) -> dict:
                        requires=tuple(payload.get("requires") or ("ohlcv",)),
                        heldout_symbols=tuple(
                            payload.get("heldout_symbols") or ()),
-                       paths=payload.get("paths"))
+                       paths=payload.get("paths"),
+                       cap_ms=payload.get("spent_cut_ms"))
     results, skipped = [], 0
     for c in combos:
         if time.monotonic() - t0 >= soft:
@@ -119,7 +121,8 @@ def select_job(payload: dict) -> dict:
         reqs.update(c.requires)
     b = ev.load_bundle(payload["tf"], payload["symbols"], payload["cfg"],
                        requires=tuple(sorted(reqs)),
-                       paths=payload.get("paths"))
+                       paths=payload.get("paths"),
+                       cap_ms=payload.get("spent_cut_ms"))
     return {"entries": referee.discovery_entries(combos, b),
             "elapsed_s": round(time.monotonic() - t0, 2)}
 

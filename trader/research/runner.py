@@ -178,6 +178,7 @@ class ResearchRunner:
         payload = {"tf": batch.tf, "symbols": disc, "heldout_symbols": held,
                    "requires": sorted(reqs), "cfg": self.cfg,
                    "paths": self._paths(),
+                   "spent_cut_ms": self.ledger.spent_cut(batch.tf),
                    "exprs": exprs}
         bid = self.ledger.start_batch(batch.tf, "", "measure", 0)
         t0 = time.monotonic()
@@ -213,6 +214,7 @@ class ResearchRunner:
                    "heldout_symbols": held, "requires": sorted(reqs),
                    "combos": [c.as_dict() for c in batch.combos],
                    "cfg": self.cfg, "paths": self._paths(),
+                   "spent_cut_ms": self.ledger.spent_cut(batch.tf),
                    "draws": self._null_draws(),
                    "seed": int(self._r("seed")),
                    "soft_deadline_s": max(
@@ -396,6 +398,7 @@ class ResearchRunner:
         res = self.run(job.select_job, {
             "tf": tf, "symbols": disc, "cfg": self.cfg,
             "paths": self._paths(),
+            "spent_cut_ms": self.ledger.spent_cut(tf),
             "combos": [c.as_dict() for _r, c in combos]},
             timeout_s=float(self._r("batch_seconds")),
             nice=int(self._r("nice")))
@@ -461,6 +464,13 @@ class ResearchRunner:
         h = cand["hash"]
         out = {"kind": "referee", "tf": tf, "geo": geo, "hash": h,
                "skipped": None}
+        prior = self.ledger.spent(h)
+        if prior:
+            # a spent held-out is never restored by a reset, retry or rename
+            self.ledger.set_candidate(h, tf, geo, "refused", reason=(
+                f"held-out already spent (test {prior['seq']})"))
+            return {**out, "ok": True, "state": "refused"}
+
         row = self.journal.query(
             "SELECT * FROM research_combos WHERE hash=?", (h,))
         c = self._combo(row[0], tf, geo) if row else None
@@ -497,6 +507,7 @@ class ResearchRunner:
         t0 = time.monotonic()
         res = self.run(job.referee_job, {
             "combo": c.as_dict(), "cut_ms": int(cut_ms), "cfg": self.cfg,
+            "spent_cut_ms": self.ledger.spent_cut(tf),
             "paths": self._paths(),
             "discovery_symbols": list(disc or DISCOVERY),
             "heldout_symbols": list(held or HELDOUT),
@@ -516,6 +527,7 @@ class ResearchRunner:
                 # look that keeps failing is charged, never retried forever
                 self.ledger.record_test(h, tf, geo, "gate1", 1.0, alpha,
                                         brake < 1.0, {"error": err,
+                                                      "cut_ms": int(cut_ms),
                                                       "evaluated": evaluated})
                 self.ledger.set_candidate(h, tf, geo, "gate1_fail",
                                           reason=f"failed {attempts}x: {err}")
@@ -524,7 +536,8 @@ class ResearchRunner:
         g1 = v.get("gate1") or {"p": 1.0, "reason": "no gate1 result"}
         rejected = self.ledger.record_test(
             h, tf, geo, "gate1", float(g1["p"]), alpha, brake < 1.0,
-            {"evaluated": evaluated, "a": v.get("a"), "b": v.get("b"),
+            {"evaluated": evaluated, "cut_ms": v.get("cut_ms") or int(cut_ms),
+             "a": v.get("a"), "b": v.get("b"),
              "rotation": v.get("rotation"), "draws": draws, "t": t})
         g3 = v.get("gate3") or {"passed": False, "reason": "no gate3 result"}
         if not rejected:
