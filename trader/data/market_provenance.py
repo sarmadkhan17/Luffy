@@ -281,13 +281,13 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
     if revision_stream:
         # Retain all versions of the bounded event window, not only the
         # database's newest projection of those events.
-        query = f"""SELECT record_json FROM market_revisions {clauses}
+        query = f"""SELECT record_json,revision_id,event_ms,available_ms,observed_ms FROM market_revisions {clauses}
             AND event_ms IN (SELECT DISTINCT event_ms FROM market_revisions
             WHERE series_key=? AND available_ms<=? AND observed_ms<=?
             ORDER BY event_ms DESC LIMIT ?) ORDER BY event_ms,observed_ms,rowid"""
         args += [key,as_of_ms,as_of_ms,limit]
     else:
-        query = f"""SELECT record_json FROM (SELECT record_json,event_ms,
+        query = f"""SELECT record_json,revision_id,event_ms,available_ms,observed_ms FROM (SELECT record_json,revision_id,event_ms,available_ms,observed_ms,
             ROW_NUMBER() OVER (PARTITION BY event_ms ORDER BY observed_ms DESC,rowid DESC) AS ordinal
             FROM market_revisions {clauses}) WHERE ordinal=1 ORDER BY event_ms DESC LIMIT ?"""
         if window_start_ms is not None:
@@ -295,13 +295,13 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
             # bar retain its exact predecessor plus only late older events
             # that can become the newest event. Dominated late corrections
             # cannot change align() at any cut in this window.
-            query = f"""WITH ranked AS (SELECT record_json,event_ms,available_ms,observed_ms,
+            query = f"""WITH ranked AS (SELECT record_json,revision_id,event_ms,available_ms,observed_ms,
                 ROW_NUMBER() OVER (PARTITION BY event_ms ORDER BY observed_ms DESC,rowid DESC) AS ordinal
                 FROM market_revisions {clauses}), current AS (
                 SELECT *,MAX(event_ms,available_ms,observed_ms) AS ready_ms FROM ranked WHERE ordinal=1),
                 frontier AS (SELECT *,MAX(event_ms) OVER (
                     ORDER BY ready_ms,event_ms DESC ROWS UNBOUNDED PRECEDING) AS newest FROM current)
-                SELECT record_json FROM frontier WHERE event_ms>=?
+                SELECT record_json,revision_id,event_ms,available_ms,observed_ms FROM frontier WHERE event_ms>=?
                 OR (ready_ms>=? AND event_ms=newest)
                 OR event_ms=(SELECT MAX(event_ms) FROM current WHERE ready_ms<?)
                 ORDER BY event_ms DESC LIMIT ?"""
@@ -312,12 +312,17 @@ def load(conn, key, *, as_of_ms, limit=200000, replay_tf=None, include_partial=F
         rows.reverse()
     selected = {}
     stream = []
-    for (raw,) in rows:
+    for raw, rid, indexed_event, indexed_available, indexed_observed in rows:
         r = json.loads(raw)
         value = {k: r[k] for k in VALUES if k in r}
         body = {k:r[k] for k in META if k not in ('revision_id','supersedes')}
         if r['content_hash'] != digest({'raw': json.loads(r['raw_json']), 'value':value}) or r['revision_id'] != digest(body):
             raise ValueError('market_revision_content_corrupt')
+        # Selection/ranking columns are outside the receipt hash. They must
+        # agree with the verified receipt before they can establish a cut.
+        if (rid, indexed_event, indexed_available, indexed_observed) != (
+                r['revision_id'], r['event_time_ms'], r['available_at_ms'], r['observed_at_ms']):
+            raise ValueError('market_revision_index_corrupt')
         event = r['event_time_ms']
         if replay_tf and r['available_at_ms'] > event + TF_MS[replay_tf]:
             continue
@@ -406,7 +411,7 @@ def resolve_lineage(conns, lineage, *, transforms=None):
             continue
         row = None
         for conn in conns:
-            row = conn.execute('SELECT record_json FROM market_revisions WHERE revision_id=?', (rid,)).fetchone()
+            row = conn.execute('SELECT record_json,event_ms,available_ms,observed_ms FROM market_revisions WHERE revision_id=?', (rid,)).fetchone()
             if row:
                 break
         if not row:
@@ -417,6 +422,8 @@ def resolve_lineage(conns, lineage, *, transforms=None):
         if (r['revision_id'] != rid or r['content_hash'] != digest({'raw': json.loads(r['raw_json']), 'value': value})
                 or rid != digest(body)):
             raise ValueError('market_revision_content_corrupt')
+        if tuple(row[1:]) != (r['event_time_ms'], r['available_at_ms'], r['observed_at_ms']):
+            raise ValueError('market_revision_index_corrupt')
         if r['available_at_ms'] is None or r['available_at_ms'] > at or r['observed_at_ms'] > at:
             raise ValueError('lineage_receipt_not_yet_available')
         if r['quality'] != Quality.VALID.value:
