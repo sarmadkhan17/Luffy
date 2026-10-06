@@ -1,0 +1,34 @@
+{
+  "item": "RES-04",
+  "scope": "ARCHITECTURE_OFFLINE",
+  "baseline": "f55c1ec",
+  "actual_gap": [
+    "raw HTML dedup misses equivalent rendered content",
+    "prefix extraction loses relevant passages and accepts irrelevant abstracts",
+    "replay does not rederive provenance/extraction/limits"
+  ],
+  "builder": "question-driven-external-evidence.v2",
+  "relevance": "UNCALIBRATED_LEXICAL_HEURISTIC",
+  "coverage": "PARTIAL_BOUNDED_METADATA_ABSTRACTS",
+  "baseline_failures": "7 failed, 1 passed on original module; corrected registration/tamper fixture",
+  "validation": {
+    "combined": "........................................................................ [ 86%]\n...........                                                              [100%]\n83 passed in 52.05s",
+    "final_focused": "...........                                                              [100%]\n11 passed in 17.12s"
+  },
+  "source_sha256": {
+    "trader/research/external_research.py": "ed21f257301c65b982f88378f4e5fc9d3afec437b8372b1722550e4928a58460",
+    "trader/cognition/external_sources.py": "e5c56982e09a7e236cfba93d1f3b76dd450e682852a9d8c49b8fa717589358d0",
+    "tests/test_res04_preprocessing.py": "71e604f45d939608921d952934e9acaa2b0abdd99ff2a2f248ac9384fb2c4fba",
+    "tests/test_external_research_router.py": "697547dd95779a3898666f7f76901c48fe443e246650b58568e228c5d3f703ab",
+    "tests/test_res02_question_routing.py": "2c265ac7349ffd8bcc5f0033975f06b77708e7abe6e0f661366bf8cc83a83b98",
+    "tests/test_generated_question_handoff_negative_memory.py": "91fc652adce68911045ab992792d85489d8bd86184f34754428847ca88b29053",
+    "tests/test_res03_source_governance.py": "ec2d76679b62a035f7ca0979d8b8b85e93a2e5bad54845418c4e5d584fe391c1"
+  },
+  "real_provider_calls": 0,
+  "llm_calls": 0,
+  "paid_spend": 0,
+  "services_launched": 0,
+  "activation_authorized": false,
+  "res05_eligible": true,
+  "successor_selected": false
+}

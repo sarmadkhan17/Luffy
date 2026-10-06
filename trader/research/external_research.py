@@ -32,7 +32,19 @@ from trader.core.child import run_child
 from trader.core.journal import Journal
 
 BANK_SCHEMA = "external-evidence-bank-object.v1"
-BUILDER = "question-driven-external-evidence.v1"
+LEGACY_BUILDER = "question-driven-external-evidence.v1"
+BUILDER = "question-driven-external-evidence.v2"
+PREPROCESSING = {
+    "version": "academic-decay-preprocessing.v2",
+    "relevance": "lexical_finance_and_strategy_terms_in_title_and_passage; not semantic validation",
+    "deduplication": "normalized_url/title_before_retrieval; rendered_text_hash_before_passage_use",
+    "coverage": "PARTIAL_BOUNDED; one registered academic index; metadata/abstracts only; no full text",
+    "abstract_scan_chars": 32000,
+}
+LIMITATIONS = ["External metadata/passages are unverified and establish no predictive edge.",
+              "Bounded selection is not exhaustive; cached availability is retained, not refreshed.",
+              "No full text, registered falsifier or causal attribution is claimed.",
+              "Relevance is a lexical title/passage heuristic, not a semantic relevance or coverage guarantee."]
 START, DONE = "external_research_request_started.v1", "external_research_request_done.v1"
 MAX_CHECKPOINTS, MAX_HISTORY = 8192, 512
 
@@ -310,6 +322,50 @@ class SearchBroker:
         return {**result, "cache": False, "request_id": key}
 
 
+def relevant(text):
+    return bool(re.search(r"\b(trad\w*|financ\w*|market\w*)\b", text, re.I)
+                and re.search(r"\b(strateg\w*|decay|regime|persist\w*|performance)\b", text, re.I))
+
+
+def relevant_passage(text, cap):
+    for part in re.split(r"\n+|(?<=[.!?])\s+", text):
+        previous = {}
+        for term in re.finditer(r"\b(?P<finance>trad\w*|financ\w*|market\w*)\b|"
+                                r"\b(?P<strategy>strateg\w*|decay|regime|persist\w*|performance)\b", part, re.I):
+            kind = term.lastgroup
+            other = previous.get("strategy" if kind == "finance" else "finance")
+            if other is not None and term.end() - other.start() <= cap:
+                start = max(0, other.start() - 40, term.end() - cap)
+                return part[start:start + cap].strip()
+            previous[kind] = term
+    return ""
+
+
+def extraction(page, bounds, hashes, *, legacy=False):
+    """Cheap bounded rendering/relevance, then content dedup before evidence use."""
+    from trader.brain.crawler import html_to_text
+    result = dict(extraction_status="NOT_EXTRACTED", passage=None, passage_sha256=None)
+    if page["status"] != "OK":
+        return result
+    abstract = page["metadata"].get("abstract")
+    if not abstract:
+        return dict(result, extraction_status="METADATA_ONLY_NO_ABSTRACT")
+    text = html_to_text(abstract[:32000], cap=32000)
+    normalized = re.sub(r"\s+", " ", text).strip()
+    content_key = sha(re.sub(r"\s+", " ", abstract).strip() if legacy else normalized)
+    if content_key in hashes:
+        return dict(result, extraction_status="DUPLICATE_CONTENT", duplicate_of=hashes[content_key])
+    hashes[content_key] = page["request_id"]
+    if legacy:
+        passage = html_to_text(abstract, cap=bounds.max_passage_chars)[:bounds.max_passage_chars]
+    else:
+        passage = relevant_passage(normalized, bounds.max_passage_chars)
+        if normalized and not passage:
+            return dict(result, extraction_status="NO_RELEVANT_PASSAGE")
+    return dict(result, extraction_status="EXTRACTED_UNVERIFIED" if passage.strip() else "EMPTY_EXTRACTION",
+                passage=passage, passage_sha256=sha(passage))
+
+
 def filter_metadata(items):
     """Cheap relevance and URL/title dedup before page retrieval/extraction."""
     selected, seen_urls, seen_content = [], set(), set()
@@ -317,9 +373,7 @@ def filter_metadata(items):
     for item in items:
         url = normalize_url(item["url"])
         title = re.sub(r"\s+", " ", item["title"].lower()).strip()
-        relevant = (re.search(r"\b(trad\w*|financ\w*|market\w*)\b", title)
-                    and re.search(r"\b(strateg\w*|decay|regime|persist\w*|performance)\b", title))
-        if not relevant or url in seen_urls or title in seen_content:
+        if not relevant(title) or url in seen_urls or title in seen_content:
             rejected += 1
             continue
         seen_urls.add(url)
@@ -353,7 +407,7 @@ def registered_question(journal, question_id):
 def _row(bank):
     text = canonical(bank)
     return dict(bank_object_id=bank["bank_object_id"], schema=BANK_SCHEMA,
-                bank_kind="external_evidence", builder_id=BUILDER,
+                bank_kind="external_evidence", builder_id=bank["builder_id"],
                 run_id=bank["plan_id"], result_id=bank["result_id"], evidence_id=bank["evidence_id"],
                 plan_id=bank["plan_id"], question_id=bank["question"]["question_id"],
                 scope_kind="strategy", scope_id=bank["question"]["scope"]["spec_id"],
@@ -376,7 +430,10 @@ def verify_bank(journal, row):
         raise ValueError("external_bank_authority")
     plan = bank["plan"]
     bounds = Bounds(**plan["bounds"])
-    expected_plan = dict(schema=BUILDER, route=S.route(bank["question"]), bounds=asdict(bounds))
+    builder = bank["builder_id"]
+    if builder not in (LEGACY_BUILDER, BUILDER):
+        raise ValueError("external_bank_builder")
+    expected_plan = dict(schema=builder, route=S.route(bank["question"]), bounds=asdict(bounds))
     if "question_source" in plan:
         expected_plan["question_source"] = plan["question_source"]
     if (plan != expected_plan
@@ -414,6 +471,37 @@ def verify_bank(journal, row):
             if (sha(evidence["passage"]) != evidence["passage_sha256"]
                     or len(evidence["passage"]) > bounds.max_passage_chars):
                 raise ValueError("external_passage_hash")
+    # Hashes/registrations alone do not prove preprocessing or query lineage.
+    if builder == BUILDER and (bank.get("preprocessing") != PREPROCESSING
+                              or bank.get("limitations") != LIMITATIONS):
+        raise ValueError("external_bank_preprocessing_policy")
+    if builder == LEGACY_BUILDER and bank.get("limitations") != LIMITATIONS[:3]:
+        raise ValueError("external_bank_preprocessing_policy")
+    metadata = []
+    for search, query in zip(bank["searches"], plan["route"]["queries"][:bounds.max_queries]):
+        if (search["query"] != query or search["question_id"] != bank["question"]["question_id"]
+                or search["source_id"] != plan["route"]["sources"][0]["source_id"]):
+            raise ValueError("external_bank_search_binding")
+        metadata.extend(search.get("metadata", []))
+    selected, rejected = filter_metadata(metadata)
+    if bank["filtering"] != dict(metadata_seen=len(metadata), metadata_rejected=rejected,
+            selected=len(selected), pages_omitted=max(0, len(selected)-bounds.max_pages)):
+        raise ValueError("external_bank_filter_binding")
+    if len(bank["evidence"]) != len(selected[:bounds.max_pages]):
+        raise ValueError("external_bank_selection_binding")
+    hashes = {}
+    for evidence, item in zip(bank["evidence"], selected[:bounds.max_pages]):
+        queries = [s["request_id"] for s in bank["searches"] if any(
+            m["doi"] == item["doi"] for m in s.get("metadata", []))]
+        if evidence["query_provenance"] != queries or evidence["source_url"] != item["url"]:
+            raise ValueError("external_bank_query_binding")
+        args = evidence["attempt_identity"]["arguments"]
+        if args != dict(doi=item["doi"], metadata_sha256=sha(canonical(item))):
+            raise ValueError("external_bank_document_version_binding")
+        expected = extraction(evidence, bounds, hashes, legacy=builder == LEGACY_BUILDER)
+        if (any(evidence.get(k) != v for k, v in expected.items())
+                or evidence.get("duplicate_of") != expected.get("duplicate_of")):
+            raise ValueError("external_bank_extraction_binding")
     return bank
 
 
@@ -440,7 +528,6 @@ def _collect(journal, q, bounds, child, question_source=None):
     selected, rejected = filter_metadata(metadata)
     evidence, hashes = [], {}
     # Content is extracted only after metadata relevance, URL and title dedup.
-    from trader.brain.crawler import html_to_text
     for item in selected[:bounds.max_pages]:
         page = broker.request(src, "retrieve", dict(doi=item["doi"], metadata_sha256=sha(canonical(item))))
         entry = dict(page, question_id=q["question_id"], source_id=src.source_id,
@@ -448,20 +535,7 @@ def _collect(journal, q, bounds, child, question_source=None):
                      query_provenance=[s["request_id"] for s in searches if any(
                          m["doi"] == item["doi"] for m in s.get("metadata", []))],
                      extraction_status="NOT_EXTRACTED", passage=None, passage_sha256=None)
-        if page["status"] == "OK":
-            data = page["metadata"]
-            abstract = data.get("abstract")
-            if not abstract:
-                entry["extraction_status"] = "METADATA_ONLY_NO_ABSTRACT"
-            else:
-                content_key = sha(re.sub(r"\s+", " ", abstract).strip())
-                if content_key in hashes:
-                    entry.update(extraction_status="DUPLICATE_CONTENT", duplicate_of=hashes[content_key])
-                else:
-                    passage = html_to_text(abstract, cap=bounds.max_passage_chars)[:bounds.max_passage_chars]
-                    entry.update(extraction_status="EXTRACTED_UNVERIFIED" if passage.strip() else "EMPTY_EXTRACTION",
-                                 passage=passage, passage_sha256=sha(passage))
-                    hashes[content_key] = page["request_id"]
+        entry.update(extraction(page, bounds, hashes))
         evidence.append(entry)
     good = any(e["status"] == "OK" for e in evidence)
     collection_status = "COLLECTED" if good else ("UNAVAILABLE" if any(
@@ -475,9 +549,7 @@ def _collect(journal, q, bounds, child, question_source=None):
                 extracted_claims={"status": "NOT_AVAILABLE", "reason": "no_registered_claim_extractor"},
                 supporting_evidence={"status": "NOT_CLASSIFIED"}, contradictory_evidence={"status": "NOT_CLASSIFIED"},
                 experiments=[], result_status="INCONCLUSIVE", collection_status=collection_status,
-                limitations=["External metadata/passages are unverified and establish no predictive edge.",
-                             "Bounded selection is not exhaustive; cached availability is retained, not refreshed.",
-                             "No full text, registered falsifier or causal attribution is claimed."],
+                limitations=list(LIMITATIONS), preprocessing=dict(PREPROCESSING),
                 next_questions=[{"text": "What registered quantitative test could falsify any extracted claim?",
                                  "status": "REQUIRES_REGISTERED_PROTOCOL"}],
                 cost=dict(scope="current_pass", network_attempts=broker.attempts, received_bytes=broker.bytes, paid_cost_usd=0,

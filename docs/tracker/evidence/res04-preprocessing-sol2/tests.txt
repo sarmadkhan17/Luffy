@@ -1,0 +1,8 @@
+Command: ./venv/bin/python -m pytest -q tests/test_res04_preprocessing.py tests/test_external_research_router.py tests/test_res02_question_routing.py tests/test_generated_question_handoff_negative_memory.py tests/test_res03_source_governance.py
+........................................................................ [ 86%]
+...........                                                              [100%]
+83 passed in 52.05s
+
+Command: ./venv/bin/python -m pytest -q tests/test_res04_preprocessing.py
+...........                                                              [100%]
+11 passed in 17.12s

@@ -1,0 +1,183 @@
+FFFF.FFF                                                                 [100%]
+=================================== FAILURES ===================================
+_______________ test_equivalent_rendered_content_is_deduplicated _______________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-44/test_equivalent_rendered_conte0')
+
+    def test_equivalent_rendered_content_is_deduplicated(tmp_path):
+        j, child, bank = collect(tmp_path, {
+            "10.1234/one": "<p>Trading strategy persistence depends on market regimes.</p>",
+            "10.1234/two": "<div>Trading <b>strategy</b> persistence depends on market regimes.</div>"})
+>       assert [e["extraction_status"] for e in bank["evidence"]] == ["EXTRACTED_UNVERIFIED", "DUPLICATE_CONTENT"]
+E       AssertionError: assert ['EXTRACTED_U...D_UNVERIFIED'] == ['EXTRACTED_U...CATE_CONTENT']
+E         
+E         At index 1 diff: 'EXTRACTED_UNVERIFIED' != 'DUPLICATE_CONTENT'
+E         Use -v to get more diff
+
+tests/test_res04_preprocessing.py:50: AssertionError
+____________ test_extract_relevant_passage_after_irrelevant_prefix _____________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-44/test_extract_relevant_passage_0')
+
+    def test_extract_relevant_passage_after_irrelevant_prefix(tmp_path):
+        _, _, bank = collect(tmp_path, {"10.1234/one": "<p>Biological cell proliferation. </p>" * 20 +
+            "<p>Trading strategy decay depends on financial market regimes.</p>"}, max_passage_chars=128)
+        passage = bank["evidence"][0]["passage"]
+>       assert "Trading strategy decay" in passage
+E       AssertionError: assert 'Trading strategy decay' in '\nBiological cell proliferation.\nBiological cell proliferation.\nBiological cell proliferation.\nBiological cell proliferation.\nBio'
+
+tests/test_res04_preprocessing.py:63: AssertionError
+_____________ test_irrelevant_abstract_is_explicitly_insufficient ______________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-44/test_irrelevant_abstract_is_ex0')
+
+    def test_irrelevant_abstract_is_explicitly_insufficient(tmp_path):
+        _, _, bank = collect(tmp_path, {"10.1234/one": "<p>Biological cell proliferation.</p>"})
+>       assert bank["evidence"][0]["extraction_status"] == "NO_RELEVANT_PASSAGE"
+E       AssertionError: assert 'EXTRACTED_UNVERIFIED' == 'NO_RELEVANT_PASSAGE'
+E         
+E         - NO_RELEVANT_PASSAGE
+E         + EXTRACTED_UNVERIFIED
+
+tests/test_res04_preprocessing.py:70: AssertionError
+_ test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing[query] _
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-44/test_rehashed_registered_bank_0')
+mutation = 'query'
+
+    @pytest.mark.parametrize("mutation", ["query", "missing_query", "url", "passage", "limits"])
+    def test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing(tmp_path, mutation):
+        j, _, bank = collect(tmp_path, {"10.1234/one": "Trading strategy decay depends on market regimes."})
+        forged = copy.deepcopy(bank)
+        e = forged["evidence"][0]
+        if mutation == "query": e["query_provenance"] = ["f"*64]
+        if mutation == "missing_query": e["query_provenance"] = []
+        if mutation == "url": e["source_url"] = "https://doi.org/10.1234/forged"
+        if mutation == "passage":
+            e["passage"] = "Biological cell proliferation."
+            e["passage_sha256"] = R.sha(e["passage"])
+        if mutation == "limits": forged["limitations"] = []
+        forged["evidence_id"] = R.sha(R.canonical(dict(searches=forged["searches"],evidence=forged["evidence"])))
+        forged["result_id"] = R.sha(R.canonical(dict(plan_id=forged["plan_id"],evidence_id=forged["evidence_id"],status=forged["collection_status"])))
+        del forged["bank_object_id"]
+        forged["bank_object_id"] = R.sha(R.canonical(forged))
+        row = R._row(forged)
+        # Rewrite the local fixture's protected row and registration deliberately,
+        # so a hash or insertion conflict cannot substitute for semantic refusal.
+        with sqlite3.connect(j.db_path) as conn:
+            for (name,) in conn.execute("SELECT name FROM sqlite_master WHERE type='trigger'").fetchall():
+                conn.execute('DROP TRIGGER "' + name + '"')
+            conn.execute("DELETE FROM research_bank_objects WHERE bank_object_id=?", (bank["bank_object_id"],))
+        assert j.record_research_bank_object(row,recorded_at_ms=1) == "inserted"
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_res04_preprocessing.py:99: Failed
+__ test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing[url] __
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-44/test_rehashed_registered_bank_2')
+mutation = 'url'
+
+    @pytest.mark.parametrize("mutation", ["query", "missing_query", "url", "passage", "limits"])
+    def test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing(tmp_path, mutation):
+        j, _, bank = collect(tmp_path, {"10.1234/one": "Trading strategy decay depends on market regimes."})
+        forged = copy.deepcopy(bank)
+        e = forged["evidence"][0]
+        if mutation == "query": e["query_provenance"] = ["f"*64]
+        if mutation == "missing_query": e["query_provenance"] = []
+        if mutation == "url": e["source_url"] = "https://doi.org/10.1234/forged"
+        if mutation == "passage":
+            e["passage"] = "Biological cell proliferation."
+            e["passage_sha256"] = R.sha(e["passage"])
+        if mutation == "limits": forged["limitations"] = []
+        forged["evidence_id"] = R.sha(R.canonical(dict(searches=forged["searches"],evidence=forged["evidence"])))
+        forged["result_id"] = R.sha(R.canonical(dict(plan_id=forged["plan_id"],evidence_id=forged["evidence_id"],status=forged["collection_status"])))
+        del forged["bank_object_id"]
+        forged["bank_object_id"] = R.sha(R.canonical(forged))
+        row = R._row(forged)
+        # Rewrite the local fixture's protected row and registration deliberately,
+        # so a hash or insertion conflict cannot substitute for semantic refusal.
+        with sqlite3.connect(j.db_path) as conn:
+            for (name,) in conn.execute("SELECT name FROM sqlite_master WHERE type='trigger'").fetchall():
+                conn.execute('DROP TRIGGER "' + name + '"')
+            conn.execute("DELETE FROM research_bank_objects WHERE bank_object_id=?", (bank["bank_object_id"],))
+        assert j.record_research_bank_object(row,recorded_at_ms=1) == "inserted"
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_res04_preprocessing.py:99: Failed
+_ test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing[passage] _
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-44/test_rehashed_registered_bank_3')
+mutation = 'passage'
+
+    @pytest.mark.parametrize("mutation", ["query", "missing_query", "url", "passage", "limits"])
+    def test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing(tmp_path, mutation):
+        j, _, bank = collect(tmp_path, {"10.1234/one": "Trading strategy decay depends on market regimes."})
+        forged = copy.deepcopy(bank)
+        e = forged["evidence"][0]
+        if mutation == "query": e["query_provenance"] = ["f"*64]
+        if mutation == "missing_query": e["query_provenance"] = []
+        if mutation == "url": e["source_url"] = "https://doi.org/10.1234/forged"
+        if mutation == "passage":
+            e["passage"] = "Biological cell proliferation."
+            e["passage_sha256"] = R.sha(e["passage"])
+        if mutation == "limits": forged["limitations"] = []
+        forged["evidence_id"] = R.sha(R.canonical(dict(searches=forged["searches"],evidence=forged["evidence"])))
+        forged["result_id"] = R.sha(R.canonical(dict(plan_id=forged["plan_id"],evidence_id=forged["evidence_id"],status=forged["collection_status"])))
+        del forged["bank_object_id"]
+        forged["bank_object_id"] = R.sha(R.canonical(forged))
+        row = R._row(forged)
+        # Rewrite the local fixture's protected row and registration deliberately,
+        # so a hash or insertion conflict cannot substitute for semantic refusal.
+        with sqlite3.connect(j.db_path) as conn:
+            for (name,) in conn.execute("SELECT name FROM sqlite_master WHERE type='trigger'").fetchall():
+                conn.execute('DROP TRIGGER "' + name + '"')
+            conn.execute("DELETE FROM research_bank_objects WHERE bank_object_id=?", (bank["bank_object_id"],))
+        assert j.record_research_bank_object(row,recorded_at_ms=1) == "inserted"
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_res04_preprocessing.py:99: Failed
+_ test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing[limits] _
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-44/test_rehashed_registered_bank_4')
+mutation = 'limits'
+
+    @pytest.mark.parametrize("mutation", ["query", "missing_query", "url", "passage", "limits"])
+    def test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing(tmp_path, mutation):
+        j, _, bank = collect(tmp_path, {"10.1234/one": "Trading strategy decay depends on market regimes."})
+        forged = copy.deepcopy(bank)
+        e = forged["evidence"][0]
+        if mutation == "query": e["query_provenance"] = ["f"*64]
+        if mutation == "missing_query": e["query_provenance"] = []
+        if mutation == "url": e["source_url"] = "https://doi.org/10.1234/forged"
+        if mutation == "passage":
+            e["passage"] = "Biological cell proliferation."
+            e["passage_sha256"] = R.sha(e["passage"])
+        if mutation == "limits": forged["limitations"] = []
+        forged["evidence_id"] = R.sha(R.canonical(dict(searches=forged["searches"],evidence=forged["evidence"])))
+        forged["result_id"] = R.sha(R.canonical(dict(plan_id=forged["plan_id"],evidence_id=forged["evidence_id"],status=forged["collection_status"])))
+        del forged["bank_object_id"]
+        forged["bank_object_id"] = R.sha(R.canonical(forged))
+        row = R._row(forged)
+        # Rewrite the local fixture's protected row and registration deliberately,
+        # so a hash or insertion conflict cannot substitute for semantic refusal.
+        with sqlite3.connect(j.db_path) as conn:
+            for (name,) in conn.execute("SELECT name FROM sqlite_master WHERE type='trigger'").fetchall():
+                conn.execute('DROP TRIGGER "' + name + '"')
+            conn.execute("DELETE FROM research_bank_objects WHERE bank_object_id=?", (bank["bank_object_id"],))
+        assert j.record_research_bank_object(row,recorded_at_ms=1) == "inserted"
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_res04_preprocessing.py:99: Failed
+=========================== short test summary info ============================
+FAILED tests/test_res04_preprocessing.py::test_equivalent_rendered_content_is_deduplicated
+FAILED tests/test_res04_preprocessing.py::test_extract_relevant_passage_after_irrelevant_prefix
+FAILED tests/test_res04_preprocessing.py::test_irrelevant_abstract_is_explicitly_insufficient
+FAILED tests/test_res04_preprocessing.py::test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing[query]
+FAILED tests/test_res04_preprocessing.py::test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing[url]
+FAILED tests/test_res04_preprocessing.py::test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing[passage]
+FAILED tests/test_res04_preprocessing.py::test_rehashed_registered_bank_cannot_drop_provenance_or_preprocessing[limits]
+7 failed, 1 passed in 10.41s
