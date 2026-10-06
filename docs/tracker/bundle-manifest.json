@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 396193,
-      "sha256": "4395a51666fd4842e2ee99d951afbbdfabe8091d02b27028222e368cb3d262c6",
+      "bytes": 397056,
+      "sha256": "00af4d19149b824466bd4d6b9331cf9fdf3f8c9498252469983e7368d3bfb5c8",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 384310,
-      "sha256": "f7795f9d54863ee888583262ff4374c51f9cb67c0936e8bd99b9a6e22b92d1c9",
+      "bytes": 385153,
+      "sha256": "674e76169701a4bb2bbc852368930c2a8519f836d841d7a956ed4b1acaa91ef7",
       "synchronization_required": false
     },
     {
@@ -381,5 +381,18 @@
     "independent_revalidation": "docs/tracker/evidence/accounting-truth-followup-sol/acc01-tests.txt",
     "four_gaps_recorded": true,
     "original_condition_satisfied": true
+  },
+  "wrld01_canonical_reconciliation": {
+    "item": "WRLD-01",
+    "canonical_status": "CLOSED",
+    "engineering_closure_commit": "3dc16013e43667b622fd478e6a77b746740c6dc8",
+    "evidence": "docs/superpowers/reports/2026-10-06-wrld01-sol1-evidence.txt",
+    "evidence_scope": "Offline engineering/test closure at 3dc1601; existing evidence reused, no implementation or runtime rerun.",
+    "dependency_status": {
+      "DATA-02": "CLOSED"
+    },
+    "wrld03_dependency_satisfied": true,
+    "wrld03_status_changed": false,
+    "control_plane_reconciliation_pending": false
   }
 }

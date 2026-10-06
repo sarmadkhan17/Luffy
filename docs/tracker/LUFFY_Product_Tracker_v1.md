@@ -1418,30 +1418,30 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 2
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Separates market evidence from execution authority.
 - **closure_condition**: Enabled analysts declare inputs, horizon, quality, strength/uncertainty and limitations; Decision consumes typed evidence.
 - **failure_regression_proof**: Analysts cannot size/place orders, activate strategies or fabricate missing values.
 - **dependencies**: DATA-02
 - **owner_role**: Perception & WorldModel owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-1 engineering closure and canonical reconciliation
+- **implementation_evidence**: 3dc1601; trader/agents/measurement.py; enabled analyst input/horizon/quality/uncertainty/limitations declarations; Orchestrator.decide consumes typed packets; tests/test_wrld01_measurements.py
+- **runtime_evidence**: NOT_PERFORMED; pinned offline tests and separate-process restart only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Seven enabled perception analysts produce immutable typed measurement packets consumed by Decision. Missing/invalid/unsupported inputs remain explicit with null measurement strength/confidence; undefined Value z-score is not defaulted. Positioning retains no exchange execution capability; wrong-instrument contexts are rejected. Exact packets survive journal capture and restart. Existing closure reused: 30 WRLD-01 checks, 99 fast checks and 62 integration checks passed in recorded groups; three unrelated scout baseline failures reproduced and unchanged. No Kernel/providers launched.
 - **source_ids**: S01, S02, S12
 - **source_sections**: §§7,15.5,35.2
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for WRLD-01. DATA-02 and WRLD-01 satisfy WRLD-03 dependencies; WRLD-03 remains a separate evidence/status decision.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 3dc16013e43667b622fd478e6a77b746740c6dc8
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/superpowers/reports/2026-10-06-wrld01-sol1-evidence.txt
+- **evidence_validity**: Pinned offline engineering/test closure at 3dc1601; no later runtime or deployment proof inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 
