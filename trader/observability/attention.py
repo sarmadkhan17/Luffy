@@ -140,10 +140,21 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
                            "detail": supplemental.reason})
     for symbol, df, source in sources:
         if df is not None:
-            from trader.data.market_provenance import eligible_frame
-            df = eligible_frame(df, tf, as_of)
-            if df is not None:
-                df = df.loc[df['quality'].eq('VALID')].copy()
+            from trader.data.market_provenance import META, cut, ms
+            import pandas as pd
+            cut(as_of)
+            if not all(key in df for key in META):
+                df = None
+            else:
+                # Capture keeps only VALID final rows. Apply the same temporal
+                # boundary directly, without copying the entire frame three
+                # times or assigning NaN to rows that capture discards.
+                known = (pd.to_numeric(df['available_at_ms'], errors='coerce').le(as_of) &
+                         pd.to_numeric(df['observed_at_ms'], errors='coerce').le(as_of) &
+                         pd.to_numeric(df['event_time_ms'], errors='coerce').le(as_of) &
+                         df['bar_state'].eq('FINAL') & df['quality'].eq('VALID') &
+                         (ms(df['ts']) + tf_ms <= as_of))
+                df = df.loc[known]
         histories.append(_history(symbol, df, tf_ms, as_of))
         if df is None or not len(df):
             issues.append({"symbol": symbol, "reason": "missing_timeframe"})
@@ -160,9 +171,12 @@ def capture(frames, members, scan_id, cfg, as_of_ms=None, supplemental=None,
             previous = -1
             proven = df is not None and 'revision_id' in df
             receipts = df['available_at_ms'].array[-tail_n:].tolist() if proven else [as_of]*len(opens)
+            # Only receipt columns are needed. Avoid per-row pandas Series and
+            # their attrs copies; OHLCV values are detached above.
+            retained = [dict(zip(META, values)) for values in zip(
+                *(df[key].array[-tail_n:].tolist() for key in META))]
             refs = [(str(row['source']) + '|instrument=' + str(row['instrument_id']) +
-                     '|revision=' + str(row['revision_id'])) for _, row in df.iloc[-tail_n:].iterrows()] if proven else [source]*len(opens)
-            retained = df.iloc[-tail_n:].to_dict('records')
+                     '|revision=' + str(row['revision_id'])) for row in retained] if proven else [source]*len(opens)
             for index, (ms, available, source_ref, *values) in enumerate(zip(opens, receipts, refs, *columns)):
                 if ms <= previous:
                     raise ValueError("unordered candle tail")
