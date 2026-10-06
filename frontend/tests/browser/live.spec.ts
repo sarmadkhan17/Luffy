@@ -363,7 +363,7 @@ test("Live System separates architecture, telemetry, stale and missing", async (
   await expect(page.locator(".react-flow__node")).toHaveCount(11);
   const node = (name: string) =>
     page.locator(".react-flow__node", { hasText: name });
-  await expect(node("Kernel cycle")).toContainText("ACTIVE");
+  await expect(node("Kernel cycle")).toContainText("UNKNOWN");
   await expect(node("Risk")).toContainText("NO TELEMETRY");
   await expect(node("Orchestrator")).toContainText("UNKNOWN");
   await expect(page.locator(".react-flow__edge.animated")).toHaveCount(0);
@@ -381,7 +381,7 @@ test("Live System separates architecture, telemetry, stale and missing", async (
   await state(request, { scenario: "stale" });
   await page.reload();
   await expect(node("Kernel cycle")).toContainText("STALE");
-  await expect(node("Kernel cycle")).toContainText("Last reported: ACTIVE");
+  await expect(node("Kernel cycle")).toContainText("Last reported: UNKNOWN");
   await expect(node("Supervisor")).toContainText("STALE");
   await expect(page.locator(".system-node.status-active")).toHaveCount(2); // dashboard and the independently polled Owner Interface
 });

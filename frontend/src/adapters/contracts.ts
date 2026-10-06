@@ -13,6 +13,8 @@ export interface Provenance {
   classification: string;
   /** What observedAt means when it is not a live observation (e.g. file_modified). */
   timeBasis?: string;
+  /** Browser clock deadline for observed telemetry; null means unproven. */
+  expiresAt?: number | null;
 }
 export type ProtectionStatus =
   | "PARTIAL"
@@ -48,6 +50,7 @@ export interface LiveOverview {
     lastEventAt: string | null;
   } | null;
   heartbeat: Provenance | null;
+  kernelState?: string;
   account: Provenance | null;
   protection: {
     status: ProtectionStatus;

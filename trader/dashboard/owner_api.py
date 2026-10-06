@@ -34,7 +34,7 @@ from pathlib import Path
 from fastapi import Request
 from fastapi.responses import FileResponse, JSONResponse, Response
 
-from . import current_truth, owner_reads, trade_history, valuation
+from . import current_truth, owner_reads, owner_runtime, trade_history, valuation
 from ..core import truth
 
 log = logging.getLogger("dashboard.owner_api")
@@ -124,6 +124,7 @@ def read_control(journal, now):
         return None, "control_state_missing"
     return {"state": str(raw), "source": "journal state_kv.control_state",
             "observed_at": _iso(now),
+            "time_basis": "read_time", "classification": "stored control permission, not process/work evidence",
             "last_event": ev[0] if ev else None}, None
 
 
@@ -135,11 +136,36 @@ def read_heartbeat(root: Path, now):
         return None, "heartbeat_unreadable"
     at = _parse(stamp)
     age = _age(at, now)
+    work_at, valid = None, False
+    try:
+        from trader.engine.watchdog import validate_heartbeat
+        validate_heartbeat(data, "luffy", now.timestamp())
+        work_at = _parse(data["context"]["last_successful_cycle_at"])
+        valid = True
+    except (ValueError, KeyError, TypeError):
+        pass
+    work_age = _age(work_at, now)
+    # Legacy publications remain readable history, but cannot prove work.
+    if valid and age is not None and work_age is not None:
+        age = max(age, work_age)
+    else:
+        valid = False
+    freshness = _freshness(age, HEARTBEAT_STALE_S) if at else "invalid"
+    if data.get("schema") and not valid:
+        freshness = "invalid"
+    process = owner_runtime.kernel_process(root)
+    bound = valid and process["heartbeat_instance_id"] == data.get("instance_id")
+    state = ("STOPPED" if process["state"] == "STOPPED" else
+             "UNKNOWN" if process["state"] != "RUNNING" or not bound else
+             "RUNNING" if freshness == "fresh" else "STALE")
     return {"observed_at": _iso(at), "age_s": age,
             # a present but malformed time is an invalid clock, not "no data"
-            "freshness": _freshness(age, HEARTBEAT_STALE_S) if at else "invalid",
+            "freshness": freshness, "runtime_state": state,
+            "process_state": process["state"], "process_source": process["source"],
+            "work_observed_at": _iso(work_at), "work_age_s": work_age,
+            "heartbeat_valid": valid, "instance_bound": bound,
             "stale_after_s": HEARTBEAT_STALE_S,
-            "reported_state": data.get("state"),
+            "reported_state": (data.get("context") or {}).get("state") if valid else data.get("state"),
             "source": "data/heartbeat_luffy.json (kernel cycle heartbeat)"}, None
 
 
@@ -443,8 +469,10 @@ def overview(journal, root: Path, cfg: dict | None = None) -> dict:
         needs = {"needs_owner": sup["needs_owner"], "reasons": sup["reasons"],
                  "since_control_event_id": sup["needs_owner_since_control_event_id"],
                  "observed_at": sup["observed_at"], "freshness": sup["freshness"],
+                 "stale_after_s": sup["stale_after_s"],
                  "source": sup["source"]}
     return {"mode": "LIVE", "generated_at": _iso(now), "control": control,
+            "kernel_process": owner_runtime.kernel_process(root),
             "heartbeat": heartbeat, "account": account, "equity_series": series,
             "realized_today": realized, "exposure": exposure, "positions": positions,
             "protection": protection, "needs_you": needs, "news_guard": news,
@@ -646,20 +674,27 @@ def system(journal, root: Path, cfg: dict) -> dict:
     now = _now()
     tele: dict[str, dict] = {}
 
-    def put(cid, at, health, summary, source, stale_after=ACTIVITY_STALE_S):
+    def put(cid, at, health, summary, source, stale_after=ACTIVITY_STALE_S, status=None):
         age = _age(at, now)
         tele[cid] = {"observed_at": _iso(at), "age_s": age,
                      "freshness": _freshness(age, stale_after), "health": health,
-                     "summary": summary, "source": source}
+                     "summary": summary, "source": source, "stale_after_s": stale_after,
+                     "status_label": status}
 
     hb, _ = _safe(read_heartbeat, root, now)
     if hb:
-        put("kernel", _parse(hb["observed_at"]), "active",
-            f"Heartbeat {hb['age_s']:.0f}s old; kernel reported state {hb.get('reported_state')}",
-            hb["source"], HEARTBEAT_STALE_S)
+        put("kernel", _parse(hb["work_observed_at"] or hb["observed_at"]), "unknown",
+            f"Process {hb['process_state']}; heartbeat {hb['freshness']}; "
+            f"successful work age {hb['work_age_s']}; reported control {hb.get('reported_state')}",
+            hb["source"], HEARTBEAT_STALE_S, hb["runtime_state"])
+        tele["kernel"]["freshness"] = hb["freshness"]
+    else:
+        process = owner_runtime.kernel_process(root)
+        put("kernel", now, "unknown", "No readable heartbeat or successful-work evidence",
+            process["source"], HEARTBEAT_STALE_S, process["state"])
     sup, _ = _safe(read_supervisor, journal, now)
     if sup:
-        health = {"SAFE": "active", "RECOVERING": "degraded", "DEGRADED": "degraded",
+        health = {"SAFE": "unknown", "RECOVERING": "degraded", "DEGRADED": "degraded",
                   "NEEDS_OWNER": "degraded"}.get(sup.get("outcome"), "unknown")
         put("supervisor", _parse(sup["observed_at"]), health,
             f"Last pass outcome {sup.get('outcome')}; stage {sup.get('stage')}; "
@@ -687,14 +722,19 @@ def system(journal, root: Path, cfg: dict) -> dict:
             put("attention", _parse(float(data["updated_ms"]) / 1000.0), "unknown",
                 f"Attention health status {data.get('status')}",
                 "data/attention_health.json", float(
-                    ((cfg.get("attention") or {}).get("stale_seconds")) or ACTIVITY_STALE_S))
+                    ((cfg.get("attention") or {}).get("stale_seconds")) or ACTIVITY_STALE_S),
+                {"waiting": "WAITING", "failed": "FAILED", "error": "FAILED",
+                 "disabled": "DISABLED", "stopped": "STOPPED"}.get(data.get("status")))
     except (OSError, ValueError, TypeError):
         pass
     put("dashboard", now, "active", "This server answered the request", "dashboard process")
     nodes = []
     for cid, label, src, x, y in SYSTEM_COMPONENTS:
         t = tele.get(cid)
+        configured = {"attention": (cfg.get("attention") or {}).get("enabled"),
+                      "research": (cfg.get("research") or {}).get("enabled")}.get(cid)
         nodes.append({"id": cid, "label": label, "kind": "Component", "source_file": src,
+                      "configured_enabled": configured if type(configured) is bool else None,
                       "x": x, "y": y,
                       "telemetry": t or {"observed_at": None, "age_s": None,
                                          "freshness": "unavailable", "health": None,

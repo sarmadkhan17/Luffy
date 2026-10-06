@@ -161,8 +161,13 @@ export default function GraphView({
   const q = useQuery({
     queryKey: ["graph", surface, scenario],
     queryFn: ({ signal }) => adapter.graph(surface, scenario, signal),
+    ...(live && system ? { refetchInterval: 30000, refetchIntervalInBackground: false } : {}),
   });
-  const d = useOwnerTelemetry(q.data ?? empty, system);
+  const graph = q.data ?? empty;
+  const d = useOwnerTelemetry(live && system && q.error ? {
+    ...graph, nodes: graph.nodes.map(n => ({ ...n, health: "unknown", statusLabel: "UNAVAILABLE",
+      evidence: { ...n.evidence, freshness: "unavailable", observedAt: null } })),
+  } : graph, system);
   const [lens, setLens] = useState<Lens>("Knowledge");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);

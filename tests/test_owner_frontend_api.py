@@ -273,7 +273,8 @@ def test_system_distinguishes_architecture_and_telemetry(live):
     s = c.get("/owner-api/v1/system", headers=H).json()
     assert s["events"] == []
     tele = {n["id"]: n["telemetry"] for n in s["nodes"]}
-    assert tele["kernel"]["freshness"] == "fresh" and tele["kernel"]["health"] == "active"
+    assert tele["kernel"]["freshness"] == "fresh" and tele["kernel"]["health"] == "unknown"
+    assert tele["kernel"]["status_label"] == "UNKNOWN"  # fixture has no observed process identity
     assert tele["risk"]["freshness"] == "unavailable" and tele["risk"]["health"] is None
     assert tele["orchestrator"]["health"] == "unknown"
     assert all(e["kind"] == "architecture" for e in s["edges"])

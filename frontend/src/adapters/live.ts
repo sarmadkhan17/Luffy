@@ -61,6 +61,15 @@ function need(cond: unknown, what: string): asserts cond {
 const fresh = (v: unknown): Freshness =>
   v === "fresh" || v === "stale" ? v : "unavailable";
 
+function telemetryExpiry(s: Json, generatedAt: unknown): number | null {
+  const server = Date.parse(String(generatedAt));
+  const at = Date.parse(String(s.observed_at));
+  const age = typeof s.age_s === "number" ? s.age_s : (server - at) / 1000;
+  return Number.isFinite(server) && Number.isFinite(at) && at <= server && Number.isFinite(age) && age >= 0 &&
+    typeof s.stale_after_s === "number" && Number.isFinite(s.stale_after_s) && s.stale_after_s > 0
+    ? Date.now() + (s.stale_after_s - age) * 1000 : null;
+}
+
 export function createTransport(onUnauthorized: () => void) {
   return async function api<T = Json>(
     path: string,
@@ -153,6 +162,7 @@ export function mapOverview(o: Json): OverviewData {
       : `Unavailable: ${errors.account ?? "no record"}.`,
     "journal record · demo venue account",
   );
+  if (account && acc) account.expiresAt = telemetryExpiry(acc, o.generated_at);
   // Protection truth is the kernel's read-only protection snapshot. The adapter
   // re-checks the backend: VERIFIED needs a fresh VERIFIED snapshot with every
   // check true and a complete stop listing, never venue_protection alone.
@@ -259,6 +269,7 @@ export function mapOverview(o: Json): OverviewData {
       : null,
     live: {
       generatedAt: String(o.generated_at),
+      kernelState: heartbeat?.runtime_state ?? o.kernel_process?.state ?? "UNKNOWN",
       control: obj(o.control)
         ? {
             state: String(o.control.state),
@@ -266,15 +277,15 @@ export function mapOverview(o: Json): OverviewData {
             lastEventAt: o.control.last_event?.ts ?? null,
           }
         : null,
-      heartbeat: provenance(
+      heartbeat: heartbeat ? { ...provenance(
         "heartbeat_luffy@" + (heartbeat?.observed_at ?? "missing"),
         heartbeat?.source ?? "kernel heartbeat",
         heartbeat,
         heartbeat
           ? `Kernel heartbeat ${heartbeat.age_s}s old (stale after ${heartbeat.stale_after_s}s).`
           : "No readable kernel heartbeat.",
-        "kernel liveness",
-      ),
+        "heartbeat publication and successful-work evidence; process state is separate",
+      )!, expiresAt: telemetryExpiry(heartbeat, o.generated_at) } : null,
       account,
       protection: obj(o.protection)
         ? {
@@ -297,13 +308,13 @@ export function mapOverview(o: Json): OverviewData {
             reasons: Array.isArray(needs.reasons)
               ? needs.reasons.map(String)
               : [],
-            provenance: provenance(
+            provenance: { ...provenance(
               "journal:supervisor_status@" + (needs.observed_at ?? "missing"),
               needs.source,
               needs,
               "Supervisor owner-attention flag and reasons.",
               "venue reconciliation evidence",
-            )!,
+            )!, expiresAt: telemetryExpiry(needs, o.generated_at) },
           }
         : null,
       realizedClosedTrades:
@@ -390,13 +401,18 @@ export function mapSystem(s: Json): GraphData {
           typeof n.x === "number" && typeof n.y === "number"
             ? { x: n.x, y: n.y }
             : undefined,
-        health,
+        // Only this responding Dashboard proves current activity here. Other
+        // components supply process/report labels, not fabricated work health.
+        health: health === "active" && n.id !== "dashboard" ? "unknown" : health,
+        statusLabel: ["RUNNING", "STOPPED", "UNKNOWN", "STALE", "WAITING", "FAILED", "DISABLED"].includes(t.status_label)
+          ? t.status_label : undefined,
         evidence: {
           id: `telemetry:${n.id}`,
           source: t.source ?? `No telemetry source · ${n.source_file}`,
           observedAt: t.observed_at ?? null,
           freshness: fresh(t.freshness),
-          summary: `${t.summary ?? "No telemetry"}. Declared in ${n.source_file}.`,
+          expiresAt: telemetryExpiry(t, s.generated_at),
+          summary: `${t.summary ?? "No telemetry"}. Declared in ${n.source_file}. Configured: ${n.configured_enabled === false ? "intentionally disabled" : n.configured_enabled === true ? "enabled" : "UNKNOWN"}; configuration does not establish runtime activity.`,
           classification: t.source ? "observed telemetry" : "architecture only",
         },
       };

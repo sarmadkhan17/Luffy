@@ -4,18 +4,25 @@ export function healthPresentation(node: GraphNode) {
     return { primary: "NO TELEMETRY", tone: "unknown", previous: null };
   if (node.statusLabel === "CHECKING")
     return { primary: "CHECKING", tone: "unknown", previous: null };
-  if (node.evidence.freshness === "stale")
+  if (node.evidence.freshness !== "stale" &&
+      (node.evidence.freshness === "unavailable" || !node.evidence.observedAt))
+    return { primary: "UNAVAILABLE", tone: "unknown", previous: null };
+  if (node.evidence.freshness === "stale" ||
+      (node.evidence.expiresAt !== undefined &&
+       (node.evidence.expiresAt === null || Date.now() > node.evidence.expiresAt)))
     return {
       primary: "STALE",
       tone: "stale",
       previous: node.statusLabel ?? node.health?.toUpperCase() ?? "UNKNOWN",
     };
-  if (node.evidence.freshness === "unavailable" || !node.evidence.observedAt)
-    return { primary: "UNAVAILABLE", tone: "unknown", previous: null };
+  if (node.statusLabel === "STOPPED")
+    return { primary: "STOPPED", tone: "unknown", previous: null };
   const health = node.health ?? "unknown";
   return {
     primary: node.statusLabel ?? health.toUpperCase(),
-    tone: health,
+    tone: node.statusLabel === "UNKNOWN" ? "unknown" :
+      node.statusLabel === "WAITING" || node.statusLabel === "DISABLED" ? "idle" :
+      node.statusLabel === "FAILED" ? "failing" : health,
     previous: null,
   };
 }

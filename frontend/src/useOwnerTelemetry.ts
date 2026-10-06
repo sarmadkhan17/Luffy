@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { usePreview } from "./context";
 import type { GraphData } from "./adapters/contracts";
@@ -8,6 +8,12 @@ export function useOwnerTelemetry(
   enabled: boolean,
 ): GraphData {
   const { adapter } = usePreview();
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    if (!enabled || adapter.mode !== "LIVE") return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [enabled, adapter.mode]);
   const health = useQuery({
     queryKey: ["owner-interface"],
     queryFn: ({ signal }) => adapter.ownerInterface!(signal),
@@ -19,13 +25,16 @@ export function useOwnerTelemetry(
   return useMemo(() => {
     if (!enabled || adapter.mode !== "LIVE") return data;
     const h = health.error ? undefined : health.data;
-    const age = h?.observedAt ? Date.now() - Date.parse(h.observedAt) : NaN;
+    const age = h?.observedAt ? now - Date.parse(h.observedAt) : NaN;
     const stale = Number.isFinite(age) && (age < 0 || age > 60000);
     return {
       ...data,
       nodes: data.nodes.map((n) =>
         n.id !== "owner-interface"
-          ? n
+          ? { ...n, evidence: { ...n.evidence,
+              freshness: n.evidence.freshness === "fresh" && n.evidence.expiresAt !== undefined &&
+                (n.evidence.expiresAt === null || now > n.evidence.expiresAt)
+                ? "stale" : n.evidence.freshness } }
           : {
               ...n,
               hasTelemetry: true,
@@ -60,5 +69,6 @@ export function useOwnerTelemetry(
     health.error,
     health.isPending,
     health.dataUpdatedAt,
+    now,
   ]);
 }

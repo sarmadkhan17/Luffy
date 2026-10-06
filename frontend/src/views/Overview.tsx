@@ -3,6 +3,7 @@ import { lazyChunk } from "../lazyChunk";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { applyProtectionExpiry } from "../protectionExpiry";
+import { expireOverviewTelemetry } from "../telemetryExpiry";
 import { ArrowUpRight, Shield, Radio, Wallet } from "lucide-react";
 import { usePreview } from "../context";
 import { recordHref } from "../links";
@@ -81,8 +82,8 @@ export default function Overview() {
     return () => clearInterval(t);
   }, [live]);
   const d = useMemo(
-    () => (q.data && live ? applyProtectionExpiry(q.data, now) : q.data),
-    [q.data, now, live],
+    () => (q.data && live ? expireOverviewTelemetry(applyProtectionExpiry(q.data, now), now, !!q.error) : q.data),
+    [q.data, q.error, now, live],
   );
   // Optional venue enrichment: never blocks, never replaces local values.
   const marks = useQuery({
@@ -164,6 +165,7 @@ export default function Overview() {
                 <div className="stat-control" data-testid="control-state">
                   {d.control}
                 </div>
+                {live && <p>Stored control permission · not evidence of running work.</p>}
                 <p>
                   {live ? (
                     <a className="text-link" href="#operations">
@@ -191,14 +193,22 @@ export default function Overview() {
                 </div>
                 {live && (
                   <div className="status-row">
-                    <span>Kernel heartbeat</span>
+                    <span>Kernel process</span>
+                    <Badge tone="amber">{q.error ? "UNKNOWN" :
+                      L?.kernelState === "RUNNING" && (L.heartbeat?.expiresAt == null || now > L.heartbeat.expiresAt)
+                        ? "STALE" : L?.kernelState ?? "UNKNOWN"}</Badge>
+                  </div>
+                )}
+                {live && (
+                  <div className="status-row">
+                    <span>Kernel heartbeat / work</span>
                     <Badge
                       tone={
-                        L?.heartbeat?.freshness === "fresh" ? "mint" : "amber"
+                        !q.error && L?.heartbeat?.freshness === "fresh" && L.heartbeat.expiresAt != null && now <= L.heartbeat.expiresAt ? "mint" : "amber"
                       }
                     >
-                      {L?.heartbeat
-                        ? L.heartbeat.freshness.toUpperCase()
+                      {q.error ? "UNAVAILABLE" : L?.heartbeat
+                        ? L.heartbeat.expiresAt == null || now > L.heartbeat.expiresAt ? "STALE" : L.heartbeat.freshness.toUpperCase()
                         : "UNAVAILABLE"}
                     </Badge>
                   </div>

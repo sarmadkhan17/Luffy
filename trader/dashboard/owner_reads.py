@@ -1016,13 +1016,14 @@ def _health_file(p: Path, now: float) -> dict:
         d = json.loads(p.read_text())
     except (OSError, ValueError):
         return {"file": p.name, "status": "unavailable"}
+    from ..core import truth
     upd = d.get("updated_ms") if isinstance(d, dict) else None
-    age = (now - float(upd) / 1000.0) if isinstance(upd, (int, float)) else None
+    at = truth.parse_time(upd / 1000.0)[0] if type(upd) in (int, float) else None
+    age = now - at.timestamp() if at else None
     return {"file": p.name, "status": d.get("status") if isinstance(d, dict) else None,
             "updated_at": _iso(datetime.fromtimestamp(upd / 1000.0, timezone.utc))
             if age is not None else None, "age_s": age,
-            "freshness": "unavailable" if age is None else
-            ("fresh" if age <= HEALTH_STALE_S else "stale"),
+            "freshness": truth.classify_age(age, HEALTH_STALE_S),
             "last_error": d.get("last_error") if isinstance(d, dict) else None}
 
 

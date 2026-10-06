@@ -1049,7 +1049,7 @@ function DiagnosticsBoard({ d }: { d: R }) {
   const failed = probes.filter((p) => !p.ok).length;
   const collectors = new Map<string, number>();
   for (const c of rows(d.collectors)) {
-    const k = value(c.status);
+    const k = `${value(c.freshness)} · last reported ${value(c.status)}`;
     collectors.set(k, (collectors.get(k) ?? 0) + 1);
   }
   const disk = rec(rec(d.storage)?.disk);
@@ -1079,7 +1079,7 @@ function DiagnosticsBoard({ d }: { d: R }) {
             ? [...collectors.entries()].map(([k, n]) => `${n} ${k}`).join(" · ")
             : "Unavailable"
         }
-        note="status as each health file records it"
+        note="Historical health-file reports; process activity is not established"
       />
       <Figure
         label="Watchdog"
@@ -1207,7 +1207,7 @@ export function DiagnosticsDetail() {
                   data={rows(d.collectors)}
                   columns={[
                     ["file", "Health file"],
-                    ["status", "Status"],
+                    ["status", "Last reported status"],
                     ["freshness", "Freshness"],
                     ["updated_at", "Updated"],
                     ["last_error", "Last error"],
