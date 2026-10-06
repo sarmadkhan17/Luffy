@@ -1,0 +1,19 @@
+id: OPEN-04
+result: CLOSED_ENGINEERING_ONLY
+implementation_commit: c07c05b
+writer: trader/core/journal.py Journal.log_brain_event('market_provenance') via Orchestrator.journalize
+identity: stored manifest (hashes full detail incl. decision_id/cycle_id) + subject, newest 256 market_provenance rows
+tests:
+  new: tests/test_journal_evidence_repair.py::test_provenance_retry_adds_no_event_but_distinct_observation_does (fails on base ce72d2f, passes on fix)
+  test_journal_evidence_repair.py: 13 pass, 2 fail (identical on base)
+  test_bounded_evidence_latency.py: 14 passed
+  related: test_stage1_data_provenance_pit, test_evidence_zlib, test_observer_attention_repair, test_stage1_entry_authority: 151 passed
+baseline_failures:
+  tests:
+  - test_interrupted_migration_never_verified
+  - test_full_small_migration_preserves_rowid_sequence_schema
+  cause: scripts/compact_journal.py:64 estimate_plus_headroom_does_not_fit; HEADROOM=10GiB, tmp_path on / with ~3.4GiB free
+  identical_on_untouched_base: ce72d2f (separate worktree)
+  owner: DATA-07 (lossless journal evidence/compaction migration); not OPEN-04
+not_done: full suite; vote/outcome write paths (DATA-08 mapping)
+safety: no Kernel/Dashboard launch, no venue/provider calls, ATT-04/FROZEN/recovery untouched, SEC-01/RUN-01 untouched

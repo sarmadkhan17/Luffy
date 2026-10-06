@@ -1549,7 +1549,7 @@ items:
   implementation_evidence: NOT_MAPPED
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: No item-level evidence mapping completed in this tracker.
+  latest_evidence: 'No item-level evidence mapping completed in this tracker. Two compact_journal migration tests fail on base and fix alike (10GiB HEADROOM vs ~3.4GiB free on /); environment-dependent, owned here.'
   source_ids:
   - S01
   - S08
@@ -1587,7 +1587,7 @@ items:
   implementation_evidence: NOT_MAPPED
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: No item-level evidence mapping completed in this tracker.
+  latest_evidence: 'No item-level evidence mapping completed in this tracker. OPEN-04 (c07c05b) closed the market_provenance journal retry path; vote/outcome/learning paths still to map.'
   source_ids:
   - S01
   - S08
@@ -7309,7 +7309,7 @@ items:
   stage: Cross-cutting
   item_type: DEFECT
   release_scope: BASELINE
-  status: OPEN
+  status: CLOSED
   required_behavior: Add exact journal logical retry idempotency where still absent.
   why_needed: Compacted identical append retry reuses payload but adds another event reference.
   closure_condition: Measured actual writer distinguishes retry identity from a distinct observation; retry adds
@@ -7318,28 +7318,30 @@ items:
     boundaries without reopening unrelated work.
   dependencies: []
   owner_role: Assigned local engineering session
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: SEE_EVIDENCE
-  runtime_evidence: SEE_SCOPE_AND_EVIDENCE
+  engineering_assignee: Claude local engineering session
+  implementation_evidence: c07c05b; trader/core/journal.py; tests/test_journal_evidence_repair.py
+  runtime_evidence: NOT_PERFORMED; offline tests only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'S08: learning-registration retry adds zero; journal append retry adds references. Current revision
-    recheck required before implementation.'
+  latest_evidence: 'market_provenance append is idempotent on exact logical retry (same subject + manifest
+    in newest 256 rows); distinct decision_id/subject and other kinds still append. New test fails on base,
+    passes on fix; latency 14 passed. Two compact_journal migration tests fail identically on untouched base
+    (10GiB headroom check) and are recorded against DATA-07.'
   source_ids:
   - S08
   source_sections: 'Parent requirement(s): DATA-08'
-  next_proof: Resolve within the linked parent/active task; capture exact evidence before closure.
+  next_proof: None for OPEN-04. DATA-08 mapping of vote/outcome retry paths remains separate.
   acceptance_basis: Existing requirement/observed incident; not a new feature.
   acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
   priority: CURRENT
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: c07c05b
+  work_authorized: true
+  updated: '2026-10-06'
   legacy_ids: ''
   parent_ids:
   - DATA-08
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: docs/tracker/evidence/open04-journal-retry/closure.yaml
+  evidence_validity: Pinned repository implementation and offline test proof; no runtime claim.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 - id: OPEN-05

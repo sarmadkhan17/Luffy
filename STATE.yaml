@@ -1526,3 +1526,16 @@ completed_obs03_engineering:
   next_recommended_item: PERF-01
   next_item_selected: false
   next_item_started: false
+
+open04_journal_retry:
+  id: OPEN-04
+  status: CLOSED
+  result: CLOSED_ENGINEERING_ONLY
+  implementation_commit: c07c05b
+  evidence: docs/tracker/evidence/open04-journal-retry/closure.yaml
+  tests: new retry/adverse test passes (fails on base); latency 14 passed; 151 related passed; two compact_journal migration tests fail identically on base (DATA-07, 10GiB headroom).
+  kernel_launched: false
+  dashboard_launched: false
+  provider_calls: 0
+  sec01_run01_unchanged: true
+  next_recommended_item: DATA-08 mapping (vote/outcome retry paths); SEC-01/RUN-01 remain externally blocked
