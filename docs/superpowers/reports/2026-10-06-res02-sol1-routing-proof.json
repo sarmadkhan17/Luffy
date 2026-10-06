@@ -1,0 +1,318 @@
+{
+  "bank_object_id": "521c926b1b12af4858bd5b79b77ff3319bc1a144e51dd1f4e4e1e1a424cc5fb1",
+  "before_fix_diagnostic": {
+    "blocked_module": "trader.core.evidence_zlib",
+    "cursor_after": 0,
+    "outcome": "FAILED",
+    "reason": "worker_exception:ImportError"
+  },
+  "collection_status": "COLLECTED",
+  "plan": {
+    "bounds": {
+      "max_cost_usd": 0,
+      "max_metadata": 10,
+      "max_pages": 3,
+      "max_passage_chars": 2000,
+      "max_queries": 1,
+      "max_response_bytes": 131072,
+      "max_seconds": 30
+    },
+    "question_source": {
+      "canonical_sha256": "4efac8bf5b73212f06890f15e5c4df69eee28188c3e00d77eb17674c277cf8dc",
+      "health_view": {
+        "row_count": 4,
+        "rows_sha256": "44ea3acd53d579117ddf233454895d4da6fc04f93bcd2d89e80d1876d2ac3dbf",
+        "spec_max_event_id": 3,
+        "sweep_max_event_id": 4
+      },
+      "invocation_id": "1a051cba564e7e409f7c2d888a1d0b2b80fce07399a802911f48443c5740bc45",
+      "question_id": "1c7ecdcc57667701a2cda9ddf8e795ce4faa0be51e6179a2100b51fcab918258",
+      "receipt_sha256": "bfa71d221a18a5a7b31a6fce96a822d2300b928245fde03b6376a84131e353c5",
+      "recorded_at_ms": 1791312694153,
+      "registration": {
+        "canonical_sha256": "4efac8bf5b73212f06890f15e5c4df69eee28188c3e00d77eb17674c277cf8dc",
+        "envelope_json": "{\"canonical_sha256\":\"4efac8bf5b73212f06890f15e5c4df69eee28188c3e00d77eb17674c277cf8dc\",\"record_id\":\"1c7ecdcc57667701a2cda9ddf8e795ce4faa0be51e6179a2100b51fcab918258\",\"record_type\":\"research-question.v1\",\"recorded_at_ms\":1791312694153,\"schema\":\"research-registration.v1\"}",
+        "envelope_sha256": "b9ff11cb0f2166e0184eeda2ab65e1b791436ae7fe71228221e1486e0179e899",
+        "record_id": "1c7ecdcc57667701a2cda9ddf8e795ce4faa0be51e6179a2100b51fcab918258",
+        "record_type": "research-question.v1",
+        "recorded_at_ms": 1791312694153
+      },
+      "schema": "generated-question-source.v1",
+      "shadow_db": "/tmp/pytest-of-sarmad/pytest-24/test_generated_decay_question_0/shadow.db",
+      "source_db": "/tmp/pytest-of-sarmad/pytest-24/test_generated_decay_question_0/events.db"
+    },
+    "route": {
+      "authority": "RESEARCH_ONLY",
+      "queries": [
+        "trading strategy performance decay market regime",
+        "financial market trading strategy persistence"
+      ],
+      "question_id": "1c7ecdcc57667701a2cda9ddf8e795ce4faa0be51e6179a2100b51fcab918258",
+      "question_sha256": "4efac8bf5b73212f06890f15e5c4df69eee28188c3e00d77eb17674c277cf8dc",
+      "registry_sha256": "f5eeebdfcf90aa6dd12322a4a2be21b8a5aac796e92c667e89f6433ec958bddf",
+      "schema": "question-source-router.v1",
+      "scope": {
+        "kind": "strategy",
+        "spec_id": "s1"
+      },
+      "source_classes": [
+        "academic_factors"
+      ],
+      "sources": [
+        {
+          "metadata": {
+            "access_method": {
+              "reason": null,
+              "state": "RECORDED",
+              "value": {
+                "endpoint": "https://api.crossref.org/works",
+                "method": "HTTPS_GET_JSON",
+                "provenance": "https://www.crossref.org/documentation/retrieve-metadata/rest-api/"
+              }
+            },
+            "cost": {
+              "reason": null,
+              "state": "RECORDED",
+              "value": {
+                "access": "public_no_signup",
+                "paid_request_usd": 0,
+                "provenance": "https://www.crossref.org/documentation/retrieve-metadata/rest-api/"
+              }
+            },
+            "credibility_class": {
+              "reason": "bibliographic_index_is_not_claim_validation",
+              "state": "NOT_ASSESSED",
+              "value": null
+            },
+            "domains": {
+              "reason": null,
+              "state": "RECORDED",
+              "value": [
+                "api.crossref.org",
+                "doi.org"
+              ]
+            },
+            "historical_depth": {
+              "reason": "coverage_not_measured",
+              "state": "NOT_MEASURED",
+              "value": null
+            },
+            "known_weaknesses": {
+              "reason": null,
+              "state": "RECORDED",
+              "value": [
+                {
+                  "provenance": "https://www.crossref.org/documentation/retrieve-metadata/rest-api/",
+                  "text": "Metadata can be incomplete; abstracts may be absent. No full-text or validity claim."
+                }
+              ]
+            },
+            "primary_secondary": {
+              "reason": null,
+              "state": "RECORDED",
+              "value": "secondary_index_of_publisher_deposits"
+            },
+            "rate_limits": {
+              "reason": "provider_limits_are_dynamic; local_adapter_spacing_s=1",
+              "state": "NOT_ASSESSED",
+              "value": null
+            },
+            "type": {
+              "reason": null,
+              "state": "RECORDED",
+              "value": "scholarly_metadata"
+            }
+          },
+          "metadata_json": "{\"access_method\":{\"reason\":null,\"state\":\"RECORDED\",\"value\":{\"endpoint\":\"https://api.crossref.org/works\",\"method\":\"HTTPS_GET_JSON\",\"provenance\":\"https://www.crossref.org/documentation/retrieve-metadata/rest-api/\"}},\"cost\":{\"reason\":null,\"state\":\"RECORDED\",\"value\":{\"access\":\"public_no_signup\",\"paid_request_usd\":0,\"provenance\":\"https://www.crossref.org/documentation/retrieve-metadata/rest-api/\"}},\"credibility_class\":{\"reason\":\"bibliographic_index_is_not_claim_validation\",\"state\":\"NOT_ASSESSED\",\"value\":null},\"domains\":{\"reason\":null,\"state\":\"RECORDED\",\"value\":[\"api.crossref.org\",\"doi.org\"]},\"historical_depth\":{\"reason\":\"coverage_not_measured\",\"state\":\"NOT_MEASURED\",\"value\":null},\"known_weaknesses\":{\"reason\":null,\"state\":\"RECORDED\",\"value\":[{\"provenance\":\"https://www.crossref.org/documentation/retrieve-metadata/rest-api/\",\"text\":\"Metadata can be incomplete; abstracts may be absent. No full-text or validity claim.\"}]},\"primary_secondary\":{\"reason\":null,\"state\":\"RECORDED\",\"value\":\"secondary_index_of_publisher_deposits\"},\"rate_limits\":{\"reason\":\"provider_limits_are_dynamic; local_adapter_spacing_s=1\",\"state\":\"NOT_ASSESSED\",\"value\":null},\"type\":{\"reason\":null,\"state\":\"RECORDED\",\"value\":\"scholarly_metadata\"}}",
+          "retriever": "crossref_public.v1",
+          "source_class": "academic_factors",
+          "source_id": "external.crossref.public",
+          "status": "AVAILABLE"
+        }
+      ],
+      "truth_assessment": "NOT_ASSESSED"
+    },
+    "schema": "question-driven-external-evidence.v1"
+  },
+  "question": {
+    "changes_since_prior": {
+      "simulation_settings_changed": false,
+      "spec_version_changed": false,
+      "thresholds_changed": false
+    },
+    "prior": {
+      "event_id": 1,
+      "health_fingerprint": "fp1",
+      "record_sha256": "a7c6963abfea9918742db5cef09a9b1f6ac4c824deb25c231d145f686dab7724",
+      "simulation_settings_sha256": "sim1",
+      "sweep_id": "sw010",
+      "sweep_started_at": "2026-09-01T00:10:00+00:00",
+      "thresholds": {
+        "decay_floor_pf": 0.85,
+        "decay_min_trades": 3,
+        "decay_recent_days": 60.0
+      },
+      "verdict": "still_working"
+    },
+    "question": {
+      "template_id": "strategy-decay-question-text.v1",
+      "text": "What explains strategy s1 moving from health verdict still_working in decay sweep sw010 to decayed in decay sweep sw020?"
+    },
+    "question_id": "1c7ecdcc57667701a2cda9ddf8e795ce4faa0be51e6179a2100b51fcab918258",
+    "question_kind": "strategy_decay",
+    "schema": "research-question.v1",
+    "scope": {
+      "kind": "strategy",
+      "spec_id": "s1"
+    },
+    "semantics": "strategy-scoped research question registered from strategy-health-observation.v1; decayed is the health sweep's lenient retirement trigger on a recent close-fill backtest, not a proven loss of edge; no asset attribution, ranking, salience, urgency, usefulness, probability, score or threshold; not an Attention trigger; no Research Planner or Source Router consumer; no network, LLM, Risk, Execution or trading authority",
+    "source": {
+      "event_id": 3,
+      "event_ts": "2026-10-06T18:51:34.151667+00:00",
+      "health_fingerprint": "fp1",
+      "health_fingerprint_schema": "strategy-health-eval-fingerprint.v1",
+      "kind": "strategy_health_observed",
+      "lifecycle_branch": "decayed",
+      "record_sha256": "786cc6decfe457d8f3c68eb18836b79add97b7474a600003b209bb6cd6d0387c",
+      "retirement_action_selected": true,
+      "schema": "strategy-health-observation.v1",
+      "simulation_settings_sha256": "sim1",
+      "spec_content_sha256": "c1",
+      "spec_fingerprint": "sfp",
+      "spec_fingerprint_schema": "x",
+      "spec_id": "s1",
+      "spec_name": "name-s1",
+      "sweep_id": "sw020",
+      "sweep_started_at": "2026-09-01T00:20:00+00:00",
+      "thresholds": {
+        "decay_floor_pf": 0.85,
+        "decay_min_trades": 3,
+        "decay_recent_days": 60.0
+      },
+      "verdict": "decayed",
+      "verdict_reason": null
+    },
+    "trigger": "transition_to_decayed",
+    "unreadable_since_prior_event_ids": []
+  },
+  "result_status": "INCONCLUSIVE",
+  "schema": "res02-offline-routing-proof.v1",
+  "scope": "synthetic health events; real shadow producer and worker CLI; offline transport; no live-source claim",
+  "searches": [
+    {
+      "attempt_identity": {
+        "arguments": {
+          "limit": 10,
+          "query": "trading strategy performance decay market regime"
+        },
+        "normalized_query": "trading strategy performance decay market regime",
+        "operation": "search",
+        "question_id": "1c7ecdcc57667701a2cda9ddf8e795ce4faa0be51e6179a2100b51fcab918258",
+        "registry": "f5eeebdfcf90aa6dd12322a4a2be21b8a5aac796e92c667e89f6433ec958bddf",
+        "registry_schema": "external-research-source-registry.v1",
+        "response_byte_bound": 131072,
+        "retriever": "crossref_public.v1",
+        "source_class": "academic_factors",
+        "source_id": "external.crossref.public"
+      },
+      "attempted_at_ms": 1791312694709,
+      "available_ms": 1791312694712,
+      "bytes": 200,
+      "cache": false,
+      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "http_status": 200,
+      "metadata": [
+        {
+          "abstract": null,
+          "doi": "10.1234/one",
+          "title": "Trading strategy performance decay",
+          "type": "journal-article",
+          "url": "https://doi.org/10.1234/one"
+        }
+      ],
+      "normalized_query": "trading strategy performance decay market regime",
+      "query": "trading strategy performance decay market regime",
+      "question_id": "1c7ecdcc57667701a2cda9ddf8e795ce4faa0be51e6179a2100b51fcab918258",
+      "reason": null,
+      "request_id": "6ec77b623de97a515e00ebc9c72478d03008304787ef14c5798f2cb79e0fd777",
+      "result_set_sha256": "4da34c257f2876223055252987c33c3d62cb495b21fe09bdbfd118dc11121acb",
+      "retrieved_at_ms": 1791312694712,
+      "source_available_ms": null,
+      "source_id": "external.crossref.public",
+      "status": "OK",
+      "url": "https://api.crossref.org/works?query.bibliographic=trading+strategy+performance+decay+market+regime&rows=10"
+    }
+  ],
+  "sources": [
+    {
+      "metadata": {
+        "access_method": {
+          "reason": null,
+          "state": "RECORDED",
+          "value": {
+            "endpoint": "https://api.crossref.org/works",
+            "method": "HTTPS_GET_JSON",
+            "provenance": "https://www.crossref.org/documentation/retrieve-metadata/rest-api/"
+          }
+        },
+        "cost": {
+          "reason": null,
+          "state": "RECORDED",
+          "value": {
+            "access": "public_no_signup",
+            "paid_request_usd": 0,
+            "provenance": "https://www.crossref.org/documentation/retrieve-metadata/rest-api/"
+          }
+        },
+        "credibility_class": {
+          "reason": "bibliographic_index_is_not_claim_validation",
+          "state": "NOT_ASSESSED",
+          "value": null
+        },
+        "domains": {
+          "reason": null,
+          "state": "RECORDED",
+          "value": [
+            "api.crossref.org",
+            "doi.org"
+          ]
+        },
+        "historical_depth": {
+          "reason": "coverage_not_measured",
+          "state": "NOT_MEASURED",
+          "value": null
+        },
+        "known_weaknesses": {
+          "reason": null,
+          "state": "RECORDED",
+          "value": [
+            {
+              "provenance": "https://www.crossref.org/documentation/retrieve-metadata/rest-api/",
+              "text": "Metadata can be incomplete; abstracts may be absent. No full-text or validity claim."
+            }
+          ]
+        },
+        "primary_secondary": {
+          "reason": null,
+          "state": "RECORDED",
+          "value": "secondary_index_of_publisher_deposits"
+        },
+        "rate_limits": {
+          "reason": "provider_limits_are_dynamic; local_adapter_spacing_s=1",
+          "state": "NOT_ASSESSED",
+          "value": null
+        },
+        "type": {
+          "reason": null,
+          "state": "RECORDED",
+          "value": "scholarly_metadata"
+        }
+      },
+      "metadata_json": "{\"access_method\":{\"reason\":null,\"state\":\"RECORDED\",\"value\":{\"endpoint\":\"https://api.crossref.org/works\",\"method\":\"HTTPS_GET_JSON\",\"provenance\":\"https://www.crossref.org/documentation/retrieve-metadata/rest-api/\"}},\"cost\":{\"reason\":null,\"state\":\"RECORDED\",\"value\":{\"access\":\"public_no_signup\",\"paid_request_usd\":0,\"provenance\":\"https://www.crossref.org/documentation/retrieve-metadata/rest-api/\"}},\"credibility_class\":{\"reason\":\"bibliographic_index_is_not_claim_validation\",\"state\":\"NOT_ASSESSED\",\"value\":null},\"domains\":{\"reason\":null,\"state\":\"RECORDED\",\"value\":[\"api.crossref.org\",\"doi.org\"]},\"historical_depth\":{\"reason\":\"coverage_not_measured\",\"state\":\"NOT_MEASURED\",\"value\":null},\"known_weaknesses\":{\"reason\":null,\"state\":\"RECORDED\",\"value\":[{\"provenance\":\"https://www.crossref.org/documentation/retrieve-metadata/rest-api/\",\"text\":\"Metadata can be incomplete; abstracts may be absent. No full-text or validity claim.\"}]},\"primary_secondary\":{\"reason\":null,\"state\":\"RECORDED\",\"value\":\"secondary_index_of_publisher_deposits\"},\"rate_limits\":{\"reason\":\"provider_limits_are_dynamic; local_adapter_spacing_s=1\",\"state\":\"NOT_ASSESSED\",\"value\":null},\"type\":{\"reason\":null,\"state\":\"RECORDED\",\"value\":\"scholarly_metadata\"}}",
+      "retriever": "crossref_public.v1",
+      "source_class": "academic_factors",
+      "source_id": "external.crossref.public",
+      "status": "AVAILABLE"
+    }
+  ]
+}

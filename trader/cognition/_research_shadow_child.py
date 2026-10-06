@@ -74,6 +74,8 @@ import time
 TRADER_ALLOWED = frozenset({
     "trader", "trader.cognition", "trader.core", "trader.core.journal",
     "trader.core.reason_codes", "trader.core.types", "trader.core.journal_evidence", "trader.strategy",
+    # Bounded retained-evidence codec required by journal_evidence; no I/O.
+    "trader.core.evidence_zlib",
     "trader.strategy.health_observation", "trader.strategy.signal_occurrence",
     "trader.strategy.signal_occurrence_observation",
     # pure ``venue_key`` symbol normaliser, imported by signal_occurrence
