@@ -15,7 +15,7 @@ import logging
 
 from ..data.derivatives import DerivFeed
 from .compile import compile_spec
-from . import null_baseline
+from . import null_baseline, quant_contract
 from .vector_backtest import funding_for, vector_walk_forward
 
 log = logging.getLogger(__name__)
@@ -312,6 +312,8 @@ def run_gauntlet(spec, frames: dict, cfg: dict, min_pf: float | None = None,
     gaps = missing_data(spec, syms, feed, frames=frames)
     ev = {"stage": "spec_walk_forward", "spec": spec.id,
           "data_requires": list(spec.data_requires), "per_symbol": {}}
+    # QNT-01: definitions, estimated-cost basis and a pinned run identity
+    ev["quant_contract"] = quant_contract.contract(spec, frames, risk_for(cfg["risk"], spec.timeframe))
     if gaps:
         # NEVER score a spec whose inputs are absent: NaN comparisons are all
         # False, so it would report 0 trades and read as 'no edge'.
