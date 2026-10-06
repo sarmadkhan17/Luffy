@@ -1238,3 +1238,31 @@ sol1_control_plane_checkpoint:
   att01_changed: false
   successor_selected: false
   runtime_execution_authorized: false
+
+att01_canonical_reconciliation:
+  item: 'ATT-01'
+  canonical_status: 'CLOSED'
+  current_build_scope: 'ARCHITECTURE_OFFLINE'
+  engineering_closure_commits:
+  - 'c4c08c1'
+  - '84b3080'
+  evidence: 'docs/tracker/evidence/att01-investigation-candidates/closure.md'
+  closure_condition_satisfied: true
+  closing_condition_proof:
+  - 'Pure candidates(receipt) projects ranked typed candidates (instrument, rank, reasons, urgency, bounded cost, source identity, INVESTIGATE_ONLY) from a verified ATT-04 receipt; receipt format and replay unchanged.'
+  - 'Normal Kernel deep-scan path delivers the candidate in admission_context[investigation]; persisted/replayed receipt to downstream consumer proven identical end to end.'
+  - 'Zero candidates distinct from refused/incomplete capture; missing receipt is unavailable; no trade or size authority.'
+  tests: 'tests/test_att01_candidates.py 9 passed; 143 passed with attention kernel wiring, selection persistence and cognition attention suites.'
+  dependency_status:
+    DATA-06: 'CLOSED'
+    WRLD-03: 'CLOSED'
+  downstream_dependency_status:
+    ATT-02: 'EVIDENCE_TO_MAP; ATT-01 satisfied, DATA-07 EVIDENCE_TO_MAP'
+    ATT-03: 'EVIDENCE_TO_MAP; ATT-01 satisfied, DATA-04 EVIDENCE_TO_MAP (DATA-03 EVIDENCE_TO_MAP)'
+    RES-01: 'EVIDENCE_TO_MAP; sole listed dependency ATT-01 now satisfied'
+  att03_now_eligible: false
+  implementation_changed: false
+  unrelated_tracker_rows_changed: false
+  successor_selected: false
+  runtime_execution_authorized: false
+  control_plane_reconciliation_pending: false

@@ -1658,32 +1658,33 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 3
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Autonomy starts with deciding what deserves compute.
 - **closure_condition**: A supported normal event creates ranked investigation candidates with instrument, reasons, urgency/cost and source identity.
 - **failure_regression_proof**: Zero eligible candidates is distinct from failed/incomplete capture; no trade/size authority.
 - **dependencies**: DATA-06, WRLD-03
 - **owner_role**: Attention & research owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: OPUS (existing engineering closure reconciled only)
+- **implementation_evidence**: c4c08c1; 84b3080; trader/attention_admission.py candidates(), trader/kernel.py _candidate_snapshot_for admission_context[investigation]; tests/test_att01_candidates.py
+- **runtime_evidence**: NOT_PERFORMED; offline engineering evidence only, no runtime or provider call
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Closed at architecture/offline scope. Normal Kernel deep-scan path emits the typed investigation candidate (rank, reasons, urgency, bounded cost, source identity, INVESTIGATE_ONLY) into admission_context; persisted/replayed receipt to downstream consumer proven identical. DATA-06 CLOSED c4bcf05; WRLD-03 CLOSED 1a2424b. 9 ATT-01 tests, 143 related offline passes.
 - **source_ids**: S01, S02, S06, S14
 - **source_sections**: §§8,33.1,35.1
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for ATT-01. ATT-02 still needs DATA-07; ATT-03 still needs DATA-04; ranking weights are not newly calibrated here.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 84b3080
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/att01-investigation-candidates/closure.md
+- **evidence_validity**: Pinned c4c08c1/84b3080 offline tests rerun at reconciliation; no runtime, provider, live account or deployment proof inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### ATT-02 — Complete scan/cause capture through the real worker and source reader.
 
