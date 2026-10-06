@@ -1,0 +1,15 @@
+{
+  "result": "PASS",
+  "prior_evidence": "docs/tracker/evidence/out03-replay-map-sol/terminal.yaml",
+  "prior_successful_distinct_cases": 82,
+  "new_test_count": 3,
+  "hash_comparison": {
+    "SDD.md": true,
+    "trader/learning/capture.py": true,
+    "trader/learning/capture_runtime.py": true,
+    "trader/learning/decision_sources.py": true,
+    "tests/test_decision_sources.py": true,
+    "tests/test_stage7_replay_world_closure_r2.py": true,
+    "tests/test_normal_learning_loop_closure.py": true
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "classification": "ACTUAL_GAP_WRLD05_NORMAL_INTEGRATION",
+  "feature_context_fields": [
+    "frames",
+    "tf",
+    "btc",
+    "derivs",
+    "universe",
+    "market",
+    "symbol",
+    "_cache",
+    "as_of_ms"
+  ],
+  "compiled_entries_signature": "(self, frames: 'dict', btc: 'dict | None' = None, derivs: 'dict | None' = None, universe: 'dict | None' = None, market: 'dict | None' = None, symbol: 'str | None' = None)",
+  "research_bundle_fields": [
+    "tf",
+    "frames",
+    "sym_frames",
+    "universe",
+    "btc",
+    "market",
+    "derivs",
+    "risk",
+    "cut",
+    "heldout_bars",
+    "equity",
+    "risk_pct",
+    "max_open",
+    "first_bars"
+  ],
+  "normal_consumer_world_imports": {
+    "trader/strategy/compile.py": [],
+    "trader/strategy/features.py": [],
+    "trader/research/job.py": [],
+    "trader/research/evaluate.py": []
+  },
+  "scope": "No typed WorldModel current/historical input/query in inspected normal consumer paths. Existing standalone WorldModel queries/replay are not sufficient."
+}

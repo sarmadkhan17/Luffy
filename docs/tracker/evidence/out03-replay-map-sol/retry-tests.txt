@@ -1,0 +1,256 @@
+EEEE..EFEEE.............                                                 [100%]
+==================================== ERRORS ====================================
+_ ERROR at setup of test_portfolio_stage_is_the_same_decision_not_a_new_identity _
+trader/learning/capture.py:637: in safely
+    value = operation(db, *args, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/producers.py:149: in missed
+    return C.attach(db,event,key,L.Kind.MISSED.value,L.Boundary.UNASSESSABLE.value,obs,cut,deps)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture.py:333: in attach
+    materialize(db, oid)
+trader/learning/producers.py:21: in materialize
+    C.insert(db, 'learning_produced_chains', 'outcome_id', outcome_id, (outcome_id, L.canonical(body)))
+trader/learning/capture.py:54: in insert
+    db.execute(f"INSERT INTO {table} VALUES({','.join('?' for _ in values)})", values)
+E   sqlite3.OperationalError: database or disk is full
+
+During handling of the above exception, another exception occurred:
+tests/test_normal_learning_loop_closure.py:129: in loop
+    intent = CR.journalize_allocation(j, snap, d, cfg, receipt, proposal, ai)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture_runtime.py:566: in journalize_allocation
+    registry.resolve(c.opportunity_id,'SKIPPED',proposal.proposal_id,allocation_inputs.as_of_ms)
+trader/portfolio/opportunity_registry.py:77: in resolve
+    C.safely(db,'missed:'+opportunity_id,P.missed,event,body)
+trader/learning/capture.py:641: in safely
+    db.execute('ROLLBACK TO learning_capture')
+E   sqlite3.OperationalError: no such savepoint: learning_capture
+------------------------------ Captured log setup ------------------------------
+CRITICAL trader.observability.safety:safety.py:60 SAFETY {"condition": "journal_write", "incident_id": "7d2b1c3697864d6eafed3344c6ed0e07", "status": "ACTIVE", "detected_at": 1791264816.106099, "reason": "OperationalError"}
+___ ERROR at setup of test_risk_decision_and_refusal_resolve_the_same_chain ____
+trader/learning/capture.py:637: in safely
+    value = operation(db, *args, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/producers.py:149: in missed
+    return C.attach(db,event,key,L.Kind.MISSED.value,L.Boundary.UNASSESSABLE.value,obs,cut,deps)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture.py:333: in attach
+    materialize(db, oid)
+trader/learning/producers.py:21: in materialize
+    C.insert(db, 'learning_produced_chains', 'outcome_id', outcome_id, (outcome_id, L.canonical(body)))
+trader/learning/capture.py:54: in insert
+    db.execute(f"INSERT INTO {table} VALUES({','.join('?' for _ in values)})", values)
+E   sqlite3.OperationalError: database or disk is full
+
+During handling of the above exception, another exception occurred:
+tests/test_normal_learning_loop_closure.py:129: in loop
+    intent = CR.journalize_allocation(j, snap, d, cfg, receipt, proposal, ai)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture_runtime.py:566: in journalize_allocation
+    registry.resolve(c.opportunity_id,'SKIPPED',proposal.proposal_id,allocation_inputs.as_of_ms)
+trader/portfolio/opportunity_registry.py:77: in resolve
+    C.safely(db,'missed:'+opportunity_id,P.missed,event,body)
+trader/learning/capture.py:641: in safely
+    db.execute('ROLLBACK TO learning_capture')
+E   sqlite3.OperationalError: no such savepoint: learning_capture
+------------------------------ Captured log setup ------------------------------
+CRITICAL trader.observability.safety:safety.py:60 SAFETY {"condition": "journal_write", "incident_id": "84c3a22dbba24189b1a343eb904758fe", "status": "ACTIVE", "detected_at": 1791264819.8436701, "reason": "OperationalError"}
+_ ERROR at setup of test_execution_resolves_the_exact_intent_stage_and_legacy_trade_stays_on_original _
+trader/learning/capture.py:637: in safely
+    value = operation(db, *args, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/producers.py:149: in missed
+    return C.attach(db,event,key,L.Kind.MISSED.value,L.Boundary.UNASSESSABLE.value,obs,cut,deps)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture.py:333: in attach
+    materialize(db, oid)
+trader/learning/producers.py:21: in materialize
+    C.insert(db, 'learning_produced_chains', 'outcome_id', outcome_id, (outcome_id, L.canonical(body)))
+trader/learning/capture.py:54: in insert
+    db.execute(f"INSERT INTO {table} VALUES({','.join('?' for _ in values)})", values)
+E   sqlite3.OperationalError: database or disk is full
+
+During handling of the above exception, another exception occurred:
+tests/test_normal_learning_loop_closure.py:129: in loop
+    intent = CR.journalize_allocation(j, snap, d, cfg, receipt, proposal, ai)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture_runtime.py:566: in journalize_allocation
+    registry.resolve(c.opportunity_id,'SKIPPED',proposal.proposal_id,allocation_inputs.as_of_ms)
+trader/portfolio/opportunity_registry.py:77: in resolve
+    C.safely(db,'missed:'+opportunity_id,P.missed,event,body)
+trader/learning/capture.py:641: in safely
+    db.execute('ROLLBACK TO learning_capture')
+E   sqlite3.OperationalError: no such savepoint: learning_capture
+------------------------------ Captured log setup ------------------------------
+CRITICAL trader.observability.safety:safety.py:60 SAFETY {"condition": "journal_write", "incident_id": "675971d30363451faa982d5ddc243f69", "status": "ACTIVE", "detected_at": 1791264823.7233336, "reason": "OperationalError"}
+_ ERROR at setup of test_exit_semantics_are_bound_per_version_not_per_allocation _
+trader/learning/capture.py:637: in safely
+    value = operation(db, *args, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/producers.py:149: in missed
+    return C.attach(db,event,key,L.Kind.MISSED.value,L.Boundary.UNASSESSABLE.value,obs,cut,deps)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture.py:333: in attach
+    materialize(db, oid)
+trader/learning/producers.py:21: in materialize
+    C.insert(db, 'learning_produced_chains', 'outcome_id', outcome_id, (outcome_id, L.canonical(body)))
+trader/learning/capture.py:54: in insert
+    db.execute(f"INSERT INTO {table} VALUES({','.join('?' for _ in values)})", values)
+E   sqlite3.OperationalError: database or disk is full
+
+During handling of the above exception, another exception occurred:
+tests/test_normal_learning_loop_closure.py:129: in loop
+    intent = CR.journalize_allocation(j, snap, d, cfg, receipt, proposal, ai)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture_runtime.py:566: in journalize_allocation
+    registry.resolve(c.opportunity_id,'SKIPPED',proposal.proposal_id,allocation_inputs.as_of_ms)
+trader/portfolio/opportunity_registry.py:77: in resolve
+    C.safely(db,'missed:'+opportunity_id,P.missed,event,body)
+trader/learning/capture.py:641: in safely
+    db.execute('ROLLBACK TO learning_capture')
+E   sqlite3.OperationalError: no such savepoint: learning_capture
+------------------------------ Captured log setup ------------------------------
+CRITICAL trader.observability.safety:safety.py:60 SAFETY {"condition": "journal_write", "incident_id": "fa71fb7c123845ba99e7366b2ca88508", "status": "ACTIVE", "detected_at": 1791264827.3922691, "reason": "OperationalError"}
+_ ERROR at setup of test_generic_dispatch_accepts_real_replay_complete_evidence_of_each_producible_class _
+trader/learning/capture.py:637: in safely
+    value = operation(db, *args, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/producers.py:149: in missed
+    return C.attach(db,event,key,L.Kind.MISSED.value,L.Boundary.UNASSESSABLE.value,obs,cut,deps)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture.py:333: in attach
+    materialize(db, oid)
+trader/learning/producers.py:21: in materialize
+    C.insert(db, 'learning_produced_chains', 'outcome_id', outcome_id, (outcome_id, L.canonical(body)))
+trader/learning/capture.py:54: in insert
+    db.execute(f"INSERT INTO {table} VALUES({','.join('?' for _ in values)})", values)
+E   sqlite3.OperationalError: database or disk is full
+
+During handling of the above exception, another exception occurred:
+tests/test_normal_learning_loop_closure.py:129: in loop
+    intent = CR.journalize_allocation(j, snap, d, cfg, receipt, proposal, ai)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture_runtime.py:566: in journalize_allocation
+    registry.resolve(c.opportunity_id,'SKIPPED',proposal.proposal_id,allocation_inputs.as_of_ms)
+trader/portfolio/opportunity_registry.py:77: in resolve
+    C.safely(db,'missed:'+opportunity_id,P.missed,event,body)
+trader/learning/capture.py:641: in safely
+    db.execute('ROLLBACK TO learning_capture')
+E   sqlite3.OperationalError: no such savepoint: learning_capture
+------------------------------ Captured log setup ------------------------------
+CRITICAL trader.observability.safety:safety.py:60 SAFETY {"condition": "journal_write", "incident_id": "54580527ad344207852f5ee14fb7cea3", "status": "ACTIVE", "detected_at": 1791264832.2938478, "reason": "OperationalError"}
+_ ERROR at setup of test_normal_loop_from_real_decision_to_changed_consumer[EVIDENCE_WEIGHTS] _
+trader/learning/capture.py:637: in safely
+    value = operation(db, *args, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/producers.py:149: in missed
+    return C.attach(db,event,key,L.Kind.MISSED.value,L.Boundary.UNASSESSABLE.value,obs,cut,deps)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture.py:333: in attach
+    materialize(db, oid)
+trader/learning/producers.py:21: in materialize
+    C.insert(db, 'learning_produced_chains', 'outcome_id', outcome_id, (outcome_id, L.canonical(body)))
+trader/learning/capture.py:54: in insert
+    db.execute(f"INSERT INTO {table} VALUES({','.join('?' for _ in values)})", values)
+E   sqlite3.OperationalError: database or disk is full
+
+During handling of the above exception, another exception occurred:
+tests/test_normal_learning_loop_closure.py:129: in loop
+    intent = CR.journalize_allocation(j, snap, d, cfg, receipt, proposal, ai)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture_runtime.py:566: in journalize_allocation
+    registry.resolve(c.opportunity_id,'SKIPPED',proposal.proposal_id,allocation_inputs.as_of_ms)
+trader/portfolio/opportunity_registry.py:77: in resolve
+    C.safely(db,'missed:'+opportunity_id,P.missed,event,body)
+trader/learning/capture.py:641: in safely
+    db.execute('ROLLBACK TO learning_capture')
+E   sqlite3.OperationalError: no such savepoint: learning_capture
+------------------------------ Captured log setup ------------------------------
+CRITICAL trader.observability.safety:safety.py:60 SAFETY {"condition": "journal_write", "incident_id": "bc14ae865e7e41e38adfe6de3a65aa76", "status": "ACTIVE", "detected_at": 1791264843.0878272, "reason": "OperationalError"}
+_ ERROR at setup of test_normal_loop_from_real_decision_to_changed_consumer[STRATEGY_ALLOCATION] _
+trader/learning/capture.py:637: in safely
+    value = operation(db, *args, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/producers.py:149: in missed
+    return C.attach(db,event,key,L.Kind.MISSED.value,L.Boundary.UNASSESSABLE.value,obs,cut,deps)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture.py:333: in attach
+    materialize(db, oid)
+trader/learning/producers.py:21: in materialize
+    C.insert(db, 'learning_produced_chains', 'outcome_id', outcome_id, (outcome_id, L.canonical(body)))
+trader/learning/capture.py:54: in insert
+    db.execute(f"INSERT INTO {table} VALUES({','.join('?' for _ in values)})", values)
+E   sqlite3.OperationalError: database or disk is full
+
+During handling of the above exception, another exception occurred:
+tests/test_normal_learning_loop_closure.py:129: in loop
+    intent = CR.journalize_allocation(j, snap, d, cfg, receipt, proposal, ai)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture_runtime.py:566: in journalize_allocation
+    registry.resolve(c.opportunity_id,'SKIPPED',proposal.proposal_id,allocation_inputs.as_of_ms)
+trader/portfolio/opportunity_registry.py:77: in resolve
+    C.safely(db,'missed:'+opportunity_id,P.missed,event,body)
+trader/learning/capture.py:641: in safely
+    db.execute('ROLLBACK TO learning_capture')
+E   sqlite3.OperationalError: no such savepoint: learning_capture
+------------------------------ Captured log setup ------------------------------
+CRITICAL trader.observability.safety:safety.py:60 SAFETY {"condition": "journal_write", "incident_id": "063a53db23494af89c09245d9183d5b0", "status": "ACTIVE", "detected_at": 1791264846.7401226, "reason": "OperationalError"}
+_ ERROR at setup of test_normal_loop_from_real_decision_to_changed_consumer[ATTENTION_PRIORITY] _
+trader/learning/capture.py:637: in safely
+    value = operation(db, *args, **kwargs)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/producers.py:149: in missed
+    return C.attach(db,event,key,L.Kind.MISSED.value,L.Boundary.UNASSESSABLE.value,obs,cut,deps)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture.py:333: in attach
+    materialize(db, oid)
+trader/learning/producers.py:21: in materialize
+    C.insert(db, 'learning_produced_chains', 'outcome_id', outcome_id, (outcome_id, L.canonical(body)))
+trader/learning/capture.py:54: in insert
+    db.execute(f"INSERT INTO {table} VALUES({','.join('?' for _ in values)})", values)
+E   sqlite3.OperationalError: database or disk is full
+
+During handling of the above exception, another exception occurred:
+tests/test_normal_learning_loop_closure.py:129: in loop
+    intent = CR.journalize_allocation(j, snap, d, cfg, receipt, proposal, ai)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture_runtime.py:566: in journalize_allocation
+    registry.resolve(c.opportunity_id,'SKIPPED',proposal.proposal_id,allocation_inputs.as_of_ms)
+trader/portfolio/opportunity_registry.py:77: in resolve
+    C.safely(db,'missed:'+opportunity_id,P.missed,event,body)
+trader/learning/capture.py:641: in safely
+    db.execute('ROLLBACK TO learning_capture')
+E   sqlite3.OperationalError: no such savepoint: learning_capture
+------------------------------ Captured log setup ------------------------------
+CRITICAL trader.observability.safety:safety.py:60 SAFETY {"condition": "journal_write", "incident_id": "d5cdf256a05242d1883ba683802505b9", "status": "ACTIVE", "detected_at": 1791264850.9973817, "reason": "OperationalError"}
+=================================== FAILURES ===================================
+_ test_normal_loop_from_real_decision_to_changed_consumer[CONFIDENCE_CALIBRATION] _
+tests/test_normal_learning_loop_closure.py:430: in test_normal_loop_from_real_decision_to_changed_consumer
+    oid = forward_outcome(j, d, ai)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/test_normal_learning_loop_closure.py:55: in forward_outcome
+    return CR.forward(db, declaration, {'fwd_ret_1h': ret}, targets, cut + 3900000)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture_runtime.py:292: in forward
+    return C.attach(db,event,key,kind,L.Boundary.COUNTERFACTUAL.value,
+trader/learning/capture.py:333: in attach
+    materialize(db, oid)
+trader/learning/producers.py:21: in materialize
+    C.insert(db, 'learning_produced_chains', 'outcome_id', outcome_id, (outcome_id, L.canonical(body)))
+trader/learning/capture.py:54: in insert
+    db.execute(f"INSERT INTO {table} VALUES({','.join('?' for _ in values)})", values)
+E   sqlite3.OperationalError: database or disk is full
+------------------------------ Captured log call -------------------------------
+CRITICAL trader.observability.safety:safety.py:60 SAFETY {"condition": "journal_write", "incident_id": "7cc53e0ac1ec41f9ad6151ab98cc7792", "status": "ACTIVE", "detected_at": 1791264839.75105, "reason": "OperationalError"}
+=========================== short test summary info ============================
+FAILED tests/test_normal_learning_loop_closure.py::test_normal_loop_from_real_decision_to_changed_consumer[CONFIDENCE_CALIBRATION]
+ERROR tests/test_normal_learning_loop_closure.py::test_portfolio_stage_is_the_same_decision_not_a_new_identity
+ERROR tests/test_normal_learning_loop_closure.py::test_risk_decision_and_refusal_resolve_the_same_chain
+ERROR tests/test_normal_learning_loop_closure.py::test_execution_resolves_the_exact_intent_stage_and_legacy_trade_stays_on_original
+ERROR tests/test_normal_learning_loop_closure.py::test_exit_semantics_are_bound_per_version_not_per_allocation
+ERROR tests/test_normal_learning_loop_closure.py::test_generic_dispatch_accepts_real_replay_complete_evidence_of_each_producible_class
+ERROR tests/test_normal_learning_loop_closure.py::test_normal_loop_from_real_decision_to_changed_consumer[EVIDENCE_WEIGHTS]
+ERROR tests/test_normal_learning_loop_closure.py::test_normal_loop_from_real_decision_to_changed_consumer[STRATEGY_ALLOCATION]
+ERROR tests/test_normal_learning_loop_closure.py::test_normal_loop_from_real_decision_to_changed_consumer[ATTENTION_PRIORITY]
+1 failed, 15 passed, 8 errors in 150.69s (0:02:30)

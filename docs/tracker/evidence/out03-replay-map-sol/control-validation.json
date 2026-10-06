@@ -1,0 +1,19 @@
+{
+  "result": "PASS",
+  "checks": [
+    "178 exact identities",
+    "only OUT-03 and GUI-02 rows changed",
+    "original requirements and edges retained",
+    "dependency gating explicit",
+    "unmet prerequisites unchanged",
+    "status counts exact",
+    "current_build_selection four-way parity",
+    "out03_replay_dependency_map four-way parity",
+    "terminal work aligned",
+    "runtime and visual evidence retained",
+    "no successor or runtime selected",
+    "bundle hashes and bytes exact",
+    "inspected source bytes exact",
+    "read-only Tracker available"
+  ]
+}

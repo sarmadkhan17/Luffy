@@ -1,0 +1,36 @@
+id: OUT-01
+status: BLOCKED
+result: BLOCKED_DEPENDENCY_AND_EXECUTION_EVIDENCE
+scope: ARCHITECTURE_OFFLINE_EVIDENCE_MAPPING
+evidence: docs/tracker/evidence/out01-identity-map-sol/REPORT.md
+base_revision: 61716877fdd717a65ffe967fdb75084b66515b67
+dependencies:
+  DEC-04: EVIDENCE_TO_MAP
+  DATA-02: CLOSED
+classification:
+  PROVEN:
+  - normal scan source manifest
+  - allocation original identity and registration
+  - HOLD and Risk refusal normal forward outcome
+  - failed delivery and parent/source mismatch refusal
+  - exact intent resolver
+  IMPLEMENTED_BUT_UNMAPPED:
+  - full normal execution delivery without manual priming
+  ACTUAL_GAP: []
+tests:
+  fresh_pytest_passed: 3
+  reused_prior_distinct_cases: 82
+  root_mismatch_checks: PASS
+actual_gap: NONE_DEMONSTRATED
+application_code_changed: false
+commits_created: []
+out03_remaining_dependencies:
+- OUT-01
+- DATA-03
+- WRLD-06
+impact_policy: OUT-03 and GUI-02 rows unchanged; outcome/learning rows supporting evidence only; DATA-03 untouched
+next_item: DEC-04 dependency mapping, including DEC-01 gate; then OUT-01 full normal execution acceptance
+successor_selected: false
+runtime_execution_authorized: false
+provider_enablement_authorized: false
+trading_activation_authorized: false

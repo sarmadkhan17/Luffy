@@ -1,41 +1,43 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.25-accounting-truth-followup-sol
+  version: 1.28-dec01-chain-sol1
   created_date: '2026-10-05'
   title: LUFFY — Product, Behaviour & GUI Tracker
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
-  scope: SDD v3.2 baseline plus v3.3 owner-adopted Attention admission; retained evidence and owner tracker requirements.
+  scope: SDD v3.2 baseline plus v3.3 owner-adopted Attention admission; retained evidence and owner tracker
+    requirements.
   baseline_commit: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
   evidence_checkpoint: 6da5ad9a895ddb0f5fed9d75904e9639cc731b44
   fresh_runtime_verified: false
   repository_modified: true
-  coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
-    prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
-  current_active_item: ACC-03
-  current_active_result: CLOSED_ACCOUNTING_TRUTH_FOLLOWUP
+  coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness
+    or full prior-chat reconciliation. No functionality or evidence has been independently retested by creating
+    this tracker.
+  current_active_item: DEC-01
+  current_active_result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
   row_count: 178
-  authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
-    is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown is an
-    optional generated reference.
+  authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This
+    YAML is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown
+    is an optional generated reference.
   pending_adoption: null
   status_counts:
     CLOSED: 35
-    EVIDENCE_TO_MAP: 106
+    EVIDENCE_TO_MAP: 102
     DEFERRED: 7
-    AWAITING_EVIDENCE: 10
+    AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14
-    BLOCKED: 2
+    BLOCKED: 7
     OPEN: 4
-  workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged and
-    excluded from adoption, synchronization and parity requirements.
+  workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged
+    and excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
   latest_perf01_result_source: docs/tracker/evidence/2026-10-06-perf01-retained-reconstruction.yaml
-  publication_note: Owner explicitly accepted adoption and read-only Tracker navigation. OPEN-09 closes with this
-    control-plane reconciliation; implementation verification is distinct from deployed/browser proof.
+  publication_note: Owner explicitly accepted adoption and read-only Tracker navigation. OPEN-09 closes with
+    this control-plane reconciliation; implementation verification is distinct from deployed/browser proof.
   current_runtime_item: PERF-01
   current_runtime_result: BLOCKED
   next_diagnostic_item: null
-  next_recommended_item: GUI-02
+  next_recommended_item: WRLD-03
   next_runtime_execution_authorized: false
   owner_representation_decision:
     date: '2026-10-05'
@@ -43,14 +45,14 @@ metadata:
     primary_view: Dashboard Tracker (read-only)
     markdown: Optional generated reference
     xlsx: DEPRECATED / NON-AUTHORITATIVE; preserved history
-    mutation_contract: No Tracker mutation API/UI; engineering/control-plane changes only until a separate typed,
-      audited GUI mutation contract is approved.
-    navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope; the
-      owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product row
-      is silently reopened or added.
-  last_terminal_item: ACC-03
-  last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
-  last_terminal_evidence: docs/tracker/evidence/acc03-economics-sol/closure.yaml
+    mutation_contract: No Tracker mutation API/UI; engineering/control-plane changes only until a separate
+      typed, audited GUI mutation contract is approved.
+    navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope;
+      the owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product
+      row is silently reopened or added.
+  last_terminal_item: DEC-01
+  last_terminal_result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+  last_terminal_evidence: docs/tracker/evidence/dec01-chain-sol1/REPORT.md
   control_snapshot:
     id: gov07-identity-sol-2026-10-06
     repository_revision: 82431136ac68ff72325af301bac43b19b7d3ecd6
@@ -64,8 +66,8 @@ metadata:
     ledger_path: docs/tracker/LUFFY_Product_Tracker_v1.yaml
     state_path: STATE.yaml
     next_path: NEXT.yaml
-    runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime UNKNOWN;
-      no runtime freshness inferred from this control snapshot.
+    runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime
+      UNKNOWN; no runtime freshness inferred from this control snapshot.
     captured_at_utc: '2026-10-06T03:52:49.947649+00:00'
     identity_evidence: docs/tracker/evidence/gov07-identity-sol/identity-map.json
   current_identity_assessment:
@@ -99,8 +101,8 @@ metadata:
     ledger_path: docs/tracker/LUFFY_Product_Tracker_v1.yaml
     state_path: STATE.yaml
     next_path: NEXT.yaml
-    runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime UNKNOWN;
-      no runtime freshness inferred from this control snapshot.
+    runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime
+      UNKNOWN; no runtime freshness inferred from this control snapshot.
 status_definitions:
 - status: EVIDENCE_TO_MAP
   meaning: Existing requirement recorded; exact row-level evidence has not yet been linked. This is NOT a finding
@@ -3085,43 +3087,44 @@ items:
   stage: '5'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: BLOCKED
   required_behavior: Compile exact strategy logic with current/historical feature parity.
   why_needed: A valid spec must be evaluated, not silently skipped.
-  closure_condition: Compiler executes declared data/world dependencies and scope with reproducible parity and explicit
-    unsupported/missing errors.
-  failure_regression_proof: Read-only array/quality filters, required frame absence and version mismatch do not
-    bypass or silently corrupt evaluation.
+  closure_condition: Compiler executes declared data/world dependencies and scope with reproducible parity
+    and explicit unsupported/missing errors.
+  failure_regression_proof: Read-only array/quality filters, required frame absence and version mismatch do
+    not bypass or silently corrupt evaluation.
   dependencies:
   - STR-01
   - WRLD-05
   owner_role: Strategies & decisions owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
+  engineering_assignee: SOL-1
+  implementation_evidence: compile.py supported DSL/context paths; 53 focused and 71 regression tests. Compiled
+    spec mutability reproduced and fixed in f55ec97c4a2bef04712abc45832e6d3f44f01162.
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: Supported current/historical frame features and readonly quality filtering mapped offline; compiled spec/hash/AST version gap fixed at f55ec97. WRLD-05 normal WorldModel consumer closure is now reconciled at dd9731a. STR-01 remains EVIDENCE_TO_MAP; full STR-02 acceptance remains blocked.
   source_ids:
   - S01
   - S02
   - S12
   - S14
   source_sections: §§14.1,14.4,28.4
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: Satisfy STR-01 and map full declared dependency/scope parity, reusing the committed WRLD-05 normal WorldModel closure, before STR-02 closure.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
   resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
   closure_evidence: ''
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  implementation_commit: f55ec97c4a2bef04712abc45832e6d3f44f01162
+  evidence_mapping: docs/tracker/evidence/dec01-chain-sol1/REPORT.md
 - id: STR-03
   area: Strategies & decisions
   stage: '5'
@@ -3250,44 +3253,43 @@ items:
   stage: '5'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: BLOCKED
   required_behavior: Freeze one coherent Opportunity Context per candidate/decision.
   why_needed: Avoids mixing source cuts and required/optional evidence.
   closure_condition: Normal source path binds canonical identity, exact spec, required/optional analysts, clocks,
     costs, book and supporting/opposing evidence.
-  failure_regression_proof: Missing required input blocks; optional absent input does not block by default; mixed
-    cuts refuse.
+  failure_regression_proof: Missing required input blocks; optional absent input does not block by default;
+    mixed cuts refuse.
   dependencies:
   - STR-02
   - WRLD-05
   - DATA-05
   owner_role: Strategies & decisions owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
+  engineering_assignee: SOL-1
+  implementation_evidence: Retained Opportunity Context identity/version/source-clock/book/cut/freshness controls mapped; required/optional analyst and supporting/opposing binding still needs proof. STR-02 remains BLOCKED; WRLD-05 and DATA-05 are CLOSED.
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 'Retained DEC-01 intake: 53 focused and 71 regression passes; compiler version gap fixed. Subsequent committed WRLD-01/WRLD-03/WRLD-05 and DATA-05 closures are preserved. STR-02 remains blocked on STR-01; required/optional analyst and supporting/opposing coherent Context binding remains unmapped. DEC-04 not started by this package.'
   source_ids:
   - S01
   - S02
   - S12
   - S14
   source_sections: §15
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: Satisfy STR-02 including STR-01; complete normal required/optional analyst and supporting/opposing Context binding and full original coherent-cut proof before DEC-01 closure.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
   resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
   closure_evidence: ''
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  evidence_mapping: docs/tracker/evidence/dec01-chain-sol1/REPORT.md
 - id: DEC-02
   area: Strategies & decisions
   stage: '5'
@@ -4377,23 +4379,26 @@ items:
   stage: '7'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: BLOCKED
   required_behavior: Preserve decision→terminal action→outcome identity through normal adapters.
   why_needed: Learning needs the action actually selected and compared evidence.
-  closure_condition: Each supported scan/allocation/HOLD/Risk refusal/execution chain retains original ID, source
-    manifest and terminal registration without manual priming.
-  failure_regression_proof: Root/allocation mismatch, failed delivery and fabricated fallback identity cannot yield
-    a verified chain.
+  closure_condition: Each supported scan/allocation/HOLD/Risk refusal/execution chain retains original ID,
+    source manifest and terminal registration without manual priming.
+  failure_regression_proof: Root/allocation mismatch, failed delivery and fabricated fallback identity cannot
+    yield a verified chain.
   dependencies:
   - DEC-04
   - DATA-02
   owner_role: Accounting & outcomes owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
+  engineering_assignee: SOL
+  implementation_evidence: Mapped Orchestrator/Journal registration, current.checkpoint allocation/Risk, forward
+    outcome and booking hooks; exact hashes in out01-identity-map-sol/source-manifest.json.
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 'PROVEN offline: scan/allocation/HOLD/Risk refusal identity and manifests, exact intent
+    resolver and failed-delivery/parent refusal. IMPLEMENTED_BUT_UNMAPPED: full normal execution delivery without
+    manual priming. ACTUAL_GAP: none demonstrated. DEC-04 EVIDENCE_TO_MAP; DATA-02 CLOSED. Three fresh tests
+    plus matching 82 prior cases reused.'
   source_ids:
   - S01
   - S02
@@ -4401,20 +4406,21 @@ items:
   - S12
   - S14
   source_sections: §§6.5,19.1–19.3
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: Satisfy DEC-04 including DEC-01 dependency without bypass; map full normal execution delivery
+    without manual source/registration priming before OUT-01 closure.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
   resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
   closure_evidence: ''
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  evidence_mapping: docs/tracker/evidence/out01-identity-map-sol/REPORT.md
 - id: OUT-02
   area: Accounting & outcomes
   stage: '7'
@@ -4462,24 +4468,24 @@ items:
   stage: '7'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: BLOCKED
   required_behavior: Reconstruct exact historical input and action without future information.
   why_needed: Replay must prove what was known then, not today's best explanation.
-  closure_condition: Data/world/spec/config/Risk/book/decision/action versions reconstruct and hash-verify at the
-    original cut; logical retry is idempotent.
-  failure_regression_proof: Missing/mixed/future/corrupt evidence refuses; retained-input replay is not an execution-realism
-    claim.
+  closure_condition: Data/world/spec/config/Risk/book/decision/action versions reconstruct and hash-verify
+    at the original cut; logical retry is idempotent.
+  failure_regression_proof: Missing/mixed/future/corrupt evidence refuses; retained-input replay is not an
+    execution-realism claim.
   dependencies:
   - OUT-01
   - DATA-03
   - WRLD-06
   owner_role: Accounting & outcomes owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
+  engineering_assignee: SOL
+  implementation_evidence: Mapped capture/decision_sources/capture_runtime contracts and three focused offline
+    replay suites; exact hashes in out03-replay-map-sol/source-manifest.json.
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: Original-cut/source-hash/terminal-binding/restart evidence mapped offline. OUT-01 is BLOCKED; DATA-03 and WRLD-06 remain EVIDENCE_TO_MAP. No prerequisite closure inferred. See out03-replay-map-sol/REPORT.md.
   source_ids:
   - S01
   - S02
@@ -4487,20 +4493,21 @@ items:
   - S12
   - S14
   source_sections: §19.3
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: Map OUT-01 first, then reconcile DATA-03 and WRLD-06 exact evidence and their dependencies before
+    OUT-03 closure.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
   resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
   closure_evidence: ''
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  evidence_mapping: docs/tracker/evidence/out03-replay-map-sol/REPORT.md
 - id: OUT-04
   area: Accounting & outcomes
   stage: '7'
@@ -5540,14 +5547,14 @@ items:
   stage: '8'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: AWAITING_EVIDENCE
+  status: BLOCKED
   required_behavior: 'Trades: Navigate the complete trade or rejected-decision story.'
   why_needed: The owner must inspect what happened and why.
-  closure_condition: Decision/context/spec→Portfolio/Risk→orders/fills/exits→accounting/outcome/replay links resolve
-    to the correct records; missing links are explicit. Functional and runtime proof are separate from owner visual
-    approval.
-  failure_regression_proof: Partial/unbound/unknown execution is not shown as verified complete; drilldown IDs stay
-    exact.
+  closure_condition: Decision/context/spec→Portfolio/Risk→orders/fills/exits→accounting/outcome/replay links
+    resolve to the correct records; missing links are explicit. Functional and runtime proof are separate from
+    owner visual approval.
+  failure_regression_proof: Partial/unbound/unknown execution is not shown as verified complete; drilldown
+    IDs stay exact.
   dependencies:
   - OUT-03
   - ACC-02
@@ -5557,21 +5564,21 @@ items:
   implementation_evidence: HISTORICAL_STAGE8_CLAIM
   runtime_evidence: NOT_PROVEN_FOR_THIS_SCREEN
   visual_approval: TRACKED_SEPARATELY
-  latest_evidence: Stage8 GUI/API tests were reported historically. Per-screen current functional/runtime evidence
-    is not mapped here; no visual approval inferred.
+  latest_evidence: 'Dependency intake: ACC-02 CLOSED architecture/offline; OUT-03 BLOCKED and OWN-01 EVIDENCE_TO_MAP.
+    OUT-03 replay evidence mapped first; GUI implementation awaits dependency satisfaction. See out03-replay-map-sol/REPORT.md.'
   source_ids:
   - S01
   - S10
   - S14
   source_sections: §25.3
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: Satisfy OUT-03 and OWN-01 without bypassing their dependencies; then verify exact complete/rejected
+    Trades navigation with explicit missing/unbound/unknown links.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: SDD_DEFINED_TEST_DETAIL_DRAFT
   priority: NORMAL
   resolution_at_commit: ''
   work_authorized: false
-  updated: '2026-10-05'
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
   closure_evidence: ''
@@ -8892,7 +8899,12 @@ current_build_selection:
   current_blocked_items:
   - WORK-01
   - PERF-03
-  next_recommended_item: GUI-02
+  - OUT-03
+  - GUI-02
+  - OUT-01
+  - STR-02
+  - DEC-01
+  next_recommended_item: null
   eligible_items:
   - DATA-08
   - GUI-02
@@ -8908,10 +8920,12 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: ACC-01 re-pinned to 8867794 after the four-gap correction; ACC-03 consumer classification fixed
-    and GUI-01 revalidated offline. GUI-02 remains recommended, unselected. No live/runtime or visual approval inferred.
-  last_terminal_item: ACC-03
-  last_terminal_result: CLOSED_ACCOUNTING_TRUTH_FOLLOWUP
+  selection_reason: 'SOL-1 checkpoint only: DEC-01/OUT-01/OUT-03 remain BLOCKED. Later committed WorldModel and
+    DATA-05 closures preserved; STR-01/STR-02, analyst Context binding, DEC-04 and OUT-01 execution proof remain.
+    No successor selected.'
+  last_terminal_item: DEC-01
+  last_terminal_result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+
 own02_authority_closure:
   id: OWN-02
   status: CLOSED
@@ -9063,3 +9077,128 @@ acc01_venue_authority_correction:
   independent_revalidation: docs/tracker/evidence/accounting-truth-followup-sol/acc01-tests.txt
   four_gaps_recorded: true
   original_condition_satisfied: true
+
+out03_replay_dependency_map:
+  id: OUT-03
+  requested_item: GUI-02
+  result: BLOCKED_DEPENDENCY_MAPPING
+  scope: OFFLINE_EVIDENCE_MAPPING
+  evidence: docs/tracker/evidence/out03-replay-map-sol/REPORT.md
+  source_manifest: docs/tracker/evidence/out03-replay-map-sol/source-manifest.json
+  base_revision: cafd1af102d87028a5543334c358dd8d155aa344
+  direct_gui_dependencies:
+    OUT-03: BLOCKED
+    ACC-02: CLOSED
+    OWN-01: EVIDENCE_TO_MAP
+  unmet_out03_dependencies:
+  - OUT-01
+  - DATA-03
+  - WRLD-06
+  next_prerequisite: OUT-01
+  next_gui_item: GUI-02
+  successor_selected: false
+  runtime_execution_authorized: false
+  implementation_gap: NONE_DEMONSTRATED_BY_MAPPING
+
+out01_identity_evidence_map:
+  id: OUT-01
+  status: BLOCKED
+  result: BLOCKED_DEPENDENCY_AND_EXECUTION_EVIDENCE
+  scope: ARCHITECTURE_OFFLINE_EVIDENCE_MAPPING
+  evidence: docs/tracker/evidence/out01-identity-map-sol/REPORT.md
+  base_revision: 61716877fdd717a65ffe967fdb75084b66515b67
+  dependencies:
+    DEC-04: EVIDENCE_TO_MAP
+    DATA-02: CLOSED
+  classification:
+    PROVEN:
+    - normal scan source manifest
+    - allocation original identity and registration
+    - HOLD and Risk refusal normal forward outcome
+    - failed delivery and parent/source mismatch refusal
+    - exact intent resolver
+    IMPLEMENTED_BUT_UNMAPPED:
+    - full normal execution delivery without manual priming
+    ACTUAL_GAP: []
+  tests:
+    fresh_pytest_passed: 3
+    reused_prior_distinct_cases: 82
+    root_mismatch_checks: PASS
+  actual_gap: NONE_DEMONSTRATED
+  application_code_changed: false
+  commits_created: []
+  out03_remaining_dependencies:
+  - OUT-01
+  - DATA-03
+  - WRLD-06
+  impact_policy: OUT-03 and GUI-02 rows unchanged; outcome/learning rows supporting evidence only; DATA-03
+    untouched
+  next_item: DEC-04 dependency mapping, including DEC-01 gate; then OUT-01 full normal execution acceptance
+  successor_selected: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+
+dec01_dependency_chain_map:
+  id: DEC-01
+  status: BLOCKED
+  result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+  scope: ARCHITECTURE_OFFLINE
+  evidence: docs/tracker/evidence/dec01-chain-sol1/REPORT.md
+  base_revision: 50edba5c4d72d014d9515b4823a4b39fd7098a2f
+  compiler_fix_commit: f55ec97c4a2bef04712abc45832e6d3f44f01162
+  data05_reused_engineering_commit: fc16e078a56a19b01b85a8a9c7edac368183904d
+  classification:
+    STR-02: SUPPORTED_FEATURE_PATH_PROVEN; COMPILED_SPEC_MUTABILITY_GAP_FIXED; STR-01_AND_WRLD-05_UNMET
+    WRLD-05: STANDALONE_API_IMPLEMENTED_BUT_UNMAPPED; ACTUAL_NORMAL_STRATEGY_RESEARCH_INTEGRATION_GAP; WRLD-03_UNMET
+    DATA-05: OWNER_CONFIRMED_ENGINEERING_CLOSURE_REUSED_AND_RECONCILED; NO_REDO
+    DEC-01: PARTIAL_CONTEXT_CLAUSES_PROVEN; REQUIRED_OPTIONAL_ANALYST_BINDING_GAP; DEPENDENCIES_UNMET
+  actual_gaps:
+    fixed:
+    - compiler mutable spec/hash/AST binding
+    remaining:
+    - WRLD-05 normal typed current/historical WorldModel strategy/research integration
+    - DEC-01 required/optional analysts and supporting/opposing evidence binding
+  unmet_upstream_gates:
+    STR-02:
+    - STR-01
+    - WRLD-05
+    WRLD-05:
+    - WRLD-03
+  tests:
+    focused_passed: 53
+    regression_passed: 71
+    distinct_passed: 124
+    new_regression_cases: 4
+    baseline_new_cases_failed: 3
+    data05_tests_repeated: 0
+  commits:
+  - f55ec97c4a2bef04712abc45832e6d3f44f01162
+  out01_now_unblocked: false
+  dec04_started: false
+  next_item: WRLD-03 / WRLD-01 prerequisite mapping, then WRLD-05 normal integration and STR-01 gate; DEC-01
+    analyst binding before closure
+  successor_selected: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+
+sol1_control_plane_checkpoint:
+  scope: DEC-01 / OUT-01 / OUT-03 control-plane checkpoint only
+  base_revision: c4c08c1c952e40a39a6b1eb98395c97a431a8dbc
+  statuses:
+    DEC-01: BLOCKED
+    OUT-01: BLOCKED
+    OUT-03: BLOCKED
+  later_closures_preserved:
+  - WRLD-01
+  - WRLD-03
+  - WRLD-05
+  - DATA-05
+  historical_intake_policy: Original reports, terminal records, source manifests and validations are immutable dated
+    intake evidence; superseded WorldModel findings are not current gaps. Current row summaries and committed reconciliation
+    records govern.
+  closing_conditions_changed: false
+  att01_changed: false
+  successor_selected: false
+  runtime_execution_authorized: false

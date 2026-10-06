@@ -1,0 +1,12 @@
+{
+  "compiled_hash_matches_mutated_spec": false,
+  "declared_entry": "close < 0",
+  "declared_timeframe": "1h",
+  "compiled_entry_results": [
+    true,
+    true,
+    true
+  ],
+  "result": "ACTUAL_GAP",
+  "local_claude_probe": "Not logged in"
+}

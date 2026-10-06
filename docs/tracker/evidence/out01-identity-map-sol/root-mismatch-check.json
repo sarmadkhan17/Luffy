@@ -1,0 +1,9 @@
+{
+  "result": "PASS",
+  "checks": [
+    "parent decision mismatch refuses decision_chain_parent_differs",
+    "parent cycle mismatch refuses decision_chain_parent_differs",
+    "no child registration inserted"
+  ],
+  "fixture": "isolated SQLite :memory:; capture.register normal validation; no providers"
+}

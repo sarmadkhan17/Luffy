@@ -1,0 +1,26 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+_______ test_compiled_spec_retains_original_bytes_after_caller_mutation ________
+tests/test_compile.py:75: in test_compiled_spec_retains_original_bytes_after_caller_mutation
+    assert compiled.spec.to_dict() == original
+E   AssertionError: assert {'id': 't1', ...trades.', ...} == {'id': 't1', ...trades.', ...}
+E     
+E     Omitting 14 identical items, use -vv to show
+E     Differing items:
+E     {'universe': {'include': ['OTHER/USDT']}} != {'universe': {'include': []}}
+E     {'timeframe': '1h'} != {'timeframe': '15m'}
+E     {'entry_long': 'close < 0'} != {'entry_long': 'close > 0'}
+E     Use -v to get more diff
+________ test_compiled_spec_mutation_refuses_version_mismatch[entries] _________
+tests/test_compile.py:86: in test_compiled_spec_mutation_refuses_version_mismatch
+    with pytest.raises(SpecError, match="compiled_spec_version_mismatch"):
+E   Failed: DID NOT RAISE SpecError
+______ test_compiled_spec_mutation_refuses_version_mismatch[exit_signal] _______
+tests/test_compile.py:86: in test_compiled_spec_mutation_refuses_version_mismatch
+    with pytest.raises(SpecError, match="compiled_spec_version_mismatch"):
+E   Failed: DID NOT RAISE SpecError
+=========================== short test summary info ============================
+FAILED tests/test_compile.py::test_compiled_spec_retains_original_bytes_after_caller_mutation
+FAILED tests/test_compile.py::test_compiled_spec_mutation_refuses_version_mismatch[entries]
+FAILED tests/test_compile.py::test_compiled_spec_mutation_refuses_version_mismatch[exit_signal]
+3 failed, 21 deselected in 4.06s

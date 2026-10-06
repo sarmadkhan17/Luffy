@@ -1,3 +1,7 @@
+> Current SOL-1 checkpoint: DEC-01, OUT-01 and OUT-03 BLOCKED. Compiler correction f55ec97 and later committed WRLD-01/WRLD-03/WRLD-05/DATA-05 closures retained. STR-01/STR-02 and DEC-01 analyst Context proof remain; OUT-01 also needs DEC-04 and full normal execution proof. No successor selected. Earlier intake findings are historical. [Evidence](evidence/dec01-chain-sol1/REPORT.md).
+
+> Current GUI-02 dependency intake: BLOCKED. ACC-02 CLOSED offline; OUT-03 replay evidence mapped but blocked by OUT-01/DATA-03/WRLD-06; OWN-01 remains unmapped. [Evidence](evidence/out03-replay-map-sol/REPORT.md). No dependency bypass or GUI closure.
+
 > Current accounting truth follow-up: CLOSED offline. ACC-01 correction pinned to 8867794; ACC-03 UNKNOWN/estimate consumer corrected; GUI-01 revalidated. [Evidence](evidence/accounting-truth-followup-sol/REPORT.md). GUI-02 recommended, unselected. Prior closure statements are historical; runtime/owner visual approval remain separate.
 
 > Current GUI-01: CLOSED for functional/offline Overview. Real read-only fixture GUI works with Kernel STOPPED; deployed/live proof and VIS-01 owner visual approval remain separate. [Evidence](evidence/gui01-overview-sol/REPORT.md). Next GUI-02 recommended, unselected. Earlier status statements are historical.
@@ -2379,32 +2383,34 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 5
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: BLOCKED
 - **why_needed**: A valid spec must be evaluated, not silently skipped.
 - **closure_condition**: Compiler executes declared data/world dependencies and scope with reproducible parity and explicit unsupported/missing errors.
 - **failure_regression_proof**: Read-only array/quality filters, required frame absence and version mismatch do not bypass or silently corrupt evaluation.
 - **dependencies**: STR-01, WRLD-05
 - **owner_role**: Strategies & decisions owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
+- **engineering_assignee**: SOL-1
+- **implementation_evidence**: compile.py supported DSL/context paths; 53 focused and 71 regression tests. Compiled spec mutability reproduced and fixed in f55ec97c4a2bef04712abc45832e6d3f44f01162.
 - **runtime_evidence**: NOT_MAPPED
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Supported current/historical frame features and readonly quality filtering mapped offline; compiled spec/hash/AST version gap fixed at f55ec97. WRLD-05 normal WorldModel consumer closure is now reconciled at dd9731a. STR-01 remains EVIDENCE_TO_MAP; full STR-02 acceptance remains blocked.
 - **source_ids**: S01, S02, S12, S14
 - **source_sections**: §§14.1,14.4,28.4
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: Satisfy STR-01 and map full declared dependency/scope parity, reusing the committed WRLD-05 normal WorldModel closure, before STR-02 closure.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
 - **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
 - **closure_evidence**:
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **implementation_commit**: f55ec97c4a2bef04712abc45832e6d3f44f01162
+- **evidence_mapping**: docs/tracker/evidence/dec01-chain-sol1/REPORT.md
 
 ### STR-03 — Bind first real-money approval to exact version and evidence.
 
@@ -2511,32 +2517,33 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 5
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: BLOCKED
 - **why_needed**: Avoids mixing source cuts and required/optional evidence.
 - **closure_condition**: Normal source path binds canonical identity, exact spec, required/optional analysts, clocks, costs, book and supporting/opposing evidence.
 - **failure_regression_proof**: Missing required input blocks; optional absent input does not block by default; mixed cuts refuse.
 - **dependencies**: STR-02, WRLD-05, DATA-05
 - **owner_role**: Strategies & decisions owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
+- **engineering_assignee**: SOL-1
+- **implementation_evidence**: Retained Opportunity Context identity/version/source-clock/book/cut/freshness controls mapped; required/optional analyst and supporting/opposing binding still needs proof. STR-02 remains BLOCKED; WRLD-05 and DATA-05 are CLOSED.
 - **runtime_evidence**: NOT_MAPPED
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Retained DEC-01 intake: 53 focused and 71 regression passes; compiler version gap fixed. Subsequent committed WRLD-01/WRLD-03/WRLD-05 and DATA-05 closures are preserved. STR-02 remains blocked on STR-01; required/optional analyst and supporting/opposing coherent Context binding remains unmapped. DEC-04 not started by this package.
 - **source_ids**: S01, S02, S12, S14
 - **source_sections**: §15
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: Satisfy STR-02 including STR-01; complete normal required/optional analyst and supporting/opposing Context binding and full original coherent-cut proof before DEC-01 closure.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
 - **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
 - **closure_evidence**:
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **evidence_mapping**: docs/tracker/evidence/dec01-chain-sol1/REPORT.md
 
 ### DEC-02 — Make deterministic candidate comparison, with explicit CASH and reasons.
 
@@ -3369,32 +3376,33 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 7
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: BLOCKED
 - **why_needed**: Learning needs the action actually selected and compared evidence.
 - **closure_condition**: Each supported scan/allocation/HOLD/Risk refusal/execution chain retains original ID, source manifest and terminal registration without manual priming.
 - **failure_regression_proof**: Root/allocation mismatch, failed delivery and fabricated fallback identity cannot yield a verified chain.
 - **dependencies**: DEC-04, DATA-02
 - **owner_role**: Accounting & outcomes owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
+- **engineering_assignee**: SOL
+- **implementation_evidence**: Mapped Orchestrator/Journal registration, current.checkpoint allocation/Risk, forward outcome and booking hooks; exact hashes in out01-identity-map-sol/source-manifest.json.
 - **runtime_evidence**: NOT_MAPPED
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: PROVEN offline: scan/allocation/HOLD/Risk refusal identity and manifests, exact intent resolver and failed-delivery/parent refusal. IMPLEMENTED_BUT_UNMAPPED: full normal execution delivery without manual priming. ACTUAL_GAP: none demonstrated. DEC-04 EVIDENCE_TO_MAP; DATA-02 CLOSED. Three fresh tests plus matching 82 prior cases reused.
 - **source_ids**: S01, S02, S08, S12, S14
 - **source_sections**: §§6.5,19.1–19.3
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: Satisfy DEC-04 including DEC-01 dependency without bypass; map full normal execution delivery without manual source/registration priming before OUT-01 closure.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
 - **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
 - **closure_evidence**:
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **evidence_mapping**: docs/tracker/evidence/out01-identity-map-sol/REPORT.md
 
 ### OUT-02 — Measure all required outcome classes under declared protocols.
 
@@ -3435,32 +3443,33 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 7
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: BLOCKED
 - **why_needed**: Replay must prove what was known then, not today's best explanation.
 - **closure_condition**: Data/world/spec/config/Risk/book/decision/action versions reconstruct and hash-verify at the original cut; logical retry is idempotent.
 - **failure_regression_proof**: Missing/mixed/future/corrupt evidence refuses; retained-input replay is not an execution-realism claim.
 - **dependencies**: OUT-01, DATA-03, WRLD-06
 - **owner_role**: Accounting & outcomes owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
+- **engineering_assignee**: SOL
+- **implementation_evidence**: Mapped capture/decision_sources/capture_runtime contracts and three focused offline replay suites; exact hashes in out03-replay-map-sol/source-manifest.json.
 - **runtime_evidence**: NOT_MAPPED
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Original-cut/source-hash/terminal-binding/restart evidence mapped offline. OUT-01 is BLOCKED; DATA-03 and WRLD-06 remain EVIDENCE_TO_MAP. No prerequisite closure inferred. See out03-replay-map-sol/REPORT.md.
 - **source_ids**: S01, S02, S08, S12, S14
 - **source_sections**: §19.3
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: Map OUT-01 first, then reconcile DATA-03 and WRLD-06 exact evidence and their dependencies before OUT-03 closure.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
 - **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
 - **closure_evidence**:
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **evidence_mapping**: docs/tracker/evidence/out03-replay-map-sol/REPORT.md
 
 ### OUT-04 — Separate attribution from causal proof.
 
@@ -4239,7 +4248,7 @@ Functional/offline closure: [REPORT.md](evidence/gui01-overview-sol/REPORT.md). 
 - **stage**: 8
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: AWAITING_EVIDENCE
+- **status**: BLOCKED
 - **why_needed**: The owner must inspect what happened and why.
 - **closure_condition**: Decision/context/spec→Portfolio/Risk→orders/fills/exits→accounting/outcome/replay links resolve to the correct records; missing links are explicit. Functional and runtime proof are separate from owner visual approval.
 - **failure_regression_proof**: Partial/unbound/unknown execution is not shown as verified complete; drilldown IDs stay exact.
@@ -4249,16 +4258,16 @@ Functional/offline closure: [REPORT.md](evidence/gui01-overview-sol/REPORT.md). 
 - **implementation_evidence**: HISTORICAL_STAGE8_CLAIM
 - **runtime_evidence**: NOT_PROVEN_FOR_THIS_SCREEN
 - **visual_approval**: TRACKED_SEPARATELY
-- **latest_evidence**: Stage8 GUI/API tests were reported historically. Per-screen current functional/runtime evidence is not mapped here; no visual approval inferred.
+- **latest_evidence**: Dependency intake: ACC-02 CLOSED architecture/offline; OUT-03 BLOCKED and OWN-01 EVIDENCE_TO_MAP. OUT-03 replay evidence mapped first; GUI implementation awaits dependency satisfaction. See out03-replay-map-sol/REPORT.md.
 - **source_ids**: S01, S10, S14
 - **source_sections**: §25.3
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: Satisfy OUT-03 and OWN-01 without bypassing their dependencies; then verify exact complete/rejected Trades navigation with explicit missing/unbound/unknown links.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: SDD_DEFINED_TEST_DETAIL_DRAFT
 - **priority**: NORMAL
 - **resolution_at_commit**:
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
 - **closure_evidence**:

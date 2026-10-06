@@ -1,0 +1,28 @@
+Re-extracting code files in . (no LLM needed)...
+[graphify watch] 138 file(s) not classified (no supported extension or shebang), skipped: .gitignore, .graphify_labels.json.sig, .graphify_root, .graphify_semantic_marker, .graphify_version, .graphifyignore (+132 more)
+  AST extraction: 100/1640 uncached files (6%) [4 workers]
+  AST extraction: 200/1640 uncached files (12%) [4 workers]
+  AST extraction: 300/1640 uncached files (18%) [4 workers]
+  AST extraction: 400/1640 uncached files (24%) [4 workers]
+  AST extraction: 500/1640 uncached files (30%) [4 workers]
+  AST extraction: 600/1640 uncached files (36%) [4 workers]
+  AST extraction: 700/1640 uncached files (42%) [4 workers]
+  AST extraction: 800/1640 uncached files (48%) [4 workers]
+  AST extraction: 900/1640 uncached files (54%) [4 workers]
+  AST extraction: 1000/1640 uncached files (60%) [4 workers]
+  AST extraction: 1100/1640 uncached files (67%) [4 workers]
+  AST extraction: 1200/1640 uncached files (73%) [4 workers]
+  AST extraction: 1300/1640 uncached files (79%) [4 workers]
+  AST extraction: 1400/1640 uncached files (85%) [4 workers]
+  AST extraction: 1500/1640 uncached files (91%) [4 workers]
+  AST extraction: 1600/1640 uncached files (97%) [4 workers]
+  AST extraction: 1640/1640 uncached files (100%) [4 workers]
+[graphify watch] community set changed since labeling (1203 saved labels, 1200 communities now; renamed 340 community(ies) by their hub). Run `graphify label` to refresh names with the LLM.
+[graphify] backed up curated graph (5 files) -> 2026-10-06/
+Graph has 24703 nodes (above 5000 limit). Building aggregated community view...
+graph.html written (aggregated: 1200 community nodes, 4302 cross-community edges)
+Tip: run with --obsidian for full node-level detail.
+[graphify watch] Rebuilt: 24703 nodes, 61977 edges, 1200 communities
+[graphify watch] graph.json, graph.html and GRAPH_REPORT.md updated in graphify-out
+Code graph updated. For doc/paper/image changes run /graphify --update in your AI assistant.
+Tip: set GEMINI_API_KEY or GOOGLE_API_KEY to use Gemini for semantic extraction.

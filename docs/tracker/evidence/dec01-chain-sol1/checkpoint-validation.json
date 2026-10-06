@@ -1,0 +1,28 @@
+{
+  "result": "PASS",
+  "base_revision": "c4c08c1c952e40a39a6b1eb98395c97a431a8dbc",
+  "checks": {
+    "identities_preserved": true,
+    "all_closing_conditions_and_edges_preserved": true,
+    "att01_exact_row_preserved": true,
+    "only_scoped_rows_changed": true,
+    "counts_exact": true,
+    "blocked_truth": true,
+    "later_closures_preserved": true,
+    "current_build_selection_parity": true,
+    "out03_replay_dependency_map_parity": true,
+    "out01_identity_evidence_map_parity": true,
+    "dec01_dependency_chain_map_parity": true,
+    "sol1_control_plane_checkpoint_parity": true,
+    "terminal_parity": true,
+    "no_successor_or_runtime": true,
+    "current_blocked_list": true,
+    "bundle_hashes": true,
+    "dec01-chain-sol1_artifacts": true,
+    "out01-identity-map-sol_artifacts": true,
+    "out03-replay-map-sol_artifacts": true,
+    "tracker_available": true,
+    "att01_markdown_preserved": true
+  },
+  "retained_test_evidence": "Original offline results reused; no application code or runtime changed."
+}

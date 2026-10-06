@@ -1,0 +1,31 @@
+id: OUT-03
+requested_item: GUI-02
+result: BLOCKED_DEPENDENCY_MAPPING
+scope: OFFLINE_EVIDENCE_MAPPING
+evidence: docs/tracker/evidence/out03-replay-map-sol/REPORT.md
+source_manifest: docs/tracker/evidence/out03-replay-map-sol/source-manifest.json
+base_revision: cafd1af102d87028a5543334c358dd8d155aa344
+direct_gui_dependencies:
+  OUT-03: BLOCKED
+  ACC-02: CLOSED
+  OWN-01: EVIDENCE_TO_MAP
+unmet_out03_dependencies:
+- OUT-01
+- DATA-03
+- WRLD-06
+next_prerequisite: OUT-01
+next_gui_item: GUI-02
+successor_selected: false
+runtime_execution_authorized: false
+implementation_gap: NONE_DEMONSTRATED; test infrastructure exhaustion recovered
+status: BLOCKED
+tests:
+  distinct_cases_successful: 82
+  initial: 58 passed, 1 failed, 23 errors; root filesystem full
+  retry: 15 passed, 1 failed, 8 errors; residual temp disk full
+  final_retry: 9 passed; TMPDIR and SQLITE_TMPDIR on workspace volume
+  control_checks: 14
+  graphify_update: PASS_AST_ONLY
+  diff_check: PASS
+runtime_proof: NOT_PERFORMED
+owner_visual_approval: NOT_PERFORMED

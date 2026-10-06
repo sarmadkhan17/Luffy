@@ -1,0 +1,15 @@
+{
+  "base_revision": "50edba5c4d72d014d9515b4823a4b39fd7098a2f",
+  "files": {
+    "trader/strategy/compile.py": "f4d318367d202e11181b41e18d98e37bb75737696cc2b65a793bf213f35b8063",
+    "tests/test_compile.py": "8a6f7dfa92ac140e72db754e2f8c506a13430fd6482d78601ddd9bf8c620f82f",
+    "trader/strategy/features.py": "08a555244ea74e718c74a5e7e8e9c5699712795591dc1e2ade09391adf192864",
+    "trader/strategy/spec.py": "5ffaaec6e232132e7788a3a829bf9cf88ac19cf9f77b5379d0339ddcdea385e7",
+    "trader/research/job.py": "e4eb44ede397ffab222bde4ff59ee5d40db8186e500fbb1b3313e693582e1c15",
+    "trader/research/evaluate.py": "96f945cd9b00e14e8f36454a1443532a83acc88b2b2ce969aac8ecc257eb0065",
+    "trader/world/model.py": "b85f1c1bf41942d8f85941f0d9da01dfb0b7a0228346c13830dbce45151262e1",
+    "trader/world/replay.py": "57ec8b2649564cfd41d4d5c9896f7a26c7705bf4d0e3c2661b032c85227a4588",
+    "trader/portfolio/opportunity_live.py": "33c2e50f3c981dc44680c7bd3d7da75e8341884464e211ec4c065d6827685434",
+    "trader/data/market_provenance.py": "4bca12b4d16a57b7a582fcd27c48254fc59c1e23a0ab0848554b5d4118d3e584"
+  }
+}

@@ -1,0 +1,42 @@
+id: DEC-01
+status: BLOCKED
+result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+scope: ARCHITECTURE_OFFLINE
+evidence: docs/tracker/evidence/dec01-chain-sol1/REPORT.md
+base_revision: 50edba5c4d72d014d9515b4823a4b39fd7098a2f
+compiler_fix_commit: f55ec97c4a2bef04712abc45832e6d3f44f01162
+data05_reused_engineering_commit: fc16e078a56a19b01b85a8a9c7edac368183904d
+classification:
+  STR-02: SUPPORTED_FEATURE_PATH_PROVEN; COMPILED_SPEC_MUTABILITY_GAP_FIXED; STR-01_AND_WRLD-05_UNMET
+  WRLD-05: STANDALONE_API_IMPLEMENTED_BUT_UNMAPPED; ACTUAL_NORMAL_STRATEGY_RESEARCH_INTEGRATION_GAP; WRLD-03_UNMET
+  DATA-05: OWNER_CONFIRMED_ENGINEERING_CLOSURE_REUSED_AND_RECONCILED; NO_REDO
+  DEC-01: PARTIAL_CONTEXT_CLAUSES_PROVEN; REQUIRED_OPTIONAL_ANALYST_BINDING_GAP; DEPENDENCIES_UNMET
+actual_gaps:
+  fixed:
+  - compiler mutable spec/hash/AST binding
+  remaining:
+  - WRLD-05 normal typed current/historical WorldModel strategy/research integration
+  - DEC-01 required/optional analysts and supporting/opposing evidence binding
+unmet_upstream_gates:
+  STR-02:
+  - STR-01
+  - WRLD-05
+  WRLD-05:
+  - WRLD-03
+tests:
+  focused_passed: 53
+  regression_passed: 71
+  distinct_passed: 124
+  new_regression_cases: 4
+  baseline_new_cases_failed: 3
+  data05_tests_repeated: 0
+commits:
+- f55ec97c4a2bef04712abc45832e6d3f44f01162
+out01_now_unblocked: false
+dec04_started: false
+next_item: WRLD-03 / WRLD-01 prerequisite mapping, then WRLD-05 normal integration and STR-01 gate; DEC-01
+  analyst binding before closure
+successor_selected: false
+runtime_execution_authorized: false
+provider_enablement_authorized: false
+trading_activation_authorized: false

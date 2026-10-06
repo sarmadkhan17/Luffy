@@ -1,0 +1,27 @@
+{
+  "result": "PASS",
+  "checks": [
+    "178 exact identities retained",
+    "only four requested rows changed",
+    "all original conditions and edges preserved",
+    "DATA-03 lane untouched",
+    "DEC-04 not started or modified",
+    "STR-01 and WRLD-03 prerequisites remain explicit",
+    "DATA-05 existing offline closure reused",
+    "three gated rows remain blocked",
+    "OUT-01 not unblocked",
+    "status counts exact",
+    "current_build_selection four-way parity",
+    "dec01_dependency_chain_map four-way parity",
+    "terminal package aligned",
+    "no successor/runtime/provider/trading selected",
+    "future runtime and visual obligations retained",
+    "bundle hashes and byte counts exact",
+    "exact inspected source bytes retained",
+    "only compiler and tests changed in inspected sources",
+    "fix commit scoped to compiler and its regressions",
+    "committed compiler/test bytes exact",
+    "read-only Tracker available",
+    "AST-only graph refresh completed"
+  ]
+}

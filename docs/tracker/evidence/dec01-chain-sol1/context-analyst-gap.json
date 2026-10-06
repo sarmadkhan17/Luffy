@@ -1,0 +1,48 @@
+{
+  "classification": "ACTUAL_GAP_DEC01_ANALYST_BINDING",
+  "reason": "UNKNOWN_SOURCE_ROLE",
+  "input_role": "analysts",
+  "scope": "Existing producer accepts no typed required/optional/supporting/opposing analyst bundle; original DEC-01 condition not proven.",
+  "upstream_gates": {
+    "STR-01": {
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "RES-08",
+        "QNT-08"
+      ],
+      "closure_condition": "Spec includes lineage/research references, universe/horizon, entry/exit/risk/data/world requirements and hashes; material change creates a new version."
+    },
+    "WRLD-03": {
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "DATA-02",
+        "WRLD-01"
+      ],
+      "closure_condition": "Global, asset-class, group, instrument and relationship states preserve relevant horizons, dimensions and conflicts through a stable query."
+    },
+    "WRLD-01": {
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "DATA-02"
+      ],
+      "closure_condition": "Enabled analysts declare inputs, horizon, quality, strength/uncertainty and limitations; Decision consumes typed evidence."
+    },
+    "RES-08": {
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "RES-07",
+        "QNT-01"
+      ],
+      "closure_condition": "Normal bridge binds hypothesis/experiment/measurement/referee/Bank IDs; unsupported shapes and insufficient data stay explicit."
+    },
+    "QNT-08": {
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "QNT-03",
+        "QNT-05",
+        "QNT-06"
+      ],
+      "closure_condition": "Only actual registered quantitative evidence yields an admitted candidate; Builder/Governor/owner gates remain downstream."
+    }
+  }
+}

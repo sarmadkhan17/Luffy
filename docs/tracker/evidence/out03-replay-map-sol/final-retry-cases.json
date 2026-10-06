@@ -1,0 +1,11 @@
+[
+  "tests/test_normal_learning_loop_closure.py::test_normal_loop_from_real_decision_to_changed_consumer[CONFIDENCE_CALIBRATION]",
+  "tests/test_normal_learning_loop_closure.py::test_portfolio_stage_is_the_same_decision_not_a_new_identity",
+  "tests/test_normal_learning_loop_closure.py::test_risk_decision_and_refusal_resolve_the_same_chain",
+  "tests/test_normal_learning_loop_closure.py::test_execution_resolves_the_exact_intent_stage_and_legacy_trade_stays_on_original",
+  "tests/test_normal_learning_loop_closure.py::test_exit_semantics_are_bound_per_version_not_per_allocation",
+  "tests/test_normal_learning_loop_closure.py::test_generic_dispatch_accepts_real_replay_complete_evidence_of_each_producible_class",
+  "tests/test_normal_learning_loop_closure.py::test_normal_loop_from_real_decision_to_changed_consumer[EVIDENCE_WEIGHTS]",
+  "tests/test_normal_learning_loop_closure.py::test_normal_loop_from_real_decision_to_changed_consumer[STRATEGY_ALLOCATION]",
+  "tests/test_normal_learning_loop_closure.py::test_normal_loop_from_real_decision_to_changed_consumer[ATTENTION_PRIORITY]"
+]

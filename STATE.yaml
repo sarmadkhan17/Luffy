@@ -1358,43 +1358,20 @@ perf03_capture_r1:
   trading_activated: false
   perf01: UNCHANGED; BLOCKED/UNKNOWN
 current_active_work:
-  id: OBS-05
-  status: CLOSED
-  result: CLOSED_ENGINEERING_ONLY_DIAGNOSTICS
+  id: DEC-01
+  status: BLOCKED
+  result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
   mode: ENGINEERING_ONLY
-  objective: Emit bounded non-secret first-boot refusal reason codes without changing OBS-05 admission
-    or Phase B safety.
-  implementation_started: true
-  implementation_complete: true
-  implementation_commit: 4d5f21b7371201780248bfa374bc1d7e4fecfb97
-  tracker_source: docs/tracker/LUFFY_Product_Tracker_v1.yaml
+  scope: ARCHITECTURE_OFFLINE
+  objective: Map DEC-01 dependency chain and fix only demonstrated compiler version binding gap; preserve original
+    WorldModel/analyst contracts and gates.
   evidence:
-  - docs/tracker/evidence/obs05-first-boot-diagnostics/intake.yaml
-  - docs/tracker/evidence/obs05-first-boot-diagnostics/closure.yaml
-  - docs/tracker/evidence/obs05-first-boot-diagnostics/REPORT.md
-  tests: 598 combined offline regressions passed, including 37 focused diagnostic cases.
-  kernel_launched: false
-  dashboard_launched: false
-  live_venue_reads: 0
-  provider_calls: 0
+  - docs/tracker/evidence/dec01-chain-sol1/REPORT.md
+  implementation_commit: f55ec97c4a2bef04712abc45832e6d3f44f01162
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
-  run01_status: DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE
-  run01_evidence_status: IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING
-  run01_live_proof_contract_possible: true
-  run01_live_proof_performed: false
-  run01_live_proof_authorization: Separate owner authorization naming the full intended final revision
-    and one controlled Kernel launch/SIGTERM graceful stop with retained Phase A/Phase B and unchanged
-    RUN-01 proof.
-  historical_next_recommended_item: RUN-01
-  next_recommended_item: GUI-01
-  another_run01_fix_selected: false
-  next_item_selected: false
-  next_item_started: false
-  related_tracker_item: SEC-01 (DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE; actual read-permission readiness unverified)
-  run01_retry_now_diagnosable: true
-  actual_previous_refusal_cause: UNKNOWN; no live venue calls authorized
+  successor_selected: false
 
 obs05_first_boot_correction:
   id: OBS-05
@@ -1639,7 +1616,12 @@ current_build_selection:
   current_blocked_items:
   - WORK-01
   - PERF-03
-  next_recommended_item: GUI-02
+  - OUT-03
+  - GUI-02
+  - OUT-01
+  - STR-02
+  - DEC-01
+  next_recommended_item: null
   eligible_items:
   - DATA-08
   - GUI-02
@@ -1655,10 +1637,11 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: ACC-01 re-pinned to 8867794 after the four-gap correction; ACC-03 consumer classification fixed
-    and GUI-01 revalidated offline. GUI-02 remains recommended, unselected. No live/runtime or visual approval inferred.
-  last_terminal_item: ACC-03
-  last_terminal_result: CLOSED_ACCOUNTING_TRUTH_FOLLOWUP
+  selection_reason: 'SOL-1 checkpoint only: DEC-01/OUT-01/OUT-03 remain BLOCKED. Later committed WorldModel and
+    DATA-05 closures preserved; STR-01/STR-02, analyst Context binding, DEC-04 and OUT-01 execution proof remain.
+    No successor selected.'
+  last_terminal_item: DEC-01
+  last_terminal_result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
 
 data01_canonical_identity:
   id: DATA-01
@@ -2019,6 +2002,180 @@ acc01_venue_authority_correction:
   four_gaps_recorded: true
   original_condition_satisfied: true
 
+out03_replay_dependency_map:
+  id: OUT-03
+  requested_item: GUI-02
+  result: BLOCKED_DEPENDENCY_MAPPING
+  scope: OFFLINE_EVIDENCE_MAPPING
+  evidence: docs/tracker/evidence/out03-replay-map-sol/REPORT.md
+  source_manifest: docs/tracker/evidence/out03-replay-map-sol/source-manifest.json
+  base_revision: cafd1af102d87028a5543334c358dd8d155aa344
+  direct_gui_dependencies:
+    OUT-03: BLOCKED
+    ACC-02: CLOSED
+    OWN-01: EVIDENCE_TO_MAP
+  unmet_out03_dependencies:
+  - OUT-01
+  - DATA-03
+  - WRLD-06
+  next_prerequisite: OUT-01
+  next_gui_item: GUI-02
+  successor_selected: false
+  runtime_execution_authorized: false
+  implementation_gap: NONE_DEMONSTRATED_BY_MAPPING
+
+out03_intake_previous_current_active_work:
+  id: OBS-05
+  status: CLOSED
+  result: CLOSED_ENGINEERING_ONLY_DIAGNOSTICS
+  mode: ENGINEERING_ONLY
+  objective: Emit bounded non-secret first-boot refusal reason codes without changing OBS-05 admission or Phase
+    B safety.
+  implementation_started: true
+  implementation_complete: true
+  implementation_commit: 4d5f21b7371201780248bfa374bc1d7e4fecfb97
+  tracker_source: docs/tracker/LUFFY_Product_Tracker_v1.yaml
+  evidence:
+  - docs/tracker/evidence/obs05-first-boot-diagnostics/intake.yaml
+  - docs/tracker/evidence/obs05-first-boot-diagnostics/closure.yaml
+  - docs/tracker/evidence/obs05-first-boot-diagnostics/REPORT.md
+  tests: 598 combined offline regressions passed, including 37 focused diagnostic cases.
+  kernel_launched: false
+  dashboard_launched: false
+  live_venue_reads: 0
+  provider_calls: 0
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  run01_status: DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE
+  run01_evidence_status: IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING
+  run01_live_proof_contract_possible: true
+  run01_live_proof_performed: false
+  run01_live_proof_authorization: Separate owner authorization naming the full intended final revision and
+    one controlled Kernel launch/SIGTERM graceful stop with retained Phase A/Phase B and unchanged RUN-01 proof.
+  historical_next_recommended_item: RUN-01
+  next_recommended_item: GUI-01
+  another_run01_fix_selected: false
+  next_item_selected: false
+  next_item_started: false
+  related_tracker_item: SEC-01 (DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE; actual read-permission readiness
+    unverified)
+  run01_retry_now_diagnosable: true
+  actual_previous_refusal_cause: UNKNOWN; no live venue calls authorized
+
+out01_intake_previous_current_active_work:
+  id: OUT-03
+  status: BLOCKED
+  result: BLOCKED_DEPENDENCY_MAPPING
+  mode: ENGINEERING_ONLY
+  scope: OFFLINE_EVIDENCE_MAPPING
+  objective: Map OUT-03 replay evidence before GUI-02; retain unmet OUT-01/DATA-03/WRLD-06 dependencies and
+    OWN-01 gate.
+  evidence:
+  - docs/tracker/evidence/out03-replay-map-sol/REPORT.md
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  successor_selected: false
+
+out01_identity_evidence_map:
+  id: OUT-01
+  status: BLOCKED
+  result: BLOCKED_DEPENDENCY_AND_EXECUTION_EVIDENCE
+  scope: ARCHITECTURE_OFFLINE_EVIDENCE_MAPPING
+  evidence: docs/tracker/evidence/out01-identity-map-sol/REPORT.md
+  base_revision: 61716877fdd717a65ffe967fdb75084b66515b67
+  dependencies:
+    DEC-04: EVIDENCE_TO_MAP
+    DATA-02: CLOSED
+  classification:
+    PROVEN:
+    - normal scan source manifest
+    - allocation original identity and registration
+    - HOLD and Risk refusal normal forward outcome
+    - failed delivery and parent/source mismatch refusal
+    - exact intent resolver
+    IMPLEMENTED_BUT_UNMAPPED:
+    - full normal execution delivery without manual priming
+    ACTUAL_GAP: []
+  tests:
+    fresh_pytest_passed: 3
+    reused_prior_distinct_cases: 82
+    root_mismatch_checks: PASS
+  actual_gap: NONE_DEMONSTRATED
+  application_code_changed: false
+  commits_created: []
+  out03_remaining_dependencies:
+  - OUT-01
+  - DATA-03
+  - WRLD-06
+  impact_policy: OUT-03 and GUI-02 rows unchanged; outcome/learning rows supporting evidence only; DATA-03
+    untouched
+  next_item: DEC-04 dependency mapping, including DEC-01 gate; then OUT-01 full normal execution acceptance
+  successor_selected: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+
+dec01_intake_previous_current_active_work:
+  id: OUT-01
+  status: BLOCKED
+  result: BLOCKED_DEPENDENCY_AND_EXECUTION_EVIDENCE
+  mode: ENGINEERING_ONLY
+  scope: ARCHITECTURE_OFFLINE_EVIDENCE_MAPPING
+  objective: Map only OUT-01 original decision/terminal/outcome identity; preserve DEC-04 gate and explicit
+    execution proof gap.
+  evidence:
+  - docs/tracker/evidence/out01-identity-map-sol/REPORT.md
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  successor_selected: false
+
+dec01_dependency_chain_map:
+  id: DEC-01
+  status: BLOCKED
+  result: BLOCKED_DEPENDENCY_AND_CONTEXT_CONTRACT
+  scope: ARCHITECTURE_OFFLINE
+  evidence: docs/tracker/evidence/dec01-chain-sol1/REPORT.md
+  base_revision: 50edba5c4d72d014d9515b4823a4b39fd7098a2f
+  compiler_fix_commit: f55ec97c4a2bef04712abc45832e6d3f44f01162
+  data05_reused_engineering_commit: fc16e078a56a19b01b85a8a9c7edac368183904d
+  classification:
+    STR-02: SUPPORTED_FEATURE_PATH_PROVEN; COMPILED_SPEC_MUTABILITY_GAP_FIXED; STR-01_AND_WRLD-05_UNMET
+    WRLD-05: STANDALONE_API_IMPLEMENTED_BUT_UNMAPPED; ACTUAL_NORMAL_STRATEGY_RESEARCH_INTEGRATION_GAP; WRLD-03_UNMET
+    DATA-05: OWNER_CONFIRMED_ENGINEERING_CLOSURE_REUSED_AND_RECONCILED; NO_REDO
+    DEC-01: PARTIAL_CONTEXT_CLAUSES_PROVEN; REQUIRED_OPTIONAL_ANALYST_BINDING_GAP; DEPENDENCIES_UNMET
+  actual_gaps:
+    fixed:
+    - compiler mutable spec/hash/AST binding
+    remaining:
+    - WRLD-05 normal typed current/historical WorldModel strategy/research integration
+    - DEC-01 required/optional analysts and supporting/opposing evidence binding
+  unmet_upstream_gates:
+    STR-02:
+    - STR-01
+    - WRLD-05
+    WRLD-05:
+    - WRLD-03
+  tests:
+    focused_passed: 53
+    regression_passed: 71
+    distinct_passed: 124
+    new_regression_cases: 4
+    baseline_new_cases_failed: 3
+    data05_tests_repeated: 0
+  commits:
+  - f55ec97c4a2bef04712abc45832e6d3f44f01162
+  out01_now_unblocked: false
+  dec04_started: false
+  next_item: WRLD-03 / WRLD-01 prerequisite mapping, then WRLD-05 normal integration and STR-01 gate; DEC-01
+    analyst binding before closure
+  successor_selected: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+
 wrld01_canonical_reconciliation:
   item: WRLD-01
   canonical_status: CLOSED
@@ -2137,3 +2294,23 @@ data06_canonical_reconciliation:
   not_wired: 'No kernel code constructs BinanceUsdmRegistryProvider yet; store and recorder hook are tested.'
   unrelated_tracker_rows_changed: false
   control_plane_reconciliation_pending: false
+
+sol1_control_plane_checkpoint:
+  scope: DEC-01 / OUT-01 / OUT-03 control-plane checkpoint only
+  base_revision: c4c08c1c952e40a39a6b1eb98395c97a431a8dbc
+  statuses:
+    DEC-01: BLOCKED
+    OUT-01: BLOCKED
+    OUT-03: BLOCKED
+  later_closures_preserved:
+  - WRLD-01
+  - WRLD-03
+  - WRLD-05
+  - DATA-05
+  historical_intake_policy: Original reports, terminal records, source manifests and validations are immutable dated
+    intake evidence; superseded WorldModel findings are not current gaps. Current row summaries and committed reconciliation
+    records govern.
+  closing_conditions_changed: false
+  att01_changed: false
+  successor_selected: false
+  runtime_execution_authorized: false

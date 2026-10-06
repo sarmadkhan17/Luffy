@@ -1,0 +1,13 @@
+{
+  "base_revision": "cafd1af102d87028a5543334c358dd8d155aa344",
+  "scope": "EXACT_DIRTY_CHECKOUT_BYTES_OFFLINE_NOT_DEPLOYED",
+  "files": {
+    "SDD.md": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28",
+    "trader/learning/capture.py": "28a30c2c5071337a4e246a63f445a0df66a39280e662ac093a6e1683d6497c12",
+    "trader/learning/capture_runtime.py": "83f35001725e5a1b968b88fe8db73f2dd8d7912ba7d3dacca0490a55907cbb93",
+    "trader/learning/decision_sources.py": "be05ddbd4d919e035a51a8c8e9bb1a186b5160dd6c6f3a61f92a66c336c636a1",
+    "tests/test_decision_sources.py": "2cd0fbc74af1fa62c74df6e9d5c41e6d8b06de9ee2451d935ffbb742ed2274a6",
+    "tests/test_stage7_replay_world_closure_r2.py": "2f0c898651ebded1c6ae4a656dcd9d4fa3e627b9033da7089f027e58dd331736",
+    "tests/test_normal_learning_loop_closure.py": "7de1954def47e7e766a887f79e9298a99b94c4150ecec71864e18f8a5b465ea2"
+  }
+}
