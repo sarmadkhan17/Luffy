@@ -56,7 +56,7 @@ export default function Tracker() {
       </div>}
     </Panel>
     {data && <>
-      <Panel title="Single selected NEXT" aside={<Badge tone="blue">SELECTED · {data.selected.status}</Badge>}>
+      <Panel title={data.selected.status === "CLOSED" ? "No active package · terminal history" : "Single selected NEXT"} aside={<Badge tone="blue">{data.selected.status === "CLOSED" ? "HISTORY" : "SELECTED"} · {data.selected.status}</Badge>}>
         <h3>{data.selected.id} · {selected?.required_behavior}</h3>
         <p>{data.selected.mode} · Tracker row remains {selected?.status}</p>
         <p>{data.selected.objective}</p>

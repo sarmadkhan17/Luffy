@@ -430,6 +430,7 @@ references:                     # reference markets for ref(key, expr) — trade
                  XLM/USDT]
 
 dashboard:
+  startup_mode: READ_ONLY_GUI  # explicit current build; LIVE requires OBS-02 readiness
   host: 192.168.126.131
   port: 8080
 

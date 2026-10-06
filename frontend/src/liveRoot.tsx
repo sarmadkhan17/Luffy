@@ -76,8 +76,8 @@ export function LiveRoot({ client = liveClient }: { client?: QueryClient }) {
   );
   const adapter = useMemo(
     () =>
-      createLiveAdapter(() => expire("Your session ended or was signed out.")),
-    [expire],
+      createLiveAdapter(() => expire("Your session ended or was signed out."), state.kind === "ready" && state.boot.dashboard_mode === "READ_ONLY_GUI"),
+    [expire, state],
   );
   const load = useCallback(async () => {
     try {

@@ -22,7 +22,7 @@ from trader.observability.safety import HeartbeatPolicy, SafetyHealth, SafetyObs
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'docs/tracker/evidence/obs02-dashboard-readiness-sol/source'
-CFG = {'timeframes': {'scan_interval_seconds': 60}, 'dashboard': {'host': 'fixture', 'port': 1}}
+CFG = {'timeframes': {'scan_interval_seconds': 60}, 'dashboard': {'host': 'fixture', 'port': 1, 'startup_mode': 'LIVE'}}
 REV = 'a' * 40
 
 
@@ -273,6 +273,9 @@ def test_healthy_direct_server_path_is_preserved(ready, monkeypatch):
     monkeypatch.setattr(gate, 'check', lambda *a, **k: events.append('gate') or result)
     monkeypatch.setattr(server, 'create_app', lambda *a: events.append('app') or 'fixture-app')
     monkeypatch.setattr(uvicorn, 'run', lambda *a, **k: events.append('listen'))
+    from trader.observability import preflight
+    monkeypatch.setattr(preflight, 'collect_facts', lambda root: {})
+    monkeypatch.setattr(preflight, 'evaluate', lambda facts: dict(allow=True, result='PASS', reasons=[]))
     server.main(); assert events == ['gate', 'app', 'listen']
 
 
@@ -309,14 +312,18 @@ def test_actual_restart_orders_both_gates_before_process_effects(ready, tmp_path
     shim = venv / 'python'
     shim.write_text('#!' + sys.executable + '\n' + '''import json,os,sys
 with open(os.environ['OBS02_EVENTS'],'a') as out: out.write(sys.argv[2]+'\\n')
-if sys.argv[2].endswith('dashboard_readiness'):
+if sys.argv[2].endswith('dashboard.phase'):
     sys.path.insert(0, os.environ['OBS02_REPO'])
     from trader import runtime_identity as ri
     from trader.observability import dashboard_readiness as gate
     ri.code_revision = lambda root: dict(revision='a'*40, dirty_code=False)
     original = gate.check
     gate.check = lambda root,cfg: original(root,cfg,clock=lambda: float(os.environ['OBS02_NOW']))
-    raise SystemExit(gate.main(sys.argv[3:]))
+    from trader.dashboard import phase
+    from trader.observability import preflight
+    preflight.collect_facts = lambda root: None
+    preflight.evaluate = lambda facts: dict(allow=os.environ['OBS02_PRE'] == '1', result='PASS' if os.environ['OBS02_PRE'] == '1' else 'FAIL', reasons=[])
+    phase.main(sys.argv[3:])
 allow = os.environ['OBS02_PRE'] == '1'
 print(json.dumps(dict(allow=allow)))
 raise SystemExit(0 if allow else 1)
@@ -328,15 +335,14 @@ raise SystemExit(0 if allow else 1)
         env={**os.environ, 'PATH': str(binpath)+':'+os.environ['PATH'], 'OBS02_EVENTS': str(events),
              'OBS02_PRE': str(int(preflight)), 'OBS02_REPO': str(ROOT), 'OBS02_NOW': str(ready.now)})
     entries = events.read_text().splitlines()
-    assert entries[0] == 'trader.observability.preflight'
-    if not preflight: assert entries == ['trader.observability.preflight']
-    elif not readiness: assert entries == ['trader.observability.preflight', 'trader.observability.dashboard_readiness']
+    assert entries[0] == 'trader.dashboard.phase'
+    if not preflight or not readiness: assert entries == ['trader.dashboard.phase']
     else:
         import time
         for _ in range(100):
             if 'setsid' in events.read_text(): break
             time.sleep(.01)
-        assert events.read_text().splitlines()[:2] == ['trader.observability.preflight', 'trader.observability.dashboard_readiness']
+        assert events.read_text().splitlines()[0] == 'trader.dashboard.phase'
         assert 'setsid' in events.read_text()
     assert (result.returncode == 0) == (preflight and readiness)
 

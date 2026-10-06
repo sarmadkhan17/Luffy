@@ -613,6 +613,6 @@ def make_app(root: Path, monkeypatch=None, scenario: str = "normal"):
         monkeypatch.setenv("DASH_TOKEN", TOKEN)
     else:
         os.environ["DASH_TOKEN"] = TOKEN
-    app = server.create_app({"attention": {"enabled": False},
+    app = server.create_app({"dashboard": {"startup_mode": "LIVE"}, "attention": {"enabled": False},
                              "owner_interface": {"enabled": True}})
     return app, journal, gateway

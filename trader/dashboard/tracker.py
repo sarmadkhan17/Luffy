@@ -212,6 +212,7 @@ def read_tracker(root: Path) -> dict:
 
 def install(app: FastAPI, *, root: Path) -> None:
     """Called inside the existing authenticated Owner API installation."""
+    @app.get("/api/tracker")
     @app.get("/owner-api/v1/tracker")
     def tracker():
         try:

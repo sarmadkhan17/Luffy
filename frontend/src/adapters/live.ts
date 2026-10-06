@@ -31,6 +31,8 @@ export class ContractViolation extends Error {}
 
 export interface Bootstrap {
   mode: "LIVE";
+  dashboard_mode?: "READ_ONLY_GUI" | "LIVE";
+  kernel_process?: { state: string };
   principal: string | null;
   session: {
     authenticated: boolean;
@@ -572,9 +574,9 @@ export function mapMentions(
   };
 }
 
-export function createLiveAdapter(onUnauthorized: () => void): OwnerAdapter {
+export function createLiveAdapter(onUnauthorized: () => void, readOnly = false): OwnerAdapter {
   const api = createTransport(onUnauthorized);
-  return {
+  const adapter: OwnerAdapter = {
     mode: "LIVE",
     async overview(_s, signal) {
       return mapOverview(await api(`${API}/overview`, { signal }));
@@ -781,6 +783,10 @@ export function createLiveAdapter(onUnauthorized: () => void): OwnerAdapter {
       };
     },
   };
+  if (readOnly) {
+    delete adapter.control;
+  }
+  return adapter;
 }
 
 export async function fetchBootstrap(

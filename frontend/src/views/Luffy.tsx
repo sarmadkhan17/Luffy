@@ -13,7 +13,8 @@ import type { RequestState } from "../components/Avatar";
 import { NeedsYou, OwnerEvidence } from "../components/OwnerEvidence";
 const Avatar = lazyChunk(() => import("../components/Avatar"));
 export default function Luffy() {
-  const { adapter, scenario, messages, setMessages } = usePreview();
+  const { adapter, scenario, messages, setMessages, session } = usePreview();
+  const readOnly = session?.dashboard_mode === "READ_ONLY_GUI";
   const live = import.meta.env.MODE === "production" || adapter.mode === "LIVE";
   const [input, setInput] = useState("");
   const [state, setState] = useState<RequestState>("idle");
@@ -76,7 +77,7 @@ export default function Luffy() {
   );
   async function send() {
     const text = input.trim();
-    if (!text || request.current || messages.length >= 100) return;
+    if (readOnly || !text || request.current || messages.length >= 100) return;
     const controller = new AbortController();
     const ownerId = Date.now();
     request.current = { controller, id: ownerId };
@@ -286,7 +287,7 @@ export default function Luffy() {
           />
           <div className="composer-actions">
             <span className="quiet">
-              <MicOff size={14} /> Voice unavailable · Enter to send
+              <MicOff size={14} /> {readOnly ? "Chat disabled in read-only GUI mode" : "Voice unavailable · Enter to send"}
             </span>
             {busy ? (
               <button
@@ -304,7 +305,7 @@ export default function Luffy() {
               <button
                 key="send"
                 className="primary"
-                disabled={!input.trim() || messages.length >= 100}
+                disabled={readOnly || !input.trim() || messages.length >= 100}
                 type="submit"
               >
                 Send <Send size={15} />

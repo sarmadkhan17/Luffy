@@ -28,6 +28,8 @@ def _owner_gateway(cfg: dict, auth):
     from ..owner.adapters import dashboard as owner_dashboard
     from ..owner.contract import MalformedRequest, Status, refused
     from ..owner.ipc import OwnerClient, resolve_ipc_dir
+    from .phase import mode, READ_ONLY_GUI
+    read_only = mode(cfg) == READ_ONLY_GUI
     section = (cfg or {}).get("owner_interface") or {}
     ipc_dir = resolve_ipc_dir(section.get("ipc_dir"))
     if ipc_dir is not None and not ipc_dir.is_absolute():
@@ -37,6 +39,8 @@ def _owner_gateway(cfg: dict, auth):
               if ipc_dir is not None else None)
 
     def gateway(operation, request_id, issued_at_ms, request, args):
+        if read_only:
+            return refused(None, "dashboard_read_only", Status.UNAVAILABLE)
         scope = getattr(request, "scope", None) or {}
         try:
             req = owner_dashboard.to_request(
@@ -69,11 +73,15 @@ def kernel_identity_view(root) -> dict:
 
 def create_app(cfg: dict | None = None) -> FastAPI:
     cfg = cfg or load_config()
+    from .phase import mode, READ_ONLY_GUI, ReadOnlyBoundary
+    read_only = mode(cfg) == READ_ONLY_GUI
     journal = Journal(str(ROOT / "data" / "luffy.db"))
     app = FastAPI(title="Luffy")
     from .auth import DashboardAuth
     auth = DashboardAuth(os.environ.get("DASH_TOKEN"))
     auth.install(app)
+    if read_only:
+        app.add_middleware(ReadOnlyBoundary)
 
     def _nocache(response):
         response.headers["Cache-Control"] = "no-store, max-age=0"
@@ -84,7 +92,8 @@ def create_app(cfg: dict | None = None) -> FastAPI:
     from . import owner_api
     from ..knowledge.vault import VAULT
     owner_api.install(app, journal=journal, cfg=cfg, root=ROOT, auth=auth, gateway=gateway,
-                      marks=_position_marks, quotes=_position_quotes, vault=VAULT)
+                      marks=None if read_only else _position_marks,
+                      quotes=None if read_only else _position_quotes, vault=VAULT)
 
     @app.get("/api/investigations/latest")
     def investigations_latest():
@@ -1107,8 +1116,8 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO)
     cfg = load_config()
     # Also guard direct module entry before app/Journal/IPC attachment or listen.
-    from ..observability.dashboard_readiness import check
-    readiness = check(ROOT, cfg)
+    from .phase import startup_check
+    readiness = startup_check(ROOT, cfg)
     if readiness['allow'] is not True:
         print(json.dumps(readiness, sort_keys=True))
         raise SystemExit(1)

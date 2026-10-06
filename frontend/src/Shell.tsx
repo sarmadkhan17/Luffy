@@ -113,8 +113,7 @@ export default function Shell() {
       </a>
       {live ? (
         <div className="live-banner" data-testid="mode-banner">
-          LIVE — Luffy backend · demo venue account (BINANCE_DEMO) · owner
-          controls only through the Owner Interface
+          {session?.dashboard_mode === "READ_ONLY_GUI" ? "READ-ONLY GUI — canonical evidence · control and provider actions disabled" : "LIVE — Luffy backend · demo venue account (BINANCE_DEMO) · owner controls only through the Owner Interface"}
         </div>
       ) : (
         <div className="demo-banner" data-testid="mode-banner">
@@ -171,7 +170,7 @@ export default function Shell() {
               {live ? "OWNER WORKSPACE" : "FRONTEND PREVIEW"}
             </span>
             <Badge tone={live ? "mint" : "amber"}>
-              {live ? "Live" : "Isolated"}
+              {session?.dashboard_mode === "READ_ONLY_GUI" ? "Read-only" : live ? "Live" : "Isolated"}
             </Badge>
             <div
               className="owner-avatar"
@@ -199,6 +198,7 @@ export default function Shell() {
             )}
           </div>
         </header>
+        {session?.dashboard_mode === "READ_ONLY_GUI" && <p role="status" className="quiet">Read-only GUI · Kernel {session.kernel_process?.state ?? "UNAVAILABLE"} · Runtime telemetry may be UNKNOWN or stale. Control, trading and provider actions disabled.</p>}
         <main id="content" tabIndex={-1}>
           <div className="page-heading">
             <div>
@@ -300,7 +300,7 @@ export default function Shell() {
           </span>
           <span>
             {live
-              ? `LIVE · text chat · backend time ${utc(session?.backend.source_time)} · voice unavailable`
+              ? `${session?.dashboard_mode === "READ_ONLY_GUI" ? "READ-ONLY · chat disabled" : "LIVE · text chat"} · backend time ${utc(session?.backend.source_time)} · voice unavailable`
               : "Fixture mode · Text only · No control connection"}
           </span>
         </footer>

@@ -20,16 +20,15 @@ case "$TARGET" in
   *) echo "usage: $0 kernel|dashboard"; exit 1 ;;
 esac
 
-# OBS-01: refuse before any process stop/start. Identity/boot ordering is RUN-01.
-if ! (cd "$DIR" && ./venv/bin/python -m trader.observability.preflight --root "$DIR" --target "$TARGET"); then
-  echo '{"schema":"luffy-launch-preflight.v1","allow":false,"result":"FAIL","reasons":["preflight_command_failed"]}'
-  exit 1
-fi
-
-# OBS-02: a Dashboard attaches only to a verified current boot/health instance.
+# Dashboard phase contract is shared with direct module startup. Kernel preflight is unchanged.
 if [ "$TARGET" = dashboard ]; then
-  if ! (cd "$DIR" && ./venv/bin/python -m trader.observability.dashboard_readiness --root "$DIR"); then
-    echo '{"schema":"luffy-dashboard-readiness.v1","allow":false,"result":"FAIL","reasons":["readiness_command_failed"]}'
+  if ! (cd "$DIR" && ./venv/bin/python -m trader.dashboard.phase --root "$DIR"); then
+    echo 'dashboard phase startup refused; existing process retained'
+    exit 1
+  fi
+else
+  if ! (cd "$DIR" && ./venv/bin/python -m trader.observability.preflight --root "$DIR" --target "$TARGET"); then
+    echo 'kernel preflight refused'
     exit 1
   fi
 fi

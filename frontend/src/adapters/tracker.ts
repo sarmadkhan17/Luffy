@@ -12,7 +12,7 @@ export interface TrackerData {
   generated_at: string; status: "AVAILABLE"; read_only: true;
   source: { path: string; sha256: string; next_path: string; next_sha256: string;
     repository_revision: string | null; observed_runtime_revision: string; version: string };
-  selected: { id: string; status: "SELECTED_NOT_STARTED" | "IN_PROGRESS"; mode: "DIAGNOSIS_ONLY" | "ENGINEERING_ONLY"; objective: string };
+  selected: { id: string; status: "SELECTED_NOT_STARTED" | "IN_PROGRESS" | "CLOSED" | "BLOCKED"; mode: "DIAGNOSIS_ONLY" | "ENGINEERING_ONLY"; objective: string };
   counts: Record<string, number>;
   status_definitions: { status: TrackerStatus; meaning: string }[];
   readiness_gates: { id: string; title: string; current: string; closure: string; limit: string; items: string[] }[];
@@ -28,10 +28,10 @@ export function parseTracker(v: unknown): TrackerData {
     if (!obj(row) || !["id","area","stage","release_scope","required_behavior","why_needed","closure_condition","latest_evidence","next_proof","owner_role"].every(k => text(row[k])) || !TRACKER_STATUSES.includes(row.status as TrackerStatus) || !["dependencies","parent_ids","related_items"].every(k => strings(row[k]))) return fail();
   }
   const ids = v.items.map(r => (r as TrackerRow).id);
-  if (new Set(ids).size !== ids.length || !obj(v.selected) || !ids.includes(v.selected.id as string) || !["SELECTED_NOT_STARTED","IN_PROGRESS"].includes(v.selected.status as string) || !["DIAGNOSIS_ONLY","ENGINEERING_ONLY"].includes(v.selected.mode as string) || !text(v.selected.objective)) return fail();
+  if (new Set(ids).size !== ids.length || !obj(v.selected) || !ids.includes(v.selected.id as string) || !["SELECTED_NOT_STARTED","IN_PROGRESS","CLOSED","BLOCKED"].includes(v.selected.status as string) || !["DIAGNOSIS_ONLY","ENGINEERING_ONLY"].includes(v.selected.mode as string) || !text(v.selected.objective)) return fail();
   const active = v.items.filter(r => (r as TrackerRow).status === "IN_PROGRESS");
   const selected = v.items.find(r => (r as TrackerRow).id === (v.selected as Record<string, unknown>).id) as TrackerRow;
-  if (active.length > 1 || active.some(r => (r as TrackerRow).id !== selected.id) || selected.status !== (v.selected.status === "IN_PROGRESS" ? "IN_PROGRESS" : "OPEN")) return fail();
+  if (active.length > 1 || active.some(r => (r as TrackerRow).id !== selected.id) || selected.status !== (v.selected.status === "SELECTED_NOT_STARTED" ? "OPEN" : v.selected.status)) return fail();
   if (!obj(v.source) || !["path","sha256","next_path","next_sha256","observed_runtime_revision","version"].every(k => text((v.source as Record<string,unknown>)[k])) || !(v.source.repository_revision === null || text(v.source.repository_revision))) return fail();
   const rows = v.items as TrackerRow[];
   if (!obj(v.counts) || !TRACKER_STATUSES.every(s => (v.counts as Record<string, unknown>)[s] === rows.filter((r: TrackerRow) => r.status === s).length)) return fail();

@@ -776,6 +776,8 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
     dist = dist or (root / "frontend" / "dist")
     knowledge_cache = KnowledgeReadCache(Path(vault))
     chat_slots = asyncio.Semaphore(CHAT_CONCURRENCY)
+    from .phase import mode, READ_ONLY_GUI
+    read_only = mode(cfg) == READ_ONLY_GUI
     section = (cfg or {}).get("owner_interface") or {}
     try:
         principal = Authorizer.from_config(cfg).resolve("dashboard", "session")
@@ -790,14 +792,19 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
             build = hashlib.sha256(dist_index.read_bytes()).hexdigest()[:12]
         except OSError:
             build = None
+        process = owner_runtime.kernel_process(root)
+        if read_only and process['state'] == 'UNKNOWN':
+            process = {**process, 'state': 'UNAVAILABLE'}
         return _json({
-            "mode": "LIVE",
+            "mode": "LIVE",  # connected transport; separate explicit authority phase
+            "dashboard_mode": "READ_ONLY_GUI" if read_only else "LIVE",
+            "kernel_process": process,
             "principal": principal,
             "session": {"authenticated": True, "method": method,
                         "expires_at": _iso(_parse(expires)) if expires else None},
-            "backend": {**version, "source_time": _iso(_now()), "frontend_build": build},
+            "backend": {**version, "process_id": os.getpid(), "source_time": _iso(_now()), "frontend_build": build},
             "owner_interface": {
-                "configured": section.get("enabled") is True and gateway is not None,
+                "configured": not read_only and section.get("enabled") is True and gateway is not None,
                 "check": PREFIX + "/owner-interface",
                 "note": "Availability is established by a live health read, not by configuration"},
             "providers": {"telegram": "CONFIGURED" if ((section.get("identities") or {})
@@ -806,8 +813,8 @@ def install(app, *, journal, cfg: dict, root: Path, auth, gateway, vault: Path |
                                                               .get("openclaw")) else "CONFIGURED",
                           "whatsapp": "NOT_CONFIGURED" if not ((section.get("identities") or {})
                                                               .get("whatsapp")) else "CONFIGURED"},
-            "capabilities": {"voice": False, "chat": "text", "controls":
-                             ["freeze", "halt", "resume", "unhalt", "panic"]},
+            "capabilities": {"voice": False, "chat": "disabled" if read_only else "text", "controls":
+                             [] if read_only else ["freeze", "halt", "resume", "unhalt", "panic"]},
         })
 
     @app.get(PREFIX + "/overview")
