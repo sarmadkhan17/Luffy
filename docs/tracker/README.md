@@ -1,3 +1,7 @@
+> Current accounting truth follow-up: CLOSED offline. ACC-01 correction pinned to 8867794; ACC-03 UNKNOWN/estimate consumer corrected; GUI-01 revalidated. [Evidence](evidence/accounting-truth-followup-sol/REPORT.md). GUI-02 recommended, unselected. Prior closure statements are historical; runtime/owner visual approval remain separate.
+
+> Current GUI-01: CLOSED for functional/offline Overview. Real read-only fixture GUI works with Kernel STOPPED; deployed/live proof and VIS-01 owner visual approval remain separate. [Evidence](evidence/gui01-overview-sol/REPORT.md). Next GUI-02 recommended, unselected. Earlier status statements are historical.
+
 > Current ACC-02/ACC-03: CLOSED for architecture/offline GUI. ACC-01 mapped first; GUI-01 dependencies satisfied, per-screen gaps and separate runtime/visual proof remain. [Evidence](evidence/acc03-economics-sol/REPORT.md). GUI-01 recommended, unselected. Earlier status statements are historical.
 
 > Current ACC-01/ACC-02 update: CLOSED at architecture/offline scope; 107 offline tests. ACC-03 remains pending. [Evidence](evidence/acc02-lineage-sol/REPORT.md). Earlier queue statements are historical.

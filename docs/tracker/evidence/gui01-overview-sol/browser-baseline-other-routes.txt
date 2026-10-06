@@ -1,0 +1,39 @@
+[WebServer] (node:1525431) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1525459) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:1525686) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 tests/browser/live.spec.ts:389:1 › other routes: real contracts or explicit unavailability (10.2s)
+
+
+  1) tests/browser/live.spec.ts:389:1 › other routes: real contracts or explicit unavailability ────
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByTestId('research-unavailable')
+    Expected substring: "no persisted research-question store"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" getByTestId('research-unavailable') with timeout 5000ms
+      - waiting for getByTestId('research-unavailable')
+
+
+      399 |   await expect(page.locator(".log-tail")).toContainText("line two");
+      400 |   await page.goto(LIVE + "/#research");
+    > 401 |   await expect(page.getByTestId("research-unavailable")).toContainText(
+          |                                                          ^
+      402 |     "no persisted research-question store",
+      403 |   );
+      404 |   await page.getByRole("button", { name: /^Results/ }).click();
+        at /mnt/luffy-data/tmp/gui01-baseline/frontend/tests/browser/live.spec.ts:401:58
+
+    Error Context: test-results/live-other-routes-real-contracts-or-explicit-unavailability/error-context.md
+
+  1 failed
+    tests/browser/live.spec.ts:389:1 › other routes: real contracts or explicit unavailability ─────

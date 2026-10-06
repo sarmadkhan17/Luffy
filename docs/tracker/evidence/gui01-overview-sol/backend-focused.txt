@@ -1,0 +1,32 @@
+..F........................                                              [100%]
+=================================== FAILURES ===================================
+___________________ test_overview_reads_with_stopped_kernel ____________________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-190/test_overview_reads_with_stopp0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72609625a570>
+
+    def test_overview_reads_with_stopped_kernel(tmp_path, monkeypatch):
+        app, journal, _ = make_app(tmp_path, monkeypatch, startup_mode="READ_ONLY_GUI")
+        (tmp_path / 'data/kernel.lock').touch()
+        with patch('trader.runtime_identity.legacy_kernel_pids', return_value=[]):
+            result = TestClient(app).get('/owner-api/v1/overview', headers={'x-luffy-token': TOKEN})
+        assert result.status_code == 200
+        d = result.json()
+        assert d['kernel_process']['state'] == 'STOPPED'
+        assert d['control']['state'] == 'FROZEN'
+        assert d['exposure']['coverage']['complete']
+        assert d['exposure']['account_observed_at'] == d['account']['observed_at']
+        assert d['realized_today']['value'] == 2
+    
+        client = TestClient(app)
+        assert client.get('/owner-api/v1/bootstrap', headers={'x-luffy-token': TOKEN}).json()['dashboard_mode'] == 'READ_ONLY_GUI'
+>       assert client.get('/owner-api/v1/enrichment/marks', headers={'x-luffy-token': TOKEN}).status_code == 403
+E       AssertionError: assert 200 == 403
+E        +  where 200 = <Response [200 OK]>.status_code
+E        +    where <Response [200 OK]> = get('/owner-api/v1/enrichment/marks', headers={'x-luffy-token': 'fixture-token'})
+E        +      where get = <starlette.testclient.TestClient object at 0x726095149b50>.get
+
+tests/test_gui01_overview.py:47: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_gui01_overview.py::test_overview_reads_with_stopped_kernel
+1 failed, 26 passed in 15.18s

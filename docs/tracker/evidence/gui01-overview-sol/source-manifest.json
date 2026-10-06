@@ -1,0 +1,23 @@
+{
+  "base_revision": "4a39a74",
+  "capture_revision": "88677941115a138258af261e37a6a488ac7a844c",
+  "identity": "exact working-tree SHA256; not deployed revision",
+  "files": {
+    "trader/dashboard/owner_api.py": "63a04d52972ad5a9c616f91d334ae7f640fd194f628bc1a0c10903306dfdf924",
+    "frontend/src/adapters/contracts.ts": "14ec49ec159b617a9712154ca319d52b09073c8d44a458ac80fc3b4dec8d5cca",
+    "frontend/src/adapters/live.ts": "015f7fd085be8e332fa4e9168b5759fcea36eaaa6bbb36f0cf9e7c9b37740cf8",
+    "frontend/src/components/OwnerEvidence.tsx": "68ef40406949d2c314c11c6252f2839eb8d6e57c8b27bfb9d11984f9184349f0",
+    "frontend/src/views/Overview.tsx": "4765272a1cc8e231a4aec30958fcea69d24e76c14157ebf3d0665b0d8b157d4b",
+    "frontend/tests/components.test.tsx": "b4b67cdc16b862973aa4f379b90046747e15dbce0343db8c714ccad0b8c7053f",
+    "frontend/tests/live.test.tsx": "7f953890320fedc416a764955254758887283b10eacd826da6bcff71f6bf5722",
+    "frontend/tests/browser/gui01.spec.ts": "87b7845fb9c25c23754fa1155cd916a3b50237ccaed8b2735a6418d64d0c8562",
+    "frontend/tests/browser/gui01-readonly.spec.ts": "cb81ecebf294f580d32d11a9d7947eb5f1dd2b85af61547c55f6e95d8deee3f7",
+    "frontend/tests/browser/stage8.spec.ts": "c40faaf564e6c27b20afaf0e52f873b9e4ab4869077f67fae720ab97d6d81064",
+    "frontend/playwright.gui01.config.ts": "cc5ed300f396942c71d8899214c530f169976ee7c4f85973cacde30a6f608c4a",
+    "tests/test_gui01_overview.py": "9aa8c0528e580b726c03818f048ce8b411e66fd6274f51c9fe4f40191f263717",
+    "tests/owner_frontend_fixture.py": "405d3296cff72d72f73a83b262eccadb11fc4f611c0a14083b67ca833269b8d4",
+    "tests/owner_frontend_server.py": "2d72803fa9589a8034ea1d92c5518214e819c14ed13ab58beecc29486de84ad3",
+    "trader/dashboard/owner_reads.py": "deeccae21cb8c5c3c75a813b200ecf91bec9a8017db83df4f6aa99e7726a529e",
+    "frontend/tests/browser/live.spec.ts": "cdb117a2850d77e978d74f53f4c16e0d7b3beeb6f549e4cc288a319a4a4b6e86"
+  }
+}

@@ -1,0 +1,22 @@
+id: GUI-01
+status: CLOSED
+result: CLOSED_FUNCTIONAL_OFFLINE
+scope: FUNCTIONAL_OFFLINE_OVERVIEW
+evidence: docs/tracker/evidence/gui01-overview-sol/REPORT.md
+implementation_base_revision: 88677941115a138258af261e37a6a488ac7a844c
+implementation_identity: source-manifest.json exact working-tree hashes; not deployed
+  identity
+backend_tests: 70
+frontend_tests: 166
+browser_tests: 13 passed; browser-scope-results.json, browser-readonly-results.json and browser-live-check-final.txt
+read_only_gui_kernel_stopped: PROVEN_TEMPORARY_FIXTURE
+kernel_launched: false
+production_dashboard_launched: false
+fixture_dashboard_launched: true
+live_venue_reads: 0
+provider_calls: 0
+live_runtime_proof: NOT_PROVEN_FOR_THIS_SCREEN
+owner_visual_approval: VIS-01_AWAITING_OWNER
+activation_authorized: false
+next_gui_item: GUI-02
+successor_selected: false

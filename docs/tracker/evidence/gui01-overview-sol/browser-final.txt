@@ -1,0 +1,137 @@
+
+> luffy-owner-frontend-preview@0.1.0 test:browser
+> playwright test gui01.spec.ts own04.spec.ts live.spec.ts stage8.spec.ts --grep-invert other routes
+
+[WebServer] (node:1524743) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1524768) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1524814) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1524834) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1524870) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1524891) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[WebServer] (node:1524943) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1524963) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1524995) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1525013) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 25 tests using 1 worker
+
+(node:1525157) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/browser/gui01.spec.ts:8:1 › GUI-01 stopped kernel, figures and exact owner evidence remain readable (9.8s)
+  ✓   2 tests/browser/gui01.spec.ts:35:1 › GUI-01 partial realized stays unavailable with explicit coverage (3.8s)
+  ✓   3 tests/browser/gui01.spec.ts:47:1 › GUI-01 missing observations do not become zero (2.4s)
+  ✘   4 tests/browser/live.spec.ts:22:1 › LIVE overview binds real backend values, never fixtures (9.0s)
+(node:1525913) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   5 tests/browser/live.spec.ts:44:1 › stale protection can never appear healthy (5.4s)
+  ✓   6 tests/browser/live.spec.ts:65:1 › missing data is shown missing, not zero (1.7s)
+  ✓   7 tests/browser/live.spec.ts:77:1 › LIVE backend failure cannot fall back to DEMO fixtures (2.1s)
+  ✓   8 tests/browser/live.spec.ts:105:1 › unreachable backend shows no data, then reconnects (2.1s)
+  ✓   9 tests/browser/live.spec.ts:121:1 › guarded Resume goes through the Owner Interface (5.6s)
+  ✘  10 tests/browser/live.spec.ts:164:1 › Owner Interface unavailable: controls fail closed (8.9s)
+(node:1526597) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  11 tests/browser/live.spec.ts:183:1 › unknown outcome keeps the id; retry re-sends the same request (6.4s)
+  ✓  12 tests/browser/live.spec.ts:211:1 › chat cannot mutate controls (3.7s)
+  ✓  13 tests/browser/live.spec.ts:251:1 › chat cancellation and failure keep the transcript honest (3.9s)
+  ✓  14 tests/browser/live.spec.ts:273:1 › session expiry and logout clear private data (7.5s)
+  ✓  15 tests/browser/live.spec.ts:317:1 › session expiry by time clears the page before any 401 (6.5s)
+  ✓  16 tests/browser/live.spec.ts:333:1 › Knowledge binds vault relations and lists what it cannot draw (4.2s)
+  ✓  17 tests/browser/live.spec.ts:357:1 › Live System separates architecture, telemetry, stale and missing (4.9s)
+  ✓  18 tests/browser/live.spec.ts:408:1 › LIVE accessibility: axe on primary LIVE surfaces (17.7s)
+  ✓  19 tests/browser/own04.spec.ts:6:1 › OWN-04 overview labels permission separately from unknown process evidence (2.5s)
+  ✓  20 tests/browser/own04.spec.ts:12:1 › OWN-04 cached activity ages locally and disconnect clears current activity (2.8s)
+  ✓  21 tests/browser/stage8.spec.ts:4:1 › typed owner interrogations and Needs You are available without fixture substitution (2.6s)
+  ✓  22 tests/browser/stage8.spec.ts:16:1 › Knowledge lenses distinguish event chronology from file modification and absent code (2.9s)
+  ✓  23 tests/browser/stage8.spec.ts:27:1 › failed Needs You endpoint is explicit and cannot enable approvals (2.1s)
+  ✓  24 tests/browser/stage8.spec.ts:35:1 › pending owner actions survive completed history and later pages are reachable (3.0s)
+  ✓  25 tests/browser/stage8.spec.ts:47:1 › Research route renders stored questions rather than false absence (1.9s)
+
+
+  1) tests/browser/live.spec.ts:22:1 › LIVE overview binds real backend values, never fixtures ─────
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: locator('.bottom-grid table tbody tr').first()
+    Expected substring: "Mark unavailable"
+    Received string:    "BTC/USDTlong600.00 USDT10.00 USDTVERIFIEDChecked 2026-10-06 05:04:22 UTC58200 · order ref recorded"
+    Timeout: 6000ms
+
+    Call log:
+      - Expect "toContainText" locator('.bottom-grid table tbody tr').first() with timeout 6000ms
+      - waiting for locator('.bottom-grid table tbody tr').first()
+        15 × locator resolved to <tr>…</tr>
+           - unexpected value "BTC/USDTlong600.00 USDT10.00 USDTVERIFIEDChecked 2026-10-06 05:04:22 UTC58200 · order ref recorded"
+
+
+      34 |   await expect(rows.first()).toContainText("order ref recorded");
+      35 |   // Fixture quote has no source timestamp: it cannot establish current P&L.
+    > 36 |   await expect(rows.first()).toContainText("Mark unavailable");
+         |                              ^
+      37 |   await expect(page.locator("body")).not.toContainText(FIXTURE_TEXT);
+      38 |   await expect(page.getByLabel("Fixture scenario")).toHaveCount(0);
+      39 |   expect(requests.some((p) => p.includes("fixture"))).toBeFalsy();
+        at /mnt/luffy-data/luffy/production/frontend/tests/browser/live.spec.ts:36:30
+
+    Error Context: test-results/live-LIVE-overview-binds-real-backend-values-never-fixtures/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/live-LIVE-overview-binds-real-backend-values-never-fixtures/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/live-LIVE-overview-binds-real-backend-values-never-fixtures/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests/browser/live.spec.ts:164:1 › Owner Interface unavailable: controls fail closed ──────────
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByTestId('owner-interface-status')
+    Expected substring: "kernel_unavailable"
+    Timeout: 6000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" getByTestId('owner-interface-status') with timeout 6000ms
+      - waiting for getByTestId('owner-interface-status')
+
+
+      169 |   await login(page);
+      170 |   await page.goto(LIVE + "/#operations");
+    > 171 |   await expect(page.getByTestId("owner-interface-status")).toContainText(
+          |                                                            ^
+      172 |     "kernel_unavailable",
+      173 |   );
+      174 |   await expect(page.getByTestId("controls-closed")).toBeVisible();
+        at /mnt/luffy-data/luffy/production/frontend/tests/browser/live.spec.ts:171:60
+
+    Error Context: test-results/live-Owner-Interface-unavailable-controls-fail-closed/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/live-Owner-Interface-unavailable-controls-fail-closed/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/live-Owner-Interface-unavailable-controls-fail-closed/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2 failed
+    tests/browser/live.spec.ts:22:1 › LIVE overview binds real backend values, never fixtures ──────
+    tests/browser/live.spec.ts:164:1 › Owner Interface unavailable: controls fail closed ───────────
+  23 passed (2.5m)

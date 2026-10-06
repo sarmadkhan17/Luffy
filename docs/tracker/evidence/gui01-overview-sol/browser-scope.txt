@@ -1,0 +1,46 @@
+
+> luffy-owner-frontend-preview@0.1.0 test:browser
+> playwright test gui01.spec.ts own04.spec.ts stage8.spec.ts
+
+[WebServer] (node:1528524) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1528553) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1528664) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1528685) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1528717) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1528730) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[WebServer] (node:1528777) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1528803) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1528849) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1528862) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 10 tests using 1 worker
+
+(node:1529048) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/browser/gui01.spec.ts:8:1 › GUI-01 stopped kernel, figures and exact owner evidence remain readable (8.4s)
+  ✓   2 tests/browser/gui01.spec.ts:35:1 › GUI-01 partial realized stays unavailable with explicit coverage (2.1s)
+  ✓   3 tests/browser/gui01.spec.ts:47:1 › GUI-01 missing observations do not become zero (1.3s)
+  ✓   4 tests/browser/own04.spec.ts:6:1 › OWN-04 overview labels permission separately from unknown process evidence (1.6s)
+  ✓   5 tests/browser/own04.spec.ts:12:1 › OWN-04 cached activity ages locally and disconnect clears current activity (2.7s)
+  ✓   6 tests/browser/stage8.spec.ts:4:1 › typed owner interrogations and Needs You are available without fixture substitution (2.2s)
+  ✓   7 tests/browser/stage8.spec.ts:16:1 › Knowledge lenses distinguish event chronology from file modification and absent code (4.3s)
+  ✓   8 tests/browser/stage8.spec.ts:27:1 › failed Needs You endpoint is explicit and cannot enable approvals (1.9s)
+  ✓   9 tests/browser/stage8.spec.ts:35:1 › pending owner actions survive completed history and later pages are reachable (3.0s)
+  ✓  10 tests/browser/stage8.spec.ts:47:1 › Research route renders stored questions rather than false absence (2.0s)
+
+  10 passed (47.6s)

@@ -42,46 +42,24 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
-  id: OBS-05
+  id: ACC-03
   status: CLOSED
-  result: CLOSED_ENGINEERING_ONLY_DIAGNOSTICS
+  result: CLOSED_ACCOUNTING_TRUTH_FOLLOWUP
   mode: ENGINEERING_ONLY
-  objective: Emit bounded non-secret first-boot refusal reason codes without changing OBS-05 admission or Phase
-    B safety.
-  implementation_started: true
-  implementation_complete: true
-  implementation_commit: 4d5f21b7371201780248bfa374bc1d7e4fecfb97
-  tracker_source: docs/tracker/LUFFY_Product_Tracker_v1.yaml
+  scope: ARCHITECTURE_FUNCTIONAL_OFFLINE
+  objective: Reconcile ACC-01 correction evidence, preserve accounting classification in ACC-03 consumers and revalidate
+    GUI-01 before GUI-02.
+  implementation_commit: 37c8d43ced2d65fb2418e87435b178318832301b
   evidence:
-  - docs/tracker/evidence/obs05-first-boot-diagnostics/intake.yaml
-  - docs/tracker/evidence/obs05-first-boot-diagnostics/closure.yaml
-  - docs/tracker/evidence/obs05-first-boot-diagnostics/REPORT.md
-  tests: 598 combined offline regressions passed, including 37 focused diagnostic cases.
-  kernel_launched: false
-  dashboard_launched: false
-  live_venue_reads: 0
-  provider_calls: 0
+  - docs/tracker/evidence/accounting-truth-followup-sol/closure.yaml
+  impact_check:
+  - ACC-01
+  - ACC-03
+  - GUI-01
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
-  run01_status: DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE
-  run01_evidence_status: IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING
-  run01_live_proof_contract_possible: true
-  run01_live_proof_performed: false
-  run01_live_proof_authorization: Separate owner authorization naming the full intended final revision and
-    one controlled Kernel launch/SIGTERM graceful stop with retained Phase A/Phase B and unchanged RUN-01 proof.
-  historical_next_recommended_item: DATA-08
-  next_recommended_item: GUI-01
-  another_run01_fix_selected: false
-  next_item_selected: false
-  next_item_started: false
-  related_tracker_item: SEC-01 (DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE; actual read-permission readiness
-    unverified)
-  run01_retry_now_diagnosable: true
-  actual_previous_refusal_cause: UNKNOWN; no live venue calls authorized
-  gov07_status: DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE
-  selection_slot_role: LAST_SUPPORTED_CLOSED_TERMINAL; no active package; GOV-07 owner deferral tracked separately.
-  gov07_owner_deferral_evidence: docs/tracker/evidence/gov07-identity-sol/owner-deferral.yaml
+  successor_selected: false
 
 obs05_first_boot_correction:
   id: OBS-05
@@ -586,10 +564,9 @@ current_build_selection:
   current_blocked_items:
   - WORK-01
   - PERF-03
-  next_recommended_item: GUI-01
+  next_recommended_item: GUI-02
   eligible_items:
   - DATA-08
-  - GUI-01
   - GUI-02
   - GUI-03
   - GUI-04
@@ -603,11 +580,10 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: ACC-01/ACC-02 dependency mapping and ACC-03 economics closed offline. GUI-01 dependencies satisfied;
-    per-screen evidence/navigation/coverage and separate runtime/visual proof remain. GUI-01 recommended only, unselected;
-    no activation authorized.
+  selection_reason: ACC-01 re-pinned to 8867794 after the four-gap correction; ACC-03 consumer classification fixed
+    and GUI-01 revalidated offline. GUI-02 remains recommended, unselected. No live/runtime or visual approval inferred.
   last_terminal_item: ACC-03
-  last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
+  last_terminal_result: CLOSED_ACCOUNTING_TRUTH_FOLLOWUP
 
 data01_canonical_identity:
   id: DATA-01
@@ -850,9 +826,9 @@ acc03_economics_closure:
   id: ACC-03
   status: CLOSED
   result: CLOSED_ARCHITECTURE_OFFLINE
-  implementation_revision: fcfd0a5bd19fcd4af89de9c7673f130f935be316
+  implementation_revision: 37c8d43ced2d65fb2418e87435b178318832301b
   dependency_evidence: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
-  schema: trade-economics-read.v1
+  schema: trade-economics-read.v2
   tests:
     backend: 163
     frontend: 37
@@ -864,3 +840,76 @@ acc03_economics_closure:
   provider_calls: 0
   gui01_status: AWAITING_EVIDENCE
   successor_selected: false
+  accounting_truth_followup_evidence: docs/tracker/evidence/accounting-truth-followup-sol/closure.yaml
+
+gui01_overview_closure:
+  id: GUI-01
+  status: CLOSED
+  result: CLOSED_FUNCTIONAL_OFFLINE
+  scope: FUNCTIONAL_OFFLINE_OVERVIEW
+  evidence: docs/tracker/evidence/gui01-overview-sol/REPORT.md
+  implementation_base_revision: 88677941115a138258af261e37a6a488ac7a844c
+  implementation_identity: source-manifest.json exact working-tree hashes; not deployed identity
+  backend_tests: 70
+  frontend_tests: 166
+  browser_tests: 13 passed; browser-scope-results.json, browser-readonly-results.json and browser-live-check-final.txt
+  read_only_gui_kernel_stopped: PROVEN_TEMPORARY_FIXTURE
+  kernel_launched: false
+  production_dashboard_launched: false
+  fixture_dashboard_launched: true
+  live_venue_reads: 0
+  provider_calls: 0
+  live_runtime_proof: NOT_PROVEN_FOR_THIS_SCREEN
+  owner_visual_approval: VIS-01_AWAITING_OWNER
+  activation_authorized: false
+  next_gui_item: GUI-02
+  successor_selected: false
+  accounting_truth_revalidation:
+    revision: 37c8d43ced2d65fb2418e87435b178318832301b
+    result: PASS_FUNCTIONAL_OFFLINE
+    evidence: docs/tracker/evidence/accounting-truth-followup-sol/closure.yaml
+    prior_screen_evidence: docs/tracker/evidence/gui01-overview-sol/closure.yaml
+
+
+accounting_truth_followup:
+  id: ACCOUNTING-TRUTH-FOLLOWUP
+  status: CLOSED
+  result: CLOSED_ARCHITECTURE_FUNCTIONAL_OFFLINE
+  items:
+  - ACC-01
+  - ACC-03
+  - GUI-01
+  canonical_acc01_revision: 88677941115a138258af261e37a6a488ac7a844c
+  consumer_implementation_revision: 37c8d43ced2d65fb2418e87435b178318832301b
+  opus_evidence: docs/tracker/evidence/acc01-correction-opus/closure.yaml
+  original_conditions_preserved: true
+  original_acc01_condition_satisfied: true
+  tests:
+    backend_final: 190
+    additional_economics: 7
+    backend_distinct: 191
+    frontend: 167
+    browser: 8
+    typecheck: PASS
+  gui01_proof: UNKNOWN null; DERIVED_ESTIMATE labelled; actual venue fields separate; exact evidence and read-only
+    Kernel STOPPED regressions pass
+  kernel_launched: false
+  production_dashboard_launched: false
+  fixture_dashboard_launched: true
+  provider_calls: 0
+  live_venue_reads: 0
+  runtime_proof: NOT_PERFORMED
+  owner_visual_approval: VIS-01_AWAITING_OWNER
+  activation_authorized: false
+  next_gui_item: GUI-02
+  successor_selected: false
+
+acc01_venue_authority_correction:
+  id: ACC-01
+  status: CLOSED
+  result: CLOSED_ARCHITECTURE_OFFLINE
+  implementation_revision: 88677941115a138258af261e37a6a488ac7a844c
+  evidence: docs/tracker/evidence/acc01-correction-opus/closure.yaml
+  independent_revalidation: docs/tracker/evidence/accounting-truth-followup-sol/acc01-tests.txt
+  four_gaps_recorded: true
+  original_condition_satisfied: true

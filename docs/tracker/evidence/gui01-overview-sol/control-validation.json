@@ -1,0 +1,17 @@
+{
+  "result": "PASS",
+  "checks": [
+    "178 identities retained",
+    "only GUI-01 row changed",
+    "requirements and edges unchanged",
+    "functional closure separate from runtime and visual",
+    "counts exact",
+    "current_build_selection parity",
+    "gui01_overview_closure parity",
+    "successor unselected",
+    "future gates preserved",
+    "manifest hashes exact",
+    "read-only tracker available",
+    "GUI source hashes exact"
+  ]
+}

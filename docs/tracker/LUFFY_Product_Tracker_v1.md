@@ -1,3 +1,7 @@
+> Current accounting truth follow-up: CLOSED offline. ACC-01 correction pinned to 8867794; ACC-03 UNKNOWN/estimate consumer corrected; GUI-01 revalidated. [Evidence](evidence/accounting-truth-followup-sol/REPORT.md). GUI-02 recommended, unselected. Prior closure statements are historical; runtime/owner visual approval remain separate.
+
+> Current GUI-01: CLOSED for functional/offline Overview. Real read-only fixture GUI works with Kernel STOPPED; deployed/live proof and VIS-01 owner visual approval remain separate. [Evidence](evidence/gui01-overview-sol/REPORT.md). Next GUI-02 recommended, unselected. Earlier status statements are historical.
+
 > Current ACC-02/ACC-03: CLOSED for architecture/offline GUI. ACC-01 mapped first; GUI-01 dependencies satisfied, per-screen gaps and separate runtime/visual proof remain. [Evidence](evidence/acc03-economics-sol/REPORT.md). GUI-01 recommended, unselected. Earlier status statements are historical.
 
 > Current ACC-01/ACC-02 update: CLOSED at architecture/offline scope; 107 offline tests. ACC-03 remains pending. [Evidence](evidence/acc02-lineage-sol/REPORT.md). Earlier queue statements are historical.
@@ -3268,22 +3272,22 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **dependencies**: DATA-01
 - **owner_role**: Accounting & outcomes owner
 - **engineering_assignee**: SOL
-- **implementation_evidence**: trader/engine/booking.py; trader/engine/trade_accounting.py; trader/engine/accounting.py; seven offline suites (107 passed)
+- **implementation_evidence**: 88677941115a138258af261e37a6a488ac7a844c; trader/engine/reconcile.py; tests/test_acc01_venue_authority.py; independently rerun reconcile/booking suites
 - **runtime_evidence**: NOT_PERFORMED; synthetic offline fixtures only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: ACC-01: engine/booking.py retains immutable before/after snapshots and original evidence with sha256; assess/replay refuse missing fees, currency conversions and rewritten assessments. engine/reconcile.py and engine/trade_accounting.py distinguish venue order fills from estimates, retain history/pages/raw receipts and explicit discrepancies/retry reasons. test_trade_booking covers native/ghost/panic estimates, absent fees, transaction rollback and legacy source-free export. test_reconcile and test_reconcile_alignment_commits cover venue alignment without substituting symbol-only trade ownership. DATA-01 canonical identity tests establish versioned market binding.
+- **latest_evidence**: Earlier ACC-01 evidence omitted ghost_unpriced_close, panic_unpriced_close, adoption_unknown_entry_price and estimate_labelling. Opus correction 8867794 fixes and labels all four. Exact original closure condition revalidated offline; raw immutable receipts, retained order/venue identities, discrepancies and estimate/UNKNOWN markers preserved. 101 focused and adjacent reconcile/booking tests pass. No runtime proof inferred.
 - **source_ids**: S01, S02, S08, S12, S14
 - **source_sections**: §§18.1,18.6
 - **next_proof**: None for this row at architecture/offline scope; dependent rows remain separate.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**: 29d093d5e5467c645b8ea13a3699451b6a7d85d6
+- **resolution_at_commit**: 88677941115a138258af261e37a6a488ac7a844c
 - **work_authorized**: True
 - **updated**: 2026-10-06
 - **parent_ids**:
 - **related_items**:
-- **closure_evidence**: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
+- **closure_evidence**: docs/tracker/evidence/acc01-correction-opus/closure.yaml
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -3334,22 +3338,22 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **dependencies**: ACC-02
 - **owner_role**: Accounting & outcomes owner
 - **engineering_assignee**: SOL
-- **implementation_evidence**: fcfd0a5; trader/dashboard/economics.py; owner_reads.trade_lineage; LiveReads.EconomicsEvidence; adapter economics contract
+- **implementation_evidence**: 37c8d43ced2d65fb2418e87435b178318832301b; trade-economics-read.v2; receipt integrity/binding and full booking-history classification
 - **runtime_evidence**: NOT_PERFORMED; offline fixtures only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Explicit status/source snapshot version/coverage for venue fields, journal bookings and derived R/MFE/MAE/slippage/attribution. Unknown calculation versions, funding and whole-trade net remain unavailable; leg replay cannot promote complete accounting. 163 backend and 37 frontend tests plus typecheck; six final regressions. ACC-02 satisfied first.
+- **latest_evidence**: Consumer now respects pnl_status, pnl_value_class, exit_price_source/pnl_price_source and evidence basis. UNKNOWN journal placeholders become null; DERIVED_ESTIMATE retains estimate status and price-source/basis coverage. Recorded venue monetary fields remain independent and never become complete net accounting. Earlier source-only v1 proof is superseded for the consumer correction; original closure condition unchanged.
 - **source_ids**: S01, S02, S08, S12, S14
 - **source_sections**: §§13.1,18.1,18.6
 - **next_proof**: None for ACC-03 at architecture/offline scope; GUI-01 per-screen proof remains separate.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**: fcfd0a5bd19fcd4af89de9c7673f130f935be316
+- **resolution_at_commit**: 37c8d43ced2d65fb2418e87435b178318832301b
 - **work_authorized**: True
 - **updated**: 2026-10-06
 - **parent_ids**:
 - **related_items**:
-- **closure_evidence**: docs/tracker/evidence/acc03-economics-sol/closure.yaml
+- **closure_evidence**: docs/tracker/evidence/accounting-truth-followup-sol/closure.yaml
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -4159,34 +4163,37 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 8
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: AWAITING_EVIDENCE
+- **status**: CLOSED
 - **why_needed**: The first screen must make status and required owner action understandable.
 - **closure_condition**: Observed figures have source/freshness/quality, unavailable values stay unknown, and Needs You opens the exact evidence/action. Functional and runtime proof are separate from owner visual approval.
 - **failure_regression_proof**: Stale, disconnected, zero/unknown and pending approval are distinct; no fake live values.
 - **dependencies**: ACC-03, OWN-03, OWN-04
 - **owner_role**: Frontend + owner-interface owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: HISTORICAL_STAGE8_CLAIM
+- **engineering_assignee**: SOL
+- **implementation_evidence**: VERIFIED_FUNCTIONAL_OFFLINE
 - **runtime_evidence**: NOT_PROVEN_FOR_THIS_SCREEN
 - **visual_approval**: TRACKED_SEPARATELY
-- **latest_evidence**: ACC-03, OWN-03 and OWN-04 satisfied for current architecture/offline scope. GUI-01 remains AWAITING_EVIDENCE: Overview journal aggregate economic coverage/version/null completeness, equity/exposure/global signals source/freshness/quality and exact Needs You evidence/action navigation remain. Runtime screen proof and owner visual approval separately outstanding. docs/tracker/evidence/acc03-economics-sol/REPORT.md
+- **latest_evidence**: Functional/offline closure revalidated after ACC-01 8867794 and ACC-03 consumer correction: UNKNOWN receipts suppress both main and activity P&L; derived totals visibly labelled estimate; no fabricated flat P&L. Exact Needs You and read-only stopped-Kernel regressions retained. 8 browser checks pass; deployed runtime and VIS-01 owner visual approval remain separate.
 - **source_ids**: S01, S10, S14
 - **source_sections**: §25.3
-- **next_proof**: Map per-screen evidence and fix demonstrated Overview gaps; retain separate runtime/visual proof.
+- **next_proof**: Future live/deployed screen proof and VIS-01 owner visual approval remain separate; no additional functional/offline proof required.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: SDD_DEFINED_TEST_DETAIL_DRAFT
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
+- **resolution_at_commit**: 37c8d43ced2d65fb2418e87435b178318832301b
+- **work_authorized**: True
 - **updated**: 2026-10-06
 - **parent_ids**:
 - **related_items**:
-- **closure_evidence**:
+- **closure_evidence**: docs/tracker/evidence/gui01-overview-sol/closure.yaml
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 
 - **phase_scope_evidence**: docs/tracker/evidence/own04-phase-scope-review/decision.yaml; runtime proof remains REQUIRED_NOT_PROVEN.
+
+
+Functional/offline closure: [REPORT.md](evidence/gui01-overview-sol/REPORT.md). Runtime screen proof NOT_PROVEN; VIS-01 owner approval separate.
 
 ### VIS-01 — Owner visual approval — Overview.
 

@@ -1,0 +1,43 @@
+
+> luffy-owner-frontend-preview@0.1.0 test:browser
+> playwright test gui01.spec.ts own04.spec.ts accounting-truth.spec.ts
+
+[WebServer] (node:1536278) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1536297) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1536356) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1536369) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1536398) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1536411) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[WebServer] (node:1536472) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1536485) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1536509) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1536522) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 7 tests using 1 worker
+
+(node:1536584) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/browser/accounting-truth.spec.ts:7:1 › Overview UNKNOWN journal placeholder never becomes flat P&L (5.8s)
+  ✓  2 tests/browser/accounting-truth.spec.ts:23:1 › Overview derived P&L remains visibly estimated (3.3s)
+  ✓  3 tests/browser/gui01.spec.ts:8:1 › GUI-01 stopped kernel, figures and exact owner evidence remain readable (4.6s)
+  ✓  4 tests/browser/gui01.spec.ts:35:1 › GUI-01 partial realized stays unavailable with explicit coverage (2.0s)
+  ✓  5 tests/browser/gui01.spec.ts:47:1 › GUI-01 missing observations do not become zero (1.2s)
+  ✓  6 tests/browser/own04.spec.ts:6:1 › OWN-04 overview labels permission separately from unknown process evidence (1.4s)
+  ✓  7 tests/browser/own04.spec.ts:12:1 › OWN-04 cached activity ages locally and disconnect clears current activity (2.2s)
+
+  7 passed (32.7s)

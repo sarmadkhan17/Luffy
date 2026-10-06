@@ -1,0 +1,17 @@
+{
+  "consumer_revision": "37c8d43ced2d65fb2418e87435b178318832301b",
+  "canonical_revision": "88677941115a138258af261e37a6a488ac7a844c",
+  "files": {
+    "trader/engine/reconcile.py": "fe74436da9bb4952c75d6744185da5f29c3d949e0298035172ecfb8053ed8be3",
+    "tests/test_acc01_venue_authority.py": "734a64eaec91e9aa40254e2da7d118cb7131ce512faec5932eb1307c28fc4d7b",
+    "trader/dashboard/economics.py": "0ae5124f048b92ccd86f78dc9039112cb03eb5877054392d17015c170df1c560",
+    "trader/dashboard/owner_api.py": "4efcab96798a4aa17fac2e126bd0b81c04a34cfc95a0897bdc01f13fff5fe769",
+    "trader/dashboard/owner_reads.py": "a6d2e058d6747647fac510aecfcf4d530f6b90b6e3b848299c15d7d83a652dad",
+    "frontend/src/views/Overview.tsx": "f046915a1fdaa5dc6ce11014618a68460ebef758d1cf103428439d53c57c02b8",
+    "frontend/src/views/Evidence.tsx": "378a2c3661261e785afc67ffdaba95c477d0ce9828e7cc080545e3b6d21decd2",
+    "tests/test_accounting_truth_followup.py": "01c4a7e1eb15db77fc89a761cfe8e2206a011e8095d69a5ccb126ecf47f68178",
+    "tests/test_acc03_economics.py": "4e9f22cb6ab0ff3ea8628e6e6505d5756149be8572ca4e9f348eaf44e77225fe",
+    "frontend/tests/acc03.test.tsx": "54ef6fd9ee1ce27d7133b19ec13a26deab706578d74c724a192e3de7300b1fe2",
+    "frontend/tests/browser/accounting-truth.spec.ts": "06b785677af578fe384afaec94abcf438c5beeafe857a1d4a912b79abedf8e1a"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "result": "PASS",
+  "checks": [
+    "178 unchanged identities",
+    "only accounting impact rows changed",
+    "original conditions and edges preserved",
+    "three closures retained only at offline scope",
+    "ACC-01 pinned to canonical correction",
+    "all four Opus gaps retained exactly",
+    "consumer correction pinned",
+    "accounting_truth_followup parity",
+    "acc01_venue_authority_correction parity",
+    "acc03_economics_closure parity",
+    "gui01_overview_closure parity",
+    "current_build_selection parity",
+    "status counts exact",
+    "future runtime and visual gates preserved",
+    "GUI-02 unselected",
+    "manifest byte counts and hashes exact",
+    "source hashes pinned to correction commits",
+    "read-only Tracker contract available"
+  ]
+}

@@ -1,0 +1,45 @@
+
+> luffy-owner-frontend-preview@0.1.0 test:browser
+> playwright test --config playwright.gui01.config.ts
+
+[WebServer] (node:1520730) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1520765) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:1521048) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 tests/browser/gui01-readonly.spec.ts:2:1 › GUI-01 real read-only server renders Overview with Kernel STOPPED (8.8s)
+
+
+  1) tests/browser/gui01-readonly.spec.ts:2:1 › GUI-01 real read-only server renders Overview with Kernel STOPPED 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByTestId('mode-banner')
+    Expected substring: "READ_ONLY_GUI"
+    Received string:    "READ-ONLY GUI — canonical evidence · control and provider actions disabled"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByTestId('mode-banner') with timeout 5000ms
+      - waiting for getByTestId('mode-banner')
+        14 × locator resolved to <div class="live-banner" data-testid="mode-banner">READ-ONLY GUI — canonical evidence · control and …</div>
+           - unexpected value "READ-ONLY GUI — canonical evidence · control and provider actions disabled"
+
+
+       7 |   await expect(page.getByTestId("control-state")).toHaveText("FROZEN");
+       8 |   await expect(page.getByTestId("needs-you-items")).toBeVisible();
+    >  9 |   await expect(page.getByTestId("mode-banner")).toContainText("READ_ONLY_GUI");
+         |                                                 ^
+      10 |   await page.getByTestId("overview-sources").locator("summary").click();
+      11 |   await expect(page.getByTestId("overview-sources")).toContainText("overview-journal-realized.v1");
+      12 |   await page.screenshot({path:"../docs/tracker/evidence/gui01-overview-sol/readonly-stopped.png",fullPage:true});
+        at /mnt/luffy-data/luffy/production/frontend/tests/browser/gui01-readonly.spec.ts:9:49
+
+    Error Context: test-results/gui01-readonly-GUI-01-real-0eb28-verview-with-Kernel-STOPPED/error-context.md
+
+  1 failed
+    tests/browser/gui01-readonly.spec.ts:2:1 › GUI-01 real read-only server renders Overview with Kernel STOPPED 

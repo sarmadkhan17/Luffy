@@ -1,0 +1,1035 @@
+{
+  "config": {
+    "argv": [
+      "/home/sarmad/.local/share/fnm/node-versions/v24.15.0/installation/bin/node",
+      "/mnt/luffy-data/luffy/production/frontend/node_modules/.bin/playwright",
+      "test",
+      "gui01.spec.ts",
+      "own04.spec.ts",
+      "live.spec.ts",
+      "stage8.spec.ts",
+      "--grep-invert",
+      "other routes"
+    ],
+    "configFile": "/mnt/luffy-data/luffy/production/frontend/playwright.config.ts",
+    "rootDir": "/mnt/luffy-data/luffy/production/frontend/tests/browser",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/mnt/luffy-data/luffy/production/frontend/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/mnt/luffy-data/luffy/production/frontend/tests/browser",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "../docs/tracker/evidence/gui01-overview-sol/browser-final-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "gui01.spec.ts",
+      "file": "gui01.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "GUI-01 stopped kernel, figures and exact owner evidence remain readable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 9845,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:04:34.896Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2a9aa2225d1b881e9904-298817cf9e9545345bea",
+          "file": "gui01.spec.ts",
+          "line": 8,
+          "column": 1
+        },
+        {
+          "title": "GUI-01 partial realized stays unavailable with explicit coverage",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3785,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:04:45.462Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2a9aa2225d1b881e9904-3bea81224be12aa1ccfc",
+          "file": "gui01.spec.ts",
+          "line": 35,
+          "column": 1
+        },
+        {
+          "title": "GUI-01 missing observations do not become zero",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2449,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:04:49.360Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2a9aa2225d1b881e9904-aae1018abc19b8483b26",
+          "file": "gui01.spec.ts",
+          "line": 47,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "live.spec.ts",
+      "file": "live.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "LIVE overview binds real backend values, never fixtures",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 9021,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.bottom-grid table tbody tr').first()\nExpected substring: \u001b[32m\"Mark unavailable\"\u001b[39m\nReceived string:    \u001b[31m\"BTC/USDTlong600.00 USDT10.00 USDTVERIFIEDChecked 2026-10-06 05:04:22 UTC58200 · order ref recorded\"\u001b[39m\nTimeout: 6000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('.bottom-grid table tbody tr').first() with timeout 6000ms\u001b[22m\n\u001b[2m  - waiting for locator('.bottom-grid table tbody tr').first()\u001b[22m\n\u001b[2m    15 × locator resolved to <tr>…</tr>\u001b[22m\n\u001b[2m       - unexpected value \"BTC/USDTlong600.00 USDT10.00 USDTVERIFIEDChecked 2026-10-06 05:04:22 UTC58200 · order ref recorded\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.bottom-grid table tbody tr').first()\nExpected substring: \u001b[32m\"Mark unavailable\"\u001b[39m\nReceived string:    \u001b[31m\"BTC/USDTlong600.00 USDT10.00 USDTVERIFIEDChecked 2026-10-06 05:04:22 UTC58200 · order ref recorded\"\u001b[39m\nTimeout: 6000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('.bottom-grid table tbody tr').first() with timeout 6000ms\u001b[22m\n\u001b[2m  - waiting for locator('.bottom-grid table tbody tr').first()\u001b[22m\n\u001b[2m    15 × locator resolved to <tr>…</tr>\u001b[22m\n\u001b[2m       - unexpected value \"BTC/USDTlong600.00 USDT10.00 USDTVERIFIEDChecked 2026-10-06 05:04:22 UTC58200 · order ref recorded\"\u001b[22m\n\n    at /mnt/luffy-data/luffy/production/frontend/tests/browser/live.spec.ts:36:30",
+                    "location": {
+                      "file": "/mnt/luffy-data/luffy/production/frontend/tests/browser/live.spec.ts",
+                      "column": 30,
+                      "line": 36
+                    },
+                    "snippet": "  34 |   await expect(rows.first()).toContainText(\"order ref recorded\");\n  35 |   // Fixture quote has no source timestamp: it cannot establish current P&L.\n> 36 |   await expect(rows.first()).toContainText(\"Mark unavailable\");\n     |                              ^\n  37 |   await expect(page.locator(\"body\")).not.toContainText(FIXTURE_TEXT);\n  38 |   await expect(page.getByLabel(\"Fixture scenario\")).toHaveCount(0);\n  39 |   expect(requests.some((p) => p.includes(\"fixture\"))).toBeFalsy();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/mnt/luffy-data/luffy/production/frontend/tests/browser/live.spec.ts",
+                        "column": 30,
+                        "line": 36
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.bottom-grid table tbody tr').first()\nExpected substring: \u001b[32m\"Mark unavailable\"\u001b[39m\nReceived string:    \u001b[31m\"BTC/USDTlong600.00 USDT10.00 USDTVERIFIEDChecked 2026-10-06 05:04:22 UTC58200 · order ref recorded\"\u001b[39m\nTimeout: 6000ms\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" locator('.bottom-grid table tbody tr').first() with timeout 6000ms\u001b[22m\n\u001b[2m  - waiting for locator('.bottom-grid table tbody tr').first()\u001b[22m\n\u001b[2m    15 × locator resolved to <tr>…</tr>\u001b[22m\n\u001b[2m       - unexpected value \"BTC/USDTlong600.00 USDT10.00 USDTVERIFIEDChecked 2026-10-06 05:04:22 UTC58200 · order ref recorded\"\u001b[22m\n\n\n  34 |   await expect(rows.first()).toContainText(\"order ref recorded\");\n  35 |   // Fixture quote has no source timestamp: it cannot establish current P&L.\n> 36 |   await expect(rows.first()).toContainText(\"Mark unavailable\");\n     |                              ^\n  37 |   await expect(page.locator(\"body\")).not.toContainText(FIXTURE_TEXT);\n  38 |   await expect(page.getByLabel(\"Fixture scenario\")).toHaveCount(0);\n  39 |   expect(requests.some((p) => p.includes(\"fixture\"))).toBeFalsy();\n    at /mnt/luffy-data/luffy/production/frontend/tests/browser/live.spec.ts:36:30"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:04:52.182Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/mnt/luffy-data/luffy/production/frontend/test-results/live-LIVE-overview-binds-real-backend-values-never-fixtures/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/mnt/luffy-data/luffy/production/frontend/test-results/live-LIVE-overview-binds-real-backend-values-never-fixtures/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/mnt/luffy-data/luffy/production/frontend/tests/browser/live.spec.ts",
+                    "column": 30,
+                    "line": 36
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-0e4b26e2c775aa3b3f57",
+          "file": "live.spec.ts",
+          "line": 22,
+          "column": 1
+        },
+        {
+          "title": "stale protection can never appear healthy",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5443,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:05:03.090Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-cc7779bc4788a33e6c63",
+          "file": "live.spec.ts",
+          "line": 44,
+          "column": 1
+        },
+        {
+          "title": "missing data is shown missing, not zero",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1721,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:05:09.282Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-539253a71697937cf881",
+          "file": "live.spec.ts",
+          "line": 65,
+          "column": 1
+        },
+        {
+          "title": "LIVE backend failure cannot fall back to DEMO fixtures",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2051,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:05:11.045Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-a0e44be33fc636a6d999",
+          "file": "live.spec.ts",
+          "line": 77,
+          "column": 1
+        },
+        {
+          "title": "unreachable backend shows no data, then reconnects",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2075,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:05:13.186Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-c0a610f2b401bfc5cf07",
+          "file": "live.spec.ts",
+          "line": 105,
+          "column": 1
+        },
+        {
+          "title": "guarded Resume goes through the Owner Interface",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5609,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:05:15.316Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-2b2a766cdc97f6996cbc",
+          "file": "live.spec.ts",
+          "line": 121,
+          "column": 1
+        },
+        {
+          "title": "Owner Interface unavailable: controls fail closed",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 8874,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('owner-interface-status')\nExpected substring: \u001b[32m\"kernel_unavailable\"\u001b[39m\nTimeout: 6000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByTestId('owner-interface-status') with timeout 6000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('owner-interface-status')\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('owner-interface-status')\nExpected substring: \u001b[32m\"kernel_unavailable\"\u001b[39m\nTimeout: 6000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByTestId('owner-interface-status') with timeout 6000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('owner-interface-status')\u001b[22m\n\n    at /mnt/luffy-data/luffy/production/frontend/tests/browser/live.spec.ts:171:60",
+                    "location": {
+                      "file": "/mnt/luffy-data/luffy/production/frontend/tests/browser/live.spec.ts",
+                      "column": 60,
+                      "line": 171
+                    },
+                    "snippet": "  169 |   await login(page);\n  170 |   await page.goto(LIVE + \"/#operations\");\n> 171 |   await expect(page.getByTestId(\"owner-interface-status\")).toContainText(\n      |                                                            ^\n  172 |     \"kernel_unavailable\",\n  173 |   );\n  174 |   await expect(page.getByTestId(\"controls-closed\")).toBeVisible();"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/mnt/luffy-data/luffy/production/frontend/tests/browser/live.spec.ts",
+                        "column": 60,
+                        "line": 171
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByTestId('owner-interface-status')\nExpected substring: \u001b[32m\"kernel_unavailable\"\u001b[39m\nTimeout: 6000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" getByTestId('owner-interface-status') with timeout 6000ms\u001b[22m\n\u001b[2m  - waiting for getByTestId('owner-interface-status')\u001b[22m\n\n\n  169 |   await login(page);\n  170 |   await page.goto(LIVE + \"/#operations\");\n> 171 |   await expect(page.getByTestId(\"owner-interface-status\")).toContainText(\n      |                                                            ^\n  172 |     \"kernel_unavailable\",\n  173 |   );\n  174 |   await expect(page.getByTestId(\"controls-closed\")).toBeVisible();\n    at /mnt/luffy-data/luffy/production/frontend/tests/browser/live.spec.ts:171:60"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:05:20.999Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/mnt/luffy-data/luffy/production/frontend/test-results/live-Owner-Interface-unavailable-controls-fail-closed/error-context.md"
+                    },
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/mnt/luffy-data/luffy/production/frontend/test-results/live-Owner-Interface-unavailable-controls-fail-closed/trace.zip"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/mnt/luffy-data/luffy/production/frontend/tests/browser/live.spec.ts",
+                    "column": 60,
+                    "line": 171
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-868f22319c017dda720e",
+          "file": "live.spec.ts",
+          "line": 164,
+          "column": 1
+        },
+        {
+          "title": "unknown outcome keeps the id; retry re-sends the same request",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6402,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:05:31.489Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-4f3f766fd158c59e24c2",
+          "file": "live.spec.ts",
+          "line": 183,
+          "column": 1
+        },
+        {
+          "title": "chat cannot mutate controls",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3680,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:05:38.452Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-ea6ad5b6d74eae66286c",
+          "file": "live.spec.ts",
+          "line": 211,
+          "column": 1
+        },
+        {
+          "title": "chat cancellation and failure keep the transcript honest",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3906,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:05:42.213Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-b0e6ccd89435f73920ec",
+          "file": "live.spec.ts",
+          "line": 251,
+          "column": 1
+        },
+        {
+          "title": "session expiry and logout clear private data",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 7522,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:05:46.178Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-a94a115ee68ff122bc13",
+          "file": "live.spec.ts",
+          "line": 273,
+          "column": 1
+        },
+        {
+          "title": "session expiry by time clears the page before any 401",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6515,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:05:53.748Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-69984be0e776308a9942",
+          "file": "live.spec.ts",
+          "line": 317,
+          "column": 1
+        },
+        {
+          "title": "Knowledge binds vault relations and lists what it cannot draw",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4164,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:06:00.312Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-f48b033bec16d5919d91",
+          "file": "live.spec.ts",
+          "line": 333,
+          "column": 1
+        },
+        {
+          "title": "Live System separates architecture, telemetry, stale and missing",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4918,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:06:04.532Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-c33599af300d4f6ebdda",
+          "file": "live.spec.ts",
+          "line": 357,
+          "column": 1
+        },
+        {
+          "title": "LIVE accessibility: axe on primary LIVE surfaces",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 17667,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:06:09.532Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b37044e47a10d94689f2-0916d02de33ee3cc8a21",
+          "file": "live.spec.ts",
+          "line": 408,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "own04.spec.ts",
+      "file": "own04.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "OWN-04 overview labels permission separately from unknown process evidence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2498,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:06:27.353Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b08c6c6f21b30b554d06-ffa3ed66fa639b854604",
+          "file": "own04.spec.ts",
+          "line": 6,
+          "column": 1
+        },
+        {
+          "title": "OWN-04 cached activity ages locally and disconnect clears current activity",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2804,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:06:29.904Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b08c6c6f21b30b554d06-f1bb3f5559f8d7011cab",
+          "file": "own04.spec.ts",
+          "line": 12,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "stage8.spec.ts",
+      "file": "stage8.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "typed owner interrogations and Needs You are available without fixture substitution",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2587,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:06:32.769Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "033c33fb38f49b9d8dc4-fa6c41abc6f8bf0b11f4",
+          "file": "stage8.spec.ts",
+          "line": 4,
+          "column": 1
+        },
+        {
+          "title": "Knowledge lenses distinguish event chronology from file modification and absent code",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2855,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:06:35.384Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "033c33fb38f49b9d8dc4-f486afa4cd91ea762599",
+          "file": "stage8.spec.ts",
+          "line": 16,
+          "column": 1
+        },
+        {
+          "title": "failed Needs You endpoint is explicit and cannot enable approvals",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2090,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:06:38.283Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "033c33fb38f49b9d8dc4-7ea2619f8d49d75a50dd",
+          "file": "stage8.spec.ts",
+          "line": 27,
+          "column": 1
+        },
+        {
+          "title": "pending owner actions survive completed history and later pages are reachable",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2960,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:06:40.406Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "033c33fb38f49b9d8dc4-7af2b7cdf8269ae022c4",
+          "file": "stage8.spec.ts",
+          "line": 35,
+          "column": 1
+        },
+        {
+          "title": "Research route renders stored questions rather than false absence",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1943,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-06T05:06:43.425Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "033c33fb38f49b9d8dc4-3f82532068f07dea5426",
+          "file": "stage8.spec.ts",
+          "line": 47,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-06T05:04:16.986Z",
+    "duration": 148937.375,
+    "expected": 23,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,31 @@
+id: ACCOUNTING-TRUTH-FOLLOWUP
+status: CLOSED
+result: CLOSED_ARCHITECTURE_FUNCTIONAL_OFFLINE
+items:
+- ACC-01
+- ACC-03
+- GUI-01
+canonical_acc01_revision: 88677941115a138258af261e37a6a488ac7a844c
+consumer_implementation_revision: 37c8d43ced2d65fb2418e87435b178318832301b
+opus_evidence: docs/tracker/evidence/acc01-correction-opus/closure.yaml
+original_conditions_preserved: true
+original_acc01_condition_satisfied: true
+tests:
+  backend_final: 190
+  additional_economics: 7
+  backend_distinct: 191
+  frontend: 167
+  browser: 8
+  typecheck: PASS
+gui01_proof: UNKNOWN null; DERIVED_ESTIMATE labelled; actual venue fields separate; exact evidence and read-only
+  Kernel STOPPED regressions pass
+kernel_launched: false
+production_dashboard_launched: false
+fixture_dashboard_launched: true
+provider_calls: 0
+live_venue_reads: 0
+runtime_proof: NOT_PERFORMED
+owner_visual_approval: VIS-01_AWAITING_OWNER
+activation_authorized: false
+next_gui_item: GUI-02
+successor_selected: false

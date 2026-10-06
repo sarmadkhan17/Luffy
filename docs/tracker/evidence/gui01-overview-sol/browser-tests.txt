@@ -1,0 +1,1866 @@
+
+> luffy-owner-frontend-preview@0.1.0 test:browser
+> playwright test gui01.spec.ts own04.spec.ts live.spec.ts stage8.spec.ts
+
+[WebServer] (node:1519626) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1519651) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1519726) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1519752) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1519790) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1519824) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[WebServer] (node:1519922) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1519965) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1519989) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1520021) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 26 tests using 1 worker
+
+(node:1520202) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 tests/browser/gui01.spec.ts:8:1 › GUI-01 stopped kernel, figures and exact owner evidence remain readable (12.7s)
+  ✓   2 tests/browser/gui01.spec.ts:34:1 › GUI-01 partial realized stays unavailable and source evidence survives disconnect (2.3s)
+  ✘   3 tests/browser/gui01.spec.ts:46:1 › GUI-01 missing observations do not become zero (7.5s)
+(node:1520848) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘   4 tests/browser/live.spec.ts:22:1 › LIVE overview binds real backend values, never fixtures (11.3s)
+(node:1521314) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   5 tests/browser/live.spec.ts:44:1 › stale protection can never appear healthy (5.0s)
+  ✓   6 tests/browser/live.spec.ts:65:1 › missing data is shown missing, not zero (1.8s)
+  ✓   7 tests/browser/live.spec.ts:77:1 › LIVE backend failure cannot fall back to DEMO fixtures (1.9s)
+  ✓   8 tests/browser/live.spec.ts:105:1 › unreachable backend shows no data, then reconnects (2.4s)
+  ✓   9 tests/browser/live.spec.ts:121:1 › guarded Resume goes through the Owner Interface (3.7s)
+  ✓  10 tests/browser/live.spec.ts:164:1 › Owner Interface unavailable: controls fail closed (2.8s)
+  ✓  11 tests/browser/live.spec.ts:183:1 › unknown outcome keeps the id; retry re-sends the same request (3.5s)
+  ✓  12 tests/browser/live.spec.ts:211:1 › chat cannot mutate controls (2.9s)
+  ✓  13 tests/browser/live.spec.ts:251:1 › chat cancellation and failure keep the transcript honest (3.6s)
+  ✓  14 tests/browser/live.spec.ts:273:1 › session expiry and logout clear private data (7.8s)
+  ✓  15 tests/browser/live.spec.ts:317:1 › session expiry by time clears the page before any 401 (6.5s)
+  ✓  16 tests/browser/live.spec.ts:333:1 › Knowledge binds vault relations and lists what it cannot draw (4.0s)
+  ✓  17 tests/browser/live.spec.ts:357:1 › Live System separates architecture, telemetry, stale and missing (5.7s)
+  ✘  18 tests/browser/live.spec.ts:389:1 › other routes: real contracts or explicit unavailability (8.9s)
+(node:1522836) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  19 tests/browser/live.spec.ts:408:1 › LIVE accessibility: axe on primary LIVE surfaces (17.6s)
+  ✓  20 tests/browser/own04.spec.ts:6:1 › OWN-04 overview labels permission separately from unknown process evidence (2.1s)
+  ✓  21 tests/browser/own04.spec.ts:12:1 › OWN-04 cached activity ages locally and disconnect clears current activity (3.0s)
+  ✓  22 tests/browser/stage8.spec.ts:4:1 › typed owner interrogations and Needs You are available without fixture substitution (3.1s)
+  ✓  23 tests/browser/stage8.spec.ts:16:1 › Knowledge lenses distinguish event chronology from file modification and absent code (3.3s)
+  ✘  24 tests/browser/stage8.spec.ts:27:1 › failed Needs You endpoint is explicit and cannot enable approvals (8.0s)
+(node:1523946) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  25 tests/browser/stage8.spec.ts:35:1 › pending owner actions survive completed history and later pages are reachable (13.0s)
+(node:1524275) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  26 tests/browser/stage8.spec.ts:47:1 › Research route renders stored questions rather than false absence (3.8s)
+
+
+  1) tests/browser/gui01.spec.ts:46:1 › GUI-01 missing observations do not become zero ─────────────
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator:  getByTestId('realized-today')
+    Expected: "UNAVAILABLE"
+    Received: "0.00 USDT"
+    Timeout:  6000ms
+
+    Call log:
+      - Expect "toHaveText" getByTestId('realized-today') with timeout 6000ms
+      - waiting for getByTestId('realized-today')
+        15 × locator resolved to <div class="stat-value neutral" data-testid="realized-today">0.00 USDT</div>
+           - unexpected value "0.00 USDT"
+
+
+      46 | test("GUI-01 missing observations do not become zero", async ({page, request}) => {
+      47 |   await state(request,{scenario:"missing"}); await login(page);
+    > 48 |   await expect(page.getByTestId("realized-today")).toHaveText("UNAVAILABLE");
+         |                                                    ^
+      49 |   await expect(page.getByTestId("control-state")).toHaveText("UNAVAILABLE");
+      50 | });
+      51 |
+        at /mnt/luffy-data/luffy/production/frontend/tests/browser/gui01.spec.ts:48:52
+
+    Error: apiRequestContext._wrapApiCall: ENOENT: no such file or directory, copyfile '/mnt/luffy-data/luffy/production/frontend/test-results/.playwright-artifacts-0/traces/2a9aa2225d1b881e9904-aae1018abc19b8483b26-recording8.network' -> '/mnt/luffy-data/luffy/production/frontend/test-results/.playwright-artifacts-0/traces/2a9aa2225d1b881e9904-aae1018abc19b8483b26-recording8-pwnetcopy-1.network'
+
+    Error: apiRequestContext._wrapApiCall: ENOENT: no such file or directory, copyfile '/mnt/luffy-data/luffy/production/frontend/test-results/.playwright-artifacts-0/traces/2a9aa2225d1b881e9904-aae1018abc19b8483b26-recording6.network' -> '/mnt/luffy-data/luffy/production/frontend/test-results/.playwright-artifacts-0/traces/2a9aa2225d1b881e9904-aae1018abc19b8483b26-recording6-pwnetcopy-1.network'
+
+    Error: browserContext._wrapApiCall: ENOENT: no such file or directory, open '/mnt/luffy-data/luffy/production/frontend/test-results/.playwright-artifacts-0/traces/2a9aa2225d1b881e9904-aae1018abc19b8483b26-recording7.trace'
+
+    Error: ENOENT: no such file or directory, open '/mnt/luffy-data/luffy/production/frontend/test-results/.playwright-artifacts-0/18ca73164f05639ef9048521a11f3aa7.zip'
+
+  2) tests/browser/live.spec.ts:22:1 › LIVE overview binds real backend values, never fixtures ─────
+
+    Error: expect(locator).not.toContainText(expected) failed
+
+    Locator: locator('body')
+    Expected pattern: not /Synthetic|fixture|DEMO —/i
+    Received string: "
+        Skip to contentLIVE — Luffy backend · demo venue account (BINANCE_DEMO) · owner controls only through the Owner InterfaceLUFFYOWNER WORKSPACEDeskOverviewTradesResearchStrategiesPartnerLUFFYMachineOperationsControls · PanicLive SystemKnowledgeDiagnosticsTrackerLIVE · DEMO VENUEDesk/OverviewOWNER WORKSPACELiveOOWNER / OVERVIEWOverviewAttention, capital and risk first; recorded activity below.Fresh · 2026-10-06 05:01:23 UTCLocal journal read · demo venue account (BINANCE_DEMO) · USDT NEEDS YOU · SUPERVISORSupervisor records no owner actionFrom the Supervisor pass at 2026-10-06 05:01:13 UTC.Pending exact owner decisionsValidity last checked 2026-10-06T05:01:47.876895+00:00. Submission revalidates exact context.UNAVAILABLE Approvals — governance_proposal_ledger_not_recordedUNAVAILABLE Approvals — first_live_request_ledger_not_recorded0 pending or stale owner items across available ledgers.No items returned from available ledgers. Unavailable ledgers do not establish no pending action.Control stateFROZENStored control permission · not evidence of running work.Owner controls on Operations Protection verificationVERIFIEDKernel processUNKNOWNKernel heartbeat / workFRESHData sourceLuffy backend · LIVENews GuardUNAVAILABLEApproval objectsUNAVAILABLEInspect topology Capital48 hourly points Account equity5,164.50 USDTJournal record 2026-10-06 05:01:23 UTC · FRESH Realized today2.00 USDT1 closed trade(s) today (UTC) · journal-booked Gross exposure40.66%Entry notional ÷ equity · not a risk limit · Fresh · 2026-10-06 05:01:23 UTCAccount trajectorylast journal equity record per UTC hour (time = row write time) · last 168 hAccessible chart dataJournal equity (USDT), last record per hourTimeUSDT2026-10-04 06:00:43 UTC5,000.00 USDT2026-10-04 07:00:43 UTC5,003.50 USDT2026-10-04 08:00:43 UTC5,007.00 USDT2026-10-04 09:00:43 UTC5,010.50 USDT2026-10-04 10:00:43 UTC5,014.00 USDT2026-10-04 11:00:43 UTC5,017.50 USDT2026-10-04 12:00:43 UTC5,021.00 USDT2026-10-04 13:00:43 UTC5,024.50 USDT2026-10-04 14:00:43 UTC5,028.00 USDT2026-10-04 15:00:43 UTC5,031.50 USDT2026-10-04 16:00:43 UTC5,035.00 USDT2026-10-04 17:00:43 UTC5,038.50 USDT2026-10-04 18:00:43 UTC5,042.00 USDT2026-10-04 19:00:43 UTC5,045.50 USDT2026-10-04 20:00:43 UTC5,049.00 USDT2026-10-04 21:00:43 UTC5,052.50 USDT2026-10-04 22:00:43 UTC5,056.00 USDT2026-10-04 23:00:43 UTC5,059.50 USDT2026-10-05 00:00:43 UTC5,063.00 USDT2026-10-05 01:00:43 UTC5,066.50 USDT2026-10-05 02:00:43 UTC5,070.00 USDT2026-10-05 03:00:43 UTC5,073.50 USDT2026-10-05 04:00:43 UTC5,077.00 USDT2026-10-05 05:00:43 UTC5,080.50 USDT2026-10-05 06:00:43 UTC5,084.00 USDT2026-10-05 07:00:43 UTC5,087.50 USDT2026-10-05 08:00:43 UTC5,091.00 USDT2026-10-05 09:00:43 UTC5,094.50 USDT2026-10-05 10:00:43 UTC5,098.00 USDT2026-10-05 11:00:43 UTC5,101.50 USDT2026-10-05 12:00:43 UTC5,105.00 USDT2026-10-05 13:00:43 UTC5,108.50 USDT2026-10-05 14:00:43 UTC5,112.00 USDT2026-10-05 15:00:43 UTC5,115.50 USDT2026-10-05 16:00:43 UTC5,119.00 USDT2026-10-05 17:00:43 UTC5,122.50 USDT2026-10-05 18:00:43 UTC5,126.00 USDT2026-10-05 19:00:43 UTC5,129.50 USDT2026-10-05 20:00:43 UTC5,133.00 USDT2026-10-05 21:00:43 UTC5,136.50 USDT2026-10-05 22:00:43 UTC5,140.00 USDT2026-10-05 23:00:43 UTC5,143.50 USDT2026-10-06 00:00:43 UTC5,147.00 USDT2026-10-06 01:00:43 UTC5,150.50 USDT2026-10-06 02:00:43 UTC5,154.00 USDT2026-10-06 03:00:43 UTC5,157.50 USDT2026-10-06 04:00:43 UTC5,161.00 USDT2026-10-06 05:00:43 UTC5,164.50 USDTRisk state: recorded values below (no live risk check)News guard: unavailable · Approval objects: Unavailable (no approval store)Overview sources and global signalsLocal read at 2026-10-06 05:01:47 UTC. Source times below belong to each observation. Stored control permission is configured state; Kernel process and heartbeat are observed separately.Last reported News Guard: QUIET · Last reported Risk: PASS. No global market signal feed is supplied: UNKNOWN.Equity quality: fresh · source journal state_kv.account_observation (kernel Risk-step equity input; BINANCE_DEMO account) · source version and coverage are UNKNOWN unless recorded below. Exposure is derived from journal entry notionals; venue coverage is unproven. Series points retain their individual source times and quality below. Missing evidence stays null. The expanded record is historical evidence from the last response; freshness fields describe that response, not a new observation.Exact figure sources, freshness, quality, coverage and versions (last response){
+      \"account\": {
+        \"equity\": 5164.5,
+        \"balance\": 5164.5,
+        \"currency\": \"USDT\",
+        \"status\": \"FRESH\",
+        \"basis\": \"venue_total_margin_balance\",
+        \"authoritative\": true,
+        \"observed_at\": \"2026-10-06T05:01:23.570358+00:00\",
+        \"age_s\": 24,
+        \"freshness\": \"fresh\",
+        \"stale_after_s\": 300,
+        \"attempted_at\": \"2026-10-06T05:01:23.570358+00:00\",
+        \"recorded_at\": \"2026-10-06T05:01:23.570358+00:00\",
+        \"recorded_age_s\": 24,
+        \"successful_read_at\": \"2026-10-06T05:01:23.570358+00:00\",
+        \"successful_value\": 5164.5,
+        \"consecutive_failures\": 0,
+        \"fallback\": null,
+        \"attempt_errors\": [],
+        \"reasons\": [],
+        \"source\": \"journal state_kv.account_observation (kernel Risk-step equity input; BINANCE_DEMO account)\",
+        \"source_status\": \"FRESH\",
+        \"last_reported\": null,
+        \"source_authoritative\": true
+      },
+      \"realized_today\": {
+        \"value\": 2,
+        \"closed_trades\": 1,
+        \"day_utc\": \"2026-10-06\",
+        \"observed_at\": \"2026-10-06T05:01:47.563628+00:00\",
+        \"freshness\": \"fresh\",
+        \"quality\": \"JOURNAL_BOOKED_COMPLETE\",
+        \"version\": \"overview-journal-realized.v1\",
+        \"coverage\": {
+          \"known\": 1,
+          \"total\": 1,
+          \"complete\": true,
+          \"scope\": \"journal closed trades today; venue net coverage unproven\"
+        },
+        \"source\": \"journal trades closed today (UTC), journal-booked realized P&L\"
+      },
+      \"exposure\": {
+        \"gross_entry_notional\": 2100,
+        \"pct_of_equity\": 40.66,
+        \"source\": \"journal open-trade entry notional ÷ journal equity\",
+        \"observed_at\": \"2026-10-06T05:01:47.563628+00:00\",
+        \"freshness\": \"fresh\",
+        \"quality\": \"DERIVED_JOURNAL_ENTRY_NOTIONAL\",
+        \"version\": \"overview-entry-exposure.v1\",
+        \"account_observed_at\": \"2026-10-06T05:01:23.570358+00:00\",
+        \"coverage\": {
+          \"positions\": 2,
+          \"complete\": true,
+          \"scope\": \"journal-open trades; current venue exposure unproven\"
+        }
+      },
+      \"control\": {
+        \"state\": \"FROZEN\",
+        \"source\": \"journal state_kv.control_state\",
+        \"observed_at\": \"2026-10-06T05:01:47.563628+00:00\",
+        \"time_basis\": \"read_time\",
+        \"classification\": \"stored control permission, not process/work evidence\",
+        \"last_event\": {
+          \"id\": 5,
+          \"ts\": \"2026-10-06T02:01:43+00:00\",
+          \"event\": \"state_change\",
+          \"from_state\": \"ACTIVE\",
+          \"to_state\": \"FROZEN\",
+          \"actor\": \"operator\"
+        }
+      },
+      \"kernel_process\": {
+        \"state\": \"UNKNOWN\",
+        \"heartbeat_instance_id\": null,
+        \"source\": \"data/kernel.lock, data/kernel_instance.json and /proc start ticks\"
+      },
+      \"heartbeat\": {
+        \"observed_at\": \"2026-10-06T05:01:23.573124+00:00\",
+        \"age_s\": 24,
+        \"freshness\": \"fresh\",
+        \"runtime_state\": \"UNKNOWN\",
+        \"process_state\": \"UNKNOWN\",
+        \"process_source\": \"data/kernel.lock, data/kernel_instance.json and /proc start ticks\",
+        \"work_observed_at\": null,
+        \"work_age_s\": null,
+        \"heartbeat_valid\": false,
+        \"instance_bound\": false,
+        \"stale_after_s\": 240,
+        \"reported_state\": \"FROZEN\",
+        \"source\": \"data/heartbeat_luffy.json (kernel cycle heartbeat)\"
+      },
+      \"equity_series\": {
+        \"points\": [
+          {
+            \"time\": 1791093643,
+            \"value\": 5000,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791097243,
+            \"value\": 5003.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791100843,
+            \"value\": 5007,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791104443,
+            \"value\": 5010.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791108043,
+            \"value\": 5014,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791111643,
+            \"value\": 5017.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791115243,
+            \"value\": 5021,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791118843,
+            \"value\": 5024.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791122443,
+            \"value\": 5028,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791126043,
+            \"value\": 5031.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791129643,
+            \"value\": 5035,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791133243,
+            \"value\": 5038.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791136843,
+            \"value\": 5042,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791140443,
+            \"value\": 5045.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791144043,
+            \"value\": 5049,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791147643,
+            \"value\": 5052.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791151243,
+            \"value\": 5056,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791154843,
+            \"value\": 5059.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791158443,
+            \"value\": 5063,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791162043,
+            \"value\": 5066.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791165643,
+            \"value\": 5070,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791169243,
+            \"value\": 5073.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791172843,
+            \"value\": 5077,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791176443,
+            \"value\": 5080.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791180043,
+            \"value\": 5084,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791183643,
+            \"value\": 5087.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791187243,
+            \"value\": 5091,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791190843,
+            \"value\": 5094.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791194443,
+            \"value\": 5098,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791198043,
+            \"value\": 5101.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791201643,
+            \"value\": 5105,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791205243,
+            \"value\": 5108.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791208843,
+            \"value\": 5112,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791212443,
+            \"value\": 5115.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791216043,
+            \"value\": 5119,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791219643,
+            \"value\": 5122.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791223243,
+            \"value\": 5126,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791226843,
+            \"value\": 5129.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791230443,
+            \"value\": 5133,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791234043,
+            \"value\": 5136.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791237643,
+            \"value\": 5140,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791241243,
+            \"value\": 5143.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791244843,
+            \"value\": 5147,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791248443,
+            \"value\": 5150.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791252043,
+            \"value\": 5154,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791255643,
+            \"value\": 5157.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791259243,
+            \"value\": 5161,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          },
+          {
+            \"time\": 1791262843,
+            \"value\": 5164.5,
+            \"row_kind\": \"unknown\",
+            \"basis\": null,
+            \"source_observed_at\": null,
+            \"source_status\": null
+          }
+        ],
+        \"window_hours\": 168,
+        \"bucket\": \"last journal equity record per UTC hour (time = row write time)\",
+        \"raw_records\": 48,
+        \"source\": \"journal equity table\"
+      },
+      \"positions\": [
+        {
+          \"id\": \"t-btc\",
+          \"symbol\": \"BTC/USDT\",
+          \"side\": \"long\",
+          \"amount\": 0.01,
+          \"entry_price\": 60000,
+          \"notional_usdt\": 600,
+          \"leverage\": 3,
+          \"opened_at\": \"2026-10-05T23:01:43+00:00\",
+          \"strategy_name\": \"spec:donchian\",
+          \"exec_mode\": \"live\",
+          \"journal_stop\": {
+            \"price\": 58200,
+            \"order_ref_recorded\": true,
+            \"source\": \"journal trades row (not venue verification)\"
+          },
+          \"protection\": {
+            \"status\": \"VERIFIED\",
+            \"observed_at\": \"2026-10-06T05:01:13.570358+00:00\",
+            \"last_reported\": null,
+            \"reasons\": [],
+            \"venue\": {
+              \"symbol\": \"BTC/USDT\",
+              \"venue_symbol\": \"BTC/USDT:USDT\",
+              \"side\": \"long\",
+              \"quantity\": 0.01,
+              \"entry_price\": 60000,
+              \"journal_trade_id\": \"t-btc\",
+              \"journal_side\": \"long\",
+              \"journal_amount\": 0.01,
+              \"quantity_agrees\": true,
+              \"journal_stop_id\": \"algo-1\",
+              \"expected_stop\": 58200,
+              \"stop_present\": true,
+              \"stop_ids\": [
+                \"algo-1\"
+              ],
+              \"stop_id\": \"algo-1\",
+              \"stop_side\": \"sell\",
+              \"reduce_only\": true,
+              \"order_type\": \"STOP_MARKET\",
+              \"stop_kind\": \"algo\",
+              \"covered_quantity\": 0.01,
+              \"trigger_price\": 58200,
+              \"tick_size\": \"0.01\",
+              \"precision_status\": \"VALID\",
+              \"precision_valid\": true,
+              \"stop_id_matches_journal\": true,
+              \"match_reason\": \"matched\",
+              \"rearm_evidence\": \"NONE\",
+              \"verified\": true,
+              \"reasons\": []
+            }
+          }
+        },
+        {
+          \"id\": \"t-eth\",
+          \"symbol\": \"ETH/USDT\",
+          \"side\": \"short\",
+          \"amount\": 0.5,
+          \"entry_price\": 3000,
+          \"notional_usdt\": 1500,
+          \"leverage\": 3,
+          \"opened_at\": \"2026-10-06T00:01:43+00:00\",
+          \"strategy_name\": \"spec:donchian\",
+          \"exec_mode\": \"live\",
+          \"journal_stop\": {
+            \"price\": 2910,
+            \"order_ref_recorded\": true,
+            \"source\": \"journal trades row (not venue verification)\"
+          },
+          \"protection\": {
+            \"status\": \"VERIFIED\",
+            \"observed_at\": \"2026-10-06T05:01:13.570358+00:00\",
+            \"last_reported\": null,
+            \"reasons\": [],
+            \"venue\": {
+              \"symbol\": \"ETH/USDT\",
+              \"venue_symbol\": \"ETH/USDT:USDT\",
+              \"side\": \"short\",
+              \"quantity\": 0.5,
+              \"entry_price\": 3000,
+              \"journal_trade_id\": \"t-eth\",
+              \"journal_side\": \"short\",
+              \"journal_amount\": 0.5,
+              \"quantity_agrees\": true,
+              \"journal_stop_id\": \"algo-1\",
+              \"expected_stop\": 2910,
+              \"stop_present\": true,
+              \"stop_ids\": [
+                \"algo-1\"
+              ],
+              \"stop_id\": \"algo-1\",
+              \"stop_side\": \"buy\",
+              \"reduce_only\": true,
+              \"order_type\": \"STOP_MARKET\",
+              \"stop_kind\": \"algo\",
+              \"covered_quantity\": 0.5,
+              \"trigger_price\": 2910,
+              \"tick_size\": \"0.01\",
+              \"precision_status\": \"VALID\",
+              \"precision_valid\": true,
+              \"stop_id_matches_journal\": true,
+              \"match_reason\": \"matched\",
+              \"rearm_evidence\": \"NONE\",
+              \"verified\": true,
+              \"reasons\": []
+            }
+          }
+        }
+      ],
+      \"news_guard\": {
+        \"clear\": true,
+        \"source\": \"journal state_kv.news_guard_state (NewsGuard check record, published by the kernel each cycle; times are the check's own)\",
+        \"truth\": \"QUIET\",
+        \"active\": false,
+        \"why\": \"feed quiet\",
+        \"assessed_at\": \"2026-10-06T05:01:23.570358+00:00\",
+        \"age_s\": 24,
+        \"freshness\": \"fresh\",
+        \"stale_after_s\": 1260,
+        \"attempted_at\": \"2026-10-06T05:01:23.570358+00:00\",
+        \"fetched_at\": \"2026-10-06T05:01:23.570358+00:00\",
+        \"succeeded_at\": \"2026-10-06T05:01:23.570358+00:00\",
+        \"published_at\": \"2026-10-06T05:01:23.570358+00:00\",
+        \"newest_publication_at\": \"2026-10-06T05:01:23.570358+00:00\",
+        \"oldest_publication_at\": \"2026-10-06T05:01:23.570358+00:00\",
+        \"hits\": 0,
+        \"severe\": 0,
+        \"dated_hits\": 0,
+        \"dated_severe\": 0,
+        \"items_total\": 5,
+        \"items_considered\": 5,
+        \"dated_in_window\": 5,
+        \"undated_items\": 0,
+        \"malformed_dates\": 0,
+        \"future_dated_items\": 0,
+        \"headlines\": [],
+        \"failure_codes\": [],
+        \"dampening\": {
+          \"applied\": false,
+          \"threshold_add\": 0.08,
+          \"score_mult\": 0.75,
+          \"enforcement\": \"dampen_only\"
+        },
+        \"status\": \"QUIET\",
+        \"last_reported\": null,
+        \"reasons\": []
+      },
+      \"risk\": {
+        \"configured\": null,
+        \"configured_error\": \"risk_config_unreadable:KeyError\",
+        \"baseline\": {
+          \"value\": null,
+          \"error\": \"risk_state_missing\",
+          \"note\": \"Risk baseline (high-water mark and day start); not a current assessment\",
+          \"source\": \"state_kv.risk_state\"
+        },
+        \"source\": \"journal state_kv.risk_assessment (kernel cycle Risk observation)\",
+        \"current\": {
+          \"assessed_at\": \"2026-10-06T05:01:23.570358+00:00\",
+          \"age_s\": 24,
+          \"freshness\": \"fresh\",
+          \"stale_after_s\": 300,
+          \"reasons\": [],
+          \"constraints\": [
+            {
+              \"name\": \"risk_baseline\",
+              \"limit\": \"ok\",
+              \"observed\": \"ok\",
+              \"result\": \"pass\",
+              \"unit\": \"state\",
+              \"basis\": \"fixture\"
+            },
+            {
+              \"name\": \"halt_drawdown\",
+              \"limit\": 20,
+              \"observed\": 1.2,
+              \"result\": \"pass\",
+              \"unit\": \"pct\",
+              \"basis\": \"fixture\"
+            },
+            {
+              \"name\": \"daily_loss_breaker\",
+              \"limit\": -6,
+              \"observed\": -0.4,
+              \"result\": \"pass\",
+              \"unit\": \"pct\",
+              \"basis\": \"fixture\"
+            },
+            {
+              \"name\": \"max_open_positions\",
+              \"limit\": 8,
+              \"observed\": 2,
+              \"result\": \"pass\",
+              \"unit\": \"count\",
+              \"basis\": \"fixture\"
+            },
+            {
+              \"name\": \"portfolio_heat\",
+              \"limit\": 15,
+              \"observed\": 1.5,
+              \"result\": \"pass\",
+              \"unit\": \"pct\",
+              \"basis\": \"fixture\"
+            },
+            {
+              \"name\": \"total_margin\",
+              \"limit\": 70,
+              \"observed\": 9,
+              \"result\": \"pass\",
+              \"unit\": \"pct\",
+              \"basis\": \"fixture\"
+            },
+            {
+              \"name\": \"per_symbol_risk_cap\",
+              \"limit\": 8,
+              \"observed\": null,
+              \"result\": \"applies_at_entry\",
+              \"unit\": \"pct\",
+              \"basis\": \"fixture\"
+            },
+            {
+              \"name\": \"per_position_margin\",
+              \"limit\": 20,
+              \"observed\": null,
+              \"result\": \"applies_at_entry\",
+              \"unit\": \"pct\",
+              \"basis\": \"fixture\"
+            }
+          ],
+          \"risk_state\": \"ok\",
+          \"drawdown_pct\": 1.2,
+          \"daily_pnl_pct\": -0.4,
+          \"halt_breached\": false,
+          \"baseline\": {
+            \"peak_equity\": 5227.2,
+            \"day_start_equity\": 5185.2,
+            \"day_key\": \"d\"
+          },
+          \"equity\": {
+            \"value\": 5164.5,
+            \"status\": \"FRESH\",
+            \"basis\": \"venue_total_margin_balance\",
+            \"observed_at\": \"2026-10-06T05:01:23.570358+00:00\",
+            \"age_at_assessment_s\": 0,
+            \"fresh_at_assessment\": true,
+            \"authoritative\": true,
+            \"source_freshness_now\": \"fresh\",
+            \"source_age_s\": 24
+          },
+          \"book\": {
+            \"source\": \"journal open trades\",
+            \"read_at\": \"2026-10-06T05:01:23.570358+00:00\",
+            \"positions\": 2,
+            \"malformed\": []
+          },
+          \"control\": {
+            \"state\": \"FROZEN\",
+            \"entries_permitted_by_control\": false,
+            \"applicability\": \"fixture\"
+          },
+          \"entry_gate\": {
+            \"allowed\": false,
+            \"blocked_reason\": \"state=FROZEN\",
+            \"basis\": \"fixture\"
+          },
+          \"running_policy\": {
+            \"digest\": \"30099052f9c98edcddd3ee892a3c34dd59e3dfaca008d61a17e15e5464da6796\",
+            \"effective\": {
+              \"risk_pct\": 0.01,
+              \"heat_cap\": 0.15,
+              \"symbol_cap\": 0.08,
+              \"max_positions\": 8,
+              \"daily_loss_block\": 0.06,
+              \"derisk_steps\": [],
+              \"halt_dd\": 0.2,
+              \"leverage\": 5,
+              \"sl_atr_mult\": 2,
+              \"min_notional\": 5,
+              \"max_pos_margin\": 0.2,
+              \"max_total_margin\": 0.7,
+              \"proving_trades\": 30,
+              \"proving_mult\": 0.5,
+              \"taker_fee\": 0.0005
+            },
+            \"limits\": {
+              \"risk_per_trade_pct\": 1,
+              \"portfolio_heat_cap_pct\": 15,
+              \"per_symbol_risk_cap_pct\": 8,
+              \"max_open_positions\": 8,
+              \"max_daily_loss_pct\": 6,
+              \"drawdown_derisk_steps\": [],
+              \"halt_drawdown_pct\": 20,
+              \"leverage\": 5,
+              \"stop_loss_atr_mult\": 2,
+              \"min_notional_usdt\": 5,
+              \"max_position_margin_pct\": 20,
+              \"max_total_margin_pct\": 70,
+              \"proving_period_trades\": 30,
+              \"proving_size_mult\": 0.5,
+              \"taker_fee_pct\": 0.05
+            },
+            \"risk_manager_identity\": \"fixture\"
+          },
+          \"status\": \"PASS\",
+          \"last_reported\": null
+        },
+        \"policy_match\": \"UNKNOWN\"
+      },
+      \"needs_you\": {
+        \"needs_owner\": false,
+        \"reasons\": [],
+        \"since_control_event_id\": null,
+        \"observed_at\": \"2026-10-06T05:01:13.570358+00:00\",
+        \"freshness\": \"fresh\",
+        \"stale_after_s\": 180,
+        \"source\": \"journal state_kv.supervisor_status (Supervisor venue reconciliation pass)\"
+      }
+    }PositionsJournal-open tradesInstrumentSideEntry notionalUnrealized (estimate)ProtectionJournal stopBTC/USDTlong600.00 USDT10.00 USDTVERIFIEDChecked 2026-10-06 05:01:13 UTC58200 · order ref recordedETH/USDTshort1,500.00 USDTMark unavailableVERIFIEDChecked 2026-10-06 05:01:13 UTC2910 · order ref recordedProtection is the kernel's last read-only venue protection check; a journal stop is not venue verification. Unrealized values are venue-price estimates at 2026-10-06 05:01:47 UTC.Protection evidenceVerification is shown as healthy only when a fresh kernel protection check read every venue position, the complete stop listing, and found nothing unprotected or unreconciled. The browser never asks the venue.Inspect evidence ↗Recent recorded actionsRecorded sourcejournal: newest 500 decisions, strategies (active/paper) with journal-booked economics, brain_events, research ledger, state_kv risk_state/rent_state, owner_requestsRead 2026-10-06 05:01:48 UTCRecent decisionsOperations ↗Newest 1 journal decisions.No executed decision in the window.No skipped directional decision in the window.No skip reason recorded in the window.Strategy activityStrategies ↗Active and paper strategies · journal-booked economicsStrategyStateTrades (open)RealizedDonchianactive1 (1)UnavailableNo strategy lifecycle event recorded.Research activityResearch ↗Latest run 5 · 2026-10-06 04:01:43 UTC · 4h trail singles · completed · survivors recorded: 0Newest results (rankings, not admission)ResultVerdictSeeded bydonchian_hi(100)prune—Risk and operating costNot recorded.Operating-cost week (rent)Not recorded.Recorded state_kv values; not a live risk check.Owner attention recordsNo unresolved owner request is recorded.UNAVAILABLE Approvals — no approval-object store exists; Needs You lists only the Supervisor's needs_owner and unresolved owner requestsUNAVAILABLE News guard — News Guard is not shown until its source state is trustworthyUNAVAILABLE Risk state — state_kv.risk_state is not recordedUNAVAILABLE Rent state — state_kv.rent_state is not recordedRecent decisions / rejectionsRecorded activityRecorded sourcejournal decisions via GraphQL · offset window · not trade lineageRead 2026-10-06 05:01:48 UTCRead time is not event freshness. Rejected decisions retain their recorded reason.Showing latest 1 decisions from the returned window. Browse decision history ↗Search DecisionsFilter executedAllfalse1 of 1 loaded recordsDecisions · bounded source windowInstrumentDecisionReasonRecorded atEvidenceBTC/USDTHOLDUnavailable2026-10-06 04:59:43 UTCInspect BTC/USDTLUFFY · OWNER WORKSPACE · backend commit unknownLIVE · text chat · backend time 2026-10-06 05:01:47 UTC · voice unavailable
+      
+    
+    "
+    Timeout: 6000ms
+
+    Call log:
+      - Expect "not toContainText" locator('body') with timeout 6000ms
+      - waiting for locator('body')
+        14 × locator resolved to <body>…</body>
+           - unexpected value "
+        Skip to contentLIVE — Luffy backend · demo venue account (BINANCE_DEMO) · owner controls only through the Owner InterfaceLUFFYOWNER WORKSPACEDeskOverviewTradesResearchStrategiesPartnerLUFFYMachineOperationsControls · PanicLive SystemKnowledgeDiagnosticsTrackerLIVE · DEMO VENUEDesk/OverviewOWNER WORKSPACELiveOOWNER / OVERVIEWOverviewAttention, capital and risk first; recorded activity below.Fresh · 2026-10-06 05:01:23 UTCLocal journal read · demo venue account (BINANCE_DEMO) · USDT NEEDS YOU · SUPERVISORSupervisor records no owner actionFrom the Supervisor pass at 2026-10-06 05:01:13 UTC.Pending exact owner decisionsValidity last checked 2026-10-06T05:01:47.876895+00:00. Submission revalidates exact context.UNAVAILABLE Approvals — governance_proposal_ledger_not_recordedUNAVAILABLE Approvals — first_live_request_ledger_not_recorded0 pending or stale owner items across available ledgers.No items returned from available ledgers. Unavailable ledgers do not establish no pending action.Control stateFROZENStored control permission · not evidence of running work.Owner controls on Operations Protection verificationVERIFIEDKernel processUNKNOWNKernel heartbeat / workFRESHData sourceLuffy backend · LIVENews GuardUNAVAILABLEApproval objectsUNAVAILABLEInspect topology Capital48 hourly points Account equity5,164.50 USDTJournal record 2026-10-06 05:01:23 UTC · FRESH Realized today2.00 USDT1 closed trade(s) today (UTC) · journal-booked Gross exposure40.66%Entry notional ÷ equity · not a risk limit · Fresh · 2026-10-06 05:01:23 UTCAccount trajectorylast journal equity record per UTC hour (time = row write time) · last 168 hAccessible chart dataJournal equity (USDT), last record per hourTimeUSDT2026-10-04 06:00:43 UTC5,000.00 USDT2026-10-04 07:00:43 UTC5,003.50 USDT2026-10-04 08:00:43 UTC5,007.00 USDT2026-10-04 09:00:43 UTC5,010.50 USDT2026-10-04 10:00:43 UTC5,014.00 USDT2026-10-04 11:00:43 UTC5,017.50 USDT2026-10-04 12:00:43 UTC5,021.00 USDT2026-10-04 13:00:43 UTC5,024.50 USDT2026-10-04 14:00:43 UTC5,028.00 USDT2026-10-04 15:00:43 UTC5,031.50 USDT2026-10-04 16:00:43 UTC5,035.00 USDT2026-10-04 17:00:43 UTC5,038.50 USDT2026-10-04 18:00:43 UTC5,042.00 USDT2026-10-04 19:00:43 UTC5,045.50 USDT2026-10-04 20:00:43 UTC5,049.00 USDT2026-10-04 21:00:43 UTC5,052.50 USDT2026-10-04 22:00:43 UTC5,056.00 USDT2026-10-04 23:00:43 UTC5,059.50 USDT2026-10-05 00:00:43 UTC5,063.00 USDT2026-10-05 01:00:43 UTC5,066.50 USDT2026-10-05 02:00:43 UTC5,070.00 USDT2026-10-05 03:00:43 UTC5,073.50 USDT2026-10-05 04:00:43 UTC5,077.00 USDT2026-10-05 05:00:43 UTC5,080.50 USDT2026-10-05 06:00:43 UTC5,084.00 USDT2026-10-05 07:00:43 UTC5,087.50 USDT2026-10-05 08:00:43 UTC5,091.00 USDT2026-10-05 09:00:43 UTC5,094.50 USDT2026-10-05 10:00:43 UTC5,098.00 USDT2026-10-05 11:00:43 UTC5,101.50 USDT2026-10-05 12:00:43 UTC5,105.00 USDT2026-10-05 13:00:43 UTC5,108.50 USDT2026-10-05 14:00:43 UTC5,112.00 USDT2026-10-05 15:00:43 UTC5,115.50 USDT2026-10-05 16:00:43 UTC5,119.00 USDT2026-10-05 17:00:43 UTC5,122.50 USDT2026-10-05 18:00:43 UTC5,126.00 USDT2026-10-05 19:00:43 UTC5,129.50 USDT2026-10-05 20:00:43 UTC5,133.00 USDT2026-10-05 21:00:43 UTC5,136.50 USDT2026-10-05 22:00:43 UTC5,140.00 USDT2026-10-05 23:00:43 UTC5,143.50 USDT2026-10-06 00:00:43 UTC5,147.00 USDT2026-10-06 01:00:43 UTC5,150.50 USDT2026-10-06 02:00:43 UTC5,154.00 USDT2026-10-06 03:00:43 UTC5,157.50 USDT2026-10-06 04:00:43 UTC5,161.00 USDT2026-10-06 05:00:43 UTC5,164.50 USDTRisk state: recorded values below (no live risk check)News guard: unavailable · Approval objects: Unavailable (no approval store)Overview sources and global signalsLocal read at 2026-10-06 05:01:47 UTC. Source times below belong to each observation. Stored control permission is configured state; Kernel process and heartbeat are observed separately.Last reported News Guard: QUIET · Last reported Risk: PASS. No global market signal feed is supplied: UNKNOWN.Equity quality: fresh · source journal state_kv.account_observation (kernel Risk-step equity input; BINANCE_DEMO account) · source version and coverage are UNKNOWN unless recorded below. Exposure is derived from journal entry notionals; venue coverage is unproven. Series points retain their individual source times and quality below. Missing evidence stays null. The expanded record is historical evidence from the last response; freshness fields describe that response, not a new observation.Exact figure sources, freshness, quality, coverage and versions (last response){
+      "account": {
+        "equity": 5164.5,
+        "balance": 5164.5,
+        "currency": "USDT",
+        "status": "FRESH",
+        "basis": "venue_total_margin_balance",
+        "authoritative": true,
+        "observed_at": "2026-10-06T05:01:23.570358+00:00",
+        "age_s": 24,
+        "freshness": "fresh",
+        "stale_after_s": 300,
+        "attempted_at": "2026-10-06T05:01:23.570358+00:00",
+        "recorded_at": "2026-10-06T05:01:23.570358+00:00",
+        "recorded_age_s": 24,
+        "successful_read_at": "2026-10-06T05:01:23.570358+00:00",
+        "successful_value": 5164.5,
+        "consecutive_failures": 0,
+        "fallback": null,
+        "attempt_errors": [],
+        "reasons": [],
+        "source": "journal state_kv.account_observation (kernel Risk-step equity input; BINANCE_DEMO account)",
+        "source_status": "FRESH",
+        "last_reported": null,
+        "source_authoritative": true
+      },
+      "realized_today": {
+        "value": 2,
+        "closed_trades": 1,
+        "day_utc": "2026-10-06",
+        "observed_at": "2026-10-06T05:01:47.563628+00:00",
+        "freshness": "fresh",
+        "quality": "JOURNAL_BOOKED_COMPLETE",
+        "version": "overview-journal-realized.v1",
+        "coverage": {
+          "known": 1,
+          "total": 1,
+          "complete": true,
+          "scope": "journal closed trades today; venue net coverage unproven"
+        },
+        "source": "journal trades closed today (UTC), journal-booked realized P&L"
+      },
+      "exposure": {
+        "gross_entry_notional": 2100,
+        "pct_of_equity": 40.66,
+        "source": "journal open-trade entry notional ÷ journal equity",
+        "observed_at": "2026-10-06T05:01:47.563628+00:00",
+        "freshness": "fresh",
+        "quality": "DERIVED_JOURNAL_ENTRY_NOTIONAL",
+        "version": "overview-entry-exposure.v1",
+        "account_observed_at": "2026-10-06T05:01:23.570358+00:00",
+        "coverage": {
+          "positions": 2,
+          "complete": true,
+          "scope": "journal-open trades; current venue exposure unproven"
+        }
+      },
+      "control": {
+        "state": "FROZEN",
+        "source": "journal state_kv.control_state",
+        "observed_at": "2026-10-06T05:01:47.563628+00:00",
+        "time_basis": "read_time",
+        "classification": "stored control permission, not process/work evidence",
+        "last_event": {
+          "id": 5,
+          "ts": "2026-10-06T02:01:43+00:00",
+          "event": "state_change",
+          "from_state": "ACTIVE",
+          "to_state": "FROZEN",
+          "actor": "operator"
+        }
+      },
+      "kernel_process": {
+        "state": "UNKNOWN",
+        "heartbeat_instance_id": null,
+        "source": "data/kernel.lock, data/kernel_instance.json and /proc start ticks"
+      },
+      "heartbeat": {
+        "observed_at": "2026-10-06T05:01:23.573124+00:00",
+        "age_s": 24,
+        "freshness": "fresh",
+        "runtime_state": "UNKNOWN",
+        "process_state": "UNKNOWN",
+        "process_source": "data/kernel.lock, data/kernel_instance.json and /proc start ticks",
+        "work_observed_at": null,
+        "work_age_s": null,
+        "heartbeat_valid": false,
+        "instance_bound": false,
+        "stale_after_s": 240,
+        "reported_state": "FROZEN",
+        "source": "data/heartbeat_luffy.json (kernel cycle heartbeat)"
+      },
+      "equity_series": {
+        "points": [
+          {
+            "time": 1791093643,
+            "value": 5000,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791097243,
+            "value": 5003.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791100843,
+            "value": 5007,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791104443,
+            "value": 5010.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791108043,
+            "value": 5014,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791111643,
+            "value": 5017.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791115243,
+            "value": 5021,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791118843,
+            "value": 5024.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791122443,
+            "value": 5028,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791126043,
+            "value": 5031.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791129643,
+            "value": 5035,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791133243,
+            "value": 5038.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791136843,
+            "value": 5042,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791140443,
+            "value": 5045.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791144043,
+            "value": 5049,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791147643,
+            "value": 5052.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791151243,
+            "value": 5056,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791154843,
+            "value": 5059.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791158443,
+            "value": 5063,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791162043,
+            "value": 5066.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791165643,
+            "value": 5070,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791169243,
+            "value": 5073.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791172843,
+            "value": 5077,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791176443,
+            "value": 5080.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791180043,
+            "value": 5084,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791183643,
+            "value": 5087.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791187243,
+            "value": 5091,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791190843,
+            "value": 5094.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791194443,
+            "value": 5098,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791198043,
+            "value": 5101.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791201643,
+            "value": 5105,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791205243,
+            "value": 5108.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791208843,
+            "value": 5112,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791212443,
+            "value": 5115.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791216043,
+            "value": 5119,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791219643,
+            "value": 5122.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791223243,
+            "value": 5126,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791226843,
+            "value": 5129.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791230443,
+            "value": 5133,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791234043,
+            "value": 5136.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791237643,
+            "value": 5140,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791241243,
+            "value": 5143.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791244843,
+            "value": 5147,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791248443,
+            "value": 5150.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791252043,
+            "value": 5154,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791255643,
+            "value": 5157.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791259243,
+            "value": 5161,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          },
+          {
+            "time": 1791262843,
+            "value": 5164.5,
+            "row_kind": "unknown",
+            "basis": null,
+            "source_observed_at": null,
+            "source_status": null
+          }
+        ],
+        "window_hours": 168,
+        "bucket": "last journal equity record per UTC hour (time = row write time)",
+        "raw_records": 48,
+        "source": "journal equity table"
+      },
+      "positions": [
+        {
+          "id": "t-btc",
+          "symbol": "BTC/USDT",
+          "side": "long",
+          "amount": 0.01,
+          "entry_price": 60000,
+          "notional_usdt": 600,
+          "leverage": 3,
+          "opened_at": "2026-10-05T23:01:43+00:00",
+          "strategy_name": "spec:donchian",
+          "exec_mode": "live",
+          "journal_stop": {
+            "price": 58200,
+            "order_ref_recorded": true,
+            "source": "journal trades row (not venue verification)"
+          },
+          "protection": {
+            "status": "VERIFIED",
+            "observed_at": "2026-10-06T05:01:13.570358+00:00",
+            "last_reported": null,
+            "reasons": [],
+            "venue": {
+              "symbol": "BTC/USDT",
+              "venue_symbol": "BTC/USDT:USDT",
+              "side": "long",
+              "quantity": 0.01,
+              "entry_price": 60000,
+              "journal_trade_id": "t-btc",
+              "journal_side": "long",
+              "journal_amount": 0.01,
+              "quantity_agrees": true,
+              "journal_stop_id": "algo-1",
+              "expected_stop": 58200,
+              "stop_present": true,
+              "stop_ids": [
+                "algo-1"
+              ],
+              "stop_id": "algo-1",
+              "stop_side": "sell",
+              "reduce_only": true,
+              "order_type": "STOP_MARKET",
+              "stop_kind": "algo",
+              "covered_quantity": 0.01,
+              "trigger_price": 58200,
+              "tick_size": "0.01",
+              "precision_status": "VALID",
+              "precision_valid": true,
+              "stop_id_matches_journal": true,
+              "match_reason": "matched",
+              "rearm_evidence": "NONE",
+              "verified": true,
+              "reasons": []
+            }
+          }
+        },
+        {
+          "id": "t-eth",
+          "symbol": "ETH/USDT",
+          "side": "short",
+          "amount": 0.5,
+          "entry_price": 3000,
+          "notional_usdt": 1500,
+          "leverage": 3,
+          "opened_at": "2026-10-06T00:01:43+00:00",
+          "strategy_name": "spec:donchian",
+          "exec_mode": "live",
+          "journal_stop": {
+            "price": 2910,
+            "order_ref_recorded": true,
+            "source": "journal trades row (not venue verification)"
+          },
+          "protection": {
+            "status": "VERIFIED",
+            "observed_at": "2026-10-06T05:01:13.570358+00:00",
+            "last_reported": null,
+            "reasons": [],
+            "venue": {
+              "symbol": "ETH/USDT",
+              "venue_symbol": "ETH/USDT:USDT",
+              "side": "short",
+              "quantity": 0.5,
+              "entry_price": 3000,
+              "journal_trade_id": "t-eth",
+              "journal_side": "short",
+              "journal_amount": 0.5,
+              "quantity_agrees": true,
+              "journal_stop_id": "algo-1",
+              "expected_stop": 2910,
+              "stop_present": true,
+              "stop_ids": [
+                "algo-1"
+              ],
+              "stop_id": "algo-1",
+              "stop_side": "buy",
+              "reduce_only": true,
+              "order_type": "STOP_MARKET",
+              "stop_kind": "algo",
+              "covered_quantity": 0.5,
+              "trigger_price": 2910,
+              "tick_size": "0.01",
+              "precision_status": "VALID",
+              "precision_valid": true,
+              "stop_id_matches_journal": true,
+              "match_reason": "matched",
+              "rearm_evidence": "NONE",
+              "verified": true,
+              "reasons": []
+            }
+          }
+        }
+      ],
+      "news_guard": {
+        "clear": true,
+        "source": "journal state_kv.news_guard_state (NewsGuard check record, published by the kernel each cycle; times are the check's own)",
+        "truth": "QUIET",
+        "active": false,
+        "why": "feed quiet",
+        "assessed_at": "2026-10-06T05:01:23.570358+00:00",
+        "age_s": 24,
+        "freshness": "fresh",
+        "stale_after_s": 1260,
+        "attempted_at": "2026-10-06T05:01:23.570358+00:00",
+        "fetched_at": "2026-10-06T05:01:23.570358+00:00",
+        "succeeded_at": "2026-10-06T05:01:23.570358+00:00",
+        "published_at": "2026-10-06T05:01:23.570358+00:00",
+        "newest_publication_at": "2026-10-06T05:01:23.570358+00:00",
+        "oldest_publication_at": "2026-10-06T05:01:23.570358+00:00",
+        "hits": 0,
+        "severe": 0,
+        "dated_hits": 0,
+        "dated_severe": 0,
+        "items_total": 5,
+        "items_considered": 5,
+        "dated_in_window": 5,
+        "undated_items": 0,
+        "malformed_dates": 0,
+        "future_dated_items": 0,
+        "headlines": [],
+        "failure_codes": [],
+        "dampening": {
+          "applied": false,
+          "threshold_add": 0.08,
+          "score_mult": 0.75,
+          "enforcement": "dampen_only"
+        },
+        "status": "QUIET",
+        "last_reported": null,
+        "reasons": []
+      },
+      "risk": {
+        "configured": null,
+        "configured_error": "risk_config_unreadable:KeyError",
+        "baseline": {
+          "value": null,
+          "error": "risk_state_missing",
+          "note": "Risk baseline (high-water mark and day start); not a current assessment",
+          "source": "state_kv.risk_state"
+        },
+        "source": "journal state_kv.risk_assessment (kernel cycle Risk observation)",
+        "current": {
+          "assessed_at": "2026-10-06T05:01:23.570358+00:00",
+          "age_s": 24,
+          "freshness": "fresh",
+          "stale_after_s": 300,
+          "reasons": [],
+          "constraints": [
+            {
+              "name": "risk_baseline",
+              "limit": "ok",
+              "observed": "ok",
+              "result": "pass",
+              "unit": "state",
+              "basis": "fixture"
+            },
+            {
+              "name": "halt_drawdown",
+              "limit": 20,
+              "observed": 1.2,
+              "result": "pass",
+              "unit": "pct",
+              "basis": "fixture"
+            },
+            {
+              "name": "daily_loss_breaker",
+              "limit": -6,
+              "observed": -0.4,
+              "result": "pass",
+              "unit": "pct",
+              "basis": "fixture"
+            },
+            {
+              "name": "max_open_positions",
+              "limit": 8,
+              "observed": 2,
+              "result": "pass",
+              "unit": "count",
+              "basis": "fixture"
+            },
+            {
+              "name": "portfolio_heat",
+              "limit": 15,
+              "observed": 1.5,
+              "result": "pass",
+              "unit": "pct",
+              "basis": "fixture"
+            },
+            {
+              "name": "total_margin",
+              "limit": 70,
+              "observed": 9,
+              "result": "pass",
+              "unit": "pct",
+              "basis": "fixture"
+            },
+            {
+              "name": "per_symbol_risk_cap",
+              "limit": 8,
+              "observed": null,
+              "result": "applies_at_entry",
+              "unit": "pct",
+              "basis": "fixture"
+            },
+            {
+              "name": "per_position_margin",
+              "limit": 20,
+              "observed": null,
+              "result": "applies_at_entry",
+              "unit": "pct",
+              "basis": "fixture"
+            }
+          ],
+          "risk_state": "ok",
+          "drawdown_pct": 1.2,
+          "daily_pnl_pct": -0.4,
+          "halt_breached": false,
+          "baseline": {
+            "peak_equity": 5227.2,
+            "day_start_equity": 5185.2,
+            "day_key": "d"
+          },
+          "equity": {
+            "value": 5164.5,
+            "status": "FRESH",
+            "basis": "venue_total_margin_balance",
+            "observed_at": "2026-10-06T05:01:23.570358+00:00",
+            "age_at_assessment_s": 0,
+            "fresh_at_assessment": true,
+            "authoritative": true,
+            "source_freshness_now": "fresh",
+            "source_age_s": 24
+          },
+          "book": {
+            "source": "journal open trades",
+            "read_at": "2026-10-06T05:01:23.570358+00:00",
+            "positions": 2,
+            "malformed": []
+          },
+          "control": {
+            "state": "FROZEN",
+            "entries_permitted_by_control": false,
+            "applicability": "fixture"
+          },
+          "entry_gate": {
+            "allowed": false,
+            "blocked_reason": "state=FROZEN",
+            "basis": "fixture"
+          },
+          "running_policy": {
+            "digest": "30099052f9c98edcddd3ee892a3c34dd59e3dfaca008d61a17e15e5464da6796",
+            "effective": {
+              "risk_pct": 0.01,
+              "heat_cap": 0.15,
+              "symbol_cap": 0.08,
+              "max_positions": 8,
+              "daily_loss_block": 0.06,
+              "derisk_steps": [],
+              "halt_dd": 0.2,
+              "leverage": 5,
+              "sl_atr_mult": 2,
+              "min_notional": 5,
+              "max_pos_margin": 0.2,
+              "max_total_margin": 0.7,
+              "proving_trades": 30,
+              "proving_mult": 0.5,
+              "taker_fee": 0.0005
+            },
+            "limits": {
+              "risk_per_trade_pct": 1,
+              "portfolio_heat_cap_pct": 15,
+              "per_symbol_risk_cap_pct": 8,
+              "max_open_positions": 8,
+              "max_daily_loss_pct": 6,
+              "drawdown_derisk_steps": [],
+              "halt_drawdown_pct": 20,
+              "leverage": 5,
+              "stop_loss_atr_mult": 2,
+              "min_notional_usdt": 5,
+              "max_position_margin_pct": 20,
+              "max_total_margin_pct": 70,
+              "proving_period_trades": 30,
+              "proving_size_mult": 0.5,
+              "taker_fee_pct": 0.05
+            },
+            "risk_manager_identity": "fixture"
+          },
+          "status": "PASS",
+          "last_reported": null
+        },
+        "policy_match": "UNKNOWN"
+      },
+      "needs_you": {
+        "needs_owner": false,
+        "reasons": [],
+        "since_control_event_id": null,
+        "observed_at": "2026-10-06T05:01:13.570358+00:00",
+        "freshness": "fresh",
+        "stale_after_s": 180,
+        "source": "journal state_kv.supervisor_status (Supervisor venue reconciliation pass)"
+      }
+    }PositionsJournal-open tradesInstrumentSideEntry notionalUnrealized (estimate)ProtectionJournal stopBTC/USDTlong600.00 USDT10.00 USDTVERIFIEDChecked 2026-10-06 05:01:13 UTC58200 · order ref recordedETH/USDTshort1,500.00 USDTMark unavailableVERIFIEDChecked 2026-10-06 05:01:13 UTC2910 · order ref recordedProtection is the kernel's last read-only venue protection check; a journal stop is not venue verification. Unrealized values are venue-price estimates at 2026-10-06 05:01:47 UTC.Protection evidenceVerification is shown as healthy only when a fresh kernel protection check read every venue position, the complete stop listing, and found nothing unprotected or unreconciled. The browser never asks the venue.Inspect evidence ↗Recent recorded actionsRecorded sourcejournal: newest 500 decisions, strategies (active/paper) with journal-booked economics, brain_events, research ledger, state_kv risk_state/rent_state, owner_requestsRead 2026-10-06 05:01:48 UTCRecent decisionsOperations ↗Newest 1 journal decisions.No executed decision in the window.No skipped directional decision in the window.No skip reason recorded in the window.Strategy activityStrategies ↗Active and paper strategies · journal-booked economicsStrategyStateTrades (open)RealizedDonchianactive1 (1)UnavailableNo strategy lifecycle event recorded.Research activityResearch ↗Latest run 5 · 2026-10-06 04:01:43 UTC · 4h trail singles · completed · survivors recorded: 0Newest results (rankings, not admission)ResultVerdictSeeded bydonchian_hi(100)prune—Risk and operating costNot recorded.Operating-cost week (rent)Not recorded.Recorded state_kv values; not a live risk check.Owner attention recordsNo unresolved owner request is recorded.UNAVAILABLE Approvals — no approval-object store exists; Needs You lists only the Supervisor's needs_owner and unresolved owner requestsUNAVAILABLE News guard — News Guard is not shown until its source state is trustworthyUNAVAILABLE Risk state — state_kv.risk_state is not recordedUNAVAILABLE Rent state — state_kv.rent_state is not recordedRecent decisions / rejectionsRecorded activityRecorded sourcejournal decisions via GraphQL · offset window · not trade lineageRead 2026-10-06 05:01:48 UTCRead time is not event freshness. Rejected decisions retain their recorded reason.Showing latest 1 decisions from the returned window. Browse decision history ↗Search DecisionsFilter executedAllfalse1 of 1 loaded recordsDecisions · bounded source windowInstrumentDecisionReasonRecorded atEvidenceBTC/USDTHOLDUnavailable2026-10-06 04:59:43 UTCInspect BTC/USDTLUFFY · OWNER WORKSPACE · backend commit unknownLIVE · text chat · backend time 2026-10-06 05:01:47 UTC · voice unavailable
+      
+    
+    "
+
+
+      35 |   // optional enrichment arrives separately
+      36 |   await expect(rows.first()).toContainText("10.00 USDT");
+    > 37 |   await expect(page.locator("body")).not.toContainText(FIXTURE_TEXT);
+         |                                          ^
+      38 |   await expect(page.getByLabel("Fixture scenario")).toHaveCount(0);
+      39 |   expect(requests.some((p) => p.includes("fixture"))).toBeFalsy();
+      40 |   expect(requests).toContain("/owner-api/v1/bootstrap");
+        at /mnt/luffy-data/luffy/production/frontend/tests/browser/live.spec.ts:37:42
+
+    Error Context: test-results/live-LIVE-overview-binds-real-backend-values-never-fixtures/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/live-LIVE-overview-binds-real-backend-values-never-fixtures/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/live-LIVE-overview-binds-real-backend-values-never-fixtures/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) tests/browser/live.spec.ts:389:1 › other routes: real contracts or explicit unavailability ────
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByTestId('research-unavailable')
+    Expected substring: "no persisted research-question store"
+    Timeout: 6000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" getByTestId('research-unavailable') with timeout 6000ms
+      - waiting for getByTestId('research-unavailable')
+
+
+      399 |   await expect(page.locator(".log-tail")).toContainText("line two");
+      400 |   await page.goto(LIVE + "/#research");
+    > 401 |   await expect(page.getByTestId("research-unavailable")).toContainText(
+          |                                                          ^
+      402 |     "no persisted research-question store",
+      403 |   );
+      404 |   await page.getByRole("button", { name: /^Results/ }).click();
+        at /mnt/luffy-data/luffy/production/frontend/tests/browser/live.spec.ts:401:58
+
+    Error Context: test-results/live-other-routes-real-contracts-or-explicit-unavailability/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/live-other-routes-real-contracts-or-explicit-unavailability/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/live-other-routes-real-contracts-or-explicit-unavailability/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) tests/browser/stage8.spec.ts:27:1 › failed Needs You endpoint is explicit and cannot enable approvals 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByTestId('needs-you-items')
+    Expected substring: "No substitute data was loaded"
+    Received string:    "Needs You · owner decisions; approval does not execute, activate or spend.Validity last checked 2026-10-06T05:03:30.767820+00:00. Submission revalidates exact context.UNAVAILABLE Approvals — governance_proposal_ledger_not_recordedUNAVAILABLE Approvals — first_live_request_ledger_not_recorded0 pending or stale owner items across available ledgers.No items returned from available ledgers. Unavailable ledgers do not establish no pending action.Previous owner items More owner items"
+    Timeout: 6000ms
+
+    Call log:
+      - Expect "toContainText" getByTestId('needs-you-items') with timeout 6000ms
+      - waiting for getByTestId('needs-you-items')
+        12 × locator resolved to <section aria-label="Needs You" data-testid="needs-you-items">…</section>
+           - unexpected value "Needs You · owner decisions; approval does not execute, activate or spend.Validity last checked 2026-10-06T05:03:30.767820+00:00. Submission revalidates exact context.UNAVAILABLE Approvals — governance_proposal_ledger_not_recordedUNAVAILABLE Approvals — first_live_request_ledger_not_recorded0 pending or stale owner items across available ledgers.No items returned from available ledgers. Unavailable ledgers do not establish no pending action.Previous owner items More owner items"
+
+
+      29 |   await page.route("**/owner-api/v1/needs-you",r=>r.fulfill({status:503,contentType:"application/json",body:'{"error":"unavailable"}'}));
+      30 |   await page.goto(LIVE+"/#luffy");
+    > 31 |   await expect(page.getByTestId("needs-you-items")).toContainText("No substitute data was loaded");
+         |                                                     ^
+      32 |   await expect(page.getByRole("button",{name:"Approve exact request"})).toHaveCount(0);
+      33 | });
+      34 |
+        at /mnt/luffy-data/luffy/production/frontend/tests/browser/stage8.spec.ts:31:53
+
+    Error Context: test-results/stage8-failed-Needs-You-en-19e83-and-cannot-enable-approvals/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/stage8-failed-Needs-You-en-19e83-and-cannot-enable-approvals/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/stage8-failed-Needs-You-en-19e83-and-cannot-enable-approvals/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) tests/browser/stage8.spec.ts:35:1 › pending owner actions survive completed history and later pages are reachable 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByTestId('needs-you-items')
+    Expected substring: "101 pending or stale owner items"
+    Received string:    "Pending exact owner decisionsValidity last checked 2026-10-06T05:03:45.834093+00:00. Submission revalidates exact context.UNAVAILABLE Approvals — governance_proposal_ledger_not_recordedUNAVAILABLE Approvals — first_live_request_ledger_not_recorded0 pending or stale owner items across available ledgers.No items returned from available ledgers. Unavailable ledgers do not establish no pending action."
+    Timeout: 6000ms
+
+    Call log:
+      - Expect "toContainText" getByTestId('needs-you-items') with timeout 6000ms
+      - waiting for getByTestId('needs-you-items')
+        15 × locator resolved to <section aria-label="Needs You" data-testid="needs-you-items">…</section>
+           - unexpected value "Pending exact owner decisionsValidity last checked 2026-10-06T05:03:45.834093+00:00. Submission revalidates exact context.UNAVAILABLE Approvals — governance_proposal_ledger_not_recordedUNAVAILABLE Approvals — first_live_request_ledger_not_recorded0 pending or stale owner items across available ledgers.No items returned from available ledgers. Unavailable ledgers do not establish no pending action."
+
+
+      38 |   await page.route("**/owner-api/v1/needs-you*",r=>r.fulfill({contentType:"application/json",body:JSON.stringify({generated_at:new Date().toISOString(),items:[{...item,reason:r.request().url().includes("offset=100") ? "Oldest pending request" : item.reason}],pending_total:101,total:101,truncated:!r.request().url().includes("offset=100"),unavailable:[]})}));
+      39 |   await page.goto(LIVE+"/#overview");
+    > 40 |   await expect(page.getByTestId("needs-you-items")).toContainText("101 pending or stale owner items");
+         |                                                     ^
+      41 |   await expect(page.getByTestId("needs-you-items")).toContainText("Pending first-live request");
+      42 |   await page.goto(LIVE+"/#luffy");
+      43 |   await page.getByRole("button",{name:"More owner items"}).click();
+        at /mnt/luffy-data/luffy/production/frontend/tests/browser/stage8.spec.ts:40:53
+
+    Error Context: test-results/stage8-pending-owner-actio-f2ec2-d-later-pages-are-reachable/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/stage8-pending-owner-actio-f2ec2-d-later-pages-are-reachable/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/stage8-pending-owner-actio-f2ec2-d-later-pages-are-reachable/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5 failed
+    tests/browser/gui01.spec.ts:46:1 › GUI-01 missing observations do not become zero ──────────────
+    tests/browser/live.spec.ts:22:1 › LIVE overview binds real backend values, never fixtures ──────
+    tests/browser/live.spec.ts:389:1 › other routes: real contracts or explicit unavailability ─────
+    tests/browser/stage8.spec.ts:27:1 › failed Needs You endpoint is explicit and cannot enable approvals 
+    tests/browser/stage8.spec.ts:35:1 › pending owner actions survive completed history and later pages are reachable 
+  21 passed (3.1m)

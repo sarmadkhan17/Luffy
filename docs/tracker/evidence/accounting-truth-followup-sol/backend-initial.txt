@@ -1,0 +1,19 @@
+.................F..............................                         [100%]
+=================================== FAILURES ===================================
+____________ test_nonfinite_monetary_evidence_is_not_a_venue_number ____________
+
+    def test_nonfinite_monetary_evidence_is_not_a_venue_number():
+        t, p = trade(), provenance()
+        t['realized_pnl'] = float('inf')
+        p['legs'][0]['fills'][0]['commission'] = 'NaN'
+        r = read(t, p)
+>       assert r['journal_booked'][0]['status'] == 'UNAVAILABLE'
+E       AssertionError: assert 'UNKNOWN' == 'UNAVAILABLE'
+E         
+E         - UNAVAILABLE
+E         + UNKNOWN
+
+tests/test_acc03_economics.py:87: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_acc03_economics.py::test_nonfinite_monetary_evidence_is_not_a_venue_number
+1 failed, 47 passed in 11.51s

@@ -1,0 +1,46 @@
+
+> luffy-owner-frontend-preview@0.1.0 test
+> vitest run
+
+
+ RUN  v5.0.2 /mnt/luffy-data/luffy/production/frontend
+
+ ❯ tests/components.test.tsx (3 tests | 2 failed) 1476ms
+   ❯ conversation and evidence (3)
+     × blocks whitespace and preserves owner text on adapter failure 243ms
+     × cancels a pending reply without appending late output 75ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components.test.tsx > conversation and evidence > blocks whitespace and preserves owner text on adapter failure
+ FAIL  tests/components.test.tsx > conversation and evidence > cancels a pending reply without appending late output
+Error: No QueryClient set, use QueryClientProvider to set one
+ ❯ useQueryClient node_modules/@tanstack/react-query/src/QueryClientProvider.tsx:29:11
+ ❯ useBaseQuery node_modules/@tanstack/react-query/src/useBaseQuery.ts:53:18
+ ❯ useQuery node_modules/@tanstack/react-query/src/useQuery.ts:297:10
+ ❯ useRead src/components/records.tsx:30:10
+     28| export function useRead(path: string | null, poll?: number) {
+     29|   const { adapter } = usePreview();
+     30|   return useQuery({
+       |          ^
+     31|     queryKey: ["owner-read", path],
+     32|     queryFn: ({ signal }) => adapter.ownerRead!(path!, signal),
+ ❯ NeedsYou src/components/OwnerEvidence.tsx:11:13
+ ❯ Object.react_stack_bottom_frame node_modules/react-dom/cjs/react-dom-client.development.js:28571:20
+ ❯ renderWithHooks node_modules/react-dom/cjs/react-dom-client.development.js:8030:22
+ ❯ updateFunctionComponent node_modules/react-dom/cjs/react-dom-client.development.js:10569:19
+ ❯ beginWork node_modules/react-dom/cjs/react-dom-client.development.js:12205:18
+ ❯ runWithFiberInDEV node_modules/react-dom/cjs/react-dom-client.development.js:1048:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed | 15 passed (16)
+      Tests  2 failed | 162 passed (164)
+   Start at  07:59:32
+   Duration  27.74s (environment 43%, tests 37%, import 9%, setup 8%, transform 4%)
+
+Environment  jsdom was created 16 times · 32.76s total, 43% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+

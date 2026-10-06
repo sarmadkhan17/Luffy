@@ -1,0 +1,34 @@
+
+> luffy-owner-frontend-preview@0.1.0 test:browser
+> playwright test --config playwright.stage8.config.ts --grep LIVE overview binds|Owner Interface unavailable --reporter=list
+
+[WebServer] (node:1530430) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1530460) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:1530732) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 tests/browser/live.spec.ts:22:1 › LIVE overview binds real backend values, never fixtures (75ms)
+(node:1530843) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 tests/browser/live.spec.ts:164:1 › Owner Interface unavailable: controls fail closed (50ms)
+
+
+  1) tests/browser/live.spec.ts:22:1 › LIVE overview binds real backend values, never fixtures ─────
+
+    Error: browserType.launch: Failed to launch chromium because executable doesn't exist at /home/sarmad/.config/codex-second/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome
+
+    Error Context: .stage8-test-results/live-LIVE-overview-binds-real-backend-values-never-fixtures/error-context.md
+
+  2) tests/browser/live.spec.ts:164:1 › Owner Interface unavailable: controls fail closed ──────────
+
+    Error: browserType.launch: Failed to launch chromium because executable doesn't exist at /home/sarmad/.config/codex-second/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome
+
+    Error Context: .stage8-test-results/live-Owner-Interface-unavailable-controls-fail-closed/error-context.md
+
+  2 failed
+    tests/browser/live.spec.ts:22:1 › LIVE overview binds real backend values, never fixtures ──────
+    tests/browser/live.spec.ts:164:1 › Owner Interface unavailable: controls fail closed ───────────

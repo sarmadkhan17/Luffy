@@ -1,0 +1,36 @@
+id: ACC-01
+status: CLOSED
+result: CLOSED_ARCHITECTURE_OFFLINE
+correction_of: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
+correction_revision: 88677941115a138258af261e37a6a488ac7a844c
+statement: >
+  The earlier ACC-01 closure (29d093d review) was incomplete. It did not cover four reconcile/panic
+  paths that invented or left unlabelled monetary facts. Corrected at the revision above; the
+  original closing condition is satisfied only with this correction.
+gaps_missed_by_earlier_closure:
+- id: ghost_unpriced_close
+  defect: reconcile ghost close with no ticker last booked exit_price 0 and realized_pnl -notional; a ticker exception booked pnl 0 silently.
+  now: exit price is journal entry placeholder, pnl 0, receipt pnl_status/pnl_value_class UNKNOWN, exit_price_source journal_entry_not_a_fill.
+- id: panic_unpriced_close
+  defect: flatten_all with no order price and no ticker booked exit 0 and a total-loss pnl.
+  now: same UNKNOWN labelling; order_id retained.
+- id: adoption_unknown_entry_price
+  defect: adopted venue position with no entryPrice/markPrice wrote entry 0.0 and venue_entry_price 0.0 as if reported.
+  now: receipt venue_entry_price null, entry_price_status UNKNOWN, exposure_source venue_position_snapshot.
+  residual: trades.entry_price column still holds 0.0 as a NOT NULL placeholder; UNKNOWN is carried by the receipt only.
+- id: estimate_labelling
+  defect: mark-priced ghost/panic/alignment-shrink P&L had no estimate label or price source.
+  now: pnl_status ESTIMATE, pnl_value_class DERIVED_ESTIMATE, price source and estimated_pnl_usdt recorded.
+implementation_revision: 88677941115a138258af261e37a6a488ac7a844c
+files:
+- trader/engine/reconcile.py
+- tests/test_acc01_venue_authority.py
+tests:
+  new: 12 (7 fail without the fix)
+  adjacent_suites: 394 passed
+  preexisting_unrelated_failures: tests/test_trade_provenance.py 24 (identical with and without the change; cause not investigated)
+kernel_launched: false
+provider_calls: 0
+acc03_cross_reference: >
+  trader/dashboard/economics.py does not consume pnl_status, pnl_value_class or price-source fields.
+  UNKNOWN/ESTIMATE close values may reach the economics read as plain numbers; separate consumer proof required.

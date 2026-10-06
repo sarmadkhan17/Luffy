@@ -1,0 +1,17 @@
+
+> luffy-owner-frontend-preview@0.1.0 test:browser
+> playwright test --config playwright.stage8.config.ts --grep LIVE overview binds|Owner Interface unavailable --reporter=list
+
+[WebServer] (node:1532265) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1532285) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:1532349) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/browser/live.spec.ts:22:1 › LIVE overview binds real backend values, never fixtures (5.2s)
+  ✓  2 tests/browser/live.spec.ts:165:1 › Owner Interface unavailable: controls fail closed (1.4s)
+
+  2 passed (12.2s)

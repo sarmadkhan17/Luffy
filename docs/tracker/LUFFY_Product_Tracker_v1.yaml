@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.23-acc03-economics-sol
+  version: 1.25-accounting-truth-followup-sol
   created_date: '2026-10-05'
   title: LUFFY — Product, Behaviour & GUI Tracker
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -11,18 +11,18 @@ metadata:
   repository_modified: true
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
     prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
-  current_active_item: OBS-05
-  current_active_result: CLOSED_ENGINEERING_ONLY_DIAGNOSTICS
+  current_active_item: ACC-03
+  current_active_result: CLOSED_ACCOUNTING_TRUTH_FOLLOWUP
   row_count: 178
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
     is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown is an
     optional generated reference.
   pending_adoption: null
   status_counts:
-    CLOSED: 27
+    CLOSED: 28
     EVIDENCE_TO_MAP: 113
     DEFERRED: 7
-    AWAITING_EVIDENCE: 11
+    AWAITING_EVIDENCE: 10
     AWAITING_OWNER: 14
     BLOCKED: 2
     OPEN: 4
@@ -35,7 +35,7 @@ metadata:
   current_runtime_item: PERF-01
   current_runtime_result: BLOCKED
   next_diagnostic_item: null
-  next_recommended_item: GUI-01
+  next_recommended_item: GUI-02
   next_runtime_execution_authorized: false
   owner_representation_decision:
     date: '2026-10-05'
@@ -4200,17 +4200,14 @@ items:
   - DATA-01
   owner_role: Accounting & outcomes owner
   engineering_assignee: SOL
-  implementation_evidence: trader/engine/booking.py; trader/engine/trade_accounting.py; trader/engine/accounting.py;
-    seven offline suites (107 passed)
+  implementation_evidence: 88677941115a138258af261e37a6a488ac7a844c; trader/engine/reconcile.py; tests/test_acc01_venue_authority.py;
+    independently rerun reconcile/booking suites
   runtime_evidence: NOT_PERFORMED; synthetic offline fixtures only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'ACC-01: engine/booking.py retains immutable before/after snapshots and original evidence with
-    sha256; assess/replay refuse missing fees, currency conversions and rewritten assessments. engine/reconcile.py
-    and engine/trade_accounting.py distinguish venue order fills from estimates, retain history/pages/raw receipts
-    and explicit discrepancies/retry reasons. test_trade_booking covers native/ghost/panic estimates, absent fees,
-    transaction rollback and legacy source-free export. test_reconcile and test_reconcile_alignment_commits cover
-    venue alignment without substituting symbol-only trade ownership. DATA-01 canonical identity tests establish
-    versioned market binding.'
+  latest_evidence: Earlier ACC-01 evidence omitted ghost_unpriced_close, panic_unpriced_close, adoption_unknown_entry_price
+    and estimate_labelling. Opus correction 8867794 fixes and labels all four. Exact original closure condition
+    revalidated offline; raw immutable receipts, retained order/venue identities, discrepancies and estimate/UNKNOWN
+    markers preserved. 101 focused and adjacent reconcile/booking tests pass. No runtime proof inferred.
   source_ids:
   - S01
   - S02
@@ -4222,16 +4219,40 @@ items:
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: 29d093d5e5467c645b8ea13a3699451b6a7d85d6
+  resolution_at_commit: 88677941115a138258af261e37a6a488ac7a844c
   work_authorized: true
   updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
+  closure_evidence: docs/tracker/evidence/acc01-correction-opus/closure.yaml
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
   closure_scope: ARCHITECTURE_OFFLINE
+  evidence_correction:
+    revision: 88677941115a138258af261e37a6a488ac7a844c
+    original_condition_satisfied: true
+    supersedes_acc01_only: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
+    gaps_missed_by_earlier_closure:
+    - id: ghost_unpriced_close
+      defect: reconcile ghost close with no ticker last booked exit_price 0 and realized_pnl -notional; a ticker
+        exception booked pnl 0 silently.
+      now: exit price is journal entry placeholder, pnl 0, receipt pnl_status/pnl_value_class UNKNOWN, exit_price_source
+        journal_entry_not_a_fill.
+    - id: panic_unpriced_close
+      defect: flatten_all with no order price and no ticker booked exit 0 and a total-loss pnl.
+      now: same UNKNOWN labelling; order_id retained.
+    - id: adoption_unknown_entry_price
+      defect: adopted venue position with no entryPrice/markPrice wrote entry 0.0 and venue_entry_price 0.0 as if
+        reported.
+      now: receipt venue_entry_price null, entry_price_status UNKNOWN, exposure_source venue_position_snapshot.
+      residual: trades.entry_price column still holds 0.0 as a NOT NULL placeholder; UNKNOWN is carried by the receipt
+        only.
+    - id: estimate_labelling
+      defect: mark-priced ghost/panic/alignment-shrink P&L had no estimate label or price source.
+      now: pnl_status ESTIMATE, pnl_value_class DERIVED_ESTIMATE, price source and estimated_pnl_usdt recorded.
+    residual_placeholder_policy: NOT NULL journal placeholders remain storage values only; receipt classification
+      governs consumer display.
 - id: ACC-02
   area: Accounting & outcomes
   stage: '7'
@@ -4296,14 +4317,14 @@ items:
   - ACC-02
   owner_role: Accounting & outcomes owner
   engineering_assignee: SOL
-  implementation_evidence: fcfd0a5; trader/dashboard/economics.py; owner_reads.trade_lineage; LiveReads.EconomicsEvidence;
-    adapter economics contract
+  implementation_evidence: 37c8d43ced2d65fb2418e87435b178318832301b; trade-economics-read.v2; receipt integrity/binding
+    and full booking-history classification
   runtime_evidence: NOT_PERFORMED; offline fixtures only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Explicit status/source snapshot version/coverage for venue fields, journal bookings and derived
-    R/MFE/MAE/slippage/attribution. Unknown calculation versions, funding and whole-trade net remain unavailable;
-    leg replay cannot promote complete accounting. 163 backend and 37 frontend tests plus typecheck; six final regressions.
-    ACC-02 satisfied first.
+  latest_evidence: Consumer now respects pnl_status, pnl_value_class, exit_price_source/pnl_price_source and evidence
+    basis. UNKNOWN journal placeholders become null; DERIVED_ESTIMATE retains estimate status and price-source/basis
+    coverage. Recorded venue monetary fields remain independent and never become complete net accounting. Earlier
+    source-only v1 proof is superseded for the consumer correction; original closure condition unchanged.
   source_ids:
   - S01
   - S02
@@ -4315,16 +4336,20 @@ items:
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: fcfd0a5bd19fcd4af89de9c7673f130f935be316
+  resolution_at_commit: 37c8d43ced2d65fb2418e87435b178318832301b
   work_authorized: true
   updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: docs/tracker/evidence/acc03-economics-sol/closure.yaml
+  closure_evidence: docs/tracker/evidence/accounting-truth-followup-sol/closure.yaml
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
   closure_scope: ARCHITECTURE_OFFLINE
+  accounting_truth_correction:
+    revision: 37c8d43ced2d65fb2418e87435b178318832301b
+    canonical_acc01_fix: 88677941115a138258af261e37a6a488ac7a844c
+    evidence: docs/tracker/evidence/accounting-truth-followup-sol/closure.yaml
 - id: OUT-01
   area: Accounting & outcomes
   stage: '7'
@@ -5388,7 +5413,7 @@ items:
   stage: '8'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: AWAITING_EVIDENCE
+  status: CLOSED
   required_behavior: 'Overview: Account/equity/P&L, exposure, current control, global signals and Needs You.'
   why_needed: The first screen must make status and required owner action understandable.
   closure_condition: Observed figures have source/freshness/quality, unavailable values stay unknown, and Needs
@@ -5399,29 +5424,30 @@ items:
   - OWN-03
   - OWN-04
   owner_role: Frontend + owner-interface owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: HISTORICAL_STAGE8_CLAIM
+  engineering_assignee: SOL
+  implementation_evidence: VERIFIED_FUNCTIONAL_OFFLINE
   runtime_evidence: NOT_PROVEN_FOR_THIS_SCREEN
   visual_approval: TRACKED_SEPARATELY
-  latest_evidence: 'ACC-03, OWN-03 and OWN-04 satisfied for current architecture/offline scope. GUI-01 remains AWAITING_EVIDENCE:
-    Overview journal aggregate economic coverage/version/null completeness, equity/exposure/global signals source/freshness/quality
-    and exact Needs You evidence/action navigation remain. Runtime screen proof and owner visual approval separately
-    outstanding. docs/tracker/evidence/acc03-economics-sol/REPORT.md'
+  latest_evidence: 'Functional/offline closure revalidated after ACC-01 8867794 and ACC-03 consumer correction:
+    UNKNOWN receipts suppress both main and activity P&L; derived totals visibly labelled estimate; no fabricated
+    flat P&L. Exact Needs You and read-only stopped-Kernel regressions retained. 8 browser checks pass; deployed
+    runtime and VIS-01 owner visual approval remain separate.'
   source_ids:
   - S01
   - S10
   - S14
   source_sections: §25.3
-  next_proof: Map per-screen evidence and fix demonstrated Overview gaps; retain separate runtime/visual proof.
+  next_proof: Future live/deployed screen proof and VIS-01 owner visual approval remain separate; no additional
+    functional/offline proof required.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: SDD_DEFINED_TEST_DETAIL_DRAFT
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
+  resolution_at_commit: 37c8d43ced2d65fb2418e87435b178318832301b
+  work_authorized: true
   updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
+  closure_evidence: docs/tracker/evidence/gui01-overview-sol/closure.yaml
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -5434,6 +5460,9 @@ items:
       - OWN-04
       remaining_for_closure: []
       screen_evidence_and_owner_visual_approval_still_required: true
+      functional_offline_proof: PROVEN
+      owner_visual_approval: VIS-01_AWAITING_OWNER_SEPARATE
+      owner_visual_approval_required_separately: true
     future_live_activation:
       mandatory_unproven:
       - MON-01
@@ -5442,6 +5471,11 @@ items:
       - RUN-01
       - GOV-07
       current_phase_eligibility_is_not_activation_authority: true
+  accounting_truth_revalidation: &id001
+    revision: 37c8d43ced2d65fb2418e87435b178318832301b
+    result: PASS_FUNCTIONAL_OFFLINE
+    evidence: docs/tracker/evidence/accounting-truth-followup-sol/closure.yaml
+    prior_screen_evidence: docs/tracker/evidence/gui01-overview-sol/closure.yaml
 - id: VIS-01
   area: Dashboard visual approval
   stage: '8'
@@ -8820,10 +8854,9 @@ current_build_selection:
   current_blocked_items:
   - WORK-01
   - PERF-03
-  next_recommended_item: GUI-01
+  next_recommended_item: GUI-02
   eligible_items:
   - DATA-08
-  - GUI-01
   - GUI-02
   - GUI-03
   - GUI-04
@@ -8837,11 +8870,10 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: ACC-01/ACC-02 dependency mapping and ACC-03 economics closed offline. GUI-01 dependencies satisfied;
-    per-screen evidence/navigation/coverage and separate runtime/visual proof remain. GUI-01 recommended only, unselected;
-    no activation authorized.
+  selection_reason: ACC-01 re-pinned to 8867794 after the four-gap correction; ACC-03 consumer classification fixed
+    and GUI-01 revalidated offline. GUI-02 remains recommended, unselected. No live/runtime or visual approval inferred.
   last_terminal_item: ACC-03
-  last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
+  last_terminal_result: CLOSED_ACCOUNTING_TRUTH_FOLLOWUP
 own02_authority_closure:
   id: OWN-02
   status: CLOSED
@@ -8914,9 +8946,9 @@ acc03_economics_closure:
   id: ACC-03
   status: CLOSED
   result: CLOSED_ARCHITECTURE_OFFLINE
-  implementation_revision: fcfd0a5bd19fcd4af89de9c7673f130f935be316
+  implementation_revision: 37c8d43ced2d65fb2418e87435b178318832301b
   dependency_evidence: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
-  schema: trade-economics-read.v1
+  schema: trade-economics-read.v2
   tests:
     backend: 163
     frontend: 37
@@ -8928,3 +8960,68 @@ acc03_economics_closure:
   provider_calls: 0
   gui01_status: AWAITING_EVIDENCE
   successor_selected: false
+  accounting_truth_followup_evidence: docs/tracker/evidence/accounting-truth-followup-sol/closure.yaml
+gui01_overview_closure:
+  id: GUI-01
+  status: CLOSED
+  result: CLOSED_FUNCTIONAL_OFFLINE
+  scope: FUNCTIONAL_OFFLINE_OVERVIEW
+  evidence: docs/tracker/evidence/gui01-overview-sol/REPORT.md
+  implementation_base_revision: 88677941115a138258af261e37a6a488ac7a844c
+  implementation_identity: source-manifest.json exact working-tree hashes; not deployed identity
+  backend_tests: 70
+  frontend_tests: 166
+  browser_tests: 13 passed; browser-scope-results.json, browser-readonly-results.json and browser-live-check-final.txt
+  read_only_gui_kernel_stopped: PROVEN_TEMPORARY_FIXTURE
+  kernel_launched: false
+  production_dashboard_launched: false
+  fixture_dashboard_launched: true
+  live_venue_reads: 0
+  provider_calls: 0
+  live_runtime_proof: NOT_PROVEN_FOR_THIS_SCREEN
+  owner_visual_approval: VIS-01_AWAITING_OWNER
+  activation_authorized: false
+  next_gui_item: GUI-02
+  successor_selected: false
+  accounting_truth_revalidation: *id001
+accounting_truth_followup:
+  id: ACCOUNTING-TRUTH-FOLLOWUP
+  status: CLOSED
+  result: CLOSED_ARCHITECTURE_FUNCTIONAL_OFFLINE
+  items:
+  - ACC-01
+  - ACC-03
+  - GUI-01
+  canonical_acc01_revision: 88677941115a138258af261e37a6a488ac7a844c
+  consumer_implementation_revision: 37c8d43ced2d65fb2418e87435b178318832301b
+  opus_evidence: docs/tracker/evidence/acc01-correction-opus/closure.yaml
+  original_conditions_preserved: true
+  original_acc01_condition_satisfied: true
+  tests:
+    backend_final: 190
+    additional_economics: 7
+    backend_distinct: 191
+    frontend: 167
+    browser: 8
+    typecheck: PASS
+  gui01_proof: UNKNOWN null; DERIVED_ESTIMATE labelled; actual venue fields separate; exact evidence and read-only
+    Kernel STOPPED regressions pass
+  kernel_launched: false
+  production_dashboard_launched: false
+  fixture_dashboard_launched: true
+  provider_calls: 0
+  live_venue_reads: 0
+  runtime_proof: NOT_PERFORMED
+  owner_visual_approval: VIS-01_AWAITING_OWNER
+  activation_authorized: false
+  next_gui_item: GUI-02
+  successor_selected: false
+acc01_venue_authority_correction:
+  id: ACC-01
+  status: CLOSED
+  result: CLOSED_ARCHITECTURE_OFFLINE
+  implementation_revision: 88677941115a138258af261e37a6a488ac7a844c
+  evidence: docs/tracker/evidence/acc01-correction-opus/closure.yaml
+  independent_revalidation: docs/tracker/evidence/accounting-truth-followup-sol/acc01-tests.txt
+  four_gaps_recorded: true
+  original_condition_satisfied: true
