@@ -382,11 +382,18 @@ def run_gauntlet(spec, frames: dict, cfg: dict, min_pf: float | None = None,
     pfs = [r["test"].profit_factor for r in results if r["test"].trades >= 2]
     ev["worst_test_pf"] = round(min(pfs), 3) if pfs else 0.0
     if total < min_trades:
-        return False, {**ev,
+        # QNT-06: too little evidence is UNTESTED, never a FAIL
+        return False, {**ev, "outcome": "UNTESTED",
+                       "untested_code": "insufficient_trades",
+                       "required_trades": min_trades,
+                       "observed_trades": total,
                        "reason": f"only {total} out-of-sample trades "
                                  f"(<{min_trades})"}
     if not pfs:
-        return False, {**ev, "reason": "no symbol reached 2 test trades"}
+        return False, {**ev, "outcome": "UNTESTED",
+                       "untested_code": "insufficient_trades",
+                       "required_trades": 2, "observed_trades": 0,
+                       "reason": "no symbol reached 2 test trades"}
     if min(pfs) < min_pf:
         return False, {**ev, "reason": f"worst out-of-sample PF "
                                        f"{min(pfs):.2f} < {min_pf}"}

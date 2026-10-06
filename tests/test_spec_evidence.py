@@ -154,3 +154,17 @@ def test_cannot_build_a_finer_frame_from_a_coarser_one(frames):
     from trader.strategy.backtest import resample
     with pytest.raises(KeyError):
         se.frames_for(resample(frames["BTC/USDT"], "4h"), "15m")
+
+
+def test_insufficient_oos_trades_are_untested_not_failed(frames, feed):
+    """QNT-06: the declared minimum is config; below it the outcome is
+    UNTESTED with the requirement and observation, not a FAIL."""
+    cfg = {**CFG, "strategies": {**CFG.get("strategies", {}),
+                                 "gauntlet_min_test_trades": 10 ** 6}}
+    ok, ev = se.run_gauntlet(_spec("close > ema(20)", timeframe="1h"),
+                             frames, cfg, feed=feed)
+    assert not ok
+    assert ev["outcome"] == "UNTESTED"
+    assert ev["untested_code"] == "insufficient_trades"
+    assert ev["required_trades"] == 10 ** 6
+    assert ev["observed_trades"] == ev["test_trades"] < 10 ** 6

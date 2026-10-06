@@ -303,12 +303,18 @@ def recent_verdict(compiled, frames: dict, risk_cfg: dict, timeframe: str,
     ev["window_days"] = window
     ev["window_widened"] = window > recent_days
     if ev["trades"] < min_trades:
-        return False, {**ev, "reason": f"only {ev['trades']} trades in the "
-                                       f"last {window:.0f}d (<{min_trades})"}
+        # QNT-06: too little evidence is UNTESTED, never a FAIL
+        return False, {**ev, "outcome": "UNTESTED",
+                       "untested_code": "insufficient_trades",
+                       "required_trades": min_trades,
+                       "observed_trades": ev["trades"],
+                       "reason": f"only {ev['trades']} trades in the "
+                                 f"last {window:.0f}d (<{min_trades})"}
     if ev["pooled_pf"] < min_pf:
-        return False, {**ev, "reason": f"pooled PF {ev['pooled_pf']:.2f} over "
-                                       f"{window:.0f}d < {min_pf}"}
-    return True, ev
+        return False, {**ev, "outcome": "FAIL",
+                       "reason": f"pooled PF {ev['pooled_pf']:.2f} over "
+                                 f"{window:.0f}d < {min_pf}"}
+    return True, {**ev, "outcome": "PASS"}
 
 
 def has_decayed(compiled, frames: dict, risk_cfg: dict, timeframe: str,
