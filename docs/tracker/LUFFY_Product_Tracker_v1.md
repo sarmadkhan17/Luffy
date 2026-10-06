@@ -1,3 +1,5 @@
+> Current ATT-03 owner scope decision: **CLOSED for architecture/offline investigation only**. Existing values are **UNCALIBRATED_HEURISTIC / INVESTIGATE_ONLY**; calibration remains **DEFERRED / UNPROVEN**, mandatory before validated Attention quality/profitability claims. Heuristics never authorize trade, size or exposure. No thresholds/windows/weights changed; earlier calibration report preserved. [Scope decision](evidence/att03-scope-decision-sol2/REPORT.md). Earlier work/status summaries below are historical.
+
 > Current SOL-1 checkpoint: DEC-01, OUT-01 and OUT-03 BLOCKED. Compiler correction f55ec97 and later committed WRLD-01/WRLD-03/WRLD-05/DATA-05 closures retained. STR-01/STR-02 and DEC-01 analyst Context proof remain; OUT-01 also needs DEC-04 and full normal execution proof. No successor selected. Earlier intake findings are historical. [Evidence](evidence/dec01-chain-sol1/REPORT.md).
 
 > Current GUI-02 dependency intake: BLOCKED. ACC-02 CLOSED offline; OUT-03 replay evidence mapped but blocked by OUT-01/DATA-03/WRLD-06; OWN-01 remains unmapped. [Evidence](evidence/out03-replay-map-sol/REPORT.md). No dependency bypass or GUI closure.
@@ -16,7 +18,7 @@
 
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.23-acc03-economics-sol
+Version: 1.31-att03-owner-scope-sol2
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
@@ -1724,8 +1726,8 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **area**: Attention & research
 - **stage**: 3
 - **item_type**: REQUIREMENT
-- **release_scope**: BASELINE
-- **status**: BLOCKED
+- **release_scope**: CURRENT_BUILD_PHASE
+- **status**: CLOSED
 - **why_needed**: Insufficient eligible history must not become a negative signal.
 - **closure_condition**: Warm-up evidence states required history/availability and becomes eligible only through valid acquisition; ranking uses approved calibrated components.
 - **failure_regression_proof**: No clock rewrite, forced selection, arbitrary new weights or historical date-only eligibility.
@@ -1735,24 +1737,59 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **implementation_evidence**: Existing 5a2b7de warm-up/history fix retained; fixed-value calibration inventory and 59 retained replays in docs/tracker/evidence/att03-calibration-sol2/REPORT.md. No application source/config change.
 - **runtime_evidence**: NOT_MAPPED
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: 59 retained scans reproduce scores/eligibility/ranking; no independent natural anomaly labels. 800 fixed null and 1000 planted offline cohorts measured current values; 68 preservation tests and 11 evidence checks pass. Operational calibration remains unsupported; no values retuned.
+- **latest_evidence**: Warm-up/null/history/valid acquisition and deterministic replay/ranking proven by retained ATT-03/ATT-01 evidence. Owner accepts unchanged thresholds/components as UNCALIBRATED_HEURISTIC / INVESTIGATE_ONLY for architecture/offline build. Calibration remains unproven and mandatory before validated Attention quality/profitability claims; heuristics never authorize trade/size/exposure.
 - **source_ids**: S01, S02, S06, S14
 - **source_sections**: §§8.2,6.2
-- **next_proof**: Owner defines event labels, acceptable false/missed-trigger rates and validation scope/plan; validate exact unchanged component values on labelled retained point-in-time evidence.
-- **acceptance_basis**: SDD requirement; verification detail drafted for approval.
-- **acceptance_status**: DRAFT_VERIFICATION_DETAIL
+- **next_proof**: No additional ATT-03 current-build proof required under explicit owner scope. Future calibration is DEFERRED/UNPROVEN: validate unchanged values against labelled point-in-time evidence under an approved acceptance/confirmation plan before claiming validated Attention quality/profitability.
+- **acceptance_basis**: Original SDD condition retained; explicit owner current-build scope decision recorded in docs/tracker/evidence/att03-scope-decision-sol2/REPORT.md
+- **acceptance_status**: OWNER_SCOPED_CURRENT_BUILD_VERIFIED_CALIBRATION_DEFERRED_UNPROVEN
 - **priority**: NORMAL
-- **resolution_at_commit**:
+- **resolution_at_commit**: 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c
 - **work_authorized**: True
 - **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/att03-scope-decision-sol2/REPORT.md
+- **evidence_validity**: CLOSED for current architecture/offline investigation scope only. Calibration is UNPROVEN; preserved report findings remain valid. No economic-signal, runtime, profitability or trading-authority claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
-
 - **evidence_mapping**: docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+- **closure_scope**: ARCHITECTURE_OFFLINE_INVESTIGATION_ONLY
+- **owner_scope_decision_evidence**: docs/tracker/evidence/att03-scope-decision-sol2/decision.yaml
+- **proof_state**:
+
+```yaml
+current_build_phase:
+  scope: ARCHITECTURE_OFFLINE_INVESTIGATION_ONLY
+  status: PROVEN
+  classification: UNCALIBRATED_HEURISTIC
+  authority: INVESTIGATE_ONLY
+  evidence:
+  - docs/tracker/evidence/att03-warmup-sol2/REPORT.md
+  - docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+  implementation_commit: 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c
+  obligation: Explicit required/eligible history and valid acquisition; WARM_UP and
+    unavailable/None preserved; deterministic replay/ranking; no forced selection
+    or clock/date-only eligibility.
+future_calibration:
+  status: DEFERRED
+  proof_status: UNPROVEN
+  blocks_current_build: false
+  required_before: Any claim of validated Attention quality or profitability
+  mandatory: true
+  evidence: docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+  original_calibration_obligation: ranking uses approved calibrated components
+  required_evidence: Owner-approved event labels, false/missed-trigger acceptance
+    limits, component profile/universe and untouched confirmation plan; labelled retained
+    point-in-time data with acquisition/revision/membership ancestry.
+  owner_acceptance_is_calibration: false
+  heuristics_authorize_trade_size_exposure: false
+```
+
+- **calibration_status**: UNPROVEN
+- **investigation_classification**: UNCALIBRATED_HEURISTIC
+- **investigation_authority**: INVESTIGATE_ONLY
+- **blocks_current_build**: False
 
 ### ATT-04 — Hierarchical deterministic crypto admission before expensive discretionary processing; independent safety/exposure service.
 
@@ -7091,19 +7128,24 @@ current_release_deferral:
   activation_authorized: false
 current_build_selection:
   active_items: []
-  last_completed_item: RISK-01
+  last_completed_item: ATT-03
   excluded_blocker_items:
   - SEC-01
   - RUN-01
   - GOV-07
+  - MON-01
+  - MON-05
   current_blocked_items:
   - WORK-01
   - PERF-03
-  next_recommended_item: OWN-04
+  - OUT-03
+  - GUI-02
+  - OUT-01
+  - STR-02
+  - DEC-01
+  next_recommended_item: null
   eligible_items:
-  - OWN-04
   - DATA-08
-  - GUI-01
   - GUI-02
   - GUI-03
   - GUI-04
@@ -7112,17 +7154,29 @@ current_build_selection:
   - GUI-07
   - GUI-08
   - GUI-09
-  eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts;
-    SEC-01, RUN-01 and GOV-07 are excluded transitively from current build blockers.
-    Other dependencies and owner visual approvals apply.
+  eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and GOV-07
+    are excluded transitively from current build blockers. Other dependencies and owner visual approvals apply.
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: RISK-01 closed with retained offline entry-permission evidence.
-    OWN-04 remains the next GUI dependency recommendation only; no successor selected.
-    Existing CLOSED OBS-05 slot retained for reader compatibility.
-  last_terminal_item: RISK-01
-  last_terminal_result: CLOSED_ENGINEERING_ONLY
+  selection_reason: Explicit owner scope closes ATT-03 for current architecture/offline investigation-only use.
+    Calibration remains unproven and mandatory before validated quality/profitability claims; no successor selected.
+  last_terminal_item: ATT-03
+  last_terminal_result: CURRENT_BUILD_CLOSED_UNCALIBRATED_HEURISTIC_INVESTIGATE_ONLY
+  deferred_proof_obligations:
+    ATT-03:
+      status: DEFERRED
+      proof_status: UNPROVEN
+      blocks_current_build: false
+      required_before: Any claim of validated Attention quality or profitability
+      mandatory: true
+      evidence: docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+      original_calibration_obligation: ranking uses approved calibrated components
+      required_evidence: Owner-approved event labels, false/missed-trigger acceptance limits, component profile/universe
+        and untouched confirmation plan; labelled retained point-in-time data with acquisition/revision/membership
+        ancestry.
+      owner_acceptance_is_calibration: false
+      heuristics_authorize_trade_size_exposure: false
 ```
 
 ## OWN-02 architecture/offline closure (2026-10-06)
@@ -7140,3 +7194,83 @@ RISK-01 is the latest terminal item: CLOSED_ENGINEERING_ONLY ([retained evidence
 ### OWN-04 state evidence terminal
 
 Exact evidence: [state map](evidence/own04-state-sol/REPORT.md) and [terminal](evidence/own04-state-sol/closure.yaml). MON-01/MON-05, GUI/status rows and all deferred gates retain their conditions. No runtime/deployment/visual approval inferred.
+
+## ATT-03 owner current-build scope decision
+
+```yaml
+item: ATT-03
+decision_date: '2026-10-06'
+review_revision: eb9c8b6ba9c854c646f5ac535966b93b71deaeb0
+authority: Explicit current-session owner scope decision
+owner_decision: Current Attention thresholds/components are accepted for the current
+  architecture/offline build only as UNCALIBRATED_HEURISTIC / INVESTIGATE_ONLY. They
+  are NOT validated economic signals and must never authorize trade/size/exposure.
+  Do NOT change any thresholds, windows or weights. Calibration against labelled evidence
+  is mandatory before claiming validated Attention quality/profitability.
+status: CLOSED
+result: CURRENT_BUILD_CLOSED_UNCALIBRATED_HEURISTIC_INVESTIGATE_ONLY
+scope: ARCHITECTURE_OFFLINE_INVESTIGATION_ONLY
+evidence: docs/tracker/evidence/att03-scope-decision-sol2/REPORT.md
+original_closure_condition: Warm-up evidence states required history/availability
+  and becomes eligible only through valid acquisition; ranking uses approved calibrated
+  components.
+original_condition_text_preserved: true
+current_build_acceptance: Warm-up/null/availability and deterministic investigation
+  prioritization are proven. Owner accepts existing components as uncalibrated investigation
+  heuristics for this build; calibration clause remains a mandatory future proof obligation.
+proof_state:
+  current_build_phase:
+    scope: ARCHITECTURE_OFFLINE_INVESTIGATION_ONLY
+    status: PROVEN
+    classification: UNCALIBRATED_HEURISTIC
+    authority: INVESTIGATE_ONLY
+    evidence:
+    - docs/tracker/evidence/att03-warmup-sol2/REPORT.md
+    - docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+    implementation_commit: 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c
+    obligation: Explicit required/eligible history and valid acquisition; WARM_UP
+      and unavailable/None preserved; deterministic replay/ranking; no forced selection
+      or clock/date-only eligibility.
+  future_calibration:
+    status: DEFERRED
+    proof_status: UNPROVEN
+    blocks_current_build: false
+    required_before: Any claim of validated Attention quality or profitability
+    mandatory: true
+    evidence: docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+    original_calibration_obligation: ranking uses approved calibrated components
+    required_evidence: Owner-approved event labels, false/missed-trigger acceptance
+      limits, component profile/universe and untouched confirmation plan; labelled
+      retained point-in-time data with acquisition/revision/membership ancestry.
+    owner_acceptance_is_calibration: false
+    heuristics_authorize_trade_size_exposure: false
+dependencies:
+  ATT-01: CLOSED
+  DATA-04: CLOSED
+permitted_use:
+- Investigation prioritization only
+forbidden_authority:
+- trade
+- size
+- exposure
+calibrated_operational_values: []
+thresholds_windows_weights_changed: false
+runtime_execution_authorized: false
+provider_enablement_authorized: false
+trading_activation_authorized: false
+successor_selected: false
+downstream_impact:
+  direct_consumer: ATT-04
+  direct_consumer_status: CLOSED
+  att03_current_build_dependency_satisfied: true
+  newly_unblocked_items: []
+  ATT-02: Unchanged EVIDENCE_TO_MAP; DATA-07 remains unresolved; no ATT-03 dependency.
+  research: RES-01 already dependency-eligible via ATT-01; calibration decision is
+    not research/referee admission.
+  strategy: STR-01 still needs RES-08/QNT-08 mapping; STR-02 remains BLOCKED.
+  decision: DEC-01 remains BLOCKED by STR-01/STR-02 and analyst Context proof; no
+    Attention economic authority granted.
+historical_records: att03_warmup_terminal and att03_calibration_terminal are immutable
+  prior checkpoints, superseded only for current-build scope by this owner decision.
+  Their calibration findings remain true.
+```

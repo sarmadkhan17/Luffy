@@ -1,0 +1,31 @@
+{
+  "result": "PASS",
+  "review_revision": "eb9c8b6ba9c854c646f5ac535966b93b71deaeb0",
+  "checks": {
+    "same_ids_row_count": true,
+    "only_att03_row_changed": true,
+    "all_original_closing_conditions_preserved": true,
+    "all_dependency_edges_preserved": true,
+    "gate_memberships_and_conditions_preserved": true,
+    "four_way_owner_decision_parity": true,
+    "four_way_selection_parity": true,
+    "terminal_package_parity": true,
+    "scoped_closed_not_calibrated": true,
+    "calibration_mandatory_deferred_unproven": true,
+    "no_trade_size_exposure_authority": true,
+    "no_successor_or_activation_selected": true,
+    "current_build_blocker_removed": true,
+    "historical_terminals_preserved": true,
+    "other_top_level_control_sections_preserved": true,
+    "counts_exact": true,
+    "bundle_hashes_exact": true,
+    "original_calibration_artifacts_preserved": true,
+    "attention_source_config_values_unchanged": true,
+    "all_prior_warmup_evidence_preserved": true,
+    "tracker_available_closed_terminal": true,
+    "downstream_impact_no_false_unblocks": true,
+    "markdown_owner_record_parity": true
+  },
+  "checks_passed": 23,
+  "production_tests": "Retained 68 preservation and 11 evidence checks reused; no production change, runtime or provider calls."
+}

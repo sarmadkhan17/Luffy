@@ -43,20 +43,24 @@ completed_pre_stage8_audit:
 
 work_package:
   id: ATT-03
-  status: BLOCKED
-  result: BLOCKED_UNSUPPORTED_CALIBRATION_VALUES
+  status: CLOSED
+  result: CURRENT_BUILD_CLOSED_UNCALIBRATED_HEURISTIC_INVESTIGATE_ONLY
   mode: ENGINEERING_ONLY
-  scope: RETAINED_AND_SYNTHETIC_OFFLINE_CALIBRATION_REVIEW
-  objective: Evaluate exact existing Attention values on retained/offline evidence without changing weights, thresholds
-    or warm-up semantics.
+  scope: ARCHITECTURE_OFFLINE_INVESTIGATION_ONLY
+  objective: Record owner acceptance of unchanged uncalibrated investigation heuristics for the current build; retain
+    mandatory unproven calibration obligation outside the current critical path.
   implementation_commit: 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c
   evidence:
   - docs/tracker/evidence/att03-warmup-sol2/REPORT.md
   - docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+  - docs/tracker/evidence/att03-scope-decision-sol2/REPORT.md
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
   successor_selected: false
+  calibration_status: UNPROVEN
+  investigation_classification: UNCALIBRATED_HEURISTIC
+  investigation_authority: INVESTIGATE_ONLY
 
 obs05_first_boot_correction:
   id: OBS-05
@@ -551,7 +555,7 @@ current_release_deferral:
 
 current_build_selection:
   active_items: []
-  last_completed_item: ACC-03
+  last_completed_item: ATT-03
   excluded_blocker_items:
   - SEC-01
   - RUN-01
@@ -566,7 +570,6 @@ current_build_selection:
   - OUT-01
   - STR-02
   - DEC-01
-  - ATT-03
   next_recommended_item: null
   eligible_items:
   - DATA-08
@@ -583,11 +586,24 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: 'ATT-03 fixed-value review remains BLOCKED: independent labels and approved calibration acceptance
-    limits/plan absent. Mathematical conditional support recorded; no values, dependencies or successor selection
-    changed.'
+  selection_reason: Explicit owner scope closes ATT-03 for current architecture/offline investigation-only use.
+    Calibration remains unproven and mandatory before validated quality/profitability claims; no successor selected.
   last_terminal_item: ATT-03
-  last_terminal_result: BLOCKED_UNSUPPORTED_CALIBRATION_VALUES
+  last_terminal_result: CURRENT_BUILD_CLOSED_UNCALIBRATED_HEURISTIC_INVESTIGATE_ONLY
+  deferred_proof_obligations:
+    ATT-03:
+      status: DEFERRED
+      proof_status: UNPROVEN
+      blocks_current_build: false
+      required_before: Any claim of validated Attention quality or profitability
+      mandatory: true
+      evidence: docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+      original_calibration_obligation: ranking uses approved calibrated components
+      required_evidence: Owner-approved event labels, false/missed-trigger acceptance limits, component profile/universe
+        and untouched confirmation plan; labelled retained point-in-time data with acquisition/revision/membership
+        ancestry.
+      owner_acceptance_is_calibration: false
+      heuristics_authorize_trade_size_exposure: false
 
 data01_canonical_identity:
   id: DATA-01
@@ -1441,3 +1457,75 @@ att03_calibration_terminal:
   successor_selected: false
   runtime_execution_authorized: false
   trading_activation_authorized: false
+
+att03_owner_scope_decision:
+  item: ATT-03
+  decision_date: '2026-10-06'
+  review_revision: eb9c8b6ba9c854c646f5ac535966b93b71deaeb0
+  authority: Explicit current-session owner scope decision
+  owner_decision: Current Attention thresholds/components are accepted for the current architecture/offline build
+    only as UNCALIBRATED_HEURISTIC / INVESTIGATE_ONLY. They are NOT validated economic signals and must never authorize
+    trade/size/exposure. Do NOT change any thresholds, windows or weights. Calibration against labelled evidence
+    is mandatory before claiming validated Attention quality/profitability.
+  status: CLOSED
+  result: CURRENT_BUILD_CLOSED_UNCALIBRATED_HEURISTIC_INVESTIGATE_ONLY
+  scope: ARCHITECTURE_OFFLINE_INVESTIGATION_ONLY
+  evidence: docs/tracker/evidence/att03-scope-decision-sol2/REPORT.md
+  original_closure_condition: Warm-up evidence states required history/availability and becomes eligible only through
+    valid acquisition; ranking uses approved calibrated components.
+  original_condition_text_preserved: true
+  current_build_acceptance: Warm-up/null/availability and deterministic investigation prioritization are proven.
+    Owner accepts existing components as uncalibrated investigation heuristics for this build; calibration clause
+    remains a mandatory future proof obligation.
+  proof_state:
+    current_build_phase:
+      scope: ARCHITECTURE_OFFLINE_INVESTIGATION_ONLY
+      status: PROVEN
+      classification: UNCALIBRATED_HEURISTIC
+      authority: INVESTIGATE_ONLY
+      evidence:
+      - docs/tracker/evidence/att03-warmup-sol2/REPORT.md
+      - docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+      implementation_commit: 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c
+      obligation: Explicit required/eligible history and valid acquisition; WARM_UP and unavailable/None preserved;
+        deterministic replay/ranking; no forced selection or clock/date-only eligibility.
+    future_calibration:
+      status: DEFERRED
+      proof_status: UNPROVEN
+      blocks_current_build: false
+      required_before: Any claim of validated Attention quality or profitability
+      mandatory: true
+      evidence: docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+      original_calibration_obligation: ranking uses approved calibrated components
+      required_evidence: Owner-approved event labels, false/missed-trigger acceptance limits, component profile/universe
+        and untouched confirmation plan; labelled retained point-in-time data with acquisition/revision/membership
+        ancestry.
+      owner_acceptance_is_calibration: false
+      heuristics_authorize_trade_size_exposure: false
+  dependencies:
+    ATT-01: CLOSED
+    DATA-04: CLOSED
+  permitted_use:
+  - Investigation prioritization only
+  forbidden_authority:
+  - trade
+  - size
+  - exposure
+  calibrated_operational_values: []
+  thresholds_windows_weights_changed: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  successor_selected: false
+  downstream_impact:
+    direct_consumer: ATT-04
+    direct_consumer_status: CLOSED
+    att03_current_build_dependency_satisfied: true
+    newly_unblocked_items: []
+    ATT-02: Unchanged EVIDENCE_TO_MAP; DATA-07 remains unresolved; no ATT-03 dependency.
+    research: RES-01 already dependency-eligible via ATT-01; calibration decision is not research/referee admission.
+    strategy: STR-01 still needs RES-08/QNT-08 mapping; STR-02 remains BLOCKED.
+    decision: DEC-01 remains BLOCKED by STR-01/STR-02 and analyst Context proof; no Attention economic authority
+      granted.
+  historical_records: att03_warmup_terminal and att03_calibration_terminal are immutable prior checkpoints, superseded
+    only for current-build scope by this owner decision. Their calibration findings remain true.

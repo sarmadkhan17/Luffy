@@ -1,3 +1,5 @@
+> Current ATT-03 owner scope decision: **CLOSED for architecture/offline investigation only**. Existing values are **UNCALIBRATED_HEURISTIC / INVESTIGATE_ONLY**; calibration remains **DEFERRED / UNPROVEN**, mandatory before validated Attention quality/profitability claims. Heuristics never authorize trade, size or exposure. No thresholds/windows/weights changed; earlier calibration report preserved. [Scope decision](evidence/att03-scope-decision-sol2/REPORT.md). Earlier work/status summaries below are historical.
+
 > Current SOL-1 checkpoint: DEC-01, OUT-01 and OUT-03 BLOCKED. Compiler correction f55ec97 and later committed WRLD-01/WRLD-03/WRLD-05/DATA-05 closures retained. STR-01/STR-02 and DEC-01 analyst Context proof remain; OUT-01 also needs DEC-04 and full normal execution proof. No successor selected. Earlier intake findings are historical. [Evidence](evidence/dec01-chain-sol1/REPORT.md).
 
 > Current GUI-02 dependency intake: BLOCKED. ACC-02 CLOSED offline; OUT-03 replay evidence mapped but blocked by OUT-01/DATA-03/WRLD-06; OWN-01 remains unmapped. [Evidence](evidence/out03-replay-map-sol/REPORT.md). No dependency bypass or GUI closure.
