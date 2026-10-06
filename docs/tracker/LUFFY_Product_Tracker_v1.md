@@ -1,10 +1,10 @@
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.13-obs05-first-boot-diagnostics
+Version: 1.14-owner-current-release-deferral
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
-Terminal NEXT: **OBS-05 — CLOSED_ENGINEERING_ONLY_DIAGNOSTICS**. Bounded refusal reasons are offline-proven; RUN-01 remains BLOCKED / LIVE_PROOF_PENDING. No runtime/trading authority granted.
+Terminal NEXT: **OBS-05 — CLOSED_ENGINEERING_ONLY_DIAGNOSTICS**. Bounded refusal reasons are offline-proven. SEC-01 and RUN-01 are DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE; their evidence and closing conditions are preserved. No runtime/trading authority granted.
 
 ## Status definitions
 
@@ -30,7 +30,7 @@ Terminal NEXT: **OBS-05 — CLOSED_ENGINEERING_ONLY_DIAGNOSTICS**. Bounded refus
 
 **One data set**: Maintain this YAML as canonical detailed data. Dashboard Tracker reads validated YAML and NEXT. Markdown is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization and adoption checks.
 
-**Current work**: OBS-03 is terminal CLOSED with exact first-cycle monotonic boundary and complete shutdown measurement fixtures. No successor is selected; PERF-01 is recommended only for its remaining attribution/proof work. PERF-01 and PERF-03 rows remain unchanged. No runtime, provider or trading activation is authorized.
+**Current work**: OBS-05 is terminal CLOSED at offline diagnostic scope. No successor is selected. DATA-08 evidence mapping is recommended; GUI completion and offline work are eligible under their existing contracts. SEC-01 and RUN-01 are deferred and excluded from current critical-path blockers. PERF-01 and PERF-03 retain unresolved evidence gaps. WORK-01 and PERF-03 are the remaining BLOCKED rows. No runtime, provider or trading activation is authorized.
 
 **Activation**: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers, a restart or a scope expansion.
 
@@ -471,8 +471,8 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **area**: Runtime & safety
 - **stage**: 1
 - **item_type**: REQUIREMENT
-- **release_scope**: BASELINE
-- **status**: BLOCKED
+- **release_scope**: NOT_REQUIRED_FOR_CURRENT_RELEASE
+- **status**: DEFERRED
 - **why_needed**: Prevents duplicate processes and startup on the wrong code.
 - **closure_condition**: Fresh identity/preflight checks, ordered boot, truthful new-instance heartbeat and graceful shutdown are demonstrated on the intended revision.
 - **failure_regression_proof**: Boot failure or shutdown timeout cannot create a second Kernel or remove needed observation.
@@ -490,7 +490,7 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
 - **resolution_at_commit**:
-- **work_authorized**: False
+- **work_authorized**: false
 - **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
@@ -498,6 +498,11 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **evidence_validity**: Integrated implementation and offline proof only; no controlled live proof on intended revision.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: Explicitly authorize one controlled Kernel launch and SIGTERM graceful stop on a named full intended revision, with revision binding required and retained proof of every listed check; Dashboard launch, provider calls and trading activation require separate explicit scope and are not authorized by this reconciliation.
+- **previous_status**: BLOCKED
+- **blocks_current_release**: false
+- **critical_path_eligible**: false
+- **owner_decision**: DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE by explicit owner decision on 2026-10-06.
+- **revisit_before**: Any future production/live activation requiring their guarantees; revisit unresolved findings and satisfy the existing closing conditions before that activation.
 
 ### RUN-02 — Preserve ACTIVE/FROZEN/HALTED/RECOVERY semantics and newer owner intent.
 
@@ -3869,8 +3874,8 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **area**: Provider & access
 - **stage**: 3
 - **item_type**: REQUIREMENT
-- **release_scope**: BASELINE
-- **status**: BLOCKED
+- **release_scope**: NOT_REQUIRED_FOR_CURRENT_RELEASE
+- **status**: DEFERRED
 - **why_needed**: A UI/research compromise must not expose venue capability.
 - **closure_condition**: Verified credential locations/scopes, account mode and privileged boundaries match the accepted deployment scope; migration gaps are explicit.
 - **failure_regression_proof**: No secrets in Git, logs, backups, browser/remote gateway or unrestricted LLM tool.
@@ -3888,7 +3893,7 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
 - **resolution_at_commit**:
-- **work_authorized**: True
+- **work_authorized**: false
 - **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: RUN-01, OBS-05, EXE-02, EXE-05, EXE-06, LLM-01, LLM-02, REL-01
@@ -3896,6 +3901,11 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **evidence_validity**: Local offline checks at b353237 plus owner-reported venue failure; external key/IP/account permission subcause UNKNOWN. BLOCKED, not closure or runtime readiness.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: Owner-side Binance demo key/account/IP verification and private read-pair installation required; no permission to substitute trading key, widen key authority, launch services or mutate trading/control state.
+- **previous_status**: BLOCKED
+- **blocks_current_release**: false
+- **critical_path_eligible**: false
+- **owner_decision**: DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE by explicit owner decision on 2026-10-06.
+- **revisit_before**: Any future production/live activation requiring their guarantees; revisit unresolved findings and satisfy the existing closing conditions before that activation.
 
 ### SEC-02 — Authenticate owner commands and separate browser/gateway from trading truth.
 
@@ -7007,3 +7017,59 @@ external_artifacts_not_inspected:
 ```
 
 OBS-01 CLOSED: repository preflight gates all restart stop/start effects; 247 isolated tests pass. No successor selected. [Closure evidence](evidence/obs01-launch-preflight-sol/closure.json).
+
+## Current owner release decision (2026-10-06)
+
+The following supersedes historical blocker/recommendation statements above.
+
+```yaml
+current_release_deferral:
+  decision_date: '2026-10-06'
+  authority: 'Explicit owner decision: SEC-01 and RUN-01 are not required for the current LUFFY build phase.'
+  status: DEFERRED
+  release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+  items:
+  - SEC-01
+  - RUN-01
+  blocks_current_release: false
+  non_blocking_for:
+  - architecture work
+  - GUI completion
+  - offline testing
+  - other tracker items
+  critical_path_excluded_items:
+  - SEC-01
+  - RUN-01
+  dependency_policy: Preserve recorded dependency and readiness-gate membership as future requirements. SEC-01
+    and RUN-01 must be excluded when evaluating current build-phase blockers or selecting current critical-path
+    work; this exception applies transitively to dependent tracker work.
+  revisit_before: Any future production/live activation requiring their guarantees; revisit unresolved findings
+    and satisfy the existing closing conditions before that activation.
+  preservation: Existing evidence, unresolved findings, closing conditions and completed implementation are
+    retained. Neither item is CLOSED.
+  activation_authorized: false
+current_build_selection:
+  active_items: []
+  last_completed_item: OBS-05
+  excluded_blocker_items: *id001
+  current_blocked_items:
+  - WORK-01
+  - PERF-03
+  next_recommended_item: DATA-08
+  eligible_items:
+  - DATA-08
+  - GUI-01
+  - GUI-02
+  - GUI-03
+  - GUI-04
+  - GUI-05
+  - GUI-06
+  - GUI-07
+  - GUI-08
+  - GUI-09
+  eligibility_scope: Evidence mapping, GUI completion/approval preparation and offline verification under existing
+    item contracts; other dependencies and owner visual approvals remain applicable. Architecture work and
+    other tracker items are not gated by SEC-01 or RUN-01.
+  next_item_selected: false
+  runtime_execution_authorized: false
+```

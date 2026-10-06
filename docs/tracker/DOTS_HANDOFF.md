@@ -1,3 +1,5 @@
+> Current owner decision (2026-10-06): SEC-01 and RUN-01 are DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE, excluded from current critical-path blockers. Evidence, unresolved findings, completed implementation and closing conditions are preserved. Revisit before future production/live activation requiring their guarantees. OBS-05 remains terminal CLOSED; no successor is selected. DATA-08 evidence mapping is recommended; GUI completion and offline testing are eligible under existing contracts. Earlier selection/blocker statements below are historical. See canonical YAML, STATE and NEXT.
+
 > Current terminal update (2026-10-06): PERF-03 is BLOCKED at its unchanged capture-evidence gate; narrow offline correction committed at a799e6c365074cab5597a80261bbdb9c3dda3b12. Exact result: [terminal.yaml](evidence/perf03-capture-r1/terminal.yaml). OBS-01 is the single selected diagnosis-only successor by safe-runtime critical path; not started. PERF-01 remains BLOCKED/UNKNOWN. Earlier selection statements below are historical; no runtime/provider/trading activation is authorized.
 
 # Dots handoff — LUFFY tracker-based work

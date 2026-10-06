@@ -1,7 +1,7 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.13-obs05-first-boot-diagnostics",
-  "control_baseline_revision": "4d5f21b7371201780248bfa374bc1d7e4fecfb97",
+  "snapshot_version": "1.14-owner-current-release-deferral",
+  "control_baseline_revision": "afc44618ad7b65513990dfd2ace4957815c48da3",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
   "gui_rows": 29,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 363906,
-      "sha256": "9c01ad3efda7b3ad54c8a4edb2a30098b85296fc0ced81aa4d50562137dce724",
+      "bytes": 367292,
+      "sha256": "c81da17ff990c875e1db2c80f8046007d1f427b5428112d4b718fd1c5f0e55d0",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 370514,
-      "sha256": "71f759bf2b29538299dfd779fcc789886658fc2dae3c40d787af7dff5c2f0895",
+      "bytes": 373484,
+      "sha256": "14ec502c1138d76f157230af305c7b41a027283b5e64e497f30630a1a16a9830",
       "synchronization_required": false
     },
     {
@@ -30,5 +30,58 @@
       "sha256": "0a0d0cadfe730e8fff6e92b3b9181d250780b37bdde4e14c508ec7201b4b5284",
       "synchronization_required": false
     }
-  ]
+  ],
+  "current_release_deferral": {
+    "decision_date": "2026-10-06",
+    "authority": "Explicit owner decision: SEC-01 and RUN-01 are not required for the current LUFFY build phase.",
+    "status": "DEFERRED",
+    "release_scope": "NOT_REQUIRED_FOR_CURRENT_RELEASE",
+    "items": [
+      "SEC-01",
+      "RUN-01"
+    ],
+    "blocks_current_release": false,
+    "non_blocking_for": [
+      "architecture work",
+      "GUI completion",
+      "offline testing",
+      "other tracker items"
+    ],
+    "critical_path_excluded_items": [
+      "SEC-01",
+      "RUN-01"
+    ],
+    "dependency_policy": "Preserve recorded dependency and readiness-gate membership as future requirements. SEC-01 and RUN-01 must be excluded when evaluating current build-phase blockers or selecting current critical-path work; this exception applies transitively to dependent tracker work.",
+    "revisit_before": "Any future production/live activation requiring their guarantees; revisit unresolved findings and satisfy the existing closing conditions before that activation.",
+    "preservation": "Existing evidence, unresolved findings, closing conditions and completed implementation are retained. Neither item is CLOSED.",
+    "activation_authorized": false
+  },
+  "current_build_selection": {
+    "active_items": [],
+    "last_completed_item": "OBS-05",
+    "excluded_blocker_items": [
+      "SEC-01",
+      "RUN-01"
+    ],
+    "current_blocked_items": [
+      "WORK-01",
+      "PERF-03"
+    ],
+    "next_recommended_item": "DATA-08",
+    "eligible_items": [
+      "DATA-08",
+      "GUI-01",
+      "GUI-02",
+      "GUI-03",
+      "GUI-04",
+      "GUI-05",
+      "GUI-06",
+      "GUI-07",
+      "GUI-08",
+      "GUI-09"
+    ],
+    "eligibility_scope": "Evidence mapping, GUI completion/approval preparation and offline verification under existing item contracts; other dependencies and owner visual approvals remain applicable. Architecture work and other tracker items are not gated by SEC-01 or RUN-01.",
+    "next_item_selected": false,
+    "runtime_execution_authorized": false
+  }
 }

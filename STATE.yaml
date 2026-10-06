@@ -1380,17 +1380,19 @@ current_active_work:
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
-  run01_status: "BLOCKED \u2014 IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING"
+  run01_status: DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE
+  run01_evidence_status: IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING
   run01_live_proof_contract_possible: true
   run01_live_proof_performed: false
   run01_live_proof_authorization: Separate owner authorization naming the full intended final revision
     and one controlled Kernel launch/SIGTERM graceful stop with retained Phase A/Phase B and unchanged
     RUN-01 proof.
-  next_recommended_item: RUN-01
+  historical_next_recommended_item: RUN-01
+  next_recommended_item: DATA-08
   another_run01_fix_selected: false
   next_item_selected: false
   next_item_started: false
-  related_tracker_item: SEC-01 (EVIDENCE_TO_MAP; actual read-permission readiness unverified)
+  related_tracker_item: SEC-01 (DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE; actual read-permission readiness unverified)
   run01_retry_now_diagnosable: true
   actual_previous_refusal_cause: UNKNOWN; no live venue calls authorized
 
@@ -1417,13 +1419,15 @@ obs05_first_boot_correction:
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
-  run01_status: "BLOCKED \u2014 IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING"
+  run01_status: DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE
+  run01_evidence_status: IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING
   run01_live_proof_contract_possible: true
   run01_live_proof_performed: false
   run01_live_proof_authorization: Separate owner authorization naming the full intended final revision
     and one controlled Kernel launch/SIGTERM graceful stop with retained Phase A/Phase B and unchanged
     RUN-01 proof.
-  next_recommended_item: RUN-01
+  historical_next_recommended_item: RUN-01
+  next_recommended_item: DATA-08
   another_run01_fix_selected: false
   next_item_selected: false
   next_item_started: false
@@ -1450,20 +1454,22 @@ obs05_initial_contained_bootstrap:
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
-  run01_status: "BLOCKED \u2014 IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING"
+  run01_status: DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE
+  run01_evidence_status: IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING
   run01_live_proof_contract_possible: true
   run01_live_proof_performed: false
   run01_live_proof_authorization: Explicit owner authorization naming the full intended final revision and
     one controlled Kernel launch/SIGTERM graceful stop; require every unchanged RUN-01 proof and retained
     Phase A/Phase B artifacts.
-  next_recommended_item: RUN-01
+  historical_next_recommended_item: RUN-01
+  next_recommended_item: DATA-08
   another_run01_fix_selected: false
   next_item_selected: false
   next_item_started: false
 
 run01_control_plane:
   id: RUN-01
-  status: BLOCKED
+  status: DEFERRED
   result: IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING
   mode: ENGINEERING_ONLY
   objective: Reconcile integrated RUN-01 implementation and retain the exact controlled live-proof closing
@@ -1507,6 +1513,11 @@ run01_control_plane:
   another_run01_fix_selected: false
   next_item_selected: false
   next_item_started: false
+  release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+  previous_status: BLOCKED
+  blocks_current_release: false
+  critical_path_eligible: false
+  revisit_before: Any future production/live activation requiring their guarantees; revisit unresolved findings and satisfy the existing closing conditions before that activation.
 
 completed_obs03_engineering:
   id: OBS-03
@@ -1538,4 +1549,57 @@ open04_journal_retry:
   dashboard_launched: false
   provider_calls: 0
   sec01_run01_unchanged: true
-  next_recommended_item: DATA-08 mapping (vote/outcome retry paths); SEC-01/RUN-01 remain externally blocked
+  next_recommended_item: DATA-08 mapping (vote/outcome retry paths); SEC-01/RUN-01 deferred for current release
+
+current_release_deferral:
+  decision_date: '2026-10-06'
+  authority: 'Explicit owner decision: SEC-01 and RUN-01 are not required for the current LUFFY build phase.'
+  status: DEFERRED
+  release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+  items:
+  - SEC-01
+  - RUN-01
+  blocks_current_release: false
+  non_blocking_for:
+  - architecture work
+  - GUI completion
+  - offline testing
+  - other tracker items
+  critical_path_excluded_items:
+  - SEC-01
+  - RUN-01
+  dependency_policy: Preserve recorded dependency and readiness-gate membership as future requirements. SEC-01
+    and RUN-01 must be excluded when evaluating current build-phase blockers or selecting current critical-path
+    work; this exception applies transitively to dependent tracker work.
+  revisit_before: Any future production/live activation requiring their guarantees; revisit unresolved findings
+    and satisfy the existing closing conditions before that activation.
+  preservation: Existing evidence, unresolved findings, closing conditions and completed implementation are retained.
+    Neither item is CLOSED.
+  activation_authorized: false
+
+current_build_selection:
+  active_items: []
+  last_completed_item: OBS-05
+  excluded_blocker_items:
+  - SEC-01
+  - RUN-01
+  current_blocked_items:
+  - WORK-01
+  - PERF-03
+  next_recommended_item: DATA-08
+  eligible_items:
+  - DATA-08
+  - GUI-01
+  - GUI-02
+  - GUI-03
+  - GUI-04
+  - GUI-05
+  - GUI-06
+  - GUI-07
+  - GUI-08
+  - GUI-09
+  eligibility_scope: Evidence mapping, GUI completion/approval preparation and offline verification under existing
+    item contracts; other dependencies and owner visual approvals remain applicable. Architecture work and other
+    tracker items are not gated by SEC-01 or RUN-01.
+  next_item_selected: false
+  runtime_execution_authorized: false

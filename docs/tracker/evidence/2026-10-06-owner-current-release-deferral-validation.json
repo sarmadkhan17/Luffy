@@ -1,0 +1,56 @@
+{
+  "result": "PASS",
+  "canonical_rows": 178,
+  "dashboard_view": "AVAILABLE / READ_ONLY",
+  "status_counts": {
+    "EVIDENCE_TO_MAP": 128,
+    "OPEN": 4,
+    "IN_PROGRESS": 0,
+    "AWAITING_EVIDENCE": 11,
+    "AWAITING_OWNER": 14,
+    "CLOSED": 15,
+    "DEFERRED": 4,
+    "BLOCKED": 2
+  },
+  "preserved": "All original SEC-01/RUN-01 evidence, findings, closing conditions and implementation; all other tracker rows and historical sections unchanged.",
+  "state_next_policy_parity": "PASS",
+  "manifest_hashes_and_version": "PASS",
+  "optional_reference_affected_row_parity": "PASS",
+  "critical_path_excluded_items": [
+    "SEC-01",
+    "RUN-01"
+  ],
+  "current_blocked_items": [
+    "WORK-01",
+    "PERF-03"
+  ],
+  "selection": {
+    "active_items": [],
+    "last_completed_item": "OBS-05",
+    "excluded_blocker_items": [
+      "SEC-01",
+      "RUN-01"
+    ],
+    "current_blocked_items": [
+      "WORK-01",
+      "PERF-03"
+    ],
+    "next_recommended_item": "DATA-08",
+    "eligible_items": [
+      "DATA-08",
+      "GUI-01",
+      "GUI-02",
+      "GUI-03",
+      "GUI-04",
+      "GUI-05",
+      "GUI-06",
+      "GUI-07",
+      "GUI-08",
+      "GUI-09"
+    ],
+    "eligibility_scope": "Evidence mapping, GUI completion/approval preparation and offline verification under existing item contracts; other dependencies and owner visual approvals remain applicable. Architecture work and other tracker items are not gated by SEC-01 or RUN-01.",
+    "next_item_selected": false,
+    "runtime_execution_authorized": false
+  },
+  "runtime_execution": false
+}
