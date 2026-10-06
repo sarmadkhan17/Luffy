@@ -1,0 +1,17 @@
+{
+  "result": "PASS",
+  "synthetic_only": true,
+  "checks": [
+    "all_four_hierarchy_levels_and_parent_chain",
+    "exact_scope_dimension_and_disagreeing_horizons_without_fallback",
+    "same_coordinate_conflict_retained_and_singleton_query_refused",
+    "contradiction_references_preserved",
+    "relationship_endpoints_kind_and_horizons_query_exactly",
+    "no_fabricated_aggregate_observations",
+    "retained_record_reconstructs_all_scopes_horizons_conflicts_and_relationships",
+    "canonical_identity_independent_of_insertion_order",
+    "mismatched_cut_and_undeclared_horizon_refused"
+  ],
+  "check_count": 9,
+  "model_id": "world.model.v1:e5b7eae8603b563d379e07d79e243bb0bb4402e2d922a1746075b5abdd3f66ea"
+}

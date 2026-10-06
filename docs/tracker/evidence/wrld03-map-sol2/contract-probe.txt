@@ -1,0 +1,86 @@
+"""Synthetic WRLD-03 verification; run with ./venv/bin/python < this file."""
+import json
+from dataclasses import replace
+from trader.world import (
+    Observation, Quality, WorldState, Scope, ScopeLevel, HierarchyNode,
+    Horizon, WorldModel, WorldModelRecord, ClaimCoordinate, ClaimEvidenceRef,
+    WorldClaim, ClaimCollection, RelationshipCoordinate, RelationshipState,
+    RelationshipCollection,
+)
+
+cut = 1000
+root = Scope(ScopeLevel.GLOBAL, "world")
+asset = Scope(ScopeLevel.ASSET_CLASS, "crypto")
+group = Scope(ScopeLevel.GROUP, "majors")
+instrument = Scope(ScopeLevel.INSTRUMENT, "BTC/USDT")
+peer = Scope(ScopeLevel.INSTRUMENT, "ETH/USDT")
+nodes = (HierarchyNode(root), HierarchyNode(asset, root),
+         HierarchyNode(group, asset), HierarchyNode(instrument, group),
+         HierarchyNode(peer, group))
+
+def observation(horizon, value, source):
+    return Observation(instrument=instrument.identifier, timestamp_ms=900,
+        observed_at_ms=cut, available_at_ms=950, timeframe="1h",
+        horizon=horizon.value, kind="trend", value=value, source=source,
+        source_ref="synthetic:" + source, quality=Quality.VALID)
+
+short = observation(Horizon.SHORT_TERM, 1, "short")
+opposing = observation(Horizon.SHORT_TERM, -1, "opposing")
+long = observation(Horizon.STRUCTURAL, -1, "long")
+state = WorldState(instrument.identifier, cut, (short, opposing, long))
+ref = ClaimEvidenceRef.from_observation(short)
+opp_ref = ClaimEvidenceRef.from_observation(opposing)
+claims = tuple(WorldClaim(ClaimCoordinate(scope, horizon, "trend"), cut,
+    value, Quality.VALID, .6, {"limitation": "synthetic"}, (ref,), (opp_ref,),
+    "synthetic", "synthetic:claim")
+    for scope in (root, asset, group, instrument)
+    for horizon, value in ((Horizon.SHORT_TERM, 1), (Horizon.STRUCTURAL, -1)))
+relationships = tuple(RelationshipState(
+    RelationshipCoordinate(instrument, peer, "correlation", horizon), cut,
+    value, Quality.VALID, "synthetic", "synthetic:relationship", (short, long))
+    for horizon, value in ((Horizon.SHORT_TERM, .8), (Horizon.STRUCTURAL, -.4)))
+model = WorldModel(cut, nodes, (state,), relationships=RelationshipCollection(cut, relationships),
+    claims=ClaimCollection(cut, claims))
+checks = []
+
+assert model.ancestors(instrument) == (group, asset, root)
+checks.append("all_four_hierarchy_levels_and_parent_chain")
+for scope in (root, asset, group, instrument):
+    assert model.get_one_claim(scope, Horizon.SHORT_TERM, dimension="trend").value == 1
+    assert model.get_one_claim(scope, Horizon.STRUCTURAL, dimension="trend").value == -1
+    assert model.get_claims(scope, Horizon.INTRADAY, dimension="trend") == ()
+checks.append("exact_scope_dimension_and_disagreeing_horizons_without_fallback")
+assert len(model.get_observations(instrument, Horizon.SHORT_TERM, kind="trend")) == 2
+try:
+    model.get_one(instrument, Horizon.SHORT_TERM, kind="trend")
+except LookupError:
+    checks.append("same_coordinate_conflict_retained_and_singleton_query_refused")
+else:
+    raise AssertionError("conflict collapsed")
+assert all(c.contradicting_evidence == (opp_ref,) for c in model.claims.claims)
+checks.append("contradiction_references_preserved")
+for horizon, value in ((Horizon.SHORT_TERM, .8), (Horizon.STRUCTURAL, -.4)):
+    assert model.relationships.get_one(source=instrument, target=peer,
+        kind="correlation", horizon=horizon).value == value
+assert model.relationships.query(source=peer, target=instrument) == ()
+checks.append("relationship_endpoints_kind_and_horizons_query_exactly")
+assert model.get_state(root) is None
+assert model.get_observations(group, Horizon.SHORT_TERM, kind="trend") == ()
+checks.append("no_fabricated_aggregate_observations")
+record = WorldModelRecord.from_model(model)
+restored = WorldModelRecord.from_json(record.to_json()).reconstruct()
+assert restored.to_json() == model.to_json()
+assert restored.model_id == model.model_id
+checks.append("retained_record_reconstructs_all_scopes_horizons_conflicts_and_relationships")
+assert replace(model, nodes=tuple(reversed(nodes))).model_id == model.model_id
+checks.append("canonical_identity_independent_of_insertion_order")
+for mutation in (dict(as_of_ms=cut + 1), dict(horizons=(Horizon.INTRADAY,))):
+    try:
+        replace(model, **mutation)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("invalid cut/horizon accepted")
+checks.append("mismatched_cut_and_undeclared_horizon_refused")
+print(json.dumps({"result": "PASS", "synthetic_only": True, "checks": checks,
+    "check_count": len(checks), "model_id": model.model_id}, indent=2))

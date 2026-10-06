@@ -1,0 +1,18 @@
+{
+  "item": "WRLD-01",
+  "classification": "ACTUAL_GAP",
+  "synthetic_only": true,
+  "production_code_changed": false,
+  "enabled_path": "trader/kernel.py:124-126 includes StructureAnalyst; engine/orchestrator.py:365 calls analyst.evaluate(snap)",
+  "reproducer": "StructureAnalyst().evaluate(Snapshot(symbol='BTC/USDT', ts='2026-10-06T00:00:00+00:00', price=1, dfs={}))",
+  "observed": {
+    "type": "Vote",
+    "side": "flat",
+    "confidence": 0.2,
+    "rationale": "no data",
+    "meta": {}
+  },
+  "missing_mandatory_packet_fields": ["input references", "explicit data quality", "uncertainty", "limitations"],
+  "limit": "This reproduces the prerequisite's missing-data contract failure. It does not establish that an analyst can place orders, size positions or activate strategies.",
+  "repair_in_this_package": "NONE: work only on WRLD-03"
+}
