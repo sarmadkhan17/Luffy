@@ -173,7 +173,8 @@ def source_from_dict(raw):
     q, plan, ev, result = (retained[k] for k in ('question','plan','evidence','result'))
     run = R.build_run(q,plan,ev,result)
     if (R.build_plan(q) != plan or R.build_result(ev) != result
-            or run != retained['run'] or R.build_bank(q,plan,ev,result,run) != retained['bank']):
+            or run != retained['run'] or R.build_bank(q,plan,ev,result,run,
+                builder_id=retained['bank']['builder_id']) != retained['bank']):
         raise ValueError('source_chain_integrity')
     for record in (q,plan,ev,result,run,retained['bank']):
         key = R._ID_KEY[record['schema']]

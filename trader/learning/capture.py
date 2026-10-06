@@ -789,7 +789,8 @@ def validate_chain(body,sources,blobs):
             I.verify_evidence(chain['evidence'])
             if I.build_plan(chain['question'])!=chain['plan'] or I.build_result(chain['evidence'])!=chain['result'] or I.build_run(chain['question'],chain['plan'],chain['evidence'],chain['result'])!=chain['receipt']:
                 raise ValueError('registered_research_family_replay_differs')
-            rebuilt=I.build_bank(chain['question'],chain['plan'],chain['evidence'],chain['result'],chain['receipt'])
+            rebuilt=I.build_bank(chain['question'],chain['plan'],chain['evidence'],chain['result'],chain['receipt'],
+                                 builder_id=bank['builder_id'])
         else:
             from trader.cognition import research_bank as B
             rebuilt=B.build(chain)

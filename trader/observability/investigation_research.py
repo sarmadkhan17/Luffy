@@ -36,6 +36,12 @@ SUPPORTED means only that the frozen registered observable path was
 supported by its exact forward measurement. It establishes no predictive
 edge, causal mechanism, profitability or trading permission. No LLM,
 network, Kernel, Risk, Execution, order, allocation or control authority.
+
+New v2 Bank output atomically binds result follow-ups stored as the existing
+QUESTION_SCHEMA in this same append-only ledger. They retain the original
+source/scope/protocol and exact question/result hashes, with QUESTION_ONLY
+authority. Legacy v1 Bank records remain byte-identical and carry no invented
+historical follow-ups. Replay verifies every v2 link against stored questions.
 """
 from __future__ import annotations
 
@@ -62,7 +68,9 @@ PLANNER_ID = "investigation-volume-anomaly-evidence-routing.v1"
 COLLECTOR_ID = "investigation-volume-anomaly-evidence-collection.v1"
 RESOLVER_ID = "investigation-volume-anomaly-predicate-result.v1"
 RUNNER_ID = "investigation-volume-anomaly-runner.v1"
-BUILDER_ID = "investigation-volume-anomaly-research-bank.v1"
+LEGACY_BUILDER_ID = "investigation-volume-anomaly-research-bank.v1"
+BUILDER_ID = "investigation-volume-anomaly-research-bank.v2"
+FOLLOWUP_GENERATOR = "investigation-volume-anomaly-result-question.v1"
 
 PATHS = ("same_direction", "normalization", "opposite_direction")
 PARTICIPANT = "participant_cause"
@@ -406,7 +414,47 @@ def build_run(question, plan, evidence, result) -> dict:
     return _with_id(body, "run_id")
 
 
-def build_bank(question, plan, evidence, result, run) -> dict:
+def build_next_questions(question, result) -> list:
+    """Registered follow-ups using the existing family question/identity contract.
+
+    Call only with a verified originating chain. No evidence, support,
+    scheduling or permission to retry the original experiment is added.
+    Empty registered gaps yield no question; unknown shapes refuse.
+    """
+    if result.get("status") not in (SUPPORTED, INCONCLUSIVE):
+        _refuse("unregistered_followup_result")
+    entries = []
+    if result["status"] == INCONCLUSIVE:
+        entries.append(("MISSING_MEASUREMENT", None,
+                        "Which missing point-in-time target inputs could resolve the original observable question?"))
+    for path in result["paths"]:
+        if path["status"] == REFUTED:
+            entries.append(("REFUTED_ALTERNATIVE", path["hypothesis"],
+                            f"Could a new independently registered observation distinguish the refuted {path['hypothesis']} alternative?"))
+        elif path["status"] not in (SUPPORTED, NOT_ASSESSED):
+            _refuse("unregistered_followup_path")
+    for gap in result["unavailable"]:
+        if gap != {"hypothesis": PARTICIPANT, "reason": PARTICIPANT_REASON}:
+            _refuse("unregistered_followup_gap")
+        entries.append(("MISSING_PARTICIPANT_SOURCE", PARTICIPANT,
+                        "Which timestamped participant-volume evidence could assess the unavailable participant-cause alternative?"))
+    out = []
+    for kind, hypothesis, text in entries:
+        body = {k: v for k, v in question.items() if k != "question_id"}
+        body.update(question=text, question_role="result_followup", followup_kind=kind,
+                    generator_id=FOLLOWUP_GENERATOR, authority="QUESTION_ONLY",
+                    lineage={"question_id": question["question_id"],
+                             "question_sha256": sha256(canonical(question)),
+                             "result_id": result["result_id"],
+                             "result_sha256": sha256(canonical(result)),
+                             "result_status": result["status"], "hypothesis": hypothesis},
+                    semantics="Lineage-bound follow-up to the original observable question and result; "
+                    "QUESTION_ONLY; no support, causal or predictive evidence, scheduling, retry or trading authority.")
+        out.append(_with_id(body, "question_id"))
+    return out
+
+
+def build_bank(question, plan, evidence, result, run, *, builder_id=BUILDER_ID) -> dict:
     """research-bank-object.v1 field layout, filed for this family."""
     links = {name: {"id": rec[key], "sha256": sha256(canonical(rec))}
              for name, rec, key in (("question", question, "question_id"), ("plan", plan, "plan_id"),
@@ -423,7 +471,9 @@ def build_bank(question, plan, evidence, result, run) -> dict:
         return {"status": "CLASSIFIED", "reason": None,
                 "items": [dict(refs, hypothesis=p["hypothesis"], status=p["status"])
                           for p in result["paths"] if p["status"] == wanted]}
-    body = {"schema": BANK_SCHEMA, "bank_kind": FAMILY, "builder_id": BUILDER_ID, "links": links,
+    if builder_id not in (LEGACY_BUILDER_ID, BUILDER_ID):
+        _refuse("unregistered_bank_builder")
+    body = {"schema": BANK_SCHEMA, "bank_kind": FAMILY, "builder_id": builder_id, "links": links,
             "trace_id": question["source"]["trace_id"],
             "question": {"question_id": question["question_id"], "scope": question["scope"],
                          "question": question["question"]},
@@ -439,6 +489,14 @@ def build_bank(question, plan, evidence, result, run) -> dict:
             "next_questions": {"status": "NOT_AVAILABLE", "reason": "no_next_question_generator"},
             "cost": {"status": "NOT_MEASURED", "reason": "no_family_cost_telemetry_contract"},
             "recall": {"authority": "context_only", "suppression": None}}
+    if builder_id == BUILDER_ID:
+        body["next_questions"] = {"status": "AVAILABLE", "generator_id": FOLLOWUP_GENERATOR,
+                                  "items": [{"schema": q["schema"], "question_id": q["question_id"],
+                                             "canonical_sha256": sha256(canonical(q)),
+                                             "followup_kind": q["followup_kind"]}
+                                            for q in build_next_questions(question, result)]}
+        if not body["next_questions"]["items"]:
+            body["next_questions"]["status"] = "NONE"
     return _with_id(body, "bank_object_id")
 
 
@@ -469,7 +527,7 @@ def schema(db) -> None:
 
 def run(ledger_path, investigation_id, *, recorded_at_ms: int) -> dict:
     """Q -> P -> E -> R -> run -> bank for the case's latest verified update,
-    in one transaction. Refusal writes nothing. Identities exclude recording
+    and typed result follow-ups in one transaction. Refusal writes nothing. Identities exclude recording
     time, so retry/restart returns duplicates."""
     try:
         src = read_source(ledger_path, investigation_id)
@@ -479,7 +537,6 @@ def run(ledger_path, investigation_id, *, recorded_at_ms: int) -> dict:
         verify_evidence(e)
         r = build_result(e)
         rn = build_run(q, p, e, r)
-        b = build_bank(q, p, e, r, rn)
     except ResearchRefused as exc:
         return {"status": "REFUSED", "reason": exc.reason, "investigation_id": investigation_id}
     iid, uid = investigation_id, e["update_event_id"]
@@ -488,9 +545,17 @@ def run(ledger_path, investigation_id, *, recorded_at_ms: int) -> dict:
         schema(db)
         db.execute("BEGIN IMMEDIATE")
         try:
+            old = db.execute("SELECT canonical_json FROM investigation_research_records "
+                             "WHERE record_type=? AND record_key=?", (BANK_SCHEMA, uid)).fetchone()
+            builder = _load(old[0], BANK_SCHEMA)["builder_id"] if old else BUILDER_ID
+            b = build_bank(q, p, e, r, rn, builder_id=builder)
+            next_questions = build_next_questions(q, r) if builder == BUILDER_ID else []
             for name, rec, key in (("question", q, iid), ("plan", p, iid), ("evidence", e, uid),
                                    ("result", r, uid), ("run", rn, uid), ("bank", b, uid)):
                 outcomes[name] = _store(db, rec, iid, key, recorded_at_ms)
+            for index, followup in enumerate(next_questions):
+                key = "followup:" + r["result_id"] + ":" + str(index)
+                outcomes["next_question:" + str(index)] = _store(db, followup, iid, key, recorded_at_ms)
             if outcomes['bank']=='inserted':
                 from trader.learning import capture as lc, capture_runtime as lr
                 lc.safely(db, 'research-bank:'+b['bank_object_id'], lr.investigation_research,
@@ -505,17 +570,18 @@ def run(ledger_path, investigation_id, *, recorded_at_ms: int) -> dict:
             "question_id": q["question_id"], "plan_id": p["plan_id"],
             "evidence_id": e["evidence_id"], "result_id": r["result_id"], "run_id": rn["run_id"],
             "bank_object_id": b["bank_object_id"], "result_status": r["status"],
+            "next_question_ids": [q["question_id"] for q in next_questions],
             "supported_path": r["supported_path"], "outcomes": outcomes}
 
 
 def _store(db, record, iid, key, recorded_at_ms) -> str:
     rtype, rid = record["schema"], record[_ID_KEY[record["schema"]]]
     text = canonical(record)
-    rows = db.execute("SELECT record_id,canonical_json FROM investigation_research_records "
+    rows = db.execute("SELECT record_id,canonical_json,record_key FROM investigation_research_records "
                       "WHERE record_type=? AND (record_id=? OR record_key=?)",
                       (rtype, rid, key)).fetchall()
     for r in rows:
-        if tuple(r) != (rid, text):
+        if tuple(r) != (rid, text, key):
             _refuse("research_record_conflict:" + rtype)
     if rows:
         return "duplicate"
@@ -582,7 +648,7 @@ def chain(ledger_path, investigation_id) -> dict | None:
         live = db.execute("SELECT payload FROM cases WHERE id=?", (investigation_id,)).fetchone()
     if not rows:
         return None
-    by = {t: [] for t in RECORD_TYPES}
+    by, row_keys = {t: [] for t in RECORD_TYPES}, {}
     for rtype, rid, key, csha, text in rows:
         if rtype not in by or sha256(text) != csha:
             _refuse("research_record_corrupt:" + str(rtype))
@@ -590,12 +656,15 @@ def chain(ledger_path, investigation_id) -> dict | None:
         if rec[_ID_KEY[rtype]] != rid:
             _refuse("research_record_corrupt:" + rtype)
         by[rtype].append(rec)
-    if len(by[QUESTION_SCHEMA]) != 1 or len(by[PLAN_SCHEMA]) != 1:
+        row_keys[rid] = key
+    roots = [q for q in by[QUESTION_SCHEMA] if "question_role" not in q]
+    followups = [q for q in by[QUESTION_SCHEMA] if q.get("question_role") == "result_followup"]
+    if len(roots) != 1 or len(by[PLAN_SCHEMA]) != 1 or len(roots) + len(followups) != len(by[QUESTION_SCHEMA]):
         _refuse("research_chain_incomplete")
-    (q,), (p,) = by[QUESTION_SCHEMA], by[PLAN_SCHEMA]
+    (q,), (p,) = roots, by[PLAN_SCHEMA]
     if build_plan(q) != p:
         _refuse("plan_rederivation_mismatch")
-    runs = []
+    runs, expected_followups = [], []
     for e in by[EVIDENCE_SCHEMA]:
         if e["plan_id"] != p["plan_id"] or e["plan_sha256"] != sha256(canonical(p)):
             _refuse("evidence_plan_mismatch")
@@ -607,8 +676,15 @@ def chain(ledger_path, investigation_id) -> dict | None:
         b = next((x for x in by[BANK_SCHEMA] if x["links"]["evidence"]["id"] == e["evidence_id"]), None)
         if r is None or rn is None or b is None:
             _refuse("research_chain_incomplete")
-        if build_result(e) != r or build_run(q, p, e, r) != rn or build_bank(q, p, e, r, rn) != b:
+        if build_result(e) != r or build_run(q, p, e, r) != rn or build_bank(q, p, e, r, rn, builder_id=b["builder_id"]) != b:
             _refuse("research_rederivation_mismatch")
+        next_questions = build_next_questions(q, r) if b["builder_id"] == BUILDER_ID else []
+        for index, followup in enumerate(next_questions):
+            if row_keys.get(followup["question_id"]) != "followup:" + r["result_id"] + ":" + str(index):
+                _refuse("research_followup_rederivation_mismatch")
+        expected_followups.extend(next_questions)
         runs.append({"update_event_id": e["update_event_id"], "evidence": e, "result": r,
-                     "run": rn, "bank": b})
+                     "run": rn, "bank": b, "next_questions": next_questions})
+    if sorted(map(canonical, followups)) != sorted(map(canonical, expected_followups)):
+        _refuse("research_followup_rederivation_mismatch")
     return {"question": q, "plan": p, "runs": runs}

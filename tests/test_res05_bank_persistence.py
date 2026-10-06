@@ -84,15 +84,15 @@ def test_normal_persistence_restart_and_duplicate_preserve_exact_record(tmp_path
     assert restarted.research_bank_object(bank["bank_object_id"]) == row
 
 
-# Inventory proof: retain the real family semantics rather than inventing a
-# standalone REFUTED result or claiming that NOT_AVAILABLE is a next question.
+# Terminal inventory: preserve real refuted alternatives and bind follow-ups
+# through the same original question and result identities.
 from tests.test_investigation_state_feedback import paths  # noqa: E402,F401
 from tests.test_investigation_research_family import measured, registered as investigation_registered  # noqa: E402
 from trader.observability import investigation_research as IR  # noqa: E402
 
 
 @pytest.mark.parametrize("completed", [False, True])
-def test_inventory_investigation_terminal_record_has_no_own_next_question(paths, completed):
+def test_investigation_terminal_record_has_linked_next_questions(paths, completed):
     _, dest, now = paths
     iid, cut = measured(paths, "same_direction") if completed else (investigation_registered(paths)[0], now)
     IR.run(dest, iid, recorded_at_ms=cut + 2)
@@ -105,5 +105,8 @@ def test_inventory_investigation_terminal_record_has_no_own_next_question(paths,
     if completed:
         assert len(bank["contradictory_evidence"]["items"]) == 2
         assert all(i["status"] == "REFUTED" for i in bank["contradictory_evidence"]["items"])
-    assert bank["next_questions"] == {"status": "NOT_AVAILABLE", "reason": "no_next_question_generator"}
+    assert bank["next_questions"]["status"] == "AVAILABLE"
+    assert last["next_questions"]
+    assert all(q["lineage"]["result_id"] == last["result"]["result_id"]
+               for q in last["next_questions"])
     assert bank["cost"]["status"] == "NOT_MEASURED"
