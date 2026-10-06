@@ -1,3 +1,5 @@
+> Current SOL-1 reconciliation: LLM-02 CLOSED at architecture/offline scope. Disabled shared admission and actual callers make zero provider attempts; explicit refusal telemetry verified in fixtures. No provider enablement or successor selection. [Evidence](evidence/llm02-reconciliation-sol1/reconciliation.json). Earlier summaries below are historical.
+
 > Current SOL-2 reconciliation: QNT-02 CLOSED at architecture/offline scope. QNT-06 is now dependency-eligible; its declared-experiment power and UNTESTED/FAIL/PASS proof remains its own work. No successor selected. [Evidence](evidence/qnt02-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
 
 > Current SOL-2 reconciliation: RES-02 CLOSED at architecture/offline scope. RES-03 is now eligible for current architecture/offline work under the existing SEC-01 deferral; no registry/adoption or future activation closure is asserted. No successor selected. [Evidence](evidence/res02-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.

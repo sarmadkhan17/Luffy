@@ -1,3 +1,5 @@
+> Current SOL-1 reconciliation: LLM-02 CLOSED at architecture/offline scope. Disabled shared admission and actual callers make zero provider attempts; explicit refusal telemetry verified in fixtures. No provider enablement or successor selection. [Evidence](evidence/llm02-reconciliation-sol1/reconciliation.json). Earlier summaries below are historical.
+
 > Current SOL-2 reconciliation: QNT-02 CLOSED at architecture/offline scope. QNT-06 is now dependency-eligible; its declared-experiment power and UNTESTED/FAIL/PASS proof remains its own work. No successor selected. [Evidence](evidence/qnt02-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
 
 > Current SOL-2 reconciliation: RES-02 CLOSED at architecture/offline scope. RES-03 is now eligible for current architecture/offline work under the existing SEC-01 deferral; no registry/adoption or future activation closure is asserted. No successor selected. [Evidence](evidence/res02-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
@@ -3862,32 +3864,33 @@ future_calibration:
 - **stage**: 3
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Credentials/budget cannot override an explicit off switch.
 - **closure_condition**: chat/chat_tools/chat_json and actual background callers make zero provider attempts when disabled, with fixtures and prospective telemetry.
 - **failure_regression_proof**: Positive budget/key or fallback cannot bypass brain.enabled=false.
 - **dependencies**: None
 - **owner_role**: Provider & access owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-1 (disabled admission proof and telemetry)
+- **implementation_evidence**: 3840cfb existing guards; b97aaf6 canonical cherry-pick of a6a0fbc; trader/brain/llm.py; tests/test_llm_disabled_boundary.py; existing disabled transport and budget regressions
+- **runtime_evidence**: NOT_PERFORMED; prospective refusal telemetry tested with offline fixtures; deployed/runtime observation not inferred
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Original condition satisfied at architecture/offline scope: 77 canonical focused tests pass; disabled public methods and actual kernel/background callers make zero provider attempts. Keys, positive budget, permissive availability and caller/template/alternate-endpoint fallbacks cannot bypass enabled=false. Explicit brain_disabled reason/purpose/zero-attempt telemetry is verified; ledger unchanged. Existing guards mapped before the demonstrated observability/coverage correction.
 - **source_ids**: S01, S02, S08, S13
 - **source_sections**: §§22.3–22.5; incident S13
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for LLM-02 at architecture/offline engineering scope; future deployed/runtime observations and dependent rows retain their own conditions.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: b97aaf6408194bcc37f2b27fba8242012ee9d5e2
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/llm02-reconciliation-sol1/reconciliation.json
+- **evidence_validity**: Pinned canonical source/test hashes and fresh offline checks; prospective telemetry verified; no runtime freshness or provider activation inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### LLM-03 — Reserve bounded per-purpose budget and settle actual/unknown usage.
 

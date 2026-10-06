@@ -1,0 +1,10 @@
+Canonical implementation: b97aaf6408194bcc37f2b27fba8242012ee9d5e2
+Command: ./venv/bin/python -m pytest tests/test_llm_disabled_boundary.py tests/test_journal_evidence_repair.py::test_disabled_zero_transport_and_ledger_unchanged tests/test_final_audit_llm_reservation.py tests/test_llm_purpose_budget.py tests/test_deep_token_cap.py tests/test_chat_agent.py tests/test_spec_writer.py tests/test_single_creation_path.py -q
+Captured tool output:
+........................................................................ [ 93%]
+.....                                                                    [100%]
+77 passed in 5.04s
+
+Control-plane regression command: ./venv/bin/python -m pytest tests/test_launch_preflight.py::test_terminal_obs01_remains_readable_without_selecting_next_item -q
+1 passed in 3.71s
+Control validation: PASS; read-only Tracker AVAILABLE; 178 IDs; original condition/dependencies, unrelated rows, Sol-2 RES-02/QNT-02 records, readiness gates and selected package preserved; manifest hashes and source pins verified.

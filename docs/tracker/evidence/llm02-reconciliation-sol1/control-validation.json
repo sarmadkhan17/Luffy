@@ -1,0 +1,50 @@
+{
+  "item": "LLM-02",
+  "result": "PASS",
+  "row_count": 178,
+  "status_counts": {
+    "EVIDENCE_TO_MAP": 92,
+    "OPEN": 4,
+    "IN_PROGRESS": 0,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "CLOSED": 45,
+    "DEFERRED": 7,
+    "BLOCKED": 7
+  },
+  "original_conditions_and_edges_preserved": true,
+  "unrelated_rows_preserved": true,
+  "sol2_res02_qnt02_records_preserved": true,
+  "readiness_gates_preserved": true,
+  "selected_package_preserved": {
+    "id": "ATT-03",
+    "status": "CLOSED",
+    "result": "CURRENT_BUILD_CLOSED_UNCALIBRATED_HEURISTIC_INVESTIGATE_ONLY",
+    "mode": "ENGINEERING_ONLY",
+    "scope": "ARCHITECTURE_OFFLINE_INVESTIGATION_ONLY",
+    "objective": "Record owner acceptance of unchanged uncalibrated investigation heuristics for the current build; retain mandatory unproven calibration obligation outside the current critical path.",
+    "implementation_commit": "5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c",
+    "evidence": [
+      "docs/tracker/evidence/att03-warmup-sol2/REPORT.md",
+      "docs/tracker/evidence/att03-calibration-sol2/REPORT.md",
+      "docs/tracker/evidence/att03-scope-decision-sol2/REPORT.md"
+    ],
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false,
+    "successor_selected": false,
+    "calibration_status": "UNPROVEN",
+    "investigation_classification": "UNCALIBRATED_HEURISTIC",
+    "investigation_authority": "INVESTIGATE_ONLY"
+  },
+  "state_next_other_content_preserved": true,
+  "manifest_other_content_preserved": true,
+  "bundle_hashes_match": true,
+  "reconciliation_records_equal": true,
+  "source_pins_match_canonical_implementation": true,
+  "cherry_pick_bytes_match_original_engineering_commit": true,
+  "read_only_tracker_contract": "AVAILABLE",
+  "runtime_config_changed": false,
+  "real_provider_calls": 0,
+  "tracker_selection_regression": "tests/test_launch_preflight.py::test_terminal_obs01_remains_readable_without_selecting_next_item: 1 passed in 3.71s"
+}

@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.36-qnt02-reconciled-sol2
+  version: 1.37-llm02-reconciled-sol1
   created_date: '2026-10-05'
   title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -19,8 +19,8 @@ metadata:
     optional generated reference.
   pending_adoption: null
   status_counts:
-    CLOSED: 44
-    EVIDENCE_TO_MAP: 93
+    CLOSED: 45
+    EVIDENCE_TO_MAP: 92
     DEFERRED: 7
     AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14
@@ -102,9 +102,9 @@ metadata:
     runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime UNKNOWN;
       no runtime freshness inferred from this control snapshot.
   latest_control_reconciliation:
-    item: QNT-02
-    evidence: docs/tracker/evidence/qnt02-reconciliation-sol2/reconciliation.json
-    engineering_closure_commit: f86699625e67bcd1dc8c32c9248aad63e8df4e92
+    item: LLM-02
+    evidence: docs/tracker/evidence/llm02-reconciliation-sol1/reconciliation.json
+    engineering_closure_commit: b97aaf6408194bcc37f2b27fba8242012ee9d5e2
 status_definitions:
 - status: EVIDENCE_TO_MAP
   meaning: Existing requirement recorded; exact row-level evidence has not yet been linked. This is NOT a finding
@@ -5008,40 +5008,47 @@ items:
   stage: '3'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Enforce disabled provider state at shared request admission.
   why_needed: Credentials/budget cannot override an explicit off switch.
-  closure_condition: chat/chat_tools/chat_json and actual background callers make zero provider attempts when disabled,
-    with fixtures and prospective telemetry.
+  closure_condition: chat/chat_tools/chat_json and actual background callers make zero provider attempts when
+    disabled, with fixtures and prospective telemetry.
   failure_regression_proof: Positive budget/key or fallback cannot bypass brain.enabled=false.
   dependencies: []
   owner_role: Provider & access owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: SOL-1 (disabled admission proof and telemetry)
+  implementation_evidence: 3840cfb existing guards; b97aaf6 canonical cherry-pick of a6a0fbc; trader/brain/llm.py;
+    tests/test_llm_disabled_boundary.py; existing disabled transport and budget regressions
+  runtime_evidence: NOT_PERFORMED; prospective refusal telemetry tested with offline fixtures; deployed/runtime
+    observation not inferred
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 'Original condition satisfied at architecture/offline scope: 77 canonical focused tests
+    pass; disabled public methods and actual kernel/background callers make zero provider attempts. Keys, positive
+    budget, permissive availability and caller/template/alternate-endpoint fallbacks cannot bypass enabled=false.
+    Explicit brain_disabled reason/purpose/zero-attempt telemetry is verified; ledger unchanged. Existing guards
+    mapped before the demonstrated observability/coverage correction.'
   source_ids:
   - S01
   - S02
   - S08
   - S13
-  source_sections: §§22.3–22.5; incident S13
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  source_sections: "\xA7\xA722.3\u201322.5; incident S13"
+  next_proof: None for LLM-02 at architecture/offline engineering scope; future deployed/runtime observations
+    and dependent rows retain their own conditions.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: b97aaf6408194bcc37f2b27fba8242012ee9d5e2
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: docs/tracker/evidence/llm02-reconciliation-sol1/reconciliation.json
+  evidence_validity: Pinned canonical source/test hashes and fresh offline checks; prospective telemetry verified;
+    no runtime freshness or provider activation inferred.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  closure_scope: ARCHITECTURE_OFFLINE
 - id: LLM-03
   area: Provider & access
   stage: '3'
@@ -8315,6 +8322,15 @@ change_log:
     implementation.
   evidence: docs/tracker/evidence/qnt02-reconciliation-sol2/reconciliation.json
   actor: SOL-2
+- date: '2026-10-06'
+  event: LLM02_CANONICAL_RECONCILIATION
+  item: LLM-02
+  before: EVIDENCE_TO_MAP
+  after: CLOSED_ARCHITECTURE_OFFLINE
+  reason: Existing enforcement mapped; demonstrated refusal telemetry gap corrected; canonical cherry-pick
+    and 77 focused checks pass. Original condition and dependencies preserved.
+  evidence: docs/tracker/evidence/llm02-reconciliation-sol1/reconciliation.json
+  actor: SOL-1
 sdd_section_coverage:
 - section: 1
   title: Mission / end goal
@@ -9896,6 +9912,85 @@ qnt02_canonical_reconciliation:
   status_counts_after:
     CLOSED: 44
     EVIDENCE_TO_MAP: 93
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 7
+    OPEN: 4
+
+llm02_canonical_reconciliation:
+  item: LLM-02
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE_ENGINEERING
+  engineering_closure_commit: b97aaf6408194bcc37f2b27fba8242012ee9d5e2
+  original_engineering_commit: a6a0fbc4642ec16925ec5591920afc3801979945
+  reconciliation_base_revision: b97aaf6408194bcc37f2b27fba8242012ee9d5e2
+  canonical_main_before_implementation: 797971f98efcc9d0b835f2eda21bb870d82b6aaf
+  preserved_sol2_control_commits:
+  - db38e907f016f5d46ccff3fff5fc327ae548aaf5
+  - 797971f98efcc9d0b835f2eda21bb870d82b6aaf
+  evidence: docs/tracker/evidence/llm02-reconciliation-sol1/reconciliation.json
+  closure_condition: chat/chat_tools/chat_json and actual background callers make zero provider attempts when
+    disabled, with fixtures and prospective telemetry.
+  closure_condition_satisfied: true
+  dependency_status: {}
+  existing_evidence: 3840cfb227b3bfdb1f6383e41318ff2a61a7d3d4 already enforced enabled at available/_call/_admit;
+    tests/test_journal_evidence_repair.py::test_disabled_zero_transport_and_ledger_unchanged covers chat/chat_tools/chat_json/_call/_admit
+    with a fake key, positive budget and unchanged ledger.
+  actual_gap: Disabled requests returned None without explicit refusal telemetry; actual background callers
+    and fallback behavior lacked direct disabled-state coverage.
+  change: 'Added warning provider admission refused: brain_disabled and structured event=provider_admission_refused,
+    reason_code=brain_disabled, purpose, provider_attempts=0 at both shared boundaries. Disabled admission
+    remains before budget/ledger/SDK access.'
+  closing_condition_proof:
+  - All three public methods plus _call and _admit refuse in fast/deep modes with enabled=false, fake credentials
+    and positive budget. Forced available=true and positive budget fallbacks cannot bypass configuration. Provider
+    send, SDK construction and socket connect tripwires remain untouched; ledger and lock unchanged.
+  - Actual Kernel._mechanism_once generation path exercises SpecWriter with disabled BrainLLM and records spec_write_failed.
+    SpecWriter, Pine refinement and legacy Strategist.review stay offline, including permissive availability
+    that forces their calls through the shared boundary.
+  - ChatEngine handles initial and repeated offline replies with zero sends. Pine retains the original template,
+    legacy review retains its deterministic fallback, and a reconstructed BrainLLM with an alternate endpoint
+    remains disabled. The shared config off switch also blocks an existing client.
+  - Prospective logs explicitly report brain_disabled and purpose with zero provider attempts. Ten telemetry
+    cases failed against original code and passed after the correction. Prompt text and fake key are absent
+    from refusal logs. Background callers that stop before the boundary retain their own explicit traces; no
+    live/deployed telemetry is claimed.
+  retained_validation: 'Original branch: 77 focused tests passed; 10 new telemetry cases failed on unmodified
+    baseline and passed after correction; final 17 new cases passed.'
+  fresh_validation: 'Canonical main b97aaf6: 77 focused tests passed in 5.04s; exact command/output retained
+    in tests.txt. All new disabled-state cases use provider/SDK/socket tripwires. No real provider calls.'
+  original_condition_and_edges_preserved: true
+  application_code_changed: false
+  real_provider_calls: 0
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  control_plane_reconciliation_pending: false
+  successor_selected: false
+  downstream:
+    LLM-03: LLM-02 dependency satisfied; original budget reservation/settlement condition remains its own unmapped
+      proof. Row unchanged and unselected.
+    RES-04: LLM-02 provider prerequisite satisfied; RES-03 remains EVIDENCE_TO_MAP and still blocks this row.
+      Original experiment-manifest condition and dependencies unchanged. Row unchanged and unselected.
+  source_sha256:
+    trader/brain/llm.py: 6562821e1516f4913a4bdb417c6fbda258705f788e434cfd0845dea4a02ba25a
+    tests/test_llm_disabled_boundary.py: 78025259cd10627d6c35410f592c796f0a800473fa42b0665226db5aa39c218c
+    tests/test_journal_evidence_repair.py: f7f40b176cda55b206199f9754297bb13ccb4d68b65c6a58846da72aa01f8904
+    tests/test_final_audit_llm_reservation.py: f3994c6f2d004d774b96e43e15b497e150df194c389a3aa9f02ec50e3540d550
+    tests/test_llm_purpose_budget.py: 8b3f87082c45333a2f8fe16c46f2cbee9b0b5c2675d7721f9f6014ee9843f0a5
+    tests/test_deep_token_cap.py: dca274b0391bdb4f5cbbdcba86627f9acee9fd8db6f3dba29dd2409768b60017
+    tests/test_chat_agent.py: 5b564dbc982379359ea2828c39145638ce452d4865c78b46c824e631a920017c
+    tests/test_spec_writer.py: f211b1b3a1e4047a1a93b0f7d5c70bff0fef6294706866f1d9d47b205a3db033
+    tests/test_single_creation_path.py: e2b2d532d09edc7a1fd9aba1bc0eaf88a88adddb60ebc24812858f1ceac7a17b
+    trader/kernel.py: 9e910c7c0589c3542c97b0895e6b931aa81e0b76bc679bb5163e5c3030cea7f7
+    trader/brain/spec_writer.py: b7aa9ac4fadd7d42418cfc6b9409ae6234c4b582947c3c18d70c2bb83ff32857
+    trader/brain/pine.py: c4e84684c607693eac4c963d50355882fdb4da6e5f884ff4daa61ff0e1fc74a0
+    trader/brain/strategist.py: 817de06bb5db5dccd6c6f4d7e63a45e2243e4bba683bf59d14038f98ec0ca2df
+    trader/chat/agent.py: 2f28a0721f0f1543c4ca01b903fed7d11a0037719b394881fb8dc99c7bdb2ccf
+  status_counts_after:
+    CLOSED: 45
+    EVIDENCE_TO_MAP: 92
     DEFERRED: 7
     AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14
