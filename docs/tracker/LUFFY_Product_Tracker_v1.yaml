@@ -3875,7 +3875,7 @@ items:
   stage: '1'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Execute normalized approved intents with durable idempotency.
   why_needed: Retry, timeout or restart must not duplicate new exposure.
   closure_condition: Persistent logical action, client order IDs, durable completed/unknown state and reopen tests
@@ -3885,12 +3885,11 @@ items:
   dependencies:
   - RISK-01
   owner_role: Execution & recovery owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: Claude local engineering session
+  implementation_evidence: trader/engine/entry_authority.py submit/execution_requests, trader/engine/recovery.py (existing, unchanged); a980039; tests/test_exe01_duplicate_entry.py
+  runtime_evidence: NOT_PERFORMED; offline tests only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 'Mapped: durable execution_requests reservation committed before the venue call (logical_id/decision_id/client_order_id unique), deterministic client order ID, UNKNOWN_OUTCOME for lost responses, REFUSED/TERMINAL retention across reopen. No production defect. Added 8 offline negative proofs (same-permission retry while ambiguous, retry after recovery, refusal retry across restart, post-venue crash, id cross-collisions, client-id collision, distinct action) and a dedup-guard mutant. Offline only.'
   source_ids:
   - S01
   - S02
@@ -3898,17 +3897,16 @@ items:
   - S12
   - S14
   source_sections: §§18,18.3
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: None for EXE-01. EXE-02, EXE-06, EXE-07 and ACC-02 remain separate.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: a980039
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
+  closure_evidence: docs/tracker/evidence/exe01-duplicate-entry/closure.yaml
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -8062,6 +8060,14 @@ change_log:
   after: CLOSED at offline engineering scope; no code defect, negative/mutant proofs retained
   reason: Explicit RISK-02 package only; no services/providers launched; every other row and closing condition preserved.
   evidence: docs/tracker/evidence/risk02-exposure-feasibility/closure.yaml
+  actor: Claude local engineering session
+- date: '2026-10-06'
+  event: EXE01_DUPLICATE_ENTRY_CLOSED
+  item: EXE-01
+  before: EVIDENCE_TO_MAP; stage-level history only
+  after: CLOSED at offline engineering scope; no code defect, negative/mutant proofs retained
+  reason: Explicit EXE-01 package only; no services/providers launched; every other row and closing condition preserved.
+  evidence: docs/tracker/evidence/exe01-duplicate-entry/closure.yaml
   actor: Claude local engineering session
 sdd_section_coverage:
 - section: 1

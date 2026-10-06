@@ -1,0 +1,17 @@
+id: EXE-01
+result: CLOSED_ENGINEERING_ONLY
+implementation_commits: []   # trader/ source unchanged
+test_commit: a980039
+paths_mapped:
+  normal_entry: entry_authority.submit() reserves execution_requests (logical_id PK, decision_id UNIQUE, client_order_id UNIQUE) in a committed durable hold BEFORE the venue call; client_order_id = lr_ + sha256(logical_id)[:28], stable across restart.
+  retry_after_refusal: InvalidOrder/InsufficientFunds -> state REFUSED, row retained; same logical action/decision refused as logical_action_already_reserved, also after reopen and in a fresh interpreter.
+  lost_or_ambiguous_response: any other exception -> recovery.save(entry_submission_ambiguous) -> UNKNOWN_OUTCOME; never treated as non-submission; pending recovery blocks new submission; recovery adopts exact venue exposure -> TERMINAL.
+  restart_reopen: execution_requests and recovery intent live in the journal DB; reopened Executor refuses the same action in every state (UNKNOWN_OUTCOME, REFUSED, TERMINAL, SUBMISSION_ATTEMPTED).
+  queue_redelivery: same permission / same decision / decision under a different logical_id / logical_id under a different decision all refused; UNIQUE constraints are a second backstop.
+  client_order_id_reuse: UNIQUE constraint rejects a second request with the same client id.
+  unknown_outcome: persisted before and after the venue call; ack-write failure keeps committed SUBMISSION_ATTEMPTED and recovery adopts without resubmitting.
+actual_gap: none in production code. Test-evidence gaps only: same-permission retry while UNKNOWN_OUTCOME, retry after recovery TERMINAL, refusal retry across reopen, post-venue crash, decision_id/logical_id cross-collision, client_order_id collision, distinct new action not blocked.
+tests: tests/test_exe01_duplicate_entry.py (8 pass); existing test_stage1_entry_authority, test_entry_recovery, test_final_audit_entry_partial_barrier (85 pass).
+mutant: removing the execution_requests dedup SELECT fails the two cross-collision tests (UNIQUE constraints still stop the insert; two layers).
+observations_not_in_scope: tests/test_trade_provenance.py fails 24 on unchanged source (hardcoded 2026-09-30 timestamps suspected; not diagnosed).
+limits: offline only; no Kernel/provider/venue calls. Does not prove venue-side idempotency of newClientOrderId, exit/partial paths (EXE-03), or restart reconciliation (EXE-06). A new action under a different logical_id after an ambiguous unresolved entry is blocked by the pending-recovery gate, not by identity.

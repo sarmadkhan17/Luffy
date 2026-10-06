@@ -771,6 +771,26 @@ risk02_exposure_feasibility:
   dependents_unblocked_not_closed: [RISK-03, EXE-01, EXE-06]
   stale_test_noted: tests/test_leverage_is_applied.py (pre-existing 6 failures, legacy _ensure_leverage)
 
+exe01_duplicate_entry:
+  id: EXE-01
+  status: CLOSED
+  result: CLOSED_ENGINEERING_ONLY
+  implementation_commits: []
+  test_commit: a980039
+  evidence: docs/tracker/evidence/exe01-duplicate-entry/closure.yaml
+  actual_code_gap: none; test-evidence gap only
+  tests: 8 new pass; 85 adjacent entry/recovery pass.
+  kernel_launched: false
+  dashboard_launched: false
+  provider_calls: 0
+  other_rows_now_satisfied: none
+  evidence_added_not_closed: [EXE-02, EXE-06, EXE-07, ACC-02]
+  dependents_unblocked_not_closed: [EXE-02, ACC-02, EXE-07]
+  still_blocked_by_other_deps: {EXE-02: [ACC-01], ACC-02: [ACC-01], EXE-07: [ACC-02]}
+  recommended_next_execution_dependency: ACC-01
+  successor_selected: false
+  stale_test_noted: tests/test_trade_provenance.py (24 pre-existing failures, hardcoded dates suspected, undiagnosed)
+
 own04_state_terminal:
   id: OWN-04
   status: CLOSED
