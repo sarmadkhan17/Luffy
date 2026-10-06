@@ -125,7 +125,7 @@ class Ledger(Contract):
 
 class Selection(Contract):
     id: str
-    status: Literal["SELECTED_NOT_STARTED", "IN_PROGRESS"]
+    status: Literal["SELECTED_NOT_STARTED", "IN_PROGRESS", "CLOSED"]
     mode: Literal["DIAGNOSIS_ONLY", "ENGINEERING_ONLY"]
     objective: str = Field(min_length=1)
 
@@ -181,7 +181,7 @@ def read_tracker(root: Path) -> dict:
         active = [r.id for r in ledger.items if r.status == "IN_PROGRESS"]
         if len(active) > 1 or (active and active != [selected.id]):
             raise TrackerError("multiple or conflicting active tracker items")
-        expected = "IN_PROGRESS" if selected.status == "IN_PROGRESS" else "OPEN"
+        expected = "OPEN" if selected.status == "SELECTED_NOT_STARTED" else selected.status
         if by_id[selected.id].status != expected:
             raise TrackerError("NEXT selection status conflicts with tracker workflow status")
     except (ValidationError, RecursionError) as exc:

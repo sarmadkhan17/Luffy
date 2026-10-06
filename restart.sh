@@ -9,6 +9,12 @@ case "$TARGET" in
   *) echo "usage: $0 kernel|dashboard"; exit 1 ;;
 esac
 
+# OBS-01: refuse before any process stop/start. Identity/boot ordering is RUN-01.
+if ! (cd "$DIR" && ./venv/bin/python -m trader.observability.preflight --root "$DIR" --target "$TARGET"); then
+  echo '{"schema":"luffy-launch-preflight.v1","allow":false,"result":"FAIL","reasons":["preflight_command_failed"]}'
+  exit 1
+fi
+
 SELF=$$
 for PID in $(pgrep -f "$MOD"); do
   [ "$PID" = "$SELF" ] && continue
