@@ -1,6 +1,6 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.33-qnt01-reconciled-sol2",
+  "snapshot_version": "1.34-wrld06-reconciled-sol2",
   "control_baseline_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 433994,
-      "sha256": "3b57125c63d0a51745d0be7616d26f179d68b564e7a8c57cd3850a00d909f4be",
+      "bytes": 414048,
+      "sha256": "8e733a448dad922e63995935cddc08189c3a7f2d780f9e14222ac9dc8d0125d6",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 402963,
-      "sha256": "7f0e856e08fd8a180594a21a2b35c982f53863928f814116a14c9c67cd7ae4b8",
+      "bytes": 404273,
+      "sha256": "d6b3050542145ae86e6eb5d9d269ee80097ab44fe25b476f03a01d326686d97a",
       "synchronization_required": false
     },
     {
@@ -415,15 +415,25 @@
       "OWN-01": "EVIDENCE_TO_MAP"
     },
     "unmet_out03_dependencies": [
-      "OUT-01",
-      "DATA-03",
-      "WRLD-06"
+      "OUT-01"
     ],
     "next_prerequisite": "OUT-01",
     "next_gui_item": "GUI-02",
     "successor_selected": false,
     "runtime_execution_authorized": false,
-    "implementation_gap": "NONE_DEMONSTRATED_BY_MAPPING"
+    "implementation_gap": "NONE_DEMONSTRATED_BY_MAPPING",
+    "historical_unmet_out03_dependencies_at_intake": [
+      "OUT-01",
+      "DATA-03",
+      "WRLD-06"
+    ],
+    "current_dependency_status": {
+      "OUT-01": "BLOCKED",
+      "DATA-03": "CLOSED",
+      "WRLD-06": "CLOSED"
+    },
+    "dependency_reconciliation_evidence": "docs/tracker/evidence/wrld06-reconciliation-sol2/reconciliation.json",
+    "original_intake_evidence_preserved": true
   },
   "out01_identity_evidence_map": {
     "id": "OUT-01",
@@ -976,8 +986,8 @@
     }
   },
   "status_counts": {
-    "CLOSED": 41,
-    "EVIDENCE_TO_MAP": 96,
+    "CLOSED": 42,
+    "EVIDENCE_TO_MAP": 95,
     "DEFERRED": 7,
     "AWAITING_EVIDENCE": 9,
     "AWAITING_OWNER": 14,
@@ -1025,6 +1035,62 @@
     "status_counts_after": {
       "CLOSED": 41,
       "EVIDENCE_TO_MAP": 96,
+      "DEFERRED": 7,
+      "AWAITING_EVIDENCE": 9,
+      "AWAITING_OWNER": 14,
+      "BLOCKED": 7,
+      "OPEN": 4
+    }
+  },
+  "wrld06_canonical_reconciliation": {
+    "item": "WRLD-06",
+    "canonical_status": "CLOSED",
+    "scope": "ARCHITECTURE_OFFLINE_ENGINEERING",
+    "engineering_closure_commit": "f353b9fa6e880404a076efd2528b000276327a5b",
+    "reconciliation_base_revision": "1b9b020ea6ff6a88b549f82cd69f36c2d6efa97b",
+    "evidence": "docs/tracker/evidence/wrld06-reconciliation-sol2/reconciliation.json",
+    "closure_condition": "Exact-cut, future, multiple-revision and restart queries select the correct applied revision; immutable base claims remain unchanged.",
+    "closure_condition_satisfied": true,
+    "dependency_status": {
+      "WRLD-04": "ENGINEERING_CLOSED at 91ae9f4 per authorized session; canonical row reconciliation still pending and unchanged",
+      "DATA-05": "CLOSED"
+    },
+    "closing_condition_proof": [
+      "The retained real WorldModel application test applies revisions at T-1, T and T+1; exact WorldModel cuts select .7, .8/revision 2 and .9. A later application remains visible to latest but cannot affect WorldModel/Attention at T.",
+      "Journal reopen preserves historical revision selection; frozen governed-state replay reproduces original Attention rows after newer learning. Injected future applied state into earlier replay raises ValueError.",
+      "WRLD-04 tests retain model JSON, embedded observations, base values/qualities and both evidence polarities across two real applications, revision history, archival reconstruction and restart; UNKNOWN/null is not rewritten by confidence.",
+      "Fresh adjacent Attention and Portfolio tests qualify learned state at the original cut, preserve selection after reopen and frozen replay, and refuse future/tampered projections. Existing DATA-05 inclusive availability-cut semantics and learning applied_at qualification are reused; no new clock model."
+    ],
+    "retained_validation": "f353b9f pinned proof: 43 passed in 12.38s (2 WorldModel temporal, 8 WRLD-04 immutable/history, 33 DATA-05 cases). Exact retained source and test bytes match f353b9f; no unnecessary repeat of that passing run.",
+    "fresh_validation": "2 adjacent historical Attention/Portfolio future-revision/restart/replay cases passed in 5.10s from tests/test_final_audit_attention_allocation_time.py.",
+    "original_condition_and_edges_preserved": true,
+    "application_code_changed": false,
+    "runtime_execution_authorized": false,
+    "trading_activation_authorized": false,
+    "control_plane_reconciliation_pending": false,
+    "successor_selected": false,
+    "downstream": {
+      "OUT-03": "CLOSER, NOT ELIGIBLE; DATA-03 CLOSED and WRLD-06 now CLOSED; remaining direct blocker OUT-01 BLOCKED, with DEC-04 and full normal execution delivery proof unresolved",
+      "WRLD-04": "No status change; engineering-closed prerequisite pinned to 91ae9f4 as explicitly supplied; canonical mapping separate"
+    },
+    "source_sha256": {
+      "docs/superpowers/reports/2026-10-06-wrld06-historical-learning-sol2.md": "0fca7de4d7baacc296b5f5706fd1a201a8939151281aa97db2f78d9001bb43d5",
+      "docs/superpowers/reports/2026-10-06-wrld04-claim-history-sol2.md": "457b4405a971b0309503cfb0848d54e0917c556722a3910b6451b5e099d3ff1d",
+      "trader/world/model.py": "8163c0ec6467c44eab25590b0a1aaf3d9d95ed00a4e8ddd96faa041033408574",
+      "trader/world/replay.py": "57ec8b2649564cfd41d4d5c9896f7a26c7705bf4d0e3c2661b032c85227a4588",
+      "trader/learning/targets.py": "c0c59f471b3601a4cdf3c101880eebb022ab0a5ea1b3db38832c8904b9d313f1",
+      "trader/learning/consumers.py": "2b4e1bb2a373120eba0d24773a997d5417845a397e58d5033f2e3b61ef3b254b",
+      "trader/observability/world_producer.py": "63a2febf04b3a732146618ea2667f5931f95da61975d74c8fa092d7cdcd97aae",
+      "trader/observability/attention.py": "212aa27db4dce3d4257fce28474df24133c34c6e6f39576616d1129a1c5395e3",
+      "trader/cognition/attention.py": "4b7245c48e0765fdb46f561120a36fd2d5c4fab85abdcfed457fc3acaa1f7edd",
+      "tests/test_final_audit_learning_time.py": "d2626bf24c233125bdf26dc7fbbb9adc2b9fc8ac9d8eb9a4f6d27e24872fd361",
+      "tests/test_wrld04_claim_history.py": "01f9f9368fab998c6b81cc9502d4c092b5e930ef3a078134c14b5c624f69044c",
+      "tests/test_data05_revision_truth.py": "4ae7452393436b1fab1abbc4572816b9dfd4f55868dadad025b64c1e90714776",
+      "tests/test_final_audit_attention_allocation_time.py": "ace9634591afdb5d75e2f42b238836656fdcbdafe5a6b07d63a1cad7d502145e"
+    },
+    "status_counts_after": {
+      "CLOSED": 42,
+      "EVIDENCE_TO_MAP": 95,
       "DEFERRED": 7,
       "AWAITING_EVIDENCE": 9,
       "AWAITING_OWNER": 14,

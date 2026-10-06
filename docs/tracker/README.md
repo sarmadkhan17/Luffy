@@ -1,3 +1,5 @@
+> Current SOL-2 reconciliation: WRLD-06 CLOSED at architecture/offline scope. OUT-03 remains BLOCKED only on its direct OUT-01 dependency; DATA-03 is CLOSED and WRLD-06 is now CLOSED. WRLD-04 engineering closure is pinned; its separate canonical mapping remains pending. No successor selected. [Evidence](evidence/wrld06-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
+
 > Current SOL-2 reconciliation: QNT-01 CLOSED at architecture/offline scope. QNT-02 is now dependency-eligible; its concurrent engineering work and own closure condition are preserved. No successor selected. [Evidence](evidence/qnt01-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
 
 > Current SOL-2 reconciliation: RES-01 CLOSED at architecture/offline scope. RES-02 is now eligible on the supported anomaly path; routing remains its own proof. No successor selected. [Evidence](evidence/res01-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.

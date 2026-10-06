@@ -1,3 +1,5 @@
+> Current SOL-2 reconciliation: WRLD-06 CLOSED at architecture/offline scope. OUT-03 remains BLOCKED only on its direct OUT-01 dependency; DATA-03 is CLOSED and WRLD-06 is now CLOSED. WRLD-04 engineering closure is pinned; its separate canonical mapping remains pending. No successor selected. [Evidence](evidence/wrld06-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
+
 > Current SOL-2 reconciliation: QNT-01 CLOSED at architecture/offline scope. QNT-02 is now dependency-eligible; its concurrent engineering work and own closure condition are preserved. No successor selected. [Evidence](evidence/qnt01-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
 
 > Current SOL-2 reconciliation: RES-01 CLOSED at architecture/offline scope. RES-02 is now eligible on the supported anomaly path; routing remains its own proof. No successor selected. [Evidence](evidence/res01-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
@@ -1598,32 +1600,33 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 2
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Stops future learning leaking into old WorldModel/Attention/Portfolio queries.
 - **closure_condition**: Exact-cut, future, multiple-revision and restart queries select the correct applied revision; immutable base claims remain unchanged.
 - **failure_regression_proof**: Latest revision applied after T cannot affect any as_of=T consumer.
 - **dependencies**: WRLD-04, DATA-05
 - **owner_role**: Perception & WorldModel owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2 (existing engineering closure reconciled only)
+- **implementation_evidence**: f353b9f proof mapping; existing world.model overlay, learning.targets as-of application reader and consumers.WorldQueryReader; WRLD-04 base invariants pinned at 91ae9f4; DATA-05 CLOSED
+- **runtime_evidence**: NOT_PERFORMED; pinned offline engineering proof only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Original exact-cut/future/multiple-revision/restart condition satisfied with unchanged immutable base claims. 43 pinned retained cases reused, exact bytes verified; 2 fresh Attention/Portfolio guards passed. Historical reads use only APPLIED revisions with applied_at <= requested cut and frozen replay refuses future state. WRLD-04 engineering prerequisite is verified at 91ae9f4; its separate canonical row remains unchanged.
 - **source_ids**: S01, S02, S12
 - **source_sections**: §§6.2,19.3,21
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for WRLD-06 at architecture/offline engineering scope; dependent rows retain their own closing conditions.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: f353b9fa6e880404a076efd2528b000276327a5b
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **related_items**: LRN-03, LRN-04
 - **parent_ids**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/wrld06-reconciliation-sol2/reconciliation.json
+- **evidence_validity**: Pinned engineering closure and scoped offline checks; no deployment/runtime proof inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### WRLD-07 — Measure changing relationships rather than assume permanent correlations.
 
@@ -3499,10 +3502,10 @@ future_calibration:
 - **implementation_evidence**: Mapped capture/decision_sources/capture_runtime contracts and three focused offline replay suites; exact hashes in out03-replay-map-sol/source-manifest.json.
 - **runtime_evidence**: NOT_MAPPED
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Original-cut/source-hash/terminal-binding/restart evidence mapped offline. OUT-01 is BLOCKED; DATA-03 and WRLD-06 remain EVIDENCE_TO_MAP. No prerequisite closure inferred. See out03-replay-map-sol/REPORT.md.
+- **latest_evidence**: Original-cut/source-hash/terminal-binding/restart evidence remains mapped offline. DATA-03 is CLOSED; WRLD-06 is reconciled CLOSED with pinned f353b9f proof. OUT-01 remains BLOCKED, the sole unmet direct dependency. This update changes dependency summaries only; no OUT-03 closure or original replay proof is inferred.
 - **source_ids**: S01, S02, S08, S12, S14
 - **source_sections**: §19.3
-- **next_proof**: Map OUT-01 first, then reconcile DATA-03 and WRLD-06 exact evidence and their dependencies before OUT-03 closure.
+- **next_proof**: Satisfy OUT-01 including DEC-04 and full normal execution delivery mapping, then verify OUT-03 own exact historical replay/identity condition. DATA-03 and WRLD-06 dependency closures are recorded; no successor selected.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
