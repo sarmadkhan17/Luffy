@@ -22,11 +22,11 @@ metadata:
   pending_adoption: null
   status_counts:
     IN_PROGRESS: 0
-    EVIDENCE_TO_MAP: 129
+    EVIDENCE_TO_MAP: 128
     AWAITING_EVIDENCE: 11
     AWAITING_OWNER: 14
     DEFERRED: 2
-    BLOCKED: 3
+    BLOCKED: 4
     OPEN: 5
     CLOSED: 14
   workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged
@@ -4872,41 +4872,60 @@ items:
   stage: '3'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: BLOCKED
   required_behavior: Keep credentials outside repository with least-privilege access.
   why_needed: A UI/research compromise must not expose venue capability.
-  closure_condition: Verified credential locations/scopes, account mode and privileged boundaries match the accepted
-    deployment scope; migration gaps are explicit.
+  closure_condition: Verified credential locations/scopes, account mode and privileged boundaries match the
+    accepted deployment scope; migration gaps are explicit.
   failure_regression_proof: No secrets in Git, logs, backups, browser/remote gateway or unrestricted LLM tool.
   dependencies:
   - GOV-07
   owner_role: Provider & access owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: SOL
+  implementation_evidence: b353237 / 4d5f21b; trader/engine/venue_reads.py; trader/observability/first_boot.py;
+    293 focused offline regressions
+  runtime_evidence: Owner-reported -2015 on positionRisk/openOrders/openAlgoOrders; fresh venue permission
+    proof unavailable
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 'SEC-01 audit: production read pair is present, trimmed, distinct, without process overrides;
+    demo routing resolves correctly under CCXT 4.5.75. No local request/config defect demonstrated. Binance
+    key validity, demo-account binding, IP restriction and read permissions remain externally unverified. Current-credential
+    scan: 3882 tracked files and 24 logs, zero matches; historical backups/privileged boundary proof remains
+    unmapped. 293 offline regressions passed; no venue/provider calls or service launch.'
   source_ids:
   - S01
   - S02
   - S08
   - S13
-  source_sections: §26
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  source_sections: "\xA726"
+  next_proof: Owner must verify/recreate a separate same-account USD-M demo key with Enable Reading and required
+    USER_DATA access, no mutation permissions; correct the actual outbound-IP allowlist if restricted, privately
+    install the matching read pair, then retain fresh bounded GET-only proof for all three listings. Resolve
+    accepted external secret storage and remaining Git-history/backups/browser/gateway/LLM evidence gaps to
+    satisfy the unchanged full SEC-01 condition.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
   resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
-  related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  related_items:
+  - RUN-01
+  - OBS-05
+  - EXE-02
+  - EXE-05
+  - EXE-06
+  - LLM-01
+  - LLM-02
+  - REL-01
+  closure_evidence: docs/tracker/evidence/sec01-read-key-audit/audit.yaml
+  evidence_validity: Local offline checks at b353237 plus owner-reported venue failure; external key/IP/account
+    permission subcause UNKNOWN. BLOCKED, not closure or runtime readiness.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
-  owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  owner_approval_needed: Owner-side Binance demo key/account/IP verification and private read-pair installation
+    required; no permission to substitute trading key, widen key authority, launch services or mutate trading/control
+    state.
 - id: SEC-02
   area: Provider & access
   stage: '3'

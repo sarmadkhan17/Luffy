@@ -1,0 +1,116 @@
+schema: luffy-sec01-local-audit.v1
+date: '2026-10-06'
+status: BLOCKED
+source_revision: b35323799a8f79e05ed6095612420c13a58c2616
+closing_condition: Verified credential locations/scopes, account mode and privileged boundaries match the accepted
+  deployment scope; migration gaps are explicit.
+failure_regression_proof: No secrets in Git, logs, backups, browser/remote gateway or unrestricted LLM tool.
+credential_values_retained: false
+local_checks:
+  env_path: /mnt/luffy-data/luffy/production/.env
+  env_mode: 0o600
+  env_git_tracked: false
+  env_git_ignored: true
+  process_overrides_present: false
+  dedicated_pair_present: true
+  nonblank_trimmed_ascii_alphanumeric: true
+  both_fields_distinct_from_trading_pair: true
+  effective_values_match_dotenv: true
+  demo_enabled: true
+  ccxt_version: 4.5.75
+  resolved_private_host: demo-fapi.binance.com
+  private_v1_v2_v3_hosts_match: true
+  network_requests_sent: 0
+  provider_attempts: 0
+  service_launches: 0
+  trading_state_mutations: 0
+current_credential_scan:
+  tracked_files_scanned: 3882
+  tracked_files_matching: 0
+  log_files_scanned: 24
+  log_files_matching: 0
+  unreadable_files: 0
+  limit: Exact current four Binance credential values only. Not a Git-history, archived-backup, browser, gateway,
+    other-secret or all-host audit.
+contract:
+  source: trader/engine/venue_reads.py:_read_credentials, guarded_client, make_venue_reads; trader/observability/first_boot.py:read_zero_account
+  read_variables:
+  - BINANCE_READ_API_KEY
+  - BINANCE_READ_SECRET_KEY
+  trading_variables_for_separation_check_only:
+  - BINANCE_API_KEY
+  - BINANCE_SECRET_KEY
+  env_precedence: Existing process environment takes precedence over ROOT/.env (load_dotenv default override=False).
+  required_venue: Same Binance USD-M demo account used for execution, demo-fapi.binance.com. Production/Spot-testnet
+    credentials are not interchangeable; a legacy futures-testnet key is not assumed valid.
+  permissions: Enable Reading only; signed USD-M USER_DATA access to positionRisk, openOrders and openAlgoOrders,
+    plus leverageBracket for the snapshot CCXT path. No venue trading, cancellation, withdrawal or transfer
+    authority.
+  ip_allowlisting: Snapshot code has no IP allowlist setting or venue permission introspection. If the key
+    is IP-restricted, Binance must allow the actual outbound/NAT/proxy source IP of this runtime. Production
+    fee-reading helper separately recommends IP restriction; that production key is not a substitute.
+  futures_account: USD-M demo account must exist and be accessible to this separate key. Endpoint USER_DATA
+    requirements do not prove that a UI Enable Futures checkbox is necessary or that enabling it preserves
+    read-only scope. Do not enable trading to solve this rejection.
+  first_boot_proof: Two complete account-global passes of all three signed GETs (six successful reads) within
+    the existing bounded deadline. Nonzero/unknown inventory remains blocking; no cleanup is authorized.
+root_cause:
+  confirmed: 'Owner-reported Binance -2015 on all three required private reads: venue authentication/access
+    rejection prevents authoritative account reconciliation.'
+  local_narrowing: Current production config rules out absent, blank, whitespace-padded, overlapping read credentials,
+    local process overrides and wrong resolved host. Installed CCXT uses modern demo routing. It does not establish
+    what credentials/environment the prior failed process used.
+  not_distinguished:
+  - wrong environment or wrong demo account key
+  - deleted/revoked/invalid key or mismatched pair
+  - IP restriction mismatch
+  - Enable Reading or USD-M account USER_DATA permission unavailable
+  not_established: Actual key issuance environment/account, permissions, allowlist, historical attempt provenance
+    and account mode are not recorded locally. -2015 does not identify the exact subcause; timestamp and signature
+    have separate documented errors, but pair correctness is not proven.
+code_config_issue: No demonstrated request-routing/signing or configuration syntax defect; no production code/config
+  changes. ROOT/.env is ignored mode 0600 but physically inside the checkout. Literal outside-repository storage,
+  historical backups and privileged-boundary verification remain explicit migration/evidence gaps under the
+  unchanged closing condition. Do not claim whole SEC-01 closure from a successful GET alone.
+owner_action:
+- In Binance Demo API Management, verify or recreate a separate key for the same USD-M demo account as execution;
+  do not supply credentials in chat, logs or Git. Verify Enable Reading and the required USD-M USER_DATA access,
+  while retaining zero trading/cancel/withdraw/transfer permissions.
+- Inspect the key IP restriction and authorize the real runtime outbound/NAT/proxy IP if restricted. Confirm
+  account-level USD-M demo access. If Binance cannot expose these USER_DATA reads under a genuinely read-only
+  key, obtain Binance support confirmation; retain BLOCKED rather than widen the key permission.
+- Install only the matching read pair through the private deployment secret channel into the two read variables;
+  retain BINANCE_DEMO=true and credential separation. Document whether ignored local .env is accepted deployment
+  scope or migrate storage outside the checkout with a reviewed loading contract; audit Git history/backups/browser/gateway/LLM
+  boundaries to satisfy the full row.
+- After external correction, obtain a fresh sanitized bounded GET-only proof from this actual runtime for all
+  three endpoints. Successful reads must establish same-account provenance and read-only permission independently.
+  Existing OBS-05 zero-account/freshness and RUN-01 exact-revision gates still apply. No Kernel/Dashboard launch
+  is authorized here.
+cross_tracker_impact:
+  RUN-01: Remains BLOCKED; no reconciliation retry is ready until fresh accepted read access proof. Exact revision,
+    preflight, identity, heartbeat and graceful stop live proof remain required.
+  OBS-05: Remains CLOSED at offline implementation scope. -2015 correctly maps to venue_authentication_or_permission_failure;
+    no gate relaxation.
+  OBS-01/OBS-02: Admission and Dashboard readiness cannot infer venue readiness from local config or old receipts.
+    No launch.
+  LLM-01/LLM-02/LLM-04: brain.enabled=false observed; no provider attempt. Existing independent LLM/provider
+    closures or pending attribution are unchanged. This key correction confers no provider readiness.
+  EXE-02/EXE-05/EXE-06: Unknown-outcome reconciliation, native protection and recovery lack fresh read-key
+    venue truth. Offline implementation status unchanged; no execution/reconciliation acceptance or activation.
+  RES-02/RES-03/SEC-03/SEC-04/REL-01: SEC-01 dependencies and security/release readiness remain unsatisfied
+    by this audit; no downstream closure, real-money readiness or scope expansion.
+run01_reconciliation_can_retry: false
+sources:
+  error_codes: https://developers.binance.com/en/docs/products/derivatives-trading-usds-futures/error-code
+  demo_and_security_types: https://developers.binance.com/en/docs/products/derivatives-trading-usds-futures/general-info
+  user_data_listings: https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/trade
+evidence_scope: Local offline audit and owner-reported failure. No fresh authenticated venue probe; external
+  account/IP/permissions UNKNOWN. opus-run-01 checkout is older 1b2735c and has no local .env; do not equate
+  it with the current effective production configuration.
+tests:
+  command: ./venv/bin/python -m pytest -q tests/test_venue_reads.py tests/test_first_boot_diagnostics.py tests/test_first_boot_admission.py
+    tests/test_launch_preflight.py tests/test_run01_instance_identity.py tests/test_protection_snapshot.py
+  result: 293 passed in 64.13s
+  tracker_validation: 'PASS: all 178 closing conditions and other 177 rows unchanged; status counts, YAML/Markdown
+    parity, Ledger schema and manifest hashes validated; config/STATE/NEXT/watchdog hashes unchanged.'

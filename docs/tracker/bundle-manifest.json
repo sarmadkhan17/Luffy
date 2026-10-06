@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 362583,
-      "sha256": "d1a9325793b9dbbe40b8a9607610f9134e0ae9bebe4c1c36f5c8f798f68e8f7e",
+      "bytes": 363906,
+      "sha256": "9c01ad3efda7b3ad54c8a4edb2a30098b85296fc0ced81aa4d50562137dce724",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 369265,
-      "sha256": "93a56db48c82befebf58252555f00bee49ec25c119c1ed6247d89883cd52732e",
+      "bytes": 370514,
+      "sha256": "71f759bf2b29538299dfd779fcc789886658fc2dae3c40d787af7dff5c2f0895",
       "synchronization_required": false
     },
     {
