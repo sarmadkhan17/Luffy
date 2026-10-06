@@ -1,0 +1,115 @@
+{
+  "items": [
+    "QNT-03",
+    "QNT-04",
+    "QNT-05"
+  ],
+  "canonical_status": {
+    "QNT-03": "CLOSED",
+    "QNT-04": "CLOSED",
+    "QNT-05": "CLOSED"
+  },
+  "scope": "ARCHITECTURE_OFFLINE_ENGINEERING",
+  "engineering_closure_commits": {
+    "QNT-03": [
+      "a801cfdf9417d894c724e98ceb619d044d76a45a",
+      "26a26d3d80ac9da053aac15333d5bd9783b16035"
+    ],
+    "QNT-04": [
+      "093187b2b613e0dbf2792d19118a251f195309a2"
+    ],
+    "QNT-05": [
+      "ceba1bde92133ae978b24b5398403016c35a648e"
+    ]
+  },
+  "evidence": "docs/tracker/evidence/qnt03-04-05-reconciliation-sol2/reconciliation.json",
+  "closure_conditions": {
+    "QNT-03": "Dependence-aware controls or calibrated effective sample treatment match the hypothesis; contributor lineage is retained.",
+    "QNT-04": "All inspected data and overlapping label windows have recorded use; appropriate held-out/purged evaluation is reproducible.",
+    "QNT-05": "Registered admission rule and sequential/family budget are evidenced, retained and respected across retries/restarts."
+  },
+  "closure_condition_satisfied": {
+    "QNT-03": true,
+    "QNT-04": true,
+    "QNT-05": true
+  },
+  "dependency_status": {
+    "QNT-03": {
+      "QNT-02": "CLOSED; reconciled at 797971f",
+      "WRLD-07": "CLOSED; closure at 45e825d"
+    },
+    "QNT-04": {
+      "QNT-01": "CLOSED"
+    },
+    "QNT-05": {
+      "QNT-02": "CLOSED; reconciled at 797971f",
+      "QNT-04": "CLOSED; reconciled in this pass (093187b)"
+    }
+  },
+  "closing_condition_proof": {
+    "QNT-03": [
+      "Dependence-aware control: admission uses max(dependence-corrected consistency p, common-rotation p); both must exist and clear the existing configured threshold; no threshold changed.",
+      "Pooling does not create independent evidence: shared-factor test has 8 distinct inputs, measured null rho >0.5, effective n <3, corrected p no smaller than the independent diagnostic; 8 exact alias copies contribute at most one scored unit.",
+      "Contributor lineage retained: every contributor, frame/signal/funding fingerprints, WRLD-07 model/version/scope/evidence references and a receipt hash; reload plus a fresh interpreter reproduces the numerical result and receipt.",
+      "Baseline gaps fixed: 45e825d admitted 15 shared votes at independent p ~3e-15 with no dependence evidence; referee silently dropped 7 of 28 unmeasured pairs and treated unaligned calendars as common."
+    ],
+    "QNT-04": [
+      "Training/selection separated from held-out: discovery holds no bar at/after the cut; B starts at the cut (existing slices/referee tests plus new partition test).",
+      "Point-in-time labels / future-label leakage control: rewriting every price after the cut leaves the discovery bundle byte-identical.",
+      "Later revision/growth cannot leak: demonstrated gap (cut drifted forward as the store grew, exposing spent B bars) fixed; with cap_ms the discovery bundle equals the original.",
+      "Reused held-out refused: record_test raises holdout_already_spent, set_candidate cannot restore a spent candidate to queued/deferred, _examine refuses a spent rule without a look; the cut stays frozen at the first spent look across restart; replay gives an identical split and bundle.",
+      "Missing/insufficient held-out evidence yields no frames (not a pass)."
+    ],
+    "QNT-05": [
+      "Explicit family/sequential budget: one LORD++ sequence whose index is the research_tests table; parameters registered once in research_budget.",
+      "Correct consumption: looks take steps 1..n in order; alpha never rises without a rejection.",
+      "Retry/restart/reset: a restart does not restore budget; a config change after spending (higher fdr_target/lord_w0) is ignored and a caller using it is refused unregistered_alpha, also across restart; a failed look is charged p=1 at max attempts and does not reset.",
+      "Duplicate/renamed candidate: same canonical hash hits the QNT-04 spent guard; a second spend raises holdout_already_spent.",
+      "Exhausted budget: _examine defers, spends nothing, state deferred. Unregistered threshold: record_test raises unregistered_alpha, nothing recorded."
+    ]
+  },
+  "limits": {
+    "QNT-03": "Architecture/offline proof on synthetic fixtures; no real-market calibration; return correlation is context, not calibrated correlation of percentile votes. tests/test_analyst.py + test_analyst_tv_and_vault.py: 5 failures reproduced on the pinned 45e825d Analyst (missing _Journal.query fixture, legacy regime-weight expectations), unrelated.",
+    "QNT-04": "Architecture/offline proof on synthetic fixtures; no real-data calibration or held-out look claimed. tests/test_research_job.py: 2 failures (test_measure_returns_percentiles_and_the_cut, test_evaluate_reports_how_many_symbols_the_bundle_actually_loaded; cut_ms 0) reproduce with the QNT-04 changes stashed and at HEAD, unrelated; not investigated.",
+    "QNT-05": "Architecture/offline proof on synthetic fixtures; no real-data calibration. Pre-max-attempt crash retries remain existing design (not charged until referee_max_attempts=3). Fixtures that passed arbitrary alphas now use the sequence alpha; queued/deferred fixture candidates are not given a spent look."
+  },
+  "fresh_validation": "83 passed via luffy-pytest (tests/test_qnt03_dependence_lineage.py, test_admission_null_gate.py, test_qnt04_holdout_separation.py, test_qnt05_error_budget.py, test_research_fdr.py, test_research_slices.py, test_research_ledger.py, test_research_referee.py); engineering-time runs: 128 passed (QNT-03 focused), 138 and 141 passed (QNT-05/QNT-04 consumers). Source bytes unchanged since the engineering commits (working tree clean vs HEAD for trader/ and tests/). Reproduced baseline failures not caused by these changes: tests/test_research_job.py 2 failed (also with QNT-04 stashed); test_analyst.py/test_analyst_tv_and_vault.py 5 failed on pinned 45e825d.",
+  "original_condition_and_edges_preserved": true,
+  "application_code_changed": false,
+  "runtime_execution_authorized": false,
+  "trading_activation_authorized": false,
+  "real_data_calibration_claimed": false,
+  "control_plane_reconciliation_pending": false,
+  "successor_selected": false,
+  "downstream": {
+    "QNT-08": "Dependency-eligible: QNT-03, QNT-05 and QNT-06 are all CLOSED. Row unchanged (EVIDENCE_TO_MAP) and unselected; closure requires only actual registered quantitative evidence to yield an admitted candidate with Builder/Governor/owner gates downstream."
+  },
+  "active_work_untouched": "RES-05 work_package/current_active_item left as recorded; RES rows not edited.",
+  "source_sha256": {
+    "trader/research/dependence.py": "7d3e69219599eb3c2e27144f534479765e5aa80cebf0e0d2a7d2718a5d6f9c48",
+    "trader/brain/analyst.py": "9a53b9f085742e00ea329f6fc85541f54e3d7b9672a6403aaa064573412b0961",
+    "trader/research/referee.py": "5fdd868b1aa9b194c219f51a24b1f0690974f17aa8b1654b050da1e5c4649b5e",
+    "trader/research/ledger.py": "b30e0c87f89e38acbbcb71d4b108bdea20e35f6dc921baa037fe83200ad7a073",
+    "trader/research/evaluate.py": "db338c68cc6faa65aa18ee8594bfe8a28b7527627a5f0d8c175db0b79ea0f664",
+    "trader/research/job.py": "bd5c46c5ad4a2b27e606e4a815e531f6d6617826adbb69db370a3dc696131fd2",
+    "trader/research/runner.py": "b8c7b4b40fd297ac6c5edc831754329607fca575f202dc48b27799b8f7a1c21e",
+    "trader/research/slices.py": "8866775b031515069a68844014e5d18194572ed5aa0183ca8ea1fa1b0de668c3",
+    "trader/research/fdr.py": "30f864ada9e959196b192a7c710ccf49efd5a0d115b95af75201ebb2c4f504de",
+    "tests/test_qnt03_dependence_lineage.py": "d75147e6c17eb22f954e6f0fbe17bde7aa4acd7f8e652e1b8ad0829961a0c73e",
+    "tests/test_admission_null_gate.py": "7c8b8cc03c897eacf4b0f0ecbd54dcf8372c775bcb643bf8eb8135ff8a87e4de",
+    "tests/test_qnt04_holdout_separation.py": "7f14855c4fb5bacf4a97e04139653f99fbfaf4680944b0c0f913caccf46c4016",
+    "tests/test_qnt05_error_budget.py": "11a609f0174636d169bd606ade0114600ac1d798961c1a5c68ad58c058d07631",
+    "tests/test_research_fdr.py": "801ca1f6006211f460f2aeab2f8941fb964ea051273988a37b69b53917e8225a",
+    "tests/test_strategy_factory_handoff.py": "3c49bdb5c6f0f7caebcd619556a575160e9aea1606e7fbf3151498e94327d1a2",
+    "tests/authority_factory_fixtures.py": "e51996d77e76ca8c0116a9a989fac1bc590d51c5b496a7682be630f10d5e59cc"
+  },
+  "status_counts_after": {
+    "CLOSED": 52,
+    "EVIDENCE_TO_MAP": 84,
+    "DEFERRED": 7,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "BLOCKED": 8,
+    "OPEN": 4
+  }
+}

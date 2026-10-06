@@ -1,3 +1,5 @@
+> Current SOL-2 reconciliation: QNT-03, QNT-04 and QNT-05 CLOSED at architecture/offline scope (a801cfd/26a26d3; 093187b; ceba1bd). Dependence-aware admission with lineage, frozen held-out cut with spent-look guard, and a persistent registered error budget; synthetic offline proof, no real-data calibration. QNT-08 is dependency-eligible (QNT-03/05/06 CLOSED), row unchanged and unselected. [Evidence](evidence/qnt03-04-05-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
+
 > Current [SOL-2][RES-05]: BLOCKED. Collector result semantics corrected; complete refuted-result/next-question proof remains open. [Evidence](evidence/res05-bank-persistence-sol2/REPORT.md). RES-06/RES-07 unchanged. Earlier summaries below are historical.
 
 > Current [SOL-2][RES-04]: CLOSED at architecture/offline scope. Versioned rendered-content dedup, relevant bounded passages and semantically verified provenance/limits; 83 combined and 11 final focused checks passed. Zero live provider/LLM calls. RES-05 eligible, unselected; original condition unchanged. [Evidence](evidence/res04-preprocessing-sol2/REPORT.md). Earlier summaries below are historical.
@@ -2220,32 +2222,33 @@ future_calibration:
 - **stage**: 4
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Prevents pseudo-replication and inflated sample/confidence.
 - **closure_condition**: Dependence-aware controls or calibrated effective sample treatment match the hypothesis; contributor lineage is retained.
 - **failure_regression_proof**: Pooling correlated outcomes or variants does not create independent evidence.
 - **dependencies**: QNT-02, WRLD-07
 - **owner_role**: Quant validation owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-1/OPUS (demonstrated gap fixed; closure reconciled)
+- **implementation_evidence**: a801cfd, 26a26d3; trader/research/dependence.py, trader/brain/analyst.py, trader/research/referee.py; tests/test_qnt03_dependence_lineage.py; WRLD-07 exact-cut context
+- **runtime_evidence**: NOT_PERFORMED; offline engineering proof only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Original condition satisfied at architecture/offline scope: analyst admission requires the max of dependence-corrected consistency and common-rotation p (raw independent p is diagnostic only); missing/unaligned/incomplete dependence evidence is untestable; contributors are retained with frozen-input fingerprints, exact alias copies count once; WRLD-07 relationships are read at exact historical cuts. Limit: synthetic offline proof, no real-market calibration; 5 adjacent test_analyst failures reproduce on the pinned 45e825d baseline.
 - **source_ids**: S01, S02, S14
 - **source_sections**: §§13.7,16.2
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for QNT-03 at architecture/offline engineering scope; dependent rows retain their own closing conditions.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: a801cfdf9417d894c724e98ceb619d044d76a45a
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/qnt03-04-05-reconciliation-sol2/reconciliation.json
+- **evidence_validity**: Pinned engineering closure and scoped offline checks; no deployment/runtime proof inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### QNT-04 — Separate discovery, held-out eras/markets and prospective proof.
 
@@ -2253,32 +2256,33 @@ future_calibration:
 - **stage**: 4
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Protects against leakage through repeated research.
 - **closure_condition**: All inspected data and overlapping label windows have recorded use; appropriate held-out/purged evaluation is reproducible.
 - **failure_regression_proof**: New run/reset/renamed candidate cannot restore an already-spent holdout.
 - **dependencies**: QNT-01
 - **owner_role**: Quant validation owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-1/OPUS (demonstrated gap fixed; closure reconciled)
+- **implementation_evidence**: 093187b; trader/research/ledger.py, evaluate.py, job.py, referee.py, runner.py; tests/test_qnt04_holdout_separation.py; existing research.slices calendar cut and predictive-split freeze
+- **runtime_evidence**: NOT_PERFORMED; offline engineering proof only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Original condition satisfied at architecture/offline scope: discovery is physically truncated at one calendar cut so no label window crosses it; held-out B trades only from the cut with pre-cut context; the first spent held-out look freezes the cut (discovery capped via cap_ms, measure/select/evaluate/referee all pinned) so store growth cannot leak spent B into discovery; a spent held-out cannot be re-recorded, re-queued or re-examined. Limit: synthetic offline proof; no real-data held-out look; predictive experiments already had a frozen split.
 - **source_ids**: S01, S02, S14
 - **source_sections**: §13.9
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for QNT-04 at architecture/offline engineering scope; dependent rows retain their own closing conditions.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 093187b2b613e0dbf2792d19118a251f195309a2
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/qnt03-04-05-reconciliation-sol2/reconciliation.json
+- **evidence_validity**: Pinned engineering closure and scoped offline checks; no deployment/runtime proof inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### QNT-05 — Enforce multiple-testing/error budgets calibrated by controls.
 
@@ -2286,32 +2290,33 @@ future_calibration:
 - **stage**: 4
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Many candidate searches cannot each claim an untouched test.
 - **closure_condition**: Registered admission rule and sequential/family budget are evidenced, retained and respected across retries/restarts.
 - **failure_regression_proof**: No arbitrary familiar alpha or reset error budget because a prior run failed.
 - **dependencies**: QNT-02, QNT-04
 - **owner_role**: Quant validation owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-1/OPUS (demonstrated gap fixed; closure reconciled)
+- **implementation_evidence**: ceba1bd; trader/research/ledger.py (research_budget, register_budget, record_test level check); tests/test_qnt05_error_budget.py; existing LORD++ trader/research/fdr.py and research_tests sequence
+- **runtime_evidence**: NOT_PERFORMED; offline engineering proof only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Original condition satisfied at architecture/offline scope: LORD++ (alpha, w0) is registered in the ledger at the first look and the registered values win over later config; every look consumes the next step of one persisted sequence; record_test refuses a level above the registered sequence level (a brake may only lower it); retry of a spent candidate, restart, rename/duplicate hash, and failed-run charging cannot restore budget; an exhausted budget defers without spending. Limit: synthetic offline proof; crashing looks below referee_max_attempts (3) retry without charge (existing design, unchanged).
 - **source_ids**: S01, S02, S14
 - **source_sections**: §13.8
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for QNT-05 at architecture/offline engineering scope; dependent rows retain their own closing conditions.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: ceba1bde92133ae978b24b5398403016c35a648e
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/qnt03-04-05-reconciliation-sol2/reconciliation.json
+- **evidence_validity**: Pinned engineering closure and scoped offline checks; no deployment/runtime proof inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### QNT-06 — Keep underpowered UNTESTED distinct from FAIL and PASS.
 
