@@ -1,0 +1,70 @@
+schema: luffy-own02-closure.v1
+id: OWN-02
+status: CLOSED
+result: CLOSED_ARCHITECTURE_OFFLINE
+date: '2026-10-06'
+source_revision: df896752e3efc5a7aa5a80352e1a8084b976a90d
+source_manifest: source-manifest.json
+configuration_sha256: 12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17
+scope: Exact row authority behavior mapped to current source and offline fixture evidence. No loaded runtime/deployment/visual
+  proof.
+closing_condition: Needs You, dashboard/chat and optional gateway authenticate actor/scope and exact request/version/hash;
+  accepted/refused/completed outcomes are distinct.
+actual_gap: ROW_EVIDENCE_NOT_MAPPED; no product implementation gap demonstrated
+change: Evidence and control documents only; no source/config/policy changes
+tests:
+  approval_factory:
+    passed: 23
+    deselected: 70
+    result: PASS
+    log: approval-tests.txt
+  frontend:
+    passed: 15
+    result: PASS
+    log: frontend-tests.txt
+  broad_authority_recovery_stage8:
+    passed: 338
+    failed: 1
+    result: ONE_OUT_OF_SCOPE_PORTFOLIO_QUERY_FAILURE
+    log: focused-tests.txt
+    failure_id: tests/test_stage8_owner_os.py::test_portfolio_exact_cut_candidates_rejection_intent_risk
+    cause: queries.py:205 calls json.loads on retained !luffy-journal-detail.v1! envelope; outside approval/control
+      authority contract; unchanged
+  legacy_revision_suites:
+    collection_errors: 4
+    result: NOT_RUN
+    log: legacy-collection.txt
+    cause: Retired dashboard/web/index.html eager read in R3; imported by R4/R5/R6
+  control_documents:
+    passed: 11
+    result: PASS
+    log: control-validation.json
+cross_tracker_impact:
+  OWN_03: OWN-02 dependency satisfied for architecture/offline scope; own row remains EVIDENCE_TO_MAP
+  OWN_04: Unchanged EVIDENCE_TO_MAP; MON-01/MON-05 dependencies retained; observed-state evidence separate
+  GUI_01: Unchanged AWAITING_EVIDENCE; ACC-03/OWN-03/OWN-04 retained; no screen/runtime/visual approval inferred
+next_gui_item: OWN-03
+successor_selected: false
+policy:
+  deferred_items:
+  - SEC-01
+  - RUN-01
+  - GOV-07
+  dependency_membership_preserved: true
+  exclusion_applies_transitively: true
+  live_proof_required_for_this_closure: false
+  future_activation_gates_preserved: true
+production_effects:
+  kernel_launched: false
+  dashboard_launched: false
+  provider_calls: 0
+  venue_calls: 0
+  trading_activation: false
+  configuration_changed: false
+limitations:
+- Current loaded deployment identity UNKNOWN; GOV-07 remains deferred.
+- Optional provider adapters tested as fixtures; OpenClaw/WhatsApp not enabled.
+- Accepted approval records an owner decision; guarded adoption/execution remains separate.
+- No owner visual approval awarded.
+- Historical R3-R6 evidence is attributed to its original snapshot; collection failure retained.
+- Out-of-scope portfolio query failure retained, not fixed or silently waived as whole-suite PASS.

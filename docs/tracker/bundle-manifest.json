@@ -1,6 +1,6 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.17-gov07-owner-deferral",
+  "snapshot_version": "1.18-own02-authority-sol",
   "control_baseline_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 374625,
-      "sha256": "1ebd037983ba7b519f393c52b8cc7e147f4dfd55e7cb70e5820bc13bdb131225",
+      "bytes": 375413,
+      "sha256": "887997318d65e9f7c1a8a6eff728f1d785a99cc387e33ecad460757225744607",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 374931,
-      "sha256": "5975caae8c751a813513b08828811a840aed0696bd39b111787128a31401c203",
+      "bytes": 375692,
+      "sha256": "9bd945af9561a42ceedf6e4a57ad61a22f34b59551815f7f318adcd741c5151d",
       "synchronization_required": false
     },
     {
@@ -84,7 +84,7 @@
   },
   "current_build_selection": {
     "active_items": [],
-    "last_completed_item": "GOV-01",
+    "last_completed_item": "OWN-02",
     "excluded_blocker_items": [
       "SEC-01",
       "RUN-01",
@@ -94,9 +94,9 @@
       "WORK-01",
       "PERF-03"
     ],
-    "next_recommended_item": "OWN-02",
+    "next_recommended_item": "OWN-03",
     "eligible_items": [
-      "OWN-02",
+      "OWN-03",
       "DATA-08",
       "GUI-01",
       "GUI-02",
@@ -112,9 +112,9 @@
     "next_item_selected": false,
     "runtime_execution_authorized": false,
     "selection_status": "NO_ACTIVE_PACKAGE",
-    "selection_reason": "Owner deferred GOV-07 for architecture/GUI build. Existing CLOSED OBS-05 slot retained for read-contract compatibility; no successor selected.",
-    "last_terminal_item": "GOV-07",
-    "last_terminal_result": "DEFERRED"
+    "selection_reason": "OWN-02 closed from exact existing authority and offline evidence. OWN-03 is next GUI dependency recommendation only; no successor selected. Existing CLOSED OBS-05 slot retained for reader compatibility.",
+    "last_terminal_item": "OWN-02",
+    "last_terminal_result": "CLOSED_ARCHITECTURE_OFFLINE"
   },
   "control_snapshot": {
     "id": "gov07-identity-sol-2026-10-06",
@@ -188,5 +188,17 @@
     "closing_condition_preserved": "Source and evidence artifacts identify revision, configuration, run/process and timestamps; deployment records match remote/local code.",
     "historical_terminal_evidence": "docs/tracker/evidence/gov07-identity-sol/terminal.yaml",
     "activation_authorized": false
+  },
+  "own02_authority_closure": {
+    "id": "OWN-02",
+    "status": "CLOSED",
+    "result": "CLOSED_ARCHITECTURE_OFFLINE",
+    "evidence": "docs/tracker/evidence/own02-authority-sol/closure.yaml",
+    "implementation_gap": "NONE_DEMONSTRATED",
+    "next_gui_dependency": "OWN-03",
+    "successor_selected": false,
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false
   }
 }

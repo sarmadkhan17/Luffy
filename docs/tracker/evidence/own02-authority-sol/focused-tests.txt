@@ -1,0 +1,59 @@
+........................................................................ [ 21%]
+........................................................................ [ 42%]
+..................................................F..................... [ 63%]
+........................................................................ [ 84%]
+...................................................                      [100%]
+=================================== FAILURES ===================================
+__________ test_portfolio_exact_cut_candidates_rejection_intent_risk ___________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-114/test_portfolio_exact_cut_candi0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x741bb922df70>
+test_only_models = None
+
+    def test_portfolio_exact_cut_candidates_rejection_intent_risk(tmp_path,monkeypatch,test_only_models):
+        from tests.paper_cost_evidence_fixture import register_test_cost_evidence
+        register_test_cost_evidence(monkeypatch)
+        from trader.portfolio.runtime import Consumer
+        from tests.test_portfolio_allocator import inputs, candidate
+        root=tmp_path; (root/'data').mkdir()
+        j=Journal(root/'data/j.db')
+        body=Consumer(root/'data/runtime-portfolio.db').consume(inputs(candidate()),processed_at=2000)
+>       out=Q.query(j,'portfolio',body['portfolio_cut_id'],root=root)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_stage8_owner_os.py:110: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/owner/queries.py:205: in query
+    value = json.loads(raw)
+            ^^^^^^^^^^^^^^^
+/usr/lib/python3.12/json/__init__.py:346: in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.12/json/decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <json.decoder.JSONDecoder object at 0x741bcea35460>
+s = '!luffy-journal-detail.v1!{"sha256":"5e651708c2b8e9989586474d2e8f82ed42cf6bebb658ca43cec6494d5194854e","byte_length":4...aa13aa492158bdb1624672532fd3d048b73a0875825f1d65","96f18493ab87b2ddd99d58ff5b3a689194c1cd425cc2fc71dc92cbb0dce5aa45"]}'
+idx = 0
+
+    def raw_decode(self, s, idx=0):
+        """Decode a JSON document from ``s`` (a ``str`` beginning with
+        a JSON document) and return a 2-tuple of the Python
+        representation and the index in ``s`` where the document ended.
+    
+        This can be used to decode a JSON document from a string that may
+        have extraneous data at the end.
+    
+        """
+        try:
+            obj, end = self.scan_once(s, idx)
+        except StopIteration as err:
+>           raise JSONDecodeError("Expecting value", s, err.value) from None
+E           json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+/usr/lib/python3.12/json/decoder.py:355: JSONDecodeError
+=========================== short test summary info ============================
+FAILED tests/test_stage8_owner_os.py::test_portfolio_exact_cut_candidates_rejection_intent_risk
+1 failed, 338 passed in 66.37s (0:01:06)

@@ -1,10 +1,10 @@
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.17-gov07-owner-deferral
+Version: 1.18-own02-authority-sol
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
-GOV-07: **DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE**. Deployment/runtime identity remains unproven and is required before future deployment/live activation claims. No active successor; OWN-02 is next GUI-eligible. NEXT retains the existing CLOSED OBS-05 terminal slot for reader compatibility.
+GOV-07: **DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE**. Deployment/runtime identity remains unproven and is required before future deployment/live activation claims. OWN-02 is CLOSED at architecture/offline scope; OWN-03 is the next GUI dependency recommendation, unselected. NEXT retains the existing CLOSED OBS-05 terminal slot for reader compatibility.
 
 ## Status definitions
 
@@ -30,7 +30,7 @@ GOV-07: **DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE**. Deployment/runtime iden
 
 **One data set**: Maintain this YAML as canonical detailed data. Dashboard Tracker reads validated YAML and NEXT. Markdown is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization and adoption checks.
 
-**Current work**: GOV-07 DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE by explicit owner decision; mapped evidence and unchanged deployment identity closing condition preserved. Dashboard loaded revision/config remain UNKNOWN; local/remote difference is unproven deployment consistency, not an application defect. SEC-01/RUN-01 remain deferred. No active successor selected; OWN-02 evidence mapping is next GUI-eligible. Existing CLOSED OBS-05 NEXT slot is retained for reader compatibility. No activation authorized.
+**Current work**: OWN-02 CLOSED at pinned architecture/offline scope; no implementation gap demonstrated. OWN-03 is next GUI dependency recommendation only, unselected. SEC-01, RUN-01 and GOV-07 remain deferred and transitively excluded from current build blockers. Loaded deployment remains UNKNOWN. Existing CLOSED OBS-05 NEXT slot retained for reader compatibility; no activation authorized.
 
 **Activation**: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers, a restart or a scope expansion.
 
@@ -4046,30 +4046,30 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 8
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Owner UI is a control surface, not independent execution logic.
 - **closure_condition**: Needs You, dashboard/chat and optional gateway authenticate actor/scope and exact request/version/hash; accepted/refused/completed outcomes are distinct.
 - **failure_regression_proof**: Duplicate/stale/replayed approval cannot expand scope or bypass Risk/Governor.
 - **dependencies**: GOV-07
 - **owner_role**: Owner interface owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL
+- **implementation_evidence**: EXACT_TYPED_AUTHORITY_MAPPED_OFFLINE
+- **runtime_evidence**: OFFLINE_AUTHORITY_REGRESSIONS; LIVE_DEPLOYMENT_NOT_CLAIMED
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Exact contract/authentication, OwnerService lifecycle, Needs You hash binding, adapter boundary and guarded Risk/Factory evidence mapped. See docs/tracker/evidence/own02-authority-sol/REPORT.md and closure.yaml. No implementation gap demonstrated; unrelated portfolio-query failure and retired legacy harness collection limits retained.
 - **source_ids**: S01, S02, S10, S14
 - **source_sections**: §§25.4,35.14
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for OWN-02 at pinned architecture/offline scope. Current loaded deployment remains unproven under deferred GOV-07; no live Kernel/provider/trading proof required for this build closure.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
-- **acceptance_status**: DRAFT_VERIFICATION_DETAIL
+- **acceptance_status**: EXACT_ROW_OFFLINE_EVIDENCE_MAPPED
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: df896752e3efc5a7aa5a80352e1a8084b976a90d
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/own02-authority-sol/closure.yaml
+- **evidence_validity**: Pinned source/test evidence at architecture/offline scope only; no runtime or visual approval inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 
@@ -7074,3 +7074,7 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
 ```
+
+## OWN-02 architecture/offline closure (2026-10-06)
+
+Exact evidence: [authority map](evidence/own02-authority-sol/REPORT.md) and [closure](evidence/own02-authority-sol/closure.yaml). OWN-03 recommendation only; GUI-01, OWN-03 and OWN-04 statuses and closing conditions unchanged. SEC-01/RUN-01/GOV-07 remain deferred. No deployment, runtime or visual acceptance inferred.

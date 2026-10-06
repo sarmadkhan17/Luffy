@@ -1,0 +1,287 @@
+item: OWN-02
+source_revision: df896752e3efc5a7aa5a80352e1a8084b976a90d
+rows:
+- id: GOV-07
+  area: Product & governance
+  stage: '0'
+  item_type: REQUIREMENT
+  release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+  status: DEFERRED
+  required_behavior: Preserve exact code/config/run identity and safe branch provenance.
+  why_needed: Ensures evidence applies to the deployed system rather than an old checkout.
+  closure_condition: Source and evidence artifacts identify revision, configuration,
+    run/process and timestamps; deployment records match remote/local code.
+  failure_regression_proof: Dirty variants remain labelled unverified; no automatic
+    merge of historical checkpoint branches.
+  dependencies:
+  - GOV-01
+  owner_role: Owner + engineering coordinator
+  engineering_assignee: SOL
+  implementation_evidence: MAPPED_EXISTING_REVISION_PROCESS_AND_ARTIFACT_BINDING
+  runtime_evidence: HISTORICAL_R3_IDENTITY_VERIFIED_CURRENT_DEPLOYMENT_UNVERIFIED
+  visual_approval: NOT_APPLICABLE
+  latest_evidence: Exact identity map at local main 82431136ac68ff72325af301bac43b19b7d3ecd6;
+    whole checkout dirty UNVERIFIED, scoped tracked runtime/config clean. Remote main
+    25cc7d00 differs. Historical r3 30 run artifact and 22 preparation hashes match;
+    config hash matches its Git revision. Existing Dashboard PID/start ticks match,
+    but loaded revision/config UNKNOWN. No demonstrated application defect. Owner
+    subsequently deferred GOV-07 for current architecture/GUI build; deployment/runtime
+    identity remains UNPROVEN. Exact closing condition and mapped evidence preserved;
+    required before future deployment/live activation claims.
+  source_ids:
+  - S01
+  - S09
+  source_sections: "\xA7\xA76.5,27,31"
+  next_proof: Before future deployment/live activation claims, satisfy the unchanged
+    exact source/config/run/process/timestamp and local/remote/deployed consistency
+    closing condition. Current architecture/GUI work excludes GOV-07 transitively.
+  acceptance_basis: SDD requirement; verification detail drafted for approval.
+  acceptance_status: DRAFT_VERIFICATION_DETAIL
+  priority: NORMAL
+  resolution_at_commit: 82431136ac68ff72325af301bac43b19b7d3ecd6
+  work_authorized: true
+  updated: '2026-10-06'
+  parent_ids: []
+  related_items: []
+  closure_evidence: docs/tracker/evidence/gov07-identity-sol/terminal.yaml
+  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand
+    this row.
+  owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  owner_deferral_evidence: docs/tracker/evidence/gov07-identity-sol/owner-deferral.yaml
+- id: OWN-02
+  area: Owner interface
+  stage: '8'
+  item_type: REQUIREMENT
+  release_scope: BASELINE
+  status: EVIDENCE_TO_MAP
+  required_behavior: Route all owner approvals and controls through one typed authority.
+  why_needed: Owner UI is a control surface, not independent execution logic.
+  closure_condition: Needs You, dashboard/chat and optional gateway authenticate actor/scope
+    and exact request/version/hash; accepted/refused/completed outcomes are distinct.
+  failure_regression_proof: Duplicate/stale/replayed approval cannot expand scope
+    or bypass Risk/Governor.
+  dependencies:
+  - GOV-07
+  owner_role: Owner interface owner
+  engineering_assignee: UNASSIGNED
+  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
+  runtime_evidence: NOT_MAPPED
+  visual_approval: NOT_APPLICABLE
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to
+    this exact row. This is not a missing-implementation finding and does not reopen
+    prior closures.
+  source_ids:
+  - S01
+  - S02
+  - S10
+  - S14
+  source_sections: "\xA7\xA725.4,35.14"
+  next_proof: Map existing exact evidence first; implement only a demonstrated gap,
+    then satisfy this row's closure condition.
+  acceptance_basis: SDD requirement; verification detail drafted for approval.
+  acceptance_status: DRAFT_VERIFICATION_DETAIL
+  priority: NORMAL
+  resolution_at_commit: ''
+  work_authorized: false
+  updated: '2026-10-05'
+  parent_ids: []
+  related_items: []
+  closure_evidence: ''
+  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand
+    this row.
+  owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- id: OWN-03
+  area: Owner interface
+  stage: '8'
+  item_type: REQUIREMENT
+  release_scope: BASELINE
+  status: EVIDENCE_TO_MAP
+  required_behavior: Surface approval-required actions without requesting approval
+    for ordinary autonomy.
+  why_needed: Avoids both unsafe activation and constant permission loops.
+  closure_condition: First-live, new scope/access/spend, hard limits, serious recovery
+    and architecture changes surface; ordinary approved decisions remain autonomous.
+  failure_regression_proof: A no-trade/research question does not require new blanket
+    approval; first-live stays gated.
+  dependencies:
+  - OWN-02
+  owner_role: Owner interface owner
+  engineering_assignee: UNASSIGNED
+  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
+  runtime_evidence: NOT_MAPPED
+  visual_approval: NOT_APPLICABLE
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to
+    this exact row. This is not a missing-implementation finding and does not reopen
+    prior closures.
+  source_ids:
+  - S01
+  - S02
+  - S10
+  - S14
+  source_sections: "\xA7\xA72.4,25.4"
+  next_proof: Map existing exact evidence first; implement only a demonstrated gap,
+    then satisfy this row's closure condition.
+  acceptance_basis: SDD requirement; verification detail drafted for approval.
+  acceptance_status: DRAFT_VERIFICATION_DETAIL
+  priority: NORMAL
+  resolution_at_commit: ''
+  work_authorized: false
+  updated: '2026-10-05'
+  parent_ids: []
+  related_items: []
+  closure_evidence: ''
+  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand
+    this row.
+  owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- id: OWN-04
+  area: Owner interface
+  stage: '8'
+  item_type: REQUIREMENT
+  release_scope: BASELINE
+  status: EVIDENCE_TO_MAP
+  required_behavior: Report declared versus observed system state honestly.
+  why_needed: An architecture diagram or stored ACTIVE value is not runtime truth.
+  closure_condition: Current processes, source age, observed work, control and unavailable
+    telemetry are distinct from configured/declared state.
+  failure_regression_proof: Stopped, waiting, failed or intentionally disabled workers
+    cannot display active fabricated activity.
+  dependencies:
+  - MON-01
+  - MON-05
+  owner_role: Owner interface owner
+  engineering_assignee: UNASSIGNED
+  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
+  runtime_evidence: NOT_MAPPED
+  visual_approval: NOT_APPLICABLE
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to
+    this exact row. This is not a missing-implementation finding and does not reopen
+    prior closures.
+  source_ids:
+  - S01
+  - S02
+  - S10
+  - S14
+  source_sections: "\xA725.3"
+  next_proof: Map existing exact evidence first; implement only a demonstrated gap,
+    then satisfy this row's closure condition.
+  acceptance_basis: SDD requirement; verification detail drafted for approval.
+  acceptance_status: DRAFT_VERIFICATION_DETAIL
+  priority: NORMAL
+  resolution_at_commit: ''
+  work_authorized: false
+  updated: '2026-10-05'
+  parent_ids: []
+  related_items: []
+  closure_evidence: ''
+  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand
+    this row.
+  owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- id: GUI-01
+  area: Dashboard GUI
+  stage: '8'
+  item_type: REQUIREMENT
+  release_scope: BASELINE
+  status: AWAITING_EVIDENCE
+  required_behavior: 'Overview: Account/equity/P&L, exposure, current control, global
+    signals and Needs You.'
+  why_needed: The first screen must make status and required owner action understandable.
+  closure_condition: Observed figures have source/freshness/quality, unavailable values
+    stay unknown, and Needs You opens the exact evidence/action. Functional and runtime
+    proof are separate from owner visual approval.
+  failure_regression_proof: Stale, disconnected, zero/unknown and pending approval
+    are distinct; no fake live values.
+  dependencies:
+  - ACC-03
+  - OWN-03
+  - OWN-04
+  owner_role: Frontend + owner-interface owner
+  engineering_assignee: UNASSIGNED
+  implementation_evidence: HISTORICAL_STAGE8_CLAIM
+  runtime_evidence: NOT_PROVEN_FOR_THIS_SCREEN
+  visual_approval: TRACKED_SEPARATELY
+  latest_evidence: Stage8 GUI/API tests were reported historically. Per-screen current
+    functional/runtime evidence is not mapped here; no visual approval inferred.
+  source_ids:
+  - S01
+  - S10
+  - S14
+  source_sections: "\xA725.3"
+  next_proof: Map existing exact evidence first; implement only a demonstrated gap,
+    then satisfy this row's closure condition.
+  acceptance_basis: SDD requirement; verification detail drafted for approval.
+  acceptance_status: SDD_DEFINED_TEST_DETAIL_DRAFT
+  priority: NORMAL
+  resolution_at_commit: ''
+  work_authorized: false
+  updated: '2026-10-05'
+  parent_ids: []
+  related_items: []
+  closure_evidence: ''
+  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand
+    this row.
+  owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+release_deferral:
+  decision_date: '2026-10-06'
+  authority: 'Explicit owner decision: SEC-01 and RUN-01 are not required for the
+    current LUFFY build phase.'
+  status: DEFERRED
+  release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+  items:
+  - SEC-01
+  - RUN-01
+  - GOV-07
+  blocks_current_release: false
+  non_blocking_for:
+  - architecture work
+  - GUI completion
+  - offline testing
+  - other tracker items
+  critical_path_excluded_items:
+  - SEC-01
+  - RUN-01
+  - GOV-07
+  dependency_policy: Preserve recorded dependency/readiness-gate membership as future
+    requirements. Exclude SEC-01, RUN-01 and GOV-07 transitively from current architecture/GUI
+    build-phase blocker evaluation and critical-path selection.
+  revisit_before: Any future production/live activation requiring their guarantees;
+    revisit unresolved findings and satisfy the existing closing conditions before
+    that activation.
+  preservation: Existing evidence, unresolved findings, closing conditions and completed
+    implementation retained. No deferred item is CLOSED. GOV-07 deployment/runtime
+    identity remains UNPROVEN and is required before future deployment/live activation
+    claims.
+  activation_authorized: false
+  additional_owner_decisions:
+  - id: GOV-07
+    decision_date: '2026-10-06'
+    authority: 'Explicit owner decision in current session: GOV-07 is not required
+      for the current architecture/GUI build phase.'
+    status: DEFERRED
+    release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+    reason: 'Remaining gate is live deployment identity: Dashboard loaded revision/config
+      UNKNOWN, local main differs from remote main, no application defect demonstrated.'
+    blocks_current_release: false
+    non_blocking_for:
+    - architecture work
+    - GUI completion
+    - offline testing
+    - other tracker items
+    dependency_policy: Exclude GOV-07 transitively from current architecture/GUI build-phase
+      blockers; preserve its original requirement/dependency membership as a future
+      gate.
+    required_before: Any future deployment/live activation claims; exact source/config/run/process/timestamp
+      and local/remote/deployed consistency closing condition must then be proven.
+    runtime_deployment_identity: UNPROVEN
+    mapped_evidence_preserved: true
+    closing_condition_preserved: Source and evidence artifacts identify revision,
+      configuration, run/process and timestamps; deployment records match remote/local
+      code.
+    historical_terminal_evidence: docs/tracker/evidence/gov07-identity-sol/terminal.yaml
+    activation_authorized: false
+authorized_scope: OWN-02 evidence mapping and demonstrated gaps only; offline build
+  completion; no runtime activation

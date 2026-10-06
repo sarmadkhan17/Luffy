@@ -1,0 +1,175 @@
+{
+  "repository_revision": "df896752e3efc5a7aa5a80352e1a8084b976a90d",
+  "scope": "offline source identity; not loaded deployment/runtime identity",
+  "files": [
+    {
+      "path": "SDD.md",
+      "sha256": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28"
+    },
+    {
+      "path": "frontend/src/adapters/live.ts",
+      "sha256": "e287c7bcf230a47792ccdefd7204d648a97deb050b9beb5635132cca2e7b2809"
+    },
+    {
+      "path": "frontend/src/adapters/pending.ts",
+      "sha256": "9fead5a2cc0e8a652f4d883c5a3cb2fa06b5c647ec0cfbde1dd63605e1e4a7f4"
+    },
+    {
+      "path": "frontend/src/components/OwnerEvidence.tsx",
+      "sha256": "c678690b9702f34429703e0adc054e29ffcd9f508fd3c5dfdf64d45236b25ed8"
+    },
+    {
+      "path": "frontend/tests/contracts.test.ts",
+      "sha256": "d78fe9a7f67222471fb18292f8f8ffa1e763957b5ecb650b564940e2e44be3f2"
+    },
+    {
+      "path": "frontend/tests/stage8.test.tsx",
+      "sha256": "e8a7e5c9abfcfe16a09857135ebc98c8df5a486756b03f0d63d7a110df5e2337"
+    },
+    {
+      "path": "tests/test_owner_frontend_api.py",
+      "sha256": "a113bc1aabf15922db4832ded9bc119d0d2a21e309c926a9548127b16006f8f1"
+    },
+    {
+      "path": "tests/test_owner_interface.py",
+      "sha256": "78a8a2ebc151ca8924934d4992b217c1fd27ccf174002f801de05049cb29ce1f"
+    },
+    {
+      "path": "tests/test_owner_interface_boundary.py",
+      "sha256": "d181662387e9d2f6e7c9598e8eed06f880299ff3c5f06b717dd436b2a9d5ab77"
+    },
+    {
+      "path": "tests/test_owner_interface_r3.py",
+      "sha256": "3e32043d84a96dfc98de43f7bca50228b4ad89e68df0aecc2bb9797cedfc2e65"
+    },
+    {
+      "path": "tests/test_owner_interface_r4.py",
+      "sha256": "1617f62ac5d4871245bebf7d0d6279b9959e32215e9948fe0b1bf94979cedeba"
+    },
+    {
+      "path": "tests/test_owner_interface_r5.py",
+      "sha256": "162754745bc4275392000649d4c2fc4ca62607164ca71f02a2b780a6d859ccd4"
+    },
+    {
+      "path": "tests/test_owner_interface_r6.py",
+      "sha256": "8ac7966ab183c1998516df7702d5be85c2187eb6fcf02b45db141fb05591a521"
+    },
+    {
+      "path": "tests/test_owner_read_cache.py",
+      "sha256": "917caec64d9553e0061116472205b9fc9e1abd10da5c68107947719eaaa4c1b8"
+    },
+    {
+      "path": "tests/test_owner_reads.py",
+      "sha256": "bdb4d707f0f691c52fff25cd142e8b8c2016bfcc141bd0b8b5dbd8f641ddc90d"
+    },
+    {
+      "path": "tests/test_owner_reads_m2.py",
+      "sha256": "b126d11b47e10c1cec96523c24976233df79f945cb9acfcfc9157426a5693b42"
+    },
+    {
+      "path": "tests/test_owner_recovery.py",
+      "sha256": "fa754861fba40a8297159ac8f01ffa6eb725940ac26dd2d958e2673aaf72edf5"
+    },
+    {
+      "path": "tests/test_owner_recovery_concurrency.py",
+      "sha256": "55a054780b4a3cbc2f81bfd9459f7869f3a6dfa61732584cf399dabab929307f"
+    },
+    {
+      "path": "tests/test_owner_recovery_risk_guard.py",
+      "sha256": "ad4d01970f85c881da1459b0552fce5fa02331f7b5b0c3cfa04771b55b108939"
+    },
+    {
+      "path": "tests/test_owner_telegram_binding.py",
+      "sha256": "cdabd47605524e2b6e194eefb0ba7e7113d1e66d46a5980e638cd45ad32900e0"
+    },
+    {
+      "path": "tests/test_stage8_owner_os.py",
+      "sha256": "cea35234f5c7bd96d30967b202ef4e6c45e5863b8fef7c0b56b131bff2feba76"
+    },
+    {
+      "path": "trader/dashboard/owner_api.py",
+      "sha256": "284817739ff7dfc38ec5db130ce5476433e2b0eb79fc87564a7f2bb5864534a2"
+    },
+    {
+      "path": "trader/dashboard/server.py",
+      "sha256": "085d0e016079239fa85d0f1f5625b9035dd070ca659d6b4f16becd678c9c3edf"
+    },
+    {
+      "path": "trader/engine/risk.py",
+      "sha256": "d9cd5a0d74beda512f67255d7319239c8cf7f12be8743bd2c3b6a8fc46c52132"
+    },
+    {
+      "path": "trader/engine/risk_intent.py",
+      "sha256": "9c599f5775f12013ee2fc0823e7b1d2988ee62fb460e868f3833ce2b69651dca"
+    },
+    {
+      "path": "trader/engine/supervisor.py",
+      "sha256": "c80e346bd7ff704a0064132d0c8473a806e406cf7b6ce019ffd217a9fc87cb11"
+    },
+    {
+      "path": "trader/kernel.py",
+      "sha256": "5f85019090631a9ea197804788d742cd7c907503b9a4650d5234bce938506c03"
+    },
+    {
+      "path": "trader/owner/__init__.py",
+      "sha256": "01eb0e9f97720584b299767973b4f1c536acfe269a2df2873475bd46a2fb9193"
+    },
+    {
+      "path": "trader/owner/adapters/__init__.py",
+      "sha256": "57e91a27496138fdbcc710ee2b81ddf7f95b6893791e863699a006cd951d3432"
+    },
+    {
+      "path": "trader/owner/adapters/dashboard.py",
+      "sha256": "c18f174119455eb611b836667f9cd7d3955225ab66f6990073a2206d78e0053c"
+    },
+    {
+      "path": "trader/owner/adapters/openclaw.py",
+      "sha256": "d077abf4276fa5dde28b64b42139c2549616fca6328a49ad5495a57fdfd09695"
+    },
+    {
+      "path": "trader/owner/adapters/render.py",
+      "sha256": "333ef784e4c8a3a0b647fdc8810ec539251d559c8e34c1e6477a53b122b3c529"
+    },
+    {
+      "path": "trader/owner/adapters/telegram.py",
+      "sha256": "793f7b1895ea7cc69d7f4775961b73ab62125779a07fb50de92c30429c1af631"
+    },
+    {
+      "path": "trader/owner/approvals.py",
+      "sha256": "2cd6b7b7f959e699b9c0c14436e12128b6680b7031c0cf6f59505c09395ba640"
+    },
+    {
+      "path": "trader/owner/authz.py",
+      "sha256": "30c4240856554de08ed3e73d0468a7f86bcb990715f788605c3106e0cffd2753"
+    },
+    {
+      "path": "trader/owner/cli.py",
+      "sha256": "d04c575e3e49a0f76fe76b833be5711ceda1dce509cc2243b7706734e53d6e0c"
+    },
+    {
+      "path": "trader/owner/contract.py",
+      "sha256": "073fa1bd3ad1fbc4fc970c05dd8f86db63bdf2202b0a7b4295c468cd02bd7d87"
+    },
+    {
+      "path": "trader/owner/ipc.py",
+      "sha256": "b0e38043cdf31a3d096ca3c573243792f0731ccaaf3e06bff24e173a0b406fec"
+    },
+    {
+      "path": "trader/owner/knowledge.py",
+      "sha256": "0d9f3833c4003bd91760de267ffb63d4180bf53d77a205b14bb8405dd0234fd0"
+    },
+    {
+      "path": "trader/owner/queries.py",
+      "sha256": "2b760f5a1a251f9062fae9f46478c93dc1a4df892509a3a96b369b812ad43285"
+    },
+    {
+      "path": "trader/owner/service.py",
+      "sha256": "c0dcaae8f333eb62301fa1516dcd26a944b2ab72d490a8338997ea1700356591"
+    },
+    {
+      "path": "trader/strategy/factory_handoff.py",
+      "sha256": "00cd4496753741a838772ec7369736b59b88f1ff68e6355b3e2698530b75c3a5"
+    }
+  ],
+  "configuration_sha256": "12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17"
+}
