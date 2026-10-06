@@ -1,0 +1,137 @@
+........................................................................ [ 16%]
+...................................F..FF..........................FFFF.. [ 33%]
+........................................................................ [ 50%]
+........................................................................ [ 66%]
+........................................................................ [ 83%]
+......................................................................   [100%]
+=================================== FAILURES ===================================
+____________ test_a_position_outside_the_universe_is_still_managed _____________
+
+    def test_a_position_outside_the_universe_is_still_managed():
+        k = _kernel(open_symbols=["MOVR/USDT"], universe_symbols=["BTC/USDT"])
+        k._manage_orphan_positions({"BTC/USDT"})
+>       assert k.exits.managed == ["MOVR/USDT"]
+E       AssertionError: assert [] == ['MOVR/USDT']
+E         
+E         Right contains one more item: 'MOVR/USDT'
+E         Use -v to get more diff
+
+/home/sarmad/trader/tests/test_orphan_positions.py:67: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:2061 orphan position MOVR/USDT: '_Exits' object has no attribute 'spec_exits'
+_____________________ test_several_orphans_are_all_managed _____________________
+
+    def test_several_orphans_are_all_managed():
+        k = _kernel(open_symbols=["A/USDT", "B/USDT", "C/USDT"],
+                    universe_symbols=["BTC/USDT"])
+        k._manage_orphan_positions({"BTC/USDT"})
+>       assert sorted(k.exits.managed) == ["A/USDT", "B/USDT", "C/USDT"]
+E       AssertionError: assert [] == ['A/USDT', 'B/USDT', 'C/USDT']
+E         
+E         Right contains 3 more items, first extra item: 'A/USDT'
+E         Use -v to get more diff
+
+/home/sarmad/trader/tests/test_orphan_positions.py:87: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:2061 orphan position A/USDT: '_Exits' object has no attribute 'spec_exits'
+WARNING  luffy:kernel.py:2061 orphan position B/USDT: '_Exits' object has no attribute 'spec_exits'
+WARNING  luffy:kernel.py:2061 orphan position C/USDT: '_Exits' object has no attribute 'spec_exits'
+________ test_an_unavailable_snapshot_does_not_abort_the_other_orphans _________
+
+    def test_an_unavailable_snapshot_does_not_abort_the_other_orphans():
+        """One dead symbol must not strand every other position behind it."""
+        k = _kernel(open_symbols=["DEAD/USDT", "B/USDT"],
+                    universe_symbols=["BTC/USDT"])
+        real = k._snapshot_for
+        k._snapshot_for = lambda sym, universe=None: (
+            None if sym == "DEAD/USDT" else real(sym))
+        k._manage_orphan_positions({"BTC/USDT"})
+>       assert k.exits.managed == ["B/USDT"]
+E       AssertionError: assert [] == ['B/USDT']
+E         
+E         Right contains one more item: 'B/USDT'
+E         Use -v to get more diff
+
+/home/sarmad/trader/tests/test_orphan_positions.py:98: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:2053 orphan position DEAD/USDT: no snapshot — cannot manage this cycle
+WARNING  luffy:kernel.py:2061 orphan position B/USDT: '_Exits' object has no attribute 'spec_exits'
+_________________ test_half_the_position_is_half_the_notional __________________
+
+ex_and_journal = (<trader.engine.executor.Executor object at 0x7fd30b9ec590>, <trader.core.journal.Journal object at 0x7fd30b873fe0>)
+
+    def test_half_the_position_is_half_the_notional(ex_and_journal):
+        e, j = ex_and_journal
+>       assert e.close_partial(dict(_row(j)), 5.0, 110.0, "tp1") is True
+E       AssertionError: assert False is True
+E        +  where False = close_partial({'id': 'pos_1', 'decision_id': '', 'symbol': 'BTC/USDT', 'side': 'long', ...}, 5.0, 110.0, 'tp1')
+E        +    where close_partial = <trader.engine.executor.Executor object at 0x7fd30b9ec590>.close_partial
+E        +    and   {'id': 'pos_1', 'decision_id': '', 'symbol': 'BTC/USDT', 'side': 'long', ...} = dict({'id': 'pos_1', 'decision_id': '', 'symbol': 'BTC/USDT', 'side': 'long', ...})
+E        +      where {'id': 'pos_1', 'decision_id': '', 'symbol': 'BTC/USDT', 'side': 'long', ...} = _row(<trader.core.journal.Journal object at 0x7fd30b873fe0>)
+
+/home/sarmad/trader/tests/test_partial_close_shrinks_notional.py:51: AssertionError
+______________ test_notional_tracks_entry_price_not_the_exit_fill ______________
+
+ex_and_journal = (<trader.engine.executor.Executor object at 0x7fd30b8cb830>, <trader.core.journal.Journal object at 0x7fd30b8b8d10>)
+
+    def test_notional_tracks_entry_price_not_the_exit_fill(ex_and_journal):
+        """Notional is what the remaining position COST, so heat is measured
+        against the capital actually committed — not marked to the exit."""
+        e, j = ex_and_journal
+        e.close_partial(dict(_row(j)), 2.0, 110.0, "tp1")
+        r = _row(j)
+>       assert r["amount"] == pytest.approx(8.0)
+E       assert 10.0 == 8.0 ± 8.0e-06
+E         
+E         comparison failed
+E         Obtained: 10.0
+E         Expected: 8.0 ± 8.0e-06
+
+/home/sarmad/trader/tests/test_partial_close_shrinks_notional.py:63: AssertionError
+_____________________ test_the_callers_dict_is_updated_too _____________________
+
+ex_and_journal = (<trader.engine.executor.Executor object at 0x7fd30b9ec800>, <trader.core.journal.Journal object at 0x7fd30b8cade0>)
+
+    def test_the_callers_dict_is_updated_too(ex_and_journal):
+        """ExitEngine keeps working the same dict after a partial; a stale
+        notional there re-enters the next heat check and the fee maths."""
+        e, j = ex_and_journal
+        t = dict(_row(j))
+        e.close_partial(t, 5.0, 110.0, "tp1")
+>       assert t["amount"] == pytest.approx(5.0)
+E       assert 10.0 == 5.0 ± 5.0e-06
+E         
+E         comparison failed
+E         Obtained: 10.0
+E         Expected: 5.0 ± 5.0e-06
+
+/home/sarmad/trader/tests/test_partial_close_shrinks_notional.py:73: AssertionError
+______________________ test_heat_halves_with_the_position ______________________
+
+ex_and_journal = (<trader.engine.executor.Executor object at 0x7fd30b8cb740>, <trader.core.journal.Journal object at 0x7fd30b8ba630>)
+
+    def test_heat_halves_with_the_position(ex_and_journal):
+        """The behaviour that actually matters: the cap sees what is held."""
+        from trader.engine.risk import RiskManager
+        e, j = ex_and_journal
+        rm = RiskManager(load_config(), j)
+        before = float(_row(j)["notional_usdt"])
+        e.close_partial(dict(_row(j)), 5.0, 110.0, "tp1")
+        after = float(_row(j)["notional_usdt"])
+>       assert after == pytest.approx(before / 2)
+E       assert 1000.0 == 500.0 ± 5.0e-04
+E         
+E         comparison failed
+E         Obtained: 1000.0
+E         Expected: 500.0 ± 5.0e-04
+
+/home/sarmad/trader/tests/test_partial_close_shrinks_notional.py:85: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_orphan_positions.py::test_a_position_outside_the_universe_is_still_managed
+FAILED tests/test_orphan_positions.py::test_several_orphans_are_all_managed
+FAILED tests/test_orphan_positions.py::test_an_unavailable_snapshot_does_not_abort_the_other_orphans
+FAILED tests/test_partial_close_shrinks_notional.py::test_half_the_position_is_half_the_notional
+FAILED tests/test_partial_close_shrinks_notional.py::test_notional_tracks_entry_price_not_the_exit_fill
+FAILED tests/test_partial_close_shrinks_notional.py::test_the_callers_dict_is_updated_too
+FAILED tests/test_partial_close_shrinks_notional.py::test_heat_halves_with_the_position
+7 failed, 423 passed in 101.45s (0:01:41)

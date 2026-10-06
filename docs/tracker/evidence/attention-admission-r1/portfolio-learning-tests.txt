@@ -1,0 +1,41 @@
+........................................................................ [ 33%]
+..........F............................................................. [ 66%]
+........................................................................ [100%]
+=================================== FAILURES ===================================
+____________ test_journal_decision_without_expiry_normal_checkpoint ____________
+
+publications = (<trader.core.journal.Journal object at 0x7735a20deb10>, {'mode': {'market': 'futures', 'execution': 'paper'}, 'univer... admission_context=None, instrument_binding_json=None, market_provenance_json=None, market_provenance_parts=None), ...)
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-16/test_journal_decision_without_0')
+
+    def test_journal_decision_without_expiry_normal_checkpoint(publications,tmp_path):
+        """The original capture -> bridge -> freeze failure, using actual stores."""
+        j,cfg,v,receipt,_,market,_=publications
+        for role in ('contexts','economics'):
+            for p in (tmp_path/role).glob('*.json'):p.unlink()
+        record_snapshot(j,snapshot('long',NOW),at_ms=NOW)
+        from tests.test_attention_telemetry import frames, event
+        from trader.observability.attention import settings
+        from trader.observability.store import Store
+        from trader.core.types import Decision, Action
+        data={SYMBOL:next(iter(frames(1,NOW).values()))}
+        store=Store(tmp_path/'attention.db',settings())
+        ident=dict(schema='attention-scan-identity.v1',instance_id='1'*32,seq=NOW)
+        store.write(dict(event('journal-scan',NOW,data),identity=ident))
+        store.write(dict(kind='causes',scan_id='journal-scan',as_of_ms=NOW,identity=ident,
+                         items=[dict(symbol=SYMBOL,decision_id='normal-decision')]))
+        store.close()
+        sig=next(json.loads(s['payload_json'])['data'][0] for s in json.loads(receipt.payload_json)['sources'] if s['source_id']=='signals')
+        j.log_cycle(market,'journal-cycle','paper')
+        j.log_decision(Decision('normal-decision','journal-cycle',SYMBOL,Action.BUY,1.,.5,.8,[],
+                               strategy_signals=[sig],ts=market.ts))
+        result,detail=current.checkpoint(j.db_path,cfg,ledger=tmp_path/'checkpoint.db',
+                                        market_snapshots={'normal-decision':market})
+>       assert detail['normal_persisted_contexts']==0 and detail['candidate_count']==1
+E       assert (0 == 0 and 0 == 1)
+
+tests/test_stage6_normal_sources.py:180: AssertionError
+------------------------------ Captured log setup ------------------------------
+WARNING  trader.engine.risk:risk.py:514 risk baseline initialized at equity 10000
+=========================== short test summary info ============================
+FAILED tests/test_stage6_normal_sources.py::test_journal_decision_without_expiry_normal_checkpoint
+1 failed, 215 passed in 590.69s (0:09:50)

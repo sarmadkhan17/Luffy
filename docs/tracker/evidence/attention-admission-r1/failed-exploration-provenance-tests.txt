@@ -1,0 +1,40 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+___________ test_failed_exploration_learning_keeps_admission_reason ____________
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-31/test_failed_exploration_learni0')
+policy = AdmissionPolicy(max_deep_slots=12, event_reserve=2, exploration_reserve=2, minimum_slots=0)
+
+    def test_failed_exploration_learning_keeps_admission_reason(tmp_path,policy):
+        from trader.learning.capture_runtime import missed_snapshot
+        j=Journal(tmp_path/'failure.db');r=A.persist(j,observation(),policy)
+        symbol=r['roles']['exploration'][0]
+        context=dict(receipt_id=r['receipt_id'],category='exploration',acquisition='FAILED_SNAPSHOT')
+        with j._tx() as db:
+>           missed_snapshot(db,None,symbol,CUT,admission_context=context)
+
+tests/test_hierarchical_admission.py:440: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+trader/learning/capture_runtime.py:351: in missed_snapshot
+    freeze(db,'reasons',reasons,at_ms,'Kernel admitted snapshot skip')]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+trader/learning/capture_runtime.py:28: in freeze
+    return C.snapshot(db, role, raw, source_id=identity, version='prospective-source.v1',
+trader/learning/capture.py:71: in snapshot
+    insert(db, 'learning_source_blobs', 'sha256', sha, (sha, text))
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+db = <sqlite3.Connection object at 0x7cc0fe8ee200>
+table = 'learning_source_blobs', key = 'sha256'
+identity = '20b10bb403aee4e79ab897eb2f0e398fcdd2651a293bcab7bbdd38f59125581c'
+values = ('20b10bb403aee4e79ab897eb2f0e398fcdd2651a293bcab7bbdd38f59125581c', '{"admission":{"acquisition":"FAILED_SNAPSHOT","c...:"4979ce81dd3a8027a39d5c6e44c1e94618809ebf58ba2b109f83bb62ed39017a"},"reason":"missing_snapshot","symbol":"S02/USDT"}')
+
+    def insert(db, table, key, identity, values):
+>       row = db.execute(f'SELECT * FROM {table} WHERE {key}=?', (identity,)).fetchone()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       sqlite3.OperationalError: no such table: learning_source_blobs
+
+trader/learning/capture.py:49: OperationalError
+=========================== short test summary info ============================
+FAILED tests/test_hierarchical_admission.py::test_failed_exploration_learning_keeps_admission_reason
+1 failed in 1.82s

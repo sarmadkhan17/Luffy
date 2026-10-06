@@ -1,0 +1,30 @@
+{
+  "implementation_commit": "881999546e4a3b2fc796ef662a20bb24ee0405f5",
+  "sha256": {
+    "SDD.md": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28",
+    "config.yaml": "12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17",
+    "docs/tracker/evidence/attention-admission-r1/intake.yaml": "fecdc901f2072a00d277a9047788d48310dc58a36af827b4cd4bbe960a801d8e",
+    "frontend/src/views/LiveReads.tsx": "026e514f9745853083a7da029954468e9552ca4eef85ef04e80f9307bef7a7c7",
+    "tests/admission_cycle_fixture.py": "11d029d9a84f55979f074ebe3ce3375c3594e0311fed90de64c7be06271f3123",
+    "tests/test_activation_risk_baseline_v2.py": "168522db9e18c7ec97212ca13a087c98c54a3a3254564f122831a8a2469b3adf",
+    "tests/test_attention_telemetry.py": "f5c814e5ad89e42c1e3cee0a14d3167149606e7e6cfd76920046f569c5aa5077",
+    "tests/test_attention_view.py": "af65fce1ce03680bfa2c9a14f206601980d4a2344f59f50d401e80c074330587",
+    "tests/test_control_state_recovery.py": "1adf086967133deb5882b47b2499ed2c713bada081ff2e1059e61af8b68c492e",
+    "tests/test_final_audit_feed_identity.py": "022c4b0c9666b24487a54bb5292c5e427afe28731e17a0d9f0b0163b03442fa1",
+    "tests/test_hierarchical_admission.py": "6e6908375ecf024e66a236cfdf19731be26e88c834772ad9437e41b60567bb71",
+    "tests/test_scan_plan.py": "9d6fa4f23eac972ca508300b6837f8e3b47fa80e25c5d3af152b80265d367087",
+    "tests/test_stage6_normal_sources.py": "42dcf1ec709640f906a27ba34a3e5eea6da7b14f50a12370f5c11ba1a9b5046b",
+    "tests/test_stage7_replay_world_closure_r2.py": "2f0c898651ebded1c6ae4a656dcd9d4fa3e627b9033da7089f027e58dd331736",
+    "tests/test_universe_frames_timeframes.py": "cd070d6171588f2565ea3f76717d5dad07640069f8852db5f9724e12bb3124e8",
+    "trader/attention_admission.py": "3721960ed3210adf3d89144e1cfbd2ffa89cdf807ccaa6d4bdc7690ec82c83ff",
+    "trader/core/types.py": "b1d292057f4ff93dc6325d44ceabab40fe6874d81794ccd4574ab6f0bee7da24",
+    "trader/dashboard/server.py": "e6753d457a26eaf8283a81fa267a32bdcff1237188222af183baccaa51f977a1",
+    "trader/data/broad_crypto.py": "737e1a5cd124fc871bffc2de57f5ce9800a9e3660f0e0f1bf050f507d480fcab",
+    "trader/engine/orchestrator.py": "088dd23bef3a78e988875a7a9481e1345b13f91cbffc9adc28997bd7e06e5ec7",
+    "trader/kernel.py": "6b96933062828b92456e8c8ab7fbd49885a260a836a6174eb8b9be60f29571e4",
+    "trader/learning/admission.py": "40411bb94a30036a0beddce5615330f6b8ecee0dccd44bde38d8dc77c936ec21",
+    "trader/learning/capture_runtime.py": "21ea21a4118201e50caeeb2296b1b0012188c909d63b26ed288b8e7dd310a837",
+    "trader/portfolio/current.py": "af6f77a1f1b47c110d142757ed4ec8dd437d2546905ce6a1a6c802e83ec47e17",
+    "trader/strategy/scan_plan.py": "f3ce246cf92a26bafcaf37081c6e455b63c1fe8bfd18ea53d1bf5b696602213c"
+  }
+}

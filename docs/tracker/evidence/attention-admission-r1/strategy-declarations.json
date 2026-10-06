@@ -1,0 +1,94 @@
+{
+  "source": "retained data/luffy.db; read-only SQLite transaction; no runtime",
+  "semantics": "include defines strategy eligibility/relevance, exclude wins; neither overrides crypto cohort or forces a slot; required_evaluation explicitly budgeted with entry-blocking deferral",
+  "strategies": [
+    {
+      "id": "auth_aggressor_divergence_at_highs",
+      "state": "retired",
+      "spec_sha256": "233e08bcc8732720f6cb0e68bda56ee33a237c8055a9790e3370cbd14b22a007",
+      "universe": {
+        "exclude": [],
+        "include": [],
+        "min_volume_usdt": 0
+      }
+    },
+    {
+      "id": "auth_aggressor_thrust_breakout",
+      "state": "retired",
+      "spec_sha256": "d383064912a9961deac9c608c75855e67d216fa21c9519a6da8a5f97547ffe9b",
+      "universe": {
+        "exclude": [],
+        "include": [],
+        "min_volume_usdt": 0
+      }
+    },
+    {
+      "id": "auth_donchian_breakout_trail",
+      "state": "paper",
+      "spec_sha256": "f310be0ed35b08f5bce948b721c8e42eb0916068a93577760927e3d75da11699",
+      "universe": {
+        "exclude": [],
+        "include": [
+          "BTC/USDT",
+          "ETH/USDT",
+          "SOL/USDT",
+          "XRP/USDT",
+          "BNB/USDT",
+          "DOGE/USDT",
+          "LINK/USDT",
+          "AVAX/USDT",
+          "SUI/USDT",
+          "AAVE/USDT",
+          "NEAR/USDT",
+          "FIL/USDT",
+          "UNI/USDT",
+          "TAO/USDT",
+          "ZEC/USDT",
+          "HYPE/USDT"
+        ],
+        "min_volume_usdt": 100000000
+      }
+    },
+    {
+      "id": "auth_funding_price_divergence",
+      "state": "retired",
+      "spec_sha256": "7148a9fc706f59cf162336c310965b255eb60d3ff3aaf43793ead33f5dd94125",
+      "universe": {
+        "exclude": [],
+        "include": [],
+        "min_volume_usdt": 0
+      }
+    },
+    {
+      "id": "seed_btc_rotation_momentum",
+      "state": "retired",
+      "spec_sha256": "e237d74222fdb4b4352eb6e86d9a14a6714fe8eb495780d7f88f11dcaaa0cee5",
+      "universe": {
+        "exclude": [],
+        "include": [],
+        "min_volume_usdt": 0
+      }
+    },
+    {
+      "id": "spec_funding_filtered_trend_pullback",
+      "state": "paper",
+      "spec_sha256": "69ba33a8d4be4f641071436ef219cc295b0ce76ba1da4aecbfc06572003abec7",
+      "universe": {
+        "exclude": [],
+        "include": [],
+        "min_volume_usdt": 100000000.0
+      }
+    },
+    {
+      "id": "spec_momentum_divergence_trail",
+      "state": "retired",
+      "spec_sha256": "a77b673dd6cf785f3e4a67c5dee0544e2c4e0541be48a34cf837c3082e10c007",
+      "universe": {
+        "exclude": [],
+        "include": [],
+        "min_volume_usdt": 100000000.0
+      }
+    }
+  ],
+  "immutable_versions": []
+}

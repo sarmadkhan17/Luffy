@@ -1330,7 +1330,12 @@ final_audit_repair_loop_r1:
 
 attention_admission_r1:
   tracker_id: ATT-04
-  status: IN_PROGRESS
+  status: CLOSED
   owner_adopted: true
+  implementation_commit: 881999546e4a3b2fc796ef662a20bb24ee0405f5
+  proof_level: OFFLINE_IMPLEMENTATION_AND_TESTS_ONLY
   runtime_authorized: false
-  evidence: docs/tracker/evidence/attention-admission-r1/intake.yaml
+  runtime_launched: false
+  evidence: docs/tracker/evidence/attention-admission-r1/closure.yaml
+  next_selected: PERF-03
+  perf01: UNCHANGED; BLOCKED/UNKNOWN

@@ -1,0 +1,69 @@
+........................................................................ [ 23%]
+..............F......................................................... [ 46%]
+........................................................................ [ 69%]
+..............................................................F....F..F. [ 92%]
+.........................                                                [100%]
+=================================== FAILURES ===================================
+________________ test_cognition_imports_only_stdlib_and_itself _________________
+
+    def test_cognition_imports_only_stdlib_and_itself():
+        for path in sorted(PKG.glob("*.py")):
+            for node in ast.walk(ast.parse(path.read_text())):
+                if isinstance(node, ast.Import):
+                    names = [a.name for a in node.names]
+                elif isinstance(node, ast.ImportFrom):
+                    names = [node.module]
+                else:
+                    continue
+                for name in names:
+>                   assert name in ALLOWED_IMPORTS, f"{path.name} imports {name}"
+E                   AssertionError: _research_shadow_child.py imports os
+E                   assert 'os' in {'__future__', 'argparse', 'base64', 'dataclasses', 'datetime', 'hashlib', ...}
+
+/home/sarmad/trader/tests/test_cognition_contracts.py:187: AssertionError
+__________ test_a_spec_with_no_preferences_gets_the_liquid_candidates __________
+
+    def test_a_spec_with_no_preferences_gets_the_liquid_candidates():
+        p = plan_scan([_Spec("s")], CANDIDATES, VOL)
+>       assert set(p.symbols) == set(CANDIDATES)
+E       AssertionError: assert {'BTC/USDT', ...', 'XAU/USDT'} == {'BTC/USDT', ...AU/USDT:USDT'}
+E         
+E         Extra items in the left set:
+E         'XAU/USDT'
+E         Extra items in the right set:
+E         'XAU/USDT:USDT'
+E         Use -v to get more diff
+
+/home/sarmad/trader/tests/test_scan_plan.py:32: AssertionError
+_________________ test_the_plan_is_the_UNION_across_strategies _________________
+
+    def test_the_plan_is_the_UNION_across_strategies():
+        """Adding a strategy must widen the scan without touching the kernel."""
+        gold = _Spec("gold", include=["XAU/USDT:USDT"], min_vol=1e12)
+        major = _Spec("major", min_vol=1e9)
+        p = plan_scan([gold, major], CANDIDATES, VOL)
+>       assert "XAU/USDT:USDT" in p.symbols and "BTC/USDT" in p.symbols
+E       AssertionError: assert ('XAU/USDT:USDT' in ('BTC/USDT', 'ETH/USDT', 'XAU/USDT'))
+E        +  where ('BTC/USDT', 'ETH/USDT', 'XAU/USDT') = ScanPlan(symbols=('BTC/USDT', 'ETH/USDT', 'XAU/USDT'), timeframes=('4h',), by_strategy={'gold': frozenset({'XAU/USDT'}), 'major': frozenset({'BTC/USDT', 'ETH/USDT', 'XAU/USDT'})}).symbols
+
+/home/sarmad/trader/tests/test_scan_plan.py:64: AssertionError
+______________ test_per_strategy_symbols_are_reported_separately _______________
+
+    def test_per_strategy_symbols_are_reported_separately():
+        """The cycle must know which spec wanted which symbol, so a spec is never
+        evaluated on a market it explicitly refused."""
+        a = _Spec("a", include=["XAU/USDT:USDT"], min_vol=1e12)
+        b = _Spec("b", min_vol=1e9)
+        p = plan_scan([a, b], CANDIDATES, VOL)
+>       assert p.wants("a", "XAU/USDT:USDT") is True
+E       AssertionError: assert False is True
+E        +  where False = wants('a', 'XAU/USDT:USDT')
+E        +    where wants = ScanPlan(symbols=('BTC/USDT', 'ETH/USDT', 'XAU/USDT'), timeframes=('4h',), by_strategy={'a': frozenset({'XAU/USDT'}), 'b': frozenset({'BTC/USDT', 'ETH/USDT', 'XAU/USDT'})}).wants
+
+/home/sarmad/trader/tests/test_scan_plan.py:84: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_cognition_contracts.py::test_cognition_imports_only_stdlib_and_itself
+FAILED tests/test_scan_plan.py::test_a_spec_with_no_preferences_gets_the_liquid_candidates
+FAILED tests/test_scan_plan.py::test_the_plan_is_the_UNION_across_strategies
+FAILED tests/test_scan_plan.py::test_per_strategy_symbols_are_reported_separately
+4 failed, 309 passed in 44.24s

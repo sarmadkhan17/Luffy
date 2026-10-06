@@ -1,9 +1,9 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.3-dashboard-tracker-adoption",
-  "control_baseline_revision": "5e464d59ea4db9f227f919d5bbbad6702ac09473",
+  "snapshot_version": "1.4-attention-admission-closure",
+  "control_baseline_revision": "881999546e4a3b2fc796ef662a20bb24ee0405f5",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
-  "row_count": 176,
+  "row_count": 177,
   "gui_rows": 29,
   "adoption": "OWNER_ACCEPTED_CONTROL_PLANE",
   "primary_view": "Dashboard Tracker (read-only)",
@@ -12,8 +12,8 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 346745,
-      "sha256": "2f69b01513ccc709ddd8aa451ecc54feeae056f97965d59d453afa6675c36391",
+      "bytes": 350220,
+      "sha256": "726bbf6fbff2453e6c7d94d33a4e3802d01210f8080362d205204f1142eb4797",
       "synchronization_required": true
     },
     {

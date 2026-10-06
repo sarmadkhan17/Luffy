@@ -1,0 +1,65 @@
+........................................................................ [ 21%]
+........................................................................ [ 43%]
+........................................................................ [ 65%]
+..............................................................FFFF...... [ 87%]
+........................................                                 [100%]
+=================================== FAILURES ===================================
+___________ test_peers_are_built_at_every_timeframe_the_book_trades ____________
+
+    def test_peers_are_built_at_every_timeframe_the_book_trades():
+        k = _kernel(("4h",))
+        frames = k._universe_frames(["BTC/USDT", "ETH/USDT"])
+>       assert "4h" in frames["BTC/USDT"], \
+                       ^^^^^^^^^^^^^^^^^^
+            "a 4h spec must find its peers at 4h, not only at the execution tf"
+E       KeyError: 'BTC/USDT'
+
+/home/sarmad/trader/tests/test_universe_frames_timeframes.py:43: KeyError
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:1921 universe frame BTC/USDT 15m: 'Kernel' object has no attribute 'journal'
+WARNING  luffy:kernel.py:1921 universe frame BTC/USDT 4h: 'Kernel' object has no attribute 'journal'
+WARNING  luffy:kernel.py:1921 universe frame ETH/USDT 15m: 'Kernel' object has no attribute 'journal'
+WARNING  luffy:kernel.py:1921 universe frame ETH/USDT 4h: 'Kernel' object has no attribute 'journal'
+________________ test_the_execution_timeframe_is_always_present ________________
+
+    def test_the_execution_timeframe_is_always_present():
+        """Analysts and the orchestrator still read the execution frame."""
+        k = _kernel(("4h",))
+>       assert "15m" in k._universe_frames(["BTC/USDT"])["BTC/USDT"]
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'BTC/USDT'
+
+/home/sarmad/trader/tests/test_universe_frames_timeframes.py:50: KeyError
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:1921 universe frame BTC/USDT 15m: 'Kernel' object has no attribute 'journal'
+WARNING  luffy:kernel.py:1921 universe frame BTC/USDT 4h: 'Kernel' object has no attribute 'journal'
+_______________ test_several_strategy_timeframes_are_all_covered _______________
+
+    def test_several_strategy_timeframes_are_all_covered():
+        k = _kernel(("1h", "4h"))
+>       got = k._universe_frames(["BTC/USDT"])["BTC/USDT"]
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'BTC/USDT'
+
+/home/sarmad/trader/tests/test_universe_frames_timeframes.py:55: KeyError
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:1921 universe frame BTC/USDT 15m: 'Kernel' object has no attribute 'journal'
+WARNING  luffy:kernel.py:1921 universe frame BTC/USDT 1h: 'Kernel' object has no attribute 'journal'
+WARNING  luffy:kernel.py:1921 universe frame BTC/USDT 4h: 'Kernel' object has no attribute 'journal'
+_________ test_no_strategy_timeframes_still_yields_the_execution_frame _________
+
+    def test_no_strategy_timeframes_still_yields_the_execution_frame():
+        k = _kernel(())
+>       assert list(k._universe_frames(["BTC/USDT"])["BTC/USDT"]) == ["15m"]
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E       KeyError: 'BTC/USDT'
+
+/home/sarmad/trader/tests/test_universe_frames_timeframes.py:61: KeyError
+------------------------------ Captured log call -------------------------------
+WARNING  luffy:kernel.py:1921 universe frame BTC/USDT 15m: 'Kernel' object has no attribute 'journal'
+=========================== short test summary info ============================
+FAILED tests/test_universe_frames_timeframes.py::test_peers_are_built_at_every_timeframe_the_book_trades
+FAILED tests/test_universe_frames_timeframes.py::test_the_execution_timeframe_is_always_present
+FAILED tests/test_universe_frames_timeframes.py::test_several_strategy_timeframes_are_all_covered
+FAILED tests/test_universe_frames_timeframes.py::test_no_strategy_timeframes_still_yields_the_execution_frame
+4 failed, 324 passed in 184.62s (0:03:04)

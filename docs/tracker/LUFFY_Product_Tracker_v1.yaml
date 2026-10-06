@@ -1,32 +1,32 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.3-dashboard-tracker-adoption
+  version: 1.4-attention-admission-closure
   created_date: '2026-10-05'
   title: LUFFY — Product, Behaviour & GUI Tracker
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
-  scope: SDD v3.2 §§1–37 at pinned revision + owner tracker/GUI requirements + provided historical/runtime reports.
+  scope: SDD v3.2 baseline plus v3.3 owner-adopted Attention admission; retained evidence and owner tracker requirements.
   baseline_commit: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
   evidence_checkpoint: 6da5ad9a895ddb0f5fed9d75904e9639cc731b44
   fresh_runtime_verified: false
   repository_modified: true
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
     prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
-  current_active_item: ATT-04
-  current_active_result: OWNER_APPROVED_IMPLEMENTATION
+  current_active_item: PERF-03
+  current_active_result: SELECTED_NOT_STARTED_DIAGNOSIS_ONLY
   row_count: 177
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
     is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown is an
     optional generated reference.
   pending_adoption: null
   status_counts:
-    IN_PROGRESS: 1
+    IN_PROGRESS: 0
     EVIDENCE_TO_MAP: 130
     AWAITING_EVIDENCE: 15
     AWAITING_OWNER: 14
     DEFERRED: 2
     BLOCKED: 1
     OPEN: 6
-    CLOSED: 8
+    CLOSED: 9
   workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged and
     excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
@@ -35,7 +35,7 @@ metadata:
     control-plane reconciliation; implementation verification is distinct from deployed/browser proof.
   current_runtime_item: PERF-01
   current_runtime_result: BLOCKED
-  next_diagnostic_item: PERF-01
+  next_diagnostic_item: PERF-03
   next_runtime_execution_authorized: false
   owner_representation_decision:
     date: '2026-10-05'
@@ -76,8 +76,8 @@ operating_rules:
     is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization
     and adoption checks.
 - rule: Current work
-  detail: ATT-04 is the single owner-authorized ENGINEERING_ONLY implementation package. PERF-01 remains
-    unchanged and BLOCKED/UNKNOWN. No restart, runtime observation, provider enablement or trading activation is authorized.
+  detail: ATT-04 is CLOSED at offline implementation/test scope. PERF-03 is the single selected DIAGNOSIS_ONLY
+    package, not started. PERF-01 remains unchanged and BLOCKED/UNKNOWN. No runtime, provider or trading activation is authorized.
 - rule: Activation
   detail: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers,
     a restart or a scope expansion.
@@ -2161,7 +2161,7 @@ items:
   stage: '3'
   item_type: ARCHITECTURE_IMPLEMENTATION
   release_scope: BASELINE
-  status: IN_PROGRESS
+  status: CLOSED
   required_behavior: Hierarchical deterministic crypto admission before expensive discretionary processing; independent
     safety/exposure service.
   why_needed: Retained scan 78513e8e processed 20 symbols despite only one salience selection, 15 warmup refusals
@@ -2185,19 +2185,24 @@ items:
   - PERF-03
   owner_role: Owner-approved local engineering
   engineering_assignee: Codex
-  implementation_evidence: IN_PROGRESS
+  implementation_evidence: 8819995; source-manifest.json; closure.yaml
   runtime_evidence: NOT_AUTHORIZED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: docs/tracker/evidence/attention-admission-r1/intake.yaml; owner adopted policy in current session.
+  latest_evidence: Offline admission/safety/peer/Portfolio/learning/replay/API tests pass. Exact known adjacent
+    failures reproduced at untouched f29fe97; no runtime/performance claim.
   source_ids:
   - S01
   source_sections: "SDD \xA7\xA72.2,6.8,8,28,35.1; current owner adoption"
-  next_proof: Implement and verify exact closure contract without runtime.
+  next_proof: Separately authorized operational observation; implementation closure complete. PERF-01 unchanged.
   acceptance_basis: Explicit owner-adopted architecture 2026-10-06
   acceptance_status: OWNER_APPROVED
   priority: CURRENT
-  work_authorized: true
+  work_authorized: false
   updated: '2026-10-06'
+  closure_evidence: docs/tracker/evidence/attention-admission-r1/closure.yaml
+  resolution_at_commit: 881999546e4a3b2fc796ef662a20bb24ee0405f5
+  evidence_validity: Exact implementation source hashes, retained replay input, focused and adjacent test logs;
+    offline only.
 - id: RES-01
   area: Attention & research
   stage: '3'

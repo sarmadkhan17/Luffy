@@ -1,0 +1,81 @@
+package: ATT-04
+result: CLOSED
+proof_level: OFFLINE_IMPLEMENTATION_AND_TESTS_ONLY
+base_head: f29fe973dd713182dd0e7173678feed5d54fcddc
+spec_commit: c592f48
+implementation_commit: 881999546e4a3b2fc796ef662a20bb24ee0405f5
+root_change: Durable deterministic crypto admission now gates discretionary snapshots, derivatives, order books,
+  decisions and deep learning before acquisition.
+old_pipeline: volume top12 alts + majors + strategy union -> all scan members deep; investigation Attention did
+  not gate processing
+new_pipeline: eligible crypto -> one bulk ticker observation + cached closed bars -> persisted deterministic admission
+  -> bounded discretionary snapshots/decisions/learning -> Portfolio; independent exposure/protection/recovery service
+canonical_values:
+  source: config.yaml attention.admission
+  maximum: 12
+  event_reserve: 2
+  exploration_reserve: 2
+  minimum: 0
+  anchors: BTC/ETH context; no automatic deep slot
+statistical_semantics:
+  strategy_peers: strategy-volume-peer.v2, defined independently; venue onboardDate replaces pre-admission daily-candle
+    age probes
+  attention_salience: broad-crypto.v1 full eligible crypto population replaces first16; existing calibrated scorer/threshold;
+    salience is unusualness
+  missing_peers: explicit cached-data absence; no admitted-only replacement; existing strategy missing-data refusal
+strategy_audit: 'strategy-declarations.json: all seven retained spec declarations; 16-symbol Donchian include remains
+  eligibility, not entitlement. No immutable versions retained. Include/exclude normalized; optional required_evaluation
+  consumes slots and deferral blocks new entries.'
+learning: Receipt retains full broad population/rejections/warmup and exact source inputs; decisions and acquisition
+  failures retain admission category/identity. Selection-bias reader cannot write labels/priorities. Learned compute-admission
+  influence NONE.
+safety: Offline actual Kernel-cycle cases preserve 15 held symbols under cap12/cap1/zero/refused admission; pending
+  and venue-only exposure independent. Existing Supervisor/recovery/protection contract unchanged.
+portfolio: Current discretionary requests require matching snapshot/receipt/admitted symbol; whole-book venue positions
+  and held market observations supplied independently. Real freeze test proves zero candidates does not erase holding.
+tests:
+  owner-provenance-final-tests.txt: 54 passed (49 admission cases + 5 API cases); final source revision
+  admission-final-tests.txt: 67 passed before two additional provenance cases; admission/scan-plan/timeframes/whole-book
+  attention-accepted-regression-tests.txt: 463 passed, 1 deselected; deselection independently reproduced at base
+  safety-final-regression-tests.txt: 423 passed, 7 known base failures
+  baseline-known-failures.txt: 8 failures, 3 passes on isolated untouched f29fe97; exact same 1 cognition-import
+    + 3 orphan + 4 partial-close failures
+  portfolio-learning-tests.txt: 215 passed, 1 stale fixture failure loaded before explicit receipt fix
+  stage6-stage7-corrected-tests.txt: 20 passed after receipt fixture correction
+  consumer-final-tests.txt: 27 passed including exact previously failing checkpoint and new whole-book omission
+  learning-cycle-accepted-tests.txt: 147 passed after failed-acquisition provenance addition
+  frontend-tests.txt: 26 passed in three relevant suites
+  frontend-typecheck.txt: PASS tsc --noEmit
+  replay-proof.json: PASS fresh-process exact replay from retained synthetic replay-fixture.json
+negative_controls:
+- cap12 -> cap1 reduces discretionary work only; all15 holdings serviced
+- missing/corrupt receipt refuses before snapshot
+- peer hash corruption refuses; actual xs_rank changes under admitted-only mutant
+- missing/deleted/corrupt/mismatched rotation refuses rather than reset
+- failed acquisition advances persisted exploration cursor
+- held symbol15 remains serviced under empty/stale/storage/decision failure
+- Portfolio zero candidates preserves whole-book position
+- latest refusal cannot masquerade as prior successful receipt
+initial_attempts: 'Failed first attempts retained, not counted as passes: FD1024 exhaustion, missing test filename,
+  fixture provenance/normalization, pre-existing missing journal fixture, and transient new test fixture/table initialization
+  mistakes. Corrected acceptance logs identified above.'
+governance:
+  new_ids:
+  - ATT-04
+  parent: ATT-01
+  PERF-01: ENTIRE_ROW_UNCHANGED; engineering BLOCKED, causal UNKNOWN, original closing condition preserved
+  next: PERF-03 SELECTED_NOT_STARTED / DIAGNOSIS_ONLY; existing CURRENT priority and no dependencies
+  runtime_authorized: false
+  trading_activated: false
+  providers_enabled: false
+limits:
+- No Kernel/Dashboard launch or runtime measurement
+- No runtime time savings, optimal-K, missed-opportunity rate, or readiness claim
+- All8 known adjacent failures remain reproducible baseline limitations; production protection fixes not expanded
+  into this package
+- Cached broad/peer coverage warms via admitted/exploration acquisition; absent cohort data stays unknown
+- Bulk observation and full-cohort receipt CPU/storage costs unmeasured
+- Attention investigation capture PERF-03 remains separate measured gap
+preservation: Unrelated graphify-out/** and docs/checkpoints/** excluded from edits/staging; no primary Graphify
+  update that could overwrite prior dirty graph state. Claude CLI unavailable (not logged in); owner-authorized
+  local implementation continued.
