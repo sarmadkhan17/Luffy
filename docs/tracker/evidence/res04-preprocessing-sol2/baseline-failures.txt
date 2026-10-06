@@ -10,7 +10,7 @@ tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-44/test_equivalent_rendered_c
             "10.1234/two": "<div>Trading <b>strategy</b> persistence depends on market regimes.</div>"})
 >       assert [e["extraction_status"] for e in bank["evidence"]] == ["EXTRACTED_UNVERIFIED", "DUPLICATE_CONTENT"]
 E       AssertionError: assert ['EXTRACTED_U...D_UNVERIFIED'] == ['EXTRACTED_U...CATE_CONTENT']
-E         
+E
 E         At index 1 diff: 'EXTRACTED_UNVERIFIED' != 'DUPLICATE_CONTENT'
 E         Use -v to get more diff
 
@@ -35,7 +35,7 @@ tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-44/test_irrelevant_abstract_i
         _, _, bank = collect(tmp_path, {"10.1234/one": "<p>Biological cell proliferation.</p>"})
 >       assert bank["evidence"][0]["extraction_status"] == "NO_RELEVANT_PASSAGE"
 E       AssertionError: assert 'EXTRACTED_UNVERIFIED' == 'NO_RELEVANT_PASSAGE'
-E         
+E
 E         - NO_RELEVANT_PASSAGE
 E         + EXTRACTED_UNVERIFIED
 

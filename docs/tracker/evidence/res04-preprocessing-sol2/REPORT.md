@@ -64,3 +64,9 @@ This proves the supported academic metadata/abstract path, not exhaustive web
 coverage or calibrated semantic relevance. The pipeline has no expensive
 reasoning stage or paid capability to enable; future reasoning remains separate
 work. SEC-01 stays deferred for this release and required for future live access.
+
+Canonical closure and read-contract checks are retained in `closure.json` and
+`control-checks.json`: all 178 IDs and 177 unrelated rows remain unchanged;
+the original RES-04 condition and dependency edges are preserved, Tracker/NEXT
+reads AVAILABLE with RES-04 CLOSED, and source/bundle hashes validate. RES-05
+is eligible without a status change or successor selection.

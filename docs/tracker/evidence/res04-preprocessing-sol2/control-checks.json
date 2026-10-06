@@ -1,0 +1,22 @@
+{
+  "item": "RES-04",
+  "read_contract": "AVAILABLE",
+  "selection": "RES-04 CLOSED",
+  "ids_preserved": 178,
+  "unrelated_rows_unchanged": 177,
+  "conditions_and_dependencies_preserved": true,
+  "res05": "ELIGIBLE_UNSELECTED",
+  "sec01": "DEFERRED",
+  "source_and_bundle_hashes": "PASS",
+  "duplicate_yaml_keys": "NONE",
+  "status_counts": {
+    "EVIDENCE_TO_MAP": 89,
+    "OPEN": 4,
+    "IN_PROGRESS": 0,
+    "AWAITING_EVIDENCE": 9,
+    "AWAITING_OWNER": 14,
+    "CLOSED": 48,
+    "DEFERRED": 7,
+    "BLOCKED": 7
+  }
+}

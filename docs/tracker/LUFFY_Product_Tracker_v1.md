@@ -1,3 +1,5 @@
+> Current [SOL-2][RES-04]: CLOSED at architecture/offline scope. Versioned rendered-content dedup, relevant bounded passages and semantically verified provenance/limits; 83 combined and 11 final focused checks passed. Zero live provider/LLM calls. RES-05 eligible, unselected; original condition unchanged. [Evidence](evidence/res04-preprocessing-sol2/REPORT.md). Earlier summaries below are historical.
+
 > Current SOL-2 reconciliation: QNT-06 CLOSED at architecture/offline scope. Insufficient evidence returns UNTESTED with required/observed sufficiency, distinct from FAIL/PASS. QNT-08 remains blocked on QNT-03 (via WRLD-07) and QNT-05 (via QNT-04); no successor selected. [Evidence](evidence/qnt06-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
 
 > Current [SOL-2][RES-03]: CLOSED at architecture/offline scope. Existing metadata and source boundaries mapped first; durable governed discovery/catalog adoption added. 230 offline tests passed; no live provider calls. RES-04 now dependency-eligible (LLM-02 CLOSED), unselected. SEC-01 remains DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE with future live requirements preserved. [Evidence](evidence/res03-governance-sol2/REPORT.md). Earlier summaries below are historical.
@@ -1948,32 +1950,33 @@ future_calibration:
 - **stage**: 3
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Prevents paying to repeatedly process irrelevant documents.
 - **closure_condition**: Supported question path retrieves relevant bounded passages with hashes/versions and reports search/relevance/coverage limits.
 - **failure_regression_proof**: No whole-web-to-LLM pipeline, duplicate paid call or dropped source provenance.
 - **dependencies**: RES-03, LLM-02
 - **owner_role**: Attention & research owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2 (offline preprocessing)
+- **implementation_evidence**: 283d581421d18f18fff1834f7cbd1b6fd922737f; trader/research/external_research.py; tests/test_res04_preprocessing.py; existing external router and generated question tests
+- **runtime_evidence**: NOT_PERFORMED; supported normal question/CLI exercised using offline child transports
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Existing routing, title/URL filtering and bounded work mapped first. Seven baseline failures demonstrate rendered-content dedup, relevant extraction and semantic replay gaps; corrected by versioned preprocessing. 83 combined plus 11 final focused checks pass with zero live/LLM calls; explicit coverage/relevance limits and legacy compatibility preserved.
 - **source_ids**: S01, S02, S06, S14
 - **source_sections**: §12.5
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for RES-04 at architecture/offline scope; future semantic relevance calibration, live coverage and downstream reasoning remain independent obligations.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 283d581421d18f18fff1834f7cbd1b6fd922737f
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/res04-preprocessing-sol2/closure.json
+- **evidence_validity**: Pinned source/test hashes and offline fixture evidence; no live provider coverage or calibrated semantic relevance claimed.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### RES-05 — Retain structured Research Bank results and next questions.
 

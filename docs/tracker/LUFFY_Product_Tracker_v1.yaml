@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.39-qnt06-reconciled-sol2
+  version: 1.40-res04-preprocessing-sol2
   created_date: '2026-10-05'
   title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -11,16 +11,16 @@ metadata:
   repository_modified: true
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
     prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
-  current_active_item: QNT-06
-  current_active_result: CLOSED_ARCHITECTURE_OFFLINE_UNTESTED_DISTINCT
+  current_active_item: RES-04
+  current_active_result: CLOSED_ARCHITECTURE_OFFLINE_PREPROCESSING
   row_count: 178
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
     is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown is an
     optional generated reference.
   pending_adoption: null
   status_counts:
-    CLOSED: 47
-    EVIDENCE_TO_MAP: 90
+    CLOSED: 48
+    EVIDENCE_TO_MAP: 89
     DEFERRED: 7
     AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14
@@ -2548,7 +2548,7 @@ items:
   stage: '3'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Search/filter/deduplicate/extract before expensive reasoning.
   why_needed: Prevents paying to repeatedly process irrelevant documents.
   closure_condition: Supported question path retrieves relevant bounded passages with hashes/versions and reports
@@ -2558,32 +2558,37 @@ items:
   - RES-03
   - LLM-02
   owner_role: Attention & research owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: SOL-2 (offline preprocessing)
+  implementation_evidence: 283d581421d18f18fff1834f7cbd1b6fd922737f; trader/research/external_research.py; tests/test_res04_preprocessing.py;
+    existing external router and generated question tests
+  runtime_evidence: NOT_PERFORMED; supported normal question/CLI exercised using offline child transports
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: Existing routing, title/URL filtering and bounded work mapped first. Seven baseline failures
+    demonstrate rendered-content dedup, relevant extraction and semantic replay gaps; corrected by versioned preprocessing.
+    83 combined plus 11 final focused checks pass with zero live/LLM calls; explicit coverage/relevance limits
+    and legacy compatibility preserved.
   source_ids:
   - S01
   - S02
   - S06
   - S14
-  source_sections: §12.5
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  source_sections: "\xA712.5"
+  next_proof: None for RES-04 at architecture/offline scope; future semantic relevance calibration, live coverage
+    and downstream reasoning remain independent obligations.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: 283d581421d18f18fff1834f7cbd1b6fd922737f
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: docs/tracker/evidence/res04-preprocessing-sol2/closure.json
+  evidence_validity: Pinned source/test hashes and offline fixture evidence; no live provider coverage or calibrated
+    semantic relevance claimed.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  closure_scope: ARCHITECTURE_OFFLINE
 - id: RES-05
   area: Attention & research
   stage: '3'
@@ -10109,6 +10114,53 @@ qnt06_canonical_reconciliation:
   status_counts_after:
     CLOSED: 47
     EVIDENCE_TO_MAP: 90
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 7
+    OPEN: 4
+
+res04_preprocessing_closure:
+  item: RES-04
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE
+  engineering_closure_commit: 283d581421d18f18fff1834f7cbd1b6fd922737f
+  evidence: docs/tracker/evidence/res04-preprocessing-sol2/closure.json
+  dependency_status:
+    RES-03: CLOSED
+    LLM-02: CLOSED
+  actual_gap: Raw HTML content dedup, prefix relevance extraction and semantically unbound replay provenance/limitations.
+  change: Versioned bounded rendered-content dedup and relevant passage windows; rederive filtering, document
+    versions, query provenance, extraction and coverage/relevance limits during replay. Legacy receipts retain
+    original extraction semantics.
+  closure_condition_satisfied: true
+  tests: 83 combined offline tests and 11 final focused checks passed; 7 corrected baseline cases failed before
+    the fix.
+  real_provider_calls: 0
+  llm_calls: 0
+  paid_spend: 0
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+  provider_enablement_authorized: false
+  successor_selected: false
+  downstream:
+    RES-05: ELIGIBLE for architecture/offline evidence work; sole dependency RES-04 CLOSED. Row unchanged and
+      unselected.
+  coverage_limit: Supported strategy-decay academic metadata/abstract path only; PARTIAL_BOUNDED; lexical relevance
+    is uncalibrated, no full text/exhaustive coverage/claim validation or expensive reasoning stage.
+  original_condition_and_edges_preserved: true
+  control_plane_reconciliation_pending: false
+  source_sha256:
+    trader/research/external_research.py: ed21f257301c65b982f88378f4e5fc9d3afec437b8372b1722550e4928a58460
+    trader/cognition/external_sources.py: e5c56982e09a7e236cfba93d1f3b76dd450e682852a9d8c49b8fa717589358d0
+    tests/test_res04_preprocessing.py: 71e604f45d939608921d952934e9acaa2b0abdd99ff2a2f248ac9384fb2c4fba
+    tests/test_external_research_router.py: 697547dd95779a3898666f7f76901c48fe443e246650b58568e228c5d3f703ab
+    tests/test_res02_question_routing.py: 2c265ac7349ffd8bcc5f0033975f06b77708e7abe6e0f661366bf8cc83a83b98
+    tests/test_generated_question_handoff_negative_memory.py: 91fc652adce68911045ab992792d85489d8bd86184f34754428847ca88b29053
+    tests/test_res03_source_governance.py: ec2d76679b62a035f7ca0979d8b8b85e93a2e5bad54845418c4e5d584fe391c1
+  status_counts_after:
+    CLOSED: 48
+    EVIDENCE_TO_MAP: 89
     DEFERRED: 7
     AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14
