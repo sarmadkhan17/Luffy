@@ -399,7 +399,23 @@ class Kernel:
         """Universe comes from production data; drop symbols the trading
         venue (demo) cannot actually trade."""
         try:
+            import pandas as pd
+            from .data import market_provenance as mp
+            started = int(time.time()*1000)
             self.exchange.load_markets()
+            received = int(time.time()*1000)
+            metadata = mp.annotate(pd.DataFrame(dict(
+                ts=pd.to_datetime([received],unit='ms',utc=True), close=[float(len(self.exchange.markets))])),
+                instrument_id='ref:venue_metadata', source=mp.venue_source(self.exchange),
+                kind='reference', received_ms=received, request_started_ms=started,
+                raw=[{'metadata':self.exchange.markets,'event_time_basis':'local_snapshot'}],
+                transform_version='venue_metadata.v1')
+            key = 'context:venue_metadata:'+self.exchange.id
+            with self.journal._tx() as conn:
+                mp.init(conn)
+                mp.append(conn,key,metadata)
+            self._venue_metadata_key = key
+            self._venue_metadata_revision = metadata['revision_id'].iloc[0]
             tradable = set()
             for m in self.exchange.markets.values():
                 if not m.get("active", True) or m.get("spot"):
@@ -1953,6 +1969,11 @@ class Kernel:
         specs = [sp for _row, sp in getattr(self, "_spec_rows", [])]
         if not specs:
             return base
+        if as_of_ms is not None:
+            # Live declarations have no historical version binding here.
+            # Replays use their frozen membership/spec sources; never stamp
+            # the currently installed strategy universe onto an old cut.
+            raise ValueError('historical_strategy_universe_unavailable')
         try:
             from .strategy.scan_plan import plan_scan
             volumes = self.universe.volumes() if as_of_ms is None else self.universe.volumes(as_of_ms=as_of_ms)

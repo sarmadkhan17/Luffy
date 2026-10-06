@@ -571,6 +571,8 @@ def test_universe_first_selection_uses_post_acquisition_cut_only_for_current(mon
     u = Universe.__new__(Universe)
     u.enabled, u.rescan_hours, u._last_scan = True, 4, 0
     u.majors, u._alts, u._selection_receipt = ['BTC/USDT'], [], None
+    u._configured_membership = {'BTC/USDT': dict(source='config.universe.majors',
+        symbol='BTC/USDT', quality='VALID', available_at_ms=T, observed_at_ms=T)}
     def rescan():
         clock.at += 1000
         u._last_scan = clock.at/1000

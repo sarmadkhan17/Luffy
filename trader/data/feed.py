@@ -649,6 +649,13 @@ class Universe:
     def __init__(self, cfg: dict, exchange=None):
         self.cfg = cfg["universe"]
         self.majors = list(self.cfg["majors"])
+        # This process first observed the configuration now. A declaration
+        # loaded on restart cannot establish membership at an earlier cut.
+        configured_at = int(time.time()*1000)
+        self._configured_membership = {
+            sym: dict(source='config.universe.majors', symbol=sym, quality='VALID',
+                      observed_at_ms=configured_at, available_at_ms=configured_at)
+            for sym in self.majors}
         scan = self.cfg.get("auto_scan", {})
         self.enabled = bool(scan.get("enabled", True))
         self.top_n = int(scan.get("top_n", 12))
@@ -697,15 +704,14 @@ class Universe:
                 # not yet available at the pre-request cut; never backdate them.
                 at = int(time.time()*1000)
         receipt = self.membership_receipts(as_of_ms=at)
-        return self.majors + [s for s in self._alts if s not in self.majors and s in receipt]
+        return [s for s in self.majors if s in receipt] + [s for s in self._alts if s not in self.majors and s in receipt]
 
     def membership_receipts(self, *, as_of_ms):
         """Configuration members and the exact eligible scan result, never backdated."""
         import copy
         at = mp.cut(as_of_ms)
-        out = {sym: dict(source='config.universe.majors', observed_at_ms=at,
-                         available_at_ms=at, quality='VALID', symbol=sym)
-               for sym in self.majors}
+        out = {sym: copy.deepcopy(r) for sym, r in getattr(self, '_configured_membership', {}).items()
+               if sym in self.majors and r['available_at_ms'] <= at and r['observed_at_ms'] <= at}
         r = self._selection_receipt
         if (r and r['quality'] == 'VALID' and r['available_at_ms'] <= at
                 and r['observed_at_ms'] <= at and self._last_scan*1000 <= at):
@@ -732,6 +738,8 @@ class Universe:
             tickers = self.ex.fetch_tickers()
             if not isinstance(tickers, dict) or not tickers:
                 return  # Missing response is not proof of an empty universe.
+            if int(time.time()*1000) < started:
+                return  # Refuse before publishing any component receipts.
         except Exception as e:
             log.warning(f"universe rescan failed: {e}")
             return
@@ -746,14 +754,14 @@ class Universe:
             last = pd.to_numeric(t.get('last'),errors='coerce')
             received=int(time.time()*1000)
             event=t.get('timestamp')
-            if (not iid or not source or not np.isfinite(quote_vol) or not np.isfinite(last)
+            if (received < started or not iid or not source or not np.isfinite(quote_vol) or not np.isfinite(last)
                     or quote_vol < 0 or last <= 0 or event is not None and
                     (type(event) not in (int,float) or not np.isfinite(event) or event > received)):
                 continue
             self._volumes[sym] = float(quote_vol)
             self._volume_receipts[sym] = dict(instrument_id=iid,source=source,
                 event_time_ms=event,observed_at_ms=received,available_at_ms=received,
-                content_hash=mp.digest(t),raw=t,quality='VALID')
+                request_started_ms=started,content_hash=mp.digest(t),raw=t,quality='VALID')
             volume_receipts[sym] = self._volume_receipts[sym]
             if sym in self.majors:
                 continue

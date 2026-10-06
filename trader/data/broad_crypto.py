@@ -54,12 +54,31 @@ def observe(kernel, exposure):
     """Freeze a broad cohort independently of old top-N and deep members."""
     ex = kernel.universe.ex
     cfg = kernel.cfg
+    started = int(time.time()*1000)
     try:
         tickers = ex.fetch_tickers()
         cut = int(time.time()*1000)
+        if cut < started:
+            raise ValueError('bulk_acquisition_clock_reversed')
         if not isinstance(tickers,dict) or not tickers: raise ValueError('empty_ticker_response')
-        # Metadata is already loaded by boot/fetch_tickers; no per-symbol API.
-        markets = getattr(kernel.exchange,'markets',{})
+        # Read the exact boot acquisition through DATA's durable shared reader.
+        # Mutable ccxt markets have no historical observation clock. An older
+        # boot receipt cannot qualify this process's newer configuration/specs.
+        from trader.data import market_provenance as mp
+        key = getattr(kernel,'_venue_metadata_key',None)
+        if key is None: raise ValueError('venue_metadata_receipt_unavailable')
+        metadata_source = mp.venue_source(kernel.exchange)
+        if metadata_source is None: raise ValueError('venue_metadata_source_unavailable')
+        metadata = mp.load(kernel.journal._conn(),key,as_of_ms=cut,limit=1,
+                           instrument_id='ref:venue_metadata',source=metadata_source)
+        metadata = mp.eligible_frame(metadata,None,cut)
+        if (metadata is None or metadata.empty or metadata['quality'].iloc[0] != 'VALID'
+                or metadata['revision_id'].iloc[0] != getattr(kernel,'_venue_metadata_revision',None)):
+            raise ValueError('venue_metadata_receipt_unavailable')
+        metadata_receipt = mp.receipt_metadata(metadata.iloc[0])
+        if metadata_receipt['kind'] != 'reference' or metadata_receipt['transform_version'] != 'venue_metadata.v1':
+            raise ValueError('venue_metadata_contract_mismatch')
+        markets = __import__('json').loads(metadata_receipt['raw_json'])['metadata']
         if not markets: raise ValueError('venue_metadata_unavailable')
         account_excluded=[]
         from trader.engine.entry_authority import CAP_KEY
@@ -73,7 +92,7 @@ def observe(kernel, exposure):
             stale_ms=cfg['attention']['stale_seconds']*1000,capability_exclusions=account_excluded)
         status='VALID'
     except Exception as exc:
-        cut=int(time.time()*1000);tickers={};markets={};rows={};excluded={};status='UNAVAILABLE:'+type(exc).__name__
+        cut=int(time.time()*1000);tickers={};markets={};rows={};excluded={};metadata_receipt=None;status='UNAVAILABLE:'+type(exc).__name__
     # Retain the old strategy-volume peer definition using cheap onboard
     # metadata instead of first-candle network probes (explicit v2 semantics).
     scan=cfg['universe']['auto_scan']
@@ -119,5 +138,7 @@ def observe(kernel, exposure):
         context_anchors=list(ANCHORS),exposure_required=sorted(exposure),
         salience_rows=scores,salience_config=result['config'],salience_anchor_ms=result.get('anchor_close_ms',cut//TF_MS[cfg['attention']['timeframe']]*TF_MS[cfg['attention']['timeframe']]),
         market=result['market'],status=status,acquisition='bulk tickers + local closed-bar cache; no per-symbol network',
-        source_receipts=dict(tickers=tickers,venue_metadata=markets))
+        source_receipts=dict(tickers=tickers,venue_metadata=markets,
+                             venue_metadata_receipt=metadata_receipt,
+                             request_started_ms=started, observed_at_ms=cut))
     return observation,frames,memberships

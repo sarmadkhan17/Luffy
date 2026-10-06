@@ -51,12 +51,13 @@ class ScanVenue:
 @pytest.fixture
 def universe(monkeypatch):
     import trader.data.feed as module
-    clock = SimpleNamespace(at=U2)
+    clock = SimpleNamespace(at=U1)
     ex = ScanVenue()
     monkeypatch.setattr(module, 'make_exchange', lambda *a, **k: ex)
     monkeypatch.setattr(module.time, 'time', lambda: clock.at/1000)
     u = Universe({'universe': {'majors': ['BTC/USDT'], 'auto_scan': {
         'min_volume_usdt': 1, 'min_price': 1, 'min_age_days': 0, 'rescan_hours': .01}}}, ex)
+    clock.at = U2  # config precedes the later market acquisition
     # Explicit acquisition avoids the cache TTL determining fixture setup.
     u._rescan()
     assert u.symbols() == ['BTC/USDT', 'ALT/USDT']
@@ -289,7 +290,7 @@ def test_mutant_original_universe_bypass_fails_membership_pit(universe, monkeypa
     broken_refresh = mutant(Universe._rescan, 'log.warning(f"universe rescan failed: {e}")',
         'log.warning(f"universe rescan failed: {e}")\n        self._last_scan = time.time()')
     broken_read = mutant(Universe.symbols,
-        'return self.majors + [s for s in self._alts if s not in self.majors and s in receipt]',
+        'return [s for s in self.majors if s in receipt] + [s for s in self._alts if s not in self.majors and s in receipt]',
         'return self.majors + [s for s in self._alts if s not in self.majors and self._last_scan*1000 <= at]')
     monkeypatch.setattr(Universe, '_rescan', broken_refresh)
     monkeypatch.setattr(Universe, 'symbols', broken_read)

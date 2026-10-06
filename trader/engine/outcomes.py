@@ -7,6 +7,7 @@ correctness. This is what later proves which agents were right.
 from __future__ import annotations
 
 import logging
+import math
 
 from ..core.journal import Journal
 
@@ -56,10 +57,22 @@ def resolve_pending(journal: Journal, feed, now_ms: int | None = None) -> int:
             continue
 
         try:
-            df = feed.fetch_ohlcv(o["symbol"], "5m", limit=650, force=True)
+            if now_ms is None:
+                df = feed.fetch_ohlcv(o["symbol"], "5m", limit=650, force=True)
+            else:
+                df = feed.fetch_ohlcv(o["symbol"], "5m", limit=650, as_of_ms=now_ms)
         except Exception as e:
             log.warning(f"outcome fetch failed {o['symbol']}: {e}")
             continue
+        if df is None or df.empty:
+            continue
+        from ..data import market_provenance as mp
+        from ..cognition.outcomes import timestamp
+        # Current acquisition is measured after receipt; explicit historical
+        # calls stay at the requested cut and never acquire newer evidence.
+        measured_ms = timestamp(iso_now(now_ms))
+        df = mp.eligible_frame(df, '5m', measured_ms,
+            require_provenance=any(k in df for k in mp.META))
         if df is None or df.empty:
             continue
         df = df[df["ts"] >= pd_to_dt(since_ms)]
@@ -82,6 +95,9 @@ def resolve_pending(journal: Journal, feed, now_ms: int | None = None) -> int:
             capture_targets[label] = {k:(v.isoformat() if hasattr(v,'isoformat') else v.item() if hasattr(v,'item') else v)
                                      for k,v in target.iloc[0].to_dict().items()}
             px = float(target.iloc[0]["close"])
+            if not math.isfinite(px):
+                capture_targets.pop(label, None)
+                continue
             ret = (px - entry) / entry * direction
             upd[col] = round(ret, 6)
             upd[ok_col] = int(ret > 0) if abs(ret) > 1e-9 else 0
@@ -91,7 +107,7 @@ def resolve_pending(journal: Journal, feed, now_ms: int | None = None) -> int:
             continue
 
         consumed = upd.get("correct_4h") is not None   # 4h = the learning coin
-        resolved_at = iso_now(now_ms) if consumed else None
+        resolved_at = iso_now(measured_ms) if consumed else None
         with journal._tx() as c:
             c.execute(
                 "UPDATE outcomes SET fwd_ret_1h=?, correct_1h=?, "
@@ -104,7 +120,6 @@ def resolve_pending(journal: Journal, feed, now_ms: int | None = None) -> int:
                  resolved_at, o["decision_id"]))
             from ..learning import capture as lc, capture_runtime as lr
             from ..cognition.outcomes import timestamp
-            measured_ms = timestamp(iso_now(now_ms))
             lc.safely(c, 'decision:'+o['decision_id'], lr.forward, o, upd, capture_targets, measured_ms)
         resolved += 1
     if resolved:

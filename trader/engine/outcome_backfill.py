@@ -39,7 +39,7 @@ LEAN_FRAC = 0.6          # |score| >= this * threshold counts as a lean
 EPS = 1e-9               # below this the move is flat, not a win
 
 
-def grade(df, since, entry: float, action: str) -> dict:
+def grade(df, since, entry: float, action: str, *, as_of_ms=None) -> dict:
     """{fwd_ret_*, correct_*} for one decision, or Nones where unmeasurable.
 
     `df` is an OHLCV frame with a tz-aware `ts` column; `since` the decision
@@ -47,6 +47,12 @@ def grade(df, since, entry: float, action: str) -> dict:
     ungraded horizon is honest, a guessed one is poison.
     """
     import pandas as pd
+    import math
+    from ..data import market_provenance as mp
+    at = int(datetime.now(timezone.utc).timestamp()*1000) if as_of_ms is None else mp.cut(as_of_ms)
+    if df is not None:
+        df = mp.eligible_frame(df, df.attrs.get('timeframe'), at,
+            require_provenance=any(k in df for k in mp.META))
     out: dict = {}
     direction = 1 if (action or "").upper() == "BUY" else -1
     since = pd.Timestamp(since)
@@ -59,7 +65,7 @@ def grade(df, since, entry: float, action: str) -> dict:
         if target.empty:
             continue
         px = float(target.iloc[0]["close"])
-        if entry <= 0:
+        if entry <= 0 or not math.isfinite(px):
             continue
         ret = (px - entry) / entry * direction
         out[col] = round(ret, 6)
@@ -89,6 +95,8 @@ def upgrade_24h(journal, frames: dict, now=None) -> int:
     A horizon with no candle stays None. An ungraded horizon is honest; a
     permanently ungradeable one is a bug.
     """
+    now = now or datetime.now(timezone.utc)
+    cut = int(now.timestamp()*1000)
     rows = journal.query(
         "SELECT decision_id, symbol, ts, action, entry_price, correct_24h "
         "FROM outcomes WHERE correct_24h IS NULL")
@@ -102,7 +110,7 @@ def upgrade_24h(journal, frames: dict, now=None) -> int:
         entry = float(r["entry_price"] or 0)
         if entry <= 0:
             continue
-        g = grade(df, r["ts"], entry, r["action"])
+        g = grade(df, r["ts"], entry, r["action"], as_of_ms=cut)
         if g.get("correct_24h") is None:
             continue                     # the frame does not reach it yet
         with journal._tx() as c:
@@ -141,6 +149,8 @@ def backfill_holds(journal, frames: dict, lean_frac: float = LEAN_FRAC,
     passed in rather than fetched so this is testable offline and so one
     read of `candles.db` serves thousands of decisions.
     """
+    now = now or datetime.now(timezone.utc)
+    cut = int(now.timestamp()*1000)
     written = 0
     for d in candidates(journal, lean_frac, limit):
         if _elapsed_minutes(d["ts"], now) < HORIZONS["4h"]:
@@ -152,7 +162,7 @@ def backfill_holds(journal, frames: dict, lean_frac: float = LEAN_FRAC,
         if entry <= 0:
             continue
         action = "BUY" if float(d["score"]) > 0 else "SELL"
-        g = grade(df, d["ts"], entry, action)
+        g = grade(df, d["ts"], entry, action, as_of_ms=cut)
         if g.get("correct_4h") is None:
             continue                       # 4h is the learning coin
         with journal._tx() as c:

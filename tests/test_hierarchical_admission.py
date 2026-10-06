@@ -174,7 +174,16 @@ def test_crypto_eligibility_and_pit():
 def broad_kernel(tmp_path,cfg,n=30):
     k=object.__new__(Kernel);k.cfg=deepcopy(cfg);k.population=[];k.journal=Journal(tmp_path/'j.db')
     syms=list(observation(n)['rows']);ms=markets(syms)
-    k.exchange=NS(markets=ms);k.universe=NS(ex=NS(fetch_tickers=Mock(return_value={s:ticker() for s in syms})),blacklist=set())
+    k.exchange=NS(markets=ms,id='binanceusdm',urls={'api':'https://offline.example/fapi'});k.universe=NS(ex=NS(fetch_tickers=Mock(return_value={s:ticker() for s in syms})),blacklist=set())
+    import pandas as pd
+    from trader.data import market_provenance as mp
+    metadata=mp.annotate(pd.DataFrame(dict(ts=pd.to_datetime([CUT],unit='ms',utc=True),close=[float(len(ms))])),
+        instrument_id='ref:venue_metadata',source=mp.venue_source(k.exchange),kind='reference',received_ms=CUT,
+        raw=[{'metadata':ms,'event_time_basis':'local_snapshot'}],transform_version='venue_metadata.v1')
+    k._venue_metadata_key='context:venue_metadata:TEST_ONLY'
+    k._venue_metadata_revision=metadata['revision_id'].iloc[0]
+    with k.journal._tx() as conn:
+        mp.init(conn);mp.append(conn,k._venue_metadata_key,metadata)
     k.feed=NS(cached_ohlcv=Mock(return_value=None),fetch_ohlcv=Mock(side_effect=AssertionError('deep fetch before admission')))
     k._attention=None;k._spec_rows=[]
     return k
@@ -299,7 +308,7 @@ def full_cycle_kernel(tmp_path,cfg,monkeypatch,n=30):
     k=safety_kernel(tmp_path,cfg)
     monkeypatch.setattr('trader.data.broad_crypto.time.time',lambda:CUT/1000)
     k.market_type=MarketType.FUTURES
-    k.state_machine=NS(refresh=lambda:ControlState.FROZEN,can_enter=lambda:False)
+    k.state_machine=NS(state=ControlState.FROZEN,refresh=lambda:ControlState.FROZEN,can_enter=lambda:False)
     k.executor=NS(recovery_pending=lambda:False,recover_entries=Mock())
     k._risk_step=lambda:(1000,{'equity':1000,'drawdown_pct':0,'risk_state':'ok'})
     k._record_risk_assessment=Mock();k._macro_step=Mock();k._publish_news_guard=Mock()

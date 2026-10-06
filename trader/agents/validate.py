@@ -87,10 +87,12 @@ def validate_symbol(analysts: dict[str, Analyst], symbol: str,
         higher = resample(win,'1h')
         dfs = {"15m": win, "1h": higher[ms(higher['ts'])+3_600_000 <= cut]}
         if btc_1h is not None:
-            known = ms(btc_1h['ts'])+3_600_000
-            if 'available_at_ms' in btc_1h:
-                known = np.maximum(known,btc_1h['available_at_ms'].fillna(np.inf))
-            dfs["BTC_1h"] = btc_1h[known <= cut]
+            from ..data.market_provenance import eligible_frame, META
+            qualified = eligible_frame(btc_1h, '1h', cut,
+                require_provenance=any(k in btc_1h for k in META))
+            # Missing receipt fields in a frame claiming retained identity
+            # remain unavailable, never a timestamp-only historical fallback.
+            dfs["BTC_1h"] = qualified if qualified is not None else btc_1h.iloc[:0]
         snap = _snap(symbol, win, i, px, dfs)
         for name, analyst in analysts.items():
             try:

@@ -29,12 +29,31 @@ def freeze(db, role, raw, cut, producer):
                       available_ms=cut, producer=producer)
 
 
+def validate_frame_cut(value, cut):
+    """Never rebase retained market receipts onto a capture/replay clock.
+
+    Unqualified prospective observations retain their original snapshot
+    semantics. Any frame claiming market receipt metadata must qualify through
+    the shared DATA reader. Preserve exact raw values, including partial bars
+    and invalid quality, rather than quietly dropping or rewriting evidence.
+    """
+    from trader.data import market_provenance as mp
+    mp.cut(cut)
+    if any(k in value for k in mp.META):
+        safe = mp.eligible_frame(value, None, cut, final=False)
+        if safe is None or len(safe) != len(value):
+            raise ValueError('frame_receipt_not_available_at_cut')
+    return value
+
+
 def frame_chunks(db, snap, cut):
+    if timestamp(snap.ts) > cut:
+        raise ValueError('snapshot_after_source_cut')
     chunks = {}
     def frame(value):
         if value is None:
             return None
-        raw = exact_frame(value)
+        raw = exact_frame(validate_frame_cut(value, cut))
         dep = freeze(db, 'data', raw, cut, 'existing Snapshot DataFrame; raw observed values')
         return dep['sha256']
     chunks['anchors'] = {symbol:{k:frame(v) for k,v in frames.items()}

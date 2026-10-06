@@ -563,8 +563,8 @@ def verify_ancestors(reg, ancestors):
             if raw is None or L.digest(raw)!=sha:
                 faults.append('parent:data_chunk_unverified')
             else:
-                from .capture_runtime import restore_frame
-                try: restore_frame(raw)
+                from .capture_runtime import restore_frame, validate_frame_cut
+                try: validate_frame_cut(restore_frame(raw), retained['sources']['data']['cutoff_ms'])
                 except (ValueError, KeyError, TypeError): faults.append('parent:data_chunk_invalid')
         reg = parent
     if reg.get('chain'): faults.append('decision_ancestor_missing_no_backfill')
@@ -670,14 +670,18 @@ def validate_chain(body,sources,blobs):
         identity=sources.get('derivative_identity')
         if identity and identity['market_type']!=data['market_type']:
             raise ValueError('original_derivative_market_type_differs')
+    if data.get('format')=='snapshot-frame-chunks.v1' and data.get('original_snapshot_ts'):
+        from trader.cognition.outcomes import timestamp
+        if timestamp(data['original_snapshot_ts']) > data['cutoff_ms']:
+            raise ValueError('snapshot_after_source_cut')
     cycle=sources.get('cycle',{})
     if symbol and cycle.get('symbol') and venue_key(symbol)!=venue_key(cycle['symbol']):
         raise ValueError('original_cycle_decision_instrument_differs')
     for sha in chunk_hashes(sources.get('data')):
         if sha not in blobs or L.digest(blobs[sha])!=sha:
             raise ValueError('data_chunk_unverified')
-        from .capture_runtime import restore_frame
-        restore_frame(blobs[sha])
+        from .capture_runtime import restore_frame, validate_frame_cut
+        validate_frame_cut(restore_frame(blobs[sha]), data['cutoff_ms'])
     out=sources.get('outcome')
     if out is None: raise ValueError('outcome_evidence_missing')
     if out.get('observation')!=body['observation']:
@@ -759,6 +763,11 @@ def validate_chain(body,sources,blobs):
         direction=1 if declaration['action']=='BUY' else -1
         horizons={'1h':3600000,'4h':14400000,'24h':86400000}
         for label,bar in out['target_bars'].items():
+            from trader.data import market_provenance as mp
+            qualified = mp.eligible_frame(pd.DataFrame([bar]), '5m', out['measured_ms'],
+                require_provenance=any(k in bar for k in mp.META))
+            if qualified is None or qualified.empty or qualified['close'].isna().any():
+                raise ValueError('forward_target_receipt_not_available_at_measurement')
             opened=int(pd.Timestamp(bar['ts']).timestamp()*1000)
             if opened < body['registration']['decision_ms'] or opened < timestamp(declaration['ts'])+horizons[label] or opened+300000>out['measured_ms']:
                 raise ValueError('target_clock_not_closed_or_horizon_differs')

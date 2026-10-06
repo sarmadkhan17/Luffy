@@ -106,6 +106,31 @@ def admit(observation, policy, state):
     if type(cut) is not int or cut < 0:
         raise ValueError('source_cut_invalid')
     rows = observation['rows']
+    if rows and 'source_receipts' in observation:
+        # Real observations carry raw source receipts. Replay must qualify
+        # their inner clocks/bytes, not trust the outer cohort timestamp.
+        from .data import market_provenance as mp
+        import pandas as pd
+        sources = observation['source_receipts']
+        r = sources.get('venue_metadata_receipt')
+        try:
+            markets = sources['venue_metadata']
+            if (not r or r['instrument_id'] != 'ref:venue_metadata' or r['kind'] != 'reference'
+                    or r['transform_version'] != 'venue_metadata.v1'
+                    or json.loads(r['raw_json'])['metadata'] != markets):
+                raise ValueError('admission_metadata_receipt_unavailable')
+            frame = pd.DataFrame([{**r, 'close':float(len(markets)),
+                                   'ts':pd.to_datetime(r['event_time_ms'],unit='ms',utc=True)}])
+            mp.receipt_metadata(frame.iloc[0])
+            retained = mp.prepare(frame)
+            if (not retained or retained[0]['revision_id'] != r['revision_id']
+                    or retained[0]['content_hash'] != r['content_hash']):
+                raise ValueError('admission_metadata_receipt_corrupt')
+            eligible = mp.eligible_frame(frame,None,cut)
+            if eligible is None or eligible.empty or not eligible['quality'].eq('VALID').all():
+                raise ValueError('admission_metadata_receipt_unavailable')
+        except (ValueError,TypeError,KeyError) as exc:
+            raise ValueError('admission_metadata_receipt_unavailable') from exc
     members = tuple(sorted(rows))
     if any(not isinstance(r,dict) or r.get('symbol') != sym or r.get('asset_class') != 'CRYPTO'
            for sym,r in rows.items()):
