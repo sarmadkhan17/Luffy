@@ -1,0 +1,27 @@
+{
+  "result": "PASS",
+  "review_revision": "6bd8624ccb4fe32a1adc4509c992f1b6fcc9a269",
+  "checks": [
+    "all_178_ids_preserved_no_new_requirement",
+    "all_substantive_requirements_and_dependency_edges_preserved",
+    "only_four_scope_evidence_rows_changed",
+    "original_readiness_gates_preserved",
+    "own04_current_phase_closed_offline_only",
+    "own04_future_requirements_mandatory_unproven",
+    "both_monitoring_rows_deferred_not_closed",
+    "monitoring_existing_evidence_and_gaps_retained",
+    "existing_sec_run_gov_deferral_rows_unchanged",
+    "release_deferral_parity",
+    "both_monitoring_requirements_in_explicit_phase_deferral",
+    "future_activation_gates_parity_mandatory",
+    "selection_and_terminal_parity",
+    "gui01_eligible_not_closed_acc03_unresolved",
+    "counts_exact",
+    "manifest_hashes_exact",
+    "prior_own04_evidence_untouched",
+    "existing_read_only_tracker_contract_available",
+    "no_runtime_or_activation_authority_added",
+    "historical_control_snapshot_unchanged"
+  ],
+  "count": 20
+}

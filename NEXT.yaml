@@ -507,6 +507,8 @@ current_release_deferral:
   - SEC-01
   - RUN-01
   - GOV-07
+  - MON-01
+  - MON-05
   blocks_current_release: false
   non_blocking_for:
   - architecture work
@@ -517,9 +519,13 @@ current_release_deferral:
   - SEC-01
   - RUN-01
   - GOV-07
+  - MON-01
+  - MON-05
   dependency_policy: Preserve recorded dependency/readiness-gate membership as future requirements. Exclude
     SEC-01, RUN-01 and GOV-07 transitively from current architecture/GUI build-phase blocker evaluation and
-    critical-path selection.
+    critical-path selection. Explicit owner phase-scope review additionally excludes MON-01/MON-05 full runtime/readiness
+    obligations from current architecture/offline/GUI blockers, retaining them as mandatory future activation
+    gates with original conditions and gaps.
   revisit_before: Any future production/live activation requiring their guarantees; revisit unresolved findings
     and satisfy the existing closing conditions before that activation.
   preservation: Existing evidence, unresolved findings, closing conditions and completed implementation retained.
@@ -551,19 +557,35 @@ current_release_deferral:
       and timestamps; deployment records match remote/local code.
     historical_terminal_evidence: docs/tracker/evidence/gov07-identity-sol/terminal.yaml
     activation_authorized: false
-
+  phase_scope_review:
+    authority: Explicit current owner scope review request
+    evidence: docs/tracker/evidence/own04-phase-scope-review/decision.yaml
+    current_phase: ARCHITECTURE_OFFLINE_GUI
+    deferred_runtime_obligations:
+    - MON-01
+    - MON-05
+    mandatory_before_future_live_activation:
+    - MON-01
+    - MON-05
+    substantive_conditions_unchanged: true
+    runtime_proof_complete: false
+    current_ui_truthfulness_still_required: true
+    policy: Original OWN-04 dependency edges are retained as future activation gates. Current consumer closure
+      requires honest use of available evidence, not fabricated telemetry or completion of deferred producer/deployment
+      guarantees. Missing MON-05 measurements remain visible gaps, never inferred proof.
 
 current_build_selection:
   active_items: []
-  last_completed_item: RISK-01
+  last_completed_item: OWN-04
   excluded_blocker_items:
   - SEC-01
   - RUN-01
   - GOV-07
+  - MON-01
+  - MON-05
   current_blocked_items:
   - WORK-01
   - PERF-03
-  - OWN-04
   next_recommended_item: ACC-03
   eligible_items:
   - ACC-03
@@ -583,11 +605,13 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: OWN-04 state-display fixes and offline evidence mapped; terminal BLOCKED on unchanged MON-01/MON-05
-    dependencies. ACC-03 is the next independent GUI-01 evidence recommendation only, unselected. Deferred
-    SEC-01/RUN-01/GOV-07 and activation gates preserved.
+  selection_reason: Owner phase-scope review closes OWN-04 for current architecture/offline GUI truthfulness
+    using retained exact proof. MON-01/MON-05 full runtime/readiness obligations are deferred for this phase
+    and mandatory before future live activation; all original conditions remain. GUI-01 eligible for functional
+    evidence work, ACC-03 prerequisite still unresolved. ACC-03 remains recommendation only; no activation
+    authorized.
   last_terminal_item: OWN-04
-  last_terminal_result: BLOCKED_DEPENDENCY_EVIDENCE
+  last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
 
 data01_canonical_identity:
   id: DATA-01
@@ -749,15 +773,49 @@ risk02_exposure_feasibility:
 
 own04_state_terminal:
   id: OWN-04
-  status: BLOCKED
-  result: BLOCKED_DEPENDENCY_EVIDENCE
-  evidence: docs/tracker/evidence/own04-state-sol/closure.yaml
+  status: CLOSED
+  result: CLOSED_ARCHITECTURE_OFFLINE
+  evidence: docs/tracker/evidence/own04-phase-scope-review/decision.yaml
   implementation_gap: DEMONSTRATED_DISPLAY_GAPS_FIXED_OFFLINE
-  remaining_dependencies:
-  - MON-01
-  - MON-05
+  remaining_dependencies: []
   next_gui_dependency: ACC-03
   successor_selected: false
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
+  future_live_activation_requirements:
+  - MON-01
+  - MON-05
+  proof_state:
+    current_build_phase:
+      scope: ARCHITECTURE_OFFLINE_GUI
+      status: PROVEN
+      evidence: docs/tracker/evidence/own04-state-sol/closure.yaml
+      implementation_revision: 0cc582e441bba5c2b1262844f981ad6dfe15bfb3
+      obligation: Truthful reporting of available evidence; missing/stopped/disconnected/stale/disabled/unknown
+        evidence cannot become fabricated ACTIVE or live work.
+    future_live_activation:
+      status: REQUIRED_NOT_PROVEN
+      mandatory_requirements:
+      - MON-01
+      - MON-05
+      transitive_requirements:
+      - RUN-01
+      - GOV-07
+      evidence_state: LIVE_RUNTIME_DEPLOYMENT_PROOF_PENDING
+      must_satisfy_original_conditions_before_activation: true
+      closure_now_does_not_authorize_activation: true
+
+
+future_live_activation_requirements:
+  requirements:
+  - MON-01
+  - MON-05
+  status: REQUIRED_NOT_PROVEN
+  original_dependency_edges_retained: true
+  original_closure_conditions_retained: true
+  blocks_current_architecture_offline_gui: false
+  blocks_future_live_activation: true
+  runtime_proof_complete: false
+  activation_authorized: false
+  scope_decision_evidence: docs/tracker/evidence/own04-phase-scope-review/decision.yaml

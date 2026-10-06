@@ -1,0 +1,558 @@
+revision: 6bd8624ccb4fe32a1adc4509c992f1b6fcc9a269
+scope: CONTROL_PLANE_REQUIREMENT_SCOPE_REVIEW_ONLY
+owner_authority: Current owner request separates current architecture/offline/GUI truthful reporting from mandatory
+  future MON-01/MON-05 live-activation observation and deployment proof. No safety requirement removal or runtime
+  proof completion authorized.
+rows:
+- id: OWN-04
+  area: Owner interface
+  stage: '8'
+  item_type: REQUIREMENT
+  release_scope: BASELINE
+  status: BLOCKED
+  required_behavior: Report declared versus observed system state honestly.
+  why_needed: An architecture diagram or stored ACTIVE value is not runtime truth.
+  closure_condition: Current processes, source age, observed work, control and unavailable telemetry are distinct
+    from configured/declared state.
+  failure_regression_proof: Stopped, waiting, failed or intentionally disabled workers cannot display active
+    fabricated activity.
+  dependencies:
+  - MON-01
+  - MON-05
+  owner_role: Owner interface owner
+  engineering_assignee: SOL
+  implementation_evidence: EXACT_SOURCE_AND_OFFLINE_API_FRONTEND_BROWSER
+  runtime_evidence: OFFLINE_FIXTURE_ONLY; loaded deployment UNKNOWN
+  visual_approval: NOT_APPLICABLE
+  latest_evidence: 'Exact OWN-04 state map and bounded fixes: matching process/heartbeat identity, publication
+    vs successful-work age, stored control permission, configured disabled vs observed report, local expiry/disconnect
+    and invalid collector clocks. Offline tests prove conservative UNKNOWN/stale presentation. Unchanged MON-01/MON-05
+    dependencies prevent full closure; MON-05 retains attribution/overhead/wait gaps.'
+  source_ids:
+  - S01
+  - S02
+  - S10
+  - S14
+  source_sections: §25.3
+  next_proof: Reconcile exact MON-01/MON-05 architecture/offline dependency evidence under their own scope.
+    MON-05 retained attribution/overhead/wait gaps remain; no live Kernel/provider/trading required for current
+    build. Revalidate OWN-04 after dependency reconciliation.
+  acceptance_basis: SDD requirement; verification detail drafted for approval.
+  acceptance_status: SDD_DEFINED_OFFLINE_BEHAVIOR_VERIFIED_DEPENDENCIES_PENDING
+  priority: NORMAL
+  resolution_at_commit: 0cc582e441bba5c2b1262844f981ad6dfe15bfb3
+  work_authorized: true
+  updated: '2026-10-06'
+  parent_ids: []
+  related_items: []
+  closure_evidence: docs/tracker/evidence/own04-state-sol/closure.yaml
+  evidence_validity: Pinned source, API/owner-read/frontend/browser fixtures only; not loaded runtime or owner
+    visual acceptance.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
+  owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- id: MON-01
+  area: Runtime & safety
+  stage: '1'
+  item_type: REQUIREMENT
+  release_scope: BASELINE
+  status: EVIDENCE_TO_MAP
+  required_behavior: Observe missing/stale/malformed heartbeat independently of its producer.
+  why_needed: A dead producer cannot be the only detector of its death.
+  closure_condition: Independent observer verifies instance, sequence, chronology, publication age and successful-work
+    age under configured policy and emits bounded alerts.
+  failure_regression_proof: Dead/stale/restarted/restamped/future/malformed cases never become fresh; prior-instance
+    startup is not new success.
+  dependencies:
+  - RUN-01
+  owner_role: Runtime & safety owner
+  engineering_assignee: UNASSIGNED
+  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
+  runtime_evidence: NOT_MAPPED
+  visual_approval: NOT_APPLICABLE
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not
+    a missing-implementation finding and does not reopen prior closures.
+  source_ids:
+  - S01
+  - S02
+  - S05
+  - S15
+  source_sections: §§5.5,24.1,27
+  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's
+    closure condition.
+  acceptance_basis: SDD requirement; verification detail drafted for approval.
+  acceptance_status: DRAFT_VERIFICATION_DETAIL
+  priority: NORMAL
+  resolution_at_commit: ''
+  work_authorized: false
+  updated: '2026-10-05'
+  parent_ids: []
+  related_items: []
+  closure_evidence: ''
+  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
+  owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- id: MON-05
+  area: Runtime & safety
+  stage: '1'
+  item_type: REQUIREMENT
+  release_scope: BASELINE
+  status: EVIDENCE_TO_MAP
+  required_behavior: Attribute latency, storage, source and provider cost to exact operations.
+  why_needed: Makes incidents diagnosable instead of emitting only BLOCKED.
+  closure_condition: Run/cycle/worker IDs link bounded phase timings, row/byte growth, waits, provider attempts
+    and failures; measurement overhead is disclosed.
+  failure_regression_proof: Logs do not embed giant payloads, leak secrets or equate WAL writes with permanent
+    retained growth.
+  dependencies:
+  - GOV-07
+  owner_role: Runtime & safety owner
+  engineering_assignee: UNASSIGNED
+  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
+  runtime_evidence: NOT_MAPPED
+  visual_approval: NOT_APPLICABLE
+  latest_evidence: 'S16: several stage and observer costs measured; 13.13s unattributed time plus database/GIL/scheduler/child/overhead
+    gaps remain. Historical stage/package build claims exist; not yet mapped to this exact row. This is not
+    a missing-implementation finding and does not reopen prior closures.'
+  source_ids:
+  - S01
+  - S02
+  - S05
+  - S15
+  - S16
+  source_sections: §§6.5,18.4,22.4,24
+  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's
+    closure condition.
+  acceptance_basis: SDD requirement; verification detail drafted for approval.
+  acceptance_status: DRAFT_VERIFICATION_DETAIL
+  priority: NORMAL
+  resolution_at_commit: ''
+  work_authorized: false
+  updated: '2026-10-05'
+  parent_ids: []
+  related_items: []
+  closure_evidence: ''
+  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
+  owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- id: GUI-01
+  area: Dashboard GUI
+  stage: '8'
+  item_type: REQUIREMENT
+  release_scope: BASELINE
+  status: AWAITING_EVIDENCE
+  required_behavior: 'Overview: Account/equity/P&L, exposure, current control, global signals and Needs You.'
+  why_needed: The first screen must make status and required owner action understandable.
+  closure_condition: Observed figures have source/freshness/quality, unavailable values stay unknown, and Needs
+    You opens the exact evidence/action. Functional and runtime proof are separate from owner visual approval.
+  failure_regression_proof: Stale, disconnected, zero/unknown and pending approval are distinct; no fake live
+    values.
+  dependencies:
+  - ACC-03
+  - OWN-03
+  - OWN-04
+  owner_role: Frontend + owner-interface owner
+  engineering_assignee: UNASSIGNED
+  implementation_evidence: HISTORICAL_STAGE8_CLAIM
+  runtime_evidence: NOT_PROVEN_FOR_THIS_SCREEN
+  visual_approval: TRACKED_SEPARATELY
+  latest_evidence: Stage8 GUI/API tests were reported historically. Per-screen current functional/runtime evidence
+    is not mapped here; no visual approval inferred.
+  source_ids:
+  - S01
+  - S10
+  - S14
+  source_sections: §25.3
+  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's
+    closure condition.
+  acceptance_basis: SDD requirement; verification detail drafted for approval.
+  acceptance_status: SDD_DEFINED_TEST_DETAIL_DRAFT
+  priority: NORMAL
+  resolution_at_commit: ''
+  work_authorized: false
+  updated: '2026-10-05'
+  parent_ids: []
+  related_items: []
+  closure_evidence: ''
+  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
+  owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- id: ACC-03
+  area: Accounting & outcomes
+  stage: '7'
+  item_type: REQUIREMENT
+  release_scope: BASELINE
+  status: EVIDENCE_TO_MAP
+  required_behavior: Report actual versus derived economics explicitly.
+  why_needed: Costs and net profitability cannot be inferred from nominal fills.
+  closure_condition: Venue monetary fields and derived R/MFE/MAE/slippage/attribution have distinct status,
+    source/version and coverage.
+  failure_regression_proof: Estimates are not relabelled actual; external unavailable cashflow does not become
+    complete accounting.
+  dependencies:
+  - ACC-02
+  owner_role: Accounting & outcomes owner
+  engineering_assignee: UNASSIGNED
+  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
+  runtime_evidence: NOT_MAPPED
+  visual_approval: NOT_APPLICABLE
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not
+    a missing-implementation finding and does not reopen prior closures.
+  source_ids:
+  - S01
+  - S02
+  - S08
+  - S12
+  - S14
+  source_sections: §§13.1,18.1,18.6
+  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's
+    closure condition.
+  acceptance_basis: SDD requirement; verification detail drafted for approval.
+  acceptance_status: DRAFT_VERIFICATION_DETAIL
+  priority: NORMAL
+  resolution_at_commit: ''
+  work_authorized: false
+  updated: '2026-10-05'
+  parent_ids: []
+  related_items: []
+  closure_evidence: ''
+  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
+  owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- id: SEC-01
+  area: Provider & access
+  stage: '3'
+  item_type: REQUIREMENT
+  release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+  status: DEFERRED
+  required_behavior: Keep credentials outside repository with least-privilege access.
+  why_needed: A UI/research compromise must not expose venue capability.
+  closure_condition: Verified credential locations/scopes, account mode and privileged boundaries match the
+    accepted deployment scope; migration gaps are explicit.
+  failure_regression_proof: No secrets in Git, logs, backups, browser/remote gateway or unrestricted LLM tool.
+  dependencies:
+  - GOV-07
+  owner_role: Provider & access owner
+  engineering_assignee: SOL
+  implementation_evidence: b353237 / 4d5f21b; trader/engine/venue_reads.py; trader/observability/first_boot.py;
+    293 focused offline regressions
+  runtime_evidence: Owner-reported -2015 on positionRisk/openOrders/openAlgoOrders; fresh venue permission
+    proof unavailable
+  visual_approval: NOT_APPLICABLE
+  latest_evidence: 'SEC-01 audit: production read pair is present, trimmed, distinct, without process overrides;
+    demo routing resolves correctly under CCXT 4.5.75. No local request/config defect demonstrated. Binance
+    key validity, demo-account binding, IP restriction and read permissions remain externally unverified. Current-credential
+    scan: 3882 tracked files and 24 logs, zero matches; historical backups/privileged boundary proof remains
+    unmapped. 293 offline regressions passed; no venue/provider calls or service launch.'
+  source_ids:
+  - S01
+  - S02
+  - S08
+  - S13
+  source_sections: §26
+  next_proof: Owner must verify/recreate a separate same-account USD-M demo key with Enable Reading and required
+    USER_DATA access, no mutation permissions; correct the actual outbound-IP allowlist if restricted, privately
+    install the matching read pair, then retain fresh bounded GET-only proof for all three listings. Resolve
+    accepted external secret storage and remaining Git-history/backups/browser/gateway/LLM evidence gaps to
+    satisfy the unchanged full SEC-01 condition.
+  acceptance_basis: SDD requirement; verification detail drafted for approval.
+  acceptance_status: DRAFT_VERIFICATION_DETAIL
+  priority: NORMAL
+  resolution_at_commit: ''
+  work_authorized: false
+  updated: '2026-10-06'
+  parent_ids: []
+  related_items:
+  - RUN-01
+  - OBS-05
+  - EXE-02
+  - EXE-05
+  - EXE-06
+  - LLM-01
+  - LLM-02
+  - REL-01
+  closure_evidence: docs/tracker/evidence/sec01-read-key-audit/audit.yaml
+  evidence_validity: Local offline checks at b353237 plus owner-reported venue failure; external key/IP/account
+    permission subcause UNKNOWN. BLOCKED, not closure or runtime readiness.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
+  owner_approval_needed: Owner-side Binance demo key/account/IP verification and private read-pair installation
+    required; no permission to substitute trading key, widen key authority, launch services or mutate trading/control
+    state.
+  previous_status: BLOCKED
+  blocks_current_release: false
+  critical_path_eligible: false
+  owner_decision: DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE by explicit owner decision on 2026-10-06.
+  revisit_before: Any future production/live activation requiring their guarantees; revisit unresolved findings
+    and satisfy the existing closing conditions before that activation.
+- id: RUN-01
+  area: Runtime & safety
+  stage: '1'
+  item_type: REQUIREMENT
+  release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+  status: DEFERRED
+  required_behavior: Start and stop one identifiable Kernel and compatible Dashboard safely.
+  why_needed: Prevents duplicate processes and startup on the wrong code.
+  closure_condition: Fresh identity/preflight checks, ordered boot, truthful new-instance heartbeat and graceful
+    shutdown are demonstrated on the intended revision.
+  failure_regression_proof: Boot failure or shutdown timeout cannot create a second Kernel or remove needed
+    observation.
+  dependencies:
+  - GOV-07
+  owner_role: Runtime & safety owner
+  engineering_assignee: UNASSIGNED
+  implementation_evidence: main 1b2735c5255d998399b50a3a5893436336fbb5d7; tests/test_run01_instance_identity.py;
+    OBS-02 identity reuse lineage from dba198c
+  runtime_evidence: LIVE_PROOF_PENDING
+  visual_approval: NOT_APPLICABLE
+  latest_evidence: 'IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING. Identity/single-instance/graceful-stop
+    implementation integrated. Owner-reported validation: 307 combined tests passed before merge; 153 production-main
+    regressions passed after merge. OBS-01/02/03/04 protections remain intact. Requirement tradeoffs: No SIGKILL:
+    a hung Kernel requires owner intervention. Safety-over-availability is intentional. Watchdog may block
+    during graceful stop. OBS-01 preflight may refuse recovery. Revision binding is required for the controlled
+    proof.'
+  source_ids:
+  - S01
+  - S02
+  - S05
+  - S15
+  - S16
+  source_sections: §§5.5,27
+  next_proof: One owner-authorized controlled launch + graceful stop on the intended exact revision proving
+    preflight PASS, exact revision, verified PID/start ticks, heartbeat instance binding, single-instance behavior,
+    SIGTERM graceful exit, lock release and no duplicate Kernel.
+  acceptance_basis: SDD requirement; verification detail drafted for approval.
+  acceptance_status: DRAFT_VERIFICATION_DETAIL
+  priority: NORMAL
+  resolution_at_commit: ''
+  work_authorized: false
+  updated: '2026-10-06'
+  parent_ids: []
+  related_items: []
+  closure_evidence: ''
+  evidence_validity: Integrated implementation and offline proof only; no controlled live proof on intended
+    revision.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
+  owner_approval_needed: Explicitly authorize one controlled Kernel launch and SIGTERM graceful stop on a named
+    full intended revision, with revision binding required and retained proof of every listed check; Dashboard
+    launch, provider calls and trading activation require separate explicit scope and are not authorized by
+    this reconciliation.
+  previous_status: BLOCKED
+  blocks_current_release: false
+  critical_path_eligible: false
+  owner_decision: DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE by explicit owner decision on 2026-10-06.
+  revisit_before: Any future production/live activation requiring their guarantees; revisit unresolved findings
+    and satisfy the existing closing conditions before that activation.
+- id: GOV-07
+  area: Product & governance
+  stage: '0'
+  item_type: REQUIREMENT
+  release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+  status: DEFERRED
+  required_behavior: Preserve exact code/config/run identity and safe branch provenance.
+  why_needed: Ensures evidence applies to the deployed system rather than an old checkout.
+  closure_condition: Source and evidence artifacts identify revision, configuration, run/process and timestamps;
+    deployment records match remote/local code.
+  failure_regression_proof: Dirty variants remain labelled unverified; no automatic merge of historical checkpoint
+    branches.
+  dependencies:
+  - GOV-01
+  owner_role: Owner + engineering coordinator
+  engineering_assignee: SOL
+  implementation_evidence: MAPPED_EXISTING_REVISION_PROCESS_AND_ARTIFACT_BINDING
+  runtime_evidence: HISTORICAL_R3_IDENTITY_VERIFIED_CURRENT_DEPLOYMENT_UNVERIFIED
+  visual_approval: NOT_APPLICABLE
+  latest_evidence: Exact identity map at local main 82431136ac68ff72325af301bac43b19b7d3ecd6; whole checkout
+    dirty UNVERIFIED, scoped tracked runtime/config clean. Remote main 25cc7d00 differs. Historical r3 30 run
+    artifact and 22 preparation hashes match; config hash matches its Git revision. Existing Dashboard PID/start
+    ticks match, but loaded revision/config UNKNOWN. No demonstrated application defect. Owner subsequently
+    deferred GOV-07 for current architecture/GUI build; deployment/runtime identity remains UNPROVEN. Exact
+    closing condition and mapped evidence preserved; required before future deployment/live activation claims.
+  source_ids:
+  - S01
+  - S09
+  source_sections: §§6.5,27,31
+  next_proof: Before future deployment/live activation claims, satisfy the unchanged exact source/config/run/process/timestamp
+    and local/remote/deployed consistency closing condition. Current architecture/GUI work excludes GOV-07
+    transitively.
+  acceptance_basis: SDD requirement; verification detail drafted for approval.
+  acceptance_status: DRAFT_VERIFICATION_DETAIL
+  priority: NORMAL
+  resolution_at_commit: 82431136ac68ff72325af301bac43b19b7d3ecd6
+  work_authorized: true
+  updated: '2026-10-06'
+  parent_ids: []
+  related_items: []
+  closure_evidence: docs/tracker/evidence/gov07-identity-sol/terminal.yaml
+  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
+  owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  owner_deferral_evidence: docs/tracker/evidence/gov07-identity-sol/owner-deferral.yaml
+deferral:
+  decision_date: '2026-10-06'
+  authority: 'Explicit owner decision: SEC-01 and RUN-01 are not required for the current LUFFY build phase.'
+  status: DEFERRED
+  release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+  items:
+  - SEC-01
+  - RUN-01
+  - GOV-07
+  blocks_current_release: false
+  non_blocking_for:
+  - architecture work
+  - GUI completion
+  - offline testing
+  - other tracker items
+  critical_path_excluded_items:
+  - SEC-01
+  - RUN-01
+  - GOV-07
+  dependency_policy: Preserve recorded dependency/readiness-gate membership as future requirements. Exclude
+    SEC-01, RUN-01 and GOV-07 transitively from current architecture/GUI build-phase blocker evaluation and
+    critical-path selection.
+  revisit_before: Any future production/live activation requiring their guarantees; revisit unresolved findings
+    and satisfy the existing closing conditions before that activation.
+  preservation: Existing evidence, unresolved findings, closing conditions and completed implementation retained.
+    No deferred item is CLOSED. GOV-07 deployment/runtime identity remains UNPROVEN and is required before
+    future deployment/live activation claims.
+  activation_authorized: false
+  additional_owner_decisions:
+  - id: GOV-07
+    decision_date: '2026-10-06'
+    authority: 'Explicit owner decision in current session: GOV-07 is not required for the current architecture/GUI
+      build phase.'
+    status: DEFERRED
+    release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+    reason: 'Remaining gate is live deployment identity: Dashboard loaded revision/config UNKNOWN, local main
+      differs from remote main, no application defect demonstrated.'
+    blocks_current_release: false
+    non_blocking_for:
+    - architecture work
+    - GUI completion
+    - offline testing
+    - other tracker items
+    dependency_policy: Exclude GOV-07 transitively from current architecture/GUI build-phase blockers; preserve
+      its original requirement/dependency membership as a future gate.
+    required_before: Any future deployment/live activation claims; exact source/config/run/process/timestamp
+      and local/remote/deployed consistency closing condition must then be proven.
+    runtime_deployment_identity: UNPROVEN
+    mapped_evidence_preserved: true
+    closing_condition_preserved: Source and evidence artifacts identify revision, configuration, run/process
+      and timestamps; deployment records match remote/local code.
+    historical_terminal_evidence: docs/tracker/evidence/gov07-identity-sol/terminal.yaml
+    activation_authorized: false
+gates:
+- id: M0
+  title: One current project plan
+  items:
+  - GOV-01
+  - GOV-02
+  - GOV-03
+  - GOV-04
+  - GOV-06
+  - OPEN-09
+  closure: One accepted tracker linked to SDD/STATE/NEXT; existing evidence mapped; one authorized item. No
+    contradictory current status.
+  current: Tracker adopted as detailed evidence ledger; owner representation accepted; STATE/NEXT reconciliation
+    selects one diagnosis-only next item. Row-level EVIDENCE_TO_MAP remains normal mapping work, not a blocker
+    to using the tracker.
+  limit: Not a new architecture review.
+- id: M1
+  title: Stable controlled observation
+  items:
+  - RUN-01
+  - RUN-02
+  - RUN-03
+  - MON-01
+  - MON-02
+  - MON-03
+  - ATT-02
+  - DATA-12
+  - LLM-02
+  - WORK-01
+  closure: Approved instrumented FROZEN window completes on fixed code with correct startup/shutdown, unchanged
+    safety boundaries and measured all-store growth.
+  current: 'Latest corrected-harness attempt blocked: first cycle 259.776s > 240s, zero completed window cycles.
+    PERF-01 is selected for diagnosis before any code change.'
+  limit: Does not establish research, profitable edge or real-money readiness.
+- id: M2
+  title: Supported autonomous research
+  items:
+  - WRLD-03
+  - WRLD-05
+  - ATT-01
+  - RES-01
+  - RES-02
+  - RES-05
+  - RES-08
+  - RES-09
+  - QNT-08
+  - OPEN-01
+  - OPEN-02
+  - OPEN-03
+  closure: Normal event→question→source→Bank→experiment/referee path is observed under approved data/resource/provider
+    scope, including legitimate negative/inconclusive results.
+  current: Build claims and selected reproductions exist; enabled worker workload and prospective result not
+    established.
+  limit: No forced questions or silent gate enablement.
+- id: M3
+  title: Governed strategy/portfolio/outcome loop
+  items:
+  - STR-01
+  - STR-02
+  - STR-03
+  - PORT-01
+  - PORT-02
+  - PORT-08
+  - RISK-01
+  - EXE-01
+  - OUT-01
+  - OUT-03
+  - LRN-04
+  closure: An authorized supported path connects exact strategy/context/Portfolio/Risk/action/outcome and bounded
+    later consumer, with correct refusal branches.
+  current: Fixture/build evidence reported; real supported rule/economics/account evidence and observation
+    remain partial.
+  limit: Test/demo evidence stays labelled; empty registries are policy/evidence blockers.
+- id: M4
+  title: Owner-usable GUI
+  items:
+  - GUI-01
+  - GUI-02
+  - GUI-03
+  - GUI-04
+  - GUI-05
+  - GUI-06
+  - GUI-07
+  - GUI-08
+  - GUI-09
+  - GUX-01
+  - GUX-11
+  closure: Nine screens have required functional/runtime evidence and exact owner visual approval; shared interaction/safety/performance
+    checks pass.
+  current: Stage8 broad historical tests reported; current per-screen map and owner approvals pending.
+  limit: Do not infer all GUI approval from an approved screenshot or API test.
+- id: M5
+  title: Explicit real-money release
+  items:
+  - REL-01
+  - STR-03
+  - RISK-03
+  - EXE-05
+  - EXE-06
+  - SEC-01
+  - OWN-02
+  closure: Owner-authorized exact versions satisfy actual account/venue/probation, cost/capacity, safety and
+    release requirements.
+  current: NOT_AUTHORIZED; current operation restricted to FROZEN demo observation.
+  limit: No automatic activation from any prior gate.
+- id: M6
+  title: Economic usefulness and disciplined expansion
+  items:
+  - GOV-10
+  - ACC-03
+  - REL-02
+  - REL-03
+  - REL-04
+  closure: Owner-defined evaluation establishes actual net economics, uncertainty and operating cost; expansion
+    earns its complexity through approved evidence.
+  current: Not established; no profitability guarantee or arbitrary quota.
+  limit: An honest negative result is evidence, not proof of profitable completion.

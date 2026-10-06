@@ -1,3 +1,5 @@
+> Current phase-scope decision: OWN-04 CLOSED for architecture/offline GUI. MON-01/MON-05 DEFERRED now, mandatory/unproven before future live activation; conditions and dependency edges preserved. GUI-01 eligible for functional evidence work, ACC-03 unresolved. [Scope evidence](evidence/own04-phase-scope-review/REPORT.md). Prior BLOCKED statements are historical.
+
 > Current OWN-04 update (2026-10-06): BLOCKED after exact state mapping, demonstrated display fixes and offline regressions; unchanged MON-01/MON-05 dependencies remain. [REPORT.md](evidence/own04-state-sol/REPORT.md). GUI-01 needs ACC-03 and OWN-04; next independent recommendation ACC-03, unselected. SEC-01/RUN-01/GOV-07 remain deferred. Earlier queue statements are historical.
 
 > Current OWN-03 update (2026-10-06): CLOSED at architecture/offline scope. Exact approval/autonomy evidence: [REPORT.md](evidence/own03-boundary-sol/REPORT.md). OWN-04 is next GUI dependency recommendation only, unselected. GUI-01 still needs ACC-03 and OWN-04. No other owner-interface row newly closes; no activation authorized. Earlier queue statements below are historical.

@@ -1,8 +1,10 @@
+> Current phase-scope decision: OWN-04 CLOSED for architecture/offline GUI; MON-01/MON-05 DEFERRED for this phase and mandatory, unproven before future activation. All substantive conditions/dependency edges retained. GUI-01 eligible for functional evidence work; ACC-03 remains. [Scope decision](evidence/own04-phase-scope-review/REPORT.md). Earlier blocked queue statements are historical.
+
 > Current OWN-04 update (2026-10-06): BLOCKED on unchanged MON-01/MON-05 dependency evidence after verified display fixes. [State evidence](evidence/own04-state-sol/REPORT.md). GUI-01 still needs ACC-03 and OWN-04; ACC-03 is the next independent evidence recommendation, unselected. Earlier queue statements below are historical.
 
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.20-own04-state-sol
+Version: 1.21-own04-phase-scope-review
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
@@ -32,7 +34,7 @@ GOV-07: **DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE**. Deployment/runtime iden
 
 **One data set**: Maintain this YAML as canonical detailed data. Dashboard Tracker reads validated YAML and NEXT. Markdown is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization and adoption checks.
 
-**Current work**: OWN-04 fixes and offline evidence mapped; BLOCKED on unchanged MON-01/MON-05 dependency evidence. ACC-03 recommendation only, unselected. SEC-01/RUN-01/GOV-07 remain deferred, loaded deployment UNKNOWN, no activation authorized.
+**Current work**: OWN-04 CLOSED for current architecture/offline GUI scope. MON-01/MON-05 are deferred current-phase obligations, mandatory and unproven before future activation. GUI-01 eligible for functional evidence work; ACC-03 unresolved. SEC-01/RUN-01/GOV-07 remain deferred. No activation authorized.
 
 **Activation**: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers, a restart or a scope expansion.
 
@@ -710,8 +712,8 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **area**: Runtime & safety
 - **stage**: 1
 - **item_type**: REQUIREMENT
-- **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **release_scope**: NOT_REQUIRED_FOR_CURRENT_RELEASE
+- **status**: DEFERRED
 - **why_needed**: A dead producer cannot be the only detector of its death.
 - **closure_condition**: Independent observer verifies instance, sequence, chronology, publication age and successful-work age under configured policy and emits bounded alerts.
 - **failure_regression_proof**: Dead/stale/restarted/restamped/future/malformed cases never become fresh; prior-instance startup is not new success.
@@ -719,24 +721,26 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **owner_role**: Runtime & safety owner
 - **engineering_assignee**: UNASSIGNED
 - **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **runtime_evidence**: LIVE_RUNTIME_DEPLOYMENT_PROOF_PENDING; not completed by owner scope decision
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures. Owner phase-scope decision defers the full runtime/readiness obligation for current architecture/offline/GUI work; all retained gaps remain, mandatory before future live activation. See docs/tracker/evidence/own04-phase-scope-review/decision.yaml.
 - **source_ids**: S01, S02, S05, S15
 - **source_sections**: §§5.5,24.1,27
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: Before future live activation, map and satisfy the unchanged full closure condition and failure-regression proof with exact source/config/run/process identity; satisfy recorded dependencies. Existing missing evidence and implementation/measurement gaps remain required work.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
 - **resolution_at_commit**:
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
 - **closure_evidence**:
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+
+- **phase_scope_evidence**: docs/tracker/evidence/own04-phase-scope-review/decision.yaml; runtime proof remains REQUIRED_NOT_PROVEN.
 
 ### MON-02 — Prove critical-store read and committed-write availability without hiding contention.
 
@@ -842,8 +846,8 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **area**: Runtime & safety
 - **stage**: 1
 - **item_type**: REQUIREMENT
-- **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **release_scope**: NOT_REQUIRED_FOR_CURRENT_RELEASE
+- **status**: DEFERRED
 - **why_needed**: Makes incidents diagnosable instead of emitting only BLOCKED.
 - **closure_condition**: Run/cycle/worker IDs link bounded phase timings, row/byte growth, waits, provider attempts and failures; measurement overhead is disclosed.
 - **failure_regression_proof**: Logs do not embed giant payloads, leak secrets or equate WAL writes with permanent retained growth.
@@ -851,24 +855,26 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **owner_role**: Runtime & safety owner
 - **engineering_assignee**: UNASSIGNED
 - **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **runtime_evidence**: LIVE_RUNTIME_DEPLOYMENT_PROOF_PENDING; not completed by owner scope decision
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: S16: several stage and observer costs measured; 13.13s unattributed time plus database/GIL/scheduler/child/overhead gaps remain. Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: S16: several stage and observer costs measured; 13.13s unattributed time plus database/GIL/scheduler/child/overhead gaps remain. Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures. Owner phase-scope decision defers the full runtime/readiness obligation for current architecture/offline/GUI work; all retained gaps remain, mandatory before future live activation. See docs/tracker/evidence/own04-phase-scope-review/decision.yaml.
 - **source_ids**: S01, S02, S05, S15, S16
 - **source_sections**: §§6.5,18.4,22.4,24
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: Before future live activation, map and satisfy the unchanged full closure condition and failure-regression proof with exact source/config/run/process identity; satisfy recorded dependencies. Existing missing evidence and implementation/measurement gaps remain required work.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
 - **resolution_at_commit**:
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
 - **closure_evidence**:
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+
+- **phase_scope_evidence**: docs/tracker/evidence/own04-phase-scope-review/decision.yaml; runtime proof remains REQUIRED_NOT_PROVEN.
 
 ### MON-06 — Expose all SDD alert classes and capability gaps with evidence.
 
@@ -4113,8 +4119,8 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **area**: Owner interface
 - **stage**: 8
 - **item_type**: REQUIREMENT
-- **release_scope**: BASELINE
-- **status**: BLOCKED
+- **release_scope**: CURRENT_BUILD_PHASE
+- **status**: CLOSED
 - **why_needed**: An architecture diagram or stored ACTIVE value is not runtime truth.
 - **closure_condition**: Current processes, source age, observed work, control and unavailable telemetry are distinct from configured/declared state.
 - **failure_regression_proof**: Stopped, waiting, failed or intentionally disabled workers cannot display active fabricated activity.
@@ -4124,22 +4130,24 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **implementation_evidence**: EXACT_SOURCE_AND_OFFLINE_API_FRONTEND_BROWSER
 - **runtime_evidence**: OFFLINE_FIXTURE_ONLY; loaded deployment UNKNOWN
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Exact OWN-04 state map and bounded fixes: matching process/heartbeat identity, publication vs successful-work age, stored control permission, configured disabled vs observed report, local expiry/disconnect and invalid collector clocks. Offline tests prove conservative UNKNOWN/stale presentation. Unchanged MON-01/MON-05 dependencies prevent full closure; MON-05 retains attribution/overhead/wait gaps.
+- **latest_evidence**: Current-phase closure from existing exact source/API/owner-read/frontend/browser proof at 0cc582e. Owner scope decision separates truthful consumption of available evidence from future MON-01/MON-05 runtime observation/deployment proof. Full monitoring conditions, dependencies and gaps retained; runtime proof remains unproven.
 - **source_ids**: S01, S02, S10, S14
 - **source_sections**: §25.3
-- **next_proof**: Reconcile exact MON-01/MON-05 architecture/offline dependency evidence under their own scope. MON-05 retained attribution/overhead/wait gaps remain; no live Kernel/provider/trading required for current build. Revalidate OWN-04 after dependency reconciliation.
+- **next_proof**: No additional current-phase OWN-04 functional proof required at the pinned evidence revision. Before future live activation satisfy original MON-01/MON-05 conditions, including RUN-01/GOV-07 dependencies and retained MON-05 attribution gaps; independently prove deployment/runtime identity.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
-- **acceptance_status**: SDD_DEFINED_OFFLINE_BEHAVIOR_VERIFIED_DEPENDENCIES_PENDING
+- **acceptance_status**: CURRENT_PHASE_VERIFIED_FUTURE_ACTIVATION_PROOF_PENDING
 - **priority**: NORMAL
 - **resolution_at_commit**: 0cc582e441bba5c2b1262844f981ad6dfe15bfb3
 - **work_authorized**: True
 - **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**: docs/tracker/evidence/own04-state-sol/closure.yaml
-- **evidence_validity**: Pinned source, API/owner-read/frontend/browser fixtures only; not loaded runtime or owner visual acceptance.
+- **closure_evidence**: docs/tracker/evidence/own04-phase-scope-review/decision.yaml
+- **evidence_validity**: CLOSED for architecture/offline GUI only using retained exact proofs; live runtime/deployment identity UNKNOWN. Original MON-01/MON-05 safety requirements remain mandatory before future activation.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+
+- **phase_scope_evidence**: docs/tracker/evidence/own04-phase-scope-review/decision.yaml; runtime proof remains REQUIRED_NOT_PROVEN.
 
 ### GUI-01 — Overview: Account/equity/P&L, exposure, current control, global signals and Needs You.
 
@@ -4157,7 +4165,7 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **implementation_evidence**: HISTORICAL_STAGE8_CLAIM
 - **runtime_evidence**: NOT_PROVEN_FOR_THIS_SCREEN
 - **visual_approval**: TRACKED_SEPARATELY
-- **latest_evidence**: Stage8 GUI/API tests were reported historically. Per-screen current functional/runtime evidence is not mapped here; no visual approval inferred.
+- **latest_evidence**: Stage8 GUI/API tests were reported historically. Per-screen current functional/runtime evidence is not mapped here; no visual approval inferred. OWN-04 is now CLOSED for current architecture/offline GUI scope using retained exact state proofs; OWN-03 is CLOSED. ACC-03 remains unresolved. MON-01/MON-05 runtime readiness remains mandatory before future activation, independent of current screen functional closure.
 - **source_ids**: S01, S10, S14
 - **source_sections**: §25.3
 - **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
@@ -4166,13 +4174,15 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **priority**: NORMAL
 - **resolution_at_commit**:
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
 - **closure_evidence**:
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+
+- **phase_scope_evidence**: docs/tracker/evidence/own04-phase-scope-review/decision.yaml; runtime proof remains REQUIRED_NOT_PROVEN.
 
 ### VIS-01 — Owner visual approval — Overview.
 

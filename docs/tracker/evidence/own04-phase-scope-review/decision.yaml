@@ -1,0 +1,64 @@
+schema: luffy-own04-phase-scope-decision.v1
+review_revision: 6bd8624ccb4fe32a1adc4509c992f1b6fcc9a269
+authority: Current owner request separates current architecture/offline/GUI truthful reporting from mandatory
+  future MON-01/MON-05 live-activation observation and deployment proof. No safety requirement removal or runtime
+  proof completion authorized.
+dependency_conflict: RESOLVED
+representation: Existing DEFERRED/NOT_REQUIRED_FOR_CURRENT_RELEASE plus scoped CLOSED and explicit split proof
+  state; original dependency edges retained as future activation gates. No new requirement ID.
+own04:
+  status: CLOSED
+  release_scope: CURRENT_BUILD_PHASE
+  closure_scope: ARCHITECTURE_OFFLINE_GUI
+  proof_state:
+    current_build_phase:
+      scope: ARCHITECTURE_OFFLINE_GUI
+      status: PROVEN
+      evidence: docs/tracker/evidence/own04-state-sol/closure.yaml
+      implementation_revision: 0cc582e441bba5c2b1262844f981ad6dfe15bfb3
+      obligation: Truthful reporting of available evidence; missing/stopped/disconnected/stale/disabled/unknown
+        evidence cannot become fabricated ACTIVE or live work.
+    future_live_activation:
+      status: REQUIRED_NOT_PROVEN
+      mandatory_requirements:
+      - MON-01
+      - MON-05
+      transitive_requirements:
+      - RUN-01
+      - GOV-07
+      evidence_state: LIVE_RUNTIME_DEPLOYMENT_PROOF_PENDING
+      must_satisfy_original_conditions_before_activation: true
+      closure_now_does_not_authorize_activation: true
+MON-01:
+  status: DEFERRED
+  required_before: FUTURE_LIVE_ACTIVATION
+  runtime_proof_complete: false
+  original_conditions_retained: true
+MON-05:
+  status: DEFERRED
+  required_before: FUTURE_LIVE_ACTIVATION
+  runtime_proof_complete: false
+  original_conditions_and_attribution_gaps_retained: true
+GUI-01:
+  status: AWAITING_EVIDENCE
+  eligible_for_current_phase_functional_work: true
+  ready_for_full_closure: false
+  satisfied_dependencies:
+  - OWN-03
+  - OWN-04
+  remaining_current_phase_dependencies:
+  - ACC-03
+  separate_screen_evidence_and_visual_acceptance_required: true
+existing_deferrals_preserved:
+- SEC-01
+- RUN-01
+- GOV-07
+implementation_changed: false
+runtime_proof_performed: false
+activation_authorized: false
+validation:
+  result: PASS
+  control_requirement_scope_checks: 20
+  evidence: validation.json
+  implementation_tests: Retained OWN-04 source/API/owner-read/frontend/browser proof reused; no implementation
+    or runtime test rerun for this control-plane-only change.
