@@ -342,7 +342,49 @@ def trade_lineage(journal, trade_id: str) -> dict | None:
                       "trade_accounting_bookings (joins only by recorded ids)"}
 
 
-def decision_detail(journal, decision_id: str) -> dict | None:
+def market_inputs(journal, decision_id: str, stores) -> tuple[dict | None, dict | None]:
+    """Verify a decision's journaled market lineage against the retained stores.
+
+    The one consumer of `resolve_lineage`: anything it cannot prove is reported
+    unavailable with its reason code, never presented as current evidence.
+    """
+    import sqlite3
+    from trader.data import market_provenance as mp
+    rows = journal.query(
+        "SELECT detail FROM (SELECT detail FROM brain_events WHERE kind='market_provenance' "
+        "ORDER BY id DESC LIMIT ?)", (BRAIN_WINDOW,))
+    receipt = None
+    for r in rows:
+        try:
+            body = json.loads(r["detail"])
+        except (TypeError, ValueError):
+            continue
+        if isinstance(body, dict) and body.get("decision_id") == decision_id:
+            receipt = body.get("receipt")
+            break
+    if not isinstance(receipt, dict):
+        return None, _unavailable("market_inputs", "no market_provenance event for decision_id")
+    conns = []
+    try:
+        for p in stores or ():
+            if Path(p).is_file():
+                conns.append(sqlite3.connect(f"file:{p}?mode=ro", uri=True))
+        if not conns:
+            return None, _unavailable("market_inputs", "market_stores_unavailable")
+        found = mp.resolve_lineage(conns, receipt)
+    except (ValueError, KeyError, TypeError, sqlite3.Error) as exc:
+        return None, _unavailable("market_inputs", f"lineage_unverified:{exc}")
+    finally:
+        for c in conns:
+            c.close()
+    own = {rid for g in ("frames", "derivs", "references") for ids in (receipt.get(g) or {}).values()
+           for rid in ids}
+    return {"verified": True, "as_of_ms": receipt["as_of_ms"], "instrument_id": receipt.get("instrument_id"),
+            "receipt_count": len(found), "attention_admission": receipt.get("attention_admission"),
+            "receipts": {rid: m for rid, m in found.items() if rid in own}}, None
+
+
+def decision_detail(journal, decision_id: str, stores=None) -> dict | None:
     d = _rows(journal, "SELECT id, cycle_id, ts, symbol, action, score, threshold, confidence, "
                        "executed, skip_reason, size_usdt, entry_price, strategy_ids, "
                        "signals_json, meta_p, scan_id FROM decisions WHERE id=?",
@@ -375,9 +417,13 @@ def decision_detail(journal, decision_id: str) -> dict | None:
                   for i in ids if isinstance(i, str) and i]
     if not decision.get("scan_id"):
         missing.append(_unavailable("opportunity", "no attention scan id recorded"))
+    inputs, why = market_inputs(journal, decision_id, stores) if stores is not None else (None, None)
+    if why:
+        missing.append(why)
     return {"generated_at": _iso(_now()), "decision": decision, "cycle": cycle,
             "votes": votes, "votes_basis": basis, "outcome": outcome, "trades": trades,
             "strategies": strategies, "unavailable": missing,
+            **({"market_inputs": inputs} if inputs else {}),
             "source": "journal decisions/cycles/votes/outcomes/trades (exact ids)"}
 
 
@@ -1463,7 +1509,8 @@ def install(app, *, journal, root: Path, vault: Path) -> None:
 
     @app.get(PREFIX + "/decisions/{decision_id}")
     def owner_decision(decision_id: str):
-        return found(decision_detail(journal, decision_id), "decision_not_found")
+        stores = [root / "data" / "candles.db", root / "data" / "derivs.db"]
+        return found(decision_detail(journal, decision_id, stores), "decision_not_found")
 
     @app.get(PREFIX + "/research")
     def owner_research(limit: int = 50, offset: int = 0):
