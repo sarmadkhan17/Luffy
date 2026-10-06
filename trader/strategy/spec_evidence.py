@@ -170,8 +170,10 @@ _TF_MINUTES = {"5m": 5, "15m": 15, "1h": 60, "4h": 240}
 
 
 def detect_tf(df) -> str | None:
-    """Infer a frame's timeframe from its own bar spacing."""
+    """Prefer the declared interval so gaps cannot imply a coarser timeframe."""
     import pandas as pd
+    if df is not None and df.attrs.get('timeframe') in _TF_MINUTES:
+        return df.attrs['timeframe']
     if df is None or len(df) < 3 or "ts" not in df.columns:
         return None
     ts = pd.to_datetime(df["ts"], utc=True)

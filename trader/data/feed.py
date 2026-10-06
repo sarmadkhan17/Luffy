@@ -410,6 +410,8 @@ class DataFeed:
         iid,source=self._identity(symbol)
         df = mp.load(self.db, self._series_key(symbol, tf), as_of_ms=as_of_ms,
                      limit=limit, include_partial=include_partial, instrument_id=iid, source=source)
+        if df is not None:
+            df.attrs['timeframe'] = tf
         return mp.eligible_frame(df, tf, as_of_ms, final=not include_partial)
 
     def latest_ohlcv(self, symbol, tf='15m', limit=20000):

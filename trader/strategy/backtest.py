@@ -75,10 +75,12 @@ def resample(df: pd.DataFrame, rule: str) -> pd.DataFrame:
     duration = TF_MS[rule]
     opens = mp.ms(df['ts'])
     own = df.attrs.get('timeframe')
+    qualified = all(k in df for k in mp.META)
+    if qualified and own not in TF_MS:
+        raise ValueError('qualified aggregation requires source timeframe')
     step = TF_MS.get(own) or (int(np.median(np.diff(opens))) if len(opens) > 1 else duration)
     if step > duration or duration % step:
         raise ValueError('cannot aggregate a finer interval from coarse bars')
-    qualified = all(k in df for k in mp.META)
     records = []
     for bucket, group in df.assign(_bucket=opens//duration*duration).groupby('_bucket'):
         stamps = mp.ms(group['ts'])
@@ -88,6 +90,7 @@ def resample(df: pd.DataFrame, rule: str) -> pd.DataFrame:
                      low=group['low'].min(skipna=False), close=group['close'].iloc[-1],
                      volume=group['volume'].sum(min_count=len(group)))
         if qualified:
+            complete = complete and group['bar_state'].eq('FINAL').all()
             receipts = group['observed_at_ms'].astype('int64')
             available = group['available_at_ms']
             known = int(available.max()) if available.notna().all() else None
