@@ -1,0 +1,17 @@
+{
+  "base_head": "f2361b77f885ced9fc03477143a9d8c984318a7f",
+  "implementation_commit": "a799e6c365074cab5597a80261bbdb9c3dda3b12",
+  "files": {
+    "trader/observability/attention.py": "212aa27db4dce3d4257fce28474df24133c34c6e6f39576616d1129a1c5395e3",
+    "docs/tracker/evidence/perf03-capture-r1/baseline-attention.py": "afa7ca635660bc9690c2202031e6498159511efc66155c9a63e487019e1ca111",
+    "docs/tracker/evidence/perf03-capture-r1/retained-fixture.json.gz": "f9c3167a9e8b6e405cd286d1ac6254f225a1d9608bce13948cc4d026eae18e3f"
+  },
+  "external_reports": {
+    "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/attention-final-metadata.json": "80e948ae0b1750ad3400ae429f1c6a7962f897ff4608dd74ca892aab286c3f43",
+    "/mnt/luffy-recovery/recovery/runtime-observer-attention-repair-r1/evidence/final-state.json": "ffcaf794ef5ef423ea36bf59c002163679ae0192af05d94766eab4340656d833",
+    "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/run/final-result.json": "d4ea1863cd236066ecd2204534c0d7720550d90cf2c8435ba59394c10629e132"
+  },
+  "frame_dependency_sha256": "3b62d592bf55e653fcc1419ef96816f69151ef9d7c13a71fcfae06cc7a236e5f",
+  "frame_blob_validation": "Learning foundation digest and exact DataFrame roundtrip verified before capture",
+  "original_packet": "NOT_RETAINED; reconstructed fixture is not the original producer packet"
+}

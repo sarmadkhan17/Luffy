@@ -1,0 +1,45 @@
+         5048593 function calls (4099344 primitive calls) in 2.839 seconds
+
+   Ordered by: cumulative time
+   List reduced from 557 to 25 due to restriction <25>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.008    0.008    2.839    2.839 /mnt/luffy-data/luffy/production/docs/tracker/evidence/perf03-capture-r1/baseline-attention.py:91(capture)
+917427/848    1.310    0.000    2.514    0.003 /usr/lib/python3.12/copy.py:118(deepcopy)
+27322/848    0.457    0.000    2.509    0.003 /usr/lib/python3.12/copy.py:217(_deepcopy_dict)
+  1834978    0.439    0.000    0.439    0.000 {method 'get' of 'dict' objects}
+   973295    0.167    0.000    0.167    0.000 {built-in method builtins.id}
+       16    0.002    0.000    0.143    0.009 /mnt/luffy-data/luffy/production/trader/data/market_provenance.py:338(eligible_frame)
+   889917    0.104    0.000    0.104    0.000 /usr/lib/python3.12/copy.py:172(_deepcopy_atomic)
+       16    0.000    0.000    0.087    0.005 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/frame.py:2125(to_dict)
+       16    0.005    0.000    0.087    0.005 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/methods/to_dict.py:97(to_dict)
+      528    0.002    0.000    0.086    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/indexing.py:1192(__getitem__)
+       16    0.000    0.000    0.067    0.004 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/indexing.py:917(__setitem__)
+       16    0.000    0.000    0.066    0.004 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/frame.py:1591(itertuples)
+       32    0.000    0.000    0.063    0.002 {method 'extend' of 'list' objects}
+      384    0.001    0.000    0.063    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/frame.py:1660(<genexpr>)
+      592    0.007    0.000    0.055    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/series.py:369(__init__)
+      368    0.001    0.000    0.054    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/indexing.py:1710(_getitem_tuple)
+      624    0.001    0.000    0.047    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/frame.py:4292(_ixs)
+      496    0.002    0.000    0.046    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/indexing.py:1740(_getitem_axis)
+      368    0.003    0.000    0.043    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/indexing.py:1058(_getitem_lowerdim)
+      240    0.001    0.000    0.042    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/frame.py:1538(iterrows)
+       16    0.000    0.000    0.035    0.002 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/indexing.py:1889(_setitem_with_indexer)
+    27510    0.023    0.000    0.035    0.000 /usr/lib/python3.12/copy.py:231(_keep_alive)
+       16    0.000    0.000    0.034    0.002 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/indexing.py:1957(_setitem_with_indexer_split_path)
+       96    0.001    0.000    0.033    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/indexing.py:2122(_setitem_single_column)
+      624    0.002    0.000    0.032    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/frame.py:4956(_box_col_values)
+
+
+   Ordered by: cumulative time
+   List reduced from 557 to 4 due to restriction <'deepcopy'>
+
+Function                                           was called by...
+                                                       ncalls  tottime  cumtime
+/usr/lib/python3.12/copy.py:118(deepcopy)          <-      16    0.000    2.497  /mnt/luffy-data/luffy/production/docs/tracker/evidence/perf03-capture-r1/baseline-attention.py:91(capture)
+                                                          832    0.003    0.017  /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/generic.py:6119(__finalize__)
+                                                      783/279    0.001    0.002  /usr/lib/python3.12/copy.py:191(_deepcopy_list)
+                                                    915796/3626    1.306    2.504  /usr/lib/python3.12/copy.py:217(_deepcopy_dict)
+/usr/lib/python3.12/copy.py:217(_deepcopy_dict)    <- 27322/848    0.457    2.509  /usr/lib/python3.12/copy.py:118(deepcopy)
+/usr/lib/python3.12/copy.py:172(_deepcopy_atomic)  <-  889917    0.104    0.104  /usr/lib/python3.12/copy.py:118(deepcopy)
+/usr/lib/python3.12/copy.py:191(_deepcopy_list)    <- 188/104    0.001    0.003  /usr/lib/python3.12/copy.py:118(deepcopy)

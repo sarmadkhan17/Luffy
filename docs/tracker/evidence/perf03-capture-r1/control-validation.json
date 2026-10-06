@@ -1,0 +1,14 @@
+{
+  "result": "PASS",
+  "ids": 177,
+  "closing_conditions_unchanged": 177,
+  "unrelated_rows_unchanged": 175,
+  "PERF_01": "ENTIRE_ROW_UNCHANGED",
+  "ATT_04": "ENTIRE_ROW_UNCHANGED",
+  "selected": "OBS-01",
+  "selected_started": false,
+  "read_only_dashboard_contract": "PASS",
+  "bundle_hashes": "PASS; XLSX historical hash unchanged",
+  "baseline_capture_source": "Exact parent Git blob",
+  "eligibility": "12 ranked; explicit dependencies satisfied; blocked PERF-01 excluded"
+}

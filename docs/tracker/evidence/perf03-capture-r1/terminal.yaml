@@ -1,0 +1,98 @@
+item: PERF-03
+result: BLOCKED
+base_head: f2361b77f885ced9fc03477143a9d8c984318a7f
+implementation_commit: a799e6c365074cab5597a80261bbdb9c3dda3b12
+why_existed: Capture measured ~1,068ms and ~865ms against 50ms advisory budget; substage cause unattributed.
+closing_condition: Measured dominant capture work corrected with provenance/coverage unchanged; actual capture
+  costs meet approved contract. Any policy change needs explicit owner decision, not silent widening.
+closure_condition_changed: false
+root_cause_scope: Historical reconstructed capture, not a PERF-01 causal finding
+root_cause: Repeated deepcopy of full ticker-population membership receipts dominates warmed historical reconstruction
+  (2.514/2.839 profiled seconds). ATT-04 already changed the normal receipt shape. Remaining repeated pandas
+  frame/row copies were corrected narrowly.
+change: Apply identical temporal/FINAL/VALID eligibility without redundant frame copies and NaN assignment
+  to discarded rows; detach only receipt columns without iterrows/to_dict.
+tests:
+  focused_pytest: 197 passed in 118.52s
+  payload_equivalence: Seven PASS cases; capture_ms excluded; strict JSON identity, future/stale/partial/missing/nullable/nonfinite/unordered
+    controls and post-capture mutation
+  graphify: AST-only update in isolated worktree; primary dirty graph excluded from commit
+measurements:
+  before: before-measurements.json
+  after: after-measurements.json
+  historical_still_over_50_ms: true
+  compact_receipt_case_after_ms:
+  - 41.521487000864
+  - 47.23455201019533
+  scope: Historical frames and 16-symbol cfg; current membership shape is a constructed comparison, not a current
+    normal Kernel run
+blocked_by:
+  type: OWNER_OR_EXTERNAL_EVIDENCE
+  missing: Exact original pre-capture packet/frames/attrs and matching membership are unavailable. Hash-verified
+    later decision inputs cannot establish original exact producer equality. No current-source actual runtime
+    capture-cost evidence.
+  needed: 'Owner/external dependency: supply exact original pre-capture frames/membership packet, or separately
+    authorize a bounded post-ATT-04 FROZEN observation retaining actual producer inputs/timings and nearby
+    adverse case. Preserve 50ms budget, coverage/provenance and PERF-01 BLOCKED/UNKNOWN; no automatic observation.'
+runtime_impact: No observed runtime improvement or deployment claim; offline compact-receipt case improves.
+  Legacy retained receipt case remains over budget. 50ms and 240s contracts unchanged.
+runtime_launched: false
+venue_requests: 0
+provider_attempts: 0
+trading_activated: false
+perf01: ENTIRE ROW UNCHANGED; BLOCKED/UNKNOWN
+att04: CLOSED; architecture and row unchanged
+next_selected: OBS-01
+next_started: false
+ranking:
+- id: OBS-01
+  severity: P0
+  reason: Preflight refusal gates every launch; reported fix awaits exact evidence; no dependencies.
+- id: OBS-04
+  severity: P0
+  reason: Maintain safety observers while shutdown is unconfirmed; small existing harness proof.
+- id: OBS-02
+  severity: P0
+  reason: Require genuine new Kernel boot/FROZEN/health before Dashboard launch; existing correction evidence
+    pending.
+- id: OPEN-04
+  severity: P0
+  reason: Known journal append retry duplication can corrupt event truth/recovery; exact current writer recheck
+    precedes fix.
+- id: DATA-01
+  severity: P0
+  reason: Root identity/capability prerequisite for provenance, Risk and booking; evidence mapping, not a newly
+    found defect.
+- id: OBS-03
+  severity: P1
+  reason: Accurate cold/first/shutdown timing is prerequisite to a valid sustained observation; reported harness
+    proof pending.
+- id: LLM-02
+  severity: P1
+  reason: Provider admission must remain disabled across all callers; root operational/provider evidence prerequisite.
+- id: OPEN-08
+  severity: P1
+  reason: Known per-call monitoring/usage attribution gap; can verify without paid/provider activation.
+- id: OPEN-01
+  severity: P1
+  reason: Research scheduling/busy gate readiness; smaller proven harness safety packages take precedence.
+- id: OPEN-07
+  severity: P3
+  reason: Prospective outcome/replay/learning completeness; depends on actual eligible evidence, not a present
+    startup failure.
+- id: GOV-01
+  severity: P4
+  reason: Root control-plane evidence mapping unlocks many downstream maps; adopted control plane has no demonstrated
+    runtime failure.
+- id: OPEN-05
+  severity: P4
+  reason: Remaining representation duplication requires measured savings; cleanup does not outrank safe startup.
+eligibility_rule: All explicit dependencies CLOSED, no owner/deferred/external gates. EVIDENCE_TO_MAP means
+  mapping, not a proven implementation gap.
+excluded:
+  PERF_01: Engineering BLOCKED/UNKNOWN despite ledger OPEN
+  PERF_03: Terminal external evidence gate
+  WORK_01: BLOCKED; no further execution
+  owner_gates: AWAITING_OWNER excluded
+  dependent_rows: Any non-CLOSED explicit dependency excluded; no bypass
+  parked: DEFERRED rows excluded

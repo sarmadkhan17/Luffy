@@ -777,7 +777,7 @@ completed_stage3_4_pre_stage8_closure_audit_r1:
     - trader/research/* and quantitative/referee tests.
     - predictive research bridge and final Stage5-7 lineage.
 
-current_active_work:
+perf01_blocked_work:
   id: PERF-01
   status: BLOCKED
   mode: DIAGNOSIS_ONLY
@@ -1339,3 +1339,40 @@ attention_admission_r1:
   evidence: docs/tracker/evidence/attention-admission-r1/closure.yaml
   next_selected: PERF-03
   perf01: UNCHANGED; BLOCKED/UNKNOWN
+
+perf03_capture_r1:
+  tracker_id: PERF-03
+  status: BLOCKED
+  implementation_commit: a799e6c365074cab5597a80261bbdb9c3dda3b12
+  evidence: docs/tracker/evidence/perf03-capture-r1/terminal.yaml
+  proof_level: OFFLINE_RECONSTRUCTION_AND_REGRESSIONS_ONLY
+  tests: 197 passed; seven exact before/after payload-equivalence cases
+  current_shape_capture_ms: "41.5\u201347.3; reconstructed 16-symbol case only"
+  historical_capture_still_over_budget: true
+  original_packet_retained: false
+  closing_condition_satisfied: false
+  external_dependency: Exact original producer packet is not retained; current-source actual producer cost
+    evidence requires separately authorized observation.
+  runtime_launched: false
+  providers_enabled: false
+  trading_activated: false
+  perf01: UNCHANGED; BLOCKED/UNKNOWN
+current_active_work:
+  id: OBS-01
+  status: SELECTED_NOT_STARTED
+  mode: DIAGNOSIS_ONLY
+  objective: Enforce preflight refusal before any service launch.
+  implementation_started: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  tracker_source: docs/tracker/LUFFY_Product_Tracker_v1.yaml
+  selection_basis: P0 launch safety blocker; no dependencies; existing reported correction offers a small evidence-verification
+    package. Selected after PERF-03 terminal BLOCKED; not started.
+  constraints:
+  - Inspect exact retained evidence and relevant harness/tests only.
+  - No service launch, provider enablement or trading activation.
+  - Preserve PERF-03 external evidence gate and PERF-01 BLOCKED/UNKNOWN.
+  evidence:
+  - docs/tracker/evidence/perf03-capture-r1/terminal.yaml
+  - docs/tracker/evidence/2026-10-05-instrumented-observation-owner-report.yaml

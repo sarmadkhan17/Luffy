@@ -1,41 +1,43 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.4-attention-admission-closure
+  version: 1.5-perf03-terminal-blocked
   created_date: '2026-10-05'
-  title: LUFFY — Product, Behaviour & GUI Tracker
+  title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
-  scope: SDD v3.2 baseline plus v3.3 owner-adopted Attention admission; retained evidence and owner tracker requirements.
+  scope: SDD v3.2 baseline plus v3.3 owner-adopted Attention admission; retained evidence and owner tracker
+    requirements.
   baseline_commit: 9385f792f32277bb0b826dba83247b8f5ccf1f8a
   evidence_checkpoint: 6da5ad9a895ddb0f5fed9d75904e9639cc731b44
   fresh_runtime_verified: false
   repository_modified: true
-  coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
-    prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
-  current_active_item: PERF-03
+  coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness
+    or full prior-chat reconciliation. No functionality or evidence has been independently retested by creating
+    this tracker.
+  current_active_item: OBS-01
   current_active_result: SELECTED_NOT_STARTED_DIAGNOSIS_ONLY
   row_count: 177
-  authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
-    is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown is an
-    optional generated reference.
+  authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This
+    YAML is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown
+    is an optional generated reference.
   pending_adoption: null
   status_counts:
     IN_PROGRESS: 0
     EVIDENCE_TO_MAP: 130
-    AWAITING_EVIDENCE: 15
+    AWAITING_EVIDENCE: 14
     AWAITING_OWNER: 14
     DEFERRED: 2
-    BLOCKED: 1
+    BLOCKED: 2
     OPEN: 6
     CLOSED: 9
-  workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged and
-    excluded from adoption, synchronization and parity requirements.
+  workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged
+    and excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
   latest_perf01_result_source: docs/tracker/evidence/2026-10-06-perf01-retained-reconstruction.yaml
-  publication_note: Owner explicitly accepted adoption and read-only Tracker navigation. OPEN-09 closes with this
-    control-plane reconciliation; implementation verification is distinct from deployed/browser proof.
+  publication_note: Owner explicitly accepted adoption and read-only Tracker navigation. OPEN-09 closes with
+    this control-plane reconciliation; implementation verification is distinct from deployed/browser proof.
   current_runtime_item: PERF-01
   current_runtime_result: BLOCKED
-  next_diagnostic_item: PERF-03
+  next_diagnostic_item: OBS-01
   next_runtime_execution_authorized: false
   owner_representation_decision:
     date: '2026-10-05'
@@ -43,11 +45,14 @@ metadata:
     primary_view: Dashboard Tracker (read-only)
     markdown: Optional generated reference
     xlsx: DEPRECATED / NON-AUTHORITATIVE; preserved history
-    mutation_contract: No Tracker mutation API/UI; engineering/control-plane changes only until a separate typed,
-      audited GUI mutation contract is approved.
-    navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope; the
-      owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product row
-      is silently reopened or added.
+    mutation_contract: No Tracker mutation API/UI; engineering/control-plane changes only until a separate
+      typed, audited GUI mutation contract is approved.
+    navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope;
+      the owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product
+      row is silently reopened or added.
+  last_terminal_item: PERF-03
+  last_terminal_result: BLOCKED
+  last_terminal_evidence: docs/tracker/evidence/perf03-capture-r1/terminal.yaml
 status_definitions:
 - status: EVIDENCE_TO_MAP
   meaning: Existing requirement recorded; exact row-level evidence has not yet been linked. This is NOT a finding
@@ -76,8 +81,9 @@ operating_rules:
     is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization
     and adoption checks.
 - rule: Current work
-  detail: ATT-04 is CLOSED at offline implementation/test scope. PERF-03 is the single selected DIAGNOSIS_ONLY
-    package, not started. PERF-01 remains unchanged and BLOCKED/UNKNOWN. No runtime, provider or trading activation is authorized.
+  detail: PERF-03 is terminal BLOCKED with a tested narrow offline correction and an external capture-evidence gate.
+    OBS-01 is the single selected DIAGNOSIS_ONLY successor, not started. PERF-01 remains unchanged and BLOCKED/UNKNOWN.
+    No runtime, provider or trading activation is authorized.
 - rule: Activation
   detail: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers,
     a restart or a scope expansion.
@@ -6522,33 +6528,35 @@ items:
   stage: Cross-cutting
   item_type: DEFECT
   release_scope: BASELINE
-  status: AWAITING_EVIDENCE
+  status: OPEN
   required_behavior: Enforce preflight refusal before any service launch.
   why_needed: The prepared preflight recorded active safety conditions but did not enforce refusal.
   closure_condition: Machine-readable preflight outcome gates launch; active/unreadable required storage/protection/environment
     facts yield zero launches.
-  failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed
-    boundaries without reopening unrelated work.
+  failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected
+    already-closed boundaries without reopening unrelated work.
   dependencies: []
   owner_role: Assigned local engineering session
-  engineering_assignee: UNASSIGNED
+  engineering_assignee: UNASSIGNED; selected successor only
   implementation_evidence: SEE_EVIDENCE
   runtime_evidence: SEE_SCOPE_AND_EVIDENCE
   visual_approval: NOT_APPLICABLE
   latest_evidence: S16 reports machine-readable preflight gating was corrected and integrated fixture scenarios
-    passed. Exact external harness artifacts were not independently inspected in the tracker-mapping step; keep
-    AWAITING_EVIDENCE.
+    passed. Exact external harness artifacts were not independently inspected in the tracker-mapping step;
+    keep AWAITING_EVIDENCE.
   source_ids:
   - S11
   - S15
   source_sections: 'Parent requirement(s): RUN-01'
-  next_proof: Resolve within the linked parent/active task; capture exact evidence before closure.
+  next_proof: Read exact retained preflight/harness implementation and fixture evidence; verify refusal before
+    launch, including active/unreadable storage/protection/environment. No service launch or runtime observation
+    authorized.
   acceptance_basis: Existing requirement/observed incident; not a new feature.
   acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
   priority: CURRENT
   resolution_at_commit: ''
   work_authorized: false
-  updated: '2026-10-05'
+  updated: '2026-10-06'
   legacy_ids: ''
   parent_work: WORK-01
   parent_ids:
@@ -6558,6 +6566,8 @@ items:
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  selection_basis: P0 launch safety blocker; no dependencies; existing reported correction offers a small evidence-verification
+    package. Selected after PERF-03 terminal BLOCKED; not started.
 - id: OBS-02
   area: Observed issues
   stage: Cross-cutting
@@ -6787,33 +6797,38 @@ items:
   stage: Cross-cutting
   item_type: DEFECT
   release_scope: BASELINE
-  status: OPEN
+  status: BLOCKED
   required_behavior: Bring Attention producer capture within its approved budget or resolve the contract explicitly.
   why_needed: Capture measured ~1,068ms and ~865ms against 50ms advisory budget; substage cause unattributed.
   closure_condition: Measured dominant capture work corrected with provenance/coverage unchanged; actual capture
     costs meet approved contract. Any policy change needs explicit owner decision, not silent widening.
-  failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed
-    boundaries without reopening unrelated work.
+  failure_regression_proof: Repeat the exact original failure and a nearby adverse variant; verify affected
+    already-closed boundaries without reopening unrelated work.
   dependencies: []
   owner_role: Assigned local engineering session
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: SEE_EVIDENCE
-  runtime_evidence: SEE_SCOPE_AND_EVIDENCE
+  engineering_assignee: Codex local engineering session
+  implementation_evidence: a799e6c365074cab5597a80261bbdb9c3dda3b12; trader/observability/attention.py; narrow
+    frame-copy correction only
+  runtime_evidence: NOT_OBSERVED_ON_CURRENT_SOURCE; offline reconstructed capture only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'S16 latest Attention capture: 535.604ms against the unchanged 50ms advisory budget. Dominant
-    internal capture work remains unattributed; no budget widening is authorized.'
+  latest_evidence: "Retained reconstruction reproduces historical overrun. Repeated full membership deepcopy\
+    \ dominates the historical profile. Narrow pandas-copy correction preserves exact captured payloads in\
+    \ seven cases; compact ATT-04 membership shape measures 41.5\u201347.3ms offline. Legacy membership still\
+    \ exceeds 50ms. Original producer packet unavailable; unchanged closing condition not satisfied."
   source_ids:
   - S05
   - S06
   - S16
   source_sections: 'Parent requirement(s): ATT-02,RUN-06'
-  next_proof: Resolve within the linked parent/active task; capture exact evidence before closure.
+  next_proof: 'Owner/external dependency: supply exact original pre-capture frames/membership packet, or separately
+    authorize a bounded post-ATT-04 FROZEN observation retaining actual producer inputs/timings and nearby
+    adverse case. Preserve 50ms budget, coverage/provenance and PERF-01 BLOCKED/UNKNOWN; no automatic observation.'
   acceptance_basis: Existing requirement/observed incident; not a new feature.
   acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
   priority: CURRENT
   resolution_at_commit: ''
   work_authorized: false
-  updated: '2026-10-05'
+  updated: '2026-10-06'
   legacy_ids: ''
   parent_ids:
   - ATT-02
@@ -6823,6 +6838,11 @@ items:
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  terminal_evidence: docs/tracker/evidence/perf03-capture-r1/terminal.yaml
+  engineering_result: BLOCKED
+  blocking_dependency: Exact original producer packet is not retained; current-source actual producer cost
+    evidence requires separately authorized observation.
+  partial_implementation_commit: a799e6c365074cab5597a80261bbdb9c3dda3b12
 - id: FIX-01
   area: Observed issues
   stage: Cross-cutting
@@ -7688,6 +7708,15 @@ change_log:
   after: Canonical YAML; read-only Dashboard Tracker primary; Markdown optional; XLSX deprecated unchanged. Tenth
     navigation route owner-approved. All 176 row closing conditions preserved.
   reason: Explicit owner decision; no trading or runtime authority.
+- date: '2026-10-06'
+  event: PERF03_TERMINAL_BLOCKED_SUCCESSOR_SELECTED
+  item: PERF-03; OBS-01
+  before: PERF-03 OPEN / SELECTED_NOT_STARTED / DIAGNOSIS_ONLY
+  after: PERF-03 BLOCKED with narrow tested offline correction; OBS-01 selected diagnosis-only, not started
+  reason: Unchanged actual capture closing condition remains unproven. Rank eligible safe-runtime blockers;
+    preflight launch gate is the smallest P0 evidence package.
+  evidence: docs/tracker/evidence/perf03-capture-r1/terminal.yaml
+  actor: Codex local engineering session
 sdd_section_coverage:
 - section: 1
   title: Mission / end goal

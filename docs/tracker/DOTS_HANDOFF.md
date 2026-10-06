@@ -1,3 +1,5 @@
+> Current terminal update (2026-10-06): PERF-03 is BLOCKED at its unchanged capture-evidence gate; narrow offline correction committed at a799e6c365074cab5597a80261bbdb9c3dda3b12. Exact result: [terminal.yaml](evidence/perf03-capture-r1/terminal.yaml). OBS-01 is the single selected diagnosis-only successor by safe-runtime critical path; not started. PERF-01 remains BLOCKED/UNKNOWN. Earlier selection statements below are historical; no runtime/provider/trading activation is authorized.
+
 # Dots handoff — LUFFY tracker-based work
 
 ## Start here

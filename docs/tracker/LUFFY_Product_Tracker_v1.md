@@ -1,10 +1,10 @@
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.3-dashboard-tracker-adoption
+Version: 1.5-perf03-terminal-blocked
 
-Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary working view: read-only Dashboard Tracker. This Markdown is an optional generated reference. XLSX is deprecated/non-authoritative historical material.
+Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
-Selected NEXT: **PERF-01 — SELECTED_NOT_STARTED_DIAGNOSIS_ONLY**. Selection grants no runtime or trading authority.
+Selected NEXT: **OBS-01 — SELECTED_NOT_STARTED_DIAGNOSIS_ONLY**. PERF-03 is BLOCKED; no runtime or trading authority follows.
 
 ## Status definitions
 
@@ -30,7 +30,7 @@ Selected NEXT: **PERF-01 — SELECTED_NOT_STARTED_DIAGNOSIS_ONLY**. Selection gr
 
 **One data set**: Maintain this YAML as canonical detailed data. Dashboard Tracker reads validated YAML and NEXT. Markdown is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization and adoption checks.
 
-**Current work**: OPEN-09 adoption is closed by the control-plane reconciliation. PERF-01 is the single selected next item in DIAGNOSIS_ONLY / NOT_STARTED state; this selection authorizes no code change, restart, observation, provider use or trading activation.
+**Current work**: PERF-03 is terminal BLOCKED with a tested narrow offline correction and an external capture-evidence gate. OBS-01 is the single selected DIAGNOSIS_ONLY successor, not started. PERF-01 remains unchanged and BLOCKED/UNKNOWN. No runtime, provider or trading activation is authorized.
 
 **Activation**: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers, a restart or a scope expansion.
 
@@ -134,7 +134,7 @@ Items: GOV-10, ACC-03, REL-02, REL-03, REL-04
 
 Limit: An honest negative result is evidence, not proof of profitable completion.
 
-## Master register
+## Items
 
 ### GOV-01 — Keep one authoritative target, evidence ledger and active task.
 
@@ -1719,6 +1719,38 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+
+### ATT-04 — Hierarchical deterministic crypto admission before expensive discretionary processing; independent safety/exposure service.
+
+- **area**: Attention & research
+- **stage**: 3
+- **item_type**: ARCHITECTURE_IMPLEMENTATION
+- **release_scope**: BASELINE
+- **status**: CLOSED
+- **why_needed**: Retained scan 78513e8e processed 20 symbols despite only one salience selection, 15 warmup refusals and four uncaptured members.
+- **impact**: Bound discretionary deep processing without redefining crypto eligibility, peer populations or whole-book exposure.
+- **closure_condition**: Versioned owner policy and normal caller enforce 0..12 discretionary slots, at most two event and two persisted rotating exploration slots; offline integration, replay, corruption and adjacent regressions prove independent exposure/protection and peer, strategy, Portfolio, learning and UI semantics. Closure is implementation/test level; no runtime or performance claim.
+- **failure_regression_proof**: Cap 12 to 1 does not drop mandatory exposure service; missing/corrupt receipts and exploration state refuse; admitted-only peer mutant detected.
+- **dependencies**: DATA-06, ATT-02, ATT-03
+- **parent_ids**: ATT-01
+- **related_items**: PERF-01, PERF-03
+- **owner_role**: Owner-approved local engineering
+- **engineering_assignee**: Codex
+- **implementation_evidence**: 8819995; source-manifest.json; closure.yaml
+- **runtime_evidence**: NOT_AUTHORIZED
+- **visual_approval**: NOT_APPLICABLE
+- **latest_evidence**: Offline admission/safety/peer/Portfolio/learning/replay/API tests pass. Exact known adjacent failures reproduced at untouched f29fe97; no runtime/performance claim.
+- **source_ids**: S01
+- **source_sections**: SDD §§2.2,6.8,8,28,35.1; current owner adoption
+- **next_proof**: Separately authorized operational observation; implementation closure complete. PERF-01 unchanged.
+- **acceptance_basis**: Explicit owner-adopted architecture 2026-10-06
+- **acceptance_status**: OWNER_APPROVED
+- **priority**: CURRENT
+- **work_authorized**: False
+- **updated**: 2026-10-06
+- **closure_evidence**: docs/tracker/evidence/attention-admission-r1/closure.yaml
+- **resolution_at_commit**: 881999546e4a3b2fc796ef662a20bb24ee0405f5
+- **evidence_validity**: Exact implementation source hashes, retained replay input, focused and adjacent test logs; offline only.
 
 ### RES-01 — Generate a research question from an actual supported event.
 
@@ -5225,26 +5257,26 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: Cross-cutting
 - **item_type**: DEFECT
 - **release_scope**: BASELINE
-- **status**: AWAITING_EVIDENCE
+- **status**: OPEN
 - **why_needed**: The prepared preflight recorded active safety conditions but did not enforce refusal.
 - **closure_condition**: Machine-readable preflight outcome gates launch; active/unreadable required storage/protection/environment facts yield zero launches.
 - **failure_regression_proof**: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed boundaries without reopening unrelated work.
 - **dependencies**: None
 - **owner_role**: Assigned local engineering session
-- **engineering_assignee**: UNASSIGNED
+- **engineering_assignee**: UNASSIGNED; selected successor only
 - **implementation_evidence**: SEE_EVIDENCE
 - **runtime_evidence**: SEE_SCOPE_AND_EVIDENCE
 - **visual_approval**: NOT_APPLICABLE
 - **latest_evidence**: S16 reports machine-readable preflight gating was corrected and integrated fixture scenarios passed. Exact external harness artifacts were not independently inspected in the tracker-mapping step; keep AWAITING_EVIDENCE.
 - **source_ids**: S11, S15
 - **source_sections**: Parent requirement(s): RUN-01
-- **next_proof**: Resolve within the linked parent/active task; capture exact evidence before closure.
+- **next_proof**: Read exact retained preflight/harness implementation and fixture evidence; verify refusal before launch, including active/unreadable storage/protection/environment. No service launch or runtime observation authorized.
 - **acceptance_basis**: Existing requirement/observed incident; not a new feature.
 - **acceptance_status**: OWNER_CONTRACT_OR_REPORTED_FAILURE
 - **priority**: CURRENT
 - **resolution_at_commit**:
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-06
 - **legacy_ids**:
 - **parent_work**: WORK-01
 - **parent_ids**: RUN-01
@@ -5253,6 +5285,7 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **selection_basis**: P0 launch safety blocker; no dependencies; existing reported correction offers a small evidence-verification package. Selected after PERF-03 terminal BLOCKED; not started.
 
 ### OBS-02 — Launch Dashboard only after new Kernel boot evidence.
 
@@ -5366,32 +5399,39 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **item_type**: DEFECT
 - **release_scope**: BASELINE
 - **status**: OPEN
-- **why_needed**: Latest observed first cycle was 259.776s against the unchanged 240s limit; prior 266.7s evidence remains historical. No ordinary recurring-cycle distribution exists for the latest attempt.
+- **why_needed**: Latest diagnostic first cycle223.759s completed before stop, but Portfolio did not trigger. Historical31.075s difference remains unproven; full-workload matched causal evidence and sustained timing are absent.
 - **closure_condition**: Approved instrumented run distinguishes boot/first/recurring/shutdown and establishes agreed safety envelope with unchanged workload and complete gaps, or records precise remaining failure.
 - **failure_regression_proof**: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed boundaries without reopening unrelated work.
 - **dependencies**: None
 - **owner_role**: Assigned local engineering session
 - **engineering_assignee**: Dots (after local access and item claim); one writer only
 - **implementation_evidence**: SEE_EVIDENCE
-- **runtime_evidence**: OWNER_REPORTED_FAILED_FIRST_CYCLE; scheduling-observation-prep-r1-idi3eex0-kernel-1012489
+- **runtime_evidence**: MEASURED_DIAGNOSTIC_ONLY; perf01-owner-measurement-r3; not full-workload comparable
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: S16 latest: first cycle 259.776s; stop requested at 240.033s; 79.281 thread-CPU seconds; zero completed window cycles; 13.13s unattributed exclusive time. Measured exclusive costs: network.wait 41.120s, evidence.store 30.747s, market.load 21.668s, Journal.query 17.117s, learning.capture.snapshot 15.109s. No single cost is established as root cause.
+- **latest_evidence**: Retained reconstruction: both historical cycles processed four NEW_OPPORTUNITY_CONTEXT triggers. Portfolio checkpoint89.546540s to72.281981s (-17.264559s); outside-Portfolio observed slice139.155163s to187.494276s (+48.339113s).18/20 symbol work and shutdown qualification prevent normalization. Baseline symbol identities/whole-loop bounds absent; engineering result BLOCKED, causal result UNKNOWN.
 - **source_ids**: S05, S06, S07, S11, S16
 - **source_sections**: Parent requirement(s): RUN-03
-- **next_proof**: Diagnosis only: attribute repeated market/evidence/Journal/capture work and remaining exclusive time from retained evidence before selecting any code change. No threshold change or new observation is authorized by selection.
+- **next_proof**: Retained-evidence gap: The later historical cycle’s MainThread elapsed cost for exactly the baseline common-symbol/input workload, with the two extra symbols and their induced pre-scan/evidence work excluded. Baseline per-symbol identities/bounds are absent, so this equivalent-work cost cannot be reconstructed from retained records. No generic runtime retry is requested or authorized.
 - **acceptance_basis**: Existing requirement/observed incident; not a new feature.
 - **acceptance_status**: OWNER_CONTRACT_OR_REPORTED_FAILURE
 - **priority**: NEXT_AFTER_CURRENT
 - **resolution_at_commit**:
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-06
 - **legacy_ids**:
 - **parent_ids**: RUN-03
 - **related_items**: None
 - **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **evidence_validity**: Exact r3 revision/config/harness hashes pinned; scan matched but Portfolio event branch differed. No root-cause, savings, recurring distribution or readiness claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **engineering_result**: BLOCKED
+- **diagnostic_attempts_completed**: 2
+- **additional_owner_attempt_consumed**: True
+- **required_external_evidence**: The later historical cycle’s MainThread elapsed cost for exactly the baseline common-symbol/input workload, with the two extra symbols and their induced pre-scan/evidence work excluded. Baseline per-symbol identities/bounds are absent, so this equivalent-work cost cannot be reconstructed from retained records.
+- **diagnostic_evidence**: docs/tracker/evidence/2026-10-06-perf01-r3-terminal-report.yaml
+- **causal_reconstruction_evidence**: docs/tracker/evidence/2026-10-06-perf01-retained-reconstruction.yaml
+- **causal_result**: UNKNOWN
 
 ### PERF-02 — Remove heavy imports from frequent safety/heartbeat observer startup.
 
@@ -5433,26 +5473,26 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: Cross-cutting
 - **item_type**: DEFECT
 - **release_scope**: BASELINE
-- **status**: OPEN
+- **status**: BLOCKED
 - **why_needed**: Capture measured ~1,068ms and ~865ms against 50ms advisory budget; substage cause unattributed.
 - **closure_condition**: Measured dominant capture work corrected with provenance/coverage unchanged; actual capture costs meet approved contract. Any policy change needs explicit owner decision, not silent widening.
 - **failure_regression_proof**: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed boundaries without reopening unrelated work.
 - **dependencies**: None
 - **owner_role**: Assigned local engineering session
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: SEE_EVIDENCE
-- **runtime_evidence**: SEE_SCOPE_AND_EVIDENCE
+- **engineering_assignee**: Codex local engineering session
+- **implementation_evidence**: a799e6c365074cab5597a80261bbdb9c3dda3b12; trader/observability/attention.py; narrow frame-copy correction only
+- **runtime_evidence**: NOT_OBSERVED_ON_CURRENT_SOURCE; offline reconstructed capture only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: S16 latest Attention capture: 535.604ms against the unchanged 50ms advisory budget. Dominant internal capture work remains unattributed; no budget widening is authorized.
+- **latest_evidence**: Retained reconstruction reproduces historical overrun. Repeated full membership deepcopy dominates the historical profile. Narrow pandas-copy correction preserves exact captured payloads in seven cases; compact ATT-04 membership shape measures 41.5–47.3ms offline. Legacy membership still exceeds 50ms. Original producer packet unavailable; unchanged closing condition not satisfied.
 - **source_ids**: S05, S06, S16
 - **source_sections**: Parent requirement(s): ATT-02,RUN-06
-- **next_proof**: Resolve within the linked parent/active task; capture exact evidence before closure.
+- **next_proof**: Owner/external dependency: supply exact original pre-capture frames/membership packet, or separately authorize a bounded post-ATT-04 FROZEN observation retaining actual producer inputs/timings and nearby adverse case. Preserve 50ms budget, coverage/provenance and PERF-01 BLOCKED/UNKNOWN; no automatic observation.
 - **acceptance_basis**: Existing requirement/observed incident; not a new feature.
 - **acceptance_status**: OWNER_CONTRACT_OR_REPORTED_FAILURE
 - **priority**: CURRENT
 - **resolution_at_commit**:
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-06
 - **legacy_ids**:
 - **parent_ids**: ATT-02, RUN-06
 - **related_items**: None
@@ -5460,6 +5500,10 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **terminal_evidence**: docs/tracker/evidence/perf03-capture-r1/terminal.yaml
+- **engineering_result**: BLOCKED
+- **blocking_dependency**: Exact original producer packet is not retained; current-source actual producer cost evidence requires separately authorized observation.
+- **partial_implementation_commit**: a799e6c365074cab5597a80261bbdb9c3dda3b12
 
 ### FIX-01 — Use bounded informative committed-write probes; separate integrity.
 
@@ -5970,6 +6014,10 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: OWNER_ACCEPTED_REPRESENTATION_AND_READ_ONLY_NAVIGATION
+
+## Terminal update (2026-10-06)
+
+PERF-03: BLOCKED with tested narrow correction; original actual-cost closing condition remains unproven. OBS-01 selected by safe-runtime critical path, not started. [Exact evidence](evidence/perf03-capture-r1/terminal.yaml).
 
 ## Sources
 

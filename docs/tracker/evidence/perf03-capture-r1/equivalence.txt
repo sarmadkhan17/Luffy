@@ -1,0 +1,37 @@
+[
+  {
+    "case": "historical",
+    "result": "PASS",
+    "payload_sha256": "d9021f7c40272e241887dc92ce49c56015e8ee9858d4fe7c761e0292fbd87ebb"
+  },
+  {
+    "case": "current_shape",
+    "result": "PASS",
+    "payload_sha256": "c777dca31f244a00b570a6084bfd530a485e66edfd2d3575cb76e9c38024f971"
+  },
+  {
+    "case": "future_and_stale",
+    "result": "PASS",
+    "payload_sha256": "df84fee3873c8838e80e58430434d07d3f29e23738e33646a0ef426312afac4c"
+  },
+  {
+    "case": "nullable_and_nonfinite",
+    "result": "PASS",
+    "payload_sha256": "643bf06d7cad1b27a3c54100665237868ef051e6f5bfe8dd957e36b6977bbb08"
+  },
+  {
+    "case": "unordered",
+    "result": "PASS",
+    "payload_sha256": "ffcc21abbf836895cc97ef0e6ccdb29e1954b7e19765195826529d57df4abdee"
+  },
+  {
+    "case": "missing_provenance",
+    "result": "PASS",
+    "payload_sha256": "803915a64ee7377267da42891bef4dfce0cbb8b8d32c745ede0270648877335b"
+  },
+  {
+    "case": "unavailable_membership",
+    "result": "PASS",
+    "payload_sha256": "fc9ff11bc78998dbb8d863810fb6c06e13d6c66d02793db0fd2ae24a143a098c"
+  }
+]

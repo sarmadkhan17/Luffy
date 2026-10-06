@@ -1,0 +1,47 @@
+Tue Oct  6 03:41:34 2026    /mnt/luffy-data/luffy/production/docs/tracker/evidence/perf03-capture-r1/baseline.prof
+
+         5338063 function calls (4381436 primitive calls) in 2.888 seconds
+
+   Ordered by: cumulative time
+   List reduced from 2936 to 25 due to restriction <25>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.006    0.006    2.890    2.890 /mnt/luffy-data/luffy/production/trader/observability/attention.py:91(capture)
+917427/848    1.033    0.000    1.997    0.002 /usr/lib/python3.12/copy.py:118(deepcopy)
+27322/848    0.379    0.000    1.993    0.002 /usr/lib/python3.12/copy.py:217(_deepcopy_dict)
+    513/3    0.004    0.000    0.619    0.206 <frozen importlib._bootstrap>:1349(_find_and_load)
+    512/3    0.002    0.000    0.619    0.206 <frozen importlib._bootstrap>:1304(_find_and_load_unlocked)
+    495/4    0.002    0.000    0.618    0.155 <frozen importlib._bootstrap>:911(_load_unlocked)
+    479/4    0.001    0.000    0.618    0.154 <frozen importlib._bootstrap_external>:989(exec_module)
+   1072/7    0.001    0.000    0.618    0.088 <frozen importlib._bootstrap>:480(_call_with_frames_removed)
+    533/4    0.011    0.000    0.617    0.154 {built-in method builtins.exec}
+        1    0.000    0.000    0.617    0.617 /mnt/luffy-data/luffy/production/trader/data/market_provenance.py:1(<module>)
+     57/2    0.000    0.000    0.595    0.298 {built-in method builtins.__import__}
+        1    0.000    0.000    0.594    0.594 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/ccxt/__init__.py:1(<module>)
+  1838224    0.341    0.000    0.341    0.000 {method 'get' of 'dict' objects}
+1315/1310    0.023    0.000    0.308    0.000 {built-in method builtins.__build_class__}
+  303/176    0.000    0.000    0.186    0.001 <frozen importlib._bootstrap>:1390(_handle_fromlist)
+        1    0.000    0.000    0.171    0.171 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/ccxt/base/__init__.py:1(<module>)
+        1    0.000    0.000    0.167    0.167 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/ccxt/base/exchange.py:1(<module>)
+      479    0.004    0.000    0.133    0.000 <frozen importlib._bootstrap_external>:1062(get_code)
+   973309    0.127    0.000    0.127    0.000 {built-in method builtins.id}
+        1    0.000    0.000    0.126    0.126 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/requests/__init__.py:1(<module>)
+       16    0.002    0.000    0.120    0.007 /mnt/luffy-data/luffy/production/trader/data/market_provenance.py:338(eligible_frame)
+        1    0.000    0.000    0.109    0.109 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/ccxt/tokocrypto.py:1(<module>)
+        1    0.000    0.000    0.109    0.109 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/ccxt/abstract/tokocrypto.py:1(<module>)
+        1    0.108    0.108    0.109    0.109 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/ccxt/abstract/tokocrypto.py:6(ImplicitAPI)
+      479    0.014    0.000    0.103    0.000 <frozen importlib._bootstrap_external>:751(_compile_bytecode)
+
+
+   Ordered by: cumulative time
+   List reduced from 2936 to 4 due to restriction <'deepcopy'>
+
+Function                                           was called by...
+                                                       ncalls  tottime  cumtime
+/usr/lib/python3.12/copy.py:118(deepcopy)          <-      16    0.000    1.983  /mnt/luffy-data/luffy/production/trader/observability/attention.py:91(capture)
+                                                          832    0.002    0.014  /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/generic.py:6119(__finalize__)
+                                                      783/279    0.001    0.002  /usr/lib/python3.12/copy.py:191(_deepcopy_list)
+                                                    915796/3626    1.029    1.990  /usr/lib/python3.12/copy.py:217(_deepcopy_dict)
+/usr/lib/python3.12/copy.py:217(_deepcopy_dict)    <- 27322/848    0.379    1.993  /usr/lib/python3.12/copy.py:118(deepcopy)
+/usr/lib/python3.12/copy.py:172(_deepcopy_atomic)  <-  889917    0.088    0.088  /usr/lib/python3.12/copy.py:118(deepcopy)
+/usr/lib/python3.12/copy.py:191(_deepcopy_list)    <- 188/104    0.001    0.002  /usr/lib/python3.12/copy.py:118(deepcopy)

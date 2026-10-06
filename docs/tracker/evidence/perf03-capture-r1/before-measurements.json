@@ -1,0 +1,37 @@
+{
+  "historical_reconstruction": {
+    "capture_ms": [
+      710.8755669905804,
+      742.3470189969521,
+      951.629799004877,
+      743.4501489915419,
+      759.1005809954368,
+      745.479475997854,
+      893.5699319990817
+    ],
+    "candles": 224,
+    "histories": 16,
+    "included": 16,
+    "input_sha256": "a2793b12425707840d937250ba413a712194c95574fb7600a0fd8d3ad9b3a9bb"
+  },
+  "current_membership_shape_on_historical_frames": {
+    "capture_ms": [
+      158.95176498452201,
+      159.7063750086818,
+      152.46371200191788,
+      158.79361898987554,
+      169.8163039982319,
+      173.4756960067898,
+      168.00279801827855
+    ],
+    "candles": 224,
+    "histories": 16,
+    "included": 16,
+    "input_sha256": "0c19c33cc38302dc399c529bb6fc0c8f6d0a303bdf6d854f78bb1193113b35c7"
+  },
+  "limits": [
+    "Reconstructed from later decision frame dependency; original producer packet/frame attrs unavailable.",
+    "Current membership shape uses historical 16-symbol cap, not ATT-04 full broad cohort.",
+    "No Kernel, worker, service, provider or venue execution; isolated capture calls only."
+  ]
+}

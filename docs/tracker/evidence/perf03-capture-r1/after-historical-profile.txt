@@ -1,0 +1,44 @@
+         4812129 function calls (3870608 primitive calls) in 2.111 seconds
+
+   Ordered by: cumulative time
+   List reduced from 283 to 25 due to restriction <25>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.006    0.006    2.111    2.111 /mnt/luffy-data/luffy/production/trader/observability/attention.py:91(capture)
+913267/16    1.050    0.000    2.005    0.125 /usr/lib/python3.12/copy.py:118(deepcopy)
+ 26490/16    0.362    0.000    2.005    0.125 /usr/lib/python3.12/copy.py:217(_deepcopy_dict)
+  1826642    0.346    0.000    0.346    0.000 {method 'get' of 'dict' objects}
+   966639    0.128    0.000    0.128    0.000 {built-in method builtins.id}
+   886589    0.091    0.000    0.091    0.000 /usr/lib/python3.12/copy.py:172(_deepcopy_atomic)
+      496    0.002    0.000    0.031    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/frame.py:4337(__getitem__)
+    26678    0.016    0.000    0.025    0.000 /usr/lib/python3.12/copy.py:231(_keep_alive)
+      496    0.001    0.000    0.025    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/frame.py:4968(_get_item)
+      272    0.001    0.000    0.025    0.000 /mnt/luffy-data/luffy/production/trader/observability/attention.py:177(<genexpr>)
+  192/160    0.000    0.000    0.025    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/ops/common.py:67(new_method)
+      496    0.001    0.000    0.024    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/frame.py:4292(_ixs)
+      240    0.002    0.000    0.017    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/series.py:369(__init__)
+      160    0.001    0.000    0.015    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/series.py:6813(_construct_result)
+       80    0.000    0.000    0.015    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/series.py:6856(_flex_method)
+      496    0.001    0.000    0.014    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/frame.py:4956(_box_col_values)
+       80    0.000    0.000    0.013    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/series.py:6726(_cmp_method)
+       80    0.000    0.000    0.011    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/arraylike.py:70(__and__)
+       80    0.000    0.000    0.010    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/series.py:6739(_logical_method)
+     3632    0.005    0.000    0.009    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/arrays/_mixins.py:287(__getitem__)
+      496    0.004    0.000    0.009    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/internals/managers.py:1226(iget)
+     1392    0.006    0.000    0.008    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/generic.py:6196(__setattr__)
+20584/20312    0.005    0.000    0.008    0.000 {built-in method builtins.isinstance}
+       32    0.000    0.000    0.008    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/series.py:6885(eq)
+      496    0.001    0.000    0.008    0.000 /mnt/luffy-data/luffy/production/venv/lib/python3.12/site-packages/pandas/core/frame.py:686(_constructor_sliced_from_mgr)
+
+
+   Ordered by: cumulative time
+   List reduced from 283 to 4 due to restriction <'deepcopy'>
+
+Function                                           was called by...
+                                                       ncalls  tottime  cumtime
+/usr/lib/python3.12/copy.py:118(deepcopy)          <-      16    0.000    2.005  /mnt/luffy-data/luffy/production/trader/observability/attention.py:91(capture)
+                                                      783/279    0.001    0.002  /usr/lib/python3.12/copy.py:191(_deepcopy_list)
+                                                    912468/298    1.049    2.004  /usr/lib/python3.12/copy.py:217(_deepcopy_dict)
+/usr/lib/python3.12/copy.py:217(_deepcopy_dict)    <- 26490/16    0.362    2.005  /usr/lib/python3.12/copy.py:118(deepcopy)
+/usr/lib/python3.12/copy.py:172(_deepcopy_atomic)  <-  886589    0.091    0.091  /usr/lib/python3.12/copy.py:118(deepcopy)
+/usr/lib/python3.12/copy.py:191(_deepcopy_list)    <- 188/104    0.000    0.002  /usr/lib/python3.12/copy.py:118(deepcopy)
