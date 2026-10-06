@@ -1,0 +1,34 @@
+tracker_id: OBS-05
+status: CLOSED
+result: CLOSED_ENGINEERING_ONLY
+implementation_commit: 774990b49a171ee3f92d888fc2f6cc9387574c89
+origin: docs/tracker/evidence/obs05-contained-bootstrap/intake.yaml
+report: docs/tracker/evidence/obs05-contained-bootstrap/REPORT.md
+tests:
+  final_combined: 491 passed
+  focused_bootstrap: 67 passed before final combined run
+  evidence: docs/tracker/evidence/obs05-contained-bootstrap/tests.txt
+closing_condition_satisfied_at: OFFLINE_IMPLEMENTATION_AND_FIXTURE_SCOPE_ONLY
+kernel_launched: false
+dashboard_launched: false
+provider_calls: 0
+original_tracker_rows_unchanged: 177
+all_prior_closing_conditions_preserved: true
+run01_status: BLOCKED / LIVE_PROOF_PENDING
+run01_live_proof_now_possible: "YES \u2014 contract path exists subject to valid static facts and separate\
+  \ exact-revision owner authorization; no current host readiness claim"
+cross_tracker_impact:
+  OBS-01: Historical CLOSED preserved. Cold pre-launch defers only absent-producer conditions and fresh age;
+    all required static facts still refuse on unknown/unreadable/active faults. Running/Dashboard preflight
+    remains strict.
+  OBS-02: Historical CLOSED and gate unchanged. Phase B reuses exact instance/chronology/boot/control/independent-health
+    checks; prior beats fail.
+  OBS-04: Historical CLOSED and retained prepared artifacts unchanged. Native controller reuses owned-child
+    service_state, retains timers on all failures, and treats UNKNOWN as pending.
+  RUN-01: Unchanged BLOCKED/live closing condition. Exact full revision now mandatory for native contained
+    launch; lock/proc identity and SIGTERM-only lifecycle reused, no retry/duplicate.
+  RUN-02: Row and closing condition unchanged. Bootstrap fence blocks real Executor submission and Supervisor
+    release; no FROZEN/hold/recovery clearing or ACTIVE transition.
+  MON-01: Row and closing condition unchanged. Missing/stale heartbeat remains observable; only independent
+    fresh current-instance evidence resolves the retained observed_cycle condition, without clearing the recovery
+    latch.

@@ -1,10 +1,10 @@
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.10-run01-reconciled-blocked
+Version: 1.11-obs05-contained-bootstrap-closed
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
-Current NEXT: **RUN-01 — BLOCKED — IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING**. Controlled live proof requires exact owner authorization; no additional RUN-01 fix is selected. No runtime, Dashboard, provider or trading authority follows.
+Terminal NEXT: **OBS-05 — CLOSED_ENGINEERING_ONLY**. RUN-01 remains BLOCKED / LIVE_PROOF_PENDING; no next fix is selected and no launch/provider/trading authority follows.
 
 ## Status definitions
 
@@ -5709,6 +5709,39 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 
+### OBS-05 — Permit evidence-producing contained cold startup without requiring stopped-producer live facts before launch.
+
+- **area**: Observed issues
+- **stage**: Cross-cutting
+- **item_type**: DEFECT
+- **release_scope**: BASELINE
+- **status**: CLOSED
+- **why_needed**: Owner RUN-01 live proof exposed an OBS-01 deadlock: stopped Kernel has active observed_cycle:luffy/no heartbeat and unavailable fresh protection, so its evidence producers cannot start.
+- **closure_condition**: Offline normal-path and negative fixtures prove static/persisted Phase A admission, a durable entry/recovery fence, exact-revision single-child launch, bounded instance-bound Phase B with fresh protection/reconciliation, and observer retention plus graceful containment on failure; no generic bypass or ACTIVE transition.
+- **failure_regression_proof**: Reproduce the stopped-producer conflict; reject missing/unreadable static facts, stale/prior-instance readiness, missing fresh protection/reconciliation, failed or late readiness and unconfirmed stop; prove zero retry/duplicate launch and unchanged historical tracker closing conditions.
+- **dependencies**: None
+- **owner_role**: Runtime & safety owner
+- **engineering_assignee**: Codex local engineering session
+- **implementation_evidence**: 774990b49a171ee3f92d888fc2f6cc9387574c89; trader/observability/bootstrap.py; trader/observability/preflight.py; trader/observability/safety.py; trader/kernel.py; restart.sh; tests/test_bootstrap_contract.py
+- **runtime_evidence**: NOT_PERFORMED; local stores, fixture lock holders and inert service-launch seams only
+- **visual_approval**: NOT_APPLICABLE
+- **latest_evidence**: 491 combined offline tests passed on the final tree. Phase A admits structurally VERIFIED persisted protection with disclosed age only for a stopped exact-revision Kernel; Phase B retains fresh instance/health/protection requirements and the 240s deadline. Durable bootstrap fence blocks final Executor submission and Supervisor recovery release. Native read-only protection producer wired after boot. No live Kernel/Dashboard or provider calls.
+- **source_ids**: S18
+- **source_sections**: Parents: OBS-01/RUN-01; control and observation impacts OBS-02/OBS-04/RUN-02/MON-01
+- **next_proof**: None for this offline implementation defect. RUN-01 remains BLOCKED: an owner-authorized controlled launch and graceful stop on a named exact final revision must provide its unchanged live closing proof.
+- **acceptance_basis**: Explicit current owner two-phase bootstrap contract and reported P0 conflict.
+- **acceptance_status**: OWNER_CONTRACT_OR_REPORTED_FAILURE
+- **priority**: P0
+- **resolution_at_commit**: 774990b49a171ee3f92d888fc2f6cc9387574c89
+- **work_authorized**: True
+- **updated**: 2026-10-06
+- **parent_ids**: OBS-01, RUN-01
+- **related_items**: OBS-02, OBS-04, RUN-02, MON-01
+- **closure_evidence**: docs/tracker/evidence/obs05-contained-bootstrap/closure.yaml
+- **evidence_validity**: Pinned repository implementation and offline negative/regression fixtures only; no live readiness, fresh venue truth or trading authority.
+- **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
+- **owner_approval_needed**: Separate exact-revision owner authorization still required for RUN-01 live proof; no launch authority granted here.
+
 ### OPEN-01 — Explain and resolve research execution starvation under the existing busy gate.
 
 - **area**: Observed issues
@@ -6017,6 +6050,10 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 
 ## Terminal update (2026-10-06)
 
+OBS-05: CLOSED at implementation/offline-fixture scope; 491 combined tests passed. RUN-01 remains BLOCKED / LIVE_PROOF_PENDING and requires a separately owner-authorized controlled launch/stop on the exact intended final revision. No next fix selected. [Exact evidence](evidence/obs05-contained-bootstrap/closure.yaml).
+
+## Historical terminal update (PERF-03, 2026-10-06)
+
 PERF-03: BLOCKED with tested narrow correction; original actual-cost closing condition remains unproven. OBS-01 selected by safe-runtime critical path, not started. [Exact evidence](evidence/perf03-capture-r1/terminal.yaml).
 
 ## Sources
@@ -6152,6 +6189,14 @@ PERF-03: BLOCKED with tested narrow correction; original actual-cost closing con
     thresholds or starting all queued items.
 ```
 
+### S18 — Owner-reported cold-start preflight conflict and explicit two-phase engineering contract
+
+- **kind**: Owner instruction and reported live-proof refusal
+- **identity**: Current conversation, 2026-10-06; local reproducer at tests/test_bootstrap_contract.py
+- **location**: docs/tracker/evidence/obs05-contained-bootstrap/intake.yaml
+- **scope**: One linked P0 defect; contained two-phase implementation and offline proof only.
+- **qualification**: External live-proof files not supplied or fetched; no fresh host/venue readiness or operational authorization inferred.
+
 ## Historical Defects
 
 ```yaml
@@ -6238,6 +6283,15 @@ PERF-03: BLOCKED with tested narrow correction; original actual-cost closing con
 ## Change Log
 
 ```yaml
+- date: '2026-10-06'
+  event: OBS05_CONTAINED_BOOTSTRAP_IMPLEMENTED_OFFLINE
+  item: OBS-05
+  before: New owner-reported stopped-producer launch conflict; no exact existing defect.
+  after: CLOSED_ENGINEERING_ONLY; RUN-01 remains BLOCKED / LIVE_PROOF_PENDING
+  reason: Explicit phase separation resolves the cold-start dependency while retaining static refusal, entry/recovery
+    fencing, bounded fresh readiness and observer retention.
+  evidence: docs/tracker/evidence/obs05-contained-bootstrap/closure.yaml
+  actor: Codex local engineering session
 - date: '2026-10-05'
   event: TRACKER_CREATED
   item: ALL

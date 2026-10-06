@@ -1,0 +1,33 @@
+tracker_id: OBS-05
+origin: NEW_EVIDENCE_LINKED_CONTRACT_CONFLICT
+priority: P0
+parent_ids: [OBS-01, RUN-01]
+related_items: [OBS-02, OBS-04, RUN-02, MON-01]
+source: Owner-reported RUN-01 live-proof refusal in current session, 2026-10-06.
+evidence_qualification: No external live-proof artifacts were supplied or fetched; exact conflict reproduced in local fixtures. No fresh host or venue state is claimed.
+reported_fact: With Kernel stopped, observed_cycle:luffy is active because no live heartbeat exists and fresh protection evidence is unavailable; the old OBS-01 preflight refuses launch, preventing its evidence producers from starting.
+ownership_check:
+  exact_existing_defect_found: false
+  inspected_scope: All canonical tracker items, especially OBS-01/02/03/04, RUN-01/02/05 and MON-01.
+  OBS-01: Owns refusal, not a stopped-producer bootstrap contract; historical CLOSED preserved.
+  OBS-02: Owns current-instance readiness before Dashboard; no pre-launch cold contract.
+  RUN-01: Parent process lifecycle requirement, still blocked on controlled live proof.
+  MON-01: Owns independent observation; absent heartbeat remains a real safety condition.
+  decision: Create exactly one defect, OBS-05, under OBS-01/RUN-01. Do not silently expand or reopen their historical closing conditions.
+old_contract: Required active-safety absence and fresh live protection before Kernel could launch, despite stopped producers.
+new_contract:
+  phase_a: Exact full clean revision, stopped/no conflicting Kernel, valid environment/configuration, committed critical-store accessibility, persisted FROZEN/operator hold/recovery latch, no unresolved execution, structurally VERIFIED persisted protection matching the exact journal book with age/status disclosed. Only absent-producer heartbeat/cycle conditions defer to Phase B; they are neither erased nor declared healthy.
+  phase_b: One owned lock/PID/start-tick-bound child, fresh current-instance successful heartbeat and independent health receipt, completed FROZEN boot, held current controls and retained recovery latch, fresh post-launch protection/reconciliation from a newer protection generation, no blocking health facts; 240-second monotonic startup deadline.
+  failure: Durable FAILED/PENDING entry/recovery fence, independent observers retained, identity-verified owned-child SIGTERM only, 300-second graceful-stop wait, UNKNOWN exit remains unconfirmed, no retry or second Kernel.
+  success: Contained readiness only; FROZEN/operator hold/recovery_required remain unchanged. Separate owner recovery and exact Risk authorization still required for ACTIVE/entries.
+tradeoffs:
+- Persisted VERIFIED protection may be aged; it authorizes only contained evidence-producing startup, never a fresh venue-protection or trading claim.
+- Missing, unreadable or unverified persisted/static facts still refuse launch; this is not a generic recovery bypass.
+- Safety-over-availability remains intentional: the unchanged 240-second deadline may reject a slow but otherwise healthy cold boot.
+- No SIGKILL; hung or identity-uncertain child requires owner intervention.
+- Observer timers persist on success/failure and are recorded for owner cleanup; no cleanup is inferred from SIGTERM delivery.
+- Native direct Kernel module launch now requires the controller's persisted attempt token and full revision; no force flag exists.
+execution_authorized: false
+kernel_launched: false
+dashboard_launched: false
+provider_calls: 0

@@ -42,6 +42,39 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
+  id: OBS-05
+  status: CLOSED
+  result: CLOSED_ENGINEERING_ONLY
+  mode: ENGINEERING_ONLY
+  objective: Resolve the stopped-producer preflight conflict with contained two-phase startup, without trading
+    authority or a generic bypass.
+  implementation_started: true
+  implementation_complete: true
+  implementation_commit: 774990b49a171ee3f92d888fc2f6cc9387574c89
+  tracker_source: docs/tracker/LUFFY_Product_Tracker_v1.yaml
+  evidence:
+  - docs/tracker/evidence/obs05-contained-bootstrap/intake.yaml
+  - docs/tracker/evidence/obs05-contained-bootstrap/closure.yaml
+  - docs/tracker/evidence/obs05-contained-bootstrap/REPORT.md
+  tests: 491 combined offline tests passed; 67 focused bootstrap tests passed before the final combined run.
+  kernel_launched: false
+  dashboard_launched: false
+  provider_calls: 0
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  run01_status: "BLOCKED \u2014 IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING"
+  run01_live_proof_contract_possible: true
+  run01_live_proof_performed: false
+  run01_live_proof_authorization: Explicit owner authorization naming the full intended final revision and
+    one controlled Kernel launch/SIGTERM graceful stop; require every unchanged RUN-01 proof and retained
+    Phase A/Phase B artifacts.
+  next_recommended_item: RUN-01
+  another_run01_fix_selected: false
+  next_item_selected: false
+  next_item_started: false
+
+run01_control_plane:
   id: RUN-01
   status: BLOCKED
   result: IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING

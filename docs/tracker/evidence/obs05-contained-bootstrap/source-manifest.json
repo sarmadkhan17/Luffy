@@ -1,0 +1,66 @@
+{
+  "implementation_commit": "774990b49a171ee3f92d888fc2f6cc9387574c89",
+  "scope": "Source and offline evidence; no current host/venue verification.",
+  "files": {
+    "restart.sh": {
+      "bytes": 3722,
+      "sha256": "f47f92c63ce617e231724defc2d394f64e2ba88b4f3aa9dcb496e072d1902f05"
+    },
+    "trader/kernel.py": {
+      "bytes": 172317,
+      "sha256": "5f85019090631a9ea197804788d742cd7c907503b9a4650d5234bce938506c03"
+    },
+    "trader/observability/bootstrap.py": {
+      "bytes": 11086,
+      "sha256": "2e8b23d6d410a664338402638bc6692807522de3fcfc5ae1b5ebd3050184ba27"
+    },
+    "trader/observability/preflight.py": {
+      "bytes": 14713,
+      "sha256": "018cbf450e6f6585a94f2818506bca0bdaa9d1ae3432de67d95b6f10e6796684"
+    },
+    "trader/observability/safety.py": {
+      "bytes": 18863,
+      "sha256": "0dec2a0b7a9eb950f101757ef7434abfaa7b3b13e90d33459d3b4953464fec61"
+    },
+    "tests/test_bootstrap_contract.py": {
+      "bytes": 19385,
+      "sha256": "da8d7e104becf275f9a8903088e544308bd65b05e445734997ae05d9e7a7ed8e"
+    },
+    "tests/test_launch_preflight.py": {
+      "bytes": 17911,
+      "sha256": "1da409076cf1443c82a4f78014cabb9172e163525a789e212040f1ae599b3b0a"
+    },
+    "tests/test_dashboard_readiness.py": {
+      "bytes": 21279,
+      "sha256": "da8e71a32b25e5d703d90abd1acfe78cca1bc6a5ad91af287c2196c7ad44d678"
+    },
+    "tests/test_run01_instance_identity.py": {
+      "bytes": 13474,
+      "sha256": "4abd6ae23446575b2852b16abf653953326c2c945b0e03595bd4a1a913f694fe"
+    },
+    "docs/tracker/evidence/obs05-contained-bootstrap/closure.yaml": {
+      "bytes": 2082,
+      "sha256": "a821b9422b37a2e2882d07ec89b3de77378b4bc6308ab52630b48e8c1ce8ae7c"
+    },
+    "docs/tracker/evidence/obs05-contained-bootstrap/tests.txt": {
+      "bytes": 591,
+      "sha256": "e78f4d7b972d4b196f83a3f6b8ea12b753d37bcd18dde9778dd9f8cabe9c7f2d"
+    },
+    "docs/tracker/evidence/obs05-contained-bootstrap/intake.yaml": {
+      "bytes": 3464,
+      "sha256": "aab45c0f31a13fed0da39c03f111d061063ec1561e3a7bcb431fd97b10cac72e"
+    },
+    "docs/tracker/evidence/obs05-contained-bootstrap/REPORT.md": {
+      "bytes": 7705,
+      "sha256": "bd46f3f0d4b2e58e75a741e7702273de8d09c747d7129800d5b89e9e22162620"
+    },
+    "docs/tracker/evidence/obs05-contained-bootstrap/focused-tests.txt": {
+      "bytes": 99,
+      "sha256": "bd0665ea4b14f818993578e6c9946de3d56cc1bea709074a854a24aa1dfe44ee"
+    },
+    "docs/tracker/evidence/obs05-contained-bootstrap/graphify-update.txt": {
+      "bytes": 1297,
+      "sha256": "1453908eed1d9f69f21a654ddb1b59218a22b6d8119e66afcfc005547ef54cbf"
+    }
+  }
+}
