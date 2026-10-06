@@ -14,7 +14,7 @@ import * as pending from "../src/adapters/pending";
 import { PreviewProvider } from "../src/context";
 import Operations from "../src/views/Operations";
 import Luffy from "../src/views/Luffy";
-import { protectionTone } from "../src/views/Overview";
+import { protectionTone, currentPositionPnl } from "../src/views/Overview";
 import type { OwnerAdapter } from "../src/adapters/contracts";
 
 const now = new Date().toISOString();
@@ -48,6 +48,14 @@ const json = (body: unknown, status = 200) =>
 
 describe("live adapter", () => {
   afterEach(() => vi.unstubAllGlobals());
+  it("unrealized estimates use exact trade quotes and expire through failed polling", () => {
+    const p = {id:"t1",symbol:"BTC/USDT"} as import("../src/adapters/contracts").Position;
+    const m = {observedAt:now, marks:{}, evidence:{by_trade:{t1:{upnl:5,quote_age_s:10}}}};
+    expect(currentPositionPnl(p,m,1000,1000,false)).toBe(5);
+    expect(currentPositionPnl(p,m,1000,52000,false)).toBeNull();
+    expect(currentPositionPnl(p,m,1000,1000,true)).toBeNull();
+    expect(currentPositionPnl(p,{observedAt:now,marks:{"BTC/USDT":{upnl:5,mark:10}}},1000,1000,false)).toBeNull();
+  });
   it("keeps STALE protection stale and never marks it healthy", () => {
     const d = mapOverview(overview());
     expect(d.positions![0].protection).toBe("STALE");
@@ -65,6 +73,14 @@ describe("live adapter", () => {
     expect(d.exposure).toBeNull();
     expect(d.control).toBe("UNAVAILABLE");
     expect(d.provenance.freshness).toBe("unavailable");
+  });
+  it("retains per-figure coverage and global signal evidence without filling unknowns", () => {
+    const realized = { value: null, quality: "PARTIAL_UNKNOWN", version: "overview-journal-realized.v1", coverage: { known: 1, total: 2, complete: false } };
+    const d = mapOverview(overview({ realized_today: realized, news_guard: null, risk: { configured: { limit: 2 }, current: { status: "UNAVAILABLE" } } }));
+    expect(d.pnl).toBeNull();
+    expect(d.live?.observedEvidence?.realized_today).toEqual(realized);
+    expect(d.live?.observedEvidence?.news_guard).toBeNull();
+    expect(d.live?.observedEvidence?.risk).toEqual({ configured: { limit: 2 }, current: { status: "UNAVAILABLE" } });
   });
   it("refuses a response that is not the LIVE contract", () => {
     expect(() => mapOverview({ mode: "DEMO", errors: {} })).toThrow("contract");

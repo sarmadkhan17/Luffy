@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { PreviewProvider } from "../src/context";
 import Luffy from "../src/views/Luffy";
 import { EvidenceButton } from "../src/components/ui";
@@ -13,9 +14,9 @@ describe("conversation and evidence", () => {
       .mockRejectedValue(new Error("Disconnected; no replacement"));
     const user = userEvent.setup();
     render(
-      <PreviewProvider adapter={{ ...fixtureAdapter, chat }}>
+      <QueryClientProvider client={new QueryClient()}><PreviewProvider adapter={{ ...fixtureAdapter, chat }}>
         <Luffy />
-      </PreviewProvider>,
+      </PreviewProvider></QueryClientProvider>,
     );
     expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
     await user.type(screen.getByLabelText("Message LUFFY"), "Example question");
@@ -36,9 +37,9 @@ describe("conversation and evidence", () => {
     };
     const user = userEvent.setup();
     render(
-      <PreviewProvider adapter={adapter}>
+      <QueryClientProvider client={new QueryClient()}><PreviewProvider adapter={adapter}>
         <Luffy />
-      </PreviewProvider>,
+      </PreviewProvider></QueryClientProvider>,
     );
     await user.type(screen.getByLabelText("Message LUFFY"), "Cancel this");
     await user.click(screen.getByRole("button", { name: "Send" }));

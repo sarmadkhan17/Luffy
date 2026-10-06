@@ -200,11 +200,21 @@ def read_equity_series(journal, now):
 
 def read_realized_today(journal, now):
     day = now.strftime("%Y-%m-%d")
-    r = journal.query("SELECT COUNT(*) n, SUM(realized_pnl) s FROM trades "
-                      "WHERE status='closed' AND closed_at LIKE ?", (f"{day}%",))[0]
-    # no closed trade today is a real zero; a closed trade with a NULL sum is missing
-    return {"value": _num(r["s"]) if r["n"] else 0.0,
-            "closed_trades": int(r["n"] or 0), "day_utc": day,
+    rows = journal.query("SELECT id, realized_pnl, closed_at FROM trades "
+                         "WHERE status='closed' AND closed_at LIKE ?", (f"{day}%",))
+    from .economics import journal_pnl, booking_receipts
+    classified = [journal_pnl(dict(r), booking_receipts(journal, r["id"])) for r in rows]
+    values = [p["value"] for p in classified]
+    known = sum(v is not None for v in values)
+    complete = known == len(rows)
+    return {"value": sum(values) if complete else None,
+            "closed_trades": len(rows), "day_utc": day,
+            "observed_at": _iso(now), "freshness": "fresh",
+            "quality": "PARTIAL_UNKNOWN" if not complete else "DERIVED_ESTIMATE" if any(p["status"] == "DERIVED_ESTIMATE" for p in classified) else "JOURNAL_BOOKED_COMPLETE",
+            "version": "overview-journal-realized.v2",
+            "trade_classifications": classified,
+            "coverage": {"known": known, "total": len(rows), "complete": complete,
+                         "scope": "journal closed trades today; venue net coverage unproven"},
             "source": "journal trades closed today (UTC), journal-booked realized P&L"}, None
 
 
@@ -454,7 +464,13 @@ def overview(journal, root: Path, cfg: dict | None = None) -> dict:
             gross = sum(notionals)
             exposure = {"gross_entry_notional": round(gross, 2),
                         "pct_of_equity": round(gross / account["equity"] * 100, 2),
-                        "source": "journal open-trade entry notional ÷ journal equity"}
+                        "source": "journal open-trade entry notional ÷ journal equity",
+                        "observed_at": _iso(now), "freshness": account.get("freshness", "unavailable"),
+                        "quality": "DERIVED_JOURNAL_ENTRY_NOTIONAL",
+                        "version": "overview-entry-exposure.v1",
+                        "account_observed_at": account.get("observed_at"),
+                        "coverage": {"positions": len(positions), "complete": True,
+                                     "scope": "journal-open trades; current venue exposure unproven"}}
         else:
             errors["exposure"] = "position_notional_missing"
     elif "exposure" not in errors:

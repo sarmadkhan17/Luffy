@@ -576,7 +576,7 @@ class FakeChat:
         return f"Fixture backend reply to: {message[:60]}"
 
 
-def make_app(root: Path, monkeypatch=None, scenario: str = "normal"):
+def make_app(root: Path, monkeypatch=None, scenario: str = "normal", startup_mode: str = "LIVE"):
     """(app, journal, gateway) with every production seam replaced."""
     import os
     from trader.core.journal import Journal
@@ -613,6 +613,6 @@ def make_app(root: Path, monkeypatch=None, scenario: str = "normal"):
         monkeypatch.setenv("DASH_TOKEN", TOKEN)
     else:
         os.environ["DASH_TOKEN"] = TOKEN
-    app = server.create_app({"dashboard": {"startup_mode": "LIVE"}, "attention": {"enabled": False},
+    app = server.create_app({"dashboard": {"startup_mode": startup_mode}, "attention": {"enabled": False},
                              "owner_interface": {"enabled": True}})
     return app, journal, gateway

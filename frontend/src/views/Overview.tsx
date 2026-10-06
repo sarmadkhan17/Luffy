@@ -16,7 +16,7 @@ import {
   EvidenceButton,
   VisualBoundary,
 } from "../components/ui";
-import type { Position, ProtectionStatus } from "../adapters/contracts";
+import type { Marks, Position, ProtectionStatus } from "../adapters/contracts";
 const RecentActivity = lazyChunk(() => import("./Activity"));
 const EquityChart = lazyChunk(() => import("../components/EquityChart"));
 const OverviewEvidence = lazyChunk(() =>
@@ -43,6 +43,16 @@ export function protectionTone(status: ProtectionStatus | string) {
     : status === "UNPROTECTED"
       ? "rose"
       : "amber";
+}
+/** A cached quote cannot stay current through a failed poll or beyond its own age limit. */
+export function currentPositionPnl(p: Position, marks: Marks | undefined, receivedAt: number, now: number, failed: boolean): number | null {
+  if (!marks || failed || marks.error) return null;
+  const byTrade = marks.evidence?.by_trade as Record<string, Record<string, unknown>> | undefined;
+  const quote = (p.id && byTrade?.[p.id]) || marks.marks[p.symbol] as Record<string, unknown> | undefined;
+  const age = quote?.quote_age_s;
+  const value = quote?.upnl;
+  return typeof age === "number" && age >= 0 && age + Math.max(0, now - receivedAt) / 1000 <= 60 &&
+    typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 function ProtectionCell({ p }: { p: Position }) {
   const d = p.protectionDetail;
@@ -96,7 +106,7 @@ export default function Overview() {
   });
   const L = d?.live;
   const pnlOf = (p: Position) =>
-    live ? (marks.data?.marks[p.symbol]?.upnl ?? null) : p.pnl;
+    live ? currentPositionPnl(p, marks.data, marks.dataUpdatedAt, now, !!marks.error) : p.pnl;
   return (
     <>
       <QueryState
@@ -155,10 +165,7 @@ export default function Overview() {
                     : "No approval records are supplied. This does not establish that no owner action is needed."}
                 </p>
                 <NeedsYou compact />
-                <a className="text-link" href="#luffy">
-                  Open LUFFY{" "}
-                  <ArrowUpRight size={14} />
-                </a>
+
               </div>
               <div className="attention-control">
                 <span className="figure-label">Control state</span>
@@ -220,12 +227,12 @@ export default function Overview() {
                 {live ? (
                   <>
                     <div className="status-row">
-                      <span>News Guard</span>
-                      <Badge tone="amber">UNAVAILABLE</Badge>
+                      <span>News Guard (last response)</span>
+                      <Badge tone="amber">{String((L?.observedEvidence?.news_guard as Record<string, unknown> | null)?.status ?? "UNKNOWN")}</Badge>
                     </div>
                     <div className="status-row">
-                      <span>Approval objects</span>
-                      <Badge tone="amber">UNAVAILABLE</Badge>
+                      <span>Owner action evidence</span>
+                      <Badge tone="amber">See Needs You</Badge>
                     </div>
                   </>
                 ) : (
@@ -272,7 +279,7 @@ export default function Overview() {
                   <section className="capital-figure">
                     <h3 className="figure-label">
                       <ArrowUpRight size={12} aria-hidden="true" />{" "}
-                      {live ? "Realized today" : "Period P&L"}
+                      {live ? `Realized today${(L?.observedEvidence?.realized_today as Record<string, unknown> | null)?.quality === "DERIVED_ESTIMATE" ? " (estimate)" : ""}` : "Period P&L"}
                     </h3>
                     <div
                       data-testid="realized-today"
@@ -378,11 +385,19 @@ export default function Overview() {
                 check)
               </span>
               <span>
-                News guard: unavailable · Approval objects:{" "}
-                <strong>Unavailable</strong> (no approval store)
+                News and risk observations: see global signals below · Owner actions: see Needs You ledgers
               </span>
             </p>
           )}
+          {live && <Panel title="Overview sources and global signals">
+            <p>Local read at {utc(L?.generatedAt ?? null)}. Source times below belong to each observation. Stored control permission is configured state; Kernel process and heartbeat are observed separately.</p>
+            <p>Last reported News Guard: {String((L?.observedEvidence?.news_guard as Record<string, unknown> | null)?.status ?? "UNKNOWN")} · Last reported Risk: {String(((L?.observedEvidence?.risk as Record<string, unknown> | null)?.current as Record<string, unknown> | null)?.status ?? "UNKNOWN")}. No global market signal feed is supplied: UNKNOWN.</p>
+            <p>Equity quality: {L?.account?.freshness ?? "unavailable"} · source {L?.account?.source ?? "UNKNOWN"} · source version and coverage are UNKNOWN unless recorded below. Exposure is derived from journal entry notionals; venue coverage is unproven. Series points retain their individual source times and quality below. Unrealized estimates require a fresh quote, retain per-trade evidence, and exclude unproven fees/funding; quote version is UNKNOWN unless supplied. Missing evidence stays null. The expanded record is historical evidence from the last response; freshness fields describe that response, not a new observation.</p>
+            {q.error && <p>DISCONNECTED — retained values are historical; current quality UNKNOWN.</p>}
+            <details data-testid="overview-sources"><summary>Exact figure sources, freshness, quality, coverage and versions (last response)</summary>
+              <pre style={{whiteSpace:"pre-wrap",overflowWrap:"anywhere",maxHeight:400,overflow:"auto"}}>{JSON.stringify({...L?.observedEvidence, unrealized_estimates: marks.data?.evidence ?? null}, null, 2)}</pre>
+            </details>
+          </Panel>}
           <div className="bottom-grid">
             <Panel
               title="Positions"

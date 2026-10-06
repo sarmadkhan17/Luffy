@@ -25,17 +25,17 @@ test("Knowledge lenses distinguish event chronology from file modification and a
 });
 
 test("failed Needs You endpoint is explicit and cannot enable approvals",async({page})=>{
-  await login(page);
   await page.route("**/owner-api/v1/needs-you",r=>r.fulfill({status:503,contentType:"application/json",body:'{"error":"unavailable"}'}));
+  await login(page);
   await page.goto(LIVE+"/#luffy");
   await expect(page.getByTestId("needs-you-items")).toContainText("No substitute data was loaded");
   await expect(page.getByRole("button",{name:"Approve exact request"})).toHaveCount(0);
 });
 
 test("pending owner actions survive completed history and later pages are reachable",async({page})=>{
-  await login(page);
   const item={item_id:"pending-first-live",action_type:"first_live",reason:"Pending first-live request",validity:"VALID",receipt:null,decision_operation:"approval_decision"};
   await page.route("**/owner-api/v1/needs-you*",r=>r.fulfill({contentType:"application/json",body:JSON.stringify({generated_at:new Date().toISOString(),items:[{...item,reason:r.request().url().includes("offset=100") ? "Oldest pending request" : item.reason}],pending_total:101,total:101,truncated:!r.request().url().includes("offset=100"),unavailable:[]})}));
+  await login(page);
   await page.goto(LIVE+"/#overview");
   await expect(page.getByTestId("needs-you-items")).toContainText("101 pending or stale owner items");
   await expect(page.getByTestId("needs-you-items")).toContainText("Pending first-live request");

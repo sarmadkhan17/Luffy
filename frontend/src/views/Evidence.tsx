@@ -796,7 +796,7 @@ export function OverviewEvidence() {
                       [
                         "journal_economics",
                         "Realized",
-                        (v) => usdt(rec(v)?.realized_pnl),
+                        (v) => `${usdt(rec(v)?.realized_pnl)}${rec(v)?.pnl_value_class === "DERIVED_ESTIMATE" ? " · estimate" : rec(v)?.pnl_value_class === "UNKNOWN" ? " · UNKNOWN" : ""}`,
                       ],
                     ]}
                   />

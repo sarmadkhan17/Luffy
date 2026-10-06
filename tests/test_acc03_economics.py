@@ -84,5 +84,19 @@ def test_nonfinite_monetary_evidence_is_not_a_venue_number():
     t['realized_pnl'] = float('inf')
     p['legs'][0]['fills'][0]['commission'] = 'NaN'
     r = read(t, p)
-    assert r['journal_booked'][0]['status'] == 'UNAVAILABLE'
+    assert r['journal_booked'][0]['status'] == 'UNKNOWN'
     assert r['venue_monetary'][1]['value'] is None
+
+
+def test_unknown_journal_booking_keeps_recorded_venue_fields_distinct():
+    t = trade(); t.update(realized_pnl=0, pnl_status="UNKNOWN", pnl_value_class="UNKNOWN")
+    r = read(t, provenance())
+    assert r['journal_booked'][0]['value'] is None
+    assert r['journal_booked'][0]['status'] == 'UNKNOWN'
+    assert r['venue_monetary'][0]['value'] == '10'
+    assert r['venue_monetary'][0]['status'] == 'RECORDED_VENUE_FIELD'
+    t.update(realized_pnl=5, pnl_status="ESTIMATE", pnl_value_class="DERIVED_ESTIMATE")
+    r = read(t, provenance())
+    assert r['journal_booked'][0]['status'] == 'DERIVED_ESTIMATE'
+    assert r['venue_monetary'][0]['value'] == '10'
+    assert not r['whole_trade_complete']

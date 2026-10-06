@@ -283,8 +283,12 @@ def trade_lineage(journal, trade_id: str) -> dict | None:
         missing.append(_unavailable("outcome", "no forward-return outcome recorded for the "
                                                "decision"))
     trade["excursion"] = _load(trade.pop("excursion_json", None))
-    from .economics import read as economics_read
-    economics = economics_read(trade, provenance)
+    from .economics import read as economics_read, booking_receipts
+    economics = economics_read(trade, provenance, booking_receipts(journal, trade_id))
+    monetary = economics["journal_booked"][0]
+    trade["recorded_journal_pnl"] = trade.get("realized_pnl")
+    trade["realized_pnl"] = monetary["value"]
+    trade["pnl_value_class"] = monetary["status"]
     cycle = _cycle(journal, decision.get("cycle_id")) if decision else None
     votes, votes_basis = _votes(journal, decision, cycle) if decision else ([], None)
     if decision and cycle is None:
@@ -1292,8 +1296,17 @@ def overview_activity(journal) -> dict:
                  "SUM(CASE WHEN status='closed' THEN realized_pnl END) realized_pnl, "
                  "MAX(opened_at) last_opened FROM trades WHERE strategy_id IS NOT NULL "
                  "GROUP BY strategy_id")}
-    for s in strategies:
-        s["journal_economics"] = econ.get(s["id"])
+    from .economics import journal_pnl, booking_receipts
+    for strategy in strategies:
+        values = [journal_pnl(t, booking_receipts(journal, t["id"])) for t in _rows(
+            journal, "SELECT id, realized_pnl FROM trades WHERE strategy_id=? AND status='closed'",
+            (strategy["id"],))]
+        if strategy["id"] in econ and values:
+            unknown = any(v["value"] is None for v in values)
+            estimated = any(v["status"] == "DERIVED_ESTIMATE" for v in values)
+            econ[strategy["id"]].update(realized_pnl=None if unknown else sum(v["value"] for v in values),
+                pnl_value_class="UNKNOWN" if unknown else "DERIVED_ESTIMATE" if estimated else "JOURNAL_BOOKED")
+        strategy["journal_economics"] = econ.get(strategy["id"])
     lifecycle = []
     if _table_exists(journal, "brain_events"):
         kinds = LIFECYCLE_KINDS
@@ -1329,10 +1342,10 @@ def overview_activity(journal) -> dict:
                                "owner_requests WHERE state != 'DONE' ORDER BY created_at DESC "
                                "LIMIT 5") if _table_exists(journal, "owner_requests") else [])
     missing += [
-        _unavailable("approvals", "no approval-object store exists; Needs You lists only the "
-                                  "Supervisor's needs_owner and unresolved owner requests"),
-        _unavailable("news_guard", "News Guard is not shown until its source state is "
-                                   "trustworthy")]
+        _unavailable("approvals", "not read by this historical activity summary; inspect exact "
+                                  "approval evidence and ledger coverage in Needs You"),
+        _unavailable("news_guard", "not read by this historical activity summary; inspect "
+                                   "News Guard source state in Overview global signals")]
     return {"generated_at": _iso(_now()),
             "decisions_basis": {"executed_skipped": "exact newest over all decisions",
                                 "risk_blocks": f"newest {ACTIVITY_WINDOW} decisions"},

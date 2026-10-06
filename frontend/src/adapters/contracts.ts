@@ -67,6 +67,7 @@ export interface LiveOverview {
     reasons: string[];
     provenance: Provenance;
   } | null;
+  observedEvidence?: Record<string, unknown>;
   realizedClosedTrades: number | null;
   exposureSource: string | null;
   seriesNote: string | null;
@@ -198,6 +199,7 @@ export interface Marks {
   marks: Record<string, { mark: number | null; upnl: number | null }>;
   error?: string;
   source?: string;
+  evidence?: Record<string, unknown>;
 }
 export interface TableData {
   paging?: { offset: number; limit: number; hasMore: boolean };

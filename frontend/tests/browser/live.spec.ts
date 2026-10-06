@@ -34,7 +34,8 @@ test("LIVE overview binds real backend values, never fixtures", async ({
   await expect(rows.first()).toContainText("order ref recorded");
   // optional enrichment arrives separately
   await expect(rows.first()).toContainText("10.00 USDT");
-  await expect(page.locator("body")).not.toContainText(FIXTURE_TEXT);
+  // Exact backend provenance may name its fixture source in this test server.
+  await expect(page.locator(".command-deck")).not.toContainText(FIXTURE_TEXT);
   await expect(page.getByLabel("Fixture scenario")).toHaveCount(0);
   expect(requests.some((p) => p.includes("fixture"))).toBeFalsy();
   expect(requests).toContain("/owner-api/v1/bootstrap");

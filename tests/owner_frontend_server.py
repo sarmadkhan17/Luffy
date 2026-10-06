@@ -29,12 +29,16 @@ from trader.dashboard import auth as auth_mod  # noqa: E402
 
 def build():
     root = Path(tempfile.mkdtemp(prefix="owner-frontend-e2e-"))
-    app, journal, gateway = make_app(root)
+    app, journal, gateway = make_app(root, startup_mode=os.environ.get("GUI01_TEST_MODE", "LIVE"))
     fail: set[str] = set()
     # a blocking journal read of the decisions table, as slow as the production
     # journal's full scan; it must never stall the server's other requests
     # (class-level: the app reads through its own Journal instance)
     from trader.core.journal import Journal
+    if os.environ.get("GUI01_TEST_MODE") == "READ_ONLY_GUI":
+        from trader import runtime_identity
+        (root / "data/kernel.lock").touch()
+        runtime_identity.legacy_kernel_pids = lambda: []
     slow = {"decisions": 0.0}
     real_query = Journal.query
 
@@ -63,6 +67,10 @@ def build():
             t = body["insert_trade"]
             insert_trade(journal, t["id"], t["symbol"], t["opened_at"],
                          t.get("status", "open"))
+        if "accounting_close" in body:
+            correction = body["accounting_close"]
+            journal.close_trade("t-btc", 60000, correction["pnl"], "panic",
+                                accounting=correction["evidence"])
         if "close_trade" in body:
             close_trade(journal, body["close_trade"])
         if "reopen_trade" in body:

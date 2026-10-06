@@ -1,15 +1,58 @@
 """Offline economics presentation; stored evidence never becomes complete accounting."""
 from __future__ import annotations
 
+import json
 import math
 from decimal import Decimal, InvalidOperation
 
 from ..engine.accounting import digest
+from ..engine import booking
 
-VERSION = "trade-economics-read.v1"
+VERSION = "trade-economics-read.v2"
 
 
-def read(trade, provenance):
+def booking_receipts(journal, trade_id):
+    """Uncapped monetary history: an early UNKNOWN leg must not disappear."""
+    return [r["payload"] for r in journal.query(
+        "SELECT payload FROM trade_accounting_bookings WHERE trade_id=? ORDER BY id", (trade_id,))]
+
+
+def journal_pnl(trade, receipts=()):
+    """A journal scalar is not authoritative over its retained booking evidence."""
+    evidence, unknown, estimated = [], False, False
+    for raw in receipts:
+        try:
+            receipt = json.loads(raw) if isinstance(raw, str) else raw
+            booking.replay(receipt)
+            if receipt.get("trade_id") != trade["id"] or receipt.get("after", {}).get("id") != trade["id"]:
+                raise ValueError("trade_binding")
+            if receipt.get("kind") == "entry":
+                continue
+            evidence.append(dict(receipt_id=receipt.get("sha256"), **receipt["evidence"]))
+        except (ValueError, TypeError, KeyError, AttributeError):
+            unknown = True
+            evidence.append({"integrity": "UNVERIFIED"})
+    evidence.append({k: trade[k] for k in ("pnl_status", "pnl_value_class", "exit_price_source", "pnl_price_source", "basis") if k in trade})
+    for ev in evidence:
+        status, cls = ev.get("pnl_status"), ev.get("pnl_value_class")
+        source = ev.get("pnl_price_source") or ev.get("exit_price_source")
+        basis = str(ev.get("basis") or "")
+        unknown |= status == "UNKNOWN" or cls == "UNKNOWN" or source == "journal_entry_not_a_fill" or "unpriced" in basis
+        estimated |= status in ("ESTIMATE", "ESTIMATED") or cls == "DERIVED_ESTIMATE" or source == "ticker_last_not_a_fill" or basis in ("estimated_order_booking", "estimated", "panic_order_unconfirmed", "reconcile_ghost_mark_estimate")
+    value = trade.get("realized_pnl")
+    if type(value) not in (int, float) or not math.isfinite(value):
+        unknown = True
+    classification = "UNKNOWN" if unknown else "DERIVED_ESTIMATE" if estimated else "JOURNAL_BOOKED"
+    return dict(value=None if unknown else value, status=classification,
+                evidence=evidence, pnl_value_class=classification,
+                coverage={"whole_trade_complete": False, "funding_attributed": False,
+                          "booking_receipts": len(receipts),
+                          "source_classification": classification,
+                          "price_evidence": evidence,
+                          "reason": "journal booking; not venue net accounting"})
+
+
+def read(trade, provenance, receipts=()):
     """Keep venue fields, journal bookings and derived measurements separate.
 
     Versions identify the displayed source snapshot, not a reconstructed historical
@@ -70,12 +113,11 @@ def read(trade, provenance):
                          dict(whole_trade_complete=False,
                               reason="not available in this journal read; leg receipts do not establish funding")))
 
-    booked = finite(trade.get("realized_pnl"))
-    journal = [row("realized_pnl", booked, "JOURNAL_BOOKED" if booked is not None else "UNAVAILABLE",
-                   "trades.realized_pnl", {k: trade.get(k) for k in
-                   ("id", "realized_pnl", "status", "closed_at")},
-                   dict(whole_trade_complete=False, funding_attributed=False,
-                        reason="may include estimates; not venue net accounting"))]
+    pnl = journal_pnl(trade, receipts)
+    journal = [row("realized_pnl", pnl["value"], pnl["status"],
+                   "trades.realized_pnl + trade_accounting_bookings.evidence",
+                   dict(trade={k: trade.get(k) for k in ("id", "realized_pnl", "status", "closed_at")},
+                        evidence=pnl["evidence"]), pnl["coverage"])]
     excursion = trade.get("excursion")
     excursion = excursion if isinstance(excursion, dict) else {}
     derived = []

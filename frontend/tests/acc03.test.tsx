@@ -35,3 +35,19 @@ it("rejects economics without coverage at the adapter boundary", () => {
   };
   expect(readContractIssue("trades/t/lineage", d)).toContain("coverage");
 });
+
+
+it("UNKNOWN and DERIVED_ESTIMATE cannot look like actual venue zero", () => {
+  const row = (amount: number | null, status: string) => ({field:"realized_pnl",value:amount,status,
+    source:"booking evidence",version:"snapshot",calculation_version:null,
+    coverage:{price_source:"ticker_last_not_a_fill",basis:"panic_order_unconfirmed"}});
+  render(<EconomicsEvidence economics={{schema_version:"trade-economics-read.v2",
+    journal_booked:[row(null,"UNKNOWN"),row(5,"DERIVED_ESTIMATE")],
+    venue_monetary:[row("7" as unknown as number,"RECORDED_VENUE_FIELD")],derived:[]}} />);
+  const journal=screen.getByRole("table",{name:"Journal bookings"});
+  expect(journal).toHaveTextContent("UNKNOWN"); expect(journal).toHaveTextContent("DERIVED_ESTIMATE");
+  expect(journal).toHaveTextContent("ticker_last_not_a_fill");
+  expect(within(journal).queryByText("0")).toBeNull();
+  const venue=screen.getByRole("table",{name:"Venue monetary fields"});
+  expect(venue).toHaveTextContent("RECORDED_VENUE_FIELD"); expect(venue).not.toHaveTextContent("DERIVED_ESTIMATE");
+});
