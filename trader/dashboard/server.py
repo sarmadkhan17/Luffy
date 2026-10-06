@@ -134,6 +134,15 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             hb_age = round(t.time() - json.loads(hb_path.read_text())["timestamp"])
         except Exception:
             pass
+        try:
+            from .. import runtime_identity as _ri
+            kernel_identity = _ri.inspect(ROOT)
+            _dash = _ri.code_revision(ROOT)["revision"]
+            _krev = (kernel_identity.get("record") or {}).get("revision")
+            kernel_identity["compatible_revision"] = (
+                None if not (_dash and _krev) else _dash == _krev)
+        except Exception as e:
+            kernel_identity = {"state": "UNKNOWN", "error": type(e).__name__}
         snap = _account_snapshot()
         assets = snap.get("assets", {})
         # no snapshot, or any asset without a USD value, is not a total
@@ -170,6 +179,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             "control_state": journal.kv_get("control_state") or "UNKNOWN",
             "market_type": journal.kv_get("market_type", "futures"),
             "heartbeat_age_s": hb_age,
+            "kernel_identity": kernel_identity,
             "equity": acc["equity"] if acc else None,
             "account": acc if acc else {"status": "UNAVAILABLE", "error": acc_err},
             "equity_prev": eq[1]["equity"] if len(eq) > 1 else None,

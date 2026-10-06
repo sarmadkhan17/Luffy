@@ -8,9 +8,9 @@
 # Between 2026-09-03 and 2026-09-11 the kernel was down for 7.5 days and 17 of
 # the 19 real Donchian breaks since 09-01 fired while nothing was listening.
 #
-# Every start goes through restart.sh, which kills before it starts, so this
-# can never leave two kernels trading one account. The kernel has no
-# single-instance guard of its own.
+# Every start goes through restart.sh, which gracefully stops before it starts, so this
+# can never leave two kernels trading one account. The kernel also holds
+# data/kernel.lock and refuses to start twice (trader/runtime_identity.py).
 #
 # To take Luffy down on purpose, `touch data/watchdog.off` first, or this will
 # bring it straight back. Remove the file to re-arm.
