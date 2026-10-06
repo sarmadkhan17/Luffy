@@ -71,7 +71,7 @@ work_package:
   run01_live_proof_authorization: Separate owner authorization naming the full intended final revision and
     one controlled Kernel launch/SIGTERM graceful stop with retained Phase A/Phase B and unchanged RUN-01 proof.
   historical_next_recommended_item: DATA-08
-  next_recommended_item: OWN-04
+  next_recommended_item: ACC-03
   another_run01_fix_selected: false
   next_item_selected: false
   next_item_started: false
