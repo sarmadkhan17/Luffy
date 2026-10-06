@@ -22,13 +22,13 @@ metadata:
   pending_adoption: null
   status_counts:
     IN_PROGRESS: 0
-    EVIDENCE_TO_MAP: 125
+    EVIDENCE_TO_MAP: 124
     AWAITING_EVIDENCE: 11
     AWAITING_OWNER: 14
     DEFERRED: 5
     BLOCKED: 2
     OPEN: 4
-    CLOSED: 17
+    CLOSED: 18
   workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged
     and excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
@@ -51,9 +51,9 @@ metadata:
     navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope;
       the owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product
       row is silently reopened or added.
-  last_terminal_item: GOV-07
-  last_terminal_result: DEFERRED
-  last_terminal_evidence: docs/tracker/evidence/gov07-identity-sol/owner-deferral.yaml
+  last_terminal_item: DATA-02
+  last_terminal_result: CLOSED_ENGINEERING_ONLY
+  last_terminal_evidence: docs/tracker/evidence/data02-provenance-lineage/closure.yaml
   control_snapshot:
     id: gov07-identity-sol-2026-10-06
     repository_revision: 82431136ac68ff72325af301bac43b19b7d3ecd6
@@ -1408,7 +1408,7 @@ items:
   stage: '1'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Retain event, receipt, availability, transform and quality provenance.
   why_needed: Decisions and replay need to know what was actually available.
   closure_condition: Every required input carries relevant clocks, source/schema/transform identity and explicit
@@ -1417,27 +1417,26 @@ items:
   dependencies:
   - DATA-01
   owner_role: Data & storage owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: NOT_MAPPED
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: Claude local engineering session
+  implementation_evidence: ccef7e8; cae1128; trader/data/market_provenance.py resolve_lineage; trader/dashboard/owner_reads.py market_inputs; tests/test_data02_decision_lineage.py
+  runtime_evidence: NOT_PERFORMED; offline tests only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: No item-level evidence mapping completed in this tracker.
+  latest_evidence: 'Candles, derivatives, references, order book, registry capability, Attention admission, Portfolio and execution/accounting receipts mapped; clocks/source/quality/transform retention PROVEN by existing tests (Portfolio and execution by code read). One gap fixed: journaled decision lineage held revision ids that nothing resolved or verified; resolve_lineage now rebuilds exact receipts and refuses missing/future/non-VALID/tampered/schema- or transform-mismatched lineage, wired into the owner decision read (fails closed into unavailable). 21 new tests. Limits: owner/queries.py path passes no stores; universe_* acquisition receipts not resolved; no runtime proof.'
   source_ids:
   - S01
   - S08
   - S13
   source_sections: §§6.1–6.5
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: None for DATA-02. Dependents DATA-03, DATA-05, RISK-01 remain separate.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: cae1128
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
+  closure_evidence: docs/tracker/evidence/data02-provenance-lineage/closure.yaml
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE

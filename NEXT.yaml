@@ -677,3 +677,16 @@ gov07_owner_deferral:
     and timestamps; deployment records match remote/local code.
   historical_terminal_evidence: docs/tracker/evidence/gov07-identity-sol/terminal.yaml
   activation_authorized: false
+
+data02_provenance_lineage:
+  id: DATA-02
+  status: CLOSED
+  result: CLOSED_ENGINEERING_ONLY
+  implementation_commits: [ccef7e8, cae1128]
+  evidence: docs/tracker/evidence/data02-provenance-lineage/closure.yaml
+  tests: 21 new pass; 202 adjacent pass; 40 pre-existing failures identical on base.
+  kernel_launched: false
+  dashboard_launched: false
+  provider_calls: 0
+  other_rows_now_satisfied: none
+  dependents_unblocked_not_closed: [DATA-03, DATA-05, RISK-01]
