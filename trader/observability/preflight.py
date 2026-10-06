@@ -1,7 +1,8 @@
-"""OBS-01 local launch gate. No process identity, venue or provider capability.
+"""OBS-01/OBS-05 launch gate; no mutation, trading or provider capability.
 
 Only the existing controlled FROZEN/demo scope is admitted. A cached protection
-receipt must still be current; missing venue evidence never triggers acquisition.
+receipt remains required for running/Dashboard admission. Contained first boot
+may use the dedicated authenticated GET-only zero-account inventory instead.
 Committed storage probes reuse SafetyObserver without resolving persisted faults.
 """
 from __future__ import annotations
@@ -143,6 +144,70 @@ def _protection(db, now, *, require_fresh=True):
                 position_count=s['position_count'], trading_authority=False)
 
 
+def _first_boot_without_receipt(db):
+    """Only absent/empty optional receipt schema, never an invalid receipt.
+
+    Producer allocations do not prove that any receipt was ever published.
+    An absent receipt is not evidence about exposure: signed venue reads below
+    are mandatory even when every journal table is empty.
+    """
+    objects = dict(db.execute("SELECT name,type FROM sqlite_master WHERE name IN "
+                              "('protection_evidence','protection_boots')"))
+    if any(kind != 'table' for kind in objects.values()):
+        raise ValueError('protection_schema_unknown')
+    if 'protection_evidence' in objects:
+        # Empty malformed schema is not a legitimate NO-RECEIPT state.
+        db.execute('SELECT slot,boot,seq,value FROM protection_evidence LIMIT 0')
+        if db.execute('SELECT count(*) FROM protection_evidence').fetchone()[0]:
+            return False
+    return True
+
+
+def _protection_generation_floor(db):
+    if not db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='protection_boots'").fetchone():
+        return 0
+    boots = [r[0] for r in db.execute('SELECT boot FROM protection_boots')]
+    if any(type(boot) is not int or boot <= 0 for boot in boots):
+        raise ValueError('prior_protection_generation_unknown')
+    return max(boots, default=0)
+
+
+def _journal_zero(db):
+    controls = dict(db.execute("SELECT key,value FROM state_kv WHERE key IN "
+                              "('control_state','macro_guard_operator_hold','execution_recovery','reconcile_rearm_submitted')"))
+    if (controls.get('control_state') != 'FROZEN' or controls.get('macro_guard_operator_hold') != '1'
+            or controls.get('execution_recovery') not in (None, '', 'null')
+            or ('reconcile_rearm_submitted' in controls and strict_json(controls['reconcile_rearm_submitted']) != {})):
+        raise ValueError('first_boot_control_or_recovery_unknown')
+    if db.execute("SELECT count(*) FROM trades WHERE status IS NULL OR status!='closed'").fetchone()[0]:
+        raise ValueError('first_boot_journal_exposure_unresolved')
+    if db.execute("SELECT count(*) FROM execution_requests WHERE state IS NULL OR state NOT IN ('TERMINAL','REFUSED')").fetchone()[0]:
+        raise ValueError('first_boot_execution_unresolved')
+    if (db.execute("SELECT 1 FROM sqlite_master WHERE name='partial_exit_intents'").fetchone()
+            and db.execute("SELECT count(*) FROM partial_exit_intents WHERE state IS NULL OR state!='CONSUMED'").fetchone()[0]):
+        raise ValueError('first_boot_partial_execution_unresolved')
+    return controls
+
+
+def _first_boot_protection(db, facts, clock):
+    if any(facts.get(name, {}).get('status') != 'PASS' for name in ('safety','environment','storage','control')):
+        raise ValueError('first_boot_static_facts_not_pass')
+    before = _journal_zero(db)
+    floor = _protection_generation_floor(db)
+    from .first_boot import read_zero_account, validate_zero_account
+    inventory = validate_zero_account(read_zero_account(clock=clock), clock())
+    if (_journal_zero(db) != before or not _first_boot_without_receipt(db)
+            or _protection_generation_floor(db) != floor):
+        raise ValueError('first_boot_journal_or_receipt_changed')
+    inventory = validate_zero_account(inventory, clock())
+    return dict(status='PASS', reasons=[], admission='FIRST_BOOT_ZERO_ACCOUNT',
+                evidence_status='AUTHORITATIVE_ZERO_EXPOSURE', account_inventory=inventory,
+                freshness='FRESH', age_seconds=clock()-inventory['checked_at'], position_count=0,
+                # Floor for Phase B's unchanged newer-producer-generation test;
+                # this is NOT a synthetic/persisted protection receipt.
+                generation=dict(boot=floor, seq=0), trading_authority=False)
+
+
 def collect_facts(root, *, recovery_root=RECOVERY_ROOT, clock=time.time, contained_cold=False):
     root, recovery_root = Path(root).resolve(), Path(recovery_root)
     facts = {}
@@ -215,7 +280,10 @@ def collect_facts(root, *, recovery_root=RECOVERY_ROOT, clock=time.time, contain
                 reasons.append('pending_partial_exits')
             facts['control'] = {**_fact(reasons), 'partial_ledger_present': partial_exists,
                                 'persisted': controls, 'trading_authority': False}
-            facts['protection'] = _protection(db, clock(), require_fresh=not contained_cold)
+            if contained_cold and _first_boot_without_receipt(db):
+                facts['protection'] = _first_boot_protection(db, facts, clock)
+            else:
+                facts['protection'] = _protection(db, clock(), require_fresh=not contained_cold)
         # Probe/publication races cannot waive a new persisted safety fault.
         health_after = _health(root / 'data/safety_health.json')
         if health_after != health:
@@ -231,7 +299,9 @@ def prelaunch(root, expected_revision, **kwargs):
 
     The only deferred faults belong to the absent heartbeat producer. Persisted
     protection must remain structurally VERIFIED and match the persisted book;
-    its age is disclosed, never relabelled as fresh venue truth.
+    its age is disclosed. First boot without a persisted receipt
+    instead requires fresh authenticated zero-account proof, never journal-only
+    absence. Both routes admit only contained FROZEN startup.
     """
     from trader import runtime_identity as ri
     try:
