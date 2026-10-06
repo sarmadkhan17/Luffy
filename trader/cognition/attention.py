@@ -272,7 +272,14 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
         else:
             status = "ok"
         win = add("candle_window", sym, status, len(present),
-                  {"need": need, "first_open_ms": opens[0], "anchor_open_ms": last_open},
+                  {"need": need, "first_open_ms": opens[0], "anchor_open_ms": last_open,
+                   "history": {"required_bars": need, "eligible_bars": len(present),
+                               "timeframe": ds.timeframe, "source_cut_ms": as_of,
+                               "first_open_ms": opens[0], "anchor_open_ms": last_open,
+                               "missing_open_ms": [t for t, b in zip(opens, bars) if b is None],
+                               "available_at_ms": max((b.available_ms for b in present), default=None),
+                               "eligible_at_ms": max((b.available_ms for b in present), default=None)
+                                   if status == "ok" else None}},
                   max((b.close_ms for b in present), default=None),
                   max((b.available_ms for b in present), default=None),
                   ",".join(sorted({b.source for b in present})) or "candles")
@@ -425,6 +432,16 @@ def evaluate(ds, as_of: int, cfg: CognitionConfig, decision_id: str,
     for sym in capped:
         rows[sym] = {"symbol": sym, "status": "not_evaluated", "eligible": False,
                      "reason": "universe_cap"}
+
+    # Required history is evidence, not an estimated completion date. Missing
+    # and malformed inputs retain their distinct statuses and null salience.
+    for sym, row in rows.items():
+        row.setdefault("salience", None)
+        row.setdefault("dominant", None)
+        row.setdefault("components", {kind: None for kind in COMPONENTS})
+        window = index.get(("candle_window", sym))
+        if window is not None:
+            row["history"] = window.detail["history"]
 
     return {"anchor_close_ms": anchor_close, "members": members + capped,
             "universe": [rows[s] for s in sorted(rows)], "rows": rows, "market": market,

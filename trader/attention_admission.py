@@ -163,6 +163,8 @@ def admit(observation, policy, state):
             context_anchor=sym in observation['context_anchors'], exposure_required=sym in observation['exposure_required'],
             category='deferred', reason='no_qualifying_salience_or_relevance' if usable else 'broad_input_unusable',
             event_reason=None, exploration_reason=None)
+        if 'history' in score:
+            detail[sym]['history'] = score['history']
     ranked.sort(key=lambda s:(-float(format(detail[s]['score'],'.12g')),s))
     event_signatures = {s:digest([observation['salience_anchor_ms'],detail[s]['components']]) for s in ranked}
     events = [s for s in ranked if old['event_signatures'].get(s) != event_signatures[s]]
@@ -302,6 +304,8 @@ def candidates(receipt):
                       wall_time=dict(status='NOT_MEASURED', reason='no_admission_cost_telemetry_contract')),
             source_identity=receipt['source_identity'], source_cut_ms=receipt['source_cut_ms'],
             receipt_id=receipt['receipt_id'], authority='INVESTIGATE_ONLY'))
+        if 'history' in r:
+            out[-1]['history'] = r['history']
     return out
 
 
