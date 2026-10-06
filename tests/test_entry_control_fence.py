@@ -35,9 +35,12 @@ def _events(j, event):
 
 
 # ── spawned-process bodies (module level for the spawn start method) ─────
-def _child_transition(db, path, started):
+def _child_transition(db, path, started, go):
+    # Journal() writes schema/migration statements, so it must be built before
+    # the entry holds its IMMEDIATE durable transaction across the venue call.
     sm = ControlStateMachine(Journal(db))
     started.set()
+    go.wait(30)
     for s in path:
         sm.set(ControlState(s), "other_process")
 
@@ -66,9 +69,10 @@ def test_blocking_state_persisted_by_other_process_stops_entry(setup, path, reas
     ex, j, e, d = setup
     kernel_sm = ControlStateMachine(j)
     assert kernel_sm.state == A                   # stale cycle cached ACTIVE
-    started = SPAWN.Event()
+    started, go = SPAWN.Event(), SPAWN.Event()
+    go.set()
     p = SPAWN.Process(target=_child_transition,
-                      args=(str(j.db_path), [s.value for s in path], started))
+                      args=(str(j.db_path), [s.value for s in path], started, go))
     p.start(); p.join(30)
     assert p.exitcode == 0
     assert kernel_sm.state == A                   # still stale in-process
@@ -105,16 +109,17 @@ def test_entry_in_flight_serializes_before_transition(setup, path):
     child = {}
     observed = {}
     real_create = ex.create_order
+    started, go = SPAWN.Event(), SPAWN.Event()
+    child["p"] = SPAWN.Process(target=_child_transition,
+                               args=(db, [s.value for s in path], started, go))
+    child["p"].start()
+    assert started.wait(60)                       # child holds a ready Journal
 
     def create_order(symbol, typ, side, amount, params=None):
         params = params or {}
         if not params.get("reduceOnly") and "stopLossPrice" not in params \
-                and "p" not in child:
-            started = SPAWN.Event()
-            child["p"] = SPAWN.Process(target=_child_transition,
-                                       args=(db, [s.value for s in path], started))
-            child["p"].start()
-            assert started.wait(30)
+                and not go.is_set():
+            go.set()
             time.sleep(0.5)                       # child is now blocked on set()
             observed["child_alive"] = child["p"].is_alive()
             observed["state"] = Journal(db).kv_get("control_state", "ACTIVE")
