@@ -1,0 +1,15 @@
+id: RISK-02
+result: CLOSED_ENGINEERING_ONLY
+guards_mapped:
+  numeric: entry_authority.positive() rejects None/bool/NaN/Inf/zero/negative/overflow; applied to price, quantity, atr, stop, target, equity (account view + margin observation), held-position numbers
+  stop_geometry: intent() entry_stop_geometry_invalid (LONG stop>=price, SHORT stop<=price); independently Risk check_entry risk_inputs_invalid
+  capability: capability() venue/quote/settle/multiplier/status/shortability/eligibility/receipt digest/freshness; symbol-bound
+  leverage: observe_leverage()+capability() replay venue symbol_config+brackets, require VERIFIED, fresh (ACCOUNT_STALE_S), actual==desired, maximum>=desired; check_bracket() requires exactly one bracket covering the notional with maximum>=desired (at authorize and validate)
+  margin: authoritative_inputs() requires verified, fresh, same-account margin observation agreeing with equity; authorize() refuses notional/leverage > availableBalance
+  venue_constraints: validate() enforces step, min/max quantity, min notional from the registry record, re-run inside the durable hold before create_order; market record digest re-checked
+actual_gap: none in production code. Test-evidence gap only: reference price, stop geometry, wrong capability, stale/over-allowance leverage, margin, venue bounds had no retained negative proof.
+tests: tests/test_risk02_exposure_feasibility.py (64 pass); adjacent test_stage1_entry_authority, test_risk01_entry_binding, test_margin_caps, test_entry_recovery, test_execution_accounting pass.
+mutants_detected: venue step/bounds check removed; min-notional removed; available-margin check removed; desired==actual leverage removed.
+mutants_not_isolable: stop geometry (intent + Risk) and leverage freshness (capability + observe_leverage rebuild) are redundant layers; each layer proven by real refusals.
+observations_not_in_scope: tests/test_leverage_is_applied.py fails 6/6 on base (Executor._ensure_leverage no longer exists; file also resolves to /home/sarmad/trader/tests). Stale legacy test; no production leverage-setting path is required because entry requires venue-observed leverage == desired. Reported to EXE rows, not changed.
+limits: offline only; no Kernel/provider/venue calls; does not prove venue-side acceptance or portfolio-level heat/concentration (RISK-03/PORT-04).
