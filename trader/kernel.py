@@ -1873,16 +1873,23 @@ class Kernel:
         return out
 
     def _candidate_snapshot_for(self, symbol, receipt, peers):
-        from .attention_admission import verify_receipt
+        from .attention_admission import verify_receipt, candidates
         verify_receipt(receipt)
         if symbol not in receipt['admitted_symbols']:
             raise ValueError('symbol_not_deep_admitted')
+        # ATT-01: the typed investigation candidate is the one normal-path
+        # truth for why/how-urgently this symbol is investigated.
+        cache = getattr(self, '_candidate_cache', None)
+        if not cache or cache[0] != receipt['receipt_id']:
+            cache = self._candidate_cache = (receipt['receipt_id'], {c['symbol']: c for c in candidates(receipt)})
+        candidate = cache[1][symbol]
         snap = self._snapshot_for(symbol, universe=peers)
         if snap is not None:
             row = next(r for r in receipt['rows'] if r['symbol']==symbol)
             snap.admission_context = dict(receipt_id=receipt['receipt_id'],schema=receipt['schema'],
                 policy_version=receipt['policy_version'],source_cut_ms=receipt['source_cut_ms'],
-                category=row['category'],reason=row['reason'],peer_cohort_id=receipt['peer_cohort_id'])
+                category=row['category'],reason=row['reason'],peer_cohort_id=receipt['peer_cohort_id'],
+                investigation=candidate)
             if getattr(snap,'market_provenance_parts',None) is not None:
                 snap.market_provenance_parts['attention_admission'] = snap.admission_context
         return snap

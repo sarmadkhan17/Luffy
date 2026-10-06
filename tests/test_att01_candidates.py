@@ -86,3 +86,27 @@ def test_tampered_receipt_cannot_yield_candidates(policy):
     r['admitted_symbols'] = list(reversed(r['admitted_symbols']))
     with pytest.raises(ValueError):
         A.candidates(r)
+
+
+def test_normal_cycle_delivers_same_candidates_to_downstream_consumer(tmp_path, cfg, monkeypatch):
+    """event -> receipt -> persisted/replayed receipt -> typed candidates -> consumer (orchestrator.decide)."""
+    from tests.test_hierarchical_admission import full_cycle_kernel
+    k = full_cycle_kernel(tmp_path, cfg, monkeypatch)
+    seen = {}
+    real = k.orchestrator.decide.side_effect
+    def consume(snap, *a, **kw):
+        seen[snap.symbol] = snap.admission_context
+        return real(snap, *a, **kw)
+    k.orchestrator.decide.side_effect = consume
+    stats = k.cycle()
+    replayed = A.candidates(A.latest(k.journal))          # persisted + replayed + re-verified
+    assert replayed and stats['admission']['deep_admitted'] == len(replayed)
+    assert set(seen) == {c['symbol'] for c in replayed}
+    for c in replayed:
+        ctx = seen[c['symbol']]
+        assert ctx['investigation'] == c                   # identical identity/rank/reasons/urgency/cost/source cut
+        assert ctx['receipt_id'] == c['receipt_id'] and ctx['category'] == c['category']  # legacy keys unchanged
+        assert c['authority'] == 'INVESTIGATE_ONLY' and c['source_cut_ms'] and c['source_identity']
+        assert c['cost']['wall_time']['status'] == 'NOT_MEASURED'
+    assert [c['rank'] for c in replayed] == list(range(1, len(replayed) + 1))
+    assert A.canonical(A.candidates(k._admission_receipt)) == A.canonical(replayed)
