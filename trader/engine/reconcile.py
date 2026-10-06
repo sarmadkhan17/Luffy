@@ -65,13 +65,19 @@ def venue_realized_pnl(exchange, symbol: str,
     return total
 
 
-def _mark(exchange, symbol: str, fallback: float) -> float:
-    """Last trade price, or the entry when the venue will not answer."""
+def _last(exchange, symbol: str) -> float | None:
+    """Venue last price, or None — a missing quote is never a price of zero."""
     try:
         px = float((exchange.fetch_ticker(symbol) or {}).get("last") or 0)
-        return px if px > 0 else fallback
     except Exception:
-        return fallback
+        return None
+    return px if math.isfinite(px) and px > 0 else None
+
+
+def _mark(exchange, symbol: str, fallback: float) -> float:
+    """Last trade price, or the entry when the venue will not answer."""
+    px = _last(exchange, symbol)
+    return fallback if px is None else px
 
 
 def reconcile_futures(exchange, journal: Journal, exclude_symbols=(), *, verify=False) -> dict:
@@ -202,7 +208,10 @@ def reconcile_futures(exchange, journal: Journal, exclude_symbols=(), *, verify=
                 decision_id="")
             journal.add_trade(pos, accounting={
                 "basis": "reconcile_adoption", "purpose": "adopted",
-                "venue_entry_price": entry, "venue_contracts": contracts})
+                "venue_entry_price": entry if entry > 0 else None,
+                "entry_price_status": "VENUE_REPORTED" if entry > 0 else "UNKNOWN",
+                "exposure_source": "venue_position_snapshot",
+                "venue_contracts": contracts})
             log.warning(f"ADOPTED orphaned exchange position {sym} "
                         f"{side_raw} {contracts} @ {entry}")
             adopted += 1
@@ -224,9 +233,18 @@ def reconcile_futures(exchange, journal: Journal, exclude_symbols=(), *, verify=
                         exchange, sym, str(jt["opened_at"] or ""), observation=observation)
                     if total is None:
                         entry = float(jt["entry_price"])
-                        px = _mark(exchange, sym, entry)
+                        quote = _last(exchange, sym)
+                        px = entry if quote is None else quote
                         direction = 1.0 if jt["side"] == "long" else -1.0
                         pnl = (px - entry) * direction * (jamt - contracts)
+                        # A local estimate, not a venue fact: say so and say
+                        # what price it was priced from.
+                        observation.update(
+                            pnl_value_class="DERIVED_ESTIMATE" if quote is not None else "UNKNOWN",
+                            pnl_status="UNKNOWN" if quote is None else "ESTIMATE",
+                            pnl_price_source=("journal_entry_not_a_fill" if quote is None
+                                              else "ticker_last_not_a_fill"),
+                            estimated_pnl_usdt=round(pnl, 8))
                 # through _tx, not query(): query() runs unwrapped and its
                 # UPDATE only lands if some later _tx on this thread happens
                 # to commit it — until then the row is invisible and the
@@ -251,16 +269,22 @@ def reconcile_futures(exchange, journal: Journal, exclude_symbols=(), *, verify=
         if jt["market_type"] != "futures":
             continue   # spot handled separately (balances ≠ positions)
         if sym not in mark_cache:
-            try:
-                t = exchange.fetch_ticker(sym)
-                mark_cache[sym] = float(t.get("last") or 0)
-            except Exception:
-                mark_cache[sym] = float(jt["entry_price"])
-        exit_px = mark_cache[sym]
+            mark_cache[sym] = _last(exchange, sym)
+        quote = mark_cache[sym]
+        # No quote: the venue-flat fact stands, but the exit price and P&L
+        # are UNKNOWN. Entry is a placeholder for the NOT NULL column, not a
+        # fill, and a zero price must never be booked as a total loss.
+        exit_px = float(jt["entry_price"]) if quote is None else quote
         direction = 1.0 if jt["side"] == "long" else -1.0
-        pnl = ((exit_px - float(jt["entry_price"])) * direction
-               * float(jt["amount"]))
-        journal.close_trade(jt["id"], exit_px, round(pnl, 8), "reconciled_ghost")
+        pnl = 0.0 if quote is None else ((exit_px - float(jt["entry_price"])) * direction
+                                         * float(jt["amount"]))
+        journal.close_trade(jt["id"], exit_px, round(pnl, 8), "reconciled_ghost", accounting={
+            "basis": "reconcile_ghost_unpriced" if quote is None else "reconcile_ghost_mark_estimate",
+            "purpose": "ghost_close", "exposure_source": "venue_position_snapshot",
+            "pnl_status": "UNKNOWN" if quote is None else "ESTIMATE",
+            "pnl_value_class": "UNKNOWN" if quote is None else "DERIVED_ESTIMATE",
+            "exit_price_source": "journal_entry_not_a_fill" if quote is None else "ticker_last_not_a_fill",
+            "estimated_pnl_usdt": None if quote is None else round(pnl, 8)})
         log.warning(f"GHOST closed: {sym} was open in journal, absent on "
                     f"exchange → closed @{exit_px} pnl={pnl:+.2f}")
         ghosts += 1
@@ -489,19 +513,25 @@ def flatten_all(exchange, journal: Journal, notifier=None) -> int:
                 sym, "market", side_close, float(t["amount"]),
                 params={"reduceOnly": True})
             fill = float(order.get("average") or order.get("price") or 0)
+            source = "order_response_price"
             if fill <= 0:                      # async fills: confirm via ticker
-                try:
-                    tk = exchange.fetch_ticker(sym)
-                    fill = float(tk.get("last") or 0)
-                except Exception:
-                    pass
-            direction = 1.0 if t["side"] == "long" else -1.0
-            pnl = ((fill - float(t["entry_price"])) * direction
-                   * float(t["amount"]))
+                fill = _last(exchange, sym) or 0.0
+                source = "ticker_last_not_a_fill"
+            if fill <= 0:
+                # The order went out; its price is UNKNOWN, never zero.
+                fill, source = float(t["entry_price"]), "journal_entry_not_a_fill"
+                pnl, pnl_status = 0.0, "UNKNOWN"
+            else:
+                direction = 1.0 if t["side"] == "long" else -1.0
+                pnl = ((fill - float(t["entry_price"])) * direction
+                       * float(t["amount"]))
+                pnl_status = "ESTIMATE"
             journal.close_trade(t["id"], fill, round(pnl, 8), "panic", accounting={
                 "basis": "panic_order_unconfirmed", "purpose": "panic_exit",
                 "order_id": str(order.get("id") or ""), "side": side_close,
                 "requested_quantity": float(t["amount"]),
+                "exit_price_source": source, "pnl_status": pnl_status,
+                "pnl_value_class": "UNKNOWN" if pnl_status == "UNKNOWN" else "DERIVED_ESTIMATE",
                 "protective_algo_id": t.get("sl_order_id") or None})
             closed += 1
             log.warning(f"PANIC close {sym}: {t['amount']} @ ~{fill} "
