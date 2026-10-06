@@ -1,0 +1,25 @@
+id: DATA-01
+result: CLOSED_ENGINEERING_ONLY
+implementation_commit: 18a5edf
+boundary_map:
+  acquisition: PROVEN  # Feed.bind_instrument(Registry InstrumentId) -> mp.annotate(instrument_id); kernel._snapshot_for refuses mixed/mismatched frame identity (kernel.py ~896-899); tests/test_final_audit_feed_identity, test_stage1_data_provenance_pit
+  registry_capability_binding: PROVEN  # entry_authority.register_capability/capability: digest, snapshot, account scope, venue/market/settlement/multiplier checks; tests/test_stage1_entry_authority
+  attention_admission: PROVEN  # selection_persistence/registry_selector require is_canonical_instrument_id; ATT-04 closure evidence
+  strategy_decision_portfolio: PROVEN  # trade_intent.bind_capability, proposal_capability_changed, TRADE_INTENT_CAPABILITY_REBIND_REFUSED tests
+  risk: PROVEN  # authorize() rereads capability; raw symbol alone -> proposal_canonical_capability_required; already_exposed_canonical_instrument
+  execution: PROVEN  # validate() re-checks capability, ex.market() sha vs cap.venue_market_sha256, base/quote/settle/linear/contractSize
+  accounting_journal: PROVEN  # execution_binding persisted in entry_identity_json; booking/accounting verify venue_symbol/instrument_id; test_accounting_preserves_exact_identity
+  open_position_protection: IMPLEMENTED_BUT_UNMAPPED_NOW_MAPPED  # reconcile.py cross-checks account scope + market id of every bound open trade each pass (canonical_binding_mismatch / canonical_position_identity_unverified / alias collision, tests present). place_stop/_move_stop are reduceOnly on the bound trade's own symbol and cannot create exposure.
+  replay_restart: PROVEN  # tests: completed_action_survives_store_reopen, retained_in_fresh_interpreter, restarted executor refuses
+actual_gap:
+  - capability() did not check receipt schema or registry/record schema_version; a digest-valid receipt of another revision would have been accepted.
+change: trader/engine/entry_authority.py capability() raises capability_revision_incompatible unless schema=='entry-capability.v1' and registry/record schema_version==instrument_registry.SCHEMA_VERSION.
+tests:
+  new: tests/test_data01_canonical_identity.py (10 pass; 3 revision cases fail on base)
+  adjacent_411_pass: test_data01_canonical_identity, test_stage1_entry_authority, test_attention_kernel_wiring, test_attention_selection_persistence, test_portfolio_allocator, test_candidate_bridge, test_reconcile, test_execution_accounting, test_entry_recovery, test_stage1_data_provenance_pit, test_whole_trade_accounting, test_emergency_whole_accounting
+baseline_failures_identical_on_base_without_change:
+  - tests/test_trade_provenance.py (24 tests: legacy fixtures call Executor.open without a risk permission; refused fail-closed as exact_risk_permission_required)
+  - tests/test_final_audit_feed_identity.py::test_frozen_kernel_cycle_reaches_exit_and_successful_heartbeat (SimpleNamespace state_machine lacks .state)
+  note: stale test fixtures, not identity defects; not fixed here (outside smallest correction).
+not_done: full suite; any runtime/venue proof; tracker Markdown regeneration (no generator exists in repo)
+safety: no Kernel/Dashboard launch, no venue/provider calls, SEC-01/RUN-01/ATT-04/PERF-01 untouched

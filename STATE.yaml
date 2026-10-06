@@ -1603,3 +1603,10 @@ current_build_selection:
     tracker items are not gated by SEC-01 or RUN-01.
   next_item_selected: false
   runtime_execution_authorized: false
+
+data01_canonical_identity:
+  id: DATA-01
+  status: CLOSED
+  result: CLOSED_ENGINEERING_ONLY
+  implementation_commit: 18a5edf
+  evidence: docs/tracker/evidence/data01-canonical-identity/closure.yaml

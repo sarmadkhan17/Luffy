@@ -22,13 +22,13 @@ metadata:
   pending_adoption: null
   status_counts:
     IN_PROGRESS: 0
-    EVIDENCE_TO_MAP: 128
+    EVIDENCE_TO_MAP: 127
     AWAITING_EVIDENCE: 11
     AWAITING_OWNER: 14
     DEFERRED: 4
     BLOCKED: 2
     OPEN: 4
-    CLOSED: 15
+    CLOSED: 16
   workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged
     and excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
@@ -1312,7 +1312,7 @@ items:
   stage: '1'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Use one canonical instrument and capability identity across all consumers.
   why_needed: Prevents valid data being rejected or misbound across Registry/Portfolio/Risk/Execution.
   closure_condition: Same observed instrument resolves to one versioned identity from acquisition through booking,
@@ -1320,28 +1320,27 @@ items:
   failure_regression_proof: Raw symbol text or incompatible capability revision cannot authorize exposure.
   dependencies: []
   owner_role: Data & storage owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: NOT_MAPPED
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: Claude local engineering session
+  implementation_evidence: 18a5edf; trader/engine/entry_authority.py; tests/test_data01_canonical_identity.py
+  runtime_evidence: NOT_PERFORMED; offline tests only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: No item-level evidence mapping completed in this tracker.
+  latest_evidence: 'Boundaries mapped acquisition to accounting, restart and reconcile; all PROVEN by existing tests. One gap fixed: capability() accepted a digest-valid receipt of another schema/registry revision, now refused (capability_revision_incompatible). 10 new tests (3 fail on base); 411 adjacent pass. 25 pre-existing failures in test_trade_provenance/test_final_audit_feed_identity are identical on base (stale fixtures).'
   source_ids:
   - S01
   - S08
   - S13
   source_sections: §§6.4,6.8
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: None for DATA-01. Dependents DATA-02/06, PORT-01, RISK-01, ACC-01 remain separate.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: 18a5edf
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: docs/tracker/evidence/data01-canonical-identity/closure.yaml
+  evidence_validity: Pinned repository implementation and offline test proof; no runtime claim.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 - id: DATA-02

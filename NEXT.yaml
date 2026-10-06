@@ -547,3 +547,16 @@ current_build_selection:
     tracker items are not gated by SEC-01 or RUN-01.
   next_item_selected: false
   runtime_execution_authorized: false
+
+data01_canonical_identity:
+  id: DATA-01
+  status: CLOSED
+  result: CLOSED_ENGINEERING_ONLY
+  implementation_commit: 18a5edf
+  evidence: docs/tracker/evidence/data01-canonical-identity/closure.yaml
+  tests: 10 new pass (3 fail on base); 411 adjacent pass; 25 pre-existing failures identical on base (stale fixtures).
+  kernel_launched: false
+  dashboard_launched: false
+  provider_calls: 0
+  other_rows_now_satisfied: none
+  next_recommended_item: DATA-08

@@ -1,7 +1,7 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
   "snapshot_version": "1.14-owner-current-release-deferral",
-  "control_baseline_revision": "afc44618ad7b65513990dfd2ace4957815c48da3",
+  "control_baseline_revision": "18a5edf441ba826760380f0bd691681ef433966c",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
   "gui_rows": 29,
@@ -12,8 +12,8 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 367292,
-      "sha256": "c81da17ff990c875e1db2c80f8046007d1f427b5428112d4b718fd1c5f0e55d0",
+      "bytes": 367805,
+      "sha256": "3ca7e50fb66546f9051b5107307458f311e54bc3fb8aebd791ca42c21aad9076",
       "synchronization_required": true
     },
     {
