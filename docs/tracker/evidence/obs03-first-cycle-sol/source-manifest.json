@@ -1,0 +1,36 @@
+{
+  "schema": "luffy-obs03-source-manifest.v1",
+  "baseline": "26d29a0",
+  "external_current_collector": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/collect_prepared.py",
+  "files": {
+    "docs/tracker/evidence/obs03-first-cycle-sol/source/before-collect_prepared.py": "70e83f283732c40ff181f4003ba3cf9ef5a3d46dcf1d4b193d44e5e649c13c90",
+    "docs/tracker/evidence/obs03-first-cycle-sol/source/collect_prepared.py": "cc1e46424f2c93d43449efebbd31fd4c07699b5d72c0875b7172f63a971cbbe7",
+    "docs/tracker/evidence/obs03-first-cycle-sol/source/launch_once.py": "2a0eaafb8f8cb38a6f3c09ab6d558946a14843ddac3a7407e08a2c52b6b66b12",
+    "docs/tracker/evidence/obs03-first-cycle-sol/source/metadata.py": "f7ab5f7fc89dfd40d99d92638635bbc32edf1bb2284b224f8aedd7f8e1e2d658",
+    "docs/tracker/evidence/obs03-first-cycle-sol/source/original-launch-clock.py": "11f91eb0d390d21a4893cc8d87b699000fc8214cec9efc7600ff0c999fedf7f6",
+    "docs/tracker/evidence/obs03-first-cycle-sol/source/profile_prepared.py": "55b9da06bd5f28fbf073ad9f542000c9db4f07443da25af2bd78283e6b07b82d"
+  },
+  "historical_source_hashes": {
+    "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/run/stages.jsonl": "e76eaee405f7d2903c820c6914c318f141186ef7d34bd7ce6f0b55df734f69e2",
+    "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/run/controller-events.jsonl": "6cdddf545ad5549a5547ee2c668eb10302e2bf2a34b6ffd91294d1389566a573",
+    "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/run/observation-result.json": "2e19346daf8f6f584748dc6ed05b2e0ab1864dd3737f8347147eee70342e2c83"
+  },
+  "runtime_launched": false,
+  "providers_called": false,
+  "test_source_sha256": "3d6b7572065e0b78787175d35b0c639f69bfe15b9a8941ce99717ea77944b78e",
+  "executed_hashes": {
+    "storage.py": "2917abbebf3c5480cbbc68bd5ce32a9bbef51f77d1de8771afa17610186b4621",
+    "prior-observer.py": "368f9aeee9798ac4c4ac1137b9cd798ef733a035a12727ef26298cab61782f75",
+    "pre_start.py": "00f1f0d06d58f53cbce86714b83829e20ce47cd2e80817c4dcb11c994ea31feb",
+    "profile_prepared.py": "55b9da06bd5f28fbf073ad9f542000c9db4f07443da25af2bd78283e6b07b82d",
+    "fresh_protection.py": "ff5483ae7a549143c0f30f569f16f35d2e12638217e43f15c05c7805f6b7e8a3",
+    "validate_preparation.py": "45a966064c9bbe6a00efd34825085315c96aa107d23922133140836b2c8c1af8",
+    "collect_prepared.py": "70e83f283732c40ff181f4003ba3cf9ef5a3d46dcf1d4b193d44e5e649c13c90",
+    "observer_once.py": "fca23b95f10f44425ccba2acdd7f89a4f5e239321b666d0ab8cc968542253cbb",
+    "launch_once.py": "5ea83b2044353bc1c522493d3aa43f03518fbc61af5d162ee35a3d34913a5a86",
+    "prior-collector.py": "11f91eb0d390d21a4893cc8d87b699000fc8214cec9efc7600ff0c999fedf7f6",
+    "metadata.py": "f7ab5f7fc89dfd40d99d92638635bbc32edf1bb2284b224f8aedd7f8e1e2d658",
+    "validate_execution_contract.py": "98abd40d842e77064e30c12b86370bc00939ea8cc0ca661279ff3ef45b9bb69f",
+    "PLAN.txt": "0e5a6655743ff1cdff9d0e7ca1c5bf34c8b4b7b99dc8e88297d346c5eccb272a"
+  }
+}

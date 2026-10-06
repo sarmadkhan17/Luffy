@@ -1,0 +1,111 @@
+{
+  "pid": 1012489,
+  "launch": {
+    "at": 1791217774.599632,
+    "event": "kernel_launched",
+    "monotonic_s": 102961.207173938,
+    "pid": 1012489
+  },
+  "window": {
+    "deadline_monotonic_s": 106590.302153612,
+    "event": "window_started",
+    "monotonic_s": 102990.302153612,
+    "pid": 1012489
+  },
+  "stop": {
+    "event": "stop_requested",
+    "monotonic_s": 103230.335568219,
+    "reason": "inflight_cycle_exceeded_existing_240_second_limit"
+  },
+  "result": {
+    "reason": "inflight_cycle_exceeded_existing_240_second_limit",
+    "observation_status": "STARTED",
+    "first_cycle_monotonic_s": 102990.302153612,
+    "deadline_monotonic_s": 106590.302153612,
+    "stop_monotonic_s": 103230.335568219,
+    "duration_s": 240.03341460699448,
+    "completed_window_cycles": 0,
+    "shutdown_cycles": 1,
+    "successful_heartbeat_gaps": [],
+    "still_running": [],
+    "exact_stop_reason": "inflight_cycle_exceeded_existing_240_second_limit"
+  },
+  "stages_before_stop": [
+    {
+      "at": 1791217776.468188,
+      "monotonic_s": 102963.075729733,
+      "native_id": 1012489,
+      "pid": 1012489,
+      "stage": "kernel.__init__",
+      "status": "BEGIN",
+      "thread": "MainThread"
+    },
+    {
+      "at": 1791217776.6037538,
+      "cpu_s": 0.05581477800000001,
+      "elapsed_s": 0.135540552000748,
+      "error_class": null,
+      "exclusive_cpu_s": 0.05044867499999994,
+      "exclusive_elapsed_s": 0.10653759299020749,
+      "heartbeat_instance_id": "03f4159362eb4718bdec15aa5f3a3e3a",
+      "heartbeat_started_at": 1791217776.495535,
+      "monotonic_s": 102963.211294891,
+      "native_id": 1012489,
+      "pid": 1012489,
+      "stage": "kernel.__init__",
+      "status": "COMPLETE",
+      "thread": "MainThread",
+      "wall_minus_thread_cpu_s": 0.07972577400074798
+    },
+    {
+      "at": 1791217776.603858,
+      "monotonic_s": 102963.211398955,
+      "native_id": 1012489,
+      "pid": 1012489,
+      "stage": "kernel.boot",
+      "status": "BEGIN",
+      "thread": "MainThread"
+    },
+    {
+      "at": 1791217803.6943567,
+      "cpu_s": 1.6205886720000002,
+      "elapsed_s": 27.09048600398819,
+      "error_class": null,
+      "exclusive_cpu_s": 0.18384621899999964,
+      "exclusive_elapsed_s": 8.988780063940794,
+      "monotonic_s": 102990.301898415,
+      "native_id": 1012489,
+      "pid": 1012489,
+      "stage": "kernel.boot",
+      "status": "COMPLETE",
+      "thread": "MainThread",
+      "wall_minus_thread_cpu_s": 25.46989733198819
+    },
+    {
+      "at": 1791217803.6946127,
+      "monotonic_s": 102990.302153612,
+      "native_id": 1012489,
+      "pid": 1012489,
+      "stage": "kernel.cycle",
+      "status": "BEGIN",
+      "thread": "MainThread"
+    }
+  ],
+  "stages_after_stop": [
+    {
+      "at": 1791218063.470887,
+      "cpu_s": 79.280860908,
+      "elapsed_s": 259.7762566360034,
+      "error_class": null,
+      "exclusive_cpu_s": 3.109127827999785,
+      "exclusive_elapsed_s": 13.130004460326745,
+      "monotonic_s": 103250.078428303,
+      "native_id": 1012489,
+      "pid": 1012489,
+      "stage": "kernel.cycle",
+      "status": "COMPLETE",
+      "thread": "MainThread",
+      "wall_minus_thread_cpu_s": 180.4953957280034
+    }
+  ]
+}

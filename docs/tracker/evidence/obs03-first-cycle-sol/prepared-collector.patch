@@ -1,0 +1,94 @@
+--- a/collect_prepared.py
++++ b/collect_prepared.py
+@@ -2,6 +2,7 @@
+ import argparse
+ import hashlib
+ import json
++import math
+ import os
+ from pathlib import Path
+ import signal
+@@ -33,7 +34,12 @@
+         self.last_beat=None;self.gaps=[];self.stop=None;self.reason=None
+         self.completed_window=0;self.shutdown_cycles=0
+ 
+-    def ingest(self,rows,directory,phase='OBSERVATION'):
++    def ingest(self,rows,directory,phase='OBSERVATION',recorded=None):
++        def emit(name,value):
++            key=(name,json.dumps(value.get('record',value),sort_keys=True))
++            if recorded is None or key not in recorded:
++                append(directory/name,value)
++                if recorded is not None: recorded.add(key)
+         for row in rows:
+             if row.get('pid')!=self.pid: continue
+             if row.get('status') in ('FAIL','METADATA_BOUND'):
+@@ -43,21 +49,24 @@
+                 self.instance=row['heartbeat_instance_id'];self.started_at=row['heartbeat_started_at']
+             if stage=='kernel.boot' and status=='COMPLETE': self.boot=True
+             if stage=='kernel.cycle' and status=='BEGIN':
+-                if not self.boot or not isinstance(mono,(int,float)): raise ValueError('unbound_cycle_start')
++                if not self.boot or type(mono) not in (int,float) or not math.isfinite(mono): raise ValueError('unbound_cycle_start')
++                if self.cycle_start is not None: raise ValueError('overlapping_cycle_start')
+                 self.cycles+=1;self.cycle_start=mono
+                 if self.first is None:
+                     self.first=mono;self.deadline=mono+3600
+-                    append(directory/'controller-events.jsonl',dict(event='window_started',pid=self.pid,monotonic_s=mono,deadline_monotonic_s=self.deadline))
++                    emit('controller-events.jsonl',dict(event='window_started',pid=self.pid,monotonic_s=mono,deadline_monotonic_s=self.deadline))
+             if stage=='kernel.cycle' and status in ('COMPLETE','FAIL'):
+-                overlap=self.stop is not None or (mono is not None and self.deadline is not None and mono>self.deadline)
++                if self.cycle_start is None or type(mono) not in (int,float) or not math.isfinite(mono) or mono<self.cycle_start:
++                    raise ValueError('unbound_cycle_completion')
++                overlap=(self.stop is not None and mono>=self.stop) or (self.deadline is not None and mono>self.deadline)
+                 kind='SHUTDOWN_OVERLAP' if overlap else ('FIRST' if self.cycles==1 else 'RECURRING')
+                 if overlap: self.shutdown_cycles+=1
+                 elif status=='COMPLETE': self.completed_window+=1
+-                append(directory/'cycle-measurements.jsonl',dict(phase=kind,sequence=self.cycles,record=row))
++                emit('cycle-measurements.jsonl',dict(phase=kind,cycle_kind='FIRST' if self.cycles==1 else 'RECURRING',sequence=self.cycles,record=row))
+                 if row.get('elapsed_s',0)>240: self.reason=self.reason or 'cycle_exceeded_existing_240_second_limit'
+                 self.cycle_start=None
+             if stage=='cycle.summary':
+-                append(directory/'cycle-summaries.jsonl',dict(phase=phase,sequence=self.cycles,record=row))
++                emit('cycle-summaries.jsonl',dict(phase=phase,sequence=self.cycles,record=row))
+ 
+     def check(self,facts,prior,now,wall):
+         if facts['controls']!={'control_state':'FROZEN','macro_guard_operator_hold':'1'} or facts['health'].get('recovery_required') is not True or not facts['watchdog_off']:
+@@ -140,9 +149,26 @@
+ def retain_until_stopped(directory,backend):
+     """Continue actual host-side observations after a drain timeout; no repair/restart."""
+     tail=Tail();next_storage=backend.monotonic()
++    state=State(backend.pids['kernel']['pid']);recorded=set()
++    for name in ('controller-events.jsonl','cycle-measurements.jsonl','cycle-summaries.jsonl'):
++        path=directory/name
++        if not path.exists(): continue
++        for line in path.read_text().splitlines():
++            value=json.loads(line)
++            recorded.add((name,json.dumps(value.get('record',value),sort_keys=True)))
++            if name=='controller-events.jsonl' and value.get('event')=='stop_requested':
++                state.stop=value['monotonic_s']
++    def ingest_remaining():
++        # Reconstruct from the original BEGIN, deduplicate already retained records,
++        # then keep the same incremental cursor through delayed process death.
++        while True:
++            offset=tail.offset
++            rows=tail.read(directory/'stages.jsonl')
++            state.ingest(rows,directory,'SHUTDOWN',recorded)
++            if rows: append(directory/'controller-events.jsonl',dict(event='timeout_continuing',stage_lines=len(rows),at=backend.wall()))
++            if tail.offset==offset: break
+     while any(backend.alive(role) for role in backend.pids):
+-        rows=tail.read(directory/'stages.jsonl')
+-        if rows: append(directory/'controller-events.jsonl',dict(event='timeout_continuing',stage_lines=len(rows),at=backend.wall()))
++        ingest_remaining()
+         if backend.monotonic()>=next_storage:
+             try:
+                 backend.storage('storage-timeout-continuing');backend.resources()
+@@ -150,5 +176,10 @@
+                 append(directory/'controller-events.jsonl',dict(event='timeout_measurement_failed',error_class=type(exc).__name__,at=backend.wall()))
+             next_storage=backend.monotonic()+60
+         backend.sleep(1)
++    ingest_remaining()  # includes a final record flushed immediately before death
++    (directory/'delayed-observation-result.json').write_text(json.dumps(dict(
++        first_cycle_monotonic_s=state.first,deadline_monotonic_s=state.deadline,
++        stop_monotonic_s=state.stop,completed_window_cycles=state.completed_window,
++        shutdown_cycles=state.shutdown_cycles,cycle_count=state.cycles),indent=2)+'\n')
+     backend.storage('storage-after-delayed-termination')
+     append(directory/'controller-events.jsonl',dict(event='delayed_termination_confirmed',at=backend.wall()))
