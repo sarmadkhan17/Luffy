@@ -1,0 +1,15 @@
+........................................................................ [ 46%]
+........................................................................ [ 92%]
+...........                                                              [100%]
+=============================== warnings summary ===============================
+tests/test_compile.py::test_filters_preserve_provenance_quality_with_readonly_pandas_arrays
+tests/test_compile.py::test_filters_preserve_provenance_quality_with_readonly_pandas_arrays
+  /usr/lib/python3.12/contextlib.py:137: Pandas4Warning: The 'mode.copy_on_write' option is deprecated. Copy-on-Write can no longer be disabled (it is always enabled with pandas >= 3.0), and setting the option has no impact. This option will be removed in pandas 4.0.
+    return next(self.gen)
+
+tests/test_compile.py::test_filters_preserve_provenance_quality_with_readonly_pandas_arrays
+  /usr/lib/python3.12/contextlib.py:144: Pandas4Warning: The 'mode.copy_on_write' option is deprecated. Copy-on-Write can no longer be disabled (it is always enabled with pandas >= 3.0), and setting the option has no impact. This option will be removed in pandas 4.0.
+    next(self.gen)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+155 passed, 2 deselected, 3 warnings in 78.61s (0:01:18)

@@ -271,6 +271,47 @@ def read_latest(path, *, now_ms=None, stale_seconds=300, health=None):
     return result
 
 
+def read_world_history(path, *, as_of_ms=None):
+    """Public retained WorldModel source, under one read-only transaction.
+
+    Retention gaps stay absent. Accepted receipts must bind their exact
+    record/model ids and cut. Corruption/ambiguity refuses the source rather
+    than silently falling back to another model or today's producer.
+    """
+    from trader.world import WorldHistory, WorldModelRecord
+    from trader.world.observation import _timestamp
+    _timestamp(as_of_ms, "as_of_ms", optional=True)
+    if not Path(path).is_file():
+        return WorldHistory(()), "SOURCE_UNAVAILABLE"
+    try:
+        with closing(sqlite3.connect(Path(path).resolve().as_uri() + "?mode=ro",
+                                     uri=True, timeout=.05)) as db:
+            db.execute("PRAGMA query_only=ON")
+            db.execute("BEGIN")
+            sql = "SELECT as_of_ms,payload FROM scans WHERE payload IS NOT NULL"
+            rows = db.execute(sql + (" AND as_of_ms <= ?" if as_of_ms is not None else ""),
+                              (as_of_ms,) if as_of_ms is not None else ()).fetchall()
+            records = []
+            for cut, payload in rows:
+                scan = json.loads(payload)
+                receipt = scan.get("world_model")
+                if receipt is None or receipt.get("status") != "ok":
+                    continue
+                if receipt.get("schema") != "world-model-live-receipt.v1":
+                    raise ValueError("invalid world receipt")
+                record = WorldModelRecord.from_json(receipt["record_json"])
+                model = record.reconstruct()
+                if (record.record_id != receipt.get("record_id")
+                        or record.model_id != receipt.get("model_id")
+                        or model.as_of_ms != cut or scan.get("as_of_ms") != cut
+                        or receipt.get("as_of_ms") != cut):
+                    raise ValueError("world receipt identity/cut mismatch")
+                records.append(record)
+            return WorldHistory(records), "RETAINED"
+    except (sqlite3.Error, OSError, ValueError, TypeError, KeyError, AttributeError):
+        return WorldHistory(()), "SOURCE_INVALID_OR_AMBIGUOUS"
+
+
 def export_scan(path, scan_id, destination):
     """Explicit immutable export, outside operational retention. No overwrite."""
     with closing(sqlite3.connect(Path(path).resolve().as_uri() + "?mode=ro", uri=True)) as db:

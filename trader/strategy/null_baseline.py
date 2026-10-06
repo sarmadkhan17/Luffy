@@ -104,7 +104,7 @@ def assess(compiled, frames: dict, risk_cfg: dict, actual_pf: float,
            btc=None, derivs=None, universe=None, market=None,
            symbol: str = "BT", draws: int = 100, seed: int = 0,
            split: float | None = None, part: str = "test",
-           funding: np.ndarray | None = None) -> dict:
+           funding: np.ndarray | None = None, world=None) -> dict:
     """{null_median, null_p90, percentile, draws, bars} for one spec/symbol.
 
     `split`/`part` select the same slice the actual profit factor came from.
@@ -115,7 +115,7 @@ def assess(compiled, frames: dict, risk_cfg: dict, actual_pf: float,
     tf = compiled.spec.timeframe
     df = frames[tf]
     lo, sh = compiled.entries(frames, btc=btc, derivs=derivs,
-                              universe=universe, market=market, symbol=symbol)
+                              universe=universe, market=market, symbol=symbol, world=world)
     score_from = 0
     if split is not None:
         cut = int(len(df) * float(split))

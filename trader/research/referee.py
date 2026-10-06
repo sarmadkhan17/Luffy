@@ -102,7 +102,7 @@ def load_heldout(tf: str, part: str, symbols, cut: int, cfg: dict,
 
     keep = slices.before if part == "a" else (lambda df, _cut: df)
     derivs = {s: {} for s in frames}
-    if any(r != "ohlcv" and not r.startswith("ref:") for r in requires):
+    if any(r not in ("ohlcv", "world") and not r.startswith("ref:") for r in requires):
         dfeed = DerivFeed(db_path=paths.get("derivs"))
         for sym in frames:
             got = spec_evidence.load_derivs(sym, requires, dfeed)
@@ -129,6 +129,8 @@ def load_heldout(tf: str, part: str, symbols, cut: int, cfg: dict,
                risk_pct=float(rcfg.get("risk_per_trade_pct", 0.5)),
                max_open=int(rcfg.get("max_open_trades", 8)),
                first_bars=first_bars)
+    from .evaluate import load_world
+    b.world = load_world(paths, requires, cut if part == 'a' else None)
     return b
 
 

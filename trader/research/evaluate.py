@@ -23,6 +23,10 @@ from __future__ import annotations
 import logging
 import statistics as st
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..world.context import WorldContext
 
 import numpy as np
 import pandas as pd
@@ -64,6 +68,7 @@ class Bundle:
     # symbol -> first tradeable bar. Empty on discovery; on held-out B the
     # bars before it are warmup context from before the cut.
     first_bars: dict = field(default_factory=dict)
+    world: WorldContext | None = None  # same contract as compiled strategies
 
 
 def load_bundle(tf: str, symbols, cfg: dict, requires=(),
@@ -120,7 +125,7 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
     disc = {s: d for s, d in disc.items() if s in sym_frames}
 
     derivs = {}
-    if any(r != "ohlcv" and not r.startswith("ref:") for r in requires):
+    if any(r not in ("ohlcv", "world") and not r.startswith("ref:") for r in requires):
         dfeed = DerivFeed(db_path=paths.get("derivs"))
         for sym in disc:
             got = spec_evidence.load_derivs(sym, requires, dfeed)
@@ -150,7 +155,20 @@ def load_bundle(tf: str, symbols, cfg: dict, requires=(),
         heldout_bars=heldout_bars,
         equity=float(cfg.get("research", {}).get("equity", 2000.0)),
         risk_pct=float(rcfg.get("risk_per_trade_pct", 0.5)),
-        max_open=int(rcfg.get("max_open_trades", 8)))
+        max_open=int(rcfg.get("max_open_trades", 8)),
+        world=load_world(paths, requires, cut))
+
+
+def load_world(paths, requires, cut=None):
+    if "world" not in requires:
+        return None
+    from ..world.context import load_context, WorldContext
+    if paths and "world" not in paths:
+        # A detached/frozen dataset cannot silently acquire a source from
+        # today's production directory when it did not retain that source.
+        from ..world import WorldHistory
+        return WorldContext(WorldHistory(()), "SOURCE_NOT_RETAINED_IN_BUNDLE", cut)
+    return load_context(paths.get("world"), as_of_ms=cut)
 
 
 def _clock(df) -> np.ndarray:
@@ -186,6 +204,11 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
         return out
 
     step = _TF_SECONDS.get(c.tf, 900)
+    if "world" in compiled.data_requires:
+        gaps = spec_evidence.missing_data(spec, list(b.frames), frames=b.frames, world=b.world)
+        if gaps:
+            out.update(verdict="untested", untested=True, context_gaps=gaps)
+            return out
     t0 = None
     for df in b.frames.values():
         first = int(_clock(df)[0])
@@ -199,7 +222,7 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
         try:
             lo, sh = compiled.entries(
                 sf, btc=b.btc, derivs=b.derivs.get(sym),
-                universe=b.universe, market=b.market, symbol=sym)
+                universe=b.universe, market=b.market, symbol=sym, world=b.world)
             fund = funding_for(sym, df, b.risk)
             mine: list = []
             r = simulate(lo, sh, df, spec.exit, b.risk, symbol=sym,
@@ -228,7 +251,7 @@ def evaluate(c, b: Bundle, draws: int = 30, seed: int = 17,
         try:
             a = null_baseline.assess(
                 compiled, sf, b.risk, r.profit_factor, btc=b.btc,
-                derivs=b.derivs.get(sym), universe=b.universe,
+                derivs=b.derivs.get(sym), universe=b.universe, world=b.world,
                 market=b.market, symbol=sym, draws=int(draws), seed=seed,
                 split=None, funding=fund)
         except Exception as e:                          # noqa: BLE001

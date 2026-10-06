@@ -156,7 +156,7 @@ def legs_for(compiled, bundle) -> list:
         try:
             lo, sh = compiled.entries(
                 sf, btc=bundle.btc, derivs=bundle.derivs.get(sym),
-                universe=bundle.universe, market=bundle.market, symbol=sym)
+                universe=bundle.universe, market=bundle.market, symbol=sym, world=bundle.world)
         except Exception as e:                          # noqa: BLE001
             log.debug(f"portfolio null entries {sym}: {e}")
             continue

@@ -116,7 +116,7 @@ MIN_COVERAGE = 0.9
 
 
 def missing_data(spec, symbols: list, feed: DerivFeed | None = None,
-                 frames: dict | None = None, ref_store=None) -> dict:
+                 frames: dict | None = None, ref_store=None, world=None) -> dict:
     """{symbol: [problems]}. Empty = honestly testable.
 
     Presence is not enough. Binance retains open interest, taker ratio and
@@ -131,8 +131,22 @@ def missing_data(spec, symbols: list, feed: DerivFeed | None = None,
     # S&P cannot score a five-year frame
     ref_needed = [r for r in spec.data_requires
                   if isinstance(r, str) and r.startswith("ref:")]
-    if not needed and not ref_needed:
+    world_needed = "world" in spec.data_requires
+    if not needed and not ref_needed and not world_needed:
         return {}
+    if world_needed:
+        import ast
+        from . import dsl
+        from .features import FeatureCtx
+        from ..world.context import load_context
+        world = world if world is not None else load_context()
+        world_queries = set()
+        for expr in (spec.entry_long, spec.entry_short, *spec.filters, spec.exit.signal_exit):
+            if not expr:
+                continue
+            for node in ast.walk(dsl.parse(expr)):
+                if isinstance(node, ast.Call) and node.func.id == 'world_observation':
+                    world_queries.add(tuple(a.value for a in node.args))
     if needed:
         feed = feed or DerivFeed()
     refs = load_refs(ref_needed, ref_store) if ref_needed else {}
@@ -144,6 +158,18 @@ def missing_data(spec, symbols: list, feed: DerivFeed | None = None,
         problems += [f"{r}: absent" for r in ref_needed
                      if r.split(":", 1)[1] not in refs]
         frame = (frames or {}).get(sym)
+        if world_needed:
+            if frame is None or not len(frame):
+                problems.append("world: historical context UNKNOWN")
+            else:
+                import numpy as np
+                sf = frames_for(frame, spec.timeframe)
+                context = FeatureCtx(sf, spec.timeframe, symbol=sym, world=world)
+                for args in sorted(world_queries):
+                    values = context.get('world_observation', args)
+                    coverage = float(np.isfinite(values.to_numpy()).mean())
+                    if coverage < MIN_COVERAGE:
+                        problems.append(f"world:{args}: historical context UNKNOWN on {1-coverage:.0%} of bars")
         if frame is not None and len(frame) and "ts" in frame.columns:
             import pandas as pd
             f0 = pd.to_datetime(frame["ts"], utc=True).iloc[0]

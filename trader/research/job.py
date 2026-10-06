@@ -32,7 +32,7 @@ def _ctxs(b) -> list:
         out.append(FeatureCtx(
             frames=b.sym_frames[sym], tf=b.tf, btc=b.btc,
             derivs=b.derivs.get(sym), universe=b.universe, market=b.market,
-            symbol=sym))
+            symbol=sym, world=b.world))
     return out
 
 

@@ -39,8 +39,8 @@ class CompiledStrategy:
     # ── vectorized path (Analyst) ────────────────────────────────────────
     def entries(self, frames: dict, btc: dict | None = None,
                 derivs: dict | None = None, universe: dict | None = None,
-                market: dict | None = None, symbol: str | None = None):
-        ctx = self._ctx(frames, btc, derivs, universe, market, symbol)
+                market: dict | None = None, symbol: str | None = None, world=None):
+        ctx = self._ctx(frames, btc, derivs, universe, market, symbol, world)
         n = len(ctx.index)
         # This accumulator is mutated below; pandas can expose a read-only view.
         keep = ctx.df['quality'].eq('VALID').to_numpy(copy=True) if 'quality' in ctx.df else np.ones(n, dtype=bool)
@@ -52,25 +52,31 @@ class CompiledStrategy:
             if self._short is not None else np.zeros(n, dtype=bool)
         # a bar cannot be both; a direction conflict resolves to no trade
         both = lo & sh
+        if ctx._world_valid is not None:
+            lo &= ctx._world_valid
+            sh &= ctx._world_valid
         return lo & ~both, sh & ~both
 
     def exit_signal(self, frames: dict, btc=None, derivs=None,
-                    universe=None, market=None, symbol: str | None = None):
+                    universe=None, market=None, symbol: str | None = None, world=None):
         if self._exit is None:
             return None
-        return dsl.evaluate_bool(
-            self._exit, self._ctx(frames, btc, derivs, universe, market,
-                                  symbol))
+        ctx = self._ctx(frames, btc, derivs, universe, market, symbol, world)
+        result = dsl.evaluate_bool(self._exit, ctx)
+        return result & ctx._world_valid if ctx._world_valid is not None else result
 
     def _ctx(self, frames, btc, derivs, universe=None,
-             market=None, symbol=None) -> FeatureCtx:
+             market=None, symbol=None, world=None) -> FeatureCtx:
         self._verify_spec()
         tf = self.spec.timeframe
         if tf not in frames:
             raise dsl.SpecError(f"spec timeframe '{tf}' not in frames "
                                 f"{sorted(frames)}")
+        if world is None and "world" in self.data_requires:
+            from ..world.context import load_context
+            world = load_context(as_of_ms=frames[tf].attrs.get('as_of_ms'))
         return FeatureCtx(frames=frames, tf=tf, btc=btc, derivs=derivs,
-                          universe=universe, market=market, symbol=symbol)
+                          universe=universe, market=market, symbol=symbol, world=world)
 
     def _verify_spec(self):
         from ..engine.trade_provenance import spec_version
@@ -135,11 +141,15 @@ class CompiledStrategy:
             btc = ({"15m": frames["BTC_1h"]}
                    if frames.get("BTC_1h") is not None else None)
             try:
+                world = getattr(snap, "world", None)
+                if world is None and "world" in self.data_requires:
+                    from ..world.context import load_context
+                    world = load_context(as_of_ms=cut)
                 lo, sh = self.entries(frames, btc=btc,
                                       derivs=getattr(snap, "derivs", None),
                                       universe=getattr(snap, "universe", None),
                                       market=getattr(snap, "market", None),
-                                      symbol=snap.symbol)
+                                      symbol=snap.symbol, world=world)
             except Exception as e:
                 # Silence here cost three authored specs their entire live
                 # career: they raised on every bar and read as "no signal".
@@ -194,6 +204,9 @@ class CompiledStrategy:
                                            or spec_fingerprint(self.spec)),
                       "signal_timeframe": tf,
                       "signal_bar_close_ms": close_ms}
+            if "world" in self.data_requires and world is not None:
+                params['world_context'] = dict(context_id=world.context_id, query_cut_ms=cut,
+                                              source_status=world.source_status)
             sources=[]
             for family, bundle in (('frames',frames),('derivs',snap.derivs),('references',snap.market)):
                 for name, source_frame in (bundle or {}).items():

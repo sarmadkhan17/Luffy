@@ -10,7 +10,10 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ..world.context import WorldContext
 
 
 def now_utc() -> datetime:
@@ -105,6 +108,7 @@ class Snapshot:
     universe: dict | None = None      # {symbol: {tf: df}} for cross-sectional
     derivs: dict | None = None        # {series: obs frame} for funding/OI/taker specs
     market: dict | None = None        # {ref key: frame} for ref() specs
+    world: WorldContext | None = None  # retained typed context; no live-model fallback
 
     anchor_frames: dict | None = None  # market context; never discretionary members
     admission_context: dict | None = None  # candidate admission or independent exposure role

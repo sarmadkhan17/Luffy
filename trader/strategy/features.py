@@ -15,12 +15,15 @@ hand-written gene schema.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
 
 from ..agents import indicators as ind
+
+if TYPE_CHECKING:
+    from ..world.context import WorldContext
 
 #: marks an argument that is a nested expression rather than a literal
 SERIES_ARG = "series"
@@ -65,8 +68,14 @@ class FeatureCtx:
     _cache: dict = field(default_factory=dict, repr=False)
 
     as_of_ms: int | None = None
+    world: WorldContext | None = None  # shared by strategy/research
+    _world_valid: object | None = field(default=None, repr=False)
 
     def __post_init__(self):
+        if self.world is not None:
+            from ..world.context import WorldContext
+            if not isinstance(self.world, WorldContext):
+                raise TypeError("world must be WorldContext")
         from ..data import market_provenance as mp
         if self.as_of_ms is None:
             self.as_of_ms = self.frames.get(self.tf, pd.DataFrame()).attrs.get('as_of_ms')
@@ -94,7 +103,8 @@ class FeatureCtx:
                     for k, v in (frames or {}).items()}
         return digest(dict(cut=self.as_of_ms, frames=ids(self.frames), btc=ids(self.btc),
                            derivs=ids(self.derivs), market=ids(self.market),
-                           universe={s:ids(f) for s,f in (self.universe or {}).items()}, symbol=self.symbol))
+                           universe={s:ids(f) for s,f in (self.universe or {}).items()}, symbol=self.symbol,
+                           world=self.world.context_id if self.world is not None else None))
 
     def bind_result(self, result, name):
         if isinstance(result, pd.Series):
@@ -125,14 +135,20 @@ class FeatureCtx:
         key = (name, self.tf, args, self.temporal_identity())
         if key not in self._cache:
             self._cache[key] = self.bind_result(FEATURES[name].fn(self, *args), name)
+        if name == 'world_observation':
+            self.require_world(self._cache[key])
         return self._cache[key]
+
+    def require_world(self, result):
+        valid = np.isfinite(result.to_numpy())
+        self._world_valid = valid if self._world_valid is None else self._world_valid & valid
 
     def scoped(self, tf: str) -> "FeatureCtx":
         """A view on a different timeframe, sharing the cache."""
         return FeatureCtx(frames=self.frames, tf=tf, btc=self.btc,
                           derivs=self.derivs, universe=self.universe,
                           market=self.market, symbol=self.symbol,
-                          _cache=self._cache, as_of_ms=self.as_of_ms)
+                          _cache=self._cache, as_of_ms=self.as_of_ms, world=self.world)
 
     def for_symbol(self, symbol: str) -> "FeatureCtx | None":
         """A view on another member of the universe at the same timeframe.
@@ -157,7 +173,48 @@ class FeatureCtx:
         # must come out honestly NaN rather than quietly wrong.
         return FeatureCtx(frames=frames, tf=self.tf, btc=self.btc,
                           derivs=None, universe=self.universe,
-                          market=self.market, symbol=symbol, _cache={}, as_of_ms=self.as_of_ms)
+                          market=self.market, symbol=symbol, _cache={}, as_of_ms=self.as_of_ms,
+                          world=self.world)
+
+
+@register("world_observation", arg_specs=((str, None, None), (str, None, None)),
+          requires=("world",))
+def world_observation(ctx: FeatureCtx, kind: str, horizon: str) -> pd.Series:
+    """Numeric exact-instrument WorldModel observation at each closed-bar cut.
+
+    Typed queries retain reasons/qualities in Series attrs; the DSL receives
+    NaN for absent, conflicting, stale, live-only or nonnumeric context.
+    """
+    from ..core.types import TF_MS
+    from ..data.market_provenance import ms
+    from ..world.context import WorldContext
+    from ..world import WorldHistory, Scope, ScopeLevel, Horizon, Quality
+    h = Horizon(horizon)
+    context = ctx.world or WorldContext(WorldHistory(()), "NOT_SUPPLIED")
+    values, receipts = [], []
+    cuts = ms(ctx.df['ts']) + TF_MS[ctx.tf]
+    # A current evaluation anchors its final row at the explicit decision
+    # cut, just like ref()/htf(). Replay rows always use their own close.
+    if ctx.as_of_ms is not None and ctx.df.attrs.get('read_mode') != 'replay' and len(cuts):
+        cuts = cuts.copy()
+        cuts[-1] = ctx.as_of_ms
+    for cut in cuts:
+        if not ctx.symbol or (ctx.as_of_ms is not None and int(cut) > ctx.as_of_ms):
+            values.append(np.nan)
+            receipts.append(dict(quality="UNKNOWN", reason="SYMBOL_OR_CUT_UNAVAILABLE"))
+            continue
+        query = context.observations(int(cut), Scope(ScopeLevel.INSTRUMENT, ctx.symbol), h, kind=kind)
+        value = query.observations[0].value if query.quality is Quality.VALID else None
+        numeric = type(value) in (int, float) and np.isfinite(value)
+        values.append(float(value) if numeric else np.nan)
+        receipts.append(dict(quality=query.quality.value if numeric else "UNKNOWN",
+                             reason=query.reason if numeric else query.reason + ":NO_NUMERIC_VALUE",
+                             as_of_ms=int(cut), model_id=query.model_id))
+    result = pd.Series(values, index=ctx.index, dtype=float)
+    valid = np.isfinite(result.to_numpy())
+    ctx._world_valid = valid if ctx._world_valid is None else ctx._world_valid & valid
+    result.attrs['world_queries'] = receipts
+    return result
 
 
 def _s(ctx: FeatureCtx, col: str) -> pd.Series:

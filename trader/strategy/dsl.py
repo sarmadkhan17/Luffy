@@ -74,6 +74,16 @@ def parse(expr: str) -> ast.Expression:
                 raise SpecError(f"{name}() takes {len(spec)} arg(s), "
                                 f"got {len(node.args)}")
             _check_args(name, node, spec)
+            if name in ('htf', 'ref', 'xs_rank', 'breadth', 'dispersion') and any(
+                    isinstance(sub, ast.Call) and isinstance(sub.func, ast.Name)
+                    and sub.func.id == 'world_observation' for sub in ast.walk(node)):
+                raise SpecError('world_observation requires its own instrument/bar cut; scoped wrappers unsupported')
+            if name == 'world_observation':
+                from ..world.model import Horizon
+                try:
+                    Horizon(node.args[1].value)
+                except ValueError:
+                    raise SpecError('world_observation: unknown typed horizon') from None
             if name == "ref":
                 _check_ref(node)
         elif isinstance(node, ast.Name):
@@ -165,7 +175,15 @@ _CMP = {ast.Lt: lambda a, b: a < b, ast.LtE: lambda a, b: a <= b,
 
 
 def evaluate(tree: ast.Expression, ctx):
-    return _eval(tree.body, ctx)
+    if hasattr(ctx, '_world_valid'):
+        ctx._world_valid = None  # research gauges have independent requirements
+    result = _eval(tree.body, ctx)
+    valid = getattr(ctx, '_world_valid', None)
+    if valid is not None and isinstance(result, pd.Series):
+        # Numeric research gauges must retain UNKNOWN even after boolean
+        # complement/comparison, just as compiled entry masks do.
+        return result.astype(float).where(valid)
+    return result
 
 
 def evaluate_bool(tree: ast.Expression, ctx) -> np.ndarray:
@@ -204,6 +222,8 @@ def _eval(node, ctx):
         if cache_key not in ctx._cache:
             args = tuple(_eval(a, ctx) for a in node.args)
             ctx._cache[cache_key] = ctx.bind_result(FEATURES[name].fn(ctx, *args), name)
+        if name == 'world_observation':
+            ctx.require_world(ctx._cache[cache_key])
         return ctx._cache[cache_key]
 
     if isinstance(node, ast.BoolOp):

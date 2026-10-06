@@ -1,0 +1,16 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_________________ test_measure_returns_percentiles_and_the_cut _________________
+/home/sarmad/trader/tests/test_research_job.py:80: in test_measure_returns_percentiles_and_the_cut
+    assert out["tf"] == "4h" and out["cut_ms"] > 0
+E   AssertionError: assert ('4h' == '4h'
+E
+E       4h and 0 > 0)
+______ test_evaluate_reports_how_many_symbols_the_bundle_actually_loaded _______
+/home/sarmad/trader/tests/test_research_job.py:107: in test_evaluate_reports_how_many_symbols_the_bundle_actually_loaded
+    assert out["loaded_symbols"] == 5
+E   assert 0 == 5
+=========================== short test summary info ============================
+FAILED tests/test_research_job.py::test_measure_returns_percentiles_and_the_cut
+FAILED tests/test_research_job.py::test_evaluate_reports_how_many_symbols_the_bundle_actually_loaded
+2 failed in 0.58s
