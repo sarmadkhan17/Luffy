@@ -11,6 +11,7 @@ import hashlib
 import json
 
 from trader.cognition import research_question as Q, research_sources as S
+from trader.cognition import source_governance as G
 
 SCHEMA = "external-research-source-registry.v1"
 ROUTER = "question-source-router.v1"
@@ -75,7 +76,11 @@ def select(source_class):
     if source_class != "academic_factors":
         raise S.ResearchSourceError("unsupported_source_class")
     src = source(_SOURCE.source_id)
-    if src.status != S.AVAILABLE or src.metadata["cost"]["value"]["paid_request_usd"] != 0:
+    decision = G.assessment({"schema": G.SCHEMA, "source_id": src.source_id,
+        "source_class": src.source_class, "access_class": "PUBLIC_FREE",
+        "scope": G.SCOPE, "metadata": src.metadata,
+        "discovery_provenance": "engineering_registered:" + REGISTRY_SHA256}, G.SCOPE)
+    if src.status != S.AVAILABLE or decision["status"] != "ADOPTED_CATALOG_ONLY":
         raise S.ResearchSourceError("paid_or_unavailable_source_not_authorized")
     return (src,)
 
