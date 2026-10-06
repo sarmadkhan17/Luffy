@@ -1,0 +1,40 @@
+{
+  "item": "QNT-03",
+  "result": "CLOSED_ARCHITECTURE_OFFLINE",
+  "engineering_commit": "a801cfdf9417d894c724e98ceb619d044d76a45a",
+  "baseline_commit": "45e825d",
+  "source_sha256": {
+    "trader/brain/analyst.py": "9a53b9f085742e00ea329f6fc85541f54e3d7b9672a6403aaa064573412b0961",
+    "trader/research/referee.py": "5fdd868b1aa9b194c219f51a24b1f0690974f17aa8b1654b050da1e5c4649b5e",
+    "trader/research/dependence.py": "7d3e69219599eb3c2e27144f534479765e5aa80cebf0e0d2a7d2718a5d6f9c48",
+    "tests/test_admission_null_gate.py": "7c8b8cc03c897eacf4b0f0ecbd54dcf8372c775bcb643bf8eb8135ff8a87e4de",
+    "tests/test_qnt03_dependence_lineage.py": "d75147e6c17eb22f954e6f0fbe17bde7aa4acd7f8e652e1b8ad0829961a0c73e",
+    "tests/test_qnt02_null_controls.py": "b13895d04e7cee90eb753774b8f03e1b26394ff1c0b5b3cde2c7b1e8c9be8cd4",
+    "tests/test_null_dependence.py": "69e0c9117596c627dbe7a3bbd36015fe971cecffb79d1ef2a9d5d7e73bbeffd4",
+    "tests/test_wrld07_relationship_state.py": "2bd2f6007e6284b191b0211001d8c81664e6adf943e33335a1e73bfef5f3e7b1",
+    "trader/research/portfolio_null.py": "d99ea82c83515c3c79d8e87af825a3446fa1522615c53d5c04393864c9cab736",
+    "trader/strategy/null_baseline.py": "ffb28d8f4b3cb8762255707c65f0ec505333861f4664a230fe8f6c670f577d8b",
+    "trader/world/relationship.py": "8b4944d34eda075f7d0788b8a4f9a79d1f0b2c9968e613b532b5ff3403750904",
+    "trader/world/replay.py": "1762a0a4d100e016e39f62cd37d0e7ea9c7c01518250484dd5ca89a373fdb8f3"
+  },
+  "pytest_executable": "/home/sarmad/.local/bin/luffy-pytest",
+  "pytest_temp_root": "/mnt/luffy-data/test-tmp/sarmad",
+  "root_before_and_after": "8.2G free, 83% used",
+  "focused": {
+    "result": "128 passed",
+    "seconds": 91.73,
+    "command": "/home/sarmad/.local/bin/luffy-pytest tests/test_qnt03_dependence_lineage.py tests/test_admission_null_gate.py tests/test_admission_records_null.py tests/test_evaluation_context.py tests/test_null_dependence.py tests/test_null_baseline.py tests/test_null_cost_symmetry.py tests/test_research_portfolio_null.py tests/test_research_referee.py tests/test_qnt02_null_controls.py tests/test_wrld07_relationship_state.py -q"
+  },
+  "adjacent": {
+    "result": "28 passed, 5 failed",
+    "seconds": 104.2,
+    "command": "/home/sarmad/.local/bin/luffy-pytest tests/test_analyst.py tests/test_analyst_tv_and_vault.py -q --tb=short"
+  },
+  "baseline_adjacent": {
+    "result": "same 5 failed",
+    "seconds": 4.82,
+    "setup": "Copy qnt03_baseline_plugin.py into a directory on /mnt/luffy-data; git show 45e825d:trader/brain/analyst.py > that_directory/analyst.py; add that_directory and repository root to PYTHONPATH; run luffy-pytest -p qnt03_baseline_plugin with the five failed node IDs in tests-adjacent-baseline.txt. This loads original Analyst in memory without altering source files."
+  },
+  "control_plane_reconciliation": "PENDING",
+  "qnt08": "CLOSER_NOT_ELIGIBLE_QNT05_UNMET"
+}

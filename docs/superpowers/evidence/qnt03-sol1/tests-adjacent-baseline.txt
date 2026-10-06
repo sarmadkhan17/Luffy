@@ -1,0 +1,40 @@
+FFFFF                                                                    [100%]
+=================================== FAILURES ===================================
+____________________ test_review_retires_a_decayed_strategy ____________________
+/home/sarmad/trader/tests/test_analyst.py:133: in test_review_retires_a_decayed_strategy
+    actions = a.review_deployed([_spec()])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+45e825d:trader/brain/analyst.py:539: in review_deployed
+    ???
+E   AttributeError: '_Journal' object has no attribute 'query'
+_____________________ test_review_keeps_a_working_strategy _____________________
+/home/sarmad/trader/tests/test_analyst.py:139: in test_review_keeps_a_working_strategy
+    assert analyst.review_deployed([_spec()]) == []
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+45e825d:trader/brain/analyst.py:539: in review_deployed
+    ???
+E   AttributeError: '_Journal' object has no attribute 'query'
+______________________ test_idle_strategy_is_not_retired _______________________
+/home/sarmad/trader/tests/test_analyst.py:144: in test_idle_strategy_is_not_retired
+    assert analyst.review_deployed(
+45e825d:trader/brain/analyst.py:539: in review_deployed
+    ???
+E   AttributeError: '_Journal' object has no attribute 'query'
+_______ test_each_member_carries_the_weight_the_orchestrator_will_apply ________
+/home/sarmad/trader/tests/test_analyst_tv_and_vault.py:150: in test_each_member_carries_the_weight_the_orchestrator_will_apply
+    assert out["members"][0]["spec"] == "strong"
+E   AssertionError: assert 'weak' == 'strong'
+E     
+E     - strong
+E     + weak
+_________________ test_stored_evidence_drives_the_blend_weight _________________
+/home/sarmad/trader/tests/test_analyst_tv_and_vault.py:223: in test_stored_evidence_drives_the_blend_weight
+    assert strategy_weights(_J(), [spec], "RANGING")[spec.id] > 1.0
+E   assert 1.0 > 1.0
+=========================== short test summary info ============================
+FAILED tests/test_analyst.py::test_review_retires_a_decayed_strategy - Attrib...
+FAILED tests/test_analyst.py::test_review_keeps_a_working_strategy - Attribut...
+FAILED tests/test_analyst.py::test_idle_strategy_is_not_retired - AttributeEr...
+FAILED tests/test_analyst_tv_and_vault.py::test_each_member_carries_the_weight_the_orchestrator_will_apply
+FAILED tests/test_analyst_tv_and_vault.py::test_stored_evidence_drives_the_blend_weight
+5 failed in 4.82s

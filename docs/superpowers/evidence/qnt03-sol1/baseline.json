@@ -1,0 +1,34 @@
+{
+  "baseline": "45e825d",
+  "analyst_correlated_votes": [
+    true,
+    {
+      "chosen_timeframe": "4h",
+      "redundancy": {
+        "max_overlap": 0.1,
+        "twin": ""
+      },
+      "persistence": {},
+      "null_median_percentile": 0.95,
+      "null_beats_90pct_on": "15/15",
+      "null_consistency_p": 2.9999999999999904e-15,
+      "null_symbols": 15
+    }
+  ],
+  "incomplete_pairs": {
+    "rho_bar": 0.722,
+    "pairs": 21,
+    "draws": 40
+  },
+  "unaligned_calendars": {
+    "rho_bar": 0.7167,
+    "pairs": 28,
+    "draws": 40
+  },
+  "fixed_incomplete_pairs": {
+    "rho_bar": null,
+    "pairs": 21,
+    "draws": 40,
+    "reason": "incomplete pairwise null dependence"
+  }
+}
