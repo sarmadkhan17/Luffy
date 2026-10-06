@@ -1,10 +1,10 @@
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.8-obs02-dashboard-readiness-closed
+Version: 1.9-obs03-first-cycle-closed
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
-Terminal NEXT: **OBS-02 — CLOSED_ENGINEERING_ONLY**. OBS-03 is recommended only; no next item is selected or started. PERF-01/PERF-03 remain BLOCKED; no runtime or trading authority follows.
+Terminal NEXT: **OBS-03 — CLOSED_ENGINEERING_ONLY**. PERF-01 is recommended only; no next item is selected or started. PERF-01/PERF-03 remain BLOCKED; no runtime or trading authority follows.
 
 ## Status definitions
 
@@ -30,7 +30,7 @@ Terminal NEXT: **OBS-02 — CLOSED_ENGINEERING_ONLY**. OBS-03 is recommended onl
 
 **One data set**: Maintain this YAML as canonical detailed data. Dashboard Tracker reads validated YAML and NEXT. Markdown is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization and adoption checks.
 
-**Current work**: OBS-02 is terminal CLOSED with current-Kernel boot/health attachment gating and isolated fixture proof. No successor is selected; OBS-03 is recommended only. PERF-01 and PERF-03 remain unchanged and BLOCKED. No runtime, provider or trading activation is authorized.
+**Current work**: OBS-03 is terminal CLOSED with exact first-cycle monotonic boundary and complete shutdown measurement fixtures. No successor is selected; PERF-01 is recommended only for its remaining attribution/proof work. PERF-01 and PERF-03 rows remain unchanged. No runtime, provider or trading activation is authorized.
 
 **Activation**: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers, a restart or a scope expansion.
 
@@ -5328,32 +5328,32 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: Cross-cutting
 - **item_type**: DEFECT
 - **release_scope**: BASELINE
-- **status**: AWAITING_EVIDENCE
+- **status**: CLOSED
 - **why_needed**: The prepared collector measured from launch instead.
 - **closure_condition**: One monotonic first-cycle-start boundary defines the hour; first/cold/shutdown cycles are not discarded or relabelled.
 - **failure_regression_proof**: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed boundaries without reopening unrelated work.
 - **dependencies**: None
 - **owner_role**: Assigned local engineering session
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: SEE_EVIDENCE
-- **runtime_evidence**: SEE_SCOPE_AND_EVIDENCE
+- **engineering_assignee**: SOL / Codex local engineering session
+- **implementation_evidence**: docs/tracker/evidence/obs03-first-cycle-sol/source-manifest.json; prepared-collector.patch
+- **runtime_evidence**: Exact retained S16 boundary bytes inspected; offline fixture replay only, no fresh runtime launch.
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: S16 reports the observation clock is bound to first-cycle start and separates shutdown-overlapping cycles. Latest attempt: 240.033s window, zero completed window cycles, first cycle finished at 259.776s during shutdown. Exact monotonic-boundary artifact remains to be inspected.
+- **latest_evidence**: First-cycle monotonic clock already fixed in executed PERF harness. Exact retained run verified; late timeout cycles and final flush now retained with original sequence/first identity. 175 focused regressions and final 27 timing cases pass.
 - **source_ids**: S11, S15
 - **source_sections**: Parent requirement(s): RUN-03
-- **next_proof**: Resolve within the linked parent/active task; capture exact evidence before closure.
+- **next_proof**: Exact closing condition satisfied by retained source, historical boundary and metadata-only fixtures; no runtime or provider activation authorized.
 - **acceptance_basis**: Existing requirement/observed incident; not a new feature.
 - **acceptance_status**: OWNER_CONTRACT_OR_REPORTED_FAILURE
 - **priority**: CURRENT
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: ccd9f25ce6aea209b6c2d4f61d757a4a44a274eb
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **legacy_ids**:
 - **parent_work**: WORK-01
 - **parent_ids**: RUN-03
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/obs03-first-cycle-sol/closure.json
+- **evidence_validity**: Pinned source and historical evidence plus offline fixtures; no new live hour or performance readiness claimed.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 

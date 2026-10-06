@@ -1358,20 +1358,20 @@ perf03_capture_r1:
   trading_activated: false
   perf01: UNCHANGED; BLOCKED/UNKNOWN
 current_active_work:
-  id: OBS-02
+  id: OBS-03
   status: CLOSED
   mode: ENGINEERING_ONLY
-  objective: Gate Dashboard attachment on verified current Kernel identity, completed boot and truthful current
-    health.
+  objective: Bind observation to the actual first-cycle monotonic BEGIN and retain cold and shutdown-overlapping
+    cycles.
   implementation_started: true
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
   tracker_source: docs/tracker/LUFFY_Product_Tracker_v1.yaml
-  implementation_commit: dba198ce9fc7845b80cacde24444a6834b0577ca
+  implementation_commit: ccd9f25ce6aea209b6c2d4f61d757a4a44a274eb
   evidence:
-  - docs/tracker/evidence/obs02-dashboard-readiness-sol/closure.json
-  - docs/tracker/evidence/obs02-dashboard-readiness-sol/REPORT.md
-  next_recommended_item: OBS-03
+  - docs/tracker/evidence/obs03-first-cycle-sol/closure.json
+  - docs/tracker/evidence/obs03-first-cycle-sol/REPORT.md
+  next_recommended_item: PERF-01
   next_item_selected: false
   next_item_started: false

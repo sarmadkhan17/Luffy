@@ -1,0 +1,4 @@
+PASS: 177 rows; only OBS-03 changed; all exact closing conditions preserved.
+PASS: STATE/NEXT only terminal work package changed; activation flags false.
+PASS: Dashboard read-only tracker AVAILABLE; OBS-03 selected terminal; status counts and bundle hashes synchronized.
+PASS: PERF-01/PERF-03/RUN-01/OBS-04 rows unchanged after closure.

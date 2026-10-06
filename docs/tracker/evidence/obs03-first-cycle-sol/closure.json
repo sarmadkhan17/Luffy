@@ -1,0 +1,44 @@
+{
+  "schema": "obs03-closure.v1",
+  "tracker_id": "OBS-03",
+  "lane": "SOL",
+  "result": "CLOSED",
+  "closing_condition": "One monotonic first-cycle-start boundary defines the hour; first/cold/shutdown cycles are not discarded or relabelled.",
+  "implementation_commit": "ccd9f25ce6aea209b6c2d4f61d757a4a44a274eb",
+  "scope": "Prepared collector and historical evidence/offline fixture proof; no fresh runtime.",
+  "existing_first_cycle_fix_verified": true,
+  "tests": {
+    "focused": "175 passed in 19.92s",
+    "final_timing": "27 passed in 1.35s"
+  },
+  "kernel_dashboard_live_launches": 0,
+  "provider_calls": 0,
+  "seconds_240_semantics_unchanged": true,
+  "window_seconds": 3600,
+  "run01_unchanged": true,
+  "obs04_controller_unchanged": true,
+  "cross_tracker": {
+    "RUN-01": {
+      "status": "EVIDENCE_TO_MAP",
+      "row_changed": false,
+      "closed_by_this_package": false
+    },
+    "OBS-04": {
+      "status": "CLOSED",
+      "row_changed": false,
+      "closed_by_this_package": false
+    },
+    "PERF-01": {
+      "status": "OPEN",
+      "row_changed": false,
+      "closed_by_this_package": false
+    },
+    "PERF-03": {
+      "status": "BLOCKED",
+      "row_changed": false,
+      "closed_by_this_package": false
+    }
+  },
+  "next_recommended_p0": "PERF-01",
+  "next_selected": false
+}

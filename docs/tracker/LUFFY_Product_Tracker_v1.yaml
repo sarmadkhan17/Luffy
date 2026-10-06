@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.8-obs02-dashboard-readiness-closed
+  version: 1.9-obs03-first-cycle-closed
   created_date: '2026-10-05'
   title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -13,7 +13,7 @@ metadata:
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness
     or full prior-chat reconciliation. No functionality or evidence has been independently retested by creating
     this tracker.
-  current_active_item: OBS-02
+  current_active_item: OBS-03
   current_active_result: CLOSED_ENGINEERING_ONLY
   row_count: 177
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This
@@ -23,12 +23,12 @@ metadata:
   status_counts:
     IN_PROGRESS: 0
     EVIDENCE_TO_MAP: 130
-    AWAITING_EVIDENCE: 12
+    AWAITING_EVIDENCE: 11
     AWAITING_OWNER: 14
     DEFERRED: 2
     BLOCKED: 2
     OPEN: 5
-    CLOSED: 12
+    CLOSED: 13
   workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged
     and excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
@@ -38,7 +38,7 @@ metadata:
   current_runtime_item: PERF-01
   current_runtime_result: BLOCKED
   next_diagnostic_item: null
-  next_recommended_item: OBS-03
+  next_recommended_item: PERF-01
   next_runtime_execution_authorized: false
   owner_representation_decision:
     date: '2026-10-05'
@@ -51,9 +51,9 @@ metadata:
     navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope;
       the owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product
       row is silently reopened or added.
-  last_terminal_item: OBS-02
+  last_terminal_item: OBS-03
   last_terminal_result: CLOSED
-  last_terminal_evidence: docs/tracker/evidence/obs02-dashboard-readiness-sol/closure.json
+  last_terminal_evidence: docs/tracker/evidence/obs03-first-cycle-sol/closure.json
 status_definitions:
 - status: EVIDENCE_TO_MAP
   meaning: Existing requirement recorded; exact row-level evidence has not yet been linked. This is NOT a finding
@@ -82,9 +82,9 @@ operating_rules:
     is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization
     and adoption checks.
 - rule: Current work
-  detail: OBS-02 is terminal CLOSED with current-Kernel boot/health attachment gating and isolated fixture proof.
-    No successor is selected; OBS-03 is recommended only. PERF-01 and PERF-03 remain unchanged and BLOCKED.
-    No runtime, provider or trading activation is authorized.
+  detail: OBS-03 is terminal CLOSED with exact first-cycle monotonic boundary and complete shutdown measurement
+    fixtures. No successor is selected; PERF-01 is recommended only for its remaining attribution/proof work. PERF-01
+    and PERF-03 rows remain unchanged. No runtime, provider or trading activation is authorized.
 - rule: Activation
   detail: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers,
     a restart or a scope expansion.
@@ -6620,7 +6620,7 @@ items:
   stage: Cross-cutting
   item_type: DEFECT
   release_scope: BASELINE
-  status: AWAITING_EVIDENCE
+  status: CLOSED
   required_behavior: Measure the observation hour from actual first-cycle start.
   why_needed: The prepared collector measured from launch instead.
   closure_condition: One monotonic first-cycle-start boundary defines the hour; first/cold/shutdown cycles are not
@@ -6629,31 +6629,33 @@ items:
     boundaries without reopening unrelated work.
   dependencies: []
   owner_role: Assigned local engineering session
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: SEE_EVIDENCE
-  runtime_evidence: SEE_SCOPE_AND_EVIDENCE
+  engineering_assignee: SOL / Codex local engineering session
+  implementation_evidence: docs/tracker/evidence/obs03-first-cycle-sol/source-manifest.json; prepared-collector.patch
+  runtime_evidence: Exact retained S16 boundary bytes inspected; offline fixture replay only, no fresh runtime launch.
   visual_approval: NOT_APPLICABLE
-  latest_evidence: 'S16 reports the observation clock is bound to first-cycle start and separates shutdown-overlapping
-    cycles. Latest attempt: 240.033s window, zero completed window cycles, first cycle finished at 259.776s during
-    shutdown. Exact monotonic-boundary artifact remains to be inspected.'
+  latest_evidence: First-cycle monotonic clock already fixed in executed PERF harness. Exact retained run verified;
+    late timeout cycles and final flush now retained with original sequence/first identity. 175 focused regressions
+    and final 27 timing cases pass.
   source_ids:
   - S11
   - S15
   source_sections: 'Parent requirement(s): RUN-03'
-  next_proof: Resolve within the linked parent/active task; capture exact evidence before closure.
+  next_proof: Exact closing condition satisfied by retained source, historical boundary and metadata-only fixtures;
+    no runtime or provider activation authorized.
   acceptance_basis: Existing requirement/observed incident; not a new feature.
   acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
   priority: CURRENT
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: ccd9f25ce6aea209b6c2d4f61d757a4a44a274eb
+  work_authorized: true
+  updated: '2026-10-06'
   legacy_ids: ''
   parent_work: WORK-01
   parent_ids:
   - RUN-03
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: docs/tracker/evidence/obs03-first-cycle-sol/closure.json
+  evidence_validity: Pinned source and historical evidence plus offline fixtures; no new live hour or performance
+    readiness claimed.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 - id: OBS-04
@@ -7751,6 +7753,14 @@ change_log:
   reason: Explicit SOL OBS-02 only; no branch merge or live service launch; every other tracker row and closing
     condition preserved.
   evidence: docs/tracker/evidence/obs02-dashboard-readiness-sol/closure.json
+  actor: SOL / Codex local engineering session
+- date: '2026-10-06'
+  event: OBS03_FIRST_CYCLE_BOUNDARY_AND_LATE_MEASUREMENTS_CLOSED
+  item: OBS-03
+  before: AWAITING_EVIDENCE; executed first-cycle timing fix uninspected, late shutdown cycles unrecorded
+  after: CLOSED; one original monotonic BEGIN boundary and all late cycle records retained
+  reason: Explicit SOL OBS-03 only; no services or providers launched; every other row and closing condition unchanged.
+  evidence: docs/tracker/evidence/obs03-first-cycle-sol/closure.json
   actor: SOL / Codex local engineering session
 sdd_section_coverage:
 - section: 1
