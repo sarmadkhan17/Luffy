@@ -1,6 +1,6 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.19-own03-boundary-sol",
+  "snapshot_version": "1.20-own04-state-sol",
   "control_baseline_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 378237,
-      "sha256": "ab921801f05cdf87d7d1ee35df5c2ad082f9f2230a4e73a19067241921b546e8",
+      "bytes": 379209,
+      "sha256": "759c16c5de2bb40e8005b54c60f659d1af7721dd5238a611449225512e7a1cbf",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 377907,
-      "sha256": "4e80762845852586fd10c9a8691038c55b1f4bc1e8bf18022db75e559fb1db68",
+      "bytes": 379079,
+      "sha256": "f4df6a49fabf4ca79214adb3780a1e7adba7e538d02231407ae2a5140b6c7f3b",
       "synchronization_required": false
     },
     {
@@ -92,11 +92,12 @@
     ],
     "current_blocked_items": [
       "WORK-01",
-      "PERF-03"
+      "PERF-03",
+      "OWN-04"
     ],
-    "next_recommended_item": "OWN-04",
+    "next_recommended_item": "ACC-03",
     "eligible_items": [
-      "OWN-04",
+      "ACC-03",
       "DATA-08",
       "GUI-01",
       "GUI-02",
@@ -112,9 +113,9 @@
     "next_item_selected": false,
     "runtime_execution_authorized": false,
     "selection_status": "NO_ACTIVE_PACKAGE",
-    "selection_reason": "RISK-01 closed with retained offline entry-permission evidence. OWN-04 remains the next GUI dependency recommendation only; no successor selected. Existing CLOSED OBS-05 slot retained for reader compatibility.",
-    "last_terminal_item": "RISK-01",
-    "last_terminal_result": "CLOSED_ENGINEERING_ONLY"
+    "selection_reason": "OWN-04 state-display fixes and offline evidence mapped; terminal BLOCKED on unchanged MON-01/MON-05 dependencies. ACC-03 is the next independent GUI-01 evidence recommendation only, unselected. Deferred SEC-01/RUN-01/GOV-07 and activation gates preserved.",
+    "last_terminal_item": "OWN-04",
+    "last_terminal_result": "BLOCKED_DEPENDENCY_EVIDENCE"
   },
   "control_snapshot": {
     "id": "gov07-identity-sol-2026-10-06",
@@ -208,6 +209,22 @@
     "evidence": "docs/tracker/evidence/own03-boundary-sol/closure.yaml",
     "implementation_gap": "NONE_DEMONSTRATED",
     "next_gui_dependency": "OWN-04",
+    "successor_selected": false,
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false
+  },
+  "own04_state_terminal": {
+    "id": "OWN-04",
+    "status": "BLOCKED",
+    "result": "BLOCKED_DEPENDENCY_EVIDENCE",
+    "evidence": "docs/tracker/evidence/own04-state-sol/closure.yaml",
+    "implementation_gap": "DEMONSTRATED_DISPLAY_GAPS_FIXED_OFFLINE",
+    "remaining_dependencies": [
+      "MON-01",
+      "MON-05"
+    ],
+    "next_gui_dependency": "ACC-03",
     "successor_selected": false,
     "runtime_execution_authorized": false,
     "provider_enablement_authorized": false,

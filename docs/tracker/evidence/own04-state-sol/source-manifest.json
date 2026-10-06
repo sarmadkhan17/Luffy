@@ -1,0 +1,114 @@
+{
+  "implementation_revision": "0cc582e441bba5c2b1262844f981ad6dfe15bfb3",
+  "scope": "offline source identity, not loaded deployment identity",
+  "files": [
+    {
+      "path": "SDD.md",
+      "sha256": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28"
+    },
+    {
+      "path": "config.yaml",
+      "sha256": "12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17"
+    },
+    {
+      "path": "data/doctrine.json",
+      "sha256": "e174dbe8139f729b0224821520c4c0c4b1e6a50802026283bc3ba58a759f4c59"
+    },
+    {
+      "path": "frontend/src/adapters/contracts.ts",
+      "sha256": "917d000ccba1b50b333131c2b1ced7af801e93caf44f0224bb414f61d3cd97c5"
+    },
+    {
+      "path": "frontend/src/adapters/live.ts",
+      "sha256": "974721bbee7858d7943b7530bd3c74ed1314fc4d544d1cedd83021ce35207964"
+    },
+    {
+      "path": "frontend/src/components/HealthStatus.tsx",
+      "sha256": "24b125cf8bba4c4f4dbd12bcedd473cbf9d8e8c7ec2428b7462ecc3eed333e16"
+    },
+    {
+      "path": "frontend/src/telemetryExpiry.ts",
+      "sha256": "b322001c8515d0ae8fd67e9667a96989f85fe93302ef4bc21c0ca5d6b4cb2886"
+    },
+    {
+      "path": "frontend/src/useOwnerTelemetry.ts",
+      "sha256": "a79c8e9c24c303e80c5b56151a3c5d1a239eba3755ca5b82887e25e56b05756a"
+    },
+    {
+      "path": "frontend/src/views/GraphView.tsx",
+      "sha256": "cd94a075a7d7401396d12f59c82ee887d696de5390df5ac4e1142f64caecd8c3"
+    },
+    {
+      "path": "frontend/src/views/LiveReads.tsx",
+      "sha256": "0ce1a13e8a3de6c976904b4707738da33beddcf9a8f00e5accd973fcf0112621"
+    },
+    {
+      "path": "frontend/src/views/Overview.tsx",
+      "sha256": "c6297ad863b3a6108d29a1e7d7eb8a4a4405d4ef0ac27452875bbd1fb780b9c2"
+    },
+    {
+      "path": "frontend/tests/browser/live.spec.ts",
+      "sha256": "ce32ecf9854e05a8042b0f278d1511ee65c96f5ed4042aff448023f1f2e064af"
+    },
+    {
+      "path": "frontend/tests/browser/own04.spec.ts",
+      "sha256": "d7bfe91fd7079cf765ee4a762ae7dc34ff850eb818672a1dbb6797b3f815b73f"
+    },
+    {
+      "path": "frontend/tests/own04.test.tsx",
+      "sha256": "8e5376c5c630ec3b7b919d3e3684d894ac52265ba32dea072548661a2cdb18c4"
+    },
+    {
+      "path": "org.yaml",
+      "sha256": "736219894a8aa57e8d1e640f5a8df133a41f9aa935c7df29acb501f9a85774ea"
+    },
+    {
+      "path": "tests/test_final_audit_heartbeat_age.py",
+      "sha256": "4177436f937521eb0664f74f29062999b249acf112e6a9b00794438fdd2af441"
+    },
+    {
+      "path": "tests/test_own04_state_truth.py",
+      "sha256": "c8ee9ad8a81147f30d6acd057326e3f60049483a308d9a8e8a8b48ae6570434d"
+    },
+    {
+      "path": "tests/test_owner_frontend_api.py",
+      "sha256": "873672b9368e7ff5c21424e65c0c9c4e25a378e2efec8cf1eea03e08ffccc10e"
+    },
+    {
+      "path": "tests/test_stage1_recovery_monitoring.py",
+      "sha256": "f37cffac9518311af254fec5395e40ade9b0a23231ce3d98a7101c21718048f0"
+    },
+    {
+      "path": "trader/dashboard/owner_api.py",
+      "sha256": "142af399d834a33c4911bf90efb65ebbdcc7a86af3e5fa08ec45cbaf98c95e67"
+    },
+    {
+      "path": "trader/dashboard/owner_reads.py",
+      "sha256": "f0c758d14c217273f2f1f800ca605baba2a17ef6c2fedbe105568f55703c8b04"
+    },
+    {
+      "path": "trader/dashboard/owner_runtime.py",
+      "sha256": "5cd8a2f1681405603e735d22bc607bd625f64c6bc7709d764dbca74aa7d137bb"
+    },
+    {
+      "path": "trader/engine/watchdog.py",
+      "sha256": "ebb9ba45a7cc10002a4d56f22c87bad874208c5d730aa73856027fc1a3a637eb"
+    },
+    {
+      "path": "trader/observability/safety.py",
+      "sha256": "0dec2a0b7a9eb950f101757ef7434abfaa7b3b13e90d33459d3b4953464fec61"
+    },
+    {
+      "path": "trader/owner/queries.py",
+      "sha256": "2b760f5a1a251f9062fae9f46478c93dc1a4df892509a3a96b369b812ad43285"
+    },
+    {
+      "path": "trader/owner/service.py",
+      "sha256": "c0dcaae8f333eb62301fa1516dcd26a944b2ab72d490a8338997ea1700356591"
+    },
+    {
+      "path": "trader/runtime_identity.py",
+      "sha256": "7eb62da6392645b06380c96a79fe9b42cccf5c93ca53795056bcfd13dda13ffb"
+    }
+  ]
+}

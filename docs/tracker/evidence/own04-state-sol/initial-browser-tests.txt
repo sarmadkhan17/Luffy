@@ -1,0 +1,143 @@
+
+> luffy-owner-frontend-preview@0.1.0 test:browser
+> playwright test tests/browser/own04.spec.ts tests/browser/live.spec.ts --grep OWN-04|overview binds|stale protection|missing sections|Live System|backend failure
+
+[WebServer] (node:1483157) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1483195) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1483292) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1483325) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1483361) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1483381) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[WebServer] (node:1483452) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1483465) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1483501) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:1483514) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 6 tests using 1 worker
+
+(node:1483620) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 tests/browser/live.spec.ts:22:1 › LIVE overview binds real backend values, never fixtures (220ms)
+(node:1483651) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 tests/browser/live.spec.ts:44:1 › stale protection can never appear healthy (117ms)
+(node:1483701) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  3 tests/browser/live.spec.ts:77:1 › LIVE backend failure cannot fall back to DEMO fixtures (171ms)
+(node:1483761) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  4 tests/browser/live.spec.ts:357:1 › Live System separates architecture, telemetry, stale and missing (118ms)
+(node:1483805) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  5 tests/browser/own04.spec.ts:6:1 › OWN-04 overview labels permission separately from unknown process evidence (104ms)
+(node:1483873) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  6 tests/browser/own04.spec.ts:12:1 › OWN-04 cached activity ages locally and disconnect clears current activity (98ms)
+
+
+  1) tests/browser/live.spec.ts:22:1 › LIVE overview binds real backend values, never fixtures ─────
+
+    Error: browserType.launch: Failed to launch chromium because executable doesn't exist at /home/sarmad/.config/codex-second/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome
+
+    Error Context: test-results/live-LIVE-overview-binds-real-backend-values-never-fixtures/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/live-LIVE-overview-binds-real-backend-values-never-fixtures/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/live-LIVE-overview-binds-real-backend-values-never-fixtures/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) tests/browser/live.spec.ts:44:1 › stale protection can never appear healthy ───────────────────
+
+    Error: browserType.launch: Failed to launch chromium because executable doesn't exist at /home/sarmad/.config/codex-second/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome
+
+    Error Context: test-results/live-stale-protection-can-never-appear-healthy/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/live-stale-protection-can-never-appear-healthy/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/live-stale-protection-can-never-appear-healthy/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) tests/browser/live.spec.ts:77:1 › LIVE backend failure cannot fall back to DEMO fixtures ──────
+
+    Error: browserType.launch: Failed to launch chromium because executable doesn't exist at /home/sarmad/.config/codex-second/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome
+
+    Error Context: test-results/live-LIVE-backend-failure-cannot-fall-back-to-DEMO-fixtures/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/live-LIVE-backend-failure-cannot-fall-back-to-DEMO-fixtures/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/live-LIVE-backend-failure-cannot-fall-back-to-DEMO-fixtures/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) tests/browser/live.spec.ts:357:1 › Live System separates architecture, telemetry, stale and missing 
+
+    Error: browserType.launch: Failed to launch chromium because executable doesn't exist at /home/sarmad/.config/codex-second/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome
+
+    Error Context: test-results/live-Live-System-separates-ca0f6-telemetry-stale-and-missing/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/live-Live-System-separates-ca0f6-telemetry-stale-and-missing/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/live-Live-System-separates-ca0f6-telemetry-stale-and-missing/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) tests/browser/own04.spec.ts:6:1 › OWN-04 overview labels permission separately from unknown process evidence 
+
+    Error: browserType.launch: Failed to launch chromium because executable doesn't exist at /home/sarmad/.config/codex-second/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome
+
+    Error Context: test-results/own04-OWN-04-overview-labe-0f621-om-unknown-process-evidence/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/own04-OWN-04-overview-labe-0f621-om-unknown-process-evidence/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/own04-OWN-04-overview-labe-0f621-om-unknown-process-evidence/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) tests/browser/own04.spec.ts:12:1 › OWN-04 cached activity ages locally and disconnect clears current activity 
+
+    Error: browserType.launch: Failed to launch chromium because executable doesn't exist at /home/sarmad/.config/codex-second/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome
+
+    Error Context: test-results/own04-OWN-04-cached-activi-b4bc3-ect-clears-current-activity/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/own04-OWN-04-cached-activi-b4bc3-ect-clears-current-activity/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/own04-OWN-04-cached-activi-b4bc3-ect-clears-current-activity/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6 failed
+    tests/browser/live.spec.ts:22:1 › LIVE overview binds real backend values, never fixtures ──────
+    tests/browser/live.spec.ts:44:1 › stale protection can never appear healthy ────────────────────
+    tests/browser/live.spec.ts:77:1 › LIVE backend failure cannot fall back to DEMO fixtures ───────
+    tests/browser/live.spec.ts:357:1 › Live System separates architecture, telemetry, stale and missing 
+    tests/browser/own04.spec.ts:6:1 › OWN-04 overview labels permission separately from unknown process evidence 
+    tests/browser/own04.spec.ts:12:1 › OWN-04 cached activity ages locally and disconnect clears current activity 

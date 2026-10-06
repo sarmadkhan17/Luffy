@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.19-own03-boundary-sol
+  version: 1.20-own04-state-sol
   created_date: '2026-10-05'
   title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -22,13 +22,13 @@ metadata:
   pending_adoption: null
   status_counts:
     IN_PROGRESS: 0
-    EVIDENCE_TO_MAP: 121
+    EVIDENCE_TO_MAP: 119
     AWAITING_EVIDENCE: 11
     AWAITING_OWNER: 14
     DEFERRED: 5
-    BLOCKED: 2
+    BLOCKED: 3
     OPEN: 4
-    CLOSED: 21
+    CLOSED: 22
   workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged
     and excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
@@ -38,7 +38,7 @@ metadata:
   current_runtime_item: PERF-01
   current_runtime_result: BLOCKED
   next_diagnostic_item: null
-  next_recommended_item: OWN-04
+  next_recommended_item: ACC-03
   next_runtime_execution_authorized: false
   owner_representation_decision:
     date: '2026-10-05'
@@ -51,9 +51,9 @@ metadata:
     navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope;
       the owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product
       row is silently reopened or added.
-  last_terminal_item: RISK-01
-  last_terminal_result: CLOSED_ENGINEERING_ONLY
-  last_terminal_evidence: docs/tracker/evidence/risk01-entry-permission/closure.yaml
+  last_terminal_item: OWN-04
+  last_terminal_result: BLOCKED_DEPENDENCY_EVIDENCE
+  last_terminal_evidence: docs/tracker/evidence/own04-state-sol/closure.yaml
   control_snapshot:
     id: gov07-identity-sol-2026-10-06
     repository_revision: 82431136ac68ff72325af301bac43b19b7d3ecd6
@@ -132,10 +132,9 @@ operating_rules:
     is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization
     and adoption checks.
 - rule: Current work
-  detail: OWN-02 CLOSED at pinned architecture/offline scope; no implementation gap demonstrated. OWN-03 is
-    next GUI dependency recommendation only, unselected. SEC-01, RUN-01 and GOV-07 remain deferred and transitively
-    excluded from current build blockers. Loaded deployment remains UNKNOWN. Existing CLOSED OBS-05 NEXT slot
-    retained for reader compatibility; no activation authorized.
+  detail: OWN-04 state fixes and offline evidence mapped; BLOCKED on unchanged MON-01/MON-05 dependency evidence.
+    ACC-03 recommendation only, unselected. SEC-01/RUN-01/GOV-07 remain deferred; loaded deployment UNKNOWN.
+    No activation authorized.
 - rule: Activation
   detail: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers,
     a restart or a scope expansion.
@@ -5248,41 +5247,45 @@ items:
   stage: '8'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: BLOCKED
   required_behavior: Report declared versus observed system state honestly.
   why_needed: An architecture diagram or stored ACTIVE value is not runtime truth.
   closure_condition: Current processes, source age, observed work, control and unavailable telemetry are distinct
     from configured/declared state.
-  failure_regression_proof: Stopped, waiting, failed or intentionally disabled workers cannot display active fabricated
-    activity.
+  failure_regression_proof: Stopped, waiting, failed or intentionally disabled workers cannot display active
+    fabricated activity.
   dependencies:
   - MON-01
   - MON-05
   owner_role: Owner interface owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: SOL
+  implementation_evidence: EXACT_SOURCE_AND_OFFLINE_API_FRONTEND_BROWSER
+  runtime_evidence: OFFLINE_FIXTURE_ONLY; loaded deployment UNKNOWN
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 'Exact OWN-04 state map and bounded fixes: matching process/heartbeat identity, publication
+    vs successful-work age, stored control permission, configured disabled vs observed report, local expiry/disconnect
+    and invalid collector clocks. Offline tests prove conservative UNKNOWN/stale presentation. Unchanged MON-01/MON-05
+    dependencies prevent full closure; MON-05 retains attribution/overhead/wait gaps.'
   source_ids:
   - S01
   - S02
   - S10
   - S14
-  source_sections: §25.3
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  source_sections: "\xA725.3"
+  next_proof: Reconcile exact MON-01/MON-05 architecture/offline dependency evidence under their own scope.
+    MON-05 retained attribution/overhead/wait gaps remain; no live Kernel/provider/trading required for current
+    build. Revalidate OWN-04 after dependency reconciliation.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
-  acceptance_status: DRAFT_VERIFICATION_DETAIL
+  acceptance_status: SDD_DEFINED_OFFLINE_BEHAVIOR_VERIFIED_DEPENDENCIES_PENDING
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: 0cc582e441bba5c2b1262844f981ad6dfe15bfb3
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: docs/tracker/evidence/own04-state-sol/closure.yaml
+  evidence_validity: Pinned source, API/owner-read/frontend/browser fixtures only; not loaded runtime or owner
+    visual acceptance.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 - id: GUI-01
@@ -8678,9 +8681,10 @@ current_build_selection:
   current_blocked_items:
   - WORK-01
   - PERF-03
-  next_recommended_item: OWN-04
-  eligible_items:
   - OWN-04
+  next_recommended_item: ACC-03
+  eligible_items:
+  - ACC-03
   - DATA-08
   - GUI-01
   - GUI-02
@@ -8697,11 +8701,11 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: RISK-01 closed with retained offline entry-permission evidence. OWN-04 remains the next
-    GUI dependency recommendation only; no successor selected. Existing CLOSED OBS-05 slot retained for reader
-    compatibility.
-  last_terminal_item: RISK-01
-  last_terminal_result: CLOSED_ENGINEERING_ONLY
+  selection_reason: OWN-04 state-display fixes and offline evidence mapped; terminal BLOCKED on unchanged MON-01/MON-05
+    dependencies. ACC-03 is the next independent GUI-01 evidence recommendation only, unselected. Deferred
+    SEC-01/RUN-01/GOV-07 and activation gates preserved.
+  last_terminal_item: OWN-04
+  last_terminal_result: BLOCKED_DEPENDENCY_EVIDENCE
 
 own02_authority_closure:
   id: OWN-02
@@ -8722,6 +8726,21 @@ own03_boundary_closure:
   evidence: docs/tracker/evidence/own03-boundary-sol/closure.yaml
   implementation_gap: NONE_DEMONSTRATED
   next_gui_dependency: OWN-04
+  successor_selected: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+
+own04_state_terminal:
+  id: OWN-04
+  status: BLOCKED
+  result: BLOCKED_DEPENDENCY_EVIDENCE
+  evidence: docs/tracker/evidence/own04-state-sol/closure.yaml
+  implementation_gap: DEMONSTRATED_DISPLAY_GAPS_FIXED_OFFLINE
+  remaining_dependencies:
+  - MON-01
+  - MON-05
+  next_gui_dependency: ACC-03
   successor_selected: false
   runtime_execution_authorized: false
   provider_enablement_authorized: false

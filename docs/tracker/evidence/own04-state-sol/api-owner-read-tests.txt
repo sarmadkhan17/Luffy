@@ -1,0 +1,48 @@
+........................................................................ [ 19%]
+........................................................................ [ 38%]
+.....................F.................................................. [ 58%]
+........................................................................ [ 77%]
+.......................F................................................ [ 97%]
+...........                                                              [100%]
+=================================== FAILURES ===================================
+____________________ test_ticker_quote_identity_and_failure ____________________
+
+    def test_ticker_quote_identity_and_failure():
+        from trader.data.feed import DataFeed
+        f = object.__new__(DataFeed)
+        f.data_ex = NS(fetch_ticker=lambda s: {"last": None, "close": 5.0,
+                                               "timestamp": 1_790_000_000_000})
+        q = f.ticker_quote("X/USDT")
+>       assert q["price"] == 5.0 and q["field"] == "close" and q["source_ms"] == 1_790_000_000_000
+E       assert (None == 5.0)
+
+tests/test_current_truth_contract.py:390: AssertionError
+__________ test_ticker_attempt_precedes_fetch_and_receipt_follows_it ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x70e98a7879e0>
+
+    def test_ticker_attempt_precedes_fetch_and_receipt_follows_it(monkeypatch):
+        from trader.data import feed as feed_mod
+        events, clock = [], iter([1_790_000_000.0, 1_790_000_002.5])
+    
+        def tick():
+            t = next(clock)
+            events.append(("clock", t))
+            return t
+    
+        def fetch(sym):
+            events.append(("fetch", sym))
+            return {"last": 7.0, "timestamp": 1_789_999_999_000}
+        monkeypatch.setattr(feed_mod.time, "time", tick)
+        q = _feed_with(fetch).ticker_quote("X/USDT")
+        assert [e[0] for e in events] == ["clock", "fetch", "clock"]   # attempt, fetch, receipt
+        assert q["attempt_started_at"] == 1_790_000_000.0 and q["received_at"] == 1_790_000_002.5
+        assert q["attempt_started_at"] <= q["received_at"]
+>       assert q["source_ms"] == 1_789_999_999_000 and q["price"] == 7.0 and q["error"] is None
+E       assert (1789999999000 == 1789999999000 and None == 7.0)
+
+tests/test_current_truth_corrections.py:484: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_current_truth_contract.py::test_ticker_quote_identity_and_failure
+FAILED tests/test_current_truth_corrections.py::test_ticker_attempt_precedes_fetch_and_receipt_follows_it
+2 failed, 369 passed in 91.35s (0:01:31)

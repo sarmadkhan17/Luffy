@@ -1,0 +1,14 @@
+
+> luffy-owner-frontend-preview@0.1.0 test
+> vitest run tests/own04.test.tsx --reporter=dot
+
+
+ RUN  v5.0.2 /mnt/luffy-data/luffy/production/frontend
+
+·········
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  07:20:18
+   Duration  2.82s (environment 57%, tests 18%, transform 12%, setup 9%, import 3%)
+

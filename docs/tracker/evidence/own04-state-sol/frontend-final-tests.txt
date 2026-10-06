@@ -1,0 +1,83 @@
+
+> luffy-owner-frontend-preview@0.1.0 test
+> vitest run --reporter=dot --testNamePattern=^(?!.*blocks whitespace and preserves owner text on adapter failure|.*cancels a pending reply without appending late output).*$
+
+
+ RUN  v5.0.2 /mnt/luffy-data/luffy/production/frontend
+
+················stderr | tests/live.test.tsx > owner controls > fail closed when the Owner Interface is unavailable
+Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: ["graph","system","normal"]
+
+·············································stderr | tests/live.test.tsx > owner controls > fail closed when the health read itself fails
+Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: ["graph","system","normal"]
+
+··············stderr | tests/live.test.tsx > owner controls > Resume is sent to the Owner Interface with a persisted request id
+Query data cannot be undefined. Please make sure to return a value other than undefined from your query function. Affected query key: ["graph","system","normal"]
+
+················stderr | tests/m1.test.tsx > bounded lazy route loading > reports a chunk that never arrives instead of loading forever
+ChunkLoadError: The view's code did not arrive within 20s.
+    at /mnt/luffy-data/luffy/production/frontend/src/lazyChunk.ts:31:43
+    at callTimer (file:///mnt/luffy-data/luffy/production/frontend/node_modules/vitest/dist/chunks/index.DGdajAO2.js:5147:25)
+    at runTimersInRange (file:///mnt/luffy-data/luffy/production/frontend/node_modules/vitest/dist/chunks/index.DGdajAO2.js:5845:26)
+    at doTickInner (file:///mnt/luffy-data/luffy/production/frontend/node_modules/vitest/dist/chunks/index.DGdajAO2.js:5940:22)
+    at doTick (file:///mnt/luffy-data/luffy/production/frontend/node_modules/vitest/dist/chunks/index.DGdajAO2.js:5956:21)
+    at file:///mnt/luffy-data/luffy/production/frontend/node_modules/vitest/dist/chunks/index.DGdajAO2.js:6046:22
+    at Immediate.<anonymous> (file:///mnt/luffy-data/luffy/production/frontend/node_modules/vitest/dist/chunks/index.DGdajAO2.js:5994:30)
+    at processImmediate (node:internal/timers:504:21) {
+  [stack]: [Getter/Setter],
+  [message]: "The view's code did not arrive within 20s.",
+  reason: 'timeout',
+  name: 'ChunkLoadError'
+}
+
+The above error occurred in one of your React components.
+
+React will try to recreate this component tree from scratch using the error boundary you provided, VisualBoundary.
+
+
+·stderr | tests/m1.test.tsx > bounded lazy route loading > Retry after a failed chunk reloads the page; it does not re-render the poisoned import
+ChunkLoadError: The view's code could not be loaded.
+    at /mnt/luffy-data/luffy/production/frontend/src/lazyChunk.ts:39:16 {
+  [stack]: [Getter/Setter],
+  [message]: "The view's code could not be loaded.",
+  reason: 'failed',
+  name: 'ChunkLoadError'
+}
+
+The above error occurred in one of your React components.
+
+React will try to recreate this component tree from scratch using the error boundary you provided, VisualBoundary.
+
+
+stderr | tests/m1.test.tsx > bounded lazy route loading > Retry of a render error with no failed chunk resets in place, no reload
+Error: boom
+    at Flaky (/mnt/luffy-data/luffy/production/frontend/tests/m1.test.tsx:92:23)
+    at Object.react_stack_bottom_frame (/mnt/luffy-data/luffy/production/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:28571:20)
+    at renderWithHooks (/mnt/luffy-data/luffy/production/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:8030:22)
+    at updateFunctionComponent (/mnt/luffy-data/luffy/production/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:10569:19)
+    at beginWork (/mnt/luffy-data/luffy/production/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:12205:18)
+    at runWithFiberInDEV (/mnt/luffy-data/luffy/production/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:1048:13)
+    at performUnitOfWork (/mnt/luffy-data/luffy/production/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:19176:22)
+    at workLoopSync (/mnt/luffy-data/luffy/production/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:19004:41)
+    at renderRootSync (/mnt/luffy-data/luffy/production/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:18985:11)
+    at performWorkOnRoot (/mnt/luffy-data/luffy/production/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:18094:35) {
+  [stack]: [Getter/Setter],
+  [message]: 'boom'
+}
+
+The above error occurred in the <Flaky> component.
+
+React will try to recreate this component tree from scratch using the error boundary you provided, VisualBoundary.
+
+
+·········--·······················································
+
+ Test Files  14 passed (14)
+      Tests  156 passed | 2 skipped (158)
+   Start at  07:26:23
+   Duration  20.40s (environment 40%, tests 39%, import 10%, setup 6%, transform 4%)
+
+Environment  jsdom was created 14 times · 22.14s total, 40% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+

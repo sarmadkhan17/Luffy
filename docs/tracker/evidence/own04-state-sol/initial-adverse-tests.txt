@@ -1,0 +1,176 @@
+.................FFFF                                                    [100%]
+=================================== FAILURES ===================================
+______ test_api_separates_report_config_control_and_work[waiting-WAITING] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-136/test_api_separates_report_conf0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72f98fae5100>
+status = 'waiting', label = 'WAITING'
+
+    @pytest.mark.parametrize('status,label', [('waiting', 'WAITING'), ('failed', 'FAILED'),
+                                             ('disabled', 'DISABLED'), ('stopped', 'STOPPED')])
+    def test_api_separates_report_config_control_and_work(tmp_path, monkeypatch, status, label):
+        app, journal, _ = make_app(tmp_path, monkeypatch)
+        monkeypatch.setattr(owner_api, '_now', lambda: NOW)
+        journal.kv_set('control_state', 'ACTIVE')
+        # No matching process observation; even a fresh ACTIVE heartbeat proves no running work.
+        heartbeat(tmp_path)
+        (tmp_path / 'data/attention_health.json').write_text(json.dumps(
+            dict(updated_ms=NOW.timestamp()*1000, status=status)))
+        before = journal.query('SELECT * FROM state_kv')
+        files = {p: p.read_bytes() for p in (tmp_path/'data').iterdir() if p.is_file()}
+        client = TestClient(app)
+        overview = client.get('/owner-api/v1/overview', headers={'x-luffy-token': TOKEN}).json()
+        assert overview['control']['state'] == 'ACTIVE'
+        assert overview['control']['time_basis'] == 'read_time'
+        assert overview['heartbeat']['runtime_state'] == 'UNKNOWN'
+        system = client.get('/owner-api/v1/system', headers={'x-luffy-token': TOKEN}).json()
+        nodes = {n['id']: n for n in system['nodes']}
+        assert nodes['kernel']['telemetry']['health'] != 'active'
+        assert nodes['attention']['telemetry']['status_label'] == label
+        assert nodes['attention']['telemetry']['health'] == 'unknown'
+        assert system['events'] == []
+        assert all(e['kind'] == 'architecture' for e in system['edges'])
+        assert journal.query('SELECT * FROM state_kv') == before
+        assert all(p.read_bytes() == content for p, content in files.items())
+        assert not (tmp_path/'data/kernel.lock').exists()
+        declared = owner_api.system(journal, tmp_path, {'attention': {'enabled': False}})
+        attention = next(n for n in declared['nodes'] if n['id'] == 'attention')
+        assert attention['configured_enabled'] is False
+        assert attention['telemetry']['status_label'] == label
+>       journal.close()
+        ^^^^^^^^^^^^^
+E       AttributeError: 'Journal' object has no attribute 'close'
+
+tests/test_own04_state_truth.py:130: AttributeError
+_______ test_api_separates_report_config_control_and_work[failed-FAILED] _______
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-136/test_api_separates_report_conf1')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72f98f1803b0>
+status = 'failed', label = 'FAILED'
+
+    @pytest.mark.parametrize('status,label', [('waiting', 'WAITING'), ('failed', 'FAILED'),
+                                             ('disabled', 'DISABLED'), ('stopped', 'STOPPED')])
+    def test_api_separates_report_config_control_and_work(tmp_path, monkeypatch, status, label):
+        app, journal, _ = make_app(tmp_path, monkeypatch)
+        monkeypatch.setattr(owner_api, '_now', lambda: NOW)
+        journal.kv_set('control_state', 'ACTIVE')
+        # No matching process observation; even a fresh ACTIVE heartbeat proves no running work.
+        heartbeat(tmp_path)
+        (tmp_path / 'data/attention_health.json').write_text(json.dumps(
+            dict(updated_ms=NOW.timestamp()*1000, status=status)))
+        before = journal.query('SELECT * FROM state_kv')
+        files = {p: p.read_bytes() for p in (tmp_path/'data').iterdir() if p.is_file()}
+        client = TestClient(app)
+        overview = client.get('/owner-api/v1/overview', headers={'x-luffy-token': TOKEN}).json()
+        assert overview['control']['state'] == 'ACTIVE'
+        assert overview['control']['time_basis'] == 'read_time'
+        assert overview['heartbeat']['runtime_state'] == 'UNKNOWN'
+        system = client.get('/owner-api/v1/system', headers={'x-luffy-token': TOKEN}).json()
+        nodes = {n['id']: n for n in system['nodes']}
+        assert nodes['kernel']['telemetry']['health'] != 'active'
+        assert nodes['attention']['telemetry']['status_label'] == label
+        assert nodes['attention']['telemetry']['health'] == 'unknown'
+        assert system['events'] == []
+        assert all(e['kind'] == 'architecture' for e in system['edges'])
+        assert journal.query('SELECT * FROM state_kv') == before
+        assert all(p.read_bytes() == content for p, content in files.items())
+        assert not (tmp_path/'data/kernel.lock').exists()
+        declared = owner_api.system(journal, tmp_path, {'attention': {'enabled': False}})
+        attention = next(n for n in declared['nodes'] if n['id'] == 'attention')
+        assert attention['configured_enabled'] is False
+        assert attention['telemetry']['status_label'] == label
+>       journal.close()
+        ^^^^^^^^^^^^^
+E       AttributeError: 'Journal' object has no attribute 'close'
+
+tests/test_own04_state_truth.py:130: AttributeError
+_____ test_api_separates_report_config_control_and_work[disabled-DISABLED] _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-136/test_api_separates_report_conf2')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72f98dee6390>
+status = 'disabled', label = 'DISABLED'
+
+    @pytest.mark.parametrize('status,label', [('waiting', 'WAITING'), ('failed', 'FAILED'),
+                                             ('disabled', 'DISABLED'), ('stopped', 'STOPPED')])
+    def test_api_separates_report_config_control_and_work(tmp_path, monkeypatch, status, label):
+        app, journal, _ = make_app(tmp_path, monkeypatch)
+        monkeypatch.setattr(owner_api, '_now', lambda: NOW)
+        journal.kv_set('control_state', 'ACTIVE')
+        # No matching process observation; even a fresh ACTIVE heartbeat proves no running work.
+        heartbeat(tmp_path)
+        (tmp_path / 'data/attention_health.json').write_text(json.dumps(
+            dict(updated_ms=NOW.timestamp()*1000, status=status)))
+        before = journal.query('SELECT * FROM state_kv')
+        files = {p: p.read_bytes() for p in (tmp_path/'data').iterdir() if p.is_file()}
+        client = TestClient(app)
+        overview = client.get('/owner-api/v1/overview', headers={'x-luffy-token': TOKEN}).json()
+        assert overview['control']['state'] == 'ACTIVE'
+        assert overview['control']['time_basis'] == 'read_time'
+        assert overview['heartbeat']['runtime_state'] == 'UNKNOWN'
+        system = client.get('/owner-api/v1/system', headers={'x-luffy-token': TOKEN}).json()
+        nodes = {n['id']: n for n in system['nodes']}
+        assert nodes['kernel']['telemetry']['health'] != 'active'
+        assert nodes['attention']['telemetry']['status_label'] == label
+        assert nodes['attention']['telemetry']['health'] == 'unknown'
+        assert system['events'] == []
+        assert all(e['kind'] == 'architecture' for e in system['edges'])
+        assert journal.query('SELECT * FROM state_kv') == before
+        assert all(p.read_bytes() == content for p, content in files.items())
+        assert not (tmp_path/'data/kernel.lock').exists()
+        declared = owner_api.system(journal, tmp_path, {'attention': {'enabled': False}})
+        attention = next(n for n in declared['nodes'] if n['id'] == 'attention')
+        assert attention['configured_enabled'] is False
+        assert attention['telemetry']['status_label'] == label
+>       journal.close()
+        ^^^^^^^^^^^^^
+E       AttributeError: 'Journal' object has no attribute 'close'
+
+tests/test_own04_state_truth.py:130: AttributeError
+______ test_api_separates_report_config_control_and_work[stopped-STOPPED] ______
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-136/test_api_separates_report_conf3')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x72f98ddaf440>
+status = 'stopped', label = 'STOPPED'
+
+    @pytest.mark.parametrize('status,label', [('waiting', 'WAITING'), ('failed', 'FAILED'),
+                                             ('disabled', 'DISABLED'), ('stopped', 'STOPPED')])
+    def test_api_separates_report_config_control_and_work(tmp_path, monkeypatch, status, label):
+        app, journal, _ = make_app(tmp_path, monkeypatch)
+        monkeypatch.setattr(owner_api, '_now', lambda: NOW)
+        journal.kv_set('control_state', 'ACTIVE')
+        # No matching process observation; even a fresh ACTIVE heartbeat proves no running work.
+        heartbeat(tmp_path)
+        (tmp_path / 'data/attention_health.json').write_text(json.dumps(
+            dict(updated_ms=NOW.timestamp()*1000, status=status)))
+        before = journal.query('SELECT * FROM state_kv')
+        files = {p: p.read_bytes() for p in (tmp_path/'data').iterdir() if p.is_file()}
+        client = TestClient(app)
+        overview = client.get('/owner-api/v1/overview', headers={'x-luffy-token': TOKEN}).json()
+        assert overview['control']['state'] == 'ACTIVE'
+        assert overview['control']['time_basis'] == 'read_time'
+        assert overview['heartbeat']['runtime_state'] == 'UNKNOWN'
+        system = client.get('/owner-api/v1/system', headers={'x-luffy-token': TOKEN}).json()
+        nodes = {n['id']: n for n in system['nodes']}
+        assert nodes['kernel']['telemetry']['health'] != 'active'
+        assert nodes['attention']['telemetry']['status_label'] == label
+        assert nodes['attention']['telemetry']['health'] == 'unknown'
+        assert system['events'] == []
+        assert all(e['kind'] == 'architecture' for e in system['edges'])
+        assert journal.query('SELECT * FROM state_kv') == before
+        assert all(p.read_bytes() == content for p, content in files.items())
+        assert not (tmp_path/'data/kernel.lock').exists()
+        declared = owner_api.system(journal, tmp_path, {'attention': {'enabled': False}})
+        attention = next(n for n in declared['nodes'] if n['id'] == 'attention')
+        assert attention['configured_enabled'] is False
+        assert attention['telemetry']['status_label'] == label
+>       journal.close()
+        ^^^^^^^^^^^^^
+E       AttributeError: 'Journal' object has no attribute 'close'
+
+tests/test_own04_state_truth.py:130: AttributeError
+=========================== short test summary info ============================
+FAILED tests/test_own04_state_truth.py::test_api_separates_report_config_control_and_work[waiting-WAITING]
+FAILED tests/test_own04_state_truth.py::test_api_separates_report_config_control_and_work[failed-FAILED]
+FAILED tests/test_own04_state_truth.py::test_api_separates_report_config_control_and_work[disabled-DISABLED]
+FAILED tests/test_own04_state_truth.py::test_api_separates_report_config_control_and_work[stopped-STOPPED]
+4 failed, 17 passed in 4.00s

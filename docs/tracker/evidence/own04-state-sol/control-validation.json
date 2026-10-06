@@ -1,0 +1,21 @@
+{
+  "result": "PASS",
+  "checks": [
+    "all_ids_conditions_dependencies_preserved",
+    "only_own04_row_changed",
+    "own04_dependency_blocked_not_fake_closed",
+    "monitoring_gui_and_economics_rows_unchanged",
+    "deferral_and_future_activation_conditions_preserved",
+    "selection_parity",
+    "acc03_recommendation_only",
+    "terminal_parity",
+    "historical_control_snapshot_retained",
+    "manifest_hashes",
+    "status_counts",
+    "source_manifest_matches",
+    "configuration_roster_sdd_unchanged",
+    "owner_tracker_read_available",
+    "no_runtime_provider_trading_authority"
+  ],
+  "count": 15
+}

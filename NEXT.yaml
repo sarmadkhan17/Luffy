@@ -563,9 +563,10 @@ current_build_selection:
   current_blocked_items:
   - WORK-01
   - PERF-03
-  next_recommended_item: OWN-04
-  eligible_items:
   - OWN-04
+  next_recommended_item: ACC-03
+  eligible_items:
+  - ACC-03
   - DATA-08
   - GUI-01
   - GUI-02
@@ -582,11 +583,11 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: RISK-01 closed with retained offline entry-permission evidence. OWN-04 remains the next
-    GUI dependency recommendation only; no successor selected. Existing CLOSED OBS-05 slot retained for reader
-    compatibility.
-  last_terminal_item: RISK-01
-  last_terminal_result: CLOSED_ENGINEERING_ONLY
+  selection_reason: OWN-04 state-display fixes and offline evidence mapped; terminal BLOCKED on unchanged MON-01/MON-05
+    dependencies. ACC-03 is the next independent GUI-01 evidence recommendation only, unselected. Deferred
+    SEC-01/RUN-01/GOV-07 and activation gates preserved.
+  last_terminal_item: OWN-04
+  last_terminal_result: BLOCKED_DEPENDENCY_EVIDENCE
 
 data01_canonical_identity:
   id: DATA-01
@@ -745,3 +746,18 @@ risk02_exposure_feasibility:
   evidence_added_not_closed: [EXE-01, PORT-05]
   dependents_unblocked_not_closed: [RISK-03, EXE-01, EXE-06]
   stale_test_noted: tests/test_leverage_is_applied.py (pre-existing 6 failures, legacy _ensure_leverage)
+
+own04_state_terminal:
+  id: OWN-04
+  status: BLOCKED
+  result: BLOCKED_DEPENDENCY_EVIDENCE
+  evidence: docs/tracker/evidence/own04-state-sol/closure.yaml
+  implementation_gap: DEMONSTRATED_DISPLAY_GAPS_FIXED_OFFLINE
+  remaining_dependencies:
+  - MON-01
+  - MON-05
+  next_gui_dependency: ACC-03
+  successor_selected: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false

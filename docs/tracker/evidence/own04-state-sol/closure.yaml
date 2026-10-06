@@ -1,0 +1,64 @@
+schema: luffy-own04-state-terminal.v1
+id: OWN-04
+status: BLOCKED
+result: BLOCKED_DEPENDENCY_EVIDENCE
+date: '2026-10-06'
+implementation_revision: 0cc582e441bba5c2b1262844f981ad6dfe15bfb3
+source_manifest: source-manifest.json
+actual_gap: Demonstrated display/read truth gaps, fixed; dependency evidence still incomplete
+change: Read-only identity/work evidence, explicit report/config/control labels, local cached expiry/disconnect,
+  strict collector clocks
+tests:
+  api_owner_reads:
+    passed: 369
+    deselected: 2
+    log: api-owner-read-final-tests.txt
+  owner_monitoring:
+    passed: 165
+    log: owner-monitor-tests.txt
+  new_adverse_api:
+    passed: 21
+    included_in_api_count: true
+    log: adverse-api-tests.txt
+  frontend:
+    passed: 156
+    skipped: 2
+    log: frontend-final-tests.txt
+  new_adverse_frontend:
+    passed: 10
+    included_in_frontend_count: true
+  browser:
+    passed: 6
+    log: browser-tests.txt
+  build:
+    result: PASS
+    log: build.txt
+  control:
+    passed: 15
+    log: control-validation.json
+remaining_dependencies:
+- MON-01
+- MON-05
+cross_tracker_impact:
+  GUI-01: ACC-03 and blocked OWN-04 remain; visual/screen proof separate
+  GUI-06_GUI-07_GUI-09_GUX-02_GUX-04: Mapped improvement only, no full-row closure
+  MON-01: Independent heartbeat offline evidence mapped; row unchanged
+  MON-05: Retained operation/overhead/wait attribution gaps; row unchanged
+next_gui_item: ACC-03
+successor_selected: false
+deferred_preserved:
+- SEC-01
+- RUN-01
+- GOV-07
+production_effects:
+  kernel_launched: false
+  production_dashboard_launched: false
+  provider_calls: 0
+  venue_calls: 0
+  trading_activation: false
+  configuration_changed: false
+limitations:
+- Offline temporary-root fixtures only; loaded deployment identity UNKNOWN; no owner visual approval
+- Two ticker and two component failures reproduce on clean intake source; final exclusions explicit
+- Legacy owner R3-R6 collection requires removed HTML fixture; no whole-suite pass claimed
+- Default 1024 descriptor combined-run failure retained; final Python groups use shell-local 8192 limit
