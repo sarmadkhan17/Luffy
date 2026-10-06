@@ -1529,3 +1529,50 @@ att03_owner_scope_decision:
       granted.
   historical_records: att03_warmup_terminal and att03_calibration_terminal are immutable prior checkpoints, superseded
     only for current-build scope by this owner decision. Their calibration findings remain true.
+
+res01_canonical_reconciliation:
+  item: RES-01
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE_ENGINEERING
+  engineering_closure_commit: df4a65269a09e8e273560f13e806389d0dbb9036
+  reconciliation_base_revision: f353b9fa6e880404a076efd2528b000276327a5b
+  evidence: docs/tracker/evidence/res01-reconciliation-sol2/reconciliation.json
+  closure_condition: An anomaly/loss/decay/contradiction/owner question produces a typed question with lineage through
+    the normal producer.
+  closure_condition_satisfied: true
+  dependency_status:
+    ATT-01: CLOSED
+  closing_condition_proof:
+  - Supported volume_anomaly passes through the unmocked bounded investigation.main producer into a typed question
+    with exact case/episode/scan/WorldModel/source hashes and frozen protocol; no manual registration or URL priming.
+  - Fresh-interpreter restart preserves canonical question and records and attempts zero duplicate work.
+  - Quiet, missing-source, missing-health, absent-context and disabled cases create no fabricated question and preserve
+    refusal/degraded reasons; missing outcome remains INCONCLUSIVE/NOT_ASSESSED.
+  retained_validation: 'df4a652 report: 71 scoped offline tests passed; broader 82 passed / 2 pre-existing failures
+    retained explicitly (capacity recovery and source-bound reason spelling), outside this supported fresh-event
+    closing proof.'
+  fresh_validation: 6 RES-01 normal-producer acceptance tests passed in 8.51s; exact source/test/report bytes match
+    df4a652.
+  original_condition_and_edges_preserved: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+  control_plane_reconciliation_pending: false
+  successor_selected: false
+  downstream:
+    RES-02: ELIGIBLE; sole dependency RES-01 now CLOSED; routing proof independent; unselected
+  source_sha256:
+    docs/superpowers/reports/2026-10-06-res01-sol1.md: 351cf52a40c919ba1d50b901145c73f568fa6c984f52d7aea30eb99452dc11e2
+    docs/superpowers/reports/2026-10-06-res01-sol1-question-proof.json: bd0dd7dd3d4a0271c34c123f9770a39c4d62799fc10c48b4648ec83e55c3caa1
+    tests/test_res01_question_producer.py: 2ba36c90c51a94db030f198bf0d6ab0236079e829c8ea9ee784c16c470382b07
+    tests/test_investigation_research_family.py: aa9ba8f600fac1d99733a06bb6a03c811a23efcaf21d84876385b303f53dbf6f
+    trader/observability/investigation.py: 7cecb2a9059add86394004f4a0fe81765f1e078cb8cadc4497aaf59c04f90cde
+    trader/observability/investigation_research.py: e4242aeb8563b101498c174457afd149c3e72475c47a99e0e9eafe0748b707a5
+  status_counts_after:
+    CLOSED: 40
+    EVIDENCE_TO_MAP: 97
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 7
+    OPEN: 4

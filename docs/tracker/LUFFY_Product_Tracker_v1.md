@@ -1,3 +1,5 @@
+> Current SOL-2 reconciliation: RES-01 CLOSED at architecture/offline scope. RES-02 is now eligible on the supported anomaly path; routing remains its own proof. No successor selected. [Evidence](evidence/res01-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
+
 > Current ATT-03 owner scope decision: **CLOSED for architecture/offline investigation only**. Existing values are **UNCALIBRATED_HEURISTIC / INVESTIGATE_ONLY**; calibration remains **DEFERRED / UNPROVEN**, mandatory before validated Attention quality/profitability claims. Heuristics never authorize trade, size or exposure. No thresholds/windows/weights changed; earlier calibration report preserved. [Scope decision](evidence/att03-scope-decision-sol2/REPORT.md). Earlier work/status summaries below are historical.
 
 > Current SOL-1 checkpoint: DEC-01, OUT-01 and OUT-03 BLOCKED. Compiler correction f55ec97 and later committed WRLD-01/WRLD-03/WRLD-05/DATA-05 closures retained. STR-01/STR-02 and DEC-01 analyst Context proof remain; OUT-01 also needs DEC-04 and full normal execution proof. No successor selected. Earlier intake findings are historical. [Evidence](evidence/dec01-chain-sol1/REPORT.md).
@@ -1829,32 +1831,33 @@ future_calibration:
 - **stage**: 3
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: A website scraper alone is not autonomous research.
 - **closure_condition**: An anomaly/loss/decay/contradiction/owner question produces a typed question with lineage through the normal producer.
 - **failure_regression_proof**: No always-busy question fabrication or manual registration needed for the supported path.
 - **dependencies**: ATT-01
 - **owner_role**: Attention & research owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2 (existing engineering closure reconciled only)
+- **implementation_evidence**: df4a652; existing investigation.main/investigation_research normal producer; tests/test_res01_question_producer.py; retained question-proof.json
+- **runtime_evidence**: NOT_PERFORMED; pinned offline engineering proof only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Original condition satisfied for supported volume_anomaly normal producer: exact typed question lineage, no operator priming or always-busy fabrication, honest missing evidence and idempotent restart. Six fresh checks and retained 71 scoped passes. External routing/other question families and live rollout are not asserted.
 - **source_ids**: S01, S02, S06, S14
 - **source_sections**: §§10,12.1–12.2,33.2
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for RES-01 at architecture/offline engineering scope; dependent rows retain their own closing conditions.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: df4a65269a09e8e273560f13e806389d0dbb9036
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/res01-reconciliation-sol2/reconciliation.json
+- **evidence_validity**: Pinned engineering closure and scoped offline checks; no deployment/runtime proof inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### RES-02 — Route questions to authoritative internal/external source classes.
 
