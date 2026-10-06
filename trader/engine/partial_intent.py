@@ -76,11 +76,11 @@ def resolve(executor, intent):
     oid = intent.get('order_id')
     order = executor.ex.fetch_order(oid, intent['symbol']) if oid else executor.ex.fetch_order(
         None,intent['symbol'],{'origClientOrderId':intent['client_order_id']})
+    from .recovery import exact_order_match
     if (not isinstance(order,dict) or not order.get('id')
-            or order.get('clientOrderId') != intent['client_order_id']
-            or order.get('reduceOnly') is not True
-            or order.get('side') != ('sell' if intent['side']=='long' else 'buy')
-            or norm_symbol(order.get('symbol','')) != norm_symbol(intent['symbol'])
+            or not exact_order_match(order, client_order_id=intent['client_order_id'],
+                symbol=intent['symbol'], side='sell' if intent['side']=='long' else 'buy',
+                order_id=oid, reduce_only=True)
             or str(order.get('status','')).lower() not in TERMINAL):
         raise ValueError('partial_exact_terminal_order_unconfirmed')
     filled = float(order.get('filled') or 0)

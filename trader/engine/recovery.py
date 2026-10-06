@@ -32,6 +32,20 @@ class OrderEvidenceMismatch(ValueError):
     pass
 
 
+def exact_order_match(order, *, client_order_id, symbol, side, order_id=None, reduce_only=None):
+    """Single identity rule shared by entry and partial-exit recovery.
+
+    The venue echo must positively carry our client order id and must not
+    contradict the symbol, side, persisted order id or (when required)
+    reduce-only flag. Absent identity is not a match."""
+    return (isinstance(order, dict)
+            and order.get("clientOrderId") == client_order_id
+            and (not order_id or str(order.get("id")) == str(order_id))
+            and norm_symbol(str(order.get("symbol") or "")) == norm_symbol(symbol)
+            and str(order.get("side") or "").lower() == side
+            and (reduce_only is None or order.get("reduceOnly") is reduce_only))
+
+
 class EntryRecovery:
     def __init__(self, executor):
         self.executor = executor
@@ -114,13 +128,10 @@ class EntryRecovery:
         """Only the order this action submitted may resolve it. The venue echo
         must positively carry our client id and must not contradict the
         persisted order id, symbol or side; absent identity is not a match."""
-        want_cid = intent[("close_" if close else "")+"client_order_id"]
         side = intent["position"]["side"]
         want_side = ("buy" if side == "long" else "sell") if not close else ("sell" if side == "long" else "buy")
-        if (not isinstance(order, dict) or order.get("clientOrderId") != want_cid
-                or (oid and str(order.get("id")) != str(oid))
-                or norm_symbol(str(order.get("symbol") or "")) != intent["symbol"]
-                or str(order.get("side") or "").lower() != want_side):
+        if not exact_order_match(order, client_order_id=intent[("close_" if close else "")+"client_order_id"],
+                                 symbol=intent["symbol"], side=want_side, order_id=oid):
             raise OrderEvidenceMismatch("order evidence does not match submitted action")
 
     def submit_close(self, intent, amount):
