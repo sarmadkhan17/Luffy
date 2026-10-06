@@ -1,0 +1,1 @@
+PASS: dashboard read_tracker validation; STATE/NEXT/manifest/closure parity; source hashes; unchanged non-WRLD-07 rows; original WRLD-07 condition and dependency edges.

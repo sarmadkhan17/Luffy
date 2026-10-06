@@ -1409,5 +1409,52 @@
       "BLOCKED": 7,
       "OPEN": 4
     }
+  },
+  "wrld07_relationship_closure": {
+    "item": "WRLD-07",
+    "canonical_status": "CLOSED",
+    "scope": "ARCHITECTURE_OFFLINE",
+    "engineering_closure_commit": "48f2bf9e00ee61919ea5101849eb34f001a22ec3",
+    "evidence": "docs/tracker/evidence/wrld07-relationships-sol1/closure.json",
+    "dependency_status": {
+      "WRLD-03": "CLOSED"
+    },
+    "actual_gap": "VALID relationships accepted absent measured method/window/context, stale or expired evidence, guessed attribution, permanent labels and untested cointegration; legacy records could infer CURRENT.",
+    "change": "Versioned v2 measurement metadata and conservative current eligibility; exact v1 archive replay retained; existing immutable exact-cut history reused.",
+    "closure_condition_satisfied": true,
+    "baseline_revision": "093187b",
+    "baseline_probe": "baseline.json: six ACCEPTED_GAP cases",
+    "fixed_probe": "fixed.json: six REFUSED cases",
+    "tests": {
+      "tests-final.txt": "216 passed, 11 errors in 310.45s (0:05:10)",
+      "tests-focused-final.txt": "138 passed in 52.01s",
+      "tests-replay-final.txt": "11 passed, 3 deselected in 8.38s"
+    },
+    "downstream": {
+      "QNT-03": "ELIGIBLE for independent architecture/offline work; QNT-02 and WRLD-07 CLOSED. Row unchanged and unselected."
+    },
+    "original_condition_and_edges_preserved": true,
+    "control_plane_reconciliation_pending": false,
+    "successor_selected": false,
+    "runtime_execution_authorized": false,
+    "trading_activation_authorized": false,
+    "source_sha256": {
+      "trader/world/relationship.py": "8b4944d34eda075f7d0788b8a4f9a79d1f0b2c9968e613b532b5ff3403750904",
+      "trader/world/replay.py": "1762a0a4d100e016e39f62cd37d0e7ea9c7c01518250484dd5ca89a373fdb8f3",
+      "trader/portfolio/common_factor.py": "9f216f21296ae492726d32a88cc27684616c54afa91ff9b0d7a31ce9aadc9aac",
+      "tests/test_wrld07_relationship_state.py": "2bd2f6007e6284b191b0211001d8c81664e6adf943e33335a1e73bfef5f3e7b1",
+      "tests/test_portfolio_common_factor.py": "3d540c7836b4259daf107ba96043f2ab741b6cb1638cf909d2f83ef250dea880"
+    },
+    "coverage_limit": "Record validation and exact history only; no statistical calibration, new estimator, stationarity-test producer or deployed/runtime claim.",
+    "test_environment_retry": "Expanded run: 216 passed, 11 setup errors because shared /tmp/pytest-of-sarmad/pytest-62 disappeared. Exact 11 affected tests rerun with dedicated --basetemp; retained full logs. No product code changed for test environment.",
+    "status_counts_after": {
+      "CLOSED": 49,
+      "EVIDENCE_TO_MAP": 87,
+      "DEFERRED": 7,
+      "AWAITING_EVIDENCE": 9,
+      "AWAITING_OWNER": 14,
+      "BLOCKED": 8,
+      "OPEN": 4
+    }
   }
 }

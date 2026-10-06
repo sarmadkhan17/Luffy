@@ -1648,32 +1648,33 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 2
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Different instruments can be the same bet or relationships can fail.
 - **closure_condition**: Relationship state records measured scope/window/quality and context; approved methods expose assumptions and instability.
 - **failure_regression_proof**: No permanent beta/correlation doctrine, guessed attribution or untested cointegration claim.
 - **dependencies**: WRLD-03
 - **owner_role**: Perception & WorldModel owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
+- **engineering_assignee**: SOL-1
+- **implementation_evidence**: 48f2bf9e00ee61919ea5101849eb34f001a22ec3; trader/world/relationship.py; trader/world/replay.py; trader/portfolio/common_factor.py; tests/test_wrld07_relationship_state.py
 - **runtime_evidence**: NOT_MAPPED
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Six baseline invalid relationship cases accepted; all six fixed cases refused. Versioned measured metadata, freshness, attribution and unsupported-method checks; persisted exact-cut history and byte-for-byte v1 replay pass. Architecture/offline only.
 - **source_ids**: S01, S02, S12
 - **source_sections**: §§7.7,9,16.2
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for WRLD-07 at architecture/offline scope; QNT-03 has its own independent closing condition.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 48f2bf9e00ee61919ea5101849eb34f001a22ec3
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/wrld07-relationships-sol1/closure.json
+- **evidence_validity**: Pinned source hashes and offline regression evidence; no deployed/runtime freshness inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### ATT-01 — Choose where to investigate from eligible universe and real triggers.
 

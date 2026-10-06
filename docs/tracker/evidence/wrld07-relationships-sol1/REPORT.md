@@ -1,6 +1,6 @@
 # [SOL-1][WRLD-07] relationship-state proof
 
-Scope: WRLD-07 architecture/offline. Dependency WRLD-03 is CLOSED. QNT-02 is CLOSED; QNT-03 is eligible after this closure, with its row and work selection unchanged.
+Result: CLOSED. Scope: WRLD-07 architecture/offline. Dependency WRLD-03 is CLOSED. QNT-02 is CLOSED; QNT-03 is eligible after this closure, with its row and work selection unchanged.
 
 Baseline 093187b: existing immutable ordered endpoints, horizon/cut, exact Observation record hashes, WorldModelRecord and WorldHistory already provide identity, provenance, versioned history and exact-cut replay. No replacement history implementation was needed.
 
@@ -15,3 +15,7 @@ Evidence matrix in tests/test_wrld07_relationship_state.py covers every requeste
 Limit: this closes record validation and offline historical semantics. It does not establish statistical significance, calibrated instability or profitable trading. Instability may honestly be recorded as unassessed. Numeric estimates remain source measurements; this change adds no estimator, automatic group-membership inference, stationarity test or production relationship producer. Context records have no numeric allocation authority.
 
 No provider, paid tool, runtime restart or trading action was used. The local Claude execution availability probe returned Not logged in; the authorized work continued locally. Existing unrelated repository and graph changes were preserved. Graphify AST update was requested after code changes.
+
+Validation: 138 final focused tests passed (52.01s). The expanded WorldModel/context/cognition/Stage7 run passed 216 tests and encountered 11 fixture setup errors when the shared /tmp/pytest-of-sarmad/pytest-62 directory disappeared. The 11 exact affected Stage7 cases are rerun with a dedicated --basetemp; their result is retained in tests-replay-final.txt. The expanded run preceded the final low-quality forbidden-kind guard; the affected code and expanded negative cases were all retested in the 138-test focused run. Full raw logs are retained without representing setup errors as passes. Graphify AST update completed successfully.
+
+Dedicated retry result: 11 passed, 3 previously passed cases deselected (8.38s). Dashboard read_tracker validation, source-hash checks, closure-record parity and unchanged non-WRLD-07 rows passed. WRLD-07 original condition and dependency edges were preserved.
