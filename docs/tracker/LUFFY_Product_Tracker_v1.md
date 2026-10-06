@@ -1,10 +1,10 @@
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.18-own02-authority-sol
+Version: 1.19-own03-boundary-sol
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
-GOV-07: **DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE**. Deployment/runtime identity remains unproven and is required before future deployment/live activation claims. OWN-02 is CLOSED at architecture/offline scope; OWN-03 is the next GUI dependency recommendation, unselected. NEXT retains the existing CLOSED OBS-05 terminal slot for reader compatibility.
+GOV-07: **DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE**. Deployment/runtime identity remains unproven and is required before future deployment/live activation claims. OWN-03 is CLOSED at architecture/offline scope; OWN-04 is the next GUI dependency recommendation, unselected. NEXT retains the existing CLOSED OBS-05 terminal slot for reader compatibility.
 
 ## Status definitions
 
@@ -30,7 +30,7 @@ GOV-07: **DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE**. Deployment/runtime iden
 
 **One data set**: Maintain this YAML as canonical detailed data. Dashboard Tracker reads validated YAML and NEXT. Markdown is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization and adoption checks.
 
-**Current work**: OWN-02 CLOSED at pinned architecture/offline scope; no implementation gap demonstrated. OWN-03 is next GUI dependency recommendation only, unselected. SEC-01, RUN-01 and GOV-07 remain deferred and transitively excluded from current build blockers. Loaded deployment remains UNKNOWN. Existing CLOSED OBS-05 NEXT slot retained for reader compatibility; no activation authorized.
+**Current work**: OWN-03 CLOSED at pinned architecture/offline scope; no product implementation gap demonstrated. OWN-04 is next GUI dependency recommendation only, unselected. SEC-01, RUN-01 and GOV-07 remain deferred and transitively excluded from current build blockers. Loaded deployment remains UNKNOWN. Existing CLOSED OBS-05 NEXT slot retained for reader compatibility; no activation authorized.
 
 **Activation**: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers, a restart or a scope expansion.
 
@@ -4079,30 +4079,30 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 8
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Avoids both unsafe activation and constant permission loops.
 - **closure_condition**: First-live, new scope/access/spend, hard limits, serious recovery and architecture changes surface; ordinary approved decisions remain autonomous.
 - **failure_regression_proof**: A no-trade/research question does not require new blanket approval; first-live stays gated.
-- **dependencies**: OWN-02
+- **dependencies**: ['OWN-02']
 - **owner_role**: Owner interface owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL
+- **implementation_evidence**: EXACT_APPROVAL_BOUNDARY_MAPPED_OFFLINE
+- **runtime_evidence**: OFFLINE_APPROVAL_AND_AUTONOMY_REGRESSIONS; LIVE_DEPLOYMENT_NOT_CLAIMED
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
-- **source_ids**: S01, S02, S10, S14
+- **latest_evidence**: Existing six approval classes, exact first-live consumer, guarded recovery and ordinary autonomy mapped. Seven new loop/expiry/rejection regressions; no product implementation gap. See docs/tracker/evidence/own03-boundary-sol/REPORT.md and closure.yaml.
+- **source_ids**: ['S01', 'S02', 'S10', 'S14']
 - **source_sections**: §§2.4,25.4
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for OWN-03 at pinned architecture/offline scope. Future deployment/activation gates retained; no live proof required for this build closure.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
-- **acceptance_status**: DRAFT_VERIFICATION_DETAIL
+- **acceptance_status**: EXACT_ROW_OFFLINE_EVIDENCE_MAPPED
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
-- **parent_ids**: None
-- **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **resolution_at_commit**: 9e6cd3552374ffef6eb064e0e04db6b2ea4025a7
+- **work_authorized**: True
+- **updated**: 2026-10-06
+- **parent_ids**: []
+- **related_items**: []
+- **closure_evidence**: docs/tracker/evidence/own03-boundary-sol/closure.yaml
+- **evidence_validity**: Pinned source/test evidence at architecture/offline scope; no loaded runtime or visual acceptance inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 
@@ -7078,3 +7078,7 @@ current_build_selection:
 ## OWN-02 architecture/offline closure (2026-10-06)
 
 Exact evidence: [authority map](evidence/own02-authority-sol/REPORT.md) and [closure](evidence/own02-authority-sol/closure.yaml). OWN-03 recommendation only; GUI-01, OWN-03 and OWN-04 statuses and closing conditions unchanged. SEC-01/RUN-01/GOV-07 remain deferred. No deployment, runtime or visual acceptance inferred.
+
+## OWN-03 architecture/offline closure (2026-10-06)
+
+Exact evidence: [boundary map](evidence/own03-boundary-sol/REPORT.md) and [closure](evidence/own03-boundary-sol/closure.yaml). GUI-01 dependency OWN-03 satisfied; ACC-03 and OWN-04 remain. No other owner-interface row newly satisfied. OWN-04 recommendation only; SEC-01/RUN-01/GOV-07 deferred, with future activation gates preserved.

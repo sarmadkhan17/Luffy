@@ -1,6 +1,6 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.18-own02-authority-sol",
+  "snapshot_version": "1.19-own03-boundary-sol",
   "control_baseline_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 375413,
-      "sha256": "887997318d65e9f7c1a8a6eff728f1d785a99cc387e33ecad460757225744607",
+      "bytes": 376138,
+      "sha256": "c791bf0a8a8f09c5d061a335b2dc664107bc3f4b9596e6d953390cfa4354f819",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 375692,
-      "sha256": "9bd945af9561a42ceedf6e4a57ad61a22f34b59551815f7f318adcd741c5151d",
+      "bytes": 376436,
+      "sha256": "d234519c20485a25bf7a7550277293e45c59adf80140cb37067392ff82769660",
       "synchronization_required": false
     },
     {
@@ -84,7 +84,7 @@
   },
   "current_build_selection": {
     "active_items": [],
-    "last_completed_item": "OWN-02",
+    "last_completed_item": "OWN-03",
     "excluded_blocker_items": [
       "SEC-01",
       "RUN-01",
@@ -94,9 +94,9 @@
       "WORK-01",
       "PERF-03"
     ],
-    "next_recommended_item": "OWN-03",
+    "next_recommended_item": "OWN-04",
     "eligible_items": [
-      "OWN-03",
+      "OWN-04",
       "DATA-08",
       "GUI-01",
       "GUI-02",
@@ -112,8 +112,8 @@
     "next_item_selected": false,
     "runtime_execution_authorized": false,
     "selection_status": "NO_ACTIVE_PACKAGE",
-    "selection_reason": "OWN-02 closed from exact existing authority and offline evidence. OWN-03 is next GUI dependency recommendation only; no successor selected. Existing CLOSED OBS-05 slot retained for reader compatibility.",
-    "last_terminal_item": "OWN-02",
+    "selection_reason": "OWN-03 closed from exact approval-boundary and offline autonomy evidence. OWN-04 is next GUI dependency recommendation only; no successor selected. Existing CLOSED OBS-05 slot retained for reader compatibility.",
+    "last_terminal_item": "OWN-03",
     "last_terminal_result": "CLOSED_ARCHITECTURE_OFFLINE"
   },
   "control_snapshot": {
@@ -196,6 +196,18 @@
     "evidence": "docs/tracker/evidence/own02-authority-sol/closure.yaml",
     "implementation_gap": "NONE_DEMONSTRATED",
     "next_gui_dependency": "OWN-03",
+    "successor_selected": false,
+    "runtime_execution_authorized": false,
+    "provider_enablement_authorized": false,
+    "trading_activation_authorized": false
+  },
+  "own03_boundary_closure": {
+    "id": "OWN-03",
+    "status": "CLOSED",
+    "result": "CLOSED_ARCHITECTURE_OFFLINE",
+    "evidence": "docs/tracker/evidence/own03-boundary-sol/closure.yaml",
+    "implementation_gap": "NONE_DEMONSTRATED",
+    "next_gui_dependency": "OWN-04",
     "successor_selected": false,
     "runtime_execution_authorized": false,
     "provider_enablement_authorized": false,

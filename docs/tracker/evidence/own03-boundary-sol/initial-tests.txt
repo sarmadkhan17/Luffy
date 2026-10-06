@@ -1,0 +1,45 @@
+F....................................................................... [ 34%]
+........................................................................ [ 69%]
+................................................................         [100%]
+=================================== FAILURES ===================================
+____ test_routine_hold_decision_and_research_never_create_blanket_approval _____
+
+tmp_path = PosixPath('/tmp/pytest-of-sarmad/pytest-119/test_routine_hold_decision_and0')
+
+    def test_routine_hold_decision_and_research_never_create_blanket_approval(tmp_path):
+        j = registered(tmp_path)
+        # Real bounded research producer, with retrieval replaced by an offline child.
+        bank = research_pass(j, child=FakeChild([]))['results'][0]['bank']
+        for action in (Action.HOLD, Action.BUY):
+            d = Decision('own03-' + action.value, 'fixture-cycle', 'BTC/USDT',
+                         action, .8, .2, .9, [], [])
+>           j.log_decision(d)
+
+tests/test_own03_approval_boundary.py:22: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <trader.core.journal.Journal object at 0x7d09c41f22a0>
+d = Decision(id='own03-HOLD', cycle_id='fixture-cycle', symbol='BTC/USDT', action=<Action.HOLD: 'HOLD'>, score=0.8, thresh...+00:00', meta_p=0.0, meta_size=1.0, scan_id=None, evaluation_causes=[], omitted_causes=0, instrument_binding_json=None)
+capture_inputs = None
+
+    def log_decision(self, d: Decision, *, capture_inputs=None) -> None:
+        strat_ids = ",".join(s.get("strategy_id", "")
+                             for s in d.strategy_signals or [])
+        signals = json.dumps(d.strategy_signals or [])
+        with self._tx() as c:
+>           c.execute(
+                "INSERT OR REPLACE INTO decisions "
+                "(id,cycle_id,ts,symbol,action,score,threshold,confidence,"
+                "executed,skip_reason,size_usdt,entry_price,strategy_ids,"
+                "signals_json,meta_p,scan_id,reason_codes,reason_codes_version,instrument_binding_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (d.id, d.cycle_id, d.ts, d.symbol, d.action.value, d.score,
+                 d.threshold, d.confidence, int(d.executed), d.skip_reason,
+                 d.size_usdt, None, strat_ids, signals,
+                 d.meta_p if d.meta_p else None, getattr(d, "scan_id", None),
+                 *self._reason_codes_cols(getattr(d, "reason_codes", None)), getattr(d, "instrument_binding_json", None)))
+E           sqlite3.IntegrityError: FOREIGN KEY constraint failed
+
+trader/core/journal.py:689: IntegrityError
+=========================== short test summary info ============================
+FAILED tests/test_own03_approval_boundary.py::test_routine_hold_decision_and_research_never_create_blanket_approval
+1 failed, 207 passed, 1 deselected in 54.67s

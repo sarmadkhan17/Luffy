@@ -1,0 +1,50 @@
+id: OWN-03
+source_revision: 9e6cd3552374ffef6eb064e0e04db6b2ea4025a7
+owner_authorization: 'Current user: work only on OWN-03; OWN-02 CLOSED; offline proof
+  and closure impact-check authorized. No runtime/provider/trading launch or RISK-01
+  changes.'
+row:
+  id: OWN-03
+  area: Owner interface
+  stage: '8'
+  item_type: REQUIREMENT
+  release_scope: BASELINE
+  status: EVIDENCE_TO_MAP
+  required_behavior: Surface approval-required actions without requesting approval
+    for ordinary autonomy.
+  why_needed: Avoids both unsafe activation and constant permission loops.
+  closure_condition: First-live, new scope/access/spend, hard limits, serious recovery
+    and architecture changes surface; ordinary approved decisions remain autonomous.
+  failure_regression_proof: A no-trade/research question does not require new blanket
+    approval; first-live stays gated.
+  dependencies:
+  - OWN-02
+  owner_role: Owner interface owner
+  engineering_assignee: UNASSIGNED
+  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
+  runtime_evidence: NOT_MAPPED
+  visual_approval: NOT_APPLICABLE
+  latest_evidence: Historical stage/package build claims exist; not yet mapped to
+    this exact row. This is not a missing-implementation finding and does not reopen
+    prior closures.
+  source_ids:
+  - S01
+  - S02
+  - S10
+  - S14
+  source_sections: "\xA7\xA72.4,25.4"
+  next_proof: Map existing exact evidence first; implement only a demonstrated gap,
+    then satisfy this row's closure condition.
+  acceptance_basis: SDD requirement; verification detail drafted for approval.
+  acceptance_status: DRAFT_VERIFICATION_DETAIL
+  priority: NORMAL
+  resolution_at_commit: ''
+  work_authorized: false
+  updated: '2026-10-05'
+  parent_ids: []
+  related_items: []
+  closure_evidence: ''
+  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  new_issue_policy: Add linked issue with reason/reproducer; do not silently expand
+    this row.
+  owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE

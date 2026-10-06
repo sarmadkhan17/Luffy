@@ -71,7 +71,7 @@ work_package:
   run01_live_proof_authorization: Separate owner authorization naming the full intended final revision and
     one controlled Kernel launch/SIGTERM graceful stop with retained Phase A/Phase B and unchanged RUN-01 proof.
   historical_next_recommended_item: DATA-08
-  next_recommended_item: OWN-03
+  next_recommended_item: OWN-04
   another_run01_fix_selected: false
   next_item_selected: false
   next_item_started: false
@@ -555,7 +555,7 @@ current_release_deferral:
 
 current_build_selection:
   active_items: []
-  last_completed_item: OWN-02
+  last_completed_item: OWN-03
   excluded_blocker_items:
   - SEC-01
   - RUN-01
@@ -563,9 +563,9 @@ current_build_selection:
   current_blocked_items:
   - WORK-01
   - PERF-03
-  next_recommended_item: OWN-03
+  next_recommended_item: OWN-04
   eligible_items:
-  - OWN-03
+  - OWN-04
   - DATA-08
   - GUI-01
   - GUI-02
@@ -582,10 +582,12 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: OWN-02 closed from exact existing authority and offline evidence. OWN-03 is next GUI dependency
-    recommendation only; no successor selected. Existing CLOSED OBS-05 slot retained for reader compatibility.
-  last_terminal_item: OWN-02
+  selection_reason: OWN-03 closed from exact approval-boundary and offline autonomy evidence. OWN-04 is next
+    GUI dependency recommendation only; no successor selected. Existing CLOSED OBS-05 slot retained for reader
+    compatibility.
+  last_terminal_item: OWN-03
   last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
+
 data01_canonical_identity:
   id: DATA-01
   status: CLOSED
@@ -696,6 +698,18 @@ own02_authority_closure:
   evidence: docs/tracker/evidence/own02-authority-sol/closure.yaml
   implementation_gap: NONE_DEMONSTRATED
   next_gui_dependency: OWN-03
+  successor_selected: false
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+
+own03_boundary_closure:
+  id: OWN-03
+  status: CLOSED
+  result: CLOSED_ARCHITECTURE_OFFLINE
+  evidence: docs/tracker/evidence/own03-boundary-sol/closure.yaml
+  implementation_gap: NONE_DEMONSTRATED
+  next_gui_dependency: OWN-04
   successor_selected: false
   runtime_execution_authorized: false
   provider_enablement_authorized: false

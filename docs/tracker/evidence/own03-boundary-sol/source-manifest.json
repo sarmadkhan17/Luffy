@@ -1,0 +1,82 @@
+{
+  "repository_revision": "9e6cd3552374ffef6eb064e0e04db6b2ea4025a7",
+  "scope": "offline source identity; not deployment",
+  "files": [
+    {
+      "path": "SDD.md",
+      "sha256": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28"
+    },
+    {
+      "path": "config.yaml",
+      "sha256": "12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17"
+    },
+    {
+      "path": "tests/test_own03_approval_boundary.py",
+      "sha256": "0335f885c64f10a6f0543f542a144160af231d7da86011a94e60fa3d2c97eb96"
+    },
+    {
+      "path": "tests/test_stage8_owner_os.py",
+      "sha256": "cea35234f5c7bd96d30967b202ef4e6c45e5863b8fef7c0b56b131bff2feba76"
+    },
+    {
+      "path": "tests/test_strategy_factory_handoff.py",
+      "sha256": "e30b6079e7fc08c1bb030554e1fd0ef839ae00e196d97a26ae48848d87834546"
+    },
+    {
+      "path": "tests/test_universal_strategy_authority.py",
+      "sha256": "2ce30d4b2bb2fdac5cd9cd706be7d130e386c3bae6724a710dfc376858a234ae"
+    },
+    {
+      "path": "tests/test_control_state_recovery.py",
+      "sha256": "1adf086967133deb5882b47b2499ed2c713bada081ff2e1059e61af8b68c492e"
+    },
+    {
+      "path": "tests/test_owner_recovery.py",
+      "sha256": "fa754861fba40a8297159ac8f01ffa6eb725940ac26dd2d958e2673aaf72edf5"
+    },
+    {
+      "path": "tests/test_owner_recovery_concurrency.py",
+      "sha256": "55a054780b4a3cbc2f81bfd9459f7869f3a6dfa61732584cf399dabab929307f"
+    },
+    {
+      "path": "tests/test_owner_recovery_risk_guard.py",
+      "sha256": "ad4d01970f85c881da1459b0552fce5fa02331f7b5b0c3cfa04771b55b108939"
+    },
+    {
+      "path": "frontend/tests/stage8.test.tsx",
+      "sha256": "e8a7e5c9abfcfe16a09857135ebc98c8df5a486756b03f0d63d7a110df5e2337"
+    },
+    {
+      "path": "frontend/src/components/OwnerEvidence.tsx",
+      "sha256": "c678690b9702f34429703e0adc054e29ffcd9f508fd3c5dfdf64d45236b25ed8"
+    },
+    {
+      "path": "trader/owner/approvals.py",
+      "sha256": "2cd6b7b7f959e699b9c0c14436e12128b6680b7031c0cf6f59505c09395ba640"
+    },
+    {
+      "path": "trader/owner/queries.py",
+      "sha256": "2b760f5a1a251f9062fae9f46478c93dc1a4df892509a3a96b369b812ad43285"
+    },
+    {
+      "path": "trader/owner/service.py",
+      "sha256": "c0dcaae8f333eb62301fa1516dcd26a944b2ab72d490a8338997ea1700356591"
+    },
+    {
+      "path": "trader/strategy/factory_handoff.py",
+      "sha256": "00cd4496753741a838772ec7369736b59b88f1ff68e6355b3e2698530b75c3a5"
+    },
+    {
+      "path": "trader/engine/supervisor.py",
+      "sha256": "c80e346bd7ff704a0064132d0c8473a806e406cf7b6ce019ffd217a9fc87cb11"
+    },
+    {
+      "path": "trader/engine/orchestrator.py",
+      "sha256": "088dd23bef3a78e988875a7a9481e1345b13f91cbffc9adc28997bd7e06e5ec7"
+    },
+    {
+      "path": "trader/research/external_research.py",
+      "sha256": "7ff110c66216a3289e05385ac79299cb4710c2e79f7d597462eff5ac33377cce"
+    }
+  ]
+}

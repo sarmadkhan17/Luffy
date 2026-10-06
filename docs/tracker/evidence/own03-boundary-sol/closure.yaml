@@ -1,0 +1,61 @@
+schema: luffy-own03-closure.v1
+id: OWN-03
+status: CLOSED
+result: CLOSED_ARCHITECTURE_OFFLINE
+date: '2026-10-06'
+source_revision: 9e6cd3552374ffef6eb064e0e04db6b2ea4025a7
+source_manifest: source-manifest.json
+closing_condition: First-live, new scope/access/spend, hard limits, serious recovery and architecture changes
+  surface; ordinary approved decisions remain autonomous.
+actual_gap: ROW_EVIDENCE_AND_EXPLICIT_ROUTINE_LOOP_REGRESSION_UNMAPPED; no product implementation gap
+change: Seven offline regression cases and evidence/control documents only
+tests:
+  approval_factory_recovery:
+    passed: 208
+    deselected: 1
+    log: tests.txt
+  autonomy_control:
+    passed: 21
+    log: autonomy-tests.txt
+  frontend:
+    passed: 9
+    log: frontend-tests.txt
+  new_boundary:
+    passed: 7
+    log: boundary-tests.txt
+  initial_fixture_error:
+    failed: 1
+    passed: 207
+    log: initial-tests.txt
+    corrected: Cycle foreign key recorded before decisions
+  control_documents:
+    passed: 13
+    result: PASS
+    log: control-validation.json
+cross_tracker_impact:
+  GUI-01: OWN-03 satisfied; ACC-03/OWN-04 and screen/visual proof remain
+  OWN-04: Unchanged EVIDENCE_TO_MAP; MON-01/MON-05 remain
+  other_rows_now_satisfied: []
+next_gui_item: OWN-04
+successor_selected: false
+policy:
+  deferred_items:
+  - SEC-01
+  - RUN-01
+  - GOV-07
+  excluded_transitively_from_current_build_blockers: true
+  future_activation_gates_preserved: true
+production_effects:
+  kernel_launched: false
+  dashboard_launched: false
+  provider_calls: 0
+  venue_calls: 0
+  trading_activation: false
+  configuration_changed: false
+  risk01_changed_by_own03: false
+limitations:
+- Offline source/test proof only; loaded deployment UNKNOWN.
+- Proposal decisions grant no execution; capability/spend/risk/code adoption remains an explicit authorized
+  workflow.
+- Known unrelated portfolio query test deselected; no whole-suite pass claimed.
+- No owner visual approval inferred.

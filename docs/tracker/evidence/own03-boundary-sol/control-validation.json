@@ -1,0 +1,19 @@
+{
+  "result": "PASS",
+  "checks": [
+    "all_ids_conditions_dependencies_preserved",
+    "only_own03_row_changed",
+    "own03_closed_dependency_satisfied",
+    "no_other_owner_rows_or_gui_closed",
+    "selection_parity",
+    "no_successor_selected",
+    "deferred_gate_policy_retained",
+    "source_config_sdd_pinned",
+    "snapshot_parity_retained",
+    "manifest_hashes",
+    "status_counts",
+    "existing_read_only_tracker_available",
+    "runtime_authorization_retained"
+  ],
+  "count": 13
+}
