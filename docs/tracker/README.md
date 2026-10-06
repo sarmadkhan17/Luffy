@@ -1,3 +1,5 @@
+> Current SOL-2 reconciliation: QNT-01 CLOSED at architecture/offline scope. QNT-02 is now dependency-eligible; its concurrent engineering work and own closure condition are preserved. No successor selected. [Evidence](evidence/qnt01-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
+
 > Current SOL-2 reconciliation: RES-01 CLOSED at architecture/offline scope. RES-02 is now eligible on the supported anomaly path; routing remains its own proof. No successor selected. [Evidence](evidence/res01-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
 
 > Current ATT-03 owner scope decision: **CLOSED for architecture/offline investigation only**. Existing values are **UNCALIBRATED_HEURISTIC / INVESTIGATE_ONLY**; calibration remains **DEFERRED / UNPROVEN**, mandatory before validated Attention quality/profitability claims. Heuristics never authorize trade, size or exposure. No thresholds/windows/weights changed; earlier calibration report preserved. [Scope decision](evidence/att03-scope-decision-sol2/REPORT.md). Earlier work/status summaries below are historical.

@@ -1,3 +1,5 @@
+> Current SOL-2 reconciliation: QNT-01 CLOSED at architecture/offline scope. QNT-02 is now dependency-eligible; its concurrent engineering work and own closure condition are preserved. No successor selected. [Evidence](evidence/qnt01-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
+
 > Current SOL-2 reconciliation: RES-01 CLOSED at architecture/offline scope. RES-02 is now eligible on the supported anomaly path; routing remains its own proof. No successor selected. [Evidence](evidence/res01-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
 
 > Current ATT-03 owner scope decision: **CLOSED for architecture/offline investigation only**. Existing values are **UNCALIBRATED_HEURISTIC / INVESTIGATE_ONLY**; calibration remains **DEFERRED / UNPROVEN**, mandatory before validated Attention quality/profitability claims. Heuristics never authorize trade, size or exposure. No thresholds/windows/weights changed; earlier calibration report preserved. [Scope decision](evidence/att03-scope-decision-sol2/REPORT.md). Earlier work/status summaries below are historical.
@@ -2129,32 +2131,33 @@ future_calibration:
 - **stage**: 4
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: A favorable backtest statistic is not executable economic edge.
 - **closure_condition**: Pinned input/code/config reproduce returns, costs, expectancy/drawdown and evaluator/backtest behaviour; labels and cost assumptions are explicit.
 - **failure_regression_proof**: No PF-only admission, estimated cost-as-actual or future data in labels/features.
 - **dependencies**: DATA-03, DATA-05
 - **owner_role**: Quant validation owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2 (existing engineering closure reconciled only)
+- **implementation_evidence**: 9065cf6; trader/strategy/quant_contract.py and additive spec_evidence quant_contract receipt; tests/test_qnt01_quant_contract.py plus evaluator/backtest and input-honesty regressions
+- **runtime_evidence**: NOT_PERFORMED; pinned offline engineering proof only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Original condition satisfied offline: explicit cost-aware return/label/expectancy/drawdown definitions, ESTIMATED_MODEL label, pinned input/spec/config/engine identity, deterministic repeated results, prefix/exit no-future checks and nonvacuous evaluator/backtest parity. 37 fresh regressions passed. No fills, costs, verdicts or operational gate thresholds changed in reconciliation.
 - **source_ids**: S01, S02, S14
 - **source_sections**: §§13.1–13.4,19.3
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for QNT-01 at architecture/offline engineering scope; dependent rows retain their own closing conditions.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 9065cf694992a4baad1eff95107518976ac6c26b
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/qnt01-reconciliation-sol2/reconciliation.json
+- **evidence_validity**: Pinned engineering closure and scoped offline checks; no deployment/runtime proof inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### QNT-02 — Test justified nulls and controls for the claimed mechanism.
 

@@ -1,6 +1,6 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.32-res01-reconciled-sol2",
+  "snapshot_version": "1.33-qnt01-reconciled-sol2",
   "control_baseline_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 429735,
-      "sha256": "bfe6e136b2affbddb22f29cc26fa953e09dcf49a6f89e45817303063b91fdd81",
+      "bytes": 433994,
+      "sha256": "3b57125c63d0a51745d0be7616d26f179d68b564e7a8c57cd3850a00d909f4be",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 402004,
-      "sha256": "184f54a214778a9d663246ee255380b8e6dce2792b303decda0c92f7b0d14efa",
+      "bytes": 402963,
+      "sha256": "7f0e856e08fd8a180594a21a2b35c982f53863928f814116a14c9c67cd7ae4b8",
       "synchronization_required": false
     },
     {
@@ -976,12 +976,60 @@
     }
   },
   "status_counts": {
-    "CLOSED": 40,
-    "EVIDENCE_TO_MAP": 97,
+    "CLOSED": 41,
+    "EVIDENCE_TO_MAP": 96,
     "DEFERRED": 7,
     "AWAITING_EVIDENCE": 9,
     "AWAITING_OWNER": 14,
     "BLOCKED": 7,
     "OPEN": 4
+  },
+  "qnt01_canonical_reconciliation": {
+    "item": "QNT-01",
+    "canonical_status": "CLOSED",
+    "scope": "ARCHITECTURE_OFFLINE_ENGINEERING",
+    "engineering_closure_commit": "9065cf694992a4baad1eff95107518976ac6c26b",
+    "reconciliation_base_revision": "f86699625e67bcd1dc8c32c9248aad63e8df4e92",
+    "evidence": "docs/tracker/evidence/qnt01-reconciliation-sol2/reconciliation.json",
+    "closure_condition": "Pinned input/code/config reproduce returns, costs, expectancy/drawdown and evaluator/backtest behaviour; labels and cost assumptions are explicit.",
+    "closure_condition_satisfied": true,
+    "dependency_status": {
+      "DATA-03": "CLOSED",
+      "DATA-05": "CLOSED"
+    },
+    "closing_condition_proof": [
+      "quant-contract.v1 defines entry/exit labels, return, fees, slippage, funding, expectancy and closed-trade drawdown; run_gauntlet emits the definitions, ESTIMATED_MODEL cost basis and input/spec/config/engine digests.",
+      "Pinned identical data/code/config reproduce identical train/test results and identity; data, config or spec changes change identity. Fees/slippage reduce net P&L; zero-trade expectancy is None; explicit closed-equity drawdown matches simulation.",
+      "Signal prefix tests reject future-bar effects; exited trade labels/P&L reproduce after truncation at exit. walk_table/simulate match exact trades and R; legacy evaluator engine-equivalence test is nonvacuous and passes.",
+      "Existing evidence admission retains required data/coverage, minimum OOS trade count, worst-symbol PF and configured robustness checks; missing derivative inputs stay UNTESTED. No PF-only gate or estimated-to-actual relabelling introduced. Existing DATA-03/DATA-05 source-cut semantics remain unchanged."
+    ],
+    "retained_validation": "9065cf6 engineering commit and its exact source/test bytes reused; additive contract metadata only, with no changed fill, cost or admission verdict. No standalone prior runtime result is inferred.",
+    "fresh_validation": "37 tests passed in 66.75s: tests/test_qnt01_quant_contract.py, tests/test_vector_backtest.py and tests/test_spec_evidence.py; source/test bytes match 9065cf6.",
+    "original_condition_and_edges_preserved": true,
+    "application_code_changed": false,
+    "runtime_execution_authorized": false,
+    "trading_activation_authorized": false,
+    "control_plane_reconciliation_pending": false,
+    "successor_selected": false,
+    "downstream": {
+      "QNT-02": "ELIGIBLE; sole dependency QNT-01 now CLOSED; null/control closure independent; active-agent artifacts not adopted"
+    },
+    "source_sha256": {
+      "trader/strategy/quant_contract.py": "d49abcd976a58e20b7420264a8307124f97ca54bf72fd44d6d247965fb733ea5",
+      "trader/strategy/spec_evidence.py": "fbf40990dd4248706e33acfb9cf4f2f3196a39f7a26273a9aa5ec568b757ff03",
+      "tests/test_qnt01_quant_contract.py": "c3f1689dc08d7d35aa368e99e92ab6efef4d76317dbf790ef35b12c14268dc2b",
+      "trader/strategy/vector_backtest.py": "4e1bcb25b024f96d78b5f0d38bada958bd632e3f3f4aad29780f2594d11aea67",
+      "tests/test_vector_backtest.py": "e946de765cb94bd7933d78b7253c2a8890728a6dc8fae0360b67b17cca95a60a",
+      "tests/test_spec_evidence.py": "f4466c9f3995b01da14d4e0e54a895feddfa0b674abe4b35258849c7cc573813"
+    },
+    "status_counts_after": {
+      "CLOSED": 41,
+      "EVIDENCE_TO_MAP": 96,
+      "DEFERRED": 7,
+      "AWAITING_EVIDENCE": 9,
+      "AWAITING_OWNER": 14,
+      "BLOCKED": 7,
+      "OPEN": 4
+    }
   }
 }
