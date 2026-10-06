@@ -2513,7 +2513,7 @@ items:
   - SEC-01
   owner_role: Attention & research owner
   engineering_assignee: SOL-2 (offline source governance)
-  implementation_evidence: 126a8a52674a186c15cc555d6f51b735981029db; trader/cognition/source_governance.py; existing
+  implementation_evidence: d6ba32bafea1f57c6381c58311acad10f0e950be; trader/cognition/source_governance.py; existing
     research_sources/external_sources metadata and worker boundaries; tests/test_res03_source_governance.py
   runtime_evidence: NOT_PERFORMED; durable fixture journals and actual selector/worker refusals tested offline
   visual_approval: NOT_APPLICABLE
@@ -2532,7 +2532,7 @@ items:
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: 126a8a52674a186c15cc555d6f51b735981029db
+  resolution_at_commit: d6ba32bafea1f57c6381c58311acad10f0e950be
   work_authorized: true
   updated: '2026-10-06'
   parent_ids: []
@@ -10013,7 +10013,7 @@ res03_governance_closure:
   item: RES-03
   canonical_status: CLOSED
   scope: ARCHITECTURE_OFFLINE
-  engineering_closure_commit: 126a8a52674a186c15cc555d6f51b735981029db
+  engineering_closure_commit: d6ba32bafea1f57c6381c58311acad10f0e950be
   evidence: docs/tracker/evidence/res03-governance-sol2/closure.json
   actual_gap: Durable discovery and governed source catalog adoption were absent; metadata and free-only source
     routing already existed.

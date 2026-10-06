@@ -2,7 +2,7 @@
   "item": "RES-03",
   "canonical_status": "CLOSED",
   "scope": "ARCHITECTURE_OFFLINE",
-  "engineering_closure_commit": "126a8a52674a186c15cc555d6f51b735981029db",
+  "engineering_closure_commit": "d6ba32bafea1f57c6381c58311acad10f0e950be",
   "evidence": "docs/tracker/evidence/res03-governance-sol2/closure.json",
   "actual_gap": "Durable discovery and governed source catalog adoption were absent; metadata and free-only source routing already existed.",
   "change": "Offline content-addressed discovery/adoption ledger and read-only catalog; source selector enforces the same scope/class/access/cost policy.",

@@ -13,14 +13,14 @@
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
       "bytes": 466297,
-      "sha256": "44323b7f2340ba8d783e4f95379fc98b7281a37ef0b7a30df72cb5d909ac5be8",
+      "sha256": "90191137eb57e3eb20f2f5b071511dc3f426a8418ee678e415b96a0b4f08fa6d",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
       "bytes": 409884,
-      "sha256": "3c75a45d5f5646bb095873b6889d29aabfb801c09dd3722bf67e5ad93f038710",
+      "sha256": "5876b51c5a2e5a9d69571f0a9cd4eabe6fa953b5cd48034c137e9db795873c17",
       "synchronization_required": false
     },
     {
@@ -1271,7 +1271,7 @@
     "item": "RES-03",
     "canonical_status": "CLOSED",
     "scope": "ARCHITECTURE_OFFLINE",
-    "engineering_closure_commit": "126a8a52674a186c15cc555d6f51b735981029db",
+    "engineering_closure_commit": "d6ba32bafea1f57c6381c58311acad10f0e950be",
     "evidence": "docs/tracker/evidence/res03-governance-sol2/closure.json",
     "actual_gap": "Durable discovery and governed source catalog adoption were absent; metadata and free-only source routing already existed.",
     "change": "Offline content-addressed discovery/adoption ledger and read-only catalog; source selector enforces the same scope/class/access/cost policy.",

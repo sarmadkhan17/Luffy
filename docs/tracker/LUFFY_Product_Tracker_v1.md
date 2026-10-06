@@ -1921,7 +1921,7 @@ future_calibration:
 - **dependencies**: RES-02, SEC-01
 - **owner_role**: Attention & research owner
 - **engineering_assignee**: SOL-2 (offline source governance)
-- **implementation_evidence**: 126a8a52674a186c15cc555d6f51b735981029db; trader/cognition/source_governance.py; existing research_sources/external_sources metadata and worker boundaries; tests/test_res03_source_governance.py
+- **implementation_evidence**: d6ba32bafea1f57c6381c58311acad10f0e950be; trader/cognition/source_governance.py; existing research_sources/external_sources metadata and worker boundaries; tests/test_res03_source_governance.py
 - **runtime_evidence**: NOT_PERFORMED; durable fixture journals and actual selector/worker refusals tested offline
 - **visual_approval**: NOT_APPLICABLE
 - **latest_evidence**: Mapped existing registry facts and free-only routing first. Closed durable discovery/adoption gap; 230 offline tests pass. Scope/class/access/cost gates, content-bound reopened catalog, paid owner approval requirements and claims/credentials authority refusal verified. Explicit unknown metadata preserved; no live provider calls.
@@ -1931,7 +1931,7 @@ future_calibration:
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**: 126a8a52674a186c15cc555d6f51b735981029db
+- **resolution_at_commit**: d6ba32bafea1f57c6381c58311acad10f0e950be
 - **work_authorized**: True
 - **updated**: 2026-10-06
 - **parent_ids**: None
