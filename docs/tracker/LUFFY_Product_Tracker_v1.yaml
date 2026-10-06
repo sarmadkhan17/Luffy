@@ -3681,7 +3681,7 @@ items:
   stage: '1'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Require current exactly bound deterministic Risk permission for new exposure.
   why_needed: No actor may turn a proposal into exposure by bypassing Risk.
   closure_condition: All normal/legacy/direct/retry/owner entry callers require allowed intent/instrument/direction/quantity/policy/account/capability/freshness
@@ -3691,29 +3691,27 @@ items:
   - DATA-01
   - DATA-02
   owner_role: Risk owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: Claude local engineering session
+  implementation_evidence: trader/engine/entry_authority.py authorize/validate/submit (existing, unchanged); d0de3d5; tests/test_risk01_entry_binding.py
+  runtime_evidence: NOT_PERFORMED; offline tests only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 'Every entry caller mapped: one reduceOnly=False order site (submit), reached only via Kernel authorize_entry -> Executor.open(risk_permission); recovery/reconcile/exits/protective are reduceOnly; owner/dashboard open no exposure. Existing code binds intent/instrument/direction/quantity/policy/account+book/capability/freshness/control watermark. No code defect found. Added 19 negative/mutant tests (foreign issuer, stale proof, expired capability, instrument/direction/quantity/geometry, retry after rejection/ambiguity, guard-removal mutants, closed caller set) and repaired a pre-existing in-flight fence test harness. Offline only.'
   source_ids:
   - S01
   - S02
   - S12
   - S14
   source_sections: §§17,35.6
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: None for RISK-01. Dependents RISK-02, RISK-03, EXE-01, EXE-06, PORT-08, RUN-02, LLM-01 remain separate.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: d0de3d5
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
+  closure_evidence: docs/tracker/evidence/risk01-entry-permission/closure.yaml
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -7963,6 +7961,14 @@ change_log:
   reason: Explicit SOL OBS-03 only; no services or providers launched; every other row and closing condition unchanged.
   evidence: docs/tracker/evidence/obs03-first-cycle-sol/closure.json
   actor: SOL / Codex local engineering session
+- date: '2026-10-06'
+  event: RISK01_ENTRY_PERMISSION_CLOSED
+  item: RISK-01
+  before: EVIDENCE_TO_MAP; stage-level history only
+  after: CLOSED at offline engineering scope; no code defect, negative/mutant proofs retained
+  reason: Explicit RISK-01 package only; no services/providers launched; DATA-01/02, ATT-04, SEC-01/RUN-01 deferral untouched; every other row and closing condition preserved.
+  evidence: docs/tracker/evidence/risk01-entry-permission/closure.yaml
+  actor: Claude local engineering session
 sdd_section_coverage:
 - section: 1
   title: Mission / end goal

@@ -1,0 +1,16 @@
+id: RISK-01
+result: CLOSED_ENGINEERING_ONLY
+entry_callers_mapped:
+  sole_order_site: trader/engine/entry_authority.py submit() is the only create_order with reduceOnly=False (AST-guarded: tests/test_stage1_entry_authority.py::test_all_live_order_callers_have_classified_boundaries; engine callers elsewhere must pass reduceOnly=True)
+  normal_kernel: kernel.py -> RiskManager.authorize_entry() -> Executor.open(risk_permission=) -> submit(); only caller of Executor.open (closed set, tests/test_risk01_entry_binding.py::test_entry_callers_are_closed_set; every kernel call passes risk_permission)
+  direct_executor: Executor.open without a permission, with a forged EntryPermission, a dict, a raw payload string or object() is refused (exact_risk_permission_required / risk_permission_not_issued)
+  legacy: no second creation path; paper executor sends no venue orders; reconcile/protective/exits/recovery create_order calls are reduceOnly=True only
+  retry: reservation row in execution_requests (logical_id, decision_id UNIQUE) retained across REFUSED/TERMINAL/ambiguous; reopen and restarted Executor refused (existing tests + new retry tests)
+  recovery_restart: recovery.tick only adopts/protects/closes (reduceOnly); never submits an entry; permissions are in-memory, issuer-identity bound, and a restarted Risk cannot validate a prior one
+  owner_interface: no owner/IPC/dashboard operation opens exposure (kernel.py:2153 manual close only)
+binding_proven_in_validate: [intent, instrument, direction, quantity<=allowed, policy digest, account+book digest, capability receipt+schema+freshness, release proof age/state/identity, control-intent watermark, venue market record]
+actual_gap: none in Risk/entry code. Defence-in-depth confirmed (mutants required removing several redundant guards to expose a bypass).
+test_gap_fixed: no retained negative proof for foreign-issuer permission, stale proof age, capability expiry after issuance, instrument/geometry binding, retry after rejection/ambiguity, mutants of each guard, closed caller set.
+harness_repair: tests/test_entry_control_fence.py::test_entry_in_flight_serializes_before_transition failed on base too (spawned child's Journal() init blocked by the entry's IMMEDIATE durable hold across the venue call); child now builds its Journal before the hold and is released by an event. No production code changed.
+tests: tests/test_risk01_entry_binding.py (19 pass); adjacent 172 pass incl. test_stage1_entry_authority, test_entry_control_fence, test_entry_recovery, test_final_audit_entry_partial_barrier, test_owner_recovery_risk_guard, test_single_creation_path.
+limits: offline only; no Kernel/provider/venue calls. Stale-capability mutant also disables the independently timed leverage receipt and account/venue receipts (those are separate redundant guards, proven by existing tests). Account-binding compare has no isolated mutant: authoritative_inputs scope guard and validate digest compare are both live, each proven by real refusals (test_account_context_changed_before_execution_refuses, test_venue_book_receipt_for_another_account_refuses, test_stale_account_after_authorization_refuses, test_mutant_* only for guards that could be isolated).

@@ -714,3 +714,18 @@ own03_boundary_closure:
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
+
+risk01_entry_permission:
+  id: RISK-01
+  status: CLOSED
+  result: CLOSED_ENGINEERING_ONLY
+  implementation_commits: [d0de3d5]
+  evidence: docs/tracker/evidence/risk01-entry-permission/closure.yaml
+  actual_code_gap: none; test-evidence gaps and one pre-existing fence-test harness fault fixed
+  tests: 19 new pass; 172 adjacent pass.
+  kernel_launched: false
+  dashboard_launched: false
+  provider_calls: 0
+  other_rows_now_satisfied: none
+  evidence_added_not_closed: [EXE-01, RUN-02, PORT-08]
+  dependents_unblocked_not_closed: [RISK-02, RISK-03, EXE-01, EXE-06, PORT-08, RUN-02, LLM-01]
