@@ -1,0 +1,53 @@
+{
+  "schema": "obs02-closure.v1",
+  "tracker_id": "OBS-02",
+  "lane": "SOL",
+  "result": "CLOSED",
+  "closing_condition": "Bound new-process boot/FROZEN/genuine heartbeat and blocking-health proof gate Dashboard; PID/sleep/old beat is insufficient.",
+  "implementation_commit": "dba198ce9fc7845b80cacde24444a6834b0577ca",
+  "scope": "Repository implementation and isolated fixtures; no live Kernel or Dashboard launched",
+  "run01_source_commit": "0ecaad8",
+  "run01_identity_module_reused_verbatim": true,
+  "run01_branch_merged": false,
+  "gate_paths": [
+    "restart.sh dashboard before process effects",
+    "trader.dashboard.server main before app/Journal/IPC construction",
+    "prepared Host.start dashboard before Popen"
+  ],
+  "tests": {
+    "focused": "243 passed in 28.81s; includes 51 readiness, OBS-01, OBS-04, Kernel boot and safety-health regressions",
+    "producer_final_check": "5 passed in 1.76s",
+    "mon03_impact": "2 passed; 35 deselected in 64.95s"
+  },
+  "refusal_cases": 30,
+  "kernel_dashboard_live_launches": 0,
+  "production_provider_calls": 0,
+  "trading_authority_changed": false,
+  "obs01_preflight_unchanged": true,
+  "obs04_shutdown_helper_and_controller_methods_unchanged": true,
+  "unrelated_tracker_rows_unchanged": true,
+  "cross_tracker": {
+    "RUN-01": {
+      "status": "EVIDENCE_TO_MAP",
+      "row_changed": false,
+      "closed_by_this_package": false
+    },
+    "MON-01": {
+      "status": "EVIDENCE_TO_MAP",
+      "row_changed": false,
+      "closed_by_this_package": false
+    },
+    "MON-02": {
+      "status": "EVIDENCE_TO_MAP",
+      "row_changed": false,
+      "closed_by_this_package": false
+    },
+    "MON-03": {
+      "status": "EVIDENCE_TO_MAP",
+      "row_changed": false,
+      "closed_by_this_package": false
+    }
+  },
+  "next_recommended_p0": "OBS-03",
+  "next_selected": false
+}

@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.7-obs04-shutdown-closed
+  version: 1.8-obs02-dashboard-readiness-closed
   created_date: '2026-10-05'
   title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -13,7 +13,7 @@ metadata:
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness
     or full prior-chat reconciliation. No functionality or evidence has been independently retested by creating
     this tracker.
-  current_active_item: OBS-04
+  current_active_item: OBS-02
   current_active_result: CLOSED_ENGINEERING_ONLY
   row_count: 177
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This
@@ -23,12 +23,12 @@ metadata:
   status_counts:
     IN_PROGRESS: 0
     EVIDENCE_TO_MAP: 130
-    AWAITING_EVIDENCE: 13
+    AWAITING_EVIDENCE: 12
     AWAITING_OWNER: 14
     DEFERRED: 2
     BLOCKED: 2
     OPEN: 5
-    CLOSED: 11
+    CLOSED: 12
   workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged
     and excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
@@ -38,7 +38,7 @@ metadata:
   current_runtime_item: PERF-01
   current_runtime_result: BLOCKED
   next_diagnostic_item: null
-  next_recommended_item: OBS-02
+  next_recommended_item: OBS-03
   next_runtime_execution_authorized: false
   owner_representation_decision:
     date: '2026-10-05'
@@ -51,9 +51,9 @@ metadata:
     navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope;
       the owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product
       row is silently reopened or added.
-  last_terminal_item: OBS-04
+  last_terminal_item: OBS-02
   last_terminal_result: CLOSED
-  last_terminal_evidence: docs/tracker/evidence/obs04-shutdown-sol/closure.json
+  last_terminal_evidence: docs/tracker/evidence/obs02-dashboard-readiness-sol/closure.json
 status_definitions:
 - status: EVIDENCE_TO_MAP
   meaning: Existing requirement recorded; exact row-level evidence has not yet been linked. This is NOT a finding
@@ -82,8 +82,8 @@ operating_rules:
     is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization
     and adoption checks.
 - rule: Current work
-  detail: OBS-04 is terminal CLOSED with verified-exit observer retention and real fixture-timer proof.
-    No successor is selected; OBS-02 is recommended only. PERF-01 and PERF-03 remain unchanged and BLOCKED.
+  detail: OBS-02 is terminal CLOSED with current-Kernel boot/health attachment gating and isolated fixture proof.
+    No successor is selected; OBS-03 is recommended only. PERF-01 and PERF-03 remain unchanged and BLOCKED.
     No runtime, provider or trading activation is authorized.
 - rule: Activation
   detail: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers,
@@ -6574,7 +6574,7 @@ items:
   stage: Cross-cutting
   item_type: DEFECT
   release_scope: BASELINE
-  status: AWAITING_EVIDENCE
+  status: CLOSED
   required_behavior: Launch Dashboard only after new Kernel boot evidence.
   why_needed: The prepared launcher started Dashboard immediately.
   closure_condition: Bound new-process boot/FROZEN/genuine heartbeat and blocking-health proof gate Dashboard; PID/sleep/old
@@ -6583,31 +6583,36 @@ items:
     boundaries without reopening unrelated work.
   dependencies: []
   owner_role: Assigned local engineering session
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: SEE_EVIDENCE
-  runtime_evidence: SEE_SCOPE_AND_EVIDENCE
+  engineering_assignee: SOL
+  implementation_evidence: dba198ce9fc7845b80cacde24444a6834b0577ca; trader/observability/dashboard_readiness.py;
+    RUN-01 identity module reused from 0ecaad8
+  runtime_evidence: docs/tracker/evidence/obs02-dashboard-readiness-sol/healthy-fixture.json; docs/tracker/evidence/obs02-dashboard-readiness-sol/refusal-fixtures.jsonl;
+    isolated lock/proc/heartbeat/health and inert Dashboard launch seams only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: S16 reports Dashboard launch is now gated behind the new Kernel boot/health evidence. In the
-    latest attempt Dashboard never launched because the first cycle exceeded the safety limit. Complete adverse-case
-    proof remains to be inspected.
+  latest_evidence: 243 focused regressions passed in 28.81s, including 51 readiness cases and all OBS-01/OBS-04
+    tests; 2 MON-03 impact cases passed. Current identity, bound fresh heartbeat, chronology/sequence, completed
+    boot, truthful FROZEN controls and independent health receipt gate all supported operational launch paths. Thirty
+    adverse cases refused before Dashboard attachment; no live services launched.
   source_ids:
   - S11
   - S15
   source_sections: 'Parent requirement(s): RUN-01'
-  next_proof: Resolve within the linked parent/active task; capture exact evidence before closure.
+  next_proof: Closed at repository implementation and isolated fixture scope; no current operational Kernel/Dashboard
+    readiness claim.
   acceptance_basis: Existing requirement/observed incident; not a new feature.
   acceptance_status: OWNER_CONTRACT_OR_REPORTED_FAILURE
   priority: CURRENT
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: dba198ce9fc7845b80cacde24444a6834b0577ca
+  work_authorized: true
+  updated: '2026-10-06'
   legacy_ids: ''
   parent_work: WORK-01
   parent_ids:
   - RUN-01
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: docs/tracker/evidence/obs02-dashboard-readiness-sol/closure.json
+  evidence_validity: Pinned implementation, reused RUN-01 source and fixture evidence; no live Kernel/Dashboard
+    launch.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 - id: OBS-03
@@ -7737,6 +7742,15 @@ change_log:
   after: CLOSED; real fixture timers retained until verified owned-child exit
   reason: Explicit SOL OBS-04 scope only; all other tracker rows and closing conditions unchanged.
   evidence: docs/tracker/evidence/obs04-shutdown-sol/closure.json
+  actor: SOL / Codex local engineering session
+- date: '2026-10-06'
+  event: OBS02_CURRENT_KERNEL_DASHBOARD_GATE_CLOSED
+  item: OBS-02
+  before: AWAITING_EVIDENCE; current identity and strict boot/health launch gate unproven
+  after: CLOSED; existing RUN-01 identity reused and genuine boot/health required before Dashboard attachment
+  reason: Explicit SOL OBS-02 only; no branch merge or live service launch; every other tracker row and closing
+    condition preserved.
+  evidence: docs/tracker/evidence/obs02-dashboard-readiness-sol/closure.json
   actor: SOL / Codex local engineering session
 sdd_section_coverage:
 - section: 1

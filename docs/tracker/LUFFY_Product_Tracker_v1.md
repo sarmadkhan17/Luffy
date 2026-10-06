@@ -1,10 +1,10 @@
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.7-obs04-shutdown-closed
+Version: 1.8-obs02-dashboard-readiness-closed
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
-Terminal NEXT: **OBS-04 — CLOSED_ENGINEERING_ONLY**. OBS-02 is recommended only; no next item is selected or started. PERF-01/PERF-03 remain BLOCKED; no runtime or trading authority follows.
+Terminal NEXT: **OBS-02 — CLOSED_ENGINEERING_ONLY**. OBS-03 is recommended only; no next item is selected or started. PERF-01/PERF-03 remain BLOCKED; no runtime or trading authority follows.
 
 ## Status definitions
 
@@ -30,7 +30,7 @@ Terminal NEXT: **OBS-04 — CLOSED_ENGINEERING_ONLY**. OBS-02 is recommended onl
 
 **One data set**: Maintain this YAML as canonical detailed data. Dashboard Tracker reads validated YAML and NEXT. Markdown is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization and adoption checks.
 
-**Current work**: OBS-04 is terminal CLOSED with verified-exit observer retention and real fixture-timer proof. No successor is selected; OBS-02 is recommended only. PERF-01 and PERF-03 remain unchanged and BLOCKED. No runtime, provider or trading activation is authorized.
+**Current work**: OBS-02 is terminal CLOSED with current-Kernel boot/health attachment gating and isolated fixture proof. No successor is selected; OBS-03 is recommended only. PERF-01 and PERF-03 remain unchanged and BLOCKED. No runtime, provider or trading activation is authorized.
 
 **Activation**: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers, a restart or a scope expansion.
 
@@ -5293,32 +5293,32 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: Cross-cutting
 - **item_type**: DEFECT
 - **release_scope**: BASELINE
-- **status**: AWAITING_EVIDENCE
+- **status**: CLOSED
 - **why_needed**: The prepared launcher started Dashboard immediately.
 - **closure_condition**: Bound new-process boot/FROZEN/genuine heartbeat and blocking-health proof gate Dashboard; PID/sleep/old beat is insufficient.
 - **failure_regression_proof**: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed boundaries without reopening unrelated work.
 - **dependencies**: None
 - **owner_role**: Assigned local engineering session
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: SEE_EVIDENCE
-- **runtime_evidence**: SEE_SCOPE_AND_EVIDENCE
+- **engineering_assignee**: SOL
+- **implementation_evidence**: dba198ce9fc7845b80cacde24444a6834b0577ca; trader/observability/dashboard_readiness.py; RUN-01 identity module reused from 0ecaad8
+- **runtime_evidence**: docs/tracker/evidence/obs02-dashboard-readiness-sol/healthy-fixture.json; docs/tracker/evidence/obs02-dashboard-readiness-sol/refusal-fixtures.jsonl; isolated lock/proc/heartbeat/health and inert Dashboard launch seams only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: S16 reports Dashboard launch is now gated behind the new Kernel boot/health evidence. In the latest attempt Dashboard never launched because the first cycle exceeded the safety limit. Complete adverse-case proof remains to be inspected.
+- **latest_evidence**: 243 focused regressions passed in 28.81s, including 51 readiness cases and all OBS-01/OBS-04 tests; 2 MON-03 impact cases passed. Current identity, bound fresh heartbeat, chronology/sequence, completed boot, truthful FROZEN controls and independent health receipt gate all supported operational launch paths. Thirty adverse cases refused before Dashboard attachment; no live services launched.
 - **source_ids**: S11, S15
 - **source_sections**: Parent requirement(s): RUN-01
-- **next_proof**: Resolve within the linked parent/active task; capture exact evidence before closure.
+- **next_proof**: Closed at repository implementation and isolated fixture scope; no current operational Kernel/Dashboard readiness claim.
 - **acceptance_basis**: Existing requirement/observed incident; not a new feature.
 - **acceptance_status**: OWNER_CONTRACT_OR_REPORTED_FAILURE
 - **priority**: CURRENT
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: dba198ce9fc7845b80cacde24444a6834b0577ca
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **legacy_ids**:
 - **parent_work**: WORK-01
 - **parent_ids**: RUN-01
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/obs02-dashboard-readiness-sol/closure.json
+- **evidence_validity**: Pinned implementation, reused RUN-01 source and fixture evidence; no live Kernel/Dashboard launch.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 

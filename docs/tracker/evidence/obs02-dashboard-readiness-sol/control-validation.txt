@@ -1,0 +1,4 @@
+177 rows retained; only OBS-02 changed. All closing conditions preserved.
+RUN-01/MON-01/MON-02/MON-03/OBS-01/OBS-04 and PERF-01/PERF-03/ATT-04 unchanged.
+STATE/NEXT terminal OBS-02 CLOSED ENGINEERING_ONLY; OBS-03 recommended, not selected or started.
+Runtime/provider/trading authorization remains false.

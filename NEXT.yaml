@@ -42,20 +42,21 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
-  id: OBS-04
+  id: OBS-02
   status: CLOSED
   mode: ENGINEERING_ONLY
-  objective: Retain required observers through uncertain shutdown until owned-child exit is verified.
+  objective: Gate Dashboard attachment on verified current Kernel identity, completed boot and truthful current
+    health.
   implementation_started: true
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
   tracker_source: docs/tracker/LUFFY_Product_Tracker_v1.yaml
-  implementation_commit: d623f548814efb504304c15507fef0f5940d7797
+  implementation_commit: dba198ce9fc7845b80cacde24444a6834b0577ca
   evidence:
-  - docs/tracker/evidence/obs04-shutdown-sol/closure.json
-  - docs/tracker/evidence/obs04-shutdown-sol/REPORT.md
-  next_recommended_item: OBS-02
+  - docs/tracker/evidence/obs02-dashboard-readiness-sol/closure.json
+  - docs/tracker/evidence/obs02-dashboard-readiness-sol/REPORT.md
+  next_recommended_item: OBS-03
   next_item_selected: false
   next_item_started: false
 historical_recommendation_note: The following recommendation predates the executed blocked WORK-01 attempt; its not-started fields are historical only.
