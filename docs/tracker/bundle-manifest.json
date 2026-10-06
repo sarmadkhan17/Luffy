@@ -1,6 +1,6 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.34-wrld06-reconciled-sol2",
+  "snapshot_version": "1.35-res02-reconciled-sol2",
   "control_baseline_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 439929,
-      "sha256": "ca9261e4f750ac89c28cc7032cbfe7717566402f56460f43b5a85c0a14c125ac",
+      "bytes": 445740,
+      "sha256": "ddd1d7484dfeb4659884d64cc6fed4d47896114d4376ae7bff695f3e4440bebf",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 404273,
-      "sha256": "d6b3050542145ae86e6eb5d9d269ee80097ab44fe25b476f03a01d326686d97a",
+      "bytes": 405340,
+      "sha256": "c3364cc71b33fbf1c51b3f2b5677c83d515f0054c60e4e078adb29d2b645489b",
       "synchronization_required": false
     },
     {
@@ -986,8 +986,8 @@
     }
   },
   "status_counts": {
-    "CLOSED": 42,
-    "EVIDENCE_TO_MAP": 95,
+    "CLOSED": 43,
+    "EVIDENCE_TO_MAP": 94,
     "DEFERRED": 7,
     "AWAITING_EVIDENCE": 9,
     "AWAITING_OWNER": 14,
@@ -1091,6 +1091,60 @@
     "status_counts_after": {
       "CLOSED": 42,
       "EVIDENCE_TO_MAP": 95,
+      "DEFERRED": 7,
+      "AWAITING_EVIDENCE": 9,
+      "AWAITING_OWNER": 14,
+      "BLOCKED": 7,
+      "OPEN": 4
+    }
+  },
+  "res02_canonical_reconciliation": {
+    "item": "RES-02",
+    "canonical_status": "CLOSED",
+    "scope": "ARCHITECTURE_OFFLINE_ENGINEERING",
+    "engineering_closure_commit": "1b9b020ea6ff6a88b549f82cd69f36c2d6efa97b",
+    "reconciliation_base_revision": "2992294237410219d1aa12326f64f411f9c8b703",
+    "evidence": "docs/tracker/evidence/res02-reconciliation-sol2/reconciliation.json",
+    "closure_condition": "Normal generated question reaches the worker/router and justified source choices without operator priming.",
+    "closure_condition_satisfied": true,
+    "dependency_status": {
+      "RES-01": "CLOSED; reconciled at 65e024f"
+    },
+    "closing_condition_proof": [
+      "RES-01 normal generated volume-anomaly questions enter build_plan/internal evidence collection through the unmocked investigation.main path. Source choices follow frozen alternatives, exact forward target keys and versioned candle/registered outcome measurements; unavailable participant evidence stays UNAVAILABLE, with no fabricated route.",
+      "Real shadow-generated strategy-decay questions pass through GeneratedQuestionSource to the normal external worker CLI and registered academic_factors/Crossref router with question-derived queries. Producer receipt, original source events, snapshot, question and registry/search identities survive reopened readers; no worker question registration or owner URL priming substitutes for routing.",
+      "COLLECTED, EMPTY and UNAVAILABLE offline transport results retain honest INCONCLUSIVE status; unsupported anomaly shapes refuse external strategy routing. Replay rejects even rehashed manually substituted URL routes, and CLI rejects URL priming/missing generated-source paths.",
+      "The existing bounded evidence_zlib allowlist correction restores the real guarded producer; isolation checks retain authority/network/venue/learning import refusals. Restart performs zero repeated evidence/transport work. No live acquisition, scheduler, paid-source adoption or deployment proof is inferred."
+    ],
+    "retained_validation": "1b9b020 report and actual offline routing-proof.json retained unchanged: final 68 tests passed in 60.10s across routing, generated handoff/negative memory, external router, RES-01 producer and investigation research family; original pre-fix ImportError diagnosis preserved.",
+    "fresh_validation": "No unnecessary rerun of the retained passing suite. Exact inspected source/test/report/proof bytes verified against 1b9b020; control-plane contracts, row/count/condition preservation and bundle hashes validated independently.",
+    "original_condition_and_edges_preserved": true,
+    "application_code_changed": false,
+    "runtime_execution_authorized": false,
+    "trading_activation_authorized": false,
+    "control_plane_reconciliation_pending": false,
+    "successor_selected": false,
+    "downstream": {
+      "RES-03": "ELIGIBLE for current architecture/offline phase; RES-02 CLOSED and SEC-01 explicitly DEFERRED/nonblocking per existing owner scope decision. SEC-01 condition/dependency edge preserved, not CLOSED; future activation obligations remain mandatory. RES-03 remains EVIDENCE_TO_MAP and unselected."
+    },
+    "source_sha256": {
+      "docs/superpowers/reports/2026-10-06-res02-sol1.md": "14b4e6f2515aa89b7e7dc75806a9f12a1d8fc6e48e179232cc8cd4b0b59e6e4a",
+      "docs/superpowers/reports/2026-10-06-res02-sol1-routing-proof.json": "b44dacbdf1e90a6b0e3b7ff3c50a2d648fe7d3a95fac9ed522b332c9380329fd",
+      "tests/test_res02_question_routing.py": "2c265ac7349ffd8bcc5f0033975f06b77708e7abe6e0f661366bf8cc83a83b98",
+      "tests/test_external_research_router.py": "697547dd95779a3898666f7f76901c48fe443e246650b58568e228c5d3f703ab",
+      "tests/test_generated_question_handoff_negative_memory.py": "91fc652adce68911045ab992792d85489d8bd86184f34754428847ca88b29053",
+      "trader/cognition/_research_shadow_child.py": "0cc6c1aeeff1d34dec96b83fa50e0d6d98607aa2196280d1c81aa02b3337d9d8",
+      "trader/cognition/research_shadow.py": "b97f139be33de5ff4bcccf4b7713d0c17827d6cdd5e7306bc5f96bd927ffadc4",
+      "trader/research/generated_question_source.py": "9618bb103183733e88fcc63477dcc0a11f89a76476019bbcef3c4c9c6b53add0",
+      "trader/cognition/external_sources.py": "45191f029efce62f3fcf919039e6f9ba2d331b8580f90bd0bfc2ee25291906ec",
+      "trader/research/external_research.py": "7ff110c66216a3289e05385ac79299cb4710c2e79f7d597462eff5ac33377cce",
+      "trader/observability/investigation.py": "7cecb2a9059add86394004f4a0fe81765f1e078cb8cadc4497aaf59c04f90cde",
+      "trader/observability/investigation_research.py": "e4242aeb8563b101498c174457afd149c3e72475c47a99e0e9eafe0748b707a5",
+      "trader/core/evidence_zlib.py": "24fb1aa9e9ef1e3a39763c91f7e0f4d3cb786f8bc5f8e969dba723e651fcfc50"
+    },
+    "status_counts_after": {
+      "CLOSED": 43,
+      "EVIDENCE_TO_MAP": 94,
       "DEFERRED": 7,
       "AWAITING_EVIDENCE": 9,
       "AWAITING_OWNER": 14,

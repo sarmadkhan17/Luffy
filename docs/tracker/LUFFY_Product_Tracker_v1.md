@@ -1,3 +1,5 @@
+> Current SOL-2 reconciliation: RES-02 CLOSED at architecture/offline scope. RES-03 is now eligible for current architecture/offline work under the existing SEC-01 deferral; no registry/adoption or future activation closure is asserted. No successor selected. [Evidence](evidence/res02-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
+
 > Current SOL-2 reconciliation: WRLD-06 CLOSED at architecture/offline scope. OUT-03 remains BLOCKED only on its direct OUT-01 dependency; DATA-03 is CLOSED and WRLD-06 is now CLOSED. WRLD-04 engineering closure is pinned; its separate canonical mapping remains pending. No successor selected. [Evidence](evidence/wrld06-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
 
 > Current SOL-2 reconciliation: QNT-01 CLOSED at architecture/offline scope. QNT-02 is now dependency-eligible; its concurrent engineering work and own closure condition are preserved. No successor selected. [Evidence](evidence/qnt01-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
@@ -1870,32 +1872,33 @@ future_calibration:
 - **stage**: 3
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Research should start from a question, not owner URLs.
 - **closure_condition**: Normal generated question reaches the worker/router and justified source choices without operator priming.
 - **failure_regression_proof**: Unsupported shape or absent source refuses truthfully; manual URL list cannot substitute for router proof.
 - **dependencies**: RES-01
 - **owner_role**: Attention & research owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2 (existing engineering closure reconciled only)
+- **implementation_evidence**: 1b9b020; existing internal investigation plan and generated-question external worker/router; bounded evidence codec allowlist correction; tests/test_res02_question_routing.py and retained routing-proof.json
+- **runtime_evidence**: NOT_PERFORMED; pinned offline engineering proof only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Original condition satisfied offline: generated anomaly and supported decay questions reach real worker/router paths with protocol/registry-justified sources and exact lineage, without URL priming. Unsupported/manual-substitution/absent-source controls and restart pass. Retained 68 passing tests and actual routing receipt match pinned engineering bytes; no implementation added or live source acquisition asserted.
 - **source_ids**: S01, S02, S06, S14
 - **source_sections**: §12.3
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for RES-02 at architecture/offline engineering scope; dependent rows retain their own closing conditions.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 1b9b020ea6ff6a88b549f82cd69f36c2d6efa97b
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/res02-reconciliation-sol2/reconciliation.json
+- **evidence_validity**: Pinned engineering closure and scoped offline checks; no deployment/runtime proof inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### RES-03 — Maintain source registry, discovery and governed adoption.
 
