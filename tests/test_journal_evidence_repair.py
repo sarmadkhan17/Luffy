@@ -127,3 +127,20 @@ def test_streaming_preserves_standard_json_key_and_scalar_contract():
     value={True:'\u2603',None:1.0,2:['x',False],3.5:None}
     assert ''.join(E.serialize(value))==json.dumps(value)
     with pytest.raises(TypeError):''.join(E.serialize({object():1}))
+
+
+def test_provenance_retry_adds_no_event_but_distinct_observation_does(tmp_path):
+    j=Journal(tmp_path/'journal.db');receipt={'revision':'r1','raw':'x'*1000}
+    def n():return j.query("SELECT COUNT(*) n FROM brain_events")[0]['n']
+    def blobs():return j.query('SELECT COUNT(*) n FROM journal_evidence_blobs_v1')[0]['n']
+    j.log_brain_event('market_provenance','market_data',{'decision_id':'d1','cycle_id':'c1','receipt':receipt})
+    events,stored=n(),blobs()
+    j.log_brain_event('market_provenance','market_data',{'decision_id':'d1','cycle_id':'c1','receipt':receipt})  # exact retry
+    assert (n(),blobs())==(events,stored)
+    # Adverse variants: same payload bytes, different observation identity.
+    j.log_brain_event('market_provenance','market_data',{'decision_id':'d2','cycle_id':'c1','receipt':receipt})
+    j.log_brain_event('market_provenance','other_subject',{'decision_id':'d1','cycle_id':'c1','receipt':receipt})
+    assert n()==events+2
+    # Other kinds are never deduplicated.
+    for _ in range(2):j.log_brain_event('legacy','s',{'status':'ok'})
+    assert n()==events+4

@@ -849,15 +849,33 @@ class Journal:
 
     def log_brain_event(self, kind: str, subject: str, detail: Any) -> None:
         with self._tx() as c:
+            stored = self._brain_detail(c, kind, detail)
+            if kind == "market_provenance" and self._provenance_retry(c, subject, stored):
+                return
             cursor = c.execute("INSERT INTO brain_events(ts,kind,subject,detail) VALUES (?,?,?,?)",
-                      (now_utc().isoformat(), kind, subject,
-                       self._brain_detail(c, kind, detail)))
+                      (now_utc().isoformat(), kind, subject, stored))
             if kind in ('execution_incident', 'data_quality_incident', 'execution_error', 'data_error', 'stale_data',
                         'malformed_evidence', 'required_input_unavailable', 'source_failure'):
                 from ..learning import capture as lc, capture_runtime as lr
                 from ..cognition.outcomes import timestamp
                 lc.safely(c, 'incident:'+str(cursor.lastrowid), lr.incident, cursor.lastrowid,
                           timestamp(now_utc().isoformat()), subject, detail, incident_kind=kind)
+
+    PROVENANCE_RETRY_WINDOW = 256
+
+    @staticmethod
+    def _provenance_retry(conn, subject, stored) -> bool:
+        """True when this exact event was already appended (a logical retry).
+
+        Identity is the stored manifest, which hashes the full detail including
+        the caller's decision_id/cycle_id. A distinct observation carries its
+        own decision_id, so identical receipt bytes alone are never a retry.
+        Only the newest rows are checked: a retry follows its original at once.
+        """
+        return conn.execute(
+            "SELECT 1 FROM (SELECT subject,detail FROM brain_events WHERE kind='market_provenance' "
+            "ORDER BY id DESC LIMIT ?) WHERE subject IS ? AND detail=? LIMIT 1",
+            (Journal.PROVENANCE_RETRY_WINDOW, subject, stored)).fetchone() is not None
 
     @staticmethod
     def _brain_detail(conn, kind, detail):
