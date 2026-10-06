@@ -42,6 +42,53 @@ completed_pre_stage8_audit:
     - Real profitable edge, calibrated costs/capacity and production learning evidence remain unestablished.
 
 work_package:
+  id: RUN-01
+  status: BLOCKED
+  result: IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING
+  mode: ENGINEERING_ONLY
+  objective: Reconcile integrated RUN-01 implementation and retain the exact controlled live-proof closing
+    gap.
+  implementation_started: true
+  implementation_complete: true
+  implementation_commit: 1b2735c5255d998399b50a3a5893436336fbb5d7
+  identity_reuse_lineage: OBS-02 dba198c
+  evidence:
+  - tests/test_run01_instance_identity.py
+  offline_validation:
+    source: Owner-reported integrated validation; not rerun in reconciliation
+    combined_pre_merge_tests_passed: 307
+    production_main_post_merge_regressions_passed: 153
+  protections_preserved:
+  - OBS-01
+  - OBS-02
+  - OBS-03
+  - OBS-04
+  closing_condition_satisfied: false
+  remaining_closing_gap: One owner-authorized controlled launch + graceful stop on the intended exact revision
+    proving preflight PASS, exact revision, verified PID/start ticks, heartbeat instance binding, single-instance
+    behavior, SIGTERM graceful exit, lock release and no duplicate Kernel.
+  requirement_tradeoffs:
+  - 'No SIGKILL: a hung Kernel requires owner intervention.'
+  - Safety-over-availability is intentional.
+  - Watchdog may block during graceful stop.
+  - OBS-01 preflight may refuse recovery.
+  - Revision binding is required for the controlled proof.
+  exact_owner_authorization_needed: Explicitly authorize one controlled Kernel launch and SIGTERM graceful
+    stop on a named full intended revision, with revision binding required and retained proof of every listed
+    check; Dashboard launch, provider calls and trading activation require separate explicit scope and are
+    not authorized by this reconciliation.
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  runtime_launched: false
+  dashboard_launched: false
+  provider_calls: 0
+  tracker_source: docs/tracker/LUFFY_Product_Tracker_v1.yaml
+  another_run01_fix_selected: false
+  next_item_selected: false
+  next_item_started: false
+
+completed_obs03_engineering:
   id: OBS-03
   status: CLOSED
   mode: ENGINEERING_ONLY

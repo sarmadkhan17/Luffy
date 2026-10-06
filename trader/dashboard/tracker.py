@@ -125,7 +125,7 @@ class Ledger(Contract):
 
 class Selection(Contract):
     id: str
-    status: Literal["SELECTED_NOT_STARTED", "IN_PROGRESS", "CLOSED"]
+    status: Literal["SELECTED_NOT_STARTED", "IN_PROGRESS", "CLOSED", "BLOCKED"]
     mode: Literal["DIAGNOSIS_ONLY", "ENGINEERING_ONLY"]
     objective: str = Field(min_length=1)
 

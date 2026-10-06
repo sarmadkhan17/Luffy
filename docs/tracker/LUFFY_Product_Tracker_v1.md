@@ -1,10 +1,10 @@
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.9-obs03-first-cycle-closed
+Version: 1.10-run01-reconciled-blocked
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
-Terminal NEXT: **OBS-03 — CLOSED_ENGINEERING_ONLY**. PERF-01 is recommended only; no next item is selected or started. PERF-01/PERF-03 remain BLOCKED; no runtime or trading authority follows.
+Current NEXT: **RUN-01 — BLOCKED — IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING**. Controlled live proof requires exact owner authorization; no additional RUN-01 fix is selected. No runtime, Dashboard, provider or trading authority follows.
 
 ## Status definitions
 
@@ -472,32 +472,32 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 1
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: BLOCKED
 - **why_needed**: Prevents duplicate processes and startup on the wrong code.
 - **closure_condition**: Fresh identity/preflight checks, ordered boot, truthful new-instance heartbeat and graceful shutdown are demonstrated on the intended revision.
 - **failure_regression_proof**: Boot failure or shutdown timeout cannot create a second Kernel or remove needed observation.
 - **dependencies**: GOV-07
 - **owner_role**: Runtime & safety owner
 - **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **implementation_evidence**: main 1b2735c5255d998399b50a3a5893436336fbb5d7; tests/test_run01_instance_identity.py; OBS-02 identity reuse lineage from dba198c
+- **runtime_evidence**: LIVE_PROOF_PENDING
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: S16: controlled launch and graceful stop reported; Dashboard correctly withheld because boot/observation gate did not pass. Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING. Identity/single-instance/graceful-stop implementation integrated. Owner-reported validation: 307 combined tests passed before merge; 153 production-main regressions passed after merge. OBS-01/02/03/04 protections remain intact. Requirement tradeoffs: No SIGKILL: a hung Kernel requires owner intervention. Safety-over-availability is intentional. Watchdog may block during graceful stop. OBS-01 preflight may refuse recovery. Revision binding is required for the controlled proof.
 - **source_ids**: S01, S02, S05, S15, S16
 - **source_sections**: §§5.5,27
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: One owner-authorized controlled launch + graceful stop on the intended exact revision proving preflight PASS, exact revision, verified PID/start ticks, heartbeat instance binding, single-instance behavior, SIGTERM graceful exit, lock release and no duplicate Kernel.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
 - **resolution_at_commit**:
 - **work_authorized**: False
-- **updated**: 2026-10-05
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
 - **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **evidence_validity**: Integrated implementation and offline proof only; no controlled live proof on intended revision.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
-- **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **owner_approval_needed**: Explicitly authorize one controlled Kernel launch and SIGTERM graceful stop on a named full intended revision, with revision binding required and retained proof of every listed check; Dashboard launch, provider calls and trading activation require separate explicit scope and are not authorized by this reconciliation.
 
 ### RUN-02 — Preserve ACTIVE/FROZEN/HALTED/RECOVERY semantics and newer owner intent.
 
