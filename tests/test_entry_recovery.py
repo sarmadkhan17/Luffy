@@ -40,7 +40,8 @@ class Venue:
         if isinstance(error, InsufficientFunds):
             raise error
         oid = 'close' if close else 'entry'
-        order = {'id': oid, 'status': 'closed', 'average': 100., 'filled': amount}
+        order = {'id': oid, 'status': 'closed', 'average': 100., 'filled': amount,
+                 'clientOrderId': params['newClientOrderId'], 'symbol': symbol, 'side': side}
         self.orders[oid] = order
         self.orders[params['newClientOrderId']] = order
         if not close:

@@ -28,6 +28,10 @@ def read(journal):
     return value
 
 
+class OrderEvidenceMismatch(ValueError):
+    pass
+
+
 class EntryRecovery:
     def __init__(self, executor):
         self.executor = executor
@@ -99,9 +103,25 @@ class EntryRecovery:
         prefix = "close_" if close else ""
         oid = intent.get(prefix+"order_id")
         if oid:
-            return self.ex.fetch_order(oid, intent["symbol"])
-        return self.ex.fetch_order(None, intent["symbol"],
-                                  {"origClientOrderId": intent[prefix+"client_order_id"]})
+            order = self.ex.fetch_order(oid, intent["symbol"])
+        else:
+            order = self.ex.fetch_order(None, intent["symbol"],
+                                       {"origClientOrderId": intent[prefix+"client_order_id"]})
+        self._require_exact(intent, order, close, oid)
+        return order
+
+    def _require_exact(self, intent, order, close, oid):
+        """Only the order this action submitted may resolve it. The venue echo
+        must positively carry our client id and must not contradict the
+        persisted order id, symbol or side; absent identity is not a match."""
+        want_cid = intent[("close_" if close else "")+"client_order_id"]
+        side = intent["position"]["side"]
+        want_side = ("buy" if side == "long" else "sell") if not close else ("sell" if side == "long" else "buy")
+        if (not isinstance(order, dict) or order.get("clientOrderId") != want_cid
+                or (oid and str(order.get("id")) != str(oid))
+                or norm_symbol(str(order.get("symbol") or "")) != intent["symbol"]
+                or str(order.get("side") or "").lower() != want_side):
+            raise OrderEvidenceMismatch("order evidence does not match submitted action")
 
     def submit_close(self, intent, amount):
         # Persist BEFORE the call: timeout or crash must not cause a blind retry.
@@ -127,6 +147,9 @@ class EntryRecovery:
         intent["attempts"] = intent.get("attempts", 0)+1
         try:
             self._tick(intent)
+        except OrderEvidenceMismatch as exc:
+            intent["error_type"] = type(exc).__name__
+            self.save(intent, "order_evidence_mismatch")  # stays UNKNOWN; never resolves
         except Exception as exc:
             # Store type, not venue exception payloads that may contain request data.
             intent["error_type"] = type(exc).__name__
