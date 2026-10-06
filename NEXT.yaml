@@ -778,6 +778,20 @@ exe02_unknown_reconcile:
   dependents_unblocked_not_closed: [EXE-03]
   successor_selected: false
 
+exe03_partial_exit:
+  id: EXE-03
+  status: CLOSED
+  result: CLOSED_ENGINEERING_ONLY
+  implementation_commits: [003a9f9]
+  evidence: docs/tracker/evidence/exe03-partial-exit/closure.yaml
+  actual_code_gap: persisted order id not compared in partial resolve; identity rule unified with entry recovery
+  tests: 10 new pass; 91 focused pass.
+  kernel_launched: false
+  dashboard_launched: false
+  provider_calls: 0
+  evidence_added_not_closed: [EXE-05, EXE-06, EXE-07]
+  successor_selected: false
+
 own04_state_terminal:
   id: OWN-04
   status: CLOSED

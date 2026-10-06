@@ -3975,7 +3975,7 @@ items:
   stage: '1'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: "CLOSED"
   required_behavior: Handle partial fills/exits and cancel/replace without duplicate reduction.
   why_needed: An unknown partial exit must not sell the remaining position twice.
   closure_condition: A persisted reduction intent survives execution/timeout/reopen and applies at most once; subsequent
@@ -3984,12 +3984,11 @@ items:
   dependencies:
   - EXE-02
   owner_role: Execution & recovery owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: "Claude local engineering session"
+  implementation_evidence: "trader/engine/partial_intent.py reserve/resolve/consume (existing) + exact_order_match shared with recovery.py (003a9f9); tests/test_exe03_partial_exit_identity.py; tests/test_final_audit_partial_intent.py"
+  runtime_evidence: "NOT_PERFORMED; offline tests only"
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: "Mapped: durable partial_exit_intents reservation (PK trade_id, unique lp_ client id) committed before the venue call; UNKNOWN survives restart; resolve requires exact terminal reduce-only order, fill within request and venue position == before-fill; consume is idempotent (CONSUMED). Gap fixed in 003a9f9: persisted order id was not compared; resolve now shares exact_order_match with entry recovery. 10 new offline proofs incl. 10->5 lost-ack never reducing again; 91 focused tests pass."
   source_ids:
   - S01
   - S02
@@ -3997,17 +3996,16 @@ items:
   - S12
   - S14
   source_sections: §§18,18.5
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: "None for EXE-03. EXE-05, EXE-06 and EXE-07 remain separate. Limit: one TP1 per trade by design; an exact zero-fill terminal order stays pending (conservative)."
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: "003a9f9"
+  work_authorized: true
+  updated: "2026-10-06"
   parent_ids: []
   related_items: []
-  closure_evidence: ''
+  closure_evidence: "docs/tracker/evidence/exe03-partial-exit/closure.yaml"
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -8134,6 +8132,14 @@ change_log:
   after: "CLOSED at offline engineering scope; one recovery order-identity gap fixed in 7644fdc"
   reason: "Explicit EXE-02 package only; no services/providers launched; every other row and closing condition preserved."
   evidence: docs/tracker/evidence/exe02-unknown-reconcile/closure.yaml
+  actor: Claude local engineering session
+- date: '2026-10-06'
+  event: EXE03_PARTIAL_EXIT_CLOSED
+  item: EXE-03
+  before: "EVIDENCE_TO_MAP; stage-level history only"
+  after: "CLOSED at offline engineering scope; one partial-exit order-id identity gap fixed in 003a9f9"
+  reason: "Explicit EXE-03 package only; no services/providers launched; every other row and closing condition preserved."
+  evidence: docs/tracker/evidence/exe03-partial-exit/closure.yaml
   actor: Claude local engineering session
 sdd_section_coverage:
 - section: 1

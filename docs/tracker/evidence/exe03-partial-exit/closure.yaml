@@ -1,0 +1,8 @@
+id: EXE-03
+result: CLOSED_ENGINEERING_ONLY
+implementation_commits: [003a9f9]
+actual_gap: partial_intent.resolve did not compare a persisted ack order id to the fetched order; identity logic duplicated EntryRecovery semantics.
+change: recovery.exact_order_match is the single identity rule (client id, symbol, side, persisted order id, reduce-only) used by entry recovery and partial_intent.resolve.
+tests: tests/test_exe03_partial_exit_identity.py (10 pass; acked-order-id test fails on old partial_intent.py); 91 focused pass incl. EXE-01/02, entry recovery, final_audit partial suites.
+proofs: lost ack stays UNKNOWN and same lp_ client id after restart; wrong client id/symbol/side/reduceOnly/id cannot consume; redelivery with other quantities never reduces twice (10->5, venue 5, journal 5, pnl unchanged); distinct trade gets distinct identity.
+limits: offline only; no Kernel/provider calls. One TP1 per trade by design; exact zero-fill terminal order stays pending. Full-close path (executor.close) has no client id/intent and is EXE-05/06 territory.
