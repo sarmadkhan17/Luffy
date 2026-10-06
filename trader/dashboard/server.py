@@ -52,6 +52,21 @@ def _owner_gateway(cfg: dict, auth):
     return gateway
 
 
+def kernel_identity_view(root) -> dict:
+    """Read-only RUN-01 identity of the Kernel this Dashboard is looking at.
+    Never launches or signals anything; unknown stays unknown."""
+    try:
+        from .. import runtime_identity as ri
+        view = ri.inspect(root)
+        mine = ri.code_revision(root)
+        theirs = (view.get("record") or {}).get("revision")
+        view["compatible_revision"] = (None if not (mine["revision"] and theirs)
+                                       else mine["revision"] == theirs and mine["dirty_code"] is False)
+        return view
+    except Exception as e:
+        return {"state": "UNKNOWN", "error": type(e).__name__}
+
+
 def create_app(cfg: dict | None = None) -> FastAPI:
     cfg = cfg or load_config()
     journal = Journal(str(ROOT / "data" / "luffy.db"))
@@ -134,6 +149,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             hb_age = round(t.time() - json.loads(hb_path.read_text())["timestamp"])
         except Exception:
             pass
+        kernel_identity = kernel_identity_view(ROOT)
         snap = _account_snapshot()
         assets = snap.get("assets", {})
         # no snapshot, or any asset without a USD value, is not a total
@@ -170,6 +186,7 @@ def create_app(cfg: dict | None = None) -> FastAPI:
             "control_state": journal.kv_get("control_state") or "UNKNOWN",
             "market_type": journal.kv_get("market_type", "futures"),
             "heartbeat_age_s": hb_age,
+            "kernel_identity": kernel_identity,
             "equity": acc["equity"] if acc else None,
             "account": acc if acc else {"status": "UNAVAILABLE", "error": acc_err},
             "equity_prev": eq[1]["equity"] if len(eq) > 1 else None,

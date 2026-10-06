@@ -264,6 +264,8 @@ sys.path.insert(0, os.environ['TEST_REPO'])
 if sys.argv[2] == 'trader.observability.dashboard_readiness':
     print(json.dumps(dict(allow=True, result='PASS')))
     raise SystemExit(0)  # OBS-01 isolates its preflight boundary; OBS-02 tests readiness.
+if sys.argv[2] == 'trader.runtime_identity':
+    raise SystemExit(0)  # RUN-01 stop/verify step, after the OBS-01 gate; proven in test_run01_instance_identity.
 from trader.observability import preflight as p
 p.collect_facts=lambda *a, **k: json.load(open(os.environ['TEST_FACTS']))
 raise SystemExit(p.main(sys.argv[3:]))
