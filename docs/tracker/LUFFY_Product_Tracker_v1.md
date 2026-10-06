@@ -1,3 +1,5 @@
+> Current SOL-2 reconciliation: QNT-02 CLOSED at architecture/offline scope. QNT-06 is now dependency-eligible; its declared-experiment power and UNTESTED/FAIL/PASS proof remains its own work. No successor selected. [Evidence](evidence/qnt02-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
+
 > Current SOL-2 reconciliation: RES-02 CLOSED at architecture/offline scope. RES-03 is now eligible for current architecture/offline work under the existing SEC-01 deferral; no registry/adoption or future activation closure is asserted. No successor selected. [Evidence](evidence/res02-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
 
 > Current SOL-2 reconciliation: WRLD-06 CLOSED at architecture/offline scope. OUT-03 remains BLOCKED only on its direct OUT-01 dependency; DATA-03 is CLOSED and WRLD-06 is now CLOSED. WRLD-04 engineering closure is pinned; its separate canonical mapping remains pending. No successor selected. [Evidence](evidence/wrld06-reconciliation-sol2/reconciliation.json). Earlier summaries below are historical.
@@ -2171,32 +2173,33 @@ future_calibration:
 - **stage**: 4
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Distinguishes timing edge from drift and chance.
 - **closure_condition**: Predeclared mechanism-appropriate controls preserve irrelevant structure; positive/no-edge controls and finite-draw p-values are reproduced.
 - **failure_regression_proof**: Independent symbol shuffles cannot replace common dependence controls without justification.
 - **dependencies**: QNT-01
 - **owner_role**: Quant validation owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2 (existing engineering closure reconciled only)
+- **implementation_evidence**: f866996; tests/test_qnt02_null_controls.py; existing strategy.null_baseline and research.portfolio_null dependence-preserving contracts; related cost/null regression evidence
+- **runtime_evidence**: NOT_PERFORMED; pinned offline engineering proof only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Original condition satisfied at architecture/offline scope: declared timing/common-rotation nulls preserve irrelevant structure and cost assumptions; pinned synthetic positive/no-edge controls, finite-draw p grid, reproducibility, dependence and insufficient-data refusals are demonstrated. 34 fresh checks pass on unchanged engineering bytes. Independent symbol votes do not replace market-wide common controls. No real-data gate/admission/calibration claim or implementation added.
 - **source_ids**: S01, S02, S14
 - **source_sections**: §§11,13.5–13.7
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for QNT-02 at architecture/offline engineering scope; dependent rows retain their own closing conditions.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: f86699625e67bcd1dc8c32c9248aad63e8df4e92
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/qnt02-reconciliation-sol2/reconciliation.json
+- **evidence_validity**: Pinned engineering closure and scoped offline checks; no deployment/runtime proof inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+- **closure_scope**: ARCHITECTURE_OFFLINE
 
 ### QNT-03 — Handle correlated symbols and shared evidence lineage.
 

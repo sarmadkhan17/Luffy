@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.35-res02-reconciled-sol2
+  version: 1.36-qnt02-reconciled-sol2
   created_date: '2026-10-05'
   title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -19,8 +19,8 @@ metadata:
     optional generated reference.
   pending_adoption: null
   status_counts:
-    CLOSED: 43
-    EVIDENCE_TO_MAP: 94
+    CLOSED: 44
+    EVIDENCE_TO_MAP: 93
     DEFERRED: 7
     AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14
@@ -102,9 +102,9 @@ metadata:
     runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime UNKNOWN;
       no runtime freshness inferred from this control snapshot.
   latest_control_reconciliation:
-    item: RES-02
-    evidence: docs/tracker/evidence/res02-reconciliation-sol2/reconciliation.json
-    engineering_closure_commit: 1b9b020ea6ff6a88b549f82cd69f36c2d6efa97b
+    item: QNT-02
+    evidence: docs/tracker/evidence/qnt02-reconciliation-sol2/reconciliation.json
+    engineering_closure_commit: f86699625e67bcd1dc8c32c9248aad63e8df4e92
 status_definitions:
 - status: EVIDENCE_TO_MAP
   meaning: Existing requirement recorded; exact row-level evidence has not yet been linked. This is NOT a finding
@@ -2834,7 +2834,7 @@ items:
   stage: '4'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Test justified nulls and controls for the claimed mechanism.
   why_needed: Distinguishes timing edge from drift and chance.
   closure_condition: Predeclared mechanism-appropriate controls preserve irrelevant structure; positive/no-edge
@@ -2843,31 +2843,36 @@ items:
   dependencies:
   - QNT-01
   owner_role: Quant validation owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: SOL-2 (existing engineering closure reconciled only)
+  implementation_evidence: f866996; tests/test_qnt02_null_controls.py; existing strategy.null_baseline and research.portfolio_null
+    dependence-preserving contracts; related cost/null regression evidence
+  runtime_evidence: NOT_PERFORMED; pinned offline engineering proof only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: 'Original condition satisfied at architecture/offline scope: declared timing/common-rotation
+    nulls preserve irrelevant structure and cost assumptions; pinned synthetic positive/no-edge controls, finite-draw
+    p grid, reproducibility, dependence and insufficient-data refusals are demonstrated. 34 fresh checks pass on
+    unchanged engineering bytes. Independent symbol votes do not replace market-wide common controls. No real-data
+    gate/admission/calibration claim or implementation added.'
   source_ids:
   - S01
   - S02
   - S14
-  source_sections: §§11,13.5–13.7
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  source_sections: "\xA7\xA711,13.5\u201313.7"
+  next_proof: None for QNT-02 at architecture/offline engineering scope; dependent rows retain their own closing
+    conditions.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: f86699625e67bcd1dc8c32c9248aad63e8df4e92
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: docs/tracker/evidence/qnt02-reconciliation-sol2/reconciliation.json
+  evidence_validity: Pinned engineering closure and scoped offline checks; no deployment/runtime proof inferred.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  closure_scope: ARCHITECTURE_OFFLINE
 - id: QNT-03
   area: Quant validation
   stage: '4'
@@ -8301,6 +8306,15 @@ change_log:
     implementation.
   evidence: docs/tracker/evidence/res02-reconciliation-sol2/reconciliation.json
   actor: SOL-2
+- date: '2026-10-06'
+  event: QNT02_CANONICAL_RECONCILIATION
+  item: QNT-02
+  before: EVIDENCE_TO_MAP
+  after: CLOSED_ARCHITECTURE_OFFLINE
+  reason: Existing engineering closure verified; original closing condition and dependency edges preserved; no new
+    implementation.
+  evidence: docs/tracker/evidence/qnt02-reconciliation-sol2/reconciliation.json
+  actor: SOL-2
 sdd_section_coverage:
 - section: 1
   title: Mission / end goal
@@ -9821,6 +9835,67 @@ res02_canonical_reconciliation:
   status_counts_after:
     CLOSED: 43
     EVIDENCE_TO_MAP: 94
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 7
+    OPEN: 4
+
+qnt02_canonical_reconciliation:
+  item: QNT-02
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE_ENGINEERING
+  engineering_closure_commit: f86699625e67bcd1dc8c32c9248aad63e8df4e92
+  reconciliation_base_revision: db38e907f016f5d46ccff3fff5fc327ae548aaf5
+  evidence: docs/tracker/evidence/qnt02-reconciliation-sol2/reconciliation.json
+  closure_condition: Predeclared mechanism-appropriate controls preserve irrelevant structure; positive/no-edge
+    controls and finite-draw p-values are reproduced.
+  closure_condition_satisfied: true
+  dependency_status:
+    QNT-01: CLOSED; reconciled at fc84a5c
+  closing_condition_proof:
+  - Existing null contracts declare circular signal rotation for timing claims and one common offset across every
+    portfolio leg for market-wide claims. Market paths, exit geometry, costs/funding and shared cross-symbol alignment
+    are held fixed; rotations change entry/market alignment rather than independently reshuffling symbols.
+  - Pinned regression controls specify geometry, risk/cost assumptions, synthetic generation, seeds and draw counts.
+    Thirty no-edge per-symbol controls do not fabricate significance; six planted timing controls are detected.
+    Planted oracle signals are synthetic test-only positive controls, not tradable future-informed features or admitted
+    strategies.
+  - Common-rotation output repeats exactly for fixed inputs/seed; finite-draw p-values follow (1 + null outcomes
+    at least actual)/(draws + 1), remain on the exact grid and never become zero. Shared-market synthetic checks
+    demonstrate independent percentile votes cannot substitute for dependence-preserving common rotation.
+  - Dependence deflation is monotone in rho and agrees with the independent model only at zero dependence. No-edge
+    consistency tests, ties, empty/short nulls and insufficient symbol counts remain nonsignificant or None/UNTESTED.
+    Existing cost-symmetry and portfolio-null regressions pass. These are architecture/offline contract controls,
+    not crypto-market calibration or held-out mechanism admission.
+  retained_validation: 'f866996 immutable engineering test package retained with exact source hashes: tests/test_qnt02_null_controls.py
+    plus existing null_baseline/common_rotation contracts and related regression suites. No implementation was changed
+    in that engineering commit or this reconciliation.'
+  fresh_validation: '34 tests passed in 51.19s: tests/test_qnt02_null_controls.py, tests/test_null_baseline.py,
+    tests/test_null_dependence.py, tests/test_null_cost_symmetry.py and tests/test_research_portfolio_null.py; exact
+    source/test bytes match f866996.'
+  original_condition_and_edges_preserved: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+  control_plane_reconciliation_pending: false
+  successor_selected: false
+  downstream:
+    QNT-06: ELIGIBLE; sole dependency QNT-02 now CLOSED. Its own declared-experiment power and UNTESTED/FAIL/PASS
+      closing proof remains independent; row unchanged and unselected.
+  source_sha256:
+    tests/test_qnt02_null_controls.py: b13895d04e7cee90eb753774b8f03e1b26394ff1c0b5b3cde2c7b1e8c9be8cd4
+    trader/strategy/null_baseline.py: ffb28d8f4b3cb8762255707c65f0ec505333861f4664a230fe8f6c670f577d8b
+    trader/research/portfolio_null.py: d99ea82c83515c3c79d8e87af825a3446fa1522615c53d5c04393864c9cab736
+    trader/strategy/vector_backtest.py: 4e1bcb25b024f96d78b5f0d38bada958bd632e3f3f4aad29780f2594d11aea67
+    trader/strategy/geometries.py: 13f57f882e46e4b9a04d0c3c09dbdaa4851b565b71bdd11f354f64c13e99b9ce
+    tests/test_null_baseline.py: ae229e5e5450c80141a6989740017ddc2cc4602e308b42575605fb8cdb50f8f3
+    tests/test_null_dependence.py: 69e0c9117596c627dbe7a3bbd36015fe971cecffb79d1ef2a9d5d7e73bbeffd4
+    tests/test_null_cost_symmetry.py: 5d9753aaa379aa69035c6c4d2806fdcd66bdc0364abfe0d38ad8222e7d4d4884
+    tests/test_research_portfolio_null.py: 5770e7ea0a994cdf867401cbec26d023ff96208ef05ad7faac5123b0e80d8d42
+  status_counts_after:
+    CLOSED: 44
+    EVIDENCE_TO_MAP: 93
     DEFERRED: 7
     AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14

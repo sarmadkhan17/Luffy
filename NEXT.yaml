@@ -1768,3 +1768,64 @@ res02_canonical_reconciliation:
     AWAITING_OWNER: 14
     BLOCKED: 7
     OPEN: 4
+
+qnt02_canonical_reconciliation:
+  item: QNT-02
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE_ENGINEERING
+  engineering_closure_commit: f86699625e67bcd1dc8c32c9248aad63e8df4e92
+  reconciliation_base_revision: db38e907f016f5d46ccff3fff5fc327ae548aaf5
+  evidence: docs/tracker/evidence/qnt02-reconciliation-sol2/reconciliation.json
+  closure_condition: Predeclared mechanism-appropriate controls preserve irrelevant structure; positive/no-edge
+    controls and finite-draw p-values are reproduced.
+  closure_condition_satisfied: true
+  dependency_status:
+    QNT-01: CLOSED; reconciled at fc84a5c
+  closing_condition_proof:
+  - Existing null contracts declare circular signal rotation for timing claims and one common offset across every
+    portfolio leg for market-wide claims. Market paths, exit geometry, costs/funding and shared cross-symbol alignment
+    are held fixed; rotations change entry/market alignment rather than independently reshuffling symbols.
+  - Pinned regression controls specify geometry, risk/cost assumptions, synthetic generation, seeds and draw counts.
+    Thirty no-edge per-symbol controls do not fabricate significance; six planted timing controls are detected.
+    Planted oracle signals are synthetic test-only positive controls, not tradable future-informed features or admitted
+    strategies.
+  - Common-rotation output repeats exactly for fixed inputs/seed; finite-draw p-values follow (1 + null outcomes
+    at least actual)/(draws + 1), remain on the exact grid and never become zero. Shared-market synthetic checks
+    demonstrate independent percentile votes cannot substitute for dependence-preserving common rotation.
+  - Dependence deflation is monotone in rho and agrees with the independent model only at zero dependence. No-edge
+    consistency tests, ties, empty/short nulls and insufficient symbol counts remain nonsignificant or None/UNTESTED.
+    Existing cost-symmetry and portfolio-null regressions pass. These are architecture/offline contract controls,
+    not crypto-market calibration or held-out mechanism admission.
+  retained_validation: 'f866996 immutable engineering test package retained with exact source hashes: tests/test_qnt02_null_controls.py
+    plus existing null_baseline/common_rotation contracts and related regression suites. No implementation was changed
+    in that engineering commit or this reconciliation.'
+  fresh_validation: '34 tests passed in 51.19s: tests/test_qnt02_null_controls.py, tests/test_null_baseline.py,
+    tests/test_null_dependence.py, tests/test_null_cost_symmetry.py and tests/test_research_portfolio_null.py; exact
+    source/test bytes match f866996.'
+  original_condition_and_edges_preserved: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+  control_plane_reconciliation_pending: false
+  successor_selected: false
+  downstream:
+    QNT-06: ELIGIBLE; sole dependency QNT-02 now CLOSED. Its own declared-experiment power and UNTESTED/FAIL/PASS
+      closing proof remains independent; row unchanged and unselected.
+  source_sha256:
+    tests/test_qnt02_null_controls.py: b13895d04e7cee90eb753774b8f03e1b26394ff1c0b5b3cde2c7b1e8c9be8cd4
+    trader/strategy/null_baseline.py: ffb28d8f4b3cb8762255707c65f0ec505333861f4664a230fe8f6c670f577d8b
+    trader/research/portfolio_null.py: d99ea82c83515c3c79d8e87af825a3446fa1522615c53d5c04393864c9cab736
+    trader/strategy/vector_backtest.py: 4e1bcb25b024f96d78b5f0d38bada958bd632e3f3f4aad29780f2594d11aea67
+    trader/strategy/geometries.py: 13f57f882e46e4b9a04d0c3c09dbdaa4851b565b71bdd11f354f64c13e99b9ce
+    tests/test_null_baseline.py: ae229e5e5450c80141a6989740017ddc2cc4602e308b42575605fb8cdb50f8f3
+    tests/test_null_dependence.py: 69e0c9117596c627dbe7a3bbd36015fe971cecffb79d1ef2a9d5d7e73bbeffd4
+    tests/test_null_cost_symmetry.py: 5d9753aaa379aa69035c6c4d2806fdcd66bdc0364abfe0d38ad8222e7d4d4884
+    tests/test_research_portfolio_null.py: 5770e7ea0a994cdf867401cbec26d023ff96208ef05ad7faac5123b0e80d8d42
+  status_counts_after:
+    CLOSED: 44
+    EVIDENCE_TO_MAP: 93
+    DEFERRED: 7
+    AWAITING_EVIDENCE: 9
+    AWAITING_OWNER: 14
+    BLOCKED: 7
+    OPEN: 4
