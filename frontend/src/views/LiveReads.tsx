@@ -43,6 +43,24 @@ import {
 import { PagingBar } from "../components/workspace";
 export { UnavailableFields };
 
+export function EconomicsEvidence({ economics }: { economics: R | null }) {
+  if (!economics) return <p className="quiet">Economics evidence unavailable.</p>;
+  return <section aria-label="Economics evidence">
+    <p className="quiet">{value(economics.schema_version)} · Source versions identify recorded snapshots.
+      Unknown calculation versions remain unknown. Whole-trade cashflow accounting is unavailable in this read.</p>
+    {([
+      ["venue_monetary", "Venue monetary fields"],
+      ["journal_booked", "Journal bookings"],
+      ["derived", "Derived measurements"],
+    ] as const).map(([key, title]) => <SmallTable key={key} caption={title}
+      data={rows(economics[key])} columns={[
+        ["field", "Field"], ["value", "Value"], ["status", "Status"],
+        ["source", "Source"], ["version", "Source version"],
+        ["calculation_version", "Calculation version"], ["coverage", "Coverage"],
+      ]} />)}
+  </section>;
+}
+
 // ── Trades ──────────────────────────────────────────────────────────────────
 export function TradeLineage({
   id,
@@ -175,6 +193,7 @@ export function TradeLineage({
                 </StageSection>
               </div>
               <StageSection step="accounting" title="Accounting receipts">
+                <EconomicsEvidence economics={rec(d.economics)} />
                 <SmallTable
                   caption="trade_accounting_bookings · integrity is the receipt's own sha256 replay"
                   data={rows(acct?.receipts)}

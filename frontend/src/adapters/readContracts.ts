@@ -61,6 +61,10 @@ const ref = nullable(shape({ kind: str, id }));
 const strategyRef = shape({ id, in_registry: bool });
 const registryRow = shape({ id });
 const hashRow = shape({ hash: id });
+const economicField = shape({
+  field: str, value: any, status: str, source: str, version: str,
+  calculation_version: nullable(str), coverage: record,
+});
 
 const lineage = shape({
   trade: shape({ id }),
@@ -72,6 +76,11 @@ const lineage = shape({
   chain: list(shape({ step: str, status: str, ref })),
   links: record,
   accounting: shape({ receipts: list(shape({ integrity: str })) }),
+  economics: optional(shape({
+    schema_version: str, whole_trade_complete: bool,
+    venue_monetary: list(economicField), journal_booked: list(economicField),
+    derived: list(economicField),
+  })),
   outcome: nullable(record),
 });
 

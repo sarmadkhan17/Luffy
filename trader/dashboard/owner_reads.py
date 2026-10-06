@@ -283,6 +283,8 @@ def trade_lineage(journal, trade_id: str) -> dict | None:
         missing.append(_unavailable("outcome", "no forward-return outcome recorded for the "
                                                "decision"))
     trade["excursion"] = _load(trade.pop("excursion_json", None))
+    from .economics import read as economics_read
+    economics = economics_read(trade, provenance)
     cycle = _cycle(journal, decision.get("cycle_id")) if decision else None
     votes, votes_basis = _votes(journal, decision, cycle) if decision else ([], None)
     if decision and cycle is None:
@@ -337,7 +339,8 @@ def trade_lineage(journal, trade_id: str) -> dict | None:
                 "verified_legs": verified_legs,
                 "replay": ("trader.engine.booking.export(db, trade_id) re-verifies every "
                            "receipt's sha256 and assessment") if receipts else None},
-            "outcome": outcome, "provenance": provenance, "unavailable": missing,
+            "outcome": outcome, "provenance": provenance, "economics": economics,
+            "unavailable": missing,
             "source": "journal trades/decisions/cycles/votes/strategies/outcomes and "
                       "trade_accounting_bookings (joins only by recorded ids)"}
 
