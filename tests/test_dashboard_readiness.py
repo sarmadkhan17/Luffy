@@ -239,7 +239,10 @@ def test_actual_cycle_publishes_boot_and_stop_truth_after_statistics():
 @pytest.mark.parametrize('duplicate', [False, True])
 def test_run01_kernel_main_binds_identity_before_run_and_refuses_duplicate(ready, monkeypatch, duplicate):
     from trader import kernel
-    monkeypatch.setattr(sys, 'argv', ['fixture-kernel'])
+    monkeypatch.setattr(sys, 'argv', ['fixture-kernel', '--bootstrap-token', 'fixture', '--expect-revision', REV])
+    from trader.observability import bootstrap
+    # OBS-05 separately proves admission; this isolates RUN-01 main wiring.
+    monkeypatch.setattr(bootstrap, 'child_admission', lambda root, token, revision: None)
     monkeypatch.setattr(kernel, 'load_config', lambda *a: {})
     monkeypatch.setattr(kernel, 'setup_logging', lambda *a: None)
     real_class = ri.KernelInstance

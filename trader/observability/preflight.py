@@ -88,7 +88,7 @@ def _probe(path, role, journal=False):
     return SafetyObserver(PreserveHealth()).store(path, role, journal=journal)
 
 
-def _protection(db, now):
+def _protection(db, now, *, require_fresh=True):
     # Reuse the persisted monitor contract, not a fresh venue reader.
     from trader.engine.protection_snapshot import STALE_AFTER_S
     row = db.execute('SELECT boot,seq,value FROM protection_evidence WHERE slot=1').fetchone()
@@ -109,7 +109,8 @@ def _protection(db, now):
         return result.timestamp()
     checked, completed = stamp(s['checked_at']), stamp(s['completed_at'])
     if (not math.isfinite(checked) or not math.isfinite(completed)
-            or not 0 <= now - checked <= STALE_AFTER_S or not checked <= completed <= now):
+            or not 0 <= now - checked or not checked <= completed <= now
+            or (require_fresh and now - checked > STALE_AFTER_S)):
         raise ValueError('protection_stale_or_future')
     cl = s.get('cleanliness')
     if (not isinstance(cl, dict) or cl.get('status') != 'CLEAN' or cl.get('items') != []
@@ -136,19 +137,25 @@ def _protection(db, now):
     if (len({r['symbol'] for r in trades}) != len(trades)
             or sorted(actual) != sorted(expected)):
         raise ValueError('protection_current_book_changed')
-    return dict(status='PASS', reasons=[], generation=s['generation'], checked_at=s['checked_at'])
+    return dict(status='PASS', reasons=[], generation=s['generation'], checked_at=s['checked_at'],
+                completed_at=s['completed_at'], age_seconds=now - checked,
+                evidence_status=s['status'], freshness='FRESH' if now - checked <= STALE_AFTER_S else 'STALE',
+                position_count=s['position_count'], trading_authority=False)
 
 
-def collect_facts(root, *, recovery_root=RECOVERY_ROOT, clock=time.time):
+def collect_facts(root, *, recovery_root=RECOVERY_ROOT, clock=time.time, contained_cold=False):
     root, recovery_root = Path(root).resolve(), Path(recovery_root)
     facts = {}
     try:
         health = _health(root / 'data/safety_health.json')
+        deferred = [name for name, c in health['conditions'].items()
+                    if contained_cold and name in ('heartbeat:luffy', 'observed_cycle:luffy')
+                    and c['status'] == 'ACTIVE']
         reasons = ['active_condition:' + name for name, c in health['conditions'].items()
-                   if c['status'] == 'ACTIVE']
+                   if c['status'] == 'ACTIVE' and name not in deferred]
         if health['recovery_required'] is not True:
             reasons.append('recovery_latch_not_retained')
-        facts['safety'] = _fact(reasons)
+        facts['safety'] = {**_fact(reasons), 'deferred_to_contained_readiness': deferred}
     except Exception:
         facts['safety'] = _fact(['safety_health_unreadable'])
     try:
@@ -206,8 +213,9 @@ def collect_facts(root, *, recovery_root=RECOVERY_ROOT, clock=time.time):
             partial_exists = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='partial_exit_intents'").fetchone() is not None
             if partial_exists and db.execute("SELECT count(*) FROM partial_exit_intents WHERE state IS NULL OR state!='CONSUMED'").fetchone()[0] != 0:
                 reasons.append('pending_partial_exits')
-            facts['control'] = {**_fact(reasons), 'partial_ledger_present': partial_exists}
-            facts['protection'] = _protection(db, clock())
+            facts['control'] = {**_fact(reasons), 'partial_ledger_present': partial_exists,
+                                'persisted': controls, 'trading_authority': False}
+            facts['protection'] = _protection(db, clock(), require_fresh=not contained_cold)
         # Probe/publication races cannot waive a new persisted safety fault.
         health_after = _health(root / 'data/safety_health.json')
         if health_after != health:
@@ -218,13 +226,42 @@ def collect_facts(root, *, recovery_root=RECOVERY_ROOT, clock=time.time):
     return facts
 
 
+def prelaunch(root, expected_revision, **kwargs):
+    """Phase A: exact clean revision and stopped process, never trading readiness.
+
+    The only deferred faults belong to the absent heartbeat producer. Persisted
+    protection must remain structurally VERIFIED and match the persisted book;
+    its age is disclosed, never relabelled as fresh venue truth.
+    """
+    from trader import runtime_identity as ri
+    try:
+        if (not isinstance(expected_revision, str) or len(expected_revision) != 40
+                or any(c not in '0123456789abcdef' for c in expected_revision)):
+            raise ValueError('full_intended_revision_required')
+        revision = ri.check_revision(expected_revision, Path(root))
+        identity = ri.inspect(Path(root))
+        if identity['state'] not in ('NONE', 'STALE_RECORD') or identity['legacy_pids']:
+            raise ValueError('conflicting_kernel')
+        facts = collect_facts(root, contained_cold=True, **kwargs)
+        facts['identity'] = dict(status='PASS', reasons=[], revision=revision, observed=identity)
+        result = evaluate(facts)
+    except Exception as exc:
+        result = dict(schema=SCHEMA, allow=False, result='FAIL',
+                      reasons=['prelaunch_identity_or_facts_failed:' + type(exc).__name__], facts={})
+    return dict(result, phase='PRE_LAUNCH', trading_authority=False)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', type=Path, required=True)
     parser.add_argument('--target', choices=('kernel', 'dashboard'), required=True)
     args = parser.parse_args(argv)
     try:
-        result = evaluate(collect_facts(args.root))
+        # No force switch: only a stopped Kernel can use the contained contract.
+        from trader import runtime_identity as ri
+        cold = args.target == 'kernel' and ri.inspect(args.root)['state'] in ('NONE', 'STALE_RECORD')
+        result = (prelaunch(args.root, os.environ.get('LUFFY_EXPECT_REVISION')) if cold
+                  else evaluate(collect_facts(args.root)))
         result['target'] = args.target
         encoded = json.dumps(result, sort_keys=True, allow_nan=False)
     except Exception:

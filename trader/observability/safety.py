@@ -135,21 +135,36 @@ class SafetyHealth:
 
     def entry_block(self):
         v = self.read()
+        if self.bootstrap_block(v):
+            return 'contained_bootstrap_not_ready'
         return 'critical_safety_requires_recovery' if v['recovery_required'] or any(
             c.get('status') == 'ACTIVE' for c in v['conditions'].values()) else None
 
     def clear_after_supervisor(self, revision):
         with self.locked():
             v = self.read()
-            if v['revision'] != revision or any(c.get('status') == 'ACTIVE' for c in v['conditions'].values()):
+            if (self.bootstrap_block(v) or v['revision'] != revision
+                    or any(c.get('status') == 'ACTIVE' for c in v['conditions'].values())):
                 return False
             v.update(recovery_required=False, revision=revision + 1, observed_at=self.clock())
             publish(self.path, v)
             return True
 
     def active_reasons(self):
-        return [key + ':' + str(c.get('reason')) for key, c in self.read()['conditions'].items()
-                if c.get('status') == 'ACTIVE']
+        value = self.read()
+        reasons = [key + ':' + str(c.get('reason')) for key, c in value['conditions'].items()
+                   if c.get('status') == 'ACTIVE']
+        if self.bootstrap_block(value):
+            reasons.append('contained_bootstrap_not_ready')
+        return reasons
+
+    @staticmethod
+    def bootstrap_block(value):
+        if 'bootstrap' not in value:
+            return False  # historical non-bootstrap health remains compatible
+        boot = value['bootstrap']
+        return (not isinstance(boot, dict) or boot.get('status') != 'READY'
+                or not isinstance(boot.get('token'), str) or not boot['token'])
 
 
 def journal_failure(journal, mode, exc):
@@ -248,6 +263,21 @@ class SafetyObserver:
         except Exception:
             reason = 'UNAVAILABLE'
         self.health.observe('heartbeat:' + producer, reason, context=dict(record=record, policy=policy.basis))
+        # The retained host observer used this independent successful-work
+        # condition. Resolve it only with a fresh, verified current producer;
+        # startup never erases it and the recovery latch remains retained.
+        if 'observed_cycle:' + producer in self.health.read()['conditions']:
+            cycle_reason = reason
+            if cycle_reason is None:
+                from trader.runtime_identity import inspect
+                identity = inspect(Path(path).parent.parent)
+                if (identity.get('verified') is not True
+                        or identity.get('heartbeat_belongs_to_instance') is not True
+                        or record['context'].get('boot_complete') is not True
+                        or record['context'].get('stopping') is not False):
+                    cycle_reason = 'CURRENT_INSTANCE_UNCONFIRMED'
+            self.health.observe('observed_cycle:' + producer, cycle_reason,
+                                context=dict(record=record, policy=policy.basis))
         return dict(component=producer, status=reason or 'FRESH', record=record)
 
     def store(self, path, role, *, journal=False):

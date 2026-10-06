@@ -14,6 +14,7 @@ import datetime as dt
 import json
 import logging
 import math
+from pathlib import Path
 import signal
 import sys
 import threading
@@ -3125,6 +3126,9 @@ class Kernel:
     # ── run ──────────────────────────────────────────────────────────────
     def run(self) -> None:
         self.boot()
+        if getattr(self, '_bootstrap_token', None):
+            from .observability.bootstrap import start_protection_monitor
+            start_protection_monitor(self)
         interval = float(self.cfg["timeframes"]["scan_interval_seconds"])
         n = 0
         while not self._stop:
@@ -3169,6 +3173,8 @@ def main() -> None:
     ap.add_argument("--expect-revision", default=None,
                     help="refuse to start unless the checkout is exactly this "
                          "git revision with clean runtime code")
+    ap.add_argument("--bootstrap-token", default=None,
+                    help="owned contained-startup attempt token; use restart.sh")
     args = ap.parse_args()
     cfg = load_config(args.config)
     setup_logging(cfg)
@@ -3181,6 +3187,18 @@ def main() -> None:
         sys.exit(0 if r.status in ("ACCEPTED", "ALREADY_SET") else 1)
     instance = None
     if not args.status:
+        # A direct module invocation cannot evade the two-phase startup fence.
+        # Admission precedes construction, venue access and background workers.
+        from .observability.bootstrap import child_admission
+        try:
+            if not args.bootstrap_token:
+                raise ValueError('contained_startup_controller_required')
+            if args.config is not None and Path(args.config).resolve() != (ROOT / 'config.yaml').resolve():
+                raise ValueError('contained_startup_requires_revision_bound_config')
+            child_admission(ROOT, args.bootstrap_token, args.expect_revision)
+        except Exception as exc:
+            log.critical("contained startup refused: %s", type(exc).__name__)
+            sys.exit(6)
         # One kernel per account: take the lock BEFORE any state is touched, so
         # a duplicate or wrong-revision launch exits without side effects.
         from .runtime_identity import (AlreadyRunning, KernelInstance, WrongRevision,
@@ -3199,6 +3217,7 @@ def main() -> None:
     k = Kernel(cfg)
     if instance is not None:
         instance.bind_heartbeat(k.heartbeat.instance_id)
+        k._bootstrap_token = args.bootstrap_token
     if args.status:
         print(json.dumps({
             "control_state": k.state_machine.state.value,

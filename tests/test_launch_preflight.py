@@ -267,6 +267,9 @@ if sys.argv[2] == 'trader.observability.dashboard_readiness':
 if sys.argv[2] == 'trader.runtime_identity':
     raise SystemExit(0)  # RUN-01 stop/verify step, after the OBS-01 gate; proven in test_run01_instance_identity.
 from trader.observability import preflight as p
+from trader import runtime_identity as ri
+ri.inspect=lambda *a: dict(state='NONE', legacy_pids=[])
+ri.check_revision=lambda *a: dict(revision='a'*40, dirty_code=False)
 p.collect_facts=lambda *a, **k: json.load(open(os.environ['TEST_FACTS']))
 raise SystemExit(p.main(sys.argv[3:]))
 '''
@@ -276,7 +279,7 @@ raise SystemExit(p.main(sys.argv[3:]))
         path.write_text('#!/bin/bash\necho ' + name + ' >> "$TEST_EVENTS"\n')
         path.chmod(0o755)
     env = {**os.environ, 'PATH': str(binpath)+':'+os.environ['PATH'], 'TEST_REPO': str(ROOT),
-           'TEST_FACTS': str(fixture), 'TEST_EVENTS': str(events)}
+           'TEST_FACTS': str(fixture), 'TEST_EVENTS': str(events), 'LUFFY_EXPECT_REVISION': 'a'*40}
     # Stub mkdir intentionally does nothing. Existing log destination is /tmp/opencode;
     # substitute fixture logs so no production path is used even on success.
     p = tmp_path / 'restart.sh'; p.write_text(p.read_text().replace('/tmp/opencode', str(tmp_path)))

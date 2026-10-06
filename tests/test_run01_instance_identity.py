@@ -181,7 +181,7 @@ def sandbox(tmp_path):
 
 def run_restart(d, target, **env):
     return subprocess.run(["bash", str(d / "restart.sh"), target], capture_output=True, text=True,
-                          env={**os.environ, **{k: str(v) for k, v in env.items()}})
+                          env={**os.environ, 'LUFFY_EXPECT_REVISION': 'a'*40, **{k: str(v) for k, v in env.items()}})
 
 
 def calls(d):
@@ -202,10 +202,10 @@ def test_restart_wrong_revision_starts_nothing(sandbox):
 
 
 def test_restart_success_starts_bound_revision(sandbox):
-    r = run_restart(sandbox, "kernel", LUFFY_EXPECT_REVISION="abc")
-    assert r.returncode == 0 and "started trader.kernel" in r.stdout
+    r = run_restart(sandbox, "kernel", LUFFY_EXPECT_REVISION="a"*40)
+    assert r.returncode == 0 and "started trader.observability.bootstrap" in r.stdout
     time.sleep(0.5)
-    assert "-m trader.kernel --expect-revision abc" in calls(sandbox)
+    assert "-m trader.observability.bootstrap --root " in calls(sandbox) and "--expect-revision " + "a"*40 in calls(sandbox)
 
 
 def test_restart_script_never_sigkills():
@@ -302,8 +302,8 @@ def test_restart_order_preflight_then_revision_then_stop_then_start(sandbox):
     assert r.returncode == 1
     assert calls(sandbox).count("\n") == 1 and "observability.preflight" in calls(sandbox)
     (sandbox / "calls").unlink()
-    r = run_restart(sandbox, "kernel", LUFFY_EXPECT_REVISION="abc")
+    r = run_restart(sandbox, "kernel", LUFFY_EXPECT_REVISION="a"*40)
     time.sleep(0.5)
     order = [l.split()[1] for l in calls(sandbox).splitlines()]
     assert order[:3] == ["trader.observability.preflight", "trader.runtime_identity", "trader.runtime_identity"]
-    assert order[3] == "trader.kernel"
+    assert order[3] == "trader.observability.bootstrap"

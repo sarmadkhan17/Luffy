@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Restart a Luffy process safely. Usage: ./restart.sh kernel|dashboard
 #
-# Order: OBS-01 preflight -> (kernel: optional revision bind) -> OBS-02 readiness
+# Order: OBS-01 preflight -> (kernel: required revision bind) -> OBS-02 readiness
 # (dashboard) -> verified graceful stop -> start.
 # Kernel stop (RUN-01): SIGTERM only the lock-holding, identity-verified process
 # and wait for data/kernel.lock to be released. NO SIGKILL: if it does not exit
 # within KERNEL_STOP_TIMEOUT (default 300s; a graceful stop has taken ~224s) or
 # cannot be verified, nothing is started and this exits non-zero, so a slow
 # shutdown never becomes a second kernel (the kernel also refuses to start while
-# the lock is held). LUFFY_EXPECT_REVISION=<sha> additionally refuses any other
+# the lock is held). LUFFY_EXPECT_REVISION=<full-sha> is required and refuses any other
 # revision or modified runtime code. Dashboard stop: SIGTERM + short grace, never
 # SIGKILL; a kernel restart never touches the Dashboard.
 set -u
@@ -36,6 +36,9 @@ fi
 
 ARGS=()
 if [ "$TARGET" = kernel ]; then
+  if ! [[ "${LUFFY_EXPECT_REVISION:-}" =~ ^[0-9a-f]{40}$ ]]; then
+    echo "refusing contained startup: full LUFFY_EXPECT_REVISION required"; exit 6
+  fi
   if [ -n "${LUFFY_EXPECT_REVISION:-}" ]; then
     (cd "$DIR" && ./venv/bin/python -m trader.runtime_identity verify --expect-revision "$LUFFY_EXPECT_REVISION") || {
       echo "refusing to start: wrong revision/modified code"; exit 6; }
@@ -64,5 +67,11 @@ cd "$DIR"
 # /tmp is wiped on reboot; a redirect into a missing directory fails and bash
 # then never runs the command, so "started" would print over a dead process.
 mkdir -p "$(dirname "$LOG")"
+if [ "$TARGET" = kernel ]; then
+  # Controller rechecks Phase A after graceful stop; it launches exactly one
+  # fenced child and retains independent observers on every readiness failure.
+  MOD="trader.observability.bootstrap"
+  ARGS=(--root "$DIR" --expect-revision "$LUFFY_EXPECT_REVISION")
+fi
 setsid nohup ./venv/bin/python -m "$MOD" "${ARGS[@]}" > "$LOG" 2>&1 < /dev/null &
-echo "started $MOD"
+echo "started $MOD (contained startup requested; readiness not yet established)"
