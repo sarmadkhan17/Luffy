@@ -49,6 +49,17 @@ START, DONE = "external_research_request_started.v1", "external_research_request
 MAX_CHECKPOINTS, MAX_HISTORY = 8192, 512
 
 
+def result_fields():
+    """The collector has no claim classifier or evaluation authority."""
+    return dict(
+        extracted_claims={"status": "NOT_AVAILABLE", "reason": "no_registered_claim_extractor"},
+        supporting_evidence={"status": "NOT_CLASSIFIED"},
+        contradictory_evidence={"status": "NOT_CLASSIFIED"},
+        experiments=[], result_status="INCONCLUSIVE",
+        next_questions=[{"text": "What registered quantitative test could falsify any extracted claim?",
+                         "status": "REQUIRES_REGISTERED_PROTOCOL"}])
+
+
 @dataclass(frozen=True)
 class RetryEligibility:
     allowed: bool
@@ -428,6 +439,8 @@ def verify_bank(journal, row):
         raise ValueError("external_bank_question_binding")
     if bank["authority"] != "RESEARCH_ONLY" or bank["result_status"] != "INCONCLUSIVE":
         raise ValueError("external_bank_authority")
+    if any(bank.get(k) != v for k, v in result_fields().items()):
+        raise ValueError("external_bank_result_semantics")
     plan = bank["plan"]
     bounds = Bounds(**plan["bounds"])
     builder = bank["builder_id"]
@@ -502,6 +515,15 @@ def verify_bank(journal, row):
         if (any(evidence.get(k) != v for k, v in expected.items())
                 or evidence.get("duplicate_of") != expected.get("duplicate_of")):
             raise ValueError("external_bank_extraction_binding")
+    good = any(e["status"] == "OK" for e in bank["evidence"])
+    expected_status = "COLLECTED" if good else ("UNAVAILABLE" if any(
+        s["status"] == "UNAVAILABLE" for s in bank["searches"] + bank["evidence"]) else "EMPTY")
+    receipts = [r for r in bank["searches"] + bank["evidence"] if r.get("cache") is False]
+    expected_cost = dict(scope="current_pass", network_attempts=len(receipts),
+                         received_bytes=sum(r["bytes"] for r in receipts), paid_cost_usd=0,
+                         llm_calls=0, total_operating_cost="NOT_MEASURED")
+    if bank["collection_status"] != expected_status or bank["cost"] != expected_cost:
+        raise ValueError("external_bank_outcome_cost_binding")
     return bank
 
 
@@ -546,12 +568,8 @@ def _collect(journal, q, bounds, child, question_source=None):
     bank = dict(schema=BANK_SCHEMA, builder_id=BUILDER, bank_kind="external_evidence", authority="RESEARCH_ONLY",
                 question=q, plan_id=plan_id, plan=plan, sources=route["sources"],
                 searches=searches, evidence=evidence, evidence_id=evidence_id, result_id=result_id,
-                extracted_claims={"status": "NOT_AVAILABLE", "reason": "no_registered_claim_extractor"},
-                supporting_evidence={"status": "NOT_CLASSIFIED"}, contradictory_evidence={"status": "NOT_CLASSIFIED"},
-                experiments=[], result_status="INCONCLUSIVE", collection_status=collection_status,
+                **result_fields(), collection_status=collection_status,
                 limitations=list(LIMITATIONS), preprocessing=dict(PREPROCESSING),
-                next_questions=[{"text": "What registered quantitative test could falsify any extracted claim?",
-                                 "status": "REQUIRES_REGISTERED_PROTOCOL"}],
                 cost=dict(scope="current_pass", network_attempts=broker.attempts, received_bytes=broker.bytes, paid_cost_usd=0,
                           llm_calls=0, total_operating_cost="NOT_MEASURED"),
                 filtering=dict(metadata_seen=len(metadata), metadata_rejected=rejected,
