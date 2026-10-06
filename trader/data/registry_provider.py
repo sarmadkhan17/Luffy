@@ -227,13 +227,17 @@ class BinanceUsdmRegistryProvider:
 
     def __init__(self, target: VenueTarget, *, fetcher: Fetcher = urllib_fetch,
                  clock_ms: Callable[[], int] = _wall_ms,
-                 timeout_s: float = DEFAULT_TIMEOUT_S, max_bytes: int = DEFAULT_MAX_BYTES):
+                 timeout_s: float = DEFAULT_TIMEOUT_S, max_bytes: int = DEFAULT_MAX_BYTES,
+                 recorder: Callable[["RegistryRefreshResult"], None] | None = None):
         if not isinstance(target, VenueTarget):
             raise TypeError("explicit VenueTarget required")
         if not timeout_s > 0 or max_bytes <= 0:
             raise ValueError("positive timeout and byte limit required")
         self.target, self.timeout_s, self.max_bytes = target, float(timeout_s), int(max_bytes)
         self._fetch, self._clock = fetcher, clock_ms
+        #: durable history sink (registry_store.record_refresh bound to a journal);
+        #: a recording failure never changes or hides the refresh result
+        self._recorder, self.record_errors = recorder, 0
         self._lock = threading.Lock()
         # (snapshot, provenance) replaced together by one reference assignment.
         self._good: tuple[RegistrySnapshot, RegistryRefreshProvenance] | None = None
@@ -258,6 +262,11 @@ class BinanceUsdmRegistryProvider:
             if result.snapshot is not None:
                 self._good = (result.snapshot, result.provenance)
             self._attempt = result.provenance
+            if self._recorder is not None:
+                try:
+                    self._recorder(result)
+                except Exception:
+                    self.record_errors += 1
             return result
 
     def _refresh(self) -> RegistryRefreshResult:

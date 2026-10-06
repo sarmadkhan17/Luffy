@@ -119,6 +119,10 @@ class Kernel:
         # Executor.
         self.feed = DataFeed()
         self.universe = Universe(cfg, self.exchange)
+        try:
+            self.universe.attach_journal(self.journal)
+        except Exception as exc:  # history is observation; never blocks boot
+            log.warning(f"universe history unavailable: {type(exc).__name__}")
         self.positioning_agent = PositioningAnalyst(self.exchange)
         self.depth_agent = DepthScout()
         order = ("structure", "momentum", "flow", "value", "rotation",

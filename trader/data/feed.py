@@ -631,12 +631,23 @@ _RUNTIME_BLACKLIST: set[str] = set()
 _UNTRADEABLE_MARKERS = ("-4411", "tradfi-perps", "tradfi perps")
 
 
+#: set by Universe.attach_journal: durable record of venue refusals, so a
+#: restart does not forget them. A failing sink never blocks the exclusion.
+_UNTRADEABLE_SINK = None
+
+
 def mark_untradeable(symbol: str, reason: str = "") -> bool:
-    """Blacklist a symbol for the life of the process. True if newly added."""
+    """Blacklist a symbol (durably once a journal is attached). True if newly added."""
     first = symbol not in _RUNTIME_BLACKLIST
     _RUNTIME_BLACKLIST.add(symbol)
     if first:
         log.warning(f"universe: {symbol} marked untradeable ({reason[:120]})")
+    sink = _UNTRADEABLE_SINK
+    if sink is not None:
+        try:
+            sink(symbol, reason)
+        except Exception as e:                            # noqa: BLE001
+            log.warning(f"universe: untradeable record failed for {symbol}: {type(e).__name__}")
     return first
 
 
@@ -687,6 +698,36 @@ class Universe:
         #: symbol -> last seen 24h quote volume, for strategy liquidity floors
         self._volume_receipts = {}
         self._volumes: dict[str, float] = {}
+
+    @property
+    def environment(self) -> str:
+        """The trading environment this universe's account refusals belong to."""
+        from ..core.config import Env
+        return "demo" if Env.get("BINANCE_DEMO", "true").lower() in ("1", "true", "yes") else "production"
+
+    def attach_journal(self, journal) -> None:
+        """Make universe history durable: restore this environment's recorded
+        venue refusals, and record future refusals and every selection revision.
+        Observation only; nothing here grants or widens trading authority."""
+        global _UNTRADEABLE_SINK
+        from . import registry_store as store
+        self._journal = journal
+        env = self.environment
+        known = store.load_untradeable(journal, env)
+        _RUNTIME_BLACKLIST.update(known)
+        self.blacklist |= set(known)
+        _UNTRADEABLE_SINK = lambda sym, reason: store.record_untradeable(  # noqa: E731
+            journal, env, sym, reason)
+
+    def _persist_revision(self, receipt: dict) -> None:
+        journal = getattr(self, "_journal", None)
+        if journal is None:
+            return
+        try:
+            from . import registry_store as store
+            store.record_universe_revision(journal, receipt, self.environment)
+        except Exception as e:                            # noqa: BLE001
+            log.warning(f"universe: revision record failed: {type(e).__name__}")
 
     @property
     def ex(self):
@@ -745,6 +786,7 @@ class Universe:
         except Exception as e:
             log.warning(f"universe rescan failed: {e}")
             return
+        self.blacklist |= set(_RUNTIME_BLACKLIST)
         scored = []
         volume_receipts = {}
         #: symbol -> reason code, for every USDT ticker the scan did not select
@@ -807,9 +849,14 @@ class Universe:
                         blacklist=sorted(self.blacklist)),
                     volume_receipts=volume_receipts,
                     exclusions=dict(sorted(exclusions.items())),
+                    # configured majors stay observable, but absence from the venue
+                    # scan is recorded and never makes anything tradable
+                    majors_unobserved=sorted(m for m in self.majors
+                                             if m not in {norm_symbol(k) for k in tickers}),
                     listing_receipts={sym:self._listing_cache[sym] for sym in members})
         body['revision_id'] = mp.digest(body)
         self._selection_receipt = body
+        self._persist_revision(body)
         self._alts = members
         self._last_scan = received/1000
         log.info(f"universe: {len(self.majors) + len(self._alts)} symbols "
