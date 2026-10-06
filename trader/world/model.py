@@ -11,7 +11,7 @@ from enum import Enum
 from hashlib import sha256
 from typing import TYPE_CHECKING, Any, Iterable
 
-from .observation import Observation, _text, _timestamp
+from .observation import Observation, Quality, _text, _timestamp
 from .state import WorldState
 
 if TYPE_CHECKING:
@@ -141,10 +141,10 @@ class WorldModel:
                     raise ValueError("observation horizon is not declared by model")
         if self.claims is not None:
             from .claim import ClaimEvidenceRef
-            present = {ClaimEvidenceRef.from_observation(obs)
+            present = {ClaimEvidenceRef.from_observation(obs): obs
                        for state in states for obs in state.observations}
             if self.relationships is not None:
-                present.update(ClaimEvidenceRef.from_relationship(rel)
+                present.update((ClaimEvidenceRef.from_relationship(rel), rel)
                                for rel in self.relationships.relationships)
             for claim in self.claims.claims:
                 if claim.coordinate.scope not in scope_set:
@@ -154,6 +154,11 @@ class WorldModel:
                 if any(ref not in present for ref in
                        claim.supporting_evidence + claim.contradicting_evidence):
                     raise ValueError("claim evidence is not an exact record in model")
+                # A hash proves lineage, not that the referenced measurement
+                # exists. Confidence and contradictions cannot fill missing support.
+                if claim.quality is Quality.VALID and not any(
+                        present[ref].value is not None for ref in claim.supporting_evidence):
+                    raise ValueError("VALID claim requires nonmissing supporting evidence")
         nodes = tuple(sorted(nodes, key=lambda node: (
             node.scope.level.value, node.scope.identifier)))
         states = tuple(sorted(states, key=lambda state: state.instrument))
