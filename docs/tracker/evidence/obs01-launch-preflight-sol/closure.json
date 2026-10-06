@@ -1,0 +1,47 @@
+{
+  "schema": "obs01-closure.v1",
+  "tracker_id": "OBS-01",
+  "lane": "SOL",
+  "result": "CLOSED",
+  "closing_condition": "Machine-readable preflight outcome gates launch; active/unreadable required storage/protection/environment facts yield zero launches.",
+  "implementation_commit": "ba93a29e19cea1d85d544aff12b2e75b8c43455e",
+  "required_sections": [
+    "storage",
+    "environment",
+    "protection",
+    "control",
+    "safety"
+  ],
+  "tests": {
+    "command": "./venv/bin/python -m pytest -q tests/test_launch_preflight.py tests/test_stage1_recovery_monitoring.py tests/test_protection_snapshot.py",
+    "result": "247 passed in 35.01s",
+    "evidence": "docs/tracker/evidence/obs01-launch-preflight-sol/tests.txt"
+  },
+  "zero_launch_failure_proven": true,
+  "zero_operational_calls_on_refusal": true,
+  "runtime_launched": false,
+  "provider_calls": 0,
+  "trading_authority_changed": false,
+  "unrelated_tracker_rows_unchanged": true,
+  "cross_tracker": {
+    "OBS-02": {
+      "status": "AWAITING_EVIDENCE",
+      "closed_by_this_package": false
+    },
+    "OBS-04": {
+      "status": "AWAITING_EVIDENCE",
+      "closed_by_this_package": false
+    },
+    "RUN-01": {
+      "status": "EVIDENCE_TO_MAP",
+      "closed_by_this_package": false
+    },
+    "MON-01": {
+      "status": "EVIDENCE_TO_MAP",
+      "closed_by_this_package": false
+    }
+  },
+  "restart_overlap": "Six-line hook after target case/esac and before SELF/pgrep; leave all existing identity/launch logic unchanged.",
+  "next_recommended_p0": "OBS-04",
+  "next_selected": false
+}

@@ -1,0 +1,456 @@
+{
+  "status": "PASS",
+  "integrated_scenarios": {
+    "active-storage": {
+      "result": "PASS",
+      "events": [
+        "preflight:REFUSE",
+        "observers:stop"
+      ],
+      "observation": {
+        "exact_stop_reason": "preflight_refused",
+        "refusal_reasons": [
+          "active_condition:journal_write"
+        ],
+        "observation_status": "OBSERVATION_NOT_STARTED",
+        "still_running": [],
+        "observers_stopped": true,
+        "final_still_running": []
+      },
+      "fixture_directory": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/integrated-active-storage-9pgg8zpg"
+    },
+    "protection-missing": {
+      "result": "PASS",
+      "events": [
+        "preflight:REFUSE",
+        "observers:stop"
+      ],
+      "observation": {
+        "exact_stop_reason": "preflight_refused",
+        "refusal_reasons": [
+          "account_protection_or_pending_execution_unverified"
+        ],
+        "observation_status": "OBSERVATION_NOT_STARTED",
+        "still_running": [],
+        "observers_stopped": true,
+        "final_still_running": []
+      },
+      "fixture_directory": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/integrated-protection-missing-p0qegoqf"
+    },
+    "protection-unverifiable": {
+      "result": "PASS",
+      "events": [
+        "preflight:REFUSE",
+        "observers:stop"
+      ],
+      "observation": {
+        "exact_stop_reason": "preflight_refused",
+        "refusal_reasons": [
+          "account_protection_or_pending_execution_unverified"
+        ],
+        "observation_status": "OBSERVATION_NOT_STARTED",
+        "still_running": [],
+        "observers_stopped": true,
+        "final_still_running": []
+      },
+      "fixture_directory": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/integrated-protection-unverifiable-lgukazqk"
+    },
+    "pending-boot": {
+      "result": "PASS",
+      "events": [
+        "preflight:ALLOW",
+        "storage:storage-before-startup",
+        "observers:start",
+        "launch:kernel",
+        "storage:storage-observer-start",
+        "sample",
+        "storage:storage-during",
+        "resources",
+        "sample",
+        "signal",
+        "storage:storage-stop-request",
+        "storage:storage-during-shutdown",
+        "services:terminated",
+        "storage:storage-after-graceful-stop",
+        "storage:storage-final-stopped",
+        "venue:final-fake",
+        "observers:stop"
+      ],
+      "observation": {
+        "reason": "operator_stop",
+        "observation_status": "OBSERVATION_NOT_STARTED",
+        "first_cycle_monotonic_s": null,
+        "deadline_monotonic_s": null,
+        "stop_monotonic_s": 101.0,
+        "duration_s": 0,
+        "completed_window_cycles": 0,
+        "shutdown_cycles": 0,
+        "successful_heartbeat_gaps": [],
+        "still_running": [],
+        "exact_stop_reason": "operator_stop",
+        "final_account_exit_code": 0,
+        "observers_stopped": true,
+        "final_still_running": []
+      },
+      "fixture_directory": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/integrated-pending-boot-uqiifmni"
+    },
+    "prior-heartbeat": {
+      "result": "PASS",
+      "events": [
+        "preflight:ALLOW",
+        "storage:storage-before-startup",
+        "observers:start",
+        "launch:kernel",
+        "storage:storage-observer-start",
+        "sample",
+        "storage:storage-during",
+        "resources",
+        "boot:complete",
+        "sample",
+        "signal",
+        "storage:storage-stop-request",
+        "storage:storage-during-shutdown",
+        "services:terminated",
+        "storage:storage-after-graceful-stop",
+        "storage:storage-final-stopped",
+        "venue:final-fake",
+        "observers:stop"
+      ],
+      "observation": {
+        "reason": "operator_stop",
+        "observation_status": "STARTED",
+        "first_cycle_monotonic_s": 101.0,
+        "deadline_monotonic_s": 3701.0,
+        "stop_monotonic_s": 101.0,
+        "duration_s": 0,
+        "completed_window_cycles": 0,
+        "shutdown_cycles": 0,
+        "successful_heartbeat_gaps": [],
+        "still_running": [],
+        "exact_stop_reason": "operator_stop",
+        "final_account_exit_code": 0,
+        "observers_stopped": true,
+        "final_still_running": []
+      },
+      "fixture_directory": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/integrated-prior-heartbeat-q3j_89jo"
+    },
+    "valid-boot": {
+      "result": "PASS",
+      "events": [
+        "preflight:ALLOW",
+        "storage:storage-before-startup",
+        "observers:start",
+        "launch:kernel",
+        "storage:storage-observer-start",
+        "sample",
+        "storage:storage-during",
+        "resources",
+        "boot:complete",
+        "sample",
+        "beat:new",
+        "sample",
+        "launch:dashboard",
+        "sample",
+        "signal",
+        "storage:storage-stop-request",
+        "storage:storage-during-shutdown",
+        "services:terminated",
+        "storage:storage-after-graceful-stop",
+        "storage:storage-final-stopped",
+        "venue:final-fake",
+        "observers:stop"
+      ],
+      "observation": {
+        "reason": "operator_stop",
+        "observation_status": "STARTED",
+        "first_cycle_monotonic_s": 101.0,
+        "deadline_monotonic_s": 3701.0,
+        "stop_monotonic_s": 103.0,
+        "duration_s": 2.0,
+        "completed_window_cycles": 1,
+        "shutdown_cycles": 0,
+        "successful_heartbeat_gaps": [],
+        "still_running": [],
+        "exact_stop_reason": "operator_stop",
+        "final_account_exit_code": 0,
+        "observers_stopped": true,
+        "final_still_running": []
+      },
+      "fixture_directory": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/integrated-valid-boot-bij5kfsi"
+    },
+    "launch-delay": {
+      "result": "PASS",
+      "events": [
+        "preflight:ALLOW",
+        "storage:storage-before-startup",
+        "observers:start",
+        "launch:kernel",
+        "storage:storage-observer-start",
+        "sample",
+        "storage:storage-during",
+        "resources",
+        "boot:complete",
+        "sample",
+        "beat:new",
+        "sample",
+        "launch:dashboard",
+        "sample",
+        "storage:storage-during",
+        "resources",
+        "sample",
+        "storage:storage-during",
+        "resources",
+        "sample",
+        "storage:storage-during",
+        "resources",
+        "sample",
+        "storage:storage-during",
+        "resources",
+        "sample",
+        "storage:storage-during",
+        "resources",
+        "sample",
+        "storage:storage-during"
+      ],
+      "observation": {
+        "reason": "bounded_hour_elapsed",
+        "observation_status": "STARTED",
+        "first_cycle_monotonic_s": 601.0,
+        "deadline_monotonic_s": 4201.0,
+        "stop_monotonic_s": 4202.0,
+        "duration_s": 3601.0,
+        "completed_window_cycles": 1,
+        "shutdown_cycles": 0,
+        "successful_heartbeat_gaps": [
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0,
+          60.0
+        ],
+        "still_running": [],
+        "exact_stop_reason": "bounded_hour_elapsed",
+        "final_account_exit_code": 0,
+        "observers_stopped": true,
+        "final_still_running": []
+      },
+      "fixture_directory": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/integrated-launch-delay-cy1chhzl"
+    },
+    "boot-failure": {
+      "result": "PASS",
+      "events": [
+        "preflight:ALLOW",
+        "storage:storage-before-startup",
+        "observers:start",
+        "launch:kernel",
+        "storage:storage-observer-start",
+        "sample",
+        "storage:storage-during",
+        "resources",
+        "sample",
+        "signal",
+        "storage:storage-stop-request",
+        "storage:storage-during-shutdown",
+        "services:terminated",
+        "storage:storage-after-graceful-stop",
+        "storage:storage-final-stopped",
+        "venue:final-fake",
+        "observers:stop"
+      ],
+      "observation": {
+        "reason": "stage_failure:kernel.boot",
+        "observation_status": "OBSERVATION_NOT_STARTED",
+        "first_cycle_monotonic_s": null,
+        "deadline_monotonic_s": null,
+        "stop_monotonic_s": 101.0,
+        "duration_s": 0,
+        "completed_window_cycles": 0,
+        "shutdown_cycles": 0,
+        "successful_heartbeat_gaps": [],
+        "still_running": [],
+        "exact_stop_reason": "stage_failure:kernel.boot",
+        "final_account_exit_code": 0,
+        "observers_stopped": true,
+        "final_still_running": []
+      },
+      "fixture_directory": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/integrated-boot-failure-d9ibjduz"
+    },
+    "shutdown-timeout": {
+      "result": "PASS",
+      "events": [
+        "preflight:ALLOW",
+        "storage:storage-before-startup",
+        "observers:start",
+        "launch:kernel",
+        "storage:storage-observer-start",
+        "sample",
+        "storage:storage-during",
+        "resources",
+        "boot:complete",
+        "sample",
+        "beat:new",
+        "sample",
+        "launch:dashboard",
+        "sample",
+        "signal",
+        "storage:storage-stop-request",
+        "storage:storage-during-shutdown",
+        "storage:storage-stop-timeout",
+        "observers:retained-on-timeout",
+        "storage:storage-timeout-continuing"
+      ],
+      "observation": {
+        "reason": "operator_stop",
+        "observation_status": "STARTED",
+        "first_cycle_monotonic_s": 101.0,
+        "deadline_monotonic_s": 3701.0,
+        "stop_monotonic_s": 103.0,
+        "duration_s": 2.0,
+        "completed_window_cycles": 1,
+        "shutdown_cycles": 0,
+        "successful_heartbeat_gaps": [],
+        "still_running": [
+          "kernel",
+          "dashboard"
+        ],
+        "exact_stop_reason": "graceful_shutdown_timeout",
+        "remaining_process_identities": {
+          "kernel": {
+            "pid": 71,
+            "start_ticks": "fixture"
+          },
+          "dashboard": {
+            "pid": 72,
+            "start_ticks": "fixture"
+          }
+        },
+        "observers_retained": true,
+        "final_still_running": [
+          "kernel",
+          "dashboard"
+        ]
+      },
+      "fixture_directory": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/integrated-shutdown-timeout-hds418w3"
+    },
+    "confirmed-shutdown": {
+      "result": "PASS",
+      "events": [
+        "preflight:ALLOW",
+        "storage:storage-before-startup",
+        "observers:start",
+        "launch:kernel",
+        "storage:storage-observer-start",
+        "sample",
+        "storage:storage-during",
+        "resources",
+        "boot:complete",
+        "sample",
+        "beat:new",
+        "sample",
+        "launch:dashboard",
+        "sample",
+        "signal",
+        "storage:storage-stop-request",
+        "storage:storage-during-shutdown",
+        "services:terminated",
+        "storage:storage-after-graceful-stop",
+        "storage:storage-final-stopped",
+        "venue:final-fake",
+        "observers:stop"
+      ],
+      "observation": {
+        "reason": "operator_stop",
+        "observation_status": "STARTED",
+        "first_cycle_monotonic_s": 101.0,
+        "deadline_monotonic_s": 3701.0,
+        "stop_monotonic_s": 103.0,
+        "duration_s": 2.0,
+        "completed_window_cycles": 1,
+        "shutdown_cycles": 0,
+        "successful_heartbeat_gaps": [],
+        "still_running": [],
+        "exact_stop_reason": "operator_stop",
+        "final_account_exit_code": 0,
+        "observers_stopped": true,
+        "final_still_running": []
+      },
+      "fixture_directory": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/integrated-confirmed-shutdown-fx2w3fd0"
+    },
+    "unloaded-transient-service-cleanup": {
+      "result": "PASS"
+    },
+    "partial-intent-absence-and-pending-query": {
+      "result": "PASS"
+    },
+    "actual-timeout-retention-loop": {
+      "result": "PASS",
+      "events": [
+        "storage:storage-timeout-continuing",
+        "resources",
+        "storage:storage-timeout-continuing",
+        "resources",
+        "services:terminated",
+        "storage:storage-after-delayed-termination"
+      ]
+    }
+  },
+  "forbidden_side_effect_guard": "ENFORCED",
+  "controls_preserved": true,
+  "services_started": false,
+  "real_venues_called": false
+}

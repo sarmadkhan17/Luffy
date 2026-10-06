@@ -1,0 +1,51 @@
+{
+  "schema": "obs01-retained-sources.v1",
+  "sources": [
+    {
+      "path": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/executed-harness/pre_start.py",
+      "bytes": 6356,
+      "sha256": "00f1f0d06d58f53cbce86714b83829e20ce47cd2e80817c4dcb11c994ea31feb"
+    },
+    {
+      "path": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/executed-harness/launch_once.py",
+      "bytes": 8461,
+      "sha256": "5ea83b2044353bc1c522493d3aa43f03518fbc61af5d162ee35a3d34913a5a86"
+    },
+    {
+      "path": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/executed-harness/metadata.py",
+      "bytes": 3472,
+      "sha256": "f7ab5f7fc89dfd40d99d92638635bbc32edf1bb2284b224f8aedd7f8e1e2d658"
+    },
+    {
+      "path": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/executed-harness/validate_execution_contract.py",
+      "bytes": 11041,
+      "sha256": "98abd40d842e77064e30c12b86370bc00939ea8cc0ca661279ff3ef45b9bb69f"
+    },
+    {
+      "path": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/executed-harness/integrated-validation.json",
+      "bytes": 13294,
+      "sha256": "4852068f980450f6eccfe4fcd575dcbf980d88c54b2c93d2cf608ffa06ad35bf"
+    },
+    {
+      "path": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/integrated-validation.json",
+      "bytes": 13368,
+      "sha256": "2a662e7bfd727392794e938798ed37c0ddf7cb98cef6fe94e61c3ad3ad0dbe43"
+    },
+    {
+      "path": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/first-preflight-refusal-preflight.json",
+      "bytes": 124,
+      "sha256": "442c745bff31e7ffaf91ed6ea509026462b2f3c3295a65d0b18b3fc71274237b"
+    },
+    {
+      "path": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/correction.patch",
+      "bytes": 64698,
+      "sha256": "a1979dcddaf38d278397a295b22cf3d34e8a0f4ff54bab8768133f4a5d4ac201"
+    },
+    {
+      "path": "/mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/executed-harness-hashes.json",
+      "bytes": 1499,
+      "sha256": "b63a3670aee46c2aab2e1cb9719460be65d0535fa664a0992858e4f18ac29923"
+    }
+  ],
+  "inspection": "Read only; external operational harness and account reader not executed."
+}

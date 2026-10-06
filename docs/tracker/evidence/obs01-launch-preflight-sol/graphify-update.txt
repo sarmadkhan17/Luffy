@@ -1,0 +1,55 @@
+Preparing worktree (detached HEAD 80d1c2a)
+Updating files:  84% (3194/3793)Updating files:  85% (3225/3793)Updating files:  86% (3262/3793)Updating files:  87% (3300/3793)Updating files:  88% (3338/3793)Updating files:  89% (3376/3793)Updating files:  90% (3414/3793)Updating files:  91% (3452/3793)Updating files:  92% (3490/3793)Updating files:  93% (3528/3793)Updating files:  94% (3566/3793)Updating files:  95% (3604/3793)Updating files:  96% (3642/3793)Updating files:  97% (3680/3793)Updating files:  98% (3718/3793)Updating files:  99% (3756/3793)Updating files: 100% (3793/3793)Updating files: 100% (3793/3793), done.
+HEAD is now at 80d1c2a docs(tracker): record PERF-03 evidence block and rank safe runtime path
+Re-extracting code files in . (no LLM needed)...
+[graphify watch] 108 file(s) not classified (no supported extension or shebang), skipped: .git, .gitignore, .graphify_labels.json.sig, .graphify_root, .graphify_semantic_marker, .graphify_version (+102 more)
+  AST extraction: 100/1680 uncached files (5%) [4 workers]
+  AST extraction: 200/1680 uncached files (11%) [4 workers]
+  AST extraction: 300/1680 uncached files (17%) [4 workers]
+  AST extraction: 400/1680 uncached files (23%) [4 workers]
+  AST extraction: 500/1680 uncached files (29%) [4 workers]
+  AST extraction: 600/1680 uncached files (35%) [4 workers]
+  AST extraction: 700/1680 uncached files (41%) [4 workers]
+  AST extraction: 800/1680 uncached files (47%) [4 workers]
+  AST extraction: 900/1680 uncached files (53%) [4 workers]
+  AST extraction: 1000/1680 uncached files (59%) [4 workers]
+  AST extraction: 1100/1680 uncached files (65%) [4 workers]
+  AST extraction: 1200/1680 uncached files (71%) [4 workers]
+  AST extraction: 1300/1680 uncached files (77%) [4 workers]
+  AST extraction: 1400/1680 uncached files (83%) [4 workers]
+  AST extraction: 1500/1680 uncached files (89%) [4 workers]
+  AST extraction: 1600/1680 uncached files (95%) [4 workers]
+  AST extraction: 1680/1680 uncached files (100%) [4 workers]
+[graphify watch] community set changed since labeling (888 saved labels, 1111 communities now; renamed 277 community(ies) by their hub). Run `graphify label` to refresh names with the LLM.
+[graphify] backed up curated graph (5 files) -> 2026-10-06/
+Graph has 23273 nodes (above 5000 limit). Building aggregated community view...
+graph.html written (aggregated: 1111 community nodes, 4094 cross-community edges)
+Tip: run with --obsidian for full node-level detail.
+[graphify watch] Rebuilt: 23273 nodes, 58491 edges, 1111 communities
+[graphify watch] graph.json, graph.html and GRAPH_REPORT.md updated in graphify-out
+Code graph updated. For doc/paper/image changes run /graphify --update in your AI assistant.
+Tip: set GEMINI_API_KEY or GOOGLE_API_KEY to use Gemini for semantic extraction.
+Re-extracting code files in . (no LLM needed)...
+[graphify watch] 108 file(s) not classified (no supported extension or shebang), skipped: .git, .gitignore, .graphify_labels.json.sig, .graphify_root, .graphify_semantic_marker, .graphify_version (+102 more)
+  AST extraction: 100/1205 uncached files (8%) [4 workers]
+  AST extraction: 200/1205 uncached files (16%) [4 workers]
+  AST extraction: 300/1205 uncached files (24%) [4 workers]
+  AST extraction: 400/1205 uncached files (33%) [4 workers]
+  AST extraction: 500/1205 uncached files (41%) [4 workers]
+  AST extraction: 600/1205 uncached files (49%) [4 workers]
+  AST extraction: 700/1205 uncached files (58%) [4 workers]
+  AST extraction: 800/1205 uncached files (66%) [4 workers]
+  AST extraction: 900/1205 uncached files (74%) [4 workers]
+  AST extraction: 1000/1205 uncached files (82%) [4 workers]
+  AST extraction: 1100/1205 uncached files (91%) [4 workers]
+  AST extraction: 1200/1205 uncached files (99%) [4 workers]
+  AST extraction: 1205/1205 uncached files (100%) [4 workers]
+[graphify watch] community set changed since labeling (1111 saved labels, 1089 communities now; renamed 353 community(ies) by their hub). Run `graphify label` to refresh names with the LLM.
+[graphify] backed up curated graph (5 files) -> 2026-10-06/
+Graph has 23274 nodes (above 5000 limit). Building aggregated community view...
+graph.html written (aggregated: 1089 community nodes, 4825 cross-community edges)
+Tip: run with --obsidian for full node-level detail.
+[graphify watch] Rebuilt: 23274 nodes, 58494 edges, 1089 communities
+[graphify watch] graph.json, graph.html and GRAPH_REPORT.md updated in graphify-out
+Code graph updated. For doc/paper/image changes run /graphify --update in your AI assistant.
+Tip: set GEMINI_API_KEY or GOOGLE_API_KEY to use Gemini for semantic extraction.

@@ -1,0 +1,5 @@
+Read-only Tracker contract: AVAILABLE; OBS-01 CLOSED; no successor selected.
+177 rows retained; only OBS-01 changed. PERF-01/PERF-03/ATT-04 and OBS-02/OBS-04/RUN-01/MON-01 unchanged.
+STATE.yaml: terminal CLOSED, no operational authorization or next selection.
+NEXT.yaml: terminal CLOSED, no operational authorization or next selection.
+Bundle manifest digests pass, historical XLSX preserved.

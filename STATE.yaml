@@ -1359,20 +1359,18 @@ perf03_capture_r1:
   perf01: UNCHANGED; BLOCKED/UNKNOWN
 current_active_work:
   id: OBS-01
-  status: SELECTED_NOT_STARTED
-  mode: DIAGNOSIS_ONLY
+  status: CLOSED
+  mode: ENGINEERING_ONLY
   objective: Enforce preflight refusal before any service launch.
-  implementation_started: false
+  implementation_started: true
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
   tracker_source: docs/tracker/LUFFY_Product_Tracker_v1.yaml
-  selection_basis: P0 launch safety blocker; no dependencies; existing reported correction offers a small evidence-verification
-    package. Selected after PERF-03 terminal BLOCKED; not started.
-  constraints:
-  - Inspect exact retained evidence and relevant harness/tests only.
-  - No service launch, provider enablement or trading activation.
-  - Preserve PERF-03 external evidence gate and PERF-01 BLOCKED/UNKNOWN.
+  implementation_commit: ba93a29e19cea1d85d544aff12b2e75b8c43455e
   evidence:
-  - docs/tracker/evidence/perf03-capture-r1/terminal.yaml
-  - docs/tracker/evidence/2026-10-05-instrumented-observation-owner-report.yaml
+  - docs/tracker/evidence/obs01-launch-preflight-sol/closure.json
+  - docs/tracker/evidence/obs01-launch-preflight-sol/REPORT.md
+  next_recommended_item: OBS-04
+  next_item_selected: false
+  next_item_started: false

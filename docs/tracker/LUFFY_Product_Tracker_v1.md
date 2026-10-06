@@ -1,10 +1,10 @@
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.5-perf03-terminal-blocked
+Version: 1.6-obs01-launch-gate-closed
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
-Selected NEXT: **OBS-01 — SELECTED_NOT_STARTED_DIAGNOSIS_ONLY**. PERF-03 is BLOCKED; no runtime or trading authority follows.
+Terminal NEXT: **OBS-01 — CLOSED_ENGINEERING_ONLY**. OBS-04 is recommended only; no next item is selected or started. PERF-01/PERF-03 remain BLOCKED; no runtime or trading authority follows.
 
 ## Status definitions
 
@@ -30,7 +30,7 @@ Selected NEXT: **OBS-01 — SELECTED_NOT_STARTED_DIAGNOSIS_ONLY**. PERF-03 is BL
 
 **One data set**: Maintain this YAML as canonical detailed data. Dashboard Tracker reads validated YAML and NEXT. Markdown is optional generated reference. Historical XLSX is deprecated/non-authoritative and excluded from synchronization and adoption checks.
 
-**Current work**: PERF-03 is terminal BLOCKED with a tested narrow offline correction and an external capture-evidence gate. OBS-01 is the single selected DIAGNOSIS_ONLY successor, not started. PERF-01 remains unchanged and BLOCKED/UNKNOWN. No runtime, provider or trading activation is authorized.
+**Current work**: OBS-01 is terminal CLOSED with a repository-native preflight launch gate and isolated fixture proof. No successor is selected; OBS-04 is recommended only. PERF-01 and PERF-03 remain unchanged and BLOCKED. No runtime, provider or trading activation is authorized.
 
 **Activation**: No item, green cell, spreadsheet formula or passing test activates trading, paid providers, new workers, a restart or a scope expansion.
 
@@ -5257,35 +5257,35 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: Cross-cutting
 - **item_type**: DEFECT
 - **release_scope**: BASELINE
-- **status**: OPEN
+- **status**: CLOSED
 - **why_needed**: The prepared preflight recorded active safety conditions but did not enforce refusal.
 - **closure_condition**: Machine-readable preflight outcome gates launch; active/unreadable required storage/protection/environment facts yield zero launches.
 - **failure_regression_proof**: Repeat the exact original failure and a nearby adverse variant; verify affected already-closed boundaries without reopening unrelated work.
 - **dependencies**: None
 - **owner_role**: Assigned local engineering session
-- **engineering_assignee**: UNASSIGNED; selected successor only
-- **implementation_evidence**: SEE_EVIDENCE
-- **runtime_evidence**: SEE_SCOPE_AND_EVIDENCE
+- **engineering_assignee**: SOL / Codex local engineering session
+- **implementation_evidence**: ba93a29e19cea1d85d544aff12b2e75b8c43455e; trader/observability/preflight.py; restart.sh
+- **runtime_evidence**: NOT_PERFORMED; isolated mocked launch fixtures only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: S16 reports machine-readable preflight gating was corrected and integrated fixture scenarios passed. Exact external harness artifacts were not independently inspected in the tracker-mapping step; keep AWAITING_EVIDENCE.
+- **latest_evidence**: Exact retained external preflight/harness and reported fixture results inspected and hash-pinned. Production restart lacked consumption. Repo-native JSON gate now refuses before every stop/start side effect; 247 focused tests pass with zero operational invocations on failure.
 - **source_ids**: S11, S15
 - **source_sections**: Parent requirement(s): RUN-01
-- **next_proof**: Read exact retained preflight/harness implementation and fixture evidence; verify refusal before launch, including active/unreadable storage/protection/environment. No service launch or runtime observation authorized.
+- **next_proof**: None for OBS-01 implementation condition. Runtime identity, ordered boot, shutdown and monitoring remain owned by separate rows; no service/provider/trading activation authorized.
 - **acceptance_basis**: Existing requirement/observed incident; not a new feature.
 - **acceptance_status**: OWNER_CONTRACT_OR_REPORTED_FAILURE
 - **priority**: CURRENT
-- **resolution_at_commit**:
-- **work_authorized**: False
+- **resolution_at_commit**: ba93a29e19cea1d85d544aff12b2e75b8c43455e
+- **work_authorized**: True
 - **updated**: 2026-10-06
 - **legacy_ids**:
 - **parent_work**: WORK-01
 - **parent_ids**: RUN-01
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/obs01-launch-preflight-sol/closure.json
+- **evidence_validity**: Pinned repository implementation and isolated fixture proof; no fresh host/venue readiness claim.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
-- **selection_basis**: P0 launch safety blocker; no dependencies; existing reported correction offers a small evidence-verification package. Selected after PERF-03 terminal BLOCKED; not started.
+- **selection_basis**: User explicitly authorized SOL OBS-01 only; terminal CLOSED. OBS-04 is a recommendation, not selected or started.
 
 ### OBS-02 — Launch Dashboard only after new Kernel boot evidence.
 
@@ -6932,3 +6932,5 @@ external_artifacts_not_inspected:
   executed_harness_hashes: /mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/executed-harness-hashes.json
   final_fixtures: /mnt/luffy-recovery/recovery/scheduling-observation-prep-r1-idi3eex0/integrated-validation.json
 ```
+
+OBS-01 CLOSED: repository preflight gates all restart stop/start effects; 247 isolated tests pass. No successor selected. [Closure evidence](evidence/obs01-launch-preflight-sol/closure.json).
