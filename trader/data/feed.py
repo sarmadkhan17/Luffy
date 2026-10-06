@@ -747,9 +747,15 @@ class Universe:
             return
         scored = []
         volume_receipts = {}
+        #: symbol -> reason code, for every USDT ticker the scan did not select
+        exclusions = {}
         for sym_raw, t in tickers.items():
             sym = norm_symbol(sym_raw)
-            if not sym.endswith("/USDT") or sym in self.blacklist:
+            if not sym.endswith("/USDT"):
+                continue
+            if sym in self.blacklist:
+                exclusions[sym] = ("runtime_untradeable" if sym in _RUNTIME_BLACKLIST
+                                   else "blacklisted")
                 continue
             iid, source = mp.venue_identity(self.ex, sym_raw)
             quote_vol = pd.to_numeric(t.get('quoteVolume'),errors='coerce')
@@ -759,6 +765,7 @@ class Universe:
             if (received < started or not iid or not source or not np.isfinite(quote_vol) or not np.isfinite(last)
                     or quote_vol < 0 or last <= 0 or event is not None and
                     (type(event) not in (int,float) or not np.isfinite(event) or event > received)):
+                exclusions[sym] = "ticker_invalid_or_identity_unverified"
                 continue
             self._volumes[sym] = float(quote_vol)
             self._volume_receipts[sym] = dict(instrument_id=iid,source=source,
@@ -767,9 +774,14 @@ class Universe:
             volume_receipts[sym] = self._volume_receipts[sym]
             if sym in self.majors:
                 continue
-            if quote_vol < self.min_vol or last < self.min_price:
+            if quote_vol < self.min_vol:
+                exclusions[sym] = "below_min_volume"
+                continue
+            if last < self.min_price:
+                exclusions[sym] = "below_min_price"
                 continue
             if not self._old_enough(sym):
+                exclusions[sym] = "listing_too_new_or_unverified"
                 continue
             scored.append((quote_vol, sym))
             self._volumes[sym] = quote_vol
@@ -780,6 +792,8 @@ class Universe:
         if self._selection_receipt and received < self._selection_receipt['available_at_ms']:
             return  # An older cut must not replace a valid later result.
         members = [s for _, s in scored[:self.top_n]]
+        for _, sym in scored[self.top_n:]:
+            exclusions[sym] = "below_top_n_rank"
         required_receipts = list(volume_receipts.values()) + [self._listing_cache[sym] for sym in members]
         if any(received < max(r['available_at_ms'], r['observed_at_ms']) for r in required_receipts):
             return  # A reversed local clock cannot backdate required selection inputs.
@@ -792,6 +806,7 @@ class Universe:
                         min_price=self.min_price, min_age_days=self.min_age_days,
                         blacklist=sorted(self.blacklist)),
                     volume_receipts=volume_receipts,
+                    exclusions=dict(sorted(exclusions.items())),
                     listing_receipts={sym:self._listing_cache[sym] for sym in members})
         body['revision_id'] = mp.digest(body)
         self._selection_receipt = body
