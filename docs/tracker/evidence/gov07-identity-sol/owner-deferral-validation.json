@@ -1,0 +1,37 @@
+{
+  "result": "PASS",
+  "checks": [
+    "gov07_deferred",
+    "closing_condition_and_prior_terminal_preserved",
+    "prior_evidence_bytes_preserved",
+    "deferral_summary_parity",
+    "selection_summary_parity",
+    "assessment_summary_parity",
+    "exclusions_transitive",
+    "gov07_not_current_blocker",
+    "gov07_loaded_identity_stays_unknown",
+    "future_deployment_gate_preserved",
+    "sec_run_status_preserved",
+    "no_successor_started_or_selected",
+    "own02_gui_eligible",
+    "manifest_hashes_match",
+    "existing_tracker_read_view_available",
+    "terminal_selection_supported",
+    "no_activation",
+    "data02_rows_not_changed"
+  ],
+  "count": 18,
+  "validated_at_utc": "2026-10-06T04:01:11.467998+00:00",
+  "base_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
+  "commit_scope": [
+    "NEXT.yaml",
+    "STATE.yaml",
+    "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
+    "docs/tracker/LUFFY_Product_Tracker_v1.md",
+    "docs/tracker/bundle-manifest.json",
+    "docs/tracker/evidence/gov07-identity-sol"
+  ],
+  "scope_note": "Prepared canonical control-plane files include retained GOV-01 prerequisite state; its separate untracked evidence and unrelated DATA-02/Graphify/checkpoint files excluded.",
+  "runtime_deployment_identity": "UNPROVEN",
+  "next_gui_eligible_item": "OWN-02"
+}

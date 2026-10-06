@@ -1,0 +1,52 @@
+id: GOV-07
+dimensions:
+  git_revision_branch:
+    evidence: identity-map.json:local_checkout
+    result: Exact local main 8243113 capture; checkout dirty and explicitly UNVERIFIED.
+  tracked_runtime_config_dirt:
+    evidence: identity-map.json:local_checkout
+    result: Scoped tracked runtime/config clean during capture; whole checkout dirty, not deployment proof.
+  config_identity:
+    evidence: identity-map.json:local_checkout.configuration and retained_r3
+    result: Current SHA256 12915baf...; no declared config schema/version, content hash is exact identity.
+      r3 SHA256 5a04414d... matches config blob at 25cc7d00, differs from local.
+  process_run:
+    evidence: identity-map.json:retained_r3.kernel and retained_process_observation
+    result: Historical Kernel PID1278749/start_ticks12776815/run perf01-owner-measurement-r3; current retained
+      Dashboard PID1154108/start_ticks11639528 matches /proc, loaded code/config UNKNOWN.
+  timestamps:
+    evidence: identity-map.json
+    result: UTC mapping window, mapping PID/start ticks/boot ID; historical preflight/launch/final event UTC
+      times retained. No mtime used as run timestamp.
+  artifact_linkage:
+    evidence: identity-map.json:retained_r3
+    result: 30/30 historical run artifact hashes and 22/22 preparation source hashes match; required HEAD/preflight/final
+      source agree at 25cc7d00. Historical config matches Git blob.
+  deployment_local_remote:
+    evidence: identity-map.json:remote_repository and retained_process_observation
+    result: Remote main queried read-only at 25cc7d00; local at8243113. Remote Git ref is not a process deployment
+      receipt. Current loaded Dashboard revision/config UNKNOWN; equality not established.
+  historical_separation:
+    evidence: identity-map.json:historical_branches; retained-manifests.json; GOV-01 control_snapshot
+    result: Historical branch/checkpoint refs retained as evidence; no merge/fetch/push. Prior control snapshot
+      remains pinned at454ebdd and is not rewritten as current/deployed truth.
+implementation_mapped:
+  revision_dirty_gate: trader/runtime_identity.py:code_revision/check_revision; tracked trader/config/org scope,
+    expected revision mismatch and dirty tracked code refusal. Source gating only; no config hash in KernelInstance
+    record. Does not prove existing Dashboard loaded code.
+  instance_binding: KernelInstance schema stores revision/dirty_code, instance UUID, PID/start ticks, started_at
+    and heartbeat binding; inspect/stop validate process identity. Existing implementation only; no live invocation.
+  diagnostic_run_binding: Existing r3 pre_start checks exact HEAD and records config hash/time; preparation
+    manifest verified before launch; launcher rechecks HEAD/config and tracks exact PID/start ticks/time. Retained
+    execution proof, not a newly authorized run.
+  governance_read_contract: trader/dashboard/tracker.py validates canonical YAML/NEXT selection/counts/status/IDs;
+    repository_revision is current Git HEAD, observed_runtime_revision is dated ledger baseline. Neither identifies
+    already-loaded Dashboard code.
+actual_gap:
+  kind: MISSING_CURRENT_DEPLOYMENT_IDENTITY_EVIDENCE
+  application_defect_found: false
+  facts: No verified current loaded Dashboard source/config receipt. Current local source differs from remotely
+    queried main and historical run. Historical identity proof is complete at its own scope, so it cannot be
+    promoted to current/deployed proof.
+  repair_scope: Add exact identity/evidence map and report GOV-07 BLOCKED without inventing a deploy receipt
+    or changing runtime logic.

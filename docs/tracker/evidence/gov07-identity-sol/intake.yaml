@@ -1,0 +1,16 @@
+id: GOV-07
+authorization: 'Explicit current owner request: work only GOV-07; no Kernel/Dashboard launch/providers/trading/DATA-02
+  changes.'
+captured_revision: 82431136ac68ff72325af301bac43b19b7d3ecd6
+captured_at_utc: '2026-10-06T03:52:49.947649+00:00'
+source_root: /mnt/luffy-data/luffy/production
+branch: main
+scope_quality: UNVERIFIED_DIRTY_CHECKOUT
+dependency:
+  GOV-01: CLOSED
+  evidence: docs/tracker/evidence/gov01-authority-sol/closure.yaml
+concurrent_local_revision_history_observed:
+- ccef7e8b415852727de28f0742df0e8f4c94deb1
+- 82431136ac68ff72325af301bac43b19b7d3ecd6
+policy: Concurrent DATA-02 changes are independent; no changes, rollback, staging or historical proof transfer
+  into their consumer lineage. Identity capture at 8243113 stable during capture.

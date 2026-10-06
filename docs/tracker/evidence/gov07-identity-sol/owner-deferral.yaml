@@ -1,0 +1,24 @@
+id: GOV-07
+decision_date: '2026-10-06'
+authority: 'Explicit owner decision in current session: GOV-07 is not required for the current architecture/GUI
+  build phase.'
+status: DEFERRED
+release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+reason: 'Remaining gate is live deployment identity: Dashboard loaded revision/config UNKNOWN, local main differs
+  from remote main, no application defect demonstrated.'
+blocks_current_release: false
+non_blocking_for:
+- architecture work
+- GUI completion
+- offline testing
+- other tracker items
+dependency_policy: Exclude GOV-07 transitively from current architecture/GUI build-phase blockers; preserve
+  its original requirement/dependency membership as a future gate.
+required_before: Any future deployment/live activation claims; exact source/config/run/process/timestamp and
+  local/remote/deployed consistency closing condition must then be proven.
+runtime_deployment_identity: UNPROVEN
+mapped_evidence_preserved: true
+closing_condition_preserved: Source and evidence artifacts identify revision, configuration, run/process and
+  timestamps; deployment records match remote/local code.
+historical_terminal_evidence: docs/tracker/evidence/gov07-identity-sol/terminal.yaml
+activation_authorized: false

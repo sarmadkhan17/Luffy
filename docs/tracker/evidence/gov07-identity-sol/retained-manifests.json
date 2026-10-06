@@ -1,0 +1,58 @@
+[
+  {
+    "path": "docs/tracker/evidence/obs01-launch-preflight-sol/retained-source-manifest.json",
+    "sha256": "af38c0376c1a1a083e020e9e6acf92ef6d157f6a1b00005f10318fd8ab318c96",
+    "declared_revision": null,
+    "resolved_revision": null,
+    "scope": "retained external source hashes; not deployed process identity",
+    "current_revalidation": "NOT_CLAIMED: historical source hashes do not apply to a later revision without matching scope/artifact proof."
+  },
+  {
+    "path": "docs/tracker/evidence/obs02-dashboard-readiness-sol/source-manifest.json",
+    "sha256": "b80fda4c427d38bf16ee9f339c310443ec26c68e33c533aa8c0b27136c43928a",
+    "declared_revision": null,
+    "resolved_revision": null,
+    "scope": "package source hashes and separate closure scope",
+    "current_revalidation": "NOT_CLAIMED: historical source hashes do not apply to a later revision without matching scope/artifact proof."
+  },
+  {
+    "path": "docs/tracker/evidence/obs03-first-cycle-sol/source-manifest.json",
+    "sha256": "3bc093ba62a19a5df8ee91954d14d1ebece7e4056e76716a54ef8b7ee5d46eac",
+    "declared_revision": "26d29a0",
+    "resolved_revision": "26d29a077908143f18bbdc51c1ae0c56b9ed438f",
+    "scope": "package source hashes and separate closure scope",
+    "current_revalidation": "NOT_CLAIMED: historical source hashes do not apply to a later revision without matching scope/artifact proof."
+  },
+  {
+    "path": "docs/tracker/evidence/obs04-shutdown-sol/source-manifest.json",
+    "sha256": "4db4861fab841d68a8fc77a3dd3c791d384234d3f51c436489fd8233b4c0ac7c",
+    "declared_revision": null,
+    "resolved_revision": null,
+    "scope": "package source hashes and separate closure scope",
+    "current_revalidation": "NOT_CLAIMED: historical source hashes do not apply to a later revision without matching scope/artifact proof."
+  },
+  {
+    "path": "docs/tracker/evidence/obs05-first-boot-diagnostics/source-manifest.json",
+    "sha256": "aefff24778ea2cee42763b64149162ebc382f699a2de9f97dd73f8abaccced42",
+    "declared_revision": "4d5f21b7371201780248bfa374bc1d7e4fecfb97",
+    "resolved_revision": "4d5f21b7371201780248bfa374bc1d7e4fecfb97",
+    "scope": "Offline bounded diagnostics only; no live readiness claim.",
+    "current_revalidation": "NOT_CLAIMED: historical source hashes do not apply to a later revision without matching scope/artifact proof."
+  },
+  {
+    "path": "docs/tracker/evidence/perf03-capture-r1/source-manifest.json",
+    "sha256": "b80fa795944a2e1fd5007b438a4cf96869c7157effbc251b23f81e225502c14c",
+    "declared_revision": "a799e6c365074cab5597a80261bbdb9c3dda3b12",
+    "resolved_revision": "a799e6c365074cab5597a80261bbdb9c3dda3b12",
+    "scope": "package source hashes and separate closure scope",
+    "current_revalidation": "NOT_CLAIMED: historical source hashes do not apply to a later revision without matching scope/artifact proof."
+  },
+  {
+    "path": "docs/tracker/evidence/gov01-authority-sol/source-manifest.json",
+    "sha256": "6f776c82d00e7a350c1fe46d2adb792c5f7dd30415e4b8f0a71a18f58f1396fb",
+    "declared_revision": "454ebdd35efb27a9ddb0020dbb425c993887bb09",
+    "resolved_revision": "454ebdd35efb27a9ddb0020dbb425c993887bb09",
+    "scope": "Pinned working-tree files, not deployed/runtime proof",
+    "current_revalidation": "NOT_CLAIMED: historical source hashes do not apply to a later revision without matching scope/artifact proof."
+  }
+]

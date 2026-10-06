@@ -1,7 +1,7 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.14-owner-current-release-deferral",
-  "control_baseline_revision": "18a5edf441ba826760380f0bd691681ef433966c",
+  "snapshot_version": "1.17-gov07-owner-deferral",
+  "control_baseline_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
   "gui_rows": 29,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 367805,
-      "sha256": "3ca7e50fb66546f9051b5107307458f311e54bc3fb8aebd791ca42c21aad9076",
+      "bytes": 373803,
+      "sha256": "8cfd42e6a04c431c540c336affaf296c3625917f594cc95c382eb1e36b909bbe",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 373484,
-      "sha256": "14ec502c1138d76f157230af305c7b41a027283b5e64e497f30630a1a16a9830",
+      "bytes": 374931,
+      "sha256": "5975caae8c751a813513b08828811a840aed0696bd39b111787128a31401c203",
       "synchronization_required": false
     },
     {
@@ -38,7 +38,8 @@
     "release_scope": "NOT_REQUIRED_FOR_CURRENT_RELEASE",
     "items": [
       "SEC-01",
-      "RUN-01"
+      "RUN-01",
+      "GOV-07"
     ],
     "blocks_current_release": false,
     "non_blocking_for": [
@@ -49,26 +50,53 @@
     ],
     "critical_path_excluded_items": [
       "SEC-01",
-      "RUN-01"
+      "RUN-01",
+      "GOV-07"
     ],
-    "dependency_policy": "Preserve recorded dependency and readiness-gate membership as future requirements. SEC-01 and RUN-01 must be excluded when evaluating current build-phase blockers or selecting current critical-path work; this exception applies transitively to dependent tracker work.",
+    "dependency_policy": "Preserve recorded dependency/readiness-gate membership as future requirements. Exclude SEC-01, RUN-01 and GOV-07 transitively from current architecture/GUI build-phase blocker evaluation and critical-path selection.",
     "revisit_before": "Any future production/live activation requiring their guarantees; revisit unresolved findings and satisfy the existing closing conditions before that activation.",
-    "preservation": "Existing evidence, unresolved findings, closing conditions and completed implementation are retained. Neither item is CLOSED.",
-    "activation_authorized": false
+    "preservation": "Existing evidence, unresolved findings, closing conditions and completed implementation retained. No deferred item is CLOSED. GOV-07 deployment/runtime identity remains UNPROVEN and is required before future deployment/live activation claims.",
+    "activation_authorized": false,
+    "additional_owner_decisions": [
+      {
+        "id": "GOV-07",
+        "decision_date": "2026-10-06",
+        "authority": "Explicit owner decision in current session: GOV-07 is not required for the current architecture/GUI build phase.",
+        "status": "DEFERRED",
+        "release_scope": "NOT_REQUIRED_FOR_CURRENT_RELEASE",
+        "reason": "Remaining gate is live deployment identity: Dashboard loaded revision/config UNKNOWN, local main differs from remote main, no application defect demonstrated.",
+        "blocks_current_release": false,
+        "non_blocking_for": [
+          "architecture work",
+          "GUI completion",
+          "offline testing",
+          "other tracker items"
+        ],
+        "dependency_policy": "Exclude GOV-07 transitively from current architecture/GUI build-phase blockers; preserve its original requirement/dependency membership as a future gate.",
+        "required_before": "Any future deployment/live activation claims; exact source/config/run/process/timestamp and local/remote/deployed consistency closing condition must then be proven.",
+        "runtime_deployment_identity": "UNPROVEN",
+        "mapped_evidence_preserved": true,
+        "closing_condition_preserved": "Source and evidence artifacts identify revision, configuration, run/process and timestamps; deployment records match remote/local code.",
+        "historical_terminal_evidence": "docs/tracker/evidence/gov07-identity-sol/terminal.yaml",
+        "activation_authorized": false
+      }
+    ]
   },
   "current_build_selection": {
     "active_items": [],
-    "last_completed_item": "OBS-05",
+    "last_completed_item": "GOV-01",
     "excluded_blocker_items": [
       "SEC-01",
-      "RUN-01"
+      "RUN-01",
+      "GOV-07"
     ],
     "current_blocked_items": [
       "WORK-01",
       "PERF-03"
     ],
-    "next_recommended_item": "DATA-08",
+    "next_recommended_item": "OWN-02",
     "eligible_items": [
+      "OWN-02",
       "DATA-08",
       "GUI-01",
       "GUI-02",
@@ -80,8 +108,85 @@
       "GUI-08",
       "GUI-09"
     ],
-    "eligibility_scope": "Evidence mapping, GUI completion/approval preparation and offline verification under existing item contracts; other dependencies and owner visual approvals remain applicable. Architecture work and other tracker items are not gated by SEC-01 or RUN-01.",
+    "eligibility_scope": "Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and GOV-07 are excluded transitively from current build blockers. Other dependencies and owner visual approvals apply.",
     "next_item_selected": false,
-    "runtime_execution_authorized": false
+    "runtime_execution_authorized": false,
+    "selection_status": "NO_ACTIVE_PACKAGE",
+    "selection_reason": "Owner deferred GOV-07 for architecture/GUI build. Existing CLOSED OBS-05 slot retained for read-contract compatibility; no successor selected.",
+    "last_terminal_item": "GOV-07",
+    "last_terminal_result": "DEFERRED"
+  },
+  "control_snapshot": {
+    "id": "gov07-identity-sol-2026-10-06",
+    "repository_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
+    "repository_branch": "main",
+    "working_tree_scope": "UNVERIFIED_DIRTY_CHECKOUT; scoped tracked runtime/config clean during captured identity window. Control documents modified after this base. Not deployed-process identity.",
+    "sdd_version": "3.3",
+    "target_path": "SDD.md",
+    "target_sha256": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28",
+    "configuration_sha256": "12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17",
+    "ledger_path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
+    "state_path": "STATE.yaml",
+    "next_path": "NEXT.yaml",
+    "runtime_evidence_policy": "Dated historical observations retain their exact revision/scope. Current runtime UNKNOWN; no runtime freshness inferred from this control snapshot.",
+    "captured_at_utc": "2026-10-06T03:52:49.947649+00:00",
+    "identity_evidence": "docs/tracker/evidence/gov07-identity-sol/identity-map.json"
+  },
+  "historical_control_snapshots": [
+    {
+      "id": "gov01-authority-sol-2026-10-06",
+      "repository_revision": "454ebdd35efb27a9ddb0020dbb425c993887bb09",
+      "repository_branch": "main",
+      "working_tree_scope": "Control documents modified after base revision; unrelated graph/checkpoint dirt preserved. Not a deployed revision.",
+      "sdd_version": "3.3",
+      "target_path": "SDD.md",
+      "target_sha256": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28",
+      "configuration_sha256": "12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17",
+      "ledger_path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
+      "state_path": "STATE.yaml",
+      "next_path": "NEXT.yaml",
+      "runtime_evidence_policy": "Dated historical observations retain their exact revision/scope. Current runtime UNKNOWN; no runtime freshness inferred from this control snapshot."
+    }
+  ],
+  "current_identity_assessment": {
+    "id": "GOV-07",
+    "status": "DEFERRED",
+    "scope": "PINNED_IDENTITY_MAP_CURRENT_DEPLOYMENT_UNVERIFIED",
+    "local_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
+    "remote_main_revision": "25cc7d0021435ea5f1182f1b459ad2c04cf6a272",
+    "local_configuration_sha256": "12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17",
+    "current_loaded_dashboard_revision": null,
+    "current_loaded_dashboard_configuration_sha256": null,
+    "quality": "UNVERIFIED_DIRTY_CHECKOUT_AND_UNKNOWN_LOADED_DEPLOYMENT",
+    "evidence": "docs/tracker/evidence/gov07-identity-sol/terminal.yaml",
+    "observed_at_utc": "2026-10-06T03:52:52.937943+00:00",
+    "historical_run_revision": "25cc7d0021435ea5f1182f1b459ad2c04cf6a272",
+    "historical_run_evidence_reapplied_to_current": false,
+    "release_scope": "NOT_REQUIRED_FOR_CURRENT_RELEASE",
+    "blocks_current_build": false,
+    "owner_deferral_evidence": "docs/tracker/evidence/gov07-identity-sol/owner-deferral.yaml",
+    "future_deployment_gate_required": true
+  },
+  "gov07_owner_deferral": {
+    "id": "GOV-07",
+    "decision_date": "2026-10-06",
+    "authority": "Explicit owner decision in current session: GOV-07 is not required for the current architecture/GUI build phase.",
+    "status": "DEFERRED",
+    "release_scope": "NOT_REQUIRED_FOR_CURRENT_RELEASE",
+    "reason": "Remaining gate is live deployment identity: Dashboard loaded revision/config UNKNOWN, local main differs from remote main, no application defect demonstrated.",
+    "blocks_current_release": false,
+    "non_blocking_for": [
+      "architecture work",
+      "GUI completion",
+      "offline testing",
+      "other tracker items"
+    ],
+    "dependency_policy": "Exclude GOV-07 transitively from current architecture/GUI build-phase blockers; preserve its original requirement/dependency membership as a future gate.",
+    "required_before": "Any future deployment/live activation claims; exact source/config/run/process/timestamp and local/remote/deployed consistency closing condition must then be proven.",
+    "runtime_deployment_identity": "UNPROVEN",
+    "mapped_evidence_preserved": true,
+    "closing_condition_preserved": "Source and evidence artifacts identify revision, configuration, run/process and timestamps; deployment records match remote/local code.",
+    "historical_terminal_evidence": "docs/tracker/evidence/gov07-identity-sol/terminal.yaml",
+    "activation_authorized": false
   }
 }

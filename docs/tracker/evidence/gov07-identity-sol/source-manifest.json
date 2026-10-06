@@ -1,0 +1,123 @@
+{
+  "schema": "luffy-gov07-terminal-source-manifest.v1",
+  "created_at_utc": "2026-10-06T03:56:34.158043+00:00",
+  "local_base_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
+  "scope": "PINNED_UNCOMMITTED_GOV07_EVIDENCE_AND_CONTROL_VARIANT_UNVERIFIED_NOT_DEPLOYED",
+  "files": [
+    {
+      "path": "trader/runtime_identity.py",
+      "sha256": "7eb62da6392645b06380c96a79fe9b42cccf5c93ca53795056bcfd13dda13ffb",
+      "bytes": 9646
+    },
+    {
+      "path": "trader/core/config.py",
+      "sha256": "d131cc86e41f2e01dfa5463e5255751daa711a8e76b17cf60e81c9830d6be852",
+      "bytes": 1162
+    },
+    {
+      "path": "trader/dashboard/tracker.py",
+      "sha256": "59c8b23ac609de60c0e590479b55b4253ee1cc61691ecacb98b4ceb95ceface6",
+      "bytes": 9219
+    },
+    {
+      "path": "restart.sh",
+      "sha256": "f47f92c63ce617e231724defc2d394f64e2ba88b4f3aa9dcb496e072d1902f05",
+      "bytes": 3722
+    },
+    {
+      "path": "tests/test_run01_instance_identity.py",
+      "sha256": "4abd6ae23446575b2852b16abf653953326c2c945b0e03595bd4a1a913f694fe",
+      "bytes": 13474
+    },
+    {
+      "path": "SDD.md",
+      "sha256": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28",
+      "bytes": 92018
+    },
+    {
+      "path": "config.yaml",
+      "sha256": "12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17",
+      "bytes": 26495
+    },
+    {
+      "path": "org.yaml",
+      "sha256": "736219894a8aa57e8d1e640f5a8df133a41f9aa935c7df29acb501f9a85774ea",
+      "bytes": 3610
+    },
+    {
+      "path": "NEXT.yaml",
+      "sha256": "90b69679eb0b4d8c3ece5bbc26eb318e835a261470e40418c24f167697941138",
+      "bytes": 25738
+    },
+    {
+      "path": "STATE.yaml",
+      "sha256": "bb82ae08e60cefc7f51647fae759871c8b3f2df0d78e68ccb53c1ae449fa60fe",
+      "bytes": 77791
+    },
+    {
+      "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
+      "sha256": "f0c955ed1769ce9aaa92179a166268c00e21c15d08b7db7d81911e5e6204dc7f",
+      "bytes": 371739
+    },
+    {
+      "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
+      "sha256": "1fd645fea9175e14a2f0d463f6470f7855e60152eb736ef2a298988b563f04ce",
+      "bytes": 374478
+    },
+    {
+      "path": "docs/tracker/bundle-manifest.json",
+      "sha256": "1a1678a6ca66f429603721a1c571b28b3b054f1d545a1e3a8d4520985fde31a8",
+      "bytes": 6413
+    },
+    {
+      "path": "docs/tracker/evidence/gov07-identity-sol/terminal.yaml",
+      "sha256": "06382c9fcf4a36843b6c8653533611b1f8c73123e8f1e6f417de21d3e7ab90fe",
+      "bytes": 3067
+    },
+    {
+      "path": "docs/tracker/evidence/gov07-identity-sol/verification.json",
+      "sha256": "c946111f6ca8a1143e5513e29a04e9e984789eac18768f88e7f36d2f251f8386",
+      "bytes": 1457
+    },
+    {
+      "path": "docs/tracker/evidence/gov07-identity-sol/cross-tracker.json",
+      "sha256": "2918ba1110d5b5dc833f5cac1b2fca0b42dd1e1f44455bd238fbe8c7c1ba22ad",
+      "bytes": 13529
+    },
+    {
+      "path": "docs/tracker/evidence/gov07-identity-sol/intake.yaml",
+      "sha256": "6ed1a378d9e96c4bafd2cb4fe0db30138e1191a69e28e1fbff9651500e7cec1b",
+      "bytes": 773
+    },
+    {
+      "path": "docs/tracker/evidence/gov07-identity-sol/identity-map.json",
+      "sha256": "3d5416a688232e076ffa3ca83854303cdfbc1e4eab3ae314dc0379ae4e5c0898",
+      "bytes": 102601
+    },
+    {
+      "path": "docs/tracker/evidence/gov07-identity-sol/map_identity.py",
+      "sha256": "3942b081d8061c53ae5309ef0c84e61513aaebf51d1404c5648478bbc92cb3d7",
+      "bytes": 8844
+    },
+    {
+      "path": "docs/tracker/evidence/gov07-identity-sol/identity-tests.txt",
+      "sha256": "9fac4bd9cf8a6bca62a242b1dc64eb54e7324f7a083bd94f9435b7ea8b17c66e",
+      "bytes": 98
+    },
+    {
+      "path": "docs/tracker/evidence/gov07-identity-sol/evidence-map.yaml",
+      "sha256": "b8f09511db2c5206531ea2811800e028523eb5ecbb46945e32639d801d4fc316",
+      "bytes": 3627
+    },
+    {
+      "path": "docs/tracker/evidence/gov07-identity-sol/control-before.json",
+      "sha256": "5e32dfdabd925cd8788fd6aadd19fde5d42e248076d8328baf30d095c8248ecb",
+      "bytes": 869502
+    },
+    {
+      "path": "docs/tracker/evidence/gov07-identity-sol/retained-manifests.json",
+      "sha256": "c53eecb68beed226aa5628a2ba3cb23d748805bb7907ad327c444c9fc6e73d77",
+      "bytes": 3389
+    }
+  ]
+}

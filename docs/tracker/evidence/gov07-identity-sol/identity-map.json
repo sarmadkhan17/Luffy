@@ -1,0 +1,2327 @@
+{
+  "schema": "luffy-gov07-identity-map.v1",
+  "started_at_utc": "2026-10-06T03:52:49.947649+00:00",
+  "finished_at_utc": "2026-10-06T03:52:52.937943+00:00",
+  "mapping_process": {
+    "pid": 1460584,
+    "start_ticks": 14395641,
+    "boot_id": "25068072-fb4b-4598-a2a0-b9f3571b2454",
+    "kind": "OFFLINE_EVIDENCE_MAPPER_NOT_KERNEL"
+  },
+  "local_checkout": {
+    "root": "/mnt/luffy-data/luffy/production",
+    "head": "82431136ac68ff72325af301bac43b19b7d3ecd6",
+    "head_at_end": "82431136ac68ff72325af301bac43b19b7d3ecd6",
+    "head_stable_during_capture": true,
+    "branch": "main",
+    "tracked_dirty": "M NEXT.yaml\n M STATE.yaml\n M docs/tracker/LUFFY_Product_Tracker_v1.md\n M docs/tracker/LUFFY_Product_Tracker_v1.yaml\n M docs/tracker/bundle-manifest.json\n M graphify-out/.graphify_labels.json\n M graphify-out/.graphify_labels.json.sig\n M graphify-out/GRAPH_REPORT.md\n M graphify-out/cache/last_query_stamp\n M graphify-out/cache/stat-index.json\n M graphify-out/graph.html\n M graphify-out/graph.json\n M graphify-out/manifest.json",
+    "tracked_runtime_config_dirty": "",
+    "untracked_runtime_paths": "",
+    "quality": "UNVERIFIED_DIRTY_CHECKOUT",
+    "configuration": {
+      "path": "config.yaml",
+      "sha256": "12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17",
+      "bytes": 26495,
+      "declared_version": null,
+      "declared_schema": null,
+      "version_quality": "CONTENT_HASH_IDENTITY_NO_DECLARED_VERSION",
+      "last_change_commit": "881999546e4a3b2fc796ef662a20bb24ee0405f5"
+    },
+    "source_files": [
+      {
+        "path": "config.yaml",
+        "sha256": "12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17",
+        "bytes": 26495
+      },
+      {
+        "path": "frontend/src/Shell.tsx",
+        "sha256": "b02e2974d8bcd8b96be39a7706b2691b9cb8a8562a7d736f98ea7900f336ef1b",
+        "bytes": 10695
+      },
+      {
+        "path": "frontend/src/adapters/contracts.ts",
+        "sha256": "95eb731d532a50617bd80ea2c3f6ec92e2a402e3d4b8b721d89e0a9e61110c17",
+        "bytes": 8720
+      },
+      {
+        "path": "frontend/src/adapters/fixture.ts",
+        "sha256": "8cb14b0d537923f04971835780f1d966505e6a1d81958e0fb0882fb04f6e7bee",
+        "bytes": 7991
+      },
+      {
+        "path": "frontend/src/adapters/live.ts",
+        "sha256": "e287c7bcf230a47792ccdefd7204d648a97deb050b9beb5635132cca2e7b2809",
+        "bytes": 28198
+      },
+      {
+        "path": "frontend/src/adapters/pending.ts",
+        "sha256": "9fead5a2cc0e8a652f4d883c5a3cb2fa06b5c647ec0cfbde1dd63605e1e4a7f4",
+        "bytes": 2457
+      },
+      {
+        "path": "frontend/src/adapters/readContracts.ts",
+        "sha256": "7f22b8d630975db36aa00a30352805b1ad9ffd8fade2b6a15dac2d6c9124b2ae",
+        "bytes": 9769
+      },
+      {
+        "path": "frontend/src/adapters/tracker.ts",
+        "sha256": "540f8ce944d8e92043032bb106bc69a95dd482eb3e08c44abeec4a0e1f837e1b",
+        "bytes": 4278
+      },
+      {
+        "path": "frontend/src/assets/chart-room.svg",
+        "sha256": "f22d2d899cae2972a6708ee1e2b108156174a3b8c55b62259cc022aece5656ed",
+        "bytes": 514
+      },
+      {
+        "path": "frontend/src/components/Avatar.tsx",
+        "sha256": "17ee72da95c440d1f6f28dd2fadacb401164795143025bc118553acfaf14cc32",
+        "bytes": 5049
+      },
+      {
+        "path": "frontend/src/components/EquityChart.tsx",
+        "sha256": "5280310f32a680fd47afdf2dfc21ce5b73502ab43d39e393d0f89e0348873aaa",
+        "bytes": 1405
+      },
+      {
+        "path": "frontend/src/components/HealthStatus.tsx",
+        "sha256": "68142f87d2c4d227ea7a67ddf4ac2b87ecb4f18a2a9316df7bc164cf122c01d9",
+        "bytes": 1107
+      },
+      {
+        "path": "frontend/src/components/OwnerEvidence.tsx",
+        "sha256": "c678690b9702f34429703e0adc054e29ffcd9f508fd3c5dfdf64d45236b25ed8",
+        "bytes": 6594
+      },
+      {
+        "path": "frontend/src/components/PathTrace.tsx",
+        "sha256": "33ca76e6175a4a39bcdf0eeec82fe3876d91bb6f9141bb8fb976000742aef350",
+        "bytes": 2324
+      },
+      {
+        "path": "frontend/src/components/product.tsx",
+        "sha256": "7b734fe1ab0851d8eb23c4d8e6bece9b479b5e511828f785dbf8fa6193c7fdf4",
+        "bytes": 3710
+      },
+      {
+        "path": "frontend/src/components/records.tsx",
+        "sha256": "3cb8441ca59d0c6130a79dc7c7324a49087ce6447a39e874cef5a21f9c54ecfd",
+        "bytes": 5706
+      },
+      {
+        "path": "frontend/src/components/ui.tsx",
+        "sha256": "24a178954383ba3b081c93caeb07395784bbb3a6ff9edc5b2c3636c46ae613d0",
+        "bytes": 6679
+      },
+      {
+        "path": "frontend/src/components/workspace.tsx",
+        "sha256": "2000ee2a3727a4d1d176045277868488687f5835c7b98ebcfc865128cef462e2",
+        "bytes": 8720
+      },
+      {
+        "path": "frontend/src/context.tsx",
+        "sha256": "bb25235c563d1639b9b6297dbe489ecf83a948ec4183418f9221a587104d3492",
+        "bytes": 2554
+      },
+      {
+        "path": "frontend/src/demo.tsx",
+        "sha256": "14ed8296460dd5fb74d2bd83447904ba64e0cfad659976f57b6a1b58a8ca4b48",
+        "bytes": 1078
+      },
+      {
+        "path": "frontend/src/lazyChunk.ts",
+        "sha256": "3052e25a13210e18ab1981bd4655250686e4f7f725bfb5e47b659e1bfa43f1d7",
+        "bytes": 2432
+      },
+      {
+        "path": "frontend/src/links.ts",
+        "sha256": "19a94e49ce7b0b6098c2f5bd01ce7053f2a6d7c057a3b5a0c278d20c4b6ddf5f",
+        "bytes": 1835
+      },
+      {
+        "path": "frontend/src/live.css",
+        "sha256": "85464bcee6113246e07dd44c91f06e6184dbff4c9e991d74f73d5aab0b14a0f1",
+        "bytes": 12874
+      },
+      {
+        "path": "frontend/src/liveRoot.tsx",
+        "sha256": "6fa757e412a97ec354c6cc6203e4d33065b722f11c033ea0865530849c7d4444",
+        "bytes": 5869
+      },
+      {
+        "path": "frontend/src/m4.css",
+        "sha256": "529dd27112cc242986349ea30a21602aec7d0eef383be058cf2948489877e81f",
+        "bytes": 20615
+      },
+      {
+        "path": "frontend/src/main.tsx",
+        "sha256": "b98da76fc85de15b5c9f4411ef71645b5bf0d26483524af59069973c4f683ec6",
+        "bytes": 339
+      },
+      {
+        "path": "frontend/src/product.css",
+        "sha256": "b5762eede6306811a96a742c6e588f2f584a752fb4774f54eb6851df498d94d0",
+        "bytes": 46955
+      },
+      {
+        "path": "frontend/src/protectionExpiry.ts",
+        "sha256": "c009d6edb4d9dcf29cd3b21d0fd13a4c124ba8ecff4c45df73b7d35825b6d63f",
+        "bytes": 1345
+      },
+      {
+        "path": "frontend/src/styles.css",
+        "sha256": "d0c2905cae7eeaf5ecb972650543579fcee884c86316fbcdbc6153cc7c2b3ca7",
+        "bytes": 26673
+      },
+      {
+        "path": "frontend/src/time.ts",
+        "sha256": "1d087f47000eb8eb53d651b64962c475c2dec4542754a632a1565837f9f3de49",
+        "bytes": 772
+      },
+      {
+        "path": "frontend/src/tokens.css",
+        "sha256": "f8cf9373929b79a12495c701578c458e0f60fbd41345a055dfbc7e625ca166e0",
+        "bytes": 235
+      },
+      {
+        "path": "frontend/src/useOwnerTelemetry.ts",
+        "sha256": "1cd34e3368c4b6850d5c0b6955078bca08a98ef3b6104e19f69dd991678e07d1",
+        "bytes": 2413
+      },
+      {
+        "path": "frontend/src/views/Activity.tsx",
+        "sha256": "a9b544aa68468badb45d7d5a17e48cfb808ca52ea20a9cc1bc1d134cc510d069",
+        "bytes": 7113
+      },
+      {
+        "path": "frontend/src/views/Evidence.tsx",
+        "sha256": "9d0bcbc47ab22c58b4b5ef81c331c2ab5b920c628df2ce3cfc7f384a7dbc65f2",
+        "bytes": 43404
+      },
+      {
+        "path": "frontend/src/views/GraphView.tsx",
+        "sha256": "15ddc130f0c09d97b5b6a2641ec36f219a6ad42c909dae13a1d7460401b25020",
+        "bytes": 32795
+      },
+      {
+        "path": "frontend/src/views/LiveReads.tsx",
+        "sha256": "026e514f9745853083a7da029954468e9552ca4eef85ef04e80f9307bef7a7c7",
+        "bytes": 44187
+      },
+      {
+        "path": "frontend/src/views/Luffy.tsx",
+        "sha256": "d70ed40dab979c755060909ece7e6f0b71063b6df04b24e65bfe817b992a0b5e",
+        "bytes": 15596
+      },
+      {
+        "path": "frontend/src/views/Operations.tsx",
+        "sha256": "34bed1517329d943eb50c0a4ab5ffb0cb4dbbd4aa9e097077c6f6666248f0328",
+        "bytes": 12125
+      },
+      {
+        "path": "frontend/src/views/Overview.tsx",
+        "sha256": "9b95cfe780c0854018f51bbb2480e5ba7db464be9f55c2fec525fa3d95f4aab9",
+        "bytes": 21990
+      },
+      {
+        "path": "frontend/src/views/Routes.tsx",
+        "sha256": "2c6c90d0b9bb80e02972eedff16735c6af5209418ba37be6a5c4606cd03cc766",
+        "bytes": 19514
+      },
+      {
+        "path": "frontend/src/views/Tracker.tsx",
+        "sha256": "67d6044300e37d72533cf50d0f47053139590908ee81814a21889226c19bdd28",
+        "bytes": 8582
+      },
+      {
+        "path": "frontend/src/views/graphGeometry.ts",
+        "sha256": "4ee344d331bcefa8bbadde9d610950d98090979171d61bc14d1b46ee3207eac3",
+        "bytes": 11696
+      },
+      {
+        "path": "frontend/src/views/graphPath.ts",
+        "sha256": "e4b6d2707e673a361735515867744aa5b44aa4b909d5753d18f8f1b872a4397c",
+        "bytes": 1213
+      },
+      {
+        "path": "frontend/src/views/graphScope.ts",
+        "sha256": "b08806d14f0b2b326770a81d94708899b0b84a783c01337d01ba4a8d8895231a",
+        "bytes": 1294
+      },
+      {
+        "path": "frontend/src/views/tracker.css",
+        "sha256": "463b61f84b52e185c2de1f46e5de1a7a6f523ff2fdea94a9a2d0580b250e7007",
+        "bytes": 1052
+      },
+      {
+        "path": "org.yaml",
+        "sha256": "736219894a8aa57e8d1e640f5a8df133a41f9aa935c7df29acb501f9a85774ea",
+        "bytes": 3610
+      },
+      {
+        "path": "restart.sh",
+        "sha256": "f47f92c63ce617e231724defc2d394f64e2ba88b4f3aa9dcb496e072d1902f05",
+        "bytes": 3722
+      },
+      {
+        "path": "trader/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "trader/agents/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "trader/agents/base.py",
+        "sha256": "3a8d6a59e2f2a3d42915cf6ad74563c86c78fcca3c84564e5e6c524d077a9dcb",
+        "bytes": 1311
+      },
+      {
+        "path": "trader/agents/calibration.py",
+        "sha256": "20895a57835acb76bb2604e55b116a74d3e67c8d7a23055bba53379873d906a4",
+        "bytes": 5541
+      },
+      {
+        "path": "trader/agents/flow.py",
+        "sha256": "32e7aa9f0be9ae35ca74df0f82d8f569a263ffafff2c7f9bb956c0bdd35a7091",
+        "bytes": 1888
+      },
+      {
+        "path": "trader/agents/indicators.py",
+        "sha256": "f3d2b7f39997690106512caa13f7ea1e10fb15e034612c9932a42f92761c4368",
+        "bytes": 4592
+      },
+      {
+        "path": "trader/agents/macro_guard.py",
+        "sha256": "11ab4acfb82d313c84196aa42e3828a870b0179d606a93f0dd02a36790daeb07",
+        "bytes": 16824
+      },
+      {
+        "path": "trader/agents/momentum.py",
+        "sha256": "3d26c2d60b5cd2c7f06307846d3e31496924fa3cf7b0d85ec5d3744d676fe942",
+        "bytes": 5819
+      },
+      {
+        "path": "trader/agents/news_guard.py",
+        "sha256": "7d396c0fe0660c65789ef41306d7933fa71d6fb31118ff5f1cb93cdd83894156",
+        "bytes": 11073
+      },
+      {
+        "path": "trader/agents/orderbook_depth.py",
+        "sha256": "f45831cf20222627afad179e04be6b22a149837c6d9e7b6621ca719fa13a21a7",
+        "bytes": 2744
+      },
+      {
+        "path": "trader/agents/positioning.py",
+        "sha256": "33718dd5dfb7906995cbe5bc05d60c92c6b2cca753125029a7b3a2c984f789de",
+        "bytes": 4091
+      },
+      {
+        "path": "trader/agents/regime.py",
+        "sha256": "f73081a5f35b18446b11b741518584e606f2b6b2b03b54580aa176ed24e8884c",
+        "bytes": 3910
+      },
+      {
+        "path": "trader/agents/structure.py",
+        "sha256": "8ed5c9928a9da09d0f43eb855f12c1fdff29ea47961c9ff4a498645fd4b693ab",
+        "bytes": 3899
+      },
+      {
+        "path": "trader/agents/validate.py",
+        "sha256": "e0dfcc4fbdde58a193ae273791a9925d21159435d920a6367bb94c7ce6b2c552",
+        "bytes": 8118
+      },
+      {
+        "path": "trader/agents/weights_online.py",
+        "sha256": "24e9bbacf701893b6863fe10f74c5d592b8e8abb6c7d4fd436015f8f0f41f2ef",
+        "bytes": 6304
+      },
+      {
+        "path": "trader/api/graphql_schema.py",
+        "sha256": "ec5dba753c7b016391ad36c5d220cdacef6dde259ea2aa6e32ed2c88958022c4",
+        "bytes": 23210
+      },
+      {
+        "path": "trader/attention_admission.py",
+        "sha256": "3721960ed3210adf3d89144e1cfbd2ffa89cdf807ccaa6d4bdc7690ec82c83ff",
+        "bytes": 14793
+      },
+      {
+        "path": "trader/brain/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "trader/brain/analyst.py",
+        "sha256": "dfa20ddd8f4046562801480c55157c19fb118d7ecea76e748447a603dd1e2019",
+        "bytes": 29424
+      },
+      {
+        "path": "trader/brain/crawler.py",
+        "sha256": "a68f318288df1819314978b925a257126d28f010095043e4cfce8b5702707a53",
+        "bytes": 13128
+      },
+      {
+        "path": "trader/brain/doctrine.py",
+        "sha256": "8545fec0ab82e945aaffd51d04bde86a04a437b248d604107c37b169e6cff6a8",
+        "bytes": 523
+      },
+      {
+        "path": "trader/brain/harvester.py",
+        "sha256": "9ede57d9672fa5cae8b92d31154be2e7915f783c4c60d34189cd3401ae750f1f",
+        "bytes": 9247
+      },
+      {
+        "path": "trader/brain/ideas.py",
+        "sha256": "eb5011fd83cafe4a58f2054212101e7c3dc6a293a99c8e7875357daeebd53a99",
+        "bytes": 10938
+      },
+      {
+        "path": "trader/brain/llm.py",
+        "sha256": "8c9519400a857f84267d2ef88423005ae2cedeecef48571f3f0572375d8219ef",
+        "bytes": 9878
+      },
+      {
+        "path": "trader/brain/meta_label.py",
+        "sha256": "b3048606a1fe504f49ee18b65112faad650b45846203f434da5efd3f5312226a",
+        "bytes": 10398
+      },
+      {
+        "path": "trader/brain/pine.py",
+        "sha256": "c4e84684c607693eac4c963d50355882fdb4da6e5f884ff4daa61ff0e1fc74a0",
+        "bytes": 16680
+      },
+      {
+        "path": "trader/brain/postmortem.py",
+        "sha256": "36308c29c9213ddfe2b63d68cbc7e1ff4fd7389fca3bd2c9b9fad6f20f12b488",
+        "bytes": 3895
+      },
+      {
+        "path": "trader/brain/scraper.py",
+        "sha256": "8d05f3c352b034f94e523afa7ef9f191f2a191c0dddc0f96f3605c5f2e652a1d",
+        "bytes": 20122
+      },
+      {
+        "path": "trader/brain/spec_writer.py",
+        "sha256": "b7aa9ac4fadd7d42418cfc6b9409ae6234c4b582947c3c18d70c2bb83ff32857",
+        "bytes": 12592
+      },
+      {
+        "path": "trader/brain/strategist.py",
+        "sha256": "817de06bb5db5dccd6c6f4d7e63a45e2243e4bba683bf59d14038f98ec0ca2df",
+        "bytes": 7497
+      },
+      {
+        "path": "trader/brain/tv.py",
+        "sha256": "dbaf82abec7c05004a4cdf1dc01e91e4df4aefae02926a21ed8fc7d35e8e0ff1",
+        "bytes": 9155
+      },
+      {
+        "path": "trader/brain/tv_harness.py",
+        "sha256": "160451a99f006ca8b39c33d047b510fb9898d5e382455e7d965ce8ecb28f94b1",
+        "bytes": 22831
+      },
+      {
+        "path": "trader/chat/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "trader/chat/agent.py",
+        "sha256": "2f28a0721f0f1543c4ca01b903fed7d11a0037719b394881fb8dc99c7bdb2ccf",
+        "bytes": 5123
+      },
+      {
+        "path": "trader/chat/engine.py",
+        "sha256": "48602c2fc3578570bbcbf8a215b10e423fae70949f2dac5d5252dbed669e57fc",
+        "bytes": 2317
+      },
+      {
+        "path": "trader/chat/tools.py",
+        "sha256": "33dbe299ba9af4333f7342eef2cca3dd03476be877d8389e2d42cf84eb9e04c3",
+        "bytes": 6819
+      },
+      {
+        "path": "trader/cognition/__init__.py",
+        "sha256": "2f30ce89025f80890615bff15367d3e17eb32643d1b590c035547cb1003edd44",
+        "bytes": 443
+      },
+      {
+        "path": "trader/cognition/_research_shadow_child.py",
+        "sha256": "8fb0574820b2e73af0eb9b8f63d7dcfd4b87574add90cf4c69a1fab21ecf68be",
+        "bytes": 20560
+      },
+      {
+        "path": "trader/cognition/attention.py",
+        "sha256": "0bff434d9fa983476f5ef1bdc7c76938415d7eaaccd042bae93b01ca55de1dcf",
+        "bytes": 33648
+      },
+      {
+        "path": "trader/cognition/contracts.py",
+        "sha256": "218a386b9f396b0e8d69e5d32a83f33e4162dc7e73092e455d104e1097ceb968",
+        "bytes": 17077
+      },
+      {
+        "path": "trader/cognition/dataset.py",
+        "sha256": "504f402fa774e855d4e7b84c23e59b3df662530b1c6a585b97f2ff7e3b2f74c1",
+        "bytes": 47815
+      },
+      {
+        "path": "trader/cognition/external_sources.py",
+        "sha256": "45191f029efce62f3fcf919039e6f9ba2d331b8580f90bd0bfc2ee25291906ec",
+        "bytes": 4138
+      },
+      {
+        "path": "trader/cognition/forecast_protocol.py",
+        "sha256": "3ca1478330c0a7f8b03e02958db7f3ffb8b216604d641b856b79e8f7d71db1a2",
+        "bytes": 1372
+      },
+      {
+        "path": "trader/cognition/historical_pit.py",
+        "sha256": "07e0748c34729bdcc4119602c69fb56cd63ca07bb1eba432da9c5488e3b43c60",
+        "bytes": 8450
+      },
+      {
+        "path": "trader/cognition/hypotheses.py",
+        "sha256": "57405fa0705f82a983fc32087a48ec79f8496601de6466396e01c3d9fb0cdeb1",
+        "bytes": 10337
+      },
+      {
+        "path": "trader/cognition/investigation.py",
+        "sha256": "d40572cefabf1cb78e0bf7a88f5711d6ecc4c142da3476329e98439c759f45c2",
+        "bytes": 40913
+      },
+      {
+        "path": "trader/cognition/m32_block_calibration.py",
+        "sha256": "5c993a3d869397ebccd571822fcf82c66aac57fb5e2a3ce0b6c8a961c6d4a70e",
+        "bytes": 17307
+      },
+      {
+        "path": "trader/cognition/m32_correction.py",
+        "sha256": "67a617be122c05616aa653cacc501f8e1658e493e659e9530e25c48153f10db7",
+        "bytes": 10408
+      },
+      {
+        "path": "trader/cognition/m32_evidence.py",
+        "sha256": "4cdbaa73db0a59512d68cac531e8148bded370093c9711f931e59aaa2b1e2eb0",
+        "bytes": 10363
+      },
+      {
+        "path": "trader/cognition/m32_fast_metric.py",
+        "sha256": "892be0d02537b7ad1d353456a7a960e7181afefd6101983d47764944c95105d0",
+        "bytes": 17560
+      },
+      {
+        "path": "trader/cognition/m32_protocol.py",
+        "sha256": "ade9d184c8e84a2e0be2219c106e6b77403089637dabd19f33bd34995be1e3bd",
+        "bytes": 12144
+      },
+      {
+        "path": "trader/cognition/m32_scheme_d_validation.py",
+        "sha256": "7d30fa8b80727485c8e1efe34128c5c94222598becfd24f8aebbae4b51928f61",
+        "bytes": 27113
+      },
+      {
+        "path": "trader/cognition/m32_search.py",
+        "sha256": "1081e3482c0d709b81b4b93db2fa94437ebead2e4bc92c78b9b359f7030a827b",
+        "bytes": 23127
+      },
+      {
+        "path": "trader/cognition/memory.py",
+        "sha256": "d18f63bfe79ced4eaf3f4283ecffb86f9e126793c9e68f30fc96c7698f7f5896",
+        "bytes": 20381
+      },
+      {
+        "path": "trader/cognition/opportunity_context.py",
+        "sha256": "98b83d54f6fc97f4e66d0acd241cec6d3a82c6f0bebb12fbe224a50fc2d20c9d",
+        "bytes": 43038
+      },
+      {
+        "path": "trader/cognition/outcomes.py",
+        "sha256": "fcc2af2b4e8c6d360e113dc80b16651876bdd5fb2307b39eb14ff1207f3ded84",
+        "bytes": 17347
+      },
+      {
+        "path": "trader/cognition/predictive.py",
+        "sha256": "89c1aaa36f93f308db0c12acd27ffa01b259a2ee739715d6186d47c02809bbbd",
+        "bytes": 12014
+      },
+      {
+        "path": "trader/cognition/predictive_bank.py",
+        "sha256": "6e5156d46a3ea643c871af99a7f3ac389ac3498fcb3ba76378df7ee24b8e761f",
+        "bytes": 2636
+      },
+      {
+        "path": "trader/cognition/replay.py",
+        "sha256": "721e9f5229a084158cf575cf3d9d50c8ee17ddbd4ef81663f44732286360a24a",
+        "bytes": 8258
+      },
+      {
+        "path": "trader/cognition/research_bank.py",
+        "sha256": "85ef8f15f8f4fe47f5058160be52aba03fa3dd19e9344260f2f2fd4a114344f2",
+        "bytes": 24103
+      },
+      {
+        "path": "trader/cognition/research_bank_view.py",
+        "sha256": "459a1640a07e081cda20cba9368b726cae238cb7d25531325952d05361f4aa03",
+        "bytes": 15011
+      },
+      {
+        "path": "trader/cognition/research_cost.py",
+        "sha256": "46568c61c1882d57a90de97ff462586bfd4f8b2cebb973ab4bee245e6afbf006",
+        "bytes": 27421
+      },
+      {
+        "path": "trader/cognition/research_evidence.py",
+        "sha256": "595f9ab63521866876958cd23f9d6c11ea5e1eb21611dcfe53673eb05be09e42",
+        "bytes": 32742
+      },
+      {
+        "path": "trader/cognition/research_families.py",
+        "sha256": "ff832d1e9e7c72968afa05394cea47542af114f19c238f008761d73b6f9f6511",
+        "bytes": 9073
+      },
+      {
+        "path": "trader/cognition/research_next_question.py",
+        "sha256": "bd9cb1a8f8c6a379c58ec70ca8ecdcb0297ad6d04c73c385767c75b60e9c47f7",
+        "bytes": 13436
+      },
+      {
+        "path": "trader/cognition/research_plan.py",
+        "sha256": "022671a5a2af2a11cb74490d5149a84c7576d952b4ff61502882014ea7f17ef8",
+        "bytes": 25554
+      },
+      {
+        "path": "trader/cognition/research_question.py",
+        "sha256": "01d610d8aa43ad9afa32d8223f0fc2de803f0bd26b5e0fccc1a0737d21c63d15",
+        "bytes": 31591
+      },
+      {
+        "path": "trader/cognition/research_recall.py",
+        "sha256": "98a7dce06d188af5ad6e59d775b6e638874bd4ae39192cb076678a3198ecfae9",
+        "bytes": 11789
+      },
+      {
+        "path": "trader/cognition/research_result.py",
+        "sha256": "6b28a0bea2200ca08a60f35c113f1eda967cf325150b03a659c9b043a76a3f01",
+        "bytes": 13712
+      },
+      {
+        "path": "trader/cognition/research_run.py",
+        "sha256": "44a565d1538940bbf3eb3857b0ef2461e099e67d7a685f301e3c960749fb9dc1",
+        "bytes": 22387
+      },
+      {
+        "path": "trader/cognition/research_shadow.py",
+        "sha256": "b97f139be33de5ff4bcccf4b7713d0c17827d6cdd5e7306bc5f96bd927ffadc4",
+        "bytes": 28495
+      },
+      {
+        "path": "trader/cognition/research_shadow_contract.py",
+        "sha256": "a80d693148b20c1d35bcae8411206648e9b45924b6d7a30407892c503a2b976b",
+        "bytes": 21231
+      },
+      {
+        "path": "trader/cognition/research_shadow_report.py",
+        "sha256": "ff1d5aa3c2876b344d2ef9af3715b742068e8ce5e9e32168c0cefdd82b12016a",
+        "bytes": 11275
+      },
+      {
+        "path": "trader/cognition/research_shadow_store.py",
+        "sha256": "b9b91772b404ca3bae6dfa86949fc81aa6cd0839770d8e550a1e84c7e4f196a6",
+        "bytes": 17892
+      },
+      {
+        "path": "trader/cognition/research_sources.py",
+        "sha256": "8ebb48759dbc34cdb0a0f8d56d906be0fb9f36267fec6cf75cb42df480d86728",
+        "bytes": 16173
+      },
+      {
+        "path": "trader/cognition/research_unreadable_bank.py",
+        "sha256": "d591c5c9df1ff4a3ff31e9c552d1021c944a7d4763b5ed254e1c485b6e1084ee",
+        "bytes": 28236
+      },
+      {
+        "path": "trader/cognition/research_unreadable_evidence.py",
+        "sha256": "d1acac0b8f73f193882fb836b46e697ccae2f74555e33e5346ab8d143d23411e",
+        "bytes": 19029
+      },
+      {
+        "path": "trader/cognition/research_unreadable_plan.py",
+        "sha256": "b3021a694089d3eb43ff0601018efaf54621d3b0a882fa67129623339bdb3ce7",
+        "bytes": 18322
+      },
+      {
+        "path": "trader/cognition/research_unreadable_question.py",
+        "sha256": "5623482a9ed6b0e7cf6b818a17ae8deac1cc3cd4f79c1390c3fdaad15511941e",
+        "bytes": 19815
+      },
+      {
+        "path": "trader/cognition/research_unreadable_recall.py",
+        "sha256": "af9eb017e3875dc4119685aff071cb45fc3e37b86b085bd3e51af2be5b1f3ceb",
+        "bytes": 14415
+      },
+      {
+        "path": "trader/cognition/research_unreadable_result.py",
+        "sha256": "4fefb0e1b8d7fd3c5b8be43d8e338fa6878796e8f997895217c69d583c688014",
+        "bytes": 11541
+      },
+      {
+        "path": "trader/cognition/research_unreadable_run.py",
+        "sha256": "7b6e58790aeb9b5be256f8a62bce7adf561f91d7d605889cc8000a55abf2fa6d",
+        "bytes": 26394
+      },
+      {
+        "path": "trader/core/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "trader/core/child.py",
+        "sha256": "2e72fa7c02b32c326719fdfff4224e7b9004976af859eaa30beedf630bf1db94",
+        "bytes": 2827
+      },
+      {
+        "path": "trader/core/config.py",
+        "sha256": "d131cc86e41f2e01dfa5463e5255751daa711a8e76b17cf60e81c9830d6be852",
+        "bytes": 1162
+      },
+      {
+        "path": "trader/core/evidence_zlib.py",
+        "sha256": "24fb1aa9e9ef1e3a39763c91f7e0f4d3cb786f8bc5f8e969dba723e651fcfc50",
+        "bytes": 2449
+      },
+      {
+        "path": "trader/core/instrument_registry.py",
+        "sha256": "f52be0568a7b1573a35e7df35291d3d52dcc0897667a5d8d400102c731e15908",
+        "bytes": 8142
+      },
+      {
+        "path": "trader/core/journal.py",
+        "sha256": "208649d8b67b30fbcaaea62420cb2e4c9a8d197b6a73d80e6065a37b5a021f49",
+        "bytes": 97070
+      },
+      {
+        "path": "trader/core/journal_evidence.py",
+        "sha256": "9ec9ce2ee650a1bdbc233772927e3b4e24489a1cc90ce257bdf19932576ea9c8",
+        "bytes": 13021
+      },
+      {
+        "path": "trader/core/reason_codes.py",
+        "sha256": "2efc84dc02c1c3ada94ac7bfef7b169fa56f89bf17548123547133304b97915b",
+        "bytes": 4444
+      },
+      {
+        "path": "trader/core/truth.py",
+        "sha256": "5a76a959b2c72e63bbb4afd2ce1d16b72cd13b00c08b280f7e19df2f8142b460",
+        "bytes": 4360
+      },
+      {
+        "path": "trader/core/types.py",
+        "sha256": "b1d292057f4ff93dc6325d44ceabab40fe6874d81794ccd4574ab6f0bee7da24",
+        "bytes": 10453
+      },
+      {
+        "path": "trader/dashboard/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "trader/dashboard/auth.py",
+        "sha256": "6fcb7ffeb9eabdad36359913b97cec765003c564e80c12d7a7a696b35581b7ae",
+        "bytes": 6774
+      },
+      {
+        "path": "trader/dashboard/current_truth.py",
+        "sha256": "df6ce2992e1b8c86fa15ce1d5134c544e1a1b668d081bca865d5008eef6272a8",
+        "bytes": 30547
+      },
+      {
+        "path": "trader/dashboard/owner_api.py",
+        "sha256": "284817739ff7dfc38ec5db130ce5476433e2b0eb79fc87564a7f2bb5864534a2",
+        "bytes": 54579
+      },
+      {
+        "path": "trader/dashboard/owner_reads.py",
+        "sha256": "985a42d5a72a13d87485f2313e60058973026e903ad3c12973b7d2b7c26d79dc",
+        "bytes": 85373
+      },
+      {
+        "path": "trader/dashboard/server.py",
+        "sha256": "085d0e016079239fa85d0f1f5625b9035dd070ca659d6b4f16becd678c9c3edf",
+        "bytes": 50554
+      },
+      {
+        "path": "trader/dashboard/tracker.py",
+        "sha256": "59c8b23ac609de60c0e590479b55b4253ee1cc61691ecacb98b4ceb95ceface6",
+        "bytes": 9219
+      },
+      {
+        "path": "trader/dashboard/trade_history.py",
+        "sha256": "36e979ec8de7717ced09a62eb311a2bb55cdc39042bab991c3c71cc2de3d4228",
+        "bytes": 9739
+      },
+      {
+        "path": "trader/dashboard/valuation.py",
+        "sha256": "8fac9194df2eca66ce0432c73989fc8fde18735084bb55d34f4883adc6e70d43",
+        "bytes": 7918
+      },
+      {
+        "path": "trader/data/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "trader/data/binance_usdm_registry.py",
+        "sha256": "82a327f66fa6d318919439e0a9b6f00f4922d6a4917ff166170bce0f6ab7b743",
+        "bytes": 7722
+      },
+      {
+        "path": "trader/data/broad_crypto.py",
+        "sha256": "737e1a5cd124fc871bffc2de57f5ce9800a9e3660f0e0f1bf050f507d480fcab",
+        "bytes": 8130
+      },
+      {
+        "path": "trader/data/coinalyze.py",
+        "sha256": "3c8e6717335fe40015608844d4bb6cb51da88d27e601b82d5f583a6a34169e26",
+        "bytes": 9258
+      },
+      {
+        "path": "trader/data/derivatives.py",
+        "sha256": "7f40214bc9cf5dad0ff1d9e948ec5bce1968292c1c3c97894ad9ae8625a7be51",
+        "bytes": 24662
+      },
+      {
+        "path": "trader/data/feed.py",
+        "sha256": "123ebde66d37f95d78dba328bca2943cba57ad94a374f56ef362104d0fe27b06",
+        "bytes": 40067
+      },
+      {
+        "path": "trader/data/market_provenance.py",
+        "sha256": "15ac55c5401485b145e95b4916220325f6c1e3394ae6a75796223601ad1fe706",
+        "bytes": 21376
+      },
+      {
+        "path": "trader/data/mcp_client.py",
+        "sha256": "cac0ab523781c51358fbcb5af65df536d449f382095cde7aae30f745c8dc579f",
+        "bytes": 6899
+      },
+      {
+        "path": "trader/data/ref_sources.py",
+        "sha256": "947a880fa72a5d3352e234f35b35fa7942bd45a2619be3e409eef2f4443ecfcc",
+        "bytes": 9882
+      },
+      {
+        "path": "trader/data/references.py",
+        "sha256": "46465727eb00dded44f08afb5746fd6c47f021186f3b937ca9414fd8aa7ee44a",
+        "bytes": 8994
+      },
+      {
+        "path": "trader/data/registry_provider.py",
+        "sha256": "bdd14c23efc15c3e8d8a94cb67fa2ed1feba74bf39c0487cadf244d32cd63d07",
+        "bytes": 12638
+      },
+      {
+        "path": "trader/data/sqlite_tx.py",
+        "sha256": "cb0039557d3e625993411641404dcc8cc73b3066396eaf56a40cdc2748353f29",
+        "bytes": 4596
+      },
+      {
+        "path": "trader/engine/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "trader/engine/accounting.py",
+        "sha256": "b4261607a9071cc0e2df50583a062e5703aeaf2ef70ac053ad2ae6993fcf235c",
+        "bytes": 8510
+      },
+      {
+        "path": "trader/engine/booking.py",
+        "sha256": "f6e1a150db6c3359cdb0e03fbd4f9aec3d9866fec1f373ec3f66699191752436",
+        "bytes": 9796
+      },
+      {
+        "path": "trader/engine/control_fence.py",
+        "sha256": "f48635f44b5541166605078de1d55a7c9caf7c51752c22c6aff10e1ddeabb807",
+        "bytes": 3621
+      },
+      {
+        "path": "trader/engine/conversion_evidence.py",
+        "sha256": "8f5f1ab268a001d8667d079b2adcea1b37877f736aada8892b9b5d68fde13747",
+        "bytes": 7312
+      },
+      {
+        "path": "trader/engine/emergency_whole_accounting.py",
+        "sha256": "70c31d080c3ea77eb3c7b7e40cdc6a14988a313f26bfb8cb8e1c5568f3f650c0",
+        "bytes": 18374
+      },
+      {
+        "path": "trader/engine/entry_authority.py",
+        "sha256": "9e543b221e43836f870730f79ddab7fc029fa7c9283deaac96be98c1aa4781e5",
+        "bytes": 30643
+      },
+      {
+        "path": "trader/engine/evidence_capture.py",
+        "sha256": "ce0f6e7619ad0ca612d82c984ce7ff5e62231a0e4ccf4213c3972e10dc511cd5",
+        "bytes": 14170
+      },
+      {
+        "path": "trader/engine/excursion.py",
+        "sha256": "e3f72ddd673a43b41001dc8a31a7f777408041a7d65fe661b22467e9713d87b5",
+        "bytes": 13388
+      },
+      {
+        "path": "trader/engine/execution_evidence.py",
+        "sha256": "3af6e9e59b1e91884a0e60ef33a55c63f90a9bd7b9647fb6df61a8038e97d9fc",
+        "bytes": 8249
+      },
+      {
+        "path": "trader/engine/executor.py",
+        "sha256": "79fa29948e5119851366e9f7b2c0e671dd26b406753cb2c078d99e63dd5c0644",
+        "bytes": 33319
+      },
+      {
+        "path": "trader/engine/exits.py",
+        "sha256": "11713491506a9208ecff50d2241421179a11c5874ec781f76f4f079478a01ceb",
+        "bytes": 16614
+      },
+      {
+        "path": "trader/engine/native_exit_provenance.py",
+        "sha256": "a214bc2ed9d9f6aa31b4aeba346fc7c90818a14b549ea0cd83c0f951c0e5a605",
+        "bytes": 14408
+      },
+      {
+        "path": "trader/engine/orchestrator.py",
+        "sha256": "088dd23bef3a78e988875a7a9481e1345b13f91cbffc9adc28997bd7e06e5ec7",
+        "bytes": 30062
+      },
+      {
+        "path": "trader/engine/outcome_backfill.py",
+        "sha256": "9dfbd3b7cf038dbe77d94ce5736e5e954f148564d4c5a90f2ede07aee87a7d3a",
+        "bytes": 7320
+      },
+      {
+        "path": "trader/engine/outcomes.py",
+        "sha256": "314a61b3755c7e30ff917852df81d211e4c7f2dff6bc81385138705a82b79118",
+        "bytes": 6602
+      },
+      {
+        "path": "trader/engine/paper.py",
+        "sha256": "1b348cb6d1d537e99849e5540a2ea8791a9800d1cd52467b8457777febd659c5",
+        "bytes": 17685
+      },
+      {
+        "path": "trader/engine/paper_cost_evidence.py",
+        "sha256": "9449a59b46dcef945a7d97b1e775cdda6df31af8dd12bb6bf25f36ecf53d8305",
+        "bytes": 15921
+      },
+      {
+        "path": "trader/engine/paper_exit_evidence.py",
+        "sha256": "77c1154e9827c6ca442288699be916eae514b757b198637459887db7d93e093d",
+        "bytes": 6302
+      },
+      {
+        "path": "trader/engine/partial_intent.py",
+        "sha256": "bdd752df4beaf39e1298e4e3dd2380192c3766c0e34e39bbe5fa53027890893a",
+        "bytes": 7681
+      },
+      {
+        "path": "trader/engine/protection_snapshot.py",
+        "sha256": "71ef541720694ef71251398e613ed59f19705d41c67cbf066d6f1d283c7a61f3",
+        "bytes": 45804
+      },
+      {
+        "path": "trader/engine/protective.py",
+        "sha256": "7f502a73453cd4dedcb895646ca09e9c6535c1336f3fc0d0afa25e0e0da3300a",
+        "bytes": 12349
+      },
+      {
+        "path": "trader/engine/reconcile.py",
+        "sha256": "88631a453255d5571ea5b7b2f55a03a74ed1669163d1139111bccd435399deb5",
+        "bytes": 26116
+      },
+      {
+        "path": "trader/engine/recovery.py",
+        "sha256": "543c45361856bc1ee3bac3f4bc3523e55395a6b9531bd16d19f7d3e4146c8ce9",
+        "bytes": 14850
+      },
+      {
+        "path": "trader/engine/rent.py",
+        "sha256": "5853dd87618ff36c6a677cd228a5c83131b1965e68151eade07ce0b675ef0a22",
+        "bytes": 2955
+      },
+      {
+        "path": "trader/engine/rent_keeper.py",
+        "sha256": "743043e7e05b90d410874fe1a7bd0d3f5c78d40b841ab39277019ef29edea6a9",
+        "bytes": 6105
+      },
+      {
+        "path": "trader/engine/risk.py",
+        "sha256": "d9cd5a0d74beda512f67255d7319239c8cf7f12be8743bd2c3b6a8fc46c52132",
+        "bytes": 43714
+      },
+      {
+        "path": "trader/engine/risk_intent.py",
+        "sha256": "9c599f5775f12013ee2fc0823e7b1d2988ee62fb460e868f3833ce2b69651dca",
+        "bytes": 8627
+      },
+      {
+        "path": "trader/engine/state.py",
+        "sha256": "b9871bfa93554b1fe5e94f0eb2fca9cb9512135a7ed8a249967a4bb9ed4a16ee",
+        "bytes": 9483
+      },
+      {
+        "path": "trader/engine/supervisor.py",
+        "sha256": "c80e346bd7ff704a0064132d0c8473a806e406cf7b6ce019ffd217a9fc87cb11",
+        "bytes": 48291
+      },
+      {
+        "path": "trader/engine/trade_accounting.py",
+        "sha256": "5998414daa0f8290280c1f0f0dcc2240aefc1fd3811aaaf128f307f0a5823e37",
+        "bytes": 19485
+      },
+      {
+        "path": "trader/engine/trade_provenance.py",
+        "sha256": "283e976f8472f97596b34e6bc2b4ae4076a1e52dcbe8784ea246f52e634c87d4",
+        "bytes": 39892
+      },
+      {
+        "path": "trader/engine/venue_reads.py",
+        "sha256": "c05713d9d1a1b6d2b107dfb7f7a1b88171696bc63fb6a0ee7e5f0ad65ad0a2f7",
+        "bytes": 14792
+      },
+      {
+        "path": "trader/engine/versioned_exits.py",
+        "sha256": "9e5664e80e76d102668e68571d1e0273faa7b9c2f82cfd61d20c47905fbede04",
+        "bytes": 5622
+      },
+      {
+        "path": "trader/engine/watchdog.py",
+        "sha256": "ebb9ba45a7cc10002a4d56f22c87bad874208c5d730aa73856027fc1a3a637eb",
+        "bytes": 3782
+      },
+      {
+        "path": "trader/kernel.py",
+        "sha256": "5f85019090631a9ea197804788d742cd7c907503b9a4650d5234bce938506c03",
+        "bytes": 172317
+      },
+      {
+        "path": "trader/knowledge/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "trader/knowledge/vault.py",
+        "sha256": "8312435d30c47f435fa912f7a70510c79be7fd9bb9cb2408c20420ca630ea7f0",
+        "bytes": 19303
+      },
+      {
+        "path": "trader/learning/__init__.py",
+        "sha256": "6b5fffcc95ae685af024be05e1e3b6e843ff83d94c5ce458e89ce9b7797328c7",
+        "bytes": 84
+      },
+      {
+        "path": "trader/learning/adaptive_application.py",
+        "sha256": "f83634d0631e1456b83968397d33c557f8521171847c2c795d963fa3e87084d6",
+        "bytes": 4012
+      },
+      {
+        "path": "trader/learning/admission.py",
+        "sha256": "40411bb94a30036a0beddce5615330f6b8ecee0dccd44bde38d8dc77c936ec21",
+        "bytes": 1542
+      },
+      {
+        "path": "trader/learning/application.py",
+        "sha256": "d5d0bfb90ded1937e33b048c0974e8ccb77b1fa8374d1150c4088a4700be88d5",
+        "bytes": 11693
+      },
+      {
+        "path": "trader/learning/capture.py",
+        "sha256": "7f1d89e0323fa83359f56082f35226fc9e9df50a7a41f0d2ee281d63e5deca4d",
+        "bytes": 45898
+      },
+      {
+        "path": "trader/learning/capture_runtime.py",
+        "sha256": "21ea21a4118201e50caeeb2296b1b0012188c909d63b26ed288b8e7dd310a837",
+        "bytes": 45527
+      },
+      {
+        "path": "trader/learning/consumers.py",
+        "sha256": "2b4e1bb2a373120eba0d24773a997d5417845a397e58d5033f2e3b61ef3b254b",
+        "bytes": 6933
+      },
+      {
+        "path": "trader/learning/decision_sources.py",
+        "sha256": "be05ddbd4d919e035a51a8c8e9bb1a186b5160dd6c6f3a61f92a66c336c636a1",
+        "bytes": 8161
+      },
+      {
+        "path": "trader/learning/dispatch.py",
+        "sha256": "883ec340ab48b3818da323bfa2198914882161fa256ae63f938403ff34bc41e0",
+        "bytes": 11044
+      },
+      {
+        "path": "trader/learning/foundation.py",
+        "sha256": "e8b6395f34cc13f83ee2c90d6c9435ec2ad0c338fb224abbf8eb357fed50144d",
+        "bytes": 28658
+      },
+      {
+        "path": "trader/learning/producers.py",
+        "sha256": "53039a47745719182bfd5a36daad83c525f0d5759b8ce27a9c70850bd97f1261",
+        "bytes": 11709
+      },
+      {
+        "path": "trader/learning/runtime.py",
+        "sha256": "f61aa84e2d692668c80b7827eb8ea25a3a8453f839449a5e29f6f33f19eaec35",
+        "bytes": 8518
+      },
+      {
+        "path": "trader/learning/targets.py",
+        "sha256": "c0c59f471b3601a4cdf3c101880eebb022ab0a5ea1b3db38832c8904b9d313f1",
+        "bytes": 12821
+      },
+      {
+        "path": "trader/notify/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "trader/notify/telegram.py",
+        "sha256": "1947ec3448a69dc7609d5b31c6832c2cc318408409bc46747581b313ad493976",
+        "bytes": 1007
+      },
+      {
+        "path": "trader/observability/__init__.py",
+        "sha256": "75cd8c1634fcae5a3cdc5edbd805c5673d30579d5f88a09b3b1f2e98368274d6",
+        "bytes": 75
+      },
+      {
+        "path": "trader/observability/_supplemental_child.py",
+        "sha256": "5b76f17425a5ea51e6b499e8f8b18ab38668538bb525338e2d321ad344741eca",
+        "bytes": 2728
+      },
+      {
+        "path": "trader/observability/accounting.py",
+        "sha256": "0786ff667f29894c44cc46fd3b19c77010e6307fa3bd80806d32af003255a2dc",
+        "bytes": 10640
+      },
+      {
+        "path": "trader/observability/attention.py",
+        "sha256": "212aa27db4dce3d4257fce28474df24133c34c6e6f39576616d1129a1c5395e3",
+        "bytes": 26297
+      },
+      {
+        "path": "trader/observability/bootstrap.py",
+        "sha256": "2e8b23d6d410a664338402638bc6692807522de3fcfc5ae1b5ebd3050184ba27",
+        "bytes": 11086
+      },
+      {
+        "path": "trader/observability/cohort.py",
+        "sha256": "1696de6336257fcd72647136adf256d1f30c7fa64528cb9b8eaf4f5fd3c845cc",
+        "bytes": 9932
+      },
+      {
+        "path": "trader/observability/collector.py",
+        "sha256": "0d36b37bc88cdd3dbbefbc3305db28e33ce6d2689dd25cdaee2551297fffd86c",
+        "bytes": 17537
+      },
+      {
+        "path": "trader/observability/collector_health.py",
+        "sha256": "6f5b77358eef28450010e8826be47276acf5ca6392098ac060e5b9ecd9e30462",
+        "bytes": 10955
+      },
+      {
+        "path": "trader/observability/dashboard_readiness.py",
+        "sha256": "99c75a0a4339222c68c0018f21b84e32c4f026af80bf2f339012d79592420c83",
+        "bytes": 6973
+      },
+      {
+        "path": "trader/observability/declared.py",
+        "sha256": "f0bd5706e4318ee80f42dbb613fc1551bd23054408cc02f5657e20c73966c89d",
+        "bytes": 9873
+      },
+      {
+        "path": "trader/observability/depth_evidence.py",
+        "sha256": "6d3ed472614faff7c2f08e7c5c70a0f59d8d04fcb7a5561eb3d184fc49c92704",
+        "bytes": 9158
+      },
+      {
+        "path": "trader/observability/diagnostics.py",
+        "sha256": "7c84d9f66399bf0dfca2b459ae11f08fdb63588ac7ec315b662193ea3afa4931",
+        "bytes": 1095
+      },
+      {
+        "path": "trader/observability/execution_calibration.py",
+        "sha256": "0569e1d48e419eed311f9295ae598280c616f94601bc57aaef909e4f46ee851e",
+        "bytes": 7403
+      },
+      {
+        "path": "trader/observability/execution_shadow.py",
+        "sha256": "f8580adc8a32bb83b32f995bd1452eec3c9d7e1a8cb917f8fe042618e348475a",
+        "bytes": 2296
+      },
+      {
+        "path": "trader/observability/first_boot.py",
+        "sha256": "e54b04c5999a22a51d72d93357c530c220dcfee9e5dd9e236ea071e6494e4c86",
+        "bytes": 8074
+      },
+      {
+        "path": "trader/observability/funding_events.py",
+        "sha256": "d5ee216bde5e82111caa5aea7706b3736a9f9bcb00e7adca78e1748bd769dad8",
+        "bytes": 7858
+      },
+      {
+        "path": "trader/observability/intelligence_trace.py",
+        "sha256": "8a48f51f295c21d5f1d2813d370dc5136779cf6cd3eab064c5843d2cd6ade0a3",
+        "bytes": 15284
+      },
+      {
+        "path": "trader/observability/investigation.py",
+        "sha256": "7cecb2a9059add86394004f4a0fe81765f1e078cb8cadc4497aaf59c04f90cde",
+        "bytes": 58865
+      },
+      {
+        "path": "trader/observability/investigation_research.py",
+        "sha256": "e4242aeb8563b101498c174457afd149c3e72475c47a99e0e9eafe0748b707a5",
+        "bytes": 34096
+      },
+      {
+        "path": "trader/observability/learning.py",
+        "sha256": "e77aa7f18dfb5418faf04d956cd511b9d458f14a798ea785cec04756ff74e29f",
+        "bytes": 18669
+      },
+      {
+        "path": "trader/observability/memory.py",
+        "sha256": "4a36378d8fc500d684c5b4e7e7e889974c0b50c4344bf6a6ceacad2a17d72211",
+        "bytes": 23598
+      },
+      {
+        "path": "trader/observability/outcomes.py",
+        "sha256": "26abb0908402cc1545fb5f280bacf535cf7a13080dbb3887989316f2f3a7c68c",
+        "bytes": 15943
+      },
+      {
+        "path": "trader/observability/population.py",
+        "sha256": "843b6b5d5456fbc305acb9ab9d363a0ba46182202505b9f24cf00b017447ac37",
+        "bytes": 25005
+      },
+      {
+        "path": "trader/observability/portfolio_observation.py",
+        "sha256": "f42613fe0790770694c0164082e32621a62bce15c1707456083d69078ea73ee1",
+        "bytes": 5988
+      },
+      {
+        "path": "trader/observability/positioning.py",
+        "sha256": "88655ae0bfc55762c7a0c25e04b7665dd56ee1d91b9aa86ed5689cc5b07d39c3",
+        "bytes": 4465
+      },
+      {
+        "path": "trader/observability/preflight.py",
+        "sha256": "5a0e1f0091044a2f54f8892f47c27d98b69225a68a30af81987515bf5b0a71e5",
+        "bytes": 20054
+      },
+      {
+        "path": "trader/observability/prospective_execution.py",
+        "sha256": "5b9a001e2cc20be77ebcb480ae9d98a58b33e29197e65c5bbb9e0e400daa63b9",
+        "bytes": 17129
+      },
+      {
+        "path": "trader/observability/registry_selector.py",
+        "sha256": "17704866cd1551a5fa822037d140202313aba52a814a020686baac3bd5471650",
+        "bytes": 10786
+      },
+      {
+        "path": "trader/observability/safety.py",
+        "sha256": "0dec2a0b7a9eb950f101757ef7434abfaa7b3b13e90d33459d3b4953464fec61",
+        "bytes": 18863
+      },
+      {
+        "path": "trader/observability/scan_source.py",
+        "sha256": "aa7a55b1eac71bbb0f924c412e9f9b28ff5dfa6a7b7fe06328dc70253a9cb66b",
+        "bytes": 5642
+      },
+      {
+        "path": "trader/observability/selection_persistence.py",
+        "sha256": "9941d56a51f3b1184ecf8692e834c41937f685a357b1cd89d6428b4735c04d61",
+        "bytes": 9361
+      },
+      {
+        "path": "trader/observability/shutdown.py",
+        "sha256": "debb211c82500c1549fbb082f7564df6be756b6db4044958a79f9763641250c6",
+        "bytes": 902
+      },
+      {
+        "path": "trader/observability/stage5_activation.py",
+        "sha256": "dfc06b2f31525268e3c8bbe086bc07be7c81b29f65ad35de555e37c0f3675164",
+        "bytes": 5743
+      },
+      {
+        "path": "trader/observability/store.py",
+        "sha256": "a4207e8dc7b58b36514473a13ae4133af031299a47fd7c281e8de0e6a1a4dc9b",
+        "bytes": 17797
+      },
+      {
+        "path": "trader/observability/supplemental.py",
+        "sha256": "c54d38396ac462b9dbac4d37e69fa8a903306f266b2c5960ed31b18d08de0d03",
+        "bytes": 17080
+      },
+      {
+        "path": "trader/observability/worker.py",
+        "sha256": "149013f2482861ab3325699766b8a5a718a5ce435c25be28167dcb52c7781b82",
+        "bytes": 1412
+      },
+      {
+        "path": "trader/observability/world_producer.py",
+        "sha256": "63a2febf04b3a732146618ea2667f5931f95da61975d74c8fa092d7cdcd97aae",
+        "bytes": 11226
+      },
+      {
+        "path": "trader/org.py",
+        "sha256": "cc1acfa8c4a240e5ce2a11e7dedbc2b8f81499f356defceb118c517dbc32dd2a",
+        "bytes": 5523
+      },
+      {
+        "path": "trader/owner/__init__.py",
+        "sha256": "01eb0e9f97720584b299767973b4f1c536acfe269a2df2873475bd46a2fb9193",
+        "bytes": 1087
+      },
+      {
+        "path": "trader/owner/adapters/__init__.py",
+        "sha256": "57e91a27496138fdbcc710ee2b81ddf7f95b6893791e863699a006cd951d3432",
+        "bytes": 242
+      },
+      {
+        "path": "trader/owner/adapters/dashboard.py",
+        "sha256": "c18f174119455eb611b836667f9cd7d3955225ab66f6990073a2206d78e0053c",
+        "bytes": 1720
+      },
+      {
+        "path": "trader/owner/adapters/openclaw.py",
+        "sha256": "d077abf4276fa5dde28b64b42139c2549616fca6328a49ad5495a57fdfd09695",
+        "bytes": 8463
+      },
+      {
+        "path": "trader/owner/adapters/render.py",
+        "sha256": "333ef784e4c8a3a0b647fdc8810ec539251d559c8e34c1e6477a53b122b3c529",
+        "bytes": 2580
+      },
+      {
+        "path": "trader/owner/adapters/telegram.py",
+        "sha256": "793f7b1895ea7cc69d7f4775961b73ab62125779a07fb50de92c30429c1af631",
+        "bytes": 2688
+      },
+      {
+        "path": "trader/owner/approvals.py",
+        "sha256": "2cd6b7b7f959e699b9c0c14436e12128b6680b7031c0cf6f59505c09395ba640",
+        "bytes": 15917
+      },
+      {
+        "path": "trader/owner/authz.py",
+        "sha256": "30c4240856554de08ed3e73d0468a7f86bcb990715f788605c3106e0cffd2753",
+        "bytes": 4400
+      },
+      {
+        "path": "trader/owner/cli.py",
+        "sha256": "d04c575e3e49a0f76fe76b833be5711ceda1dce509cc2243b7706734e53d6e0c",
+        "bytes": 1516
+      },
+      {
+        "path": "trader/owner/contract.py",
+        "sha256": "073fa1bd3ad1fbc4fc970c05dd8f86db63bdf2202b0a7b4295c468cd02bd7d87",
+        "bytes": 11253
+      },
+      {
+        "path": "trader/owner/ipc.py",
+        "sha256": "b0e38043cdf31a3d096ca3c573243792f0731ccaaf3e06bff24e173a0b406fec",
+        "bytes": 18652
+      },
+      {
+        "path": "trader/owner/knowledge.py",
+        "sha256": "0d9f3833c4003bd91760de267ffb63d4180bf53d77a205b14bb8405dd0234fd0",
+        "bytes": 4578
+      },
+      {
+        "path": "trader/owner/queries.py",
+        "sha256": "2b760f5a1a251f9062fae9f46478c93dc1a4df892509a3a96b369b812ad43285",
+        "bytes": 15297
+      },
+      {
+        "path": "trader/owner/service.py",
+        "sha256": "c0dcaae8f333eb62301fa1516dcd26a944b2ab72d490a8338997ea1700356591",
+        "bytes": 42975
+      },
+      {
+        "path": "trader/persistence/__init__.py",
+        "sha256": "0de619fa208f3c8d717abe69d2e713772d59efa9e1e8792558cfa0cf6c0fc99b",
+        "bytes": 66
+      },
+      {
+        "path": "trader/persistence/backup.py",
+        "sha256": "33be7fd4f6fc618091e2ec19fec8cf7a5a084215cde37b61e180f6ce647cfcbf",
+        "bytes": 27165
+      },
+      {
+        "path": "trader/persistence/pit_inventory.py",
+        "sha256": "ea23ca245412ab5d8bc9037a147675fb3aa33a6c920f6ec69e1e0d1233043362",
+        "bytes": 8691
+      },
+      {
+        "path": "trader/portfolio/__init__.py",
+        "sha256": "4916d03cc3deaf2bd0740a5b483a8f3c94b02155ced60d9d9dc637e58fe5f661",
+        "bytes": 69
+      },
+      {
+        "path": "trader/portfolio/allocator.py",
+        "sha256": "573665981869d88631ea26b3ce589765647abd0e313341a8cc21e5a53d4c94d1",
+        "bytes": 31237
+      },
+      {
+        "path": "trader/portfolio/candidate_bridge.py",
+        "sha256": "15ca3ff946ffa453e7bdaf934facb145dec27227d98a74c2339083587888c1f6",
+        "bytes": 18742
+      },
+      {
+        "path": "trader/portfolio/common_factor.py",
+        "sha256": "c578571ed7f81e1ebd5e254788ab25b3475df4b2396ae58c93548c5a22b955a2",
+        "bytes": 20135
+      },
+      {
+        "path": "trader/portfolio/current.py",
+        "sha256": "af6f77a1f1b47c110d142757ed4ec8dd437d2546905ce6a1a6c802e83ec47e17",
+        "bytes": 13975
+      },
+      {
+        "path": "trader/portfolio/economics.py",
+        "sha256": "3005e58cfbc2401cc6e5435c73962638b028209b1531a934e9e7b5b2ddd93113",
+        "bytes": 18462
+      },
+      {
+        "path": "trader/portfolio/opportunity_cost.py",
+        "sha256": "b6a1b2b84c98a2ed5d4efb6726a47a8778cb295b80bad8f81525b2df6ebf3687",
+        "bytes": 5117
+      },
+      {
+        "path": "trader/portfolio/opportunity_live.py",
+        "sha256": "33c2e50f3c981dc44680c7bd3d7da75e8341884464e211ec4c065d6827685434",
+        "bytes": 19188
+      },
+      {
+        "path": "trader/portfolio/opportunity_registry.py",
+        "sha256": "f6b9e8152fb337682e9884862f87326fa7833d9588871824b38e512d72f595c5",
+        "bytes": 5402
+      },
+      {
+        "path": "trader/portfolio/reoptimization.py",
+        "sha256": "9538bfdd909b45fb957b0981c0fb82dde1a39e8090984637d1b1029d1f2fc324",
+        "bytes": 11058
+      },
+      {
+        "path": "trader/portfolio/runtime.py",
+        "sha256": "b3d5076c3123235dcf53f1c8688fc7af668a4696b2645fe7286705b9031eae3e",
+        "bytes": 8485
+      },
+      {
+        "path": "trader/portfolio/runtime_metrics.py",
+        "sha256": "cd3d3c9252b42b0d26bc7d0beb30ee2d0562a820da1ebf3a4a37b36b1152a004",
+        "bytes": 9873
+      },
+      {
+        "path": "trader/portfolio/source_adapter.py",
+        "sha256": "d32ffa8364363c11fa0fd6b1b160e8ef2de0f753b20151424c5e09023e8bf94c",
+        "bytes": 4363
+      },
+      {
+        "path": "trader/portfolio/trade_intent.py",
+        "sha256": "d7b38a33915d26a578a2f2096e41dc7dd13ca9fa3c920230cd7bde282a6249e5",
+        "bytes": 7852
+      },
+      {
+        "path": "trader/research/__init__.py",
+        "sha256": "0e5f945bbef4113ce81035ead3cb5140296a183bf3fd33e9e3499e323988a756",
+        "bytes": 202
+      },
+      {
+        "path": "trader/research/__main__.py",
+        "sha256": "94b0f06cbf552626e7ada0e8f0ff51b2879ff35ecc3741486029c968bf598597",
+        "bytes": 7247
+      },
+      {
+        "path": "trader/research/combo.py",
+        "sha256": "6702bdfffec8a930a25fb5a0efff917451c96eba1c36a4610d865b1f1347a16d",
+        "bytes": 8711
+      },
+      {
+        "path": "trader/research/control.py",
+        "sha256": "3f3128454e193222ea727f50fdab7bc4f857c80ee97a6e1724b228a61390ea55",
+        "bytes": 6701
+      },
+      {
+        "path": "trader/research/evaluate.py",
+        "sha256": "96f945cd9b00e14e8f36454a1443532a83acc88b2b2ce969aac8ecc257eb0065",
+        "bytes": 11488
+      },
+      {
+        "path": "trader/research/external_research.py",
+        "sha256": "7ff110c66216a3289e05385ac79299cb4710c2e79f7d597462eff5ac33377cce",
+        "bytes": 31998
+      },
+      {
+        "path": "trader/research/fdr.py",
+        "sha256": "30f864ada9e959196b192a7c710ccf49efd5a0d115b95af75201ebb2c4f504de",
+        "bytes": 2820
+      },
+      {
+        "path": "trader/research/generated_question_source.py",
+        "sha256": "9618bb103183733e88fcc63477dcc0a11f89a76476019bbcef3c4c9c6b53add0",
+        "bytes": 4712
+      },
+      {
+        "path": "trader/research/growth.py",
+        "sha256": "19801ce1d9d1ef2ade81170bb395d17acc31f19a2c6da55472588e627c8fd322",
+        "bytes": 5535
+      },
+      {
+        "path": "trader/research/job.py",
+        "sha256": "e4eb44ede397ffab222bde4ff59ee5d40db8186e500fbb1b3313e693582e1c15",
+        "bytes": 6199
+      },
+      {
+        "path": "trader/research/ledger.py",
+        "sha256": "82e1003d2ca68eb25b7ec144e838ee421149ab32609131b3e613ab1abae34e59",
+        "bytes": 19430
+      },
+      {
+        "path": "trader/research/planner.py",
+        "sha256": "3a44e39b659889c30ad9c63ed33e1f7aab3169efd6f1f26d582ff3b304f1de8e",
+        "bytes": 12112
+      },
+      {
+        "path": "trader/research/portfolio_null.py",
+        "sha256": "4ece35456c04904ca064d5c0ed92b975d79bbd8e6d38ed54ded66905cd9f53fd",
+        "bytes": 7066
+      },
+      {
+        "path": "trader/research/predictive_bridge.py",
+        "sha256": "b90803335119d7a64cb2ac7d99ba245e1e84ac3e2ece2b33fb4b20794e424af3",
+        "bytes": 26130
+      },
+      {
+        "path": "trader/research/predictive_experiment.py",
+        "sha256": "dfc37c0bf7095a300e251fb8b500fd6743a1d71a2bf39fd052c2ae5430f1c0ea",
+        "bytes": 10675
+      },
+      {
+        "path": "trader/research/referee.py",
+        "sha256": "17e329e7d20c9b1562f95d38e92e88af6049c5402a987aa8bbf6c5fc2c052635",
+        "bytes": 23281
+      },
+      {
+        "path": "trader/research/runner.py",
+        "sha256": "3aa694502740f6544e62e75cb16f9639e673e1539ba6020fb28c8bae24da2036",
+        "bytes": 27925
+      },
+      {
+        "path": "trader/research/slices.py",
+        "sha256": "8866775b031515069a68844014e5d18194572ed5aa0183ca8ea1fa1b0de668c3",
+        "bytes": 3511
+      },
+      {
+        "path": "trader/research/thesis.py",
+        "sha256": "2d1e7648a0d73e95c1ead964bbd7abb868aefab5b4184602ab6f3e8620d95636",
+        "bytes": 33003
+      },
+      {
+        "path": "trader/research/thresholds.py",
+        "sha256": "cb0b6db83037ed3cd33f2709044edb36dd7dd81dd4a4b8df5c293d8df63b5983",
+        "bytes": 3716
+      },
+      {
+        "path": "trader/research/universe.py",
+        "sha256": "2440287cbee405dbe3aba732ebb09dd4687fb84d2d348346ebc85ace955503dc",
+        "bytes": 4574
+      },
+      {
+        "path": "trader/research/vocab.py",
+        "sha256": "bdddf45e4f5d9d3ff45a0e72b142d410deee0fa68a06fbe903b45627055733bf",
+        "bytes": 13068
+      },
+      {
+        "path": "trader/runtime_identity.py",
+        "sha256": "7eb62da6392645b06380c96a79fe9b42cccf5c93ca53795056bcfd13dda13ffb",
+        "bytes": 9646
+      },
+      {
+        "path": "trader/strategy/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      },
+      {
+        "path": "trader/strategy/backtest.py",
+        "sha256": "0c94e23a3312d6811cb5c47f68b6f01b2d43984db2e1b955d9e26c50601a4541",
+        "bytes": 13798
+      },
+      {
+        "path": "trader/strategy/blend.py",
+        "sha256": "09673213e7a72bd0e8b92e8edb29aa727383446de7dbad60cfe73c5bb6941884",
+        "bytes": 4622
+      },
+      {
+        "path": "trader/strategy/capacity.py",
+        "sha256": "5e34e4904e7169433d2e4f4589411dcac86dea6f921cb821a013ea8d81b73a13",
+        "bytes": 44721
+      },
+      {
+        "path": "trader/strategy/compile.py",
+        "sha256": "f4d318367d202e11181b41e18d98e37bb75737696cc2b65a793bf213f35b8063",
+        "bytes": 13668
+      },
+      {
+        "path": "trader/strategy/dsl.py",
+        "sha256": "5e7b1dff621928c50e102b39bb204a0998d8455057bdf88bed2da0164a84adbb",
+        "bytes": 25010
+      },
+      {
+        "path": "trader/strategy/evidence.py",
+        "sha256": "38032c6e6eb8d7de5086f461ed410b202ba5057ce4fca1ed8c11a02512432a2d",
+        "bytes": 8438
+      },
+      {
+        "path": "trader/strategy/exit_policy.py",
+        "sha256": "ef9b1f90665a63b088a462bc79128470de07a9596b5630776c243d2a15736333",
+        "bytes": 7372
+      },
+      {
+        "path": "trader/strategy/factory_handoff.py",
+        "sha256": "00cd4496753741a838772ec7369736b59b88f1ff68e6355b3e2698530b75c3a5",
+        "bytes": 73299
+      },
+      {
+        "path": "trader/strategy/features.py",
+        "sha256": "08a555244ea74e718c74a5e7e8e9c5699712795591dc1e2ade09391adf192864",
+        "bytes": 22149
+      },
+      {
+        "path": "trader/strategy/features_deriv.py",
+        "sha256": "45555f295f30c7d2706419faec95f5809a0b119a20c4f683de43673acb810b94",
+        "bytes": 8780
+      },
+      {
+        "path": "trader/strategy/features_xs.py",
+        "sha256": "12da97dbcd529dd4b92889642fb197d21d8d4cdc1a666c8aaa94f967554bbf00",
+        "bytes": 1662
+      },
+      {
+        "path": "trader/strategy/genome.py",
+        "sha256": "5087ac989b0a532606b0ffb71723daf13abb9cf28f6d4ef864d1b9d8b9d4f0b4",
+        "bytes": 8251
+      },
+      {
+        "path": "trader/strategy/geometries.py",
+        "sha256": "13f57f882e46e4b9a04d0c3c09dbdaa4851b565b71bdd11f354f64c13e99b9ce",
+        "bytes": 1399
+      },
+      {
+        "path": "trader/strategy/health.py",
+        "sha256": "3465893744aa98416e5c6334ed95d3238c741aba6fab3b9c094f8d8d962548b6",
+        "bytes": 3249
+      },
+      {
+        "path": "trader/strategy/health_observation.py",
+        "sha256": "20d3ecf449523d4da3d52d61649aefe5652788e59ddc79774430392bf9f8c3c5",
+        "bytes": 32886
+      },
+      {
+        "path": "trader/strategy/legacy_authority.py",
+        "sha256": "c340d99645cf2cea7c3673184e123961e488a6362670a7208018bc17e9e0a748",
+        "bytes": 2871
+      },
+      {
+        "path": "trader/strategy/library.py",
+        "sha256": "9374038f007c46024e170faec93aea24071fe7aced5adcd70a86b3291d4eaa00",
+        "bytes": 18290
+      },
+      {
+        "path": "trader/strategy/null_baseline.py",
+        "sha256": "032b465bdf7cffdc1dabb1e610c64215389f98bb4403dc26bf2ac2aa67b31db9",
+        "bytes": 12231
+      },
+      {
+        "path": "trader/strategy/pine_spec.py",
+        "sha256": "9f6104faa13dbfc0fb7ce289460682c952e5eace3a3f4cccc2431b7cfbe7f6e7",
+        "bytes": 13436
+      },
+      {
+        "path": "trader/strategy/portfolio_evidence.py",
+        "sha256": "30adbe78b45ded13fed8a33a055c07cee5f895af2dbff9af0b38560cc3c5c723",
+        "bytes": 2676
+      },
+      {
+        "path": "trader/strategy/promotion.py",
+        "sha256": "b39912c5c60e3daad020dc95ae1465a55777e7f278cfca76cfd8e29a1420edb1",
+        "bytes": 9121
+      },
+      {
+        "path": "trader/strategy/rolling.py",
+        "sha256": "261ba739eeaf5688eaaf33e1b7b31972fd30a3dafb3f67b271630f7b63a6ba46",
+        "bytes": 19105
+      },
+      {
+        "path": "trader/strategy/scan_plan.py",
+        "sha256": "f3ce246cf92a26bafcaf37081c6e455b63c1fe8bfd18ea53d1bf5b696602213c",
+        "bytes": 4355
+      },
+      {
+        "path": "trader/strategy/seed_specs.py",
+        "sha256": "4b202d30fc9120cd797f4d69c10d636cc00e0b421062a3a9752d6f11281125c9",
+        "bytes": 901
+      },
+      {
+        "path": "trader/strategy/signal_occurrence.py",
+        "sha256": "7dad1a822baef5f2f7327dc6703aac27ab8bfc563a77e0416929327075975c63",
+        "bytes": 4921
+      },
+      {
+        "path": "trader/strategy/signal_occurrence_observation.py",
+        "sha256": "de658c69eb6faf75cf338ec25a49bef7428de0610dabd141903f72e497bbbbb2",
+        "bytes": 10102
+      },
+      {
+        "path": "trader/strategy/spec.py",
+        "sha256": "5ffaaec6e232132e7788a3a829bf9cf88ac19cf9f77b5379d0339ddcdea385e7",
+        "bytes": 5903
+      },
+      {
+        "path": "trader/strategy/spec_evidence.py",
+        "sha256": "dc7019f69f620f9b466503ba4f14707e072b10fc6ee8310a9802a3139a2465d9",
+        "bytes": 15951
+      },
+      {
+        "path": "trader/strategy/vector_backtest.py",
+        "sha256": "4e1bcb25b024f96d78b5f0d38bada958bd632e3f3f4aad29780f2594d11aea67",
+        "bytes": 19307
+      },
+      {
+        "path": "trader/world/__init__.py",
+        "sha256": "e204b8f3b0375dc38464339beb97af92d0f8e1cedd2effdaa43ce2c89867e8eb",
+        "bytes": 1325
+      },
+      {
+        "path": "trader/world/claim.py",
+        "sha256": "38b6187b00ef9996aa7ae377ec6372adb6d0b341e6a5d8ceb88567788e9baf49",
+        "bytes": 9978
+      },
+      {
+        "path": "trader/world/model.py",
+        "sha256": "b85f1c1bf41942d8f85941f0d9da01dfb0b7a0228346c13830dbce45151262e1",
+        "bytes": 14583
+      },
+      {
+        "path": "trader/world/observation.py",
+        "sha256": "7f45aad6cb95154683b086d7f5298001e6f0e5d16493b313c47be80dc9bcde05",
+        "bytes": 10402
+      },
+      {
+        "path": "trader/world/perception.py",
+        "sha256": "b61d4a7b86b707d6813d238613321117c93b4285da1749d05e742334963f7009",
+        "bytes": 7913
+      },
+      {
+        "path": "trader/world/relationship.py",
+        "sha256": "4d0a75a6ad864b9319d447e99f19857716bfae5b582bcfeebeaaab9b720e3cec",
+        "bytes": 8900
+      },
+      {
+        "path": "trader/world/replay.py",
+        "sha256": "57ec8b2649564cfd41d4d5c9896f7a26c7705bf4d0e3c2661b032c85227a4588",
+        "bytes": 14408
+      },
+      {
+        "path": "trader/world/state.py",
+        "sha256": "c0552f1488f67e0976e715c314e90db53e7d0a09c90933d28c4945c934deda2d",
+        "bytes": 4416
+      }
+    ],
+    "source_manifest_sha256": "687e549c3ff88edda437d54f1778384ead8590266d7042d83de2e19395e67183"
+  },
+  "remote_repository": {
+    "remote_name": "origin",
+    "ref": "refs/heads/main",
+    "head": "25cc7d0021435ea5f1182f1b459ad2c04cf6a272",
+    "queried_at_start_utc": "2026-10-06T03:52:50.146130+00:00",
+    "queried_at_end_utc": "2026-10-06T03:52:52.756997+00:00",
+    "matches_local_head": false,
+    "quality": "READ_ONLY_REF_QUERY_NOT_DEPLOYED_PROCESS_PROOF",
+    "cached_remote_refs": [
+      "refs/remotes/origin/current-truth-r1 87b9e4ba4bcbc8a9fa4f1ee8472abb7143d43a72",
+      "refs/remotes/origin/intelligence-spine-r1 a2d44dcf0535664d02f91a17f3526892d2fae84b",
+      "refs/remotes/origin/luffy-admitted-exit-semantic-parity-r1 1ab0da0cb9cb3a3c290488d7c75edf09788b6462",
+      "refs/remotes/origin/luffy-capacity-evidence-integration-r1 e60e04540dde4668f12bcfc6caf5992f6580928b",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z 6da5ad9a895ddb0f5fed9d75904e9639cc731b44",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1 0a20aad470e59b6ea9530f32a560d8473b65c98e",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-claude-md-refresh 9fbaf820a2561129182b218dfd8866de2504e064",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-opportunity-context-live-integration-r1 c7df74b043b0f1e60361f9bcdc8f0635df9280bd",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding 055c2a5f97f93e9be9aeae0476fb2612663a4abc",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-owner-interface-gateway 24ca9a80af402205c9dfef719d471c19fc41fa8d",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-paper-execution-cost-calibration-r1 91268ea97c4ddd289e0541d7d0796243beedfdee",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-predictive-research-bridge-r1 bf6f1d76fb3e8fc615bf7acf975bb1630c8854df",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-stage5-evidence-activation-r1 232392e4697bacebe146a3ce664fdd82c2174c80",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-stage6-implementation-closure-r1 483e1449e45456299052fb4166f61f530d386fe1",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-stage6-runtime-portfolio-integration-r1 e6c4c38e3d43af891a9f0380c247c464a361920d",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-stage7-decision-replay-source-integration-r1 9efbab7cd6f8e9dc915200a70f3b05d4c98b6131",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1 095764401953e166b634d1ef602dd8c34733f273",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-stage7-implementation-closure-r1 63ab1a3283d3bdb198e36f2a1f9f0195f5dc7978",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-stage7-learning-application-r1 ad16ecf6bcbd53490056e4be812cc9ac4c358771",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-stage7-learning-closed-loop-foundation-r1 fb6ca8be5f3f08e6327d90bed69bed832428f90e",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1 8f5c7781c74196bde1d45ca4f984342be35ff6aa",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-stage7-normal-learning-loop-closure-r1 9d22ae837a3848d08deb791a212cf3492d1fcf56",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-stage7-real-learning-authority-consumer-integration-r1 43e04cb62c87268910eaf56ada0f765d099bb94e",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-stage7-verified-outcome-producer-integration-r1 fff91989e08c9e0d836e339c1d1290d864e46275",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-strategy-capacity-r1 4178dbb752c751cdcaf0ee82981929c09e74bd61",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-trader-boot-recovery-fix 968fd2d41a128eb15924cf4888f9295cac14aa94",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-trader-chat-safety 9aea9c61bdb36e2304b8a58e4624285650b33b59",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-trader-collector-rollback 610ee31d672fec1600ee5cd2d7f0e85bd9cb1536",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-trader-dashboard-integration 5dc0b888e753d1c89b8bee541502180cb5639bad",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-trader-dashboard-performance 4a548db7dbf848c663e4707a410453b2dd70b5c7",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-trader-health-prod-candidate b600a4832a65c536f673b81d67d1fd0e9b7da025",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-trader-owner-frontend fe6cd0dc2225ac6a85d1ebefaf99d706cea9b68e",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-trader-owner-recovery fc394a5e575d043753981aa73ccc777e26635f97",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-trader-population-rollback 28e03d715d3a0039e9c2994e53669b6ff17fad32",
+      "refs/remotes/origin/luffy-checkpoint-20261005T131532Z-trader-world 642b72e03f6252529c62fe3eaa5bb4a2dbc960ab",
+      "refs/remotes/origin/luffy-expected-net-economics-r1 b471b9e2170c8c5d1da3f3b5e06bc25e58613a65",
+      "refs/remotes/origin/luffy-final-audit-repair-loop-r1 f9e168e6d952f290b394ac49d5d134bf7927639a",
+      "refs/remotes/origin/luffy-integrated-core-r1 548ebb727e81d2bd82a9cd23cb8e72445d0517c2",
+      "refs/remotes/origin/luffy-opportunity-context-live-integration-r1 6bb99e541e9d9ce583cc4a283f7db685f9235b96",
+      "refs/remotes/origin/luffy-portfolio-allocator-r1 a4432ba244a474ec48f7a9f0cc59fb6f7833aa61",
+      "refs/remotes/origin/luffy-predictive-research-bridge-r1 3bf9f87cf5b41e714a863715d0fa042a899af472",
+      "refs/remotes/origin/luffy-stage1-data-provenance-pit-r1 fcfe9e0359874b18d65a0b1e1ccfd156d18115e1",
+      "refs/remotes/origin/luffy-stage1-entry-authority-idempotency-r1 8d49c6976dc7359aed9451c4b3fd5c9bf55b0198",
+      "refs/remotes/origin/luffy-stage1-recovery-monitoring-foundation-r1 53e7c8567c259b2326315a0acdd4b838af030998",
+      "refs/remotes/origin/luffy-stage1-safety-truth-closure-r1 f571c988b866fdeaa27957d2d950625aa292ebd9",
+      "refs/remotes/origin/luffy-stage5-closure-evidence-flow-r1 0b23ab3f645efe4301ceabf9399405ab60d38e56",
+      "refs/remotes/origin/luffy-stage6-implementation-closure-r1 d256bfb4d6c6b2f7d9d7c950bd6f0c7aff0049f9",
+      "refs/remotes/origin/luffy-stage6-portfolio-common-factor-concentration-authority-r1 8ebc7113c0d3566facf64b47786c6efcc6339726",
+      "refs/remotes/origin/luffy-stage6-runtime-portfolio-integration-r1 640a5f20a8f78bf9ac68f1ac26d5c6c0de6977c3",
+      "refs/remotes/origin/luffy-stage7-decision-replay-source-integration-r1 1c77fdbbdd141dcf68a6b12bb2c85670ed667f6d",
+      "refs/remotes/origin/luffy-stage7-implementation-closure-r1 9d2a1b895b93c9abaf23ab258e47d8535c916bb0",
+      "refs/remotes/origin/luffy-stage7-learning-application-integration-r1 481b8323f040fd8daf960f844815847fcafd2d5f",
+      "refs/remotes/origin/luffy-stage7-learning-closed-loop-foundation-r1 9d31fbd61ed4c4b8c697248ac32dfd0451b537e4",
+      "refs/remotes/origin/luffy-stage7-normal-learning-loop-closure-r1 50a4545484798207e4b126a0b7a0547ea9b0ec79",
+      "refs/remotes/origin/luffy-stage7-normal-replay-world-consumer-closure-r2 f5e5156b8a294cd53db277e8d46cb30645611a61",
+      "refs/remotes/origin/luffy-stage7-outcome-capture-recovery-r1 d400394e0472da4e8b0d7f9220ad419c2a4d4244",
+      "refs/remotes/origin/luffy-stage7-real-learning-authority-consumer-integration-r1 b56682e936fe9907f023900a0daacf0aad5ac07e",
+      "refs/remotes/origin/luffy-stage7-verified-outcome-producer-integration-r1 503d93c4c83d134899b8067f567b995f329ea6a1",
+      "refs/remotes/origin/luffy-stage8-owner-os-closure-r1 52aac90e004662610de006fd5c4eb8cdcf39bb7a",
+      "refs/remotes/origin/luffy-strategy-capacity-r1 6b7f0f7f434fbe6b7c227595a43d4a325dc849e6",
+      "refs/remotes/origin/luffy-versioned-paper-cost-evidence-protocol-r1 be2bf1860b0c66957d7d3af8c32d6a0e2a55d209",
+      "refs/remotes/origin/luffy-versioned-paper-execution-r1 d4de42adcef0a9a7d905febe90712113fd68253f",
+      "refs/remotes/origin/main 25cc7d0021435ea5f1182f1b459ad2c04cf6a272",
+      "refs/remotes/origin/owner-frontend-live-binding-v1 dc78d233b1e47003b0496d1ee3ed654c721a3773",
+      "refs/remotes/origin/owner-frontend-m3-v1 b86d772c016d3d4480adc43b49b5765e9877d83f",
+      "refs/remotes/origin/production-local-preserve-final-20261004 428b315d8849f2016a47d0990f513e12f2305a7a",
+      "refs/remotes/origin/recovery-state-plumbing 5d586f4ccdd58e4502b208ed1dfb9c1290af0317",
+      "refs/remotes/origin/strategy-factory-r1 a883313b9d8f3748f487fcea2ceefb2afcec4ae0",
+      "refs/remotes/origin/trade-provenance-r1 54aefc56fe2c4d02e9589a9d4aedc41ac2d17b63",
+      "refs/remotes/origin/world-model-foundation 8020faf4dc1f64bc14c9b263ab1c635afd7a00f3"
+    ]
+  },
+  "historical_branches": {
+    "local_refs": [
+      "refs/heads/candle-txn-safety-v1 97ccebd399551956e6df1294da23940867d79bd4",
+      "refs/heads/chat-control-separation-v1 9aea9c61bdb36e2304b8a58e4624285650b33b59",
+      "refs/heads/current-truth-r1 87b9e4ba4bcbc8a9fa4f1ee8472abb7143d43a72",
+      "refs/heads/dashboard-integration-v1 5dc0b888e753d1c89b8bee541502180cb5639bad",
+      "refs/heads/dashboard-performance-v1 4a548db7dbf848c663e4707a410453b2dd70b5c7",
+      "refs/heads/docs/claude-md-refresh d3b640c473175a127d9eef1b2c9ac95a04b475ba",
+      "refs/heads/feat/strategy-foundation 43d1fd3332cc09213f22b903c01e2db16517a602",
+      "refs/heads/fix/collector-recovery-20260918 e344a65675acbf86061b793417046603db795eaf",
+      "refs/heads/fix/declared-population-20260918 51101d0778d3cfc2993b62e24ff219db9dde9f35",
+      "refs/heads/fix/market-data-truth 214947a9717eb9cb770c8dd7981603701e727ee2",
+      "refs/heads/fix/population-window-rollforward-20260918 234e9b2030b1321ca446258f50085012964707c3",
+      "refs/heads/fix/runtime-bounded-evidence-latency-r1 b880e52cf319451307261ee7728d1f0bfd7014c4",
+      "refs/heads/fix/runtime-observer-attention-repair-r1 958c9eb2f0b10993ad240b85f88c626b8d0e2ee6",
+      "refs/heads/health-observation-prod-candidate b600a4832a65c536f673b81d67d1fd0e9b7da025",
+      "refs/heads/intelligence-spine-r1 a2d44dcf0535664d02f91a17f3526892d2fae84b",
+      "refs/heads/kernel-boot-recovery-fix-v1 d46d045af38497712ae5fbcfcc9b3bdeb78feee5",
+      "refs/heads/luffy-admitted-exit-semantic-parity-r1 1ab0da0cb9cb3a3c290488d7c75edf09788b6462",
+      "refs/heads/luffy-capacity-evidence-capture-r1 b35a4bcca29d7a0eda0ebcebc25bd9d6067b1cb9",
+      "refs/heads/luffy-capacity-evidence-integration-r1 e60e04540dde4668f12bcfc6caf5992f6580928b",
+      "refs/heads/luffy-checkpoint-20261005T131532Z 6da5ad9a895ddb0f5fed9d75904e9639cc731b44",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-capacity-evidence-capture-r1 0a20aad470e59b6ea9530f32a560d8473b65c98e",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-claude-md-refresh 9fbaf820a2561129182b218dfd8866de2504e064",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-opportunity-context-live-integration-r1 c7df74b043b0f1e60361f9bcdc8f0635df9280bd",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-owner-frontend-live-binding 055c2a5f97f93e9be9aeae0476fb2612663a4abc",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-owner-interface-gateway 24ca9a80af402205c9dfef719d471c19fc41fa8d",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-paper-execution-cost-calibration-r1 91268ea97c4ddd289e0541d7d0796243beedfdee",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-predictive-research-bridge-r1 bf6f1d76fb3e8fc615bf7acf975bb1630c8854df",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-stage5-evidence-activation-r1 232392e4697bacebe146a3ce664fdd82c2174c80",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-stage6-implementation-closure-r1 483e1449e45456299052fb4166f61f530d386fe1",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-stage6-runtime-portfolio-integration-r1 e6c4c38e3d43af891a9f0380c247c464a361920d",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-stage7-decision-replay-source-integration-r1 9efbab7cd6f8e9dc915200a70f3b05d4c98b6131",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-stage7-historical-outcome-capture-r1 095764401953e166b634d1ef602dd8c34733f273",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-stage7-implementation-closure-r1 63ab1a3283d3bdb198e36f2a1f9f0195f5dc7978",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-stage7-learning-application-r1 ad16ecf6bcbd53490056e4be812cc9ac4c358771",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-stage7-learning-closed-loop-foundation-r1 fb6ca8be5f3f08e6327d90bed69bed832428f90e",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-stage7-learning-target-authority-framework-r1 8f5c7781c74196bde1d45ca4f984342be35ff6aa",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-stage7-normal-learning-loop-closure-r1 9d22ae837a3848d08deb791a212cf3492d1fcf56",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-stage7-real-learning-authority-consumer-integration-r1 43e04cb62c87268910eaf56ada0f765d099bb94e",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-stage7-verified-outcome-producer-integration-r1 fff91989e08c9e0d836e339c1d1290d864e46275",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-strategy-capacity-r1 4178dbb752c751cdcaf0ee82981929c09e74bd61",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-trader-boot-recovery-fix 968fd2d41a128eb15924cf4888f9295cac14aa94",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-trader-chat-safety 9aea9c61bdb36e2304b8a58e4624285650b33b59",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-trader-collector-rollback 610ee31d672fec1600ee5cd2d7f0e85bd9cb1536",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-trader-dashboard-integration 5dc0b888e753d1c89b8bee541502180cb5639bad",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-trader-dashboard-performance 4a548db7dbf848c663e4707a410453b2dd70b5c7",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-trader-health-prod-candidate b600a4832a65c536f673b81d67d1fd0e9b7da025",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-trader-owner-frontend fe6cd0dc2225ac6a85d1ebefaf99d706cea9b68e",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-trader-owner-recovery fc394a5e575d043753981aa73ccc777e26635f97",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-trader-population-rollback 28e03d715d3a0039e9c2994e53669b6ff17fad32",
+      "refs/heads/luffy-checkpoint-20261005T131532Z-trader-world 642b72e03f6252529c62fe3eaa5bb4a2dbc960ab",
+      "refs/heads/luffy-expected-net-economics-r1 b471b9e2170c8c5d1da3f3b5e06bc25e58613a65",
+      "refs/heads/luffy-final-audit-repair-loop-r1 f9e168e6d952f290b394ac49d5d134bf7927639a",
+      "refs/heads/luffy-integrated-core-r1 548ebb727e81d2bd82a9cd23cb8e72445d0517c2",
+      "refs/heads/luffy-opportunity-context-live-integration-r1 6bb99e541e9d9ce583cc4a283f7db685f9235b96",
+      "refs/heads/luffy-paper-execution-cost-evidence-calibration-r1 be2bf1860b0c66957d7d3af8c32d6a0e2a55d209",
+      "refs/heads/luffy-portfolio-allocator-r1 a4432ba244a474ec48f7a9f0cc59fb6f7833aa61",
+      "refs/heads/luffy-predictive-research-bridge-r1 3bf9f87cf5b41e714a863715d0fa042a899af472",
+      "refs/heads/luffy-stage1-data-provenance-pit-r1 fcfe9e0359874b18d65a0b1e1ccfd156d18115e1",
+      "refs/heads/luffy-stage1-entry-authority-idempotency-r1 8d49c6976dc7359aed9451c4b3fd5c9bf55b0198",
+      "refs/heads/luffy-stage1-recovery-monitoring-foundation-r1 53e7c8567c259b2326315a0acdd4b838af030998",
+      "refs/heads/luffy-stage1-safety-truth-closure-r1 f571c988b866fdeaa27957d2d950625aa292ebd9",
+      "refs/heads/luffy-stage5-closure-evidence-flow-r1 0b23ab3f645efe4301ceabf9399405ab60d38e56",
+      "refs/heads/luffy-stage5-evidence-activation-r1 7e5aedde46b2ae4cdeaa6c97f1b471455a57198f",
+      "refs/heads/luffy-stage6-implementation-closure-r1 d256bfb4d6c6b2f7d9d7c950bd6f0c7aff0049f9",
+      "refs/heads/luffy-stage6-portfolio-common-factor-concentration-authority-r1 8ebc7113c0d3566facf64b47786c6efcc6339726",
+      "refs/heads/luffy-stage6-runtime-portfolio-integration-r1 640a5f20a8f78bf9ac68f1ac26d5c6c0de6977c3",
+      "refs/heads/luffy-stage7-decision-replay-source-integration-r1 1c77fdbbdd141dcf68a6b12bb2c85670ed667f6d",
+      "refs/heads/luffy-stage7-historical-outcome-capture-r1 9d31fbd61ed4c4b8c697248ac32dfd0451b537e4",
+      "refs/heads/luffy-stage7-implementation-closure-r1 9d2a1b895b93c9abaf23ab258e47d8535c916bb0",
+      "refs/heads/luffy-stage7-learning-application-integration-r1 481b8323f040fd8daf960f844815847fcafd2d5f",
+      "refs/heads/luffy-stage7-learning-closed-loop-foundation-r1 9d31fbd61ed4c4b8c697248ac32dfd0451b537e4",
+      "refs/heads/luffy-stage7-learning-target-authority-framework-r1 9d2a1b895b93c9abaf23ab258e47d8535c916bb0",
+      "refs/heads/luffy-stage7-normal-learning-loop-closure-r1 50a4545484798207e4b126a0b7a0547ea9b0ec79",
+      "refs/heads/luffy-stage7-normal-replay-world-consumer-closure-r2 f5e5156b8a294cd53db277e8d46cb30645611a61",
+      "refs/heads/luffy-stage7-outcome-capture-recovery-r1 d400394e0472da4e8b0d7f9220ad419c2a4d4244",
+      "refs/heads/luffy-stage7-real-learning-authority-consumer-integration-r1 b56682e936fe9907f023900a0daacf0aad5ac07e",
+      "refs/heads/luffy-stage7-verified-outcome-producer-integration-r1 503d93c4c83d134899b8067f567b995f329ea6a1",
+      "refs/heads/luffy-stage8-owner-os-closure-r1 52aac90e004662610de006fd5c4eb8cdcf39bb7a",
+      "refs/heads/luffy-strategy-capacity-r1 6b7f0f7f434fbe6b7c227595a43d4a325dc849e6",
+      "refs/heads/luffy-versioned-paper-cost-evidence-protocol-r1 be2bf1860b0c66957d7d3af8c32d6a0e2a55d209",
+      "refs/heads/luffy-versioned-paper-execution-r1 d4de42adcef0a9a7d905febe90712113fd68253f",
+      "refs/heads/main 82431136ac68ff72325af301bac43b19b7d3ecd6",
+      "refs/heads/master 5b262d4281e77a09514019d9e52de4292f05bebb",
+      "refs/heads/opus-run-01 1b2735c5255d998399b50a3a5893436336fbb5d7",
+      "refs/heads/owner-frontend-live-binding-v1 dc78d233b1e47003b0496d1ee3ed654c721a3773",
+      "refs/heads/owner-frontend-m3-v1 b86d772c016d3d4480adc43b49b5765e9877d83f",
+      "refs/heads/owner-frontend-v1 3f42acf56108e65a29d57e445879ff6649051618",
+      "refs/heads/owner-interface-gateway-v1 24ca9a80af402205c9dfef719d471c19fc41fa8d",
+      "refs/heads/owner-interface-tg-binding 7840965d2a9003d2a80cbc2b0f3306e737dd4a7c",
+      "refs/heads/owner-recovery-recheck-v1 fc394a5e575d043753981aa73ccc777e26635f97",
+      "refs/heads/production-local-preserve-20261003 bda0be40487e7fe7d7a9aef31a259fdc818a770b",
+      "refs/heads/production-local-preserve-final-20261004 428b315d8849f2016a47d0990f513e12f2305a7a",
+      "refs/heads/recovery-state-plumbing 5d586f4ccdd58e4502b208ed1dfb9c1290af0317",
+      "refs/heads/rollback/collector-recovery-20260918 610ee31d672fec1600ee5cd2d7f0e85bd9cb1536",
+      "refs/heads/rollback/declared-population-20260918 28e03d715d3a0039e9c2994e53669b6ff17fad32",
+      "refs/heads/strategy-factory-r1 a883313b9d8f3748f487fcea2ceefb2afcec4ae0",
+      "refs/heads/trade-provenance-r1 54aefc56fe2c4d02e9589a9d4aedc41ac2d17b63",
+      "refs/heads/world-model-foundation 1eb00e151113d0add6033ef809ccdf6e30623003"
+    ],
+    "policy": "Historical/checkpoint refs remain reference evidence; not merged or selected as current truth. Git ancestry alone does not transfer run proof."
+  },
+  "retained_r3": {
+    "scope": "HISTORICAL_RUN_ONLY; cannot prove current checkout or loaded Dashboard",
+    "run_id": "perf01-owner-measurement-r3",
+    "root": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3",
+    "revision": "25cc7d0021435ea5f1182f1b459ad2c04cf6a272",
+    "config_sha256": "5a04414d4256d7a7b1f5aec33873b54004c6275581d0ec84f0aee395350daf81",
+    "config_hash_at_recorded_git_revision": "5a04414d4256d7a7b1f5aec33873b54004c6275581d0ec84f0aee395350daf81",
+    "config_matches_recorded_revision": true,
+    "config_matches_current_local": false,
+    "preflight_at_epoch": 1791242580.8200035,
+    "preflight_at_utc": "2026-10-05T23:23:00.820004+00:00",
+    "kernel": {
+      "pid": 1278749,
+      "start_ticks": "12776815",
+      "launch_requested_at": 1791242581.5513263,
+      "launch_monotonic_s": 127768.158868718
+    },
+    "launch_at_epoch": 1791242581.5513263,
+    "launch_at_utc": "2026-10-05T23:23:01.551326+00:00",
+    "last_event_at_utc": "2026-10-05T23:27:29.209432+00:00",
+    "production_final_head": "25cc7d0021435ea5f1182f1b459ad2c04cf6a272",
+    "preflight_matches_final_head": true,
+    "final_source_config_unchanged_reported": true,
+    "preparation_required_head": "25cc7d0021435ea5f1182f1b459ad2c04cf6a272",
+    "preparation_revision": "r3",
+    "preparation_files": [
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/expected-output-schema.json",
+        "expected_sha256": "974f3de8f1c18719029183988319beeb4ed37cb5779b3310d6000ce8fa951bf8",
+        "actual_sha256": "974f3de8f1c18719029183988319beeb4ed37cb5779b3310d6000ce8fa951bf8",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/diagnostic-plan.json",
+        "expected_sha256": "dda2198cba47fd2bd32d2e6c0d8a75be641e29aee76aa683f18ac97bb99e9e13",
+        "actual_sha256": "dda2198cba47fd2bd32d2e6c0d8a75be641e29aee76aa683f18ac97bb99e9e13",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/deadline.py",
+        "expected_sha256": "485938c4926c506bbd1e6aa14aa3228a830c0d6ebca1214c2d08e486a67b7be6",
+        "actual_sha256": "485938c4926c506bbd1e6aa14aa3228a830c0d6ebca1214c2d08e486a67b7be6",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/fresh_protection.py",
+        "expected_sha256": "ff5483ae7a549143c0f30f569f16f35d2e12638217e43f15c05c7805f6b7e8a3",
+        "actual_sha256": "ff5483ae7a549143c0f30f569f16f35d2e12638217e43f15c05c7805f6b7e8a3",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/profile_prepared.py",
+        "expected_sha256": "7afa9df3b262e88b2a514cf6a85ec3472b0106055a105b9e96a1ade1712b1077",
+        "actual_sha256": "7afa9df3b262e88b2a514cf6a85ec3472b0106055a105b9e96a1ade1712b1077",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run_static_tests.py",
+        "expected_sha256": "32772db60d391e4423ac1604e299e409f36f48b819bf26066e78a222fe94bdbe",
+        "actual_sha256": "32772db60d391e4423ac1604e299e409f36f48b819bf26066e78a222fe94bdbe",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/baseline.json",
+        "expected_sha256": "65d61d0e2eac866b743a024b98ebe97e78add40ee5419caa468b1522e1989b47",
+        "actual_sha256": "65d61d0e2eac866b743a024b98ebe97e78add40ee5419caa468b1522e1989b47",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/metadata.py",
+        "expected_sha256": "f7ab5f7fc89dfd40d99d92638635bbc32edf1bb2284b224f8aedd7f8e1e2d658",
+        "actual_sha256": "f7ab5f7fc89dfd40d99d92638635bbc32edf1bb2284b224f8aedd7f8e1e2d658",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/test_acceptance_review.py",
+        "expected_sha256": "bfcdbf45bf4bf67e157f912b5c132412834e155aea5cbb7a0fc2298f4fe5fcde",
+        "actual_sha256": "bfcdbf45bf4bf67e157f912b5c132412834e155aea5cbb7a0fc2298f4fe5fcde",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/test_static.py",
+        "expected_sha256": "41d4ca05f6c4cce4dbb632fd809991e4cfa347665aaf80abd0bf7da2f2a3fb55",
+        "actual_sha256": "41d4ca05f6c4cce4dbb632fd809991e4cfa347665aaf80abd0bf7da2f2a3fb55",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/validate_static.py",
+        "expected_sha256": "3b69bef8d430190610f6617e8d8e33a86477c17eb62fbb7ac55366dfff3f762f",
+        "actual_sha256": "3b69bef8d430190610f6617e8d8e33a86477c17eb62fbb7ac55366dfff3f762f",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/test_tail.py",
+        "expected_sha256": "46472d5c1cc05444d676df0c891a25cbf73d496ad01a4c41af5e938e83953aad",
+        "actual_sha256": "46472d5c1cc05444d676df0c891a25cbf73d496ad01a4c41af5e938e83953aad",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/authorization.json",
+        "expected_sha256": "fe14a5299c660e7185f62f37d01cb9e107e99ddbadcfd45b8e2deaa22d37cbe5",
+        "actual_sha256": "fe14a5299c660e7185f62f37d01cb9e107e99ddbadcfd45b8e2deaa22d37cbe5",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/analyze.py",
+        "expected_sha256": "65b9d20680098112a3d758ce3bddaa0527212e6fdc68bb1853c8f35193d9005e",
+        "actual_sha256": "65b9d20680098112a3d758ce3bddaa0527212e6fdc68bb1853c8f35193d9005e",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/observer_once.py",
+        "expected_sha256": "fca23b95f10f44425ccba2acdd7f89a4f5e239321b666d0ab8cc968542253cbb",
+        "actual_sha256": "fca23b95f10f44425ccba2acdd7f89a4f5e239321b666d0ab8cc968542253cbb",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/production-before.json",
+        "expected_sha256": "5e8c19a64464e426e55700d93f8486275c9a689be9fea3eaa051039be3b0dc0f",
+        "actual_sha256": "5e8c19a64464e426e55700d93f8486275c9a689be9fea3eaa051039be3b0dc0f",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/launch_once.py",
+        "expected_sha256": "8bc0d436f21c3117eb9d5fc0fae4cd0ac2b7a05cfbec5c845bf1c7dfda9d80b2",
+        "actual_sha256": "8bc0d436f21c3117eb9d5fc0fae4cd0ac2b7a05cfbec5c845bf1c7dfda9d80b2",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/static-acceptance.json",
+        "expected_sha256": "f3501c3ad75cc7855d8f7292a7db5e1e61488a230c6e1be43915ee571f63add3",
+        "actual_sha256": "f3501c3ad75cc7855d8f7292a7db5e1e61488a230c6e1be43915ee571f63add3",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/storage.py",
+        "expected_sha256": "2917abbebf3c5480cbbc68bd5ce32a9bbef51f77d1de8771afa17610186b4621",
+        "actual_sha256": "2917abbebf3c5480cbbc68bd5ce32a9bbef51f77d1de8771afa17610186b4621",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/attribution.py",
+        "expected_sha256": "45de7c740b054eb1d4e34d175f723dc3bb6dff339ed33e2d9468c00550935cce",
+        "actual_sha256": "45de7c740b054eb1d4e34d175f723dc3bb6dff339ed33e2d9468c00550935cce",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/collect_prepared.py",
+        "expected_sha256": "8c1f7c6162802406a8e719eb20c07733421e49e9fd9fda5d750e0c320d766e5f",
+        "actual_sha256": "8c1f7c6162802406a8e719eb20c07733421e49e9fd9fda5d750e0c320d766e5f",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/pre_start.py",
+        "expected_sha256": "52f1730dbd6df03315fd7a379c949838d8104f53a0f5efeb72f4a1ae0bb5cd66",
+        "actual_sha256": "52f1730dbd6df03315fd7a379c949838d8104f53a0f5efeb72f4a1ae0bb5cd66",
+        "status": "MATCH"
+      }
+    ],
+    "run_artifacts": [
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/storage-before-startup.json",
+        "expected_sha256": "8d673d51f22b604f023e9af1976e8b79ae2e8dbd3c1d7b661cb2c15b8e69c860",
+        "actual_sha256": "8d673d51f22b604f023e9af1976e8b79ae2e8dbd3c1d7b661cb2c15b8e69c860",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/perf01-owner-report.txt",
+        "expected_sha256": "3ada0805d79b17c544ac99a78d58738ad104dca6c288834f29519a453854fcba",
+        "actual_sha256": "3ada0805d79b17c544ac99a78d58738ad104dca6c288834f29519a453854fcba",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/kernel.log",
+        "expected_sha256": "31de35f95dd1e4d7a9fb36dd5a083757daf40cae7c1e8984c1964fbf8caf9ca2",
+        "actual_sha256": "31de35f95dd1e4d7a9fb36dd5a083757daf40cae7c1e8984c1964fbf8caf9ca2",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/pids.json",
+        "expected_sha256": "56dc556d89c7fecf4852fb70e784eeda24832e69d99424ed8aba108cf76a8e5c",
+        "actual_sha256": "56dc556d89c7fecf4852fb70e784eeda24832e69d99424ed8aba108cf76a8e5c",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/storage-during-shutdown.json",
+        "expected_sha256": "8710fd53e4abf37ed52eff33f861c8f9490e87b43c21ab922a744a3a9c8ab9b3",
+        "actual_sha256": "8710fd53e4abf37ed52eff33f861c8f9490e87b43c21ab922a744a3a9c8ab9b3",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/storage-after-graceful-stop.json",
+        "expected_sha256": "603514db866ec03579fbb7414839025c2e83ea0db701c59064a6952a00b9469b",
+        "actual_sha256": "603514db866ec03579fbb7414839025c2e83ea0db701c59064a6952a00b9469b",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/storage-observer-start.json",
+        "expected_sha256": "d24e166f9fcb3d7f72dcd3e8528c3cef7298f3cd81e26c5af59658c46ea80422",
+        "actual_sha256": "d24e166f9fcb3d7f72dcd3e8528c3cef7298f3cd81e26c5af59658c46ea80422",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/storage-final-stopped.json",
+        "expected_sha256": "07f68519e86a94115b9506b9022199d14d52119767ae5a5a8b1cde743b79991d",
+        "actual_sha256": "07f68519e86a94115b9506b9022199d14d52119767ae5a5a8b1cde743b79991d",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/storage-during.json",
+        "expected_sha256": "01e76f396c511aa542721ddda92994d7f4f26650e6a2497bf783d7f29ea466e9",
+        "actual_sha256": "01e76f396c511aa542721ddda92994d7f4f26650e6a2497bf783d7f29ea466e9",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/storage-stop-request.json",
+        "expected_sha256": "eaac9f12f2e9929f7db3344fb0697cc1db2e666d0694246f66bc0de189b6f3dc",
+        "actual_sha256": "eaac9f12f2e9929f7db3344fb0697cc1db2e666d0694246f66bc0de189b6f3dc",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/attribution-report.json",
+        "expected_sha256": "1d7336c7bfe14a7bd2b8d62f26bc3c3bd808aadae9884371f1e39f04d5860d7f",
+        "actual_sha256": "1d7336c7bfe14a7bd2b8d62f26bc3c3bd808aadae9884371f1e39f04d5860d7f",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/control-plane-validation.json",
+        "expected_sha256": "827cfe29074974bc6c866ce71ef566968fad3d6de9417eabb5b99bf1c51c15e4",
+        "actual_sha256": "827cfe29074974bc6c866ce71ef566968fad3d6de9417eabb5b99bf1c51c15e4",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/terminal-reconciliation.json",
+        "expected_sha256": "ccc1eacd21403872c6b2298b548b5d05ab9a7a59e683b0df0f58f4b980f45803",
+        "actual_sha256": "ccc1eacd21403872c6b2298b548b5d05ab9a7a59e683b0df0f58f4b980f45803",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/account-pre-start.json",
+        "expected_sha256": "ae62d6d009d89146842d3f0b9d980c17c1c3b9e8c776a9737424d513058fae78",
+        "actual_sha256": "ae62d6d009d89146842d3f0b9d980c17c1c3b9e8c776a9737424d513058fae78",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/controller-events.jsonl",
+        "expected_sha256": "800deb4f4d3c43e3a94e8986b26d536ec40499e1875614da2b5bf9ace31ae4ed",
+        "actual_sha256": "800deb4f4d3c43e3a94e8986b26d536ec40499e1875614da2b5bf9ace31ae4ed",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/preflight.json",
+        "expected_sha256": "6044b28ecea4346007ca6a35d8cd1568ee68631f922fcaf904466f906c05bdeb",
+        "actual_sha256": "6044b28ecea4346007ca6a35d8cd1568ee68631f922fcaf904466f906c05bdeb",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/portfolio-gate-evidence.json",
+        "expected_sha256": "4137da0d16686c2a1e155a16240063e2badc293f96a18840cb302b8611d5b87c",
+        "actual_sha256": "4137da0d16686c2a1e155a16240063e2badc293f96a18840cb302b8611d5b87c",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/launch-result.json",
+        "expected_sha256": "c5aa7e7eb14d737b13d6cf31693a6b0d47b4c05725f4a397150052440a0009d1",
+        "actual_sha256": "c5aa7e7eb14d737b13d6cf31693a6b0d47b4c05725f4a397150052440a0009d1",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/cycle-measurements.jsonl",
+        "expected_sha256": "bbdcdc367be0a805a49308d888afa134b44f19a99d2a3520c405303ef8934802",
+        "actual_sha256": "bbdcdc367be0a805a49308d888afa134b44f19a99d2a3520c405303ef8934802",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/stages.jsonl",
+        "expected_sha256": "7cbae0ee06b7b2012be161df990b6594935da14030e75b2a1cd5c12464a2fe36",
+        "actual_sha256": "7cbae0ee06b7b2012be161df990b6594935da14030e75b2a1cd5c12464a2fe36",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/perf01-owner-report.json",
+        "expected_sha256": "2e069c03a8b50549bf644af981fb4760bedbbc0627529b80a933b507bb91ad40",
+        "actual_sha256": "2e069c03a8b50549bf644af981fb4760bedbbc0627529b80a933b507bb91ad40",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/observer-safety-only.jsonl",
+        "expected_sha256": "759b482d50d0aacd156f3333f58d94e6146b5322dc8b9de94788c639ce7a851c",
+        "actual_sha256": "759b482d50d0aacd156f3333f58d94e6146b5322dc8b9de94788c639ce7a851c",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/observation-result.json",
+        "expected_sha256": "fa9af5d99585d6abd5fbc1bdd223bab0d79761dd057c00b88d4a05b9d35dc6ef",
+        "actual_sha256": "fa9af5d99585d6abd5fbc1bdd223bab0d79761dd057c00b88d4a05b9d35dc6ef",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/samples.jsonl",
+        "expected_sha256": "6cebf569ed09ffbb9cd70a4367c3061ddd5e28ea82a6bfa95af45594d7260c55",
+        "actual_sha256": "6cebf569ed09ffbb9cd70a4367c3061ddd5e28ea82a6bfa95af45594d7260c55",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/portfolio-gate-summary.json",
+        "expected_sha256": "020dfe857e8a87227b866f4ffc41c1a1076e65f98894e1372b5a37bf8c7a53e2",
+        "actual_sha256": "020dfe857e8a87227b866f4ffc41c1a1076e65f98894e1372b5a37bf8c7a53e2",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/production-final-proof.json",
+        "expected_sha256": "f0933fa01e8109a62ee7da82ca593e5e6118b21cb89922f208585e1ef75e1d31",
+        "actual_sha256": "f0933fa01e8109a62ee7da82ca593e5e6118b21cb89922f208585e1ef75e1d31",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/account-final-stopped.json",
+        "expected_sha256": "5d2c9d8dd60c155858cee5d7a3e8f665f0a58c42e11b9c36b6cb5ffb57624b7d",
+        "actual_sha256": "5d2c9d8dd60c155858cee5d7a3e8f665f0a58c42e11b9c36b6cb5ffb57624b7d",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/observer-heartbeat-only.jsonl",
+        "expected_sha256": "332941863684ae5c03549a226cdfa43a7095941ed0e0a99e7b8665e093e56006",
+        "actual_sha256": "332941863684ae5c03549a226cdfa43a7095941ed0e0a99e7b8665e093e56006",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/attribution-report.txt",
+        "expected_sha256": "82ec55c7c93dc4e91e5bf7121d3c4066ae442e43e85bbec4dbf5c7c4153199ff",
+        "actual_sha256": "82ec55c7c93dc4e91e5bf7121d3c4066ae442e43e85bbec4dbf5c7c4153199ff",
+        "status": "MATCH"
+      },
+      {
+        "path": "/home/sarmad/Documents/Codex/2026-10-05/task-5/perf01-owner-measurement-r3/run/cycle-summaries.jsonl",
+        "expected_sha256": "6eb87657c382b2896e7a341e19211d97f5c5e2d0324dad23c3b1ba8e7a56d1ea",
+        "actual_sha256": "6eb87657c382b2896e7a341e19211d97f5c5e2d0324dad23c3b1ba8e7a56d1ea",
+        "status": "MATCH"
+      }
+    ]
+  },
+  "retained_process_observation": {
+    "observed_at_utc": "2026-10-06T03:52:52.937943+00:00",
+    "dashboard_processes": [
+      {
+        "pid": 1154108,
+        "start_ticks": 11639528,
+        "expected_start_ticks": "11639528",
+        "pid_start_matches": true,
+        "module": "trader.dashboard.server",
+        "cwd": "/mnt/luffy-data/luffy/production",
+        "executable": "/usr/bin/python3.12",
+        "loaded_revision": null,
+        "loaded_configuration_sha256": null,
+        "quality": "UNVERIFIED_LOADED_CODE_AND_CONFIG"
+      }
+    ],
+    "kernel_records": [
+      {
+        "path": "/mnt/luffy-data/luffy/production/data/kernel_instance.json",
+        "status": "ABSENT"
+      },
+      {
+        "path": "/mnt/luffy-data/luffy/production/data/heartbeat_luffy.json",
+        "sha256": "80c32b7e5ae6be284b77887d49caf3b469f14b669ea0448b5b23b5eba818988d",
+        "fields": {
+          "schema": "luffy-heartbeat.v1",
+          "instance_id": "9370e86628634e7c8cbbf2ad8870e5e9",
+          "pid": null,
+          "start_ticks": null,
+          "revision": null,
+          "dirty_code": null,
+          "started_at": 1791242583.6451457,
+          "publication_ts": null,
+          "last_successful_work_ts": null
+        },
+        "quality": "RETAINED_ONLY_NOT_CURRENT_PROCESS_IDENTITY"
+      }
+    ],
+    "policy": "PID/start ticks prove process continuity only; cwd HEAD does not identify already-loaded modules/config. No process launch/signal or HTTP call."
+  },
+  "blocking_facts": [
+    "Current loaded Dashboard revision and config hash are UNKNOWN; matching historical PID/start ticks does not establish current local/deployed consistency.",
+    "Local HEAD differs from remotely queried main; remote ref and historical run identity are separate from current local build identity.",
+    "Whole checkout is dirty; any variant remains UNVERIFIED, with scoped runtime/config dirt captured separately."
+  ],
+  "operational_actions": {
+    "kernel_launched": false,
+    "dashboard_launched": false,
+    "provider_calls": 0,
+    "signals_sent": 0,
+    "fetch_push_merge": false
+  }
+}

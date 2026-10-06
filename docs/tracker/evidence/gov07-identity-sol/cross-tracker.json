@@ -1,0 +1,400 @@
+{
+  "direct_dependents": [
+    "RUN-01",
+    "MON-05",
+    "DATA-12",
+    "SEC-01",
+    "OWN-02"
+  ],
+  "review": [
+    {
+      "id": "RUN-01",
+      "status": "DEFERRED",
+      "dependencies": [
+        "GOV-07"
+      ],
+      "unmet_build_dependencies": [
+        "GOV-07"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Deferred scope/evidence preserved; no closure/activation."
+    },
+    {
+      "id": "RUN-02",
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "RISK-01"
+      ],
+      "unmet_build_dependencies": [
+        "RISK-01"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "RUN-03",
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "RUN-01",
+        "MON-01"
+      ],
+      "unmet_build_dependencies": [
+        "MON-01"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "RUN-04",
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "RUN-03",
+        "RES-01"
+      ],
+      "unmet_build_dependencies": [
+        "RUN-03",
+        "RES-01"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "RUN-05",
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "LLM-01",
+        "EXE-05"
+      ],
+      "unmet_build_dependencies": [
+        "LLM-01",
+        "EXE-05"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "RUN-06",
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "MON-05",
+        "DATA-09"
+      ],
+      "unmet_build_dependencies": [
+        "MON-05",
+        "DATA-09"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "RUN-07",
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "GOV-09"
+      ],
+      "unmet_build_dependencies": [
+        "GOV-09"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "MON-05",
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "GOV-07"
+      ],
+      "unmet_build_dependencies": [
+        "GOV-07"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "DATA-12",
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "GOV-07",
+        "DATA-09"
+      ],
+      "unmet_build_dependencies": [
+        "GOV-07",
+        "DATA-09"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "SEC-01",
+      "status": "DEFERRED",
+      "dependencies": [
+        "GOV-07"
+      ],
+      "unmet_build_dependencies": [
+        "GOV-07"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Deferred scope/evidence preserved; no closure/activation."
+    },
+    {
+      "id": "OWN-01",
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "OUT-03",
+        "MEM-02"
+      ],
+      "unmet_build_dependencies": [
+        "OUT-03",
+        "MEM-02"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "OWN-02",
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "GOV-07"
+      ],
+      "unmet_build_dependencies": [
+        "GOV-07"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "OWN-03",
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "OWN-02"
+      ],
+      "unmet_build_dependencies": [
+        "OWN-02"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "OWN-04",
+      "status": "EVIDENCE_TO_MAP",
+      "dependencies": [
+        "MON-01",
+        "MON-05"
+      ],
+      "unmet_build_dependencies": [
+        "MON-01",
+        "MON-05"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "GUI-01",
+      "status": "AWAITING_EVIDENCE",
+      "dependencies": [
+        "ACC-03",
+        "OWN-03",
+        "OWN-04"
+      ],
+      "unmet_build_dependencies": [
+        "ACC-03",
+        "OWN-03",
+        "OWN-04"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "GUI-02",
+      "status": "AWAITING_EVIDENCE",
+      "dependencies": [
+        "OUT-03",
+        "ACC-02",
+        "OWN-01"
+      ],
+      "unmet_build_dependencies": [
+        "OUT-03",
+        "ACC-02",
+        "OWN-01"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "GUI-03",
+      "status": "AWAITING_EVIDENCE",
+      "dependencies": [
+        "RES-05",
+        "RES-09",
+        "OWN-01"
+      ],
+      "unmet_build_dependencies": [
+        "RES-05",
+        "RES-09",
+        "OWN-01"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "GUI-04",
+      "status": "AWAITING_EVIDENCE",
+      "dependencies": [
+        "STR-03",
+        "STR-04",
+        "PORT-02"
+      ],
+      "unmet_build_dependencies": [
+        "STR-03",
+        "STR-04",
+        "PORT-02"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "GUI-05",
+      "status": "AWAITING_EVIDENCE",
+      "dependencies": [
+        "OWN-01",
+        "OWN-02"
+      ],
+      "unmet_build_dependencies": [
+        "OWN-01",
+        "OWN-02"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "GUI-06",
+      "status": "AWAITING_EVIDENCE",
+      "dependencies": [
+        "ATT-02",
+        "RUN-04",
+        "MON-05"
+      ],
+      "unmet_build_dependencies": [
+        "ATT-02",
+        "RUN-04",
+        "MON-05"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "GUI-07",
+      "status": "AWAITING_EVIDENCE",
+      "dependencies": [
+        "OWN-04"
+      ],
+      "unmet_build_dependencies": [
+        "OWN-04"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "GUI-08",
+      "status": "AWAITING_EVIDENCE",
+      "dependencies": [
+        "MEM-01",
+        "MEM-02",
+        "OUT-03"
+      ],
+      "unmet_build_dependencies": [
+        "MEM-01",
+        "MEM-02",
+        "OUT-03"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "GUI-09",
+      "status": "AWAITING_EVIDENCE",
+      "dependencies": [
+        "MON-02",
+        "MON-05"
+      ],
+      "unmet_build_dependencies": [
+        "MON-02",
+        "MON-05"
+      ],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "OBS-01",
+      "status": "CLOSED",
+      "dependencies": [],
+      "unmet_build_dependencies": [],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "OBS-02",
+      "status": "CLOSED",
+      "dependencies": [],
+      "unmet_build_dependencies": [],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "OBS-03",
+      "status": "CLOSED",
+      "dependencies": [],
+      "unmet_build_dependencies": [],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "OBS-04",
+      "status": "CLOSED",
+      "dependencies": [],
+      "unmet_build_dependencies": [],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    },
+    {
+      "id": "OBS-05",
+      "status": "CLOSED",
+      "dependencies": [],
+      "unmet_build_dependencies": [],
+      "satisfied_by_this_work": false,
+      "assessment": "Mapped identity can support only the exact named historical revision/run; independent behavior/runtime/visual proof remains required."
+    }
+  ],
+  "identity_only_candidates": [
+    {
+      "id": "RUN-01",
+      "closing_condition": "Fresh identity/preflight checks, ordered boot, truthful new-instance heartbeat and graceful shutdown are demonstrated on the intended revision.",
+      "assessment": "No artifact proving the full independent behavior closing condition was added. GOV-07 itself is BLOCKED, so dependent rows cannot close."
+    },
+    {
+      "id": "MON-05",
+      "closing_condition": "Run/cycle/worker IDs link bounded phase timings, row/byte growth, waits, provider attempts and failures; measurement overhead is disclosed.",
+      "assessment": "No artifact proving the full independent behavior closing condition was added. GOV-07 itself is BLOCKED, so dependent rows cannot close."
+    },
+    {
+      "id": "DATA-12",
+      "closing_condition": "Generated evidence follows intended runtime paths; all-store growth, temporary files and WAL are measured and bounded by explicit policy.",
+      "assessment": "No artifact proving the full independent behavior closing condition was added. GOV-07 itself is BLOCKED, so dependent rows cannot close."
+    },
+    {
+      "id": "SEC-01",
+      "closing_condition": "Verified credential locations/scopes, account mode and privileged boundaries match the accepted deployment scope; migration gaps are explicit.",
+      "assessment": "No artifact proving the full independent behavior closing condition was added. GOV-07 itself is BLOCKED, so dependent rows cannot close."
+    },
+    {
+      "id": "OWN-02",
+      "closing_condition": "Needs You, dashboard/chat and optional gateway authenticate actor/scope and exact request/version/hash; accepted/refused/completed outcomes are distinct.",
+      "assessment": "No artifact proving the full independent behavior closing condition was added. GOV-07 itself is BLOCKED, so dependent rows cannot close."
+    }
+  ],
+  "other_rows_satisfied": [],
+  "gui01_chain": "GOV-07 remains a blocker through OWN-02 -> OWN-03 and MON-05 -> OWN-04; ACC-03 and MON-01 also require separate evidence mapping.",
+  "own03_own04": "Unchanged EVIDENCE_TO_MAP; approval behavior and declared-vs-observed telemetry are not proven by a historical identity receipt.",
+  "run_obs": "RUN-01 remains DEFERRED; OBS-01/02/03/04/05 existing closures retained at their exact offline/evidence scopes. No new runtime proof or reopened historical item.",
+  "next_gui_critical_item": "GOV-07 exact current deployment identity evidence gate; no successor selected. DATA-02 is independent work and not absorbed."
+}

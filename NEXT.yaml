@@ -2,7 +2,7 @@ project: LUFFY
 sdd_version: '3.3'
 updated_at: '2026-10-06'
 
-repository_checkpoint:
+historical_repository_checkpoint:
   branch: main
   implementation_baseline: 958c9eb2f0b10993ad240b85f88c626b8d0e2ee6
   evidence_checkpoint: 6da5ad9a895ddb0f5fed9d75904e9639cc731b44
@@ -46,8 +46,8 @@ work_package:
   status: CLOSED
   result: CLOSED_ENGINEERING_ONLY_DIAGNOSTICS
   mode: ENGINEERING_ONLY
-  objective: Emit bounded non-secret first-boot refusal reason codes without changing OBS-05 admission
-    or Phase B safety.
+  objective: Emit bounded non-secret first-boot refusal reason codes without changing OBS-05 admission or Phase
+    B safety.
   implementation_started: true
   implementation_complete: true
   implementation_commit: 4d5f21b7371201780248bfa374bc1d7e4fecfb97
@@ -68,17 +68,20 @@ work_package:
   run01_evidence_status: IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING
   run01_live_proof_contract_possible: true
   run01_live_proof_performed: false
-  run01_live_proof_authorization: Separate owner authorization naming the full intended final revision
-    and one controlled Kernel launch/SIGTERM graceful stop with retained Phase A/Phase B and unchanged
-    RUN-01 proof.
-  historical_next_recommended_item: RUN-01
-  next_recommended_item: DATA-08
+  run01_live_proof_authorization: Separate owner authorization naming the full intended final revision and
+    one controlled Kernel launch/SIGTERM graceful stop with retained Phase A/Phase B and unchanged RUN-01 proof.
+  historical_next_recommended_item: DATA-08
+  next_recommended_item: OWN-02
   another_run01_fix_selected: false
   next_item_selected: false
   next_item_started: false
-  related_tracker_item: SEC-01 (DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE; actual read-permission readiness unverified)
+  related_tracker_item: SEC-01 (DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE; actual read-permission readiness
+    unverified)
   run01_retry_now_diagnosable: true
   actual_previous_refusal_cause: UNKNOWN; no live venue calls authorized
+  gov07_status: DEFERRED / NOT_REQUIRED_FOR_CURRENT_RELEASE
+  selection_slot_role: LAST_SUPPORTED_CLOSED_TERMINAL; no active package; GOV-07 owner deferral tracked separately.
+  gov07_owner_deferral_evidence: docs/tracker/evidence/gov07-identity-sol/owner-deferral.yaml
 
 obs05_first_boot_correction:
   id: OBS-05
@@ -503,6 +506,7 @@ current_release_deferral:
   items:
   - SEC-01
   - RUN-01
+  - GOV-07
   blocks_current_release: false
   non_blocking_for:
   - architecture work
@@ -512,26 +516,56 @@ current_release_deferral:
   critical_path_excluded_items:
   - SEC-01
   - RUN-01
-  dependency_policy: Preserve recorded dependency and readiness-gate membership as future requirements. SEC-01
-    and RUN-01 must be excluded when evaluating current build-phase blockers or selecting current critical-path
-    work; this exception applies transitively to dependent tracker work.
+  - GOV-07
+  dependency_policy: Preserve recorded dependency/readiness-gate membership as future requirements. Exclude
+    SEC-01, RUN-01 and GOV-07 transitively from current architecture/GUI build-phase blocker evaluation and
+    critical-path selection.
   revisit_before: Any future production/live activation requiring their guarantees; revisit unresolved findings
     and satisfy the existing closing conditions before that activation.
-  preservation: Existing evidence, unresolved findings, closing conditions and completed implementation are retained.
-    Neither item is CLOSED.
+  preservation: Existing evidence, unresolved findings, closing conditions and completed implementation retained.
+    No deferred item is CLOSED. GOV-07 deployment/runtime identity remains UNPROVEN and is required before
+    future deployment/live activation claims.
   activation_authorized: false
+  additional_owner_decisions:
+  - id: GOV-07
+    decision_date: '2026-10-06'
+    authority: 'Explicit owner decision in current session: GOV-07 is not required for the current architecture/GUI
+      build phase.'
+    status: DEFERRED
+    release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+    reason: 'Remaining gate is live deployment identity: Dashboard loaded revision/config UNKNOWN, local main
+      differs from remote main, no application defect demonstrated.'
+    blocks_current_release: false
+    non_blocking_for:
+    - architecture work
+    - GUI completion
+    - offline testing
+    - other tracker items
+    dependency_policy: Exclude GOV-07 transitively from current architecture/GUI build-phase blockers; preserve
+      its original requirement/dependency membership as a future gate.
+    required_before: Any future deployment/live activation claims; exact source/config/run/process/timestamp
+      and local/remote/deployed consistency closing condition must then be proven.
+    runtime_deployment_identity: UNPROVEN
+    mapped_evidence_preserved: true
+    closing_condition_preserved: Source and evidence artifacts identify revision, configuration, run/process
+      and timestamps; deployment records match remote/local code.
+    historical_terminal_evidence: docs/tracker/evidence/gov07-identity-sol/terminal.yaml
+    activation_authorized: false
+
 
 current_build_selection:
   active_items: []
-  last_completed_item: OBS-05
+  last_completed_item: GOV-01
   excluded_blocker_items:
   - SEC-01
   - RUN-01
+  - GOV-07
   current_blocked_items:
   - WORK-01
   - PERF-03
-  next_recommended_item: DATA-08
+  next_recommended_item: OWN-02
   eligible_items:
+  - OWN-02
   - DATA-08
   - GUI-01
   - GUI-02
@@ -542,11 +576,17 @@ current_build_selection:
   - GUI-07
   - GUI-08
   - GUI-09
-  eligibility_scope: Evidence mapping, GUI completion/approval preparation and offline verification under existing
-    item contracts; other dependencies and owner visual approvals remain applicable. Architecture work and other
-    tracker items are not gated by SEC-01 or RUN-01.
+  eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and
+    GOV-07 are excluded transitively from current build blockers. Other dependencies and owner visual approvals
+    apply.
   next_item_selected: false
   runtime_execution_authorized: false
+  selection_status: NO_ACTIVE_PACKAGE
+  selection_reason: Owner deferred GOV-07 for architecture/GUI build. Existing CLOSED OBS-05 slot retained
+    for read-contract compatibility; no successor selected.
+  last_terminal_item: GOV-07
+  last_terminal_result: DEFERRED
+
 
 data01_canonical_identity:
   id: DATA-01
@@ -560,3 +600,80 @@ data01_canonical_identity:
   provider_calls: 0
   other_rows_now_satisfied: none
   next_recommended_item: DATA-08
+
+control_snapshot:
+  id: gov07-identity-sol-2026-10-06
+  repository_revision: 82431136ac68ff72325af301bac43b19b7d3ecd6
+  repository_branch: main
+  working_tree_scope: UNVERIFIED_DIRTY_CHECKOUT; scoped tracked runtime/config clean during captured identity
+    window. Control documents modified after this base. Not deployed-process identity.
+  sdd_version: '3.3'
+  target_path: SDD.md
+  target_sha256: 393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28
+  configuration_sha256: 12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17
+  ledger_path: docs/tracker/LUFFY_Product_Tracker_v1.yaml
+  state_path: STATE.yaml
+  next_path: NEXT.yaml
+  runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime
+    UNKNOWN; no runtime freshness inferred from this control snapshot.
+  captured_at_utc: '2026-10-06T03:52:49.947649+00:00'
+  identity_evidence: docs/tracker/evidence/gov07-identity-sol/identity-map.json
+historical_control_snapshots:
+- id: gov01-authority-sol-2026-10-06
+  repository_revision: 454ebdd35efb27a9ddb0020dbb425c993887bb09
+  repository_branch: main
+  working_tree_scope: Control documents modified after base revision; unrelated graph/checkpoint dirt preserved.
+    Not a deployed revision.
+  sdd_version: '3.3'
+  target_path: SDD.md
+  target_sha256: 393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28
+  configuration_sha256: 12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17
+  ledger_path: docs/tracker/LUFFY_Product_Tracker_v1.yaml
+  state_path: STATE.yaml
+  next_path: NEXT.yaml
+  runtime_evidence_policy: Dated historical observations retain their exact revision/scope. Current runtime
+    UNKNOWN; no runtime freshness inferred from this control snapshot.
+current_identity_assessment:
+  id: GOV-07
+  status: DEFERRED
+  scope: PINNED_IDENTITY_MAP_CURRENT_DEPLOYMENT_UNVERIFIED
+  local_revision: 82431136ac68ff72325af301bac43b19b7d3ecd6
+  remote_main_revision: 25cc7d0021435ea5f1182f1b459ad2c04cf6a272
+  local_configuration_sha256: 12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17
+  current_loaded_dashboard_revision: null
+  current_loaded_dashboard_configuration_sha256: null
+  quality: UNVERIFIED_DIRTY_CHECKOUT_AND_UNKNOWN_LOADED_DEPLOYMENT
+  evidence: docs/tracker/evidence/gov07-identity-sol/terminal.yaml
+  observed_at_utc: '2026-10-06T03:52:52.937943+00:00'
+  historical_run_revision: 25cc7d0021435ea5f1182f1b459ad2c04cf6a272
+  historical_run_evidence_reapplied_to_current: false
+  release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+  blocks_current_build: false
+  owner_deferral_evidence: docs/tracker/evidence/gov07-identity-sol/owner-deferral.yaml
+  future_deployment_gate_required: true
+
+gov07_owner_deferral:
+  id: GOV-07
+  decision_date: '2026-10-06'
+  authority: 'Explicit owner decision in current session: GOV-07 is not required for the current architecture/GUI
+    build phase.'
+  status: DEFERRED
+  release_scope: NOT_REQUIRED_FOR_CURRENT_RELEASE
+  reason: 'Remaining gate is live deployment identity: Dashboard loaded revision/config UNKNOWN, local main
+    differs from remote main, no application defect demonstrated.'
+  blocks_current_release: false
+  non_blocking_for:
+  - architecture work
+  - GUI completion
+  - offline testing
+  - other tracker items
+  dependency_policy: Exclude GOV-07 transitively from current architecture/GUI build-phase blockers; preserve
+    its original requirement/dependency membership as a future gate.
+  required_before: Any future deployment/live activation claims; exact source/config/run/process/timestamp
+    and local/remote/deployed consistency closing condition must then be proven.
+  runtime_deployment_identity: UNPROVEN
+  mapped_evidence_preserved: true
+  closing_condition_preserved: Source and evidence artifacts identify revision, configuration, run/process
+    and timestamps; deployment records match remote/local code.
+  historical_terminal_evidence: docs/tracker/evidence/gov07-identity-sol/terminal.yaml
+  activation_authorized: false

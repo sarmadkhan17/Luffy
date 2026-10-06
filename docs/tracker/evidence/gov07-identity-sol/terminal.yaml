@@ -1,0 +1,61 @@
+id: GOV-07
+result: BLOCKED
+status: BLOCKED
+evaluated_at_utc: '2026-10-06T03:56:10.781488+00:00'
+exact_closing_condition: Source and evidence artifacts identify revision, configuration, run/process and timestamps;
+  deployment records match remote/local code.
+captured_local_revision: 82431136ac68ff72325af301bac43b19b7d3ecd6
+captured_branch: main
+captured_configuration_sha256: 12915bafcac152a16d9a61dc20e531be86321f5783e594b56c21ae7504576c17
+dirty_variant_quality: UNVERIFIED_DIRTY_CHECKOUT; tracked runtime/config clean only at captured window. Not
+  deployed/loaded identity proof.
+evidence_mapped:
+- identity-map.json
+- evidence-map.yaml
+- retained-manifests.json
+- identity-tests.txt
+- verification.json
+- cross-tracker.json
+historical_proof: Run perf01-owner-measurement-r3 at25cc7d00; exact config hash matches committed blob, 30
+  run and22 preparation artifacts match. PID/start ticks/time recorded. Historical proof stays at its exact
+  revision/config/run.
+actual_gap:
+  application_defect_found: false
+  kind: CURRENT_DEPLOYMENT_IDENTITY_EVIDENCE_MISSING
+  loaded_dashboard_revision: null
+  loaded_dashboard_config_hash: null
+  remote_main_revision: 25cc7d0021435ea5f1182f1b459ad2c04cf6a272
+  remote_local_match: false
+  explanation: Existing Dashboard PID/start ticks match retained record, but its loaded revision/config is
+    UNKNOWN. Local build and remote main differ; no receipt verifies the intended current local/remote/deployed
+    relationship. This is an evidence gate, not a finding that remote lag is a software defect.
+  deferred_dependency: 'NONE: SEC-01/RUN-01 status unchanged; no live test demanded as a new dependency.'
+change: Mapped existing source/revision/dirty gates and exact historical run artifacts; added pinned current
+  identity assessment, preserved prior control snapshot as historical, marked only GOV-07 BLOCKED in control-plane
+  summaries. No app/trading/config/DATA-02 changes.
+missing_proof: Existing read-only deployment/startup receipt for current Dashboard PID/start ticks, loaded
+  source revision, loaded config hash and deployment timestamps, with exact intended local/remote/deployed
+  relationship. Historical r3/run or current cwd HEAD cannot substitute.
+tests:
+  existing_offline_identity_tests: 5 passed
+  evidence_control_integrity_checks: 26
+  result: PASS
+  diff_check: PASS
+commits:
+  created_by_this_work: []
+  reason: Control files already include uncommitted GOV-01 changes; unrelated concurrent DATA-02 commits/edits
+    preserved. No combined commit or staging of prior/other work.
+  observed_concurrent_commits_not_attributed_to_gov07:
+  - ccef7e8
+  - cae1128
+  - '8243113'
+cross_tracker_impact: GUI-01 through OWN-03/OWN-04 remains gated by GOV-07. Existing RUN/OBS scopes preserved;
+  no exact-source-only dependent row fully satisfied.
+other_rows_satisfied: []
+next_gui_critical_item: GOV-07 current deployment identity evidence gate; no successor selected.
+runtime_actions:
+  kernel_launched: false
+  dashboard_launched: false
+  provider_calls: 0
+  signals_sent: 0
+  fetch_push_merge: false
