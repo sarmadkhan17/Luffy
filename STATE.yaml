@@ -1839,6 +1839,21 @@ exe01_duplicate_entry:
   successor_selected: false
   stale_test_noted: tests/test_trade_provenance.py (24 pre-existing failures, hardcoded dates suspected, undiagnosed)
 
+exe02_unknown_reconcile:
+  id: EXE-02
+  status: CLOSED
+  result: CLOSED_ENGINEERING_ONLY
+  implementation_commits: [7644fdc]
+  evidence: docs/tracker/evidence/exe02-unknown-reconcile/closure.yaml
+  actual_code_gap: recovery accepted any fetched order as resolving evidence; fixed
+  tests: 8 new pass; 67 focused pass.
+  kernel_launched: false
+  dashboard_launched: false
+  provider_calls: 0
+  evidence_added_not_closed: [EXE-03, EXE-05, EXE-06, EXE-07]
+  dependents_unblocked_not_closed: [EXE-03]
+  successor_selected: false
+
 own04_state_terminal:
   id: OWN-04
   status: CLOSED

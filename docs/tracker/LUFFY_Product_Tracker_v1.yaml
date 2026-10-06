@@ -3934,7 +3934,7 @@ items:
   stage: '1'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: "CLOSED"
   required_behavior: Reconcile unknown outcomes before reissuing an action.
   why_needed: A request may reach the venue even without a local acknowledgement.
   closure_condition: UNKNOWN actions stay explicit and resolve by exact venue/order/fill evidence under recovery
@@ -3945,12 +3945,11 @@ items:
   - EXE-01
   - ACC-01
   owner_role: Execution & recovery owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: "Claude local engineering session"
+  implementation_evidence: "trader/engine/recovery.py EntryRecovery.order/_require_exact (7644fdc); trader/engine/entry_authority.py submit; tests/test_exe02_unknown_reconcile.py"
+  runtime_evidence: "NOT_PERFORMED; offline tests only"
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: "Mapped: UNKNOWN_OUTCOME persisted before/after venue call, same client_order_id across restart, lookup failure/absent order keep UNKNOWN and hold the entry barrier. Actual gap fixed in 7644fdc: recovery accepted any fetched order; it now requires echoed clientOrderId/symbol/side (and persisted order id) so wrong-order evidence stays UNKNOWN (order_evidence_mismatch). 8 offline proofs added; 67 focused tests pass. Offline only."
   source_ids:
   - S01
   - S02
@@ -3958,17 +3957,16 @@ items:
   - S12
   - S14
   source_sections: §§18.1,18.3,27
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: "None for EXE-02. EXE-03, EXE-05, EXE-06 and EXE-07 remain separate; partial-exit lookups (partial_intent.py) are EXE-03."
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: "7644fdc"
+  work_authorized: true
+  updated: "2026-10-06"
   parent_ids: []
   related_items: []
-  closure_evidence: ''
+  closure_evidence: "docs/tracker/evidence/exe02-unknown-reconcile/closure.yaml"
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -8128,6 +8126,14 @@ change_log:
   after: CLOSED at offline engineering scope; no code defect, negative/mutant proofs retained
   reason: Explicit EXE-01 package only; no services/providers launched; every other row and closing condition preserved.
   evidence: docs/tracker/evidence/exe01-duplicate-entry/closure.yaml
+  actor: Claude local engineering session
+- date: '2026-10-06'
+  event: EXE02_UNKNOWN_RECONCILE_CLOSED
+  item: EXE-02
+  before: "EVIDENCE_TO_MAP; stage-level history only"
+  after: "CLOSED at offline engineering scope; one recovery order-identity gap fixed in 7644fdc"
+  reason: "Explicit EXE-02 package only; no services/providers launched; every other row and closing condition preserved."
+  evidence: docs/tracker/evidence/exe02-unknown-reconcile/closure.yaml
   actor: Claude local engineering session
 sdd_section_coverage:
 - section: 1

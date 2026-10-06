@@ -1,0 +1,8 @@
+id: EXE-02
+result: CLOSED_ENGINEERING_ONLY
+implementation_commits: [7644fdc]
+actual_gap: EntryRecovery.order() trusted any fetched order; a terminal order of another client id/symbol/side with a flat venue resolved UNKNOWN to TERMINAL and released the entry barrier.
+change: recovery.py _require_exact - echoed clientOrderId must equal the submitted client id, symbol and side must match, persisted order id must match when known; mismatch -> reason order_evidence_mismatch, state stays UNKNOWN_OUTCOME.
+tests: tests/test_exe02_unknown_reconcile.py (8 pass); with test_exe01_duplicate_entry, test_entry_recovery, test_execution_accounting, test_reconcile 67 pass.
+baseline_failures_not_caused: tests/test_attention_telemetry, test_trade_provenance (24), test_final_audit_feed_identity, test_owner_interface, test_stage1_recovery_monitoring, test_stage8_owner_os fail identically on HEAD recovery.py (dirty kernel.py / hardcoded dates suspected; undiagnosed).
+limits: offline only; fake venue; no Kernel/provider calls. Partial-exit and cancel/replace lookups (EXE-03), boot reconciliation (EXE-06) not covered.
