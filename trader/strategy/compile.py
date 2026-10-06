@@ -5,6 +5,7 @@ card (Librarian). One artifact, three consumers, no drift.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from copy import deepcopy
 
 import logging
 import time
@@ -63,12 +64,18 @@ class CompiledStrategy:
 
     def _ctx(self, frames, btc, derivs, universe=None,
              market=None, symbol=None) -> FeatureCtx:
+        self._verify_spec()
         tf = self.spec.timeframe
         if tf not in frames:
             raise dsl.SpecError(f"spec timeframe '{tf}' not in frames "
                                 f"{sorted(frames)}")
         return FeatureCtx(frames=frames, tf=tf, btc=btc, derivs=derivs,
                           universe=universe, market=market, symbol=symbol)
+
+    def _verify_spec(self):
+        from ..engine.trade_provenance import spec_version
+        if spec_version(self.spec)["spec_sha256"] != self.spec_sha256:
+            raise dsl.SpecError("compiled_spec_version_mismatch")
 
     # ── live path (Trader) ───────────────────────────────────────────────
     def to_evaluator(self):
@@ -82,6 +89,13 @@ class CompiledStrategy:
         def _evaluate(_genome, snap, *, diagnostic=None):
             import pandas as pd
             from ..data.market_provenance import cut as valid_cut
+            try:
+                self._verify_spec()
+            except dsl.SpecError:
+                if diagnostic:
+                    diagnostic("compiled_spec_version_mismatch")
+                log.warning("spec %s refused: compiled_spec_version_mismatch", self.spec.id)
+                return None
             try:
                 if not snap.ts or snap.ts in ('now','today'):
                     raise ValueError('explicit snapshot cut required')
@@ -272,6 +286,6 @@ def compile_spec(spec: StrategySpec, *, exit_semantics_id=None) -> CompiledStrat
     req = dsl.data_requires(*trees)
     spec.data_requires = list(req)
     from ..engine.trade_provenance import spec_version
-    return CompiledStrategy(spec=spec, _long=long_t, _short=short_t,
+    return CompiledStrategy(spec=deepcopy(spec), _long=long_t, _short=short_t,
                             _filters=filters, _exit=exit_t, data_requires=req,
                             spec_sha256=spec_version(spec)["spec_sha256"])

@@ -64,6 +64,40 @@ def test_data_requires_is_derived(frame):
     assert compile_spec(_spec()).data_requires == ("ohlcv",)
 
 
+def test_compiled_spec_retains_original_bytes_after_caller_mutation(frame):
+    from trader.engine.trade_provenance import spec_version
+    spec = _spec(entry_long="close > 0", filters=[])
+    compiled = compile_spec(spec)
+    original = compiled.spec.to_dict()
+    spec.entry_long = "close < 0"
+    spec.timeframe = "1h"
+    spec.universe["include"].append("OTHER/USDT")
+    assert compiled.spec.to_dict() == original
+    assert spec_version(compiled.spec)["spec_sha256"] == compiled.spec_sha256
+    lo, _ = compiled.entries({"15m": frame})
+    assert lo.all()
+
+
+@pytest.mark.parametrize("path", ["entries", "exit_signal"])
+def test_compiled_spec_mutation_refuses_version_mismatch(frame, path):
+    compiled = compile_spec(_spec(entry_long="close > 0", filters=[],
+                                  exit=ExitSpec(signal_exit="close < 0")))
+    compiled.spec.universe["include"].append("OTHER/USDT")
+    with pytest.raises(SpecError, match="compiled_spec_version_mismatch"):
+        getattr(compiled, path)({"15m": frame})
+
+
+def test_live_spec_version_mismatch_is_explicit_before_timeframe_filter(frame):
+    compiled = compile_spec(_spec(entry_long="close > 0", filters=[]))
+    compiled.spec.timeframe = "1h"
+    snap = Snapshot(symbol="BTC/USDT", ts="", price=1.0,
+                    dfs={"15m": frame}, market_type="futures")
+    reasons = []
+    assert compiled.to_evaluator()(compiled.spec, snap,
+        diagnostic=lambda reason, *args: reasons.append(reason)) is None
+    assert reasons == ["compiled_spec_version_mismatch"]
+
+
 def test_invalid_expression_fails_at_compile_time():
     with pytest.raises(SpecError):
         compile_spec(_spec(entry_long="close > nope(3)"))
