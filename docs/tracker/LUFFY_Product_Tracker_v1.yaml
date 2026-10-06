@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.22-acc02-lineage-sol
+  version: 1.23-acc03-economics-sol
   created_date: '2026-10-05'
   title: LUFFY — Product, Behaviour & GUI Tracker
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -19,8 +19,8 @@ metadata:
     optional generated reference.
   pending_adoption: null
   status_counts:
-    CLOSED: 26
-    EVIDENCE_TO_MAP: 114
+    CLOSED: 27
+    EVIDENCE_TO_MAP: 113
     DEFERRED: 7
     AWAITING_EVIDENCE: 11
     AWAITING_OWNER: 14
@@ -35,7 +35,7 @@ metadata:
   current_runtime_item: PERF-01
   current_runtime_result: BLOCKED
   next_diagnostic_item: null
-  next_recommended_item: ACC-03
+  next_recommended_item: GUI-01
   next_runtime_execution_authorized: false
   owner_representation_decision:
     date: '2026-10-05'
@@ -48,9 +48,9 @@ metadata:
     navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope; the
       owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product row
       is silently reopened or added.
-  last_terminal_item: OWN-04
+  last_terminal_item: ACC-03
   last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
-  last_terminal_evidence: docs/tracker/evidence/own04-phase-scope-review/decision.yaml
+  last_terminal_evidence: docs/tracker/evidence/acc03-economics-sol/closure.yaml
   control_snapshot:
     id: gov07-identity-sol-2026-10-06
     repository_revision: 82431136ac68ff72325af301bac43b19b7d3ecd6
@@ -4285,7 +4285,7 @@ items:
   stage: '7'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Report actual versus derived economics explicitly.
   why_needed: Costs and net profitability cannot be inferred from nominal fills.
   closure_condition: Venue monetary fields and derived R/MFE/MAE/slippage/attribution have distinct status, source/version
@@ -4295,12 +4295,15 @@ items:
   dependencies:
   - ACC-02
   owner_role: Accounting & outcomes owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: STAGE_LEVEL_HISTORY_ONLY
-  runtime_evidence: NOT_MAPPED
+  engineering_assignee: SOL
+  implementation_evidence: fcfd0a5; trader/dashboard/economics.py; owner_reads.trade_lineage; LiveReads.EconomicsEvidence;
+    adapter economics contract
+  runtime_evidence: NOT_PERFORMED; offline fixtures only
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a
-    missing-implementation finding and does not reopen prior closures.
+  latest_evidence: Explicit status/source snapshot version/coverage for venue fields, journal bookings and derived
+    R/MFE/MAE/slippage/attribution. Unknown calculation versions, funding and whole-trade net remain unavailable;
+    leg replay cannot promote complete accounting. 163 backend and 37 frontend tests plus typecheck; six final regressions.
+    ACC-02 satisfied first.
   source_ids:
   - S01
   - S02
@@ -4308,20 +4311,20 @@ items:
   - S12
   - S14
   source_sections: §§13.1,18.1,18.6
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: None for ACC-03 at architecture/offline scope; GUI-01 per-screen proof remains separate.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: fcfd0a5bd19fcd4af89de9c7673f130f935be316
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
+  closure_evidence: docs/tracker/evidence/acc03-economics-sol/closure.yaml
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
+  closure_scope: ARCHITECTURE_OFFLINE
 - id: OUT-01
   area: Accounting & outcomes
   stage: '7'
@@ -5400,17 +5403,16 @@ items:
   implementation_evidence: HISTORICAL_STAGE8_CLAIM
   runtime_evidence: NOT_PROVEN_FOR_THIS_SCREEN
   visual_approval: TRACKED_SEPARATELY
-  latest_evidence: Stage8 GUI/API tests were reported historically. Per-screen current functional/runtime evidence
-    is not mapped here; no visual approval inferred. OWN-04 is now CLOSED for current architecture/offline GUI scope
-    using retained exact state proofs; OWN-03 is CLOSED. ACC-03 remains unresolved. MON-01/MON-05 runtime readiness
-    remains mandatory before future activation, independent of current screen functional closure.
+  latest_evidence: 'ACC-03, OWN-03 and OWN-04 satisfied for current architecture/offline scope. GUI-01 remains AWAITING_EVIDENCE:
+    Overview journal aggregate economic coverage/version/null completeness, equity/exposure/global signals source/freshness/quality
+    and exact Needs You evidence/action navigation remain. Runtime screen proof and owner visual approval separately
+    outstanding. docs/tracker/evidence/acc03-economics-sol/REPORT.md'
   source_ids:
   - S01
   - S10
   - S14
   source_sections: §25.3
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: Map per-screen evidence and fix demonstrated Overview gaps; retain separate runtime/visual proof.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: SDD_DEFINED_TEST_DETAIL_DRAFT
   priority: NORMAL
@@ -5427,10 +5429,10 @@ items:
     current_build_phase:
       eligible_for_functional_evidence_work: true
       satisfied:
+      - ACC-03
       - OWN-03
       - OWN-04
-      remaining_for_closure:
-      - ACC-03
+      remaining_for_closure: []
       screen_evidence_and_owner_visual_approval_still_required: true
     future_live_activation:
       mandatory_unproven:
@@ -8808,7 +8810,7 @@ current_release_deferral:
       Missing MON-05 measurements remain visible gaps, never inferred proof.
 current_build_selection:
   active_items: []
-  last_completed_item: OWN-04
+  last_completed_item: ACC-03
   excluded_blocker_items:
   - SEC-01
   - RUN-01
@@ -8818,9 +8820,8 @@ current_build_selection:
   current_blocked_items:
   - WORK-01
   - PERF-03
-  next_recommended_item: ACC-03
+  next_recommended_item: GUI-01
   eligible_items:
-  - ACC-03
   - DATA-08
   - GUI-01
   - GUI-02
@@ -8836,11 +8837,10 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: Owner phase-scope review closes OWN-04 for current architecture/offline GUI truthfulness using
-    retained exact proof. MON-01/MON-05 full runtime/readiness obligations are deferred for this phase and mandatory
-    before future live activation; all original conditions remain. GUI-01 eligible for functional evidence work,
-    ACC-03 prerequisite still unresolved. ACC-03 remains recommendation only; no activation authorized.
-  last_terminal_item: OWN-04
+  selection_reason: ACC-01/ACC-02 dependency mapping and ACC-03 economics closed offline. GUI-01 dependencies satisfied;
+    per-screen evidence/navigation/coverage and separate runtime/visual proof remain. GUI-01 recommended only, unselected;
+    no activation authorized.
+  last_terminal_item: ACC-03
   last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
 own02_authority_closure:
   id: OWN-02
@@ -8910,3 +8910,21 @@ future_live_activation_requirements:
   runtime_proof_complete: false
   activation_authorized: false
   scope_decision_evidence: docs/tracker/evidence/own04-phase-scope-review/decision.yaml
+acc03_economics_closure:
+  id: ACC-03
+  status: CLOSED
+  result: CLOSED_ARCHITECTURE_OFFLINE
+  implementation_revision: fcfd0a5bd19fcd4af89de9c7673f130f935be316
+  dependency_evidence: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
+  schema: trade-economics-read.v1
+  tests:
+    backend: 163
+    frontend: 37
+    final_regressions: 6
+    typecheck: PASS
+  kernel_launched: false
+  dashboard_launched: false
+  live_venue_reads: 0
+  provider_calls: 0
+  gui01_status: AWAITING_EVIDENCE
+  successor_selected: false

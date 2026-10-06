@@ -1,0 +1,17 @@
+id: ACC-03
+status: CLOSED
+result: CLOSED_ARCHITECTURE_OFFLINE
+implementation_revision: fcfd0a5bd19fcd4af89de9c7673f130f935be316
+dependency_evidence: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
+schema: trade-economics-read.v1
+tests:
+  backend: 163
+  frontend: 37
+  final_regressions: 6
+  typecheck: PASS
+kernel_launched: false
+dashboard_launched: false
+live_venue_reads: 0
+provider_calls: 0
+gui01_status: AWAITING_EVIDENCE
+successor_selected: false

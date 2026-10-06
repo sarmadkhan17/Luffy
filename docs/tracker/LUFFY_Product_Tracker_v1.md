@@ -1,3 +1,5 @@
+> Current ACC-02/ACC-03: CLOSED for architecture/offline GUI. ACC-01 mapped first; GUI-01 dependencies satisfied, per-screen gaps and separate runtime/visual proof remain. [Evidence](evidence/acc03-economics-sol/REPORT.md). GUI-01 recommended, unselected. Earlier status statements are historical.
+
 > Current ACC-01/ACC-02 update: CLOSED at architecture/offline scope; 107 offline tests. ACC-03 remains pending. [Evidence](evidence/acc02-lineage-sol/REPORT.md). Earlier queue statements are historical.
 
 > Current phase-scope decision: OWN-04 CLOSED for architecture/offline GUI; MON-01/MON-05 DEFERRED for this phase and mandatory, unproven before future activation. All substantive conditions/dependency edges retained. GUI-01 eligible for functional evidence work; ACC-03 remains. [Scope decision](evidence/own04-phase-scope-review/REPORT.md). Earlier blocked queue statements are historical.
@@ -6,7 +8,7 @@
 
 # LUFFY — Product, Behaviour & GUI Tracker
 
-Version: 1.21-own04-phase-scope-review
+Version: 1.23-acc03-economics-sol
 
 Canonical source: `LUFFY_Product_Tracker_v1.yaml`. Primary view: read-only Dashboard Tracker. Markdown is optional; XLSX is deprecated/non-authoritative history.
 
@@ -3259,29 +3261,29 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 7
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Journal records and venue truth must remain distinguishable.
 - **closure_condition**: Reconciliation retains raw receipts, field source and explicit discrepancy/corrective action; local estimates remain labelled.
 - **failure_regression_proof**: No silent overwrite of history, symbol-only identity substitution or invented actual exposure.
 - **dependencies**: DATA-01
 - **owner_role**: Accounting & outcomes owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL
+- **implementation_evidence**: trader/engine/booking.py; trader/engine/trade_accounting.py; trader/engine/accounting.py; seven offline suites (107 passed)
+- **runtime_evidence**: NOT_PERFORMED; synthetic offline fixtures only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: ACC-01: engine/booking.py retains immutable before/after snapshots and original evidence with sha256; assess/replay refuse missing fees, currency conversions and rewritten assessments. engine/reconcile.py and engine/trade_accounting.py distinguish venue order fills from estimates, retain history/pages/raw receipts and explicit discrepancies/retry reasons. test_trade_booking covers native/ghost/panic estimates, absent fees, transaction rollback and legacy source-free export. test_reconcile and test_reconcile_alignment_commits cover venue alignment without substituting symbol-only trade ownership. DATA-01 canonical identity tests establish versioned market binding.
 - **source_ids**: S01, S02, S08, S12, S14
 - **source_sections**: §§18.1,18.6
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for this row at architecture/offline scope; dependent rows remain separate.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
-- **parent_ids**: None
-- **related_items**: None
-- **closure_evidence**:
+- **resolution_at_commit**: 29d093d5e5467c645b8ea13a3699451b6a7d85d6
+- **work_authorized**: True
+- **updated**: 2026-10-06
+- **parent_ids**:
+- **related_items**:
+- **closure_evidence**: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -3292,29 +3294,29 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 7
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Enables actual net P&L and reliable downstream learning.
 - **closure_condition**: Order/fill/booked legs, trades, costs and financing bind original requests/decisions and their available receipts.
 - **failure_regression_proof**: Retry or partial accounting cannot double-book money; missing entry/exit identities stay unbound.
 - **dependencies**: ACC-01, EXE-01
 - **owner_role**: Accounting & outcomes owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL
+- **implementation_evidence**: trader/engine/booking.py; trader/engine/trade_accounting.py; trader/engine/accounting.py; seven offline suites (107 passed)
+- **runtime_evidence**: NOT_PERFORMED; synthetic offline fixtures only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: ACC-02: engine/entry_authority.py retains original logical action/decision/client order ids. engine/booking.py records trade-bound entry, align_delta and close legs transactionally; repeated fill delivery and callbacks cannot double-reduce or double-book. engine/trade_accounting.py legs/history_rows/assess binds exact order/fill ids to booking snapshots and signed financing; incomplete/overlapping/reused identities, non-USDT fees and incomplete history remain retry-required. execution_accounting preserves recovery closes across restart with archive/release in one transaction. Whole-trade import is idempotent and replays source-free.
 - **source_ids**: S01, S02, S08, S12, S14
 - **source_sections**: §§18.4,18.6,19.2
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for this row at architecture/offline scope; dependent rows remain separate.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
-- **parent_ids**: None
-- **related_items**: None
-- **closure_evidence**:
+- **resolution_at_commit**: 29d093d5e5467c645b8ea13a3699451b6a7d85d6
+- **work_authorized**: True
+- **updated**: 2026-10-06
+- **parent_ids**:
+- **related_items**:
+- **closure_evidence**: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -3325,29 +3327,29 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 7
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Costs and net profitability cannot be inferred from nominal fills.
 - **closure_condition**: Venue monetary fields and derived R/MFE/MAE/slippage/attribution have distinct status, source/version and coverage.
 - **failure_regression_proof**: Estimates are not relabelled actual; external unavailable cashflow does not become complete accounting.
 - **dependencies**: ACC-02
 - **owner_role**: Accounting & outcomes owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL
+- **implementation_evidence**: fcfd0a5; trader/dashboard/economics.py; owner_reads.trade_lineage; LiveReads.EconomicsEvidence; adapter economics contract
+- **runtime_evidence**: NOT_PERFORMED; offline fixtures only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Explicit status/source snapshot version/coverage for venue fields, journal bookings and derived R/MFE/MAE/slippage/attribution. Unknown calculation versions, funding and whole-trade net remain unavailable; leg replay cannot promote complete accounting. 163 backend and 37 frontend tests plus typecheck; six final regressions. ACC-02 satisfied first.
 - **source_ids**: S01, S02, S08, S12, S14
 - **source_sections**: §§13.1,18.1,18.6
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for ACC-03 at architecture/offline scope; GUI-01 per-screen proof remains separate.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
-- **parent_ids**: None
-- **related_items**: None
-- **closure_evidence**:
+- **resolution_at_commit**: fcfd0a5bd19fcd4af89de9c7673f130f935be316
+- **work_authorized**: True
+- **updated**: 2026-10-06
+- **parent_ids**:
+- **related_items**:
+- **closure_evidence**: docs/tracker/evidence/acc03-economics-sol/closure.yaml
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -4167,18 +4169,18 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **implementation_evidence**: HISTORICAL_STAGE8_CLAIM
 - **runtime_evidence**: NOT_PROVEN_FOR_THIS_SCREEN
 - **visual_approval**: TRACKED_SEPARATELY
-- **latest_evidence**: Stage8 GUI/API tests were reported historically. Per-screen current functional/runtime evidence is not mapped here; no visual approval inferred. OWN-04 is now CLOSED for current architecture/offline GUI scope using retained exact state proofs; OWN-03 is CLOSED. ACC-03 remains unresolved. MON-01/MON-05 runtime readiness remains mandatory before future activation, independent of current screen functional closure.
+- **latest_evidence**: ACC-03, OWN-03 and OWN-04 satisfied for current architecture/offline scope. GUI-01 remains AWAITING_EVIDENCE: Overview journal aggregate economic coverage/version/null completeness, equity/exposure/global signals source/freshness/quality and exact Needs You evidence/action navigation remain. Runtime screen proof and owner visual approval separately outstanding. docs/tracker/evidence/acc03-economics-sol/REPORT.md
 - **source_ids**: S01, S10, S14
 - **source_sections**: §25.3
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: Map per-screen evidence and fix demonstrated Overview gaps; retain separate runtime/visual proof.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: SDD_DEFINED_TEST_DETAIL_DRAFT
 - **priority**: NORMAL
 - **resolution_at_commit**:
 - **work_authorized**: False
 - **updated**: 2026-10-06
-- **parent_ids**: None
-- **related_items**: None
+- **parent_ids**:
+- **related_items**:
 - **closure_evidence**:
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.

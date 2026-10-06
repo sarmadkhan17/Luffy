@@ -1,0 +1,11 @@
+{
+  "revision": "fcfd0a5bd19fcd4af89de9c7673f130f935be316",
+  "files": {
+    "trader/dashboard/economics.py": "e5c9dcd66ba82615b641d7aa66fd386f896ed5361cf9853a6d8811084a882ba3",
+    "trader/dashboard/owner_reads.py": "d6f774e0535c4da8a20239814169fd7f58b20edfa0c3168415b18ef74dfe531f",
+    "frontend/src/views/LiveReads.tsx": "39e215cf29c9fe996f426e54d88eb6e6de092a7e34f7e830a37ac539408b6fc1",
+    "frontend/src/adapters/readContracts.ts": "867a9faa7b49be326e99650a8debff329c954d11ed1262fcee7841130c1efad6",
+    "tests/test_acc03_economics.py": "e4336654ff1dc4d7263341cd0de4be4456d1da4733746721c2df5dfcb23cc051",
+    "frontend/tests/acc03.test.tsx": "68bf37397ee9a7b9823a3c31c535438744f913a09249c90cf7043ac789492556"
+  }
+}

@@ -1388,7 +1388,7 @@ current_active_work:
     and one controlled Kernel launch/SIGTERM graceful stop with retained Phase A/Phase B and unchanged
     RUN-01 proof.
   historical_next_recommended_item: RUN-01
-  next_recommended_item: ACC-03
+  next_recommended_item: GUI-01
   another_run01_fix_selected: false
   next_item_selected: false
   next_item_started: false
@@ -1629,7 +1629,7 @@ current_release_deferral:
 
 current_build_selection:
   active_items: []
-  last_completed_item: OWN-04
+  last_completed_item: ACC-03
   excluded_blocker_items:
   - SEC-01
   - RUN-01
@@ -1639,9 +1639,8 @@ current_build_selection:
   current_blocked_items:
   - WORK-01
   - PERF-03
-  next_recommended_item: ACC-03
+  next_recommended_item: GUI-01
   eligible_items:
-  - ACC-03
   - DATA-08
   - GUI-01
   - GUI-02
@@ -1652,18 +1651,15 @@ current_build_selection:
   - GUI-07
   - GUI-08
   - GUI-09
-  eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and
-    GOV-07 are excluded transitively from current build blockers. Other dependencies and owner visual approvals
-    apply.
+  eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts; SEC-01, RUN-01 and GOV-07
+    are excluded transitively from current build blockers. Other dependencies and owner visual approvals apply.
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: Owner phase-scope review closes OWN-04 for current architecture/offline GUI truthfulness
-    using retained exact proof. MON-01/MON-05 full runtime/readiness obligations are deferred for this phase
-    and mandatory before future live activation; all original conditions remain. GUI-01 eligible for functional
-    evidence work, ACC-03 prerequisite still unresolved. ACC-03 remains recommendation only; no activation
-    authorized.
-  last_terminal_item: OWN-04
+  selection_reason: ACC-01/ACC-02 dependency mapping and ACC-03 economics closed offline. GUI-01 dependencies satisfied;
+    per-screen evidence/navigation/coverage and separate runtime/visual proof remain. GUI-01 recommended only, unselected;
+    no activation authorized.
+  last_terminal_item: ACC-03
   last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
 
 data01_canonical_identity:
@@ -1903,3 +1899,22 @@ acc02_lineage_closure:
   evidence: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
   tests: 107 passed
   provider_calls: 0
+
+acc03_economics_closure:
+  id: ACC-03
+  status: CLOSED
+  result: CLOSED_ARCHITECTURE_OFFLINE
+  implementation_revision: fcfd0a5bd19fcd4af89de9c7673f130f935be316
+  dependency_evidence: docs/tracker/evidence/acc02-lineage-sol/closure.yaml
+  schema: trade-economics-read.v1
+  tests:
+    backend: 163
+    frontend: 37
+    final_regressions: 6
+    typecheck: PASS
+  kernel_launched: false
+  dashboard_launched: false
+  live_venue_reads: 0
+  provider_calls: 0
+  gui01_status: AWAITING_EVIDENCE
+  successor_selected: false

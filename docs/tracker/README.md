@@ -1,3 +1,5 @@
+> Current ACC-02/ACC-03: CLOSED for architecture/offline GUI. ACC-01 mapped first; GUI-01 dependencies satisfied, per-screen gaps and separate runtime/visual proof remain. [Evidence](evidence/acc03-economics-sol/REPORT.md). GUI-01 recommended, unselected. Earlier status statements are historical.
+
 > Current ACC-01/ACC-02 update: CLOSED at architecture/offline scope; 107 offline tests. ACC-03 remains pending. [Evidence](evidence/acc02-lineage-sol/REPORT.md). Earlier queue statements are historical.
 
 > Current phase-scope decision: OWN-04 CLOSED for architecture/offline GUI. MON-01/MON-05 DEFERRED now, mandatory/unproven before future live activation; conditions and dependency edges preserved. GUI-01 eligible for functional evidence work, ACC-03 unresolved. [Scope evidence](evidence/own04-phase-scope-review/REPORT.md). Prior BLOCKED statements are historical.

@@ -1,0 +1,17 @@
+
+> luffy-owner-frontend-preview@0.1.0 test
+> vitest run tests/acc03.test.tsx tests/m1.test.tsx tests/live.test.tsx tests/contracts.test.ts tests/own04.test.tsx
+
+
+ RUN  v5.0.2 /mnt/luffy-data/luffy/production/frontend
+
+
+ Test Files  5 passed (5)
+      Tests  37 passed (37)
+   Start at  07:53:07
+   Duration  8.07s (environment 44%, tests 29%, transform 11%, import 8%, setup 8%)
+
+Environment  jsdom was created 5 times · 8.66s total, 44% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+

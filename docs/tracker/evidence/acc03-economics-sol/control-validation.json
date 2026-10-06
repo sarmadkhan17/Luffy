@@ -1,0 +1,19 @@
+{
+  "result": "PASS",
+  "baseline": "29d093d",
+  "checks": [
+    "178 exact identities preserved",
+    "requirements and dependency edges unchanged",
+    "only accounting and GUI-01 evidence rows changed",
+    "dependency closures satisfied",
+    "GUI-01 remains awaiting evidence",
+    "counts exact",
+    "current_build_selection parity",
+    "acc03_economics_closure parity",
+    "no successor selected",
+    "future activation gates preserved",
+    "manifest hashes exact",
+    "source hashes match pinned implementation",
+    "read-only tracker available"
+  ]
+}

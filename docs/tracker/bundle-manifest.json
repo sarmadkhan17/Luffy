@@ -1,6 +1,6 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.22-acc02-lineage-sol",
+  "snapshot_version": "1.23-acc03-economics-sol",
   "control_baseline_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 388756,
-      "sha256": "c1c42beef9684b17873ee79f79f13c8902e2efed0c210734e231ac7e7d9600e6",
+      "bytes": 389478,
+      "sha256": "f64cdeb63ae64400d764a5845cfd33b42476382dab289bb6dacb66e883bf3b46",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 381601,
-      "sha256": "441b7eccb98ecbaf51c8e070d2d8b465eaf7e0c11cd5ca7cb25fc86e62831ff1",
+      "bytes": 383563,
+      "sha256": "0396ac11269dcd08597d690bcc533aba1d6e9228f97e4b28898f9b8f8aa011bb",
       "synchronization_required": false
     },
     {
@@ -105,7 +105,7 @@
   },
   "current_build_selection": {
     "active_items": [],
-    "last_completed_item": "OWN-04",
+    "last_completed_item": "ACC-03",
     "excluded_blocker_items": [
       "SEC-01",
       "RUN-01",
@@ -117,9 +117,8 @@
       "WORK-01",
       "PERF-03"
     ],
-    "next_recommended_item": "ACC-03",
+    "next_recommended_item": "GUI-01",
     "eligible_items": [
-      "ACC-03",
       "DATA-08",
       "GUI-01",
       "GUI-02",
@@ -135,8 +134,8 @@
     "next_item_selected": false,
     "runtime_execution_authorized": false,
     "selection_status": "NO_ACTIVE_PACKAGE",
-    "selection_reason": "Owner phase-scope review closes OWN-04 for current architecture/offline GUI truthfulness using retained exact proof. MON-01/MON-05 full runtime/readiness obligations are deferred for this phase and mandatory before future live activation; all original conditions remain. GUI-01 eligible for functional evidence work, ACC-03 prerequisite still unresolved. ACC-03 remains recommendation only; no activation authorized.",
-    "last_terminal_item": "OWN-04",
+    "selection_reason": "ACC-01/ACC-02 dependency mapping and ACC-03 economics closed offline. GUI-01 dependencies satisfied; per-screen evidence/navigation/coverage and separate runtime/visual proof remain. GUI-01 recommended only, unselected; no activation authorized.",
+    "last_terminal_item": "ACC-03",
     "last_terminal_result": "CLOSED_ARCHITECTURE_OFFLINE"
   },
   "control_snapshot": {
@@ -289,5 +288,25 @@
     "runtime_proof_complete": false,
     "activation_authorized": false,
     "scope_decision_evidence": "docs/tracker/evidence/own04-phase-scope-review/decision.yaml"
+  },
+  "acc03_economics_closure": {
+    "id": "ACC-03",
+    "status": "CLOSED",
+    "result": "CLOSED_ARCHITECTURE_OFFLINE",
+    "implementation_revision": "fcfd0a5bd19fcd4af89de9c7673f130f935be316",
+    "dependency_evidence": "docs/tracker/evidence/acc02-lineage-sol/closure.yaml",
+    "schema": "trade-economics-read.v1",
+    "tests": {
+      "backend": 163,
+      "frontend": 37,
+      "final_regressions": 6,
+      "typecheck": "PASS"
+    },
+    "kernel_launched": false,
+    "dashboard_launched": false,
+    "live_venue_reads": 0,
+    "provider_calls": 0,
+    "gui01_status": "AWAITING_EVIDENCE",
+    "successor_selected": false
   }
 }
