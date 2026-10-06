@@ -269,6 +269,14 @@ class VenueReads:
                 "refused": rate.refused, "refusals": len(self._guard.refusals)}
 
 
+class ReadCredentialsMissing(RuntimeError):
+    """No dedicated read credentials configured."""
+
+
+class ReadCredentialsSeparation(RuntimeError):
+    """Dedicated read credentials overlap trading credentials."""
+
+
 def _read_credentials(env) -> tuple[str, str, str]:
     """A read-only key, or nothing. The trading key is never used here.
 
@@ -279,10 +287,10 @@ def _read_credentials(env) -> tuple[str, str, str]:
     """
     key, secret = env.get("BINANCE_READ_API_KEY"), env.get("BINANCE_READ_SECRET_KEY")
     if not (key and secret):
-        raise RuntimeError("read_only_api_key_not_configured")
+        raise ReadCredentialsMissing("read_only_api_key_not_configured")
     trading_key, trading_secret = env.binance_keys()
     if key == trading_key or secret == trading_secret:
-        raise RuntimeError("read_only_key_equals_trading_key")
+        raise ReadCredentialsSeparation("read_only_key_equals_trading_key")
     return key, secret, "read_only_key"
 
 

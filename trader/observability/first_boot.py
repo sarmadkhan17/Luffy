@@ -8,44 +8,92 @@ from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
 import math
+import sqlite3
 import time
-from urllib.parse import urlsplit
 
 READ_BUDGET_S = 20.0
 
 
+REASON_CODES = frozenset({
+    'read_credentials_missing', 'read_credentials_unusable',
+    'read_credentials_separation_violation', 'venue_authentication_or_permission_failure',
+    'venue_timeout_or_network_failure', 'venue_response_malformed',
+    'venue_positions_nonzero', 'venue_orders_nonzero', 'local_execution_ledger_not_clear',
+    'snapshot_stale_or_unverifiable', 'first_boot_static_facts_not_pass',
+    'first_boot_unexpected_failure',
+})
+
+
+class AdmissionFailure(ValueError):
+    """Only fixed codes cross the preflight output boundary."""
+    def __init__(self, code):
+        self.code = code if code in REASON_CODES else 'first_boot_unexpected_failure'
+        super().__init__(self.code)
+
+
+def failure_code(exc):
+    # Never serialize exception text, class names, response bodies or headers.
+    import ccxt
+    import requests
+    from trader.engine.venue_reads import ReadCredentialsMissing, ReadCredentialsSeparation
+    if isinstance(exc, AdmissionFailure):
+        return exc.code if exc.code in REASON_CODES else 'first_boot_unexpected_failure'
+    if isinstance(exc, sqlite3.Error):
+        return 'local_execution_ledger_not_clear'
+    if isinstance(exc, ReadCredentialsMissing):
+        return 'read_credentials_missing'
+    if isinstance(exc, ReadCredentialsSeparation):
+        return 'read_credentials_separation_violation'
+    if isinstance(exc, (ccxt.AuthenticationError, ccxt.PermissionDenied)):
+        return 'venue_authentication_or_permission_failure'
+    if isinstance(exc, ccxt.ArgumentsRequired):
+        return 'read_credentials_unusable'
+    if isinstance(exc, (ccxt.NetworkError, requests.exceptions.Timeout,
+                        requests.exceptions.ConnectionError, TimeoutError, ConnectionError)):
+        return 'venue_timeout_or_network_failure'
+    if isinstance(exc, (ccxt.BadResponse, requests.exceptions.JSONDecodeError)):
+        return 'venue_response_malformed'
+    return 'first_boot_unexpected_failure'
+
+
 def _positions_zero(rows):
     if not isinstance(rows, list):
-        raise ValueError('venue_positions_unknown')
+        raise AdmissionFailure('venue_response_malformed')
     identities = set()
     for row in rows:
         if (not isinstance(row, dict) or not isinstance(row.get('symbol'), str)
                 or not row['symbol'] or row.get('positionSide') not in ('BOTH', 'LONG', 'SHORT')
                 or type(row.get('positionAmt')) not in (str, int, float)):
-            raise ValueError('venue_position_malformed')
+            raise AdmissionFailure('venue_response_malformed')
         identity = row['symbol'], row['positionSide']
         if identity in identities:
-            raise ValueError('venue_position_duplicate')
+            raise AdmissionFailure('venue_response_malformed')
         identities.add(identity)
         try:
             amount = Decimal(str(row['positionAmt']))
         except InvalidOperation:
-            raise ValueError('venue_position_quantity_unknown') from None
-        if not amount.is_finite() or amount != 0:
-            raise ValueError('venue_exposure_nonzero_or_unknown')
+            raise AdmissionFailure('venue_response_malformed') from None
+        if not amount.is_finite():
+            raise AdmissionFailure('venue_response_malformed')
+        if amount != 0:
+            raise AdmissionFailure('venue_positions_nonzero')
 
 
 def _orders_zero(rows, *, algo=False):
     if algo and isinstance(rows, dict):
         if (set(rows) - {'orders','total','hasMore','nextPageToken'}
                 or not isinstance(rows.get('orders'), list)
-                or ('total' in rows and (type(rows['total']) is not int or rows['total'] != 0))
+                or ('total' in rows and (type(rows['total']) is not int or rows['total'] < 0))
                 or rows.get('hasMore', False) is not False
                 or rows.get('nextPageToken') not in (None, '')):
-            raise ValueError('venue_algo_listing_incomplete')
+            raise AdmissionFailure('venue_response_malformed')
+        if rows.get('total', 0) > 0:
+            raise AdmissionFailure('venue_orders_nonzero')
         rows = rows['orders']
-    if not isinstance(rows, list) or rows != []:
-        raise ValueError('venue_orders_nonzero_or_unknown')
+    if not isinstance(rows, list):
+        raise AdmissionFailure('venue_response_malformed')
+    if rows:
+        raise AdmissionFailure('venue_orders_nonzero')
 
 
 def read_zero_account(*, clock=time.time, monotonic=time.monotonic):
@@ -53,8 +101,14 @@ def read_zero_account(*, clock=time.time, monotonic=time.monotonic):
     from trader.core.config import Env
     from trader.engine.venue_reads import _read_credentials, guarded_client
     if Env.get('BINANCE_DEMO', '').lower() not in ('1', 'true', 'yes'):
-        raise ValueError('first_boot_requires_demo')
-    key, secret, scope = _read_credentials(Env)
+        raise AdmissionFailure('first_boot_static_facts_not_pass')
+    try:
+        key, secret, scope = _read_credentials(Env)
+    except (TypeError, ValueError, AttributeError):
+        raise AdmissionFailure('read_credentials_unusable') from None
+    if any(not isinstance(value, str) or not value.strip() or value != value.strip()
+           for value in (key, secret)):
+        raise AdmissionFailure('read_credentials_unusable')
     # Raw signed endpoints need no markets/Kernel/trading client initialization.
     client, guard = guarded_client(api_key=key, secret=secret, demo=True, markets={})
     begin, start = clock(), monotonic()
@@ -97,13 +151,13 @@ def validate_zero_account(value, now):
             or any(type(value.get(key)) is not int or value[key] != 0 for key in
                    ['position_count','ordinary_order_count','algo_order_count','mutations'])
             or type(value.get('requests')) is not int or value['requests'] != 6):
-        raise ValueError('first_boot_account_truth_unknown')
+        raise AdmissionFailure('snapshot_stale_or_unverifiable')
     for key in ('checked_at','completed_at','read_elapsed_seconds'):
         if type(value.get(key)) not in (int,float) or not math.isfinite(value[key]):
-            raise ValueError('first_boot_account_clock_unknown')
+            raise AdmissionFailure('snapshot_stale_or_unverifiable')
     if (not 0 <= now-value['checked_at'] <= STALE_AFTER_S
             or not value['checked_at'] <= value['completed_at'] <= now
             or not 0 <= value['read_elapsed_seconds'] <= READ_BUDGET_S
             or value['completed_at']-value['checked_at'] > READ_BUDGET_S):
-        raise ValueError('first_boot_account_truth_stale')
+        raise AdmissionFailure('snapshot_stale_or_unverifiable')
     return value

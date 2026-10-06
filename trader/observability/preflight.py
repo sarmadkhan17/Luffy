@@ -173,32 +173,36 @@ def _protection_generation_floor(db):
 
 
 def _journal_zero(db):
+    from .first_boot import AdmissionFailure
     controls = dict(db.execute("SELECT key,value FROM state_kv WHERE key IN "
                               "('control_state','macro_guard_operator_hold','execution_recovery','reconcile_rearm_submitted')"))
     if (controls.get('control_state') != 'FROZEN' or controls.get('macro_guard_operator_hold') != '1'
             or controls.get('execution_recovery') not in (None, '', 'null')
             or ('reconcile_rearm_submitted' in controls and strict_json(controls['reconcile_rearm_submitted']) != {})):
-        raise ValueError('first_boot_control_or_recovery_unknown')
+        raise AdmissionFailure('local_execution_ledger_not_clear')
     if db.execute("SELECT count(*) FROM trades WHERE status IS NULL OR status!='closed'").fetchone()[0]:
-        raise ValueError('first_boot_journal_exposure_unresolved')
+        raise AdmissionFailure('local_execution_ledger_not_clear')
     if db.execute("SELECT count(*) FROM execution_requests WHERE state IS NULL OR state NOT IN ('TERMINAL','REFUSED')").fetchone()[0]:
-        raise ValueError('first_boot_execution_unresolved')
+        raise AdmissionFailure('local_execution_ledger_not_clear')
     if (db.execute("SELECT 1 FROM sqlite_master WHERE name='partial_exit_intents'").fetchone()
             and db.execute("SELECT count(*) FROM partial_exit_intents WHERE state IS NULL OR state!='CONSUMED'").fetchone()[0]):
-        raise ValueError('first_boot_partial_execution_unresolved')
+        raise AdmissionFailure('local_execution_ledger_not_clear')
     return controls
 
 
 def _first_boot_protection(db, facts, clock):
+    from .first_boot import AdmissionFailure
+    if facts.get('control', {}).get('status') != 'PASS':
+        raise AdmissionFailure('local_execution_ledger_not_clear')
     if any(facts.get(name, {}).get('status') != 'PASS' for name in ('safety','environment','storage','control')):
-        raise ValueError('first_boot_static_facts_not_pass')
+        raise AdmissionFailure('first_boot_static_facts_not_pass')
     before = _journal_zero(db)
     floor = _protection_generation_floor(db)
     from .first_boot import read_zero_account, validate_zero_account
     inventory = validate_zero_account(read_zero_account(clock=clock), clock())
     if (_journal_zero(db) != before or not _first_boot_without_receipt(db)
             or _protection_generation_floor(db) != floor):
-        raise ValueError('first_boot_journal_or_receipt_changed')
+        raise AdmissionFailure('snapshot_stale_or_unverifiable')
     inventory = validate_zero_account(inventory, clock())
     return dict(status='PASS', reasons=[], admission='FIRST_BOOT_ZERO_ACCOUNT',
                 evidence_status='AUTHORITATIVE_ZERO_EXPOSURE', account_inventory=inventory,
@@ -257,9 +261,11 @@ def collect_facts(root, *, recovery_root=RECOVERY_ROOT, clock=time.time, contain
             facts['storage'] = {**_fact(reasons), 'components': results}
         except Exception:
             facts['storage'] = _fact(['storage_unreadable_or_probe_failed'])
+    first_boot_path = False
     try:
         from trader.engine.protection_snapshot import ro_connect
         with ro_connect(root / 'data/luffy.db', timeout_s=1) as db:
+            first_boot_path = contained_cold and _first_boot_without_receipt(db)
             controls = dict(db.execute("SELECT key,value FROM state_kv WHERE key IN "
                                        "('control_state','macro_guard_operator_hold','execution_recovery')"))
             reasons = []
@@ -280,17 +286,32 @@ def collect_facts(root, *, recovery_root=RECOVERY_ROOT, clock=time.time, contain
                 reasons.append('pending_partial_exits')
             facts['control'] = {**_fact(reasons), 'partial_ledger_present': partial_exists,
                                 'persisted': controls, 'trading_authority': False}
-            if contained_cold and _first_boot_without_receipt(db):
-                facts['protection'] = _first_boot_protection(db, facts, clock)
+            if first_boot_path:
+                try:
+                    facts['protection'] = _first_boot_protection(db, facts, clock)
+                except Exception as exc:
+                    from .first_boot import failure_code
+                    # Diagnostic only: every failure remains FAIL / zero authority.
+                    facts['protection'] = {**_fact([failure_code(exc)]),
+                                           'admission': 'FIRST_BOOT_ZERO_ACCOUNT',
+                                           'trading_authority': False}
             else:
                 facts['protection'] = _protection(db, clock(), require_fresh=not contained_cold)
         # Probe/publication races cannot waive a new persisted safety fault.
         health_after = _health(root / 'data/safety_health.json')
         if health_after != health:
             facts['safety'] = _fact(['safety_health_changed_during_preflight'])
-    except Exception:
+    except Exception as exc:
         facts.setdefault('control', _fact(['control_unreadable']))
-        facts['protection'] = _fact(['protection_unreadable_or_unverified'])
+        if first_boot_path:
+            import sqlite3
+            from .first_boot import failure_code
+            code = ('local_execution_ledger_not_clear' if isinstance(exc, sqlite3.Error)
+                    else failure_code(exc))
+            facts['protection'] = {**_fact([code]), 'admission': 'FIRST_BOOT_ZERO_ACCOUNT',
+                                   'trading_authority': False}
+        else:
+            facts['protection'] = _fact(['protection_unreadable_or_unverified'])
     return facts
 
 
