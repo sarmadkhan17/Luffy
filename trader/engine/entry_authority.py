@@ -505,7 +505,8 @@ def submit(executor, permission, decision, amount, atr, stop, target,
                     error = exc
                     if isinstance(exc, (InvalidOrder, InsufficientFunds)):
                         executor.recovery.save(recovery, 'entry_submission_rejected', conn=conn)
-                        conn.execute("UPDATE execution_requests SET state='REFUSED' WHERE logical_id=?",(logical_id,))
+                        conn.execute("UPDATE execution_requests SET state='REFUSED',result_json=? WHERE logical_id=?",
+                            (canonical(dict(reason=type(exc).__name__, submitted=True, submitted_ms=submitted_ms)), logical_id))
                         conn.execute("INSERT OR REPLACE INTO state_kv(key,value) VALUES (?, 'null')",(KEY,))
                     else:
                         executor.recovery.save(recovery, 'entry_submission_ambiguous', conn=conn)

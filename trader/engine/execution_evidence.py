@@ -15,6 +15,20 @@ scope:
 - measured slippage = side-signed (VWAP - reference) / reference, in basis
   points; positive is adverse (paid more on a buy, received less on a sell)
 
+- the exact action lineage: logical id (from the entry's frozen execution
+  binding), decision id, client order id and venue order id. An entry is
+  VERIFIED only when the client order id is the one derived from that logical
+  id and, where the reservation row exists, it agrees on all three; any
+  disagreement is MISMATCH, never repaired. Exit orders carry no logical
+  action id and stay bound to the trade only
+- timing: signal bar, decision, submission and fill times as recorded; the
+  acknowledgement time, spread and book depth are not persisted at order time
+  and are reported UNAVAILABLE, never inferred
+- commission VERIFIED only when every attributed fill carries the venue's own
+  figure AND the fills cover the booked quantity; a booked estimate with no
+  venue figure is ESTIMATED; anything else is UNAVAILABLE. Never zero
+- `rejections()`: refused/rejected reservations, which never have fills
+
 No aggregation, no size -> impact relation, no capacity figure: these are
 exact historical measurements for a later, separately validated model.
 """
@@ -29,6 +43,7 @@ from .trade_provenance import ATTRIBUTED, LUFFY_ORDER_PURPOSES, MARKET_TYPES
 
 SCHEMA = "execution-evidence.v1"
 MEASURED, UNAVAILABLE, UNKNOWN = "MEASURED", "UNAVAILABLE", "UNKNOWN"
+VERIFIED, ESTIMATED = "VERIFIED", "ESTIMATED"
 
 
 def _pos(v) -> float | None:
@@ -80,9 +95,16 @@ def _reference(leg: dict) -> dict:
     price = _pos(ref.get("price"))
     if price is None or ref.get("basis") in (None, "unavailable"):
         return {"status": UNAVAILABLE, "price": None, "basis": ref.get("basis"),
-                "reason": ref.get("reason") or "reference price not recorded"}
+                "reason": ref.get("reason") or "reference price not recorded",
+                "submitted_ms": ref.get("submitted_ms")}
+    # entries record the decision snapshot time as `snapshot_at`; exits as `observed_at`
+    observed = ref.get("observed_at")
+    source = "observed_at"
+    if observed is None and ref.get("snapshot_at") is not None:
+        observed, source = ref.get("snapshot_at"), "snapshot_at"
     return {"status": "RECORDED", "price": price, "basis": ref.get("basis"),
-            "observed_at": ref.get("observed_at"),
+            "observed_at": observed, "observed_at_source": source if observed is not None else None,
+            "bar_ts": ref.get("bar_ts"),
             "submitted_ms": ref.get("submitted_ms")}
 
 
@@ -93,9 +115,58 @@ def _instrument(market: str, symbol: str) -> str | None:
     return None
 
 
-def measure(leg: dict, fills: list, trade: dict | None) -> dict:
+def _action(leg: dict, trade: dict | None, request: dict | None) -> dict:
+    """The exact action lineage of one order, verified or explicitly not."""
+    out = {"trade_id": leg["trade_id"], "decision_id": (trade or {}).get("decision_id") or None,
+           "client_order_id": leg.get("client_order_id"),
+           "venue_order_id": leg.get("venue_order_id"), "logical_id": None}
+    if leg.get("purpose") != "entry":
+        return dict(out, status="TRADE_BOUND_ONLY",
+                    reason="exit orders carry no logical action id; bound to the trade by exact venue order id")
+    ident = _json((trade or {}).get("entry_identity_json"))
+    binding = ident.get("execution_binding") if isinstance(ident, dict) else None
+    logical = binding.get("logical_id") if isinstance(binding, dict) else None
+    if not logical or not isinstance(logical, str):
+        return dict(out, status=UNKNOWN, reason="no execution binding recorded for this entry")
+    out["logical_id"] = logical
+    cid = leg.get("client_order_id")
+    expected = "lr_" + hashlib.sha256(logical.encode()).hexdigest()[:28]
+    recorded_decision = ((ident.get("decision") or {}).get("decision_id")
+                         if isinstance(ident.get("decision"), dict) else None)
+    if not cid:
+        return dict(out, status=UNKNOWN, reason="no client order id recorded on the order")
+    if cid != expected:
+        return dict(out, status="MISMATCH", expected_client_order_id=expected,
+                    reason="client order id is not the one derived from the bound logical id")
+    if out["decision_id"] and recorded_decision and out["decision_id"] != recorded_decision:
+        return dict(out, status="MISMATCH", reason="trade decision id differs from the decision in the entry identity")
+    if request is not None and (request.get("logical_id") != logical
+            or request.get("client_order_id") != cid
+            or (out["decision_id"] and request.get("decision_id") != out["decision_id"])):
+        return dict(out, status="MISMATCH", reason="reservation row disagrees on logical/client/decision id")
+    return dict(out, status=VERIFIED, reservation="RECORDED" if request is not None else "NOT_FOUND")
+
+
+def _timing(leg: dict, ref: dict, trade: dict | None, fill_ts: list, submitted) -> dict:
+    ident = _json((trade or {}).get("entry_identity_json"))
+    decided = ((ident.get("decision") or {}).get("decided_at")
+               if isinstance(ident, dict) and isinstance(ident.get("decision"), dict) else None)
+    fields = {"signal_bar_ts": ref.get("bar_ts"),
+              "decision_at": decided,
+              "reference_observed_at": ref.get("observed_at"),
+              "submitted_ms": submitted if isinstance(submitted, int) else None,
+              "acknowledged_ms": None,
+              "first_fill_ms": min(fill_ts) if fill_ts else None,
+              "last_fill_ms": max(fill_ts) if fill_ts else None}
+    out = {k: v for k, v in fields.items()}
+    out["unavailable"] = sorted(k for k, v in fields.items() if v is None)
+    out["note"] = "acknowledgement time is not persisted; a missing field is never filled from another clock"
+    return out
+
+
+def measure(leg: dict, fills: list, trade: dict | None, request: dict | None = None) -> dict:
     """One order's measurement from its recorded leg, its fills attributed by
-    exact venue order id, and its trade row."""
+    exact venue order id, and its trade row (and, if known, its reservation)."""
     market = leg["market_type"]
     good = [f for f in fills if _pos(f.get("qty")) and _pos(f.get("price"))]
     qty = sum(f["qty"] for f in good)
@@ -117,6 +188,16 @@ def measure(leg: dict, fills: list, trade: dict | None) -> dict:
             continue
         commissions[f["commission_asset"]] = commissions.get(
             f["commission_asset"], Decimal(0)) + v
+    if not fills:
+        commission_status = ESTIMATED if leg.get("fee_basis") in (
+            "estimated_order_booking", "estimated") else UNAVAILABLE
+    elif fee_gaps == 0 and coverage == "COMPLETE":
+        commission_status = VERIFIED
+    elif commissions:
+        commission_status = "PARTIAL"
+    else:
+        commission_status = ESTIMATED if leg.get("fee_basis") in (
+            "estimated_order_booking", "estimated") else UNAVAILABLE
     ref = _reference(leg)
     side = leg.get("side")
     if ref["status"] != "RECORDED":
@@ -148,8 +229,13 @@ def measure(leg: dict, fills: list, trade: dict | None) -> dict:
            "fill_qty": qty if good else None, "fill_coverage": coverage,
            "vwap": vwap,
            "commissions_by_asset": {a: str(v) for a, v in sorted(commissions.items())},
-           "commission_status": (UNAVAILABLE if not fills else
-                                 "VERIFIED" if fee_gaps == 0 else "PARTIAL"),
+           "commission_status": commission_status,
+           "action": _action(leg, trade, request),
+           "timing": _timing(leg, ref, trade, ts, submitted=ref.get("submitted_ms")),
+           "market_context": {"spread": {"status": UNAVAILABLE, "reason": "not captured at order time"},
+                              "depth": {"status": UNAVAILABLE, "reason": "not captured at order time"},
+                              "size": {"requested_qty": leg.get("requested_qty"),
+                                       "booked_qty": booked}},
            "slippage": slip,
            "first_fill_ms": min(ts) if ts else None,
            "last_fill_ms": max(ts) if ts else None,
@@ -173,6 +259,7 @@ def executed_orders(query, *, trade_id: str | None = None) -> list[dict]:
         sql += " AND trade_id=?"
         args += (trade_id,)
     out = []
+    has_requests = _has(query, "execution_requests")
     trades: dict = {}
     for leg in query(sql + " ORDER BY id", args):
         if leg["market_type"] not in MARKET_TYPES:
@@ -184,5 +271,30 @@ def executed_orders(query, *, trade_id: str | None = None) -> list[dict]:
         if tid not in trades:
             rows = query("SELECT * FROM trades WHERE id=?", (tid,))
             trades[tid] = rows[0] if rows else None
-        out.append(measure(leg, fills, trades[tid]))
+        request = None
+        if has_requests and leg.get("client_order_id"):
+            rows = query("SELECT logical_id,decision_id,client_order_id,state FROM execution_requests "
+                         "WHERE client_order_id=?", (leg["client_order_id"],))
+            request = rows[0] if len(rows) == 1 else None
+        out.append(measure(leg, fills, trades[tid], request))
+    return out
+
+
+def rejections(query) -> list[dict]:
+    """Entry reservations the venue or Luffy refused. They have no fills and
+    no venue order id; the reason is as recorded, UNAVAILABLE when it was not.
+    Read-only."""
+    if not _has(query, "execution_requests"):
+        return []
+    out = []
+    for r in query("SELECT logical_id,decision_id,client_order_id,state,result_json "
+                   "FROM execution_requests WHERE state='REFUSED' ORDER BY rowid", ()):
+        res = _json(r.get("result_json"))
+        res = res if isinstance(res, dict) else {}
+        out.append({"schema": SCHEMA, "kind": "REJECTION", "logical_id": r["logical_id"],
+                    "decision_id": r["decision_id"], "client_order_id": r["client_order_id"],
+                    "reason": res.get("reason") or UNAVAILABLE,
+                    "submitted": res.get("submitted") if isinstance(res.get("submitted"), bool) else None,
+                    "submitted_ms": res.get("submitted_ms") if isinstance(res.get("submitted_ms"), int) else None,
+                    "fills": 0})
     return out
