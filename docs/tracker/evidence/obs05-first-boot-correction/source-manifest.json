@@ -1,0 +1,70 @@
+{
+  "implementation_commit": "b562728606bd8694d6bafa9f6573be2d0e776451",
+  "scope": "Offline correction only; no current host/account readiness claim.",
+  "files": {
+    "trader/observability/preflight.py": {
+      "bytes": 18904,
+      "sha256": "e50947e70c7ad0218a5ecc9aa0f448d6f81dec07b41451ea34a1245c83a39ae9"
+    },
+    "trader/observability/first_boot.py": {
+      "bytes": 5546,
+      "sha256": "f7fc9d9019e30b58ce747c71dd119e5331aee215233cb10c4ed8966336c0c063"
+    },
+    "tests/test_first_boot_admission.py": {
+      "bytes": 11895,
+      "sha256": "d7312ea26b65af9cc17718834b0b27906c29802523618cfb18d2d2e2b7b52397"
+    },
+    "trader/observability/bootstrap.py": {
+      "bytes": 11086,
+      "sha256": "2e8b23d6d410a664338402638bc6692807522de3fcfc5ae1b5ebd3050184ba27"
+    },
+    "trader/observability/safety.py": {
+      "bytes": 18863,
+      "sha256": "0dec2a0b7a9eb950f101757ef7434abfaa7b3b13e90d33459d3b4953464fec61"
+    },
+    "trader/observability/dashboard_readiness.py": {
+      "bytes": 6973,
+      "sha256": "99c75a0a4339222c68c0018f21b84e32c4f026af80bf2f339012d79592420c83"
+    },
+    "trader/observability/shutdown.py": {
+      "bytes": 902,
+      "sha256": "debb211c82500c1549fbb082f7564df6be756b6db4044958a79f9763641250c6"
+    },
+    "trader/kernel.py": {
+      "bytes": 172317,
+      "sha256": "5f85019090631a9ea197804788d742cd7c907503b9a4650d5234bce938506c03"
+    },
+    "trader/runtime_identity.py": {
+      "bytes": 9646,
+      "sha256": "7eb62da6392645b06380c96a79fe9b42cccf5c93ca53795056bcfd13dda13ffb"
+    },
+    "restart.sh": {
+      "bytes": 3722,
+      "sha256": "f47f92c63ce617e231724defc2d394f64e2ba88b4f3aa9dcb496e072d1902f05"
+    },
+    "docs/tracker/evidence/obs05-first-boot-correction/closure.yaml": {
+      "bytes": 1558,
+      "sha256": "b36d6b27e00d5e51b2a83e1106f66a1f839f706400ae5dfb54bcbb6e6c355f9c"
+    },
+    "docs/tracker/evidence/obs05-first-boot-correction/tests.txt": {
+      "bytes": 671,
+      "sha256": "7423cfe0b5ef5d997938aa1136cbd2c28fc7524dd2da34ec4f45a79433cb9455"
+    },
+    "docs/tracker/evidence/obs05-first-boot-correction/graphify-update.txt": {
+      "bytes": 2137,
+      "sha256": "62a9ba1b400f342d492a715c6a1b4d5fe9dbacbf3aaa55b7b7bc5bf77136bb63"
+    },
+    "docs/tracker/evidence/obs05-first-boot-correction/intake.yaml": {
+      "bytes": 2583,
+      "sha256": "1cca1e0ebca185f55a1ce782c51d1b586ce369a93cd3771dd915ea7f005a75dd"
+    },
+    "docs/tracker/evidence/obs05-first-boot-correction/REPORT.md": {
+      "bytes": 6256,
+      "sha256": "5bc62586552634b138ab0393091d6d4d2867f871e714b359ba93ff12adb6b182"
+    },
+    "docs/tracker/evidence/obs05-first-boot-correction/focused-tests.txt": {
+      "bytes": 99,
+      "sha256": "b8ae629513d6cf9e66641e843871f76428e3cd5eaea7b801a7bf59e60af0de17"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+tracker_id: OBS-05
+status: CLOSED
+result: CLOSED_ENGINEERING_ONLY_FIRST_BOOT_CORRECTED
+implementation_commit: b562728606bd8694d6bafa9f6573be2d0e776451
+prior_implementation: 774990b49a171ee3f92d888fc2f6cc9387574c89
+prior_evidence: docs/tracker/evidence/obs05-contained-bootstrap/closure.yaml
+origin: docs/tracker/evidence/obs05-first-boot-correction/intake.yaml
+report: docs/tracker/evidence/obs05-first-boot-correction/REPORT.md
+tests:
+  combined: 561 passed
+  first_boot_cases: 54
+  evidence: docs/tracker/evidence/obs05-first-boot-correction/tests.txt
+new_tracker_ids: 0
+all_178_closing_conditions_preserved: true
+other_177_rows_unchanged: true
+kernel_launched: false
+dashboard_launched: false
+live_venue_reads: 0
+provider_calls: 0
+phase_b_implementation_unchanged: true
+run01_status: BLOCKED / LIVE_PROOF_PENDING
+run01_live_proof_now_possible: "YES \u2014 contract only; valid static facts, authoritative account reads\
+  \ and separate owner-authorized exact revision still required."
+cross_tracker_impact:
+  OBS-01: Existing running/Dashboard refusal and valid receipt path preserved; only contained no-receipt Phase
+    A adds fresh zero-account proof.
+  OBS-02: Unchanged bound-instance heartbeat/boot/health gate.
+  OBS-04: Unchanged observer retention and owned-child graceful containment.
+  RUN-01: Unchanged identity, single-instance/SIGTERM and live closing condition; remains BLOCKED.
+  RUN-02: Unchanged entry/recovery fence; no hold/latch clear or ACTIVE transition.
+  MON-01: Unchanged independent heartbeat freshness/chronology observation.

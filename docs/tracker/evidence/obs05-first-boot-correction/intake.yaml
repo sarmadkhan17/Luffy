@@ -1,0 +1,24 @@
+tracker_id: OBS-05
+origin: NARROW_EXISTING_CONTRACT_CORRECTION
+source: Current owner instruction, 2026-10-06; reported RUN-01 live-proof refusal without any protection receipt.
+evidence_qualification: Owner-reported installation state; no external live-proof artifacts fetched and no live venue/account reads performed during engineering.
+ownership:
+  existing_id: OBS-05
+  exact_gap: Its Phase A assumes a persisted structurally VERIFIED receipt although the first producer exists only after contained boot.
+  governance_basis: Owner explicitly requests OBS-05 only and permits updating its narrowly evidenced first-boot contract rather than adding IDs. Existing offline Phase-A/Phase-B closing condition already covers this admission boundary.
+  new_ids: 0
+  closing_condition_changed: false
+contract:
+  existing_receipt: Preserve the existing structurally VERIFIED matching-book path, including disclosed age; never fall back around an invalid existing receipt.
+  absent_receipt: Only absent or empty well-formed receipt schema may enter fresh authenticated read-only zero-account inventory. No journal-only or cached-file proof is accepted.
+  account_proof: Two complete signed account-global positionRisk, ordinary/open-order and conditional/algo-order inventories, same dedicated configured read key and demo venue; explicit finite zero quantities, empty order listings, no malformed/unknown/paginated truth. Existing GET-only transport and aggregate-weight guard apply.
+  local_proof: Clear execution/rearm/partial ledgers, no open or unknown journal trade status, FROZEN/operator hold and retained recovery latch, valid static/storage facts; repeat ledger/control/schema/generation checks after reads.
+  freshness: Twenty-second aggregate read budget and existing 120-second protection freshness policy; stale/future/unknown timestamps refuse.
+  exposure: Any position or any ordinary/conditional order blocks this no-receipt path; no receipt-less held-exposure protection exception is introduced.
+  prior_attempts: Producer allocation history is not receipt publication. It supplies only the Phase-B generation floor; no synthetic protection receipt is stored or claimed.
+  phase_b: Unchanged fresh instance-bound successful heartbeat, fresh actual protection/reconciliation from a newer post-launch generation, blocking health and deadline checks.
+  authority: Contained FROZEN startup only; no entry, hold/recovery clear or ACTIVE transition. Existing durable fence remains unchanged.
+kernel_launched: false
+dashboard_launched: false
+live_venue_reads: 0
+provider_calls: 0

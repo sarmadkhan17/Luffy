@@ -44,6 +44,40 @@ completed_pre_stage8_audit:
 work_package:
   id: OBS-05
   status: CLOSED
+  result: CLOSED_ENGINEERING_ONLY_FIRST_BOOT_CORRECTED
+  mode: ENGINEERING_ONLY
+  objective: Correct OBS-05 first-boot/no-receipt admission using fresh authoritative read-only zero-account
+    proof, with the existing Phase B and containment unchanged.
+  implementation_started: true
+  implementation_complete: true
+  implementation_commit: b562728606bd8694d6bafa9f6573be2d0e776451
+  tracker_source: docs/tracker/LUFFY_Product_Tracker_v1.yaml
+  evidence:
+  - docs/tracker/evidence/obs05-first-boot-correction/intake.yaml
+  - docs/tracker/evidence/obs05-first-boot-correction/closure.yaml
+  - docs/tracker/evidence/obs05-first-boot-correction/REPORT.md
+  tests: 561 combined offline regressions passed, including 54 first-boot cases.
+  kernel_launched: false
+  dashboard_launched: false
+  live_venue_reads: 0
+  provider_calls: 0
+  runtime_execution_authorized: false
+  provider_enablement_authorized: false
+  trading_activation_authorized: false
+  run01_status: "BLOCKED \u2014 IMPLEMENTED_AND_OFFLINE_PROVEN / LIVE_PROOF_PENDING"
+  run01_live_proof_contract_possible: true
+  run01_live_proof_performed: false
+  run01_live_proof_authorization: Separate owner authorization naming the full intended final revision and
+    one controlled Kernel launch/SIGTERM graceful stop with retained Phase A/Phase B and unchanged RUN-01
+    proof.
+  next_recommended_item: RUN-01
+  another_run01_fix_selected: false
+  next_item_selected: false
+  next_item_started: false
+
+obs05_initial_contained_bootstrap:
+  id: OBS-05
+  status: CLOSED
   result: CLOSED_ENGINEERING_ONLY
   mode: ENGINEERING_ONLY
   objective: Resolve the stopped-producer preflight conflict with contained two-phase startup, without trading
