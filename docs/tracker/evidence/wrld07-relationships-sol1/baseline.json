@@ -1,0 +1,8 @@
+{
+  "expired_evidence_recut": "ACCEPTED_GAP",
+  "guessed_attribution": "ACCEPTED_GAP",
+  "missing_method_window_context": "ACCEPTED_GAP",
+  "permanent_beta": "ACCEPTED_GAP",
+  "stale_evidence_promoted": "ACCEPTED_GAP",
+  "untested_cointegration": "ACCEPTED_GAP"
+}

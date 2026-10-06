@@ -118,7 +118,7 @@ def world_measurements(source, now_ms):
         item = r.to_dict()
         if r.quality is Quality.STALE:
             raise ValueError('RELATIONSHIP_EVIDENCE_STALE')
-        valid = r.quality is Quality.VALID
+        valid = r.is_current_at(now_ms)
         for o in r.evidence:
             if o.quality is Quality.STALE:
                 raise ValueError('RELATIONSHIP_EVIDENCE_STALE')

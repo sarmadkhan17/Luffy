@@ -18,7 +18,7 @@ from .model import (HierarchyNode, Horizon, Scope, ScopeLevel, WorldModel,
 from .observation import Observation, Quality, _timestamp
 from .relationship import (EvidenceRef, RelationshipCollection,
                            RelationshipCoordinate, RelationshipState,
-                           SCHEMA_VERSION as RELATIONSHIP_VERSION)
+                           SCHEMA_VERSION as RELATIONSHIP_VERSION, LEGACY_SCHEMA_VERSION)
 from .state import WorldState, SCHEMA_VERSION as STATE_VERSION
 
 
@@ -80,8 +80,11 @@ def _evidence_ref(value: Any) -> EvidenceRef:
 
 def _relationship(value: Any, evidence: Mapping[EvidenceRef, Observation]) -> RelationshipState:
     record = _object(value, {"schema_version", "relationship_id", "coordinate", "as_of_ms", "value",
-                             "quality", "confidence", "uncertainty", "source", "source_ref", "evidence"}, "relationship")
-    _version(record, RELATIONSHIP_VERSION)
+                             "quality", "confidence", "uncertainty", "source", "source_ref", "evidence"}, "relationship", optional={"measurement"})
+    if record["schema_version"] not in (RELATIONSHIP_VERSION, LEGACY_SCHEMA_VERSION):
+        raise ValueError("unsupported historical relationship schema version")
+    if record["schema_version"] == RELATIONSHIP_VERSION and "measurement" not in record:
+        raise ValueError("v2 relationship missing measurement")
     coordinate = _object(record["coordinate"], {"source", "target", "kind", "horizon"}, "relationship coordinate")
     refs = tuple(_evidence_ref(item) for item in record["evidence"])
     try:
@@ -94,7 +97,7 @@ def _relationship(value: Any, evidence: Mapping[EvidenceRef, Observation]) -> Re
         record["as_of_ms"], record["value"], Quality(record["quality"]),
         record["source"], record["source_ref"], observations,
         confidence=record["confidence"], uncertainty=record["uncertainty"],
-        schema_version=record["schema_version"])
+        schema_version=record["schema_version"], measurement=record.get("measurement", {}))
     if [ref.to_dict() for ref in relationship.evidence_refs] != record["evidence"]:
         raise ValueError("relationship evidence refs do not match exact records")
     _identity(record["relationship_id"], relationship.relationship_id, "relationship_id")

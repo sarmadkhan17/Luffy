@@ -11,7 +11,11 @@ from .model import Horizon, Scope
 from .observation import Observation, Quality, _freeze, _plain, _text, _timestamp
 
 
-SCHEMA_VERSION = "world.relationship.v1"
+LEGACY_SCHEMA_VERSION = "world.relationship.v1"
+SCHEMA_VERSION = "world.relationship.v2"
+
+# Only existing bounded measurement families are accepted as current.
+METHODS = {"rolling-correlation": "rolling-pearson.v1", "beta": "ols-beta.v1"}
 
 
 def _canonical(record: Any) -> str:
@@ -72,6 +76,7 @@ class RelationshipState:
     confidence: float | None = None
     uncertainty: Mapping[str, Any] = field(default_factory=dict)
     schema_version: str = SCHEMA_VERSION
+    measurement: Mapping[str, Any] = field(default_factory=dict)
     evidence_refs: tuple[EvidenceRef, ...] = field(init=False)
     relationship_id: str = field(init=False)
 
@@ -79,7 +84,7 @@ class RelationshipState:
         if not isinstance(self.coordinate, RelationshipCoordinate):
             raise TypeError("coordinate must be RelationshipCoordinate")
         _timestamp(self.as_of_ms, "as_of_ms")
-        if self.schema_version != SCHEMA_VERSION:
+        if self.schema_version not in (SCHEMA_VERSION, LEGACY_SCHEMA_VERSION):
             raise ValueError("unsupported relationship schema version")
         if not isinstance(self.quality, Quality):
             raise TypeError("quality must be Quality")
@@ -113,20 +118,112 @@ class RelationshipState:
             raise ValueError("VALID relationship requires a value")
         if self.quality is Quality.MISSING and self.value is not None:
             raise ValueError("MISSING relationship cannot carry a value")
+        if not isinstance(self.measurement, Mapping):
+            raise TypeError("measurement must be a JSON object")
+        if self.schema_version == LEGACY_SCHEMA_VERSION and self.measurement:
+            raise ValueError("legacy relationship cannot carry v2 measurement")
+        if (self.schema_version == SCHEMA_VERSION and self.value is not None
+                and self.coordinate.kind in {"cointegration", "attribution", "permanent-beta", "permanent-correlation"}):
+            raise ValueError("unsupported relationship method; attribution and untested cointegration refused")
+        if self.schema_version == SCHEMA_VERSION and self.quality is Quality.VALID:
+            self._validate_measurement(observations)
+        object.__setattr__(self, "measurement", _freeze(self.measurement))
         object.__setattr__(self, "evidence", observations)
         object.__setattr__(self, "evidence_refs", refs)
         object.__setattr__(self, "value", _freeze(self.value))
         object.__setattr__(self, "uncertainty", _freeze(self.uncertainty))
         digest = sha256(_canonical(self._identity_record()).encode("utf-8")).hexdigest()
-        object.__setattr__(self, "relationship_id", f"{SCHEMA_VERSION}:{digest}")
+        object.__setattr__(self, "relationship_id", f"{self.schema_version}:{digest}")
+
+    def _validate_measurement(self, observations: tuple[Observation, ...]) -> None:
+        m = self.measurement
+        required = {"method", "window_start_ms", "window_end_ms", "max_age_ms",
+                    "scope", "context", "assumptions"}
+        if set(m) != required:
+            raise ValueError("VALID relationship requires explicit measurement method/window/scope/context/assumptions")
+        if METHODS.get(self.coordinate.kind) != m["method"] or self.coordinate.kind not in METHODS:
+            raise ValueError("unsupported relationship method; attribution and untested cointegration refused")
+        allowed_values = {"correlation", "beta"} if self.coordinate.kind == "rolling-correlation" else {"beta"}
+        required_value = "correlation" if self.coordinate.kind == "rolling-correlation" else "beta"
+        if not isinstance(self.value, Mapping) or required_value not in self.value or not set(self.value) <= allowed_values:
+            raise ValueError("relationship payload must contain only supported measured estimates")
+        for key, value in self.value.items():
+            if type(value) not in (int, float) or not math.isfinite(value):
+                raise ValueError("relationship estimate must be finite")
+            if key == "correlation" and not -1 <= value <= 1:
+                raise ValueError("correlation must be between -1 and 1")
+        for name in ("window_start_ms", "window_end_ms", "max_age_ms"):
+            _timestamp(m[name], name)
+        if not m["window_start_ms"] < m["window_end_ms"] <= self.as_of_ms:
+            raise ValueError("invalid measurement window at relationship cut")
+        if not isinstance(m["context"], Mapping) or not m["context"]:
+            raise ValueError("measurement requires explicit context/source cut")
+        _timestamp(m["context"].get("source_cut_ms"), "context.source_cut_ms")
+        if m["context"]["source_cut_ms"] > self.as_of_ms:
+            raise ValueError("future measurement context/source cut")
+        if any(o.observed_at_ms > m["context"]["source_cut_ms"] for o in observations):
+            raise ValueError("evidence was not captured at measurement source cut")
+        if not isinstance(m["assumptions"], (list, tuple)) or not m["assumptions"]:
+            raise ValueError("measurement assumptions must be explicit")
+        for assumption in m["assumptions"]:
+            _text(assumption, "assumption")
+        _text(self.uncertainty.get("instability"), "uncertainty.instability")
+        scopes = m["scope"]
+        if not isinstance(scopes, Mapping) or set(scopes) != {"source", "target"}:
+            raise ValueError("measurement scope must identify both endpoints")
+        members = set()
+        for key, endpoint in (("source", self.coordinate.source), ("target", self.coordinate.target)):
+            ids = scopes[key]
+            if not isinstance(ids, (list, tuple)) or not ids or len(set(ids)) != len(ids):
+                raise ValueError("measurement scope requires explicit unique instrument members")
+            for identifier in ids:
+                _text(identifier, "measurement instrument")
+            if endpoint.level.value == "INSTRUMENT":
+                if list(ids) != [endpoint.identifier]:
+                    raise ValueError("guessed endpoint attribution refused")
+            elif endpoint.level.value == "GROUP":
+                # Group identity alone never supplies membership at a past cut.
+                membership = m["context"].get("membership_source_refs", {})
+                if not isinstance(membership, Mapping):
+                    raise ValueError("group membership requires exact source reference")
+                _text(membership.get(endpoint.identifier), "group membership source reference")
+            else:
+                raise ValueError("unsupported measurement scope attribution")
+            members.update(ids)
+        if {o.instrument for o in observations} != members:
+            raise ValueError("evidence instruments do not match measured scope; guessed attribution refused")
+        timeframes = {o.timeframe for o in observations}
+        if len(timeframes) != 1:
+            raise ValueError("measurement evidence timeframes must match")
+        for o in observations:
+            if not o.is_fresh_at(self.as_of_ms):
+                raise ValueError("VALID relationship requires fresh VALID evidence")
+            if o.transform_version != m["method"]:
+                raise ValueError("evidence method does not match measured method")
+            if not isinstance(o.value, Mapping) or any(o.value.get(k) != m[k]
+                    for k in ("window_start_ms", "window_end_ms")):
+                raise ValueError("evidence window does not match measurement window")
+        if self.as_of_ms - m["window_end_ms"] > m["max_age_ms"]:
+            raise ValueError("measurement window is stale at relationship cut")
+
+    def is_current_at(self, as_of_ms: int) -> bool:
+        """Legacy/unbounded evidence is replayable, never inferred current."""
+        _timestamp(as_of_ms, "as_of_ms")
+        return (self.schema_version == SCHEMA_VERSION and self.quality is Quality.VALID
+                and self.as_of_ms <= as_of_ms
+                and as_of_ms - self.measurement["window_end_ms"] <= self.measurement["max_age_ms"]
+                and all(o.is_fresh_at(as_of_ms) for o in self.evidence))
 
     def _identity_record(self) -> dict[str, Any]:
-        return {"schema_version": self.schema_version,
+        record = {"schema_version": self.schema_version,
                 "coordinate": self.coordinate.to_dict(), "as_of_ms": self.as_of_ms,
                 "value": _plain(self.value), "quality": self.quality.value,
                 "confidence": self.confidence, "uncertainty": _plain(self.uncertainty),
                 "source": self.source, "source_ref": self.source_ref,
                 "evidence": [ref.to_dict() for ref in self.evidence_refs]}
+        if self.schema_version == SCHEMA_VERSION:
+            record["measurement"] = _plain(self.measurement)
+        return record
 
     def to_dict(self) -> dict[str, Any]:
         return {**self._identity_record(), "relationship_id": self.relationship_id}

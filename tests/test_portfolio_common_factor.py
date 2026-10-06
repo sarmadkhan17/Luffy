@@ -167,8 +167,13 @@ def measured_source(*, stale=False):
         source='test-measured',source_ref='window-v1',quality=Quality.VALID,
         max_age_ms=499 if stale else 1000,transform_version='rolling-pearson.v1') for s in (a,b))
     r = RelationshipState(RelationshipCoordinate(a,b,'rolling-correlation',Horizon.SWING),1000,
-        {'correlation':0.99,'beta':1.2,'window_start_ms':100,'window_end_ms':1000},Quality.VALID,
-        'test-rolling-pearson','measured-v1',obs)
+        {'correlation':0.99,'beta':1.2},Quality.VALID,
+        'test-rolling-pearson','measured-v1',obs,
+        measurement=dict(method='rolling-pearson.v1',window_start_ms=100,window_end_ms=1000,
+            max_age_ms=1000,scope={'source':[a.identifier],'target':[b.identifier]},
+            context={'source_cut_ms':1000,'regime':'TEST_ONLY'},
+            assumptions=['aligned closed return windows','finite nonzero variance']),
+        uncertainty={'instability':'unassessed outside measured window'})
     m = WorldModel(1000,(HierarchyNode(g),HierarchyNode(asset,g),HierarchyNode(a,asset),HierarchyNode(b,asset)),
         relationships=RelationshipCollection(1000,(r,)))
     return Source.freeze('relationship-test',dict(record_json=WorldModelRecord.from_model(m).to_json(),valid_until_ms=2000))
