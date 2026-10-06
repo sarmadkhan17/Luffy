@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 377309,
-      "sha256": "c0e87efbc2020289d22399385a7b2acec4351c868a1578fa528592e39b3df27c",
+      "bytes": 377308,
+      "sha256": "43d2160b27103d00c2c02ff93f9a27ca8cac3959e0abb62bbbfe390eb520da4e",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 376436,
-      "sha256": "d234519c20485a25bf7a7550277293e45c59adf80140cb37067392ff82769660",
+      "bytes": 377907,
+      "sha256": "4e80762845852586fd10c9a8691038c55b1f4bc1e8bf18022db75e559fb1db68",
       "synchronization_required": false
     },
     {
@@ -84,7 +84,7 @@
   },
   "current_build_selection": {
     "active_items": [],
-    "last_completed_item": "OWN-03",
+    "last_completed_item": "RISK-01",
     "excluded_blocker_items": [
       "SEC-01",
       "RUN-01",
@@ -112,9 +112,9 @@
     "next_item_selected": false,
     "runtime_execution_authorized": false,
     "selection_status": "NO_ACTIVE_PACKAGE",
-    "selection_reason": "OWN-03 closed from exact approval-boundary and offline autonomy evidence. OWN-04 is next GUI dependency recommendation only; no successor selected. Existing CLOSED OBS-05 slot retained for reader compatibility.",
-    "last_terminal_item": "OWN-03",
-    "last_terminal_result": "CLOSED_ARCHITECTURE_OFFLINE"
+    "selection_reason": "RISK-01 closed with retained offline entry-permission evidence. OWN-04 remains the next GUI dependency recommendation only; no successor selected. Existing CLOSED OBS-05 slot retained for reader compatibility.",
+    "last_terminal_item": "RISK-01",
+    "last_terminal_result": "CLOSED_ENGINEERING_ONLY"
   },
   "control_snapshot": {
     "id": "gov07-identity-sol-2026-10-06",

@@ -2886,29 +2886,29 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 1
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: No actor may turn a proposal into exposure by bypassing Risk.
 - **closure_condition**: All normal/legacy/direct/retry/owner entry callers require allowed intent/instrument/direction/quantity/policy/account/capability/freshness bindings.
 - **failure_regression_proof**: Remove Risk gate mutant, stale/mismatched permission and ACTIVE-only entry are refused.
 - **dependencies**: DATA-01, DATA-02
 - **owner_role**: Risk owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: STAGE_LEVEL_HISTORY_ONLY
-- **runtime_evidence**: NOT_MAPPED
+- **engineering_assignee**: Claude local engineering session
+- **implementation_evidence**: trader/engine/entry_authority.py authorize/validate/submit (existing, unchanged); d0de3d5; tests/test_risk01_entry_binding.py
+- **runtime_evidence**: NOT_PERFORMED; offline tests only
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Historical stage/package build claims exist; not yet mapped to this exact row. This is not a missing-implementation finding and does not reopen prior closures.
+- **latest_evidence**: Every entry caller mapped: one reduceOnly=False order site (submit), reached only via Kernel authorize_entry -> Executor.open(risk_permission); recovery/reconcile/exits/protective are reduceOnly; owner/dashboard open no exposure. Existing code binds intent/instrument/direction/quantity/policy/account+book/capability/freshness/control watermark. No code defect found. Added 19 negative/mutant tests (foreign issuer, stale proof, expired capability, instrument/direction/quantity/geometry, retry after rejection/ambiguity, guard-removal mutants, closed caller set) and repaired a pre-existing in-flight fence test harness. Offline only.
 - **source_ids**: S01, S02, S12, S14
 - **source_sections**: §§17,35.6
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for RISK-01. Dependents RISK-02, RISK-03, EXE-01, EXE-06, PORT-08, RUN-02, LLM-01 remain separate.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: d0de3d5
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
+- **closure_evidence**: docs/tracker/evidence/risk01-entry-permission/closure.yaml
 - **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
@@ -7051,13 +7051,17 @@ current_release_deferral:
   activation_authorized: false
 current_build_selection:
   active_items: []
-  last_completed_item: OBS-05
-  excluded_blocker_items: *id001
+  last_completed_item: RISK-01
+  excluded_blocker_items:
+  - SEC-01
+  - RUN-01
+  - GOV-07
   current_blocked_items:
   - WORK-01
   - PERF-03
-  next_recommended_item: DATA-08
+  next_recommended_item: OWN-04
   eligible_items:
+  - OWN-04
   - DATA-08
   - GUI-01
   - GUI-02
@@ -7068,11 +7072,17 @@ current_build_selection:
   - GUI-07
   - GUI-08
   - GUI-09
-  eligibility_scope: Evidence mapping, GUI completion/approval preparation and offline verification under existing
-    item contracts; other dependencies and owner visual approvals remain applicable. Architecture work and
-    other tracker items are not gated by SEC-01 or RUN-01.
+  eligibility_scope: Evidence mapping and GUI/offline build work under existing contracts;
+    SEC-01, RUN-01 and GOV-07 are excluded transitively from current build blockers.
+    Other dependencies and owner visual approvals apply.
   next_item_selected: false
   runtime_execution_authorized: false
+  selection_status: NO_ACTIVE_PACKAGE
+  selection_reason: RISK-01 closed with retained offline entry-permission evidence.
+    OWN-04 remains the next GUI dependency recommendation only; no successor selected.
+    Existing CLOSED OBS-05 slot retained for reader compatibility.
+  last_terminal_item: RISK-01
+  last_terminal_result: CLOSED_ENGINEERING_ONLY
 ```
 
 ## OWN-02 architecture/offline closure (2026-10-06)
@@ -7082,3 +7092,7 @@ Exact evidence: [authority map](evidence/own02-authority-sol/REPORT.md) and [clo
 ## OWN-03 architecture/offline closure (2026-10-06)
 
 Exact evidence: [boundary map](evidence/own03-boundary-sol/REPORT.md) and [closure](evidence/own03-boundary-sol/closure.yaml). GUI-01 dependency OWN-03 satisfied; ACC-03 and OWN-04 remain. No other owner-interface row newly satisfied. OWN-04 recommendation only; SEC-01/RUN-01/GOV-07 deferred, with future activation gates preserved.
+
+## Control-plane metadata repair (2026-10-06)
+
+RISK-01 is the latest terminal item: CLOSED_ENGINEERING_ONLY ([retained evidence](evidence/risk01-entry-permission/closure.yaml)). Counts: 21 CLOSED, 121 EVIDENCE_TO_MAP; all other counts unchanged. Canonical NEXT remains OBS-05 / CLOSED / ENGINEERING_ONLY, a terminal compatibility slot with no active package. OWN-04 remains a recommendation; local engineering activity does not select a canonical package.

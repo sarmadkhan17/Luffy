@@ -555,7 +555,7 @@ current_release_deferral:
 
 current_build_selection:
   active_items: []
-  last_completed_item: OWN-03
+  last_completed_item: RISK-01
   excluded_blocker_items:
   - SEC-01
   - RUN-01
@@ -582,11 +582,11 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: OWN-03 closed from exact approval-boundary and offline autonomy evidence. OWN-04 is next
+  selection_reason: RISK-01 closed with retained offline entry-permission evidence. OWN-04 remains the next
     GUI dependency recommendation only; no successor selected. Existing CLOSED OBS-05 slot retained for reader
     compatibility.
-  last_terminal_item: OWN-03
-  last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
+  last_terminal_item: RISK-01
+  last_terminal_result: CLOSED_ENGINEERING_ONLY
 
 data01_canonical_identity:
   id: DATA-01

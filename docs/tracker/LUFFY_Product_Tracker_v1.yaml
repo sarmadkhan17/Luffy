@@ -22,13 +22,13 @@ metadata:
   pending_adoption: null
   status_counts:
     IN_PROGRESS: 0
-    EVIDENCE_TO_MAP: 122
+    EVIDENCE_TO_MAP: 121
     AWAITING_EVIDENCE: 11
     AWAITING_OWNER: 14
     DEFERRED: 5
     BLOCKED: 2
     OPEN: 4
-    CLOSED: 20
+    CLOSED: 21
   workbook_view_note: Existing XLSX is DEPRECATED / NON-AUTHORITATIVE historical material, preserved unchanged
     and excluded from adoption, synchronization and parity requirements.
   latest_result_source: S16
@@ -51,9 +51,9 @@ metadata:
     navigation_clarification: The original nine-workspace acceptance text remains unchanged historical scope;
       the owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product
       row is silently reopened or added.
-  last_terminal_item: OWN-03
-  last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
-  last_terminal_evidence: docs/tracker/evidence/own03-boundary-sol/closure.yaml
+  last_terminal_item: RISK-01
+  last_terminal_result: CLOSED_ENGINEERING_ONLY
+  last_terminal_evidence: docs/tracker/evidence/risk01-entry-permission/closure.yaml
   control_snapshot:
     id: gov07-identity-sol-2026-10-06
     repository_revision: 82431136ac68ff72325af301bac43b19b7d3ecd6
@@ -8664,7 +8664,7 @@ current_release_deferral:
 
 current_build_selection:
   active_items: []
-  last_completed_item: OWN-03
+  last_completed_item: RISK-01
   excluded_blocker_items:
   - SEC-01
   - RUN-01
@@ -8691,11 +8691,11 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: OWN-03 closed from exact approval-boundary and offline autonomy evidence. OWN-04 is next
+  selection_reason: RISK-01 closed with retained offline entry-permission evidence. OWN-04 remains the next
     GUI dependency recommendation only; no successor selected. Existing CLOSED OBS-05 slot retained for reader
     compatibility.
-  last_terminal_item: OWN-03
-  last_terminal_result: CLOSED_ARCHITECTURE_OFFLINE
+  last_terminal_item: RISK-01
+  last_terminal_result: CLOSED_ENGINEERING_ONLY
 
 own02_authority_closure:
   id: OWN-02
