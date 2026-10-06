@@ -2342,3 +2342,34 @@ att01_canonical_reconciliation:
   successor_selected: false
   runtime_execution_authorized: false
   control_plane_reconciliation_pending: false
+
+data03_canonical_reconciliation:
+  item: DATA-03
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE_ENGINEERING
+  engineering_closure_commit: 61716877fdd717a65ffe967fdb75084b66515b67
+  reconciliation_base_revision: c8dfea702de0f2e5cbc4c9d2bf759589e7a4e0bb
+  evidence: docs/tracker/evidence/data03-consumer-cuts/closure.md
+  validation: docs/tracker/evidence/data03-consumer-cuts/validation.md
+  closure_condition: All normal/replay consumers enforce availability at the requested cut for candles, universe,
+    derivatives, references, features and learning.
+  closure_condition_satisfied: true
+  dependency_status:
+    DATA-02: CLOSED
+  closing_condition_proof:
+  - Normal/replay candles, membership, derivatives, references and features use source-cut-qualified shared readers;
+    future cache and later revisions cannot be rebased.
+  - Admission rollback and metadata acquisition clocks are enforced; historical current-spec membership refuses
+    without retained ancestry.
+  - Learning capture, main/parent replay, analyst leader and outcome/backfill boundaries requalify inner receipt
+    clocks; restart preserves exact bytes.
+  retained_validation: 304 distinct final recovery/focused passes; earlier batches overlap and resource-exhausted
+    runs are excluded.
+  fresh_validation: 36 DATA-03 regression cases passed in 3.83s.
+  original_condition_and_edges_preserved: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+  control_plane_reconciliation_pending: false
+  historical_pending_notes: Original closure report pending statements describe the engineering checkpoint; this
+    record completes canonical reconciliation.

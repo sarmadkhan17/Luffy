@@ -21,8 +21,8 @@ metadata:
     is an optional generated reference.
   pending_adoption: null
   status_counts:
-    CLOSED: 36
-    EVIDENCE_TO_MAP: 101
+    CLOSED: 37
+    EVIDENCE_TO_MAP: 100
     DEFERRED: 7
     AWAITING_EVIDENCE: 9
     AWAITING_OWNER: 14
@@ -1484,7 +1484,7 @@ items:
   stage: '1'
   item_type: REQUIREMENT
   release_scope: BASELINE
-  status: EVIDENCE_TO_MAP
+  status: CLOSED
   required_behavior: Reject future data in current and historical reads, including caches.
   why_needed: Prevents look-ahead through receipt timing or timestamp rewriting.
   closure_condition: All normal/replay consumers enforce availability at the requested cut for candles, universe,
@@ -1494,28 +1494,33 @@ items:
   dependencies:
   - DATA-02
   owner_role: Data & storage owner
-  engineering_assignee: UNASSIGNED
-  implementation_evidence: NOT_MAPPED
+  engineering_assignee: SOL-2
+  implementation_evidence: Retained engineering closure 61716877fdd717a65ffe967fdb75084b66515b67; original condition
+    mapped in docs/tracker/evidence/data03-consumer-cuts/reconciliation.json.
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: No item-level evidence mapping completed in this tracker.
+  latest_evidence: Original closing condition satisfied at architecture/offline scope. Normal/replay candles, membership,
+    derivatives, references and features use source-cut-qualified shared readers; future cache and later revisions
+    cannot be rebased. Admission rollback and metadata acquisition clocks are enforced; historical current-spec membership
+    refuses without retained ancestry. Learning capture, main/parent replay, analyst leader and outcome/backfill boundaries
+    requalify inner receipt clocks; restart preserves exact bytes.
   source_ids:
   - S01
   - S08
   - S13
   source_sections: §6.2
-  next_proof: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure
-    condition.
+  next_proof: None for DATA-03 at architecture/offline engineering scope. Dependent rows retain their own acceptance
+    conditions.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
-  resolution_at_commit: ''
-  work_authorized: false
-  updated: '2026-10-05'
+  resolution_at_commit: 61716877fdd717a65ffe967fdb75084b66515b67
+  work_authorized: true
+  updated: '2026-10-06'
   parent_ids: []
   related_items: []
-  closure_evidence: ''
-  evidence_validity: Pinned evidence only; not revalidated on later runtime.
+  closure_evidence: docs/tracker/evidence/data03-consumer-cuts/reconciliation.json
+  evidence_validity: Pinned engineering closure and current focused offline checks; no runtime or deployed proof inferred.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 - id: DATA-04
@@ -9209,3 +9214,34 @@ sol1_control_plane_checkpoint:
   att01_changed: false
   successor_selected: false
   runtime_execution_authorized: false
+
+data03_canonical_reconciliation:
+  item: DATA-03
+  canonical_status: CLOSED
+  scope: ARCHITECTURE_OFFLINE_ENGINEERING
+  engineering_closure_commit: 61716877fdd717a65ffe967fdb75084b66515b67
+  reconciliation_base_revision: c8dfea702de0f2e5cbc4c9d2bf759589e7a4e0bb
+  evidence: docs/tracker/evidence/data03-consumer-cuts/closure.md
+  validation: docs/tracker/evidence/data03-consumer-cuts/validation.md
+  closure_condition: All normal/replay consumers enforce availability at the requested cut for candles, universe,
+    derivatives, references, features and learning.
+  closure_condition_satisfied: true
+  dependency_status:
+    DATA-02: CLOSED
+  closing_condition_proof:
+  - Normal/replay candles, membership, derivatives, references and features use source-cut-qualified shared readers;
+    future cache and later revisions cannot be rebased.
+  - Admission rollback and metadata acquisition clocks are enforced; historical current-spec membership refuses
+    without retained ancestry.
+  - Learning capture, main/parent replay, analyst leader and outcome/backfill boundaries requalify inner receipt
+    clocks; restart preserves exact bytes.
+  retained_validation: 304 distinct final recovery/focused passes; earlier batches overlap and resource-exhausted
+    runs are excluded.
+  fresh_validation: 36 DATA-03 regression cases passed in 3.83s.
+  original_condition_and_edges_preserved: true
+  application_code_changed: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+  control_plane_reconciliation_pending: false
+  historical_pending_notes: Original closure report pending statements describe the engineering checkpoint; this
+    record completes canonical reconciliation.

@@ -1092,30 +1092,30 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **stage**: 1
 - **item_type**: REQUIREMENT
 - **release_scope**: BASELINE
-- **status**: EVIDENCE_TO_MAP
+- **status**: CLOSED
 - **why_needed**: Prevents look-ahead through receipt timing or timestamp rewriting.
 - **closure_condition**: All normal/replay consumers enforce availability at the requested cut for candles, universe, derivatives, references, features and learning.
 - **failure_regression_proof**: Clock rollback, failed refresh, future cache or later revision cannot be restamped into the past.
 - **dependencies**: DATA-02
 - **owner_role**: Data & storage owner
-- **engineering_assignee**: UNASSIGNED
-- **implementation_evidence**: NOT_MAPPED
+- **engineering_assignee**: SOL-2
+- **implementation_evidence**: Retained engineering closure 61716877fdd717a65ffe967fdb75084b66515b67; original condition mapped in docs/tracker/evidence/data03-consumer-cuts/reconciliation.json.
 - **runtime_evidence**: NOT_MAPPED
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: No item-level evidence mapping completed in this tracker.
+- **latest_evidence**: Original closing condition satisfied at architecture/offline scope. Normal/replay candles, membership, derivatives, references and features use source-cut-qualified shared readers; future cache and later revisions cannot be rebased. Admission rollback and metadata acquisition clocks are enforced; historical current-spec membership refuses without retained ancestry. Learning capture, main/parent replay, analyst leader and outcome/backfill boundaries requalify inner receipt clocks; restart preserves exact bytes.
 - **source_ids**: S01, S08, S13
 - **source_sections**: §6.2
-- **next_proof**: Map existing exact evidence first; implement only a demonstrated gap, then satisfy this row's closure condition.
+- **next_proof**: None for DATA-03 at architecture/offline engineering scope. Dependent rows retain their own acceptance conditions.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
-- **resolution_at_commit**:
-- **work_authorized**: False
-- **updated**: 2026-10-05
+- **resolution_at_commit**: 61716877fdd717a65ffe967fdb75084b66515b67
+- **work_authorized**: True
+- **updated**: 2026-10-06
 - **parent_ids**: None
 - **related_items**: None
-- **closure_evidence**:
-- **evidence_validity**: Pinned evidence only; not revalidated on later runtime.
+- **closure_evidence**: docs/tracker/evidence/data03-consumer-cuts/reconciliation.json
+- **evidence_validity**: Pinned engineering closure and current focused offline checks; no runtime or deployed proof inferred.
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 

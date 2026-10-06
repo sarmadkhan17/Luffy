@@ -1,0 +1,13 @@
+{
+  "result": "PASS",
+  "checks": {
+    "only_target_row_changed": true,
+    "all_conditions_and_edges_preserved": true,
+    "counts_exact": true,
+    "four_way_reconciliation_parity": true,
+    "current_work_selection_preserved": true,
+    "bundle_hashes_exact": true,
+    "readonly_tracker_available": true,
+    "dependencies_closed": true
+  }
+}

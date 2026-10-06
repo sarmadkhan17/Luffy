@@ -1,0 +1,2 @@
+./venv/bin/python -m pytest -q --basetemp=/mnt/luffy-data/sol2-data03-reconciliation-20261006 tests/test_data03_consumer_cuts.py
+36 passed in 3.83s

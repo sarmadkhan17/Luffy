@@ -1,0 +1,82 @@
+{
+  "docs/tracker/evidence/data03-consumer-cuts/closure.md": {
+    "sha256": "72fc1ed4f4ce517562fc35b81d8a83a7dd0b4d76aad225746fff1997f125b1ec",
+    "engineering_sha256": "72fc1ed4f4ce517562fc35b81d8a83a7dd0b4d76aad225746fff1997f125b1ec",
+    "unchanged_since_engineering": true
+  },
+  "docs/tracker/evidence/data03-consumer-cuts/direct-consumers.md": {
+    "sha256": "a8cae6122c7605db970bfda2f3c6200d788b4e2ce18fc688992f664ffe2fa0a1",
+    "engineering_sha256": "a8cae6122c7605db970bfda2f3c6200d788b4e2ce18fc688992f664ffe2fa0a1",
+    "unchanged_since_engineering": true
+  },
+  "docs/tracker/evidence/data03-consumer-cuts/validation.md": {
+    "sha256": "cf49bdf1a8ee78b78e35823fdd6fdde9de2ac68ef2fb20302867997050e705bb",
+    "engineering_sha256": "cf49bdf1a8ee78b78e35823fdd6fdde9de2ac68ef2fb20302867997050e705bb",
+    "unchanged_since_engineering": true
+  },
+  "tests/test_data03_consumer_cuts.py": {
+    "sha256": "198d9fe9d944a66829c93b713f68e8d8d647ca97e56adc94d138df2e4e119260",
+    "engineering_sha256": "198d9fe9d944a66829c93b713f68e8d8d647ca97e56adc94d138df2e4e119260",
+    "unchanged_since_engineering": true
+  },
+  "tests/test_hierarchical_admission.py": {
+    "sha256": "923118d2b80701d9fb5777ecf4bbe9e5cc02d605b4d12508d16c671109938422",
+    "engineering_sha256": "923118d2b80701d9fb5777ecf4bbe9e5cc02d605b4d12508d16c671109938422",
+    "unchanged_since_engineering": true
+  },
+  "tests/test_stage1_data_provenance_pit.py": {
+    "sha256": "75f3072f1f712d4484bda4275e60282668c009d975c206f0b78d10c25b7aeec3",
+    "engineering_sha256": "75f3072f1f712d4484bda4275e60282668c009d975c206f0b78d10c25b7aeec3",
+    "unchanged_since_engineering": true
+  },
+  "tests/test_stage1_pit_blocker_fix.py": {
+    "sha256": "93bca78fe9703e575b8bf55978b8e36d1e66c6ada958dd764dc038cef4c47b83",
+    "engineering_sha256": "93bca78fe9703e575b8bf55978b8e36d1e66c6ada958dd764dc038cef4c47b83",
+    "unchanged_since_engineering": true
+  },
+  "trader/agents/validate.py": {
+    "sha256": "9ee742511d258fc7946a48d58b774823184542b449cd737a72b3511501d6d0ff",
+    "engineering_sha256": "9ee742511d258fc7946a48d58b774823184542b449cd737a72b3511501d6d0ff",
+    "unchanged_since_engineering": true
+  },
+  "trader/attention_admission.py": {
+    "sha256": "551fcf3356ba8325586375b82a8c8d165659cbc78e00568308d78f70e7447421",
+    "engineering_sha256": "bd3b6da611ba3df8e3ca4876dedf35fe608d4787ff056818cc12e82f022de273",
+    "unchanged_since_engineering": false
+  },
+  "trader/data/broad_crypto.py": {
+    "sha256": "2bcf278a5cb2bb01707291a9159cbc4904fc17bd881efd82f563605434dbbc14",
+    "engineering_sha256": "2bcf278a5cb2bb01707291a9159cbc4904fc17bd881efd82f563605434dbbc14",
+    "unchanged_since_engineering": true
+  },
+  "trader/data/feed.py": {
+    "sha256": "ef7f0b5d7ccce086d2c5178947d5563643c2064607d3ceaa3d97c3fa0ddc3f75",
+    "engineering_sha256": "bfd8cbfe25c5a2ef8795d6e68f50cbd932680e8f03b866c5a2d906f868a504b7",
+    "unchanged_since_engineering": false
+  },
+  "trader/engine/outcome_backfill.py": {
+    "sha256": "2d1ffa93254c108854f421aead585b817aab12c80a03d278ce984e28cdb8e731",
+    "engineering_sha256": "2d1ffa93254c108854f421aead585b817aab12c80a03d278ce984e28cdb8e731",
+    "unchanged_since_engineering": true
+  },
+  "trader/engine/outcomes.py": {
+    "sha256": "ffa96923a9ba8180114149feee1e4d4297c4576f3bc668cdb77baa5f7ed0bacb",
+    "engineering_sha256": "ffa96923a9ba8180114149feee1e4d4297c4576f3bc668cdb77baa5f7ed0bacb",
+    "unchanged_since_engineering": true
+  },
+  "trader/kernel.py": {
+    "sha256": "9e910c7c0589c3542c97b0895e6b931aa81e0b76bc679bb5163e5c3030cea7f7",
+    "engineering_sha256": "3886eddfbb68937594fad12f1c197bd409dcb5da0386a3bdbe870de8485db1fa",
+    "unchanged_since_engineering": false
+  },
+  "trader/learning/capture.py": {
+    "sha256": "28a30c2c5071337a4e246a63f445a0df66a39280e662ac093a6e1683d6497c12",
+    "engineering_sha256": "28a30c2c5071337a4e246a63f445a0df66a39280e662ac093a6e1683d6497c12",
+    "unchanged_since_engineering": true
+  },
+  "trader/learning/capture_runtime.py": {
+    "sha256": "83f35001725e5a1b968b88fe8db73f2dd8d7912ba7d3dacca0490a55907cbb93",
+    "engineering_sha256": "83f35001725e5a1b968b88fe8db73f2dd8d7912ba7d3dacca0490a55907cbb93",
+    "unchanged_since_engineering": true
+  }
+}
