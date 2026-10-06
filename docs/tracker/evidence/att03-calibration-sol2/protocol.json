@@ -1,0 +1,20 @@
+{
+  "schema": "att03-existing-values-evaluation.v1",
+  "scope": "Offline evaluation only; no tuning, policy changes, live providers or operational launches.",
+  "predeclared_before_measurement": true,
+  "source_baseline": "085c6b4",
+  "retained_sources": ["data/attention.db", "data/declared-population/attention.db", "data/exit-ab-shadow/declared-population/attention.db"],
+  "retained_policy": "Freeze every present scan and referenced version in read-only transactions. Descriptive trigger frequency only: no independent anomaly labels, no false/missed-trigger interpretation, no forward-profit proxy.",
+  "synthetic_policy": "Use current evaluator, unchanged CognitionConfig and admission policy; generated offline controls supplement retained fixtures. Synthetic null/plant labels are experiment truth only, not real-market labels.",
+  "seed": 20261006,
+  "null_trials_per_model": 400,
+  "plant_trials_per_family": 200,
+  "cohort_size": 8,
+  "null_models": ["iid Gaussian log returns and log1p-volume", "stationary AR(1), phi=0.6, same marginal variance"],
+  "null_parameters": {"return_sigma": 0.01, "log1p_volume_mean": 5.0, "log1p_volume_sigma": 0.3},
+  "plants": {"volume": "candidate anchor log1p-volume increased by 3 marginal sigma", "volatility": "candidate last 5 return innovations multiplied by 3", "divergence": "candidate last 5 returns shifted by +3 marginal sigma", "positioning": "candidate anchor of both positioning series shifted by +3 marginal sigma", "correlation": "candidate baseline correlation 0.8 to common driver, recent correlation zero; seven peers stay at 0.8"},
+  "metrics": ["per-component available/missing and absolute score>=existing cutoff 2", "composite cutoff rate", "cohort any-trigger rate", "target component missed-trigger and composite missed-trigger rates for planted controls", "target top-3 cognition selection and normal admission separately", "world-volume duplicate parity", "serialization/repeated-process determinism", "retained score/eligibility/ranking replay parity on common fields"],
+  "uncertainty": "Bootstrap independent synthetic cohort trials, fixed 1000 resamples, 95% percentile intervals. Never count within-cohort assets as independent; retained scans remain overlapping descriptive observations.",
+  "acceptance": "No owner-specified allowable false-trigger/missed-trigger rates or calibrated real-market labels are present. Measurements cannot invent an acceptance target or establish operational calibration by themselves.",
+  "preservation": "No new weights, thresholds, current values, warm-up/null meanings or historical clocks may change. No held-out trading gate evaluation. Any historical source mismatch is reported, not repaired into a pass."
+}

@@ -1,0 +1,45 @@
+item: ATT-03
+status: BLOCKED
+result: BLOCKED_UNSUPPORTED_CALIBRATION_VALUES
+scope: RETAINED_AND_SYNTHETIC_OFFLINE_CALIBRATION_REVIEW
+evidence: docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+component_inventory: docs/tracker/evidence/att03-calibration-sol2/component-inventory.json
+results: docs/tracker/evidence/att03-calibration-sol2/results.json
+protocol: docs/tracker/evidence/att03-calibration-sol2/protocol.json
+dependencies:
+  ATT-01: CLOSED
+  DATA-04: CLOSED
+calibrated_operational_values: []
+conditional_support: IID Gaussian predictive volume/positioning references and IID Fisher scaling; not operational
+  real-market calibration.
+unsupported_values:
+- shared salience cutoff 2 and maximum/cohort interpretation
+- window 20 / short 5 / min cohort 4
+- positioning reference 20 / max of two / cadence slack tolerance
+- correlation baseline 120 / recent 30 / peer floor 4
+- supporting breadth 1.5 and 0.75 / divergence 2 / persistence 1 / participation 0.05 when calibration claimed
+retained_validation:
+  scans: 59
+  symbol_rows: 944
+  eligible_rows: 929
+  score_eligibility_ranking_replays: 59
+  independent_labels: 0
+  real_false_trigger_rate: null
+  real_missed_trigger_rate: null
+synthetic_validation:
+  null_trials: 800
+  planted_trials: 1000
+  current_broad_null_symbol_cutoff_rate_iid: 0.231875
+  current_broad_null_symbol_cutoff_rate_ar1_phi_0_6: 0.515625
+  scope: Fixed model conditional diagnostics, not crypto-market error rates or acceptance.
+tests:
+  preservation_passed: 68
+  evidence_checks_passed: 11
+owner_decision_required: true
+owner_decision: Define investigate-worthy events, allowed false/missed triggers, component profile/universe and
+  an untouched validation plan for unchanged values. No implicit retuning or condition revision.
+application_source_and_config_changed: false
+conditions_changed: false
+successor_selected: false
+runtime_execution_authorized: false
+trading_activation_authorized: false

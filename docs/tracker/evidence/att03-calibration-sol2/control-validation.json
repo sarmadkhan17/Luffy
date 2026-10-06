@@ -1,0 +1,15 @@
+{
+  "result": "PASS",
+  "checks": {
+    "only_att03_row_changed": true,
+    "all_original_conditions_preserved": true,
+    "dependency_closures_preserved": true,
+    "att03_blocked_truth": true,
+    "terminal_package_parity": true,
+    "record_four_way_parity": true,
+    "selection_four_way_parity": true,
+    "counts_exact": true,
+    "bundle_hashes_exact": true,
+    "tracker_available": true
+  }
+}

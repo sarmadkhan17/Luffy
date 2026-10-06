@@ -1,0 +1,22 @@
+{
+  "null": {
+    "planted_broad_move": false,
+    "market_broad": false,
+    "classification_matches_fixture": true
+  },
+  "broad": {
+    "planted_broad_move": true,
+    "market_broad": true,
+    "classification_matches_fixture": true
+  },
+  "isolated": {
+    "planted_broad_move": false,
+    "market_broad": false,
+    "classification_matches_fixture": true
+  },
+  "contested": {
+    "planted_broad_move": true,
+    "market_broad": true,
+    "classification_matches_fixture": true
+  }
+}

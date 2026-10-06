@@ -1,0 +1,25 @@
+{
+  "retained": {
+    "scans": 59,
+    "verified_replayed": 59,
+    "refused": 0,
+    "mismatched": 0,
+    "symbol_rows": 944,
+    "eligible_rows": 929,
+    "cutoff_crossings": 605,
+    "independent_labels": 0,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null
+  },
+  "null_composite_rates": {
+    "iid": 0.231875,
+    "ar1_phi_0.6": 0.515625
+  },
+  "plant_component_miss": {
+    "volume": 0.235,
+    "volatility": 0.23,
+    "divergence": 0.0,
+    "positioning": 0.02,
+    "correlation": 0.005
+  }
+}

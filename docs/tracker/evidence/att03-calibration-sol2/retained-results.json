@@ -1,0 +1,2599 @@
+[
+  {
+    "source": "data/attention.db",
+    "scan_id": "scan_78513e8e21a148388868f783ce7cce34",
+    "as_of_ms": 1791242657344,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 1,
+    "shared_cutoff_crossings": 1,
+    "statuses": {
+      "warmup": 15,
+      "ok": 1
+    },
+    "receipt_qualified_candles": 266,
+    "candles": 266,
+    "components": {
+      "volume_anomaly": {
+        "available": 1,
+        "crossings": 1
+      },
+      "volatility_transition": {
+        "available": 1,
+        "crossings": 1
+      },
+      "relative_return_divergence": {
+        "available": 0,
+        "crossings": 0
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_6ef044f4e640421fa3825ebab49048eb",
+    "as_of_ms": 1791062411829,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_50b232a7d6e44490ae949e27a02dd8a6",
+    "as_of_ms": 1791062709048,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_9db7d7067e3c4ae2986fe195d4a6b67c",
+    "as_of_ms": 1791063010076,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_3d1610d7e19649c3b116c5061e2f715f",
+    "as_of_ms": 1791063311364,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_c1aa150e19354f36947212c310f5e480",
+    "as_of_ms": 1791063608930,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_4817863581094abf8eac776fa6ab37e3",
+    "as_of_ms": 1791063909916,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_de256f09d9744c92845e4c9fe011f99f",
+    "as_of_ms": 1791064210938,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_c81bd704a5b247fd84e18d4b922f089c",
+    "as_of_ms": 1791064817135,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_e023cb5bad084457acede4f4778a7063",
+    "as_of_ms": 1791065198371,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_dc63737f16ec473aadbf6c3b8b254468",
+    "as_of_ms": 1791065507733,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_5a96f7b629d44b7e9c063afe2c881e0c",
+    "as_of_ms": 1791065719538,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_fe0fbec8bf884ff6a43f1cbc1b15eebb",
+    "as_of_ms": 1791066017932,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_310cbd025ebf4b7a9d5964a63ea5d6d7",
+    "as_of_ms": 1791066319948,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_9caad44e29a54accbd17e1a06147faaf",
+    "as_of_ms": 1791066618149,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_bff5c644d80d41148b13188186889057",
+    "as_of_ms": 1791066917829,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_ff479a7de3cd4ee69a14c72cbf273a61",
+    "as_of_ms": 1791067219618,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_abbcf40caa524119a64cb906b0d21c59",
+    "as_of_ms": 1791067519727,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_f81790ae94b94076b356c067940201eb",
+    "as_of_ms": 1791067820220,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_b42197a22ce64bf8b8c96c7d0615b05d",
+    "as_of_ms": 1791068119461,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_5002df6ac8b44ac5b669bd1423f45248",
+    "as_of_ms": 1791068417689,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_7ef356e423e4471b9c9cd4f912264793",
+    "as_of_ms": 1791068718706,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_32b34ca098624813bdc18b2ca418f95a",
+    "as_of_ms": 1791069020628,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_36cdf1d55589430a964054b631fe5588",
+    "as_of_ms": 1791069319590,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_c6f7651dd95d4fc78750812afaf30aec",
+    "as_of_ms": 1791069622384,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_de09b1272e254250abba45f076f846b4",
+    "as_of_ms": 1791069918053,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_a1fa8d2346264057a612162361cebc0d",
+    "as_of_ms": 1791070219258,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_dcbc685c173042128ce54493d1dfbd38",
+    "as_of_ms": 1791070518336,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_cf01b2940a5748f59fb7d0b8afc91546",
+    "as_of_ms": 1791070818704,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_97f4bc4c90aa4f8aba036f8fa8e90ebc",
+    "as_of_ms": 1791071114008,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_fc5ce2c09b7e4973a5b59af6d6141d40",
+    "as_of_ms": 1791071797710,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 11,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_dc1e182b92e64f51819377fada0fb7bf",
+    "as_of_ms": 1791072015238,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_c424ed2dacf74e1f9c61dd32c51c9a70",
+    "as_of_ms": 1791072316321,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_1a4605502134423ea4ce011f94ece785",
+    "as_of_ms": 1791072616079,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_4229c6382b2c4a5890178632bff04ff4",
+    "as_of_ms": 1791072924991,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_639631cd79ec4442a4512bcfec1ce648",
+    "as_of_ms": 1791073213856,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_a4771d7193664efbbd5fdcbe342c0209",
+    "as_of_ms": 1791073521690,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_ed77c59eb8d747e089f664ff3cfc7ee2",
+    "as_of_ms": 1791073820289,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_5920860f2e8145b791fbac0d88bd4394",
+    "as_of_ms": 1791074116897,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_613f966331c64447a2806c7f038106c4",
+    "as_of_ms": 1791074414690,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_fa42e0a9360347b289a0f22add762759",
+    "as_of_ms": 1791074714836,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_2c92d4d5f18447ac9ef22d6bc082e2a7",
+    "as_of_ms": 1791075014465,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_bc5d814d816f4a0ca85c26f9995c3b8c",
+    "as_of_ms": 1791075318962,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_8e04dbd61e814712959e0d57a76a7113",
+    "as_of_ms": 1791075620049,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_8836a4b84c294931996982ddf99f93b5",
+    "as_of_ms": 1791075920426,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_65d043ba99a949eeadc69a57377fc767",
+    "as_of_ms": 1791076217696,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_ad63b525b06c43e0ac71f101120fb43a",
+    "as_of_ms": 1791076522131,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_0be72a2640044c2d98d0668dd371e5aa",
+    "as_of_ms": 1791076819741,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_017d017cfd6c4165b9696f699447ccd9",
+    "as_of_ms": 1791077118942,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_9553a61ce6c74e9c89e2787e7e653433",
+    "as_of_ms": 1791077419444,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_748cf2d3ec754b6d8f721957a19fb800",
+    "as_of_ms": 1791077721236,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_a41540a7b0dd407ab3220e0fb2be2c59",
+    "as_of_ms": 1791079816024,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_d08150e370e045cc8a5d60d623129bb7",
+    "as_of_ms": 1791080117110,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_be24678ca1dc4f729086ecd58037281e",
+    "as_of_ms": 1791080417805,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/declared-population/attention.db",
+    "scan_id": "declared_f9aa65e084c74faf9e7c4a22a4d0cd9e",
+    "as_of_ms": 1791080718130,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 416,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 7
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/exit-ab-shadow/declared-population/attention.db",
+    "scan_id": "declared_0d2c0900beaf4146a7b0799296253aa4",
+    "as_of_ms": 1789827547757,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 4,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 0,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 3
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 2
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/exit-ab-shadow/declared-population/attention.db",
+    "scan_id": "declared_28ca55cc11ab4d35acd40b24595be456",
+    "as_of_ms": 1789867665085,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 0,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/exit-ab-shadow/declared-population/attention.db",
+    "scan_id": "declared_752236e6932148f19a4b50c090986946",
+    "as_of_ms": 1789873378562,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 0,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  },
+  {
+    "source": "data/exit-ab-shadow/declared-population/attention.db",
+    "scan_id": "declared_8c00416bfbc444079e0137a8567f882b",
+    "as_of_ms": 1789874529300,
+    "independent_anomaly_labels": false,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null,
+    "reference_hashes_verified": true,
+    "score_eligibility_ranking_parity": true,
+    "symbols": 16,
+    "eligible": 16,
+    "shared_cutoff_crossings": 10,
+    "statuses": {
+      "ok": 16
+    },
+    "receipt_qualified_candles": 0,
+    "candles": 416,
+    "components": {
+      "volume_anomaly": {
+        "available": 16,
+        "crossings": 2
+      },
+      "volatility_transition": {
+        "available": 16,
+        "crossings": 8
+      },
+      "relative_return_divergence": {
+        "available": 16,
+        "crossings": 1
+      },
+      "world_volume_anomaly": {
+        "available": 0,
+        "crossings": 0
+      },
+      "positioning_extreme": {
+        "available": 0,
+        "crossings": 0
+      },
+      "correlation_change": {
+        "available": 0,
+        "crossings": 0
+      }
+    }
+  }
+]

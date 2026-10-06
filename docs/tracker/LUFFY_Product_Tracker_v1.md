@@ -1732,13 +1732,13 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **dependencies**: ATT-01, DATA-04
 - **owner_role**: Attention & research owner
 - **engineering_assignee**: SOL-2
-- **implementation_evidence**: Explicit source-cut history and null warm-up diagnostics propagated through existing admission/candidates at 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c.
+- **implementation_evidence**: Existing 5a2b7de warm-up/history fix retained; fixed-value calibration inventory and 59 retained replays in docs/tracker/evidence/att03-calibration-sol2/REPORT.md. No application source/config change.
 - **runtime_evidence**: NOT_MAPPED
 - **visual_approval**: NOT_APPLICABLE
-- **latest_evidence**: Warm-up/availability, no date-only eligibility, null components and deterministic replay/restart mapped; 287 passes and 35 independently reproduced baseline failures. Exact calibrated-ranking evidence remains unestablished; see docs/tracker/evidence/att03-warmup-sol2/REPORT.md.
+- **latest_evidence**: 59 retained scans reproduce scores/eligibility/ranking; no independent natural anomaly labels. 800 fixed null and 1000 planted offline cohorts measured current values; 68 preservation tests and 11 evidence checks pass. Operational calibration remains unsupported; no values retuned.
 - **source_ids**: S01, S02, S06, S14
 - **source_sections**: §§8.2,6.2
-- **next_proof**: Establish approved calibration evidence for existing ranking components/scales/thresholds without inventing weights or a second scoring system.
+- **next_proof**: Owner defines event labels, acceptable false/missed-trigger rates and validation scope/plan; validate exact unchanged component values on labelled retained point-in-time evidence.
 - **acceptance_basis**: SDD requirement; verification detail drafted for approval.
 - **acceptance_status**: DRAFT_VERIFICATION_DETAIL
 - **priority**: NORMAL
@@ -1752,7 +1752,7 @@ Limit: An honest negative result is evidence, not proof of profitable completion
 - **new_issue_policy**: Add linked issue with reason/reproducer; do not silently expand this row.
 - **owner_approval_needed**: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
 
-- **evidence_mapping**: docs/tracker/evidence/att03-warmup-sol2/REPORT.md
+- **evidence_mapping**: docs/tracker/evidence/att03-calibration-sol2/REPORT.md
 
 ### ATT-04 — Hierarchical deterministic crypto admission before expensive discretionary processing; independent safety/exposure service.
 

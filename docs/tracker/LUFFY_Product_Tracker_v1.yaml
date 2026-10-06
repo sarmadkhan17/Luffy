@@ -1,6 +1,6 @@
 metadata:
   schema: luffy-product-tracker.draft.v1
-  version: 1.29-att03-warmup-sol2
+  version: 1.30-att03-calibration-sol2
   created_date: '2026-10-05'
   title: "LUFFY \u2014 Product, Behaviour & GUI Tracker"
   state: ADOPTED_CONTROL_PLANE_NO_RUNTIME_EXECUTION_AUTHORIZED
@@ -12,7 +12,7 @@ metadata:
   coverage_limit: All 37 SDD sections mapped at section level, not certified clause-by-clause completeness or full
     prior-chat reconciliation. No functionality or evidence has been independently retested by creating this tracker.
   current_active_item: ATT-03
-  current_active_result: BLOCKED_CALIBRATION_EVIDENCE
+  current_active_result: BLOCKED_UNSUPPORTED_CALIBRATION_VALUES
   row_count: 178
   authority: SDD is target authority; STATE is current evidence summary and NEXT selects one package. This YAML
     is the canonical detailed ledger; the read-only Dashboard Tracker is the primary working view. Markdown is an
@@ -49,8 +49,8 @@ metadata:
       owner-approved tenth Tracker route is defined in SDD section 25.3 and verified separately. No product row
       is silently reopened or added.
   last_terminal_item: ATT-03
-  last_terminal_result: BLOCKED_CALIBRATION_EVIDENCE
-  last_terminal_evidence: docs/tracker/evidence/att03-warmup-sol2/REPORT.md
+  last_terminal_result: BLOCKED_UNSUPPORTED_CALIBRATION_VALUES
+  last_terminal_evidence: docs/tracker/evidence/att03-calibration-sol2/REPORT.md
   control_snapshot:
     id: gov07-identity-sol-2026-10-06
     repository_revision: 82431136ac68ff72325af301bac43b19b7d3ecd6
@@ -2289,21 +2289,21 @@ items:
   - DATA-04
   owner_role: Attention & research owner
   engineering_assignee: SOL-2
-  implementation_evidence: Explicit source-cut history and null warm-up diagnostics propagated through existing admission/candidates
-    at 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c.
+  implementation_evidence: Existing 5a2b7de warm-up/history fix retained; fixed-value calibration inventory and 59
+    retained replays in docs/tracker/evidence/att03-calibration-sol2/REPORT.md. No application source/config change.
   runtime_evidence: NOT_MAPPED
   visual_approval: NOT_APPLICABLE
-  latest_evidence: Warm-up/availability, no date-only eligibility, null components and deterministic replay/restart
-    mapped; 287 passes and 35 independently reproduced baseline failures. Exact calibrated-ranking evidence remains
-    unestablished; see docs/tracker/evidence/att03-warmup-sol2/REPORT.md.
+  latest_evidence: 59 retained scans reproduce scores/eligibility/ranking; no independent natural anomaly labels.
+    800 fixed null and 1000 planted offline cohorts measured current values; 68 preservation tests and 11 evidence
+    checks pass. Operational calibration remains unsupported; no values retuned.
   source_ids:
   - S01
   - S02
   - S06
   - S14
   source_sections: §§8.2,6.2
-  next_proof: Establish approved calibration evidence for existing ranking components/scales/thresholds without inventing
-    weights or a second scoring system.
+  next_proof: Owner defines event labels, acceptable false/missed-trigger rates and validation scope/plan; validate
+    exact unchanged component values on labelled retained point-in-time evidence.
   acceptance_basis: SDD requirement; verification detail drafted for approval.
   acceptance_status: DRAFT_VERIFICATION_DETAIL
   priority: NORMAL
@@ -2316,7 +2316,7 @@ items:
   evidence_validity: Pinned evidence only; not revalidated on later runtime.
   new_issue_policy: Add linked issue with reason/reproducer; do not silently expand this row.
   owner_approval_needed: NO_NEW_APPROVAL_FOR_ALREADY_AUTHORIZED_SCOPE
-  evidence_mapping: docs/tracker/evidence/att03-warmup-sol2/REPORT.md
+  evidence_mapping: docs/tracker/evidence/att03-calibration-sol2/REPORT.md
 
 - id: ATT-04
   area: Attention & research
@@ -8941,10 +8941,11 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: ATT-03 warm-up reporting gap fixed; original calibrated-ranking evidence gate remains unmet.
-    Dependencies ATT-01/DATA-04 CLOSED; no successor or runtime selected.
+  selection_reason: 'ATT-03 fixed-value review remains BLOCKED: independent labels and approved calibration acceptance
+    limits/plan absent. Mathematical conditional support recorded; no values, dependencies or successor selection
+    changed.'
   last_terminal_item: ATT-03
-  last_terminal_result: BLOCKED_CALIBRATION_EVIDENCE
+  last_terminal_result: BLOCKED_UNSUPPORTED_CALIBRATION_VALUES
 
 own02_authority_closure:
   id: OWN-02
@@ -9345,6 +9346,53 @@ att03_warmup_terminal:
     distinct_passed: 287
   conditions_and_dependency_edges_changed: false
   scoring_system_changed: false
+  successor_selected: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+
+att03_calibration_terminal:
+  item: ATT-03
+  status: BLOCKED
+  result: BLOCKED_UNSUPPORTED_CALIBRATION_VALUES
+  scope: RETAINED_AND_SYNTHETIC_OFFLINE_CALIBRATION_REVIEW
+  evidence: docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+  component_inventory: docs/tracker/evidence/att03-calibration-sol2/component-inventory.json
+  results: docs/tracker/evidence/att03-calibration-sol2/results.json
+  protocol: docs/tracker/evidence/att03-calibration-sol2/protocol.json
+  dependencies:
+    ATT-01: CLOSED
+    DATA-04: CLOSED
+  calibrated_operational_values: []
+  conditional_support: IID Gaussian predictive volume/positioning references and IID Fisher scaling; not operational
+    real-market calibration.
+  unsupported_values:
+  - shared salience cutoff 2 and maximum/cohort interpretation
+  - window 20 / short 5 / min cohort 4
+  - positioning reference 20 / max of two / cadence slack tolerance
+  - correlation baseline 120 / recent 30 / peer floor 4
+  - supporting breadth 1.5 and 0.75 / divergence 2 / persistence 1 / participation 0.05 when calibration claimed
+  retained_validation:
+    scans: 59
+    symbol_rows: 944
+    eligible_rows: 929
+    score_eligibility_ranking_replays: 59
+    independent_labels: 0
+    real_false_trigger_rate: null
+    real_missed_trigger_rate: null
+  synthetic_validation:
+    null_trials: 800
+    planted_trials: 1000
+    current_broad_null_symbol_cutoff_rate_iid: 0.231875
+    current_broad_null_symbol_cutoff_rate_ar1_phi_0_6: 0.515625
+    scope: Fixed model conditional diagnostics, not crypto-market error rates or acceptance.
+  tests:
+    preservation_passed: 68
+    evidence_checks_passed: 11
+  owner_decision_required: true
+  owner_decision: Define investigate-worthy events, allowed false/missed triggers, component profile/universe and
+    an untouched validation plan for unchanged values. No implicit retuning or condition revision.
+  application_source_and_config_changed: false
+  conditions_changed: false
   successor_selected: false
   runtime_execution_authorized: false
   trading_activation_authorized: false

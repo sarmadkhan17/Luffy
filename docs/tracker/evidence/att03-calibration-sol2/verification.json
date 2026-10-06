@@ -1,0 +1,16 @@
+{
+  "result": "PASS",
+  "checks": {
+    "production_values_and_source_bytes_unchanged": true,
+    "protocol_identity": true,
+    "fixed_trial_counts": true,
+    "profile_addendum_preserves_initial_measurement": true,
+    "frozen_archive_hash": true,
+    "59_scan_reference_and_score_replays": true,
+    "no_real_false_or_missed_labels_fabricated": true,
+    "fresh_process_six_case_ranking_eligibility_replay": true,
+    "world_component_exact_duplicate": true,
+    "zero_sample_error_not_proven_zero_probability": true,
+    "four_retained_fixture_breadth_classifications": true
+  }
+}

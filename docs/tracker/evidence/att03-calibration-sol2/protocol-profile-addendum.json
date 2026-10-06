@@ -1,0 +1,5 @@
+{
+  "reason": "Separate the current normal broad path (three base components plus captured correlation) from all-optional diagnostic input. Prior all-optional metrics are retained. No values, seeds, effect sizes or acceptance goals change.",
+  "measurements": "Repeat the same fixed trials with optional positioning/world input removed for the current broad profile; record separate composite/selection metrics.",
+  "uncertainty": "Add Wilson 95% intervals for independent Bernoulli trials so zero/one bootstrap proportions are not mistaken for certainty."
+}

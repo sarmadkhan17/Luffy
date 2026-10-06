@@ -1,0 +1,746 @@
+{
+  "protocol_sha256": "2d3db1cddb1a6bc9cd08ad1cc265f1d9a2288723db164bc88b1e32272ec520a7",
+  "current_config": {
+    "window": 20,
+    "short": 5,
+    "horizon": 5,
+    "k": 3,
+    "min_salience": 2.0,
+    "min_cohort": 4,
+    "broad_z": 1.5,
+    "broad_breadth": 0.75,
+    "divergence_z": 2.0,
+    "persist_z": 1.0,
+    "participation_change": 0.05,
+    "participation_stale_bars": 2,
+    "max_symbols": 500,
+    "max_decisions": 5000
+  },
+  "status": "BLOCKED_NO_OPERATIONAL_CALIBRATION_ACCEPTANCE_OR_LABELS",
+  "nulls": {
+    "iid": {
+      "all_optional_diagnostic": {
+        "trials": 400,
+        "composite_symbol_cutoff_rate": {
+          "mean": 0.3275,
+          "cohort_bootstrap_95_interval": [
+            0.3103125,
+            0.34500781249999996
+          ]
+        },
+        "cohort_any_cutoff_rate": {
+          "mean": 0.955,
+          "cohort_bootstrap_95_interval": [
+            0.935,
+            0.975
+          ],
+          "independent_trial_wilson_95_interval": [
+            0.9299952708096761,
+            0.971348541346114
+          ]
+        },
+        "components": {
+          "volume_anomaly": {
+            "available_symbol_rows": 3200,
+            "crossings": 230,
+            "rate": {
+              "mean": 0.071875,
+              "cohort_bootstrap_95_interval": [
+                0.0628125,
+                0.080625
+              ]
+            }
+          },
+          "volatility_transition": {
+            "available_symbol_rows": 3200,
+            "crossings": 256,
+            "rate": {
+              "mean": 0.08,
+              "cohort_bootstrap_95_interval": [
+                0.070625,
+                0.089375
+              ]
+            }
+          },
+          "relative_return_divergence": {
+            "available_symbol_rows": 3200,
+            "crossings": 192,
+            "rate": {
+              "mean": 0.06,
+              "cohort_bootstrap_95_interval": [
+                0.0515625,
+                0.0684375
+              ]
+            }
+          },
+          "world_volume_anomaly": {
+            "available_symbol_rows": 3200,
+            "crossings": 230,
+            "rate": {
+              "mean": 0.071875,
+              "cohort_bootstrap_95_interval": [
+                0.0628125,
+                0.080625
+              ]
+            }
+          },
+          "positioning_extreme": {
+            "available_symbol_rows": 3200,
+            "crossings": 408,
+            "rate": {
+              "mean": 0.1275,
+              "cohort_bootstrap_95_interval": [
+                0.11624218750000001,
+                0.1387578125
+              ]
+            }
+          },
+          "correlation_change": {
+            "available_symbol_rows": 3200,
+            "crossings": 136,
+            "rate": {
+              "mean": 0.0425,
+              "cohort_bootstrap_95_interval": [
+                0.03625,
+                0.0496875
+              ]
+            }
+          }
+        }
+      },
+      "current_broad_profile": {
+        "trials": 400,
+        "composite_symbol_cutoff_rate": {
+          "mean": 0.231875,
+          "cohort_bootstrap_95_interval": [
+            0.2178125,
+            0.24657031249999997
+          ]
+        },
+        "cohort_any_cutoff_rate": {
+          "mean": 0.8625,
+          "cohort_bootstrap_95_interval": [
+            0.8275,
+            0.895
+          ],
+          "independent_trial_wilson_95_interval": [
+            0.8252880733424808,
+            0.8928155132651543
+          ]
+        },
+        "components": {
+          "volume_anomaly": {
+            "available_symbol_rows": 3200,
+            "crossings": 230,
+            "rate": {
+              "mean": 0.071875,
+              "cohort_bootstrap_95_interval": [
+                0.0628125,
+                0.080625
+              ]
+            }
+          },
+          "volatility_transition": {
+            "available_symbol_rows": 3200,
+            "crossings": 256,
+            "rate": {
+              "mean": 0.08,
+              "cohort_bootstrap_95_interval": [
+                0.070625,
+                0.089375
+              ]
+            }
+          },
+          "relative_return_divergence": {
+            "available_symbol_rows": 3200,
+            "crossings": 192,
+            "rate": {
+              "mean": 0.06,
+              "cohort_bootstrap_95_interval": [
+                0.0515625,
+                0.0684375
+              ]
+            }
+          },
+          "world_volume_anomaly": {
+            "available_symbol_rows": 0,
+            "crossings": 0,
+            "rate": null
+          },
+          "positioning_extreme": {
+            "available_symbol_rows": 0,
+            "crossings": 0,
+            "rate": null
+          },
+          "correlation_change": {
+            "available_symbol_rows": 3200,
+            "crossings": 136,
+            "rate": {
+              "mean": 0.0425,
+              "cohort_bootstrap_95_interval": [
+                0.03625,
+                0.0496875
+              ]
+            }
+          }
+        }
+      }
+    },
+    "ar1_phi_0.6": {
+      "all_optional_diagnostic": {
+        "trials": 400,
+        "composite_symbol_cutoff_rate": {
+          "mean": 0.599375,
+          "cohort_bootstrap_95_interval": [
+            0.581875,
+            0.61625
+          ]
+        },
+        "cohort_any_cutoff_rate": {
+          "mean": 1.0,
+          "cohort_bootstrap_95_interval": [
+            1.0,
+            1.0
+          ],
+          "independent_trial_wilson_95_interval": [
+            0.9904877056657034,
+            0.9999999999999999
+          ]
+        },
+        "components": {
+          "volume_anomaly": {
+            "available_symbol_rows": 3200,
+            "crossings": 269,
+            "rate": {
+              "mean": 0.0840625,
+              "cohort_bootstrap_95_interval": [
+                0.0753125,
+                0.093125
+              ]
+            }
+          },
+          "volatility_transition": {
+            "available_symbol_rows": 3200,
+            "crossings": 500,
+            "rate": {
+              "mean": 0.15625,
+              "cohort_bootstrap_95_interval": [
+                0.1434375,
+                0.16813281249999998
+              ]
+            }
+          },
+          "relative_return_divergence": {
+            "available_symbol_rows": 3200,
+            "crossings": 805,
+            "rate": {
+              "mean": 0.2515625,
+              "cohort_bootstrap_95_interval": [
+                0.23717968749999999,
+                0.26625781249999997
+              ]
+            }
+          },
+          "world_volume_anomaly": {
+            "available_symbol_rows": 3200,
+            "crossings": 269,
+            "rate": {
+              "mean": 0.0840625,
+              "cohort_bootstrap_95_interval": [
+                0.0753125,
+                0.093125
+              ]
+            }
+          },
+          "positioning_extreme": {
+            "available_symbol_rows": 3200,
+            "crossings": 537,
+            "rate": {
+              "mean": 0.1678125,
+              "cohort_bootstrap_95_interval": [
+                0.1534375,
+                0.18250781249999998
+              ]
+            }
+          },
+          "correlation_change": {
+            "available_symbol_rows": 3200,
+            "crossings": 491,
+            "rate": {
+              "mean": 0.1534375,
+              "cohort_bootstrap_95_interval": [
+                0.139375,
+                0.1675078125
+              ]
+            }
+          }
+        }
+      },
+      "current_broad_profile": {
+        "trials": 400,
+        "composite_symbol_cutoff_rate": {
+          "mean": 0.515625,
+          "cohort_bootstrap_95_interval": [
+            0.49875,
+            0.5334375
+          ]
+        },
+        "cohort_any_cutoff_rate": {
+          "mean": 0.9975,
+          "cohort_bootstrap_95_interval": [
+            0.9925,
+            1.0
+          ],
+          "independent_trial_wilson_95_interval": [
+            0.9859767149241766,
+            0.9995585522131983
+          ]
+        },
+        "components": {
+          "volume_anomaly": {
+            "available_symbol_rows": 3200,
+            "crossings": 269,
+            "rate": {
+              "mean": 0.0840625,
+              "cohort_bootstrap_95_interval": [
+                0.0753125,
+                0.093125
+              ]
+            }
+          },
+          "volatility_transition": {
+            "available_symbol_rows": 3200,
+            "crossings": 500,
+            "rate": {
+              "mean": 0.15625,
+              "cohort_bootstrap_95_interval": [
+                0.1434375,
+                0.16813281249999998
+              ]
+            }
+          },
+          "relative_return_divergence": {
+            "available_symbol_rows": 3200,
+            "crossings": 805,
+            "rate": {
+              "mean": 0.2515625,
+              "cohort_bootstrap_95_interval": [
+                0.23717968749999999,
+                0.26625781249999997
+              ]
+            }
+          },
+          "world_volume_anomaly": {
+            "available_symbol_rows": 0,
+            "crossings": 0,
+            "rate": null
+          },
+          "positioning_extreme": {
+            "available_symbol_rows": 0,
+            "crossings": 0,
+            "rate": null
+          },
+          "correlation_change": {
+            "available_symbol_rows": 3200,
+            "crossings": 491,
+            "rate": {
+              "mean": 0.1534375,
+              "cohort_bootstrap_95_interval": [
+                0.139375,
+                0.1675078125
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "plants": {
+    "volume": {
+      "trials": 200,
+      "component": "volume_anomaly",
+      "component_miss": {
+        "mean": 0.235,
+        "cohort_bootstrap_95_interval": [
+          0.18,
+          0.29
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.18157433415232588,
+          0.29841368882762537
+        ]
+      },
+      "composite_miss": {
+        "mean": 0.155,
+        "cohort_bootstrap_95_interval": [
+          0.11,
+          0.205
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.11139636927689314,
+          0.21160690592342077
+        ]
+      },
+      "top3_miss": {
+        "mean": 0.2,
+        "cohort_bootstrap_95_interval": [
+          0.15,
+          0.255
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.15045200926098115,
+          0.2608551865653788
+        ]
+      },
+      "admission_policy_miss_extended_inputs": {
+        "mean": 0.0,
+        "cohort_bootstrap_95_interval": [
+          0.0,
+          0.0
+        ],
+        "independent_trial_wilson_95_interval": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ]
+      },
+      "current_broad_composite_miss": {
+        "mean": 0.185,
+        "cohort_bootstrap_95_interval": [
+          0.135,
+          0.24
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.13730192800616042,
+          0.2445706276115175
+        ]
+      }
+    },
+    "volatility": {
+      "trials": 200,
+      "component": "volatility_transition",
+      "component_miss": {
+        "mean": 0.23,
+        "cohort_bootstrap_95_interval": [
+          0.175,
+          0.295
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.17709343259068805,
+          0.2930830436530359
+        ]
+      },
+      "composite_miss": {
+        "mean": 0.085,
+        "cohort_bootstrap_95_interval": [
+          0.05,
+          0.125
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.05374575017747561,
+          0.13189587071565567
+        ]
+      },
+      "top3_miss": {
+        "mean": 0.125,
+        "cohort_bootstrap_95_interval": [
+          0.085,
+          0.17
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.08611974475712644,
+          0.17801425002582347
+        ]
+      },
+      "admission_policy_miss_extended_inputs": {
+        "mean": 0.0,
+        "cohort_bootstrap_95_interval": [
+          0.0,
+          0.0
+        ],
+        "independent_trial_wilson_95_interval": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ]
+      },
+      "current_broad_composite_miss": {
+        "mean": 0.095,
+        "cohort_bootstrap_95_interval": [
+          0.06,
+          0.14
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.06166310271738653,
+          0.1436016116481994
+        ]
+      }
+    },
+    "divergence": {
+      "trials": 200,
+      "component": "relative_return_divergence",
+      "component_miss": {
+        "mean": 0.0,
+        "cohort_bootstrap_95_interval": [
+          0.0,
+          0.0
+        ],
+        "independent_trial_wilson_95_interval": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ]
+      },
+      "composite_miss": {
+        "mean": 0.0,
+        "cohort_bootstrap_95_interval": [
+          0.0,
+          0.0
+        ],
+        "independent_trial_wilson_95_interval": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ]
+      },
+      "top3_miss": {
+        "mean": 0.0,
+        "cohort_bootstrap_95_interval": [
+          0.0,
+          0.0
+        ],
+        "independent_trial_wilson_95_interval": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ]
+      },
+      "admission_policy_miss_extended_inputs": {
+        "mean": 0.0,
+        "cohort_bootstrap_95_interval": [
+          0.0,
+          0.0
+        ],
+        "independent_trial_wilson_95_interval": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ]
+      },
+      "current_broad_composite_miss": {
+        "mean": 0.0,
+        "cohort_bootstrap_95_interval": [
+          0.0,
+          0.0
+        ],
+        "independent_trial_wilson_95_interval": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ]
+      }
+    },
+    "positioning": {
+      "trials": 200,
+      "component": "positioning_extreme",
+      "component_miss": {
+        "mean": 0.02,
+        "cohort_bootstrap_95_interval": [
+          0.005,
+          0.04
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.0078044264163494685,
+          0.050287086905826436
+        ]
+      },
+      "composite_miss": {
+        "mean": 0.015,
+        "cohort_bootstrap_95_interval": [
+          0.0,
+          0.035
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.00511423779325831,
+          0.04316572879269026
+        ]
+      },
+      "top3_miss": {
+        "mean": 0.035,
+        "cohort_bootstrap_95_interval": [
+          0.01,
+          0.065
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.017055542008567192,
+          0.07047061152229073
+        ]
+      },
+      "admission_policy_miss_extended_inputs": {
+        "mean": 0.0,
+        "cohort_bootstrap_95_interval": [
+          0.0,
+          0.0
+        ],
+        "independent_trial_wilson_95_interval": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ]
+      },
+      "current_broad_composite_miss": {
+        "mean": 0.76,
+        "cohort_bootstrap_95_interval": [
+          0.7,
+          0.815
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.6962665902079583,
+          0.8139338400758631
+        ]
+      }
+    },
+    "correlation": {
+      "trials": 200,
+      "component": "correlation_change",
+      "component_miss": {
+        "mean": 0.005,
+        "cohort_bootstrap_95_interval": [
+          0.0,
+          0.015
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.0008831687156009814,
+          0.02777370439789293
+        ]
+      },
+      "composite_miss": {
+        "mean": 0.005,
+        "cohort_bootstrap_95_interval": [
+          0.0,
+          0.015
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.0008831687156009814,
+          0.02777370439789293
+        ]
+      },
+      "top3_miss": {
+        "mean": 0.005,
+        "cohort_bootstrap_95_interval": [
+          0.0,
+          0.015
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.0008831687156009814,
+          0.02777370439789293
+        ]
+      },
+      "admission_policy_miss_extended_inputs": {
+        "mean": 0.0,
+        "cohort_bootstrap_95_interval": [
+          0.0,
+          0.0
+        ],
+        "independent_trial_wilson_95_interval": [
+          1.734723475976807e-18,
+          0.018845326377266575
+        ]
+      },
+      "current_broad_composite_miss": {
+        "mean": 0.005,
+        "cohort_bootstrap_95_interval": [
+          0.0,
+          0.015
+        ],
+        "independent_trial_wilson_95_interval": [
+          0.0008831687156009814,
+          0.02777370439789293
+        ]
+      }
+    }
+  },
+  "existing_fixture_controls": {
+    "null": {
+      "planted_symbols": [],
+      "cutoff_crossings": [],
+      "false_crossing_symbols": [],
+      "missed_planted_symbols": [],
+      "selected": []
+    },
+    "broad": {
+      "planted_symbols": [
+        "AAA",
+        "BBB",
+        "CCC",
+        "DDD",
+        "EEE",
+        "FFF"
+      ],
+      "cutoff_crossings": [
+        "AAA",
+        "BBB",
+        "CCC",
+        "DDD",
+        "EEE",
+        "FFF"
+      ],
+      "false_crossing_symbols": [],
+      "missed_planted_symbols": [],
+      "selected": [
+        "AAA",
+        "BBB",
+        "CCC"
+      ]
+    },
+    "isolated": {
+      "planted_symbols": [
+        "CCC"
+      ],
+      "cutoff_crossings": [
+        "CCC"
+      ],
+      "false_crossing_symbols": [],
+      "missed_planted_symbols": [],
+      "selected": [
+        "CCC"
+      ]
+    },
+    "contested": {
+      "planted_symbols": [
+        "AAA",
+        "BBB",
+        "CCC",
+        "DDD",
+        "EEE",
+        "FFF"
+      ],
+      "cutoff_crossings": [
+        "AAA"
+      ],
+      "false_crossing_symbols": [],
+      "missed_planted_symbols": [
+        "BBB",
+        "CCC",
+        "DDD",
+        "EEE",
+        "FFF"
+      ],
+      "selected": [
+        "AAA"
+      ]
+    }
+  },
+  "retained": {
+    "scans": 59,
+    "verified_replayed": 59,
+    "refused": 0,
+    "mismatched": 0,
+    "symbol_rows": 944,
+    "eligible_rows": 929,
+    "cutoff_crossings": 605,
+    "independent_labels": 0,
+    "false_trigger_rate": null,
+    "missed_trigger_rate": null
+  },
+  "serialization_replay_hashes": [
+    "9f5a69086a7ca38c844f053cfe44ed9f6b25e79c6c7c5205e4c6ee7f1d790cf5",
+    "92b1b89271ae22e97a43d8c7146e1e84bb88de79de62277156aefebbec859a0a",
+    "7fa42a2d0809b991db5c0599ce37515976fd9940252440a11fad7d1de10903a2",
+    "b1cffad302afa1477b64e58deb495d85d4954e2a1c9c91084530075e5cea9f42",
+    "66fcc5005060d5b1944e2d36cffde035b3621cf202a05da4b37f58c5b2285d54",
+    "8e428c8cccca1dbf46f4a805699da863eb1badaa1a24fe3bc78ad4ff78092277"
+  ]
+}

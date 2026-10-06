@@ -1,0 +1,1 @@
+[('BTC/USDT', 'funding', 'ok'), ('BTC/USDT', 'ls_ratio', 'stale'), ('ETH/USDT', 'funding', 'stale'), ('ETH/USDT', 'ls_ratio', 'stale')]

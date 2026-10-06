@@ -1,0 +1,11 @@
+{
+  "scope": "Conditional reference under independently sampled Gaussian levels; not operational calibration",
+  "predictive_formula": "(new_sample-reference_mean)/sample_sd = sqrt(1+1/N)*t_(N-1)",
+  "N": 20,
+  "existing_cutoff": 2.0,
+  "volume_single_series_iid_cutoff_probability": 0.06586022394864077,
+  "two_independent_positioning_series_max_probability": 0.12738287879871646,
+  "normal_two_sided_reference_at_2": 0.04550026389635844,
+  "numerical_method": "Student t density integrated by composite Simpson; N=10000 vs20000 cells",
+  "integration_difference": 0.0
+}

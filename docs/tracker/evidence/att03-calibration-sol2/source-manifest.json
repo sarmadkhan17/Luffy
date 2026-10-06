@@ -1,0 +1,23 @@
+{
+  "baseline_commit": "085c6b43602826f2d89f47e5d56484b449bce056",
+  "protocol_sha256": "2d3db1cddb1a6bc9cd08ad1cc265f1d9a2288723db164bc88b1e32272ec520a7",
+  "files": {
+    "trader/cognition/attention.py": "4b7245c48e0765fdb46f561120a36fd2d5c4fab85abdcfed457fc3acaa1f7edd",
+    "trader/cognition/contracts.py": "218a386b9f396b0e8d69e5d32a83f33e4162dc7e73092e455d104e1097ceb968",
+    "trader/cognition/hypotheses.py": "57405fa0705f82a983fc32087a48ec79f8496601de6466396e01c3d9fb0cdeb1",
+    "trader/attention_admission.py": "1475e3424a4f53db93e94cd571eb02497421f098769e13f6d094d464d3f70077",
+    "trader/data/broad_crypto.py": "2bcf278a5cb2bb01707291a9159cbc4904fc17bd881efd82f563605434dbbc14",
+    "trader/observability/attention.py": "212aa27db4dce3d4257fce28474df24133c34c6e6f39576616d1129a1c5395e3",
+    "trader/observability/world_producer.py": "63a2febf04b3a732146618ea2667f5931f95da61975d74c8fa092d7cdcd97aae",
+    "trader/observability/positioning.py": "88655ae0bfc55762c7a0c25e04b7665dd56ee1d91b9aa86ed5689cc5b07d39c3",
+    "config.yaml": "c9d43eaf894a3cfe5fa227ebca98b4d1dc9388fd83c9b1a78d37291f31e71532",
+    "SDD.md": "393d3e60f292899d3afb35269c1bf4ef175990e53c52ade667bee00cedff0a28",
+    "tests/test_cognition_attention.py": "ebb868cd254d2737c95b0cc316b8fad0e179aebc8d0a06df598db2abac6d27e0",
+    "tests/_corr_synth.py": "5a089efb74c18f6f3cbe6c67181d4d5e71052e0c703318134e1987cd3f523534",
+    "docs/superpowers/specs/2026-09-15-cognition-offline.md": "32d73ec9ae1e2f00c62c58cac66bef80f67a80fbe84f62c40104dea7e742dd79",
+    "docs/superpowers/reports/2026-09-15-cognition-history.md": "65cf042cbee172d03727c2b44efa948fc5f28709591ac76db1d5706386fa23ba",
+    "docs/superpowers/reports/2026-09-15-cognition-coverage-audit.md": "f3d5761195f44ce24010eccecd16ba114c8cb3fdaa5b1cba51fdb24170b14674",
+    "trader/data/market_provenance.py": "4bca12b4d16a57b7a582fcd27c48254fc59c1e23a0ab0848554b5d4118d3e584",
+    "trader/observability/store.py": "a4db152fcbba7773a7a3bd372de23404b6c73988b4b61e6c30a7363aa6713214"
+  }
+}

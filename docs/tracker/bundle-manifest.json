@@ -1,6 +1,6 @@
 {
   "schema": "luffy-tracker-import-manifest.v1",
-  "snapshot_version": "1.29-att03-warmup-sol2",
+  "snapshot_version": "1.30-att03-calibration-sol2",
   "control_baseline_revision": "82431136ac68ff72325af301bac43b19b7d3ecd6",
   "observed_runtime_revision": "9385f792f32277bb0b826dba83247b8f5ccf1f8a",
   "row_count": 178,
@@ -12,15 +12,15 @@
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.yaml",
       "role": "CANONICAL",
-      "bytes": 416026,
-      "sha256": "8c7368ee2436d27986af9e28e94ca764f5218d702bc2ed75c929aec355fa1e8e",
+      "bytes": 418283,
+      "sha256": "a970eb95ff39919d00e3c40641be519013d87c3fa804c2c4ddf8aad3cf1e5d97",
       "synchronization_required": true
     },
     {
       "path": "docs/tracker/LUFFY_Product_Tracker_v1.md",
       "role": "OPTIONAL_GENERATED_REFERENCE",
-      "bytes": 393807,
-      "sha256": "b501f53b687d165ad7a07d9813d4f6aac53f2c01eec3a2841619a79d24f287ff",
+      "bytes": 393902,
+      "sha256": "cc866367e1db06887e9ebd573e2d551bd93dfe1a64bdb5a578b1457f863296d5",
       "synchronization_required": false
     },
     {
@@ -139,9 +139,9 @@
     "next_item_selected": false,
     "runtime_execution_authorized": false,
     "selection_status": "NO_ACTIVE_PACKAGE",
-    "selection_reason": "ATT-03 warm-up reporting gap fixed; original calibrated-ranking evidence gate remains unmet. Dependencies ATT-01/DATA-04 CLOSED; no successor or runtime selected.",
+    "selection_reason": "ATT-03 fixed-value review remains BLOCKED: independent labels and approved calibration acceptance limits/plan absent. Mathematical conditional support recorded; no values, dependencies or successor selection changed.",
     "last_terminal_item": "ATT-03",
-    "last_terminal_result": "BLOCKED_CALIBRATION_EVIDENCE"
+    "last_terminal_result": "BLOCKED_UNSUPPORTED_CALIBRATION_VALUES"
   },
   "control_snapshot": {
     "id": "gov07-identity-sol-2026-10-06",
@@ -793,6 +793,56 @@
     },
     "conditions_and_dependency_edges_changed": false,
     "scoring_system_changed": false,
+    "successor_selected": false,
+    "runtime_execution_authorized": false,
+    "trading_activation_authorized": false
+  },
+  "att03_calibration_terminal": {
+    "item": "ATT-03",
+    "status": "BLOCKED",
+    "result": "BLOCKED_UNSUPPORTED_CALIBRATION_VALUES",
+    "scope": "RETAINED_AND_SYNTHETIC_OFFLINE_CALIBRATION_REVIEW",
+    "evidence": "docs/tracker/evidence/att03-calibration-sol2/REPORT.md",
+    "component_inventory": "docs/tracker/evidence/att03-calibration-sol2/component-inventory.json",
+    "results": "docs/tracker/evidence/att03-calibration-sol2/results.json",
+    "protocol": "docs/tracker/evidence/att03-calibration-sol2/protocol.json",
+    "dependencies": {
+      "ATT-01": "CLOSED",
+      "DATA-04": "CLOSED"
+    },
+    "calibrated_operational_values": [],
+    "conditional_support": "IID Gaussian predictive volume/positioning references and IID Fisher scaling; not operational real-market calibration.",
+    "unsupported_values": [
+      "shared salience cutoff 2 and maximum/cohort interpretation",
+      "window 20 / short 5 / min cohort 4",
+      "positioning reference 20 / max of two / cadence slack tolerance",
+      "correlation baseline 120 / recent 30 / peer floor 4",
+      "supporting breadth 1.5 and 0.75 / divergence 2 / persistence 1 / participation 0.05 when calibration claimed"
+    ],
+    "retained_validation": {
+      "scans": 59,
+      "symbol_rows": 944,
+      "eligible_rows": 929,
+      "score_eligibility_ranking_replays": 59,
+      "independent_labels": 0,
+      "real_false_trigger_rate": null,
+      "real_missed_trigger_rate": null
+    },
+    "synthetic_validation": {
+      "null_trials": 800,
+      "planted_trials": 1000,
+      "current_broad_null_symbol_cutoff_rate_iid": 0.231875,
+      "current_broad_null_symbol_cutoff_rate_ar1_phi_0_6": 0.515625,
+      "scope": "Fixed model conditional diagnostics, not crypto-market error rates or acceptance."
+    },
+    "tests": {
+      "preservation_passed": 68,
+      "evidence_checks_passed": 11
+    },
+    "owner_decision_required": true,
+    "owner_decision": "Define investigate-worthy events, allowed false/missed triggers, component profile/universe and an untouched validation plan for unchanged values. No implicit retuning or condition revision.",
+    "application_source_and_config_changed": false,
+    "conditions_changed": false,
     "successor_selected": false,
     "runtime_execution_authorized": false,
     "trading_activation_authorized": false

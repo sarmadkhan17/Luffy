@@ -1,0 +1,155 @@
+{
+  "components": [
+    {
+      "name": "volume_anomaly",
+      "formula": "(ln(1+v_anchor)-mean(prior N ln(1+v)))/sample_stdev(prior N ln(1+v))",
+      "values": {
+        "N": 20,
+        "shared_abs_cutoff": 2.0,
+        "weight": null
+      },
+      "origin": "214947a / docs/superpowers/specs/2026-09-15-cognition-offline.md: inherited prototype defaults; sample normalization mathematically defined, no empirical calibration",
+      "available_evidence": "59 frozen scans (availability varies); existing broad/isolated/null fixtures; IID and AR(1) controls",
+      "activation": "normal admission and worker"
+    },
+    {
+      "name": "volatility_transition",
+      "formula": "ln(sample_stdev(last S log returns)/sample_stdev(first N log returns))/sqrt(1/(2*(S-1))+1/(2*(N-1)))",
+      "values": {
+        "N": 20,
+        "S": 5,
+        "normalizer": 0.38899330260774956,
+        "shared_abs_cutoff": 2.0,
+        "weight": null
+      },
+      "origin": "214947a: inherited N/S and cutoff; large-sample log-scale approximation, finite-sample operational tails uncalibrated",
+      "available_evidence": "frozen scans, existing fixtures; fixed 3x last-five volatility plants and stationary null controls",
+      "activation": "normal admission and worker"
+    },
+    {
+      "name": "relative_return_divergence",
+      "formula": "(sum(last S log returns)-median_cohort(sum(last S log returns)))/(sample_stdev(first N log returns)*sqrt(S))",
+      "values": {
+        "N": 20,
+        "S": 5,
+        "min_cohort": 4,
+        "shared_abs_cutoff": 2.0,
+        "weight": null
+      },
+      "origin": "214947a: inherited prototype scales/cohort floor; sample denominator and estimated cohort median alter tails",
+      "available_evidence": "frozen scan membership and rows; isolated fixture and fixed recent-mean plants; no independent natural-event labels",
+      "activation": "normal admission and worker"
+    },
+    {
+      "name": "world_volume_anomaly",
+      "formula": "abs(accepted WorldModel volume_anomaly with unit z_score); normal producer duplicates existing volume formula exactly",
+      "values": {
+        "N": 20,
+        "shared_abs_cutoff": 2.0,
+        "weight": null,
+        "max_age": "one dataset timeframe"
+      },
+      "origin": "640a5f2: package seam using existing volume_z transform; no extra confidence multiplier",
+      "available_evidence": "current source producer and pure duplicate parity controls; none of the inventoried stores provides a separate calibrated world-label set",
+      "activation": "optional worker world_model; disabled by current config; not passed into broad admission"
+    },
+    {
+      "name": "positioning_extreme",
+      "formula": "max over funding/ls_ratio of abs((anchor-mean(previous 20 values))/sample_stdev(previous 20 values))",
+      "values": {
+        "reference_samples": 20,
+        "required_samples": 21,
+        "shared_abs_cutoff": 2.0,
+        "weight": null,
+        "ls_ratio_step_ms": 900000,
+        "ls_ratio_max_age_ms": 2700000,
+        "funding_age_slack_ms": 1800000
+      },
+      "origin": "640a5f2: package-owned reference20, per code; timing constants follow recorder cadence/slack, not calibrated event-error tolerances",
+      "available_evidence": "59 scans contain no positioning input; additional exact-cut derivs.db anchor inventory: BTC funding usable, BTC ls_ratio and both ETH series stale. No natural-event labels. Stationary and +3-sigma algebra controls remain conditional.",
+      "activation": "optional worker captured derivatives; not supplied to broad admission"
+    },
+    {
+      "name": "correlation_change",
+      "formula": "abs((atanh(r_recent)-atanh(r_baseline))/sqrt(1/(120-3)+1/(30-3))); r against one frozen leave-one-out equal-weight peer basket",
+      "values": {
+        "baseline_returns": 120,
+        "recent_returns": 30,
+        "required_closes": 151,
+        "fisher_scale": 0.2135042050734495,
+        "peer_weights": "1/n eligible peers, equal and frozen",
+        "min_peers": 4,
+        "shared_abs_cutoff": 2.0,
+        "weight": null
+      },
+      "origin": "640a5f2: package-owned 120/30 windows, Fisher approximation; explicitly a deterministic feature, not calibrated test",
+      "available_evidence": "latest operational frozen scan may carry correlation_input; exact-grid existing correlation fixture; stable-null and 0.8-to-zero plants",
+      "activation": "normal admission when 151 closes available; worker optional captured correlation"
+    },
+    {
+      "name": "market_breadth",
+      "formula": "breadth_up=count(R_S>0)/cohort_size; market_z=median(R_S)/(median(sigma_long)*sqrt(S)); broad iff abs(market_z)>=1.5 and max(up,1-up)>=0.75",
+      "values": {
+        "broad_z": 1.5,
+        "broad_breadth": 0.75,
+        "min_cohort": 4,
+        "weight": null
+      },
+      "origin": "214947a: inherited prototype defaults, explicitly uncalibrated; supporting framing, not extra salience term",
+      "available_evidence": "frozen market rows and existing broad/contested fixtures; no real-market labelled broad-event acceptance set",
+      "activation": "normal observation/worker framing"
+    },
+    {
+      "name": "participation",
+      "formula": "ln(current/previous) within exact same (kind,source), both endpoints available; supporting evidence iff abs(change)>=0.05",
+      "values": {
+        "participation_change": 0.05,
+        "stale_bars": 2,
+        "weight": null
+      },
+      "origin": "214947a: inherited prototype supporting-evidence threshold; not score term",
+      "available_evidence": "existing synthetic participation/late-revision tests; normal capture participation empty; no retained natural labelled calibration",
+      "activation": "optional cognition research input; normal capture input empty"
+    }
+  ],
+  "other_values": {
+    "shared_score": "maximum absolute available component; None stays unavailable. No fitted component weights.",
+    "defaults": {
+      "window": 20,
+      "short": 5,
+      "horizon": 5,
+      "k": 3,
+      "min_salience": 2.0,
+      "min_cohort": 4,
+      "broad_z": 1.5,
+      "broad_breadth": 0.75,
+      "divergence_z": 2.0,
+      "persist_z": 1.0,
+      "participation_change": 0.05,
+      "participation_stale_bars": 2,
+      "max_symbols": 500,
+      "max_decisions": 5000
+    },
+    "framing_values": {
+      "divergence_z": 2.0,
+      "persist_z": 1.0,
+      "horizon_bars": 5,
+      "origin": "214947a prototype defaults; illustrative hypotheses, not additional ranking components"
+    },
+    "capacity": {
+      "k_cognition": 3,
+      "max_deep_slots": 12,
+      "event_reserve": 2,
+      "exploration_reserve": 2,
+      "minimum_slots": 0,
+      "origin": "k3 prototype; admission capacities explicitly owner-adopted SDD8.4/config.yaml, engineering budget policy not statistically calibrated score values"
+    },
+    "learned_priority": {
+      "cognition_order": "HIGH then NORMAL then LOW; stable within classes after salience ordering",
+      "origin": "b56682e governed consumer contract; not numeric weights or probability calibration",
+      "normal_admission_influence": "NONE; ignores cognition learned order and uses existing salience/rotations"
+    },
+    "nonexistent_composite_weights": "SDD8.2 w1..w6 are a design template only; no economic-relevance/novelty/urgency/cost weighted sum exists in this implementation.",
+    "calibration_classification": "No operationally calibrated score cutoff/window/weight established; mathematical derivations, adoption and mechanical proofs are recorded separately."
+  }
+}

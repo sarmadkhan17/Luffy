@@ -44,14 +44,15 @@ completed_pre_stage8_audit:
 work_package:
   id: ATT-03
   status: BLOCKED
-  result: BLOCKED_CALIBRATION_EVIDENCE
+  result: BLOCKED_UNSUPPORTED_CALIBRATION_VALUES
   mode: ENGINEERING_ONLY
-  scope: ARCHITECTURE_OFFLINE
-  objective: Prove warm-up and existing ranking semantics without invented salience; retain unresolved calibration
-    gate.
+  scope: RETAINED_AND_SYNTHETIC_OFFLINE_CALIBRATION_REVIEW
+  objective: Evaluate exact existing Attention values on retained/offline evidence without changing weights, thresholds
+    or warm-up semantics.
   implementation_commit: 5a2b7ded388ce1137b0a949510ad8f4e93ab5c6c
   evidence:
   - docs/tracker/evidence/att03-warmup-sol2/REPORT.md
+  - docs/tracker/evidence/att03-calibration-sol2/REPORT.md
   runtime_execution_authorized: false
   provider_enablement_authorized: false
   trading_activation_authorized: false
@@ -582,10 +583,11 @@ current_build_selection:
   next_item_selected: false
   runtime_execution_authorized: false
   selection_status: NO_ACTIVE_PACKAGE
-  selection_reason: ATT-03 warm-up reporting gap fixed; original calibrated-ranking evidence gate remains unmet.
-    Dependencies ATT-01/DATA-04 CLOSED; no successor or runtime selected.
+  selection_reason: 'ATT-03 fixed-value review remains BLOCKED: independent labels and approved calibration acceptance
+    limits/plan absent. Mathematical conditional support recorded; no values, dependencies or successor selection
+    changed.'
   last_terminal_item: ATT-03
-  last_terminal_result: BLOCKED_CALIBRATION_EVIDENCE
+  last_terminal_result: BLOCKED_UNSUPPORTED_CALIBRATION_VALUES
 
 data01_canonical_identity:
   id: DATA-01
@@ -1389,6 +1391,53 @@ att03_warmup_terminal:
     distinct_passed: 287
   conditions_and_dependency_edges_changed: false
   scoring_system_changed: false
+  successor_selected: false
+  runtime_execution_authorized: false
+  trading_activation_authorized: false
+
+att03_calibration_terminal:
+  item: ATT-03
+  status: BLOCKED
+  result: BLOCKED_UNSUPPORTED_CALIBRATION_VALUES
+  scope: RETAINED_AND_SYNTHETIC_OFFLINE_CALIBRATION_REVIEW
+  evidence: docs/tracker/evidence/att03-calibration-sol2/REPORT.md
+  component_inventory: docs/tracker/evidence/att03-calibration-sol2/component-inventory.json
+  results: docs/tracker/evidence/att03-calibration-sol2/results.json
+  protocol: docs/tracker/evidence/att03-calibration-sol2/protocol.json
+  dependencies:
+    ATT-01: CLOSED
+    DATA-04: CLOSED
+  calibrated_operational_values: []
+  conditional_support: IID Gaussian predictive volume/positioning references and IID Fisher scaling; not operational
+    real-market calibration.
+  unsupported_values:
+  - shared salience cutoff 2 and maximum/cohort interpretation
+  - window 20 / short 5 / min cohort 4
+  - positioning reference 20 / max of two / cadence slack tolerance
+  - correlation baseline 120 / recent 30 / peer floor 4
+  - supporting breadth 1.5 and 0.75 / divergence 2 / persistence 1 / participation 0.05 when calibration claimed
+  retained_validation:
+    scans: 59
+    symbol_rows: 944
+    eligible_rows: 929
+    score_eligibility_ranking_replays: 59
+    independent_labels: 0
+    real_false_trigger_rate: null
+    real_missed_trigger_rate: null
+  synthetic_validation:
+    null_trials: 800
+    planted_trials: 1000
+    current_broad_null_symbol_cutoff_rate_iid: 0.231875
+    current_broad_null_symbol_cutoff_rate_ar1_phi_0_6: 0.515625
+    scope: Fixed model conditional diagnostics, not crypto-market error rates or acceptance.
+  tests:
+    preservation_passed: 68
+    evidence_checks_passed: 11
+  owner_decision_required: true
+  owner_decision: Define investigate-worthy events, allowed false/missed triggers, component profile/universe and
+    an untouched validation plan for unchanged values. No implicit retuning or condition revision.
+  application_source_and_config_changed: false
+  conditions_changed: false
   successor_selected: false
   runtime_execution_authorized: false
   trading_activation_authorized: false
