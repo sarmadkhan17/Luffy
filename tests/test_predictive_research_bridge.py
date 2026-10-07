@@ -145,7 +145,7 @@ def test_normal_bank_consumer_to_planner_referee_feedback(population, dispositio
         assert not j.query("SELECT name FROM sqlite_master WHERE name='strategy_versions'")
         with pytest.raises(F.HandoffRefused,match='research_lineage_missing'):
             F.create_version(j,CFG,dict(kind='research_candidate',hash=candidate['hash']),at_ms=later)
-        version=F.create_version(j,CFG,B.factory_source(final),at_ms=later)
+        version=F.create_version(j,CFG,B.factory_source(final,bank),at_ms=later)
         assert F.load_version(j,version['version_id'])['lineage']['research']['result_id']==final['result_id']
         assert version['version_id'] # no install/paper/approval/activation invoked
     else:

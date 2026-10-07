@@ -113,10 +113,11 @@ def test_predictive_candidate_requires_exact_res_ids(tmp_path, cfg):
     _refused(j, cfg, _src(h, bad), "research_lineage_malformed")
     _refused(j, cfg, _src(h, {**RES, "measurement_id": ""}),
              "research_lineage_malformed")
-    v = F.create_version(j, cfg, _src(h, RES), at_ms=T0)
-    r = F.load_version(j, v["version_id"])["lineage"]["research"]
-    assert r["origin"] == "predictive_experiment"
-    assert {k: r[k] for k in RES} == RES
+    # well-formed and consistent with the rule, but no Research Bank to
+    # authenticate it against: nothing is created (see test_str01_bank_lineage)
+    _refused(j, cfg, _src(h, RES), "research_bank_required")
+    _refused(j, cfg, {**_src(h, RES), "bank_path": "/nonexistent/bank.db"},
+             "research_bank_unauthenticated")
 
 
 def test_discovery_candidate_may_not_claim_research_ids(tmp_path, cfg):

@@ -550,8 +550,74 @@ def _research_ref(ev: dict, source: dict) -> dict:
         _refuse("research_lineage_malformed")
     if given["hypothesis_id"] != hyp or given["experiment_id"] != exp:
         _refuse("research_lineage_mismatch")
+    bank = _authenticate_bank(source.get("bank_path"), given, ev)
     return {"origin": "predictive_experiment", "round": combo.get("round"),
-            "candidate_hash": ev["candidate"]["hash"], **given}
+            "candidate_hash": ev["candidate"]["hash"], **given, **bank}
+
+
+def _authenticate_bank(bank_path, given: dict, ev: dict) -> dict:
+    """Resolve the claimed ids through the canonical persisted Research Bank
+    and refuse unless they are one genuine, current, SUPPORTED result for
+    THIS candidate. `predictive_extensions` is the existing authority: it
+    re-verifies every retained record's identity and replays each result
+    against its experiment's registered quantitative ledger. No ids are
+    taken on trust and nothing is copied into a second store."""
+    from contextlib import closing
+    from ..cognition.predictive_bank import predictive_extensions
+    from ..research import predictive_receipt as M
+    from ..research.predictive_experiment import readonly
+    if not isinstance(bank_path, str) or not bank_path:
+        _refuse("research_bank_required")
+    try:
+        with closing(readonly(bank_path)) as db:
+            hyps = [json.loads(p)["hypothesis"] for (p,) in db.execute(
+                "SELECT payload FROM bridge_hypotheses ORDER BY rowid")]
+        bank_ids = {h["bank_id"] for h in hyps
+                    if h["hypothesis_id"] == given["hypothesis_id"]}
+        if len(bank_ids) != 1:
+            _refuse("research_bank_hypothesis_not_found")
+        att = predictive_extensions(bank_path, next(iter(bank_ids)))
+    except HandoffRefused:
+        raise
+    except Exception:                                   # noqa: BLE001
+        _refuse("research_bank_unauthenticated")
+    res = [r for r in att["results"] if r["result_id"] == given["result_id"]]
+    if len(res) != 1:
+        _refuse("research_bank_result_not_found")
+    r = res[0]
+    if any(r.get(k) != given[k] for k in RESEARCH_REF_KEYS):
+        _refuse("research_bank_lineage_mismatch")
+    if (r.get("classification"), r.get("quantitative_outcome")) != (
+            "SUPPORTED", "PASS") or r.get("predictive_strategy_validation") \
+            is not True or r.get("schema") != M.SCHEMA:
+        _refuse("research_result_not_supported")
+    exps = [e for e in att["experiments"]
+            if e["source_hypothesis_id"] == given["hypothesis_id"]]
+    ex = next((e for e in exps if e["experiment_id"] == given["experiment_id"]),
+              None)
+    if ex is None:
+        _refuse("research_bank_experiment_not_found")
+    if exps[-1]["experiment_id"] != given["experiment_id"]:
+        _refuse("research_result_stale")
+    disp = r.get("referee_disposition") or {}
+    fc, bev = disp.get("factory_candidate") or {}, disp.get("evidence") or {}
+    if (fc.get("hash") != ev["candidate"]["hash"]
+            or fc.get("experiment_id") != given["experiment_id"]
+            or fc.get("hypothesis_id") != given["hypothesis_id"]):
+        _refuse("research_bank_candidate_mismatch")
+    try:
+        same = (_jsha(bev["gate1_look"]) == ev["gate1_look_sha256"]
+                and _jsha({"gate1": bev["gate1"], "gate3": bev["gate3"]})
+                == ev["candidate_gates_sha256"]
+                and _jsha(bev["evaluated"]) == ev["evaluated_sha256"])
+        cut = json.loads(ev["gate1_look"]["detail"])["cut_ms"]
+    except (KeyError, TypeError, ValueError):
+        same = False
+    if not same or ex["split"]["cut_ms"] != cut:
+        _refuse("research_bank_evidence_mismatch")
+    return {"bank_id": r["bank_id"], "result_schema": r["schema"],
+            "experiment_binding_sha256": _jsha(M.binding(ex)),
+            "bank_authentication": "REPLAYED_AGAINST_REGISTERED_LEDGER"}
 
 
 def _lineage(spec_d: dict, risk_sha256, research: dict | None,

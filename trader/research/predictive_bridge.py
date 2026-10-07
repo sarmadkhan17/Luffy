@@ -199,7 +199,7 @@ def replay_feedback(chain, bank):
     return bank
 
 
-def factory_source(result):
+def factory_source(result, bank_path):
     """The one StrategyVersion creation source for a SUPPORTED Bank result:
     the registered candidate plus the exact RES-08 identities that produced
     it. The Factory cross-checks them to the evaluated rule; this function
@@ -207,7 +207,7 @@ def factory_source(result):
     cand = (result.get('referee_disposition') or {}).get('factory_candidate')
     if result.get('classification') != 'SUPPORTED' or not cand:
         raise ValueError('factory_source_requires_supported_registered_result')
-    return dict(kind='research_candidate', hash=cand['hash'],
+    return dict(kind='research_candidate', hash=cand['hash'], bank_path=str(bank_path),
                 research=dict(hypothesis_id=result['hypothesis_id'],
                               experiment_id=result['experiment_id'],
                               measurement_id=result['measurement_id'],
