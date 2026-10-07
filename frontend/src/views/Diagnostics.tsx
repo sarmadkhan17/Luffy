@@ -2,7 +2,7 @@
  * checked. Everything is read from the diagnostics, overview and activity
  * records; a check the records do not report is shown as "not reported", never
  * as a pass. The design's invented tile values are replaced by real ones. */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, Clock, Cpu, Database, FileText, HardDrive, HeartPulse, Lock, Radar, RefreshCw, ScanEye, ShieldCheck, Stethoscope, TriangleAlert, Wrench, Gauge, Check, X, CircleHelp, type LucideIcon } from "lucide-react";
 import { usePreview } from "../context";
@@ -11,6 +11,8 @@ import { Card, CardHead, DetailPanel, KV } from "../components/glass";
 import { StorageTruth } from "../components/StorageTruth";
 import { PageHeader } from "../components/PageHeader";
 import { timestamp as utc } from "../time";
+
+import { recoveryTruth, reconciliationTruth, collectorTruth, supervisorFreshness } from "../diagnosticTruth";
 
 const G = "#3ddc97", A = "#f2b44a", R = "#ff7b72", GREY = "#8d9fb2";
 type Lvl = "ok" | "warn" | "bad" | "none";
@@ -34,10 +36,14 @@ export default function Diagnostics() {
   const [filter, setFilter] = useState<"all" | "prob" | "ok">("all");
   const [sel, setSel] = useState<string | null>(null);
 
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
   const D = (dq.isError ? {} : dq.data ?? {}) as Record<string, any>;
-  const L = ov.data?.live;
+  const L = ov.isError ? undefined : ov.data?.live;
   const ev = (L?.observedEvidence ?? {}) as Record<string, any>;
-  const sup = ev.protection?.supervisor as Record<string, any> | undefined;
+  const rawSup = ev.protection?.supervisor as Record<string, any> | undefined;
+  const supFreshness = supervisorFreshness(rawSup, now);
+  const sup: Record<string, any> | undefined = rawSup ? { ...rawSup, freshness: supFreshness, checks_are_current: rawSup.checks_are_current === true && supFreshness === "fresh", age_s: Number.isFinite(Date.parse(rawSup.observed_at)) ? Math.max(0, (now - Date.parse(rawSup.observed_at)) / 1000) : rawSup.age_s } : undefined;
   const hb = ev.heartbeat as Record<string, any> | null | undefined;
   const control = ov.data?.control ?? "UNAVAILABLE";
   const positions = ov.data?.positions ?? null;
@@ -89,26 +95,32 @@ export default function Diagnostics() {
       mean: prot === "VERIFIED" ? "Nothing to do." : "No current venue verification exists, so protection cannot be confirmed from here.",
       facts: [...(positions ?? []).map((p): [string, string | null] => [`${p.symbol.split("/")[0]} ${p.side}`, p.journalStop?.price ? `journal stop ${p.journalStop.price}` : "no stop recorded"]), ["Venue protection", prot]] });
     const rLast = recEvents[0];
-    t.push({ id: "recon", l: "Reconcile", g: "Exchange vs journal", icon: RefreshCw, lvl: rLast ? "ok" : "none", v: String(recEvents.length), st: rLast ? "Ran" : "Not reported",
-      x: rLast ? `${recEvents.length} reconcile run(s) in the recent control events; latest ${stamp(rLast.ts)}.` : "No reconcile run in the recent control events.",
+    const reconciliation = reconciliationTruth(sup, now);
+    t.push({ id: "recon", l: "Reconcile", g: "Exchange vs journal", icon: RefreshCw, lvl: reconciliation.level, v: reconciliation.status, st: reconciliation.status,
+      x: rLast ? `Historical activity: ${recEvents.length} reconciliation run(s) in the recent control events; latest ${stamp(rLast.ts)}.` : "No reconcile run in the recent control events.",
       what: "LUFFY compares what the exchange says against its own records, so nothing drifts out of sync.",
-      mean: "A run is recorded here; whether it found drift is in each run's detail, which is not summarised.",
-      facts: [["Runs in recent events", String(recEvents.length)], ["Latest", rLast ? stamp(rLast.ts) : null]], dots: recEvents.slice(0, 8).map((e) => ({ t: stamp(e.ts).slice(0, 12), lvl: "ok" as Lvl })),
+      mean: "A run is recorded here; activity does not establish current reconciliation health.",
+      facts: [["Current status", reconciliation.status], ["Proof timestamp", sup?.observed_at ? stamp(sup.observed_at) : null], ["Proof freshness", reconciliation.status === "STALE" ? "stale" : sup?.freshness ?? null], ["Runs in recent events", String(recEvents.length)], ["Latest", rLast ? stamp(rLast.ts) : null]], dots: recEvents.slice(0, 8).map((e) => ({ t: stamp(e.ts).slice(0, 12), lvl: "none" as Lvl })),
       log: recEvents.slice(0, 8).map((e) => `${stamp(e.ts)}  ${e.actor}`), logTitle: "Reconcile runs" });
     const rec2 = reasons.some((r) => /recovery/i.test(r));
-    t.push({ id: "recov", l: "Recovery mode", g: "Storage / heartbeat recovery", icon: Wrench, lvl: rec2 ? "warn" : sup ? "ok" : "none", v: rec2 ? "On" : sup ? "Off" : "—", st: rec2 ? "Active" : sup ? "Normal" : "Not reported",
-      x: rec2 ? "The Supervisor's last pass reports storage/heartbeat recovery." : "No recovery reason in the last Supervisor pass.",
-      what: "A careful mode LUFFY enters after a problem with its storage or heartbeat: it double-checks state before doing anything.", mean: "It switches off by itself once the heartbeat is healthy again.",
-      facts: [["Reason recorded", rec2 ? reasons.filter((r) => /recovery/i.test(r)).map(human).join("; ") : "none"]] });
+    const recovery = recoveryTruth(sup, now);
+    t.push({ id: "recov", l: "Recovery mode", g: "Storage / heartbeat recovery", icon: Wrench, lvl: recovery.level, v: recovery.status, st: recovery.status,
+      x: sup ? `Last Supervisor evidence ${stamp(sup.observed_at)} · ${age(sup.age_s)} old · ${recovery.freshness}. ${rec2 ? "Recovery reason recorded." : "No recovery reason recorded."}` : "Recovery state NOT REPORTED.",
+      what: "A careful mode LUFFY enters after a problem with its storage or heartbeat: it double-checks state before doing anything.", mean: "Only current Supervisor evidence establishes current recovery state; historical reasons do not establish active recovery.",
+      facts: [["Evidence timestamp", sup?.observed_at ? stamp(sup.observed_at) : null], ["Freshness", recovery.freshness], ["Stale after", sup ? age(sup.stale_after_s) : null], ["Reason recorded", rec2 ? reasons.filter((r) => /recovery/i.test(r)).map(human).join("; ") : "none"]] });
     const pOk = probes.filter((p) => p.ok).length;
     t.push({ id: "probe", l: "Store probes", g: "Can LUFFY read its own data?", icon: Database, lvl: probes.length ? (pOk === probes.length ? "ok" : "bad") : "none", v: probes.length ? `${pOk}/${probes.length}` : "—", st: probes.length ? (pOk === probes.length ? "OK" : "Failing") : "Not reported",
       x: "Journal, newest decision, knowledge vault and dashboard build, each timed.", what: "Quick test reads against LUFFY's databases and files, timed in milliseconds.", mean: "A failing probe means a store the owner views depend on cannot be read.",
       dots: probes.map((p) => ({ t: String(p.probe).replaceAll("_", " "), lvl: (p.ok ? "ok" : "bad") as Lvl })), facts: probes.map((p): [string, string] => [String(p.probe), `${p.ok ? "ok" : "FAILED"} · ${p.ms} ms · ${p.detail}`]) });
     const cOk = collectors.filter((c) => c.freshness === "fresh" && c.status === "ok").length;
-    t.push({ id: "coll", l: "Collectors", g: "Background data feeds", icon: Radar, lvl: !collectors.length || collectors.every(c => c.freshness === "unavailable") ? "none" : cOk === collectors.length ? "ok" : collectors.some((c) => c.status === "error") ? "bad" : "warn", v: collectors.length ? `${cOk}/${collectors.length}` : "—", st: !collectors.length || collectors.every(c => c.freshness === "unavailable") ? "Not reported" : cOk === collectors.length ? "Fresh" : "Stale",
-      x: "Attention, investigation and learning feeds, from their *_health.json files.", what: "Small workers that keep gathering market attention, investigations and learning data in the background.", mean: "Stale or error means that feed has not reported recently; with the kernel stopped that is expected.",
-      dots: collectors.map((c) => ({ t: String(c.file).replace("_health.json", ""), lvl: (c.freshness === "fresh" && c.status === "ok" ? "ok" : c.status === "error" ? "bad" : "warn") as Lvl })),
-      facts: collectors.map((c): [string, string] => [String(c.file).replace("_health.json", ""), `${c.status} · ${c.freshness} · ${age(c.age_s)} old${c.last_error ? ` · ${c.last_error}` : ""}`]) });
+    const collectorStates = collectors.map(collectorTruth);
+    const hasError = collectorStates.some(c => c.status === "ERROR");
+    const collectorStatus = hasError ? "ERROR" : collectorStates.length && collectorStates.every(c => c.status === "OK") ? "OK" : "UNKNOWN";
+    const collectorFreshness = collectorStates.length && collectorStates.every(c => c.freshness === "FRESH") ? "FRESH" : collectorStates.some(c => c.freshness === "STALE") ? "STALE" : "UNKNOWN";
+    t.push({ id: "coll", l: "Collectors", g: "Background data feeds", icon: Radar, lvl: hasError ? "bad" : collectorStatus === "UNKNOWN" || collectorFreshness === "UNKNOWN" ? "none" : collectorFreshness === "STALE" ? "warn" : "ok", v: collectorStatus, st: collectorStatus,
+      x: `Freshness: ${collectorFreshness}. ${cOk}/${collectors.length} reports fresh and OK.`, what: "Recorded worker status and report freshness are independent dimensions.", mean: "ERROR is the last explicitly recorded failure; STALE means the report is old, not that a new failure occurred.",
+      dots: collectors.map((c, i) => ({ t: `${String(c.file).replace("_health.json", "")} · ${collectorStates[i].status} · ${collectorStates[i].freshness}`, lvl: collectorStates[i].level })),
+      facts: collectors.map((c, i): [string, string] => [String(c.file).replace("_health.json", ""), `Last status: ${collectorStates[i].status} · Freshness: ${collectorStates[i].freshness} · Age: ${age(c.age_s)}${c.last_error ? ` · Last error: ${c.last_error}` : ""}`]) });
     const wdOff = wd?.disabled_flag === true;
     t.push({ id: "wd", l: "Watchdog", g: "Restarts LUFFY if it dies", icon: Activity, lvl: !wd ? "none" : wdOff ? "warn" : "none", v: !wd ? "—" : wdOff ? "Off" : "Unknown", st: !wd ? "Not reported" : wdOff ? "Disabled by flag" : "Process not reported",
       x: wdOff ? `A disable flag (data/watchdog.off) is present${wd?.disabled_since ? ` since ${stamp(wd.disabled_since)}` : ""}.` : "No disable flag; the watchdog may restart stopped processes.",
@@ -126,7 +138,7 @@ export default function Diagnostics() {
       log: lines ? lines.slice(-40).map((s) => s.slice(0, 240)) : undefined, logTitle: "luffy.log (newest lines)" });
     return t;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dq.data, ov.data, oq.data, logQ.data]);
+  }, [dq.data, ov.data, oq.data, logQ.data, ov.isError, now]);
 
   const problems = tiles.filter((t) => t.lvl === "bad" || t.lvl === "warn");
   const shown = tiles.filter((t) => filter === "all" || (filter === "prob" ? t.lvl === "bad" || t.lvl === "warn" : t.lvl === "ok"));
@@ -149,7 +161,7 @@ export default function Diagnostics() {
   const lanes = [
     { l: "Supervisor", marks: dayEv.filter((e) => e.type === "Safety" && e.facts?.event === "supervisor_recovery").map((e) => ({ at: e.at, c: e.tone === "bad" ? R : e.tone === "warn" ? A : G, t: `${stamp(e.at)} · ${e.result} · ${e.what}` })) },
     { l: "Scan passes", marks: dayEv.filter((e) => e.type === "Scan").map((e) => ({ at: e.at, c: e.tone === "ok" ? G : GREY, t: `${stamp(e.at)} · ${e.what}` })) },
-    { l: "Reconcile", marks: dayEv.filter((e) => e.type === "Safety" && e.facts?.event === "reconcile").map((e) => ({ at: e.at, c: G, t: `${stamp(e.at)} · ${e.what}` })) },
+    { l: "Reconcile", marks: dayEv.filter((e) => e.type === "Safety" && e.facts?.event === "reconcile").map((e) => ({ at: e.at, c: GREY, t: `${stamp(e.at)} · ${e.what}` })) },
   ];
   const scanHours = new Set(dayEv.filter((e) => e.type === "Scan").map((e) => new Date(e.at).getUTCHours()));
   let gap = 0, gapAt = 0, run = 0;

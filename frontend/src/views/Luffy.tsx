@@ -187,14 +187,14 @@ export default function Luffy() {
               const el = transcript.current;
               if (el) { nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 64; if (nearBottom.current) setUnread(false); }
             }}>
-            {messages.map((m) => (
+            {messages.map((m, index) => (
               <article className={`msgin ${m.role}`} key={m.id} style={{ alignItems: m.role === "owner" ? "flex-end" : "flex-start" }}>
                 <span style={{ fontSize: 12, color: "var(--txt3)" }}>
                   <b style={{ color: m.role === "owner" ? "#c9d4df" : "rgb(var(--a2))" }}>{m.role === "owner" ? "You" : "LUFFY"}</b>
                   {timeOf(m.id) ? ` · ${timeOf(m.id)}` : ""}{live && m.requestId ? ` · reply ${m.requestId.slice(0, 8)}` : ""}
                 </span>
                 <div className="bubble" style={{ borderRadius: m.role === "owner" ? "14px 14px 4px 14px" : "14px 14px 14px 4px", background: m.role === "owner" ? "#ffffff0d" : "rgb(var(--a) / .08)", borderColor: m.role === "owner" ? "#ffffff1a" : "rgb(var(--a) / .3)" }}>
-                  <p>{m.text}</p>
+                  <p>{readOnly && index === 0 && m.id === 0 ? "Conversation is unavailable in read-only mode. Existing evidence surfaces remain available." : m.text}</p>
                 </div>
                 {m.outcome === "cancelled" && <p className="gl-note">Cancelled — no reply · {m.cancellationReason}</p>}
                 {m.outcome === "failed" && <p className="gl-note" style={{ color: "#ff7b72" }}>Failed — no reply</p>}

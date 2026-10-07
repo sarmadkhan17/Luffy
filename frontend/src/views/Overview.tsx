@@ -1,6 +1,7 @@
 /** Overview — approved "Final · 1" design, bound to live owner-api reads.
  * Every figure is a recorded value with its source; a missing value reads
  * UNAVAILABLE and is never replaced by a plausible one. */
+import { needsYouCount } from "../diagnosticTruth";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Activity, ArrowLeftRight, Bell, Eye, LineChart, Search, Shield, TrendingUp, Wallet } from "lucide-react";
@@ -187,12 +188,15 @@ export default function Overview() {
       out.push({ id: `approval:${String(i.item_id)}`, t: String(i.action_type ?? "Owner decision"), w: "approval", dsc: String(i.reason ?? ""), cta: "Decide in LUFFY", href: "#luffy" });
     return out;
   }, [control, kernelState, L, hb, sup, lastEvent, positions, now, needsQ.data]);
+  const needsUnavailable = live && (q.isError || needsQ.isError || (!q.isPending && (!L?.needsYou || L.needsYou.provenance?.freshness !== "fresh")) || (!needsQ.isPending && (!Array.isArray(needsQ.data?.items) || asRows(needsQ.data?.unavailable).length > 0)));
+  const needsPending = live && (q.isPending || needsQ.isPending);
   const visibleNeeds = needs.filter((n) => !later.includes(n.id));
 
   const okCount = tiles.filter((x) => x.ok).length;
 
   return (
     <>
+      <div className="gl-overview">
       <PageHeader title="Overview">
         <span className={`gl-state ${control === "ACTIVE" ? "live" : "blink"}`} style={{ color: COLOR[control === "ACTIVE" ? "ok" : control === "FROZEN" ? "frozen" : control === "HALTED" ? "bad" : "warn"] }} data-testid="control-state">
           <i />
@@ -212,7 +216,7 @@ export default function Overview() {
           <span className="gl-sheen"><i /></span>
           <div className="gl-kpi">
             <span className="gl-hd"><span className="gl-ic" aria-hidden="true"><Wallet size={16} /></span><span className="lab">Unrealized P&amp;L</span></span>
-            <span className="big" style={{ color: upnl.value === null ? GREY : upnl.value >= 0 ? OK : BAD }} data-testid="kpi-upnl">{upnl.value === null ? "UNAVAILABLE" : signed(upnl.value)}</span>
+            <span className={`big ${upnl.value === null ? "txt" : ""}`} style={{ color: upnl.value === null ? GREY : upnl.value >= 0 ? OK : BAD }} data-testid="kpi-upnl">{upnl.value === null ? "UNAVAILABLE" : signed(upnl.value)}</span>
             <span className="sub">{upnl.why}</span>
           </div>
           <LastCloses desk={desk} />
@@ -264,8 +268,9 @@ export default function Overview() {
           <Card need className="pad" label="Needs you">
             <div className="gl-hd">
               <span className="gl-ic solid" aria-hidden="true"><Bell size={16} /></span><h2 style={{ color: "rgb(var(--a2))" }}>Needs you</h2><span className="fill" />
-              <span className="gl-count" aria-label={`${visibleNeeds.length} items`}>{visibleNeeds.length}</span>
+              <span className="gl-count" data-testid="needs-you-count" aria-label={`${needsYouCount(visibleNeeds.length, needsPending, needsUnavailable)} items`}>{needsYouCount(visibleNeeds.length, needsPending, needsUnavailable)}</span>
             </div>
+            {needsUnavailable && <p className="gl-note">Owner-action total UNKNOWN. {visibleNeeds.length} recorded item(s) shown; unavailable or stale sources may contain more.</p>}
             {visibleNeeds.map((n) => (
               <div className="gl-need-item" key={n.id}>
                 <div className="top"><b>{n.t}</b><span style={{ fontSize: 12, color: GREY, whiteSpace: "nowrap" }}>{n.w}</span></div>
@@ -278,7 +283,7 @@ export default function Overview() {
             ))}
             {visibleNeeds.length === 0 && (
               <p className="gl-note">
-                {needs.length ? `${needs.length} item${needs.length === 1 ? "" : "s"} snoozed until reload.` : L?.needsYou ? "The Supervisor records no owner action and nothing else is pending." : "No Supervisor record is readable. This does not establish that nothing needs the owner."}
+                {needsUnavailable ? "Owner-action state unavailable; pending items may exist." : needsPending ? "Loading owner-action evidence…" : needs.length ? `${needs.length} item${needs.length === 1 ? "" : "s"} snoozed until reload.` : L?.needsYou ? "The Supervisor records no owner action and nothing else is pending." : "No Supervisor record is readable. This does not establish that nothing needs the owner."}
               </p>
             )}
             {needsQ.isError && <p className="gl-note">Approval ledger unavailable — pending approvals may exist.</p>}
@@ -287,6 +292,7 @@ export default function Overview() {
           <ResearchCard desk={desk} sys={sysQ.data} loading={deskQ.isPending && live} />
           <SystemCard sys={sysQ.data} control={control} hbFresh={L?.heartbeat?.freshness} naked={ev.protection?.naked_exposure} loading={sysQ.isPending && live} />
         </aside>
+      </div>
       </div>
     </>
   );

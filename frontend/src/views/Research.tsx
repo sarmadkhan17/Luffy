@@ -117,7 +117,7 @@ export default function Research() {
               {stages.slice(0, -1).map((_, i) => <path key={i} d={`M${((i + 1) * 1000) / NS} 20V240`} stroke="#ffffff1f" strokeDasharray="3 5" vectorEffect="non-scaling-stroke" />)}
             </svg>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: `repeat(${NS}, minmax(0, 1fr))`, gap: 8, marginTop: 8 }}>
+            <div className="gl-funnel-stages" style={{ display: "grid", gridTemplateColumns: `repeat(${NS}, minmax(0, 1fr))`, gap: 8, marginTop: 8 }}>
               {stages.map((s, i) => (
                 <div key={s.l} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <span className="m" style={{ fontSize: 28 - i * 2, color: "rgb(var(--hi))" }}>{s.n === null ? "UNAVAILABLE" : s.n.toLocaleString("en-US")}</span>

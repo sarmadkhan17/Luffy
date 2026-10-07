@@ -86,3 +86,43 @@ test("exact version shows stale approval and unavailable economics separately fr
   await expect(page.getByRole("dialog")).toContainText("STALE");
   await expect(page.getByRole("dialog")).toContainText("UNAVAILABLE — no current exact economics");
 });
+
+for (const width of [1440, 1280, 390]) test(`correction layouts at ${width}px`, async ({ page }) => {
+  await intercept(page); await page.setViewportSize({ width, height: width === 390 ? 844 : width === 1440 ? 900 : 800 });
+  for (const slug of ["overview", "operations", "diagnostics", "research", "trades", "strategies", "luffy", "live-system", "knowledge", "tracker"]) {
+    await page.goto(`/#${slug}`);
+    await expect(page.getByRole("heading", { name: slug === "luffy" ? "LUFFY" : slug === "live-system" ? "Live System" : slug[0].toUpperCase() + slug.slice(1), exact: true }).first()).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    if (width === 390 && slug === "overview") {
+      const needs = await page.getByRole("region", { name: "Needs you", exact: true }).boundingBox();
+      const chart = await page.getByRole("heading", { name: "Realized P&L", exact: true }).boundingBox();
+      expect(needs!.y).toBeLessThan(chart!.y); expect(needs!.y).toBeLessThan(1600);
+    }
+    if (width === 390 && slug === "research") {
+      const boxes = await page.locator('.gl-funnel-stages > div').evaluateAll(es => es.map(e => e.getBoundingClientRect().toJSON()));
+      for (let i = 1; i < boxes.length; i++) expect(boxes[i].top).toBeGreaterThanOrEqual(boxes[i-1].bottom);
+    }
+    if (width === 390 && slug === "diagnostics") {
+      await expect(page.getByLabel('Filesystem free-space summary')).toBeVisible();
+      const textWidth = await page.locator('.gl-verdict .cg').evaluate(e => e.getBoundingClientRect().width);
+      expect(textWidth).toBeGreaterThan(270);
+    }
+  }
+});
+for (const state of ["empty", "populated", "failed", "unavailable"]) test(`Needs You ${state} remains truthful`, async ({page}) => {
+  const o = structuredClone(fixtures['/owner-api/v1/overview']); const now = new Date().toISOString();
+  o.generated_at = now; o.control.state = 'ACTIVE'; o.kernel_process.state = 'RUNNING'; o.positions = [];
+  o.heartbeat = { ...o.heartbeat, observed_at: now, freshness: 'fresh', age_s: 0, runtime_state: 'RUNNING' };
+  o.needs_you = { ...o.needs_you, observed_at: now, freshness: 'fresh', needs_owner: false };
+  const n = { ...structuredClone(fixtures['/owner-api/v1/needs-you']), generated_at: now, items: state === 'populated' ? [{item_id:'exact1', validity:'VALID', action_type:'Approval', reason:'Exact version'}] : [], unavailable: state === 'unavailable' ? [{field:'Approvals', reason:'Source unavailable'}] : [] };
+  await intercept(page, {'/owner-api/v1/overview': o, '/owner-api/v1/needs-you': state === 'failed' ? null : n});
+  await page.goto('/#overview');
+  await expect(page.getByTestId('needs-you-count')).toHaveText(state === 'empty' ? '0' : state === 'populated' ? '1' : 'UNKNOWN');
+  if (state === 'failed' || state === 'unavailable') await expect(page.getByRole('region', {name:'Needs you', exact:true})).not.toContainText('nothing else is pending');
+});
+test('Operations filtered emptiness differs from an empty window', async ({page}) => {
+  await intercept(page); await page.goto('/#operations');
+  await page.getByPlaceholder('Search coin, strategy, word…').fill('zz-no-such-record');
+  await expect(page.getByText('No matching records.', {exact:true})).toBeVisible();
+  await expect(page.getByText('Nothing recorded in this window.', {exact:true})).toHaveCount(0);
+});

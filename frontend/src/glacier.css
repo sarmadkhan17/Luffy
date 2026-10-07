@@ -84,7 +84,7 @@ html, body { margin: 0; background: #000; }
 .gl-state { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .gl-state i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 .gl-chip { font: 10px var(--mono); letter-spacing: 0.15em; color: rgb(var(--mut)); border: 1px solid rgb(var(--a) / 0.3); border-radius: 6px; padding: 4px 8px; }
-.gl-app footer.gl-foot { flex: 0 0 100%; margin-left: 260px; padding: 10px 24px 18px; font-size: 11px; color: var(--txt3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: none; border: 0; }
+.gl-app footer.gl-foot { flex: 0 0 calc(100% - 260px); box-sizing: border-box; min-width: 0; margin-left: 260px; padding: 10px 24px 18px; font-size: 11px; color: var(--txt3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; background: none; border: 0; }
 
 /* ── cards ── */
 .gl-card {
@@ -246,7 +246,7 @@ html, body { margin: 0; background: #000; }
   .gl-nav { flex-direction: row; flex-wrap: wrap; }
   .gl-nav .grp { flex-direction: row; flex-wrap: wrap; }
   .gl-nav .grp > span, .gl-quote { display: none; }
-  .gl-app footer.gl-foot { margin-left: 0; }
+  .gl-app footer.gl-foot { margin-left: 0; flex-basis: 100%; }
 }
 
 .gl-chips { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
@@ -463,3 +463,32 @@ html, body { margin: 0; background: #000; }
 .gl-table th { padding: 6px 14px; }
 .gl-table tbody tr.click:hover { background: #ffffff08; }
 .gl-hd .sub { font-size: 13px; }
+
+/* Focused truth-review corrections; existing Glacier cards and rail retained. */
+.gl-overview { display: contents; }
+.gl-filesystem-summary { display: none; }
+.gl-kpi .big.txt { font-size: clamp(16px, 1.7vw, 24px); overflow-wrap: normal; word-break: normal; }
+.gl-kpi:last-child { flex-wrap: wrap; }
+.gl-kpi:last-child > span { flex: 1 1 100px; overflow-wrap: normal; }
+.gl-state { flex-wrap: wrap; }
+@media (max-width: 600px) {
+  .gl-funnel-stages { grid-template-columns: 1fr !important; gap: 16px !important; }
+  .gl-funnel-stages > div { min-width: 0; }
+  .gl-overview { display: flex; flex-direction: column; gap: 20px; }
+  .gl-overview > .gl-row, .gl-overview .gl-col, .gl-overview .gl-side { display: contents; }
+  .gl-overview .gl-safety { order: 1; max-width: none; }
+  .gl-overview section[aria-label="Needs you"] { order: 2; }
+  .gl-overview .gl-kpis { order: 3; }
+  .gl-overview .gl-col > :nth-child(3) { order: 4; }
+  .gl-overview .gl-col > :nth-child(1) { order: 5; }
+  .gl-overview .gl-col > :nth-child(2) { order: 6; }
+  .gl-overview .gl-side > :nth-child(2) { order: 7; }
+  .gl-overview .gl-side > :nth-child(3) { order: 8; }
+  .gl-overview .gl-kpis, .gl-overview .gl-safety { flex: none; }
+  .gl-verdict { flex-direction: column; align-items: stretch; }
+  .gl-verdict .vring { align-self: center; }
+  .gl-verdict .why { max-width: 100%; white-space: normal; text-align: left; overflow-wrap: anywhere; }
+  .gl-filesystem-summary { display: flex; flex-direction: column; gap: 12px; }
+  .gl-filesystem-summary article { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 9px; font-size: 13px; }
+}
+.gl-overview .gl-count { width: auto; min-width: 26px; padding: 0 8px; border-radius: 999px; flex-shrink: 0; box-sizing: border-box; }

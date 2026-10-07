@@ -111,3 +111,23 @@ it("diagnostics keeps missing cycle work, unknown Kernel and unreported permissi
   expect(cycle).toHaveTextContent("Not reported");
   expect(cycle).not.toHaveTextContent("Healthy");
 });
+
+it.each([
+  ["history without proof", "fresh", null, "UNKNOWN"],
+  ["stale proof", "stale", true, "STALE"],
+  ["current match", "fresh", true, "MATCHED"],
+  ["current mismatch", "fresh", false, "MISMATCH"],
+] as const)("renders reconciliation %s independently of run count", async (_, freshness, reconciliation, status) => {
+  const at = new Date(Date.now() - (freshness === "stale" ? 46 * 3600000 : 1000)).toISOString();
+  setup(<Diagnostics />, {
+    overview: { control: "FROZEN", positions: [], live: { observedEvidence: { protection: { supervisor: { observed_at: at, age_s: freshness === "stale" ? 46 * 3600 : 1, freshness, stale_after_s: 180, checks_are_current: freshness === "fresh", reconciliation, reasons: ["heartbeat_recovery"] } } } } },
+    diagnostics: { incidents: [{event:"reconcile",ts:at,actor:"kernel"}], collectors: [] },
+  });
+  const tile = await screen.findByRole("button", {name:/^Reconcile/});
+  await waitFor(() => expect(tile).toHaveTextContent(status));
+  expect(tile).toHaveTextContent("Historical activity: 1 reconciliation run");
+  if (freshness === "stale") {
+    const recovery = screen.getByRole("button", {name:/^Recovery mode/});
+    expect(recovery).toHaveTextContent("STALE"); expect(recovery).toHaveTextContent("46 h old"); expect(recovery).not.toHaveTextContent("ACTIVE");
+  }
+});

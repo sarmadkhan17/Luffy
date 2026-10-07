@@ -233,7 +233,7 @@ def read_supervisor(journal, now):
     freshness = _freshness(age, PROTECTION_STALE_S)
     if at is None and s.get("updated_at") not in (None, ""):
         freshness = "invalid"
-    reported = {k: checks.get(k) is True
+    reported = {k: checks.get(k) if isinstance(checks.get(k), bool) else None
                 for k in ("venue_positions", "reconciliation", "venue_protection")}
     current = freshness == "fresh"
     return {"observed_at": _iso(at), "age_s": age,

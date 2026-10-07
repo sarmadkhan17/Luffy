@@ -110,7 +110,7 @@ export default function OperationsLog() {
         {q.data && (
           <>
             <DataTable label="Activity log" rows={visible} cols={cols} rowId={(e) => String(e.id)} onOpen={setOpen} defaultSort={{ key: "at", dir: -1 }}
-onShown={(r) => setShownN(r.length)} empty="Nothing recorded in this window." />
+onShown={(r) => setShownN(r.length)} empty={events.length ? "No matching records." : "Nothing recorded in this window."} />
             <p className="gl-note">{String(q.data.source)}</p>
           </>
         )}
